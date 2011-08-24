@@ -24,7 +24,11 @@
 #
 %dependencies = (
     "qtbase" => "refs/heads/master",
+    "qtdeclarative" => "refs/heads/master",
+    "qtscript" => "refs/heads/master",
+    "qtsvg" => "refs/heads/master",
     "qtsystems" => "refs/heads/master",
+    "qtxmlpatterns" => "refs/heads/master",
 );
 
 # Compile tests
