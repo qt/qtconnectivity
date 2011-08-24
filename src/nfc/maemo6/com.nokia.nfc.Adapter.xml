@@ -1,0 +1,59 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/nokia/nfc/0/nfc0">
+    <interface name="com.nokia.nfc.Adapter">
+        <method name="GetProperties">
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+        </method>
+        <method name="SetProperty">
+            <arg type="s" direction="in"/>
+            <arg type="v" direction="in"/>
+        </method>
+        <method name="RequestHandover">
+            <arg type="o" direction="in"/>
+            <arg type="s" direction="in"/>
+            <arg type="s" direction="in"/>
+        </method>
+        <method name="CancelHandoverRequest">
+            <arg type="s" direction="in"/>
+        </method>
+        <method name="RequestAccess">
+            <arg type="o" direction="in"/>
+            <arg type="s" direction="in"/>
+        </method>
+        <method name="CancelAccessRequest">
+            <arg type="o" direction="in"/>
+            <arg type="s" direction="in"/>
+        </method>
+        <method name="RegisterUIAgent">
+            <arg type="o" direction="in"/>
+        </method>
+        <method name="UnregisterUIAgent">
+            <arg type="o" direction="in"/>
+        </method>
+        <signal name="PropertyChanged">
+            <arg type="s"/>
+            <arg type="v"/>
+        </signal>
+        <signal name="TargetDetected">
+            <arg type="o"/>
+        </signal>
+        <signal name="TargetLost">
+            <arg type="o"/>
+        </signal>
+        <signal name="HandoverStarted"/>
+        <signal name="HandoverCarrierSelected">
+            <arg type="s"/>
+        </signal>
+        <signal name="HandoverCompleted">
+            <arg type="s"/>
+            <arg type="v"/>
+        </signal>
+        <signal name="HandoverFailed">
+            <arg type="s"/>
+        </signal>
+        <property name="State" type="s" access="readwrite"/>
+        <property name="Discovering" type="b" access="read"/>
+        <property name="TagTechnologies" type="as" access="read"/>
+    </interface>
+</node>

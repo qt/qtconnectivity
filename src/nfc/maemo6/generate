@@ -1,0 +1,8 @@
+#!/bin/sh
+
+qdbusxml2cpp -p adapter_interface_p.h:adapter_interface.cpp com.nokia.nfc.Adapter.xml
+
+qdbusxml2cpp -p target_interface_p.h:target_interface.cpp com.nokia.nfc.Target.xml
+qdbusxml2cpp -p tag_interface_p.h:tag_interface.cpp com.nokia.nfc.Tag.xml
+qdbusxml2cpp -p device_interface_p.h:device_interface.cpp com.nokia.nfc.Device.xml
+

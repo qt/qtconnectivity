@@ -1,0 +1,22 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/foo">
+    <interface name="com.nokia.nfc.LLCPRequestor">
+        <method name="Accept">
+            <arg type="v" direction="in"/>
+            <arg type="v" direction="in"/>
+            <arg type="h" direction="in"/>
+            <arg type="a{sv}" direction="in"/>
+        </method>
+        <method name="Connect">
+            <arg type="v" direction="in"/>
+            <arg type="v" direction="in"/>
+            <arg type="h" direction="in"/>
+            <arg type="a{sv}" direction="in"/>
+        </method>
+        <method name="Socket">
+            <arg type="v" direction="in"/>
+            <arg type="h" direction="in"/>
+            <arg type="a{sv}" direction="in"/>
+        </method>
+    </interface>
+</node>

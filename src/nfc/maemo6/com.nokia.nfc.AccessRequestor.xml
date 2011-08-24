@@ -1,0 +1,14 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/foo">
+    <interface name="com.nokia.nfc.AccessRequestor">
+        <method name="AccessFailed">
+            <arg type="o" direction="in"/>
+            <arg type="s" direction="in"/>
+            <arg type="s" direction="in"/>
+        </method>
+        <method name="AccessGranted">
+            <arg type="o" direction="in"/>
+            <arg type="s" direction="in"/>
+        </method>
+    </interface>
+</node>

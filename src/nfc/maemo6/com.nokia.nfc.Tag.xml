@@ -1,0 +1,28 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/nokia/nfc/0/nfc0/target_DE_AD_BE_EF">
+    <interface name="com.nokia.nfc.Tag">
+        <method name="GetProperties">
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+        </method>
+        <method name="SetProperty">
+            <arg type="s" direction="in"/>
+            <arg type="v" direction="in"/>
+        </method>
+        <method name="ReadNDEFData">
+            <arg type="aay" direction="out"/>
+            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QList&lt;QByteArray&gt;"/>
+        </method>
+        <method name="WriteNDEFData">
+            <arg type="aay" direction="in"/>
+            <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="QList&lt;QByteArray&gt;"/>
+        </method>
+        <signal name="PropertyChanged">
+            <arg type="s"/>
+            <arg type="v"/>
+        </signal>
+        <property name="UID" type="s" access="read"/>
+        <property name="Technology" type="s" access="read"/>
+    </interface>
+</node>
+

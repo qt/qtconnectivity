@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SFW version="1.1">
+<service>
+    <name>nfctestserviceprovider</name>
+    <ipcaddress>nfctestserviceprovider</ipcaddress>
+    <description>NFC serive provider</description>
+    <interface>
+        <name>com.nokia.qt.nfc.NdefMessageHandler</name>
+        <version>1.0</version>
+        <description>nfc service provider</description>
+        <capabilities></capabilities>
+        <customproperty key="datatype">urn:nfc:ext:R||abc</customproperty>
+    </interface>
+</service>
+</SFW>

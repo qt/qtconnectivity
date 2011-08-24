@@ -1,0 +1,34 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/nokia/nfc/0/nfc0/se0">
+    <interface name="com.nokia.nfc.SecureElement">
+        <method name="GetProperties">
+            <arg type="a{sv}" direction="out"/>
+            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+        </method>
+        <method name="RequestAccess"/>
+        <method name="ReleaseAccess"/>
+        <method name="Activate"/>
+        <method name="Deactivate"/>
+        <method name="SetActivationLevel">
+            <arg type="v" direction="in"/>
+        </method>
+        <method name="RawRequest">
+            <arg type="ay" direction="in"/>
+            <arg type="ay" direction="out"/>
+        </method>
+        <signal name="PropertyChanged">
+            <arg type="s"/>
+            <arg type="v"/>
+        </signal>
+        <signal name="TransactionStarted">
+            <arg type="s"/>
+        </signal>
+        <signal name="TransactionEnded">
+            <arg type="s"/>
+            <arg type="s"/>
+        </signal>
+        <property name="State" type="s" access="read"/>
+        <property name="ActivationLevel" type="s" access="read"/>
+    </interface>
+</node>
+
