@@ -24,7 +24,7 @@
 #
 %dependencies = (
     "qtbase" => "refs/heads/master",
-    "qtserviceframework" => "refs/heads/master",
+    "qtsystems" => "refs/heads/master",
 );
 
 # Compile tests
