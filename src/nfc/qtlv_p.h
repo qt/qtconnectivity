@@ -53,7 +53,7 @@
 QT_BEGIN_HEADER
 
 class QNearFieldTarget;
-class QM_AUTOTEST_EXPORT QTlvReader
+class Q_AUTOTEST_EXPORT QTlvReader
 {
 public:
     explicit QTlvReader(QNearFieldTarget *target);
