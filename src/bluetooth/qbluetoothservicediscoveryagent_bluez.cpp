@@ -48,9 +48,9 @@
 
 #include <QtDBus/QDBusPendingCallWatcher>
 
-//#define QTM_SERVICEDISCOVERY_DEBUG
+//#define QT_SERVICEDISCOVERY_DEBUG
 
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
 #include <QtCore/QDebug>
 #endif
 
@@ -73,7 +73,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);    
 
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
     qDebug() << "Full discovery on: " << address.toString();
 #endif
 
@@ -106,7 +106,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
 void QBluetoothServiceDiscoveryAgentPrivate::stop()
 {
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
     qDebug() << Q_FUNC_INFO << "Stop called";
 #endif
     if(device){
@@ -128,7 +128,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
     const QBluetoothAddress &address = watcher->property("_q_BTaddress").value<QBluetoothAddress>();
 
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
     qDebug() << Q_FUNC_INFO << "created" << address.toString();
 #endif
 
@@ -136,7 +136,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     if (deviceObjectPath.isError()) {
         if (deviceObjectPath.error().name() != QLatin1String("org.bluez.Error.AlreadyExists")) {
             _q_serviceDiscoveryFinished();
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
             qDebug() << "Create device failed Error: " << error << deviceObjectPath.error().name();
 #endif
             return;
@@ -151,7 +151,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
                 emit q->error(error);
             }
             _q_serviceDiscoveryFinished();
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
             qDebug() << "Can't find device after creation Error: " << error << deviceObjectPath.error().name();
 #endif
             return;
@@ -173,7 +173,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     foreach (const QBluetoothUuid &uuid, uuidFilter)
         pattern += uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}')) + QLatin1Char(' ');
 
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
     qDebug() << Q_FUNC_INFO << "Discover: " << pattern.trimmed();
 #endif
     QDBusPendingReply<ServiceMap> discoverReply = device->DiscoverServices(pattern.trimmed());
@@ -185,13 +185,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingCallWatcher *watcher)
 {
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
     qDebug() << Q_FUNC_INFO;
 #endif
 
     QDBusPendingReply<ServiceMap> reply = *watcher;
     if (reply.isError()) {
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
         qDebug() << "discoveredServices error: " << error << reply.error().message();
 #endif
         watcher->deleteLater();
@@ -207,14 +207,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
     ServiceMap map = reply.value();
 
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
     qDebug() << "Parsing xml" << discoveredDevices.at(0).address().toString() << discoveredDevices.count() << map.count();
 #endif
 
     foreach (const QString &record, reply.value()) {
         QXmlStreamReader xml(record);
 
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
       //  qDebug() << "Service xml" << record;
 #endif
 
@@ -243,7 +243,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         Q_Q(QBluetoothServiceDiscoveryAgent);
 
         discoveredServices.append(serviceInfo);
-#ifdef QTM_SERVICEDISCOVERY_DEBUG
+#ifdef QT_SERVICEDISCOVERY_DEBUG
         qDebug() << "Discovered services" << discoveredDevices.at(0).address().toString();
 #endif
         emit q->serviceDiscovered(serviceInfo);
