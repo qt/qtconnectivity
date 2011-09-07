@@ -15,8 +15,6 @@ DEPENDPATH += ../common
 INCLUDEPATH += ../../../src/global
 DEPENDPATH += ../../../src/global
 
-QMAKE_LIBDIR += $$QT_MOBILITY_BUILD_TREE/lib
-
 HEADERS += ../common/qautomsgbox.h
 SOURCES += tst_qcontenthandler.cpp \
         ../common/qautomsgbox.cpp

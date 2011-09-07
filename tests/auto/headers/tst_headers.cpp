@@ -39,54 +39,18 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qbluetoothdevicediscoveryagent_p.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
+#include <QtTest/QtTest>
 
-#define QT_DEVICEDISCOVERY_DEBUG
-
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
-
+class tst_HeadersClean: public QObject
 {
-}
+    Q_OBJECT
 
-QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
-{
-}
+private slots:
+    void mocRun()
+    {
+        QVERIFY(true);
+    }
+};
 
-bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
-{
-    return false;
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
-{
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::stop()
-{
-}
-#ifdef QT_BLUEZ_BLUETOOTH
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &address,
-                                                           const QVariantMap &dict)
-{
-    Q_UNUSED(address);
-    Q_UNUSED(dict);
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &name,
-                                                               const QDBusVariant &value)
-{    
-    Q_UNUSED(name);
-    Q_UNUSED(value);
-}
-#endif
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-void _q_newDeviceFound(const QBluetoothDeviceInfo &device)
-{
-
-}
-#endif
-
+QTEST_MAIN(tst_HeadersClean)
+#include "tst_headers.moc"

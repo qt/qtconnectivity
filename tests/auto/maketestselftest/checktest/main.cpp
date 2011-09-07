@@ -39,54 +39,61 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qbluetoothdevicediscoveryagent_p.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
+#include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QStringList>
 
-#define QT_DEVICEDISCOVERY_DEBUG
+#include <stdio.h>
+#include <stdlib.h>
 
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
-
+void fail(QString const& message)
 {
+    printf("CHECKTEST FAIL: %s\n", qPrintable(message));
+    exit(0);
 }
 
-QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
+void pass(QString const& message)
 {
+    printf("CHECKTEST PASS: %s\n", qPrintable(message));
+    exit(0);
 }
 
-bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
+int main(int argc, char** argv)
 {
-    return false;
-}
+    QCoreApplication app(argc, argv);
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
-{
-}
+    QStringList args = app.arguments();
+    args.removeFirst(); // ourself
 
-void QBluetoothDeviceDiscoveryAgentPrivate::stop()
-{
-}
-#ifdef QT_BLUEZ_BLUETOOTH
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &address,
-                                                           const QVariantMap &dict)
-{
-    Q_UNUSED(address);
-    Q_UNUSED(dict);
-}
+    QString args_quoted = QString("'%1'").arg(args.join("','"));
 
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &name,
-                                                               const QDBusVariant &value)
-{    
-    Q_UNUSED(name);
-    Q_UNUSED(value);
-}
+#ifdef Q_WS_QWS
+    {
+        // for QWS we expect tests to be run as the QWS server
+        QString qws = args.takeLast();
+        if (qws != "-qws") {
+            fail(QString("Expected test to be run with `-qws', but it wasn't; args: %1").arg(args_quoted));
+        }
+    }
 #endif
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-void _q_newDeviceFound(const QBluetoothDeviceInfo &device)
-{
+    if (args.count() != 1) {
+        fail(QString("These arguments are not what I expected: %1").arg(args_quoted));
+    }
 
+    QString test = args.at(0);
+
+    QFileInfo testfile(test);
+    if (!testfile.exists()) {
+        fail(QString("File %1 does not exist (my working directory is: %2, my args are: %3)")
+            .arg(test)
+            .arg(QDir::currentPath())
+            .arg(args_quoted)
+        );
+    }
+
+    pass(args_quoted);
 }
-#endif
 
