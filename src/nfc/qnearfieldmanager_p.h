@@ -54,7 +54,7 @@ QT_BEGIN_HEADER
 
 class QNdefFilter;
 
-class QM_AUTOTEST_EXPORT QNearFieldManagerPrivate : public QObject
+class Q_AUTOTEST_EXPORT QNearFieldManagerPrivate : public QObject
 {
     Q_OBJECT
 

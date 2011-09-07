@@ -69,15 +69,4 @@
 #  endif
 #endif
 
-#include <QtCore/qglobal.h>
-#if defined(QTM_BUILD_UNITTESTS) && (defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)) && defined(QT_MAKEDLL)
-#    define QM_AUTOTEST_EXPORT Q_DECL_EXPORT
-#elif defined(QTM_BUILD_UNITTESTS) && (defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)) && defined(QT_DLL)
-#    define QM_AUTOTEST_EXPORT Q_DECL_IMPORT
-#elif defined(QTM_BUILD_UNITTESTS) && !(defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)) && defined(QT_SHARED)
-#    define QM_AUTOTEST_EXPORT Q_DECL_EXPORT
-#else
-#    define QM_AUTOTEST_EXPORT
-#endif
-
 #endif // QTNFC_H
