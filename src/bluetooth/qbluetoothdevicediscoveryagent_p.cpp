@@ -44,7 +44,7 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
 
-#define QTM_DEVICEDISCOVERY_DEBUG
+#define QT_DEVICEDISCOVERY_DEBUG
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
 
