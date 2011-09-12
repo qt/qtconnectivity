@@ -42,13 +42,13 @@
 #ifndef QNDEFNFCTEXTRECORD_H
 #define QNDEFNFCTEXTRECORD_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <qndefrecord.h>
 
 QT_BEGIN_HEADER
 
-class Q_CONNECTIVITY_EXPORT QNdefNfcTextRecord : public QNdefRecord
+class Q_NFC_EXPORT QNdefNfcTextRecord : public QNdefRecord
 {
 public:
     Q_DECLARE_NDEF_RECORD(QNdefNfcTextRecord, QNdefRecord::NfcRtd, "T", QByteArray(1, char(0)))

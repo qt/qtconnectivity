@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHDEVICEDISCOVERYAGENT_H
 #define QBLUETOOTHDEVICEDISCOVERYAGENT_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QObject>
 
@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 
 class QBluetoothDeviceDiscoveryAgentPrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothDeviceDiscoveryAgent : public QObject
+class Q_BLUETOOTH_EXPORT QBluetoothDeviceDiscoveryAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType READ inquiryType WRITE setInquiryType)

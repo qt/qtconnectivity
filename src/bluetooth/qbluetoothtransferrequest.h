@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHTRANSFERREQUEST_H
 #define QBLUETOOTHTRANSFERREQUEST_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QVariant>
@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 class QBluetoothAddress;
 class QBluetoothTransferRequestPrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothTransferRequest
+class Q_BLUETOOTH_EXPORT QBluetoothTransferRequest
 {
 public:
     enum Attribute {

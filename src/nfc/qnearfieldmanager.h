@@ -42,7 +42,7 @@
 #ifndef QNEARFIELDMANAGER_H
 #define QNEARFIELDMANAGER_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QObject>
 
@@ -53,7 +53,7 @@
 QT_BEGIN_HEADER
 
 class QNearFieldManagerPrivate;
-class Q_CONNECTIVITY_EXPORT QNearFieldManager : public QObject
+class Q_NFC_EXPORT QNearFieldManager : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QNearFieldManager)

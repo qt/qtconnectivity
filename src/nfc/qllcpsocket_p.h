@@ -42,7 +42,7 @@
 #ifndef QLLCPSOCKET_P_H
 #define QLLCPSOCKET_P_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include "qllcpsocket.h"
 

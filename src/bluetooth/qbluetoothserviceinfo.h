@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHSERVICEINFO_H
 #define QBLUETOOTHSERVICEINFO_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <qbluetoothuuid.h>
 
@@ -57,7 +57,7 @@ QT_BEGIN_HEADER
 class QBluetoothServiceInfoPrivate;
 class QBluetoothDeviceInfo;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothServiceInfo
+class Q_BLUETOOTH_EXPORT QBluetoothServiceInfo
 {
 public:
     enum AttributeId {
@@ -140,7 +140,7 @@ public:
     bool unregisterService() const;
 
 protected:
-    friend Q_CONNECTIVITY_EXPORT QDebug operator<<(QDebug, const QBluetoothServiceInfo &);
+    friend Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, const QBluetoothServiceInfo &);
 
 protected:
     QBluetoothServiceInfoPrivate *d_ptr;

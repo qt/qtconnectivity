@@ -42,7 +42,7 @@
 #ifndef QNEARFIELDTARGET_P_H
 #define QNEARFIELDTARGET_P_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include "qnearfieldtarget.h"
 

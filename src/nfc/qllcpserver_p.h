@@ -42,7 +42,7 @@
 #ifndef QLLCPSERVER_P_H
 #define QLLCPSERVER_P_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include "qllcpserver.h"
 
