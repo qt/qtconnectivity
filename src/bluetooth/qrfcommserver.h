@@ -42,7 +42,7 @@
 #ifndef QRFCOMMSERVER_H
 #define QRFCOMMSERVER_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QObject>
 
@@ -55,7 +55,7 @@ QT_BEGIN_HEADER
 class QRfcommServerPrivate;
 class QBluetoothSocket;
 
-class Q_CONNECTIVITY_EXPORT QRfcommServer : public QObject
+class Q_BLUETOOTH_EXPORT QRfcommServer : public QObject
 {
     Q_OBJECT
 

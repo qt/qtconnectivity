@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHTRANSFERMANAGER_H
 #define QBLUETOOTHTRANSFERMANAGER_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 #include <qbluetoothaddress.h>
 
 #include <QtCore/QObject>
@@ -55,7 +55,7 @@ class QBluetoothTransferReply;
 class QBluetoothTransferRequest;
 class QBluetoothTranferManagerPrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothTransferManager : public QObject
+class Q_BLUETOOTH_EXPORT QBluetoothTransferManager : public QObject
 {
     Q_OBJECT
 

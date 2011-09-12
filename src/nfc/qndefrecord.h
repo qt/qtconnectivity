@@ -42,7 +42,7 @@
 #ifndef QNDEFRECORD_H
 #define QNDEFRECORD_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QSharedDataPointer>
 #include <QtCore/QByteArray>
@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 
 class QNdefRecordPrivate;
 
-class Q_CONNECTIVITY_EXPORT QNdefRecord
+class Q_NFC_EXPORT QNdefRecord
 {
 public:
     enum TypeNameFormat {

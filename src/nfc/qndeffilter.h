@@ -42,7 +42,7 @@
 #ifndef QNDEFFILTER_H
 #define QNDEFFILTER_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QSharedDataPointer>
 
@@ -51,7 +51,7 @@
 QT_BEGIN_HEADER
 
 class QNdefFilterPrivate;
-class Q_CONNECTIVITY_EXPORT QNdefFilter
+class Q_NFC_EXPORT QNdefFilter
 {
 public:
     QNdefFilter();

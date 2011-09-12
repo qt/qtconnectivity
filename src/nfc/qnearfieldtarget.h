@@ -43,7 +43,7 @@
 #ifndef QNEARFIELDTARGET_H
 #define QNEARFIELDTARGET_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
@@ -58,7 +58,7 @@ QT_BEGIN_HEADER
 class QNdefMessage;
 class QNearFieldTargetPrivate;
 
-class Q_CONNECTIVITY_EXPORT QNearFieldTarget : public QObject
+class Q_NFC_EXPORT QNearFieldTarget : public QObject
 {
     Q_OBJECT
 
@@ -96,7 +96,7 @@ public:
     };
 
     class RequestIdPrivate;
-    class Q_CONNECTIVITY_EXPORT RequestId
+    class Q_NFC_EXPORT RequestId
     {
     public:
         RequestId();
@@ -160,7 +160,7 @@ private:
     QNearFieldTargetPrivate *d_ptr;
 };
 
-Q_CONNECTIVITY_EXPORT quint16 qNfcChecksum(const char * data, uint len);
+Q_NFC_EXPORT quint16 qNfcChecksum(const char * data, uint len);
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldTarget::AccessMethods)
 

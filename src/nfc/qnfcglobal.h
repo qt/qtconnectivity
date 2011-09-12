@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtConnectivity module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -38,69 +38,46 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QTNFC_H
+#define QTNFC_H
 
-#ifndef QL2CAPSERVER_H
-#define QL2CAPSERVER_H
+#include <QtCore/qglobal.h>
 
-#include "qbluetoothglobal.h"
-
-#include <QObject>
-
-#include <qbluetoothaddress.h>
-#include <qbluetooth.h>
-#include <qbluetoothsocket.h>
-
-QT_BEGIN_HEADER
-
-class QL2capServerPrivate;
-class QBluetoothSocket;
-
-class Q_BLUETOOTH_EXPORT QL2capServer : public QObject
-{
-    Q_OBJECT
-
-public:
-    QL2capServer(QObject *parent = 0);
-    ~QL2capServer();
-
-    void close();
-
-    bool listen(const QBluetoothAddress &address = QBluetoothAddress(), quint16 port = 0);
-    bool isListening() const;
-
-    void setMaxPendingConnections(int numConnections);
-    int maxPendingConnections() const;
-
-    bool hasPendingConnections() const;
-    QBluetoothSocket *nextPendingConnection();
-
-    QBluetoothAddress serverAddress() const;
-    quint16 serverPort() const;
-
-    void setSecurityFlags(QBluetooth::SecurityFlags security);
-    QBluetooth::SecurityFlags securityFlags() const;
-
-signals:
-    void newConnection();
-
-protected:
-    QL2capServerPrivate *d_ptr;
-
-private:
-    Q_DECLARE_PRIVATE(QL2capServer)
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_connected())
-    Q_PRIVATE_SLOT(d_func(), void _q_socketError(QBluetoothSocket::SocketError err))
-    Q_PRIVATE_SLOT(d_func(), void _q_disconnected())
-#endif //QT_SYMBIAN_BLUETOOTH
-    
-#ifdef QT_BLUEZ_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_newConnection())
+#if defined(Q_OS_WIN)
+#  if defined(QT_NODLL)
+#    undef QT_MAKEDLL
+#    undef QT_DLL
+#  elif defined(QT_MAKEDLL)
+#    if defined(QT_DLL)
+#      undef QT_DLL
+#    endif
+#    if defined(QT_BUILD_BT_LIB)
+#      define Q_NFC_EXPORT Q_DECL_EXPORT
+#    else
+#      define Q_NFC_EXPORT Q_DECL_IMPORT
+#    endif
+#  elif defined(QT_DLL)
+#    define Q_NFC_EXPORT Q_DECL_EXPORT
+#  endif
 #endif
 
-};
-
-QT_END_HEADER
-
+#if !defined(Q_NFC_EXPORT)
+#  if defined(QT_SHARED)
+#    define Q_NFC_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_NFC_EXPORT
+#  endif
 #endif
+
+#include <QtCore/qglobal.h>
+#if defined(QTM_BUILD_UNITTESTS) && (defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)) && defined(QT_MAKEDLL)
+#    define QM_AUTOTEST_EXPORT Q_DECL_EXPORT
+#elif defined(QTM_BUILD_UNITTESTS) && (defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)) && defined(QT_DLL)
+#    define QM_AUTOTEST_EXPORT Q_DECL_IMPORT
+#elif defined(QTM_BUILD_UNITTESTS) && !(defined(Q_OS_WIN) || defined(Q_OS_SYMBIAN)) && defined(QT_SHARED)
+#    define QM_AUTOTEST_EXPORT Q_DECL_EXPORT
+#else
+#    define QM_AUTOTEST_EXPORT
+#endif
+
+#endif // QTNFC_H

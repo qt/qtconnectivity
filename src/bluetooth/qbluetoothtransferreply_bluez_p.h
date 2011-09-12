@@ -60,7 +60,7 @@ class OrgOpenobexClientInterface;
 class OrgOpenobexManagerInterface;
 class AgentAdaptor;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothTransferReplyBluez : public QBluetoothTransferReply
+class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyBluez : public QBluetoothTransferReply
 {
     Q_OBJECT
 
