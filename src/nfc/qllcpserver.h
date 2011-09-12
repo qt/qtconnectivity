@@ -42,7 +42,7 @@
 #ifndef QLLCPSERVER_H
 #define QLLCPSERVER_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <qllcpsocket.h>
 
@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 
 class QLlcpServerPrivate;
 
-class Q_CONNECTIVITY_EXPORT QLlcpServer : public QObject
+class Q_NFC_EXPORT QLlcpServer : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QLlcpServer)

@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHUUID_H
 #define QBLUETOOTHUUID_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QMetaType>
@@ -57,7 +57,7 @@ struct quint128
     quint8 data[16];
 };
 
-class Q_CONNECTIVITY_EXPORT QBluetoothUuid : public QUuid
+class Q_BLUETOOTH_EXPORT QBluetoothUuid : public QUuid
 {
 public:
     enum ProtocolUuid {

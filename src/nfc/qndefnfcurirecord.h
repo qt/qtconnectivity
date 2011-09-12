@@ -42,7 +42,7 @@
 #ifndef QNDEFNFCURIRECORD_H
 #define QNDEFNFCURIRECORD_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <qndefrecord.h>
 
@@ -50,7 +50,7 @@ QT_FORWARD_DECLARE_CLASS(QUrl)
 
 QT_BEGIN_HEADER
 
-class Q_CONNECTIVITY_EXPORT QNdefNfcUriRecord : public QNdefRecord
+class Q_NFC_EXPORT QNdefNfcUriRecord : public QNdefRecord
 {
 public:
     Q_DECLARE_NDEF_RECORD(QNdefNfcUriRecord, QNdefRecord::NfcRtd, "U", QByteArray(0, char(0)))

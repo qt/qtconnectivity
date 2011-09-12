@@ -42,7 +42,7 @@
 #ifndef QL2CAPSERVER_P_H
 #define QL2CAPSERVER_P_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 #include <qbluetoothsocket.h>
 
 #ifdef QT_SYMBIAN_BLUETOOTH

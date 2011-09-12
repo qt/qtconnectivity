@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHSOCKET_H
 #define QBLUETOOTHSOCKET_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothuuid.h>
@@ -55,7 +55,7 @@ QT_BEGIN_HEADER
 class QBluetoothSocketPrivate;
 class QBluetoothServiceInfo;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothSocket : public QIODevice
+class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 {
     Q_OBJECT    
     Q_DECLARE_PRIVATE(QBluetoothSocket)
@@ -172,8 +172,8 @@ private:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-Q_CONNECTIVITY_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketError);
-Q_CONNECTIVITY_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketState);
+Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketError);
+Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketState);
 #endif
 
 QT_END_HEADER

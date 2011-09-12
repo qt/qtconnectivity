@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHADDRESS_H
 #define QBLUETOOTHADDRESS_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 
 class QBluetoothAddressPrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothAddress
+class Q_BLUETOOTH_EXPORT QBluetoothAddress
 {
 public:
     QBluetoothAddress();

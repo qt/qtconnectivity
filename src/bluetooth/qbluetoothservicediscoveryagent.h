@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHSERVICEDISCOVERYAGENT_H
 #define QBLUETOOTHSERVICEDISCOVERYAGENT_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QObject>
 
@@ -54,7 +54,7 @@ QT_BEGIN_HEADER
 class QBluetoothAddress;
 class QBluetoothServiceDiscoveryAgentPrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothServiceDiscoveryAgent : public QObject
+class Q_BLUETOOTH_EXPORT QBluetoothServiceDiscoveryAgent : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QBluetoothServiceDiscoveryAgent)

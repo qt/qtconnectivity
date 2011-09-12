@@ -42,7 +42,7 @@
 #ifndef QNDEFMESSAGE_H
 #define QNDEFMESSAGE_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <qndefrecord.h>
 
@@ -53,7 +53,7 @@
 
 QT_BEGIN_HEADER
 
-class Q_CONNECTIVITY_EXPORT QNdefMessage : public QList<QNdefRecord>
+class Q_NFC_EXPORT QNdefMessage : public QList<QNdefRecord>
 {
 public:
     inline QNdefMessage() { }

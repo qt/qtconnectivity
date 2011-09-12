@@ -43,7 +43,7 @@
 #ifndef QNDEFRECORD_P_H
 #define QNDEFRECORD_P_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QSharedData>
 #include <QtCore/QByteArray>
