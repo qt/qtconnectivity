@@ -42,7 +42,7 @@
 #ifndef QLLCPSOCKET_H
 #define QLLCPSOCKET_H
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QIODevice>
 #include <QtNetwork/QAbstractSocket>
@@ -52,7 +52,7 @@ QT_BEGIN_HEADER
 class QNearFieldTarget;
 class QLlcpSocketPrivate;
 
-class Q_CONNECTIVITY_EXPORT QLlcpSocket : public QIODevice
+class Q_NFC_EXPORT QLlcpSocket : public QIODevice
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QLlcpSocket)

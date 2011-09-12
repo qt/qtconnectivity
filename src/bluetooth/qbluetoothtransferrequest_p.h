@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHTRANSFERREQUESTPRIVATE_H
 #define QBLUETOOTHTRANSFERREQUESTPRIVATE_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 #include "qbluetoothtransferrequest.h"
 
 QT_BEGIN_HEADER

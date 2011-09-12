@@ -43,7 +43,7 @@
 #ifndef QBLUETOOTHLOCALDEVICE_H
 #define QBLUETOOTHLOCALDEVICE_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QObject>
 #include <QtCore/QList>
@@ -55,7 +55,7 @@ QT_BEGIN_HEADER
 
 class QBluetoothLocalDevicePrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothHostInfo
+class Q_BLUETOOTH_EXPORT QBluetoothHostInfo
 {
 public:
     QBluetoothHostInfo() { };
@@ -77,7 +77,7 @@ private:
 };
 
 
-class Q_CONNECTIVITY_EXPORT QBluetoothLocalDevice : public QObject
+class Q_BLUETOOTH_EXPORT QBluetoothLocalDevice : public QObject
 {
     Q_OBJECT
     Q_ENUMS(Pairing)

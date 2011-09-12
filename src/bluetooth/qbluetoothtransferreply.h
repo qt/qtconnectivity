@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 
 class QBluetoothTransferReplyPrivate;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothTransferReply : public QObject
+class Q_BLUETOOTH_EXPORT QBluetoothTransferReply : public QObject
 {
     Q_OBJECT
 

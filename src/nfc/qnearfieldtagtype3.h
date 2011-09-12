@@ -49,7 +49,7 @@
 
 QT_BEGIN_HEADER
 
-class Q_CONNECTIVITY_EXPORT QNearFieldTagType3 : public QNearFieldTarget
+class Q_NFC_EXPORT QNearFieldTagType3 : public QNearFieldTarget
 {
     Q_OBJECT
 

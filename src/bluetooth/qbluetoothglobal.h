@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QTCONNECTIVITY_H
-#define QTCONNECTIVITY_H
+#ifndef QTBLUETOOTH_H
+#define QTBLUETOOTH_H
 
 #include <QtCore/qglobal.h>
 
@@ -52,20 +52,20 @@
 #      undef QT_DLL
 #    endif
 #    if defined(QT_BUILD_BT_LIB)
-#      define Q_CONNECTIVITY_EXPORT Q_DECL_EXPORT
+#      define Q_BLUETOOTH_EXPORT Q_DECL_EXPORT
 #    else
-#      define Q_CONNECTIVITY_EXPORT Q_DECL_IMPORT
+#      define Q_BLUETOOTH_EXPORT Q_DECL_IMPORT
 #    endif
 #  elif defined(QT_DLL)
-#    define Q_CONNECTIVITY_EXPORT Q_DECL_EXPORT
+#    define Q_BLUETOOTH_EXPORT Q_DECL_EXPORT
 #  endif
 #endif
 
-#if !defined(Q_CONNECTIVITY_EXPORT)
+#if !defined(Q_BLUETOOTH_EXPORT)
 #  if defined(QT_SHARED)
-#    define Q_CONNECTIVITY_EXPORT Q_DECL_EXPORT
+#    define Q_BLUETOOTH_EXPORT Q_DECL_EXPORT
 #  else
-#    define Q_CONNECTIVITY_EXPORT
+#    define Q_BLUETOOTH_EXPORT
 #  endif
 #endif
 
@@ -80,4 +80,4 @@
 #    define QM_AUTOTEST_EXPORT
 #endif
 
-#endif // QTCONNECTIVITY_H
+#endif // QTBLUETOOTH_H

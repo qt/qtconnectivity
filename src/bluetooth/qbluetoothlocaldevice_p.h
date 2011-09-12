@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHLOCALDEVICE_P_H
 #define QBLUETOOTHLOCALDEVICE_P_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include "qbluetoothlocaldevice.h"
 

@@ -51,7 +51,7 @@ QT_BEGIN_HEADER
 
 class QDeclarativeNdefRecordPrivate;
 
-class Q_CONNECTIVITY_EXPORT QDeclarativeNdefRecord : public QObject
+class Q_NFC_EXPORT QDeclarativeNdefRecord : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarativeNdefRecord)
@@ -75,11 +75,11 @@ private:
     QDeclarativeNdefRecordPrivate *d_ptr;
 };
 
-void Q_CONNECTIVITY_EXPORT qRegisterNdefRecordTypeHelper(const QMetaObject *metaObject,
+void Q_NFC_EXPORT qRegisterNdefRecordTypeHelper(const QMetaObject *metaObject,
                                                          QNdefRecord::TypeNameFormat typeNameFormat,
                                                          const QByteArray &type);
 
-Q_CONNECTIVITY_EXPORT QDeclarativeNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record);
+Q_NFC_EXPORT QDeclarativeNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record);
 
 template<typename T>
 bool qRegisterNdefRecordType(QNdefRecord::TypeNameFormat typeNameFormat, const QByteArray &type)

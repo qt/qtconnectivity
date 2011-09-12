@@ -46,7 +46,7 @@
 #include "qnearfieldtarget.h"
 #include "qndefrecord.h"
 
-#include "../qtconnectivityglobal.h"
+#include "qnfcglobal.h"
 
 #include <QtCore/QObject>
 

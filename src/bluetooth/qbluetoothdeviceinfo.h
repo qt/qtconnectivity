@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHDEVICEINFO_H
 #define QBLUETOOTHDEVICEINFO_H
 
-#include "../qtconnectivityglobal.h"
+#include "qbluetoothglobal.h"
 
 #include <QString>
 
@@ -52,7 +52,7 @@ class QBluetoothDeviceInfoPrivate;
 class QBluetoothAddress;
 class QBluetoothUuid;
 
-class Q_CONNECTIVITY_EXPORT QBluetoothDeviceInfo
+class Q_BLUETOOTH_EXPORT QBluetoothDeviceInfo
 {
 public:
     enum MajorDeviceClass {
