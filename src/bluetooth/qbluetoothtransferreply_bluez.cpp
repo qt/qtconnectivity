@@ -79,6 +79,7 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QOb
         qDebug() << "Failed Creating dbus objects";
 
 #ifdef NOKIA_BT_SERVICES
+    m_obexService = NULL;
     connectToObexServerService();
 #endif
 }
@@ -133,11 +134,10 @@ void QBluetoothTransferReplyBluez::connectToObexServerService()
     }
     if (m_obexService) {
         qDebug() << "connected to service:" << m_obexService;
+        connect(m_obexService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
     } else {
         qDebug() << "failed to connect to Obex server service";
     }
-
-    connect(m_obexService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
 }
 #endif
 
