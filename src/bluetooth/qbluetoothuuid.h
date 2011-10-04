@@ -114,6 +114,7 @@ public:
         ImagingResponder = 0x111b,
         ImagingAutomaticArchive = 0x111c,
         Handsfree = 0x111d,
+        HandsfreeUnit = 0x111e,
         HandsfreeAudioGateway = 0x111f,
         DirectPrintingReferenceObjectsService = 0x1120,
         ReflectedUI = 0x1121,
