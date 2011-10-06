@@ -63,7 +63,7 @@ public:
         NoTargetAccess = 0x00,
         NdefReadTargetAccess = 0x01,
         NdefWriteTargetAccess = 0x02,
-        TagTypeSpecificTargetAccess = 0x04,
+        TagTypeSpecificTargetAccess = 0x04
     };
     Q_DECLARE_FLAGS(TargetAccessModes, TargetAccessMode)
 

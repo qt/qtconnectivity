@@ -345,7 +345,7 @@ void QTlvWriter::writeTlv(quint8 tagType, const QByteArray &data)
         if (length < 0xff) {
             m_buffer.append(quint8(length));
         } else {
-            m_buffer.append(0xff);
+            m_buffer.append(char(0xff));
             m_buffer.append(quint16(length) >> 8);
             m_buffer.append(quint16(length) & 0x00ff);
         }
