@@ -58,11 +58,11 @@ class QBluetoothLocalDevicePrivate;
 class Q_BLUETOOTH_EXPORT QBluetoothHostInfo
 {
 public:
-    QBluetoothHostInfo() { };
+    QBluetoothHostInfo() { }
     QBluetoothHostInfo(const QBluetoothHostInfo &other) {
         m_address = other.m_address;
         m_name = other.m_name;
-    };
+    }
 
     QBluetoothAddress getAddress() const { return m_address; }
     void setAddress(const QBluetoothAddress &address) { m_address = address; }

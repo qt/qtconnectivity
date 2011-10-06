@@ -51,13 +51,13 @@
 #    if defined(QT_DLL)
 #      undef QT_DLL
 #    endif
-#    if defined(QT_BUILD_BT_LIB)
+#    if defined(QT_BUILD_NFC_LIB)
 #      define Q_NFC_EXPORT Q_DECL_EXPORT
 #    else
 #      define Q_NFC_EXPORT Q_DECL_IMPORT
 #    endif
 #  elif defined(QT_DLL)
-#    define Q_NFC_EXPORT Q_DECL_EXPORT
+#    define Q_NFC_EXPORT Q_DECL_IMPORT
 #  endif
 #endif
 

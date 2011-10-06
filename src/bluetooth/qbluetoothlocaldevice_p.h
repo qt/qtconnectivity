@@ -66,7 +66,7 @@ QT_BEGIN_HEADER
 
 class QBluetoothAddress;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject,
                                      protected QDBusContext
 {
@@ -104,9 +104,9 @@ private:
 
     QBluetoothLocalDevice *q_ptr;
 };
-#endif
 
-#ifdef QT_SYMBIAN_BLUETOOTH
+#elif defined(QT_SYMBIAN_BLUETOOTH)
+
 class QBluetoothLocalDevicePrivate
         : public MBTEngSettingsObserver
 {
@@ -143,6 +143,10 @@ private:
 protected:
     QBluetoothLocalDevice *q_ptr;
 
+};
+#else
+class QBluetoothLocalDevicePrivate : public QObject
+{
 };
 #endif
 
