@@ -42,8 +42,8 @@
 #include <QtTest/QtTest>
 
 #include "../qconnectivitytestcommon.h"
-#include "qnearfieldmanager_emulator_p.h"
 
+#include <private/qnearfieldmanager_emulator_p.h>
 #include <qnearfieldmanager.h>
 #include <qndefmessage.h>
 #include <qnearfieldtagtype2.h>
