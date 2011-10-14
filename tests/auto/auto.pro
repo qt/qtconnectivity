@@ -1,38 +1,47 @@
 TEMPLATE = subdirs
 
-# Required by tst_maketestselftest::tests_pro_files
-# Mark the following non unit test directories ok
-# nfcdata
+SUBDIRS += \
+    qbluetoothaddress \
+    qbluetoothdevicediscoveryagent \
+    qbluetoothdeviceinfo \
+    qbluetoothlocaldevice \
+    qbluetoothservicediscoveryagent \
+    qbluetoothserviceinfo \
+    qbluetoothsocket \
+    qbluetoothtransfermanager \
+    qbluetoothtransferrequest \
+    qbluetoothuuid \
+    ql2capserver \
+    qndefmessage \
+    qndefrecord \
+    qnearfieldmanager \
+    qnearfieldtagtype1 \
+    qnearfieldtagtype2 \
+    qrfcommserver \
 
-#SUBDIRS += \
-#        qndefrecord \
-#        qndefmessage \
-#        qnearfieldtagtype1 \
-#        qnearfieldtagtype2 \
-#        qnearfieldmanager
+!contains(QT_CONFIG, bluetooth): SUBDIRS -= \
+    qbluetoothaddress \
+    qbluetoothdevicediscoveryagent \
+    qbluetoothdeviceinfo \
+    qbluetoothlocaldevice \
+    qbluetoothservicediscoveryagent \
+    qbluetoothserviceinfo \
+    qbluetoothsocket \
+    qbluetoothtransfermanager \
+    qbluetoothtransferrequest \
+    qbluetoothuuid \
+    ql2capserver \
 
-#!win32:SUBDIRS += \
-#        qbluetoothaddress\
-#        qbluetoothuuid\
-#        qbluetoothdeviceinfo\
-#        qbluetoothdevicediscoveryagent\
-#        qbluetoothserviceinfo\
-#        qbluetoothservicediscoveryagent\
-#        qbluetoothsocket\
-#        qrfcommserver \
-#        qbluetoothtransferrequest
+!contains(QT_CONFIG, nfc): SUBDIRS -= \
+    qndefmessage \
+    qndefrecord \
+    qnearfieldmanager \
+    qnearfieldtagtype1 \
+    qnearfieldtagtype2 \
 
-#enable autotests on symbian
-symbian:SUBDIRS += \
-        qbluetoothaddress\
-        qbluetoothuuid\
-        qbluetoothdeviceinfo\
-        qbluetoothdevicediscoveryagent\
-        qbluetoothserviceinfo\
-        qbluetoothservicediscoveryagent\
-        qbluetoothsocket\
-        qrfcommserver \
-        qbluetoothtransferrequest \
-        qbluetoothlocaldevice \
-        qbluetoothtransfermanager \
-        ql2capserver
+# QTBUG-22015 these do not compile.
+SUBDIRS -= \
+    qnearfieldmanager \
+    qnearfieldtagtype1 \
+    qnearfieldtagtype2 \
+

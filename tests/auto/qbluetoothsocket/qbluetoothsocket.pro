@@ -11,3 +11,5 @@ symbian: TARGET.CAPABILITY = NetworkControl ReadDeviceData LocalServices WriteDe
 
 OTHER_FILES += \
     README.txt
+
+CONFIG += insignificant_test    # QTBUG-22017
