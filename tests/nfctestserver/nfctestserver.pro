@@ -11,9 +11,7 @@ CONFIG -= app_bundle
 
 QMAKE_LIBS += -Wl,-rpath,$${QT.nfc.libs}
 
-QT = core nfc connectivity
-qtAddLibrary(QtTest)
-
+QT = core nfc
 
 TEMPLATE = app
 
