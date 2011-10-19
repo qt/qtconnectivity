@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,6 +49,8 @@
 #include <QtGui/private/qsimulatordata_p.h>
 
 #include <QtCore/QCoreApplication>
+
+QTNFC_BEGIN_NAMESPACE
 
 using namespace QtSimulatorPrivate;
 
@@ -202,3 +204,5 @@ void QNearFieldManagerPrivateImpl::targetLeavingProximity(const QByteArray &uid)
 
 #include "qnearfieldmanager_simulator.moc"
 #include "moc_qnearfieldmanager_simulator_p.cpp"
+
+QTNFC_END_NAMESPACE

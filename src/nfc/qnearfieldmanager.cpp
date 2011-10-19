@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -55,6 +55,8 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QMetaMethod>
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldManager
     \brief The QNearFieldManager class provides access to notifications for NFC events.
@@ -103,7 +105,7 @@
     and using system resources.
 
     The process of registering the handler is different on each platform. The platform specifics
-    are documented in the sections below. Qt Mobility provides a tool, \c {ndefhandlergen}, to
+    are documented in the sections below. QtNfc provides a tool, \c {ndefhandlergen}, to
     generate the platform specific registration files. The output of \c {ndefhandlergen -help} is
     reproduced here for convenience:
 
@@ -552,3 +554,5 @@ QNearFieldManager::TargetAccessModes QNearFieldManager::targetAccessModes() cons
 
 #include "moc_qnearfieldmanager.cpp"
 #include "moc_qnearfieldmanager_p.cpp"
+
+QTNFC_END_NAMESPACE

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -52,6 +52,8 @@
 #include <signal.h>
 
 using namespace com::nokia::nfc;
+
+QTNFC_BEGIN_NAMESPACE
 
 static QAtomicInt requestorId = 0;
 static const char * const requestorBasePath = "/com/nokia/nfc/llcpclient/";
@@ -636,3 +638,5 @@ void QLlcpSocketPrivate::initializeRequestor()
 }
 
 #include "moc_qllcpsocket_maemo6_p.cpp"
+
+QTNFC_END_NAMESPACE

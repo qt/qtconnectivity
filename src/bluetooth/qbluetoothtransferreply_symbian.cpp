@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothTransferReplySymbian::QBluetoothTransferReplySymbian(QIODevice *input,
     QBluetoothTransferManager::Operation operation, QObject *parent)
@@ -311,5 +313,7 @@ bool QBluetoothTransferReplySymbian::copyToTempFile(QIODevice *to, QIODevice *fr
     delete[] block;
     return true;
 }
+
+QTBLUETOOTH_END_NAMESPACE
 
 #include "moc_qbluetoothtransferreply_symbian_p.cpp"

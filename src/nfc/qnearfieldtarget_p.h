@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,6 +49,8 @@
 #include <QtCore/QMap>
 #include <QtCore/QSharedData>
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNearFieldTarget::RequestIdPrivate : public QSharedData
 {
 };
@@ -58,5 +60,7 @@ class QNearFieldTargetPrivate
 public:
     QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QNEARFIELDTARGET_P_H
