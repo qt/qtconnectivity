@@ -223,7 +223,7 @@ static void dumpServiceInfoAttributes(const QBluetoothServiceInfo &info)
 void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
 {
     if (devices.isEmpty())
-            QSKIP("This test requires an in-range bluetooth device", SkipAll);
+        QSKIP("This test requires an in-range bluetooth device");
 
     QTest::addColumn<QBluetoothDeviceInfo>("deviceInfo");
     QTest::addColumn<QList<QBluetoothUuid> >("uuidFilter");
@@ -252,7 +252,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     static int expected_failures = 0;
 
     if (devices.isEmpty())
-        QSKIP("This test requires an in-range bluetooth device", SkipAll);
+        QSKIP("This test requires an in-range bluetooth device");
 
     QFETCH(QBluetoothDeviceInfo, deviceInfo);
     QFETCH(QList<QBluetoothUuid>, uuidFilter);
