@@ -46,6 +46,8 @@
 
 #include "symbian/debug.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 QLLCPSocketState::QLLCPSocketState(QLlcpSocketPrivate* socket)
       :m_socket(socket)
 {}
@@ -549,3 +551,4 @@ void QLLCPSocketState::DisconnectFromService()
    BEGIN_END
 }
 
+QTNFC_END_NAMESPACE

@@ -44,6 +44,8 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothServiceDiscoveryAgent
     \brief The QBluetoothServiceDiscoveryAgent class provides an API for querying the services
@@ -408,5 +410,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
     startServiceDiscovery();
 }
 
-
 #include "moc_qbluetoothservicediscoveryagent.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

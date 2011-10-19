@@ -51,6 +51,8 @@ QT_FORWARD_DECLARE_CLASS(QIODevice)
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothTransferReply;
 class QBluetoothTransferRequest;
 class QBluetoothTranferManagerPrivate;
@@ -74,6 +76,8 @@ signals:
     void finished(QBluetoothTransferReply *reply);
 
 };
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

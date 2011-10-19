@@ -46,6 +46,8 @@
 
 #include "qllcpserver.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 class QLlcpServerPrivate 
 {
     Q_DECLARE_PUBLIC(QLlcpServer)
@@ -70,5 +72,7 @@ public:
 private:
     QLlcpServer *q_ptr;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QLLCPSERVER_P_H

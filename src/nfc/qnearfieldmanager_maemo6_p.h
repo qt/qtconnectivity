@@ -61,6 +61,8 @@ class ComNokiaNfcAdapterInterface;
 class NDEFHandlerAdaptor;
 class AccessRequestorAdaptor;
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNearFieldManagerPrivateImpl;
 
 class NdefHandler : public QObject
@@ -140,5 +142,7 @@ private:
 
     QMap<QString, QBasicTimer> m_pendingDetectedTargets;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QNEARFIELDMANAGER_MAEMO6_P_H

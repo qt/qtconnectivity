@@ -46,6 +46,8 @@
 
 #include <qllcpserver.h>
 
+QTNFC_USE_NAMESPACE
+
 class ServerController : public QObject
 {
     Q_OBJECT

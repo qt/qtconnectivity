@@ -49,6 +49,8 @@
 #include <qnearfieldtagtype1.h>
 #include <qndefnfctextrecord.h>
 
+QTNFC_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QNearFieldTarget*)
 
 class tst_QNearFieldTagType1 : public QObject

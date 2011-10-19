@@ -48,6 +48,8 @@
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
 
+QTBLUETOOTH_USE_NAMESPACE
+
 typedef QMap<int,QVariant> tst_QBluetoothTransferRequest_QParameterMap;
 Q_DECLARE_METATYPE(tst_QBluetoothTransferRequest_QParameterMap)
 

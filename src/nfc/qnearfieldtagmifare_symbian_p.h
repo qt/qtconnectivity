@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNdefMessage;
 
 class QNearFieldTagMifareSymbian : public QNearFieldTarget, private QNearFieldTagImpl<QNearFieldTagMifareSymbian>
@@ -91,6 +93,8 @@ signals:
 
     friend class QNearFieldTagImpl<QNearFieldTagMifareSymbian>;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

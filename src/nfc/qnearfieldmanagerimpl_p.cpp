@@ -43,6 +43,7 @@
 
 #include "qnearfieldmanagerimpl_p.h"
 
+QTNFC_BEGIN_NAMESPACE
 
 /*
     Constructs a new near field manager private implementation.
@@ -59,3 +60,4 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 }
 //#include "moc_qnearfieldmanagerimpl_p.cpp"
 
+QTNFC_END_NAMESPACE

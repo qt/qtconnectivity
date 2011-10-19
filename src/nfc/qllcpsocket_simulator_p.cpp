@@ -41,6 +41,8 @@
 
 #include "qllcpsocket_simulator_p.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 QLlcpSocketPrivate::QLlcpSocketPrivate(QLlcpSocket *q)
 :   q_ptr(q)
 {
@@ -184,3 +186,4 @@ bool QLlcpSocketPrivate::waitForDisconnected(int msecs)
     return false;
 }
 
+QTNFC_END_NAMESPACE

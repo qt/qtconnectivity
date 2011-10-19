@@ -43,6 +43,8 @@
 #include <QVariant>
 #include "qnearfieldtagmifare_symbian_p.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 QNearFieldTagMifareSymbian::QNearFieldTagMifareSymbian(CNearFieldNdefTarget *tag, QObject *parent)
                                 : QNearFieldTarget(parent), QNearFieldTagImpl(tag)
 {
@@ -96,3 +98,5 @@ bool QNearFieldTagMifareSymbian::waitForRequestCompleted(const RequestId &id, in
     return _waitForRequestCompleted(id, msecs);
 }
 #include "moc_qnearfieldtagmifare_symbian_p.cpp"
+
+QTNFC_END_NAMESPACE

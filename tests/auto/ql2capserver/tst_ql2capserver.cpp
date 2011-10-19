@@ -46,6 +46,8 @@
 #include <ql2capserver.h>
 #include <qbluetoothsocket.h>
 
+QTBLUETOOTH_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QBluetooth::SecurityFlags);
 
 // Max time to wait for connection

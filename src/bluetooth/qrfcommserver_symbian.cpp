@@ -51,6 +51,8 @@
 
 #include <QDebug>
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 QRfcommServerPrivate::QRfcommServerPrivate()
 : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
 {
@@ -282,3 +284,5 @@ QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
     Q_D(const QRfcommServer);
     return d->securityFlags;
 }
+
+QTBLUETOOTH_END_NAMESPACE

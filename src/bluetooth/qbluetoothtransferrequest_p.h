@@ -47,6 +47,8 @@
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothAddress;
 
 class QBluetoothTransferRequestPrivate
@@ -57,6 +59,8 @@ public:
     QBluetoothAddress m_address;
     QMap<int, QVariant> m_parameters;
 };
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

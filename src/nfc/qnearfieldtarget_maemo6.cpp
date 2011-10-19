@@ -41,6 +41,8 @@
 
 #include "qnearfieldtarget_maemo6_p.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 void PendingCallWatcher::addSendCommand(const QDBusPendingReply<QByteArray> &reply,
                                         const QNearFieldTarget::RequestId &id)
 {
@@ -174,3 +176,4 @@ int TagType4::memorySize() const
 
 #include <moc_qnearfieldtarget_maemo6_p.cpp>
 
+QTNFC_END_NAMESPACE

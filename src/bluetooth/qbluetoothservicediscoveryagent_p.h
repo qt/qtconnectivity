@@ -63,6 +63,8 @@ class QXmlStreamReader;
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothDeviceDiscoveryAgent;
 
 class QBluetoothServiceDiscoveryAgentPrivate
@@ -160,6 +162,8 @@ private:
 protected:
     QBluetoothServiceDiscoveryAgent *q_ptr;
 };
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

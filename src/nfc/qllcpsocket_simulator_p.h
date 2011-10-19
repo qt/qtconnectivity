@@ -46,6 +46,8 @@
 
 #include "qllcpsocket.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 class QLlcpSocketPrivate
 {
     Q_DECLARE_PUBLIC(QLlcpSocket)
@@ -87,5 +89,7 @@ public:
 private:
     QLlcpSocket *q_ptr;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QLLCPSOCKET_P_H

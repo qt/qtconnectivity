@@ -42,6 +42,8 @@
 #include "qndefmessage.h"
 #include "qndefrecord_p.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNdefMessage
     \brief The QNdefMessage class provides an NFC NDEF message.
@@ -317,3 +319,5 @@ QByteArray QNdefMessage::toByteArray() const
 
     return m;
 }
+
+QTNFC_END_NAMESPACE

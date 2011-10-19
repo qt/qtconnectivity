@@ -41,6 +41,8 @@
 #include "qdummyslot.h"
 #include "qnfctagtestcommon.h"
 
+QTNFC_USE_NAMESPACE
+
 QDummySlot::QDummySlot(QObject *parent) :
     QObject(parent)
 {

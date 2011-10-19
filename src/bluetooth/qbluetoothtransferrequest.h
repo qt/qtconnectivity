@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothAddress;
 class QBluetoothTransferRequestPrivate;
 
@@ -83,6 +85,8 @@ private:
     Q_DECLARE_PRIVATE(QBluetoothTransferRequest)
 
 };
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

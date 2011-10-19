@@ -58,6 +58,8 @@
 
 #include <QtCore/QSocketNotifier>
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
       socketType(QBluetoothSocket::UnknownSocketType),
@@ -547,3 +549,4 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return buffer.size();
 }
 
+QTBLUETOOTH_END_NAMESPACE

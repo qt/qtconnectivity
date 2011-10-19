@@ -54,6 +54,8 @@
 #include <qndefmessage.h>
 #include <qndefrecord.h>
 
+QTNFC_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QNearFieldTarget*)
 Q_DECLARE_METATYPE(QNearFieldTarget::Type)
 Q_DECLARE_METATYPE(QNdefFilter)

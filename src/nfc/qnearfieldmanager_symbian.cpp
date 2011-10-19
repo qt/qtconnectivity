@@ -50,6 +50,8 @@
 #include "symbian/debug.h"
 #include "symbian/nearfieldutility_symbian.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 Proxy contentHandlerProxy;
 
 Proxy::Proxy(QObject* parent) : QObject (parent)
@@ -383,3 +385,5 @@ void QNearFieldManagerPrivateImpl::targetDisconnected()
 }
 
 #include "moc_qnearfieldmanager_symbian_p.cpp"
+
+QTNFC_END_NAMESPACE

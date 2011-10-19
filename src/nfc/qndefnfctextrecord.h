@@ -48,6 +48,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class Q_NFC_EXPORT QNdefNfcTextRecord : public QNdefRecord
 {
 public:
@@ -67,6 +69,8 @@ public:
     Encoding encoding() const;
     void setEncoding(Encoding encoding);
 };
+
+QTNFC_END_NAMESPACE
 
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcTextRecord, QNdefRecord::NfcRtd, "T")
 

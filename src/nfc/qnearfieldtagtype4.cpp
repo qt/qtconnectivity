@@ -41,6 +41,8 @@
 
 #include "qnearfieldtagtype4.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldTagType4
     \brief The QNearFieldTagType4 class provides an interface for communicating with an NFC Tag
@@ -159,3 +161,5 @@ bool QNearFieldTagType4::handleResponse(const QNearFieldTarget::RequestId &id,
 }
 
 #include "moc_qnearfieldtagtype4.cpp"
+
+QTNFC_END_NAMESPACE

@@ -46,6 +46,8 @@
 #include <QtCore/QString>
 #include <QDebug>
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothLocalDevice
     \brief The QBluetoothLocalDevice class provides access to local Bluetooth devices.
@@ -235,5 +237,6 @@ bool QBluetoothLocalDevice::isValid() const
   Construct new QBluetoothLocalDevice for \a address.
 */
 
-
 #include "moc_qbluetoothlocaldevice.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

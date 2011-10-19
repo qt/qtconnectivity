@@ -43,6 +43,7 @@
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
 
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
 :   QObject(parent)
@@ -101,3 +102,4 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
     Q_UNUSED(confirmation);
 }
 
+QTBLUETOOTH_END_NAMESPACE

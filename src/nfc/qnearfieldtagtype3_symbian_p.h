@@ -48,6 +48,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNearFieldTagType3Symbian : public QNearFieldTagType3, private QNearFieldTagImpl<QNearFieldTagType3Symbian>
 {
     Q_OBJECT
@@ -104,6 +106,8 @@ private:
     QByteArray mIDm;
     friend class QNearFieldTagImpl<QNearFieldTagType3Symbian>;
 };
+
+QTNFC_END_NAMESPACE
 
 typedef QMap<quint16,QByteArray> checkResponseType;
 Q_DECLARE_METATYPE(checkResponseType)

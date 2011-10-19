@@ -50,6 +50,8 @@
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothuuid.h>
 
+QTBLUETOOTH_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QBluetoothUuid::ProtocolUuid)
 Q_DECLARE_METATYPE(QUuid)
 Q_DECLARE_METATYPE(QBluetoothServiceInfo::Protocol)

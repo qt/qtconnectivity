@@ -53,6 +53,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class Q_NFC_EXPORT QNdefMessage : public QList<QNdefRecord>
 {
 public:
@@ -68,7 +70,9 @@ public:
     static QNdefMessage fromByteArray(const QByteArray &message);
 };
 
-Q_DECLARE_METATYPE(QNdefMessage)
+QTNFC_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtNfc::QNdefMessage)
 
 QT_END_HEADER
 

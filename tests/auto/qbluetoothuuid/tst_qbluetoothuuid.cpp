@@ -53,6 +53,8 @@
 #include <bttypes.h>
 #endif
 
+QTBLUETOOTH_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(quint128)
 
 class tst_QBluetoothUuid : public QObject

@@ -48,6 +48,8 @@
 
 #include <QtCore/QDebug>
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldTagType2
     \brief The QNearFieldTagType2 class provides an interface for communicating with an NFC Tag
@@ -346,3 +348,5 @@ void QNearFieldTagType2::timerEvent(QTimerEvent *event)
 }
 
 #include "moc_qnearfieldtagtype2.cpp"
+
+QTNFC_END_NAMESPACE

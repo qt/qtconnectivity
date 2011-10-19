@@ -52,6 +52,8 @@
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QL2capServerPrivate;
 class QBluetoothSocket;
 
@@ -100,6 +102,8 @@ private:
 #endif
 
 };
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

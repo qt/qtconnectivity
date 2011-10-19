@@ -48,6 +48,8 @@
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothuuid.h>
 
+QTBLUETOOTH_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo::ServiceClasses)
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo::MajorDeviceClass)
 

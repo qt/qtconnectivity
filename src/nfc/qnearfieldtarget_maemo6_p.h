@@ -63,6 +63,8 @@
 
 using namespace com::nokia::nfc;
 
+QTNFC_BEGIN_NAMESPACE
+
 class PendingCallWatcher : public QObject
 {
     Q_OBJECT
@@ -305,5 +307,7 @@ public:
 
     int memorySize() const;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QNEARFIELDTARGET_MAEMO6_P_H

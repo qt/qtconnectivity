@@ -43,6 +43,8 @@
 
 #include <QtCore/QList>
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNdefFilter
     \brief The QNdefFilter class provides a filter for matching NDEF messages.
@@ -200,3 +202,4 @@ int QNdefFilter::recordCount() const
     return d->filterRecords.count();
 }
 
+QTNFC_END_NAMESPACE

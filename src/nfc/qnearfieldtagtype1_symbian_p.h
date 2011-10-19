@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNearFieldTagType1Symbian : public QNearFieldTagType1, private QNearFieldTagImpl<QNearFieldTagType1Symbian>
 {
     Q_OBJECT
@@ -98,6 +100,8 @@ public:
     QVariant decodeResponse(const QByteArray &command, const QByteArray &response);
     friend class QNearFieldTagImpl<QNearFieldTagType1Symbian>;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

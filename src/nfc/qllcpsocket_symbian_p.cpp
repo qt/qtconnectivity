@@ -46,6 +46,8 @@
 #include "symbian/nearfieldutility_symbian.h"
 #include "symbian/debug.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     Constructor
 */
@@ -407,3 +409,4 @@ void QLlcpSocketPrivate::changeState(QLLCPSocketState* state)
     BEGIN_END
 }
 
+QTNFC_END_NAMESPACE

@@ -48,6 +48,8 @@
 
 using namespace com::nokia::nfc;
 
+QTNFC_BEGIN_NAMESPACE
+
 static QAtomicInt requestorId = 0;
 static const char * const requestorBasePath = "/com/nokia/nfc/llcpserver/";
 
@@ -194,5 +196,7 @@ void QLlcpServerPrivate::Socket(const QDBusVariant &lsap, int fd, const QVariant
     Q_UNUSED(fd);
     Q_UNUSED(properties);
 }
+
+QTNFC_END_NAMESPACE
 
 #include "moc_qllcpserver_maemo6_p.cpp"

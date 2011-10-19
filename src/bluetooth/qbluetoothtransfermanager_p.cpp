@@ -43,8 +43,12 @@
 #include "qbluetoothtransferrequest.h"
 #include "qbluetoothtransferreply.h"
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request,
                                                         QIODevice *data)
 {
     return 0;
 }
+
+QTBLUETOOTH_END_NAMESPACE

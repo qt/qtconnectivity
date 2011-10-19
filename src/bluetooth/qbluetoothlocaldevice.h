@@ -53,6 +53,8 @@
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothLocalDevicePrivate;
 
 class Q_BLUETOOTH_EXPORT QBluetoothHostInfo
@@ -142,9 +144,11 @@ private:
 #endif //QT_SYMBIAN_BLUETOOTH
 };
 
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::HostMode)
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::Pairing)
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::Error)
+QTBLUETOOTH_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::HostMode)
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::Pairing)
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::Error)
 
 QT_END_HEADER
 

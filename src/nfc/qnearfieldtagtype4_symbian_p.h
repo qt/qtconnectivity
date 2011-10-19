@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNearFieldTagType4Symbian : public QNearFieldTagType4, private QNearFieldTagImpl<QNearFieldTagType4Symbian>
 {
     Q_OBJECT
@@ -98,6 +100,8 @@ private:
 
     friend class QNearFieldTagImpl<QNearFieldTagType4Symbian>;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

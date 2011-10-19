@@ -49,6 +49,8 @@
 #include <qnearfieldtagtype2.h>
 #include <qndefnfctextrecord.h>
 
+QTNFC_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QNearFieldTarget*)
 
 static const char * const deadbeef = "\xde\xad\xbe\xef";

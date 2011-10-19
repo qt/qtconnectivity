@@ -64,6 +64,8 @@ class QDBusPendingCallWatcher;
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothAddress;
 
 #if defined(QT_BLUEZ_BLUETOOTH)
@@ -149,6 +151,8 @@ class QBluetoothLocalDevicePrivate : public QObject
 {
 };
 #endif
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

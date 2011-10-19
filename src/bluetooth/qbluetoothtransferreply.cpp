@@ -44,6 +44,8 @@
 #include "qbluetoothtransferreply_p.h"
 #include "qbluetoothaddress.h"
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothTransferReply
     \brief The QBluetoothTransferReply class contains the data and headers for a request sent with
@@ -215,3 +217,5 @@ QBluetoothTransferReplyPrivate::QBluetoothTransferReplyPrivate()
 }
 
 #include "moc_qbluetoothtransferreply.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

@@ -53,6 +53,7 @@
 #include "bluetoothsymbianregistryadapter.h"
 #endif //USING_BTENGDEVMAN
 
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
     : m_settings(NULL)
@@ -419,3 +420,5 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
     return d_ptr->pairingConfirmation(confirmation);
 }
+
+QTBLUETOOTH_END_NAMESPACE

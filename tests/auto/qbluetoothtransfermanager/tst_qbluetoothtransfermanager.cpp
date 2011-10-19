@@ -56,6 +56,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <btclient.h>
 
+QTBLUETOOTH_USE_NAMESPACE
 
 typedef QMap<int,QVariant> tst_QBluetoothTransferManager_QParameterMap;
 Q_DECLARE_METATYPE(tst_QBluetoothTransferManager_QParameterMap)

@@ -48,6 +48,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 namespace Simulator {
 class NfcConnection;
 }
@@ -70,6 +72,8 @@ private:
     Simulator::NfcConnection *nfcConnection;
     QMap<QByteArray, QWeakPointer<QNearFieldTarget> > m_targets;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

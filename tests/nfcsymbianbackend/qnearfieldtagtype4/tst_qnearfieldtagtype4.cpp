@@ -49,6 +49,8 @@
 #include "qnfctagtestcommon.h"
 #include "qnfctestcommon.h"
 
+QTNFC_USE_NAMESPACE
+
 class NfcTagRawCommandOperationType4: public NfcTagRawCommandOperationCommon
 {
 public:

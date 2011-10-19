@@ -49,6 +49,8 @@
 
 #include <QtCore/QDebug>
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldTagType1
     \brief The QNearFieldTagType1 class provides an interface for communicating with an NFC Tag
@@ -733,3 +735,5 @@ bool QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
 }
 
 #include "moc_qnearfieldtagtype1.cpp"
+
+QTNFC_END_NAMESPACE

@@ -47,6 +47,8 @@
 
 #include <QtCore/QDebug>
 
+QTNFC_BEGIN_NAMESPACE
+
 QPair<int, int> qParseReservedMemoryControlTlv(const QByteArray &tlvData)
 {
     quint8 position = tlvData.at(0);
@@ -526,3 +528,5 @@ int QTlvWriter::moveToNextAvailable()
 
     return length;
 }
+
+QTNFC_END_NAMESPACE

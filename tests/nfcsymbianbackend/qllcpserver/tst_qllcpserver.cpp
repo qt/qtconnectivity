@@ -50,6 +50,8 @@
 
 QString TestUri("urn:nfc:xsn:nokia:symbiantest");
 
+QTNFC_USE_NAMESPACE
+
 static qint64 countBytesWritten(QSignalSpy& bytesWrittenSpy)
     {
     qint64 ret = 0;

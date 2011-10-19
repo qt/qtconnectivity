@@ -45,6 +45,8 @@
 
 #include <QtCore/QHash>
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QNdefRecord
     \brief The QNdefRecord class provides an NFC NDEF record.
@@ -347,3 +349,5 @@ bool QNdefRecord::operator==(const QNdefRecord &other) const
 
     return true;
 }
+
+QTNFC_END_NAMESPACE

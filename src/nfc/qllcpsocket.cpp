@@ -51,6 +51,8 @@
 #include "qllcpsocket_p.h"
 #endif
 
+QTNFC_BEGIN_NAMESPACE
+
 /*!
     \class QLlcpSocket
     \brief The QLlcpSocket class provides an NFC LLCP socket.
@@ -402,3 +404,5 @@ qint64 QLlcpSocket::writeData(const char *data, qint64 len)
 }
 
 #include <moc_qllcpsocket.cpp>
+
+QTNFC_END_NAMESPACE
