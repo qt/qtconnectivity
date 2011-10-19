@@ -47,6 +47,7 @@
 
 #include <QDebug>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 :serviceRecord(0)
@@ -300,3 +301,5 @@ bool QBluetoothServiceInfo::unregisterService() const
     d->serviceRecord = 0;
     return true;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

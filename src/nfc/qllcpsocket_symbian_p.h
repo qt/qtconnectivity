@@ -53,6 +53,8 @@ class CLlcpSocketType2;
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QLLCPSocketState;
 
 class QLlcpSocketPrivate
@@ -147,6 +149,8 @@ private:
 public:
     int m_writeDatagramRefCount;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

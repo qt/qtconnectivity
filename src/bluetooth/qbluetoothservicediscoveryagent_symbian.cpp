@@ -47,6 +47,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &address)
     : error(QBluetoothServiceDiscoveryAgent::NoError)
     , state(Inactive)
@@ -309,3 +311,5 @@ void QBluetoothServiceDiscoveryAgentPrivate::EndListL()
         }
     }
 }
+
+QTCONNECTIVITY_END_NAMESPACE

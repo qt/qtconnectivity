@@ -43,6 +43,8 @@
 #include "qrfcommserver_p.h"
 #include "qbluetoothsocket.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QRfcommServerPrivate::QRfcommServerPrivate()
 {
 }
@@ -128,3 +130,4 @@ QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
     return QBluetooth::NoSecurity;
 }
 
+QTCONNECTIVITY_END_NAMESPACE

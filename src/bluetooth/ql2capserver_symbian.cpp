@@ -50,6 +50,8 @@
 
 #include <QDebug>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QL2capServerPrivate::QL2capServerPrivate()
 : socket(0),pending(false),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
 {
@@ -283,3 +285,5 @@ QBluetooth::SecurityFlags QL2capServer::securityFlags() const
     Q_D(const QL2capServer);
     return d->securityFlags;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

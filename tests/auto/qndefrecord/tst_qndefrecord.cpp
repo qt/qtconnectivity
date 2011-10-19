@@ -45,6 +45,8 @@
 #include <qndefnfctextrecord.h>
 #include <qndefnfcurirecord.h>
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 class tst_QNdefRecord : public QObject
 {
     Q_OBJECT

@@ -46,6 +46,8 @@
 
 #include <QDebug>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
     : inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry)
     , lastError(QBluetoothDeviceDiscoveryAgent::NoError)
@@ -137,3 +139,5 @@ uint QBluetoothDeviceDiscoveryAgentPrivate::inquiryTypeToIAC() const
 {
     return inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry ? KLIAC : KGIAC;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

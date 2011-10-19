@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNearFieldTagType2Symbian : public QNearFieldTagType2, private QNearFieldTagImpl<QNearFieldTagType2Symbian>
 {
     Q_OBJECT
@@ -90,6 +92,8 @@ public:
 private:
     quint8 mCurrentSector;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

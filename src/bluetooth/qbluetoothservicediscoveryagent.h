@@ -51,6 +51,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothAddress;
 class QBluetoothServiceDiscoveryAgentPrivate;
 
@@ -108,6 +110,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_createdDevice(QDBusPendingCallWatcher*))
 #endif
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

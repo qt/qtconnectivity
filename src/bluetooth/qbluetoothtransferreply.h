@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothTransferReplyPrivate;
 
 class Q_BLUETOOTH_EXPORT QBluetoothTransferReply : public QObject
@@ -101,7 +103,9 @@ private:
 
 };
 
-Q_DECLARE_METATYPE(QBluetoothTransferReply *);
+QTCONNECTIVITY_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtAddOn::Connectivity::QBluetoothTransferReply *);
 
 QT_END_HEADER
 

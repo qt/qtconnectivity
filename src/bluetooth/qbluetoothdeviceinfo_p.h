@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothDeviceInfoPrivate
 {
 public:
@@ -70,6 +72,8 @@ public:
     QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
     QList<QBluetoothUuid> serviceUuids;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

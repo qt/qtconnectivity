@@ -47,6 +47,8 @@
 #include <qnearfieldmanager.h>
 #include <qllcpsocket.h>
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 class SocketController : public QObject
 {
     Q_OBJECT

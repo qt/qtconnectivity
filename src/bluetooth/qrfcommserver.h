@@ -52,6 +52,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QRfcommServerPrivate;
 class QBluetoothSocket;
 
@@ -100,6 +102,7 @@ private:
 #endif
 };
 
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

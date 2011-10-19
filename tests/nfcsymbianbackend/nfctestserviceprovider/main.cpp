@@ -61,6 +61,8 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 void MyOutputHandler(QtMsgType type, const char *msg) {
     static int fd = -1;
       if (fd == -1)

@@ -44,6 +44,8 @@
 #include "qbluetoothtransferrequest_p.h"
 
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothTransferRequest
     \brief The QBluetoothTransferRequest class holds a request to be sent with
@@ -182,3 +184,4 @@ QBluetoothTransferRequestPrivate::QBluetoothTransferRequestPrivate()
 {
 }
 
+QTCONNECTIVITY_END_NAMESPACE

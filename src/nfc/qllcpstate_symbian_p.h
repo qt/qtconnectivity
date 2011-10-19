@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QLlcpSocketPrivate;
 
 /*!
@@ -165,6 +167,8 @@ public://from base class
     bool WaitForBytesWritten(int msecs);
     bool WaitForReadyRead(int msecs);
     };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

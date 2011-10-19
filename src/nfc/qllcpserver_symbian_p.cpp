@@ -46,6 +46,8 @@
 
 #include "symbian/debug.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
     :q_ptr(q)
 {
@@ -155,6 +157,8 @@ QLlcpSocket::SocketError QLlcpServerPrivate::serverError() const
     END
     return QLlcpSocket::UnknownSocketError;
 }
+
+QTCONNECTIVITY_END_NAMESPACE
 
 //EOF
 

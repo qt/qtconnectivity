@@ -41,6 +41,8 @@
 
 #include "qnfctagutil.h"
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 bool QNfcTagUtil::WriteTextNdef2Tag(QNearFieldTarget& target, QString text)
 {
     QSignalSpy ndefMessageWriteSpy(&target, SIGNAL(ndefMessagesWritten()));

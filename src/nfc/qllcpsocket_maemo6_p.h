@@ -55,6 +55,8 @@ QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 class AccessRequestorAdaptor;
 class LLCPRequestorAdaptor;
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class SocketRequestor;
 
 class QLlcpSocketPrivate : public QObject
@@ -139,5 +141,7 @@ private:
     QLlcpSocket::SocketState m_state;
     QLlcpSocket::SocketError m_error;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 #endif // QLLCPSOCKET_MAEMO6_P_H

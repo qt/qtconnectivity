@@ -48,6 +48,8 @@
 //#define SYMBIAN_RETURN_CRC
 //#define SYMBIAN_RETURN_NO_ACK
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static void OutputByteArray(const QByteArray& data)
 {
     for(int i = 0; i < data.count(); ++i)
@@ -243,3 +245,5 @@ bool QNearFieldTagType2Symbian::waitForRequestCompleted(const RequestId &id, int
 }
 
 #include "moc_qnearfieldtagtype2_symbian_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

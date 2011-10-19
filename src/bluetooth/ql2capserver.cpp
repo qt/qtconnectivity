@@ -43,6 +43,8 @@
 #include "ql2capserver_p.h"
 #include "qbluetoothsocket.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QL2capServer
     \brief The QL2capServer class provides an L2CAP server.
@@ -178,3 +180,5 @@ int QL2capServer::maxPendingConnections() const
 */
 
 #include "moc_ql2capserver.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

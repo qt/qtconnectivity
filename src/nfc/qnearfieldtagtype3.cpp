@@ -41,6 +41,8 @@
 
 #include "qnearfieldtagtype3.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldTagType3
     \brief The QNearFieldTagType3 class provides an interface for communicating with an NFC Tag
@@ -183,3 +185,5 @@ bool QNearFieldTagType3::handleResponse(const QNearFieldTarget::RequestId &id,
 }
 
 #include "moc_qnearfieldtagtype3.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

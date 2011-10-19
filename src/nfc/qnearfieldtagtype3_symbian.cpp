@@ -45,6 +45,8 @@
 #include <QtEndian>
 #include <QVariant>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /* For all #if 0 blocks: this is due to symbian RawModeAccess API is not
  * available yet. After the RawModeAccess API is stable, those blocks
  * should be enabled.
@@ -502,3 +504,5 @@ bool QNearFieldTagType3Symbian::waitForRequestCompleted(const RequestId &id, int
 }
 
 #include "moc_qnearfieldtagtype3_symbian_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

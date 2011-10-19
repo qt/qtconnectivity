@@ -43,6 +43,8 @@
 #include "qndefmessage.h"
 #include "qtlv_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static inline bool matchesTarget(QNearFieldTarget::Type type,
                                  const QList<QNearFieldTarget::Type> &types)
 {
@@ -213,3 +215,5 @@ void QNearFieldManagerPrivateVirtualBase::ndefReceived(const QNdefMessage &messa
 }
 
 #include "moc_qnearfieldmanagervirtualbase_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -63,6 +63,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothServiceDiscoveryAgent;
 class QBluetoothServiceInfo;
 
@@ -135,6 +137,8 @@ private:
 
     QTimer *m_timer;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

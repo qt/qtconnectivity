@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothAddressPrivate;
 
 class Q_BLUETOOTH_EXPORT QBluetoothAddress
@@ -79,7 +81,9 @@ private:
     QBluetoothAddressPrivate *d_ptr;
 };
 
-Q_DECLARE_METATYPE(QBluetoothAddress)
+QTCONNECTIVITY_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtAddOn::Connectivity::QBluetoothAddress)
 
 QT_END_HEADER
 

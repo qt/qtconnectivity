@@ -1,6 +1,6 @@
 load(qt_module)
 
-TARGET = QtBluetooth
+TARGET = QtAddOnBluetooth
 QPRO_PWD = $PWD
 
 CONFIG += module

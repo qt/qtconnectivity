@@ -42,6 +42,8 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothaddress_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothAddress
     \brief The QBluetoothAddress class provides a Bluetooth address.
@@ -215,3 +217,5 @@ QBluetoothAddressPrivate::QBluetoothAddressPrivate()
 {
     m_address = 0;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

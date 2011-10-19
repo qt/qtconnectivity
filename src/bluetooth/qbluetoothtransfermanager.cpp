@@ -42,6 +42,8 @@
 #include "qbluetoothtransfermanager.h"
 #include "qbluetoothtransferrequest.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothTransferManager
     \brief The QBluetoothTransferManager class allows the application to send data objects to other
@@ -93,5 +95,6 @@ QBluetoothTransferManager::~QBluetoothTransferManager()
 {
 }
 
-
 #include "moc_qbluetoothtransfermanager.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -50,6 +50,8 @@
 
 //#define QT_DEVICEDISCOVERY_DEBUG
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
     :   lastError(QBluetoothDeviceDiscoveryAgent::NoError), pendingCancel(false), pendingStart(false), adapter(0)
 {
@@ -220,3 +222,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
         }
     }
 }
+
+QTCONNECTIVITY_END_NAMESPACE

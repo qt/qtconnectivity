@@ -48,6 +48,8 @@
 #include <qnearfieldtagtype2.h>
 #include "qnfctestcommon.h"
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 class NfcTagRawCommandOperationType2: public NfcTagRawCommandOperationCommon
 {
 public:

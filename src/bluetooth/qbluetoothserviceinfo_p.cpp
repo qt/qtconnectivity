@@ -42,6 +42,7 @@
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothserviceinfo_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
 
 bool QBluetoothServiceInfo::isRegistered() const
 {
@@ -83,3 +84,5 @@ bool QBluetoothServiceInfoPrivate::registerService() const
     return false;
 }
 #endif
+
+QTCONNECTIVITY_END_NAMESPACE

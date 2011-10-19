@@ -1,6 +1,6 @@
 load(qt_module)
 
-TARGET = QtNfc
+TARGET = QtAddOnNfc
 QPRO_PWD = $PWD
 
 CONFIG += module

@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNdefFilterPrivate;
 class Q_NFC_EXPORT QNdefFilter
 {
@@ -92,6 +94,8 @@ void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
 
     appendRecord(record.typeNameFormat(), record.type(), min, max);
 }
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

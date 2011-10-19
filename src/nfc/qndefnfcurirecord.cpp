@@ -46,6 +46,8 @@
 
 #include <QtCore/QDebug>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QNdefNfcUriRecord
     \brief The QNdefNfcUriRecord class provides an NFC RTD-URI
@@ -140,3 +142,4 @@ void QNdefNfcUriRecord::setUri(const QUrl &uri)
     setPayload(p);
 }
 
+QTCONNECTIVITY_END_NAMESPACE

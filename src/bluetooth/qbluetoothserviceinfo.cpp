@@ -44,6 +44,8 @@
 
 #include <QUrl>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothServiceInfo::Sequence
     \brief The Sequence class provides a data type for Bluetooth Data
@@ -602,3 +604,5 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
     }
     return dbg;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

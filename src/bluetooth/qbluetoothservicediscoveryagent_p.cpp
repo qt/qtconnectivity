@@ -42,6 +42,8 @@
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &address)
 {
     Q_UNUSED(address);
@@ -59,3 +61,5 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 void QBluetoothServiceDiscoveryAgentPrivate::stop()
 {
 }
+
+QTCONNECTIVITY_END_NAMESPACE

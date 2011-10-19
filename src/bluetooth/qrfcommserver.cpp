@@ -43,6 +43,8 @@
 #include "qrfcommserver_p.h"
 #include "qbluetoothsocket.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QRfcommServer
     \brief The QRfcommServer class provides an RFCOMM server.
@@ -177,3 +179,5 @@ int QRfcommServer::maxPendingConnections() const
 */
 
 #include "moc_qrfcommserver.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

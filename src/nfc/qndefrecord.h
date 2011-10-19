@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNdefRecordPrivate;
 
 class Q_NFC_EXPORT QNdefRecord
@@ -106,12 +108,16 @@ private:
     className(const QNdefRecord &other) : QNdefRecord(other, typeNameFormat, type) { }
 
 #define Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(className, typeNameFormat_, type_) \
+    QTCONNECTIVITY_BEGIN_NAMESPACE \
     template<> inline bool QNdefRecord::isRecordType<className>() const\
     { \
         return (typeNameFormat() == typeNameFormat_ && type() == type_); \
-    }
+    } \
+    QTCONNECTIVITY_END_NAMESPACE
 
 uint qHash(const QNdefRecord &key);
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

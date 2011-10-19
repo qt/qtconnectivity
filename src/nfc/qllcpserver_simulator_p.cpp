@@ -41,6 +41,8 @@
 
 #include "qllcpserver_simulator_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
 :   q_ptr(q)
 {
@@ -86,3 +88,5 @@ QLlcpSocket::SocketError QLlcpServerPrivate::serverError() const
 {
     return QLlcpSocket::UnknownSocketError;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -51,6 +51,8 @@
 #include <QFileInfo>
 #include <QDir>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QBluetoothTransferReplySymbian::QBluetoothTransferReplySymbian(QIODevice *input,
     QBluetoothTransferManager::Operation operation, QObject *parent)
     : QBluetoothTransferReply(parent)
@@ -311,5 +313,7 @@ bool QBluetoothTransferReplySymbian::copyToTempFile(QIODevice *to, QIODevice *fr
     delete[] block;
     return true;
 }
+
+QTCONNECTIVITY_END_NAMESPACE
 
 #include "moc_qbluetoothtransferreply_symbian_p.cpp"

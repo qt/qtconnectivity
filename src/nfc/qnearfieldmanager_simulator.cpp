@@ -50,6 +50,8 @@
 
 #include <QtCore/QCoreApplication>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 using namespace QtSimulatorPrivate;
 
 namespace Simulator {
@@ -202,3 +204,5 @@ void QNearFieldManagerPrivateImpl::targetLeavingProximity(const QByteArray &uid)
 
 #include "qnearfieldmanager_simulator.moc"
 #include "moc_qnearfieldmanager_simulator_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

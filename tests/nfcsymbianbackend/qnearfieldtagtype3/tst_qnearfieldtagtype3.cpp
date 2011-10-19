@@ -48,6 +48,8 @@
 #include <qnearfieldtagtype3.h>
 #include "qnfctestcommon.h"
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 typedef QMap<quint16,QByteArray> checkResponseType;
 Q_DECLARE_METATYPE(checkResponseType)
 

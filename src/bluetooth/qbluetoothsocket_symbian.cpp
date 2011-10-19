@@ -52,6 +52,8 @@
 #include <bt_sock.h>
 #include <es_sock.h>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 Q_GLOBAL_STATIC(QSocketServerPrivate, getSocketServer)
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
@@ -589,3 +591,4 @@ bool QBluetoothSocketPrivate::tryToSend()
     return transmitting;
 }
 
+QTCONNECTIVITY_END_NAMESPACE

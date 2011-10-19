@@ -56,6 +56,8 @@ class OrgBluezServiceInterface;
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothServiceInfo;
 
 class QBluetoothServiceInfoPrivate
@@ -96,6 +98,8 @@ public:
 private:
     QBluetoothServiceInfo *q_ptr;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

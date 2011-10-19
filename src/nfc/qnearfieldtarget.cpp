@@ -49,6 +49,8 @@
 
 #include <QtCore/QDebug>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldTarget
     \brief The QNearFieldTarget class provides an interface for communicating with a target
@@ -462,3 +464,5 @@ bool QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
 }
 
 #include "moc_qnearfieldtarget.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

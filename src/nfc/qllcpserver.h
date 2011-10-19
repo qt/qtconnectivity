@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QLlcpServerPrivate;
 
 class Q_NFC_EXPORT QLlcpServer : public QObject
@@ -80,6 +82,8 @@ Q_SIGNALS:
 private:
     QLlcpServerPrivate *d_ptr;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

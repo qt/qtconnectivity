@@ -53,6 +53,8 @@ class QLlcpSocket;
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QLlcpServerPrivate
 {
     Q_DECLARE_PUBLIC(QLlcpServer)
@@ -80,6 +82,8 @@ private:
     QLlcpServer *q_ptr;
     QList<QPointer<QLlcpSocket> > m_pendingConnections;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

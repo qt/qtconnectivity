@@ -49,6 +49,8 @@
 #include "qnfctestcommon.h"
 #include "qnfctestutil.h"
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 Q_DECLARE_METATYPE(QNearFieldTarget*)
 Q_DECLARE_METATYPE(QLlcpSocket::SocketError);
 

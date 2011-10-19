@@ -46,6 +46,8 @@
 
 #define QT_DEVICEDISCOVERY_DEBUG
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
 
 {
@@ -90,3 +92,4 @@ void _q_newDeviceFound(const QBluetoothDeviceInfo &device)
 }
 #endif
 
+QTCONNECTIVITY_END_NAMESPACE

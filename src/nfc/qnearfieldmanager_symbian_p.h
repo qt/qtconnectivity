@@ -58,6 +58,8 @@ class CNdefMessage;
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class Proxy : public QObject
 {
     Q_OBJECT
@@ -130,6 +132,8 @@ private:
 
     QRemoteServiceRegister* m_serviceRegister ;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 #endif /* QNEARFIELDMANAGER_SYMBIAN_P_H_ */

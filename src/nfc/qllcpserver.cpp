@@ -51,6 +51,8 @@
 #include "qllcpserver_p.h"
 #endif
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QLlcpServer
     \brief The QLlcpServer class provides an NFC LLCP socket based server.
@@ -201,3 +203,5 @@ QLlcpSocket::SocketError QLlcpServer::serverError() const
 }
 
 #include "moc_qllcpserver.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

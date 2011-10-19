@@ -44,6 +44,8 @@
 #include <QtCore/QMap>
 #include <QtCore/QRegExp>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QDeclarativeNdefRecord
     \brief The QDeclarativeNdefRecord class implements the NdefRecord element in QML.
@@ -270,3 +272,5 @@ void QDeclarativeNdefRecord::setRecord(const QNdefRecord &record)
 }
 
 #include "moc_qdeclarativendefrecord.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -52,6 +52,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNdefFilter;
 
 class Q_AUTOTEST_EXPORT QNearFieldManagerPrivate : public QObject
@@ -123,6 +125,8 @@ signals:
 public:
     QNearFieldManager::TargetAccessModes m_requestedModes;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

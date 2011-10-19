@@ -42,6 +42,8 @@
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothDeviceDiscoveryAgent
     \brief The QBluetoothDeviceDiscoveryAgent class provides an API for discovering nearby
@@ -224,3 +226,6 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
 }
 
 #include "moc_qbluetoothdevicediscoveryagent.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE
+

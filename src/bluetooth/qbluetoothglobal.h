@@ -43,6 +43,11 @@
 
 #include <QtCore/qglobal.h>
 
+#define QTCONNECTIVITY_PREPEND_NAMESPACE(name) ::QtAddOn::Connectivity::name
+#define QTCONNECTIVITY_BEGIN_NAMESPACE namespace QtAddOn { namespace Connectivity {
+#define QTCONNECTIVITY_END_NAMESPACE } }
+#define QTCONNECTIVITY_USE_NAMESPACE using namespace QtAddOn::Connectivity;
+
 #if defined(Q_OS_WIN)
 #  if defined(QT_NODLL)
 #    undef QT_MAKEDLL

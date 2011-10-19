@@ -51,6 +51,8 @@
 #include "bluez/agent_p.h"
 #include "bluez/device_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static const QLatin1String agentPath("/qt/agent");
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
@@ -516,3 +518,5 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
 
 //#include "qbluetoothlocaldevice.moc"
 #include "moc_qbluetoothlocaldevice_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

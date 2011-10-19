@@ -48,6 +48,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNearFieldLlcpDeviceSymbian : public QNearFieldTarget
 {
     Q_OBJECT
@@ -63,6 +65,8 @@ public:
 private:
     RNfcServer& mNfcServer;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

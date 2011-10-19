@@ -47,6 +47,8 @@
 
 //#define SYMBIAN_BUG_NOT_FIX
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static void OutputByteArray(const QByteArray& data)
 {
     for(int i = 0; i < data.count(); ++i)
@@ -400,3 +402,5 @@ void QNearFieldTagType1Symbian::handleTagOperationResponse(const RequestId &id, 
 }
 
 #include "moc_qnearfieldtagtype1_symbian_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

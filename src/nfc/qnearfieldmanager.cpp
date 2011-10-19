@@ -55,6 +55,8 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QMetaMethod>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QNearFieldManager
     \brief The QNearFieldManager class provides access to notifications for NFC events.
@@ -552,3 +554,5 @@ QNearFieldManager::TargetAccessModes QNearFieldManager::targetAccessModes() cons
 
 #include "moc_qnearfieldmanager.cpp"
 #include "moc_qnearfieldmanager_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -46,6 +46,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyPrivate
 {
 public:
@@ -59,6 +61,8 @@ public:
     QBluetoothTransferReply *q_ptr;
 
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

@@ -41,6 +41,8 @@
 
 #include "qnearfieldllcpdevice_symbian_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QNearFieldLlcpDeviceSymbian::QNearFieldLlcpDeviceSymbian(RNfcServer& nfcServer, QObject *parent)
                                   : QNearFieldTarget(parent), mNfcServer(nfcServer)
 {
@@ -67,3 +69,5 @@ void QNearFieldLlcpDeviceSymbian::setAccessMethods(const QNearFieldTarget::Acces
 }
 
 #include "moc_qnearfieldllcpdevice_symbian_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -44,6 +44,8 @@
 
 #include <QDebug>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothDeviceInfo
     \brief The QBluetoothDeviceInfo class provides information about Bluetooth devices.
@@ -527,3 +529,5 @@ void QBluetoothDeviceInfo::setCached(bool cached)
 
     d->cached = cached;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -60,6 +60,8 @@ class QDBusVariant;
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothDeviceDiscoveryAgentPrivate
 {
     Q_DECLARE_PUBLIC(QBluetoothDeviceDiscoveryAgent)
@@ -114,6 +116,8 @@ private:
     QBluetoothDeviceDiscoveryAgent *q_ptr;
 
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

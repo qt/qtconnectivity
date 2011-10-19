@@ -48,6 +48,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothDeviceInfoPrivate;
 class QBluetoothAddress;
 class QBluetoothUuid;
@@ -239,6 +241,8 @@ protected:
 private:
     Q_DECLARE_PRIVATE(QBluetoothDeviceInfo)
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

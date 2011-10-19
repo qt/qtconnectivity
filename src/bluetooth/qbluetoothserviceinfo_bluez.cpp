@@ -47,6 +47,8 @@
 
 #include <QtCore/QXmlStreamWriter>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 {
     const QString unsignedFormat(QLatin1String("0x%1"));
@@ -294,3 +296,5 @@ bool QBluetoothServiceInfoPrivate::registerService() const
     registered = true;
     return true;
 }
+
+QTCONNECTIVITY_END_NAMESPACE

@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QL2capSocket : public QBluetoothSocket
 {
     Q_OBJECT
@@ -68,6 +70,8 @@ public:
 private:
     Q_DISABLE_COPY(QL2capSocket)
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

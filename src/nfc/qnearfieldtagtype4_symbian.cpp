@@ -45,6 +45,8 @@
 #include "symbian/nearfieldutility_symbian.h"
 #include "qnearfieldtagtype4_symbian_p.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static void OutputByteArray(const QByteArray& data)
 {
     for(int i = 0; i < data.count(); ++i)
@@ -394,3 +396,5 @@ bool QNearFieldTagType4Symbian::waitForRequestCompleted(const RequestId &id, int
     return _waitForRequestCompleted(id, msecs);
 }
 #include "moc_qnearfieldtagtype4_symbian_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

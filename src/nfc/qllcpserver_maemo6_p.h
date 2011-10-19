@@ -54,6 +54,8 @@ QT_FORWARD_DECLARE_CLASS(QDBusVariant)
 class AccessRequestorAdaptor;
 class LLCPRequestorAdaptor;
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class SocketRequestor;
 
 class QLlcpServerPrivate : public QObject
@@ -105,5 +107,7 @@ private:
 
     QLlcpSocket::SocketError m_error;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 #endif // QLLCPSERVER_MAEMO6_P_H

@@ -54,6 +54,8 @@
 
 using namespace com::nokia::nfc;
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 static QAtomicInt handlerId = 0;
 static const char * const registeredHandlerPath = "/com/nokia/nfc/ndefhandler";
 static const char * const accessRequesterPath = "/com/nokia/nfc/accessRequester/";
@@ -447,3 +449,5 @@ void QNearFieldManagerPrivateImpl::_q_targetLost(const QDBusObjectPath &targetPa
 }
 
 #include "moc_qnearfieldmanager_maemo6_p.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

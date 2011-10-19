@@ -41,9 +41,13 @@
 
 #include "qrfcommsocket.h"
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 QRfcommSocket::QRfcommSocket(QObject *parent)
 :   QBluetoothSocket(parent)
 {
 }
 
 #include "moc_qrfcommsocket.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

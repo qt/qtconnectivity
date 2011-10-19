@@ -46,6 +46,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QBluetoothAddressPrivate
 {
 public:
@@ -55,6 +57,8 @@ public:
     quint64 m_address;
 
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

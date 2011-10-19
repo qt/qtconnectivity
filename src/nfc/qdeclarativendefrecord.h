@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QDeclarativeNdefRecordPrivate;
 
 class Q_NFC_EXPORT QDeclarativeNdefRecord : public QObject
@@ -90,6 +92,8 @@ bool qRegisterNdefRecordType(QNdefRecord::TypeNameFormat typeNameFormat, const Q
 
 #define Q_DECLARE_NDEFRECORD(className, typeNameFormat, type) \
 static bool _q_##className##_registered = qRegisterNdefRecordType<className>(typeNameFormat, type);
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

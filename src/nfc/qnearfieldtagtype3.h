@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class Q_NFC_EXPORT QNearFieldTagType3 : public QNearFieldTarget
 {
     Q_OBJECT
@@ -72,6 +74,8 @@ public:
 protected:
     bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response);
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

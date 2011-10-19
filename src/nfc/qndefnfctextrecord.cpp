@@ -44,6 +44,8 @@
 #include <QtCore/QTextCodec>
 #include <QtCore/QLocale>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QNdefNfcTextRecord
     \brief The QNdefNfcTextRecord class provides an NFC RTD-Text
@@ -187,3 +189,4 @@ void QNdefNfcTextRecord::setEncoding(Encoding encoding)
     setText(string);
 }
 
+QTCONNECTIVITY_END_NAMESPACE

@@ -47,6 +47,8 @@
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
 
+QTCONNECTIVITY_USE_NAMESPACE
+
 #define WAIT_FOR_CONDITION(a,e)            \
     for (int _i = 0; _i < 5000; _i += 1) {  \
         if ((a) == (e)) break;             \

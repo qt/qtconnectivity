@@ -50,6 +50,8 @@
 #include <QDebug>
 #include <QSocketNotifier>
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 /*!
     \class QBluetoothSocket
     \brief The QBluetoothSocket class provides a Bluetooth socket.
@@ -658,3 +660,5 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketState state)
 #endif
 
 #include "moc_qbluetoothsocket.cpp"
+
+QTCONNECTIVITY_END_NAMESPACE

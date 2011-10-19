@@ -48,6 +48,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNearFieldManagerPrivateVirtualBase : public QNearFieldManagerPrivate
 {
     Q_OBJECT
@@ -84,6 +86,8 @@ private:
     QList<int> m_freeIds;
     QList<QNearFieldTarget::Type> m_detectTargetTypes;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

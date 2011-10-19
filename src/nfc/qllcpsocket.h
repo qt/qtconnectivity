@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNearFieldTarget;
 class QLlcpSocketPrivate;
 
@@ -125,6 +127,8 @@ private:
 
     QLlcpSocketPrivate *d_ptr;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 

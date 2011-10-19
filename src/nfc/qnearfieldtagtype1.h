@@ -46,6 +46,8 @@
 
 QT_BEGIN_HEADER
 
+QTCONNECTIVITY_BEGIN_NAMESPACE
+
 class QNearFieldTagType1Private;
 
 class Q_NFC_EXPORT QNearFieldTagType1 : public QNearFieldTarget
@@ -92,6 +94,8 @@ protected:
 private:
     QNearFieldTagType1Private *d_ptr;
 };
+
+QTCONNECTIVITY_END_NAMESPACE
 
 QT_END_HEADER
 
