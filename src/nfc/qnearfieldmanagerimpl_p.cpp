@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,6 +43,7 @@
 
 #include "qnearfieldmanagerimpl_p.h"
 
+QTNFC_BEGIN_NAMESPACE
 
 /*
     Constructs a new near field manager private implementation.
@@ -59,3 +60,4 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 }
 //#include "moc_qnearfieldmanagerimpl_p.cpp"
 
+QTNFC_END_NAMESPACE

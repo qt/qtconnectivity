@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,6 +53,8 @@
 #include <QtCore/QDebug>
 
 QT_BEGIN_HEADER
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfoPrivate;
 class QBluetoothDeviceInfo;
@@ -149,10 +151,14 @@ private:
     Q_DECLARE_PRIVATE(QBluetoothServiceInfo)
 };
 
-Q_DECLARE_METATYPE(QBluetoothServiceInfo)
-Q_DECLARE_METATYPE(QBluetoothServiceInfo::Sequence)
-Q_DECLARE_METATYPE(QBluetoothServiceInfo::Alternative)
-Q_DECLARE_METATYPE(QList<QBluetoothUuid>)
+QTBLUETOOTH_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothServiceInfo)
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothServiceInfo::Sequence)
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothServiceInfo::Alternative)
+Q_DECLARE_METATYPE(QList<QtBluetooth::QBluetoothUuid>)
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 inline void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QBluetoothUuid &value)
 {
@@ -223,6 +229,8 @@ inline QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
 {
     return attribute(ServiceClassIds).value<QList<QBluetoothUuid> >();
 }
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

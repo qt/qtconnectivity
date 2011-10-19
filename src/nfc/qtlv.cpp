@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -46,6 +46,8 @@
 #include <QtCore/QVariant>
 
 #include <QtCore/QDebug>
+
+QTNFC_BEGIN_NAMESPACE
 
 QPair<int, int> qParseReservedMemoryControlTlv(const QByteArray &tlvData)
 {
@@ -526,3 +528,5 @@ int QTlvWriter::moveToNextAvailable()
 
     return length;
 }
+
+QTNFC_END_NAMESPACE

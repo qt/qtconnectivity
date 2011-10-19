@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNdefFilterPrivate;
 class Q_NFC_EXPORT QNdefFilter
 {
@@ -92,6 +94,8 @@ void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
 
     appendRecord(record.typeNameFormat(), record.type(), min, max);
 }
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

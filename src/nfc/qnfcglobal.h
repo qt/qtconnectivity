@@ -43,6 +43,11 @@
 
 #include <QtCore/qglobal.h>
 
+#define QTNFC_PREPEND_NAMESPACE(name) ::QtNfc::name
+#define QTNFC_BEGIN_NAMESPACE namespace QtNfc {
+#define QTNFC_END_NAMESPACE }
+#define QTNFC_USE_NAMESPACE using namespace QtNfc;
+
 #if defined(Q_OS_WIN)
 #  if defined(QT_NODLL)
 #    undef QT_MAKEDLL

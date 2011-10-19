@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -62,6 +62,8 @@ class QXmlStreamReader;
 #endif
 
 QT_BEGIN_HEADER
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
 
@@ -160,6 +162,8 @@ private:
 protected:
     QBluetoothServiceDiscoveryAgent *q_ptr;
 };
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

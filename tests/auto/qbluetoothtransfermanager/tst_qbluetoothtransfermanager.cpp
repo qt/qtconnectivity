@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -56,6 +56,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <btclient.h>
 
+QTBLUETOOTH_USE_NAMESPACE
 
 typedef QMap<int,QVariant> tst_QBluetoothTransferManager_QParameterMap;
 Q_DECLARE_METATYPE(tst_QBluetoothTransferManager_QParameterMap)
@@ -227,7 +228,7 @@ void tst_QBluetoothTransferManager::tst_put()
     QCOMPARE(finishedSpy.count(), 1);
 
     int error = reply->error();
-    qDebug()<<"QtMobilityBtTester::SendData reply->error ="<<error;
+    qDebug()<<"QtBluetoothTester::SendData reply->error ="<<error;
     QVERIFY(error == QBluetoothTransferReply::NoError);
 
     if (error != QBluetoothTransferReply::NoError) {
@@ -283,7 +284,7 @@ void tst_QBluetoothTransferManager::tst_putAbort()
     reply->abort();
 
     int error = reply->error();
-    qDebug()<<"QtMobilityBtTester::SendData reply->error ="<<error;
+    qDebug()<<"QtBluetoothTester::SendData reply->error ="<<error;
     QVERIFY(error == QBluetoothTransferReply::NoError);
 
     if (error != QBluetoothTransferReply::NoError) {

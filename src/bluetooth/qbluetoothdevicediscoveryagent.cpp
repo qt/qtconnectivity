@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,6 +41,8 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothDeviceDiscoveryAgent
@@ -224,3 +226,6 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
 }
 
 #include "moc_qbluetoothdevicediscoveryagent.cpp"
+
+QTBLUETOOTH_END_NAMESPACE
+

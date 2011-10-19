@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,6 +48,8 @@
 #include <QtCore/QByteArray>
 
 QT_BEGIN_HEADER
+
+QTNFC_BEGIN_NAMESPACE
 
 class QNdefRecordPrivate;
 
@@ -106,12 +108,16 @@ private:
     className(const QNdefRecord &other) : QNdefRecord(other, typeNameFormat, type) { }
 
 #define Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(className, typeNameFormat_, type_) \
+    QTNFC_BEGIN_NAMESPACE \
     template<> inline bool QNdefRecord::isRecordType<className>() const\
     { \
         return (typeNameFormat() == typeNameFormat_ && type() == type_); \
-    }
+    } \
+    QTNFC_END_NAMESPACE
 
 uint qHash(const QNdefRecord &key);
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

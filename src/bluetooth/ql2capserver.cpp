@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,6 +42,8 @@
 #include "ql2capserver.h"
 #include "ql2capserver_p.h"
 #include "qbluetoothsocket.h"
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QL2capServer
@@ -178,3 +180,5 @@ int QL2capServer::maxPendingConnections() const
 */
 
 #include "moc_ql2capserver.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

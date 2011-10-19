@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,6 +45,8 @@
 #include <bttypes.h>
 
 #include <QDebug>
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
     : inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry)
@@ -137,3 +139,5 @@ uint QBluetoothDeviceDiscoveryAgentPrivate::inquiryTypeToIAC() const
 {
     return inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry ? KLIAC : KGIAC;
 }
+
+QTBLUETOOTH_END_NAMESPACE

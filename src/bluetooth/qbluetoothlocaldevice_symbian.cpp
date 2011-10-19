@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,6 +53,7 @@
 #include "bluetoothsymbianregistryadapter.h"
 #endif //USING_BTENGDEVMAN
 
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
     : m_settings(NULL)
@@ -419,3 +420,5 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
     return d_ptr->pairingConfirmation(confirmation);
 }
+
+QTBLUETOOTH_END_NAMESPACE
