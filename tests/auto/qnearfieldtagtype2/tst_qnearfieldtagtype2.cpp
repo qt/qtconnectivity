@@ -281,7 +281,7 @@ void tst_QNearFieldTagType2::dynamicMemoryModel()
 
 void tst_QNearFieldTagType2::ndefMessages()
 {
-    QSKIP("Not implemented", SkipAll);
+    QSKIP("Not implemented");
 
     QByteArray firstId;
     forever {
