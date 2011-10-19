@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,6 +42,8 @@
 #include <nfctag.h>
 #include <QVariant>
 #include "qnearfieldtagmifare_symbian_p.h"
+
+QTNFC_BEGIN_NAMESPACE
 
 QNearFieldTagMifareSymbian::QNearFieldTagMifareSymbian(CNearFieldNdefTarget *tag, QObject *parent)
                                 : QNearFieldTarget(parent), QNearFieldTagImpl(tag)
@@ -96,3 +98,5 @@ bool QNearFieldTagMifareSymbian::waitForRequestCompleted(const RequestId &id, in
     return _waitForRequestCompleted(id, msecs);
 }
 #include "moc_qnearfieldtagmifare_symbian_p.cpp"
+
+QTNFC_END_NAMESPACE

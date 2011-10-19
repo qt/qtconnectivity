@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -52,6 +52,8 @@
 #include "qbluetoothaddress.h"
 
 QT_BEGIN_HEADER
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothLocalDevicePrivate;
 
@@ -142,9 +144,11 @@ private:
 #endif //QT_SYMBIAN_BLUETOOTH
 };
 
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::HostMode)
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::Pairing)
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::Error)
+QTBLUETOOTH_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::HostMode)
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::Pairing)
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::Error)
 
 QT_END_HEADER
 

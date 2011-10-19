@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -62,6 +62,8 @@
 #include <QtDBus/QDBusPendingReply>
 
 using namespace com::nokia::nfc;
+
+QTNFC_BEGIN_NAMESPACE
 
 class PendingCallWatcher : public QObject
 {
@@ -305,5 +307,7 @@ public:
 
     int memorySize() const;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QNEARFIELDTARGET_MAEMO6_P_H

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,6 +44,8 @@
 #include <QDebug>
 
 #include <qbluetoothaddress.h>
+
+QTBLUETOOTH_USE_NAMESPACE
 
 class tst_QBluetoothAddress : public QObject
 {

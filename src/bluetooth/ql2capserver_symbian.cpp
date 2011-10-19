@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,6 +49,8 @@
 #include <QCoreApplication>
 
 #include <QDebug>
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 QL2capServerPrivate::QL2capServerPrivate()
 : socket(0),pending(false),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
@@ -283,3 +285,5 @@ QBluetooth::SecurityFlags QL2capServer::securityFlags() const
     Q_D(const QL2capServer);
     return d->securityFlags;
 }
+
+QTBLUETOOTH_END_NAMESPACE

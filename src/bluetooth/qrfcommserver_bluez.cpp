@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -51,6 +51,8 @@
 #include <bluetooth/rfcomm.h>
 
 #include <errno.h>
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
 {
@@ -246,3 +248,4 @@ QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
     return static_cast<QBluetooth::Security>(security);
 }
 
+QTBLUETOOTH_END_NAMESPACE

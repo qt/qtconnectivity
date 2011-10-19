@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -51,6 +51,8 @@
 #include <limits.h>
 #include <bt_sock.h>
 #include <es_sock.h>
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QSocketServerPrivate, getSocketServer)
 
@@ -589,3 +591,4 @@ bool QBluetoothSocketPrivate::tryToSend()
     return transmitting;
 }
 
+QTBLUETOOTH_END_NAMESPACE

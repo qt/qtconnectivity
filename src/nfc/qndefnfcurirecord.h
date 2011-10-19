@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@ QT_FORWARD_DECLARE_CLASS(QUrl)
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class Q_NFC_EXPORT QNdefNfcUriRecord : public QNdefRecord
 {
 public:
@@ -58,6 +60,8 @@ public:
     QUrl uri() const;
     void setUri(const QUrl &uri);
 };
+
+QTNFC_END_NAMESPACE
 
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcUriRecord, QNdefRecord::NfcRtd, "U")
 

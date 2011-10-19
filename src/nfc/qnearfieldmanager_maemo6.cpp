@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,6 +53,8 @@
 #include <QtDBus/QDBusConnection>
 
 using namespace com::nokia::nfc;
+
+QTNFC_BEGIN_NAMESPACE
 
 static QAtomicInt handlerId = 0;
 static const char * const registeredHandlerPath = "/com/nokia/nfc/ndefhandler";
@@ -447,3 +449,5 @@ void QNearFieldManagerPrivateImpl::_q_targetLost(const QDBusObjectPath &targetPa
 }
 
 #include "moc_qnearfieldmanager_maemo6_p.cpp"
+
+QTNFC_END_NAMESPACE

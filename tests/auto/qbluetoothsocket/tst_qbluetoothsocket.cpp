@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -54,6 +54,8 @@
 #include <sys/utsname.h>
 
 #include <btclient.h>
+
+QTBLUETOOTH_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothSocket::SocketState)
 Q_DECLARE_METATYPE(QBluetoothSocket::SocketType)
