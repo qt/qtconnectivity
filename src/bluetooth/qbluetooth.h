@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -47,6 +47,8 @@
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 namespace QBluetooth {
 enum Security {
     NoSecurity = 0x00,
@@ -61,6 +63,8 @@ Q_DECLARE_FLAGS(SecurityFlags, Security)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
 
 }
+
+QTBLUETOOTH_END_NAMESPACE
 
 QT_END_HEADER
 

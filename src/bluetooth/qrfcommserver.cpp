@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -42,6 +42,8 @@
 #include "qrfcommserver.h"
 #include "qrfcommserver_p.h"
 #include "qbluetoothsocket.h"
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QRfcommServer
@@ -177,3 +179,5 @@ int QRfcommServer::maxPendingConnections() const
 */
 
 #include "moc_qrfcommserver.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

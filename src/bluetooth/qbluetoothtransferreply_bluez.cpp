@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -54,6 +54,8 @@
 #include <QtConcurrentRun>
 
 static const QLatin1String agentPath("/qt/agent");
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 
 QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QObject *parent)
@@ -340,5 +342,6 @@ qint64 QBluetoothTransferReplyBluez::writeData(const char*, qint64)
     return 0;
 }
 
-
 #include "moc_qbluetoothtransferreply_bluez_p.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,6 +45,8 @@
 #include "symbian/llcpsockettype2_symbian.h"
 #include "symbian/nearfieldutility_symbian.h"
 #include "symbian/debug.h"
+
+QTNFC_BEGIN_NAMESPACE
 
 /*!
     Constructor
@@ -407,3 +409,4 @@ void QLlcpSocketPrivate::changeState(QLLCPSocketState* state)
     BEGIN_END
 }
 
+QTNFC_END_NAMESPACE
