@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,6 +44,8 @@
 #include "qndefrecord_p.h"
 
 #include <QtCore/QHash>
+
+QTNFC_BEGIN_NAMESPACE
 
 /*!
     \class QNdefRecord
@@ -347,3 +349,5 @@ bool QNdefRecord::operator==(const QNdefRecord &other) const
 
     return true;
 }
+
+QTNFC_END_NAMESPACE

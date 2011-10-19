@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -46,6 +46,8 @@
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
+
+QTBLUETOOTH_USE_NAMESPACE
 
 #define WAIT_FOR_CONDITION(a,e)            \
     for (int _i = 0; _i < 5000; _i += 1) {  \

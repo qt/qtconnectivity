@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,8 +43,12 @@
 #include "qbluetoothtransferrequest.h"
 #include "qbluetoothtransferreply.h"
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request,
                                                         QIODevice *data)
 {
     return 0;
 }
+
+QTBLUETOOTH_END_NAMESPACE

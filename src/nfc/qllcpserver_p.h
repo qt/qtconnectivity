@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -46,6 +46,8 @@
 
 #include "qllcpserver.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 class QLlcpServerPrivate 
 {
     Q_DECLARE_PUBLIC(QLlcpServer)
@@ -70,5 +72,7 @@ public:
 private:
     QLlcpServer *q_ptr;
 };
+
+QTNFC_END_NAMESPACE
 
 #endif // QLLCPSERVER_P_H

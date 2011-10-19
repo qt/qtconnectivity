@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@
 #else
 #include "qllcpsocket_p.h"
 #endif
+
+QTNFC_BEGIN_NAMESPACE
 
 /*!
     \class QLlcpSocket
@@ -402,3 +404,5 @@ qint64 QLlcpSocket::writeData(const char *data, qint64 len)
 }
 
 #include <moc_qllcpsocket.cpp>
+
+QTNFC_END_NAMESPACE

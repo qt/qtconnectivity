@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@
 //#include <arpa/inet.h>
 //#include <netinet/in.h>
 #include <string.h>
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 // Bluetooth base UUID 00000000-0000-1000-8000-00805F9B34FB
 // TODO: make more efficient
@@ -356,3 +358,5 @@ bool QBluetoothUuid::operator==(const QBluetoothUuid &other) const
 {
     return QUuid::operator==(other);
 }
+
+QTBLUETOOTH_END_NAMESPACE
