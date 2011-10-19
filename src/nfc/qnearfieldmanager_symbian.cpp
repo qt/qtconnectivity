@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,6 +49,8 @@
 #include "symbian/nearfieldmanager_symbian.h"
 #include "symbian/debug.h"
 #include "symbian/nearfieldutility_symbian.h"
+
+QTNFC_BEGIN_NAMESPACE
 
 Proxy contentHandlerProxy;
 
@@ -383,3 +385,5 @@ void QNearFieldManagerPrivateImpl::targetDisconnected()
 }
 
 #include "moc_qnearfieldmanager_symbian_p.cpp"
+
+QTNFC_END_NAMESPACE

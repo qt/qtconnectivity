@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -43,6 +43,8 @@
 
 #include <QtCore/QMap>
 #include <QtCore/QRegExp>
+
+QTNFC_BEGIN_NAMESPACE
 
 /*!
     \class QDeclarativeNdefRecord
@@ -270,3 +272,5 @@ void QDeclarativeNdefRecord::setRecord(const QNdefRecord &record)
 }
 
 #include "moc_qdeclarativendefrecord.cpp"
+
+QTNFC_END_NAMESPACE

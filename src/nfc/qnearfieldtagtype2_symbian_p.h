@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,6 +49,8 @@
 
 QT_BEGIN_HEADER
 
+QTNFC_BEGIN_NAMESPACE
+
 class QNearFieldTagType2Symbian : public QNearFieldTagType2, private QNearFieldTagImpl<QNearFieldTagType2Symbian>
 {
     Q_OBJECT
@@ -90,6 +92,8 @@ public:
 private:
     quint8 mCurrentSector;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

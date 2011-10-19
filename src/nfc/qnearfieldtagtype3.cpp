@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,6 +40,8 @@
 ****************************************************************************/
 
 #include "qnearfieldtagtype3.h"
+
+QTNFC_BEGIN_NAMESPACE
 
 /*!
     \class QNearFieldTagType3
@@ -183,3 +185,5 @@ bool QNearFieldTagType3::handleResponse(const QNearFieldTarget::RequestId &id,
 }
 
 #include "moc_qnearfieldtagtype3.cpp"
+
+QTNFC_END_NAMESPACE

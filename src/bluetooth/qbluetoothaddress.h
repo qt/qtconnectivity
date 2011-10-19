@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@
 
 QT_BEGIN_HEADER
 
+QTBLUETOOTH_BEGIN_NAMESPACE
+
 class QBluetoothAddressPrivate;
 
 class Q_BLUETOOTH_EXPORT QBluetoothAddress
@@ -79,7 +81,9 @@ private:
     QBluetoothAddressPrivate *d_ptr;
 };
 
-Q_DECLARE_METATYPE(QBluetoothAddress)
+QTBLUETOOTH_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothAddress)
 
 QT_END_HEADER
 

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -49,6 +49,8 @@
 #include "qnfctestutil.h"
 
 QString TestUri("urn:nfc:xsn:nokia:symbiantest");
+
+QTNFC_USE_NAMESPACE
 
 static qint64 countBytesWritten(QSignalSpy& bytesWrittenSpy)
     {

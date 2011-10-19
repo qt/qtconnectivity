@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -41,6 +41,8 @@
 
 #include "qnearfieldllcpdevice_symbian_p.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 QNearFieldLlcpDeviceSymbian::QNearFieldLlcpDeviceSymbian(RNfcServer& nfcServer, QObject *parent)
                                   : QNearFieldTarget(parent), mNfcServer(nfcServer)
 {
@@ -67,3 +69,5 @@ void QNearFieldLlcpDeviceSymbian::setAccessMethods(const QNearFieldTarget::Acces
 }
 
 #include "moc_qnearfieldllcpdevice_symbian_p.cpp"
+
+QTNFC_END_NAMESPACE

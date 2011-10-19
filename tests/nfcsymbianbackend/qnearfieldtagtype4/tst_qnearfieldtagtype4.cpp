@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,6 +48,8 @@
 #include <qnearfieldtagtype4.h>
 #include "qnfctagtestcommon.h"
 #include "qnfctestcommon.h"
+
+QTNFC_USE_NAMESPACE
 
 class NfcTagRawCommandOperationType4: public NfcTagRawCommandOperationCommon
 {

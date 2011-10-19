@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -50,6 +50,8 @@
 #include "bluez/adapter_p.h"
 #include "bluez/agent_p.h"
 #include "bluez/device_p.h"
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 static const QLatin1String agentPath("/qt/agent");
 
@@ -516,3 +518,5 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
 
 //#include "qbluetoothlocaldevice.moc"
 #include "moc_qbluetoothlocaldevice_p.cpp"
+
+QTBLUETOOTH_END_NAMESPACE

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -51,6 +51,8 @@
 #include <QtCore/QDebug>
 
 QT_BEGIN_HEADER
+
+QTBLUETOOTH_BEGIN_NAMESPACE
 
 struct quint128
 {
@@ -171,7 +173,9 @@ inline QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
     return debug;
 }
 
-Q_DECLARE_METATYPE(QBluetoothUuid)
+QTBLUETOOTH_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QtBluetooth::QBluetoothUuid)
 
 QT_END_HEADER
 

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -45,6 +45,8 @@
 #include <qnearfieldtarget.h>
 
 QT_BEGIN_HEADER
+
+QTNFC_BEGIN_NAMESPACE
 
 class QNearFieldTagType1Private;
 
@@ -92,6 +94,8 @@ protected:
 private:
     QNearFieldTagType1Private *d_ptr;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

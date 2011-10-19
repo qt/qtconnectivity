@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -48,6 +48,8 @@
 #include "symbian/nearfieldtagimpl_symbian.h"
 
 QT_BEGIN_HEADER
+
+QTNFC_BEGIN_NAMESPACE
 
 class QNearFieldTagType1Symbian : public QNearFieldTagType1, private QNearFieldTagImpl<QNearFieldTagType1Symbian>
 {
@@ -98,6 +100,8 @@ public:
     QVariant decodeResponse(const QByteArray &command, const QByteArray &response);
     friend class QNearFieldTagImpl<QNearFieldTagType1Symbian>;
 };
+
+QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 

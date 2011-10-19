@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Qt Mobility Components.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -44,6 +44,8 @@
 #include <QtEndian>
 #include "symbian/nearfieldutility_symbian.h"
 #include "qnearfieldtagtype4_symbian_p.h"
+
+QTNFC_BEGIN_NAMESPACE
 
 static void OutputByteArray(const QByteArray& data)
 {
@@ -394,3 +396,5 @@ bool QNearFieldTagType4Symbian::waitForRequestCompleted(const RequestId &id, int
     return _waitForRequestCompleted(id, msecs);
 }
 #include "moc_qnearfieldtagtype4_symbian_p.cpp"
+
+QTNFC_END_NAMESPACE

@@ -43,6 +43,11 @@
 
 #include <QtCore/qglobal.h>
 
+#define QTBLUETOOTH_PREPEND_NAMESPACE(name) ::QtBluetooth::name
+#define QTBLUETOOTH_BEGIN_NAMESPACE namespace QtBluetooth {
+#define QTBLUETOOTH_END_NAMESPACE }
+#define QTBLUETOOTH_USE_NAMESPACE using namespace QtBluetooth;
+
 #if defined(Q_OS_WIN)
 #  if defined(QT_NODLL)
 #    undef QT_MAKEDLL
