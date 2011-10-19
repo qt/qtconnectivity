@@ -310,7 +310,7 @@ void tst_QBluetoothSocket::tst_clientConnection()
             qDebug() << errorSpy.takeFirst().at(0).toInt();
             if (loop--)
                 goto tryagain;
-            QSKIP("Connection error", SkipSingle);
+            QSKIP("Connection error");
         }
         QCOMPARE(connectedSpy.count(), 1);
         QCOMPARE(stateSpy.count(), 1);
@@ -446,7 +446,7 @@ void tst_QBluetoothSocket::tst_serviceConnection()
 
     if (errorSpy.count() != 0) {
         qDebug() << errorSpy.takeFirst().at(0).toInt();
-        QSKIP("Connection error", SkipSingle);
+        QSKIP("Connection error");
     }
     QCOMPARE(connectedSpy.count(), 1);
     QCOMPARE(stateSpy.count(), 1);
