@@ -214,7 +214,7 @@ bool QNearFieldTarget::RequestId::isValid() const
 int QNearFieldTarget::RequestId::refCount() const
 {
     if (d)
-        return d->ref;
+        return d->ref.load();
 
     return 0;
 }
