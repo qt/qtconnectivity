@@ -1,3 +1,4 @@
 *.pro.user
+*.pro.shared
 qtbluetoothversion.h
 qtnfcversion.h
