@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
 CONFIG  += ordered
-SUBDIRS = bluetooth nfc
+SUBDIRS = bluetooth nfc imports
