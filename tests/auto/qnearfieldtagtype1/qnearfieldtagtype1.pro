@@ -8,3 +8,6 @@ QT = core nfc-private testlib
 DEFINES += SRCDIR=\\\"$$PWD/../nfcdata\\\"
 
 maemo*:CONFIG += insignificant_test
+
+nfcdata.files=../nfcdata
+TESTDATA+=nfcdata
