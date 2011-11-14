@@ -7,3 +7,5 @@ TARGET = tst_ql2capserver
 QT = core bluetooth testlib
 
 symbian: TARGET.CAPABILITY =  LocalServices NetworkControl
+
+!include(../auto.pri):error(missing auto.pri)

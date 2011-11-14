@@ -10,3 +10,5 @@ DEPENDPATH += ../../../tests/btclient
 symbian: TARGET.CAPABILITY = All-TCB #ReadDeviceData LocalServices WriteDeviceData
 
 CONFIG += insignificant_test    # QTBUG-22017
+
+!include(../auto.pri):error(missing auto.pri)

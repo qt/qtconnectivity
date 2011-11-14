@@ -10,3 +10,5 @@ OTHER_FILES += \
     README.txt
 
 CONFIG += insignificant_test    # QTBUG-22017
+
+!include(../auto.pri):error(missing auto.pri)

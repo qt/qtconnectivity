@@ -7,8 +7,9 @@ module_qtconnectivity_src.target = module-qtconnectivity-src
 module_qtconnectivity_tests.subdir = tests
 module_qtconnectivity_tests.target = module-qtconnectivity-tests
 module_qtconnectivity_tests.depends = module_qtconnectivity_src
+module_qtconnectivity_tests.CONFIG = no_default_install
 !contains(QT_BUILD_PARTS,tests) {
-    module_qtconnectivity_tests.CONFIG = no_default_target no_default_install
+    module_qtconnectivity_tests.CONFIG += no_default_target
 }
 
 module_qtconnectivity_examples.subdir = examples

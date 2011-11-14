@@ -4,3 +4,4 @@ CONFIG += testcase
 
 QT = core bluetooth testlib
 
+!include(../auto.pri):error(missing auto.pri)

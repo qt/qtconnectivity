@@ -7,3 +7,5 @@ QT = core nfc-private testlib
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 maemo*:CONFIG += insignificant_test
+
+!include(../auto.pri):error(missing auto.pri)
