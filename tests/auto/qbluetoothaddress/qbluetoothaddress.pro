@@ -4,3 +4,5 @@ CONFIG += testcase
 
 QT = core bluetooth testlib
 
+target.path = $$[QT_INSTALL_LIBS]/tests/$$TARGET/
+INSTALLS += target

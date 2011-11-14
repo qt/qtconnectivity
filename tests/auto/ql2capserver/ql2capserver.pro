@@ -7,3 +7,6 @@ TARGET = tst_ql2capserver
 QT = core bluetooth testlib
 
 symbian: TARGET.CAPABILITY =  LocalServices NetworkControl
+
+target.path = $$[QT_INSTALL_LIBS]/tests/$$TARGET/
+INSTALLS += target
