@@ -57,7 +57,6 @@ static const QLatin1String agentPath("/qt/agent");
 
 QTBLUETOOTH_BEGIN_NAMESPACE
 
-
 QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QObject *parent)
 :   QBluetoothTransferReply(parent), tempfile(0), source(input),
     m_running(false), m_finished(false), m_size(0),
@@ -81,8 +80,7 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QOb
         qDebug() << "Failed Creating dbus objects";
 
 #ifdef NOKIA_BT_SERVICES
-    m_obexService = NULL;
-    connectToObexServerService();
+    nokiaBtServiceInstance()->acquire();
 #endif
 }
 
@@ -93,10 +91,6 @@ QBluetoothTransferReplyBluez::~QBluetoothTransferReplyBluez()
 {
     QDBusConnection::sessionBus().unregisterObject(m_agent_path);
     delete client;
-
-#ifdef NOKIA_BT_SERVICES
-    delete m_obexService;
-#endif
 }
 
 bool QBluetoothTransferReplyBluez::start()
@@ -124,29 +118,6 @@ bool QBluetoothTransferReplyBluez::start()
     return true;
 }
 
-#ifdef NOKIA_BT_SERVICES
-void QBluetoothTransferReplyBluez::connectToObexServerService()
-{
-    QServiceManager manager;
-    QServiceFilter filter("com.nokia.mt.obexserverservice.control");
-//    filter.setServiceName("ObexServerServiceControl");
-
-    // find services complying with filter
-    QList<QServiceInterfaceDescriptor> foundServices;
-    foundServices = manager.findInterfaces(filter);
-
-    if(foundServices.count()) {
-        m_obexService = manager.loadInterface(foundServices.at(0));
-    }
-    if (m_obexService) {
-        qDebug() << "connected to service:" << m_obexService;
-        connect(m_obexService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
-    } else {
-        qDebug() << "failed to connect to Obex server service";
-    }
-}
-#endif
-
 bool QBluetoothTransferReplyBluez::copyToTempFile(QIODevice *to, QIODevice *from)
 {
     char *block = new char[4096];
@@ -168,15 +139,6 @@ void QBluetoothTransferReplyBluez::copyDone()
     startOPP(tempfile->fileName());
     QObject::sender()->deleteLater();
 }
-
-#ifdef NOKIA_BT_SERVICES
-void QBluetoothTransferReplyBluez::sfwIPCError(QService::UnrecoverableIPCError error)
-{
-    qDebug() << "Connection to Obex server broken:" << error << ". Trying to reconnect...";
-    m_obexService->deleteLater();
-    QMetaObject::invokeMethod(this, "connectToObexServerService", Qt::QueuedConnection);
-}
-#endif
 
 void QBluetoothTransferReplyBluez::startOPP(QString filename)
 {
@@ -233,8 +195,7 @@ void QBluetoothTransferReplyBluez::Complete(const QDBusObjectPath &in0)
     m_running = false;
 
 #ifdef NOKIA_BT_SERVICES
-    if (m_obexService)
-        QMetaObject::invokeMethod(m_obexService, "setTransferFinished", Q_ARG(QString, in0.path()), Q_ARG(bool, true));
+    nokiaBtServiceInstance()->setTransferFinished(in0.path(), true);
 #endif
 }
 
@@ -253,8 +214,7 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
     emit finished(this);
 
 #ifdef NOKIA_BT_SERVICES
-    if (m_obexService)
-        QMetaObject::invokeMethod(m_obexService, "setTransferFinished", Q_ARG(QString, in0.path()), Q_ARG(bool, false));
+    nokiaBtServiceInstance()->setTransferFinished(in0.path(), false);
 #endif
 }
 
@@ -264,8 +224,7 @@ void QBluetoothTransferReplyBluez::Progress(const QDBusObjectPath &in0, qulonglo
     emit uploadProgress(in1, m_size);
 
 #ifdef NOKIA_BT_SERVICES
-    if (m_obexService)
-        QMetaObject::invokeMethod(m_obexService, "setTransferProgress", Q_ARG(QString, in0.path()), Q_ARG(quint64, in1), Q_ARG(quint64, m_size));
+    nokiaBtServiceInstance()->setTranferProgress(in0.path(), in1, m_size);
 #endif
 }
 
@@ -280,11 +239,9 @@ QString QBluetoothTransferReplyBluez::Request(const QDBusObjectPath &in0)
     m_transfer_path = in0.path();
 
 #ifdef NOKIA_BT_SERVICES
-    if (m_obexService) {
-        QFile *file = qobject_cast<QFile *>(source);
-        QMetaObject::invokeMethod(m_obexService, "outgoingFile", Q_ARG(QString, m_transfer_path), Q_ARG(QString, address.toString()), Q_ARG(QString, file->fileName()), Q_ARG(QString, QBluetoothTransferReply::attribute(QBluetoothTransferRequest::TypeAttribute).toString()), Q_ARG(quint64, m_size));
-        QMetaObject::invokeMethod(m_obexService, "setTransferStarted", Q_ARG(QString, m_transfer_path));
-    }
+    QFile *file = qobject_cast<QFile *>(source);
+    nokiaBtServiceInstance()->outgoingFile(m_transfer_path, address.toString(), file->fileName(), QBluetoothTransferReply::attribute(QBluetoothTransferRequest::TypeAttribute).toString(), m_size);
+    nokiaBtServiceInstance()->setTransferStarted(m_transfer_path);
 #endif
 
     return QString();
@@ -320,8 +277,7 @@ void QBluetoothTransferReplyBluez::abort()
         delete xfer;
 
 #ifdef NOKIA_BT_SERVICES
-        if (m_obexService)
-            QMetaObject::invokeMethod(m_obexService, "setTransferFinished", Q_ARG(QString, m_transfer_path), Q_ARG(bool, false));
+        nokiaBtServiceInstance()->setTransferFinished(m_transfer_path, false);
 #endif
 
     }
@@ -341,6 +297,98 @@ qint64 QBluetoothTransferReplyBluez::writeData(const char*, qint64)
 {
     return 0;
 }
+
+
+#ifdef NOKIA_BT_SERVICES
+
+NokiaBtServiceConnection::NokiaBtServiceConnection():
+    m_obexService(NULL),
+    m_refCount(0)
+{
+}
+
+void NokiaBtServiceConnection::acquire()
+{
+    QMutexLocker m(&m_refCountMutex);
+    ++m_refCount;
+    if (m_obexService == NULL) {
+        connectToObexServerService();
+    }
+}
+
+void NokiaBtServiceConnection::release()
+{
+    QMutexLocker m(&m_refCountMutex);
+    --m_refCount;
+    if (m_refCount == 0) {
+        QTimer::singleShot(5000, this, SLOT(disconnectFromObexServerService()));
+    }
+}
+
+void NokiaBtServiceConnection::disconnectFromObexServerService()
+{
+    // Check if noone acquired the service in the meantime
+    QMutexLocker m(&m_refCountMutex);
+    if (m_refCount == 0) {
+        m_obexService->deleteLater();
+        m_obexService = NULL;
+    }
+}
+
+void NokiaBtServiceConnection::connectToObexServerService()
+{
+    if (m_obexService == NULL) {
+        QServiceManager manager;
+        QServiceFilter filter(QLatin1String("com.nokia.mt.obexserverservice.control"));
+    //    filter.setServiceName("ObexServerServiceControl");
+
+        // find services complying with filter
+        QList<QServiceInterfaceDescriptor> foundServices;
+        foundServices = manager.findInterfaces(filter);
+
+        if (foundServices.count()) {
+            m_obexService = manager.loadInterface(foundServices.at(0));
+        }
+        if (m_obexService) {
+            qDebug() << "connected to service:" << m_obexService;
+            connect(m_obexService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
+        } else {
+            qDebug() << "failed to connect to Obex server service";
+        }
+    } else {
+        qDebug() << "already connected to service:" << m_obexService;
+    }
+}
+
+void NokiaBtServiceConnection::sfwIPCError(QService::UnrecoverableIPCError error)
+{
+    qDebug() << "Connection to Obex server broken:" << error << ". Trying to reconnect...";
+    m_obexService->deleteLater();
+    m_obexService = NULL;
+    QMetaObject::invokeMethod(this, "connectToObexServerService", Qt::QueuedConnection);
+}
+
+void NokiaBtServiceConnection::outgoingFile(const QString &transferId, const QString &remoteDevice, const QString &fileName, const QString &mimeType, quint64 size)
+{
+    QMetaObject::invokeMethod(m_obexService, "outgoingFile", Q_ARG(QString, transferId), Q_ARG(QString, remoteDevice), Q_ARG(QString, fileName), Q_ARG(QString, mimeType), Q_ARG(quint64, size));
+}
+
+void NokiaBtServiceConnection::setTransferStarted(const QString &transferId)
+{
+    QMetaObject::invokeMethod(m_obexService, "setTransferStarted", Q_ARG(QString, transferId));
+}
+
+void NokiaBtServiceConnection::setTransferFinished(const QString &transferId, bool success)
+{
+    QMetaObject::invokeMethod(m_obexService, "setTransferFinished", Q_ARG(QString, transferId), Q_ARG(bool, success));
+}
+
+void NokiaBtServiceConnection::setTranferProgress(const QString &transferId, quint64 progress, quint64 total)
+{
+    QMetaObject::invokeMethod(m_obexService, "setTransferProgress", Q_ARG(QString, transferId), Q_ARG(quint64, progress), Q_ARG(quint64, total));
+}
+
+#endif
 
 #include "moc_qbluetoothtransferreply_bluez_p.cpp"
 
