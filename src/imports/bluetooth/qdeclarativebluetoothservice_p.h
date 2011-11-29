@@ -45,7 +45,7 @@
 #include <QObject>
 #include <qdeclarative.h>
 #include <qbluetoothserviceinfo.h>
-#include <qdeclarativebluetoothsocket_p.h>
+#include "qdeclarativebluetoothsocket_p.h"
 
 class QDeclarativeBluetoothSocket;
 

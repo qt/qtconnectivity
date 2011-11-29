@@ -51,8 +51,6 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
 
-#include <sys/utsname.h>
-
 #include <btclient.h>
 
 QTBLUETOOTH_USE_NAMESPACE
@@ -667,11 +665,7 @@ void tst_QBluetoothSocket::tst_localPeer_data()
     QTest::addColumn<QBluetoothAddress>("peerAddress");
     QTest::addColumn<quint16>("peerPort");
 
-    struct utsname u;
-    uname(&u);
-
-    QTest::newRow("test") //<< QString::fromLocal8Bit(u.nodename) << QBluetoothAddress(BTADDRESS) << quint16(10)
-                          << QString(BTADDRESS) << QBluetoothAddress(BTADDRESS) << quint16(10);
+    QTest::newRow("test") << QString(BTADDRESS) << QBluetoothAddress(BTADDRESS) << quint16(10);
 }
 
 void tst_QBluetoothSocket::tst_localPeer()

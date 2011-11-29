@@ -71,7 +71,7 @@ public:
     enum SocketType {
         UnknownSocketType = -1,
         L2capSocket,
-        RfcommSocket,
+        RfcommSocket
     };
 
     enum SocketState {
@@ -81,7 +81,7 @@ public:
         ConnectedState = QAbstractSocket::ConnectedState,
         BoundState = QAbstractSocket::BoundState,
         ClosingState = QAbstractSocket::ClosingState,
-        ListeningState = QAbstractSocket::ListeningState,
+        ListeningState = QAbstractSocket::ListeningState
     };
 
     enum SocketError {
