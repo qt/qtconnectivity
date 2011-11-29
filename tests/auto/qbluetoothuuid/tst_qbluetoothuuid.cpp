@@ -46,9 +46,10 @@
 
 #include <qbluetoothuuid.h>
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#ifdef Q_OS_SYMBIAN
+#if defined(Q_OS_UNIX)
+#    include <arpa/inet.h>
+#    include <netinet/in.h>
+#elif defined(Q_OS_SYMBIAN)
 //needed for symbian uuid conversion test
 #include <bttypes.h>
 #endif
