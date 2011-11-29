@@ -767,13 +767,14 @@ void tst_QBluetoothSocket::tst_error()
     QBluetoothSocket socket;
     QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
     QCOMPARE(errorSpy.count(), 0);
+    const QBluetoothSocket::SocketError e = socket.error();
 
-    QVERIFY(socket.error() != (QBluetoothSocket::ConnectionRefusedError ||
-        QBluetoothSocket::HostNotFoundError ||
-        QBluetoothSocket::NetworkError ||
-        QBluetoothSocket::RemoteHostClosedError ||
-        QBluetoothSocket::ServiceNotFoundError ||
-        QBluetoothSocket::UnknownSocketError));
+    QVERIFY(e != QBluetoothSocket::ConnectionRefusedError
+            && e != QBluetoothSocket::HostNotFoundError
+            && e != QBluetoothSocket::NetworkError
+            && e != QBluetoothSocket::RemoteHostClosedError
+            && e != QBluetoothSocket::ServiceNotFoundError
+            && e != QBluetoothSocket::UnknownSocketError);
 
     QVERIFY(socket.errorString() == QString());
 }
