@@ -59,7 +59,10 @@
 
 class OrgBluezAdapterInterface;
 class OrgBluezAgentAdaptor;
+
+QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
+QT_END_NAMESPACE
 #endif
 
 QT_BEGIN_HEADER

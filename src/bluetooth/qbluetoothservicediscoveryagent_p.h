@@ -57,8 +57,10 @@
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
+QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 class QXmlStreamReader;
+QT_END_NAMESPACE
 #endif
 
 QT_BEGIN_HEADER
