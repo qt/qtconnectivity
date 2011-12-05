@@ -49,7 +49,10 @@
 #ifdef QT_BLUEZ_BLUETOOTH
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
+
+QT_BEGIN_NAMESPACE
 class QDBusVariant;
+QT_END_NAMESPACE
 #endif
 
 #ifdef QT_SYMBIAN_BLUETOOTH
