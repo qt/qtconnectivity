@@ -50,8 +50,10 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QSharedDataPointer>
 
+QT_BEGIN_NAMESPACE
 class QString;
 class QUrl;
+QT_END_NAMESPACE
 
 QT_BEGIN_HEADER
 
