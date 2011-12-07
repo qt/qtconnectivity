@@ -49,11 +49,6 @@
 
 QTBLUETOOTH_USE_NAMESPACE
 
-#define WAIT_FOR_CONDITION(a,e)            \
-    for (int _i = 0; _i < 5000; _i += 1) {  \
-        if ((a) == (e)) break;             \
-        QTest::qWait(100);}
-
 class tst_QBluetoothLocalDevice : public QObject
 {
     Q_OBJECT
@@ -145,12 +140,12 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
 
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     // there should be no changes yet
+    QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
 
     localDevice.powerOn();
     // async, wait for it
-    WAIT_FOR_CONDITION(hostModeSpy.count(),1);
-    QVERIFY(hostModeSpy.count() > 0);
+    QTRY_VERIFY(hostModeSpy.count() > 0);
     QBluetoothLocalDevice::HostMode hostMode= localDevice.hostMode();
     // we should not be powered off
     QVERIFY(hostMode == QBluetoothLocalDevice::HostConnectable
@@ -170,12 +165,12 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
     QBluetoothLocalDevice localDevice;
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     // there should be no changes yet
+    QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
 
     localDevice.setHostMode(QBluetoothLocalDevice::HostPoweredOff);
     // async, wait for it
-    WAIT_FOR_CONDITION(hostModeSpy.count(),1);
-    QVERIFY(hostModeSpy.count() > 0);
+    QTRY_VERIFY(hostModeSpy.count() > 0);
     // we should not be powered off
     QVERIFY(localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff);
 
@@ -188,6 +183,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
     QBluetoothLocalDevice localDevice;
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     // there should be no changes yet
+    QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
 
     QTest::qWait(1000);
@@ -196,8 +192,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
     // wait for the device to switch bluetooth mode.
     QTest::qWait(1000);
     if (hostModeExpected != localDevice.hostMode()) {
-        WAIT_FOR_CONDITION(hostModeSpy.count(),1);
-        QVERIFY(hostModeSpy.count() > 0);
+        QTRY_VERIFY(hostModeSpy.count() > 0);
     }
     // test the actual signal values.
     QList<QVariant> arguments = hostModeSpy.takeFirst();
@@ -252,12 +247,12 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
 
     QSignalSpy pairingSpy(&localDevice, SIGNAL(pairingFinished(const QBluetoothAddress &,QBluetoothLocalDevice::Pairing)) );
     // there should be no signals yet
+    QVERIFY(pairingSpy.isValid());
     QVERIFY(pairingSpy.isEmpty());
 
     localDevice.requestPairing(deviceAddress, pairingExpected);
     // async, wait for it
-    WAIT_FOR_CONDITION(pairingSpy.count(),1);
-    QVERIFY(pairingSpy.count() > 0);
+    QTRY_VERIFY(pairingSpy.count() > 0);
 
     // test the actual signal values.
     QList<QVariant> arguments = pairingSpy.takeFirst();
