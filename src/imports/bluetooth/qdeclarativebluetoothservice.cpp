@@ -53,7 +53,7 @@
 
 /*!
    \qmlclass BluetoothService QDeclarativeBluetoothService
-   \brief The BluetoothService element contains all the information available for a single bluetooth service.\.
+   \brief The BluetoothService element contains all the information available for a single Bluetooth service.\.
 
    \ingroup connectivity-qml
    \inmodule QtConnectivity
@@ -61,7 +61,7 @@
    \sa QBluetoothAddress
    \sa QBluetoothSocket
 
-    The BluetoothService element is part of the \bold{QtMobility.connectivity 1.2} module.
+    The BluetoothService element was introduced in \bold{QtConnectivity 5.0}.
 
     It allows a QML project to get information about a remote service, or describe a service
     for a BluetoothSocket to connect to.

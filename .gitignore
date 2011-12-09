@@ -2,3 +2,4 @@
 *.pro.shared
 qtbluetoothversion.h
 qtnfcversion.h
+*~

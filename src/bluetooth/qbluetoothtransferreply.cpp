@@ -207,6 +207,12 @@ void QBluetoothTransferReply::setManager(QBluetoothTransferManager *manager)
 }
 
 /*!
+  \fn TransferError QBluetoothTransferReply::error() const
+
+  The error code of the error that happened.
+*/
+
+/*!
   \fn QString QBluetoothTransferReply::errorString() const
 
   String describing the error.  Can be displayed to the user.

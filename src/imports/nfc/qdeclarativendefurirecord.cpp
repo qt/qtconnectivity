@@ -54,7 +54,7 @@
 
     \sa QNdefNfcUriRecord
 
-    The NdefUriRecord element is part of the \bold {QtMobility.connectivity 1.2} module.
+    The NdefUriRecord element was introduced in \bold {QtConnectivity 5.0}.
 */
 
 /*!
