@@ -54,7 +54,7 @@
 
     \sa QNdefNfcTextRecord
 
-    The NdefTextRecord element is part of the \bold {QtMobility.connectivity 1.2} module.
+    The NdefTextRecord element was introduced in \bold {QtConnectivity 5.0}.
 
     The NdefTextRecord element contains a localized piece of text that can be display to the user.
     An NDEF message may contain many text records for different locales, it is up to the

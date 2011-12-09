@@ -131,8 +131,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value DirectPrinting         Basic Printing Profile (BPP) UUID
     \value ReferencePrinting      Related to Basic Printing Profile (BPP) UUID
     \value ImagingResponder       Basic Imaging Profile (BIP) UUID
-    \value ImagingResponder       Basic Imaging Profile (BIP) UUID
     \value ImagingAutomaticArchive Basic Imaging Profile (BIP) UUID
+    \value ImagingReferenceObjects Basic Imaging Profile (BIP) UUID
     \value Handsfree              Hands-Free Profile (HFP) Service Class Identifier and Profile Identifier
     \value HandsfreeAudioGateway  Hands-free Profile (HFP) UUID
     \value DirectPrintingReferenceObjectsService Basic Printing Profile (BPP) UUID

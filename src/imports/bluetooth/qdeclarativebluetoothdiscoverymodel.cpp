@@ -55,7 +55,7 @@
     \ingroup connectivity-qml
     \inmodule QtConnectivity
 
-    This element is part of the \bold{QtConnectivity} module.
+    The BluetoothDiscoveryModel element was introduced in \bold{QtConnectivity 5.0}.
 
     BluetoothDiscoveryModel provides a model of connectable services. The
     contents of the model can be filtered by UUID allowing discovery to be
