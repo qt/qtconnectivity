@@ -56,10 +56,9 @@
 /*! \internal
     \class BluetoothLinkManagerDeviceDiscoverer
     \brief The BluetoothLinkManagerDeviceDiscoverer class searches other bluetooth devices.
-    \since 5.0
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
+    \inmodule QtBluetooth
     \internal
 
     BluetoothLinkManagerDeviceDiscoverer is an Symbian ActiveObject derived class that discovers

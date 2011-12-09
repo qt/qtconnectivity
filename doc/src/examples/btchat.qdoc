@@ -1,0 +1,191 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the documentation of the Qt local connectivty modules.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example btchat
+    \title Bluetooth Chat Example
+
+    The Bluetooth Chat example shows how to use the Qt Connectivity Bluetooth API to communicate
+    with another application on a remote device using Bluetooth.
+
+    \image btchat-example.png
+
+    The Bluetooth Chat example implements a simple chat program between multiple parties.  The
+    application always acts as both a server and a client eliminating the need to determine who
+    should connect to whom.
+
+    \section1 Chat Server
+
+    The chat server is implemented by the ChatServer class.  The ChatServer class is declared as:
+
+    \snippet ../examples/btchat/chatserver.h declaration
+
+    The first thing the chat server needs to do is create an instance of QRfcommServer to listen
+    for incoming Bluetooth connections.  Our clientConnected() slot will be called whenever a new
+    connection is created.
+
+    \snippet ../examples/btchat/chatserver.cpp Create the server
+
+    The chat server is only useful if others know that it is there.  To enable other devices to
+    discover it a record describing the service needs to be published in the systems SDP (Service
+    Discovery Protocol) database.  The QBluetoothServiceInfo class encapsulates a service record.
+
+    We will publish a service record that contains some textural descriptions of the services, a
+    UUID that uniquely identifies the service, the discoverability attribute and connection
+    parameters.
+
+    The textural description of the service is stored in the ServiceName, ServiceDescription and
+    ServiceProvider attributes.
+
+    \snippet ../examples/btchat/chatserver.cpp Service name, description and provider
+
+    Bluetooth uses UUIDs as unique identifiers.  Our chat service is uses a randomly generated
+    UUID.
+
+    \snippet ../examples/btchat/chatserver.cpp Service UUID
+    \snippet ../examples/btchat/chatserver.cpp Service UUID set
+
+    A Bluetooth service is only discoverable if it is in the PublicBrowseGroup.
+
+    \snippet ../examples/btchat/chatserver.cpp Service Discoverability
+
+    The ProtocolDescriptorList attribute is used to publish the connection parameters that the
+    remote device requires to connect to our service.  Here we specify that the Rfcomm protocol is
+    used and set the port number to port that our rfcommServer instance is listening to.
+
+    \snippet ../examples/btchat/chatserver.cpp Protocol descriptor list
+
+    Finally we register the service record with the system.
+
+    \snippet ../examples/btchat/chatserver.cpp Register service
+
+    As mentioned earlier incoming connections are handled in the clientConnected() slot.  In this
+    slot we get a pointer a QBluetoothSocket representing the next pending connection connect up
+    slots to the readyRead() and disconnected() signals and emit a signal to notify others that a
+    new client has connected.
+
+    \snippet ../examples/btchat/chatserver.cpp clientConnected
+
+    The readSocket() slot is called whenever data is ready to be read from a client socket.  The
+    slot reads individual lines from the socket converts them from UTF-8 and emits the
+    messageReceived() signal.
+
+    \snippet ../examples/btchat/chatserver.cpp readSocket
+
+    The clientDisconnected() slot is called whenever a client disconnects from the service.  The
+    slot emits a signal to notify others that a client has disconnected and deletes the socket.
+
+    \snippet ../examples/btchat/chatserver.cpp clientDisconnected
+
+    The sendMessage() slot is used to send a message to all connected clients.  The message is
+    converted into UTF-8 and appended with a newline before being sent to all clients.
+
+    \snippet ../examples/btchat/chatserver.cpp sendMessage
+
+    When the chat server is stop the service record is removed from the system SDP database, all
+    connected client sockets are deleted and the QRfcommServer instance is deleted.
+
+    \snippet ../examples/btchat/chatserver.cpp stopServer
+
+    \section1 Chat Client
+
+    The chat client is implemented by the ChatClient class.  The ChatClient class is declared as:
+
+    \snippet ../examples/btchat/chatclient.h declaration
+
+    The client creates a new QBluetoothSocket and connects to the remote service described by the
+    \i remoteService parameter.  Slots are connected to the sockets readyRead(), connected() and
+    disconnected() signals.
+
+    \snippet ../examples/btchat/chatclient.cpp startClient
+
+    On sucessfull socket connection we emit a signal to notify other.
+
+    \snippet ../examples/btchat/chatclient.cpp connected
+
+    Similarily to the chat server the readSocket() slot is called when data is available from the
+    socket.  Lines are read individually and converted from UTF-8.  The messageReceived() signal
+    is emitted.
+
+    \snippet ../examples/btchat/chatclient.cpp readSocket
+
+    The sendMessage() slot is used to send a message to the remote device.  The message is
+    converted to UTF-8 and a newline appended.
+
+    \snippet ../examples/btchat/chatclient.cpp sendMessage
+
+    To disconnect from the remote chat service the QBluetoothSocket instance is deleted.
+
+    \snippet ../examples/btchat/chatclient.cpp stopClient
+
+    \section1 Chat Dialog
+
+    The main window of this example is the chat dialog, implemented in the Chat class.  This class
+    displays a chat session between a single ChatServer and zero or more ChatClients.  The Chat
+    class is declared as:
+
+    \snippet ../examples/btchat/chat.h declaration
+
+    First we construct the user interface
+
+    \snippet ../examples/btchat/chat.cpp Construct UI
+
+    We create an instance of the ChatServer and respond to its clientConnected(),
+    clientDiconnected() and messageReceived() signals.
+
+    \snippet ../examples/btchat/chat.cpp Create Chat Server
+
+    In response to the clientConnected() and clientDisconnected() signals of the ChatServer we
+    display the typical "foo has joined chat." and "foo has left." messages in the chat session.
+
+    \snippet ../examples/btchat/chat.cpp clientConnected clientDisconnected
+
+    Incoming messages from clients connected to the ChatServer are handled in the showMessage()
+    slot.  The message text tagged with the remote device name is displayed in the chat session.
+
+    \snippet ../examples/btchat/chat.cpp showMessage
+
+    In response to the connect button being clicked the application starts service discovery and
+    presents a list of discovered chat services on remote devices.  A ChatClient for the service
+    selected by the user.
+
+    \snippet ../examples/btchat/chat.cpp Connect to remote service
+
+    In reponse to connected() signals from ChatClient we display the a "Joined chat with foo."
+    message in the chat session.
+
+    \snippet ../examples/btchat/chat.cpp connected
+
+    Messages are sent to all remote devices via the ChatServer and ChatClient instances by emitting
+    the sendMessage() signal.
+
+    \snippet ../examples/btchat/chat.cpp sendClicked
+
+    We need to clean up ChatClient instances when the remote device forces a disconnect.
+
+    \snippet ../examples/btchat/chat.cpp clientDisconnected
+*/

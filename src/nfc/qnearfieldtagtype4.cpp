@@ -47,10 +47,9 @@ QTNFC_BEGIN_NAMESPACE
     \class QNearFieldTagType4
     \brief The QNearFieldTagType4 class provides an interface for communicating with an NFC Tag
            Type 4 tag.
-    \since 5.0
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
+    \inmodule QtNfc
 */
 
 /*!

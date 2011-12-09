@@ -46,11 +46,11 @@
     \brief The NdefMimeRecord element represents an NFC MIME record.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
+    \inmodule QtNfc
 
     \inherits NdefRecord
 
-    The NdefMimeRecord element is part of the \bold {QtMobility.connectivity 1.2} module.
+    The NdefMimeRecord element was introduced in \bold {QtNfc 5.0}.
 
     The NdefMimeRecord element can contain data with an associated MIME type.  The data is
     accessible from the uri in the \l {NdefMimeRecord::uri}{uri} property.
