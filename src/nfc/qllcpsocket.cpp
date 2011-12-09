@@ -56,10 +56,9 @@ QTNFC_BEGIN_NAMESPACE
 /*!
     \class QLlcpSocket
     \brief The QLlcpSocket class provides an NFC LLCP socket.
-    \since 5.0
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
+    \inmodule QtNfc
 
     NFC LLCP protocol is a peer-to-peer communication protocol between two NFC compliant devices.
 */

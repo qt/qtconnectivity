@@ -1,0 +1,89 @@
+/****************************************************************************
+**
+** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the documentation of the Qt local connectivty modules.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\title Qt5 Local Connectivity Reference Documentation
+\page connectivity.html
+\brief The Local Connectivity APIs facilitates communication with local devices.
+
+\tableofcontents
+
+\section1 Overview
+
+The Qt local connectivity addon APIs provides a set of APIs for communicating with local devices.
+
+The current version of the local connectivity APIs includes support for Bluetooth and Near Field
+Communication (NFC) technologies. Bluetooth is a short-range (less than 100 meters) wireless
+technology. It has a reasonably high data transfer rate of 2.1 Mbit/s, which makes it ideal for
+transfering data between devices.
+
+The Bluetooth API provides classes for controlling the local Bluetooth device, discovering devices
+in the local vacinity, discovering services provided by those devices, publishing services and both
+server and client sockets for L2CAP and RFCOMM protocols.
+
+NFC is an extremely short-range (approx. 1 centimeter) wireless techonology and has a maximum
+transfer rate of 424 kbit/s. NFC is ideal for transfer small packets of data when two devices are
+touched together.
+
+The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devices, including
+target detection and loss, registering NDEF message handlers, reading and writing NDEF messages to
+NFC Forum Tags, send tag specific commands. The API also provides client and server LLCP sockets.
+
+\section1 Known Issues and Limitations
+
+\section2 NFC
+
+The NFC API is only supported on Maemo6 and Symbian^3 and the Qt Simulator. On Symbian^3 the API is
+fully functional. On the Qt Simulator only target detection and loss and tag access are support. On
+Maemo6 the following features are \bold NOT supported:
+
+\list
+    \o Connectionless LLCP sockets (both client and server).
+    \o Tag type specific access.
+\endlist
+
+
+\section1 Examples
+
+To get started with the local connectivity APIs see
+\list
+    \o \l{Qt Local Connectivity Examples}{Examples}
+\endlist
+
+\section1 The local connectivity APIs
+
+\section2 Bluetooth C++ Classes
+\annotatedlist connectivity-bluetooth
+\section2 Bluetooth Qt Quick Elements
+\annotatedlist bluetooth-qml
+
+\section2 NFC C++ Classes
+\annotatedlist connectivity-nfc
+\section2 NFC Qt Quick Elements
+\annotatedlist nfc-qml
+
+*/

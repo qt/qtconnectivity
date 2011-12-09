@@ -52,8 +52,7 @@
     \brief The CNearFieldManager class provides symbian backend implementation to access NFC service.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
     \internal
 
     A Symbian implementation class to support symbian NFC backend.

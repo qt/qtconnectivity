@@ -53,8 +53,7 @@ QTNFC_BEGIN_NAMESPACE
     \brief The QNdefNfcUriRecord class provides an NFC RTD-URI
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 
     RTD-URI encapsulates a URI.
 */

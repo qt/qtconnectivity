@@ -50,8 +50,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
            devices.  Currently implemented using OPP.
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtBluetooth
 
     QBluetoothTransferManager uses OBEX to send get and put commands to remote devices.
 */
