@@ -171,7 +171,7 @@ QVariant QNearFieldTagType1Symbian::decodeResponse(const QByteArray &command, co
            Type 1 tag.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
+    \inmodule QtNfc
 */
 
 /*

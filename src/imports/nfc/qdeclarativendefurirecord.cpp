@@ -47,14 +47,14 @@
     \qmlclass NdefUriRecord QDeclarativeNdefUriRecord
     \brief The NdefUriRecord element represents an NFC RTD-URI NDEF record.
 
-    \ingroup connectivity-qml
-    \inmodule QtConnectivity
+    \ingroup nfc-qml
+    \inmodule QtNfc
 
     \inherits NdefRecord
 
     \sa QNdefNfcUriRecord
 
-    The NdefUriRecord element is part of the \bold {QtMobility.connectivity 1.2} module.
+    The NdefUriRecord element was introduced in \bold {QtNfc 5.0}.
 */
 
 /*!

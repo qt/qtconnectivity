@@ -1,0 +1,81 @@
+/****************************************************************************
+**
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** No Commercial Usage
+** This file contains pre-release code and may not be distributed.
+** You may use this file in accordance with the terms and conditions
+** contained in the Technology Preview License Agreement accompanying
+** this package.
+**
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of this
+** file.
+**
+** If you have questions regarding the use of this file, please contact
+** Nokia at qt-info@nokia.com.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page all-examples.html
+    \title Qt Local Connectivity Examples
+
+    The local connectivity APIs are structured in two submodules. These are QtBluetooth and QtNfc. There are a variety of examples that cover the entire range of the the local connectivity api's. You will find them in their own documentation but are also accessible from here.
+
+    \section2 Bluetooth
+    \table 80%
+        \header
+            \o Example
+            \o Description
+        \row
+            \o \l{btchat}{Bluetooth Chat}
+            \o A chat server and client using bluetooth.
+        \row
+            \o \l{bttennis}{Bluetooth Tennis}
+            \o The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
+            over Bluetooth and touch-to-play functionality on devices that support NFC.
+        \row
+            \o \l{btfiletransfer}{Bluetooth File Transfer}
+            \o Transfer files between Bluetooth devices.
+        \row
+            \o \l{btscanner}{Bluetooth Scanner}
+            \o Scan for Bluetooth devices.
+        \row
+            \o \l{bttennis}{QML Bluetooth Tennis}
+            \o The tennis game using a QML interface to the Bluetooth API. It must connect to an
+            instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
+        \row
+            \o \l{btscanner}{QML Bluetooth Scanner}
+            \o A QML implementation of the Bluetooth device scanner.
+    \endtable
+
+    \section2 NFC
+
+    \table 80%
+        \header
+            \o Example
+            \o Description
+        \row
+            \o \l{annotatedurl}{NFC Annotated URL}
+            \o Displays URL along with caption text and an image from from an NFC tag containing a
+            specially formated NDEF message.
+        \row
+            \o \l{ndefeditor}{NDEF Editor}
+            \o Create NDEF messages using the NDEF records supported by the Connectivity API and save
+            them to supported NFC Forum tags.
+        \row
+            \o \l{poster}{QML Poster}
+            \o A QML implementation of the NFC Annotated URL example.
+c    \endtable
+
+*/
+

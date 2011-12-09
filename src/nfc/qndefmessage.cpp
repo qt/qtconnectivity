@@ -49,8 +49,7 @@ QTNFC_BEGIN_NAMESPACE
     \brief The QNdefMessage class provides an NFC NDEF message.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 
     A QNdefMessage is a collection of 0 or more QNdefRecords. QNdefMessage inherits from
     QList<QNdefRecord> and therefore the standard QList functions can be used to manipulate the

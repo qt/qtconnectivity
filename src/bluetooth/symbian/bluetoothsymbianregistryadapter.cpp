@@ -56,7 +56,7 @@
     It uses following Symbian class CBTEngDevMan for native operations.
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
+    \inmodule QtBluetooth
     \internal
 
     @internalComponent

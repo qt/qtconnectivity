@@ -50,8 +50,7 @@ QTNFC_BEGIN_NAMESPACE
     \brief The QNdefFilter class provides a filter for matching NDEF messages.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 
     The QNdefFilter encapsulates the structure of an NDEF message and is used by
     QNearFieldManager::registerNdefMessageHandler() to match NDEF message that have a particular
