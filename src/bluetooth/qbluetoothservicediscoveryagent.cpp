@@ -52,14 +52,13 @@ QTBLUETOOTH_BEGIN_NAMESPACE
            provided by a Bluetooth device.
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtBluetooth
 
     To query the services provided by all contactable Bluetooth devices create an instance of
     QBluetoothServiceDiscoveryAgent, connect to either the serviceDiscovered() or finished()
     signals and call start().
 
-    \snippet snippets/connectivity/servicediscovery.cpp Service discovery
+    \snippet ../doc/src/snippets/servicediscovery.cpp Service discovery
 
     By default a minimal service discovery is performed. In this mode the QBluetotohServiceInfo
     objects returned are guaranteed to contain only device and service UUID information. Depending

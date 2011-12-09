@@ -59,8 +59,7 @@
            to the input tag information
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 */
 
 /*

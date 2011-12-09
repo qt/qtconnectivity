@@ -62,8 +62,7 @@ QTNFC_BEGIN_NAMESPACE
     \brief The QNearFieldManager class provides access to notifications for NFC events.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 
     NFC Forum devices support two modes of communications.  The first mode, peer-to-peer
     communications, is used to communicate between two NFC Forum devices.  The second mode,
@@ -145,113 +144,10 @@ QTNFC_BEGIN_NAMESPACE
                                             SLOT(handleNdefMessage(QNdefMessage,QNearFieldTarget)));
     \endcode
 
-    \section3 Symbian^3
-
-    On Symbian^3 an xml file needs to be created and installed into a particular directory on the
-    device. The format of the xml is given below.
-
-    \quotefile tools/ndefhandlergen/templates/symbian/symbian.xml
-
-    The \i {%APPNAME%} tags need to be changed to match the name of the application. The
-    \i description xml tags should be used to describe the application, however these values are
-    not used. The \i {%DATATYPE%} tag must be set with the NDEF record type to match  For example
-    the following would be used to match NDEF messages that contain a RTD-URI record:
-
     \code
         <customproperty key="datatype">urn:nfc:wkt:U</customproperty>
     \endcode
 
-    The following would be used to match NDEF messages that contain a custom type
-    urn:nfc:ext:example.com:f:
-
-    \code
-        <customproperty key="datatype">urn:nfc:ext:com.example:f</customproperty>
-    \endcode
-
-    The value of the \i customproperty xml tag can be set to any valid match string supported by
-    the Symbian^3 platform.
-
-    It is recommended to name the xml file after the application package name. For example
-    myapplication.xml. To install the above xml file into the correct location the following should
-    be added to the application .pro file:
-
-    \code
-        symbian {
-            ndefhandler.sources = myapplication.xml
-            ndefhandler.path = /private/2002AC7F/import/
-            DEPLOYMENT += ndefhandler
-        }
-    \endcode
-
-    \section3 Maemo6
-
-    On Maemo6 the NDEF message handler notifications are passed over D-Bus. Registration of the
-    NDEF message match criteria is done via a D-Bus call. The application must also ensure that it
-    has registered a D-Bus service name so that the application can be automatically launched when
-    a notification message is sent to the registered service.
-
-    To register the D-Bus service the two files need to be created and installed into particular
-    directories on the device. The first file is the D-Bus bus configuration file:
-
-    \quotefile tools/ndefhandlergen/templates/maemo6/maemo6.conf
-
-    The \i {%APPNAME%} tag must be replaced with the name of your application binary.
-
-    The second file is a D-Bus service file which is used by the D-Bus daemon to launch your
-    application.
-
-    \quotefile tools/ndefhandlergen/templates/maemo6/maemo6.service
-
-    The \i {%APPNAME%} tag must be replace with the name of your application binary and the
-    \i {%APPPATH%} tag must be replaced with the path to your installed application binary.
-
-    It is recommended to name these files after the application package name. For example
-    myapplication.conf and myapplication.service. To install the above files into the correct
-    location the following should be added to the application .pro file:
-
-    \code
-        maemo6 {
-            ndefhandler_conf.sources = myapplication.conf
-            ndefhandler_conf.path = /etc/dbus-1/system.d/
-
-            ndefhandler_service.sources = myapplication.service
-            ndefhandler_service.path = /usr/share/dbus-1/system-services/
-
-            DEPLOYMENT += ndefhandler_conf ndefhandler_service
-        }
-    \endcode
-
-    The NDEF message handler is registered with the following D-Bus command. Applications should
-    ensure that the following command (or similar) is executed once at installation time. For
-    example in the packages post-installation script.
-
-    \quotefile tools/ndefhandlergen/templates/maemo6/maemo6.postinst
-
-    The \i {%APPNAME%} string must be replaced with the name of the application binary. The
-    \i {%DATATYPE%} string must be replaced with the NDEF record type to match. For example the
-    following would be used to match NDEF messages that contain a RTD-URI record:
-
-    \code
-        string:"urn:nfc:wkt:U[1:*];"
-    \endcode
-
-    The following would be used to match NDEF messages that contain a custom type
-    urn:nfc:ext:example.com:f:
-
-    \code
-        string:"urn:nfc:ext:example.com:f[1:*];"
-    \endcode
-
-    Note that \c {[1:*]} indicates one or more records of the specified type must be in the NDEF
-    message. The value of the datatype string argument can be set to any valid match string
-    supported by the Maemo6 platform.
-
-    The NDEF message handler should be unregistered at uninstallation time. For example in the
-    packages pre-removal script.
-
-    \quotefile tools/ndefhandlergen/templates/maemo6/maemo6.prerm
-
-    The \i {%APPNAME%} string must be replace with the name of the application binary.
 */
 
 /*!

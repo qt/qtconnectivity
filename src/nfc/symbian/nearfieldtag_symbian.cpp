@@ -50,9 +50,8 @@
     \brief The CNearFieldTag class provides ways to access tag
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
+    \inmodule QtNfc
     \internal
-    \since 5.0
 */
 
 CNearFieldTag::CNearFieldTag(MNfcTag * aNfcTag, RNfcServer& aNfcServer) :  CActive(EPriorityStandard),

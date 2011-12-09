@@ -52,8 +52,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
            QBluetoothTranferManager.
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtBluetooth
 
     In additional to a copy of the QBluetoothTransferRequest object used to create the request,
     QBluetoothTransferReply contains the contents of the reply itself.
@@ -205,6 +204,12 @@ void QBluetoothTransferReply::setManager(QBluetoothTransferManager *manager)
     Q_D(QBluetoothTransferReply);
     d->m_manager = manager;
 }
+
+/*!
+  \fn TransferError QBluetoothTransferReply::error() const
+
+  The error code of the error that happened.
+*/
 
 /*!
   \fn QString QBluetoothTransferReply::errorString() const

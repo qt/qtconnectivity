@@ -60,7 +60,7 @@ const static TInt BTKErrRemoteDeviceIndicatedNoBonding = KLinkManagerErrBase-4;
     It uses following Symbian class CBTEngConnMan for native operations.
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
+    \inmodule QtBluetooth
     \internal
 */
 

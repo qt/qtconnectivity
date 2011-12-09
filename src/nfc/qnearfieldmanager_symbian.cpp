@@ -79,7 +79,7 @@ void ContentHandlerInterface::handleMessage(const QByteArray& btArray)
     \brief The QNearFieldManagerPrivateImpl class provides symbian backend access to NFC service.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
+    \inmodule QtNfc
 
   A Qt-Symbian wrapper implementation class to support symbian NFC backend.
 */

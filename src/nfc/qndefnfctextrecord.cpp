@@ -51,8 +51,7 @@ QTNFC_BEGIN_NAMESPACE
     \brief The QNdefNfcTextRecord class provides an NFC RTD-Text
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 
     RTD-Text encapsulates a user displayable text record.
 */

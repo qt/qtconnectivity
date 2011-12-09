@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: http://www.qt-project.org/
 **
-** This file is part of the QtConnectivity module of the Qt Toolkit.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
