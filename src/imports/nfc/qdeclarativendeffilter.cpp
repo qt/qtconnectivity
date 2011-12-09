@@ -45,13 +45,13 @@
     \qmlclass NdefFilter QDeclarativeNdefFilter
     \brief The NdefFilter element represents a filtering constraint for NDEF message records.
 
-    \ingroup connectivity-qml
-    \inmodule QtConnectivity
+    \ingroup nfc-qml
+    \inmodule QtNfc
 
     \sa NearField
     \sa QNdefFilter
 
-    The NdefFilter element is part of the \bold {QtMobility.connectivity 1.2} module.
+    The NdefFilter element was introduced in \bold {QtNfc 5.0}.
 
     The NdefFilter element is used with the NearField element to read NDEF messages from NFC Forum
     tags that match a given structure.

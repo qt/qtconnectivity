@@ -47,10 +47,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \class QBluetoothAddress
     \brief The QBluetoothAddress class provides a Bluetooth address.
-    \since 5.0
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
+    \inmodule QtBluetooth
 
     This class holds a Bluetooth address in a platform- and protocol- independent manner.
 */

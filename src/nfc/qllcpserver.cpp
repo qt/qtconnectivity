@@ -58,8 +58,7 @@ QTNFC_BEGIN_NAMESPACE
     \brief The QLlcpServer class provides an NFC LLCP socket based server.
 
     \ingroup connectivity-nfc
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtNfc
 
     This class makes it possible to accept incoming LLCP socket connections.
 
@@ -152,8 +151,7 @@ QString QLlcpServer::serviceUri() const
 
 /*!
     Returns the LLCP port associated with the service URI that the server is listening on.
-
-    \note This call is not supported on all platforms and will return 0 on these platforms.
+    This call is not supported on all platforms and will return 0 on these platforms.
 */
 quint8 QLlcpServer::serverPort() const
 {

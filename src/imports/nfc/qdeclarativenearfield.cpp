@@ -53,8 +53,8 @@
     \qmlclass NearField QDeclarativeNearField
     \brief The NearField element provides access to NDEF messages stored on NFC Forum tags.
 
-    \ingroup connectivity-qml
-    \inmodule QtConnectivity
+    \ingroup nfc-qml
+    \inmodule QtNfc
 
     \sa NdefFilter
     \sa NdefRecord
@@ -63,7 +63,7 @@
     \sa QNdefMessage
     \sa QNdefRecord
 
-    The NearField element is part of the \bold {QtNfc 5.0} module.
+    The NearField element was introduced in \bold {QtNfc 5.0}.
 
     The NearField element can be used to read NDEF messages from NFC Forum tags.  Set the \l filter
     and \l orderMatch properties to match the required NDEF messages.  Once an NDEF message is

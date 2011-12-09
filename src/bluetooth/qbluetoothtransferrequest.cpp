@@ -52,8 +52,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
            QBluetoothTransferManager.
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
-    \since 5.0
+    \inmodule QtBluetooth
 
     QBluetoothTransferRequest is part of the Bluetooth Transfer API and is the class holding the
     information necessary to initiate a transfer over Bluetooth.
