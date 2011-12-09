@@ -48,15 +48,14 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \class QBluetoothDeviceDiscoveryAgent
     \brief The QBluetoothDeviceDiscoveryAgent class provides an API for discovering nearby
            Bluetooth devices.
-    \since 5.0
 
     \ingroup connectivity-bluetooth
-    \inmodule QtConnectivity
+    \inmodule QtBluetooth
 
     To discovery nearby Bluetooth devices create an instance of QBluetoothDeviceDiscoveryAgent,
     connect to either the deviceDiscovered() or finished() signals and call start().
 
-    \snippet snippets/connectivity/devicediscovery.cpp Device discovery
+    \snippet ../doc/src/snippets/devicediscovery.cpp Device discovery
 
     To retrieve results asynchronously connect to the deviceDiscovered() signal. To get a list of
     all discovered devices call discoveredDevices() after the finished() signal is emitted.

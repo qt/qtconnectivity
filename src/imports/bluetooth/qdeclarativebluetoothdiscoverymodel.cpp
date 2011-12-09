@@ -52,10 +52,10 @@
     \qmlclass BluetoothDiscoveryModel QDeclarativeBluetoothDiscoveryModel
     \brief The BluetoothDisoceryModel element provides access device and service scanning
 
-    \ingroup connectivity-qml
-    \inmodule QtConnectivity
+    \ingroup bluetooth-qml
+    \inmodule QtBluetooth
 
-    This element is part of the \bold{QtConnectivity} module.
+    The BluetoothDiscoveryModel element was introduced in \bold{QtBluetooth 5.0}.
 
     BluetoothDiscoveryModel provides a model of connectable services. The
     contents of the model can be filtered by UUID allowing discovery to be
