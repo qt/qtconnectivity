@@ -53,7 +53,7 @@
     \sa QLlcpSocket
     \sa QLlcpServer
 
-    The NearFieldSocket element is part of the \bold {QtMobility.connectivity 1.2} module.
+    The NearFieldSocket element was introduced in \bold {QtConnectivity 5.0}.
 
     The NearFieldSocket element can be used to create a peer-to-peer connection over NFC LLCP
     sockets.  NearfieldSocket can be used for both client and server side sockets.

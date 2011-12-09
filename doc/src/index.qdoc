@@ -1,0 +1,14 @@
+/*!
+\title Overview
+\page index.html
+
+
+C++ classes in this project:
+
+\generatelist annotatedclasses
+
+QML classes in this project:
+
+\generatelist qmlclasses
+
+*/

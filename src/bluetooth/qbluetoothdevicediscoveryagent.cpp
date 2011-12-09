@@ -56,7 +56,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     To discovery nearby Bluetooth devices create an instance of QBluetoothDeviceDiscoveryAgent,
     connect to either the deviceDiscovered() or finished() signals and call start().
 
-    \snippet snippets/connectivity/devicediscovery.cpp Device discovery
+    \snippet ../doc/src/snippets/devicediscovery.cpp Device discovery
 
     To retrieve results asynchronously connect to the deviceDiscovered() signal. To get a list of
     all discovered devices call discoveredDevices() after the finished() signal is emitted.
