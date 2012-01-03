@@ -214,7 +214,7 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
     }
 }
 
-static void dumpServiceInfoAttributes(const QBluetoothServiceInfo &info)
+static inline void dumpServiceInfoAttributes(const QBluetoothServiceInfo &info)
 {
     foreach (quint16 id, info.attributes()) {
         dumpAttributeVariant(info.attribute(id), QString("\t"));

@@ -45,13 +45,13 @@
 
 QTBLUETOOTH_BEGIN_NAMESPACE
 
-QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
-:   QObject(parent)
+QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
+    QObject(parent), d_ptr(0)
 {
 }
 
-QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent)
-: QObject(parent)
+QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &, QObject *parent) :
+    QObject(parent), d_ptr(0)
 {
 }
 

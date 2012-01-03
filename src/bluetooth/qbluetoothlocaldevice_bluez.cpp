@@ -55,8 +55,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 static const QLatin1String agentPath("/qt/agent");
 
-QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
-:   QObject(parent)
+QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
+    QObject(parent), d_ptr(0)
 {
     OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
                                      QDBusConnection::systemBus());
@@ -90,8 +90,8 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
 
 }
 
-QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent)
-: QObject(parent)
+QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent) :
+    QObject(parent), d_ptr(0)
 {
     OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
                                      QDBusConnection::systemBus());
@@ -237,7 +237,10 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     return localDevices;
 }
 
-static inline OrgBluezDeviceInterface *getDevice(const QBluetoothAddress &address, QBluetoothLocalDevicePrivate *d_ptr){
+static inline OrgBluezDeviceInterface *getDevice(const QBluetoothAddress &address, QBluetoothLocalDevicePrivate *d_ptr)
+{
+    if (!d_ptr)
+        return 0;
     QDBusPendingReply<QDBusObjectPath> reply = d_ptr->adapter->FindDevice(address.toString());
     reply.waitForFinished();
     if(reply.isError()){
