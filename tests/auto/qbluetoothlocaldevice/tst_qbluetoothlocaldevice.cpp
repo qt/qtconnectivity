@@ -195,6 +195,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
         QTRY_VERIFY(hostModeSpy.count() > 0);
     }
     // test the actual signal values.
+    QVERIFY(hostModeSpy.count() > 0);
     QList<QVariant> arguments = hostModeSpy.takeFirst();
     QBluetoothLocalDevice::HostMode hostMode = qvariant_cast<QBluetoothLocalDevice::HostMode>(arguments.at(0));
     QCOMPARE(hostModeExpected, hostMode);
