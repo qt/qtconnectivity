@@ -103,7 +103,7 @@ static const char * const abbreviations[] = {
 */
 QUrl QNdefNfcUriRecord::uri() const
 {
-    const QByteArray p = payload();
+    QByteArray p = payload();
 
     if (p.isEmpty())
         return QUrl();
@@ -111,8 +111,10 @@ QUrl QNdefNfcUriRecord::uri() const
     quint8 code = p.at(0);
     if (code >= sizeof(abbreviations) / sizeof(*abbreviations))
         code = 0;
-
-    return QUrl(QLatin1String(abbreviations[code]) + QString::fromUtf8(p.mid(1), p.length() - 1));
+    p.remove(0, 1);
+    if (const char *abbreviation = abbreviations[code])
+        p.insert(0, abbreviation);
+    return QUrl(QString::fromUtf8(p));
 }
 
 /*!

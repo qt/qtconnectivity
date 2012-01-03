@@ -135,11 +135,8 @@ void tst_QBluetoothTransferManager::initTestCase()
     sda->setUuidFilter(QBluetoothUuid(QString(ECHO_SERVICE_UUID)));
     sda->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
 
-    int connectTime = MaxConnectTime;
-    while (!done_discovery) {
+    for (int connectTime = MaxConnectTime; !done_discovery && connectTime > 0; connectTime -= 1000)
         QTest::qWait(1000);
-        connectTime -= 1000;
-    }
 
     sda->stop();
 
