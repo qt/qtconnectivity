@@ -5,7 +5,7 @@ DEPENDPATH += $$PWD/../../src/nfc
 
 TARGET = nfctestserver
 
-CONFIG += qt debug warn_on console depend_includepath
+CONFIG += qt warn_on console depend_includepath
 CONFIG += console strict_flags
 CONFIG -= app_bundle
 
