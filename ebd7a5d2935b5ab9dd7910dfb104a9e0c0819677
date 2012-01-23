@@ -1,0 +1,6 @@
+Sanity-Review-1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+2: Alex <alex.blasche@nokia.com>
+Sanity-Review+1: Alex <alex.blasche@nokia.com>
+Reviewed-on: http://codereview.qt-project.org/13117
+Project: qt/qtconnectivity
+Branch: refs/heads/master
