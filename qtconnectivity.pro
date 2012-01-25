@@ -1,8 +1,6 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 
-include(doc/doc.pri)
-
 module_qtconnectivity_src.subdir = src
 module_qtconnectivity_src.target = module-qtconnectivity-src
 
