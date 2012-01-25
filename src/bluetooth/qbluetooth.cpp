@@ -39,7 +39,11 @@
 **
 ****************************************************************************/
 
-#include "qbluetooth.h"
+#include <QtBluetooth/qbluetooth.h>
+
+QT_BEGIN_NAMESPACE
+
+namespace QBluetooth {
 
 /*!
     \namespace QBluetooth
@@ -72,3 +76,6 @@
     Legacy pairing is not permitted, Simple Pairing from Bluetooth 2.1 or
     greater is required.
 */
+}
+
+QT_END_NAMESPACE
