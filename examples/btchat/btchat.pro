@@ -21,7 +21,3 @@ HEADERS = \
 FORMS = \
     chat.ui \
     remoteselector.ui
-
-symbian {
-    TARGET.CAPABILITY = LocalServices UserEnvironment ReadUserData WriteUserData NetworkServices NetworkControl ReadDeviceData WriteDeviceData SwEvent
-}

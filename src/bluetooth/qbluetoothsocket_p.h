@@ -51,12 +51,6 @@
 
 #include <QtGlobal>
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-#include <es_sock.h>
-#include <bt_sock.h>
-#include <bttypes.h>
-#endif
-
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 
 QT_BEGIN_HEADER
@@ -70,10 +64,6 @@ class QSocketServerPrivate
 public:
     QSocketServerPrivate();
     ~QSocketServerPrivate();
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-    RSocketServ socketServer;
-#endif
 };
 
 
@@ -82,9 +72,6 @@ class QBluetoothSocket;
 class QBluetoothServiceDiscoveryAgent;
 
 class QBluetoothSocketPrivate
-#ifdef QT_SYMBIAN_BLUETOOTH
-: public MBluetoothSocketNotifier
-#endif
 {
     Q_DECLARE_PUBLIC(QBluetoothSocket)
 public:
@@ -121,24 +108,6 @@ public:
 
     qint64 bytesAvailable() const;
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-    void _q_startReceive();
-    void startReceive();
-    void startServerSideReceive();
-    void receive();
-    bool ensureBlankNativeSocket(QBluetoothSocket::SocketType type);
-    bool tryToSend();
-
-    /* MBluetoothSocketNotifier virtual functions */
-    void HandleActivateBasebandEventNotifierCompleteL(TInt aErr, TBTBasebandEventNotification& aEventNotification);
-    void HandleAcceptCompleteL(TInt aErr);
-    void HandleConnectCompleteL(TInt aErr);
-    void HandleIoctlCompleteL(TInt aErr);
-    void HandleReceiveCompleteL(TInt aErr);
-    void HandleSendCompleteL(TInt aErr);
-    void HandleShutdownCompleteL(TInt aErr);
-#endif
-
 public:
     QPrivateLinearBuffer buffer;
     QPrivateLinearBuffer txBuffer;
@@ -157,19 +126,6 @@ public:
 //    QByteArray rxBuffer;
 //    qint64 rxOffset;
     QString errorString;
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-    CBluetoothSocket *iSocket;
-    TPtr8 rxDescriptor;
-    TPtrC8 txDescriptor;
-    QByteArray txArray;
-    TSockXfrLength rxLength;
-    TInt recvMTU;
-    TInt txMTU;
-    char* bufPtr;
-    bool transmitting;
-    quint64 writeSize;
-#endif
 
     // private slots
     void _q_readNotify();

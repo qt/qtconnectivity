@@ -137,11 +137,6 @@ Q_SIGNALS:
 private:
     Q_DECLARE_PRIVATE(QBluetoothLocalDevice)
     QBluetoothLocalDevicePrivate *d_ptr;
-#ifdef QT_SYMBIAN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_pairingFinished(const QBluetoothAddress &, QBluetoothLocalDevice::Pairing))
-    Q_PRIVATE_SLOT(d_func(), void _q_registryError(int error))
-    Q_PRIVATE_SLOT(d_func(), void _q_pairingError(int error))
-#endif //QT_SYMBIAN_BLUETOOTH
 };
 
 QTBLUETOOTH_END_NAMESPACE

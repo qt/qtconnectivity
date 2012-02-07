@@ -105,11 +105,6 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_deviceFound(const QString &address, const QVariantMap &dict));
     Q_PRIVATE_SLOT(d_func(), void _q_propertyChanged(const QString &name, const QDBusVariant &value));
 #endif
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_newDeviceFound(const QBluetoothDeviceInfo &device))
-    Q_PRIVATE_SLOT(d_func(), void _q_setError(QBluetoothDeviceDiscoveryAgent::Error errorCode, QString errorDescription))
-#endif // QT_SYMBIAN_BLUETOOTH
 };
 
 QTBLUETOOTH_END_NAMESPACE

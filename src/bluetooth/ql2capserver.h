@@ -91,12 +91,6 @@ protected:
 private:
     Q_DECLARE_PRIVATE(QL2capServer)
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_connected())
-    Q_PRIVATE_SLOT(d_func(), void _q_socketError(QBluetoothSocket::SocketError err))
-    Q_PRIVATE_SLOT(d_func(), void _q_disconnected())
-#endif //QT_SYMBIAN_BLUETOOTH
-    
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_newConnection())
 #endif

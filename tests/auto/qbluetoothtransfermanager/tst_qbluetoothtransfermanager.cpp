@@ -61,12 +61,7 @@ QTBLUETOOTH_USE_NAMESPACE
 typedef QMap<int,QVariant> tst_QBluetoothTransferManager_QParameterMap;
 Q_DECLARE_METATYPE(tst_QBluetoothTransferManager_QParameterMap)
 
-#ifdef Q_OS_SYMBIAN
-char BTADDRESS[] = "00:09:DD:50:93:DD";
-static const QString testfile("c:\\data\\testdata.txt");
-#else
 char BTADDRESS[] = "00:00:00:00:00:00";
-#endif
 
 static const int MaxConnectTime = 60 * 1000;   // 1 minute in ms
 
@@ -121,7 +116,6 @@ void tst_QBluetoothTransferManager::initTestCase()
     device->powerOn();
     delete device;
 
-#ifndef Q_OS_SYMBIAN
     // Go find an echo server for BTADDRESS
     QBluetoothServiceDiscoveryAgent *sda = new QBluetoothServiceDiscoveryAgent(this);
     connect(sda, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
@@ -144,7 +138,6 @@ void tst_QBluetoothTransferManager::initTestCase()
         QFAIL("Unable to find test service");
     }
     delete sda;
-#endif
 }
 void tst_QBluetoothTransferManager::error(QBluetoothServiceDiscoveryAgent::Error error)
 {
@@ -198,42 +191,6 @@ void tst_QBluetoothTransferManager::tst_put()
     }
 
     QBluetoothTransferManager manager;
-
-#ifdef Q_OS_SYMBIAN
-    {
-        QFile fileToWrite(testfile);
-         if (!fileToWrite.open(QIODevice::WriteOnly | QIODevice::Text))
-             return;
-
-         QTextStream out(&fileToWrite);
-         out << "This_is_testdata!!!";
-         fileToWrite.close();
-    }
-
-    QFile file(testfile);
-    if (!file.exists())
-        return;
-
-    QBluetoothTransferReply *reply = manager.put(transferRequest, &file);
-    int connectTime = MaxConnectTime;
-
-    QSignalSpy finishedSpy(&manager, SIGNAL(finished(QBluetoothTransferReply*)));
-    while (finishedSpy.count() == 0 && connectTime > 0) {
-        QTest::qWait(1000);
-        connectTime -= 1000;
-    }
-    QCOMPARE(finishedSpy.count(), 1);
-
-    int error = reply->error();
-    qDebug()<<"QtBluetoothTester::SendData reply->error ="<<error;
-    QVERIFY(error == QBluetoothTransferReply::NoError);
-
-    if (error != QBluetoothTransferReply::NoError) {
-        qDebug() << "Failed to send file";
-    }
-    delete reply;
-    file.close();
-#endif
 }
 
 void tst_QBluetoothTransferManager::tst_putAbort_data()
@@ -261,35 +218,6 @@ void tst_QBluetoothTransferManager::tst_putAbort()
     }
 
     QBluetoothTransferManager manager;
-
-#ifdef Q_OS_SYMBIAN
-    {
-        QFile fileToWrite(testfile);
-         if (!fileToWrite.open(QIODevice::WriteOnly | QIODevice::Text))
-             return;
-
-         QTextStream out(&fileToWrite);
-         out << "This_is_testdata!!!";
-         fileToWrite.close();
-    }
-
-    QFile file(testfile);
-    if (!file.exists())
-        return;
-
-    QBluetoothTransferReply *reply = manager.put(transferRequest, &file);
-    reply->abort();
-
-    int error = reply->error();
-    qDebug()<<"QtBluetoothTester::SendData reply->error ="<<error;
-    QVERIFY(error == QBluetoothTransferReply::NoError);
-
-    if (error != QBluetoothTransferReply::NoError) {
-        qDebug() << "Failed to send file";
-    }
-    delete reply;
-    file.close();
-#endif
 }
 
 void tst_QBluetoothTransferManager::tst_attribute_data()
@@ -317,32 +245,6 @@ void tst_QBluetoothTransferManager::tst_attribute()
     }
 
     QBluetoothTransferManager manager;
-
-#ifdef Q_OS_SYMBIAN
-    {
-        QFile fileToWrite(testfile);
-         if (!fileToWrite.open(QIODevice::WriteOnly | QIODevice::Text))
-             return;
-
-         QTextStream out(&fileToWrite);
-         out << "This_is_testdata!!!";
-         fileToWrite.close();
-    }
-
-    QFile file(testfile);
-    if (!file.exists())
-        return;
-
-    QBluetoothTransferReply *reply = manager.put(transferRequest, &file);
-    reply->abort();
-
-    QVERIFY(reply->attribute(QBluetoothTransferRequest::DescriptionAttribute) == QVariant("Desciption"));
-    QVERIFY(reply->attribute(QBluetoothTransferRequest::LengthAttribute) == QVariant("1024"));
-    QVERIFY(reply->attribute(QBluetoothTransferRequest::TypeAttribute) == QVariant("OPP"));
-
-    delete reply;
-    file.close();
-#endif
 }
 
 void tst_QBluetoothTransferManager::tst_operation_data()
@@ -358,28 +260,6 @@ void tst_QBluetoothTransferManager::tst_operation()
 
     QBluetoothTransferRequest transferRequest(address);
     QBluetoothTransferManager manager;
-#ifdef Q_OS_SYMBIAN
-    {
-        QFile fileToWrite(testfile);
-         if (!fileToWrite.open(QIODevice::WriteOnly | QIODevice::Text))
-             return;
-
-         QTextStream out(&fileToWrite);
-         out << "This_is_testdata!!!";
-         fileToWrite.close();
-    }
-
-    QFile file(testfile);
-    if (!file.exists())
-        return;
-
-    QBluetoothTransferReply *reply = manager.put(transferRequest, &file);
-
-    QVERIFY(reply->operation() == QBluetoothTransferManager::PutOperation);
-
-    delete reply;
-    file.close();
-#endif
 }
 
 void tst_QBluetoothTransferManager::tst_manager_data()
@@ -395,28 +275,6 @@ void tst_QBluetoothTransferManager::tst_manager()
 
     QBluetoothTransferRequest transferRequest(address);
     QBluetoothTransferManager manager;
-#ifdef Q_OS_SYMBIAN
-    {
-        QFile fileToWrite(testfile);
-         if (!fileToWrite.open(QIODevice::WriteOnly | QIODevice::Text))
-             return;
-
-         QTextStream out(&fileToWrite);
-         out << "This_is_testdata!!!";
-         fileToWrite.close();
-    }
-
-    QFile file(testfile);
-    if (!file.exists())
-        return;
-
-    QBluetoothTransferReply *reply = manager.put(transferRequest, &file);
-
-    QVERIFY(reply->manager() == &manager);
-
-    delete reply;
-    file.close();
-#endif
 }
 
 QTEST_MAIN(tst_QBluetoothTransferManager)

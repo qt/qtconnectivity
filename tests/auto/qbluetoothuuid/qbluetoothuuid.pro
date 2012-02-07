@@ -3,7 +3,3 @@ TARGET = tst_qbluetoothuuid
 CONFIG += testcase
 
 QT = core concurrent bluetooth testlib
-
-symbian: {
-    LIBS *= -lbluetooth
-}

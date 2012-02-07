@@ -45,11 +45,6 @@
 #include "qbluetoothglobal.h"
 #include <qbluetoothsocket.h>
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-#include <es_sock.h>
-#include <bt_sock.h>
-#endif //QT_SYMBIAN_BLUETOOTH
-
 #ifdef QT_BLUEZ_BLUETOOTH
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
@@ -61,10 +56,6 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 class QBluetoothAddress;
 class QBluetoothSocket;
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-class QBluetoothSocketPrivate;
-#endif
-
 class QL2capServer;
 
 class QL2capServerPrivate
@@ -75,13 +66,6 @@ public:
     QL2capServerPrivate();
     ~QL2capServerPrivate();
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-    // private slots
-    void _q_connected();
-    void _q_socketError(QBluetoothSocket::SocketError err);
-    void _q_disconnected();
-#endif //QT_SYMBIAN_BLUETOOTH
-    
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_newConnection();
 #endif
@@ -93,11 +77,6 @@ public:
 
     int maxPendingConnections;
     QBluetooth::SecurityFlags securityFlags;
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-    mutable QList<QBluetoothSocket *> activeSockets;
-    QBluetoothSocketPrivate *ds;
-#endif //QT_SYMBIAN_BLUETOOTH
 
 protected:
     QL2capServer *q_ptr;

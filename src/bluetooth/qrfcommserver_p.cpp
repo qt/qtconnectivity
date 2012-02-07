@@ -96,31 +96,6 @@ void QRfcommServerPrivate::_q_newConnection()
 }
 #endif
 
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-void QRfcommServerPrivate::HandleAcceptCompleteL(TInt aErr)
-{
-}
-void QRfcommServerPrivate::HandleActivateBasebandEventNotifierCompleteL(TInt aErr, TBTBasebandEventNotification &aEventNotification)
-{
-}
-void QRfcommServerPrivate::HandleConnectCompleteL(TInt aErr)
-{
-}
-void QRfcommServerPrivate::HandleIoctlCompleteL(TInt aErr)
-{
-}
-void QRfcommServerPrivate::HandleReceiveCompleteL(TInt aErr)
-{
-}
-void QRfcommServerPrivate::HandleSendCompleteL(TInt aErr)
-{
-}
-void QRfcommServerPrivate::HandleShutdownCompleteL(TInt aErr)
-{
-}
-#endif
-
 void QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
 }

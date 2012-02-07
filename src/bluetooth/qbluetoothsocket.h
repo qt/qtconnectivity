@@ -168,9 +168,6 @@ protected:
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_readNotify())
     Q_PRIVATE_SLOT(d_func(), void _q_writeNotify())
-#ifdef QT_SYMBIAN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_startReceive())
-#endif //QT_SYMBIAN_BLUETOOTH
 };
 
 #ifndef QT_NO_DEBUG_STREAM
