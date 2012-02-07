@@ -10,6 +10,8 @@ DEFINES += QT_BUILD_BT_LIB QT_MAKEDLL
 
 load(qt_module_config)
 
+QT += concurrent
+
 PUBLIC_HEADERS += \
     qbluetoothaddress.h\
     qbluetoothuuid.h\
