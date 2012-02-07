@@ -8,7 +8,7 @@ DEPENDPATH += \
     ../../src/connectivity/bluetooth \
     ../../src/connectivity/nfc
 
-QT += bluetooth nfc widgets
+QT += concurrent bluetooth nfc widgets
 
 SOURCES = \
     main.cpp \

@@ -2,7 +2,7 @@ SOURCES += tst_qbluetoothuuid.cpp
 TARGET = tst_qbluetoothuuid
 CONFIG += testcase
 
-QT = core bluetooth testlib
+QT = core concurrent bluetooth testlib
 
 symbian: {
     LIBS *= -lbluetooth
