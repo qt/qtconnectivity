@@ -1,4 +1,4 @@
-QT += widgets declarative network bluetooth quick
+QT += concurrent widgets declarative network bluetooth quick
 SOURCES += qmlscanner.cpp
 
 TARGET = qml_scanner

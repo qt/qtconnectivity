@@ -4,6 +4,6 @@ TARGET = tst_ql2capserver
 # Note, not really an autotest.  Requires manually setting up and running btclient first.
 #CONFIG += testcase
 
-QT = core bluetooth testlib
+QT = core concurrent bluetooth testlib
 
 symbian: TARGET.CAPABILITY =  LocalServices NetworkControl

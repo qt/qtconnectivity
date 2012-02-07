@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += plugin
 PLUGIN_TYPE=serviceframework
 
-QT += bluetooth serviceframework
+QT += concurrent bluetooth serviceframework
 
 HEADERS += bluetoothtransferplugin.h \
            bluetoothtransfer.h

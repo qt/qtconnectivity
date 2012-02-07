@@ -2,7 +2,7 @@ SOURCES += tst_qbluetoothtransfermanager.cpp
 TARGET=tst_qbluetoothtransfermanager
 CONFIG += testcase
 
-QT = core bluetooth testlib
+QT = core concurrent bluetooth testlib
 
 INCLUDEPATH += ../../../tests/btclient
 DEPENDPATH += ../../../tests/btclient

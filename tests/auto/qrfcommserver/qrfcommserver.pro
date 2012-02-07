@@ -2,7 +2,7 @@ SOURCES += tst_qrfcommserver.cpp
 TARGET = tst_qrfcommserver
 CONFIG += testcase
 
-QT = core bluetooth testlib
+QT = core concurrent bluetooth testlib
 
 symbian: TARGET.CAPABILITY =  LocalServices NetworkControl WriteDeviceData
 
