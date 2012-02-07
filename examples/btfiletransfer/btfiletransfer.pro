@@ -1,6 +1,6 @@
 TARGET = btfiletransfer
 
-QT += bluetooth widgets
+QT += concurrent bluetooth widgets
 
 INCLUDEPATH += ../../src/connectivity/bluetooth
 DEPENDPATH += ../../src/connectivity/bluetooth

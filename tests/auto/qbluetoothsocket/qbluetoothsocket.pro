@@ -2,7 +2,7 @@ SOURCES += tst_qbluetoothsocket.cpp
 TARGET = tst_qbluetoothsocket
 CONFIG += testcase
 
-QT = core network bluetooth testlib
+QT = core concurrent network bluetooth testlib
 
 INCLUDEPATH += ../../../tests/btclient
 DEPENDPATH += ../../../tests/btclient
