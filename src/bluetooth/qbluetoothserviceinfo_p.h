@@ -48,10 +48,6 @@
 #include <QMap>
 #include <QVariant>
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-#include <btsdp.h>
-#endif
-
 class OrgBluezServiceInterface;
 
 QT_BEGIN_HEADER
@@ -78,16 +74,6 @@ public:
 
     QBluetoothDeviceInfo deviceInfo;
     QMap<quint16, QVariant> attributes;
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-private:
-    void setRegisteredAttributeL(quint16 attributeId, const QVariant &value) const;
-
-public:
-    mutable RSdp sdpSession;
-    mutable RSdpDatabase sdpDatabase;
-    mutable TSdpServRecordHandle serviceRecord;
-#endif
 
 #ifdef QT_BLUEZ_BLUETOOTH
     mutable OrgBluezServiceInterface *service;

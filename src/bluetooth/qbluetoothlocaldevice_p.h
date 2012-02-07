@@ -46,11 +46,6 @@
 
 #include "qbluetoothlocaldevice.h"
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-#include <e32base.h>
-#include <btengsettings.h>
-#endif
-
 #ifdef QT_BLUEZ_BLUETOOTH
 #include <QObject>
 #include <QDBusContext>
@@ -108,46 +103,6 @@ private:
     QDBusConnection *msgConnection;
 
     QBluetoothLocalDevice *q_ptr;
-};
-
-#elif defined(QT_SYMBIAN_BLUETOOTH)
-
-class QBluetoothLocalDevicePrivate
-        : public MBTEngSettingsObserver
-{
-    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
-public:
-    QBluetoothLocalDevicePrivate();
-    ~QBluetoothLocalDevicePrivate();
-
-    static QString name();
-    static QBluetoothAddress address();
-
-    void powerOn();
-    void powerOff();
-    void setHostMode(QBluetoothLocalDevice::HostMode mode);
-    QBluetoothLocalDevice::HostMode hostMode() const;
-
-    void requestPairing(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
-    QBluetoothLocalDevice::Pairing pairingStatus(const QBluetoothAddress &address) const;
-
-    void pairingConfirmation(bool confirmation);
-    //slots exposed for the public api.
-    void _q_pairingFinished(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
-    void _q_registryError(int error);
-    void _q_pairingError(int error);
-
-private:
-    //From MBTEngSettingsObserver
-    void PowerStateChanged(TBTPowerStateValue aState);
-    void VisibilityModeChanged(TBTVisibilityMode aState);
-
-private:
-    CBTEngSettings *m_settings;
-
-protected:
-    QBluetoothLocalDevice *q_ptr;
-
 };
 #else
 class QBluetoothLocalDevicePrivate : public QObject

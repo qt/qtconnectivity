@@ -60,9 +60,6 @@ Q_DECLARE_METATYPE(QBluetoothSocket::SocketType)
 
 //#define BTADDRESS "00:1A:9F:92:9E:5A"
 char BTADDRESS[] = "00:00:00:00:00:00";
-#ifdef Q_OS_SYMBIAN
-static const QString peerNameSymbian("Patagonia_bluetooth_client");
-#endif
 
 // Max time to wait for connection
 
@@ -675,7 +672,6 @@ void tst_QBluetoothSocket::tst_localPeer()
     QFETCH(quint16, peerPort);
     Q_UNUSED(peerPort)
 
-#ifndef Q_OS_SYMBIAN
     QStringList args;
     args << "name" << peerAddress.toString();
     QProcess *hcitool = new QProcess();
@@ -684,7 +680,6 @@ void tst_QBluetoothSocket::tst_localPeer()
     QString peerNameHCI = hcitool->readLine().trimmed();
     hcitool->close();
     delete hcitool;
-#endif
 
 
     /* Construction */
@@ -729,11 +724,7 @@ void tst_QBluetoothSocket::tst_localPeer()
     QCOMPARE(socket->localName(), list[2]);
     QCOMPARE(socket->localAddress(), QBluetoothAddress(list[3]));
     QCOMPARE(socket->localPort(), list[4].toUShort());
-#ifndef Q_OS_SYMBIAN
     QCOMPARE(socket->peerName(), peerNameHCI);
-#else
-    QCOMPARE(socket->peerName(), peerNameSymbian);
-#endif
 
     /* Disconnection */
     QSignalSpy disconnectedSpy(socket, SIGNAL(disconnected()));

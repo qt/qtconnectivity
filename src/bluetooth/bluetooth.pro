@@ -58,61 +58,7 @@ SOURCES += \
     qbluetoothtransferrequest.cpp \
     qbluetoothtransferreply.cpp
 
-symbian {
-    contains(S60_VERSION, 3.1) | contains(S60_VERSION, 3.2) {
-        DEFINES += DO_NOT_BUILD_BLUETOOTH_SYMBIAN_BACKEND
-        message("S60 3.1 or 3.2 sdk not supported by bluetooth")
-        SOURCES += \
-            qbluetoothdevicediscoveryagent_p.cpp \
-            qbluetoothlocaldevice_p.cpp \
-            qbluetoothserviceinfo_p.cpp \
-            qbluetoothservicediscoveryagent_p.cpp \
-            qbluetoothsocket_p.cpp \
-            ql2capserver_p.cpp \
-            qrfcommserver_p.cpp \
-            qbluetoothtransfermanager_p.cpp
-    }
-}
-
-symbian {
-    !contains(DEFINES, DO_NOT_BUILD_BLUETOOTH_SYMBIAN_BACKEND) {
-        DEFINES += QT_SYMBIAN_BLUETOOTH
-        INCLUDEPATH += $$MW_LAYER_SYSTEMINCLUDE
-        include(symbian/symbian.pri)
-
-        PRIVATE_HEADERS += \
-            qbluetoothtransferreply_symbian_p.h \
-            qbluetoothlocaldevice_p.h
-
-        SOURCES += \
-            qbluetoothserviceinfo_symbian.cpp\
-            qbluetoothdevicediscoveryagent_symbian.cpp\
-            qbluetoothservicediscoveryagent_symbian.cpp\
-            qbluetoothsocket_symbian.cpp\
-            qrfcommserver_symbian.cpp \
-            qbluetoothlocaldevice_symbian.cpp \
-            qbluetoothtransfermanager_symbian.cpp \
-            qbluetoothtransferreply_symbian.cpp \
-            ql2capserver_symbian.cpp
-
-        contains(S60_VERSION, 5.0) {
-            message("NOTICE - START")
-            message("Bluetooth backend needs SDK plugin from Forum Nokia for 5.0 SDK")
-            message("NOTICE - END")
-            LIBS *= -lirobex
-        } else {
-            LIBS *= -lobex
-        }
-        LIBS *= -lesock \
-                -lbluetooth \
-                -lsdpagent \
-                -lsdpdatabase \
-                -lestlib \
-                -lbtengsettings \
-                -lbtmanclient \
-                -lbtdevice
-    }
-} else:contains(config_test_bluez, yes):contains(QT_CONFIG, dbus) {
+contains(config_test_bluez, yes):contains(QT_CONFIG, dbus) {
     QT *= dbus
     DEFINES += QT_BLUEZ_BLUETOOTH
 
@@ -141,7 +87,7 @@ symbian {
 
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
-    message("Either no Qt dBus found, no bluez headers, or not symbian")
+    message("Either no Qt dBus found or no Bluez headers")
     SOURCES += \
         qbluetoothdevicediscoveryagent_p.cpp \
         qbluetoothlocaldevice_p.cpp \

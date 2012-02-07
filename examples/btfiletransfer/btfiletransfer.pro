@@ -21,11 +21,6 @@ FORMS = \
     progress.ui \
     pindisplay.ui
 
-
-symbian {
-    TARGET.CAPABILITY = LocalServices UserEnvironment ReadUserData WriteUserData NetworkServices ReadDeviceData WriteDeviceData
-}
-
 OTHER_FILES += \
     busy.gif \
     pairing.gif
