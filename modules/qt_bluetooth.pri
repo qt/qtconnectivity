@@ -11,7 +11,7 @@ QT.bluetooth.sources = $$QT_MODULE_BASE/src/bluetooth
 QT.bluetooth.libs = $$QT_MODULE_LIB_BASE
 QT.bluetooth.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.bluetooth.imports = $$QT_MODULE_IMPORT_BASE
-QT.bluetooth.depends = core
+QT.bluetooth.depends = core concurrent
 QT.bluetooth.DEFINES = QT_BLUETOOTH_LIB
 
 QT_CONFIG += bluetooth
