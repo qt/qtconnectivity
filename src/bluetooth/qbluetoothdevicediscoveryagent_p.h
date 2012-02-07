@@ -55,12 +55,6 @@ class QDBusVariant;
 QT_END_NAMESPACE
 #endif
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-#include "symbian/bluetoothlinkmanagerdevicediscoverer.h"
-#include <es_sock.h>
-#include <bt_sock.h>
-#endif
-
 QT_BEGIN_HEADER
 
 QTBLUETOOTH_BEGIN_NAMESPACE
@@ -76,24 +70,12 @@ public:
     void stop();
     bool isActive() const;
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-// private slots
-    void _q_newDeviceFound(const QBluetoothDeviceInfo &device);
-    void _q_setError(QBluetoothDeviceDiscoveryAgent::Error errorCode, 
-            QString errorDescription);
-#endif
-
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_deviceFound(const QString &address, const QVariantMap &dict);
     void _q_propertyChanged(const QString &name, const QDBusVariant &value);
 #endif
 
 private:
-#ifdef QT_SYMBIAN_BLUETOOTH
-    void allocate();
-    uint inquiryTypeToIAC() const;
-#endif
-
     QList<QBluetoothDeviceInfo> discoveredDevices;
     QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType;
 
@@ -106,14 +88,6 @@ private:
 #ifdef QT_BLUEZ_BLUETOOTH
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
-#endif
-
-#ifdef QT_SYMBIAN_BLUETOOTH
-    // shared socket servet among RHostResolvers
-    RSocketServ m_socketServer;
-    // active object for device discovery
-    BluetoothLinkManagerDeviceDiscoverer *m_deviceDiscovery;
-
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

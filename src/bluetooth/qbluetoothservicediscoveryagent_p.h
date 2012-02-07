@@ -49,10 +49,6 @@
 
 #include <QStack>
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-#include <btsdp.h>
-#endif
-
 #ifdef QT_BLUEZ_BLUETOOTH
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
@@ -70,9 +66,6 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 class QBluetoothDeviceDiscoveryAgent;
 
 class QBluetoothServiceDiscoveryAgentPrivate
-#ifdef QT_SYMBIAN_BLUETOOTH
-: public MSdpAgentNotifier, public MSdpAttributeValueVisitor
-#endif
 {
     Q_DECLARE_PUBLIC(QBluetoothServiceDiscoveryAgent)
 
@@ -106,26 +99,11 @@ public:
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
 #endif
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-    /* MSdpAgentNotifier virtual functions */
-    void NextRecordRequestComplete(TInt aError, TSdpServRecordHandle aHandle, TInt aTotalRecordsCount);
-    void AttributeRequestResult(TSdpServRecordHandle aHandle, TSdpAttributeID aAttrID, CSdpAttrValue *aAttrValue);
-    void AttributeRequestComplete(TSdpServRecordHandle, TInt aError);
-
-    /* MSdpAttributeValueVisitor virtual functions */
-    void VisitAttributeValueL(CSdpAttrValue &aValue, TSdpElementType aType);
-    void StartListL(CSdpAttrValueList &);
-    void EndListL();
-#endif
-
 private:
     void start(const QBluetoothAddress &address);
     void stop();
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-    void startL(const QBluetoothAddress &address);
-    void initL(const QBluetoothAddress &address);
-#elif defined(QT_BLUEZ_BLUETOOTH)
+#ifdef QT_BLUEZ_BLUETOOTH
     QVariant readAttributeValue(QXmlStreamReader &xml);
 #endif
 
@@ -147,15 +125,7 @@ private:
 
     bool singleDevice;
 
-#ifdef QT_SYMBIAN_BLUETOOTH
-    CSdpAgent *m_sdpAgent;
-    CSdpSearchPattern *m_filter;
-    CSdpAttrIdMatchList *m_attributes;
-    QBluetoothServiceInfo m_serviceInfo;
-    TSdpAttributeID m_currentAttributeId;
-
-    QStack<QVariant> m_stack;
-#elif defined(QT_BLUEZ_BLUETOOTH)
+#ifdef QT_BLUEZ_BLUETOOTH
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;

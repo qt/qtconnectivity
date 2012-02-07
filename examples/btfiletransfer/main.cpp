@@ -49,11 +49,7 @@ int main(int argc, char *argv[])
     RemoteSelector d;
     QObject::connect(&d, SIGNAL(accepted()), &app, SLOT(quit()));
     d.startDiscovery();
-#ifdef Q_OS_SYMBIAN
-    d.showFullScreen();
-#else
     d.show();
-#endif
 
     app.exec();
 
