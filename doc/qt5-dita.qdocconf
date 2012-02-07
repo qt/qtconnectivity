@@ -1,0 +1,22 @@
+# Name of the project.
+project = qtconnectivity
+
+# Directories in which to search for files to document and images.
+# By default set to the root directory of the project for sources
+# and headers and qdoc will therefore generate output for each file.
+# Images should be placed in <rootdir>/dic/images and examples in
+# <rootdir>/examples.
+# Paths are relative to the  location of this file.
+exampledirs += .
+headerdirs += ..
+sourcedirs += ..
+
+
+
+#Do not change the variables after this line unless you know what you are doing.
+
+outputdir = ditaxml
+outputformats = DITAXML
+
+sources.fileextensions = "*.cpp *.qdoc *.mm *.qml"
+headers.fileextensions = "*.h *.ch *.h++ *.hh *.hpp *.hxx"

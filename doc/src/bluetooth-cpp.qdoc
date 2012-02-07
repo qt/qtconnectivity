@@ -1,9 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the documentation of the Qt local connectivty modules.
+** This file is part of the documentation of the Qt Bluetooth Module.
 **
 ** $QT_BEGIN_LICENSE:FDL$
 ** GNU Free Documentation License
@@ -20,18 +21,55 @@
 **
 **
 **
-**
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
+
+
+
 /*!
-    \page all-examples.html
-    \title Qt Bluetooth Examples
 
-    This is a variety of examples that cover the entire range of the the Qt Bluetooth API. You will find them in their own documentation but are also accessible from here.
+\page bluetooth-cpp.html
 
-    \section2 C++ Examples
+\title Bluetooth C++ API
+\brief An API enabling basic Bluetooth operations like scanning for Devices
+and connecting them.
+
+\ingroup qtconnectivity
+\ingroup qtconnectivity-c++
+
+The Bluetooth C++ API enables an application to scan for devices and connect and
+interact with them in a more flexible way than the QML components.
+
+\tableofcontents
+
+\section1 Getting Started
+
+To include the Bluetooth classes, use the
+include directive for the appropriate class. For example:
+
+\snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp include
+
+The Bluetooth API is a QtAddon API and for thus wrapped in a namespace. To
+make use of the namespace use:
+
+\snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp namespace
+
+To link against the module, add this line to your \l qmake \c
+.pro file:
+
+\snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
+
+\section1 Classes
+
+\list
+\annotatedlist connectivity-bluetooth
+\endlist
+
+\section2 Examples
+
+The following sample applications show examples of API usage:
     \table 80%
         \header
             \o Example
@@ -54,19 +92,6 @@
             \o A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
     \endtable
 
-    \section2 QML Examples
-    \table 80%
-        \header
-            \o Example
-            \o Description
-        \row
-            \o \l{bttennis}{QML Bluetooth Tennis}
-            \o The tennis game using a QML interface to the Bluetooth API. It must connect to an
-            instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
-        \row
-            \o \l{btscanner}{QML Bluetooth Scanner}
-            \o A QML implementation of the Bluetooth device scanner.
-    \endtable
 
 */
 
