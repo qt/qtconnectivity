@@ -25,42 +25,53 @@
 **
 ****************************************************************************/
 
+
 /*!
-    \ingroup all-examples
-    \page bluetooth-examples.html
-    \title Qt Bluetooth Examples
-    \brief Examples for the QtBluetooth module
 
-    This is a variety of examples that cover the entire range of the the Qt Bluetooth API. You will find them in their own documentation but are also accessible from here.
+\page bluetooth-qml.html
 
-    \section2 C++ Examples
+\title Bluetooth QML API
+\brief A QML API enabling basic Bluetooth operations like scanning for Devices
+and connecting them.
+
+\ingroup qtconnectivity
+\ingroup qtconnectivity-qml
+
+The Bluetooth API enables an application to scan for devices and connect and
+interact with them in an easier way than the C++ Classes. However, it is a bit
+more limited than the C++ API. You can always use the C++ API to create QML
+plugins with the flexibility you need.
+
+\tableofcontents
+
+\section1 Getting Started
+
+To import the Bluetooth Elements, use the following:
+
+\snippet ../doc/src/snippets/doc_src_qtbluetooth.qml import
+
+After importing the Bluetooth API you can use its elements. For example:
+
+\snippet ../doc/src/snippets/doc_src_qtbluetooth.qml service
+
+To make your application link against the module, add this line to your \l qmake \c
+.pro file:
+
+\snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
+
+\section1 QML Elements
+
+\list
+\annotatedlist connectivity-bluetooth
+\endlist
+
+\section2 Examples
+
     \table 80%
         \header
             \o Example
             \o Description
-        \row
-            \o \l{btchat}{Bluetooth Chat}
-            \o A chat server and client using bluetooth.
-        \row
-            \o \l{bttennis}{Bluetooth Tennis}
-            \o The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
-            over Bluetooth and touch-to-play functionality on devices that support NFC.
-        \row
-            \o \l{btfiletransfer}{Bluetooth File Transfer}
-            \o Transfer files between Bluetooth devices.
-        \row
-            \o \l{btscanner}{Bluetooth Scanner}
-            \o Scan for Bluetooth devices.
-        \row
-            \o \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
-            \o A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
-    \endtable
 
-    \section2 QML Examples
-    \table 80%
-        \header
-            \o Example
-            \o Description
         \row
             \o \l{bttennis}{QML Bluetooth Tennis}
             \o The tennis game using a QML interface to the Bluetooth API. It must connect to an
