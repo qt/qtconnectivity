@@ -81,12 +81,6 @@ contains(config_test_bluez, yes):contains(QT_CONFIG, dbus) {
         qbluetoothtransfermanager_bluez.cpp \
         ql2capserver_bluez.cpp
 
-    exists(/usr/include/test_framework_4711.h) {
-        message(Activating Nokia Bluetooth Services)
-        DEFINES += NOKIA_BT_SERVICES
-        QT += serviceframework
-    }
-
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
     message("Either no Qt dBus found or no Bluez headers")
