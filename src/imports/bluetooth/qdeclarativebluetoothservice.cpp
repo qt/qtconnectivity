@@ -53,7 +53,7 @@
 
 /*!
    \qmlclass BluetoothService QDeclarativeBluetoothService
-   \brief The BluetoothService element contains all the information available for a single Bluetooth service.\.
+   \brief Provides information about a particular Bluetooth service.
 
    \ingroup bluetooth-qml
    \inmodule QtBluetooth
