@@ -48,8 +48,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothTransferReply
-    \brief The QBluetoothTransferReply class contains the data and headers for a request sent with
-           QBluetoothTranferManager.
+    \brief The QBluetoothTransferReply class stores the response for a data transfer request.
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
