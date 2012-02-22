@@ -46,8 +46,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothTransferManager
-    \brief The QBluetoothTransferManager class allows the application to send data objects to other
-           devices.  Currently implemented using OPP.
+    \brief The QBluetoothTransferManager class transfers data to another device using Object Push Profile (OPP).
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth

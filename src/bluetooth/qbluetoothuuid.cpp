@@ -59,7 +59,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 
 /*!
     \class QBluetoothUuid
-    \brief The QBluetoothUuid class provides a Bluetooth UUID.
+    \brief The QBluetoothUuid class provides an UUID for each Bluetooth service.
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth

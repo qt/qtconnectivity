@@ -50,7 +50,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothLocalDevice
-    \brief The QBluetoothLocalDevice class provides access to local Bluetooth devices.
+    \brief The QBluetoothLocalDevice class enables you to access the local Bluetooth devices.
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
