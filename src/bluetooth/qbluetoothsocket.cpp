@@ -54,7 +54,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothSocket
-    \brief The QBluetoothSocket class provides a Bluetooth socket.
+    \brief The QBluetoothSocket class enables you to connect and communicate with a 
+	   Bluetooth device running an RFCOMM server.
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth

@@ -50,7 +50,7 @@
 
 /*!
     \qmlclass BluetoothDiscoveryModel QDeclarativeBluetoothDiscoveryModel
-    \brief The BluetoothDisoceryModel element provides access device and service scanning
+    \brief Enables you to search for the Bluetooth devices and services in the range.
 
     \ingroup bluetooth-qml
     \inmodule QtBluetooth

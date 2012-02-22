@@ -46,8 +46,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothDeviceDiscoveryAgent
-    \brief The QBluetoothDeviceDiscoveryAgent class provides an API for discovering nearby
-           Bluetooth devices.
+    \brief The QBluetoothDeviceDiscoveryAgent class enables you to discover the nearby Bluetooth devices.
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth

@@ -47,7 +47,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QL2capServer
-    \brief The QL2capServer class provides an L2CAP server.
+    \brief The QL2capServer class allows you to connect and communicate with a device or service 
+	   using the L2CAP protocol.
 
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
