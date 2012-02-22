@@ -57,7 +57,7 @@
 
 /*!
    \qmlclass BluetoothSocket QDeclarativeBluetoothSocket
-   \brief The BluetoothSocket element represents a single bluetooth client socket.
+   \brief Enables you to connect and communicate with a Bluetooth service or device.
 
    \ingroup bluetooth-qml
    \inmodule QtBluetooth
