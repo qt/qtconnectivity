@@ -62,7 +62,7 @@ To make your application link against the module, add this line to your \l qmake
 \section1 QML Elements
 
 \list
-\annotatedlist connectivity-bluetooth
+\annotatedlist bluetooth-qml
 \endlist
 
 \section2 Examples
