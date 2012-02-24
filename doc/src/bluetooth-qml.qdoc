@@ -46,23 +46,18 @@ plugins with the flexibility you need.
 
 \section1 Getting Started
 
-To import the Bluetooth Elements, use the following:
+To import the Bluetooth elements, use the following:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.qml import
 
-After importing the Bluetooth API you can use its elements. For example:
+After importing the Bluetooth API you can use its elements. This example shows how to connect to a remote RFCOMM (SPP) server using BluetoothSocket:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.qml service
-
-To make your application link against the module, add this line to your \l qmake \c
-.pro file:
-
-\snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
 
 \section1 QML Elements
 
 \list
-\annotatedlist connectivity-bluetooth
+\annotatedlist bluetooth-qml
 \endlist
 
 \section2 Examples

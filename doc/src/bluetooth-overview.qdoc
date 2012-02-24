@@ -39,30 +39,19 @@ Bluetooth is a short-range (less than 100 meters) wireless
 technology. It has a reasonably high data transfer rate of 2.1 Mbit/s, which
 makes it ideal for transfering data between devices.
 
-\section1 Introduction
-
-The Bluetooth API provides classes for controlling the local Bluetooth device,
-discovering devices in the local vicinity, discovering services provided by
-those devices, publishing services and both server and client sockets for
-L2CAP and RFCOMM protocols.
-
-\section1 Overview
-
 Bluetooth connectivity is based on basic device management like scanning for
-devices and gathering informations about them. On top of that, there are a
+devices and gathering information about them. On top of that, there are a
 number of profiles which enable a certain specified interaction type on
-the Bluetooth connection. The Qt Bluetooth API currently supports the
-retrieval of local and remote device information and two profiles:
-SPP for establishing a serial port connection and Obex Object Push to push
-files to a remote device.
+the Bluetooth connection.
 
-    With the Bluetooth API typical use cases are:
+    With the Qt Bluetooth API typical use cases are:
 
         \list
-        \o Retrieve informations about the local Bluetooth device
-        \o Scan for other Bluetooth devices in range and retrieve informations about them
-        \o Connect to remote devices via a serial port emulation (SPP).
-        \o Push files to remote devices (OPP).
+        \o Retrieve information about the local Bluetooth device
+        \o Scan for other Bluetooth devices in range and retrieve information about them
+        \o Connect to remote devices through a RFCOMM channel using the serial port profile (SPP).
+        \o Create a RFCOMM server that allows incoming connections using SPP.
+        \o Push files to remote devices using the Obex Object Push Profile (OPP).
         \endlist
 
 
@@ -75,7 +64,7 @@ files to a remote device.
 
     \section2 QML API
 
-    There are a number of QML Elements available in the QtBluetooth API.
+    There are a number of QML Elements available in the Qt Bluetooth API.
 
     \list
         \o \l {Bluetooth QML API}{Bluetooth QML API}

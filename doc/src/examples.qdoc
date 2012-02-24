@@ -33,14 +33,14 @@
 
     This is a variety of examples that cover the entire range of the the Qt Bluetooth API. You will find them in their own documentation but are also accessible from here.
 
+    \section2 C++ Tutorial
+    The \l{btchat}{Bluetooth Chat} example contains a tutorial on how to use the C++ API to create a RFCOMM server and client and exchange data between them.
+
     \section2 C++ Examples
     \table 80%
         \header
             \o Example
             \o Description
-        \row
-            \o \l{btchat}{Bluetooth Chat}
-            \o A chat server and client using bluetooth.
         \row
             \o \l{bttennis}{Bluetooth Tennis}
             \o The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
