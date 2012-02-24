@@ -49,9 +49,20 @@ import QtBluetooth 5.0
 
         onConnectedChanged: {
             console.log("bluetoothSocket status: " + connected)
-            if (connected) titleRow.title = "Connected to:"
-            else titleRow.title = "Not connected"
+            if (connected) {
+                titleRow.title = "Connected";
 
+                // Send some data to the remote device
+                stringData = "Hello there!";
+
+            } else {
+                titleRow.title = "Disconnected";
+            }
+        }
+
+        // read incoming data from the remote device
+        onDataAvailable: {
+            print("received data:", stringData);
         }
     }
 //! [service]

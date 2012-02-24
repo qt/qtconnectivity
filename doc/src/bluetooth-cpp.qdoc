@@ -39,7 +39,7 @@ and connecting them.
 \ingroup qtconnectivity-c++
 
 The Bluetooth C++ API enables an application to scan for devices and connect and
-interact with them in a more flexible way than the QML components.
+interact with them in a more flexible way than the \l{Bluetooth QML API}.
 
 \tableofcontents
 
@@ -50,7 +50,7 @@ include directive for the appropriate class. For example:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp include
 
-The Bluetooth API is a QtAddon API and for thus wrapped in a namespace. To
+The Bluetooth API is a Qt Add-On API and for thus wrapped in a namespace. To
 make use of the namespace use:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp namespace
@@ -60,8 +60,6 @@ To link against the module, add this line to your \l qmake \c
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
 
-
-\endlist
 
 \section1 Classes
 
