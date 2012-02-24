@@ -109,10 +109,6 @@ private:
 
     QString m_transfer_path;
 
-#ifdef NOKIA_BT_SERVICES
-    static QObject *s_obexService;
-#endif
-
     static bool copyToTempFile(QIODevice *to, QIODevice *from);
 
 private slots:
