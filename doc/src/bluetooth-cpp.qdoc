@@ -61,8 +61,6 @@ To link against the module, add this line to your \l qmake \c
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
 
 
-\endlist
-
 \section1 Classes
 
 \list
