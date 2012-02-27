@@ -12,11 +12,13 @@ include(macros.qdocconf)
 # Images should be placed in <rootdir>/dic/images and examples in
 # <rootdir>/examples.
 # Paths are relative to the  location of this file.
-exampledirs += ../examples/ ../demos/
-headerdirs += ..
-imagedirs += src/images
-sourcedirs += ..
-excludedirs += ../tests
+exampledirs +=  ../examples
+headerdirs +=   ../src/bluetooth ../src/imports/bluetooth
+imagedirs +=    src/images
+sourcedirs +=   ../src/bluetooth \
+                ../src/imports/bluetooth \
+                src
+excludedirs +=  ../tests
 
 # The following parameters are for creating a qhp file, the qhelpgenerator
 # program can convert the qhp file into a qch file which can be opened in
