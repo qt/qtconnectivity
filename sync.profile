@@ -1,20 +1,20 @@
 %modules = ( # path to module name map
     "QtBluetooth" => "$basedir/src/bluetooth",
-    "QtNfc" => "$basedir/src/nfc",
+#    "QtNfc" => "$basedir/src/nfc",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
 %classnames = (
     "qtbluetoothversion.h" => "QtBluetoothVersion",
-    "qtnfcversion.h" => "QtNfcVersion",
+#    "qtnfcversion.h" => "QtNfcVersion",
 );
 %mastercontent = (
     "bluetooth" => "#include <QtBluetooth/QtBluetooth>\n",
-    "nfc" => "#include <QtNfc/QtNfc>\n",
+#    "nfc" => "#include <QtNfc/QtNfc>\n",
 );
 %modulepris = (
     "QtBluetooth" => "$basedir/modules/qt_bluetooth.pri",
-    "QtNfc" => "$basedir/modules/qt_nfc.pri",
+#    "QtNfc" => "$basedir/modules/qt_nfc.pri",
 );
 # Module dependencies.
 # Every module that is required to build this module should have one entry.
