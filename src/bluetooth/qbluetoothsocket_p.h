@@ -47,7 +47,7 @@
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
 #define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)
 #endif
-#include "../qprivatelinearbuffer_p.h"
+#include "qprivatelinearbuffer_p.h"
 
 #include <QtGlobal>
 
