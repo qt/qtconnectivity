@@ -7,9 +7,14 @@ project = qtconnectivity
 # Images should be placed in <rootdir>/dic/images and examples in
 # <rootdir>/examples.
 # Paths are relative to the  location of this file.
-exampledirs += .
-headerdirs += ..
-sourcedirs += ..
+exampledirs +=  ../examples
+headerdirs +=   ../src/bluetooth ../src/imports/bluetooth
+imagedirs +=    src/images
+sourcedirs +=   ../src/bluetooth \
+                ../src/imports/bluetooth \
+                src
+excludedirs +=  ../tests
+
 
 
 
