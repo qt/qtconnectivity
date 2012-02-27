@@ -322,8 +322,6 @@ bool QNearFieldTarget::hasNdefMessage()
     An ndefMessageRead() signal will be emitted for each NDEF message. The requestCompleted()
     signal will be emitted was all NDEF messages have been read. The error() signal is emitted if
     an error occurs.
-
-    \note Symbian^3 and Maemo 6 only support read one NDEF message.
 */
 QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
 {
@@ -337,9 +335,6 @@ QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
 
     The ndefMessagesWritten() signal will be emitted when the write operation completes
     successfully; otherwise the error() signal is emitted.
-
-    \note Symbian^3 and Maemo 6 only support writing one NDEF message.  Only the first NDEF message
-    in the list will be written, others are silently dropped.
 */
 QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNdefMessage> &messages)
 {

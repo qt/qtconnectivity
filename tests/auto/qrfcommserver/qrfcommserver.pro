@@ -4,8 +4,6 @@ CONFIG += testcase
 
 QT = core concurrent bluetooth testlib
 
-symbian: TARGET.CAPABILITY =  LocalServices NetworkControl WriteDeviceData
-
 OTHER_FILES += \
     README.txt
 

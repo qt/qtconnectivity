@@ -44,8 +44,6 @@
 
 #if defined(QT_SIMULATOR)
 #include "qnearfieldmanager_simulator_p.h"
-#elif defined(Q_OS_SYMBIAN)
-#include "qnearfieldmanager_symbian_p.h"
 #elif defined(Q_WS_MAEMO_6) || defined (Q_WS_MEEGO)
 #include "qnearfieldmanager_maemo6_p.h"
 #else
@@ -120,16 +118,10 @@ QTNFC_BEGIN_NAMESPACE
 
         The -datatype and -match options are mutually exclusive.
 
-        Available templates: maemo6, symbian
+        Available templates: maemo6
     \endcode
 
-    A typical invocation of the \c ndefhandlergen tool for Symbian^3 target:
-
-    \code
-        ndefhandlergen -template symbian -appname myapplication -datatype urn:nfc:ext:com.example:f
-    \endcode
-
-    and for Maemo6 target:
+    A typical invocation of the \c ndefhandlergen tool for Maemo6 target:
 
     \code
         ndefhandlergen -template maemo6 -appname myapplication -apppath /usr/bin/myapplication -datatype urn:nfc:ext:com.example:f

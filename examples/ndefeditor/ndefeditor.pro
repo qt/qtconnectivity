@@ -24,5 +24,3 @@ FORMS += \
     textrecordeditor.ui \
     urirecordeditor.ui \
     mimeimagerecordeditor.ui
-
-symbian:TARGET.CAPABILITY += LocalServices
