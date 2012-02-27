@@ -40,7 +40,8 @@ PRIVATE_HEADERS += \
     qrfcommserver_p.h \
     ql2capserver_p.h \
     qbluetoothtransferreply_p.h \
-    qbluetoothtransferrequest_p.h
+    qbluetoothtransferrequest_p.h \
+    qprivatelinearbuffer_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
