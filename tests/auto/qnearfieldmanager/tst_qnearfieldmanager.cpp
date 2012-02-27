@@ -81,9 +81,7 @@ private slots:
 
 tst_QNearFieldManager::tst_QNearFieldManager()
 {
-#ifndef Q_OS_SYMBIAN
     QDir::setCurrent(QLatin1String(SRCDIR));
-#endif
 
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
     qRegisterMetaType<QNearFieldTarget *>("QNearFieldTarget*");

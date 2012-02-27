@@ -132,16 +132,9 @@ void tst_QRfcommServer::tst_listen_data()
     QTest::addColumn<quint16>("port");
 
     QTest::newRow("default") << QBluetoothAddress() << quint16(0);
-#ifdef Q_OS_SYMBIAN
-    //use localdevice address for listen address.
-    QTest::newRow("specified address") << localDevice.address() << quint16(0);
-    QTest::newRow("specified port") << QBluetoothAddress() << quint16(20);
-    QTest::newRow("specified address/port") << localDevice.address() << quint16(27);  // port 21 returns KErrInUse
-#else
     QTest::newRow("specified address") << QBluetoothAddress("00:11:B1:08:AD:B8") << quint16(0);
     QTest::newRow("specified port") << QBluetoothAddress() << quint16(10);
     QTest::newRow("specified address/port") << QBluetoothAddress("00:11:B1:08:AD:B8") << quint16(10);
-#endif
 }
 
 void tst_QRfcommServer::tst_listen()

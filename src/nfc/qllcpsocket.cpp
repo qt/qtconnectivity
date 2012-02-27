@@ -43,8 +43,6 @@
 
 #if defined(QT_SIMULATOR)
 #include "qllcpsocket_simulator_p.h"
-#elif defined(Q_OS_SYMBIAN)
-#include "qllcpsocket_symbian_p.h"
 #elif defined(Q_WS_MAEMO_6) || defined(Q_WS_MEEGO)
 #include "qllcpsocket_maemo6_p.h"
 #else

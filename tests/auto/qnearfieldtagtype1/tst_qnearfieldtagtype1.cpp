@@ -78,9 +78,7 @@ private:
 tst_QNearFieldTagType1::tst_QNearFieldTagType1()
 :   emulatorBackend(0), manager(0), target(0)
 {
-#ifndef Q_OS_SYMBIAN
     QDir::setCurrent(QLatin1String(SRCDIR));
-#endif
 
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
     qRegisterMetaType<QNearFieldTarget *>("QNearFieldTarget*");
