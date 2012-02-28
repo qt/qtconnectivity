@@ -67,12 +67,12 @@
 
     The BluetoothSocket element was introduced in \bold{QtBluetooth 5.0}.
 
-    It allows a QML class easily connect to another bluetooth device and send
-    and received QString's from the device. Data is sent and received via a
-    QDataStream allowing type safe transfer of string data.  QDataStream is a well known
-    format and maybe decoded by non-Qt applications.
+    It allows a QML class connect to another bluetooth device and send
+    and receive QString from the device. Data is sent and received using a
+    QDataStream object allowing type safe transfer of string data. QDataStream
+    is a well known format and can be decoded by non-Qt applications.
 
-    Connections to remove devices can be over rfcomm or l2cap.  Either the remote port
+    Connections to remote devices can be over rfcomm or l2cap.  Either the remote port
     or service UUID is required.  This is specified by creating a BluetoothService,
     or passing in the service return from BluetoothDiscoveryModel.
  */
@@ -176,7 +176,7 @@ void QDeclarativeBluetoothSocket::componentComplete()
 /*!
   \qmlproperty BluetoothService BluetoothSocket::service
 
-  This property holds the details of the remote service to connect too. It can be
+  This property holds the details of the remote service to connect to. It can be
   set to a static BluetoothService with a fixed description, or a service returned
   by service discovery.
   */
@@ -203,8 +203,8 @@ void QDeclarativeBluetoothSocket::setService(QDeclarativeBluetoothService *servi
   \qmlproperty bool BluetoothSocket::connected
 
   This property holds the connection state of the socket. If the socket is
-  connected to peer it returns true. It can be set true of false to control the
-  connection. When set true the property will not return true until the
+  connected to peer, it returns true. It can be set true or false to control the
+  connection. When set to true, the property will not return true until the
   connection is established.
 
   */
@@ -239,7 +239,7 @@ void QDeclarativeBluetoothSocket::setConnected(bool connected)
   \qmlproperty string BluetoothSocket::error
 
   This property holds the string for the last reported error
-  This property is read only.
+  This property is read-only.
   */
 
 
@@ -319,9 +319,9 @@ void QDeclarativeBluetoothSocket::socket_readyRead()
   \qmlproperty string BluetoothSocket::stringData
 
   This property receives or sends data to remote bluetooth device. Arrival of
-  data is signaled through the dataAvailable signal and can be read by
-  stringData. Calling sendStringData will transmit the string to the far side.
-  If excessive amounts of data are sent the function may block. Reading will
+  data is signaled by the dataAvailable signal and can be read by
+  stringData. Calling sendStringData will transmit the string.
+  If excessive amounts of data are sent, the function may block sending. Reading will
   never block.
   */
 

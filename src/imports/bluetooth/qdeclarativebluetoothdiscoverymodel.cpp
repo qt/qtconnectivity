@@ -62,7 +62,7 @@
     limited to a single service such as a game.
 
     The model roles provided by BluetoothDiscoveryModel are display, decoration and \c Service.
-    Through the \c Service role the BluetoothService maybe accessed for more details.
+    Through the \c Service role the BluetoothService can be accessed for more details.
 
     \sa QBluetoothServiceDiscoveryAgent
 
@@ -170,9 +170,9 @@ void QDeclarativeBluetoothDiscoveryModel::errorDiscovery(QBluetoothServiceDiscov
 /*!
   \qmlproperty string BluetoothDiscoveryModel::error
 
-  This property holds the last error reported by discovery.
+  This property holds the last error reported during discovery.
 
-  This property is read only.
+  This property is read-only.
   */
 QString QDeclarativeBluetoothDiscoveryModel::error() const
 {
@@ -281,8 +281,8 @@ bool QDeclarativeBluetoothDiscoveryModel::discovery()
   \qmlproperty string BluetoothDiscoveryModel::uuidFilter
 
   This property holds an optional UUID filter.  A UUID can be used to return only
-  matching services.  16 bit, 32 bit or 128 bit UUIDs maybe used.  The string format
-  is the same format as QUuid.
+  matching services.  16 bit, 32 bit or 128 bit UUIDs can be used.  The string format
+  is same as the format of QUuid.
 
   \sa QBluetoothUuid
   \sa QUuid

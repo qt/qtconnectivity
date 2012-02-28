@@ -57,7 +57,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     QBluetoothTransferReply contains the contents of the reply itself.
 
     QBluetoothTransferReply is a sequential-access QIODevice, which means that once data is read
-    from the object, it no longer kept by the device. It is therefore the application's
+    from the object, it is no longer kept by the device. It is the application's
     responsibility to keep this data if it needs to. Whenever more data is received and processed,
     the readyRead() signal is emitted.
 
@@ -66,7 +66,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     the contents (for example, decompressing and removing the protocol overhead).
 
     Even though QBluetoothTransferReply is a QIODevice connected to the contents of the reply, it
-    also emits the uploadProgress() signal, which indicates the progress of the upload for
+    emits the uploadProgress() signal, which indicates the progress of the upload for
     operations that have such content.
 */
 
@@ -115,7 +115,7 @@ void QBluetoothTransferReply::abort()
 */
 
 /*!
-    Constructs a new QBluetoothTransferReply with parent \a parent.
+    Constructs a new QBluetoothTransferReply with \a parent.
 */
 QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
 :   QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate)
@@ -132,7 +132,7 @@ QBluetoothTransferReply::~QBluetoothTransferReply()
 }
 
 /*!
-    Returns the attribute associated with the code \a code. If the attribute has not been set, it
+    Returns the attribute associated with \a code. If the attribute has not been set, it
     returns an invalid QVariant.
 */
 QVariant QBluetoothTransferReply::attribute(QBluetoothTransferRequest::Attribute code) const
@@ -144,13 +144,13 @@ QVariant QBluetoothTransferReply::attribute(QBluetoothTransferRequest::Attribute
 /*!
    \fn bool QBluetoothTransferReply::isFinished() const
 
-    Returns true if this reply has finished; otherwise returns false.
+    Returns true if this reply has finished, otherwise false.
 */
 
 /*!
    \fn bool QBluetoothTransferReply::isRunning() const
 
-    Returns true if this reply is running; otherwise returns false.
+    Returns true if this reply is running, otherwise false.
 */
 
 /*!
@@ -184,7 +184,7 @@ void QBluetoothTransferReply::setOperation(QBluetoothTransferManager::Operation 
 /*!
   \fn QBluetoothTransferReply::setAttribute(QBluetoothTransferRequest::Attribute code, const QVariant &value)
 
-    Set the attribute associated with the code \a code to the value \a value.
+    Set the attribute associated with the \a code to \a value.
 */
 void QBluetoothTransferReply::setAttribute(QBluetoothTransferRequest::Attribute code, const QVariant &value)
 {
@@ -195,7 +195,7 @@ void QBluetoothTransferReply::setAttribute(QBluetoothTransferRequest::Attribute 
 /*!
   \fn QBluetoothTransferReply::setManager(QBluetoothTransferManager *manager)
 
-  Set the reply's manager to manager \a manager.
+  Set the reply's manager to the \a manager.
 */
 
 void QBluetoothTransferReply::setManager(QBluetoothTransferManager *manager)
@@ -207,13 +207,13 @@ void QBluetoothTransferReply::setManager(QBluetoothTransferManager *manager)
 /*!
   \fn TransferError QBluetoothTransferReply::error() const
 
-  The error code of the error that happened.
+  The error code of the error that occurred.
 */
 
 /*!
   \fn QString QBluetoothTransferReply::errorString() const
 
-  String describing the error.  Can be displayed to the user.
+  String describing the error. Can be displayed to the user.
 */
 
 QBluetoothTransferReplyPrivate::QBluetoothTransferReplyPrivate()

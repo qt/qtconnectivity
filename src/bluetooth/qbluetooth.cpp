@@ -58,23 +58,21 @@ namespace QBluetooth {
 
     This enum describe the security requirements of a Bluetooth service.
 
-    \value NoSecurity       The service does not require any security.
+    \value NoSecurity    The service does not require any security.
 
-    \value Authorization The service requires authorization. Device does not
-    have to paired, the connection will be granted by prompting the user unless
-    the device is Authorized-Paired where the connection will be made
-    automatically.
+    \value Authorization The service requires authorization by the user,
+    unless the device is Authorized-Paired.
 
     \value Authentication The service requires authentication. Device must
-    paired, the user maybe prompted on connection unless the device is
+    be paired, and the user is prompted on connection unless the device is
     Authorized-Paired.
 
-    \value Encryption The service requires that the communications link be
-    encrypted.  This requires the device be paired.
+    \value Encryption The service requires the communication link to be
+    encrypted. This requires the device to be paired.
 
-    \value Secure The service requires that the communications link be secure.
-    Legacy pairing is not permitted, Simple Pairing from Bluetooth 2.1 or
-    greater is required.
+    \value Secure The service requires the communication link to be secure.
+    Simple Pairing from Bluetooth 2.1 or greater is required.
+    Legacy pairing is not permitted.
 */
 }
 

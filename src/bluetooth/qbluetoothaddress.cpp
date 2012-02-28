@@ -51,7 +51,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
 
-    This class holds a Bluetooth address in a platform- and protocol- independent manner.
+    This class holds a Bluetooth address in a platform- and protocol-independent manner.
 */
 
 /*!
@@ -158,7 +158,7 @@ void QBluetoothAddress::clear()
 }
 
 /*!
-    Returns true if the Bluetooth address is valid, otherwise returns false.
+    Returns true if the Bluetooth address is null, otherwise returns false.
 */
 bool QBluetoothAddress::isNull() const
 {
@@ -167,7 +167,7 @@ bool QBluetoothAddress::isNull() const
 }
 
 /*!
-    Returns true if the Bluetooth address is less than \a other; otherwise
+    Returns true if the Bluetooth address is less than \a other, otherwise
     returns false.
 */
 bool QBluetoothAddress::operator<(const QBluetoothAddress &other) const
@@ -179,7 +179,7 @@ bool QBluetoothAddress::operator<(const QBluetoothAddress &other) const
 /*!
     Compares this Bluetooth address to \a other.
 
-    Returns true if the Bluetooth address are equal, otherwise returns false.
+    Returns true if the two Bluetooth addresses are equal, otherwise returns false.
 */
 bool QBluetoothAddress::operator==(const QBluetoothAddress &other) const
 {
@@ -197,7 +197,7 @@ quint64 QBluetoothAddress::toUInt64() const
 }
 
 /*!
-    Returns the Bluetooth address as a string of the form XX:XX:XX:XX:XX:XX.
+    Returns the Bluetooth address as a string of the form, XX:XX:XX:XX:XX:XX.
 */
 QString QBluetoothAddress::toString() const
 {

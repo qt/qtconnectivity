@@ -143,8 +143,8 @@ QString QDeclarativeBluetoothService::deviceName() const
 /*!
   \qmlproperty string BluetoothService::deviceAddress
 
-  This property holds the remote device MAc address. Must be valid if you to
-  connect to a remote device with a BluetoothSocket.
+  This property holds the remote device's MAC address. Must be a valid address to
+  connect to a remote device using a Bluetooth socket.
   */
 
 QString QDeclarativeBluetoothService::deviceAddress() const
@@ -213,7 +213,7 @@ void QDeclarativeBluetoothService::setServiceDescription(QString description)
 /*!
   \qmlproperty string BluetoothService::serviceProtocol
 
-  This property holds the protocol used for the service. Can be the string
+  This property holds the protocol used for the service. Can be the string,
   "l2cap" or "rfcomm"
   */
 
@@ -245,9 +245,9 @@ void QDeclarativeBluetoothService::setServiceProtocol(QString protocol)
 /*!
   \qmlproperty string BluetoothService::serviceUuid
 
-  This property holds the UUID of the remote service. Service UUID or port, as
-  well as the address must be set to connect to a remote service. If UUID and
-  port are set, the port is used. The UUID takes longer to connect since
+  This property holds the UUID of the remote service. Service UUID or port,
+  and the address must be set to connect to a remote service. If UUID and
+  port are set, the port is used. The UUID takes longer to connect as
   service discovery must be initiated to discover the port value.
   */
 
@@ -277,7 +277,7 @@ void QDeclarativeBluetoothService::setServiceUuid(QString uuid)
 
   This property holds the port value for the remote service. Bluetooth does not
   use well defined port values, so port values should not be stored and used
-  later without care. Connecting via UUID is much more consistent.
+  later. Connecting using UUID is much more consistent.
   */
 qint32 QDeclarativeBluetoothService::servicePort() const
 {
@@ -308,8 +308,8 @@ void QDeclarativeBluetoothService::setServicePort(qint32 port)
 /*!
   \qmlproperty string BluetoothService::registered
 
-  This property holds the registration/publication status of the service.  If true the service
-  is published via service discovery.  Not implemented in 1.2.
+  This property holds the registration/publication status of the service.  If true, the service
+  is published during service discovery. Not implemented in 1.2.
   */
 
 bool QDeclarativeBluetoothService::isRegistered() const

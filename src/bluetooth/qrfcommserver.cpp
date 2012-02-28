@@ -54,14 +54,13 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     QRfcommServer is used to implement Bluetooth services over RFCOMM.
 
-    Start listening for incoming connections with listen(). The newConnection() signal is emitted
-    when a new connection is established. Call nextPendingConnection() to get a QBluetoothSocket
+    Start listening for incoming connections with listen(). Wait till the newConnection() signal
+    is emitted when a new connection is established, and call nextPendingConnection() to get a QBluetoothSocket
     for the new connection.
 
-    To enable other devices to find your service create a QBluetoothServiceInfo with the
-    applicable attributes for your service and register it with
-    QBluetoothServiceInfo::registerService(). Call serverPort() to get the RFCOMM channel number
-    that is being used.
+    To enable other devices to find your service, create a QBluetoothServiceInfo with the
+    applicable attributes for your service and register it using QBluetoothServiceInfo::registerService().
+    Call serverPort() to get the RFCOMM channel number that is being used.
 
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
@@ -89,7 +88,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     Start listening for incoming connections to \a address on \a port.
 
     Returns true if the operation succeeded and the RFCOMM server is listening for
-    incoming connections; otherwise returns false.
+    incoming connections, otherwise returns false.
 
     \sa isListening(), newConnection()
 */
@@ -104,7 +103,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \fn bool QRfcommServer::hasPendingConnections() const
-    Returns true if a connection is pending; otherwise returns false.
+    Returns true if a connection is pending, otherwise false.
 */
 
 /*!
@@ -123,7 +122,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \fn quint16 QRfcommServer::serverPort() const
 
-    Returns the server's port number.
+    Returns the server port number.
 */
 
 /*!
@@ -144,8 +143,7 @@ QRfcommServer::~QRfcommServer()
 }
 
 /*!
-    Returns true if the RFCOMM server is listening for incoming connections; otherwise returns
-    false.
+    Returns true if the RFCOMM server is listening for incoming connections, otherwise false.
 */
 bool QRfcommServer::isListening() const
 {
@@ -167,13 +165,12 @@ int QRfcommServer::maxPendingConnections() const
 }
 
 /*!
-  \fn QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
-    Sets the Bluetooth security flags to \a security. This function must be called prior to calling
-    listen().
+    \fn QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
+    Sets the Bluetooth security flags to \a security. This function must be called before calling listen().
 */
 
 /*!
-  \fn QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
+    \fn QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
     Returns the Bluetooth security flags.
 */
 
