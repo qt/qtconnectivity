@@ -53,17 +53,19 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
 
-    To query the services provided by all contactable Bluetooth devices create an instance of
-    QBluetoothServiceDiscoveryAgent, connect to either the serviceDiscovered() or finished()
-    signals and call start().
+    To query the services provided by all contactable Bluetooth devices:
+    \list
+    \o create an instance of QBluetoothServiceDiscoveryAgent,
+    \o connect to either the serviceDiscovered() or finished() signals,
+    \o and call start().
 
     \snippet ../doc/src/snippets/servicediscovery.cpp Service discovery
 
-    By default a minimal service discovery is performed. In this mode the QBluetotohServiceInfo
+    By default a minimal service discovery is performed. In this mode, the QBluetotohServiceInfo
     objects returned are guaranteed to contain only device and service UUID information. Depending
-    on platform and device capabilities other service information may also be available. For most
+    on platform and device capabilities, other service information may also be available. For most
     use cases this is adequate as QBluetoothSocket::connectToService() will perform additional
-    discovery if required.  If full service information is required pass \l FullDiscovery as the
+    discovery if required.  If full service information is required, pass \l FullDiscovery as the
     discoveryMode parameter to start().
 */
 
@@ -83,8 +85,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     This enum describes the service discovery mode.
 
     \value MinimalDiscovery     Performs a minimal service discovery. The QBluetoothServiceInfo
-                                objects returned may be incomplete and are only guaranteed to
-                                contain device and service UUID information.
+    objects returned may be incomplete and are only guaranteed to contain device and service UUID information.
     \value FullDiscovery        Performs a full service discovery.
 */
 
@@ -120,7 +121,7 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
 /*!
     Constructs a new QBluetoothServiceDiscoveryAgent for \a remoteAddress and with \a parent.
 
-    If \a remoteAddress is null services will be discovred on all contactable Bluetooth
+    If \a remoteAddress is null, services will be discovred on all contactable Bluetooth
     devices.
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &remoteAddress, QObject *parent)
@@ -258,12 +259,12 @@ bool QBluetoothServiceDiscoveryAgent::isActive() const
 
 /*!
     Returns the type of error that last occurred. If service discovery is done
-    on a signle address it will returns errors when trying to discover services
-    on that device. If the alternate constructor is used and devices are
-    discovered by a scan, then errors doing service discovery on individual
-    devices are not saved and no signals are emitted. In this case errors are
-    fairly normal since some devices may not respond to discovery or
-    may no longer be in range.  As such errors are surpressed.  If no services
+    on a signle address it will return errors that occured while trying to discover 
+    services on that device. If the alternate constructor is used and devices are
+    discovered by a scan, errors during service discovery on individual
+    devices are not saved and no signals are emitted. In this case, errors are
+    fairly normal as some devices may not respond to discovery or
+    may no longer be in range.  Such errors are surpressed.  If no services
     are returned, it can be assumed no services could be discovered.
 
 */
@@ -275,8 +276,8 @@ QBluetoothServiceDiscoveryAgent::Error QBluetoothServiceDiscoveryAgent::error() 
 }
 
 /*!
-    Returns a human-readable description of the last error that occurred when
-    doing service discovery on a single device.
+    Returns a human-readable description of the last error that occurred during
+    service discovery on a single device.
 */
 QString QBluetoothServiceDiscoveryAgent::errorString() const
 {

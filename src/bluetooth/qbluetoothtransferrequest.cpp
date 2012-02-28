@@ -64,8 +64,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     Attribute codes for QBluetoothTransferRequest and QBluetoothTransferReply.
 
-    \value DescriptionAttribute A textural description of the object being transferred. May be
-                                display in the UI of the remote device.
+    \value DescriptionAttribute A textual description of the object being transferred.
+    May be displayed in the UI of the remote device.
     \value TimeAttribute        Time attribute of the object being transferred.
     \value TypeAttribute        MIME type of the object being transferred.
     \value LengthAttribute      Length in bytes of the object being transferred.
@@ -74,7 +74,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 */
 
 /*!
-    Constructs a new Bluetooth transfer request to the device wit address \a address.
+    Constructs a new Bluetooth transfer request to the device with \a address.
 */
 QBluetoothTransferRequest::QBluetoothTransferRequest(const QBluetoothAddress &address)
 :d_ptr(new QBluetoothTransferRequestPrivate)
@@ -102,7 +102,7 @@ QBluetoothTransferRequest::~QBluetoothTransferRequest()
 }
 
 /*!
-    Returns the attribute associated with code \a code. If the attribute has not been set, it
+    Returns the attribute associated with \a code. If the attribute has not been set, it
     returns \a defaultValue.
 
     \sa setAttribute(), QBluetoothTransferRequest::Attribute
@@ -119,7 +119,7 @@ QVariant QBluetoothTransferRequest::attribute(Attribute code, const QVariant &de
 }
 
 /*!
-    Sets the attribute associated with code \a code to be value \a value. If the attribute is
+    Sets the attribute associated with \a code to \a value. If the attribute is
     already set, the previous value is discarded. If \a value is an invalid QVariant, the attribute
     is unset.
 

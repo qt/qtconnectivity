@@ -104,9 +104,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     implicitly converted into a QBluetoothUuid when necessary.
 
     \value PublicBrowseGroup    Public browse group service class. Services which have the public
-                                browse group in their
-                                \l {QBluetoothServiceInfo::BrowseGroupList}{browse group list} are
-                                discoverable by remote devices.
+    browse group in their \l {QBluetoothServiceInfo::BrowseGroupList}{browse group list} are discoverable
+    by the remote devices.
     \value ObexObjectPush       OBEX object push service UUID.
     \value ServiceDiscoveryServer
     \value BrowseGroupDescriptor Browser group descriptor
@@ -171,7 +170,7 @@ QBluetoothUuid::QBluetoothUuid()
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the protocol UUID \a uuid.
+    Constructs a new Bluetooth UUID from the protocol \a uuid.
 */
 QBluetoothUuid::QBluetoothUuid(ProtocolUuid uuid)
 :   QUuid(uuid, baseUuid()->data2,
@@ -182,7 +181,7 @@ QBluetoothUuid::QBluetoothUuid(ProtocolUuid uuid)
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the service class UUID \a uuid.
+    Constructs a new Bluetooth UUID from the service class \a uuid.
 */
 QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
 :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
@@ -192,7 +191,7 @@ QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the 16 bit UUID \a uuid.
+    Constructs a new Bluetooth UUID from the 16 bit \a uuid.
 */
 QBluetoothUuid::QBluetoothUuid(quint16 uuid)
 :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
@@ -202,7 +201,7 @@ QBluetoothUuid::QBluetoothUuid(quint16 uuid)
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the 32 bit UUID \a uuid.
+    Constructs a new Bluetooth UUID from the 32 bit \a uuid.
 */
 QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
@@ -212,7 +211,7 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the 128 bit UUID \a uuid.
+    Constructs a new Bluetooth UUID from the 128 bit \a uuid.
 */
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 {
@@ -232,7 +231,7 @@ QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the string \a uuid.
+    Constructs a new Bluetooth UUID from the \a uuid string.
 
     The string must be in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.
 */
@@ -288,8 +287,8 @@ int QBluetoothUuid::minimumSize() const
 }
 
 /*!
-    Returns the 16 bit representation of this UUID. If \a ok is passed it is set to true if the
-    conversion is possible otherwise it is set to false. The return value is undefined if \a ok is
+    Returns the 16 bit representation of this UUID. If \a ok is passed, it is set to true if the
+    conversion is possible, otherwise it is set to false. The return value is undefined if \a ok is
     set to false.
 */
 quint16 QBluetoothUuid::toUInt16(bool *ok) const
@@ -309,8 +308,8 @@ quint16 QBluetoothUuid::toUInt16(bool *ok) const
 }
 
 /*!
-    Returns the 32 bit representation of this UUID. If \a ok is passed it is set to true if the
-    conversion is possible otherwise it is set to false. The return value is undefined if \a ok is
+    Returns the 32 bit representation of this UUID. If \a ok is passed, it is set to true if the
+    conversion is possible, otherwise it is set to false. The return value is undefined if \a ok is
     set to false.
 */
 quint32 QBluetoothUuid::toUInt32(bool *ok) const
@@ -351,7 +350,7 @@ quint128 QBluetoothUuid::toUInt128() const
 }
 
 /*!
-    Returns true if \a other is equal to this Bluetooth UUID; otherwise returns false.
+    Returns true if \a other is equal to this Bluetooth UUID, otherwise false.
 */
 bool QBluetoothUuid::operator==(const QBluetoothUuid &other) const
 {

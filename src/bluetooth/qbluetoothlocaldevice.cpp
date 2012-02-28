@@ -62,7 +62,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \enum QBluetoothLocalDevice::Pairing
 
-    This enum describes the pairing state between two Bluetooth devices.
+    This enum describes the pairing state between the two Bluetooth devices.
 
     \value Unpaired         The Bluetooth devices are not paired.
     \value Paired           The Bluetooth devices are paired. The system will prompt the user for
@@ -89,18 +89,17 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     This enum describes the most of the local Bluetooth device.
 
-    \value HostPoweredOff       Powers the device down
+    \value HostPoweredOff       Power off the device
     \value HostConnectable      Remote Bluetooth devices can connect to the local Bluetooth device
-                                if they have previously been paired with it or otherwise know its
-                                address. This powers up the device if it was powered off.
+    if they have previously been paired with it or otherwise know its address. This powers up the 
+    device if it was powered off.
     \value HostDiscoverable     Remote Bluetooth devices can discover the presence of the local
-                                Bluetooth device.  The device will also be connectable, and powered on.
+    Bluetooth device. The device will also be connectable, and powered on.
     \value HostDiscoverableLimitedInquiry Remote Bluetooth devices can discover the presence of the local
-                                Bluetooth device when performing a limited inquiry.  This should be used for
-                                locating services that are only made discoverable for a limited period of time.
-                                This can speed up discovery between games for example, since service
-                                discovery can be skipped on devices not in limited enquiry more.  This
-                                is not supported on all platforms. The device will also be connectable, and powered on.
+     Bluetooth device when performing a limited inquiry. This should be used for locating services that are   
+     only made discoverable for a limited period of time. This can speed up discovery between gaming devices, 
+     as service discovery can be skipped on devices not in LimitedInquiry mode. In this mode, the device will 
+     be connectable and powered on, if required.
 
 */
 
@@ -127,7 +126,7 @@ QBluetoothLocalDevice::~QBluetoothLocalDevice()
 }
 
 /*!
-    Returns true the QBluetoothLocalDevice represents an available local Bluetooth device;
+    Returns true if the QBluetoothLocalDevice represents an available local Bluetooth device;
     otherwise return false.
 */
 bool QBluetoothLocalDevice::isValid() const
@@ -138,7 +137,7 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
     \fn void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 
-    Sets the host mode the this local Bluetooth device to \a mode.
+    Sets the host mode of this local Bluetooth device to \a mode.
 */
 
 /*!
@@ -168,7 +167,7 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
   \fn QBluetoothLocalDevice::powerOn()
 
-  Powers on the device on returning it to the hostMode() state is was in when powered down
+  Powers on the device after returning it to the hostMode() state, if it was powered off.
 */
 
 /*!
@@ -178,7 +177,7 @@ bool QBluetoothLocalDevice::isValid() const
 
 /*!
   \fn QBluetoothLocalDevice::hostModeStateChanged(QBluetoothLocalDevice::HostMode state)
-  The \a state of the host has transitioned to a different HostMode
+  The \a state of the host has transitioned to a different HostMode.
 */
 
 /*!
@@ -213,9 +212,8 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
   \fn QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 
-  Set the \a pairing status with \a address.  The results are returned via
-  the signal pairingFinished().  Caution: creating a pairing may take minutes, and can require
-  the user to acknowledge dialogs.
+  Set the \a pairing status with \a address.  The results are returned by the signal, pairingFinished().
+  Caution: creating a pairing may take minutes, and may require the user to acknowledge.
 */
 
 /*!
@@ -226,7 +224,7 @@ bool QBluetoothLocalDevice::isValid() const
 
 /*!
   \fn QBluetoothLocalDevice::error(QBluetoothLocalDevice::Error error)
-  Signal emitted for pairing if there's an exceptional \a error
+  Signal emitted if there's an exceptional \a error while pairing.
 */
 
 

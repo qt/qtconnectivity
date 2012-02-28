@@ -66,8 +66,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \fn QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request, QIODevice *data)
 
-    Sends the contents of \a data to the remote device \a request and returns a new
-    QBluetoothTransferReply, that can be used to track the request's progress.
+    Sends the contents of \a data to the remote device identified by \a request, and returns a new
+    QBluetoothTransferReply that can be used to track the request's progress.
 */
 
 

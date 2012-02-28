@@ -51,13 +51,17 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
 
-    To discovery nearby Bluetooth devices create an instance of QBluetoothDeviceDiscoveryAgent,
-    connect to either the deviceDiscovered() or finished() signals and call start().
+    To discover the nearby Bluetooth devices:
+    \list
+    \o create an instance of QBluetoothDeviceDiscoveryAgent,
+    \o connect to either the deviceDiscovered() or finished() signals,
+    \o and call start().
+    \endlist
 
     \snippet ../doc/src/snippets/devicediscovery.cpp Device discovery
 
-    To retrieve results asynchronously connect to the deviceDiscovered() signal. To get a list of
-    all discovered devices call discoveredDevices() after the finished() signal is emitted.
+    To retrieve results asynchronously, connect to the deviceDiscovered() signal. To get a list of
+    all discovered devices, call discoveredDevices() after the finished() signal.
 */
 
 /*!
@@ -66,27 +70,27 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     Indicates all possible error conditions found during Bluetooth device discovery.
 
     \value NoError          No error has occurred.
-    \value PoweredOff       Bluetooth adaptor is powered off, power it on before doing discovery.
-    \value IOFailure        Writing or reading from device resulted in an error.
+    \value PoweredOff       The Bluetooth adaptor is powered off, power it on before doing discovery.
+    \value IOFailure        Writing or reading from the device resulted in an error.
     \value UnknownError     An unknown error has occurred.
 */
 
 /*!
     \enum QBluetoothDeviceDiscoveryAgent::InquiryType
 
-    This enum describes the inquiry type used when discovering Bluetooth devices.
+    This enum describes the inquiry type used while discovering Bluetooth devices.
 
     \value GeneralUnlimitedInquiry  A general unlimited inquiry. Discovers all visible Bluetooth
                                     devices in the local vicinity.
-    \value LimitedInquiry           A limited inquiry. Only discovers devices that are in limited
-                                    inquiry mode. Not all platforms support limited inquiry. If
-                                    limited inquiry is requested on a platform that does not
-                                    support it general unlimited inquiry we be used instead. Setting
-                                    LimitedInquiry is useful for 2 games that wish to find each other
-                                    quickly.  The phone scans for devices in LimitedInquiry and
-                                    Service Discovery is only done on one or two devices speeding up the
-                                    service scan.  After the game has connected the device returns to
-                                    GeneralUnilimitedInquiry
+    \value LimitedInquiry           A limited inquiry discovers devices that are in limited
+                                    inquiry mode. 
+
+    LimitedInquiry is not supported on all platforms. If it is requested on a platform that does not
+    support it, GeneralUnlimitedInquiry will be used instead. Setting LimitedInquiry is useful 
+    for multi-player Bluetooth-based games that needs faster communication between the devices.
+    The phone scans for devices in LimitedInquiry and Service Discovery is done on one or two devices
+    to speed up the service scan. After the game has connected to the device it intends to,the device
+    returns to GeneralUnilimitedInquiry.
 */
 
 /*!
@@ -118,7 +122,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \fn bool QBluetoothDeviceDiscoveryAgent::isActive() const
 
-    Returns true if the agent is currently discovering Bluetooth devices, other returns false.
+    Returns true if the agent is currently discovering Bluetooth devices, otherwise returns false.
 */
 
 /*!
@@ -140,9 +144,9 @@ QBluetoothDeviceDiscoveryAgent::~QBluetoothDeviceDiscoveryAgent()
 
 /*!
     \property QBluetoothDeviceDiscoveryAgent::inquiryType
-    \brief type of inquiry scan to use when discovering devices
+    \brief type of inquiry scan to be used while discovering devices
 
-    This property affects the type of inquiry scan which is performed when discovering devices.
+    This property affects the type of inquiry scan which is performed while discovering devices.
 
     By default, this property is set to GeneralUnlimitedInquiry.
 
@@ -188,7 +192,7 @@ void QBluetoothDeviceDiscoveryAgent::start()
     Stops Bluetooth device discovery.  The cancel() signal is emitted once the
     device discovery is canceled.  start() maybe called before the cancel signal is
     received.  Once start() has been called the cancel signal from the prior
-    discovery will be silently discarded.
+    discovery will be discarded.
 */
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
@@ -205,7 +209,7 @@ bool QBluetoothDeviceDiscoveryAgent::isActive() const
 
 
 /*!
-    Returns the last error which has occurred.
+    Returns the last error.
 */
 QBluetoothDeviceDiscoveryAgent::Error QBluetoothDeviceDiscoveryAgent::error() const
 {
@@ -215,7 +219,7 @@ QBluetoothDeviceDiscoveryAgent::Error QBluetoothDeviceDiscoveryAgent::error() co
 }
 
 /*!
-    Returns a human-readable description of the last error that occurred.
+    Returns a human-readable description of the last error.
 */
 QString QBluetoothDeviceDiscoveryAgent::errorString() const
 {

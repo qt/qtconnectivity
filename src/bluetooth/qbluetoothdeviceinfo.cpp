@@ -66,11 +66,11 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \value PhoneDevice          A telephone device.
     \value LANAccessDevice      A device that provides access to a local area network.
     \value AudioVideoDevice     A device capable of playback or capture of audio and/or video.
-    \value PeripheralDevice     A peripheral device such as a keyboard, mouse, etc.
+    \value PeripheralDevice     A peripheral device such as a keyboard, mouse, and so on.
     \value ImagingDevice        An imaging device such as a display, printer, scanner or camera.
     \value WearableDevice       A wearable device such as a watch or pager.
     \value ToyDevice            A toy.
-    \value HealthDevice         A health reated device such as heart rate, or temperature.
+    \value HealthDevice         A health reated device such as heart rate or temperature monitor.
     \value UncategorizedDevice  A device that does not fit into any of the other device classes.
 */
 
@@ -132,13 +132,13 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     \value UncategorizedAudioVideoDevice    An uncategorized audio/video device.
     \value WearableHeadsetDevice            A wearable headset device.
-    \value HandsFreeDevice                  A hands free device.
+    \value HandsFreeDevice                  A handsfree device.
     \value Microphone                       A microphone.
     \value Loudspeaker                      A loudspeaker.
     \value Headphones                       Headphones.
     \value PortableAudioDevice              A portable audio device.
     \value CarAudio                         A car audio device.
-    \value SetTopBox                        A set top box.
+    \value SetTopBox                        A settop box.
     \value HiFiAudioDevice                  A HiFi audio device.
     \value Vcr                              A video cassette recorder.
     \value VideoCamera                      A video camera.
@@ -224,7 +224,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \enum QBluetoothDeviceInfo::ServiceClass
 
     This enum describes the service class of the Bluetooth device. The service class is used as a
-    rudimentary form of service discovery. It is meant to provide a rudimentary list of the types
+    rudimentary form of service discovery. It is meant to provide a list of the types
     of services that the device might provide.
 
     \value NoService                The device does not provide any services.
@@ -367,7 +367,7 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
 }
 
 /*!
-  Returns true if the \a other QBluetoothDeviceInfo object and this are identical
+  Returns true if the \a other QBluetoothDeviceInfo object and this are identical.
   */
 bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
 {
@@ -461,11 +461,11 @@ void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids, D
 
 /*!
     Returns the list of service UUIDS supported by the device. If \a completeness is not 0 it will
-    be set to DataComplete if the returned list is the complete list of UUIDs supported by the
-    device. DataIncomplete if additional service UUIDs are supported by the device and
-    DataUnavailable if no service UUID information is available.
+    be set to DataComplete and the complete list of UUIDs supported by the device is returned.
+    DataIncomplete if additional service UUIDs are supported by the device and DataUnavailable if
+    no service UUID information is available.
 
-    This function requires both Bluetooth devices to support the 2.1 specification.
+    This function requires both the Bluetooth devices to support the 2.1 specification.
 */
 QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids(DataCompleteness *completeness) const
 {
@@ -478,10 +478,10 @@ QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids(DataCompleteness *compl
 }
 
 /*!
-    Returns the completeness of the service UUID list.  If DataComplete is returned then
-    serviceUuids() will return a complete list of service UUIDs supported by the device. Otherwise
-    serviceUuids() will only return a partial or empty list of service UUIDs. To get a full list
-    of services supported by the device a full service discovery needs to be performed.
+    Returns the completeness of the service UUID list.  If DataComplete is returned,
+    serviceUuids() returns the complete list of service UUIDs supported by the device, otherwise
+    only the partial or empty list of service UUIDs. To get a list
+    of all services supported by the device, a full service discovery needs to be performed.
 */
 QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsCompleteness() const
 {
@@ -491,7 +491,7 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
 }
 
 /*!
-    Sets the manufacturer specific data returned by Extended Inquiry Responses to \a data.
+    Sets the manufacturer-specific data returned by Extended Inquiry Responses to \a data.
 */
 void QBluetoothDeviceInfo::setManufacturerSpecificData(const QByteArray &data)
 {
@@ -499,8 +499,8 @@ void QBluetoothDeviceInfo::setManufacturerSpecificData(const QByteArray &data)
 }
 
 /*!
-    Returns the manufacturer specific data. If \a available is not 0 it is set to true if
-    manufacturer specific data is available; otherwise it is set to false.
+    Returns the manufacturer-specific data. If \a available is not 0, it is set to true if
+    manufacturer-specific data is available; otherwise it is set to false.
 */
 QByteArray QBluetoothDeviceInfo::manufacturerSpecificData(bool *available) const
 {
@@ -509,7 +509,7 @@ QByteArray QBluetoothDeviceInfo::manufacturerSpecificData(bool *available) const
 }
 
 /*!
-    Returns true if the QBluetoothDeviceInfo object is created from cached data
+    Returns true if the QBluetoothDeviceInfo object is created from cached data.
 */
 bool QBluetoothDeviceInfo::isCached() const
 {
@@ -519,8 +519,8 @@ bool QBluetoothDeviceInfo::isCached() const
 }
 
 /*!
-  Used by the system to set the \a cached flag if the QBluetoothDeviceInfo is created from cached data. Cached information
-  may not be as accurate as data read from a live device.
+  Used by the system to set the \a cached flag if the QBluetoothDeviceInfo is created from cached data. Cached
+  information may not be as accurate as data read from an active device.
   */
 void QBluetoothDeviceInfo::setCached(bool cached)
 {
