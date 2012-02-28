@@ -110,8 +110,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \value ServiceRecordHandle      Specifies a service record from which attributes can be retrieved
     \value ServiceName              Name of the Bluetooth service in the primary language.
     \value ServiceDescription       Description of the Bluetooth service in the primary language.
-    \value ServiceProvider          Name of the company / entity that provides the Bluetooth
-                                    service primary language.
+    \value ServiceProvider          Name of the company / entity that provides the Bluetooth service primary
+    language.
 */
 
 /*!
@@ -127,25 +127,24 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \fn bool QBluetoothServiceInfo::isRegistered() const
 
-    Returns true if the service info is registered with the platforms service discovery protocol
-    (SDP) implementation; otherwise returns false.
+    Returns true if the service information is registered with the platform's Service Discovery Protocol
+    (SDP) implementation, otherwise returns false.
 */
 
 /*!
     \fn bool QBluetoothServiceInfo::registerService() const
 
-    Registers this service with the platforms service discovery protocol (SDP) implementation,
+    Registers this service with the platform's Service Discovery Protocol (SDP) implementation,
     making it findable by other devices when they perform service discovery.  Returns true if the
     service is successfully registered, otherwise returns false.  Once registered changes to the record
-    cannot be made.  The service must be unregistered and registered.
+    cannot be made. The service must be unregistered and registered again with the changes.
 */
 
 /*!
     \fn bool QBluetoothServiceInfo::unregisterService() const
 
-    Unregisters this service with the platforms service discovery protocol (SDP) implementation.
-
-    This service will not longer be findable by other devices via service discovery.
+    Unregisters this service with the platform's Service Discovery Protocol (SDP) implementation.
+    After this, the service will no longer be findable by other devices through service discovery.
 
     Returns true if the service is successfully unregistered, otherwise returns false.
 */
@@ -324,9 +323,9 @@ QBluetoothServiceInfo::~QBluetoothServiceInfo()
 }
 
 /*!
-    Returns true if the Bluetooth service info object is valid; otherwise returns false.
+    Returns true if the QBluetoothServiceInfo object is valid, otherwise returns false.
 
-    An invalid Bluetooth service info has no attributes.
+    An invalid QBluetoothServiceInfo object will have no attributes.
 */
 bool QBluetoothServiceInfo::isValid() const
 {
@@ -336,9 +335,9 @@ bool QBluetoothServiceInfo::isValid() const
 }
 
 /*!
-    Returns true if the Bluetooth service info object is considered complete; otherwise returns false.
+    Returns true if the QBluetoothServiceInfo object is considered complete, otherwise returns false.
 
-    A complete service info contains a ProtocolDescriptorList attribute.
+    A complete QBluetoothServiceInfo object contains a ProtocolDescriptorList attribute.
 */
 bool QBluetoothServiceInfo::isComplete() const
 {
@@ -370,7 +369,7 @@ void QBluetoothServiceInfo::setDevice(const QBluetoothDeviceInfo &device)
 /*!
     Sets the attribute identified by \a attributeId to \a value.
 
-    IF the service info is registered with the platforms SDP database the database entry is also
+    If the service information is registered with the platforms SDP database, the database entry is also
     updated.
 
     \sa isRegistered(), registerService()
@@ -399,7 +398,7 @@ QVariant QBluetoothServiceInfo::attribute(quint16 attributeId) const
 }
 
 /*!
-    Returns a list of all attribute ids that this service info has.
+    Returns a list of all attribute ids that the QBluetoothServiceInfo object has.
 */
 QList<quint16> QBluetoothServiceInfo::attributes() const
 {
@@ -409,7 +408,7 @@ QList<quint16> QBluetoothServiceInfo::attributes() const
 }
 
 /*!
-    Returns true if the service info contains the attribute \a attributeId; otherwise returns
+    Returns true if the QBluetoothServiceInfo object contains the attribute \a attributeId, otherwise returns
     false.
 */
 bool QBluetoothServiceInfo::contains(quint16 attributeId) const
@@ -420,7 +419,7 @@ bool QBluetoothServiceInfo::contains(quint16 attributeId) const
 }
 
 /*!
-    Removes the attribute \a attributeId from this service info.
+    Removes the attribute \a attributeId from the QBluetoothServiceInfo object.
 */
 void QBluetoothServiceInfo::removeAttribute(quint16 attributeId)
 {
@@ -433,7 +432,7 @@ void QBluetoothServiceInfo::removeAttribute(quint16 attributeId)
 }
 
 /*!
-    Returns the protocol that this service uses.
+    Returns the protocol that the QBluetoothServiceInfo object uses.
 */
 QBluetoothServiceInfo::Protocol QBluetoothServiceInfo::socketProtocol() const
 {
@@ -450,10 +449,10 @@ QBluetoothServiceInfo::Protocol QBluetoothServiceInfo::socketProtocol() const
 
 /*!
     This is a convenience function. Returns the protocol/service multiplexer for services which
-    support the L2CAP protocol. Otherwise returns -1.
+    support the L2CAP protocol, otherwise returns -1.
 
-    This function is equivalent to extracting the information from the
-    QBluetoothServiceInfo::Sequence returned from
+    This function is equivalent to extracting the information from
+    QBluetoothServiceInfo::Sequence returned by
     QBluetoothServiceInfo::attribute(QBluetoothServiceInfo::ProtocolDescriptorList).
 */
 int QBluetoothServiceInfo::protocolServiceMultiplexer() const
@@ -470,10 +469,10 @@ int QBluetoothServiceInfo::protocolServiceMultiplexer() const
 
 /*!
     This is a convenience function. Returns the server channel for services which support the
-    RFCOMM protocol. Otherwise returns -1.
+    RFCOMM protocol, otherwise returns -1.
 
-    This function is equivalent to extracting the information from the
-    QBluetoothServiceInfo::Sequence returned from
+    This function is equivalent to extracting the information from
+    QBluetoothServiceInfo::Sequence returned by
     QBluetoothServiceInfo::attribute(QBluetootherServiceInfo::ProtocolDescriptorList).
 */
 int QBluetoothServiceInfo::serverChannel() const

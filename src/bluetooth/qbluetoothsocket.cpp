@@ -67,7 +67,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \l {QBluetoothSocket::RfcommSocket}{RFCOMM} is a reliable, stream-oriented socket.  RFCOMM
     sockets emulate an RS-232 serial port.
 
-    To create a connection to a Bluetooth service create a socket of the appropriate type and call
+    To create a connection to a Bluetooth service, create a socket of the appropriate type and call
     connectToService() passing the Bluetooth address and port number. QBluetoothSocket will emit
     the connected() signal when the connection is established.
 
@@ -89,14 +89,13 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     This enum describes the state of the Bluetooth socket.
 
-    \value UnconnectedState      Socket is not connected.
+    \value UnconnectedState     Socket is not connected.
     \value ServiceLookupState   Socket is querying connection parameters.
     \value ConnectingState      Socket is attempting to connect to a device.
     \value ConnectedState       Socket is connected to a device.
-    \value BoundState   242.nmp.nokia.com
-_IceTransSocketUNIXConnect: Cannot connect to non-local host saisd        Socket is bound to a local address and port.
+    \value BoundState           Socket is bound to a local address and port.
     \value ClosingState         Socket is connected and will be closed once all pending data is
-                                written to the socket.
+    written to the socket.
     \value ListeningState       Socket is listening for incoming connections.
 */
 
@@ -186,7 +185,7 @@ _IceTransSocketUNIXConnect: Cannot connect to non-local host saisd        Socket
 /*!
     \fn quint16 QBluetoothSocket::localPort() const
 
-    Returns the port number of the local socket if available; otherwise returns 0.
+    Returns the port number of the local socket if available, otherwise returns 0.
 */
 
 /*!
@@ -204,7 +203,7 @@ _IceTransSocketUNIXConnect: Cannot connect to non-local host saisd        Socket
 /*!
     \fn quint16 QBluetoothSocket::peerPort() const
 
-    Return the port number of the peer socket if available; otherwise returns 0.
+    Return the port number of the peer socket if available, otherwise returns 0.
 */
 
 /*!
@@ -443,7 +442,7 @@ void QBluetoothSocket::setSocketError(QBluetoothSocket::SocketError error_)
 
 /*!
   Start device discovery for \a service and open the socket with \a openMode.  If the socket
-  is created with a service uuid device address we must use service discovery to find the
+  is created with a service uuid device address, use service discovery to find the
   port number to connect to.
 */
 
@@ -576,8 +575,8 @@ void QBluetoothSocket::close()
 }
 
 /*!
-  Set the socket to use \a socketDescriptor with a type of \a socketType
-  which is in state \a socketState and mode \a openMode.
+  Set the socket to use \a socketDescriptor with a type of \a socketType,
+  which is in state, \a socketState, and mode, \a openMode.
 
   Returns true on success
 */
@@ -591,7 +590,7 @@ bool QBluetoothSocket::setSocketDescriptor(int socketDescriptor, SocketType sock
 }
 
 /*!
-  Returns the platform specific socket descriptor, if available
+  Returns the platform-specific socket descriptor, if available.
 */
 
 int QBluetoothSocket::socketDescriptor() const

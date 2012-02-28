@@ -54,12 +54,12 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     QL2capServer is used to implement Bluetooth services over L2CAP.
 
-    Start listening for incoming connections with listen(). The newConnection() signal is emitted
-    when a new connection is established. Call nextPendingConnection() to get a QBluetoothSocket
-    for the new connection.
+    Start listening for incoming connections with listen(). Wait till the newConnection() signal
+    is emitted when the connection is established, and call nextPendingConnection() to get a QBluetoothSocket
+    for the connection.
 
-    to enable other devices to find your service create a QBluetoothServiceInfo with the applicable
-    attributes for your service and register it with QBluetoothServiceInfo::registerService(). Call
+    To enable other devices to find your service, create a QBluetoothServiceInfo with the applicable
+    attributes for your service and register it using QBluetoothServiceInfo::registerService(). Call
     serverPort() to get the L2CAP port number that is being used.
 
     \sa QBluetoothServiceInfo, QBluetoothSocket
@@ -88,7 +88,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     Start listening for incoming connections to \a address on \a port.
 
     Returns true if the operation succeeded and the L2CAP server is listening for incoming
-    connections; otherwise returns false.
+    connections, otherwise returns false.
 
     \sa isListening(), newConnection()
 */
@@ -104,7 +104,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \fn bool QL2capServer::hasPendingConnections() const
 
-    Returns true if a connection is pending; otherwise returns false.
+    Returns true if a connection is pending, otherwise false.
 */
 
 /*!
@@ -123,7 +123,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 /*!
     \fn quint16 QL2capServer::serverPort() const
 
-    Returns the server's port number.
+    Returns the server port number.
 */
 
 /*!
@@ -136,7 +136,7 @@ QL2capServer::QL2capServer(QObject *parent)
 }
 
 /*!
-    Destorys the L2CAP server.
+    Destroys the L2CAP server.
 */
 QL2capServer::~QL2capServer()
 {
@@ -144,8 +144,7 @@ QL2capServer::~QL2capServer()
 }
 
 /*!
-    Returns true if the L2CAP server is listening for incoming connections; otherwise returns
-    false.
+    Returns true if the L2CAP server is listening for incoming connections, otherwise false.
 */
 bool QL2capServer::isListening() const
 {
@@ -167,13 +166,12 @@ int QL2capServer::maxPendingConnections() const
 }
 
 /*!
-  \fn void QL2capServer::setSecurityFlags(QBluetooth::SecurityFlags security)
-    Sets the Bluetooth security flags to \a security. This function must be called prior to calling
-    listen().
+    \fn void QL2capServer::setSecurityFlags(QBluetooth::SecurityFlags security)
+    Sets the Bluetooth security flags to \a security. This function must be called before calling listen().
 */
 
 /*!
-  \fn QBluetooth::SecurityFlags QL2capServer::securityFlags() const
+    \fn QBluetooth::SecurityFlags QL2capServer::securityFlags() const
 
     Returns the Bluetooth security flags.
 */
