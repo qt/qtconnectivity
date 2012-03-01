@@ -53,7 +53,7 @@
 
 #include "tennisserver.h"
 #include "tennisclient.h"
-#include "handover.h"
+//#include "handover.h"
 
 #include <qbluetooth.h>
 #include <qbluetoothdeviceinfo.h>
@@ -61,13 +61,13 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
 
-#include <qnearfieldmanager.h>
-#include <qllcpserver.h>
-#include <qllcpsocket.h>
+//#include <qnearfieldmanager.h>
+//#include <qllcpserver.h>
+//#include <qllcpsocket.h>
 
 Tennis::Tennis(QWidget *parent)
 : QDialog(parent), ui(new Ui_Tennis), board(new Board), controller(new Controller), socket(0),
-  m_discoveryAgent(new QBluetoothServiceDiscoveryAgent), m_handover(0)
+  m_discoveryAgent(new QBluetoothServiceDiscoveryAgent)//, m_handover(0)
 {
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
@@ -139,7 +139,7 @@ Tennis::Tennis(QWidget *parent)
 //    ui->pongView->setBackgroundBrush(QBrush(Qt::white));
     ui->pongView->setCacheMode(QGraphicsView::CacheBackground);
 
-    QNearFieldManager nearFieldManager;
+/*    QNearFieldManager nearFieldManager;
     if (nearFieldManager.isAvailable()) {
         m_handover = new Handover(server->serverPort(), this);
         connect(m_handover, SIGNAL(bluetoothServiceChanged()), this, SLOT(nearFieldHandover()));
@@ -147,7 +147,7 @@ Tennis::Tennis(QWidget *parent)
         connect(m_discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
                 this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
         connect(m_discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
-    }
+    }*/
 
 
     m_discoveryAgent->setUuidFilter(QBluetoothUuid(serviceUuid));
@@ -188,9 +188,9 @@ Tennis::Tennis(QWidget *parent)
         service.setDevice(device);
         client->startClient(service);
         board->setStatus("Connecting", 100, 25);
-    } else if (nearFieldManager.isAvailable()) {
+    } /*else if (nearFieldManager.isAvailable()) {
         board->setStatus(tr("Touch to play"), 100, 25);
-    }
+    }*/
 
     setEnabled(true);
 
@@ -394,7 +394,7 @@ void Tennis::lagReport(int ms)
     }
 }
 
-void Tennis::nearFieldHandover()
+/*void Tennis::nearFieldHandover()
 {
     qDebug() << "Connecting to NFC provided address" << m_handover->bluetoothAddress().toString();
 
@@ -415,7 +415,7 @@ void Tennis::nearFieldHandover()
 
     client->startClient(service);
     board->setStatus(tr("Connecting: %1 %2").arg(m_handover->bluetoothAddress().toString()).arg(m_handover->serverPort()), 100, 25);
-}
+}*/
 
 void Tennis::fps(const QString &f)
 {

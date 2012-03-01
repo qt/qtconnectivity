@@ -87,9 +87,6 @@ The following sample applications show examples of API usage:
         \row
             \o \l{btscanner}{Bluetooth Scanner}
             \o Scan for Bluetooth devices.
-        \row
-            \o \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
-            \o A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
     \endtable
 
 
