@@ -51,9 +51,6 @@
         \row
             \li \l{btscanner}{Bluetooth Scanner}
             \li Scan for Bluetooth devices.
-        \row
-            \li \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
-            \li A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
     \endtable
 
     \section2 QML Examples

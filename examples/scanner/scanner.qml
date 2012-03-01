@@ -38,24 +38,20 @@
 **
 ****************************************************************************/
 
-import Qt 4.7
+import QtQuick 2.0
 import QtBluetooth 5.0
 
-Rectangle {
+Item {
     id: top
 
     property BluetoothService currentService
     property alias minimalDiscovery: myModel.minimalDiscovery
-    property alias uuidFilder: myModel.uuidFilter
-
-    anchors.fill: parent
 
     BluetoothDiscoveryModel {
         id: myModel
         minimalDiscovery: true
         onDiscoveryChanged: busy.running = discovery;
-//        onNewServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
-//        uuidFilter: "e8e10f95-1a70-4b27-9ccf-02010264e9c9"
+        onNewServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
    }
 
     Rectangle {
@@ -192,7 +188,6 @@ Rectangle {
         id: mainList
         width: top.width
         anchors.top: busy.bottom
-//        anchors.bottom: top.bottom
         anchors.bottom: fullbutton.top
 
         model: myModel
