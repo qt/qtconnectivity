@@ -61,7 +61,7 @@
    \sa QBluetoothAddress
    \sa QBluetoothSocket
 
-    The BluetoothService element was introduced in \bold{QtBluetooth 5.0}.
+    The BluetoothService element was introduced in \b{QtBluetooth 5.0}.
 
     It allows a QML project to get information about a remote service, or describe a service
     for a BluetoothSocket to connect to.

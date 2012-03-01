@@ -118,7 +118,7 @@
     \snippet ../examples/btchat/chatclient.h declaration
 
     The client creates a new QBluetoothSocket and connects to the remote service described by the
-    \i remoteService parameter.  Slots are connected to the sockets readyRead(), connected() and
+    \e remoteService parameter.  Slots are connected to the sockets readyRead(), connected() and
     disconnected() signals.
 
     \snippet ../examples/btchat/chatclient.cpp startClient

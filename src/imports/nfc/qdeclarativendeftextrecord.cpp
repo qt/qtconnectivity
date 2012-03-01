@@ -54,7 +54,7 @@
 
     \sa QNdefNfcTextRecord
 
-    The NdefTextRecord element was introduced in \bold {QtNfc 5.0}.
+    The NdefTextRecord element was introduced in \b {QtNfc 5.0}.
 
     The NdefTextRecord element contains a localized piece of text that can be display to the user.
     An NDEF message may contain many text records for different locales, it is up to the
@@ -84,23 +84,23 @@
 
     \table
         \header
-            \o Value
-            \o Description
+            \li Value
+            \li Description
         \row
-            \o LocaleMatchedNone
-            \o The text record does not match at all.
+            \li LocaleMatchedNone
+            \li The text record does not match at all.
         \row
-            \o LocaleMatchedEnglish
-            \o The language of the text record is English and the language of application's current
-               locale is \bold {not} English.  The English language text should be displayed if
+            \li LocaleMatchedEnglish
+            \li The language of the text record is English and the language of application's current
+               locale is \b {not} English.  The English language text should be displayed if
                there is not a more appropriate match.
         \row
-            \o LocaleMatchedLanguage
-            \o The language of the text record and the language of the applications's current
+            \li LocaleMatchedLanguage
+            \li The language of the text record and the language of the applications's current
                locale are the same.
         \row
-            \o LocaleMatchedLanguageAndCountry
-            \o The language and country of the text record matches that of the applicatin's current
+            \li LocaleMatchedLanguageAndCountry
+            \li The language and country of the text record matches that of the applicatin's current
                locale.
     \endtable
 */

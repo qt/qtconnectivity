@@ -330,8 +330,8 @@ static QMetaMethod methodForSignature(QObject *object, const char *method)
     Returns an identifier, which can be used to unregister the handler, on success; otherwise
     returns -1.
 
-    \note The \i target parameter of \a method may not be available on all platforms, in which case
-    \i target will be 0.
+    \note The \e target parameter of \a method may not be available on all platforms, in which case
+    \e target will be 0.
 */
 
 int QNearFieldManager::registerNdefMessageHandler(QNdefRecord::TypeNameFormat typeNameFormat,
@@ -365,8 +365,8 @@ int QNearFieldManager::registerNdefMessageHandler(QNdefRecord::TypeNameFormat ty
     NDEF message matching a pre-registered message format is received. See the section on
     \l {Automatically launching NDEF message handlers}.
 
-    \note The \i target parameter of \a method may not be available on all platforms, in which case
-    \i target will be 0.
+    \note The \e target parameter of \a method may not be available on all platforms, in which case
+    \e target will be 0.
 */
 int QNearFieldManager::registerNdefMessageHandler(QObject *object, const char *method)
 {
@@ -387,8 +387,8 @@ int QNearFieldManager::registerNdefMessageHandler(QObject *object, const char *m
     Returns an identifier, which can be used to unregister the handler, on success; otherwise
     returns -1.
 
-    \note The \i target parameter of \a method may not be available on all platforms, in which case
-    \i target will be 0.
+    \note The \e target parameter of \a method may not be available on all platforms, in which case
+    \e target will be 0.
 */
 int QNearFieldManager::registerNdefMessageHandler(const QNdefFilter &filter,
                                                   QObject *object, const char *method)
