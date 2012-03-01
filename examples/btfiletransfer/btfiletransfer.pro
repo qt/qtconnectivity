@@ -1,9 +1,7 @@
+TEMPLATE = app
 TARGET = btfiletransfer
 
 QT += concurrent bluetooth widgets
-
-INCLUDEPATH += ../../src/connectivity/bluetooth
-DEPENDPATH += ../../src/connectivity/bluetooth
 
 SOURCES = \
     main.cpp \
