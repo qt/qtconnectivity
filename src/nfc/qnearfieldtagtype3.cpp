@@ -126,7 +126,7 @@ QNearFieldTarget::RequestId QNearFieldTagType3::writeServiceData(quint16 service
 }
 
 /*!
-    Sends the \i check request to the target. Requests the service data blocks specified by
+    Sends the \e check request to the target. Requests the service data blocks specified by
     \a serviceBlockList. Returns a request id which can be used to track the completion status of
     the request.
 
@@ -150,7 +150,7 @@ QNearFieldTarget::RequestId QNearFieldTagType3::check(const QMap<quint16, QList<
 }
 
 /*!
-    Sends the \i update request to the target. Writes \a data to the services and block indexes
+    Sends the \e update request to the target. Writes \a data to the services and block indexes
     sepecified by \a serviceBlockList. Returns a request id which can be used to track the
     completion status of the request.
 

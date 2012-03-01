@@ -65,7 +65,7 @@
    \sa QBluetoothSocket
    \sa QDataStream
 
-    The BluetoothSocket element was introduced in \bold{QtBluetooth 5.0}.
+    The BluetoothSocket element was introduced in \b{QtBluetooth 5.0}.
 
     It allows a QML class connect to another bluetooth device and send
     and receive QString from the device. Data is sent and received using a

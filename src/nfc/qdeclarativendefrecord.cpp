@@ -61,12 +61,12 @@ QTNFC_BEGIN_NAMESPACE
     create a new NDEF record type in QML:
 
     \list
-        \o The subclass must have a Q_OBJECT macro in its declaration.
-        \o The subclass must have an \l {Q_INVOKABLE}{invokable} constructor that takes a
+        \li The subclass must have a Q_OBJECT macro in its declaration.
+        \li The subclass must have an \l {Q_INVOKABLE}{invokable} constructor that takes a
            QNdefRecord and a QObject pointer.
-        \o The subclass must be declared as an NDEF record by expanding the Q_DECLARE_NDEFRECORD()
+        \li The subclass must be declared as an NDEF record by expanding the Q_DECLARE_NDEFRECORD()
            macro in the implementation file of the subclass.
-        \o The subclass must be registered with QML.
+        \li The subclass must be registered with QML.
     \endlist
 
     For example the declaration of such a class may look like the following.

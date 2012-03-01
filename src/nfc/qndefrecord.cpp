@@ -78,7 +78,7 @@ QTNFC_BEGIN_NAMESPACE
 
     Specialized NDEF record classes can be easily created with the Q_DECLARE_NDEF_RECORD() and
     Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD() macros.  The following example shows the class
-    declaration of the hypothetical \i {example.com:f} record type that encapsulates a single int
+    declaration of the hypothetical \e {example.com:f} record type that encapsulates a single int
     property foo.
 
     \snippet ../doc/src/snippets/nfc.cpp Specialized class definition
@@ -122,7 +122,7 @@ QTNFC_BEGIN_NAMESPACE
 
     \a className is the name of the specialized class, \a typeNameFormat is the appropriate
     QNdefRecord::TypeNameFormat for the custom type and \a type is the type without the NID or NSS
-    prefixes. That is \i {example.com:f} not \i {urn:nfc:ext:example.com:f}.  \a initialPayload
+    prefixes. That is \e {example.com:f} not \e {urn:nfc:ext:example.com:f}.  \a initialPayload
     is the initial payload of an empty record, it must be a QByteArray or a type that can be
     implicitly converted into a QByteArray.
 
@@ -142,7 +142,7 @@ QTNFC_BEGIN_NAMESPACE
 
     \a className is the name of the specialized class, \a typeNameFormat is the appropriate
     QNdefRecord::TypeNameFormat for the custom type and \a type is the type without the NID or NSS
-    prefixes.  That is \i {example.com:f} not \i {urn:nfc:ext:example.com:f}.
+    prefixes.  That is \e {example.com:f} not \e {urn:nfc:ext:example.com:f}.
 
     See the secton on \l {Creating specialized NDEF record classes} for details.
 

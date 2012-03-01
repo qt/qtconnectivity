@@ -51,7 +51,7 @@
     \sa NearField
     \sa QNdefFilter
 
-    The NdefFilter element was introduced in \bold {QtNfc 5.0}.
+    The NdefFilter element was introduced in \b {QtNfc 5.0}.
 
     The NdefFilter element is used with the NearField element to read NDEF messages from NFC Forum
     tags that match a given structure.
@@ -74,7 +74,7 @@
 
     This property holds the NDEF record type that the filter matches.  This property must be set to
     the fully qualified record type, i.e. including the NIS and NSS prefixes.  For example set to
-    \i {urn:nfc:wkt:U} to match NFC RTD-URI records.
+    \li {urn:nfc:wkt:U} to match NFC RTD-URI records.
 */
 
 /*!

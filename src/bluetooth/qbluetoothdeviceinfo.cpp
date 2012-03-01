@@ -274,11 +274,11 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo()
     The \a classOfDevice parameter is encoded in the following format
 
     \table
-        \header \o Bits \o Size \o Description
-        \row \o 0 - 1 \o 2 \o Unused, set to 0.
-        \row \o 2 - 7 \o 6 \o Minor device class.
-        \row \o 8 - 12 \o 5 \o Major device class.
-        \row \o 13 - 23 \o 11 \o Service class.
+        \header \li Bits \li Size \li Description
+        \row \li 0 - 1 \li 2 \li Unused, set to 0.
+        \row \li 2 - 7 \li 6 \li Minor device class.
+        \row \li 8 - 12 \li 5 \li Major device class.
+        \row \li 13 - 23 \li 11 \li Service class.
     \endtable
 */
 QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name, quint32 classOfDevice)

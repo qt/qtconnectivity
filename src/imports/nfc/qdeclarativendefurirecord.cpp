@@ -54,7 +54,7 @@
 
     \sa QNdefNfcUriRecord
 
-    The NdefUriRecord element was introduced in \bold {QtNfc 5.0}.
+    The NdefUriRecord element was introduced in \b {QtNfc 5.0}.
 */
 
 /*!
