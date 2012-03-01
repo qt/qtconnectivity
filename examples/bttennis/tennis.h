@@ -65,7 +65,7 @@ static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c9");
 
 class TennisServer;
 class TennisClient;
-class Handover;
+//class Handover;
 
 //! [declaration]
 class Tennis : public QDialog
@@ -105,7 +105,7 @@ private slots:
 
     void lagReport(int ms);
 
-    void nearFieldHandover();
+//    void nearFieldHandover();
 
     void fps(const QString &f);
 
@@ -135,6 +135,6 @@ private:
     QPropertyAnimation *paddleAnimation;
 
     QBluetoothServiceDiscoveryAgent *m_discoveryAgent;
-    Handover *m_handover;
+//    Handover *m_handover;
 };
 //! [declaration]

@@ -51,9 +51,11 @@ QTBLUETOOTH_END_NAMESPACE
 
 QTBLUETOOTH_USE_NAMESPACE
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class Progress;
 }
+QT_END_NAMESPACE
 
 class Progress : public QDialog
 {

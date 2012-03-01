@@ -1,14 +1,8 @@
+TEMPLATE = app
 TARGET = bttennis
 
-INCLUDEPATH += \
-    ../../src/connectivity/bluetooth \
-    ../../src/connectivity/nfc
-
-DEPENDPATH += \
-    ../../src/connectivity/bluetooth \
-    ../../src/connectivity/nfc
-
-QT += concurrent bluetooth nfc widgets
+QT += concurrent bluetooth widgets
+#QT += nfc
 
 SOURCES = \
     main.cpp \
@@ -17,8 +11,8 @@ SOURCES = \
     controller.cpp \
     tennisserver.cpp \
     tennisclient.cpp \
-    tennisview.cpp \
-    handover.cpp
+    tennisview.cpp
+#    handover.cpp
 
 HEADERS = \
     board.h \
@@ -26,8 +20,8 @@ HEADERS = \
     controller.h \
     tennisserver.h \
     tennisclient.h \
-    tennisview.h \
-    handover.h
+    tennisview.h
+#    handover.h
 
 FORMS = \
     tennis.ui

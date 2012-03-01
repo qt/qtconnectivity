@@ -1,8 +1,5 @@
 TARGET = btscanner
 
-INCLUDEPATH += ../../src/connectivity/bluetooth
-DEPENDPATH += ../../src/connectivity/bluetooth
-
 QT += concurrent bluetooth widgets
 TEMPLATE = app
 
