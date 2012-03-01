@@ -47,11 +47,11 @@ the Bluetooth connection.
     With the Qt Bluetooth API typical use cases are:
 
         \list
-        \o Retrieve information about the local Bluetooth device
-        \o Scan for other Bluetooth devices in range and retrieve information about them
-        \o Connect to remote devices through a RFCOMM channel using the serial port profile (SPP).
-        \o Create a RFCOMM server that allows incoming connections using SPP.
-        \o Push files to remote devices using the Obex Object Push Profile (OPP).
+        \li Retrieve information about the local Bluetooth device
+        \li Scan for other Bluetooth devices in range and retrieve information about them
+        \li Connect to remote devices through a RFCOMM channel using the serial port profile (SPP).
+        \li Create a RFCOMM server that allows incoming connections using SPP.
+        \li Push files to remote devices using the Obex Object Push Profile (OPP).
         \endlist
 
 
@@ -67,7 +67,7 @@ the Bluetooth connection.
     There are a number of QML Elements available in the Qt Bluetooth API.
 
     \list
-        \o \l {Bluetooth QML API}{Bluetooth QML API}
+        \li \l {Bluetooth QML API}{Bluetooth QML API}
     \endlist
 
     \section2 C++ Bluetooth API
@@ -76,7 +76,7 @@ the Bluetooth connection.
     to interact with remote devices.
 
     \list
-        \o \l {Bluetooth C++ API} {Bluetooth C++ API}.
+        \li \l {Bluetooth C++ API} {Bluetooth C++ API}.
     \endlist
 
 */

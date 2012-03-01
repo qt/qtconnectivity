@@ -64,16 +64,16 @@ After importing the Bluetooth API you can use its elements. This example shows h
 
     \table 80%
         \header
-            \o Example
-            \o Description
+            \li Example
+            \li Description
 
         \row
-            \o \l{bttennis}{QML Bluetooth Tennis}
-            \o The tennis game using a QML interface to the Bluetooth API. It must connect to an
+            \li \l{bttennis}{QML Bluetooth Tennis}
+            \li The tennis game using a QML interface to the Bluetooth API. It must connect to an
             instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
         \row
-            \o \l{btscanner}{QML Bluetooth Scanner}
-            \o A QML implementation of the Bluetooth device scanner.
+            \li \l{btscanner}{QML Bluetooth Scanner}
+            \li A QML implementation of the Bluetooth device scanner.
     \endtable
 
 */

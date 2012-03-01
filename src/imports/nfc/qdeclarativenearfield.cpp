@@ -63,7 +63,7 @@
     \sa QNdefMessage
     \sa QNdefRecord
 
-    The NearField element was introduced in \bold {QtNfc 5.0}.
+    The NearField element was introduced in \b {QtNfc 5.0}.
 
     The NearField element can be used to read NDEF messages from NFC Forum tags.  Set the \l filter
     and \l orderMatch properties to match the required NDEF messages.  Once an NDEF message is

@@ -72,24 +72,24 @@ To link against the module, add this line to your \l qmake \c
 The following sample applications show examples of API usage:
     \table 80%
         \header
-            \o Example
-            \o Description
+            \li Example
+            \li Description
         \row
-            \o \l{btchat}{Bluetooth Chat}
-            \o A chat server and client using bluetooth.
+            \li \l{btchat}{Bluetooth Chat}
+            \li A chat server and client using bluetooth.
         \row
-            \o \l{bttennis}{Bluetooth Tennis}
-            \o The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
+            \li \l{bttennis}{Bluetooth Tennis}
+            \li The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
             over Bluetooth and touch-to-play functionality on devices that support NFC.
         \row
-            \o \l{btfiletransfer}{Bluetooth File Transfer}
-            \o Transfer files between Bluetooth devices.
+            \li \l{btfiletransfer}{Bluetooth File Transfer}
+            \li Transfer files between Bluetooth devices.
         \row
-            \o \l{btscanner}{Bluetooth Scanner}
-            \o Scan for Bluetooth devices.
+            \li \l{btscanner}{Bluetooth Scanner}
+            \li Scan for Bluetooth devices.
         \row
-            \o \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
-            \o A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
+            \li \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
+            \li A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
     \endtable
 
 

@@ -55,7 +55,7 @@
     \ingroup bluetooth-qml
     \inmodule QtBluetooth
 
-    The BluetoothDiscoveryModel element was introduced in \bold{QtBluetooth 5.0}.
+    The BluetoothDiscoveryModel element was introduced in \b{QtBluetooth 5.0}.
 
     BluetoothDiscoveryModel provides a model of connectable services. The
     contents of the model can be filtered by UUID allowing discovery to be

@@ -39,35 +39,35 @@
     \section2 C++ Examples
     \table 80%
         \header
-            \o Example
-            \o Description
+            \li Example
+            \li Description
         \row
-            \o \l{bttennis}{Bluetooth Tennis}
-            \o The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
+            \li \l{bttennis}{Bluetooth Tennis}
+            \li The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
             over Bluetooth and touch-to-play functionality on devices that support NFC.
         \row
-            \o \l{btfiletransfer}{Bluetooth File Transfer}
-            \o Transfer files between Bluetooth devices.
+            \li \l{btfiletransfer}{Bluetooth File Transfer}
+            \li Transfer files between Bluetooth devices.
         \row
-            \o \l{btscanner}{Bluetooth Scanner}
-            \o Scan for Bluetooth devices.
+            \li \l{btscanner}{Bluetooth Scanner}
+            \li Scan for Bluetooth devices.
         \row
-            \o \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
-            \o A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
+            \li \l{bluetoothtransferplugin}{Bluetooth Transfer Plugin}
+            \li A Service Framework plugin that enables sending files over Bluetooth through the Service Framework
     \endtable
 
     \section2 QML Examples
     \table 80%
         \header
-            \o Example
-            \o Description
+            \li Example
+            \li Description
         \row
-            \o \l{bttennis}{QML Bluetooth Tennis}
-            \o The tennis game using a QML interface to the Bluetooth API. It must connect to an
+            \li \l{bttennis}{QML Bluetooth Tennis}
+            \li The tennis game using a QML interface to the Bluetooth API. It must connect to an
             instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
         \row
-            \o \l{btscanner}{QML Bluetooth Scanner}
-            \o A QML implementation of the Bluetooth device scanner.
+            \li \l{btscanner}{QML Bluetooth Scanner}
+            \li A QML implementation of the Bluetooth device scanner.
     \endtable
 
 */

@@ -50,7 +50,7 @@
 
     \inherits NdefRecord
 
-    The NdefMimeRecord element was introduced in \bold {QtNfc 5.0}.
+    The NdefMimeRecord element was introduced in \b {QtNfc 5.0}.
 
     The NdefMimeRecord element can contain data with an associated MIME type.  The data is
     accessible from the uri in the \l {NdefMimeRecord::uri}{uri} property.
