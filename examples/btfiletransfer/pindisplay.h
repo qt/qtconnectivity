@@ -43,9 +43,11 @@
 
 #include <QDialog>
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class pinDisplay;
 }
+QT_END_NAMESPACE
 
 class pinDisplay : public QDialog
 {

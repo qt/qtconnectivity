@@ -57,9 +57,11 @@ class pinDisplay;
 
 QTBLUETOOTH_USE_NAMESPACE
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class RemoteSelector;
 }
+QT_END_NAMESPACE
 
 class RemoteSelector : public QDialog
 {
