@@ -2,9 +2,6 @@ QT += nfc widgets
 
 CONFIG += strict_flags
 
-INCLUDEPATH += $$PWD/../../src/connectivity/nfc
-DEPENDPATH += $$PWD/../../src/connectivity/nfc
-
 TARGET = annotatedurl
 
 SOURCES += main.cpp \

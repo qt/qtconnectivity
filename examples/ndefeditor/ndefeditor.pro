@@ -1,6 +1,3 @@
-INCLUDEPATH += $$PWD/../../src/connectivity/nfc
-DEPENDPATH += $$PWD/../../src/connectivity/nfc
-
 QT += nfc widgets
 
 TARGET = ndefeditor
