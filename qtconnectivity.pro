@@ -23,3 +23,5 @@ module_qtconnectivity_examples.depends = module_qtconnectivity_src
 SUBDIRS += module_qtconnectivity_src \
            module_qtconnectivity_tests \
            #module_qtconnectivity_examples  # there are no examples yet
+
+include(doc/doc.pri)
