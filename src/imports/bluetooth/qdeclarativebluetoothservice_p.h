@@ -43,7 +43,7 @@
 #define QDECLARATIVEBLUETOOTHSERVICE_P_H
 
 #include <QObject>
-#include <qdeclarative.h>
+#include <qqml.h>
 #include <qbluetoothserviceinfo.h>
 #include "qdeclarativebluetoothsocket_p.h"
 
@@ -53,7 +53,7 @@ QTBLUETOOTH_USE_NAMESPACE
 
 class QDeclarativeBluetoothServicePrivate;
 
-class QDeclarativeBluetoothService : public QObject, public QDeclarativeParserStatus
+class QDeclarativeBluetoothService : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY detailsChanged)
@@ -65,7 +65,7 @@ class QDeclarativeBluetoothService : public QObject, public QDeclarativeParserSt
     Q_PROPERTY(qint32 servicePort READ servicePort WRITE setServicePort NOTIFY detailsChanged)
     Q_PROPERTY(bool registered READ isRegistered WRITE setRegistered NOTIFY registeredChanged)
 
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
     explicit QDeclarativeBluetoothService(QObject *parent = 0);

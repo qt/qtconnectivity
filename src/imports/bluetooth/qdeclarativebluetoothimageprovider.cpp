@@ -40,10 +40,10 @@
 ****************************************************************************/
 
 #include <QDebug>
-#include <qdeclarativeextensionplugin.h>
+#include <QQmlExtensionPlugin>
 
-#include <qdeclarativeengine.h>
-#include <qdeclarative.h>
+#include <QQmlEngine>
+#include <qqml.h>
 #include "qdeclarativebluetoothimageprovider_p.h"
 
 

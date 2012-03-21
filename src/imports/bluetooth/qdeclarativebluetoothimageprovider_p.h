@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include <qdeclarativeimageprovider.h>
+#include <QQmlImageProvider>
 #include <QMap>
 
 #include <qbluetoothserviceinfo.h>
@@ -47,7 +47,7 @@
 QTBLUETOOTH_USE_NAMESPACE
 
 
-class BluetoothThumbnailImageProvider : public QDeclarativeImageProvider
+class BluetoothThumbnailImageProvider : public QQmlImageProvider
 {
 public:
     // This is run in a low priority thread.

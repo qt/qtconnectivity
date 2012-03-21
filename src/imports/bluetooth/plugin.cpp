@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeExtensionPlugin>
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlExtensionPlugin>
 
 #include "qdeclarativebluetoothdiscoverymodel_p.h"
 #include "qdeclarativebluetoothimageprovider_p.h"
@@ -50,7 +50,7 @@
 
 QT_USE_NAMESPACE
 
-class QBluetoothQmlPlugin : public QDeclarativeExtensionPlugin
+class QBluetoothQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
 public:
