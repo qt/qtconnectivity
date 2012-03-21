@@ -47,11 +47,11 @@ the Bluetooth connection.
     With the Qt Bluetooth API typical use cases are:
 
         \list
-        \li Retrieve information about the local Bluetooth device
-        \li Scan for other Bluetooth devices in range and retrieve information about them
-        \li Connect to remote devices through a RFCOMM channel using the serial port profile (SPP).
-        \li Create a RFCOMM server that allows incoming connections using SPP.
+        \li Retrieve information about the local Bluetooth device.
+        \li Scan for other Bluetooth devices in range and retrieve information about them.
         \li Push files to remote devices using the Obex Object Push Profile (OPP).
+        \li Connect to remote devices through a RFCOMM channel using the Serial Port Profile (SPP).
+        \li Create a RFCOMM server that allows incoming connections using SPP.
         \endlist
 
 
@@ -59,8 +59,56 @@ the Bluetooth connection.
     you can do, getting started, some simple examples and tutorials.
 
     \section1 Getting Started
-    To get started with Qt Bluetooth API  see the \l{Qt Bluetooth Examples}{Examples} or check out
-    the \l{Bluetooth QML API}{QML} and \l{Bluetooth C++ API}{C++} API's with their "Getting started" sections.
+    As shown in the above list, the Bluetooth API has three main purposes. The first one is to
+    obtain local and remote device information. The first steps in retrieving device information is
+    to check if Bluetooth is available on the device and read the local device address and name. The
+    QBluetoothLocalDevice is the one to provide all of this information. Additionally you can use it
+    to turn Bluetooth on and off and set the visibility on the device.
+
+    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp turningon
+
+    Similar to the QBluetoothLocalDevice, the API offers QBluetoothDeviceInfo which provides
+    that information for remote devices. While you can just create QBluetoothDeviceInfo objects on
+    your own and fill them with data, the easier way is to use the QBluetoothDeviceDiscoveryAgent to
+    start an automated search for visible Bluetooth devices within the connectable range.
+
+    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp discovery
+
+    Once the desired device is found, there are two main use cases provided by Qt Bluetooth. The
+    simpler is to send files via the Obex Object Push Profile (OPP). As the name describes, this
+    profile can only push files from one device to another but not pull files or browse the remote
+    file system. Because of this limitation, this profile does not require the two devices to be
+    paired before exchanging data. To push files to remote devices, create a
+    QBluetoothTransferRequest and ask the QBluetoothTransferManager to push the file contained in
+    the request by calling the put() function.
+
+    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp sendfile
+
+    The more flexible approach to do communication between two Bluetooth enabled devices, is to
+    create a virtual serial port connection and freely exchange data over that connection. This can
+    be done by the Serial Port Profile (SPP). The Serial Port Profile emulates a serial connection
+    over the Bluetooth transport protocol RFCOMM.
+
+    To be able to create SPP connections, you need to register a Server one one device by using
+    QRfcommServer.
+
+    \snippet ../examples/btchat/chatserver.cpp Create the server
+
+    Connect to this server from another device playing the client role by using a
+    QBluetoothSocket.
+
+    \snippet ../examples/btchat/chatclient.cpp startClient
+
+    Using such a connection allows to exchange any form of data in both directions.
+    It is perfectly suited for use cases like gaming or syncing the state between two instances of
+    an application on two devices. For more detailed descriptions on how to configure the server
+    and client, please refer to the detailed description sections in the QRfcommServer and
+    QBluetoothSocket classes. A good example to start with SPP is the \l{btchat}{Bluetooth Chat}
+    example.
+
+    To get started with adding the Qt Bluetooth API to your project, see the
+    \l{Qt Bluetooth Examples}{Examples} or check out the \l{Bluetooth QML API}{QML} and
+    \l{Bluetooth C++ API}{C++} API's with their "Getting started" sections.
 
     \section2 QML API
 
