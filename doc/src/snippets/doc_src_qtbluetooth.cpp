@@ -45,3 +45,53 @@
 //! [namespace]
 QTBLUETOOTH_USE_NAMESPACE
 //! [namespace]
+
+//! [turningon]
+QBluetoothLocalDevice localDevice;
+QString localDeviceName;
+
+// Check if Bluetooth is available on this device
+if (localDevice.isValid()) {
+
+    // Turn Bluetooth on
+    localDevice.powerOn();
+
+    // Read local device name
+    localDeviceName = localDevice.name();
+
+    // Make it visible to others
+    localDevice.setHostMode(QBluetoothLocalDevice::HostDiscoverable)
+}
+//! [turningon]
+
+//! [discovery]
+// Create a discovery agent and connect to its signals
+QBluetoothDiscoveryAgent *discoveryAgent = new QBluetoothDiscoveryAgent(this);
+connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)), this, SLOT(deviceDiscovered(const QBluetoothDeviceInfo&)));
+
+// Start a discovery
+discoveryAgent->start();
+
+...
+
+// In your local slot, read information about the found devices
+void MyClass::deviceDiscovered(const QBluetoothDeviceInfo &device)
+{
+    qDebug() << "Found new device:" << device.name() << '(' << device.address().toString() << ')';
+}
+//! [discovery]
+
+//! [sendfile]
+// Create a transfer manager
+QBluetoothTransferManager *transferManager = new QBluetoothTransferManager(this);
+
+// Create the transfer request and file to be sent
+QBluetoothTransferRequest request(device.address());
+QFile *file = new QFile("testfile.txt");
+
+// Ask the transfer manager to send it
+QBluetoothTransferReply *reply = transferManager->put(request, file);
+
+// Connect to the reply's signals to be informed about the status and do cleanups when done
+connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SLOT(transferFinished(QBluetoothTransferReply*)));
+//! [sendfile]
