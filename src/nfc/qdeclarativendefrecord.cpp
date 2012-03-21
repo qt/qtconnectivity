@@ -48,14 +48,14 @@ QTNFC_BEGIN_NAMESPACE
 
 /*!
     \class QDeclarativeNdefRecord
-    \brief The QDeclarativeNdefRecord class implements the NdefRecord element in QML.
+    \brief The QDeclarativeNdefRecord class implements the NdefRecord type in QML.
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
 
     \sa NdefRecord
 
-    The QDeclarativeNdefRecord class is the base class for all NdefRecord elements in QML.  To
+    The QDeclarativeNdefRecord class is the base class for all NdefRecord types in QML.  To
     support a new NDEF record type in QML subclass this class and expose new properties, member
     functions and signals appropriate for the new record type.  The following must be done to
     create a new NDEF record type in QML:
@@ -86,7 +86,7 @@ QTNFC_BEGIN_NAMESPACE
 
 /*!
     \qmlclass NdefRecord QDeclarativeNdefRecord
-    \brief The NdefRecord element represents a record in an NDEF message.
+    \brief The NdefRecord type represents a record in an NDEF message.
 
     \ingroup nfc-qml
     \inmodule QtNfc
@@ -96,7 +96,7 @@ QTNFC_BEGIN_NAMESPACE
 
     \sa QNdefRecord
 
-    The NdefRecord element is the base element for all NDEF record elements in QML.  It contains
+    The NdefRecord type is the base type for all NDEF record types in QML.  It contains
     a single property holding the type of record.
 
     This class is not intended to be used directly, but extended from C++.

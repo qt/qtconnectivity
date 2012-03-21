@@ -45,7 +45,7 @@
 
 /*!
     \qmlclass NdefTextRecord QDeclarativeNdefTextRecord
-    \brief The NdefTextRecord element represents an NFC RTD-Text NDEF record.
+    \brief The NdefTextRecord type represents an NFC RTD-Text NDEF record.
 
     \ingroup nfc-qml
     \inmodule QtNfc
@@ -54,9 +54,9 @@
 
     \sa QNdefNfcTextRecord
 
-    The NdefTextRecord element was introduced in \b {QtNfc 5.0}.
+    The NdefTextRecord type was introduced in \b {QtNfc 5.0}.
 
-    The NdefTextRecord element contains a localized piece of text that can be display to the user.
+    The NdefTextRecord type contains a localized piece of text that can be display to the user.
     An NDEF message may contain many text records for different locales, it is up to the
     application to select the most appropriate one to display to the user.  The localeMatch
     property can be used to determine if the text record has been matched.

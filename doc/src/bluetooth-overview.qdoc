@@ -64,7 +64,7 @@ the Bluetooth connection.
 
     \section2 QML API
 
-    There are a number of QML Elements available in the Qt Bluetooth API.
+    There are a number of QML Types available in the Qt Bluetooth API.
 
     \list
         \li \l {Bluetooth QML API}{Bluetooth QML API}
