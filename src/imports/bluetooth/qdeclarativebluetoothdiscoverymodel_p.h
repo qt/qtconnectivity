@@ -42,9 +42,9 @@
 #define QDECLARATIVECONTACTMODEL_P_H
 
 #include <QAbstractListModel>
-#include <QDeclarativeParserStatus>
-#include <QDeclarativeListProperty>
-#include <QDeclarativeParserStatus>
+#include <QQmlParserStatus>
+#include <QQmlListProperty>
+#include <QQmlParserStatus>
 
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothservicediscoveryagent.h>
@@ -56,14 +56,14 @@
 QTBLUETOOTH_USE_NAMESPACE
 
 class QDeclarativeBluetoothDiscoveryModelPrivate;
-class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QDeclarativeParserStatus
+class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
     Q_PROPERTY(bool minimalDiscovery READ minimalDiscovery WRITE setMinimalDiscovery NOTIFY minimalDiscoveryChanged)
     Q_PROPERTY(bool discovery READ discovery WRITE setDiscovery NOTIFY discoveryChanged)
     Q_PROPERTY(QString uuidFilter READ uuidFilter WRITE setUuidFilter NOTIFY uuidFilterChanged)
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 public:
     explicit QDeclarativeBluetoothDiscoveryModel(QObject *parent = 0);
 
