@@ -46,15 +46,15 @@ plugins with the flexibility you need.
 
 \section1 Getting Started
 
-To import the Bluetooth elements, use the following:
+To import the Bluetooth types, use the following:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.qml import
 
-After importing the Bluetooth API you can use its elements. This example shows how to connect to a remote RFCOMM (SPP) server using BluetoothSocket:
+After importing the Bluetooth API you can use its types. This example shows how to connect to a remote RFCOMM (SPP) server using BluetoothSocket:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.qml service
 
-\section1 QML Elements
+\section1 QML Types
 
 \list
 \annotatedlist bluetooth-qml
