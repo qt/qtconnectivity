@@ -29,7 +29,7 @@
 \ingroup technology-apis
 \title Qt Bluetooth Module
 \page qtbluetooth-overview.html
-\brief The Bluetooth API enables connectivity with other Bluetooth enabled devices.
+\brief The Qt Bluetooth API enables connectivity with other Bluetooth enabled devices.
 
 \tableofcontents
 
@@ -59,7 +59,7 @@ the Bluetooth connection.
     you can do, getting started, some simple examples and tutorials.
 
     \section1 Getting Started
-    As shown in the above list, the Bluetooth API has three main purposes. The first one is to
+    As shown in the above list, the Qt Bluetooth API has three main purposes. The first one is to
     obtain local and remote device information. The first steps in retrieving device information is
     to check if Bluetooth is available on the device and read the local device address and name. The
     QBluetoothLocalDevice is the one to provide all of this information. Additionally you can use it
@@ -107,24 +107,24 @@ the Bluetooth connection.
     example.
 
     To get started with adding the Qt Bluetooth API to your project, see the
-    \l{Qt Bluetooth Examples}{Examples} or check out the \l{Bluetooth QML API}{QML} and
-    \l{Bluetooth C++ API}{C++} API's with their "Getting started" sections.
+    \l{Qt Bluetooth Examples}{Examples} or check out the \l{Qt Bluetooth QML API}{QML} and
+    \l{Qt Bluetooth C++ API}{C++} API's with their "Getting started" sections.
 
     \section2 QML API
 
     There are a number of QML Types available in the Qt Bluetooth API.
 
     \list
-        \li \l {Bluetooth QML API}{Bluetooth QML API}
+        \li \l {Qt Bluetooth QML API}{Qt Bluetooth QML API}
     \endlist
 
-    \section2 C++ Bluetooth API
+    \section2 C++ API
 
-    The C++ Bluetooth API requires gives a bit more flexibility on how
+    The Qt Bluetooth C++ API requires gives a bit more flexibility on how
     to interact with remote devices.
 
     \list
-        \li \l {Bluetooth C++ API} {Bluetooth C++ API}.
+        \li \l {Qt Bluetooth C++ API} {Qt Bluetooth C++ API}.
     \endlist
 
 */

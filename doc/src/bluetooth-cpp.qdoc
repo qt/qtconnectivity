@@ -31,15 +31,15 @@
 
 \page bluetooth-cpp.html
 \module QtBluetooth
-\title Bluetooth C++ API
+\title Qt Bluetooth C++ API
 \brief An API enabling basic Bluetooth operations like scanning for Devices
 and connecting them.
 
 \ingroup qtconnectivity
 \ingroup qtconnectivity-c++
 
-The Bluetooth C++ API enables an application to scan for devices and connect and
-interact with them in a more flexible way than the \l{Bluetooth QML API}.
+The Qt Bluetooth C++ API enables an application to scan for devices and connect and
+interact with them in a more flexible way than the \l{Qt Bluetooth QML API}.
 
 \tableofcontents
 
@@ -50,7 +50,7 @@ include directive for the appropriate class. For example:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp include
 
-The Bluetooth API is a Qt Add-On API and for thus wrapped in a namespace. To
+The Qt Bluetooth C++ API is a Qt Add-On API and for thus wrapped in a namespace. To
 make use of the namespace use:
 
 \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp namespace
