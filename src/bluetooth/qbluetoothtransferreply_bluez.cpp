@@ -175,8 +175,9 @@ void QBluetoothTransferReplyBluez::sendReturned(QDBusPendingCallWatcher *watcher
 #ifdef NOKIA_BT_SERVICES
         // Inform the service daemon that an outgoing transfer has failed (use a fake transfer ID as there is no real one yet)
         QFile *file = qobject_cast<QFile *>(source);
-        nokiaBtServiceInstance()->outgoingFile("/transfer9999", address.toString(), file->fileName(), QBluetoothTransferReply::attribute(QBluetoothTransferRequest::TypeAttribute).toString(), m_size);
-        nokiaBtServiceInstance()->setTransferFinished("/transfer9999", false);
+        QString tempId = QUuid::createUuid().toString();
+        nokiaBtServiceInstance()->outgoingFile("/transfer" + tempId, address.toString(), file->fileName(), QBluetoothTransferReply::attribute(QBluetoothTransferRequest::TypeAttribute).toString(), m_size);
+        nokiaBtServiceInstance()->setTransferFinished("/transfer" + tempId, false);
 #endif
 
         // allow time for the developer to connect to the signal
