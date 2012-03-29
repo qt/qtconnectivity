@@ -38,13 +38,13 @@
 **
 ****************************************************************************/
 
-#include <QtWidgets/QApplication>
+#include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickView>
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QtQml/QQmlEngine>
 
 int main(int argc, char *argv[])
 {
-    QApplication application(argc, argv);
+    QGuiApplication application(argc, argv);
     const QString mainQmlApp = QLatin1String("qrc:/scanner.qml");
     QQuickView view;
     view.setSource(QUrl(mainQmlApp));
