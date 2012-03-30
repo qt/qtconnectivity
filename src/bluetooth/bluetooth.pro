@@ -3,13 +3,13 @@ load(qt_module)
 TARGET = QtBluetooth
 QPRO_PWD = $PWD
 
-CONFIG += module
-MODULE_PRI = ../../modules/qt_bluetooth.pri
+QT = core
 
 DEFINES += QT_BUILD_BT_LIB QT_MAKEDLL
 
 load(qt_module_config)
 
+# private dependencies
 QT += concurrent
 
 PUBLIC_HEADERS += \
