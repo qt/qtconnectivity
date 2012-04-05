@@ -1,3 +1,6 @@
+load(configure)
+qtCompileTest(bluez)
+
 TEMPLATE = subdirs
 CONFIG += ordered
 
