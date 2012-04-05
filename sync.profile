@@ -27,8 +27,3 @@
     "qtsystems" => "refs/heads/master",
     "qtxmlpatterns" => "refs/heads/master",
 );
-
-# Compile tests
-%configtests = (
-    "bluez" => {},
-);
