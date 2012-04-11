@@ -4,8 +4,6 @@ TARGET = QtNfc
 QPRO_PWD = $PWD
 
 CONFIG += module
-MODULE_PRI = ../../modules/qt_nfc.pri
-
 QT = core
 
 DEFINES += QT_BUILD_NFC_LIB QT_MAKEDLL
