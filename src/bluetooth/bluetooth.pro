@@ -6,7 +6,7 @@ QPRO_PWD = $PWD
 CONFIG += module
 QT = core
 
-DEFINES += QT_BUILD_BT_LIB QT_MAKEDLL
+DEFINES += QT_BUILD_BLUETOOTH_LIB QT_MAKEDLL
 
 load(qt_module_config)
 
