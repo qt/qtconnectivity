@@ -4,10 +4,6 @@
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
-%classnames = (
-    "qtbluetoothversion.h" => "QtBluetoothVersion",
-#    "qtnfcversion.h" => "QtNfcVersion",
-);
 %mastercontent = (
     "bluetooth" => "#include <QtBluetooth/QtBluetooth>\n",
 #    "nfc" => "#include <QtNfc/QtNfc>\n",
