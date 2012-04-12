@@ -1,12 +1,7 @@
 load(qt_module)
 
 TARGET = QtNfc
-QPRO_PWD = $PWD
-
-CONFIG += module
 QT = core
-
-DEFINES += QT_BUILD_NFC_LIB QT_MAKEDLL
 
 load(qt_module_config)
 
@@ -138,7 +133,5 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
         qllcpserver_p.cpp \
         qnearfieldmanagerimpl_p.cpp
 }
-
-INCLUDEPATH += $$PWD
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
