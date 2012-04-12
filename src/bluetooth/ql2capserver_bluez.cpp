@@ -97,6 +97,10 @@ bool QL2capServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_D(QL2capServer);
 
+#ifdef NOKIA_BT_PATCHES
+    return false; // Raw L2Cap not supported
+#endif
+
     int sock = d->socket->socketDescriptor();
     if (sock < 0)
         return false;

@@ -52,6 +52,12 @@
 
 #include <errno.h>
 
+#ifdef NOKIA_BT_PATCHES
+extern "C" {
+#include <bluetooth/brcm-rfcomm.h>
+}
+#endif
+
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
@@ -113,10 +119,18 @@ bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
     else
         convertAddress(Q_UINT64_C(0), addr.rc_bdaddr.b);
 
+#ifndef NOKIA_BT_PATCHES
     if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0)
+#else
+    if (brcm_rfcomm_socket_bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0)
+#endif
         return false;
 
+#ifndef NOKIA_BT_PATCHES
     if (::listen(sock, d->maxPendingConnections) < 0)
+#else
+    if (brcm_rfcomm_socket_listen(sock, d->maxPendingConnections) < 0)
+#endif
         return false;
 
     d->socket->setSocketState(QBluetoothSocket::ListeningState);
@@ -159,8 +173,13 @@ QBluetoothSocket *QRfcommServer::nextPendingConnection()
     sockaddr_rc addr;
     socklen_t length = sizeof(sockaddr_rc);
 
+#ifndef NOKIA_BT_PATCHES
     int pending = ::accept(d->socket->socketDescriptor(),
                            reinterpret_cast<sockaddr *>(&addr), &length);
+#else
+    int pending = brcm_rfcomm_socket_accept(d->socket->socketDescriptor(),
+                           reinterpret_cast<sockaddr *>(&addr), &length);
+#endif
     if (pending >= 0) {
         QBluetoothSocket *newSocket = new QBluetoothSocket;
         newSocket->setSocketDescriptor(pending, QBluetoothSocket::RfcommSocket);
@@ -213,7 +232,11 @@ void QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 
     qDebug() << hex << "Setting lm to" << lm << security;
 
+#ifndef NOKIA_BT_PATCHES
     if(setsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm)) < 0){
+#else
+    if(brcm_rfcomm_socket_setsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm)) < 0){
+#endif
         qWarning() << "Failed to set socket option, closing socket for safety" << errno;
         qWarning() << "Error: " << strerror(errno);
         d->socket->close();
@@ -228,7 +251,11 @@ QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
     int len = sizeof(lm);
     int security = QBluetooth::NoSecurity;
 
+#ifndef NOKIA_BT_PATCHES
     if(getsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, (socklen_t *)&len) < 0) {
+#else
+    if(brcm_rfcomm_socket_getsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, (socklen_t *)&len) < 0) {
+#endif
         qWarning() << "Failed to get security flags" << strerror(errno);
         return QBluetooth::NoSecurity;
     }

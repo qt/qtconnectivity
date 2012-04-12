@@ -166,8 +166,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
     QDBusPendingReply<QVariantMap> deviceReply = device->GetProperties();
     deviceReply.waitForFinished();
-    if(deviceReply.isError())
+    if (deviceReply.isError()) {
+#ifdef QT_SERVICEDISCOVERY_DEBUG
+        qDebug() << "GetProperties error: " << error << deviceObjectPath.error().name();
+#endif
         return;
+    }
     QVariantMap v = deviceReply.value();
     QStringList device_uuids = v.value(QLatin1String("UUIDs")).toStringList();
 
@@ -217,7 +221,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         QXmlStreamReader xml(record);
 
 #ifdef QT_SERVICEDISCOVERY_DEBUG
-      //  qDebug() << "Service xml" << record;
+        qDebug() << "Service xml" << record;
 #endif
 
         QBluetoothServiceInfo serviceInfo;
