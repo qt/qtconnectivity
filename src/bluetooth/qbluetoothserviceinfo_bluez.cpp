@@ -247,8 +247,10 @@ bool QBluetoothServiceInfoPrivate::ensureSdpConnection() const
 
 bool QBluetoothServiceInfoPrivate::registerService() const
 {
-    if (!ensureSdpConnection())
+    if (!ensureSdpConnection()) {
+        qDebug() << "SDP not connected. Cannot register";
         return false;
+    }
 
     QString xmlServiceRecord;
 
@@ -263,10 +265,8 @@ bool QBluetoothServiceInfoPrivate::registerService() const
 
     QMap<quint16, QVariant>::ConstIterator i = attributes.constBegin();
     while (i != attributes.constEnd()) {
-        QString t = unsignedFormat.arg(i.key(), 4, QLatin1Char('0'));
         stream.writeStartElement(QLatin1String("attribute"));
-        stream.writeAttribute(QLatin1String("id"),
-                              unsignedFormat.arg(i.key(), 4, 16, QLatin1Char('0')));
+        stream.writeAttribute(QLatin1String("id"), unsignedFormat.arg(i.key(), 4, 16, QLatin1Char('0')));
         writeAttribute(&stream, i.value());
         stream.writeEndElement();
 
@@ -282,15 +282,26 @@ bool QBluetoothServiceInfoPrivate::registerService() const
     if (!registered) {
         QDBusPendingReply<uint> reply = service->AddRecord(xmlServiceRecord);
         reply.waitForFinished();
-        if (reply.isError())
+        if (reply.isError()) {
+            qDebug() << "AddRecord returned error" << reply.error();
             return false;
+        }
 
         serviceRecord = reply.value();
     } else {
+#ifndef NOKIA_BT_PATCHES
         QDBusPendingReply<> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
+#else
+        QDBusPendingReply<uint> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
+#endif
         reply.waitForFinished();
-        if (reply.isError())
+        if (reply.isError()) {
+            qDebug() << "UpdateRecord returned error" << reply.error();
             return false;
+        }
+#ifdef NOKIA_BT_PATCHES
+        serviceRecord = reply.value();
+#endif
     }
 
     registered = true;
