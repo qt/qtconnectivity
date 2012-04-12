@@ -1,12 +1,7 @@
-load(qt_module)
+load(qt_build_config)
 
 TARGET = QtBluetooth
-QPRO_PWD = $PWD
-
-CONFIG += module
 QT = core
-
-DEFINES += QT_BUILD_BLUETOOTH_LIB QT_MAKEDLL
 
 load(qt_module_config)
 
@@ -106,9 +101,6 @@ config_bluez:contains(QT_CONFIG, dbus) {
         qbluetoothtransfermanager_p.cpp
 
 }
-
-INCLUDEPATH += $$PWD
-INCLUDEPATH += ..
 
 OTHER_FILES +=
 
