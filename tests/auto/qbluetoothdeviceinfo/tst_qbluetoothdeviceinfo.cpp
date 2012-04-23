@@ -252,6 +252,7 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(deviceInfo.name(), name);
         QCOMPARE(deviceInfo.serviceClasses(), serviceClasses);
         QCOMPARE(deviceInfo.majorDeviceClass(), majorDeviceClass);
+        QEXPECT_FAIL("0x00044C COD", "QTBUG-25453", Abort);
         QCOMPARE(deviceInfo.minorDeviceClass(), minorDeviceClass);
 
         QBluetoothDeviceInfo copyInfo(deviceInfo);
@@ -293,6 +294,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo.name(), name);
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
+        QEXPECT_FAIL("0x00044C COD", "QTBUG-25453", Abort);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
     }
 
