@@ -232,6 +232,7 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         copyInfo = serviceInfo;
         QVERIFY(!copyInfo.isRegistered());
 
+        QEXPECT_FAIL("assignment_data", "QTBUG-25452", Abort);
         QVERIFY(copyInfo.registerService());
         QVERIFY(copyInfo.isRegistered());
 
