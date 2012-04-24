@@ -61,3 +61,4 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, ServiceMap &servi
 
     return argument;
 }
+ 

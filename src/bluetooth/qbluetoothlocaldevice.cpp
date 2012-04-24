@@ -237,3 +237,4 @@ bool QBluetoothLocalDevice::isValid() const
 #include "moc_qbluetoothlocaldevice.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

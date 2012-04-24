@@ -183,3 +183,4 @@ QBluetoothTransferRequestPrivate::QBluetoothTransferRequestPrivate()
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

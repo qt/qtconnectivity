@@ -550,3 +550,4 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

@@ -52,3 +52,4 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

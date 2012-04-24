@@ -660,3 +660,4 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketState state)
 #include "moc_qbluetoothsocket.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

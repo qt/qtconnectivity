@@ -53,3 +53,4 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, ServiceMap &servi
 Q_DECLARE_METATYPE(ServiceMap)
 
 #endif // SERVICEMAP_P_H
+ 

@@ -218,3 +218,4 @@ QBluetoothAddressPrivate::QBluetoothAddressPrivate()
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

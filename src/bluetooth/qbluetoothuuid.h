@@ -180,3 +180,4 @@ Q_DECLARE_METATYPE(QtBluetooth::QBluetoothUuid)
 QT_END_HEADER
 
 #endif
+ 

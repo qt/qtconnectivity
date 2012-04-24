@@ -86,3 +86,4 @@ bool QBluetoothServiceInfoPrivate::registerService() const
 #endif
 
 QTBLUETOOTH_END_NAMESPACE
+ 

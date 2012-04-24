@@ -602,3 +602,4 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

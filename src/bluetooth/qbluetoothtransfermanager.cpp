@@ -96,3 +96,4 @@ QBluetoothTransferManager::~QBluetoothTransferManager()
 #include "moc_qbluetoothtransfermanager.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

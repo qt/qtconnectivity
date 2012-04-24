@@ -103,3 +103,4 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

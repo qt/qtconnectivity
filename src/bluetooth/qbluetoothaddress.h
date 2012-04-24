@@ -88,3 +88,4 @@ Q_DECLARE_METATYPE(QtBluetooth::QBluetoothAddress)
 QT_END_HEADER
 
 #endif
+ 

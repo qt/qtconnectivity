@@ -325,3 +325,4 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

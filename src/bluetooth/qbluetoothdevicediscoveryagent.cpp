@@ -231,3 +231,4 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
 
 QTBLUETOOTH_END_NAMESPACE
 
+ 

@@ -51,3 +51,4 @@ QL2capSocket::QL2capSocket(QObject *parent)
 #include "moc_ql2capsocket.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

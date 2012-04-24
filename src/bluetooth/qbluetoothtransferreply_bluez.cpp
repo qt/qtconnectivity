@@ -401,3 +401,4 @@ void NokiaBtServiceConnection::setTranferProgress(const QString &transferId, qui
 #include "moc_qbluetoothtransferreply_bluez_p.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

@@ -168,3 +168,4 @@ private:
 };
 
 #endif // QPRIVATELINEARBUFFER_P_H
+ 

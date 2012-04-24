@@ -246,3 +246,4 @@ QBluetooth::SecurityFlags QL2capServer::securityFlags() const
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

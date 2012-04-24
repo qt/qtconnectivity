@@ -224,3 +224,4 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

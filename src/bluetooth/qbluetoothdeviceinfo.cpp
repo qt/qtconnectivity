@@ -530,3 +530,4 @@ void QBluetoothDeviceInfo::setCached(bool cached)
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

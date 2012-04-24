@@ -148,3 +148,4 @@ Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::Error)
 QT_END_HEADER
 
 #endif // QBLUETOOTHLOCALDEVICE_H
+ 

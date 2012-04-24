@@ -358,3 +358,4 @@ bool QBluetoothUuid::operator==(const QBluetoothUuid &other) const
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

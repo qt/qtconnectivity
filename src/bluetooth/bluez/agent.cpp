@@ -85,3 +85,4 @@ QString OrgBluezAgentAdaptor::RequestPinCode(const QDBusObjectPath &in0)
     return out0;
 }
 
+ 

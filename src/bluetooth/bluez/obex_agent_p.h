@@ -66,3 +66,4 @@ Q_SIGNALS: // SIGNALS
 };
 
 #endif
+ 

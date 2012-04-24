@@ -177,3 +177,4 @@ int QRfcommServer::maxPendingConnections() const
 #include "moc_qrfcommserver.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

@@ -412,3 +412,4 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
 #include "moc_qbluetoothservicediscoveryagent.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

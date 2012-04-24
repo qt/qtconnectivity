@@ -108,3 +108,4 @@ void QL2capServerPrivate::_q_newConnection()
 #endif
 
 QTBLUETOOTH_END_NAMESPACE
+ 

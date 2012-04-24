@@ -77,3 +77,4 @@ namespace QBluetooth {
 }
 
 QT_END_NAMESPACE
+ 

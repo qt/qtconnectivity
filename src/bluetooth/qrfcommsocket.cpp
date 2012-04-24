@@ -51,3 +51,4 @@ QRfcommSocket::QRfcommSocket(QObject *parent)
 #include "moc_qrfcommsocket.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

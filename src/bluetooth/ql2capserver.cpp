@@ -179,3 +179,4 @@ int QL2capServer::maxPendingConnections() const
 #include "moc_ql2capserver.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

@@ -110,3 +110,4 @@ Q_DECLARE_METATYPE(QtBluetooth::QBluetoothTransferReply *);
 QT_END_HEADER
 
 #endif // QBLUETOOTHTRANSFERREPLY_H
+ 

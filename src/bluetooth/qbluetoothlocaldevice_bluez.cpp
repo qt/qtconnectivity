@@ -523,3 +523,4 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
 #include "moc_qbluetoothlocaldevice_p.cpp"
 
 QTBLUETOOTH_END_NAMESPACE
+ 

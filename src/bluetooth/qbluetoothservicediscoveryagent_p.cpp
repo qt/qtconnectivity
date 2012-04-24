@@ -63,3 +63,4 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
 }
 
 QTBLUETOOTH_END_NAMESPACE
+ 

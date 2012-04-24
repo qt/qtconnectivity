@@ -65,3 +65,4 @@ QString AgentAdaptor::Request(const QDBusObjectPath &in0)
     return out0;
 }
 
+ 
