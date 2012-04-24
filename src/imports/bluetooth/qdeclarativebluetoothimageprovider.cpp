@@ -85,7 +85,7 @@ QImage BluetoothThumbnailImageProvider::requestImage(const QString &id, QSize *s
 }
 
 BluetoothThumbnailImageProvider::BluetoothThumbnailImageProvider()
-    :QDeclarativeImageProvider(QDeclarativeImageProvider::Image)
+    :QQmlImageProvider(QQuickImageProvider::Image)
 {
 
 }
