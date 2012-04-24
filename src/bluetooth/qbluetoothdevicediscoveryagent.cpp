@@ -53,9 +53,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     To discover the nearby Bluetooth devices:
     \list
-    \o create an instance of QBluetoothDeviceDiscoveryAgent,
-    \o connect to either the deviceDiscovered() or finished() signals,
-    \o and call start().
+    \li create an instance of QBluetoothDeviceDiscoveryAgent,
+    \li connect to either the deviceDiscovered() or finished() signals,
+    \li and call start().
     \endlist
 
     \snippet ../doc/src/snippets/devicediscovery.cpp Device discovery

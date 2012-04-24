@@ -55,9 +55,10 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     To query the services provided by all contactable Bluetooth devices:
     \list
-    \o create an instance of QBluetoothServiceDiscoveryAgent,
-    \o connect to either the serviceDiscovered() or finished() signals,
-    \o and call start().
+    \li create an instance of QBluetoothServiceDiscoveryAgent,
+    \li connect to either the serviceDiscovered() or finished() signals,
+    \li and call start().
+    \endlist
 
     \snippet ../doc/src/snippets/servicediscovery.cpp Service discovery
 
