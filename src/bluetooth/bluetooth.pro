@@ -11,6 +11,7 @@ DEFINES += QT_BUILD_BT_LIB QT_MAKEDLL
 load(qt_module_config)
 
 QT += concurrent
+QT -= gui
 
 PUBLIC_HEADERS += \
     qbluetoothaddress.h\
