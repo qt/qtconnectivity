@@ -24,7 +24,7 @@ SUBDIRS += \
     qbluetoothdevicediscoveryagent \
     qbluetoothdeviceinfo \
     qbluetoothlocaldevice \
-    qbluetoothservicediscoveryagent \
+#    qbluetoothservicediscoveryagent \
     qbluetoothserviceinfo \
     qbluetoothsocket \
     qbluetoothtransfermanager \
