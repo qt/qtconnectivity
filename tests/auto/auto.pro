@@ -45,3 +45,4 @@ SUBDIRS += \
 #    qnearfieldtagtype1 \
 #    qnearfieldtagtype2 \
 
+qbluetoothservicediscoveryagent.CONFIG += no_check_target # QTBUG-22017
