@@ -306,7 +306,7 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
     } else if (xml.name() == QLatin1String("text")) {
         QString value = xml.attributes().value(QLatin1String("value")).toString();
         if (xml.attributes().value(QLatin1String("encoding")) == QLatin1String("hex"))
-            value = QString::fromUtf8(QByteArray::fromHex(value.toAscii()));
+            value = QString::fromUtf8(QByteArray::fromHex(value.toLatin1()));
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("sequence")) {

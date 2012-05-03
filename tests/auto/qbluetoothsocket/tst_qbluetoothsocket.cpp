@@ -133,7 +133,7 @@ void tst_QBluetoothSocket::initTestCase()
     QLatin1String t("TESTSERVER");
     if (pe.contains(t)){
         qDebug() << pe.value(t);
-        strcpy(BTADDRESS, pe.value(t).toAscii());
+        strcpy(BTADDRESS, pe.value(t).toLatin1());
     }
 
     if (QBluetoothAddress(BTADDRESS).isNull()){
@@ -180,7 +180,7 @@ void tst_QBluetoothSocket::finished()
 void tst_QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
     qDebug() << "Found: " << info.device().name() << info.serviceUuid();
-    strcpy(BTADDRESS, info.device().address().toString().toAscii());
+    strcpy(BTADDRESS, info.device().address().toString().toLatin1());
     done_discovery = true;
 }
 
