@@ -154,7 +154,7 @@ void tst_QBluetoothTransferManager::finished()
 void tst_QBluetoothTransferManager::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
     qDebug() << "Found: " << info.device().name() << info.serviceUuid();
-    strcpy(BTADDRESS, info.device().address().toString().toAscii());
+    strcpy(BTADDRESS, info.device().address().toString().toLatin1());
     done_discovery = true;
 }
 

@@ -79,7 +79,7 @@ QString QNdefNfcTextRecord::locale() const
 
     quint8 codeLength = status & 0x3f;
 
-    return QString::fromAscii(p.constData() + 1, codeLength);
+    return QString::fromLatin1(p.constData() + 1, codeLength);
 }
 
 /*!
@@ -96,7 +96,7 @@ void QNdefNfcTextRecord::setLocale(const QString &locale)
     quint8 newStatus = (status & 0xd0) | locale.length();
 
     p[0] = newStatus;
-    p.replace(1, codeLength, locale.toAscii());
+    p.replace(1, codeLength, locale.toLatin1());
 
     setPayload(p);
 }

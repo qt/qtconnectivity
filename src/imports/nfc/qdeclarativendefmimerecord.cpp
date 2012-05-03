@@ -96,5 +96,5 @@ QDeclarativeNdefMimeRecord::~QDeclarativeNdefMimeRecord()
 QString QDeclarativeNdefMimeRecord::uri() const
 {
     QByteArray dataUri = "data:" + record().type() + ";base64," + record().payload().toBase64();
-    return QString::fromAscii(dataUri.constData(), dataUri.length());
+    return QString::fromLatin1(dataUri.constData(), dataUri.length());
 }
