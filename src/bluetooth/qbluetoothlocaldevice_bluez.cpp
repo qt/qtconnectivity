@@ -249,6 +249,9 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                                       Q_ARG(QBluetoothLocalDevice::Pairing, QBluetoothLocalDevice::Paired));
         }
         else {
+#ifdef NOKIA_BT_SERVICES
+            nokiaBtManServiceInstance()->requestPairing(address);
+#else
             QDBusPendingReply<QDBusObjectPath> reply =
                     d_ptr->adapter->CreatePairedDevice(address.toString(),
                                                        QDBusObjectPath(d_ptr->agent_path),
@@ -259,6 +262,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 
             if(reply.isError())
                 qDebug() << Q_FUNC_INFO << reply.error() << d_ptr->agent_path;
+#endif
         }
     }
     else if(pairing == Unpaired) {
@@ -311,6 +315,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     initializeAdapter();
 #else
     connect(nokiaBtManServiceInstance(), SIGNAL(poweredChanged(bool)), SLOT(powerStateChanged(bool)));
+    connect(nokiaBtManServiceInstance(), SIGNAL(pairingCompleted(bool)), SLOT(pairingCompleted(bool)));
     nokiaBtManServiceInstance()->acquire();
 #endif
 }
@@ -495,6 +500,38 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
 
 }
 
+#ifdef NOKIA_BT_SERVICES
+void QBluetoothLocalDevicePrivate::pairingCompleted(bool success)
+{
+    Q_Q(QBluetoothLocalDevice);
+
+    if (!success) {
+        qDebug() << Q_FUNC_INFO << "failed to create pairing";
+        emit q->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
+        return;
+    }
+
+    QDBusPendingReply<QDBusObjectPath> findReply = adapter->FindDevice(address.toString());
+    findReply.waitForFinished();
+    if (findReply.isError()) {
+        qDebug() << Q_FUNC_INFO << "failed to find device" << findReply.error();
+        emit q->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
+        return;
+    }
+
+    OrgBluezDeviceInterface device(QLatin1String("org.bluez"), findReply.value().path(),
+                                   QDBusConnection::systemBus());
+
+    if (pairing == QBluetoothLocalDevice::AuthorizedPaired) {
+        device.SetProperty(QLatin1String("Trusted"), QDBusVariant(QVariant(true)));
+        emit q->pairingFinished(address, QBluetoothLocalDevice::AuthorizedPaired);
+    } else {
+        device.SetProperty(QLatin1String("Trusted"), QDBusVariant(QVariant(false)));
+        emit q->pairingFinished(address, QBluetoothLocalDevice::Paired);
+    }
+}
+#endif
+
 void QBluetoothLocalDevicePrivate::Authorize(const QDBusObjectPath &in0, const QString &in1)
 {
     qDebug() << "Got authorize for" << in0.path() << in1;
@@ -609,6 +646,7 @@ void NokiaBtManServiceConnection::connectToBtManService()
             qDebug() << "connected to service:" << m_btmanService;
             connect(m_btmanService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
             connect(m_btmanService, SIGNAL(powerStateChanged(int)), SLOT(powerStateChanged(int)));
+            connect(m_btmanService, SIGNAL(pairingFinished(QString,int,int)), SLOT(pairingFinished(QString,int,int)));
             if (powered()) {
                 emit poweredChanged(true);
             }
@@ -696,6 +734,22 @@ void NokiaBtManServiceConnection::powerStateChanged(int powerState)
         }
         emit poweredChanged(true);
     }
+}
+
+void NokiaBtManServiceConnection::requestPairing(const QBluetoothAddress &address)
+{
+    m_pairingAddress = address.toString();
+    QMetaObject::invokeMethod(m_btmanService, "requestPairing", Q_ARG(QString, m_pairingAddress), Q_ARG(bool, false));
+}
+
+void NokiaBtManServiceConnection::pairingFinished(const QString& address, int direction, int status)
+{
+    // DirectionOutgoing = 0
+    if (m_pairingAddress != address || direction != 0) return;
+    m_pairingAddress.clear();
+
+    // StatusSuccess = 0
+    emit pairingCompleted(status == 0);
 }
 
 void NokiaBtManServiceConnection::sfwIPCError(QService::UnrecoverableIPCError error)
