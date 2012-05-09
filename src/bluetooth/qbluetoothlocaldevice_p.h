@@ -106,6 +106,7 @@ public Q_SLOTS: // METHODS
 
 #ifdef NOKIA_BT_SERVICES
     void powerStateChanged(bool powered);
+    void pairingCompleted(bool success);
 #endif
 
 private:
@@ -129,9 +130,11 @@ public:
     void setPowered(bool powered);
     bool powered() const;
     void setHostMode(QBluetoothLocalDevice::HostMode mode);
+    void requestPairing(const QBluetoothAddress &address);
 
 signals:
     void poweredChanged(bool powered);
+    void pairingCompleted(bool success);
 
 private:
     QObject *m_btmanService;
@@ -139,12 +142,14 @@ private:
     QMutex m_refCountMutex;
     bool m_forceDiscoverable;
     bool m_forceConnectable;
+    QString m_pairingAddress;
 
 private slots:
     void connectToBtManService();
     void disconnectFromBtManService();
     void sfwIPCError(QService::UnrecoverableIPCError);
     void powerStateChanged(int powerState);
+    void pairingFinished(const QString &address, int direction, int status);
 };
 Q_GLOBAL_STATIC(NokiaBtManServiceConnection, nokiaBtManServiceInstance)
 #endif
