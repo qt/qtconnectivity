@@ -58,6 +58,11 @@ class OrgBluezAgentAdaptor;
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 QT_END_NAMESPACE
+
+#ifdef NOKIA_BT_SERVICES
+#include <QtServiceFramework/QServiceManager>
+#include <QtCore/QMutex>
+#endif
 #endif
 
 QT_BEGIN_HEADER
@@ -73,12 +78,13 @@ class QBluetoothLocalDevicePrivate : public QObject,
     Q_OBJECT
     Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
 public:
-    QBluetoothLocalDevicePrivate();
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress localAddress = QBluetoothAddress());
     ~QBluetoothLocalDevicePrivate();
 
     OrgBluezAdapterInterface *adapter;
     OrgBluezAgentAdaptor *agent;
     QString agent_path;
+    QBluetoothAddress localAddress;
     QBluetoothAddress address;
     QBluetoothLocalDevice::Pairing pairing;
     QBluetoothLocalDevice::HostMode currentMode;
@@ -98,12 +104,51 @@ public Q_SLOTS: // METHODS
 
     void PropertyChanged(QString,QDBusVariant);
 
+#ifdef NOKIA_BT_SERVICES
+    void powerStateChanged(bool powered);
+#endif
+
 private:
     QDBusMessage msgConfirmation;
     QDBusConnection *msgConnection;
 
     QBluetoothLocalDevice *q_ptr;
+
+    void initializeAdapter();
 };
+
+#ifdef NOKIA_BT_SERVICES
+class NokiaBtManServiceConnection: public QObject
+{
+    Q_OBJECT
+
+public:
+    NokiaBtManServiceConnection();
+    void acquire();
+    void release();
+    void setPowered(bool powered);
+    bool powered() const;
+    void setHostMode(QBluetoothLocalDevice::HostMode mode);
+
+signals:
+    void poweredChanged(bool powered);
+
+private:
+    QObject *m_btmanService;
+    int m_refCount;
+    QMutex m_refCountMutex;
+    bool m_forceDiscoverable;
+    bool m_forceConnectable;
+
+private slots:
+    void connectToBtManService();
+    void disconnectFromBtManService();
+    void sfwIPCError(QService::UnrecoverableIPCError);
+    void powerStateChanged(int powerState);
+};
+Q_GLOBAL_STATIC(NokiaBtManServiceConnection, nokiaBtManServiceInstance)
+#endif
+
 #else
 class QBluetoothLocalDevicePrivate : public QObject
 {
