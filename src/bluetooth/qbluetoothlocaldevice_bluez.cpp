@@ -56,78 +56,18 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 static const QLatin1String agentPath("/qt/agent");
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
-    QObject(parent), d_ptr(0)
+    QObject(parent), d_ptr(new QBluetoothLocalDevicePrivate(this))
 {
-    OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
-                                     QDBusConnection::systemBus());
-
-    QDBusPendingReply<QDBusObjectPath> reply = manager.DefaultAdapter();
-    reply.waitForFinished();
-    if (reply.isError())
-        return;
-
-    OrgBluezAdapterInterface *adapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"),
-                                                                     reply.value().path(),
-                                                                     QDBusConnection::systemBus());
-
-    this->d_ptr = new QBluetoothLocalDevicePrivate;
-    this->d_ptr->adapter = adapter;    
-    this->d_ptr->q_ptr = this;
-    this->d_ptr->agent = 0x0;
-    this->d_ptr->msgConnection = 0x0;
-    this->d_ptr->currentMode = static_cast<QBluetoothLocalDevice::HostMode>(-1);
-
-    connect(adapter, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-            this->d_ptr, SLOT(PropertyChanged(QString,QDBusVariant)));
-
-//    connect(d_ptr, SIGNAL(pairingFinished(const QBluetoothAddress&,QBluetoothLocalDevice::Pairing)), this, SIGNAL(pairingFinished(const QBluetoothAddress&,QBluetoothLocalDevice::Pairing)));
-//    connect(this->d_ptr, SIGNAL(pairingDisplayPinCode(const QBluetoothAddress &,QString)),
-//            this, SIGNAL(pairingDisplayPinCode(const QBluetoothAddress &,QString)));
-
-    qsrand(QTime::currentTime().msec());
-    this->d_ptr->agent_path = agentPath;
-    this->d_ptr->agent_path.append(QString::fromLatin1("/%1").arg(qrand()));
-
 }
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent) :
-    QObject(parent), d_ptr(0)
+    QObject(parent), d_ptr(new QBluetoothLocalDevicePrivate(this, address))
 {
-    OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
-                                     QDBusConnection::systemBus());
-
-    QDBusPendingReply<QList<QDBusObjectPath> > reply = manager.ListAdapters();
-    reply.waitForFinished();
-    if (reply.isError())
-        return;
-
-
-    foreach (const QDBusObjectPath &path, reply.value()) {
-        OrgBluezAdapterInterface *adapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"),
-                                                                         path.path(),
-                                                                         QDBusConnection::systemBus());
-
-        QDBusPendingReply<QVariantMap> reply = adapter->GetProperties();
-        reply.waitForFinished();
-        if (reply.isError())
-            continue;
-
-        QBluetoothAddress path_address(reply.value().value(QLatin1String("Address")).toString());
-
-        if(path_address == address){
-            this->d_ptr = new QBluetoothLocalDevicePrivate;
-            this->d_ptr->adapter = adapter;
-            break;
-        }
-        else {
-            delete adapter;
-        }
-    }
 }
 
 QString QBluetoothLocalDevice::name() const
 {    
-    if (!d_ptr)
+    if (!d_ptr || !d_ptr->adapter)
         return QString();
 
     QDBusPendingReply<QVariantMap> reply = d_ptr->adapter->GetProperties();
@@ -140,7 +80,7 @@ QString QBluetoothLocalDevice::name() const
 
 QBluetoothAddress QBluetoothLocalDevice::address() const
 {
-    if (!d_ptr)
+    if (!d_ptr || !d_ptr->adapter)
         return QBluetoothAddress();
 
     QDBusPendingReply<QVariantMap> reply = d_ptr->adapter->GetProperties();
@@ -153,15 +93,22 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 
 void QBluetoothLocalDevice::powerOn()
 {
-    if (!d_ptr)
+#ifdef NOKIA_BT_SERVICES
+    nokiaBtManServiceInstance()->setPowered(true);
+#else
+    if (!d_ptr || !d_ptr->adapter)
         return;
 
     d_ptr->adapter->SetProperty(QLatin1String("Powered"), QDBusVariant(QVariant::fromValue(true)));
+#endif
 }
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 {
-    if (!d_ptr)
+#ifdef NOKIA_BT_SERVICES
+    nokiaBtManServiceInstance()->setHostMode(mode);
+#else
+    if (!d_ptr || !d_ptr->adapter)
         return;
 
     switch (mode) {
@@ -183,11 +130,12 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 //                                QDBusVariant(QVariant::fromValue(false)));
         break;
     }
+#endif
 }
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 {
-    if (!d_ptr)
+    if (!d_ptr || !d_ptr->adapter)
         return HostPoweredOff;
 
     QDBusPendingReply<QVariantMap> reply = d_ptr->adapter->GetProperties();
@@ -239,7 +187,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 
 static inline OrgBluezDeviceInterface *getDevice(const QBluetoothAddress &address, QBluetoothLocalDevicePrivate *d_ptr)
 {
-    if (!d_ptr)
+    if (!d_ptr || !d_ptr->adapter)
         return 0;
     QDBusPendingReply<QDBusObjectPath> reply = d_ptr->adapter->FindDevice(address.toString());
     reply.waitForFinished();
@@ -356,10 +304,15 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluet
 
 }
 
-QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
-    : adapter(0), agent(0), msgConnection(0)
+QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress address)
+    : adapter(0), agent(0), localAddress(address), msgConnection(0), q_ptr(q)
 {
-
+#ifndef NOKIA_BT_SERVICES
+    initializeAdapter();
+#else
+    connect(nokiaBtManServiceInstance(), SIGNAL(poweredChanged(bool)), SLOT(powerStateChanged(bool)));
+    nokiaBtManServiceInstance()->acquire();
+#endif
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
@@ -367,7 +320,100 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
     delete msgConnection;
     delete adapter;
     delete agent;
+
+#ifdef NOKIA_BT_SERVICES
+    nokiaBtManServiceInstance()->release();
+#endif
 }
+
+void QBluetoothLocalDevicePrivate::initializeAdapter()
+{
+    if (adapter)
+        return;
+
+    qDebug() << "initialize adapter interface";
+
+    OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"), QDBusConnection::systemBus());
+
+    if (localAddress == QBluetoothAddress()) {
+        QDBusPendingReply<QDBusObjectPath> reply = manager.DefaultAdapter();
+        reply.waitForFinished();
+        if (reply.isError())
+            return;
+
+        adapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"), reply.value().path(), QDBusConnection::systemBus());
+    } else {
+        QDBusPendingReply<QList<QDBusObjectPath> > reply = manager.ListAdapters();
+        reply.waitForFinished();
+        if (reply.isError())
+            return;
+
+        foreach (const QDBusObjectPath &path, reply.value()) {
+            OrgBluezAdapterInterface *tmpAdapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"), path.path(), QDBusConnection::systemBus());
+
+            QDBusPendingReply<QVariantMap> reply = tmpAdapter->GetProperties();
+            reply.waitForFinished();
+            if (reply.isError())
+                continue;
+
+            QBluetoothAddress path_address(reply.value().value(QLatin1String("Address")).toString());
+
+            if (path_address == localAddress) {
+                adapter = tmpAdapter;
+                break;
+            } else {
+                delete tmpAdapter;
+            }
+        }
+    }
+
+    currentMode = static_cast<QBluetoothLocalDevice::HostMode>(-1);
+    if (adapter) {
+        connect(adapter, SIGNAL(PropertyChanged(QString,QDBusVariant)), SLOT(PropertyChanged(QString,QDBusVariant)));
+
+        qsrand(QTime::currentTime().msec());
+        agent_path = agentPath;
+        agent_path.append(QString::fromLatin1("/%1").arg(qrand()));
+    }
+}
+
+#ifdef NOKIA_BT_SERVICES
+void QBluetoothLocalDevicePrivate::powerStateChanged(bool powered)
+{
+    Q_Q(QBluetoothLocalDevice);
+    QBluetoothLocalDevice::HostMode mode;
+
+    if (powered) {
+        initializeAdapter();
+
+        QDBusPendingReply<QVariantMap> reply = adapter->GetProperties();
+        reply.waitForFinished();
+        if (reply.isError()){
+            qWarning() << "Failed to get bluetooth properties";
+            return;
+        }
+
+        if (reply.value().value(QLatin1String("Discoverable")).toBool()) {
+            mode = QBluetoothLocalDevice::HostDiscoverable;
+        } else {
+            mode = QBluetoothLocalDevice::HostConnectable;
+        }
+    } else {
+        mode = QBluetoothLocalDevice::HostPoweredOff;
+        delete msgConnection;
+        msgConnection = 0;
+        delete adapter;
+        adapter = 0;
+        delete agent;
+        agent = 0;
+    }
+
+    if (mode != currentMode) {
+        emit q->hostModeStateChanged(mode);
+        currentMode = mode;
+    }
+}
+#endif
 
 void QBluetoothLocalDevicePrivate::RequestConfirmation(const QDBusObjectPath &in0, uint in1)
 {
@@ -518,6 +564,151 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
 
     currentMode = mode;
 }
+
+
+#ifdef NOKIA_BT_SERVICES
+
+NokiaBtManServiceConnection::NokiaBtManServiceConnection():
+    m_btmanService(NULL),
+    m_refCount(0)
+{
+}
+
+void NokiaBtManServiceConnection::acquire()
+{
+    QMutexLocker m(&m_refCountMutex);
+    ++m_refCount;
+    if (m_btmanService == NULL) {
+        connectToBtManService();
+    }
+}
+
+void NokiaBtManServiceConnection::release()
+{
+    QMutexLocker m(&m_refCountMutex);
+    --m_refCount;
+    if (m_refCount == 0) {
+        QTimer::singleShot(5000, this, SLOT(disconnectFromBtManService()));
+    }
+}
+
+void NokiaBtManServiceConnection::connectToBtManService()
+{
+    if (m_btmanService == NULL) {
+        QServiceManager manager;
+        QServiceFilter filter(QLatin1String("com.nokia.mt.btmanservice"));
+
+        // find services complying with filter
+        QList<QServiceInterfaceDescriptor> foundServices;
+        foundServices = manager.findInterfaces(filter);
+
+        if (foundServices.count()) {
+            m_btmanService = manager.loadInterface(foundServices.at(0));
+        }
+        if (m_btmanService) {
+            qDebug() << "connected to service:" << m_btmanService;
+            connect(m_btmanService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
+            connect(m_btmanService, SIGNAL(powerStateChanged(int)), SLOT(powerStateChanged(int)));
+            if (powered()) {
+                emit poweredChanged(true);
+            }
+        } else {
+            qDebug() << "failed to connect to btman service";
+        }
+    } else {
+        qDebug() << "already connected to service:" << m_btmanService;
+    }
+}
+
+void NokiaBtManServiceConnection::disconnectFromBtManService()
+{
+    // Check if none acquired the service in the meantime
+    QMutexLocker m(&m_refCountMutex);
+    if (m_refCount == 0 && m_btmanService) {
+        qDebug() << "disconnecting from btman service";
+        m_btmanService->deleteLater();
+        m_btmanService = NULL;
+    }
+}
+
+bool NokiaBtManServiceConnection::powered() const
+{
+    int powerState;
+    QMetaObject::invokeMethod(m_btmanService, "powerState", Q_RETURN_ARG(int, powerState));
+    return powerState == 2; // enabled
+}
+
+void NokiaBtManServiceConnection::setPowered(bool powered)
+{
+    int powerState; // Disabled  = 0, Enabling  = 1, Enabled   = 2, Disabling = 3
+    QMetaObject::invokeMethod(m_btmanService, "powerState", Q_RETURN_ARG(int, powerState));
+
+    if ((powered && powerState != 0) || (!powered && powerState != 2)) {
+        qWarning() << "cannot change powered (wrong state)";
+        return;
+    }
+
+    QMetaObject::invokeMethod(m_btmanService, "setPowered", Q_ARG(bool, powered));
+}
+
+void NokiaBtManServiceConnection::setHostMode(QBluetoothLocalDevice::HostMode mode)
+{
+    m_forceDiscoverable = false;
+    m_forceConnectable = false;
+
+    switch (mode) {
+    case QBluetoothLocalDevice::HostDiscoverableLimitedInquiry:
+    case QBluetoothLocalDevice::HostDiscoverable:
+        if (powered()) {
+            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, true));
+        } else {
+            m_forceDiscoverable = true;
+            setPowered(true);
+        }
+        break;
+    case QBluetoothLocalDevice::HostConnectable:
+        if (powered()) {
+            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, false));
+        } else {
+            m_forceConnectable = true;
+            setPowered(true);
+        }
+        break;
+    case QBluetoothLocalDevice::HostPoweredOff:
+        if (powered()) {
+            setPowered(false);
+        }
+        break;
+    }
+}
+
+void NokiaBtManServiceConnection::powerStateChanged(int powerState)
+{
+    if (powerState == 0) {
+        emit poweredChanged(false);
+    } else if (powerState == 2) {
+        if (m_forceDiscoverable) {
+            m_forceDiscoverable = false;
+            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, true));
+        } else if (m_forceConnectable) {
+            m_forceConnectable = false;
+            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, false));
+        }
+        emit poweredChanged(true);
+    }
+}
+
+void NokiaBtManServiceConnection::sfwIPCError(QService::UnrecoverableIPCError error)
+{
+    qDebug() << "Connection to btman service broken:" << error << ". Trying to reconnect...";
+    if (m_btmanService) {
+        m_btmanService->deleteLater();
+        m_btmanService = NULL;
+    }
+    QMetaObject::invokeMethod(this, "connectToBtManService", Qt::QueuedConnection);
+}
+
+#endif
 
 //#include "qbluetoothlocaldevice.moc"
 #include "moc_qbluetoothlocaldevice_p.cpp"
