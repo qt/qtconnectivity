@@ -337,7 +337,7 @@ void NokiaBtServiceConnection::disconnectFromObexServerService()
 {
     // Check if noone acquired the service in the meantime
     QMutexLocker m(&m_refCountMutex);
-    if (m_refCount == 0) {
+    if (m_refCount == 0 && m_obexService != NULL) {
         m_obexService->deleteLater();
         m_obexService = NULL;
     }
