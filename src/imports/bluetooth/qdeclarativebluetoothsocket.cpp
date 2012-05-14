@@ -67,12 +67,15 @@
 
     The BluetoothSocket type was introduced in \b{QtBluetooth 5.0}.
 
-    It allows a QML class connect to another bluetooth device and send
-    and receive QString from the device. Data is sent and received using a
-    QDataStream object allowing type safe transfer of string data. QDataStream
-    is a well known format and can be decoded by non-Qt applications.
+    It allows a QML class connect to another Bluetooth device and exchange strings
+    with it. Data is sent and received using a QDataStream object allowing type
+    safe transfers of QStrings. QDataStream is a well known format and can be
+    decoded by non-Qt applications. Note that for the ease of use, BluetoothSocket
+    is only well suited for use with strings. If you want to
+    use a binary protocol for your application's communication you should
+    consider using its C++ counterpart QBluetoothSocket.
 
-    Connections to remote devices can be over rfcomm or l2cap.  Either the remote port
+    Connections to remote devices can be over RFCOMM or L2CAP.  Either the remote port
     or service UUID is required.  This is specified by creating a BluetoothService,
     or passing in the service return from BluetoothDiscoveryModel.
  */
@@ -318,7 +321,7 @@ void QDeclarativeBluetoothSocket::socket_readyRead()
 /*!
   \qmlproperty string BluetoothSocket::stringData
 
-  This property receives or sends data to remote bluetooth device. Arrival of
+  This property receives or sends data to remote Bluetooth device. Arrival of
   data is signaled by the dataAvailable signal and can be read by
   stringData. Calling sendStringData will transmit the string.
   If excessive amounts of data are sent, the function may block sending. Reading will
