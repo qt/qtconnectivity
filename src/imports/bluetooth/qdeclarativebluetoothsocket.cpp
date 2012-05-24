@@ -313,6 +313,15 @@ QString QDeclarativeBluetoothSocket::state()
     return d->m_state;
 }
 
+/*!
+  \qmlsignal BluetoothSocket::dataAvailable()
+
+  This signal indicates the arrival of new data. It is emitted each time the socket has new
+  data available. The data can be read from the property stringData.
+  \sa stringData
+  \sa sendStringData
+ */
+
 void QDeclarativeBluetoothSocket::socket_readyRead()
 {
     emit dataAvailable();
@@ -326,8 +335,9 @@ void QDeclarativeBluetoothSocket::socket_readyRead()
   stringData. Calling sendStringData will transmit the string.
   If excessive amounts of data are sent, the function may block sending. Reading will
   never block.
+  \sa dataAvailable
+  \sa sendStringData
   */
-
 
 QString QDeclarativeBluetoothSocket::stringData()
 {
@@ -338,6 +348,15 @@ QString QDeclarativeBluetoothSocket::stringData()
     *d->m_stream >> data;
     return data;
 }
+
+/*!
+  \qmlmethod BluetoothSocket::sendStringData(data)
+
+  This method transmits the string data passed with "data" to the remote device.
+  If excessive amounts of data are sent, the function may block sending.
+  \sa dataAvailable
+  \sa stringData
+ */
 
 void QDeclarativeBluetoothSocket::sendStringData(QString data)
 {
