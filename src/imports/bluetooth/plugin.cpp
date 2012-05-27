@@ -53,6 +53,7 @@ QT_USE_NAMESPACE
 class QBluetoothQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 public:
     void registerTypes(const char *uri)
     {
@@ -72,5 +73,3 @@ public:
 };
 
 #include "plugin.moc"
-
-Q_EXPORT_PLUGIN2(qbluetoothqmlplugin, QBluetoothQmlPlugin);

@@ -57,6 +57,7 @@ QT_USE_NAMESPACE
 class QNfcQmlPlugin : public QDeclarativeExtensionPlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 public:
     void registerTypes(const char *uri)
     {
@@ -77,4 +78,3 @@ public:
 
 #include "plugin.moc"
 
-Q_EXPORT_PLUGIN2(qnfcqmlplugin, QNfcQmlPlugin);
