@@ -138,6 +138,9 @@ bool QBluetoothLocalDevice::isValid() const
     \fn void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 
     Sets the host mode of this local Bluetooth device to \a mode.
+    NOTE: Due to security policies of platforms, this method may behave different on different platforms. For example
+    the system can ask the user for confirmation before turning Bluetooth on or off. Not all host modes may be
+    supported on all platforms. Please refer to the platform specific Bluetooth documentation for details.
 */
 
 /*!
@@ -168,6 +171,9 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::powerOn()
 
   Powers on the device after returning it to the hostMode() state, if it was powered off.
+  NOTE: Due to security policies of platforms, this method may behave different on different platforms. For example
+  the system can ask the user for confirmation before turning Bluetooth on or off.
+  Please refer to the platform specific Bluetooth documentation for details.
 */
 
 /*!
