@@ -678,15 +678,11 @@ bool NokiaBtManServiceConnection::powered() const
 
 void NokiaBtManServiceConnection::setPowered(bool powered)
 {
-    int powerState; // Disabled  = 0, Enabling  = 1, Enabled   = 2, Disabling = 3
-    QMetaObject::invokeMethod(m_btmanService, "powerState", Q_RETURN_ARG(int, powerState));
-
-    if ((powered && powerState != 0) || (!powered && powerState != 2)) {
-        qWarning() << "cannot change powered (wrong state)";
-        return;
+    if (powered) {
+        QMetaObject::invokeMethod(m_btmanService, "acquireTemporaryPower");
+    } else {
+        QMetaObject::invokeMethod(m_btmanService, "releaseTemporaryPower");
     }
-
-    QMetaObject::invokeMethod(m_btmanService, "setPowered", Q_ARG(bool, powered));
 }
 
 void NokiaBtManServiceConnection::setHostMode(QBluetoothLocalDevice::HostMode mode)
