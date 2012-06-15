@@ -58,12 +58,6 @@
 
 #include <QtCore/QSocketNotifier>
 
-#ifdef NOKIA_BT_PATCHES
-extern "C" {
-#include <bluetooth/brcm-rfcomm.h>
-}
-#endif
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
@@ -75,9 +69,6 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       connecting(false),
       discoveryAgent(0)
 {
-#ifdef NOKIA_BT_PATCHES
-    brcm_rfcomm_init();
-#endif
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
@@ -86,10 +77,6 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
     readNotifier = 0;
     delete connectWriteNotifier;
     connectWriteNotifier = 0;
-
-#ifdef NOKIA_BT_PATCHES
-    brcm_rfcomm_exit();
-#endif
 }
 
 bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType type)
@@ -109,18 +96,10 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType ty
 
     switch (type) {
     case QBluetoothSocket::L2capSocket:
-#ifndef NOKIA_BT_PATCHES
         socket = ::socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
-#else
-        socket = -1; // Raw L2cap sockets not supported
-#endif
         break;
     case QBluetoothSocket::RfcommSocket:
-#ifndef NOKIA_BT_PATCHES
         socket = ::socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-#else
-        socket = brcm_rfcomm_socket();
-#endif
         break;
     default:
         socket = -1;
@@ -163,19 +142,8 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         connectWriteNotifier->setEnabled(true);
         readNotifier->setEnabled(true);QString();
 
-#ifndef NOKIA_BT_PATCHES
         result = ::connect(socket, (sockaddr *)&addr, sizeof(addr));
-#else
-        brcm_rfcomm_socket_bind(socket, (sockaddr*)&addr, sizeof(addr));
-        result = brcm_rfcomm_socket_connect(socket, (sockaddr *)&addr, sizeof(addr));
-        qDebug() << "BRCM: connect result:" << result;
-#endif
     } else if (socketType == QBluetoothSocket::L2capSocket) {
-#ifndef NOKIA_BT_PATCHES
-        errorString = "Raw L2Cap sockets are not supported on this platform";
-        q->setSocketError(QBluetoothSocket::UnknownSocketError);
-        return;
-#endif
         sockaddr_l2 addr;
 
         memset(&addr, 0, sizeof(addr));
@@ -205,11 +173,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
     if(connecting && state == QBluetoothSocket::ConnectingState){
         int errorno, len;
         len = sizeof(errorno);
-#ifndef NOKIA_BT_PATCHES
         ::getsockopt(socket, SOL_SOCKET, SO_ERROR, &errorno, (socklen_t*)&len);
-#else
-        brcm_rfcomm_socket_getsockopt(socket, SOL_SOCKET, SO_ERROR, &errorno, (socklen_t*)&len);
-#endif
         if(errorno) {
             errorString = QString::fromLocal8Bit(strerror(errorno));
             emit q->error(QBluetoothSocket::UnknownSocketError);
@@ -233,11 +197,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
 
         int size = txBuffer.read(buf, 1024);
 
-#ifndef NOKIA_BT_PATCHES
         if (::write(socket, buf, size) != size) {
-#else
-        if (brcm_rfcomm_socket_write(socket, buf, size) != size) {
-#endif
             socketError = QBluetoothSocket::NetworkError;
             emit q->error(socketError);
         }
@@ -262,11 +222,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
     Q_Q(QBluetoothSocket);
     char *writePointer = buffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
 //    qint64 readFromDevice = q->readData(writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
-#ifndef NOKIA_BT_PATCHES
     int readFromDevice = ::read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
-#else
-    int readFromDevice = brcm_rfcomm_socket_read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
-#endif
     if(readFromDevice <= 0){
         int errsv = errno;
         readNotifier->setEnabled(false);
@@ -340,19 +296,12 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-#ifndef NOKIA_BT_PATCHES
         if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-#else
-        if (brcm_rfcomm_socket_getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-#endif
             quint64 bdaddr;
             convertAddress(addr.rc_bdaddr.b, bdaddr);
             return QBluetoothAddress(bdaddr);
         }
     } else if (socketType == QBluetoothSocket::L2capSocket) {
-#ifndef NOKIA_BT_PATCHES
-        return QBluetoothAddress(); // Raw L2cap sockets not supported
-#endif
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -372,16 +321,9 @@ quint16 QBluetoothSocketPrivate::localPort() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-#ifndef NOKIA_BT_PATCHES
         if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
-#else
-        if (brcm_rfcomm_socket_getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
-#endif
             return addr.rc_channel;
     } else if (socketType == QBluetoothSocket::L2capSocket) {
-#ifdef NOKIA_BT_PATCHES
-        return 0; // Raw L2cap sockets not supported
-#endif
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -403,18 +345,11 @@ QString QBluetoothSocketPrivate::peerName() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-#ifndef NOKIA_BT_PATCHES
         if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) < 0)
-#else
-        if (brcm_rfcomm_socket_getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) < 0)
-#endif
             return QString();
 
         convertAddress(addr.rc_bdaddr.b, bdaddr);
     } else if (socketType == QBluetoothSocket::L2capSocket) {
-#ifdef NOKIA_BT_PATCHES
-        return QString(); // Raw L2cap sockets not supported
-#endif
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -471,19 +406,12 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-#ifndef NOKIA_BT_PATCHES
         if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-#else
-        if (brcm_rfcomm_socket_getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-#endif
             quint64 bdaddr;
             convertAddress(addr.rc_bdaddr.b, bdaddr);
             return QBluetoothAddress(bdaddr);
         }
     } else if (socketType == QBluetoothSocket::L2capSocket) {
-#ifdef NOKIA_BT_PATCHES
-        return QBluetoothAddress(); // Raw L2cap sockets not supported
-#endif
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -503,16 +431,9 @@ quint16 QBluetoothSocketPrivate::peerPort() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-#ifndef NOKIA_BT_PATCHES
         if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
-#else
-        if (brcm_rfcomm_socket_getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
-#endif
             return addr.rc_channel;
     } else if (socketType == QBluetoothSocket::L2capSocket) {
-#ifdef NOKIA_BT_PATCHES
-        return 0; // Raw L2cap sockets not supported
-#endif
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -527,11 +448,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 {
     Q_Q(QBluetoothSocket);
     if (q->openMode() & QIODevice::Unbuffered) {
-#ifndef NOKIA_BT_PATCHES
         if (::write(socket, data, maxSize) != maxSize) {
-#else
-        if (brcm_rfcomm_socket_write(socket, (void*)data, maxSize) != maxSize) {
-#endif
             socketError = QBluetoothSocket::NetworkError;
             emit q->error(socketError);
         }
@@ -589,11 +506,7 @@ void QBluetoothSocketPrivate::close()
         // We are disconnected now, so go to unconnected.
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         emit q->disconnected();
-#ifndef NOKIA_BT_PATCHES
         ::close(socket);
-#else
-        brcm_rfcomm_socket_close(socket);
-#endif
     }
 
 }

@@ -50,10 +50,6 @@
 
 #include "qbluetoothtransferreply.h"
 
-#ifdef NOKIA_BT_SERVICES
-#include <QtServiceFramework/QServiceManager>
-#endif
-
 QT_BEGIN_HEADER
 
 class OrgOpenobexClientInterface;
@@ -124,34 +120,6 @@ public slots:
     void sendReturned(QDBusPendingCallWatcher*);
 
 };
-
-#ifdef NOKIA_BT_SERVICES
-class NokiaBtServiceConnection: public QObject
-{
-    Q_OBJECT
-public:
-    NokiaBtServiceConnection();
-    void acquire();
-    void release();
-
-    void outgoingFile(const QString &transferId, const QString &remoteDevice, const QString &fileName, const QString &mimeType, quint64 size);
-    void setTransferStarted(const QString &transferId);
-    void setTransferFinished(const QString &transferId, bool success);
-    void setTranferProgress(const QString &transferId, quint64 progress, quint64 total);
-
-private:
-    QObject *m_obexService;
-    int m_refCount;
-    QMutex m_refCountMutex;
-
-private slots:
-    void connectToObexServerService();
-    void disconnectFromObexServerService();
-    void sfwIPCError(QService::UnrecoverableIPCError);
-};
-Q_GLOBAL_STATIC(NokiaBtServiceConnection, nokiaBtServiceInstance)
-
-#endif
 
 QTBLUETOOTH_END_NAMESPACE
 

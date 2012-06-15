@@ -289,19 +289,12 @@ bool QBluetoothServiceInfoPrivate::registerService() const
 
         serviceRecord = reply.value();
     } else {
-#ifndef NOKIA_BT_PATCHES
         QDBusPendingReply<> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
-#else
-        QDBusPendingReply<uint> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
-#endif
         reply.waitForFinished();
         if (reply.isError()) {
             qDebug() << "UpdateRecord returned error" << reply.error();
             return false;
         }
-#ifdef NOKIA_BT_PATCHES
-        serviceRecord = reply.value();
-#endif
     }
 
     registered = true;
