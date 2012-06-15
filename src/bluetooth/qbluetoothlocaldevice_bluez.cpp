@@ -93,21 +93,14 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 
 void QBluetoothLocalDevice::powerOn()
 {
-#ifdef NOKIA_BT_SERVICES
-    nokiaBtManServiceInstance()->setPowered(true);
-#else
     if (!d_ptr || !d_ptr->adapter)
         return;
 
     d_ptr->adapter->SetProperty(QLatin1String("Powered"), QDBusVariant(QVariant::fromValue(true)));
-#endif
 }
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 {
-#ifdef NOKIA_BT_SERVICES
-    nokiaBtManServiceInstance()->setHostMode(mode);
-#else
     if (!d_ptr || !d_ptr->adapter)
         return;
 
@@ -130,7 +123,6 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 //                                QDBusVariant(QVariant::fromValue(false)));
         break;
     }
-#endif
 }
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
@@ -249,9 +241,6 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                                       Q_ARG(QBluetoothLocalDevice::Pairing, QBluetoothLocalDevice::Paired));
         }
         else {
-#ifdef NOKIA_BT_SERVICES
-            nokiaBtManServiceInstance()->requestPairing(address);
-#else
             QDBusPendingReply<QDBusObjectPath> reply =
                     d_ptr->adapter->CreatePairedDevice(address.toString(),
                                                        QDBusObjectPath(d_ptr->agent_path),
@@ -262,7 +251,6 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 
             if(reply.isError())
                 qDebug() << Q_FUNC_INFO << reply.error() << d_ptr->agent_path;
-#endif
         }
     }
     else if(pairing == Unpaired) {
@@ -311,13 +299,7 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluet
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress address)
     : adapter(0), agent(0), localAddress(address), msgConnection(0), q_ptr(q)
 {
-#ifndef NOKIA_BT_SERVICES
     initializeAdapter();
-#else
-    connect(nokiaBtManServiceInstance(), SIGNAL(poweredChanged(bool)), SLOT(powerStateChanged(bool)));
-    connect(nokiaBtManServiceInstance(), SIGNAL(pairingCompleted(bool)), SLOT(pairingCompleted(bool)));
-    nokiaBtManServiceInstance()->acquire();
-#endif
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
@@ -325,10 +307,6 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
     delete msgConnection;
     delete adapter;
     delete agent;
-
-#ifdef NOKIA_BT_SERVICES
-    nokiaBtManServiceInstance()->release();
-#endif
 }
 
 void QBluetoothLocalDevicePrivate::initializeAdapter()
@@ -381,44 +359,6 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
         agent_path.append(QString::fromLatin1("/%1").arg(qrand()));
     }
 }
-
-#ifdef NOKIA_BT_SERVICES
-void QBluetoothLocalDevicePrivate::powerStateChanged(bool powered)
-{
-    Q_Q(QBluetoothLocalDevice);
-    QBluetoothLocalDevice::HostMode mode;
-
-    if (powered) {
-        initializeAdapter();
-
-        QDBusPendingReply<QVariantMap> reply = adapter->GetProperties();
-        reply.waitForFinished();
-        if (reply.isError()){
-            qWarning() << "Failed to get bluetooth properties";
-            return;
-        }
-
-        if (reply.value().value(QLatin1String("Discoverable")).toBool()) {
-            mode = QBluetoothLocalDevice::HostDiscoverable;
-        } else {
-            mode = QBluetoothLocalDevice::HostConnectable;
-        }
-    } else {
-        mode = QBluetoothLocalDevice::HostPoweredOff;
-        delete msgConnection;
-        msgConnection = 0;
-        delete adapter;
-        adapter = 0;
-        delete agent;
-        agent = 0;
-    }
-
-    if (mode != currentMode) {
-        emit q->hostModeStateChanged(mode);
-        currentMode = mode;
-    }
-}
-#endif
 
 void QBluetoothLocalDevicePrivate::RequestConfirmation(const QDBusObjectPath &in0, uint in1)
 {
@@ -500,38 +440,6 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
 
 }
 
-#ifdef NOKIA_BT_SERVICES
-void QBluetoothLocalDevicePrivate::pairingCompleted(bool success)
-{
-    Q_Q(QBluetoothLocalDevice);
-
-    if (!success) {
-        qDebug() << Q_FUNC_INFO << "failed to create pairing";
-        emit q->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
-        return;
-    }
-
-    QDBusPendingReply<QDBusObjectPath> findReply = adapter->FindDevice(address.toString());
-    findReply.waitForFinished();
-    if (findReply.isError()) {
-        qDebug() << Q_FUNC_INFO << "failed to find device" << findReply.error();
-        emit q->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
-        return;
-    }
-
-    OrgBluezDeviceInterface device(QLatin1String("org.bluez"), findReply.value().path(),
-                                   QDBusConnection::systemBus());
-
-    if (pairing == QBluetoothLocalDevice::AuthorizedPaired) {
-        device.SetProperty(QLatin1String("Trusted"), QDBusVariant(QVariant(true)));
-        emit q->pairingFinished(address, QBluetoothLocalDevice::AuthorizedPaired);
-    } else {
-        device.SetProperty(QLatin1String("Trusted"), QDBusVariant(QVariant(false)));
-        emit q->pairingFinished(address, QBluetoothLocalDevice::Paired);
-    }
-}
-#endif
-
 void QBluetoothLocalDevicePrivate::Authorize(const QDBusObjectPath &in0, const QString &in1)
 {
     qDebug() << "Got authorize for" << in0.path() << in1;
@@ -601,164 +509,6 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
 
     currentMode = mode;
 }
-
-
-#ifdef NOKIA_BT_SERVICES
-
-NokiaBtManServiceConnection::NokiaBtManServiceConnection():
-    m_btmanService(NULL),
-    m_refCount(0)
-{
-}
-
-void NokiaBtManServiceConnection::acquire()
-{
-    QMutexLocker m(&m_refCountMutex);
-    ++m_refCount;
-    if (m_btmanService == NULL) {
-        connectToBtManService();
-    }
-}
-
-void NokiaBtManServiceConnection::release()
-{
-    QMutexLocker m(&m_refCountMutex);
-    --m_refCount;
-    if (m_refCount == 0) {
-        QTimer::singleShot(5000, this, SLOT(disconnectFromBtManService()));
-    }
-}
-
-void NokiaBtManServiceConnection::connectToBtManService()
-{
-    if (m_btmanService == NULL) {
-        QServiceManager manager;
-        QServiceFilter filter(QLatin1String("com.nokia.mt.btmanservice"));
-
-        // find services complying with filter
-        QList<QServiceInterfaceDescriptor> foundServices;
-        foundServices = manager.findInterfaces(filter);
-
-        if (foundServices.count()) {
-            m_btmanService = manager.loadInterface(foundServices.at(0));
-        }
-        if (m_btmanService) {
-            qDebug() << "connected to service:" << m_btmanService;
-            connect(m_btmanService, SIGNAL(errorUnrecoverableIPCFault(QService::UnrecoverableIPCError)), SLOT(sfwIPCError(QService::UnrecoverableIPCError)));
-            connect(m_btmanService, SIGNAL(powerStateChanged(int)), SLOT(powerStateChanged(int)));
-            connect(m_btmanService, SIGNAL(pairingFinished(QString,int,int)), SLOT(pairingFinished(QString,int,int)));
-            if (powered()) {
-                emit poweredChanged(true);
-            }
-        } else {
-            qDebug() << "failed to connect to btman service";
-        }
-    } else {
-        qDebug() << "already connected to service:" << m_btmanService;
-    }
-}
-
-void NokiaBtManServiceConnection::disconnectFromBtManService()
-{
-    // Check if none acquired the service in the meantime
-    QMutexLocker m(&m_refCountMutex);
-    if (m_refCount == 0 && m_btmanService) {
-        qDebug() << "disconnecting from btman service";
-        m_btmanService->deleteLater();
-        m_btmanService = NULL;
-    }
-}
-
-bool NokiaBtManServiceConnection::powered() const
-{
-    int powerState;
-    QMetaObject::invokeMethod(m_btmanService, "powerState", Q_RETURN_ARG(int, powerState));
-    return powerState == 2; // enabled
-}
-
-void NokiaBtManServiceConnection::setPowered(bool powered)
-{
-    if (powered) {
-        QMetaObject::invokeMethod(m_btmanService, "acquireTemporaryPower");
-    } else {
-        QMetaObject::invokeMethod(m_btmanService, "releaseTemporaryPower");
-    }
-}
-
-void NokiaBtManServiceConnection::setHostMode(QBluetoothLocalDevice::HostMode mode)
-{
-    m_forceDiscoverable = false;
-    m_forceConnectable = false;
-
-    switch (mode) {
-    case QBluetoothLocalDevice::HostDiscoverableLimitedInquiry:
-    case QBluetoothLocalDevice::HostDiscoverable:
-        if (powered()) {
-            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, true));
-        } else {
-            m_forceDiscoverable = true;
-            setPowered(true);
-        }
-        break;
-    case QBluetoothLocalDevice::HostConnectable:
-        if (powered()) {
-            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, false));
-        } else {
-            m_forceConnectable = true;
-            setPowered(true);
-        }
-        break;
-    case QBluetoothLocalDevice::HostPoweredOff:
-        if (powered()) {
-            setPowered(false);
-        }
-        break;
-    }
-}
-
-void NokiaBtManServiceConnection::powerStateChanged(int powerState)
-{
-    if (powerState == 0) {
-        emit poweredChanged(false);
-    } else if (powerState == 2) {
-        if (m_forceDiscoverable) {
-            m_forceDiscoverable = false;
-            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, true));
-        } else if (m_forceConnectable) {
-            m_forceConnectable = false;
-            QMetaObject::invokeMethod(m_btmanService, "setDiscoverable", Q_ARG(bool, false));
-        }
-        emit poweredChanged(true);
-    }
-}
-
-void NokiaBtManServiceConnection::requestPairing(const QBluetoothAddress &address)
-{
-    m_pairingAddress = address.toString();
-    QMetaObject::invokeMethod(m_btmanService, "requestPairing", Q_ARG(QString, m_pairingAddress), Q_ARG(bool, false));
-}
-
-void NokiaBtManServiceConnection::pairingFinished(const QString& address, int direction, int status)
-{
-    // DirectionOutgoing = 0
-    if (m_pairingAddress != address || direction != 0) return;
-    m_pairingAddress.clear();
-
-    // StatusSuccess = 0
-    emit pairingCompleted(status == 0);
-}
-
-void NokiaBtManServiceConnection::sfwIPCError(QService::UnrecoverableIPCError error)
-{
-    qDebug() << "Connection to btman service broken:" << error << ". Trying to reconnect...";
-    if (m_btmanService) {
-        m_btmanService->deleteLater();
-        m_btmanService = NULL;
-    }
-    QMetaObject::invokeMethod(this, "connectToBtManService", Qt::QueuedConnection);
-}
-
-#endif
 
 //#include "qbluetoothlocaldevice.moc"
 #include "moc_qbluetoothlocaldevice_p.cpp"

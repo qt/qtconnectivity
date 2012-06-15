@@ -144,21 +144,12 @@ private:
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
 {
-#ifndef NOKIA_BT_PATCHES
     to[0] = (from >> 0) & 0xff;
     to[1] = (from >> 8) & 0xff;
     to[2] = (from >> 16) & 0xff;
     to[3] = (from >> 24) & 0xff;
     to[4] = (from >> 32) & 0xff;
     to[5] = (from >> 40) & 0xff;
-#else
-    to[5] = (from >> 0) & 0xff;
-    to[4] = (from >> 8) & 0xff;
-    to[3] = (from >> 16) & 0xff;
-    to[2] = (from >> 24) & 0xff;
-    to[1] = (from >> 32) & 0xff;
-    to[0] = (from >> 40) & 0xff;
-#endif
 }
 
 static inline void convertAddress(quint8 (&from)[6], quint64 &to)
