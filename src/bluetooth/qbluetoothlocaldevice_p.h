@@ -59,10 +59,6 @@ QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 QT_END_NAMESPACE
 
-#ifdef NOKIA_BT_SERVICES
-#include <QtServiceFramework/QServiceManager>
-#include <QtCore/QMutex>
-#endif
 #endif
 
 QT_BEGIN_HEADER
@@ -104,11 +100,6 @@ public Q_SLOTS: // METHODS
 
     void PropertyChanged(QString,QDBusVariant);
 
-#ifdef NOKIA_BT_SERVICES
-    void powerStateChanged(bool powered);
-    void pairingCompleted(bool success);
-#endif
-
 private:
     QDBusMessage msgConfirmation;
     QDBusConnection *msgConnection;
@@ -117,42 +108,6 @@ private:
 
     void initializeAdapter();
 };
-
-#ifdef NOKIA_BT_SERVICES
-class NokiaBtManServiceConnection: public QObject
-{
-    Q_OBJECT
-
-public:
-    NokiaBtManServiceConnection();
-    void acquire();
-    void release();
-    void setPowered(bool powered);
-    bool powered() const;
-    void setHostMode(QBluetoothLocalDevice::HostMode mode);
-    void requestPairing(const QBluetoothAddress &address);
-
-signals:
-    void poweredChanged(bool powered);
-    void pairingCompleted(bool success);
-
-private:
-    QObject *m_btmanService;
-    int m_refCount;
-    QMutex m_refCountMutex;
-    bool m_forceDiscoverable;
-    bool m_forceConnectable;
-    QString m_pairingAddress;
-
-private slots:
-    void connectToBtManService();
-    void disconnectFromBtManService();
-    void sfwIPCError(QService::UnrecoverableIPCError);
-    void powerStateChanged(int powerState);
-    void pairingFinished(const QString &address, int direction, int status);
-};
-Q_GLOBAL_STATIC(NokiaBtManServiceConnection, nokiaBtManServiceInstance)
-#endif
 
 #else
 class QBluetoothLocalDevicePrivate : public QObject
