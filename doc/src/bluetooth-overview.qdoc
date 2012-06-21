@@ -28,7 +28,7 @@
 /*!
 \ingroup technology-apis
 \title Qt Bluetooth Module
-\page qtbluetooth-overview.html
+\page index-qtbluetooth-module.html
 \brief The Qt Bluetooth API enables connectivity with other Bluetooth enabled devices.
 
 \tableofcontents
