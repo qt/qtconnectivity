@@ -172,7 +172,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 #endif
     } else if (socketType == QBluetoothSocket::L2capSocket) {
 #ifndef NOKIA_BT_PATCHES
-        errorString = "Raw L2Cap sockets are not supported on this platform";
+        errorString = QString::fromLocal8Bit("Raw L2Cap sockets are not supported on this platform");
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
         return;
 #endif
