@@ -94,6 +94,9 @@ void tst_QRfcommServer::initTestCase()
 {
     qRegisterMetaType<QBluetooth::SecurityFlags>("QBluetooth::SecurityFlags");
 
+    if (!QBluetoothLocalDevice::allDevices().count())
+        QSKIP("Skipping test due to missing Bluetooth device");
+
     // turn on BT in case it is not on
     if (localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
         QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
