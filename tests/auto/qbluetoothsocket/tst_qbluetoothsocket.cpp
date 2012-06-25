@@ -125,6 +125,9 @@ tst_QBluetoothSocket::~tst_QBluetoothSocket()
 void tst_QBluetoothSocket::initTestCase()
 {
     // start Bluetooth if not started
+    if (!QBluetoothLocalDevice::allDevices().count())
+        QSKIP("Skipping test due to missing Bluetooth device");
+
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     device->powerOn();
     delete device;

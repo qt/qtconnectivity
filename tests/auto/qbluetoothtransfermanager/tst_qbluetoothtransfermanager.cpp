@@ -111,6 +111,9 @@ tst_QBluetoothTransferManager::~tst_QBluetoothTransferManager()
 
 void tst_QBluetoothTransferManager::initTestCase()
 {
+    if (!QBluetoothLocalDevice::allDevices().count())
+        QSKIP("Skipping test due to missing Bluetooth device");
+
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     device->powerOn();

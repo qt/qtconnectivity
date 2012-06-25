@@ -119,7 +119,6 @@ void tst_QBluetoothLocalDevice::tst_pairingStatus_data()
 
 void tst_QBluetoothLocalDevice::tst_powerOn()
 {
-    {
     QBluetoothLocalDevice localDevice;
 
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
@@ -127,18 +126,24 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
     QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
 
-    localDevice.powerOn();
-    // async, wait for it
-    QTRY_VERIFY(hostModeSpy.count() > 0);
-    QBluetoothLocalDevice::HostMode hostMode= localDevice.hostMode();
-    // we should not be powered off
-    QVERIFY(hostMode == QBluetoothLocalDevice::HostConnectable
-         || hostMode == QBluetoothLocalDevice::HostDiscoverable);
+    if (QBluetoothLocalDevice::allDevices().count() > 0) {
+        localDevice.powerOn();
+        // async, wait for it
+        QTRY_VERIFY(hostModeSpy.count() > 0);
+        QBluetoothLocalDevice::HostMode hostMode= localDevice.hostMode();
+        // we should not be powered off
+        QVERIFY(hostMode == QBluetoothLocalDevice::HostConnectable
+             || hostMode == QBluetoothLocalDevice::HostDiscoverable);
+    } else {
+        QSKIP("Skipping test due to missing Bluetooth device");
     }
-
 }
 void tst_QBluetoothLocalDevice::tst_powerOff()
 {
+    if (QBluetoothLocalDevice::allDevices().count() == 0) {
+        QSKIP("Skipping test due to missing Bluetooth device");
+    }
+
     {
         QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
         device->powerOn();
@@ -163,6 +168,10 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
 void tst_QBluetoothLocalDevice::tst_hostModes()
 {
     QFETCH(QBluetoothLocalDevice::HostMode, hostModeExpected);
+
+    if (QBluetoothLocalDevice::allDevices().count() == 0) {
+        QSKIP("Skipping test due to missing Bluetooth device");
+    }
 
     QBluetoothLocalDevice localDevice;
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
@@ -189,11 +198,19 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
 
 void tst_QBluetoothLocalDevice::tst_address()
 {
+    if (QBluetoothLocalDevice::allDevices().count() == 0) {
+        QSKIP("Skipping test due to missing Bluetooth device");
+    }
+
     QBluetoothLocalDevice localDevice;
     QVERIFY(!localDevice.address().toString().isEmpty());
 }
 void tst_QBluetoothLocalDevice::tst_name()
 {
+    if (QBluetoothLocalDevice::allDevices().count() == 0) {
+        QSKIP("Skipping test due to missing Bluetooth device");
+    }
+
     QBluetoothLocalDevice localDevice;
     QVERIFY(!localDevice.name().isEmpty());
 }
@@ -201,14 +218,25 @@ void tst_QBluetoothLocalDevice::tst_isValid()
 {
     QBluetoothLocalDevice localDevice;
     QVERIFY(localDevice.isValid());
+
+    /*
+    //TODO the above should really be the following once QBluetoothLocalDevice has been fixed
+    if (QBluetoothLocalDevice::allDevices().count() == 0)
+        QVERIFY(!localDevice.isValid());
+    else
+        QVERIFY(localDevice.isValid());
+    */
 }
 void tst_QBluetoothLocalDevice::tst_allDevices()
 {
-    // we should have one local bluetooth device
-    QVERIFY(QBluetoothLocalDevice::allDevices().count() == 1);
+    //nothing we can really test here
 }
 void tst_QBluetoothLocalDevice::tst_construction()
 {
+    if (QBluetoothLocalDevice::allDevices().count() == 0) {
+        QSKIP("Skipping test due to missing Bluetooth device");
+    }
+
     QBluetoothLocalDevice localDevice;
     QVERIFY(localDevice.isValid());
 
@@ -222,6 +250,10 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
 {
     QFETCH(QBluetoothAddress, deviceAddress);
     QFETCH(QBluetoothLocalDevice::Pairing, pairingExpected);
+
+    if (QBluetoothLocalDevice::allDevices().count() == 0) {
+        QSKIP("Skipping test due to missing Bluetooth device");
+    }
 
     qDebug() << "tst_pairDevice(): address=" << deviceAddress.toString() << "pairingModeExpected="
             << static_cast<int>(pairingExpected);
