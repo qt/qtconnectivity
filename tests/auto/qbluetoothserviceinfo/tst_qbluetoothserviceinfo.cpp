@@ -232,12 +232,15 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         copyInfo = serviceInfo;
         QVERIFY(!copyInfo.isRegistered());
 
-        QEXPECT_FAIL("assignment_data", "QTBUG-25452", Abort);
-        QVERIFY(copyInfo.registerService());
-        QVERIFY(copyInfo.isRegistered());
+        if (!QBluetoothLocalDevice::allDevices().count()) {
+            QSKIP("Slipping test due to missing Bluetooth device");
+        } else {
+            QVERIFY(copyInfo.registerService());
+            QVERIFY(copyInfo.isRegistered());
 
-        QVERIFY(copyInfo.unregisterService());
-        QVERIFY(!copyInfo.isRegistered());
+            QVERIFY(copyInfo.unregisterService());
+            QVERIFY(!copyInfo.isRegistered());
+        }
     }
 }
 
