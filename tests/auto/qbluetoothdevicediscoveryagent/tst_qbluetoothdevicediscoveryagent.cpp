@@ -94,6 +94,9 @@ void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
     qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>("QBluetoothDeviceDiscoveryAgent::InquiryType");
 
+    if (!QBluetoothLocalDevice::allDevices().count())
+        QSKIP("Skipping test due to missing Bluetooth device");
+
     // turn on BT in case it is not on
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     if (device->hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
