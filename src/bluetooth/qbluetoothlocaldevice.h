@@ -49,35 +49,13 @@
 #include <QtCore/QList>
 #include <QString>
 
-#include "qbluetoothaddress.h"
+#include "qbluetoothhostinfo.h"
 
 QT_BEGIN_HEADER
 
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothLocalDevicePrivate;
-
-class Q_BLUETOOTH_EXPORT QBluetoothHostInfo
-{
-public:
-    QBluetoothHostInfo() { }
-    QBluetoothHostInfo(const QBluetoothHostInfo &other) {
-        m_address = other.m_address;
-        m_name = other.m_name;
-    }
-
-    QBluetoothAddress getAddress() const { return m_address; }
-    void setAddress(const QBluetoothAddress &address) { m_address = address; }
-
-    QString getName() const { return m_name; }
-    void setName(const QString &name){ m_name = name; }
-
-private:
-    QBluetoothAddress m_address;
-    QString m_name;
-
-};
-
 
 class Q_BLUETOOTH_EXPORT QBluetoothLocalDevice : public QObject
 {
