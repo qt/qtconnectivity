@@ -15,6 +15,7 @@ QT -= gui
 
 PUBLIC_HEADERS += \
     qbluetoothaddress.h\
+    qbluetoothhostinfo.h \
     qbluetoothuuid.h\
     qbluetoothdeviceinfo.h\
     qbluetoothserviceinfo.h\
@@ -33,6 +34,7 @@ PUBLIC_HEADERS += \
 
 PRIVATE_HEADERS += \
     qbluetoothaddress_p.h\
+    qbluetoothhostinfo_p.h \
     qbluetoothdeviceinfo_p.h\
     qbluetoothserviceinfo_p.h\
     qbluetoothdevicediscoveryagent_p.h\
@@ -46,6 +48,7 @@ PRIVATE_HEADERS += \
 
 SOURCES += \
     qbluetoothaddress.cpp\
+    qbluetoothhostinfo.cpp \
     qbluetoothuuid.cpp\
     qbluetoothdeviceinfo.cpp\
     qbluetoothserviceinfo.cpp\
