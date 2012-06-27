@@ -5,6 +5,7 @@ SUBDIRS += \
     qbluetoothdevicediscoveryagent \
     qbluetoothdeviceinfo \
     qbluetoothlocaldevice \
+    qbluetoothhostinfo \
     qbluetoothservicediscoveryagent \
     qbluetoothserviceinfo \
     qbluetoothsocket \
@@ -24,6 +25,7 @@ SUBDIRS += \
     qbluetoothdevicediscoveryagent \
     qbluetoothdeviceinfo \
     qbluetoothlocaldevice \
+    qbluetoothhostinfo \
     qbluetoothservicediscoveryagent \
     qbluetoothserviceinfo \
     qbluetoothsocket \
