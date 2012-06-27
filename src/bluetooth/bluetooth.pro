@@ -5,6 +5,8 @@ QT = core
 
 load(qt_module_config)
 
+QMAKE_DOCS = $$PWD/../../doc/qt5.qdocconf
+
 # private dependencies
 QT += concurrent
 
