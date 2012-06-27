@@ -57,10 +57,10 @@ public:
     QBluetoothHostInfo(const QBluetoothHostInfo &other);
     ~QBluetoothHostInfo();
 
-    QBluetoothAddress getAddress() const;
+    QBluetoothAddress address() const;
     void setAddress(const QBluetoothAddress &address);
 
-    QString getName() const;
+    QString name() const;
     void setName(const QString &name);
 
 private:

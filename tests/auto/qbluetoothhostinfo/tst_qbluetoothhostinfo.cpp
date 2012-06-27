@@ -84,10 +84,10 @@ void tst_QBluetoothHostInfo::tst_address()
     QCOMPARE(address.toString(), addressString);
 
     QBluetoothHostInfo info;
-    QBluetoothAddress result = info.getAddress();
+    QBluetoothAddress result = info.address();
     QVERIFY(result.isNull());
     info.setAddress(address);
-    QCOMPARE(info.getAddress().toString(), addressString);
+    QCOMPARE(info.address().toString(), addressString);
 
 }
 
@@ -106,12 +106,12 @@ void tst_QBluetoothHostInfo::tst_name()
     QFETCH(QString, name);
 
     QBluetoothHostInfo info;
-    QString result = info.getName();
+    QString result = info.name();
     QVERIFY(result.isNull());
     QVERIFY(result.isEmpty());
 
     info.setName(name);
-    QCOMPARE(info.getName(), name);
+    QCOMPARE(info.name(), name);
 }
 
 void tst_QBluetoothHostInfo::tst_name_data()
@@ -151,24 +151,24 @@ void tst_QBluetoothHostInfo::tst_construction()
     QBluetoothAddress addr(btAddress);
     setter.setName(name);
     setter.setAddress(addr);
-    QCOMPARE(setter.getName(), name);
-    QCOMPARE(setter.getAddress().toString(), btAddress);
-    QCOMPARE(setter.getAddress().isNull(), !validBtAddress);
+    QCOMPARE(setter.name(), name);
+    QCOMPARE(setter.address().toString(), btAddress);
+    QCOMPARE(setter.address().isNull(), !validBtAddress);
 
     setter.setAddress(empty);
-    QCOMPARE(setter.getName(), name);
-    QCOMPARE(setter.getAddress().toString(), QString("00:00:00:00:00:00"));
-    QCOMPARE(setter.getAddress().isNull(), true);
+    QCOMPARE(setter.name(), name);
+    QCOMPARE(setter.address().toString(), QString("00:00:00:00:00:00"));
+    QCOMPARE(setter.address().isNull(), true);
 
     setter.setName(QString());
-    QCOMPARE(setter.getName(), QString());
-    QCOMPARE(setter.getAddress().toString(), QString("00:00:00:00:00:00"));
-    QCOMPARE(setter.getAddress().isNull(), true);
+    QCOMPARE(setter.name(), QString());
+    QCOMPARE(setter.address().toString(), QString("00:00:00:00:00:00"));
+    QCOMPARE(setter.address().isNull(), true);
 
     setter.setAddress(addr);
-    QCOMPARE(setter.getName(), QString());
-    QCOMPARE(setter.getAddress().toString(), btAddress);
-    QCOMPARE(setter.getAddress().isNull(), !validBtAddress);
+    QCOMPARE(setter.name(), QString());
+    QCOMPARE(setter.address().toString(), btAddress);
+    QCOMPARE(setter.address().isNull(), !validBtAddress);
 }
 
 QTEST_MAIN(tst_QBluetoothHostInfo)

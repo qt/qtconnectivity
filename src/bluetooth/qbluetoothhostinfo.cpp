@@ -86,7 +86,7 @@ QBluetoothHostInfo::~QBluetoothHostInfo()
 /*!
     Returns the Bluetooth address as a QBluetoothAddress.
 */
-QBluetoothAddress QBluetoothHostInfo::getAddress() const
+QBluetoothAddress QBluetoothHostInfo::address() const
 {
     Q_D(const QBluetoothHostInfo);
     return d->m_address;
@@ -102,9 +102,9 @@ void QBluetoothHostInfo::setAddress(const QBluetoothAddress &address)
 }
 
 /*!
-    Returns the name of the host info object.
+    Returns the user visible name of the host info object.
 */
-QString QBluetoothHostInfo::getName() const
+QString QBluetoothHostInfo::name() const
 {
     Q_D(const QBluetoothHostInfo);
     return d->m_name;
