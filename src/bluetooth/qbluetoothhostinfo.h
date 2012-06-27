@@ -42,6 +42,7 @@
 #ifndef QBLUETOOTHHOSTINFO_H
 #define QBLUETOOTHHOSTINFO_H
 
+#include "qbluetoothglobal.h"
 #include "qbluetoothaddress.h"
 
 QT_BEGIN_HEADER
