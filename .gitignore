@@ -22,6 +22,5 @@ qrc_*.cpp
 .qmake.cache
 config.log
 tmp
+imports/*
 include
-src/imports/bluetooth/debug/qrc_bluetooth.cpp
-src/imports/bluetooth/release/qrc_bluetooth.cpp
