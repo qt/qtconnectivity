@@ -1,15 +1,3 @@
-TARGET = declarative_nfc
-TARGETPATH = QtNfc
-
-include(qnfcimport.pri)
-target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
-DESTDIR = $$QT.nfc.imports/$$TARGETPATH
-INSTALLS += target
-
-qmldir.files += $$PWD/qmldir
-qmldir.path +=  $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
-INSTALLS += qmldir
-
 QT += declarative nfc
 
 # Input
@@ -29,4 +17,4 @@ SOURCES += plugin.cpp \
     qdeclarativendefurirecord.cpp \
     qdeclarativendefmimerecord.cpp
 
-INSTALLS += qmldir
+load(qml_plugin)
