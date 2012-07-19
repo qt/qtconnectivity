@@ -19,6 +19,7 @@ SUBDIRS += \
 #    qnearfieldtagtype1 \
 #    qnearfieldtagtype2 \
     qrfcommserver \
+    cmake
 
 !contains(QT_CONFIG, bluetooth): SUBDIRS -= \
     qbluetoothaddress \
