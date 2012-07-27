@@ -44,7 +44,8 @@
 #include <QtCore/QUrl>
 
 /*!
-    \qmlclass NdefUriRecord QDeclarativeNdefUriRecord
+    \qmltype NdefUriRecord
+    \instantiates QDeclarativeNdefUriRecord
     \brief The NdefUriRecord type represents an NFC RTD-URI NDEF record.
 
     \ingroup nfc-qml
