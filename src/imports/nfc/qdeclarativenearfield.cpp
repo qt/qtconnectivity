@@ -50,7 +50,8 @@
 #include <qndefnfcurirecord.h>
 
 /*!
-    \qmlclass NearField QDeclarativeNearField
+    \qmltype NearField
+    \instantiates QDeclarativeNearField
     \brief The NearField type provides access to NDEF messages stored on NFC Forum tags.
 
     \ingroup nfc-qml
