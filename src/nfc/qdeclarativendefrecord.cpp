@@ -85,7 +85,8 @@ QTNFC_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlclass NdefRecord QDeclarativeNdefRecord
+    \qmltype NdefRecord
+    \instantiates QDeclarativeNdefRecord
     \brief The NdefRecord type represents a record in an NDEF message.
 
     \ingroup nfc-qml

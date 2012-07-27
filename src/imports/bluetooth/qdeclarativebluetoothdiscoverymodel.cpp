@@ -49,7 +49,8 @@
 #include "qdeclarativebluetoothservice_p.h"
 
 /*!
-    \qmlclass BluetoothDiscoveryModel QDeclarativeBluetoothDiscoveryModel
+    \qmltype BluetoothDiscoveryModel
+    \instantiates QDeclarativeBluetoothDiscoveryModel
     \brief Enables you to search for the Bluetooth devices and services in range.
 
     \ingroup bluetooth-qml

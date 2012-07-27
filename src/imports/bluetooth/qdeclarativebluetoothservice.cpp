@@ -52,7 +52,8 @@
 /* ==================== QDeclarativeBluetoothService ======================= */
 
 /*!
-   \qmlclass BluetoothService QDeclarativeBluetoothService
+   \qmltype BluetoothService
+    \instantiates QDeclarativeBluetoothService
    \brief Provides information about a particular Bluetooth service.
 
    \ingroup bluetooth-qml
