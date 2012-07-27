@@ -42,7 +42,8 @@
 #include "qdeclarativendeffilter_p.h"
 
 /*!
-    \qmlclass NdefFilter QDeclarativeNdefFilter
+    \qmltype NdefFilter
+    \instantiates QDeclarativeNdefFilter
     \brief The NdefFilter type represents a filtering constraint for NDEF message records.
 
     \ingroup nfc-qml
