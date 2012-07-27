@@ -42,7 +42,8 @@
 #include "qdeclarativendefmimerecord_p.h"
 
 /*!
-    \qmlclass NdefMimeRecord QDeclarativeNdefMimeRecord
+    \qmltype NdefMimeRecord
+    \instantiates QDeclarativeNdefMimeRecord
     \brief The NdefMimeRecord type represents an NFC MIME record.
 
     \ingroup connectivity-nfc

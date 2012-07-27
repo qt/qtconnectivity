@@ -56,7 +56,8 @@
 /* ==================== QDeclarativeBluetoothSocket ======================= */
 
 /*!
-   \qmlclass BluetoothSocket QDeclarativeBluetoothSocket
+   \qmltype BluetoothSocket
+    \instantiates QDeclarativeBluetoothSocket
    \brief Enables you to connect and communicate with a Bluetooth service or device.
 
    \ingroup bluetooth-qml
