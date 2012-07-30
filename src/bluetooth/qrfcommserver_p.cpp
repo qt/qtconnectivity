@@ -98,6 +98,7 @@ void QRfcommServerPrivate::_q_newConnection()
 
 void QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
+    Q_UNUSED(security);
 }
 
 QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
