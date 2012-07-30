@@ -48,6 +48,8 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request,
                                                         QIODevice *data)
 {
+    Q_UNUSED(request);
+    Q_UNUSED(data);
     return 0;
 }
 

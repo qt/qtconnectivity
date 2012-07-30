@@ -92,6 +92,7 @@ quint16 QL2capServer::serverPort() const
 
 void QL2capServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
+    Q_UNUSED(security);
 }
 
 QBluetooth::SecurityFlags QL2capServer::securityFlags() const
