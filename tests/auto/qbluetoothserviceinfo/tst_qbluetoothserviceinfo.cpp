@@ -194,7 +194,7 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         QVERIFY(!copyInfo.isValid());
         copyInfo = serviceInfo;
 
-        copyInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, uuid);
+        copyInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, QBluetoothUuid(uuid));
         QVERIFY(copyInfo.contains(QBluetoothServiceInfo::ProtocolDescriptorList));
         QVERIFY(copyInfo.isComplete());
         QVERIFY(copyInfo.attributes().count() > 0);
