@@ -6,3 +6,4 @@ QT -= gui \
     core
 SOURCES = btclient.c
 HEADERS += btclient.h
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
