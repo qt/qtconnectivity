@@ -13,5 +13,6 @@ SOURCES += plugin.cpp \
     qdeclarativebluetoothimageprovider.cpp
 
 RESOURCES += bluetooth.qrc
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 
 load(qml_plugin)
