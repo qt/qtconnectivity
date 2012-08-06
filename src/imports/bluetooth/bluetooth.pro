@@ -1,4 +1,4 @@
-TARGET = declarative_bluetooth
+TARGET = bluetoothplugin
 TARGETPATH = QtBluetooth
 
 include(qbluetoothimport.pri)
@@ -33,7 +33,7 @@ RESOURCES += bluetooth.qrc
 # This will run the following command:
 #     qmlplugindump <import name> <import version> <path to import plugin> > plugins.qmltypes
 # e.g.:
-#     qmlplugindump QtBluetooth 5.0 imports/QtLocation/libdeclarative_bluetooth.so > plugins.qmltypes
+#     qmlplugindump QtBluetooth 5.0 imports/QtBluetooth/libbluetoothplugin.so > plugins.qmltypes
 
 load(resolve_target)
 qmltypes.target = qmltypes
