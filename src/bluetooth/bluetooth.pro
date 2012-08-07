@@ -2,13 +2,11 @@ load(qt_build_config)
 
 TARGET = QtBluetooth
 QT = core
+QT_PRIVATE = concurrent
 
 load(qt_module)
 
 QMAKE_DOCS = $$PWD/../../doc/qt5.qdocconf
-
-# private dependencies
-QT += concurrent
 
 PUBLIC_HEADERS += \
     qbluetoothaddress.h\
