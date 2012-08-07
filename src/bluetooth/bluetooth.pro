@@ -3,7 +3,7 @@ load(qt_build_config)
 TARGET = QtBluetooth
 QT = core
 
-load(qt_module_config)
+load(qt_module)
 
 QMAKE_DOCS = $$PWD/../../doc/qt5.qdocconf
 
