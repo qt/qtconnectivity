@@ -30,9 +30,9 @@
 /*!
 
 \page bluetooth-cpp.html
-\module QtBluetooth
+
 \title Qt Bluetooth C++ API
-\brief An API enabling basic Bluetooth operations like scanning for Devices
+\brief An API enabling basic Bluetooth operations like scanning for devices
 and connecting them.
 
 \ingroup qtconnectivity
@@ -41,54 +41,11 @@ and connecting them.
 The Qt Bluetooth C++ API enables an application to scan for devices and connect and
 interact with them in a more flexible way than the \l{Qt Bluetooth QML API}.
 
-\tableofcontents
-
-\section1 Getting Started
-
-To include the Bluetooth classes, use the
-include directive for the appropriate class. For example:
-
-\snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp include
-
-The Qt Bluetooth C++ API is a Qt Add-On API and for thus wrapped in a namespace. To
-make use of the namespace use:
-
-\snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp namespace
-
-To link against the module, add this line to your \l qmake \c
-.pro file:
-
-\snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
-
-
 \section1 Classes
 
 \list
 \annotatedlist connectivity-bluetooth
 \endlist
-
-\section1 Examples
-
-The following sample applications show examples of API usage:
-    \table 80%
-        \header
-            \li Example
-            \li Description
-        \row
-            \li \l{btchat}{Bluetooth Chat}
-            \li A chat server and client using bluetooth.
-        \row
-            \li \l{bttennis}{Bluetooth Tennis}
-            \li The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
-            over Bluetooth and touch-to-play functionality on devices that support NFC.
-        \row
-            \li \l{btfiletransfer}{Bluetooth File Transfer}
-            \li Transfer files between Bluetooth devices.
-        \row
-            \li \l{btscanner}{Bluetooth Scanner}
-            \li Scan for Bluetooth devices.
-    \endtable
-
 
 */
 

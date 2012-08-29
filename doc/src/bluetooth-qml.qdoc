@@ -31,7 +31,7 @@
 \page bluetooth-qml.html
 
 \title Qt Bluetooth QML API
-\brief A QML API enabling basic Bluetooth operations like scanning for Devices
+\brief A QML API enabling basic Bluetooth operations like scanning for devices.
 and connecting them.
 
 \ingroup qtconnectivity
@@ -44,38 +44,11 @@ plugins with the flexibility you need.
 
 \tableofcontents
 
-\section1 Getting Started
-
-To import the Bluetooth types, use the following:
-
-\snippet ../doc/src/snippets/doc_src_qtbluetooth.qml import
-
-After importing the Qt Bluetooth QML API you can use its types. This example shows how
-to connect to a remote RFCOMM (SPP) server using BluetoothSocket:
-
-\snippet ../doc/src/snippets/doc_src_qtbluetooth.qml service
-
 \section1 QML Types
 
 \list
 \annotatedlist bluetooth-qml
 \endlist
-
-\section2 Examples
-
-    \table 80%
-        \header
-            \li Example
-            \li Description
-
-        \row
-            \li \l{bttennis}{QML Bluetooth Tennis}
-            \li The tennis game using a QML interface to the Qt Bluetooth QML API. It must connect to an
-            instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
-        \row
-            \li \l{btscanner}{QML Bluetooth Scanner}
-            \li A QML implementation of the Bluetooth device scanner.
-    \endtable
 
 */
 
