@@ -27,39 +27,28 @@
 
 /*!
 \ingroup technology-apis
-\title Qt Bluetooth Module
-\page index-qtbluetooth-module.html
+\title Qt Bluetooth Overview
+\page qtbluetooth-overview.html
 \brief The Qt Bluetooth API enables connectivity with other Bluetooth enabled devices.
 
 \tableofcontents
-
-\section1 Overview
-
-Bluetooth is a short-range (less than 100 meters) wireless
-technology. It has a reasonably high data transfer rate of 2.1 Mbit/s, which
-makes it ideal for transfering data between devices.
-
-Bluetooth connectivity is based on basic device management like scanning for
-devices and gathering information about them. On top of that, there are a
-number of profiles which enable a certain specified interaction type on
-the Bluetooth connection.
 
     With the Qt Bluetooth API typical use cases are:
 
         \list
         \li Retrieve information about the local Bluetooth device.
         \li Scan for other Bluetooth devices in range and retrieve information about them.
-        \li Push files to remote devices using the Obex Object Push Profile (OPP).
+        \li Push files to remote devices using the OBEX Object Push Profile (OPP).
         \li Connect to remote devices through a RFCOMM channel using the Serial Port Profile (SPP).
         \li Create a RFCOMM server that allows incoming connections using SPP.
         \endlist
 
+    The following sections describe how to use the Qt Bluetooth C++ API classes
+    for the above use cases.
 
-    The following documentation leads you through what
-    you can do, getting started, some simple examples and tutorials.
+    \section1 Retrieving Local Device Information
 
-    \section1 Getting Started
-    As shown in the above list, the Qt Bluetooth API has three main purposes. The first one is to
+    The Qt Bluetooth API has three main purposes. The first one is to
     obtain local and remote device information. The first steps in retrieving device information is
     to check if Bluetooth is available on the device and read the local device address and name. The
     QBluetoothLocalDevice is the one to provide all of this information. Additionally you can use it
@@ -67,12 +56,16 @@ the Bluetooth connection.
 
     \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp turningon
 
+    \section1 Scanning for Bluetooth Devices
+
     Similar to the QBluetoothLocalDevice, the API offers QBluetoothDeviceInfo which provides
     that information for remote devices. While you can just create QBluetoothDeviceInfo objects on
     your own and fill them with data, the easier way is to use the QBluetoothDeviceDiscoveryAgent to
     start an automated search for visible Bluetooth devices within the connectable range.
 
     \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp discovery
+
+    \section1 Pushing Files to Remote Devices
 
     Once the desired device is found, there are two main use cases provided by Qt Bluetooth. The
     simpler is to send files via the Obex Object Push Profile (OPP). As the name describes, this
@@ -83,6 +76,8 @@ the Bluetooth connection.
     the request by calling the put() function.
 
     \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp sendfile
+
+    \section1 Exchanging Data Between Devices
 
     The more flexible approach to do communication between two Bluetooth enabled devices, is to
     create a virtual serial port connection and freely exchange data over that connection. This can
@@ -105,26 +100,5 @@ the Bluetooth connection.
     and client, please refer to the detailed description sections in the QRfcommServer and
     QBluetoothSocket classes. A good example to start with SPP is the \l{btchat}{Bluetooth Chat}
     example.
-
-    To get started with adding the Qt Bluetooth API to your project, see the
-    \l{Qt Bluetooth Examples}{Examples} or check out the \l{Qt Bluetooth QML API}{QML} and
-    \l{Qt Bluetooth C++ API}{C++} API's with their "Getting started" sections.
-
-    \section2 QML API
-
-    There are a number of QML Types available in the Qt Bluetooth API.
-
-    \list
-        \li \l {Qt Bluetooth QML API}{Qt Bluetooth QML API}
-    \endlist
-
-    \section2 C++ API
-
-    The Qt Bluetooth C++ API requires gives a bit more flexibility on how
-    to interact with remote devices.
-
-    \list
-        \li \l {Qt Bluetooth C++ API} {Qt Bluetooth C++ API}.
-    \endlist
 
 */
