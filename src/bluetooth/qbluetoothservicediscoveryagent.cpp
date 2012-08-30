@@ -60,7 +60,7 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     \li and call start().
     \endlist
 
-    \snippet ../doc/src/snippets/servicediscovery.cpp Service discovery
+    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp discovery
 
     By default a minimal service discovery is performed. In this mode, the QBluetotohServiceInfo
     objects returned are guaranteed to contain only device and service UUID information. Depending
