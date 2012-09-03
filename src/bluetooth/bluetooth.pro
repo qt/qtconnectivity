@@ -1,5 +1,3 @@
-load(qt_build_config)
-
 TARGET = QtBluetooth
 QT = core
 QT_PRIVATE = concurrent
