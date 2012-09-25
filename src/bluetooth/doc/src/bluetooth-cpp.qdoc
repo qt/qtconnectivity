@@ -24,28 +24,22 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-
-
 /*!
 
-\page bluetooth-cpp.html
+\module QtBluetooth
 
 \title Qt Bluetooth C++ API
 \brief An API enabling basic Bluetooth operations like scanning for devices
 and connecting them.
 
-\ingroup qtconnectivity
-\ingroup qtconnectivity-c++
 
-The Qt Bluetooth C++ API enables an application to scan for devices and connect and
-interact with them in a more flexible way than the \l{Qt Bluetooth QML API}.
+    The \l{Qt Bluetooth} C++ API enables an application to scan for devices and
+    connect and interact with them in a more flexible way than the \l{Qt
+    Bluetooth QML API}.
 
-\section1 Classes
+    To use the C++ library in your application, add the following configuration
+    option to your \c .pro file:
 
-\list
-\annotatedlist connectivity-bluetooth
-\endlist
-
+    \snippet doc_src_qtbluetooth.pro contacts project modification
 */
 

@@ -51,10 +51,9 @@
 /*!
     \qmltype BluetoothDiscoveryModel
     \instantiates QDeclarativeBluetoothDiscoveryModel
-    \brief Enables you to search for the Bluetooth devices and services in range.
-
-    \ingroup bluetooth-qml
-    \inmodule QtBluetooth
+    \inqmlmodule QtBluetooth 5.0
+    \brief Enables you to search for the Bluetooth devices and services in
+    range.
 
     The BluetoothDiscoveryModel type was introduced in \b{QtBluetooth 5.0}.
 

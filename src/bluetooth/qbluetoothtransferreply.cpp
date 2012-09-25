@@ -48,10 +48,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothTransferReply
-    \brief The QBluetoothTransferReply class stores the response for a data transfer request.
-
-    \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
+    \brief The QBluetoothTransferReply class stores the response for a data
+    transfer request.
 
     In additional to a copy of the QBluetoothTransferRequest object used to create the request,
     QBluetoothTransferReply contains the contents of the reply itself.

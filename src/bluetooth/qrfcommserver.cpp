@@ -47,10 +47,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QRfcommServer
-    \brief The QRfcommServer class uses the RFCOMM protocol to communicate with a Bluetooth device.
-
-    \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
+    \brief The QRfcommServer class uses the RFCOMM protocol to communicate with
+    a Bluetooth device.
 
     QRfcommServer is used to implement Bluetooth services over RFCOMM.
 
