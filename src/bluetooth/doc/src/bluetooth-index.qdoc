@@ -43,12 +43,12 @@
     To use the C++ library in your application, add the following configuration
     option to your \c .pro file:
 
-    \snippet ../doc/src/snippets/doc_src_qtbluetooth.pro contacts project modification
+    \snippet doc_src_qtbluetooth.pro contacts project modification
 
     To use the classes of the module in your application you need the following
     import statement in your \c .qml file:
 
-    \snippet ../doc/src/snippets/doc_src_qtbluetooth.qml import
+    \snippet doc_src_qtbluetooth.qml import
 
     \section1 References
 

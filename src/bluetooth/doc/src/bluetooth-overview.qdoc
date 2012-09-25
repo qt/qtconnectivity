@@ -54,7 +54,7 @@
     QBluetoothLocalDevice is the one to provide all of this information. Additionally you can use it
     to turn Bluetooth on and off and set the visibility on the device.
 
-    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp turningon
+    \snippet doc_src_qtbluetooth.cpp turningon
 
     \section1 Scanning for Bluetooth Devices
 
@@ -63,7 +63,7 @@
     your own and fill them with data, the easier way is to use the QBluetoothDeviceDiscoveryAgent to
     start an automated search for visible Bluetooth devices within the connectable range.
 
-    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp discovery
+    \snippet doc_src_qtbluetooth.cpp discovery
 
     \section1 Pushing Files to Remote Devices
 
@@ -75,7 +75,7 @@
     QBluetoothTransferRequest and ask the QBluetoothTransferManager to push the file contained in
     the request by calling the put() function.
 
-    \snippet ../doc/src/snippets/doc_src_qtbluetooth.cpp sendfile
+    \snippet doc_src_qtbluetooth.cpp sendfile
 
     \section1 Exchanging Data Between Devices
 
@@ -87,12 +87,12 @@
     To be able to create SPP connections, you need to register a Server one one device by using
     QRfcommServer.
 
-    \snippet ../examples/btchat/chatserver.cpp Create the server
+    \snippet chatserver.cpp Create the server
 
     Connect to this server from another device playing the client role by using a
     QBluetoothSocket.
 
-    \snippet ../examples/btchat/chatclient.cpp startClient
+    \snippet chatclient.cpp startClient
 
     Using such a connection allows to exchange any form of data in both directions.
     It is perfectly suited for use cases like gaming or syncing the state between two instances of
