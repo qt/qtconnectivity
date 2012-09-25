@@ -46,11 +46,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothHostInfo
+    \inmodule QtBluetooth
     \brief The QBluetoothHostInfo class encapsulates the details of a local
     QBluetooth device.
-
-    \ingroup connectivity-bluetooth
-    \inmodule QtBluetooth
 
     This class holds the name and address of a local Bluetooth device.
 */

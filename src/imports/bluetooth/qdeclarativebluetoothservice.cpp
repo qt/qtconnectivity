@@ -52,12 +52,10 @@
 /* ==================== QDeclarativeBluetoothService ======================= */
 
 /*!
-   \qmltype BluetoothService
+    \qmltype BluetoothService
     \instantiates QDeclarativeBluetoothService
-   \brief Provides information about a particular Bluetooth service.
-
-   \ingroup bluetooth-qml
-   \inmodule QtBluetooth
+    \inqmlmodule QtBluetooth 5.0
+    \brief Provides information about a particular Bluetooth service.
 
    \sa QBluetoothAddress
    \sa QBluetoothSocket
