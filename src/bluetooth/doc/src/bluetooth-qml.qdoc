@@ -28,27 +28,20 @@
 
 /*!
 
-\page bluetooth-qml.html
-
+\qmlmodule QtBluetooth 5.0
 \title Qt Bluetooth QML API
 \brief A QML API enabling basic Bluetooth operations like scanning for devices
 and connecting them.
-
-\ingroup qtconnectivity
-\ingroup qtconnectivity-qml
 
 The Qt Bluetooth QML API enables an application to scan for devices and connect and
 interact with them in an easier way than the C++ Classes. However, it is a bit
 more limited than the C++ API. You can always use the C++ API to create QML
 plugins with the flexibility you need.
 
-\tableofcontents
+To use the classes of the module in your application you need the following
+import statement in your \c .qml file:
 
-\section1 QML Types
-
-\list
-\annotatedlist bluetooth-qml
-\endlist
+\snippet doc_src_qtbluetooth.qml import
 
 */
 

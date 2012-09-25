@@ -46,10 +46,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothDeviceDiscoveryAgent
-    \brief The QBluetoothDeviceDiscoveryAgent class discovers the Bluetooth devices nearby.
-
-    \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
+    \brief The QBluetoothDeviceDiscoveryAgent class discovers the Bluetooth
+    devices nearby.
 
     To discover the nearby Bluetooth devices:
     \list

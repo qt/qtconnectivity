@@ -48,10 +48,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothDeviceInfo
-    \brief The QBluetoothDeviceInfo class stores information about the Bluetooth device.
-
-    \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
+    \brief The QBluetoothDeviceInfo class stores information about the Bluetooth
+    device.
 
     QBluetoothDeviceInfo provides information about a Bluetooth device's name, address and class of device.
 */

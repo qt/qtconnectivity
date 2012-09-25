@@ -46,10 +46,9 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothTransferManager
-    \brief The QBluetoothTransferManager class transfers data to another device using Object Push Profile (OPP).
-
-    \ingroup connectivity-bluetooth
     \inmodule QtBluetooth
+    \brief The QBluetoothTransferManager class transfers data to another device
+    using Object Push Profile (OPP).
 
     QBluetoothTransferManager uses OBEX to send get and put commands to remote devices.
 */
