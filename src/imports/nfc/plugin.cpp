@@ -39,12 +39,10 @@
 **
 ****************************************************************************/
 
+#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlExtensionPlugin>
 
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeExtensionPlugin>
-
-#include <qdeclarativendefrecord.h>
-
+#include "qdeclarativendefrecord.h"
 #include "qdeclarativenearfieldsocket_p.h"
 #include "qdeclarativenearfield_p.h"
 #include "qdeclarativendeffilter_p.h"
@@ -54,14 +52,18 @@
 
 QT_USE_NAMESPACE
 
-class QNfcQmlPlugin : public QDeclarativeExtensionPlugin
+class QNfcQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
+
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
+
 public:
     void registerTypes(const char *uri)
     {
         Q_ASSERT(uri == QLatin1String("QtNfc"));
+
+        // @uri QtNfc
 
         int major = 5;
         int minor = 0;

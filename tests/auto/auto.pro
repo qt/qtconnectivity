@@ -1,51 +1,32 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    qbluetoothaddress \
-    qbluetoothdevicediscoveryagent \
-    qbluetoothdeviceinfo \
-    qbluetoothlocaldevice \
-    qbluetoothhostinfo \
-    qbluetoothservicediscoveryagent \
-    qbluetoothserviceinfo \
-    qbluetoothsocket \
-    qbluetoothtransfermanager \
-    qbluetoothtransferrequest \
-    qbluetoothuuid \
-    ql2capserver \
-#    qndefmessage \
-#    qndefrecord \
-#    qnearfieldmanager \
-#    qnearfieldtagtype1 \
-#    qnearfieldtagtype2 \
-    qrfcommserver \
     cmake
 
-!contains(QT_CONFIG, bluetooth): SUBDIRS -= \
-    qbluetoothaddress \
-    qbluetoothdevicediscoveryagent \
-    qbluetoothdeviceinfo \
-    qbluetoothlocaldevice \
-    qbluetoothhostinfo \
-    qbluetoothservicediscoveryagent \
-    qbluetoothserviceinfo \
-    qbluetoothsocket \
-    qbluetoothtransfermanager \
-    qbluetoothtransferrequest \
-    qbluetoothuuid \
-    ql2capserver \
+!isEmpty(QT.bluetooth.name) {
+    SUBDIRS += \
+        qbluetoothaddress \
+        qbluetoothdevicediscoveryagent \
+        qbluetoothdeviceinfo \
+        qbluetoothlocaldevice \
+        qbluetoothhostinfo \
+        qbluetoothservicediscoveryagent \
+        qbluetoothserviceinfo \
+        qbluetoothsocket \
+        qbluetoothtransfermanager \
+        qbluetoothtransferrequest \
+        qbluetoothuuid \
+        ql2capserver \
+        qrfcommserver
+}
 
-#!contains(QT_CONFIG, nfc): SUBDIRS -= \
-#    qndefmessage \
-#    qndefrecord \
-#    qnearfieldmanager \
-#    qnearfieldtagtype1 \
-#    qnearfieldtagtype2 \
-#
-## QTBUG-22015 these do not compile.
-#SUBDIRS -= \
-#    qnearfieldmanager \
-#    qnearfieldtagtype1 \
-#    qnearfieldtagtype2 \
+!isEmpty(QT.nfc.name) {
+    SUBDIRS += \
+        qndefmessage \
+        qndefrecord \
+        qnearfieldmanager \
+        qnearfieldtagtype1 \
+        qnearfieldtagtype2 \
+}
 
 qbluetoothservicediscoveryagent.CONFIG += no_check_target # QTBUG-22017

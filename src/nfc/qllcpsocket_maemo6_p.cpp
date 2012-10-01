@@ -637,6 +637,4 @@ void QLlcpSocketPrivate::initializeRequestor()
     }
 }
 
-#include "moc_qllcpsocket_maemo6_p.cpp"
-
 QTNFC_END_NAMESPACE

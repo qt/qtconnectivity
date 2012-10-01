@@ -400,6 +400,4 @@ qint64 QLlcpSocket::writeData(const char *data, qint64 len)
     return d->writeData(data, len);
 }
 
-#include <moc_qllcpsocket.cpp>
-
 QTNFC_END_NAMESPACE

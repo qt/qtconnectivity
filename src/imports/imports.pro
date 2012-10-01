@@ -1,5 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS += bluetooth
 
-#The Qt NFC module is currently not supported
-#SUBDIRS += nfc
+!isEmpty(QT.bluetooth.name):SUBDIRS += bluetooth
+!isEmpty(QT.nfc.name):SUBDIRS += nfc

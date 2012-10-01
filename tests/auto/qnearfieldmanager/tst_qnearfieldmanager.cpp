@@ -292,6 +292,12 @@ void tst_QNearFieldManager::registerNdefMessageHandler_filter()
     QVERIFY(target);
 }
 
-QTEST_MAIN(tst_QNearFieldManager);
+QTEST_MAIN(tst_QNearFieldManager)
+
+// Unset the moc namespace which is not required for the following include.
+#undef QT_BEGIN_MOC_NAMESPACE
+#define QT_BEGIN_MOC_NAMESPACE
+#undef QT_END_MOC_NAMESPACE
+#define QT_END_MOC_NAMESPACE
 
 #include "tst_qnearfieldmanager.moc"

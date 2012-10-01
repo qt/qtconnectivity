@@ -214,6 +214,4 @@ void QNearFieldManagerPrivateVirtualBase::ndefReceived(const QNdefMessage &messa
     }
 }
 
-#include "moc_qnearfieldmanagervirtualbase_p.cpp"
-
 QTNFC_END_NAMESPACE

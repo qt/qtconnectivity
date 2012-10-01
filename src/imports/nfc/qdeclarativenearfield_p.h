@@ -43,32 +43,32 @@
 #define QDECLARATIVENEARFIELD_P_H
 
 #include <QtCore/QObject>
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/QDeclarativeParserStatus>
+#include <QtQml/qqml.h>
+#include <QtQml/QQmlParserStatus>
+#include <QtNfc/QNearFieldManager>
 
-#include <qnearfieldmanager.h>
-#include <qdeclarativendefrecord.h>
+#include "qdeclarativendefrecord.h"
 
 class QDeclarativeNdefFilter;
 
 QTNFC_USE_NAMESPACE
 
-class QDeclarativeNearField : public QObject, public QDeclarativeParserStatus
+class QDeclarativeNearField : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
-    Q_PROPERTY(QDeclarativeListProperty<QDeclarativeNdefRecord> messageRecords READ messageRecords NOTIFY messageRecordsChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QDeclarativeNdefFilter> filter READ filter NOTIFY filterChanged)
+    Q_PROPERTY(QQmlListProperty<QDeclarativeNdefRecord> messageRecords READ messageRecords NOTIFY messageRecordsChanged)
+    Q_PROPERTY(QQmlListProperty<QDeclarativeNdefFilter> filter READ filter NOTIFY filterChanged)
     Q_PROPERTY(bool orderMatch READ orderMatch WRITE setOrderMatch NOTIFY orderMatchChanged)
 
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
 public:
     explicit QDeclarativeNearField(QObject *parent = 0);
 
-    QDeclarativeListProperty<QDeclarativeNdefRecord> messageRecords();
+    QQmlListProperty<QDeclarativeNdefRecord> messageRecords();
 
-    QDeclarativeListProperty<QDeclarativeNdefFilter> filter();
+    QQmlListProperty<QDeclarativeNdefFilter> filter();
 
     bool orderMatch() const;
     void setOrderMatch(bool on);
@@ -97,19 +97,19 @@ private:
 
     void registerMessageHandler();
 
-    static void append_messageRecord(QDeclarativeListProperty<QDeclarativeNdefRecord> *list,
+    static void append_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
                                      QDeclarativeNdefRecord *record);
-    static int count_messageRecords(QDeclarativeListProperty<QDeclarativeNdefRecord> *list);
-    static QDeclarativeNdefRecord *at_messageRecord(QDeclarativeListProperty<QDeclarativeNdefRecord> *list,
+    static int count_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list);
+    static QDeclarativeNdefRecord *at_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
                                                     int index);
-    static void clear_messageRecords(QDeclarativeListProperty<QDeclarativeNdefRecord> *list);
+    static void clear_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list);
 
-    static void append_filter(QDeclarativeListProperty<QDeclarativeNdefFilter> *list,
+    static void append_filter(QQmlListProperty<QDeclarativeNdefFilter> *list,
                               QDeclarativeNdefFilter *filter);
-    static int count_filters(QDeclarativeListProperty<QDeclarativeNdefFilter> *list);
-    static QDeclarativeNdefFilter *at_filter(QDeclarativeListProperty<QDeclarativeNdefFilter> *list,
-                                                    int index);
-    static void clear_filter(QDeclarativeListProperty<QDeclarativeNdefFilter> *list);
+    static int count_filters(QQmlListProperty<QDeclarativeNdefFilter> *list);
+    static QDeclarativeNdefFilter *at_filter(QQmlListProperty<QDeclarativeNdefFilter> *list,
+                                             int index);
+    static void clear_filter(QQmlListProperty<QDeclarativeNdefFilter> *list);
 };
 
 #endif // QDECLARATIVENEARFIELD_P_H

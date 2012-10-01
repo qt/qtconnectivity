@@ -47,6 +47,8 @@
 
 #include <QtCore/QDebug>
 
+QTNFC_BEGIN_NAMESPACE
+
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
 {
     TagActivator *tagActivator = TagActivator::instance();
@@ -99,4 +101,4 @@ void QNearFieldManagerPrivateImpl::tagDeactivated(TagBase *tag)
     targetDeactivated(target);
 }
 
-
+QTNFC_END_NAMESPACE

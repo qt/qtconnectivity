@@ -43,16 +43,15 @@
 #define QDECLARATIVENEARFIELDSOCKET_P_H
 
 #include <QtCore/QObject>
-#include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/QDeclarativeParserStatus>
-
-#include <qllcpsocket.h>
+#include <QtQml/qqml.h>
+#include <QtQml/QQmlParserStatus>
+#include <QtNfc/QLlcpSocket>
 
 QTNFC_USE_NAMESPACE
 
 class QDeclarativeNearFieldSocketPrivate;
 
-class QDeclarativeNearFieldSocket : public QObject, public QDeclarativeParserStatus
+class QDeclarativeNearFieldSocket : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
@@ -63,7 +62,7 @@ class QDeclarativeNearFieldSocket : public QObject, public QDeclarativeParserSta
     Q_PROPERTY(bool listening READ listening WRITE setListening NOTIFY listeningChanged)
     Q_PROPERTY(QString stringData READ stringData WRITE sendStringData NOTIFY dataAvailable)
 
-    Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QQmlParserStatus)
 
     Q_DECLARE_PRIVATE(QDeclarativeNearFieldSocket)
 

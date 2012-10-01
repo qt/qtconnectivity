@@ -58,6 +58,7 @@ class QNearFieldManagerPrivate;
 class Q_NFC_EXPORT QNearFieldManager : public QObject
 {
     Q_OBJECT
+
     Q_DECLARE_PRIVATE(QNearFieldManager)
 
 public:

@@ -48,12 +48,11 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
 
-#include <QtCore/QDebug>
+QTNFC_BEGIN_NAMESPACE
 
 static QMutex tagMutex;
 static QMap<TagBase *, bool> tagMap;
 static TagActivator tagActivator;
-
 
 TagType1::TagType1(TagBase *tag, QObject *parent)
 :   QNearFieldTagType1(parent), m_tag(tag)
@@ -226,13 +225,11 @@ void TagActivator::initialize()
         target.endGroup();
 
         if (tagType == QLatin1String("TagType1")) {
-            qDebug() << "loading" << targetFilename << "as NfcTagType1";
             NfcTagType1 *tag = new NfcTagType1;
             tag->load(&target);
 
             tagMap.insert(tag, false);
         } else if (tagType == QLatin1String("TagType2")) {
-            qDebug() << "loading" << targetFilename << "as NfcTagType2";
             NfcTagType2 *tag = new NfcTagType2;
             tag->load(&target);
 
@@ -277,8 +274,10 @@ void TagActivator::timerEvent(QTimerEvent *e)
 
         *m_current = false;
 
+        TagBase *tag = m_current.key();
+
         tagMutex.unlock();
-        emit tagDeactivated(m_current.key());
+        emit tagDeactivated(tag);
         tagMutex.lock();
     }
 
@@ -289,12 +288,14 @@ void TagActivator::timerEvent(QTimerEvent *e)
     if (m_current != tagMap.end()) {
         *m_current = true;
 
-        tagMutex.unlock();
+        TagBase *tag = m_current.key();
 
-        emit tagActivated(m_current.key());
+        tagMutex.unlock();
+        emit tagActivated(tag);
         tagMutex.lock();
     }
 
     tagMutex.unlock();
 }
 
+QTNFC_END_NAMESPACE

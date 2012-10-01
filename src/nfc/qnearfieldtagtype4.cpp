@@ -159,6 +159,4 @@ bool QNearFieldTagType4::handleResponse(const QNearFieldTarget::RequestId &id,
     return QNearFieldTarget::handleResponse(id, response);
 }
 
-#include "moc_qnearfieldtagtype4.cpp"
-
 QTNFC_END_NAMESPACE

@@ -448,6 +448,4 @@ void QNearFieldManagerPrivateImpl::_q_targetLost(const QDBusObjectPath &targetPa
         emit targetLost(nearFieldTarget);
 }
 
-#include "moc_qnearfieldmanager_maemo6_p.cpp"
-
 QTNFC_END_NAMESPACE

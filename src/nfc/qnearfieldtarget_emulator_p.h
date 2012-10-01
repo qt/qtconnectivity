@@ -48,6 +48,10 @@
 
 #include <QtCore/QMap>
 
+QT_BEGIN_HEADER
+
+QTNFC_BEGIN_NAMESPACE
+
 class TagType1 : public QNearFieldTagType1
 {
     Q_OBJECT
@@ -110,5 +114,9 @@ private:
     QMap<TagBase *, bool>::Iterator m_current;
     int timerId;
 };
+
+QTNFC_END_NAMESPACE
+
+QT_END_HEADER
 
 #endif // QNEARFIELDTARGET_EMULATOR_P_H
