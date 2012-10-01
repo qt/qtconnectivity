@@ -3,6 +3,11 @@ QT = core
 
 load(qt_module)
 
+# All classes in this module are in the QtNfc namespace.  Define the namespace which moc generated
+# code will be in.
+DEFINES += QT_BEGIN_MOC_NAMESPACE=\""namespace QtNfc {"\"
+DEFINES += QT_END_MOC_NAMESPACE=\""}"\"
+
 PUBLIC_HEADERS += \
     qnearfieldmanager.h \
     qnearfieldtarget.h \
@@ -119,7 +124,7 @@ simulator {
 }
 
 isEmpty(NFC_BACKEND_AVAILABLE) {
-    # unsupported platform stub
+    message("Unsupported NFC platform, will not build a working QtNfc library.")
 
     PRIVATE_HEADERS += \
         qllcpsocket_p.h \

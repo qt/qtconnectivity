@@ -271,6 +271,4 @@ void QDeclarativeNdefRecord::setRecord(const QNdefRecord &record)
     d->record = record;
 }
 
-#include "moc_qdeclarativendefrecord.cpp"
-
 QTNFC_END_NAMESPACE

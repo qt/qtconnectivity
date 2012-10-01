@@ -1,4 +1,4 @@
-QT += declarative nfc
+QT = core qml nfc
 
 # Input
 HEADERS += \

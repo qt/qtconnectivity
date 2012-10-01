@@ -440,7 +440,4 @@ QNearFieldManager::TargetAccessModes QNearFieldManager::targetAccessModes() cons
     return d->m_requestedModes;
 }
 
-#include "moc_qnearfieldmanager.cpp"
-#include "moc_qnearfieldmanager_p.cpp"
-
 QTNFC_END_NAMESPACE

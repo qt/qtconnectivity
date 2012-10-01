@@ -44,14 +44,19 @@
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QByteArray>
+#include <QtNfc/qnfcglobal.h>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
+
+QT_BEGIN_HEADER
+
+QTNFC_BEGIN_NAMESPACE
 
 class TagBase
 {
 public:
     TagBase();
-    ~TagBase();
+    virtual ~TagBase();
 
     virtual void load(QSettings *settings) = 0;
 
@@ -103,5 +108,9 @@ private:
     quint8 currentSector;
     bool expectPacket2;
 };
+
+QTNFC_END_NAMESPACE
+
+QT_END_HEADER
 
 #endif // TARGETEMULATOR_P_H

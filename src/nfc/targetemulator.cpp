@@ -49,6 +49,8 @@
 // Implementation of qNfcChecksum
 #include "checksum_p.h"
 
+QTNFC_BEGIN_NAMESPACE
+
 TagBase::TagBase()
 :   lastAccess(0)
 {
@@ -69,6 +71,10 @@ NfcTagType1::NfcTagType1()
     // Locked blocks
     memory[(0x0e << 3) | 0x00] = 0x01;
     memory[(0x0e << 3) | 0x01] = 0x60;
+}
+
+NfcTagType1::~NfcTagType1()
+{
 }
 
 void NfcTagType1::load(QSettings *settings)
@@ -290,6 +296,10 @@ NfcTagType2::NfcTagType2()
 {
 }
 
+NfcTagType2::~NfcTagType2()
+{
+}
+
 void NfcTagType2::load(QSettings *settings)
 {
     settings->beginGroup(QLatin1String("TagType2"));
@@ -380,3 +390,5 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
 
     return response;
 }
+
+QTNFC_END_NAMESPACE

@@ -484,6 +484,12 @@ void tst_QNearFieldTagType1::ndefMessages()
     }
 }
 
-QTEST_MAIN(tst_QNearFieldTagType1);
+QTEST_MAIN(tst_QNearFieldTagType1)
+
+// Unset the moc namespace which is not required for the following include.
+#undef QT_BEGIN_MOC_NAMESPACE
+#define QT_BEGIN_MOC_NAMESPACE
+#undef QT_END_MOC_NAMESPACE
+#define QT_END_MOC_NAMESPACE
 
 #include "tst_qnearfieldtagtype1.moc"

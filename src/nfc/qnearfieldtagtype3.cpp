@@ -183,6 +183,4 @@ bool QNearFieldTagType3::handleResponse(const QNearFieldTarget::RequestId &id,
     return QNearFieldTarget::handleResponse(id, response);
 }
 
-#include "moc_qnearfieldtagtype3.cpp"
-
 QTNFC_END_NAMESPACE

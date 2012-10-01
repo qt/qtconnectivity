@@ -39,8 +39,8 @@
 ****************************************************************************/
 
 #include <QtWidgets/QApplication>
+#include <QtQml/QQmlEngine>
 #include <QtQuick/QQuickView>
-#include <QtDeclarative/QDeclarativeEngine>
 
 int main(int argc, char *argv[])
 {

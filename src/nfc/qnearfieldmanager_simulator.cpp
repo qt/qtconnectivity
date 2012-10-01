@@ -202,7 +202,6 @@ void QNearFieldManagerPrivateImpl::targetLeavingProximity(const QByteArray &uid)
     targetDeactivated(target);
 }
 
-#include "qnearfieldmanager_simulator.moc"
-#include "moc_qnearfieldmanager_simulator_p.cpp"
-
 QTNFC_END_NAMESPACE
+
+#include "qnearfieldmanager_simulator.moc"

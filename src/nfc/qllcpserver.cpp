@@ -198,6 +198,4 @@ QLlcpSocket::SocketError QLlcpServer::serverError() const
     return d->serverError();
 }
 
-#include "moc_qllcpserver.cpp"
-
 QTNFC_END_NAMESPACE

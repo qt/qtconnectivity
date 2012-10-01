@@ -457,6 +457,4 @@ bool QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
     return true;
 }
 
-#include "moc_qnearfieldtarget.cpp"
-
 QTNFC_END_NAMESPACE

@@ -198,5 +198,3 @@ void QLlcpServerPrivate::Socket(const QDBusVariant &lsap, int fd, const QVariant
 }
 
 QTNFC_END_NAMESPACE
-
-#include "moc_qllcpserver_maemo6_p.cpp"

@@ -346,6 +346,4 @@ void QNearFieldTagType2::timerEvent(QTimerEvent *event)
     }
 }
 
-#include "moc_qnearfieldtagtype2.cpp"
-
 QTNFC_END_NAMESPACE

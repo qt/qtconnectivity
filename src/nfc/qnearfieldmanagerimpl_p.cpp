@@ -58,6 +58,5 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 {
 }
-//#include "moc_qnearfieldmanagerimpl_p.cpp"
 
 QTNFC_END_NAMESPACE
