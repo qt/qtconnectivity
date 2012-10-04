@@ -161,8 +161,8 @@ void tst_QBluetoothDeviceInfo::tst_construction_data()
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::AudioVideoDevice
         << quint8(QBluetoothDeviceInfo::UncategorizedAudioVideoDevice);
-    QTest::newRow("0x00044C COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
-        << quint32(0x00044C)
+    QTest::newRow("0x000448 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
+        << quint32(0x000448)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::AudioVideoDevice
         << quint8(QBluetoothDeviceInfo::GamingDevice);
@@ -252,7 +252,6 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(deviceInfo.name(), name);
         QCOMPARE(deviceInfo.serviceClasses(), serviceClasses);
         QCOMPARE(deviceInfo.majorDeviceClass(), majorDeviceClass);
-        QEXPECT_FAIL("0x00044C COD", "QTBUG-25453", Abort);
         QCOMPARE(deviceInfo.minorDeviceClass(), minorDeviceClass);
 
         QBluetoothDeviceInfo copyInfo(deviceInfo);
@@ -294,7 +293,6 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo.name(), name);
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
-        QEXPECT_FAIL("0x00044C COD", "QTBUG-25453", Abort);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
     }
 
