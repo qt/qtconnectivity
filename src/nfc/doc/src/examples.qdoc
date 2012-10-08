@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the documentation of the Qt local connectivty modules.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:FDL$
 ** Commercial License Usage
@@ -24,22 +24,39 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 /*!
+\ingroup all-examples
+\page nfc-examples.html
+\title Qt NFC Examples
+\brief Examples for the QtNfc module
 
-\module QtBluetooth
+This is a variety of examples that cover the entire range of the the Qt NFC API. You will find them
+in their own documentation but are also accessible from here.
 
-\title Qt Bluetooth C++ Classes
-\brief An API enabling basic Bluetooth operations like scanning for devices
-and connecting them.
+\section2 C++ Tutorial
 
+\section2 C++ Examples
+\table 80%
+    \header
+        \li Example
+        \li Description
+    \row
+        \li \l{annotatedurl}{Annotated URL}
+        \li Displays URLs stored on NFC Forum Tags.
+    \row
+        \li \l{ndefeditor}{NDEF Editor}
+        \li Create new or modify existing NDEF messages on NFC Forum Tags.
+\endtable
 
-    The \l{Qt Bluetooth} C++ API enables an application to scan for devices and
-    connect and interact with them in a more flexible way than the \l{Qt
-    Bluetooth QML API}.
-
-    To use the C++ library in your application, add the following configuration
-    option to your \c .pro file:
-
-    \snippet doc_src_qtbluetooth.pro contacts project modification
+\section2 QML Examples
+\table 80%
+    \header
+        \li Example
+        \li Description
+    \row
+        \li \l{poster}{QML Poster}
+        \li Displays URLs stored on NFC Forum Tags.
+\endtable
 */
 
