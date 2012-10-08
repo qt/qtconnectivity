@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the documentation of the Qt local connectivty modules.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:FDL$
 ** Commercial License Usage
@@ -24,22 +24,30 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 /*!
+\ingroup technology-apis
+\title Qt NFC Overview
+\page qtnfc-overview.html
+\brief The Qt NFC classes provides access to NFC enabled devices.
 
-\module QtBluetooth
+\tableofcontents
 
-\title Qt Bluetooth C++ Classes
-\brief An API enabling basic Bluetooth operations like scanning for devices
-and connecting them.
+With the Qt NFC API typical use cases are:
 
+\list
+    \li Detect NFC devices entering and leaving communication range.
+    \li Read and write NDEF message on NFC Forum Tags.
+    \li Create an LLCP server listening for incoming LLCP socket connections.
+    \li Create an LLCP socket connection to a NFC Forum Device.
+    \li Register an NDEF message handler for a particular content type.
+\endlist
 
-    The \l{Qt Bluetooth} C++ API enables an application to scan for devices and
-    connect and interact with them in a more flexible way than the \l{Qt
-    Bluetooth QML API}.
+The following sections describe how to use QtNfc C++ classes for the above use cases.
 
-    To use the C++ library in your application, add the following configuration
-    option to your \c .pro file:
-
-    \snippet doc_src_qtbluetooth.pro contacts project modification
+\section1 Detect NFC devices entering and leaving communication range.
+\section1 Read and write NDEF message on NFC Forum Tags.
+\section1 Create an LLCP server listening for incoming LLCP socket connections.
+\section1 Create an LLCP socket connection to a NFC Forum Device.
+\section1 Register an NDEF message handler for a particular content type.
 */
-

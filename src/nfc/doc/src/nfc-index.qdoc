@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -26,55 +26,54 @@
 ****************************************************************************/
 
 /*!
-\page qtbluetooth-index.html
-\title Qt Bluetooth
-\brief Qt Bluetooth enables connectivity between Bluetooth enabled devices.
+\page qtnfc-index.html
+\title Qt NFC
+\brief Qt NFC enables connectivity between NFC enabled devices.
 
-Bluetooth is a short-range (less than 100 meters) wireless technology. It
-has a reasonably high data transfer rate of 2.1 Mbit/s, which makes it ideal
-for transferring data between devices.
+NFC is an extremely short-range (less than 20 centimeters) wireless technology and has a
+maximum transfer rate of 424 kbit/s.  NFC is ideal for transferring small packets of data when two
+devices are touched together.
 
-Bluetooth connectivity is based on basic device management, such as scanning
-for devices, gathering information about them, and exchaning data between
-them.
+The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devices, including
+target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
+on NFC Forum Tags, sending tag specific commands, client and server LLCP sockets for bidirectional
+communication between two NFC Forum Devices.
 
 \section1 Getting started
 
 To use the C++ library in your application, add the following configuration
 option to your \c .pro file:
 
-\snippet doc_src_qtbluetooth.pro contacts project modification
+\snippet doc_src_qtnfc.pro project modification
 
 To use the classes of the module in your application you need the following
 import statement in your \c .qml file:
 
-\snippet doc_src_qtbluetooth.qml import
+\snippet doc_src_qtnfc.qml import
 
 \section1 Related information
 
 \section2 Guides
 \list
-    \li \l {Qt Bluetooth Overview}
+    \li \l {Qt NFC Overview}
 \endlist
 
 \section2 Reference
 \list
-    \li \l {Qt Bluetooth QML Types}{QML Types}
-    \li \l {Qt Bluetooth C++ Classes}{C++ Classes}
+    \li \l {Qt NFC QML Types}{QML Types}
+    \li \l {Qt NFC C++ Classes}{C++ Classes}
 \endlist
 
 \section2 Examples
 \list
     \li QML
     \list
-        \li \l {scanner}{QML Bluetooth Scanner}
+        \li \l {poster}{QML Poster}
     \endlist
     \li C++
     \list
-        \li \l {btchat}{Bluetooth Chat}
-        \li \l {btscanner}{Bluetooth Scanner}
-        \li \l {bttennis}{Bluetooth Tennis}
-        \li \l {btfiletransfer}{Bluetooth File Transfer}
+        \li \l {annotatedurl}{Annotated URL}
+        \li \l {ndefeditor}{NDEF Editor}
     \endlist
 \endlist
 */
