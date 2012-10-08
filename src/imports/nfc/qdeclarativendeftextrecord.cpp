@@ -49,7 +49,7 @@
     \brief The NdefTextRecord type represents an NFC RTD-Text NDEF record.
 
     \ingroup nfc-qml
-    \inmodule QtNfc
+    \inqmlmodule QtNfc 5.0
 
     \inherits NdefRecord
 

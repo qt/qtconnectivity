@@ -3,6 +3,9 @@ QT = core
 
 load(qt_module)
 
+QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
+OTHER_FILES += doc/src/*.qdoc
+
 # All classes in this module are in the QtNfc namespace.  Define the namespace which moc generated
 # code will be in.
 DEFINES += QT_BEGIN_MOC_NAMESPACE=\""namespace QtNfc {"\"
