@@ -61,7 +61,7 @@
       \li QML API examples
       \li C++ API examples
     \row
-        \li \l{Qt Bluetooth QML API}
+        \li \l{Qt Bluetooth QML Types}
         \li \l{Qt Bluetooth Overview}
         \li \l{btscanner}{QML Bluetooth Scanner}
 
@@ -70,7 +70,7 @@
 
             Scan for Bluetooth devices.
     \row
-        \li \l{Qt Bluetooth C++ API}
+        \li \l{Qt Bluetooth C++ Classes}
         \li \l{btchat}{Qt Bluetooth Tutorial}
 
             A chat server and client using bluetooth.

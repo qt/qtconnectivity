@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the documentation of the Qt local connectivty modules.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:FDL$
 ** Commercial License Usage
@@ -24,22 +24,19 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+
 /*!
 
-\module QtBluetooth
+\qmlmodule QtNfc 5.0
+\title Qt NFC QML Types
+\ingroup qmlmodules
+\brief Provides QML types for accessing NFC Forum Tags and Devices
 
-\title Qt Bluetooth C++ Classes
-\brief An API enabling basic Bluetooth operations like scanning for devices
-and connecting them.
+To use the classes of the module in your application you need the following
+import statement in your \c .qml file:
 
+\snippet doc_src_qtnfc.qml import
 
-    The \l{Qt Bluetooth} C++ API enables an application to scan for devices and
-    connect and interact with them in a more flexible way than the \l{Qt
-    Bluetooth QML API}.
-
-    To use the C++ library in your application, add the following configuration
-    option to your \c .pro file:
-
-    \snippet doc_src_qtbluetooth.pro contacts project modification
 */
 
