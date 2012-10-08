@@ -1,36 +1,41 @@
-include(../../../doc/global/qt-html-templates-offline.qdocconf)
-include(../../../doc/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtBluetooth
 description             = Qt Bluetooth Reference Documentation
-url                     = http://qt-project.org/doc/qt-5.0/qtbluetooth-index.html
 version                 = 5.0.0
+
+examplesinstallpath     = bluetooth
 
 qhp.projects            = QtBluetooth
 
 qhp.QtBluetooth.file                = qtbluetooth.qhp
 qhp.QtBluetooth.namespace           = org.qt-project.qtbluetooth.500
-qhp.QtBluetooth.virtualFolder       = qdoc
-qhp.QtBluetooth.indexTitle          = Qt Bluetooth Reference Documentation
+qhp.QtBluetooth.virtualFolder       = qtbluetooth
+qhp.QtBluetooth.indexTitle          = Qt Bluetooth
 qhp.QtBluetooth.indexRoot           =
 
 qhp.QtBluetooth.filterAttributes    = qtbluetooth 5.0.0 qtrefdoc
 qhp.QtBluetooth.customFilters.Qt.name = QtBluetooth 5.0.0
 qhp.QtBluetooth.customFilters.Qt.filterAttributes = qtbluetooth 5.0.0
-qhp.QtBluetooth.subprojects         = classes overviews examples
-qhp.QtBluetooth.subprojects.classes.title = Classes
-qhp.QtBluetooth.subprojects.classes.indexTitle = Qt Bluetooth's Classes
+qhp.QtBluetooth.subprojects         = overviews classes qml examples
+qhp.QtBluetooth.subprojects.classes.title = C++ Classes
+qhp.QtBluetooth.subprojects.classes.indexTitle = Qt Bluetooth C++ Classes
 qhp.QtBluetooth.subprojects.classes.selectors = class fake:headerfile
 qhp.QtBluetooth.subprojects.classes.sortPages = true
+qhp.QtBluetooth.subprojects.qml.title = QML Types
+qhp.QtBluetooth.subprojects.qml.indexTitle = Qt Bluetooth QML Types
+qhp.QtBluetooth.subprojects.qml.selectors = fake:headerfile
+qhp.QtBluetooth.subprojects.qml.sortPages = true
 qhp.QtBluetooth.subprojects.overviews.title = Overviews
-qhp.QtBluetooth.subprojects.overviews.indexTitle = All Overviews and HOWTOs
+qhp.QtBluetooth.subprojects.overviews.indexTitle = Qt Bluetooth Overview
 qhp.QtBluetooth.subprojects.overviews.selectors = fake:page,group,module
 qhp.QtBluetooth.subprojects.examples.title = Qt Bluetooth Examples
 qhp.QtBluetooth.subprojects.examples.indexTitle = Qt Bluetooth Examples
 qhp.QtBluetooth.subprojects.examples.selectors = fake:example
 
-outputdir               = ../../../doc/qtbluetooth
 tagfile                 = ../../../doc/qtbluetooth/qtbluetooth.tags
+
+depends += qtcore
 
 headerdirs  += .. \
                 ../../imports/bluetooth

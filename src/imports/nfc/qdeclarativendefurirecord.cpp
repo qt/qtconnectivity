@@ -49,7 +49,7 @@
     \brief The NdefUriRecord type represents an NFC RTD-URI NDEF record.
 
     \ingroup nfc-qml
-    \inmodule QtNfc
+    \inqmlmodule QtNfc 5.0
 
     \inherits NdefRecord
 
