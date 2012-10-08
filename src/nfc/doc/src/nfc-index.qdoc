@@ -1,0 +1,81 @@
+/****************************************************************************
+**
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Contact: http://www.qt-project.org/legal
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and Digia.  For licensing terms and
+** conditions see http://qt.digia.com/licensing.  For further information
+** use the contact form at http://qt.digia.com/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.  Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: http://www.gnu.org/copyleft/fdl.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtnfc-index.html
+\title Qt NFC
+\brief Qt NFC enables connectivity between NFC enabled devices.
+
+NFC is an extremely short-range (less than 20 centimeters) wireless technology and has a
+maximum transfer rate of 424 kbit/s.  NFC is ideal for transferring small packets of data when two
+devices are touched together.
+
+The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devices, including
+target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
+on NFC Forum Tags, sending tag specific commands, client and server LLCP sockets for bidirectional
+communication between two NFC Forum Devices.
+
+\section1 Getting Started
+
+To use the C++ library in your application, add the following configuration
+option to your \c .pro file:
+
+\snippet doc_src_qtnfc.pro project modification
+
+To use the classes of the module in your application you need the following
+import statement in your \c .qml file:
+
+\snippet doc_src_qtnfc.qml import
+
+\section1 References
+
+\table
+\header
+    \li {1,4} Reference
+    \li {1,4} Guides
+    \li {4,1} Examples
+\header
+  \li QML API examples
+  \li C++ API examples
+\row
+    \li \l{Qt NFC QML Types}
+    \li \l{Qt NFC Overview}
+    \li \l{poster}{QML Poster}
+
+        Displays URLs stored on NFC tags.
+    \li \l{annotatedurl}{Annotated URL}
+
+        Displays URLs stored on NFC tags.
+\row
+    \li \l{Qt NFC C++ Classes}
+    \li
+    \li
+    \li \l{ndefeditor}{NDEF Editor}
+
+        Create new or modify existing NDEF message on NFC tags.
+\endtable
+*/

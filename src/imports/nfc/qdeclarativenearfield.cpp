@@ -55,7 +55,7 @@
     \brief The NearField type provides access to NDEF messages stored on NFC Forum tags.
 
     \ingroup nfc-qml
-    \inmodule QtNfc
+    \inqmlmodule QtNfc 5.0
 
     \sa NdefFilter
     \sa NdefRecord
