@@ -55,8 +55,6 @@
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -110,7 +108,5 @@ private Q_SLOTS:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

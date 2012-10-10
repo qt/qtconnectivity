@@ -44,8 +44,6 @@
 
 #include <qbluetoothsocket.h>
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QRfcommSocket : public QBluetoothSocket
@@ -60,7 +58,5 @@ private:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QRFCOMMSOCKET_H

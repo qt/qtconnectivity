@@ -50,8 +50,6 @@
 
 #include "qbluetoothtransferreply.h"
 
-QT_BEGIN_HEADER
-
 class OrgOpenobexClientInterface;
 class OrgOpenobexManagerInterface;
 class AgentAdaptor;
@@ -122,7 +120,5 @@ public slots:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QBLUETOOTHTRANSFERREPLY_H

@@ -44,8 +44,6 @@
 
 #include "qbluetoothaddress.h"
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothAddressPrivate
@@ -59,7 +57,5 @@ public:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

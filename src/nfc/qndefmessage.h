@@ -49,8 +49,6 @@
 #include <QtNfc/qnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class Q_NFC_EXPORT QNdefMessage : public QList<QNdefRecord>
@@ -71,7 +69,5 @@ public:
 QTNFC_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QtNfc::QNdefMessage)
-
-QT_END_HEADER
 
 #endif // QNDEFMESSAGE_H

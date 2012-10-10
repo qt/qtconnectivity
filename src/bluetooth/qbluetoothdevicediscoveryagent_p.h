@@ -58,8 +58,6 @@ QT_END_NAMESPACE
 #include <QTimer>
 #endif
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
@@ -119,7 +117,5 @@ private:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

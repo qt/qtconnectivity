@@ -45,8 +45,6 @@
 
 #include "qbluetoothglobal.h"
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 namespace QBluetooth {
@@ -65,7 +63,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
 }
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QBLUETOOTH_H

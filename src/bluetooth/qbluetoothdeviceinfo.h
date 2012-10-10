@@ -46,8 +46,6 @@
 
 #include <QString>
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothDeviceInfoPrivate;
@@ -243,7 +241,5 @@ private:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

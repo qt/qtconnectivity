@@ -46,8 +46,6 @@
 
 #include "qnearfieldtarget_qnx_p.h"
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QLlcpSocketPrivate : public QObject
@@ -123,7 +121,5 @@ private Q_SLOTS:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QLLCPSOCKET_QNX_P_H
