@@ -47,8 +47,6 @@
 
 #include <QtCore/QObject>
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QL2capSocket : public QBluetoothSocket
@@ -72,7 +70,5 @@ private:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QL2CAPSOCKET_H

@@ -50,8 +50,6 @@
 #include <qbluetooth.h>
 #include <qbluetoothsocket.h>
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QL2capServerPrivate;
@@ -98,7 +96,5 @@ private:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

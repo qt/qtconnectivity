@@ -64,8 +64,6 @@ QT_END_NAMESPACE
 #include "qnx/ppshelpers_p.h"
 #endif
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -145,7 +143,5 @@ class QBluetoothLocalDevicePrivate : public QObject
 #endif
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QBLUETOOTHLOCALDEVICE_P_H

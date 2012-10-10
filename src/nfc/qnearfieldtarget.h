@@ -53,8 +53,6 @@ class QString;
 class QUrl;
 QT_END_NAMESPACE
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNdefMessage;
@@ -170,7 +168,5 @@ QTNFC_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QtNfc::QNearFieldTarget::RequestId)
 Q_DECLARE_METATYPE(QtNfc::QNearFieldTarget::Error)
-
-QT_END_HEADER
 
 #endif // QNEARFIELDTARGET_H

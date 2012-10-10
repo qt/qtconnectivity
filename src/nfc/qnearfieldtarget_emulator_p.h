@@ -48,8 +48,6 @@
 
 #include <QtCore/QMap>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class TagType1 : public QNearFieldTagType1
@@ -116,7 +114,5 @@ private:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNEARFIELDTARGET_EMULATOR_P_H

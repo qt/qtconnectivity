@@ -50,8 +50,6 @@
 #include <QtCore/QMap>
 #include <QtCore/QPair>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNearFieldTarget;
@@ -122,7 +120,5 @@ QPair<int, int> qParseReservedMemoryControlTlv(const QByteArray &tlvData);
 QPair<int, int> qParseLockControlTlv(const QByteArray &tlvData);
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QTLV_P_H

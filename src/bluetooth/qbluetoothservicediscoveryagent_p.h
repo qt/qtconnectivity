@@ -65,8 +65,6 @@ QT_END_NAMESPACE
 #include <unistd.h>
 #endif
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
@@ -159,7 +157,5 @@ protected:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

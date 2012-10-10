@@ -44,8 +44,6 @@
 
 #include <QtNfc/QNearFieldTarget>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNearFieldTagType2Private;
@@ -85,7 +83,5 @@ private:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNEARFIELDTAGTYPE2_H

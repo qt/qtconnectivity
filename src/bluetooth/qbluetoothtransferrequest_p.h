@@ -45,8 +45,6 @@
 #include "qbluetoothglobal.h"
 #include "qbluetoothtransferrequest.h"
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -61,7 +59,5 @@ public:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QBLUETOOTHTRANSFERREQUESTPRIVATE_H

@@ -50,8 +50,6 @@
 
 #include <QtCore/QObject>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNdefFilter;
@@ -127,7 +125,5 @@ public:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNEARFIELDMANAGER_P_H

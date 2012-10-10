@@ -44,8 +44,6 @@
 
 #include "qbluetoothtransferreply.h"
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyPrivate
@@ -63,7 +61,5 @@ public:
 };
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QBLUETOOTHTRANSFERREPLY_H
