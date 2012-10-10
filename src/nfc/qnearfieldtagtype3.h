@@ -42,10 +42,9 @@
 #ifndef QNEARFIELDTAGTYPE3_H
 #define QNEARFIELDTAGTYPE3_H
 
-#include <qnearfieldtarget.h>
-
 #include <QtCore/QList>
 #include <QtCore/QMap>
+#include <QtNfc/QNearFieldTarget>
 
 QT_BEGIN_HEADER
 

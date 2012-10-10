@@ -9,6 +9,7 @@ DEFINES += QT_BEGIN_MOC_NAMESPACE=\""namespace QtNfc {"\"
 DEFINES += QT_END_MOC_NAMESPACE=\""}"\"
 
 PUBLIC_HEADERS += \
+    qnfcglobal.h \
     qnearfieldmanager.h \
     qnearfieldtarget.h \
     qndefrecord.h \

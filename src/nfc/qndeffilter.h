@@ -42,11 +42,9 @@
 #ifndef QNDEFFILTER_H
 #define QNDEFFILTER_H
 
-#include "qnfcglobal.h"
-
 #include <QtCore/QSharedDataPointer>
-
-#include <qndefrecord.h>
+#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/QNdefRecord>
 
 QT_BEGIN_HEADER
 

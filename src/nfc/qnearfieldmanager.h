@@ -42,13 +42,11 @@
 #ifndef QNEARFIELDMANAGER_H
 #define QNEARFIELDMANAGER_H
 
-#include "qnfcglobal.h"
-
 #include <QtCore/QObject>
-
-#include <qnearfieldtarget.h>
-#include <qndefrecord.h>
-#include <qndeffilter.h>
+#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/QNearFieldTarget>
+#include <QtNfc/QNdefRecord>
+#include <QtNfc/QNdefFilter>
 
 QT_BEGIN_HEADER
 
