@@ -57,8 +57,6 @@ QT_FORWARD_DECLARE_CLASS(QDBusVariant)
 
 class DBusConnection;
 
-QT_BEGIN_HEADER
-
 class SocketRequestor : public QObject
 {
     Q_OBJECT
@@ -84,7 +82,5 @@ signals:
 private:
     const QString m_adaptor;
 };
-
-QT_END_HEADER
 
 #endif // SOCKETREQUESTOR_P_H

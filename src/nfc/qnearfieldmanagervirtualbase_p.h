@@ -46,8 +46,6 @@
 
 #include <QtCore/QMetaMethod>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNearFieldManagerPrivateVirtualBase : public QNearFieldManagerPrivate
@@ -88,7 +86,5 @@ private:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNEARFIELDMANAGERVIRTUALBASE_P_H

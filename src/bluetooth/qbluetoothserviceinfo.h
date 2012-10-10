@@ -52,8 +52,6 @@
 
 #include <QtCore/QDebug>
 
-QT_BEGIN_HEADER
-
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfoPrivate;
@@ -231,7 +229,5 @@ inline QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
 }
 
 QTBLUETOOTH_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif

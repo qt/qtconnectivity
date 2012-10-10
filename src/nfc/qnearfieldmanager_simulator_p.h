@@ -46,8 +46,6 @@
 
 #include <QtCore/QWeakPointer>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 namespace Simulator {
@@ -74,7 +72,5 @@ private:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNEARFIELDMANAGER_SIMULATOR_P_H

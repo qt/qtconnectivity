@@ -46,8 +46,6 @@
 #include <QtCore/QByteArray>
 #include <QtNfc/qnfcglobal.h>
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNdefRecordPrivate;
@@ -117,7 +115,5 @@ private:
 uint qHash(const QNdefRecord &key);
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNDEFRECORD_H

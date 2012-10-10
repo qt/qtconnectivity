@@ -60,8 +60,6 @@
 #define qQNXNFCDebug QT_NO_QDEBUG_MACRO
 #endif
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QLlcpSocketPrivate;
@@ -138,8 +136,6 @@ Q_SIGNALS:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif
 

@@ -10,8 +10,6 @@
 #include "../qnfcglobal.h"
 #include "../qndefmessage.h"
 
-QT_BEGIN_HEADER
-
 QTNFC_BEGIN_NAMESPACE
 
 class QNXNFCEventFilter : public QObject, public QAbstractNativeEventFilter
@@ -32,7 +30,5 @@ Q_SIGNALS:
 };
 
 QTNFC_END_NAMESPACE
-
-QT_END_HEADER
 
 #endif // QNXNFCEVENTFILTER_H
