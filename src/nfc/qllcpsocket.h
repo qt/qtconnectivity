@@ -42,10 +42,9 @@
 #ifndef QLLCPSOCKET_H
 #define QLLCPSOCKET_H
 
-#include "qnfcglobal.h"
-
 #include <QtCore/QIODevice>
 #include <QtNetwork/QAbstractSocket>
+#include <QtNfc/qnfcglobal.h>
 
 QT_BEGIN_HEADER
 
@@ -57,6 +56,7 @@ class QLlcpSocketPrivate;
 class Q_NFC_EXPORT QLlcpSocket : public QIODevice
 {
     Q_OBJECT
+
     Q_DECLARE_PRIVATE(QLlcpSocket)
 
     friend class QLlcpServerPrivate;

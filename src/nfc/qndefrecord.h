@@ -42,10 +42,9 @@
 #ifndef QNDEFRECORD_H
 #define QNDEFRECORD_H
 
-#include "qnfcglobal.h"
-
 #include <QtCore/QSharedDataPointer>
 #include <QtCore/QByteArray>
+#include <QtNfc/qnfcglobal.h>
 
 QT_BEGIN_HEADER
 

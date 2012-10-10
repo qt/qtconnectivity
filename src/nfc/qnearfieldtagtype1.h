@@ -42,7 +42,7 @@
 #ifndef QNEARFIELDTAGTYPE1_H
 #define QNEARFIELDTAGTYPE1_H
 
-#include <qnearfieldtarget.h>
+#include <QtNfc/QNearFieldTarget>
 
 QT_BEGIN_HEADER
 

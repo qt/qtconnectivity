@@ -42,14 +42,12 @@
 #ifndef QNDEFMESSAGE_H
 #define QNDEFMESSAGE_H
 
-#include "qnfcglobal.h"
-
-#include <qndefrecord.h>
-
 #include <QtCore/QVector>
 #include <QtCore/QSet>
 #include <QtCore/QList>
 #include <QtCore/QMetaType>
+#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/QNdefRecord>
 
 QT_BEGIN_HEADER
 
