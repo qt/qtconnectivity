@@ -2,7 +2,7 @@ TARGET = QtBluetooth
 QT = core
 QT_PRIVATE = concurrent
 
-QMAKE_DOCS = $$PWD/../../doc/qt5.qdocconf
+QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 
 load(qt_module)
 
