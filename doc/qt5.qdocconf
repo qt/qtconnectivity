@@ -2,7 +2,7 @@ include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 # Name of the project.
-project = qtconnectivity
+project = qtbluetooth
 
 include(qt-cpp-ignore.qdocconf)
 include(qt-defines.qdocconf)
@@ -30,33 +30,33 @@ excludedirs +=  ../tests
 # Defines the name of the project. You cannot use operators (+, =, -) in
 # the name. Properties for this project are set using a qhp.<projectname>.property
 # format.
-qhp.projects = qtconnectivity
+qhp.projects = qtbluetooth
 
 # Sets the name of the output qhp file.
-qhp.qtconnectivity.file = qtconnectivity.qhp
+qhp.qtbluetooth.file = qtbluetooth.qhp
 
 # Namespace for the output file. This namespace is used to distinguish between
 # different documentation files in Creator/Assistant. Normal format for MP
 # projects should be: com.nokia.mp.<projectname>.version with version being
 # a number containing a major, minor and revision element. E.g. version 1.0
 # becomes 100.
-qhp.qtconnectivity.namespace = com.nokia.mp.qtconnectivity.100
+qhp.qtbluetooth.namespace = com.nokia.mp.qtbluetooth.100
 
 # Title for the package, will be the main title for the package in
 # Assistant/Creator.
-qhp.qtconnectivity.indexTitle = Qt Local Connectivity Reference Documentation
+qhp.qtbluetooth.indexTitle = Qt Local Connectivity Reference Documentation
 
 # Extra files to add to the output which are not linked to from anywhere
 # using a qdoc \l command.
-qhp.qtconnectivity.extraFiles = style/style.css \
+qhp.qtbluetooth.extraFiles = style/style.css \
                                      index.html
 
 # Only update the name of the project for the next variables.
-qhp.qtconnectivity.virtualFolder  = qdoc
-qhp.qtconnectivity.subprojects = classes
-qhp.qtconnectivity.subprojects.classes.title = Classes
-qhp.qtconnectivity.subprojects.classes.selectors = class fake:headerfile
-qhp.qtconnectivity.subprojects.classes.sortPages = true
+qhp.qtbluetooth.virtualFolder  = qdoc
+qhp.qtbluetooth.subprojects = classes
+qhp.qtbluetooth.subprojects.classes.title = Classes
+qhp.qtbluetooth.subprojects.classes.selectors = class fake:headerfile
+qhp.qtbluetooth.subprojects.classes.sortPages = true
 
 
 
