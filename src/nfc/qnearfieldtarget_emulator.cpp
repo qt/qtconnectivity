@@ -281,7 +281,9 @@ void TagActivator::timerEvent(QTimerEvent *e)
         tagMutex.lock();
     }
 
-    ++m_current;
+    if (m_current != tagMap.end())
+        ++m_current;
+
     if (m_current == tagMap.end())
         m_current = tagMap.begin();
 
