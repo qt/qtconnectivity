@@ -44,7 +44,7 @@
 
 #if defined(QT_SIMULATOR)
 #include "qnearfieldmanager_simulator_p.h"
-#elif defined(Q_WS_MAEMO_6) || defined (Q_WS_MEEGO)
+#elif defined(QTNFC_MAEMO)
 #include "qnearfieldmanager_maemo6_p.h"
 #elif defined(QNX_NFC)
 #include "qnearfieldmanager_qnx_p.h"

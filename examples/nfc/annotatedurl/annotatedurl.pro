@@ -13,3 +13,5 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
+maemo:DEFINES += FULLSCREEN_UI
+

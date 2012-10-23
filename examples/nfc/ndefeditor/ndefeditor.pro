@@ -21,3 +21,6 @@ FORMS += \
     textrecordeditor.ui \
     urirecordeditor.ui \
     mimeimagerecordeditor.ui
+
+maemo:DEFINES += FULLSCREEN_UI
+

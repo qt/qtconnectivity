@@ -134,7 +134,7 @@ private:
     ComNokiaNfcAdapterInterface *m_adapter;
 
     QList<QNearFieldTarget::Type> m_detectTargetTypes;
-    QMap<QString, QWeakPointer<QNearFieldTarget> > m_targets;
+    QMap<QString, QPointer<QNearFieldTarget> > m_targets;
 
     AccessRequestorAdaptor *m_accessAgent;
 

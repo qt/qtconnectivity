@@ -42,8 +42,6 @@
 #ifndef QLLCPSERVER_MAEMO6_P_H
 #define QLLCPSERVER_MAEMO6_P_H
 
-#include <qconnectivityglobal.h>
-
 #include "qllcpserver.h"
 
 #include <QtDBus/QDBusConnection>
@@ -51,12 +49,12 @@
 QT_FORWARD_DECLARE_CLASS(QDBusObjectPath)
 QT_FORWARD_DECLARE_CLASS(QDBusVariant)
 
+class ComNokiaNfcAdapterInterface;
 class AccessRequestorAdaptor;
 class LLCPRequestorAdaptor;
+class SocketRequestor;
 
 QT_BEGIN_NAMESPACE_NFC
-
-class SocketRequestor;
 
 class QLlcpServerPrivate : public QObject
 {
@@ -97,11 +95,14 @@ private:
     QLlcpServer *q_ptr;
 
     QDBusConnection m_connection;
+    ComNokiaNfcAdapterInterface *m_adapter;
 
     QString m_serviceUri;
 
     QString m_requestorPath;
-    SocketRequestor *m_socketRequestor;
+
+    AccessRequestorAdaptor *m_accessAgent;
+    LLCPRequestorAdaptor *m_llcpAgent;
 
     QList<QPair<int, QVariantMap> > m_pendingSockets;
 

@@ -6,17 +6,20 @@
             <arg type="v" direction="in"/>
             <arg type="h" direction="in"/>
             <arg type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In3" value="QVariantMap"/>
         </method>
         <method name="Connect">
             <arg type="v" direction="in"/>
             <arg type="v" direction="in"/>
             <arg type="h" direction="in"/>
             <arg type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In3" value="QVariantMap"/>
         </method>
         <method name="Socket">
             <arg type="v" direction="in"/>
             <arg type="h" direction="in"/>
             <arg type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In2" value="QVariantMap"/>
         </method>
     </interface>
 </node>

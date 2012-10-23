@@ -42,8 +42,6 @@
 #ifndef QNEARFIELDTARGET_MAEMO6_P_H
 #define QNEARFIELDTARGET_MAEMO6_P_H
 
-#include <qconnectivityglobal.h>
-
 #include "qnearfieldmanager_maemo6_p.h"
 
 #include <qnearfieldtarget.h>

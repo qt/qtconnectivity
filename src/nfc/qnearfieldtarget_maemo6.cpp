@@ -174,6 +174,4 @@ int TagType4::memorySize() const
     return m_tag->size();
 }
 
-#include <moc_qnearfieldtarget_maemo6_p.cpp>
-
 QT_END_NAMESPACE_NFC

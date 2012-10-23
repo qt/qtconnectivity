@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow w;
 
-#if defined(Q_WS_S60) || defined(Q_WS_MAEMO_6) || defined(Q_WS_MEEGO)
+#ifdef FULLSCREEN_UI
     w.showFullScreen();
 #else
     w.show();

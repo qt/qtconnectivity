@@ -52,61 +52,28 @@ SOURCES += \
     qllcpserver.cpp \
     qdeclarativendefrecord.cpp
 
-maemo6|meego {
+maemo {
     NFC_BACKEND_AVAILABLE = yes
 
+    DEFINES += QTNFC_MAEMO
+
     QT *= dbus
-
-    DBUS_INTERFACES += \
-        maemo6/com.nokia.nfc.Manager.xml
-
-    DBUS_ADAPTORS += \
-        maemo6/com.nokia.nfc.AccessRequestor.xml \
-        maemo6/com.nokia.nfc.NDEFHandler.xml
-
-    # work around bug in Qt
-    dbus_interface_source.depends = ${QMAKE_FILE_OUT_BASE}.h
-    dbus_adaptor_source.depends = ${QMAKE_FILE_OUT_BASE}.h
-
-    # Link against libdbus until Qt has support for passing file descriptors over DBus.
-    CONFIG += link_pkgconfig
-    DEFINES += DBUS_API_SUBJECT_TO_CHANGE
-    PKGCONFIG += dbus-1
 
     PRIVATE_HEADERS += \
         qnearfieldmanager_maemo6_p.h \
         qnearfieldtarget_maemo6_p.h \
         qllcpsocket_maemo6_p.h \
-        qllcpserver_maemo6_p.h \
-        maemo6/adapter_interface_p.h \
-        maemo6/target_interface_p.h \
-        maemo6/tag_interface_p.h \
-        maemo6/device_interface_p.h \
-        maemo6/socketrequestor_p.h
+        qllcpserver_maemo6_p.h
 
     SOURCES += \
         qnearfieldmanager_maemo6.cpp \
         qnearfieldtarget_maemo6.cpp \
         qllcpsocket_maemo6_p.cpp \
-        qllcpserver_maemo6_p.cpp \
-        maemo6/adapter_interface.cpp \
-        maemo6/target_interface.cpp \
-        maemo6/tag_interface.cpp \
-        maemo6/device_interface.cpp \
-        maemo6/socketrequestor.cpp
+        qllcpserver_maemo6_p.cpp
 
-    OTHER_FILES += \
-        $$DBUS_INTERFACES \
-        $$DBUS_ADAPTORS \
-        maemo6/com.nokia.nfc.Adapter.xml \
-        maemo6/com.nokia.nfc.Target.xml \
-        maemo6/com.nokia.nfc.Tag.xml \
-        maemo6/com.nokia.nfc.Device.xml \
-        maemo6/com.nokia.nfc.LLCPRequestor.xml
-
-    # Add OUT_PWD to INCLUDEPATH so that creator picks up headers for generated files
-    # This is not needed for the build otherwise.
-    INCLUDEPATH += $$OUT_PWD
+    INCLUDEPATH += $OUT_PWD
+    DEPENDPATH += $OUT_PWD
+    LIBS_PRIVATE += -Lmaemo6 -lnfc_maemo6
 }
 
 qnx {

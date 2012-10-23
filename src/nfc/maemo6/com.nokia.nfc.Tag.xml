@@ -3,7 +3,7 @@
     <interface name="com.nokia.nfc.Tag">
         <method name="GetProperties">
             <arg type="a{sv}" direction="out"/>
-            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
         </method>
         <method name="SetProperty">
             <arg type="s" direction="in"/>
@@ -11,11 +11,11 @@
         </method>
         <method name="ReadNDEFData">
             <arg type="aay" direction="out"/>
-            <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QList&lt;QByteArray&gt;"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.Out0" value="QList&lt;QByteArray&gt;"/>
         </method>
         <method name="WriteNDEFData">
             <arg type="aay" direction="in"/>
-            <annotation name="com.trolltech.QtDBus.QtTypeName.In0" value="QList&lt;QByteArray&gt;"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QList&lt;QByteArray&gt;"/>
         </method>
         <signal name="PropertyChanged">
             <arg type="s"/>

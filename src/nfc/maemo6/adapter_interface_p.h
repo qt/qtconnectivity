@@ -76,6 +76,7 @@
 class ComNokiaNfcAdapterInterface: public QDBusAbstractInterface
 {
     Q_OBJECT
+
 public:
     static inline const char *staticInterfaceName()
     { return "com.nokia.nfc.Adapter"; }

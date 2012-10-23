@@ -11,3 +11,6 @@ RESOURCES += \
 
 OTHER_FILES += \
     poster.qml
+
+maemo|simulator:DEFINES += FULLSCREEN_UI
+

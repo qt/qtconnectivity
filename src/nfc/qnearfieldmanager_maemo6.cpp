@@ -41,12 +41,12 @@
 
 #include "qnearfieldmanager_maemo6_p.h"
 #include "qnearfieldtarget_maemo6_p.h"
-#include "manager_interface.h"
+#include "maemo6/manager_interface.h"
 #include "maemo6/adapter_interface_p.h"
 #include "maemo6/target_interface_p.h"
 #include "maemo6/tag_interface_p.h"
-#include "ndefhandler_adaptor.h"
-#include "accessrequestor_adaptor.h"
+#include "maemo6/ndefhandler_adaptor.h"
+#include "maemo6/accessrequestor_adaptor.h"
 
 #include <qnearfieldtagtype1.h>
 
@@ -73,7 +73,7 @@ NdefHandler::NdefHandler(QNearFieldManagerPrivateImpl *manager, const QString &s
     m_serviceName(serviceName), m_path(path)
 {
     QDBusConnection handlerConnection =
-        QDBusConnection::connectToBus(QDBusConnection::SystemBus, connectionUuid);
+        QDBusConnection::connectToBus(QDBusConnection::SystemBus, QLatin1String(connectionUuid));
     if (serviceName != handlerConnection.baseService()) {
         handlerConnection = QDBusConnection::connectToBus(QDBusConnection::SystemBus, serviceName);
 
@@ -276,13 +276,13 @@ int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(const QNdefFilter &
 
         switch (record.typeNameFormat) {
         case QNdefRecord::NfcRtd:
-            type = QLatin1String("urn:nfc:wkt:") + record.type;
+            type = QLatin1String("urn:nfc:wkt:") + QString::fromLatin1(record.type);
             break;
         case QNdefRecord::ExternalRtd:
-            type = QLatin1String("urn:nfc:ext:") + record.type;
+            type = QLatin1String("urn:nfc:ext:") + QString::fromLatin1(record.type);
             break;
         case QNdefRecord::Mime:
-            type = record.type;
+            type = QString::fromLatin1(record.type);
             break;
         default:
             qWarning("Unsupported filter type");

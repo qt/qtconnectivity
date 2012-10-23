@@ -42,8 +42,6 @@
 #ifndef QLLCPSOCKET_MAEMO6_P_H
 #define QLLCPSOCKET_MAEMO6_P_H
 
-#include <qconnectivityglobal.h>
-
 #include "qllcpsocket.h"
 
 #include <QtDBus/QDBusConnection>
@@ -52,12 +50,11 @@ QT_FORWARD_DECLARE_CLASS(QDBusObjectPath)
 QT_FORWARD_DECLARE_CLASS(QDBusVariant)
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 
+class ComNokiaNfcAdapterInterface;
 class AccessRequestorAdaptor;
 class LLCPRequestorAdaptor;
 
 QT_BEGIN_NAMESPACE_NFC
-
-class SocketRequestor;
 
 class QLlcpSocketPrivate : public QObject
 {
@@ -118,20 +115,22 @@ private slots:
 
 private:
     void setSocketError(QLlcpSocket::SocketError socketError);
-    void initializeRequestor();
+    bool initializeRequestor();
 
     QLlcpSocket *q_ptr;
     QVariantMap m_properties;
     QList<QByteArray> m_receivedDatagrams;
 
     QDBusConnection m_connection;
+    ComNokiaNfcAdapterInterface *m_adapter;
 
     QString m_serviceUri;
     quint8 m_port;
 
     QString m_requestorPath;
 
-    SocketRequestor *m_socketRequestor;
+    AccessRequestorAdaptor *m_accessAgent;
+    LLCPRequestorAdaptor *m_llcpAgent;
 
     int m_fd;
     QSocketNotifier *m_readNotifier;

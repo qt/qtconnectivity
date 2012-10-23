@@ -41,10 +41,11 @@
 
 #include "qllcpserver_maemo6_p.h"
 
-#include "manager_interface.h"
-#include "maemo6/adapter_interface_p.h"
 #include "qllcpsocket_maemo6_p.h"
-#include "maemo6/socketrequestor_p.h"
+#include "maemo6/manager_interface.h"
+#include "maemo6/adapter_interface_p.h"
+#include "maemo6/accessrequestor_adaptor.h"
+#include "maemo6/llcprequestor_adaptor.h"
 
 using namespace com::nokia::nfc;
 
@@ -55,8 +56,8 @@ static const char * const requestorBasePath = "/com/nokia/nfc/llcpserver/";
 
 QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
 :   q_ptr(q),
-    m_connection(QDBusConnection::connectToBus(QDBusConnection::SystemBus, QUuid::createUuid())),
-    m_socketRequestor(0)
+    m_connection(QDBusConnection::connectToBus(QDBusConnection::SystemBus, QUuid::createUuid().toString())),
+    m_accessAgent(0), m_llcpAgent(0)
 {
 }
 
@@ -69,34 +70,37 @@ bool QLlcpServerPrivate::listen(const QString &serviceUri)
 
     Manager manager(QLatin1String("com.nokia.nfc"), QLatin1String("/"), m_connection);
     QDBusObjectPath defaultAdapterPath = manager.DefaultAdapter();
+    m_adapter = new Adapter(QStringLiteral("com.nokia.nfc"), defaultAdapterPath.path(),
+                            m_connection, this);
 
-    if (!m_socketRequestor) {
-        m_socketRequestor = new SocketRequestor(defaultAdapterPath.path(), this);
-
-        connect(m_socketRequestor, SIGNAL(accessFailed(QDBusObjectPath,QString,QString)),
-                this, SLOT(AccessFailed(QDBusObjectPath,QString,QString)));
-        connect(m_socketRequestor, SIGNAL(accessGranted(QDBusObjectPath,QString)),
-                this, SLOT(AccessGranted(QDBusObjectPath,QString)));
-        connect(m_socketRequestor, SIGNAL(accept(QDBusVariant,QDBusVariant,int,QVariantMap)),
-                this, SLOT(Accept(QDBusVariant,QDBusVariant,int,QVariantMap)));
-        connect(m_socketRequestor, SIGNAL(connect(QDBusVariant,QDBusVariant,int,QVariantMap)),
-                this, SLOT(Connect(QDBusVariant,QDBusVariant,int,QVariantMap)));
-        connect(m_socketRequestor, SIGNAL(socket(QDBusVariant,int,QVariantMap)),
-                this, SLOT(Socket(QDBusVariant,int,QVariantMap)));
+    if (!m_adapter) {
+        Manager manager(QStringLiteral("com.nokia.nfc"), QStringLiteral("/"), m_connection);
+        QDBusObjectPath defaultAdapterPath = manager.DefaultAdapter();
+        m_adapter = new Adapter(QStringLiteral("com.nokia.nfc"), defaultAdapterPath.path(),
+                                m_connection, this);
     }
 
-    if (m_socketRequestor) {
-        QString accessKind(QLatin1String("device.llcp.co.server:") + serviceUri);
-        m_socketRequestor->requestAccess(m_requestorPath, accessKind);
 
-        m_serviceUri = serviceUri;
-    } else {
-        m_error = QLlcpSocket::SocketResourceError;
-
-        m_serviceUri.clear();
+    if (!m_accessAgent) {
+        m_accessAgent = new AccessRequestorAdaptor(this);
+        if (!m_connection.registerObject(m_requestorPath, this)) {
+            delete m_accessAgent;
+            m_accessAgent = 0;
+            m_error = QLlcpSocket::SocketResourceError;
+            m_serviceUri.clear();
+            return false;
+        }
     }
 
-    return !m_serviceUri.isEmpty();
+    if (!m_llcpAgent)
+        m_llcpAgent = new LLCPRequestorAdaptor(this);
+
+    m_serviceUri = serviceUri;
+
+    QString accessKind(QLatin1String("device.llcp.co.server:") + serviceUri);
+    m_adapter->RequestAccess(QDBusObjectPath(m_requestorPath), accessKind);
+
+    return true;
 }
 
 bool QLlcpServerPrivate::isListening() const
@@ -108,7 +112,7 @@ void QLlcpServerPrivate::close()
 {
     QString accessKind(QLatin1String("device.llcp.co.server:") + m_serviceUri);
 
-    m_socketRequestor->cancelAccessRequest(m_requestorPath, accessKind);
+    m_adapter->CancelAccessRequest(QDBusObjectPath(m_requestorPath), accessKind);
 
     m_serviceUri.clear();
 }
