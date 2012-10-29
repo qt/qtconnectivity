@@ -1,0 +1,7 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+2: Martin Smith <martin.smith@digia.com>
+Submitted-by: Jerome Pasion <jerome.pasion@digia.com>
+Submitted-at: Mon, 29 Oct 2012 10:42:53 +0100
+Reviewed-on: https://codereview.qt-project.org/38278
+Project: qt/qtconnectivity
+Branch: refs/heads/newdocs
