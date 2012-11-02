@@ -44,8 +44,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaType>
-
-#include <qndefrecord.h>
+#include <QtNfc/QNdefRecord>
 
 QT_BEGIN_HEADER
 
@@ -56,6 +55,7 @@ class QDeclarativeNdefRecordPrivate;
 class Q_NFC_EXPORT QDeclarativeNdefRecord : public QObject
 {
     Q_OBJECT
+
     Q_DECLARE_PRIVATE(QDeclarativeNdefRecord)
 
     Q_PROPERTY(QString recordType READ recordType WRITE setRecordType NOTIFY recordTypeChanged)

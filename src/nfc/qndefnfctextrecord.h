@@ -42,9 +42,8 @@
 #ifndef QNDEFNFCTEXTRECORD_H
 #define QNDEFNFCTEXTRECORD_H
 
-#include "qnfcglobal.h"
-
-#include <qndefrecord.h>
+#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/QNdefRecord>
 
 QT_BEGIN_HEADER
 

@@ -39,16 +39,14 @@
 **
 ****************************************************************************/
 
-
 #ifndef QNEARFIELDTARGET_H
 #define QNEARFIELDTARGET_H
-
-#include "qnfcglobal.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
 #include <QtCore/QMetaType>
 #include <QtCore/QSharedDataPointer>
+#include <QtNfc/qnfcglobal.h>
 
 QT_BEGIN_NAMESPACE
 class QString;
