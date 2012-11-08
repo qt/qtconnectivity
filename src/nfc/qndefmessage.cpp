@@ -152,7 +152,7 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 
         quint32 payloadLength;
         if (sr)
-            payloadLength = *(++i);
+            payloadLength = quint8(*(++i));
         else {
             payloadLength = quint8(*(++i)) << 24;
             payloadLength |= quint8(*(++i)) << 16;

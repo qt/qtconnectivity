@@ -52,7 +52,7 @@ QTNFC_BEGIN_NAMESPACE
 class Q_NFC_EXPORT QNdefNfcTextRecord : public QNdefRecord
 {
 public:
-    Q_DECLARE_NDEF_RECORD(QNdefNfcTextRecord, QNdefRecord::NfcRtd, "T", QByteArray(1, char(0)))
+    Q_DECLARE_NDEF_RECORD(QNdefNfcTextRecord, QNdefRecord::NfcRtd, "T", QByteArray(0, char(0)))
 
     QString locale() const;
     void setLocale(const QString &locale);
