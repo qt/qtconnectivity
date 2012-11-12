@@ -96,6 +96,7 @@ public:
 
 protected:
     QNdefRecord(const QNdefRecord &other, TypeNameFormat typeNameFormat, const QByteArray &type);
+    QNdefRecord(const QNdefRecord &other, TypeNameFormat typeNameFormat);
     QNdefRecord(TypeNameFormat typeNameFormat, const QByteArray &type);
 
 private:

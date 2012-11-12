@@ -191,6 +191,23 @@ QNdefRecord::QNdefRecord(const QNdefRecord &other, TypeNameFormat typeNameFormat
 /*!
     \internal
 
+    Constructs an NDEF record that is a copy of \a other if \a other is of the expected type name
+    format identified by \a typeNameFormat; otherwise an empty NDEF record of the expected type
+	name format and type is created.
+*/
+QNdefRecord::QNdefRecord(const QNdefRecord &other, TypeNameFormat typeNameFormat)
+{
+    if (other.d->typeNameFormat == quint8(typeNameFormat)) {
+        d = other.d;
+    } else {
+        d = new QNdefRecordPrivate;
+        d->typeNameFormat = typeNameFormat;
+    }
+}
+
+/*!
+    \internal
+
     Constructs an NDEF record with a type name format identified by \a typeNameFormat and type as
     identified by \a type.
 */
