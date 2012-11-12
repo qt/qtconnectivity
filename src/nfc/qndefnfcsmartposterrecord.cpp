@@ -14,10 +14,6 @@ QTNFC_BEGIN_NAMESPACE
  * @ingroup connectivity-nfc
  * @since 1.2
  *
- * @xmlonly
- * <apigrouping group="Device and Communication/NFC"/>
- * @endxmlonly    
- *  
  * RTD-SmartPoster encapsulates a Smart Poster.
  */
 
