@@ -23,14 +23,16 @@ PUBLIC_HEADERS += \
     qnearfieldtagtype3.h \
     qnearfieldtagtype4.h \
     qllcpserver.h \
-    qdeclarativendefrecord.h
+    qdeclarativendefrecord.h \
+    qndefnfcsmartposterrecord.h
 
 PRIVATE_HEADERS += \
     qndefrecord_p.h \
     qnearfieldtarget_p.h \
     qnearfieldmanager_p.h \
     qtlv_p.h \
-    checksum_p.h
+    checksum_p.h \
+    qndefnfcsmartposterrecord_p.h
 
 SOURCES += \
     qnearfieldmanager.cpp \
@@ -47,7 +49,8 @@ SOURCES += \
     qnearfieldtagtype4.cpp \
     qtlv.cpp \
     qllcpserver.cpp \
-    qdeclarativendefrecord.cpp
+    qdeclarativendefrecord.cpp \
+    qndefnfcsmartposterrecord.cpp
 
 maemo6|meego {
     NFC_BACKEND_AVAILABLE = yes
