@@ -79,7 +79,22 @@ config_bluez:contains(QT_CONFIG, dbus) {
         qbluetoothtransfermanager_bluez.cpp \
         ql2capserver_bluez.cpp
 
-} else {
+} qnx{
+    DEFINES += QTM_BLACKBERRY_BLUETOOTH #BT_BBPPSDEBUG
+
+    include(qnx/qnx.pri)
+
+    SOURCES += \
+        qbluetoothdevicediscoveryagent_p.cpp \
+        qbluetoothlocaldevice_p.cpp \
+        qbluetoothserviceinfo_p.cpp \
+        qbluetoothservicediscoveryagent_p.cpp \
+        qbluetoothsocket_p.cpp \
+        ql2capserver_p.cpp \
+        qrfcommserver_p.cpp \
+        qbluetoothtransfermanager_p.cpp
+
+}else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
     message("Either no Qt dBus found or no Bluez headers")
     SOURCES += \
