@@ -80,13 +80,13 @@ config_bluez:contains(QT_CONFIG, dbus) {
         ql2capserver_bluez.cpp
 
 } else:qnx{
-    DEFINES += QTM_BLACKBERRY_BLUETOOTH #BT_BBPPSDEBUG
+    DEFINES += QTM_QNX_BLUETOOTH #BT_BBPPSDEBUG
 
     include(qnx/qnx.pri)
 
     SOURCES += \
         qbluetoothdevicediscoveryagent_p.cpp \
-        qbluetoothlocaldevice_p.cpp \
+        qbluetoothlocaldevice_qnx.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \

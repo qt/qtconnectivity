@@ -59,6 +59,9 @@ QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 QT_END_NAMESPACE
 
+#elif defined(QTM_QNX_BLUETOOTH)
+#include <QSocketNotifier>
+#include "qnx/ppshelpers_p.h"
 #endif
 
 QT_BEGIN_HEADER
@@ -109,6 +112,34 @@ private:
     void initializeAdapter();
 };
 
+
+#elif defined(QTM_QNX_BLUETOOTH)
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_OBJECT
+    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
+public:
+    QBluetoothLocalDevicePrivate();
+    ~QBluetoothLocalDevicePrivate();
+
+    static QString name();
+    static QBluetoothAddress address();
+
+    void powerOn();
+    void powerOff();
+
+    void setHostMode(QBluetoothLocalDevice::HostMode mode);
+    QBluetoothLocalDevice::HostMode hostMode() const;
+
+    void setAccess(int);
+
+    //void requestPairing(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
+
+    Q_INVOKABLE void controlReply(ppsResult res);
+
+private:
+    QBluetoothLocalDevice *q_ptr;
+};
 #else
 class QBluetoothLocalDevicePrivate : public QObject
 {
