@@ -106,6 +106,23 @@ maemo6|meego {
     INCLUDEPATH += $$OUT_PWD
 }
 
+qnx {
+    NFC_BACKEND_AVAILABLE = yes
+    DEFINES += QQNXNFC_DEBUG
+
+    PRIVATE_HEADERS += \
+        qllcpsocket_p.h \
+        qllcpserver_p.h \
+        qnearfieldmanagerimpl_p.h \
+        qnx/qnxnfcmanager_p.h
+
+    SOURCES += \
+        qllcpsocket_p.cpp \
+        qllcpserver_p.cpp \
+        qnearfieldmanagerimpl_p.cpp\
+        qnx/qnxnfcmanager.cpp
+}
+
 simulator {
     NFC_BACKEND_AVAILABLE = yes
 
