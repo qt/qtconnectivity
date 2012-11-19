@@ -88,7 +88,7 @@ config_bluez:contains(QT_CONFIG, dbus) {
         qbluetoothdevicediscoveryagent_qnx.cpp \
         qbluetoothlocaldevice_qnx.cpp \
         qbluetoothserviceinfo_p.cpp \
-        qbluetoothservicediscoveryagent_p.cpp \
+        qbluetoothservicediscoveryagent_qnx.cpp \
         qbluetoothsocket_p.cpp \
         ql2capserver_p.cpp \
         qrfcommserver_p.cpp \
