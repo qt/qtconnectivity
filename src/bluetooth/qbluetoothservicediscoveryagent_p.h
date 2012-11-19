@@ -59,6 +59,12 @@ class QXmlStreamReader;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QTM_QNX_BLUETOOTH
+#include "qnx/ppshelpers_p.h"
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 QT_BEGIN_HEADER
 
 QTBLUETOOTH_BEGIN_NAMESPACE
@@ -66,7 +72,13 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 class QBluetoothDeviceDiscoveryAgent;
 
 class QBluetoothServiceDiscoveryAgentPrivate
+#ifdef QTM_QNX_BLUETOOTH
+: public QObject
 {
+    Q_OBJECT
+#else
+{
+#endif
     Q_DECLARE_PUBLIC(QBluetoothServiceDiscoveryAgent)
 
 public:
@@ -105,6 +117,17 @@ private:
 
 #ifdef QT_BLUEZ_BLUETOOTH
     QVariant readAttributeValue(QXmlStreamReader &xml);
+#endif
+
+#ifdef QTM_QNX_BLUETOOTH
+private Q_SLOTS:
+    void remoteDevicesChanged(int fd);
+    void controlReply(ppsResult result);
+    void controlEvent(ppsResult result);
+
+private:
+    int m_rdfd;
+    QSocketNotifier *rdNotifier;
 #endif
 
 public:
