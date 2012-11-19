@@ -82,8 +82,6 @@ public Q_SLOTS:
 
 static BBSocketNotifier bbSocketNotifier;
 
-static QSocketNotifier *ppsCtrlNotifier = 0;
-
 enum ResultType {UNKNOWN, EVENT, MESSAGE, RESPONSE};
 
 struct ppsResult {

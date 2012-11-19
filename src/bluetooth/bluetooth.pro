@@ -85,7 +85,7 @@ config_bluez:contains(QT_CONFIG, dbus) {
     include(qnx/qnx.pri)
 
     SOURCES += \
-        qbluetoothdevicediscoveryagent_p.cpp \
+        qbluetoothdevicediscoveryagent_qnx.cpp \
         qbluetoothlocaldevice_qnx.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
