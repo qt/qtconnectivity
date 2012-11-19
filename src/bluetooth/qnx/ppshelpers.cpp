@@ -49,6 +49,8 @@ static int count = 0;
 
 static int ppsCtrlFD = -1;
 
+static QSocketNotifier *ppsCtrlNotifier = 0;
+
 static const char btControlFDPath[] = "/pps/services/bluetooth/public/control";
 static const char btSettingsFDPath[] = "/pps/services/bluetooth/settings";
 static const char btRemoteDevFDPath[] = "/pps/services/bluetooth/remote_devices/";
