@@ -211,8 +211,6 @@ void QNXNFCManager::newNfcEvent(int fd)
     case NFC_LLCP_READ_COMPLETE_EVENT: qQNXNFCDebug() << "Read complete event"; break;
     case NFC_LLCP_WRITE_COMPLETE_EVENT: qQNXNFCDebug() << "Write complete event"; break;
     case NFC_LLCP_CONNECTION_EVENT: qQNXNFCDebug() << "LLCP connection event"; break;
-    case NFC_RESULT_READ_FAILED: qQNXNFCDebug() << "Result read failed"; break;
-    case NFC_RESULT_WRITE_FAILED: qQNXNFCDebug() << "Result write failed"; break;
     default: qQNXNFCDebug() << "Got NFC event" << nfcEventType; break;
     }
 
@@ -232,8 +230,8 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
     qQNXNFCDebug() << "Variant:" << variant;
 
     QList<QNdefMessage> targetMessages = decodeTargetMessage(target);
-//    NearFieldTarget *bbNFTarget = new NearFieldTarget(this, target, targetMessages);
-//    emit targetDetected(bbNFTarget, targetMessages);
+    NearFieldTarget<QNearFieldTarget> *bbNFTarget = new NearFieldTarget<QNearFieldTarget>(this, target, targetMessages);
+    emit targetDetected(bbNFTarget, targetMessages);
 //    for (int i=0; i< targetMessages.count(); i++) {
 //        for (int j=0; j<ndefMessageHandlers.count(); j++) {
 //            //ndefMessageHandlers.at(j).second.invoke(ndefMessageHandlers.at(j).first,
