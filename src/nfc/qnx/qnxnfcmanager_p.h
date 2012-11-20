@@ -53,7 +53,7 @@
 //#include <bb/system/InvokeManager>
 //#include <bb/system/InvokeRequest>
 //#include <bb/system/ApplicationStartupMode>
-//#include "../qnearfieldtarget_blackberry_p.h"
+#include "../qnearfieldtarget_qnx_p.h"
 
 #ifdef QNXNFC_DEBUG
 #define qQNXNFCDebug qDebug
@@ -105,9 +105,9 @@ public Q_SLOTS:
 Q_SIGNALS:
     //void llcpEvent();
     //void ndefMessage(const QNdefMessage&);
-    //void targetDetected(NearFieldTarget*, const QList<QNdefMessage>&);
+    void targetDetected(QNearFieldTarget*, const QList<QNdefMessage>&);
     //Not sure if this is implementable
-    void targetLost(); //Not available yet
+    //void targetLost(); //Not available yet
     //void bluetoothHandover();
 };
 

@@ -114,7 +114,8 @@ qnx {
         qllcpsocket_p.h \
         qllcpserver_p.h \
         qnearfieldmanagerimpl_p.h \
-        qnx/qnxnfcmanager_p.h
+        qnx/qnxnfcmanager_p.h\
+        qnearfieldtarget_qnx_p.h
 
     SOURCES += \
         qllcpsocket_p.cpp \
