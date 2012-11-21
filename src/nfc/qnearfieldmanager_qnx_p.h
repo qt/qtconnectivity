@@ -39,81 +39,55 @@
 **
 ****************************************************************************/
 
+#ifndef QNEARFIELDMANAGER_QNX_P_H
+#define QNEARFIELDMANAGER_QNX_P_H
 
-#ifndef QNXNFCMANAGER_H
-#define QNXNFCMANAGER_H
+#include "qnearfieldmanager_p.h"
+#include "qnearfieldmanager.h"
+#include "qnearfieldtarget.h"
 
-#include "nfc/nfc_types.h"
-#include "nfc/nfc.h"
-#include <QSocketNotifier>
-#include <QDebug>
-#include "../qndefmessage.h"
-#include "../qndefrecord.h"
-//#include <bb/system/InvokeManager>
-//#include <bb/system/InvokeRequest>
-//#include <bb/system/ApplicationStartupMode>
-#include "../qnearfieldtarget_qnx_p.h"
-
-#ifdef QNXNFC_DEBUG
-#define qQNXNFCDebug qDebug
-#else
-#define qQNXNFCDebug QT_NO_QDEBUG_MACRO
-#endif
-
-QT_BEGIN_HEADER
+#include "qnx/qnxnfcmanager_p.h"
 
 QTNFC_BEGIN_NAMESPACE
 
-class Q_DECL_EXPORT QNXNFCManager : public QObject
+class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
 {
     Q_OBJECT
+
 public:
-    static QNXNFCManager *instance();
-    void registerForNewInstance();
-    void unregisterForInstance();
-    void unregisterTargetDetection(QObject *);
-    nfc_target_t *getLastTarget();
-    bool isAvailable();
+    QNearFieldManagerPrivateImpl();
+    ~QNearFieldManagerPrivateImpl();
+
+    bool isAvailable() const;
+
+    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+
+    void stopTargetDetection();
+
+    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);
+
+    int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method);
+
+    bool unregisterNdefMessageHandler(int handlerId);
+
+    void requestAccess(QNearFieldManager::TargetAccessModes accessModes);
+
+    void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
+
+private Q_SLOTS:
+    void handleMessage(QNdefMessage, QNearFieldTarget *);
 
 private:
-    QNXNFCManager();
-    ~QNXNFCManager();
+    QList<QNearFieldTarget::Type> m_detectTargetTypes;
 
-    static QNXNFCManager *m_instance;
-    int m_instanceCount;
+    int handlerID;
+    QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
+    QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
 
-    int nfcFD;
-    QSocketNotifier *nfcNotifier;
-
-    QList<QNdefMessage> decodeTargetMessage(nfc_target_t *);
-
-    QList<QPair<QObject*, QMetaMethod> > ndefMessageHandlers;
-
-    //There can only be one target. The last detected one is saved here
-    //currently we do not get notified when the target is disconnected. So the target might be invalid
-    nfc_target_t *m_lastTarget;
-    bool m_available;
-
-public Q_SLOTS:
-    void newNfcEvent(int fd);
-    void nfcReadWriteEvent(nfc_event_t *nfcEvent);
-    void startBTHandover();
-    //TODO add a parameter to only detect a special target for now we are detecting all target types
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
-    //void handleInvoke(const bb::system::InvokeRequest& request);
-
-Q_SIGNALS:
-    //void llcpEvent();
-    void ndefMessage(QNdefMessage, QNearFieldTarget *);
-    void targetDetected(QNearFieldTarget *, const QList<QNdefMessage> &);
-    //Not sure if this is implementable
-    //void targetLost(); //Not available yet
-    //void bluetoothHandover();
+private Q_SLOTS:
+    void newTarget(NearFieldTarget<QNearFieldTarget> *target, const QList<QNdefMessage> &);
 };
 
 QTNFC_END_NAMESPACE
 
-QT_END_HEADER
-
-#endif
-
+#endif // QNEARFIELDMANAGER_QNX_P_H

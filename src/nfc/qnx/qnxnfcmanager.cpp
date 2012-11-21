@@ -73,6 +73,12 @@ void QNXNFCManager::unregisterForInstance()
     }
 }
 
+void QNXNFCManager::unregisterTargetDetection(QObject *obj)
+{
+    //TODO another instance of the nearfieldmanager might still want to detect targets
+    nfc_unregister_tag_readerwriter();
+}
+
 nfc_target_t *QNXNFCManager::getLastTarget()
 {
     return m_lastTarget;
@@ -232,12 +238,11 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
     QList<QNdefMessage> targetMessages = decodeTargetMessage(target);
     NearFieldTarget<QNearFieldTarget> *bbNFTarget = new NearFieldTarget<QNearFieldTarget>(this, target, targetMessages);
     emit targetDetected(bbNFTarget, targetMessages);
-//    for (int i=0; i< targetMessages.count(); i++) {
-//        for (int j=0; j<ndefMessageHandlers.count(); j++) {
-//            //ndefMessageHandlers.at(j).second.invoke(ndefMessageHandlers.at(j).first,
-//            //      Q_ARG(const QNdefMessage&, targetMessages.at(i)), Q_ARG(NearFieldTarget*, bbNFTarget));
-//        }
-//    }
+    for (int i=0; i< targetMessages.count(); i++) {
+        for (int j=0; j<ndefMessageHandlers.count(); j++) {
+            emit ndefMessage(targetMessages.at(i), reinterpret_cast<QNearFieldTarget *> (bbNFTarget));
+        }
+    }
 }
 
 //void QNXNFCManager::startBTHandover()
@@ -245,8 +250,9 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
 
 //}
 
-bool QNXNFCManager::startTargetDetection()
+bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
 {
+    //TODO handle the target types
     if (nfc_register_tag_readerwriter(TAG_TYPE_ALL) == NFC_RESULT_SUCCESS) {
         return true;
     } else {
