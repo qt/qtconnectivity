@@ -297,6 +297,9 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     Q_D(QBluetoothSocket);
     setOpenMode(openMode);
 
+#ifdef QTM_QNX_BLUETOOTH
+    d->connectToService(service.device().address(), service.serviceUuid(), openMode);
+#else
     if (service.protocolServiceMultiplexer() > 0) {
         if (!d->ensureNativeSocket(L2capSocket)) {
             emit error(UnknownSocketError);
@@ -318,6 +321,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         qDebug() << "Need a port/psm, doing discovery";
         doDeviceDiscovery(service, openMode);
     }
+#endif
 }
 
 /*!
@@ -337,11 +341,16 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode)
 {
+#ifdef QTM_QNX_BLUETOOTH
+    Q_D(QBluetoothSocket);
+    d->connectToService(address, uuid, openMode);
+#else
     QBluetoothServiceInfo service;
     QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::MiscellaneousDevice);
     service.setDevice(device);
     service.setServiceUuid(uuid);
     doDeviceDiscovery(service, openMode);
+#endif
 }
 
 /*!
@@ -359,9 +368,15 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
     Q_D(QBluetoothSocket);
+#ifdef QTM_QNX_BLUETOOTH
+    Q_UNUSED(port);
+    Q_UNUSED(openMode);
+    Q_UNUSED(address);
+    qWarning("Connecting to port is not supported on QNX");
+#else
     setOpenMode(openMode);
-
     d->connectToService(address, port, openMode);
+#endif
 }
 
 /*!
