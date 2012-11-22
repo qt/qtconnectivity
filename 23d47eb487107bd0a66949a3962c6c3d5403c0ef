@@ -1,0 +1,8 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+2: Alex <ablasche@gmail.com>
+Code-Review+1: Mehdi Fekari <mfekari@rim.com>
+Submitted-by: Peter Hartmann <phartmann@rim.com>
+Submitted-at: Thu, 22 Nov 2012 09:53:56 +0100
+Reviewed-on: https://codereview.qt-project.org/40015
+Project: qt/qtconnectivity
+Branch: refs/heads/master
