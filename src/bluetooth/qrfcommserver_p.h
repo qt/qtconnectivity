@@ -45,6 +45,11 @@
 #include <QtGlobal>
 #include <QList>
 #include <qbluetoothsocket.h>
+#include "qbluetooth.h"
+
+#ifdef QTM_QNX_BLUETOOTH
+#include "qnx/ppshelpers_p.h"
+#endif
 
 #ifdef QT_BLUEZ_BLUETOOTH
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
@@ -60,7 +65,13 @@ class QBluetoothSocket;
 class QRfcommServer;
 
 class QRfcommServerPrivate
+#ifdef QTM_QNX_BLUETOOTH
+: public QObject
 {
+    Q_OBJECT
+#else
+{
+#endif
     Q_DECLARE_PUBLIC(QRfcommServer)
 
 public:
@@ -77,11 +88,28 @@ public:
     int maxPendingConnections;
     QBluetooth::SecurityFlags securityFlags;
 
+#ifdef QTM_QNX_BLUETOOTH
+    static QRfcommServerPrivate *rfcomm_server_p;   //This is probably a bad idea....
+                        //but we need to be able to access the server in the qbluetoothserviceinfo class
+    void registerService(QBluetoothUuid);  //This should probably not be here...but rather in qbluetoothserviceinfo..
+                                           //but it saves some overhead there
+
+    QList<QBluetoothSocket *> activeSockets;
+#endif
+
 protected:
     QRfcommServer *q_ptr;
 
 private:
-#ifdef QT_BLUEZ_BLUETOOTH
+#ifdef QTM_QNX_BLUETOOTH
+    QBluetoothUuid m_uuid;
+    bool serverRegistered;
+    QString nextClientAddress;
+
+private Q_SLOTS:
+    void controlReply(ppsResult result);
+    void controlEvent(ppsResult result);
+#elif defined(QT_BLUEZ_BLUETOOTH)
     QSocketNotifier *socketNotifier;
 #endif
 };
