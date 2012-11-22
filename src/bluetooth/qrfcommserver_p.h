@@ -89,11 +89,6 @@ public:
     QBluetooth::SecurityFlags securityFlags;
 
 #ifdef QTM_QNX_BLUETOOTH
-    static QRfcommServerPrivate *rfcomm_server_p;   //This is probably a bad idea....
-                        //but we need to be able to access the server in the qbluetoothserviceinfo class
-    void registerService(QBluetoothUuid);  //This should probably not be here...but rather in qbluetoothserviceinfo..
-                                           //but it saves some overhead there
-
     QList<QBluetoothSocket *> activeSockets;
 #endif
 

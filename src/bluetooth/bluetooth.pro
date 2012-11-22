@@ -37,7 +37,8 @@ PRIVATE_HEADERS += \
     ql2capserver_p.h \
     qbluetoothtransferreply_p.h \
     qbluetoothtransferrequest_p.h \
-    qprivatelinearbuffer_p.h
+    qprivatelinearbuffer_p.h \
+    qbluetoothlocaldevice_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -65,8 +66,7 @@ config_bluez:contains(QT_CONFIG, dbus) {
     include(bluez/bluez.pri)
 
     PRIVATE_HEADERS += \
-        qbluetoothtransferreply_bluez_p.h \
-        qbluetoothlocaldevice_p.h
+        qbluetoothtransferreply_bluez_p.h
 
     SOURCES += \
         qbluetoothserviceinfo_bluez.cpp \
@@ -87,7 +87,7 @@ config_bluez:contains(QT_CONFIG, dbus) {
     SOURCES += \
         qbluetoothdevicediscoveryagent_qnx.cpp \
         qbluetoothlocaldevice_qnx.cpp \
-        qbluetoothserviceinfo_p.cpp \
+        qbluetoothserviceinfo_qnx.cpp \
         qbluetoothservicediscoveryagent_qnx.cpp \
         qbluetoothsocket_qnx.cpp \
         ql2capserver_p.cpp \
