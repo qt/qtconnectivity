@@ -68,7 +68,7 @@ public:
 
     bool ensureSdpConnection() const;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) || defined(QTM_QNX_BLUETOOTH)
     bool registerService() const;
 #endif
 
@@ -78,6 +78,10 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     mutable OrgBluezServiceInterface *service;
     mutable quint32 serviceRecord;
+    mutable bool registered;
+#endif
+
+#ifdef QTM_QNX_BLUETOOTH
     mutable bool registered;
 #endif
     

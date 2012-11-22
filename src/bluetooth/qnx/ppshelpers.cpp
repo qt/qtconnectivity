@@ -229,7 +229,7 @@ void ppsDecodeControlResponse()
     }
 }
 
-QVariant ppsqt_safe_readSetting(const char *property)
+QVariant ppsReadSetting(const char *property)
 {
     int settingsFD;
     char buf[ppsBufferSize];
@@ -311,7 +311,7 @@ QVariant ppsRemoteDeviceStatus(const QByteArray &address, const char *property)
     return res;
 }
 
-bool ppsqt_safe_readRemoteDevice(int fd, pps_decoder_t *decoder, QBluetoothAddress *btAddr, QString *deviceName)
+bool ppsReadRemoteDevice(int fd, pps_decoder_t *decoder, QBluetoothAddress *btAddr, QString *deviceName)
 {
     char buf[ppsBufferSize * 2];
     char addr_buf[18];
