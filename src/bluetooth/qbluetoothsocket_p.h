@@ -44,6 +44,10 @@
 
 #include "qbluetoothsocket.h"
 
+#ifdef QTM_QNX_BLUETOOTH
+#include "qnx/ppshelpers_p.h"
+#endif
+
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
 #define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)
 #endif
@@ -72,14 +76,25 @@ class QBluetoothSocket;
 class QBluetoothServiceDiscoveryAgent;
 
 class QBluetoothSocketPrivate
+#ifdef QTM_QNX_BLUETOOTH
+: public QObject
 {
+    Q_OBJECT
+#else
+{
+#endif
     Q_DECLARE_PUBLIC(QBluetoothSocket)
 public:
 
     QBluetoothSocketPrivate();
     ~QBluetoothSocketPrivate();
 
+//On qnx we connect using the uuid not the port
+#ifdef QTM_QNX_BLUETOOTH
+    void connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode);
+#else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
+#endif
 
     bool ensureNativeSocket(QBluetoothSocket::SocketType type);
 
@@ -139,6 +154,15 @@ protected:
 private:
     mutable QString m_localName;
     mutable QString m_peerName;
+#ifdef QTM_QNX_BLUETOOTH
+    QBluetoothAddress m_peerAddress;
+    QBluetoothUuid m_uuid;
+    bool isServerSocket;
+
+private Q_SLOTS:
+    void controlReply(ppsResult result);
+    void controlEvent(ppsResult result);
+#endif
 };
 
 
