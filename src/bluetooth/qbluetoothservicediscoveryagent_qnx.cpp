@@ -68,8 +68,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
     qBBBluetoothDebug() << "Starting Service discovery for" << address.toString();
-    if ((m_rdfd = qt_safe_open((QByteArray("/pps/services/bluetooth/remote_devices/%1").append(address.toString().toUtf8().constData())).constData(), O_RDONLY)) == -1) {
-        qWarning() << "Failed to open " << "/pps/services/bluetooth/remote_devices/" << address.toString();
+    const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(address.toString().toUtf8().constData()).constData();
+    if ((m_rdfd = qt_safe_open(filePath, O_RDONLY)) == -1) {
+        qWarning() << "Failed to open " << filePath;
+        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        errorString = QStringLiteral("Failed to open remote device file");
+        q->error(error);
+        return;
     } else {
         if (rdNotifier)
             delete rdNotifier;
@@ -95,7 +100,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     if (rdNotifier)
         delete rdNotifier;
     rdNotifier = 0;
-    ppsUnregisterControl();
+    ppsUnregisterControl(this);
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
@@ -176,6 +181,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
 void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
+    qBBBluetoothDebug() << "Control event" << result.msg;
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
@@ -189,6 +195,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
 void QBluetoothServiceDiscoveryAgentPrivate::controlEvent(ppsResult result)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
+    qBBBluetoothDebug() << "Control event" << result.msg;
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
