@@ -61,7 +61,7 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 {
-    ppsUnregisterControl();
+    ppsUnregisterControl(this);
     close();
 }
 

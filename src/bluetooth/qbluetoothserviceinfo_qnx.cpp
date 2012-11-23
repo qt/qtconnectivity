@@ -85,7 +85,7 @@ QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
     if (registered)
         ppsSendControlMessage("deregister_server", 0x1101, QBluetoothUuid(QStringLiteral("00000000-1111-2222-3334-444444444443")), QString(), 0);
 
-    ppsUnregisterControl();
+    ppsUnregisterControl(0);
 }
 
 void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value) const

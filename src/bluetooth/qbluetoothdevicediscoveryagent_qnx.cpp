@@ -58,6 +58,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     if (pendingStart)
         stop();
+
+    ppsUnreguisterForEvent(QStringLiteral("device_added"), this);
+    ppsUnreguisterForEvent(QStringLiteral("device_search"), this);
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -67,9 +70,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
+    qBBBluetoothDebug() << "Starting device discovery";
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (pendingStart)
         return;
+    pendingStart = true;
+    discoveredDevices.clear();
 
     if (m_rdfd != -1 || (m_rdfd = qt_safe_open("/pps/services/bluetooth/remote_devices/.all", O_RDONLY)) == -1) {
         qWarning() << Q_FUNC_INFO << "rdfd - failed to open /pps/services/bluetooth/remote_devices/.all";
@@ -94,8 +100,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     finishedTimer.start(10000);
     connect(&finishedTimer, SIGNAL(timeout()), this, SLOT(finished()));
 
-    pendingStart = true;
-
     ppsRegisterControl();
 
     ppsSendControlMessage("device_search", this);
@@ -110,11 +114,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 
     ppsSendControlMessage("cancel_device_search",this);
 
+    ppsUnregisterControl(this);
+
     pendingStart = false;
-    if (rdNotifier)
+    if (rdNotifier) {
         delete rdNotifier;
-    qt_safe_close(m_rdfd);
-    m_rdfd = -1;
+        rdNotifier = 0;
+    }
+    if (m_rdfd != -1) {
+        qt_safe_close(m_rdfd);
+        m_rdfd = -1;
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
@@ -200,6 +210,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::finished()
 {
     qBBBluetoothDebug() << "Device discovery finished";
     finishedTimer.stop();
+    stop();
     q_ptr->finished();
 }
 
