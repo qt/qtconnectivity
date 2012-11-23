@@ -104,10 +104,12 @@ private:
     void controlEvent(ppsResult result);
 
 private:
-    QSocketNotifier *rdNotifier;
-    QTimer finishedTimer;
+    void abort();
 
-    bool started;
+    QSocketNotifier *m_rdNotifier;
+    QTimer m_finishedTimer;
+
+    bool m_controlRegistered;
 
     int m_rdfd;
 #endif
