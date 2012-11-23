@@ -89,8 +89,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
             return;
         }
     }
-
-    qBBBluetoothDebug() << "Devdis agent register";
     ppsRegisterControl();
     ppsSendControlMessage("service_query", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()));
     ppsRegisterForEvent(QStringLiteral("service_query"), this);

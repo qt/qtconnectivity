@@ -91,7 +91,7 @@ void ppsRegisterControl()
     count++;
 }
 
-void ppsUnregisterControl()
+void ppsUnregisterControl(QObject *obj)
 {
     qBBBluetoothDebug() << "Unregistering Control";
     count--;
@@ -100,6 +100,10 @@ void ppsUnregisterControl()
         ppsCtrlFD = -1;
         delete ppsCtrlNotifier;
         ppsCtrlNotifier = 0;
+    }
+    for (int i = waitingCtrlMsgs.size()-1; i >= 0 ; i--) {
+        if (waitingCtrlMsgs.at(i).second == obj)
+            waitingCtrlMsgs.removeAt(i);
     }
 }
 
@@ -175,7 +179,7 @@ void ppsDecodeControlResponse()
             pps_decoder_push(&ppsDecoder, 0);
             const char *buf;
 
-            //THe pps response can either be of type 'res', 'msg' or 'evt'
+            //The pps response can either be of type 'res', 'msg' or 'evt'
             if (pps_decoder_get_string(&ppsDecoder, "res", &buf) == PPS_DECODER_OK) {
                 result.msg = QString::fromUtf8(buf);
                 resType = RESPONSE;
@@ -190,7 +194,7 @@ void ppsDecodeControlResponse()
             if (pps_decoder_get_string(&ppsDecoder, "id",  &buf) == PPS_DECODER_OK)
                 result.id = QString::fromUtf8(buf).toInt();
 
-            //qt_safe_read out the error message if there is one
+            //read out the error message if there is one
             if (pps_decoder_get_string(&ppsDecoder, "errstr", &buf) == PPS_DECODER_OK)
                 result.errorMsg = QString::fromUtf8(buf);
 
@@ -208,7 +212,7 @@ void ppsDecodeControlResponse()
                     }
                 } while (pps_decoder_next(&ppsDecoder) == PPS_DECODER_OK);
             } else {
-                qBBBluetoothDebug() << "No node type";
+                qBBBluetoothDebug() << "Control Response: No node type" << result.msg;
             }
         }
         pps_decoder_cleanup(&ppsDecoder);
@@ -217,11 +221,10 @@ void ppsDecodeControlResponse()
 
     if (resType == RESPONSE) {
         QPair<int, QObject*> wMessage = takeObjectInWList(result.id);
-        if (wMessage.second!=0) {
+        if (wMessage.second != 0) {
             wMessage.second->metaObject()->invokeMethod(wMessage.second, "controlReply", Q_ARG(ppsResult, result));
         }
     } else if (resType == EVENT) {
-        qBBBluetoothDebug() << "Distributing event" << result.msg << result.dat;
         for (int i=0; i < evtRegistration.size(); i++) {
             if (result.msg == evtRegistration.at(i).first)
                 evtRegistration.at(i).second->metaObject()->invokeMethod(evtRegistration.at(i).second, "controlEvent", Q_ARG(ppsResult, result));
@@ -234,7 +237,7 @@ QVariant ppsReadSetting(const char *property)
     int settingsFD;
     char buf[ppsBufferSize];
     if ((settingsFD = qt_safe_open(btSettingsFDPath, O_RDONLY)) == -1) {
-        qWarning() << Q_FUNC_INFO << "failed to qt_safe_open "<< btSettingsFDPath;
+        qWarning() << Q_FUNC_INFO << "failed to open "<< btSettingsFDPath;
         return QVariant();
     }
 
@@ -251,16 +254,18 @@ QVariant ppsReadSetting(const char *property)
             const char *dat;
             if (pps_decoder_get_string(&decoder, property, &dat) == PPS_DECODER_OK) {
                 result = QString::fromUtf8(dat);
+                qBBBluetoothDebug() << "Read setting" << result;
             } else {
-                qWarning() << Q_FUNC_INFO << "could not qt_safe_read"<< property;
+                qWarning() << Q_FUNC_INFO << "could not read"<< property;
                 return QVariant();
             }
         } else if (nodeType == PPS_TYPE_NUMBER) {
             int dat;
             if (pps_decoder_get_int(&decoder, property, &dat) == PPS_DECODER_OK) {
                 result = dat;
+                qBBBluetoothDebug() << "Read setting" << result;
             } else {
-                qWarning() << Q_FUNC_INFO << "could not qt_safe_read"<< property;
+                qWarning() << Q_FUNC_INFO << "could not read"<< property;
                 return QVariant();
             }
         } else {
@@ -280,7 +285,7 @@ QVariant ppsRemoteDeviceStatus(const QByteArray &address, const char *property)
     filename.append(address);
 
     if ((rmFD = qt_safe_open(filename.constData(), O_RDONLY)) < 0) {
-        qWarning() << Q_FUNC_INFO << "failed to qt_safe_open "<< btRemoteDevFDPath << address;
+        qWarning() << Q_FUNC_INFO << "failed to open "<< btRemoteDevFDPath << address;
         return false;
     }
 
@@ -303,7 +308,7 @@ QVariant ppsRemoteDeviceStatus(const QByteArray &address, const char *property)
             pps_decoder_get_bool(&ppsDecoder,property,&dat);
             res = QVariant(dat);
         } else {
-            qBBBluetoothDebug() << "No node type";
+            qBBBluetoothDebug() << "RDStatus: No node type" << property;
         }
     }
     pps_decoder_cleanup(&ppsDecoder);
@@ -349,13 +354,18 @@ bool ppsReadRemoteDevice(int fd, pps_decoder_t *decoder, QBluetoothAddress *btAd
 
 void ppsRegisterForEvent(const QString &evt, QObject *obj)
 {
+    //If the event was already registered, we don't register it again
+    for (int i = 0; i < evtRegistration.size(); i++) {
+        if (evtRegistration.at(i).first == evt && evtRegistration.at(i).second == obj )
+            return;
+    }
     evtRegistration.append(QPair<QString, QObject*>(evt,obj));
 }
 
-void ppsUnreguisterForEvent(QObject *obj)
+void ppsUnreguisterForEvent(const QString &str, QObject *obj)
 {
     for (int i=evtRegistration.size()-1; i >= 0; --i) {
-        if (evtRegistration.at(i).second == obj)
+        if (evtRegistration.at(i).first == str && evtRegistration.at(i).second == obj)
             evtRegistration.removeAt(i);
     }
 }
