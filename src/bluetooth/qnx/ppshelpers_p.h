@@ -101,7 +101,7 @@ QPair<int, QObject*> takeObjectInWList(int id);
 
 void ppsRegisterControl();
 
-void ppsUnregisterControl();
+void ppsUnregisterControl(QObject *obj);
 
 pps_encoder_t *beginCtrlMessage(const char *msg, QObject *sender);
 
@@ -123,7 +123,7 @@ bool ppsReadRemoteDevice(int fd, pps_decoder_t *decoder, QBluetoothAddress *btAd
 
 void ppsRegisterForEvent(const QString &evt, QObject *obj);
 
-void ppsUnreguisterForEvent(QObject *obj);
+void ppsUnreguisterForEvent(const QString &evt, QObject *obj);
 
 QTBLUETOOTH_END_NAMESPACE
 

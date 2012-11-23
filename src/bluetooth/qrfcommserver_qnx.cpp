@@ -60,7 +60,7 @@ QRfcommServerPrivate::QRfcommServerPrivate()
 QRfcommServerPrivate::~QRfcommServerPrivate()
 {
     delete socket;
-    ppsUnregisterControl();
+    ppsUnregisterControl(this);
 }
 
 void QRfcommServerPrivate::controlReply(ppsResult result)

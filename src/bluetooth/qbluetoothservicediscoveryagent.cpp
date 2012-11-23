@@ -198,6 +198,8 @@ QList<QBluetoothUuid> QBluetoothServiceDiscoveryAgent::uuidFilter() const
 /*!
     Starts service discovery. \a mode specifies the type of service discovery to perform.
 
+    On Blackberry devices device discovery may lead to pairing requests.
+
     \sa DiscoveryMode
 */
 void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
