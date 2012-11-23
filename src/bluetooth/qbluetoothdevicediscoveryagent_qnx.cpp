@@ -58,6 +58,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     if (pendingStart)
         stop();
+
+    ppsUnreguisterForEvent(QStringLiteral("device_added"), this);
+    ppsUnreguisterForEvent(QStringLiteral("device_search"), this);
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -67,9 +70,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
+    qBBBluetoothDebug() << "Starting device discovery";
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (pendingStart)
         return;
+    pendingStart = true;
+    discoveredDevices.clear();
 
     if (m_rdfd != -1 || (m_rdfd = qt_safe_open("/pps/services/bluetooth/remote_devices/.all", O_RDONLY)) == -1) {
         qWarning() << Q_FUNC_INFO << "rdfd - failed to open /pps/services/bluetooth/remote_devices/.all";
@@ -78,11 +84,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         stop();
         return;
     } else {
-        rdNotifier = new QSocketNotifier(m_rdfd, QSocketNotifier::Read, this);
-        if (rdNotifier) {
-            connect(rdNotifier, SIGNAL(activated(int)), this, SLOT(remoteDevicesChanged(int)));
+        m_rdNotifier = new QSocketNotifier(m_rdfd, QSocketNotifier::Read, this);
+        if (m_rdNotifier) {
+            connect(m_rdNotifier, SIGNAL(activated(int)), this, SLOT(remoteDevicesChanged(int)));
         } else {
-            qWarning() << Q_FUNC_INFO << "failed to connect to rdNotifier";
+            qWarning() << Q_FUNC_INFO << "failed to connect to m_rdNotifier";
             lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
             emit q->error(lastError);
             stop();
@@ -90,13 +96,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         }
     }
 
-    //If there is no new results after 10 sekonds, the device inquire will be stopped
-    finishedTimer.start(10000);
-    connect(&finishedTimer, SIGNAL(timeout()), this, SLOT(finished()));
+    //If there is no new results after 7 seconds, the device inquire will be stopped
+    m_finishedTimer.start(7000);
+    connect(&m_finishedTimer, SIGNAL(timeout()), this, SLOT(finished()));
 
-    pendingStart = true;
-
-    ppsRegisterControl();
+    if (!m_controlRegistered) {
+        ppsRegisterControl();
+        m_controlRegistered = true;
+    }
 
     ppsSendControlMessage("device_search", this);
     ppsRegisterForEvent(QStringLiteral("device_added"), this);
@@ -106,15 +113,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
     qBBBluetoothDebug() << "Stopping device search";
-
     ppsSendControlMessage("cancel_device_search",this);
-
-    pendingStart = false;
-    if (rdNotifier)
-        delete rdNotifier;
-    qt_safe_close(m_rdfd);
-    m_rdfd = -1;
+    emit q->canceled();
+    abort();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
@@ -155,7 +158,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         }
     }
     //Starts the timer again
-    finishedTimer.start(10000);
+    m_finishedTimer.start(7000);
 
     if (!deviceAddr.isNull()) {
         discoveredDevices.append(deviceInfo);
@@ -199,8 +202,27 @@ void QBluetoothDeviceDiscoveryAgentPrivate::controlEvent(ppsResult result)
 void QBluetoothDeviceDiscoveryAgentPrivate::finished()
 {
     qBBBluetoothDebug() << "Device discovery finished";
-    finishedTimer.stop();
+    m_finishedTimer.stop();
+    stop();
     q_ptr->finished();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::abort()
+{
+    if (m_controlRegistered) {
+        ppsUnregisterControl(this);
+        m_controlRegistered = false;
+    }
+
+    pendingStart = false;
+    if (m_rdNotifier) {
+        delete m_rdNotifier;
+        m_rdNotifier = 0;
+    }
+    if (m_rdfd != -1) {
+        qt_safe_close(m_rdfd);
+        m_rdfd = -1;
+    }
 }
 
 QTBLUETOOTH_END_NAMESPACE
