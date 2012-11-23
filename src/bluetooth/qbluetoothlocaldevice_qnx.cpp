@@ -121,7 +121,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
-    ppsUnregisterControl();
+    ppsUnregisterControl(this);
 }
 
 QBluetoothAddress QBluetoothLocalDevicePrivate::address()
