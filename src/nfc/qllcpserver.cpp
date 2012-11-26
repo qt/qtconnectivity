@@ -45,6 +45,8 @@
 #include "qllcpserver_simulator_p.h"
 #elif defined(Q_WS_MAEMO_6) || defined(Q_WS_MEEGO)
 #include "qllcpserver_maemo6_p.h"
+#elif defined(QNX_NFC)
+#include "qllcpserver_qnx_p.h"
 #else
 #include "qllcpserver_p.h"
 #endif

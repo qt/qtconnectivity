@@ -108,18 +108,20 @@ maemo6|meego {
 
 qnx {
     NFC_BACKEND_AVAILABLE = yes
-    DEFINES += QNX_NFC QQNXNFC_DEBUG
+    DEFINES += #QNX_NFC QQNXNFC_DEBUG
+
+    LIBS += -lnfc
 
     PRIVATE_HEADERS += \
-        qllcpsocket_p.h \
-        qllcpserver_p.h \
+        qllcpserver_qnx_p.h \
+        qllcpsocket_qnx_p.h \
         qnearfieldmanager_qnx_p.h \
         qnx/qnxnfcmanager_p.h \
         qnearfieldtarget_qnx_p.h
 
     SOURCES += \
-        qllcpsocket_p.cpp \
-        qllcpserver_p.cpp \
+        qllcpserver_qnx_p.cpp \
+        qllcpsocket_qnx_p.cpp \
         qnearfieldmanager_qnx.cpp \
         qnx/qnxnfcmanager.cpp
 }
