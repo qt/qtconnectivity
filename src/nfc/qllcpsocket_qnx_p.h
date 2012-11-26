@@ -39,53 +39,79 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDMANAGER_QNX_P_H
-#define QNEARFIELDMANAGER_QNX_P_H
+#ifndef QLLCPSOCKET_QNX_P_H
+#define QLLCPSOCKET_QNX_P_H
 
-#include "qnearfieldmanager_p.h"
-#include "qnearfieldmanager.h"
-#include "qnearfieldtarget.h"
+#include "qllcpsocket.h"
 
-#include "qnx/qnxnfcmanager_p.h"
+#include "qnearfieldtarget_qnx_p.h"
+
+QT_BEGIN_HEADER
 
 QTNFC_BEGIN_NAMESPACE
 
-class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
+class QLlcpSocketPrivate : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PUBLIC(QLlcpSocket)
 
 public:
-    QNearFieldManagerPrivateImpl();
-    ~QNearFieldManagerPrivateImpl();
+    QLlcpSocketPrivate(QLlcpSocket *q);
 
-    bool isAvailable() const;
+    ~QLlcpSocketPrivate();
 
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+    void connectToService(QNearFieldTarget *target, const QString &serviceUri);
 
-    void stopTargetDetection();
+    bool bind(quint8 port);
 
-    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);
+    bool hasPendingDatagrams() const;
+    qint64 pendingDatagramSize() const;
 
-    int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method);
+    qint64 writeDatagram(const char *data, qint64 size);
+    qint64 writeDatagram(const QByteArray &datagram);
 
-    bool unregisterNdefMessageHandler(int handlerId);
+    qint64 readDatagram(char *data, qint64 maxSize,
+                        QNearFieldTarget **target = 0, quint8 *port = 0);
+    qint64 writeDatagram(const char *data, qint64 size,
+                         QNearFieldTarget *target, quint8 port);
+    qint64 writeDatagram(const QByteArray &datagram, QNearFieldTarget *target, quint8 port);
 
-    void requestAccess(QNearFieldManager::TargetAccessModes accessModes);
+    QLlcpSocket::SocketError error() const;
+    QLlcpSocket::SocketState state() const;
 
-    void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
+    qint64 readData(char *data, qint64 maxlen);
+    qint64 writeData(const char *data, qint64 len);
 
-private Q_SLOTS:
-    void handleMessage(QNdefMessage, QNearFieldTarget *);
-    void newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &);
+    qint64 bytesAvailable() const;
+    bool canReadLine() const;
+
+    bool waitForReadyRead(int msecs);
+    bool waitForBytesWritten(int msecs);
+    bool waitForConnected(int msecs);
+    bool waitForDisconnected(int msecs);
+
+    Q_INVOKABLE void connected(nfc_target_t *);
+
+public Q_SLOTS:
+    void disconnectFromService();
 
 private:
-    QList<QNearFieldTarget::Type> m_detectTargetTypes;
+    QLlcpSocket *q_ptr;
+    unsigned int m_sap;
+    nfc_llcp_connection_listener_t m_conListener;
+    //NearFieldTarget *m_target;
+    nfc_target_t *m_target;
 
-    int m_handlerID;
-    QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
-    QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
+    QLlcpSocket::SocketState m_state;
+
+    QList<QByteArray> m_receivedDatagrams;
+
+private Q_SLOTS:
+    void dataRead(QByteArray&);
 };
 
 QTNFC_END_NAMESPACE
 
-#endif // QNEARFIELDMANAGER_QNX_P_H
+QT_END_HEADER
+
+#endif // QLLCPSOCKET_QNX_P_H

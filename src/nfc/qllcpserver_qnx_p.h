@@ -39,90 +39,50 @@
 **
 ****************************************************************************/
 
+#ifndef QLLCPSERVER_QNX_P_H
+#define QLLCPSERVER_QNX_P_H
 
-#ifndef QNXNFCMANAGER_H
-#define QNXNFCMANAGER_H
-
-#include "nfc/nfc_types.h"
+#include "qllcpserver.h"
 #include "nfc/nfc.h"
-#include <QSocketNotifier>
-#include <QDebug>
-#include "../qndefmessage.h"
-#include "../qndefrecord.h"
-//#include <bb/system/InvokeManager>
-//#include <bb/system/InvokeRequest>
-//#include <bb/system/ApplicationStartupMode>
-#include "../qnearfieldtarget_qnx_p.h"
-#include <QTimer>
-
-#ifdef QQNXNFC_DEBUG
-#define qQNXNFCDebug qDebug
-#else
-#define qQNXNFCDebug QT_NO_QDEBUG_MACRO
-#endif
 
 QT_BEGIN_HEADER
 
 QTNFC_BEGIN_NAMESPACE
 
-class Q_DECL_EXPORT QNXNFCManager : public QObject
+class QLlcpServerPrivate : public QObject
 {
     Q_OBJECT
 public:
-    static QNXNFCManager *instance();
-    void registerForNewInstance();
-    void unregisterForInstance();
-    void unregisterTargetDetection(QObject *);
-    nfc_target_t *getLastTarget();
-    bool isAvailable();
+    QLlcpServerPrivate(QLlcpServer *q);
 
-private:
-    QNXNFCManager();
-    ~QNXNFCManager();
+    bool listen(const QString &serviceUri);
+    bool isListening() const;
 
-    static QNXNFCManager *m_instance;
-    int m_instanceCount;
+    void close();
 
-    int nfcFD;
-    QSocketNotifier *nfcNotifier;
+    QString serviceUri() const;
+    quint8 serverPort() const;
 
-    QList<QNdefMessage> decodeTargetMessage(nfc_target_t *);
+    bool hasPendingConnections() const;
+    QLlcpSocket *nextPendingConnection();
 
-    QList<QPair<QObject*, QMetaMethod> > ndefMessageHandlers;
-
-    //There can only be one target. The last detected one is saved here
-    //currently we do not get notified when the target is disconnected. So the target might be invalid
-    nfc_target_t *m_lastTarget;
-    bool m_available;
-
-    void llcpReadComplete(nfc_event_t *nfcEvent);
-    void nfcReadWriteEvent(nfc_event_t *nfcEvent);
-    void llcpConnectionEvent(nfc_event_t *nfcEvent);
-    void startBTHandover();
+    QLlcpSocket::SocketError serverError() const;
 
 private Q_SLOTS:
-    void newNfcEvent(int fd);
-    void llcpRead();
-
-public:
-    //TODO add a parameter to only detect a special target for now we are detecting all target types
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
-    //void handleInvoke(const bb::system::InvokeRequest& request);
-
-Q_SIGNALS:
     void newLlcpConnection(nfc_target_t *);
-    void ndefMessage(QNdefMessage, QNearFieldTarget *);
-    void targetDetected(QNearFieldTarget *, const QList<QNdefMessage>&);
-    //Not sure if this is implementable
-    //void targetLost(); //Not available yet
-    //void bluetoothHandover();
-    void readResult(QByteArray&);
-    void llcpDisconnected();
+
+private:
+    QLlcpServer *q_ptr;
+    QLlcpSocket *m_llcpSocket;
+    //We can not use m_conListener for the connection state
+    bool m_connected;
+    nfc_llcp_connection_listener_t m_conListener;
+    QString m_serviceUri;
+    nfc_target_t *m_target;
 };
 
 QTNFC_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif
-
+#endif // QLLCPSERVER_QNX_P_H

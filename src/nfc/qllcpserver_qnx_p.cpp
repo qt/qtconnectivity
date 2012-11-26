@@ -39,53 +39,89 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDMANAGER_QNX_P_H
-#define QNEARFIELDMANAGER_QNX_P_H
-
-#include "qnearfieldmanager_p.h"
-#include "qnearfieldmanager.h"
-#include "qnearfieldtarget.h"
-
+#include "qllcpserver_qnx_p.h"
 #include "qnx/qnxnfcmanager_p.h"
 
 QTNFC_BEGIN_NAMESPACE
 
-class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
+QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
+    : q_ptr(q), m_llcpSocket(0), m_connected(false), m_conListener(0)
 {
-    Q_OBJECT
+}
 
-public:
-    QNearFieldManagerPrivateImpl();
-    ~QNearFieldManagerPrivateImpl();
+bool QLlcpServerPrivate::listen(const QString &serviceUri)
+{
+    //The server is already listening
+    if (isListening())
+        return false;
 
-    bool isAvailable() const;
+    nfc_result_t result = nfc_llcp_register_connection_listener(SERVER, 0, serviceUri.toStdString().c_str(), &m_conListener);
+    m_connected = true;
+    if (result == NFC_RESULT_SUCCESS) {
+        m_serviceUri = serviceUri;
+        qQNXNFCDebug() << "LLCP server registered";
+    } else {
+        qWarning() << Q_FUNC_INFO << "Could not register for llcp connection listener";
+        return false;
+    }
+    connect(QNXNFCManager::instance(), SIGNAL(newLlcpConnection(nfc_target_t*)), this, SLOT(newLlcpConnection(nfc_target_t*)));
+    return true;
+}
 
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+bool QLlcpServerPrivate::isListening() const
+{
+    return m_connected;
+}
 
-    void stopTargetDetection();
+void QLlcpServerPrivate::close()
+{
+    nfc_llcp_unregister_connection_listener(m_conListener);
+    m_serviceUri = QString();
+    m_connected = false;
+}
 
-    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);
+QString QLlcpServerPrivate::serviceUri() const
+{
+    return m_serviceUri;
+}
 
-    int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method);
+quint8 QLlcpServerPrivate::serverPort() const
+{
+    unsigned int sap;
+    if (nfc_llcp_get_local_sap(m_target, &sap) == NFC_RESULT_SUCCESS) {
+        return sap;
+    }
+    return -1;
+}
 
-    bool unregisterNdefMessageHandler(int handlerId);
+bool QLlcpServerPrivate::hasPendingConnections() const
+{
+    return m_llcpSocket != 0;
+}
 
-    void requestAccess(QNearFieldManager::TargetAccessModes accessModes);
+QLlcpSocket *QLlcpServerPrivate::nextPendingConnection()
+{
+    QLlcpSocket *socket = m_llcpSocket;
+    m_llcpSocket = 0;
+    return socket;
+}
 
-    void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
+QLlcpSocket::SocketError QLlcpServerPrivate::serverError() const
+{
+    return QLlcpSocket::UnknownSocketError;
+}
 
-private Q_SLOTS:
-    void handleMessage(QNdefMessage, QNearFieldTarget *);
-    void newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &);
-
-private:
-    QList<QNearFieldTarget::Type> m_detectTargetTypes;
-
-    int m_handlerID;
-    QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
-    QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
-};
+void QLlcpServerPrivate::newLlcpConnection(nfc_target_t *target)
+{
+    m_target = target;
+    if (m_llcpSocket != 0) {
+        qWarning() << Q_FUNC_INFO << "LLCP socket not cloesed properly";
+        return;
+    }
+    m_llcpSocket = new QLlcpSocket();
+    m_llcpSocket->bind(serverPort());
+}
 
 QTNFC_END_NAMESPACE
 
-#endif // QNEARFIELDMANAGER_QNX_P_H
+

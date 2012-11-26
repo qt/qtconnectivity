@@ -49,8 +49,10 @@ QNXNFCManager *QNXNFCManager::m_instance = 0;
 
 QNXNFCManager *QNXNFCManager::instance()
 {
-    if (!m_instance)
+    if (!m_instance) {
+        qQNXNFCDebug() << "creating manager instance";
         m_instance = new QNXNFCManager;
+    }
 
     return m_instance;
 }
@@ -97,10 +99,10 @@ QNXNFCManager::QNXNFCManager()
     //        this, SLOT(handleInvoke(const bb::system::InvokeRequest&)));
 
     nfc_set_verbosity(2);
-    qQNXNFCDebug()<<"Init BB NFC";
+    qQNXNFCDebug() << "Init BB NFC";
 
     if (nfc_connect() != NFC_RESULT_SUCCESS) {
-        qWarning()<<Q_FUNC_INFO<< "Could not connect to NFC System";
+        qWarning() << Q_FUNC_INFO << "Could not connect to NFC System";
         return;
     }
 
@@ -214,13 +216,60 @@ void QNXNFCManager::newNfcEvent(int fd)
     case NFC_HANDOVER_COMPLETE_EVENT: qQNXNFCDebug() << "NFC handover event"; break;
     case NFC_HANDOVER_DETECTED_EVENT: qQNXNFCDebug() << "NFC Handover detected"; break;
     case NFC_SNEP_CONNECTION_EVENT: qQNXNFCDebug() << "NFC SNEP detected"; break;
-    case NFC_LLCP_READ_COMPLETE_EVENT: qQNXNFCDebug() << "Read complete event"; break;
+    case NFC_LLCP_READ_COMPLETE_EVENT: llcpReadComplete(nfcEvent); break;
     case NFC_LLCP_WRITE_COMPLETE_EVENT: qQNXNFCDebug() << "Write complete event"; break;
-    case NFC_LLCP_CONNECTION_EVENT: qQNXNFCDebug() << "LLCP connection event"; break;
+    case NFC_LLCP_CONNECTION_EVENT: llcpConnectionEvent(nfcEvent); break;
     default: qQNXNFCDebug() << "Got NFC event" << nfcEventType; break;
     }
 
     nfc_free_event (nfcEvent);
+}
+
+void QNXNFCManager::llcpRead()
+{
+    if (nfc_llcp_read(getLastTarget(), 128) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "Could not register for reading";
+    }
+}
+
+void QNXNFCManager::llcpReadComplete(nfc_event_t *nfcEvent)
+{
+    nfc_target_t *target;
+    if (nfc_get_target(nfcEvent, &target) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "Could not retrieve NFC target";
+        return;
+    }
+    nfc_result_t result;
+    unsigned int bufferLength = -1;
+    result = nfc_llcp_get_local_miu(target, &bufferLength);
+    if (bufferLength == -1) {
+        qWarning() << Q_FUNC_INFO << "could not get local miu";
+    }
+    uchar_t buffer[bufferLength];
+
+    size_t bytesRead;
+
+    m_lastTarget = target;
+
+    result = nfc_llcp_get_read_result(getLastTarget(), buffer, bufferLength, &bytesRead);
+    if (result == NFC_RESULT_SUCCESS) {
+        QByteArray data(reinterpret_cast<char *> (buffer), bytesRead);
+        qQNXNFCDebug() << "Read LLCP data" << bytesRead << data;
+        if (bytesRead > 0) {
+            emit readResult(data);
+            llcpRead();
+        } else {
+            //If there is no data to be read, wait 200 ms
+            QTimer::singleShot(200, this, SLOT(llcpRead()));
+        }
+    } else if (result == NFC_RESULT_READ_FAILED) { //This most likely means, that the target has been disconnected
+        qQNXNFCDebug() << "Read failed";
+        emit llcpDisconnected();
+        return;
+    } else {
+        qQNXNFCDebug() << "LLCP read unknown error";
+        return;
+    }
 }
 
 void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
@@ -245,6 +294,25 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
     }
 }
 
+void QNXNFCManager::llcpConnectionEvent(nfc_event_t *nfcEvent)
+{
+
+    nfc_target_t *target;
+
+    if (nfc_get_target(nfcEvent, &target) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "Could not retrieve NFC target";
+        return;
+    }
+    unsigned int lmiu;
+    nfc_llcp_get_local_miu(target, &lmiu);
+    m_lastTarget = target;
+
+    qQNXNFCDebug() << "LLCP connection event; local MIU" << lmiu;
+    emit newLlcpConnection(target);
+
+    //emit targetDetected(bbNFTarget, targetMessages);
+}
+
 //void QNXNFCManager::startBTHandover()
 //{
 
@@ -253,6 +321,7 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
 bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
 {
     //TODO handle the target types
+    qQNXNFCDebug() << "Starting target detection";
     if (nfc_register_tag_readerwriter(TAG_TYPE_ALL) == NFC_RESULT_SUCCESS) {
         return true;
     } else {
