@@ -56,6 +56,7 @@ QTNFC_BEGIN_NAMESPACE
 template <typename T>
 class NearFieldTarget : public T
 {
+    //Q_OBJECT
 public:
 
     NearFieldTarget(QObject *parent, nfc_target_t *target, const QList<QNdefMessage> &messages)
@@ -115,7 +116,7 @@ public:
             emit QNearFieldTarget::ndefMessageRead(m_ndefMessages.at(i));
         }
         QNearFieldTarget::RequestId id = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-        emit requestCompleted_p(id);
+        //emit requestCompleted_p(id);
         return id;
     }
 
@@ -177,7 +178,7 @@ public:
 
         }
         QNearFieldTarget::RequestId id = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-        emit requestCompleted_p(id);
+        //emit requestCompleted_p(id);
         return id;
     }
 
@@ -197,10 +198,10 @@ protected:
     QByteArray m_tagId;
     QList<QNdefMessage> m_ndefMessages;
 
-Q_SIGNALS:
+//Q_SIGNALS:
     //The purpose of this signal is to be able to emit the requestCompleted signal outside of a function
     //by using a queued connection
-    void requestCompleted_p(const QNearFieldTarget::RequestId &id);
+    //void requestCompleted_p(const QNearFieldTarget::RequestId &id);
 };
 
 QTNFC_END_NAMESPACE
