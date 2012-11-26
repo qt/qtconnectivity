@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2012 Research In Motion
+** Copyright (C) 2013 Research In Motion
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -39,53 +39,49 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDMANAGER_QNX_P_H
-#define QNEARFIELDMANAGER_QNX_P_H
+#ifndef QLLCPSERVER_QNX_P_H
+#define QLLCPSERVER_QNX_P_H
 
-#include "qnearfieldmanager_p.h"
-#include "qnearfieldmanager.h"
-#include "qnearfieldtarget.h"
+#include "qllcpserver.h"
+#include "nfc/nfc.h"
 
-#include "qnx/qnxnfcmanager_p.h"
+QT_BEGIN_HEADER
 
 QTNFC_BEGIN_NAMESPACE
 
-class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
+class QLlcpServerPrivate : public QObject
 {
     Q_OBJECT
-
 public:
-    QNearFieldManagerPrivateImpl();
-    ~QNearFieldManagerPrivateImpl();
+    QLlcpServerPrivate(QLlcpServer *q);
 
-    bool isAvailable() const;
+    bool listen(const QString &serviceUri);
+    bool isListening() const;
 
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+    void close();
 
-    void stopTargetDetection();
+    QString serviceUri() const;
+    quint8 serverPort() const;
 
-    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);
+    bool hasPendingConnections() const;
+    QLlcpSocket *nextPendingConnection();
 
-    int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method);
+    QLlcpSocket::SocketError serverError() const;
 
-    bool unregisterNdefMessageHandler(int handlerId);
-
-    void requestAccess(QNearFieldManager::TargetAccessModes accessModes);
-
-    void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
-
-private Q_SLOTS:
-    void handleMessage(QNdefMessage, QNearFieldTarget *);
-    void newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &);
+Q_INVOKABLE void connected(nfc_target_t *);
 
 private:
-    QList<QNearFieldTarget::Type> m_detectTargetTypes;
-
-    int m_handlerID;
-    QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
-    QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
+    QLlcpServer *q_ptr;
+    QLlcpSocket *m_llcpSocket;
+    //We can not use m_conListener for the connection state
+    bool m_connected;
+    nfc_llcp_connection_listener_t m_conListener;
+    QString m_serviceUri;
+    nfc_target_t *m_target;
 };
 
 QTNFC_END_NAMESPACE
 
-#endif // QNEARFIELDMANAGER_QNX_P_H
+QT_END_HEADER
+
+#endif // QLLCPSERVER_QNX_P_H

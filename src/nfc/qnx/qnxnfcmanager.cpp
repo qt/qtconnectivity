@@ -49,8 +49,10 @@ QNXNFCManager *QNXNFCManager::m_instance = 0;
 
 QNXNFCManager *QNXNFCManager::instance()
 {
-    if (!m_instance)
+    if (!m_instance) {
+        qQNXNFCDebug() << "creating manager instance";
         m_instance = new QNXNFCManager;
+    }
 
     return m_instance;
 }
@@ -89,18 +91,43 @@ bool QNXNFCManager::isAvailable()
     return m_available;
 }
 
+void QNXNFCManager::registerLLCPConnection(nfc_llcp_connection_listener_t listener, QObject *obj)
+{
+    llcpConnections.append(QPair<nfc_llcp_connection_listener_t, QObject*> (listener, obj));
+}
+
+void QNXNFCManager::unregisterLLCPConnection(nfc_llcp_connection_listener_t listener)
+{
+    for (int i=0; i<llcpConnections.size(); i++) {
+        if (llcpConnections.at(i).first == listener) {
+            llcpConnections.removeAt(i);
+        }
+    }
+}
+
+void QNXNFCManager::requestTargetLost(QObject *object, int targetId)
+{
+    nfcTargets.append(QPair<unsigned int, QObject*> (targetId, object));
+}
+
+void QNXNFCManager::unregisterTargetLost(QObject *object)
+{
+    for (int i=0; i<nfcTargets.size(); i++) {
+        if (nfcTargets.at(i).second == object) {
+            nfcTargets.removeAt(i);
+            break;
+        }
+    }
+}
+
 QNXNFCManager::QNXNFCManager()
     : QObject(), nfcNotifier(0)
 {
-    //bb::system::InvokeManager *iManager = new bb::system::InvokeManager(this);
-    //connect(iManager, SIGNAL(invoked(const bb::system::InvokeRequest&)),
-    //        this, SLOT(handleInvoke(const bb::system::InvokeRequest&)));
-
     nfc_set_verbosity(2);
-    qQNXNFCDebug()<<"Init BB NFC";
+    qQNXNFCDebug() << "Initializing BB NFC";
 
     if (nfc_connect() != NFC_RESULT_SUCCESS) {
-        qWarning()<<Q_FUNC_INFO<< "Could not connect to NFC System";
+        qWarning() << Q_FUNC_INFO << "Could not connect to NFC system";
         return;
     }
 
@@ -109,7 +136,7 @@ QNXNFCManager::QNXNFCManager()
     qQNXNFCDebug() << "NFC status" << nfcStatus;
     if (!nfcStatus) {
         qWarning() << "NFC not enabled...enabling";
-        //qDebug()<<nfc_set_setting(NFC_SETTING_ENABLED, true);
+        nfc_set_setting(NFC_SETTING_ENABLED, true);
     }
     m_available = true;
 
@@ -214,13 +241,82 @@ void QNXNFCManager::newNfcEvent(int fd)
     case NFC_HANDOVER_COMPLETE_EVENT: qQNXNFCDebug() << "NFC handover event"; break;
     case NFC_HANDOVER_DETECTED_EVENT: qQNXNFCDebug() << "NFC Handover detected"; break;
     case NFC_SNEP_CONNECTION_EVENT: qQNXNFCDebug() << "NFC SNEP detected"; break;
-    case NFC_LLCP_READ_COMPLETE_EVENT: qQNXNFCDebug() << "Read complete event"; break;
-    case NFC_LLCP_WRITE_COMPLETE_EVENT: qQNXNFCDebug() << "Write complete event"; break;
-    case NFC_LLCP_CONNECTION_EVENT: qQNXNFCDebug() << "LLCP connection event"; break;
+    case NFC_LLCP_READ_COMPLETE_EVENT: llcpReadComplete(nfcEvent); break;
+    case NFC_LLCP_WRITE_COMPLETE_EVENT: llcpWriteComplete(nfcEvent); break;
+    case NFC_LLCP_CONNECTION_EVENT: llcpConnectionEvent(nfcEvent); break;
+    case NFC_TARGET_LOST_EVENT: targetLostEvent(nfcEvent); break;
     default: qQNXNFCDebug() << "Got NFC event" << nfcEventType; break;
     }
 
     nfc_free_event (nfcEvent);
+}
+
+void QNXNFCManager::llcpReadComplete(nfc_event_t *nfcEvent)
+{
+    nfc_target_t *target;
+    if (nfc_get_target(nfcEvent, &target) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "Could not retrieve LLCP NFC target";
+        return;
+    }
+    nfc_result_t result;
+    unsigned int bufferLength = -1;
+    result = nfc_llcp_get_local_miu(target, &bufferLength);
+    if (result != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "could not get local miu";
+    }
+    uchar_t buffer[bufferLength];
+
+    size_t bytesRead;
+
+    m_lastTarget = target;
+    unsigned int targetId;
+    nfc_get_target_connection_id(target, &targetId);
+
+    QByteArray data;
+    result = nfc_llcp_get_read_result(getLastTarget(), buffer, bufferLength, &bytesRead);
+    if (result == NFC_RESULT_SUCCESS) {
+        data = QByteArray(reinterpret_cast<char *> (buffer), bytesRead);
+        qQNXNFCDebug() << "Read LLCP data" << bytesRead << data;
+    } else if (result == NFC_RESULT_READ_FAILED) { //This most likely means, that the target has been disconnected
+        qWarning() << Q_FUNC_INFO << "LLCP read failed";
+        nfc_llcp_close(target);
+        targetLost(targetId);
+        return;
+    } else {
+        qWarning() << Q_FUNC_INFO << "LLCP read unknown error";
+        //return;
+    }
+
+    for (int i=0; i<nfcTargets.size(); i++) {
+        if (nfcTargets.at(i).first == targetId) {
+            QMetaObject::invokeMethod(nfcTargets.at(i).second, "dataRead",
+                                  Q_ARG(QByteArray&, data));
+        }
+    }
+}
+
+void QNXNFCManager::llcpWriteComplete(nfc_event_t *nfcEvent)
+{
+    nfc_target_t *target;
+    if (nfc_get_target(nfcEvent, &target) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "Could not retrieve LLCP NFC target";
+        return;
+    }
+
+    if (nfc_llcp_get_write_status(target) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "LLCP write failed";
+    } else {
+        qQNXNFCDebug() << "write completed succesfull";
+    }
+
+    unsigned int targetId;
+    nfc_get_target_connection_id(target, &targetId);
+
+    for (int i=0; i<nfcTargets.size(); i++) {
+        if (nfcTargets.at(i).first == targetId) {
+            QMetaObject::invokeMethod(nfcTargets.at(i).second, "dataWritten");
+        }
+    }
 }
 
 void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
@@ -245,14 +341,54 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
     }
 }
 
-//void QNXNFCManager::startBTHandover()
-//{
+void QNXNFCManager::llcpConnectionEvent(nfc_event_t *nfcEvent)
+{
+    nfc_target_t *target;
 
-//}
+    if (nfc_get_target(nfcEvent, &target) != NFC_RESULT_SUCCESS) {
+        qWarning() << Q_FUNC_INFO << "Could not retrieve NFC target";
+        return;
+    }
+    nfc_llcp_connection_listener_t conListener;
+    nfc_llcp_get_connection_status(target, &conListener);
+    unsigned int lmiu;
+    nfc_llcp_get_local_miu(target, &lmiu);
+    m_lastTarget = target;
+
+    qQNXNFCDebug() << "LLCP connection event; local MIU" << lmiu;
+    for (int i=0; i<llcpConnections.size(); i++) {
+        if (llcpConnections.at(i).first == conListener) {
+            //Do we also have to destroy the conn listener afterwards?
+            QMetaObject::invokeMethod(llcpConnections.at(i).second, "connected",
+                                      Q_ARG(nfc_target_t *, target));
+            break;
+        }
+    }
+}
+
+void QNXNFCManager::targetLostEvent(nfc_event_t *nfcEvent)
+{
+    unsigned int targetId;
+    nfc_get_notification_value(nfcEvent, &targetId);
+    qQNXNFCDebug() << "Target lost with target ID:" << targetId;
+    targetLost(targetId);
+}
+
+void QNXNFCManager::targetLost(unsigned int targetId)
+{
+    for (int i=0; i<nfcTargets.size(); i++) {
+        if (nfcTargets.at(i).first == targetId) {
+            QMetaObject::invokeMethod(nfcTargets.at(i).second, "targetLost");
+            nfcTargets.removeAt(i);
+            break;
+        }
+    }
+}
 
 bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
 {
     //TODO handle the target types
+    qQNXNFCDebug() << "Starting target detection";
     if (nfc_register_tag_readerwriter(TAG_TYPE_ALL) == NFC_RESULT_SUCCESS) {
         return true;
     } else {
@@ -260,14 +396,5 @@ bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &ta
         return false;
     }
 }
-
-//void QNXNFCManager::handleInvoke(const bb::system::InvokeRequest& request)
-//{
-//    /*QString action = request.action(); // The action to be performed
-//    QString mime = request.mimeType(); // Content type of the data
-//    QString uri = request.uri().toString(); // Location of data – out of band
-//    QString data = QString(request.data()); // In-band data
-//    qQNXNFCDebug() << action << mime << uri << data;*/
-//}
 
 QTNFC_END_NAMESPACE
