@@ -53,8 +53,9 @@
 //#include <bb/system/InvokeRequest>
 //#include <bb/system/ApplicationStartupMode>
 #include "../qnearfieldtarget_qnx_p.h"
+#include <QTimer>
 
-#ifdef QNXNFC_DEBUG
+#ifdef QQNXNFC_DEBUG
 #define qQNXNFCDebug qDebug
 #else
 #define qQNXNFCDebug QT_NO_QDEBUG_MACRO
@@ -63,6 +64,8 @@
 QT_BEGIN_HEADER
 
 QTNFC_BEGIN_NAMESPACE
+
+class QLlcpSocketPrivate;
 
 class Q_DECL_EXPORT QNXNFCManager : public QObject
 {
@@ -74,6 +77,10 @@ public:
     void unregisterTargetDetection(QObject *);
     nfc_target_t *getLastTarget();
     bool isAvailable();
+    void registerLLCPConnection(nfc_llcp_connection_listener_t, QObject *);
+    void unregisterLLCPConnection(nfc_llcp_connection_listener_t);
+    void requestTargetLost(QObject *, int);
+    void unregisterTargetLost(QObject *);
 
 private:
     QNXNFCManager();
@@ -86,6 +93,8 @@ private:
     QSocketNotifier *nfcNotifier;
 
     QList<QNdefMessage> decodeTargetMessage(nfc_target_t *);
+    QList<QPair<nfc_llcp_connection_listener_t, QObject *> > llcpConnections;
+    QList<QPair<unsigned int ,QLlcpSocketPrivate*> > nfcTargets;
 
     QList<QPair<QObject*, QMetaMethod> > ndefMessageHandlers;
 
@@ -94,21 +103,26 @@ private:
     nfc_target_t *m_lastTarget;
     bool m_available;
 
-public Q_SLOTS:
-    void newNfcEvent(int fd);
+    void llcpReadComplete(nfc_event_t *nfcEvent);
+    void llcpWriteComplete(nfc_event_t *nfcEvent);
     void nfcReadWriteEvent(nfc_event_t *nfcEvent);
+    void llcpConnectionEvent(nfc_event_t *nfcEvent);
+    void targetLostEvent(nfc_event_t *nfcEvent);
+    void targetLost(unsigned int target);
     void startBTHandover();
+
+private Q_SLOTS:
+    void newNfcEvent(int fd);
+
+public:
     //TODO add a parameter to only detect a special target for now we are detecting all target types
     bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
-    //void handleInvoke(const bb::system::InvokeRequest& request);
 
 Q_SIGNALS:
-    //void llcpEvent();
     void ndefMessage(QNdefMessage, QNearFieldTarget *);
     void targetDetected(QNearFieldTarget *, const QList<QNdefMessage> &);
-    //Not sure if this is implementable
-    //void targetLost(); //Not available yet
-    //void bluetoothHandover();
+    void readResult(QByteArray&, nfc_target_t *);
+    void llcpDisconnected();
 };
 
 QTNFC_END_NAMESPACE
