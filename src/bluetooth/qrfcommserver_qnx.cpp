@@ -59,7 +59,8 @@ QRfcommServerPrivate::QRfcommServerPrivate()
 
 QRfcommServerPrivate::~QRfcommServerPrivate()
 {
-    delete socket;
+    if (socket)
+        delete socket;
     ppsUnregisterControl(this);
 }
 
@@ -79,7 +80,7 @@ void QRfcommServerPrivate::controlReply(ppsResult result)
         } else {
             QBluetoothSocket *newSocket =  new QBluetoothSocket;
             newSocket->setSocketDescriptor(socketFD, QBluetoothSocket::RfcommSocket,
-                                           QBluetoothSocket::ConnectedState);//, );
+                                           QBluetoothSocket::ConnectedState);
             newSocket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
             activeSockets.append(newSocket);
             emit q->newConnection();
@@ -92,10 +93,16 @@ void QRfcommServerPrivate::controlEvent(ppsResult result)
     if (result.msg == QStringLiteral("service_connected")) {
         qBBBluetoothDebug() << "SPP: Server: Sending request for mount point path";
         qBBBluetoothDebug() << result.dat;
+        for (int i=0; i<result.dat.size(); i++) {
+            qBBBluetoothDebug() << result.dat.at(i);
+        }
 
-        if (result.dat.size() >= 2) {
-            nextClientAddress = result.dat.at(1);
-            ppsSendControlMessage("get_mount_point_path", 0x1101, QBluetoothUuid(QStringLiteral("00000000-1111-2222-3334-444444444443")), result.dat.at(1), this);
+        if (result.dat.contains("addr") && result.dat.contains("uuid") && result.dat.contains("subtype")) {
+            nextClientAddress = result.dat.at(result.dat.indexOf("addr") + 1);
+            m_uuid = QBluetoothUuid(result.dat.at(result.dat.indexOf("uuid") + 1));
+            int subtype = result.dat.at(result.dat.indexOf("subtype") + 1).toInt();
+            qBBBluetoothDebug() << "Getting mount point path" << m_uuid << nextClientAddress<< subtype;
+            ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, nextClientAddress, this, BT_SPP_SERVER_SUBTYPE);
         } else {
             qWarning() << Q_FUNC_INFO << "address not specified in service connect reply";
         }
@@ -129,7 +136,7 @@ bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
     if (!d->socket)
         return false;
 
-    ppsRegisterForEvent(QStringLiteral("service_connected"),this);
+    ppsRegisterForEvent(QStringLiteral("service_connected"),d);
     return true;
 }
 
