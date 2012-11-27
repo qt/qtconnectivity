@@ -167,41 +167,6 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
     }
 }
 
-bool QBluetoothServiceInfo::isRegistered() const
-{
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->registered;
-}
-
-bool QBluetoothServiceInfo::registerService() const
-{
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->registerService();
-}
-
-bool QBluetoothServiceInfo::unregisterService() const
-{
-    Q_D(const QBluetoothServiceInfo);
-
-    if (!d->registered)
-        return false;
-
-    if (!d->ensureSdpConnection())
-        return false;
-
-    QDBusPendingReply<> reply = d->service->RemoveRecord(d->serviceRecord);
-    reply.waitForFinished();
-    if (reply.isError())
-        return false;
-
-    d->serviceRecord = 0;
-
-    d->registered = false;
-    return true;
-}
-
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 :   service(0), serviceRecord(0), registered(false)
 {
@@ -209,6 +174,25 @@ QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
 {
+}
+
+bool QBluetoothServiceInfoPrivate::unregisterService() const
+{
+    if (!registered)
+        return false;
+
+    if (!ensureSdpConnection())
+        return false;
+
+    QDBusPendingReply<> reply = service->RemoveRecord(d->serviceRecord);
+    reply.waitForFinished();
+    if (reply.isError())
+        return false;
+
+    serviceRecord = 0;
+
+    registered = false;
+    return true;
 }
 
 void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value) const

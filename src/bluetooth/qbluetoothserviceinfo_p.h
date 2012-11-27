@@ -57,35 +57,38 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 class QBluetoothServiceInfo;
 
 class QBluetoothServiceInfoPrivate
+#ifdef QTM_QNX_BLUETOOTH
+: public QObject
 {
+    Q_OBJECT
+#else
+{
+#endif
     Q_DECLARE_PUBLIC(QBluetoothServiceInfo)
 public:
     QBluetoothServiceInfoPrivate();
     ~QBluetoothServiceInfoPrivate();
 
+    bool registerService() const;
+
+    bool isRegistered() const;
+
+    bool unregisterService() const;
+
     void setRegisteredAttribute(quint16 attributeId, const QVariant &value) const;
     void removeRegisteredAttribute(quint16 attributeId) const;
-
-    bool ensureSdpConnection() const;
-
-#if defined(QT_BLUEZ_BLUETOOTH) || defined(QTM_QNX_BLUETOOTH)
-    bool registerService() const;
-#endif
-
     QBluetoothDeviceInfo deviceInfo;
     QMap<quint16, QVariant> attributes;
-
+private:
 #ifdef QT_BLUEZ_BLUETOOTH
+    bool ensureSdpConnection() const;
+
     mutable OrgBluezServiceInterface *service;
     mutable quint32 serviceRecord;
-    mutable bool registered;
 #endif
 
-#ifdef QTM_QNX_BLUETOOTH
     mutable bool registered;
-#endif
-    
-private:
+
     QBluetoothServiceInfo *q_ptr;
 };
 

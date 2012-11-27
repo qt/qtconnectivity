@@ -44,21 +44,6 @@
 
 QTBLUETOOTH_BEGIN_NAMESPACE
 
-bool QBluetoothServiceInfo::isRegistered() const
-{
-    return false;
-}
-
-bool QBluetoothServiceInfo::registerService() const
-{
-    return false;
-}
-
-bool QBluetoothServiceInfo::unregisterService() const
-{
-    return false;
-}
-
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 {
 }
@@ -66,6 +51,22 @@ QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
 {
 }
+
+bool QBluetoothServiceInfoPrivate::isRegistered() const
+{
+    return false;
+}
+
+bool QBluetoothServiceInfoPrivate::registerService() const
+{
+    return false;
+}
+
+bool QBluetoothServiceInfoPrivate::unregisterService() const
+{
+    return false;
+}
+
 
 void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value) const
 {
@@ -77,12 +78,5 @@ void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId
 {
     Q_UNUSED(attributeId);
 }
-
-#ifdef QT_BLUEZ_BLUETOOTH
-bool QBluetoothServiceInfoPrivate::registerService() const
-{
-    return false;
-}
-#endif
 
 QTBLUETOOTH_END_NAMESPACE
