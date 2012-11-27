@@ -130,6 +130,12 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     (SDP) implementation, otherwise returns false.
 */
 
+bool QBluetoothServiceInfo::isRegistered() const
+{
+    Q_D(const QBluetoothServiceInfo);
+    return d->registered;
+}
+
 /*!
     \fn bool QBluetoothServiceInfo::registerService() const
 
@@ -139,6 +145,12 @@ QTBLUETOOTH_BEGIN_NAMESPACE
     cannot be made. The service must be unregistered and registered again with the changes.
 */
 
+bool QBluetoothServiceInfo::registerService() const
+{
+    Q_D(const QBluetoothServiceInfo);
+    return d->registerService();
+}
+
 /*!
     \fn bool QBluetoothServiceInfo::unregisterService() const
 
@@ -147,6 +159,13 @@ QTBLUETOOTH_BEGIN_NAMESPACE
 
     Returns true if the service is successfully unregistered, otherwise returns false.
 */
+
+bool QBluetoothServiceInfo::unregisterService() const
+{
+    Q_D(const QBluetoothServiceInfo);
+    return d->unregisterService();
+}
+
 
 /*!
     \fn void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QBluetoothUuid &value)
