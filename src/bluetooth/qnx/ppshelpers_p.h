@@ -69,6 +69,9 @@
 #define qBBBluetoothDebug QT_NO_QDEBUG_MACRO
 #endif
 
+#define BT_SPP_SERVER_SUBTYPE 1
+#define BT_SPP_CLIENT_SUBTYPE 2
+
 QT_BEGIN_HEADER
 
 QTBLUETOOTH_BEGIN_NAMESPACE
@@ -107,7 +110,7 @@ pps_encoder_t *beginCtrlMessage(const char *msg, QObject *sender);
 
 void endCtrlMessage(pps_encoder_t *encoder);
 
-void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, QObject *sender=0);
+void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, QObject *sender=0, const int &subtype=-1);
 
 void ppsSendControlMessage(const char *msg,  const QString &dat, QObject *sender=0);
 

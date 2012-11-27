@@ -74,12 +74,13 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType ty
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode)
 {
     Q_UNUSED(openMode);
+    qBBBluetoothDebug() << "Connecting socket";
     if (isServerSocket) {
         m_peerAddress = address;
         m_uuid = uuid;
         return;
     }
-    qBBBluetoothDebug() << "Connecting..";
+
     if (state != QBluetoothSocket::UnconnectedState) {
         qBBBluetoothDebug() << "Socket already connected";
         return;
@@ -89,7 +90,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     m_uuid = uuid;
     m_peerAddress = address;
 
-    ppsSendControlMessage("connect_service", 0x1101, uuid, address.toString(), this);
+    ppsSendControlMessage("connect_service", 0x1101, uuid, address.toString(), this, BT_SPP_CLIENT_SUBTYPE);
     ppsRegisterForEvent(QStringLiteral("service_connected"),this);
     ppsRegisterForEvent(QStringLiteral("get_mount_point_path"),this);
     socketType = QBluetoothSocket::RfcommSocket;
@@ -157,7 +158,11 @@ void QBluetoothSocketPrivate::_q_readNotify()
 
 void QBluetoothSocketPrivate::abort()
 {
-    ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, m_peerAddress.toString(), this);
+    Q_Q(QBluetoothSocket);
+    qBBBluetoothDebug() << "Disconnecting service";
+    if (q->state() != QBluetoothSocket::ClosingState)
+        ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, m_peerAddress.toString(), this,
+                          isServerSocket ? BT_SPP_SERVER_SUBTYPE : BT_SPP_CLIENT_SUBTYPE);
     delete readNotifier;
     readNotifier = 0;
     delete connectWriteNotifier;
@@ -166,7 +171,8 @@ void QBluetoothSocketPrivate::abort()
     ::close(socket);
 
     Q_Q(QBluetoothSocket);
-    emit q->disconnected();
+    q->setSocketState(QBluetoothSocket::UnconnectedState);
+    Q_EMIT q->disconnected();
     isServerSocket = false;
 }
 
@@ -242,28 +248,7 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
 
 void QBluetoothSocketPrivate::close()
 {
-    Q_Q(QBluetoothSocket);
-
-    ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, peerAddress().toString(), this);
-
-    // Only go through closing if the socket was fully opened
-    if (state == QBluetoothSocket::ConnectedState)
-        q->setSocketState(QBluetoothSocket::ClosingState);
-
-    if (txBuffer.size() > 0 && state == QBluetoothSocket::ClosingState) {
-        connectWriteNotifier->setEnabled(true);
-    } else {
-
-        delete readNotifier;
-        readNotifier = 0;
-        delete connectWriteNotifier;
-        connectWriteNotifier = 0;
-
-        // We are disconnected now, so go to unconnected.
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
-        Q_EMIT q->disconnected();
-        ::close(socket);
-    }
+    abort();
 }
 
 bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothSocket::SocketType socketType,
@@ -295,6 +280,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
         emit q->connected();
 
     isServerSocket = true;
+    ppsRegisterForEvent(QStringLiteral("service_disconnected"),this);
 
     return true;
 }
@@ -321,8 +307,10 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
             emit q->error(QBluetoothSocket::UnknownSocketError);
             q->setSocketState(QBluetoothSocket::UnconnectedState);
             return;
+        } else {
+            qBBBluetoothDebug() << Q_FUNC_INFO << "Sending request for mount point";
+            ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, m_peerAddress.toString(), this, BT_SPP_CLIENT_SUBTYPE);
         }
-
     } else if (result.msg == QStringLiteral("get_mount_point_path")) {
         QString path;
         path = result.dat.first();
@@ -357,16 +345,16 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
             connectWriteNotifier->setEnabled(true);
             readNotifier->setEnabled(true);
             emit q->connected();
+            ppsRegisterForEvent(QStringLiteral("service_disconnected"),this);
         }
     }
 }
 
 void QBluetoothSocketPrivate::controlEvent(ppsResult result)
 {
-    if (result.msg == QStringLiteral("service_connected")) {
-        qBBBluetoothDebug() << Q_FUNC_INFO << "Sending request for mount point";
-        ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, m_peerAddress.toString(), this);
-        return;
+    if (result.msg == QStringLiteral("service_disconnected")) {
+        q->setSocketState(QBluetoothSocket::ClosingState);
+        close();
     }
 }
 
