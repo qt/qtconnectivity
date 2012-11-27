@@ -130,11 +130,13 @@ void endCtrlMessage(pps_encoder_t *encoder)
     pps_encoder_cleanup( encoder );
 }
 
-void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, QObject *sender)
+void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, QObject *sender, const int &subtype)
 {
     pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
     pps_encoder_start_object(encoder, "dat");
     pps_encoder_add_int(encoder, "service", service);
+    if (subtype != -1)
+        pps_encoder_add_int(encoder, "subtype", subtype);
 
     pps_encoder_add_string(encoder, "uuid", uuid.toString().mid(1,36).toUtf8().constData());
 
@@ -172,6 +174,7 @@ void ppsDecodeControlResponse()
     if (ppsCtrlFD != -1) {
         char buf[ppsBufferSize];
         qt_safe_read( ppsCtrlFD, &buf, sizeof(buf) );
+        qBBBluetoothDebug() << "CTRL Response" << buf;
 
         pps_decoder_t ppsDecoder;
         pps_decoder_initialize(&ppsDecoder, 0);
@@ -205,18 +208,31 @@ void ppsDecodeControlResponse()
                 result.dat << QString::fromUtf8(buf);
             } else if (nodeType == PPS_TYPE_OBJECT || nodeType == PPS_TYPE_ARRAY) {
                 pps_decoder_push(&ppsDecoder,"dat");
-                do {
-                    if (pps_decoder_get_string(&ppsDecoder,0, &buf) == PPS_DECODER_OK) {
-                        result.dat << QString::fromUtf8(pps_decoder_name(&ppsDecoder));
-                        result.dat << QString::fromUtf8(buf);
-                    }
-                } while (pps_decoder_next(&ppsDecoder) == PPS_DECODER_OK);
+                pps_decoder_goto_index(&ppsDecoder, 0);
+                int len = pps_decoder_length(&ppsDecoder);
+
+                for (int i = 0; i < len; ++i) {
+                    switch ( pps_decoder_type(&ppsDecoder, 0)) {
+                    case PPS_TYPE_STRING:
+                         result.dat << QString::fromUtf8(pps_decoder_name(&ppsDecoder));
+                         pps_decoder_get_string(&ppsDecoder, 0, &buf);
+                         result.dat << QString::fromUtf8(buf);
+                         break;
+                     case PPS_TYPE_NUMBER:
+                         result.dat << QString::fromUtf8(pps_decoder_name(&ppsDecoder));
+                         double dvalue;
+                         pps_decoder_get_double(&ppsDecoder, 0, &dvalue);
+                         result.dat << QString::number(dvalue);
+                         break;
+                     default:
+                         pps_decoder_next(&ppsDecoder);
+                     }
+                 }
             } else {
                 qBBBluetoothDebug() << "Control Response: No node type" << result.msg;
             }
         }
         pps_decoder_cleanup(&ppsDecoder);
-
     }
 
     if (resType == RESPONSE) {

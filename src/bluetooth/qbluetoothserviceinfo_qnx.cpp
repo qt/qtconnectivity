@@ -88,15 +88,19 @@ void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId
 bool QBluetoothServiceInfoPrivate::registerService() const
 {
     Q_Q(const QBluetoothServiceInfo);
+    if (q->socketProtocol() != QBluetoothServiceInfo::RfcommProtocol) {
+        qWarning() << Q_FUNC_INFO << "Only SPP services can be registered on QNX";
+        return false;
+    }
     ppsRegisterControl();
     if (registered)
-        ppsSendControlMessage("deregister_server", 0x1101,  QBluetoothUuid(QStringLiteral("00000000-1111-2222-3334-444444444443")), QString(), 0);
+        ppsSendControlMessage("deregister_server", 0x1101,  q->serviceUuid(), QString(), 0);
 
-    //m_uuid = uuid;
-    qBBBluetoothDebug() << "deregistering server";
-    ppsSendControlMessage("deregister_server", 0x1101, QBluetoothUuid(QStringLiteral("00000000-1111-2222-3334-444444444443")), QString(), 0);
-    qBBBluetoothDebug() << "registering server";
-    ppsSendControlMessage("register_server", 0x1101, QBluetoothUuid(QStringLiteral("00000000-1111-2222-3334-444444444443")), QString(), 0);
+    //If any server instance is already running, it is deregistered
+    //qBBBluetoothDebug() << "deregistering server";
+    //ppsSendControlMessage("deregister_server", 0x1101, q->serviceUuid(), QString(), 0);
+    qBBBluetoothDebug() << "registering spp server: UUID" << q->serviceUuid();
+    ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), QString(), 0);
 
     registered = true;
     return true;
