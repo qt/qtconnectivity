@@ -184,7 +184,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService() const
     if (!ensureSdpConnection())
         return false;
 
-    QDBusPendingReply<> reply = service->RemoveRecord(d->serviceRecord);
+    QDBusPendingReply<> reply = service->RemoveRecord(serviceRecord);
     reply.waitForFinished();
     if (reply.isError())
         return false;
