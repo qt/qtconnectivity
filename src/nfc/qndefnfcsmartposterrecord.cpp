@@ -1,45 +1,83 @@
+/***************************************************************************
+ **
+ ** Copyright (C) 2011 - 2012 Research In Motion
+ ** Contact: http://www.qt-project.org/legal
+ **
+ ** This file is part of the plugins of the Qt Toolkit.
+ **
+ ** $QT_BEGIN_LICENSE:LGPL$
+ ** Commercial License Usage
+ ** Licensees holding valid commercial Qt licenses may use this file in
+ ** accordance with the commercial license agreement provided with the
+ ** Software or, alternatively, in accordance with the terms contained in13	
+ ** a written agreement between you and Digia.  For licensing terms and
+ ** conditions see http://qt.digia.com/licensing.  For further information
+ ** use the contact form at http://qt.digia.com/contact-us.
+ **
+ ** GNU Lesser General Public License Usage
+ ** Alternatively, this file may be used under the terms of the GNU Lesser
+ ** General Public License version 2.1 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.LGPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU Lesser General Public License version 2.1 requirements
+ ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+ **
+ ** In addition, as a special exception, Digia gives you certain additional
+ ** rights.  These rights are described in the Digia Qt LGPL Exception
+ ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+ **	
+ ** GNU General Public License Usage
+ ** Alternatively, this file may be used under the terms of the GNU
+ ** General Public License version 3.0 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.GPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU General Public License version 3.0 requirements will be
+ ** met: http://www.gnu.org/copyleft/gpl.html.
+ **
+ **
+ ** $QT_END_LICENSE$
+ **
+ ****************************************************************************/
+
 #include <qndefnfcsmartposterrecord.h>
 #include <qndefnfcsmartposterrecord_p.h>
 #include <qndefmessage.h>
 #include <qndefnfcurirecord.h>
 
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 #include <QtCore/QUrl>
 
 QTNFC_BEGIN_NAMESPACE
 
 /*!
- * @class QNdefNfcSmartPosterRecord
- * @brief The QNdefNfcSmartPosterRecord class provides an NFC RTD-SmartPoster.
- * @ingroup connectivity-nfc
- * @since 1.2
- *
- * RTD-SmartPoster encapsulates a Smart Poster.
+    \class QNdefNfcSmartPosterRecord
+    \brief The QNdefNfcSmartPosterRecord class provides an NFC RTD-SmartPoster.
+    
+    \ingroup connectivity-nfc
+    \inmodule QtNfc
+    
+    RTD-SmartPoster encapsulates a Smart Poster.
  */
 
 /*!
- * @enum QNdefNfcSmartPosterRecord::ActionValue
- * This enum describes the course of action that a device should take with the content.
+    \enum QNdefNfcSmartPosterRecord::Action
+
+    This enum describes the course of action that a device should take with the content.
+
+    \value UnspecifiedAction    The action is not defined.
+    \value DoAction             Do the action (send the SMS, launch the browser, make the telephone call).
+    \value SaveAction           Save for later (store the SMS in INBOX, put the URI in a bookmark, save the telephone number in contacts).
+    \value EditAction           Open for editing (open an SMS in the SMS editor, open the URI in a URI editor, open the telephone number for editing).
  */
 
 /*!
- * @var QNdefNfcSmartPosterRecord::ActionValue QNdefNfcSmartPosterRecord::Unset
- * The action is not defined.
- * @var QNdefNfcSmartPosterRecord::ActionValue QNdefNfcSmartPosterRecord::Do
- * Do the action (send the SMS, launch the browser, make the telephone call).
- * @var QNdefNfcSmartPosterRecord::ActionValue QNdefNfcSmartPosterRecord::Save
- * Save for later (store the SMS in INBOX, put the URI in a bookmark, save the telephone number in contacts).
- * @var QNdefNfcSmartPosterRecord::ActionValue QNdefNfcSmartPosterRecord::Open
- * Open for editing (open an SMS in the SMS editor, open the URI in a URI editor, open the telephone number for editing).
+    Returns true if the smart poster record contains a title record encoded in \a locale. If \a locale
+    is empty then true is returned if at least one title is present regardless of \a locale, otherwise
+    false is returned.
  */
-
-/*!
- *  @return Returns true if the smart poster record contains a title record encoded in @c locale. If @c locale
- *  is empty then true is returned if at least one title is present regardless of @c locale, otherwise
- *  false is returned.
- *  @param locale The locale to match with the title record
- */
-bool QNdefNfcSmartPosterRecord::hasTitle(const QString& locale) const {
+bool QNdefNfcSmartPosterRecord::hasTitle(const QString &locale) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -48,7 +86,7 @@ bool QNdefNfcSmartPosterRecord::hasTitle(const QString& locale) const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord text(rec);
@@ -63,9 +101,10 @@ bool QNdefNfcSmartPosterRecord::hasTitle(const QString& locale) const {
 }
 
 /*!
- *  @return Returns true if the smart poster record contains an action record, otherwise false.
+    Returns true if the smart poster record contains an action record, otherwise false.
  */
-bool QNdefNfcSmartPosterRecord::hasAction() const {
+bool QNdefNfcSmartPosterRecord::hasAction() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -74,7 +113,7 @@ bool QNdefNfcSmartPosterRecord::hasAction() const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcActRecord>()) {
             return true;
@@ -85,12 +124,12 @@ bool QNdefNfcSmartPosterRecord::hasAction() const {
 }
 
 /*!
- *  @return Returns true if the smart poster record contains an icon record with mimetype @c mimetype. If @c mimetype
- *  is empty then true is returned if at least one icon is present regardless of @c mimetype, otherwise
- *  false is returned.
- *  @param mimetype The MIME type that encodes the icon's image type
+    Returns true if the smart poster record contains an icon record with mimetype \a mimetype. If \a mimetype
+    is empty then true is returned if at least one icon is present regardless of \a mimetype, otherwise
+    false is returned.
  */
-bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray& mimetype) const {
+bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray &mimetype) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -99,7 +138,7 @@ bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray& mimetype) const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcIconRecord>()) {
             QNdefNfcIconRecord icon(rec);
@@ -114,9 +153,10 @@ bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray& mimetype) const {
 }
 
 /*!
- *  @return Returns true if the smart poster record contains a size record, otherwise false.
+    Returns true if the smart poster record contains a size record, otherwise false.
  */
-bool QNdefNfcSmartPosterRecord::hasSize() const {
+bool QNdefNfcSmartPosterRecord::hasSize() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -125,7 +165,7 @@ bool QNdefNfcSmartPosterRecord::hasSize() const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcSizeRecord>()) {
             return true;
@@ -136,9 +176,10 @@ bool QNdefNfcSmartPosterRecord::hasSize() const {
 }
 
 /*!
- *  @return Returns true if the smart poster record contains a type record, otherwise false.
+    Returns true if the smart poster record contains a type record, otherwise false.
  */
-bool QNdefNfcSmartPosterRecord::hasTypeInfo() const {
+bool QNdefNfcSmartPosterRecord::hasTypeInfo() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -147,7 +188,7 @@ bool QNdefNfcSmartPosterRecord::hasTypeInfo() const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcTypeRecord>()) {
             return true;
@@ -158,12 +199,12 @@ bool QNdefNfcSmartPosterRecord::hasTypeInfo() const {
 }
 
 /*!
- *  @return Returns the title from the title record encoded in @c locale if available. If @c locale
- *  is empty then the title from the first available record is returned regardless of @c locale. In all other
- *  cases an empty string is returned.
- *  @param locale The locale to match with the title record
+    Returns the title from the title record encoded in \a locale if available. If \a locale
+    is empty then the title from the first available record is returned regardless of \a locale. In all other
+    cases an empty string is returned.
  */
-QString QNdefNfcSmartPosterRecord::title(const QString& locale) const {
+QString QNdefNfcSmartPosterRecord::title(const QString &locale) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -172,7 +213,7 @@ QString QNdefNfcSmartPosterRecord::title(const QString& locale) const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord text(rec);
@@ -187,12 +228,12 @@ QString QNdefNfcSmartPosterRecord::title(const QString& locale) const {
 }
 
 /*!
- *  @return Returns the locale from the title record encoded in @c locale if available. If @c locale
- *  is empty then the locale from the first available record is returned regardless of @c locale. In all other
- *  cases an empty string is returned.
- *  @param locale The locale to match with the title record
+    Returns the locale from the title record encoded in \a locale if available. If \a locale
+    is empty then the locale from the first available record is returned regardless of \a locale. In all other
+    cases an empty string is returned.
  */
-QString QNdefNfcSmartPosterRecord::titleLocale(const QString& locale) const {
+QString QNdefNfcSmartPosterRecord::titleLocale(const QString &locale) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -201,7 +242,7 @@ QString QNdefNfcSmartPosterRecord::titleLocale(const QString& locale) const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord text(rec);
@@ -216,12 +257,12 @@ QString QNdefNfcSmartPosterRecord::titleLocale(const QString& locale) const {
 }
 
 /*!
- *  @return Returns the encoding from the title record encoded in @c locale if available. If @c locale
- *  is empty then the encoding from the first available record is returned regardless of @c locale. In all other
- *  cases @c QNdefNfcTextRecord::Utf8 is returned.
- *  @param locale The locale to match with the title record
+    Returns the encoding from the title record encoded in \a locale if available. If \a locale
+    is empty then the encoding from the first available record is returned regardless of \a locale. In all other
+    cases \a Utf8 is returned.
  */
-QNdefNfcTextRecord::Encoding QNdefNfcSmartPosterRecord::titleEncoding(const QString& locale) const {
+QNdefNfcTextRecord::Encoding QNdefNfcSmartPosterRecord::titleEncoding(const QString &locale) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -230,7 +271,7 @@ QNdefNfcTextRecord::Encoding QNdefNfcSmartPosterRecord::titleEncoding(const QStr
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord text(rec);
@@ -245,15 +286,13 @@ QNdefNfcTextRecord::Encoding QNdefNfcSmartPosterRecord::titleEncoding(const QStr
 }
 
 /*!
- *  @brief Adds a new title record containing the title @c text using locale @c locale and encoded in @c encoding.
- *  The method inserts the record and returns true if the smart poster does not already contain a title encoded in @c locale,
- *  otherwise the title is not added and false is returned.
- *  @param text The text of the title
- *  @param locale The locale of the title
- *  @param encoding The encoding of the title
- *  @return Returns true if the smart poster does not already contain a title encoded in @c locale, otherwise false
+    Adds a new title record containing the title \a text using locale \a locale and encoded in \a encoding.
+    The method inserts the record and returns true if the smart poster does not already contain a title encoded in \a locale,
+    otherwise the title is not added and false is returned. Returns true if the smart poster does not already contain a title encoded
+    in \a locale, otherwise false
  */
-bool QNdefNfcSmartPosterRecord::addTitle(const QString& text, const QString& locale, QNdefNfcTextRecord::Encoding encoding) {
+bool QNdefNfcSmartPosterRecord::addTitle(const QString &text, const QString &locale, QNdefNfcTextRecord::Encoding encoding)
+{
     const QByteArray p = payload();
     QNdefMessage msg;
 
@@ -261,7 +300,7 @@ bool QNdefNfcSmartPosterRecord::addTitle(const QString& text, const QString& loc
         msg = QNdefMessage::fromByteArray(p);
 
         for (int i = 0; i < msg.length(); i++) {
-            const QNdefRecord& rec = msg.at(i);
+            const QNdefRecord &rec = msg.at(i);
 
             if (rec.isRecordType<QNdefNfcTextRecord>()) {
                 QNdefNfcTextRecord text(rec);
@@ -284,10 +323,68 @@ bool QNdefNfcSmartPosterRecord::addTitle(const QString& text, const QString& loc
     return true;
 }
 
+bool QNdefNfcSmartPosterRecord::removeTitle(const QString &locale)
+{
+    const QByteArray p = payload();
+    bool removed = false;
+
+    if (!p.isEmpty()) {
+        QNdefMessage msg = QNdefMessage::fromByteArray(p);
+        QNdefMessage newMsg;
+
+        for (int i = 0; i < msg.length(); i++) {
+            const QNdefRecord &rec = msg.at(i);
+
+            if (rec.isRecordType<QNdefNfcTextRecord>()) {
+                QNdefNfcTextRecord text(rec);
+
+                if (text.locale() == locale) {
+                    removed = true;
+                }
+
+                else {
+                    newMsg.append(rec);
+                }
+            }
+
+            else {
+                newMsg.append(rec);
+            }
+        }
+
+        setPayload(newMsg.toByteArray());
+    }
+
+    return removed;
+}
+
+QStringList QNdefNfcSmartPosterRecord::titleLocales()
+{
+    const QByteArray p = payload();
+    QStringList locales;
+
+    if (p.isEmpty())
+        return QStringList();
+
+    QNdefMessage msg = QNdefMessage::fromByteArray(p);
+
+    for (int i = 0; i < msg.length(); i++) {
+        const QNdefRecord &rec = msg.at(i);
+
+        if (rec.isRecordType<QNdefNfcTextRecord>()) {
+            QNdefNfcTextRecord text(rec);
+            locales.append(text.locale());
+        }
+    }
+
+    return locales;
+}
+
 /*!
- *  @return Returns the URI from the URI record if available. Otherwise an empty URI is returned.
+    Returns the URI from the URI record if available. Otherwise an empty URI is returned.
  */
-QUrl QNdefNfcSmartPosterRecord::uri() const {
+QUrl QNdefNfcSmartPosterRecord::uri() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -296,7 +393,7 @@ QUrl QNdefNfcSmartPosterRecord::uri() const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcUriRecord>()) {
             return QNdefNfcUriRecord(rec).uri();
@@ -307,13 +404,12 @@ QUrl QNdefNfcSmartPosterRecord::uri() const {
 }
 
 /*!
- *  @brief Sets the URI record to @c url and returns true if the smart poster
- *  does not already contain a URI record. Otherwise, the URI is not changed
- *  and false is returned.
- *  @param url The URI of the URI record
- *  @return Returns true if the smart poster does not already contain a URI record, otherwise false
+    Sets the URI record to \a url and returns true if the smart poster
+    does not already contain a URI record. Otherwise, the URI is not changed and false is returned.
+    Returns true if the smart poster does not already contain a URI record, otherwise false
  */
-bool QNdefNfcSmartPosterRecord::setUri(const QUrl& url) {
+bool QNdefNfcSmartPosterRecord::setUri(const QUrl &url)
+{
     const QByteArray p = payload();
     QNdefMessage msg;
 
@@ -321,7 +417,7 @@ bool QNdefNfcSmartPosterRecord::setUri(const QUrl& url) {
         msg = QNdefMessage::fromByteArray(p);
 
         for (int i = 0; i < msg.length(); i++) {
-            const QNdefRecord& rec = msg.at(i);
+            const QNdefRecord &rec = msg.at(i);
 
             if (rec.isRecordType<QNdefNfcUriRecord>()) {
                 return false;
@@ -339,35 +435,36 @@ bool QNdefNfcSmartPosterRecord::setUri(const QUrl& url) {
 }
 
 /*!
- *  @return Returns the action from the action record if available. Otherwise @c ActionValue::Unset is returned.
+    Returns the action from the action record if available. Otherwise \a UnspecifiedAction is returned.
  */
-QNdefNfcSmartPosterRecord::ActionValue QNdefNfcSmartPosterRecord::action() const {
+QNdefNfcSmartPosterRecord::Action QNdefNfcSmartPosterRecord::action() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
-        return Unset;
+        return UnspecifiedAction;
 
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcActRecord>()) {
             return QNdefNfcActRecord(rec).action();
         }
     }
 
-    return Unset;
+    return UnspecifiedAction;
 }
 
 /*!
- *  @brief Sets the action record to @c act and returns true if the smart poster
- *  does not already contain an action record. Otherwise, the action record
- *  is not changed and false is returned.
- *  @param act The @c ActionValue type
- *  @return Returns true if the smart poster record does not already contain an action record, otherwise false
+    Sets the action record to \a act and returns true if the smart poster
+    does not already contain an action record. Otherwise, the action record
+    is not changed and false is returned.
+    Returns true if the smart poster record does not already contain an action record, otherwise false
  */
-bool QNdefNfcSmartPosterRecord::setAction(ActionValue act) {
+bool QNdefNfcSmartPosterRecord::setAction(Action act)
+{
     const QByteArray p = payload();
     QNdefMessage msg;
 
@@ -375,7 +472,7 @@ bool QNdefNfcSmartPosterRecord::setAction(ActionValue act) {
         msg = QNdefMessage::fromByteArray(p);
 
         for (int i = 0; i < msg.length(); i++) {
-            const QNdefRecord& rec = msg.at(i);
+            const QNdefRecord &rec = msg.at(i);
 
             if (rec.isRecordType<QNdefNfcActRecord>()) {
                 return false;
@@ -393,11 +490,11 @@ bool QNdefNfcSmartPosterRecord::setAction(ActionValue act) {
 }
 
 /*!
- *  @return Returns the icon data from the first icon record matching @c mimetype if available.
- *  Otherwise an empty byte array is returned.
- *  @param mimetype The MIME type that encodes the icon's image type
+    Returns the icon data from the first icon record matching \a mimetype if available.
+    Otherwise an empty byte array is returned.
  */
-QByteArray QNdefNfcSmartPosterRecord::icon(const QByteArray& mimetype) const {
+QByteArray QNdefNfcSmartPosterRecord::icon(const QByteArray &mimetype) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -406,7 +503,7 @@ QByteArray QNdefNfcSmartPosterRecord::icon(const QByteArray& mimetype) const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcIconRecord>()) {
             QNdefNfcIconRecord icon(rec);
@@ -421,10 +518,10 @@ QByteArray QNdefNfcSmartPosterRecord::icon(const QByteArray& mimetype) const {
 }
 
 /*!
- *  @return Returns the icon type from the first icon record matching @c mimetype if available. Otherwise an empty byte array is returned.
- *  @param mimetype The MIME type that encodes the icon's image type
+    Returns the icon type from the first icon record matching \a mimetype if available. Otherwise an empty byte array is returned.
  */
-QByteArray QNdefNfcSmartPosterRecord::iconType(const QByteArray& mimetype) const {
+QByteArray QNdefNfcSmartPosterRecord::iconType(const QByteArray &mimetype) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -433,7 +530,7 @@ QByteArray QNdefNfcSmartPosterRecord::iconType(const QByteArray& mimetype) const
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcIconRecord>()) {
             QNdefNfcIconRecord icon(rec);
@@ -448,10 +545,10 @@ QByteArray QNdefNfcSmartPosterRecord::iconType(const QByteArray& mimetype) const
 }
 
 /*!
- *  @return Returns the icon data from the icon record at position @c index if available. Otherwise an empty byte array is returned.
- *  @param index The index position of the icon record
+    Returns the icon data from the icon record at position \a index if available. Otherwise an empty byte array is returned.
  */
-QByteArray QNdefNfcSmartPosterRecord::icon(int index) const {
+QByteArray QNdefNfcSmartPosterRecord::icon(int index) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty()) {
@@ -459,15 +556,15 @@ QByteArray QNdefNfcSmartPosterRecord::icon(int index) const {
     }
 
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
-    int index_found = -1;
+    int indexFound = -1;
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcIconRecord>()) {
-            index_found++;
+            indexFound++;
 
-            if (index == index_found) {
+            if (index == indexFound) {
                 return QNdefNfcIconRecord(rec).data();
             }
         }
@@ -477,10 +574,10 @@ QByteArray QNdefNfcSmartPosterRecord::icon(int index) const {
 }
 
 /*!
- *  @return Returns the icon type from the icon record at position @c index if available. Otherwise an empty byte array is returned.
- *  @param index The index position of the icon record
+    Returns the icon type from the icon record at position \a index if available. Otherwise an empty byte array is returned.
  */
-QByteArray QNdefNfcSmartPosterRecord::iconType(int index) const {
+QByteArray QNdefNfcSmartPosterRecord::iconType(int index) const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty()) {
@@ -488,15 +585,15 @@ QByteArray QNdefNfcSmartPosterRecord::iconType(int index) const {
     }
 
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
-    int index_found = -1;
+    int indexFound = -1;
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcIconRecord>()) {
-            index_found++;
+            indexFound++;
 
-            if (index == index_found) {
+            if (index == indexFound) {
                 return QNdefNfcIconRecord(rec).type();
             }
         }
@@ -506,9 +603,10 @@ QByteArray QNdefNfcSmartPosterRecord::iconType(int index) const {
 }
 
 /*!
- *  @return Returns the total number of icon records contained in the smart poster record.
+    Returns the total number of icon records contained in the smart poster record.
  */
-quint32 QNdefNfcSmartPosterRecord::iconCount() const {
+quint32 QNdefNfcSmartPosterRecord::iconCount() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty()) {
@@ -519,7 +617,7 @@ quint32 QNdefNfcSmartPosterRecord::iconCount() const {
     quint32 count = 0;
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcIconRecord>()) {
             count++;
@@ -529,12 +627,33 @@ quint32 QNdefNfcSmartPosterRecord::iconCount() const {
     return count;
 }
 
+QList<QByteArray> QNdefNfcSmartPosterRecord::iconTypes() const
+{
+    const QByteArray p = payload();
+    QList<QByteArray> types;
+
+    if (p.isEmpty()) {
+        return QList<QByteArray>();
+    }
+
+    QNdefMessage msg = QNdefMessage::fromByteArray(p);
+
+    for (int i = 0; i < msg.length(); i++) {
+        const QNdefRecord &rec = msg.at(i);
+
+        if (rec.isRecordType<QNdefNfcIconRecord>()) {
+            types.append(QNdefNfcIconRecord(rec).type());
+        }
+    }
+
+    return types;
+}
+
 /*!
- *  @brief Adds a new icon record with type @c type and data @c data.
- *  @param type The MIME type that encodes the icon's image type
- *  @param data The image data encoded in the format corresponding to its type
+    Adds a new icon record with type \a type and data \a data.
  */
-void QNdefNfcSmartPosterRecord::addIcon(const QByteArray& type, const QByteArray& data) {
+void QNdefNfcSmartPosterRecord::addIcon(const QByteArray &type, const QByteArray &data)
+{
     const QByteArray p = payload();
     QNdefMessage msg;
 
@@ -550,10 +669,39 @@ void QNdefNfcSmartPosterRecord::addIcon(const QByteArray& type, const QByteArray
     setPayload(msg.toByteArray());
 }
 
+void QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
+{
+    const QByteArray p = payload();
+
+    if (!p.isEmpty()) {
+        QNdefMessage msg = QNdefMessage::fromByteArray(p);
+        QNdefMessage newMsg;
+
+        for (int i = 0; i < msg.length(); i++) {
+            const QNdefRecord &rec = msg.at(i);
+
+            if (rec.isRecordType<QNdefNfcIconRecord>()) {
+                QNdefNfcIconRecord icon(rec);
+
+                if (icon.type() != type) {
+                    newMsg.append(rec);
+                }
+            }
+
+            else {
+                newMsg.append(rec);
+            }
+        }
+
+        setPayload(newMsg.toByteArray());
+    }
+}
+
 /*!
- *  @return Returns the size from the size record if available. Otherwise returns 0.
+    Returns the size from the size record if available. Otherwise returns 0.
  */
-quint32 QNdefNfcSmartPosterRecord::size() const {
+quint32 QNdefNfcSmartPosterRecord::size() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -562,7 +710,7 @@ quint32 QNdefNfcSmartPosterRecord::size() const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcSizeRecord>()) {
             return QNdefNfcSizeRecord(rec).size();
@@ -573,13 +721,11 @@ quint32 QNdefNfcSmartPosterRecord::size() const {
 }
 
 /*!
- *  @brief Sets the size record to @c size if the smart poster does not already
- *  contain a size record.
- *  @param size The size of the size record
- *  @return Returns true if the smart poster does not already contain a size record,
- *  otherwise false.
+    Sets the size record to \a size if the smart poster does not already contain a size record.
+    Returns true if the smart poster does not already contain a size record, otherwise false.
  */
-bool QNdefNfcSmartPosterRecord::setSize(quint32 size) {
+bool QNdefNfcSmartPosterRecord::setSize(quint32 size)
+{
     const QByteArray p = payload();
     QNdefMessage msg;
 
@@ -587,7 +733,7 @@ bool QNdefNfcSmartPosterRecord::setSize(quint32 size) {
         msg = QNdefMessage::fromByteArray(p);
 
         for (int i = 0; i < msg.length(); i++) {
-            const QNdefRecord& rec = msg.at(i);
+            const QNdefRecord &rec = msg.at(i);
 
             if (rec.isRecordType<QNdefNfcSizeRecord>()) {
                 return false;
@@ -604,9 +750,10 @@ bool QNdefNfcSmartPosterRecord::setSize(quint32 size) {
 }
 
 /*!
- *  @return Returns the type from the type record if available. Otherwise returns an empty byte array.
+    Returns the type from the type record if available. Otherwise returns an empty byte array.
  */
-QByteArray QNdefNfcSmartPosterRecord::typeInfo() const {
+QByteArray QNdefNfcSmartPosterRecord::typeInfo() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -615,7 +762,7 @@ QByteArray QNdefNfcSmartPosterRecord::typeInfo() const {
     QNdefMessage msg = QNdefMessage::fromByteArray(p);
 
     for (int i = 0; i < msg.length(); i++) {
-        const QNdefRecord& rec = msg.at(i);
+        const QNdefRecord &rec = msg.at(i);
 
         if (rec.isRecordType<QNdefNfcTypeRecord>()) {
             return QNdefNfcTypeRecord(rec).typeInfo();
@@ -626,12 +773,11 @@ QByteArray QNdefNfcSmartPosterRecord::typeInfo() const {
 }
 
 /*!
- *  @brief Sets the type record to @c type if the smart poster does not already contain a type record.
- *  @param type The type of the type record
- *  @return Returns true if the smart poster does not already contain a type record,
- *  otherwise false.
+    Sets the type record to \a type if the smart poster does not already contain a type record.
+    Returns true if the smart poster does not already contain a type record, otherwise false.
  */
-bool QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray& type) {
+bool QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray &type)
+{
     const QByteArray p = payload();
     QNdefMessage msg;
 
@@ -639,7 +785,7 @@ bool QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray& type) {
         msg = QNdefMessage::fromByteArray(p);
 
         for (int i = 0; i < msg.length(); i++) {
-            const QNdefRecord& rec = msg.at(i);
+            const QNdefRecord &rec = msg.at(i);
 
             if (rec.isRecordType<QNdefNfcTypeRecord>()) {
                 return false;
@@ -655,48 +801,38 @@ bool QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray& type) {
     return true;
 }
 
-/*!
-    @internal
-*/
-void QNdefNfcActRecord::setAction(QNdefNfcSmartPosterRecord::ActionValue actionValue) {
+void QNdefNfcActRecord::setAction(QNdefNfcSmartPosterRecord::Action action)
+{
     QByteArray data;
-    data[0] = actionValue;
+    data[0] = action;
 
     setPayload(data);
 }
 
-/*!
-    @internal
-*/
-QNdefNfcSmartPosterRecord::ActionValue QNdefNfcActRecord::action() const {
+QNdefNfcSmartPosterRecord::Action QNdefNfcActRecord::action() const
+{
     const QByteArray p = payload();
-    QNdefNfcSmartPosterRecord::ActionValue value =
-            QNdefNfcSmartPosterRecord::Unset;
+    QNdefNfcSmartPosterRecord::Action value =
+            QNdefNfcSmartPosterRecord::UnspecifiedAction;
 
     if (!p.isEmpty())
-        value = QNdefNfcSmartPosterRecord::ActionValue(p[0]);
+        value = QNdefNfcSmartPosterRecord::Action(p[0]);
 
     return value;
 }
 
-/*!
-    @internal
-*/
-void QNdefNfcIconRecord::setData(const QByteArray& data) {
+void QNdefNfcIconRecord::setData(const QByteArray &data)
+{
     setPayload(data);
 }
 
-/*!
-    @internal
-*/
-QByteArray QNdefNfcIconRecord::data() const {
+QByteArray QNdefNfcIconRecord::data() const
+{
     return payload();
 }
 
-/*!
-    @internal
-*/
-void QNdefNfcSizeRecord::setSize(quint32 size) {
+void QNdefNfcSizeRecord::setSize(quint32 size)
+{
     QByteArray data;
 
     data[0] = (int) ((size & 0xFF000000) >> 24);
@@ -707,10 +843,8 @@ void QNdefNfcSizeRecord::setSize(quint32 size) {
     setPayload(data);
 }
 
-/*!
-    @internal
-*/
-quint32 QNdefNfcSizeRecord::size() const {
+quint32 QNdefNfcSizeRecord::size() const
+{
     const QByteArray p = payload();
 
     if (p.isEmpty())
@@ -720,17 +854,13 @@ quint32 QNdefNfcSizeRecord::size() const {
             + ((p[2] << 8) & 0x0000FF00) + (p[3] & 0x000000FF);
 }
 
-/*!
-    @internal
-*/
-void QNdefNfcTypeRecord::setTypeInfo(const QByteArray &type) {
+void QNdefNfcTypeRecord::setTypeInfo(const QByteArray &type)
+{
     setPayload(type);
 }
 
-/*!
-    @internal
-*/
-QByteArray QNdefNfcTypeRecord::typeInfo() const {
+QByteArray QNdefNfcTypeRecord::typeInfo() const
+{
     return payload();
 }
 
