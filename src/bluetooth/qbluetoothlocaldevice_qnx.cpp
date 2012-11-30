@@ -184,11 +184,12 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevicePrivate::hostMode() const
 
 void QBluetoothLocalDevicePrivate::setAccess(int access)
 {
-    ppsSendControlMessage("set_access", QStringLiteral("\"access\":n:%1").arg(access), this);
+    ppsSendControlMessage("set_access", QStringLiteral("{\"access\":%1}").arg(access), this);
 }
 
 void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
 {
+    qBBBluetoothDebug() << "Ldef reply" << result.msg << result.dat;
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
         q_ptr->error(QBluetoothLocalDevice::UnknownError);

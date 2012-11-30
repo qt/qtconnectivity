@@ -123,6 +123,7 @@ void endCtrlMessage(pps_encoder_t *encoder)
     qBBBluetoothDebug() << "writing" << pps_encoder_buffer(encoder);
     if (pps_encoder_buffer(encoder) != 0) {
         int res = write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
+        qBBBluetoothDebug() << QByteArray(pps_encoder_buffer(encoder), pps_encoder_length(encoder));
         if (res == -1)
             qWarning() << Q_FUNC_INFO << "Error when writing to control FD";
     }
@@ -156,6 +157,16 @@ void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &u
 void ppsSendControlMessage(const char *msg, const QString &dat, QObject *sender)
 {
     pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
+
+//    pps_encoder_t json_encoder;
+//    pps_encoder_initialize( &json_encoder, true);
+//    pps_encoder_reset( &json_encoder );
+//    pps_encoder_start_object( &json_encoder, NULL);
+//    if ( pps_encoder_add_int( &json_encoder, "access", 1 ) == PPS_ENCODER_OK ) {
+//        pps_encoder_end_object( &json_encoder );
+//        pps_encoder_add_json(encoder, "dat", pps_encoder_buffer( &json_encoder ) );
+//    }
+//    pps_encoder_cleanup( &json_encoder );
     pps_encoder_add_json(encoder, "dat", dat.toUtf8().constData());
     endCtrlMessage(encoder);
 }
