@@ -55,7 +55,7 @@
 QTBLUETOOTH_BEGIN_NAMESPACE
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &address)
-    : rdNotifier(0), error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive), deviceAddress(address),
+    : m_rdfd(-1), rdNotifier(0), error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive), deviceAddress(address),
       deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery)
 {
 }
@@ -99,6 +99,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     if (rdNotifier)
         delete rdNotifier;
     rdNotifier = 0;
+    if (m_rdfd != -1) {
+        qt_safe_close (m_rdfd);
+        m_rdfd = -1;
+    }
     ppsUnregisterControl(this);
 }
 
