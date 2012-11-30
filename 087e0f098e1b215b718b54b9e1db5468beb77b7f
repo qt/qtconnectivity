@@ -1,0 +1,7 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+2: Peter Hartmann <phartmann@rim.com>
+Submitted-by: Peter Hartmann <phartmann@rim.com>
+Submitted-at: Fri, 30 Nov 2012 18:33:23 +0100
+Reviewed-on: https://codereview.qt-project.org/41260
+Project: qt/qtconnectivity
+Branch: refs/heads/master
