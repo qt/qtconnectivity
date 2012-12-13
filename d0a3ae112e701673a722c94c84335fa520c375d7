@@ -1,0 +1,7 @@
+Code-Review+2: Sergio Ahumada <sergio.ahumada@digia.com>
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Submitted-by: Oswald Buddenhagen <oswald.buddenhagen@digia.com>
+Submitted-at: Thu, 13 Dec 2012 22:47:29 +0100
+Reviewed-on: https://codereview.qt-project.org/42691
+Project: qt/qtconnectivity
+Branch: refs/heads/master
