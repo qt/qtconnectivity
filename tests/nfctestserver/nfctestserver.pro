@@ -1,7 +1,5 @@
 
 INCLUDEPATH += $$PWD/../../src/nfc
-DEPENDPATH += $$PWD/../../src/nfc
-
 
 TARGET = nfctestserver
 
