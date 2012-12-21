@@ -52,7 +52,7 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     m_handlerID(0)
 {
     QNXNFCManager::instance()->registerForNewInstance();
-    connect(QNXNFCManager::instance(), SIGNAL(ndefMessage(QNdefMessage, QNearFieldTarget *)), this, SLOT(handleMessage(QNdefMessage, QNearFieldTarget *)));
+    connect(QNXNFCManager::instance(), SIGNAL(ndefMessage(const QNdefMessage&, QNearFieldTarget *)), this, SLOT(handleMessage(const QNdefMessage&, QNearFieldTarget *)));
 
     m_requestedModes = QNearFieldManager::NdefWriteTargetAccess;
     qQNXNFCDebug() << "Nearfieldmanager created";
@@ -60,7 +60,8 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 {
-    //QNXNFCManager::instance()->unregisterObject(this);
+    //First, remove all ndef message handlers
+    QNXNFCManager::instance()->updateNdefFilters(QList<QByteArray>(), this);
     QNXNFCManager::instance()->unregisterForInstance();
 }
 
@@ -91,16 +92,28 @@ void QNearFieldManagerPrivateImpl::stopTargetDetection()
 
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(QObject *object, const QMetaMethod &method)
 {
+    QList<QByteArray> filterList;
+    filterList += "*";
+    QNXNFCManager::instance()->updateNdefFilters(filterList, this);
+
     ndefMessageHandlers.append(QPair<QPair<int, QObject *>, QMetaMethod>(QPair<int, QObject *>(m_handlerID, object), method));
-    //Wont work any more if a handler is deleted
+
+    //Returns the handler ID and increments it afterwards
     return m_handlerID++;
 }
 
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(const QNdefFilter &filter,
                                                              QObject *object, const QMetaMethod &method)
 {
+    //If no record is set in the filter, we ignore the filter
+    if (filter.recordCount()==0)
+        return registerNdefMessageHandler(object, method);
+
     ndefFilterHandlers.append(QPair<QPair<int, QObject*>, QPair<QNdefFilter, QMetaMethod> >
                               (QPair<int, QObject*>(m_handlerID, object), QPair<QNdefFilter, QMetaMethod>(filter, method)));
+
+    updateNdefFilter();
+
     return m_handlerID++;
 }
 
@@ -109,12 +122,14 @@ bool QNearFieldManagerPrivateImpl::unregisterNdefMessageHandler(int handlerId)
     for (int i=0; i<ndefMessageHandlers.count(); i++) {
         if (ndefMessageHandlers.at(i).first.first == handlerId) {
             ndefMessageHandlers.removeAt(i);
+            updateNdefFilter();
             return true;
         }
     }
     for (int i=0; i<ndefFilterHandlers.count(); i++) {
         if (ndefFilterHandlers.at(i).first.first == handlerId) {
             ndefFilterHandlers.removeAt(i);
+            updateNdefFilter();
             return true;
         }
     }
@@ -133,8 +148,10 @@ void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccess
     //Do nothing, because we dont have access modes for the target
 }
 
-void QNearFieldManagerPrivateImpl::handleMessage(QNdefMessage message, QNearFieldTarget *target)
+void QNearFieldManagerPrivateImpl::handleMessage(const QNdefMessage &message, QNearFieldTarget *target)
 {
+    qQNXNFCDebug() << "Handling message in near field manager. Filtercount:"
+                   << ndefFilterHandlers.count() << message.count();
     //For message handlers without filters
     for (int i = 0; i < ndefMessageHandlers.count(); i++) {
         ndefMessageHandlers.at(i).second.invoke(ndefMessageHandlers.at(i).first.second, Q_ARG(QNdefMessage, message), Q_ARG(QNearFieldTarget*, target));
@@ -145,12 +162,17 @@ void QNearFieldManagerPrivateImpl::handleMessage(QNdefMessage message, QNearFiel
         QNdefFilter filter = ndefFilterHandlers.at(i).second.first;
         if (filter.recordCount() > message.count())
             continue;
-        for (int j = 0; j < filter.recordCount(); j++) {
+
+        int j=0;
+        for (j = 0; j < filter.recordCount();) {
             if (message.at(j).typeNameFormat() != filter.recordAt(j).typeNameFormat
-                    || message.at(j).type() != filter.recordAt(j).type )
-                continue;
+                    || message.at(j).type() != filter.recordAt(j).type ) {
+                break;
+            }
+            j++;
         }
-        ndefMessageHandlers.at(i).second.invoke(ndefMessageHandlers.at(i).first.second, Q_ARG(QNdefMessage, message), Q_ARG(QNearFieldTarget*, target));
+        if (j == filter.recordCount())
+            ndefFilterHandlers.at(i).second.second.invoke(ndefFilterHandlers.at(i).first.second, Q_ARG(QNdefMessage, message), Q_ARG(QNearFieldTarget*, target));
     }
 }
 
@@ -159,5 +181,26 @@ void QNearFieldManagerPrivateImpl::newTarget(QNearFieldTarget *target, const QLi
     qQNXNFCDebug() << "New Target";
     emit targetDetected(target);
 }
+
+void QNearFieldManagerPrivateImpl::updateNdefFilter()
+{
+    qQNXNFCDebug() << "Updating NDEF filter";
+    QList<QByteArray> filterList;
+    if (ndefMessageHandlers.size() > 0) { ///SUbscribe for all ndef messages
+        filterList += "*";
+        QNXNFCManager::instance()->updateNdefFilters(filterList, this);
+    } else if (ndefFilterHandlers.size() > 0){
+        for (int i = 0; i < ndefFilterHandlers.count(); i++) {
+            QByteArray filter = "ndef://" + QByteArray::number(ndefFilterHandlers.at(i).second.first.recordAt(0).typeNameFormat)
+                    + "/" + ndefFilterHandlers.at(i).second.first.recordAt(0).type;
+            if (!filterList.contains(filter))
+                filterList.append(filter);
+        }
+        QNXNFCManager::instance()->updateNdefFilters(filterList, this);
+    } else { //Remove all ndef message handlers for this object
+        QNXNFCManager::instance()->updateNdefFilters(filterList, this);
+    }
+}
+
 
 QTNFC_END_NAMESPACE
