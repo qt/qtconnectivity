@@ -3,7 +3,7 @@ TEMPLATE = subdirs
 SUBDIRS += \
     cmake
 
-!isEmpty(QT.bluetooth.name) {
+qtHaveModule(bluetooth) {
     SUBDIRS += \
         qbluetoothaddress \
         qbluetoothdevicediscoveryagent \
@@ -20,7 +20,7 @@ SUBDIRS += \
         qrfcommserver
 }
 
-!isEmpty(QT.nfc.name) {
+qtHaveModule(nfc) {
     SUBDIRS += \
         qndefmessage \
         qndefrecord \
