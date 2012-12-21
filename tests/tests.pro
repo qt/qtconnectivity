@@ -1,8 +1,8 @@
 TEMPLATE = subdirs
 SUBDIRS += auto
 
-linux*:!linux-armcc:contains(bluez_enabled, yes):contains(QT_CONFIG, dbus) {
+linux*:!linux-armcc:contains(bluez_enabled, yes):qtHaveModule(dbus) {
     SUBDIRS += btclient
 }
 
-!isEmpty(QT.nfc.name):SUBDIRS += nfctestserver
+qtHaveModule(nfc): SUBDIRS += nfctestserver

@@ -59,7 +59,7 @@ SOURCES += \
     qbluetoothtransferrequest.cpp \
     qbluetoothtransferreply.cpp
 
-config_bluez:contains(QT_CONFIG, dbus) {
+config_bluez:qtHaveModule(dbus) {
     QT *= dbus
     DEFINES += QT_BLUEZ_BLUETOOTH
 
