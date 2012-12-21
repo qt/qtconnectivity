@@ -120,13 +120,15 @@ qnx {
         qllcpsocket_qnx_p.h \
         qnearfieldmanager_qnx_p.h \
         qnx/qnxnfcmanager_p.h \
-        qnearfieldtarget_qnx_p.h
+        qnearfieldtarget_qnx_p.h \
+        qnx/qnxnfceventfilter_p.h
 
     SOURCES += \
         qllcpserver_qnx_p.cpp \
         qllcpsocket_qnx_p.cpp \
         qnearfieldmanager_qnx.cpp \
-        qnx/qnxnfcmanager.cpp
+        qnx/qnxnfcmanager.cpp \
+        qnx/qnxnfceventfilter.cpp
 }
 
 simulator {
