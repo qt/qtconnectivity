@@ -47,7 +47,8 @@ SOURCES += \
     qnearfieldtagtype4.cpp \
     qtlv.cpp \
     qllcpserver.cpp \
-    qdeclarativendefrecord.cpp
+    qdeclarativendefrecord.cpp \
+    qnx/qnxnfceventfilter.cpp
 
 maemo6|meego {
     NFC_BACKEND_AVAILABLE = yes
@@ -108,6 +109,7 @@ maemo6|meego {
 
 qnx {
     NFC_BACKEND_AVAILABLE = yes
+
     DEFINES += QNX_NFC #QQNXNFC_DEBUG
 
     LIBS += -lnfc
@@ -117,7 +119,8 @@ qnx {
         qllcpsocket_qnx_p.h \
         qnearfieldmanager_qnx_p.h \
         qnx/qnxnfcmanager_p.h \
-        qnearfieldtarget_qnx_p.h
+        qnearfieldtarget_qnx_p.h \
+        qnx/qnxnfceventfilter_p.h
 
     SOURCES += \
         qllcpserver_qnx_p.cpp \

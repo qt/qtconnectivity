@@ -75,10 +75,11 @@ public:
     void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
 
 private Q_SLOTS:
-    void handleMessage(QNdefMessage, QNearFieldTarget *);
+    void handleMessage(QNdefMessage&, QNearFieldTarget *);
     void newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &);
 
 private:
+    void updateNdefFilter();
     QList<QNearFieldTarget::Type> m_detectTargetTypes;
 
     int m_handlerID;

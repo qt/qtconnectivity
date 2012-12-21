@@ -42,6 +42,7 @@
 #include "qnxnfcmanager_p.h"
 #include <QMetaMethod>
 #include <QMetaObject>
+#include "../qllcpsocket_qnx_p.h"
 
 QTNFC_BEGIN_NAMESPACE
 
@@ -147,6 +148,10 @@ QNXNFCManager::QNXNFCManager()
 
     nfcNotifier = new QSocketNotifier(nfcFD, QSocketNotifier::Read);
     qQNXNFCDebug() << "Connecting SocketNotifier" << connect(nfcNotifier, SIGNAL(activated(int)), this, SLOT(newNfcEvent(int)));
+
+    ndefEventFilter = new QNXNFCEventFilter();
+    ndefEventFilter->installOnEventDispatcher(QAbstractEventDispatcher::instance());
+    connect(ndefEventFilter, SIGNAL(ndefEvent(QNdefMessage&)), this, SLOT(invokeNdefMessage(QNdefMessage&)));
 }
 
 QNXNFCManager::~QNXNFCManager()
@@ -155,6 +160,7 @@ QNXNFCManager::~QNXNFCManager()
 
     if (nfcNotifier)
         delete nfcNotifier;
+    ndefEventFilter->uninstallEventFilter();
 }
 
 QList<QNdefMessage> QNXNFCManager::decodeTargetMessage(nfc_target_t *target)
@@ -170,49 +176,7 @@ QList<QNdefMessage> QNXNFCManager::decodeTargetMessage(nfc_target_t *target)
         if (nfc_get_ndef_message(target, i, &nextMessage) != NFC_RESULT_SUCCESS) {
             qWarning() << Q_FUNC_INFO << "Could not get ndef message";
         } else {
-            QNdefMessage newNdefMessage;
-            unsigned int recordCount;
-            nfc_get_ndef_record_count(nextMessage, &recordCount);
-            for (unsigned int j=0; j<recordCount; j++) {
-                nfc_ndef_record_t *newRecord;
-                char *recordType;
-                uchar_t *payLoad;
-                char *recordId;
-                size_t payLoadSize;
-                tnf_type_t typeNameFormat;
-
-                nfc_get_ndef_record(nextMessage, j, &newRecord);
-
-                nfc_get_ndef_record_type(newRecord, &recordType);
-                QNdefRecord newNdefRecord;
-                newNdefRecord.setType(QByteArray(recordType));
-
-                nfc_get_ndef_record_payload(newRecord, &payLoad, &payLoadSize);
-                newNdefRecord.setPayload(QByteArray(reinterpret_cast<const char*>(payLoad), payLoadSize));
-
-                nfc_get_ndef_record_id(newRecord, &recordId);
-                newNdefRecord.setId(QByteArray(recordId));
-
-                nfc_get_ndef_record_tnf(newRecord, &typeNameFormat);
-                QNdefRecord::TypeNameFormat recordTnf;
-                switch (typeNameFormat) {
-                case NDEF_TNF_WELL_KNOWN: recordTnf = QNdefRecord::NfcRtd; break;
-                case NDEF_TNF_EMPTY: recordTnf = QNdefRecord::Empty; break;
-                case NDEF_TNF_MEDIA: recordTnf = QNdefRecord::Mime; break;
-                case NDEF_TNF_ABSOLUTE_URI: recordTnf = QNdefRecord::Uri; break;
-                case NDEF_TNF_EXTERNAL: recordTnf = QNdefRecord::ExternalRtd; break;
-                case NDEF_TNF_UNKNOWN: recordTnf = QNdefRecord::Unknown; break;
-                    //TODO add the rest
-                case NDEF_TNF_UNCHANGED: recordTnf = QNdefRecord::Unknown; break;
-                }
-
-                newNdefRecord.setTypeNameFormat(recordTnf);
-                qQNXNFCDebug() << "Adding NFC record";
-                newNdefMessage << newNdefRecord;
-                delete recordType;
-                delete payLoad;
-                delete recordId;
-            }
+            QNdefMessage newNdefMessage = decodeMessage(nextMessage);
             ndefMessages.append(newNdefMessage);
         }
     }
@@ -249,6 +213,11 @@ void QNXNFCManager::newNfcEvent(int fd)
     }
 
     nfc_free_event (nfcEvent);
+}
+
+void QNXNFCManager::invokeNdefMessage(QNdefMessage &msg)
+{
+    Q_EMIT ndefMessage(msg, 0);
 }
 
 void QNXNFCManager::llcpReadComplete(nfc_event_t *nfcEvent)
@@ -289,7 +258,7 @@ void QNXNFCManager::llcpReadComplete(nfc_event_t *nfcEvent)
 
     for (int i=0; i<nfcTargets.size(); i++) {
         if (nfcTargets.at(i).first == targetId) {
-            nfcTargets.at(i).second->dataRead(QByteArray&, data);
+            qobject_cast<QLlcpSocketPrivate*>(nfcTargets.at(i).second)->dataRead(data);
         }
     }
 }
@@ -313,7 +282,7 @@ void QNXNFCManager::llcpWriteComplete(nfc_event_t *nfcEvent)
 
     for (int i=0; i<nfcTargets.size(); i++) {
         if (nfcTargets.at(i).first == targetId) {
-            nfcTargets.at(i).second_>dataWritten();
+            qobject_cast<QLlcpSocketPrivate*>(nfcTargets.at(i).second)->dataWritten();
         }
     }
 }
@@ -334,9 +303,9 @@ void QNXNFCManager::nfcReadWriteEvent(nfc_event_t *nfcEvent)
     NearFieldTarget<QNearFieldTarget> *bbNFTarget = new NearFieldTarget<QNearFieldTarget>(this, target, targetMessages);
     emit targetDetected(bbNFTarget, targetMessages);
     for (int i=0; i< targetMessages.count(); i++) {
-        for (int j=0; j<ndefMessageHandlers.count(); j++) {
-            emit ndefMessage(targetMessages.at(i), reinterpret_cast<QNearFieldTarget *> (bbNFTarget));
-        }
+        //for (int j=0; j<ndefMessageHandlers.count(); j++) {
+            emit ndefMessage(targetMessages[i], reinterpret_cast<QNearFieldTarget *> (bbNFTarget));
+        //}
     }
 }
 
@@ -362,6 +331,39 @@ void QNXNFCManager::llcpConnectionEvent(nfc_event_t *nfcEvent)
                                       Q_ARG(nfc_target_t *, target));
             break;
         }
+    }
+}
+void QNXNFCManager::setupInvokeTarget() {
+    qQNXNFCDebug() << "Setting up invoke target";
+    QByteArray uriFilter;
+    bool registerAll = false;
+
+    if (!absNdefFilters.isEmpty()) {
+        uriFilter = "uris=";
+    }
+    for (int i=0; i<absNdefFilters.size(); i++) {
+        if (absNdefFilters.at(i) == "*") {
+            registerAll = true;
+            break;
+        }
+        uriFilter.append(absNdefFilters.at(i));
+        if (i==absNdefFilters.size()-1)
+            uriFilter += ";";
+        else
+            uriFilter += ",";
+    }
+    if (registerAll) {
+        uriFilter = "uris=ndef://;";
+    }
+
+    const char *filters[1];
+    QByteArray filter = QByteArray("actions=bb.action.OPEN;types=application/vnd.rim.nfc.ndef;" + uriFilter);
+    filters[0] = filter.constData();
+
+    if (BPS_SUCCESS != navigator_invoke_set_filters("20", "org.qtm.NFCTest", filters, 1)) {
+        qWarning() << "NFC Error setting share target filter";
+    } else {
+        qQNXNFCDebug() << "NFC share target filter set" << filters[0];
     }
 }
 
@@ -394,6 +396,90 @@ bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &ta
         qWarning() << Q_FUNC_INFO << "Could not start Target detection";
         return false;
     }
+}
+
+void QNXNFCManager::updateNdefFilters(QList<QByteArray> filters, QObject *obj)
+{
+    qQNXNFCDebug() << Q_FUNC_INFO << "NDEF Filter update";
+    //Updating the filters for an object
+    bool updated = false;
+    for (int i=0; i<ndefFilters.size(); i++) {
+        if (ndefFilters.at(i).second == obj) {
+            ndefFilters[i].first = filters;
+            updated = true;
+            qQNXNFCDebug() << "Updateing filter list for"<< obj;
+            break;
+        }
+    }
+    //Object is not in the list yet
+    if (!updated) {
+        qQNXNFCDebug() << "Appending new filter for"<< obj;
+        ndefFilters.append(QPair<QList<QByteArray> , QObject*> (filters, obj));
+    }
+
+    //Iterate over all registered object filters and construct a filter list for the application
+    QList<QByteArray> newFilters;
+    for (int i=0; i<ndefFilters.size(); i++) {
+        foreach (QByteArray filter, ndefFilters.at(i).first) {
+            if (!newFilters.contains(filter)) {
+                newFilters.append(filter);
+                qQNXNFCDebug() << "Appending Filter" << filter;
+            }
+        }
+    }
+
+    if (newFilters != absNdefFilters) {
+        absNdefFilters = newFilters;
+        setupInvokeTarget();
+    }
+}
+
+QNdefMessage QNXNFCManager::decodeMessage(nfc_ndef_message_t *nextMessage)
+{
+    QNdefMessage newNdefMessage;
+    unsigned int recordCount;
+    nfc_get_ndef_record_count(nextMessage, &recordCount);
+    for (unsigned int j=0; j<recordCount; j++) {
+        nfc_ndef_record_t *newRecord;
+        char *recordType;
+        uchar_t *payLoad;
+        char *recordId;
+        size_t payLoadSize;
+        tnf_type_t typeNameFormat;
+
+        nfc_get_ndef_record(nextMessage, j, &newRecord);
+
+        nfc_get_ndef_record_type(newRecord, &recordType);
+        QNdefRecord newNdefRecord;
+        newNdefRecord.setType(QByteArray(recordType));
+
+        nfc_get_ndef_record_payload(newRecord, &payLoad, &payLoadSize);
+        newNdefRecord.setPayload(QByteArray(reinterpret_cast<const char*>(payLoad), payLoadSize));
+
+        nfc_get_ndef_record_id(newRecord, &recordId);
+        newNdefRecord.setId(QByteArray(recordId));
+
+        nfc_get_ndef_record_tnf(newRecord, &typeNameFormat);
+        QNdefRecord::TypeNameFormat recordTnf;
+        switch (typeNameFormat) {
+        case NDEF_TNF_WELL_KNOWN: recordTnf = QNdefRecord::NfcRtd; break;
+        case NDEF_TNF_EMPTY: recordTnf = QNdefRecord::Empty; break;
+        case NDEF_TNF_MEDIA: recordTnf = QNdefRecord::Mime; break;
+        case NDEF_TNF_ABSOLUTE_URI: recordTnf = QNdefRecord::Uri; break;
+        case NDEF_TNF_EXTERNAL: recordTnf = QNdefRecord::ExternalRtd; break;
+        case NDEF_TNF_UNKNOWN: recordTnf = QNdefRecord::Unknown; break;
+            //TODO add the rest
+        case NDEF_TNF_UNCHANGED: recordTnf = QNdefRecord::Unknown; break;
+        }
+
+        newNdefRecord.setTypeNameFormat(recordTnf);
+        qQNXNFCDebug() << "Adding NFC record";
+        newNdefMessage << newNdefRecord;
+        delete recordType;
+        delete payLoad;
+        delete recordId;
+    }
+    return newNdefMessage;
 }
 
 QTNFC_END_NAMESPACE
