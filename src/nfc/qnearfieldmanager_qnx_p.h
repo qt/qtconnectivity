@@ -79,6 +79,7 @@ private Q_SLOTS:
     void newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &);
 
 private:
+    void updateNdefFilter();
     QList<QNearFieldTarget::Type> m_detectTargetTypes;
 
     int m_handlerID;

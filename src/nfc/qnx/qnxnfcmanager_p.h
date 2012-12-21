@@ -49,11 +49,10 @@
 #include <QDebug>
 #include "../qndefmessage.h"
 #include "../qndefrecord.h"
-//#include <bb/system/InvokeManager>
-//#include <bb/system/InvokeRequest>
-//#include <bb/system/ApplicationStartupMode>
+#include <bps/navigator_invoke.h>
 #include "../qnearfieldtarget_qnx_p.h"
 #include <QTimer>
+#include "qnxnfceventfilter_p.h"
 
 #ifdef QQNXNFC_DEBUG
 #define qQNXNFCDebug qDebug
@@ -89,6 +88,8 @@ private:
     static QNXNFCManager *m_instance;
     int m_instanceCount;
 
+    QNXNFCEventFilter *ndefEventFilter;
+
     int nfcFD;
     QSocketNotifier *nfcNotifier;
 
@@ -96,7 +97,10 @@ private:
     QList<QPair<nfc_llcp_connection_listener_t, QObject *> > llcpConnections;
     QList<QPair<unsigned int ,QLlcpSocketPrivate*> > nfcTargets;
 
-    QList<QPair<QObject*, QMetaMethod> > ndefMessageHandlers;
+    QList<QPair<QList<QByteArray>,QObject *> > ndefFilters;
+    QList<QByteArray> absNdefFilters;
+
+    //QList<QPair<QObject*, QMetaMethod> > ndefMessageHandlers;
 
     //There can only be one target. The last detected one is saved here
     //currently we do not get notified when the target is disconnected. So the target might be invalid
@@ -111,15 +115,23 @@ private:
     void targetLost(unsigned int target);
     void startBTHandover();
 
+    void setupInvokeTarget();
+
 private Q_SLOTS:
     void newNfcEvent(int fd);
+    void invokeNdefMessage(QNdefMessage &);
 
 public:
     //TODO add a parameter to only detect a special target for now we are detecting all target types
     bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
 
+    void updateNdefFilters(QList<QByteArray>,QObject *);
+
+    QNdefMessage decodeMessage(nfc_ndef_message_t *nextMessage);
+
 Q_SIGNALS:
-    void ndefMessage(QNdefMessage, QNearFieldTarget *);
+    void newLlcpConnection(nfc_target_t *);
+    void ndefMessage(QNdefMessage &, QNearFieldTarget *);
     void targetDetected(QNearFieldTarget *, const QList<QNdefMessage> &);
     void readResult(QByteArray&, nfc_target_t *);
     void llcpDisconnected();
