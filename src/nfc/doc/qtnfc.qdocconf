@@ -1,0 +1,45 @@
+include(../../../doc/global/qt-html-templates-offline.qdocconf)
+include(../../../doc/global/qt-module-defaults.qdocconf)
+
+project                 = QtNfc
+description             = Qt Nfc Reference Documentation
+url                     = http://qt-project.org/doc/qt-5.0/qtnfc-index.html
+version                 = 5.0.0
+
+qhp.projects            = QtNfc
+
+qhp.QtNfc.file                = qtnfc.qhp
+qhp.QtNfc.namespace           = org.qt-project.qtnfc.500
+qhp.QtNfc.virtualFolder       = qdoc
+qhp.QtNfc.indexTitle          = Qt Nfc Reference Documentation
+qhp.QtNfc.indexRoot           =
+
+qhp.QtNfc.filterAttributes    = qtnfc 5.0.0 qtrefdoc
+qhp.QtNfc.customFilters.Qt.name = QtNfc 5.0.0
+qhp.QtNfc.customFilters.Qt.filterAttributes = qtnfc 5.0.0
+qhp.QtNfc.subprojects         = classes overviews examples
+qhp.QtNfc.subprojects.classes.title = Classes
+qhp.QtNfc.subprojects.classes.indexTitle = Qt Nfc's Classes
+qhp.QtNfc.subprojects.classes.selectors = class fake:headerfile
+qhp.QtNfc.subprojects.classes.sortPages = true
+qhp.QtNfc.subprojects.overviews.title = Overviews
+qhp.QtNfc.subprojects.overviews.indexTitle = All Overviews and HOWTOs
+qhp.QtNfc.subprojects.overviews.selectors = fake:page,group,module
+qhp.QtNfc.subprojects.examples.title = Qt Nfc Examples
+qhp.QtNfc.subprojects.examples.indexTitle = Qt Nfc Examples
+qhp.QtNfc.subprojects.examples.selectors = fake:example
+
+outputdir               = ../../../doc/qtnfc
+tagfile                 = ../../../doc/qtnfc/qtnfc.tags
+
+headerdirs  += .. \
+                ../../imports/nfc
+
+sourcedirs  += .. \
+                ../../imports/nfc \
+
+exampledirs += ../../../examples/nfc \
+               snippets/
+
+
+imagedirs   += images

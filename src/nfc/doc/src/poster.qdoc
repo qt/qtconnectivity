@@ -1,0 +1,49 @@
+/****************************************************************************
+**
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\example ndefposter
+\title QML Poster Example
+
+The QML Poster example displays the contents of specifically formated NDEF messages read from an
+NFC Tag. The NDEF message should contain a URI record, an optional image/* MIME record and one
+or more localized Text records.
+
+\image qml-poster-example.png
+
+An NFC enabled poster can be a poster in a public place with an embedded NFC tag. A passerby may stop, read the text printed on the poster and become curious. She sees that the poster contains an NFC tag and holds her phone up to touch the area marked as the tag. The tag can then transfer additional data to the mobile device. The device can take whatever action the application thinks is necessary, from simply displaying text and links to opening links in the transferred data.
+
+The example declares a NearField element with id \i nearfield. This includes a \i filter constructed from two \l {NdefFilter}s. The filters have the type specified by a string such as "urn:nfc:wkt:U", which identifies the type as being an NFC \i {Well Known Type}, that is predefined, of "U" representing a URL. The other \l NdefFilter element is for a Well Known Type of "T" (Text).
+
+\snippet  ../../examples/declarative-connectivity/poster/poster.qml   nfc-filter
+
+The \l NearField element has the properties of \l {NearField::filter}{filter}, \l {NearField::messageRecords}{messageRecords} and \l {NearField::orderMatch}{orderMatch}. In this example the \i filter component contains the two NdefFilter elements, the \i orderMatch property is not used in this example and the \i messageRecords property is a list of \l {NdefRecord}s containing the results of the last read. When the signal \i messageRecordsChanged() is emitted the slot \i onMessageRecordsChanged will iterate through the \l {NearField::messageRecords}{messageRecords} selecting particular types. After all records in the messageRecords list have been examined the state of the example is set to "Show" which displays the results.
+
+\snippet ../../examples/declarative-connectivity/poster/poster.qml    nfc-onMessageRecordsChanged
+
+
+*/
