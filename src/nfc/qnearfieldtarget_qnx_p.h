@@ -76,8 +76,6 @@ public:
             m_tagId = QByteArray(buf,bufLength);
 
         m_ndefMessages = messages;
-        connect(this, SIGNAL(requestCompleted(const QNearFieldTarget::RequestId)), this, SIGNAL(requestCompleted(QNearFieldTarget::RequestId)),
-                Qt::QueuedConnection);
     }
 
     ~NearFieldTarget()
@@ -116,7 +114,8 @@ public:
             emit QNearFieldTarget::ndefMessageRead(m_ndefMessages.at(i));
         }
         QNearFieldTarget::RequestId id = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-        //emit requestCompleted_p(id);
+        (reinterpret_cast<QObject*>(this))->metaObject()->invokeMethod(this, "requestCompleted",
+                                          Qt::QueuedConnection, Q_ARG(const QNearFieldTarget::RequestId, id));
         return id;
     }
 
@@ -178,15 +177,10 @@ public:
 
         }
         QNearFieldTarget::RequestId id = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-        //emit requestCompleted_p(id);
+        (reinterpret_cast<QObject*>(this))->metaObject()->invokeMethod(this, "requestCompleted",
+                                          Qt::QueuedConnection, Q_ARG(const QNearFieldTarget::RequestId, id));
         return id;
     }
-
-    //Would only be needed for an LLCP socket. But for now there won't be any "forum device detected" events
-//    nfc_target_t *getTarget()
-//    {
-//        return m_target;
-//    }
 
 protected:
     nfc_target_t *m_target;
@@ -197,11 +191,6 @@ protected:
     QByteArray m_tagName;
     QByteArray m_tagId;
     QList<QNdefMessage> m_ndefMessages;
-
-//Q_SIGNALS:
-    //The purpose of this signal is to be able to emit the requestCompleted signal outside of a function
-    //by using a queued connection
-    //void requestCompleted_p(const QNearFieldTarget::RequestId &id);
 };
 
 QTNFC_END_NAMESPACE
