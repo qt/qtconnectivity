@@ -5,6 +5,7 @@ CONFIG += testcase
 QT = core nfc-private testlib
 
 INCLUDEPATH += ../../../src/nfc
+VPATH += ../../../src/nfc
 
 # This test includes source code from QtNfc library. Define the namespace which moc generated code
 # should be in.
