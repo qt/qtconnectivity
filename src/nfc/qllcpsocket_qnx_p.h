@@ -46,7 +46,7 @@
 
 #include "qnearfieldtarget_qnx_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QLlcpSocketPrivate : public QObject
 {
@@ -120,6 +120,6 @@ private Q_SLOTS:
     void enteringIdle();
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QLLCPSOCKET_QNX_P_H

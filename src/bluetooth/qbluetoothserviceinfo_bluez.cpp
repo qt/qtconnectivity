@@ -47,7 +47,7 @@
 
 #include <QtCore/QXmlStreamWriter>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 {
@@ -285,4 +285,4 @@ bool QBluetoothServiceInfoPrivate::registerService() const
     return true;
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

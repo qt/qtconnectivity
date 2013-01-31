@@ -44,7 +44,7 @@
 #include <QMetaObject>
 #include "../qllcpsocket_qnx_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 QNXNFCManager *QNXNFCManager::m_instance = 0;
 
@@ -482,4 +482,4 @@ QNdefMessage QNXNFCManager::decodeMessage(nfc_ndef_message_t *nextMessage)
     return newNdefMessage;
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

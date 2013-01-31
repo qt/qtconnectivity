@@ -44,7 +44,7 @@
 
 #include <qdeclarativendefrecord.h>
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class QDeclarativeNdefMimeRecord : public QDeclarativeNdefRecord
 {

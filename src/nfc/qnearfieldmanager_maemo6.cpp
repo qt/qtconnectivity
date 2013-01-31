@@ -54,7 +54,7 @@
 
 using namespace com::nokia::nfc;
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 static QAtomicInt handlerId = 0;
 static const char * const registeredHandlerPath = "/com/nokia/nfc/ndefhandler";
@@ -448,4 +448,4 @@ void QNearFieldManagerPrivateImpl::_q_targetLost(const QDBusObjectPath &targetPa
         emit targetLost(nearFieldTarget);
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

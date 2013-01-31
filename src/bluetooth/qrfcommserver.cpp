@@ -43,7 +43,7 @@
 #include "qrfcommserver_p.h"
 #include "qbluetoothsocket.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 /*!
     \class QRfcommServer
@@ -175,4 +175,4 @@ int QRfcommServer::maxPendingConnections() const
 
 #include "moc_qrfcommserver.cpp"
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

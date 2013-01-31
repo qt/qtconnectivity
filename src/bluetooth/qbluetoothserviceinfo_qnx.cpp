@@ -45,7 +45,7 @@
 #include "qrfcommserver_p.h"
 #include "qrfcommserver.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 :  registered(false)
@@ -106,4 +106,4 @@ bool QBluetoothServiceInfoPrivate::registerService() const
     return true;
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

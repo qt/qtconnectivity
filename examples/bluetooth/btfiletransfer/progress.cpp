@@ -46,7 +46,7 @@
 #include <qbluetoothtransferrequest.h>
 #include <qbluetoothtransferreply.h>
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 Progress::Progress(QWidget *parent) :
     QDialog(parent),

@@ -46,7 +46,7 @@
 
 #include <qllcpserver.h>
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class ServerController : public QObject
 {

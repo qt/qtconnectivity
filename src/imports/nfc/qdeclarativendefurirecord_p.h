@@ -48,7 +48,7 @@
 
 #include <QtCore/QMetaType>
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class QDeclarativeNdefUriRecord : public QDeclarativeNdefRecord
 {

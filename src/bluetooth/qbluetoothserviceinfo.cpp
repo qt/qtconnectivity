@@ -44,7 +44,7 @@
 
 #include <QUrl>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 /*!
     \class QBluetoothServiceInfo::Sequence
@@ -619,4 +619,4 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
     return dbg;
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

@@ -46,7 +46,7 @@
 #include "qndeffilter.h"
 #include "qndefrecord.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     m_handlerID(0)
@@ -203,4 +203,4 @@ void QNearFieldManagerPrivateImpl::updateNdefFilter()
 }
 
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

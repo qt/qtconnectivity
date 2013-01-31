@@ -49,7 +49,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QWeakPointer>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class TagBase;
 class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivateVirtualBase
@@ -75,6 +75,6 @@ private:
 
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDMANAGER_EMULATOR_H

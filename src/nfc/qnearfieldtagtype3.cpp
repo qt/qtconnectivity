@@ -41,7 +41,7 @@
 
 #include "qnearfieldtagtype3.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 /*!
     \class QNearFieldTagType3
@@ -183,4 +183,4 @@ bool QNearFieldTagType3::handleResponse(const QNearFieldTarget::RequestId &id,
     return QNearFieldTarget::handleResponse(id, response);
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

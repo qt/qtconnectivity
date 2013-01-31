@@ -45,7 +45,7 @@
 
 #include <qbluetoothaddress.h>
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 class tst_QBluetoothAddress : public QObject
 {

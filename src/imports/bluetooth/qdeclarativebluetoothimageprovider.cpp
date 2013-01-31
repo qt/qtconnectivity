@@ -47,7 +47,7 @@
 #include "qdeclarativebluetoothimageprovider_p.h"
 
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 // This is run in a low priority thread.
 QImage BluetoothThumbnailImageProvider::requestImage(const QString &id, QSize *size, const QSize &req_size)

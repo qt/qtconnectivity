@@ -51,7 +51,7 @@
 
 class QDeclarativeNdefFilter;
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class QDeclarativeNearField : public QObject, public QQmlParserStatus
 {

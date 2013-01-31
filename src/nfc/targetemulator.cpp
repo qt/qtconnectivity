@@ -49,7 +49,7 @@
 // Implementation of qNfcChecksum
 #include "checksum_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 TagBase::TagBase()
 :   lastAccess(0)
@@ -391,4 +391,4 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     return response;
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

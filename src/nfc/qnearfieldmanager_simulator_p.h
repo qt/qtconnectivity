@@ -46,7 +46,7 @@
 
 #include <QtCore/QWeakPointer>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 namespace Simulator {
 class NfcConnection;
@@ -71,6 +71,6 @@ private:
     QMap<QByteArray, QWeakPointer<QNearFieldTarget> > m_targets;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDMANAGER_SIMULATOR_P_H

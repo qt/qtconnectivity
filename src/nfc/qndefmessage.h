@@ -49,7 +49,7 @@
 #include <QtNfc/qnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class Q_NFC_EXPORT QNdefMessage : public QList<QNdefRecord>
 {
@@ -66,7 +66,7 @@ public:
     static QNdefMessage fromByteArray(const QByteArray &message);
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 Q_DECLARE_METATYPE(QtNfc::QNdefMessage)
 

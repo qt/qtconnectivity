@@ -49,7 +49,7 @@ namespace Ui {
     class TextRecordEditor;
 }
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class TextRecordEditor : public QWidget
 {

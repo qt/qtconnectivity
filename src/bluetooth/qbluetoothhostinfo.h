@@ -45,7 +45,7 @@
 #include "qbluetoothglobal.h"
 #include "qbluetoothaddress.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class QBluetoothHostInfoPrivate;
 class Q_BLUETOOTH_EXPORT QBluetoothHostInfo
@@ -67,6 +67,6 @@ private:
 };
 
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
 #endif

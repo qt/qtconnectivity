@@ -47,7 +47,7 @@
 
 #include <QtCore/QDebug>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 QPair<int, int> qParseReservedMemoryControlTlv(const QByteArray &tlvData)
 {
@@ -529,4 +529,4 @@ int QTlvWriter::moveToNextAvailable()
     return length;
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

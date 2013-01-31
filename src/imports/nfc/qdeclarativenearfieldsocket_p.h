@@ -47,7 +47,7 @@
 #include <QtQml/QQmlParserStatus>
 #include <QtNfc/QLlcpSocket>
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class QDeclarativeNearFieldSocketPrivate;
 

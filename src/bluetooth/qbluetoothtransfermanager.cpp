@@ -42,7 +42,7 @@
 #include "qbluetoothtransfermanager.h"
 #include "qbluetoothtransferrequest.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 /*!
     \class QBluetoothTransferManager
@@ -94,4 +94,4 @@ QBluetoothTransferManager::~QBluetoothTransferManager()
 
 #include "moc_qbluetoothtransfermanager.cpp"
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

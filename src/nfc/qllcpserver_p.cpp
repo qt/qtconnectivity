@@ -41,7 +41,7 @@
 
 #include "qllcpserver_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
 :   q_ptr(q)
@@ -93,4 +93,4 @@ QLlcpSocket::SocketError QLlcpServerPrivate::serverError() const
     return QLlcpSocket::UnknownSocketError;
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

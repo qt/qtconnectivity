@@ -48,7 +48,7 @@
 
 #include <QtCore/QMap>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class TagType1 : public QNearFieldTagType1
 {
@@ -113,6 +113,6 @@ private:
     int timerId;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDTARGET_EMULATOR_P_H

@@ -72,7 +72,7 @@
 #define BT_SPP_SERVER_SUBTYPE 1
 #define BT_SPP_CLIENT_SUBTYPE 2
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class BBSocketNotifier : public QObject
 {
@@ -126,6 +126,6 @@ void ppsRegisterForEvent(const QString &evt, QObject *obj);
 
 void ppsUnreguisterForEvent(const QString &evt, QObject *obj);
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
 #endif // PPSHELPERS_H

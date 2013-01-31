@@ -50,7 +50,7 @@ namespace Ui {
     class UriRecordEditor;
 }
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class UriRecordEditor : public QWidget
 {

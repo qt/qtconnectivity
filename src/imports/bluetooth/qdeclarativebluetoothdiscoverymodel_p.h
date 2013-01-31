@@ -53,7 +53,7 @@
 
 #include "qdeclarativebluetoothservice_p.h"
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 class QDeclarativeBluetoothDiscoveryModelPrivate;
 class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QQmlParserStatus

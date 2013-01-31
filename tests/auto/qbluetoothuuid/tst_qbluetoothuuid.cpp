@@ -51,7 +51,7 @@
 #    include <netinet/in.h>
 #endif
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 Q_DECLARE_METATYPE(quint128)
 

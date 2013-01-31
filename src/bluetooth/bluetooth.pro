@@ -8,6 +8,7 @@ OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 load(qt_module)
 
 PUBLIC_HEADERS += \
+    qbluetoothglobal.h \
     qbluetoothaddress.h\
     qbluetoothhostinfo.h \
     qbluetoothuuid.h\

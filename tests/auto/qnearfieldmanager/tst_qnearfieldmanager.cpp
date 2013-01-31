@@ -48,7 +48,7 @@
 #include <qndefmessage.h>
 #include <qndefrecord.h>
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 Q_DECLARE_METATYPE(QNearFieldTarget*)
 Q_DECLARE_METATYPE(QNearFieldTarget::Type)

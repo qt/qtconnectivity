@@ -49,7 +49,7 @@
 
 #include <QCoreApplication>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QRfcommServerPrivate::QRfcommServerPrivate()
     : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
@@ -193,5 +193,5 @@ QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
     return d->securityFlags;
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 

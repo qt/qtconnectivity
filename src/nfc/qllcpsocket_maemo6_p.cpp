@@ -53,7 +53,7 @@
 
 using namespace com::nokia::nfc;
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 static QAtomicInt requestorId = 0;
 static const char * const requestorBasePath = "/com/nokia/nfc/llcpclient/";
@@ -637,4 +637,4 @@ void QLlcpSocketPrivate::initializeRequestor()
     }
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
