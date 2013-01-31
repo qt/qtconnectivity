@@ -53,7 +53,7 @@
 
 #include <btclient.h>
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 Q_DECLARE_METATYPE(QBluetoothSocket::SocketState)
 Q_DECLARE_METATYPE(QBluetoothSocket::SocketType)

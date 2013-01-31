@@ -3,7 +3,7 @@
 #include "nfc/nfc.h"
 #include "qnxnfcmanager_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 QNXNFCEventFilter::QNXNFCEventFilter()
 {
@@ -59,4 +59,4 @@ bool QNXNFCEventFilter::nativeEventFilter(const QByteArray &eventType, void *mes
     return false;
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

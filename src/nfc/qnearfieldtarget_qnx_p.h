@@ -51,7 +51,7 @@
 
 #include "qnx/qnxnfcmanager_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 template <typename T>
 class NearFieldTarget : public T
@@ -193,6 +193,6 @@ protected:
     QList<QNdefMessage> m_ndefMessages;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDTARGET_QNX_H

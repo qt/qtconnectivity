@@ -46,7 +46,7 @@
 #include <QtCore/QByteArray>
 #include <QtNfc/qnfcglobal.h>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNdefRecordPrivate;
 
@@ -105,15 +105,15 @@ private:
     className(const QNdefRecord &other) : QNdefRecord(other, typeNameFormat, type) { }
 
 #define Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(className, typeNameFormat_, type_) \
-    QTNFC_BEGIN_NAMESPACE \
+    QT_BEGIN_NAMESPACE_NFC \
     template<> inline bool QNdefRecord::isRecordType<className>() const\
     { \
         return (typeNameFormat() == typeNameFormat_ && type() == type_); \
     } \
-    QTNFC_END_NAMESPACE
+    QT_END_NAMESPACE_NFC
 
 uint qHash(const QNdefRecord &key);
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNDEFRECORD_H

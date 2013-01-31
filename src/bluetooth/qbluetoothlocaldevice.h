@@ -51,7 +51,7 @@
 
 #include "qbluetoothhostinfo.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class QBluetoothLocalDevicePrivate;
 
@@ -115,7 +115,7 @@ private:
     QBluetoothLocalDevicePrivate *d_ptr;
 };
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
 Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::HostMode)
 Q_DECLARE_METATYPE(QtBluetooth::QBluetoothLocalDevice::Pairing)

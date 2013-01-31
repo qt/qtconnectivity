@@ -43,7 +43,7 @@
 #include "ql2capserver_p.h"
 #include "qbluetoothsocket.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QL2capServerPrivate::QL2capServerPrivate()
 {
@@ -108,4 +108,4 @@ void QL2capServerPrivate::_q_newConnection()
 }
 #endif
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

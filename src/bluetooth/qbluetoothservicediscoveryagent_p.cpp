@@ -42,7 +42,7 @@
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &address)
 {
@@ -62,4 +62,4 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
 {
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

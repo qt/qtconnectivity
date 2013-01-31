@@ -44,7 +44,7 @@
 #include <qbluetoothdeviceinfo.h>
 #include <qbluetoothaddress.h>
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 RemoteSelector::RemoteSelector(QWidget *parent)
 :   QDialog(parent), ui(new Ui::RemoteSelector),

@@ -45,7 +45,7 @@
 #include <QtNfc/qnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class Q_NFC_EXPORT QNdefNfcTextRecord : public QNdefRecord
 {
@@ -67,7 +67,7 @@ public:
     void setEncoding(Encoding encoding);
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcTextRecord, QNdefRecord::NfcRtd, "T")
 

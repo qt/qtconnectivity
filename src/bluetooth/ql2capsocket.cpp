@@ -41,7 +41,7 @@
 
 #include "ql2capsocket.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QL2capSocket::QL2capSocket(QObject *parent)
 :   QBluetoothSocket(parent)
@@ -50,4 +50,4 @@ QL2capSocket::QL2capSocket(QObject *parent)
 
 #include "moc_ql2capsocket.cpp"
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

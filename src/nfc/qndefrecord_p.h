@@ -48,7 +48,7 @@
 #include <QtCore/QSharedData>
 #include <QtCore/QByteArray>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNdefRecordPrivate : public QSharedData
 {
@@ -62,6 +62,6 @@ public:
     QByteArray payload;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNDEFRECORD_P_H

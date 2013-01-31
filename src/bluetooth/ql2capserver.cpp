@@ -43,7 +43,7 @@
 #include "ql2capserver_p.h"
 #include "qbluetoothsocket.h"
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 /*!
     \class QL2capServer
@@ -177,4 +177,4 @@ int QL2capServer::maxPendingConnections() const
 
 #include "moc_ql2capserver.cpp"
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

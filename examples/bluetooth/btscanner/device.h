@@ -48,12 +48,12 @@
 
 #include <QDialog>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 class QBluetoothDeviceDiscoveryAgent;
 class QBluetoothDeviceInfo;
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 class DeviceDiscoveryDialog : public QDialog
 {

@@ -51,13 +51,13 @@
 #include <QtCore/QTime>
 #include <QtCore/QTimer>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 class QL2capServer;
 class QBluetoothSocket;
 class QBluetoothServiceInfo;
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 //! [declaration]
 class TennisServer : public QObject

@@ -55,7 +55,7 @@
 
 static const QLatin1String agentPath("/qt/agent");
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QObject *parent)
 :   QBluetoothTransferReply(parent), tempfile(0), source(input),
@@ -272,4 +272,4 @@ qint64 QBluetoothTransferReplyBluez::writeData(const char*, qint64)
 
 #include "moc_qbluetoothtransferreply_bluez_p.cpp"
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

@@ -49,7 +49,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QSharedData>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNearFieldTarget::RequestIdPrivate : public QSharedData
 {
@@ -61,6 +61,6 @@ public:
     QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDTARGET_P_H

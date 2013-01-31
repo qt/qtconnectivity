@@ -50,7 +50,7 @@
 
 #include <QtCore/QObject>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNdefFilter;
 
@@ -124,6 +124,6 @@ public:
     QNearFieldManager::TargetAccessModes m_requestedModes;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDMANAGER_P_H

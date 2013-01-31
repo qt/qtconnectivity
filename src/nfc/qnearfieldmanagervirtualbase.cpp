@@ -43,7 +43,7 @@
 #include "qndefmessage.h"
 #include "qtlv_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 static inline bool matchesTarget(QNearFieldTarget::Type type,
                                  const QList<QNearFieldTarget::Type> &types)
@@ -214,4 +214,4 @@ void QNearFieldManagerPrivateVirtualBase::ndefReceived(const QNdefMessage &messa
     }
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

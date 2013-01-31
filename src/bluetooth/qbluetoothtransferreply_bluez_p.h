@@ -54,7 +54,7 @@ class OrgOpenobexClientInterface;
 class OrgOpenobexManagerInterface;
 class AgentAdaptor;
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyBluez : public QBluetoothTransferReply
 {
@@ -119,6 +119,6 @@ public slots:
 
 };
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
 #endif // QBLUETOOTHTRANSFERREPLY_H

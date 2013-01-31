@@ -43,7 +43,7 @@
 
 #include <QtCore/QList>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 /*!
     \class QNdefFilter
@@ -201,4 +201,4 @@ int QNdefFilter::recordCount() const
     return d->filterRecords.count();
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

@@ -46,7 +46,7 @@
 
 #include <QString>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class QBluetoothDeviceInfoPrivate;
 class QBluetoothAddress;
@@ -240,6 +240,6 @@ private:
     Q_DECLARE_PRIVATE(QBluetoothDeviceInfo)
 };
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
 #endif

@@ -45,7 +45,7 @@
 #include <qndefnfctextrecord.h>
 #include <qndefnfcurirecord.h>
 
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 
 class tst_QNdefRecord : public QObject
 {

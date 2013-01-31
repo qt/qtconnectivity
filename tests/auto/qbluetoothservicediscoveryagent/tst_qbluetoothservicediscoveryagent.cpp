@@ -50,7 +50,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
 
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_BLUETOOTH
 
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
 Q_DECLARE_METATYPE(QBluetoothServiceDiscoveryAgent::Error)

@@ -50,7 +50,7 @@
 
 #include <QtCore/QDebug>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 struct quint128
 {
@@ -171,7 +171,7 @@ inline QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
     return debug;
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
 
 Q_DECLARE_METATYPE(QtBluetooth::QBluetoothUuid)
 

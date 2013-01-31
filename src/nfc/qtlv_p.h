@@ -50,7 +50,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QPair>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNearFieldTarget;
 class Q_AUTOTEST_EXPORT QTlvReader
@@ -119,6 +119,6 @@ private:
 QPair<int, int> qParseReservedMemoryControlTlv(const QByteArray &tlvData);
 QPair<int, int> qParseLockControlTlv(const QByteArray &tlvData);
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QTLV_P_H

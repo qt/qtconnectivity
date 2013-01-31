@@ -51,7 +51,7 @@
 //#include <netinet/in.h>
 #include <string.h>
 
-QTBLUETOOTH_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 // Bluetooth base UUID 00000000-0000-1000-8000-00805F9B34FB
 // TODO: make more efficient
@@ -357,4 +357,4 @@ bool QBluetoothUuid::operator==(const QBluetoothUuid &other) const
     return QUuid::operator==(other);
 }
 
-QTBLUETOOTH_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH

@@ -44,7 +44,7 @@
 
 #include "qnearfieldmanager_p.h"
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
 {
@@ -53,6 +53,6 @@ public:
   ~QNearFieldManagerPrivateImpl();
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QNEARFIELDMANAGERIMPL_P_H

@@ -46,7 +46,7 @@
 #include <QtNfc/qnfcglobal.h>
 #include <QtNfc/QLlcpSocket>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QLlcpServerPrivate;
 
@@ -80,6 +80,6 @@ private:
     QLlcpServerPrivate *d_ptr;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QLLCPSERVER_H

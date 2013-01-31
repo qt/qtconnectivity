@@ -49,7 +49,7 @@
 
 #include <QtCore/QDebug>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 /*!
     \class QNearFieldTarget
@@ -457,4 +457,4 @@ bool QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
     return true;
 }
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC

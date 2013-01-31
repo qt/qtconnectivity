@@ -46,7 +46,7 @@
 #include <QtNetwork/QAbstractSocket>
 #include <QtNfc/qnfcglobal.h>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class QNearFieldTarget;
 class QLlcpSocketPrivate;
@@ -126,6 +126,6 @@ private:
     QLlcpSocketPrivate *d_ptr;
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 #endif // QLLCPSOCKET_H

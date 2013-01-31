@@ -47,7 +47,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QUrl)
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 
 class Q_NFC_EXPORT QNdefNfcUriRecord : public QNdefRecord
 {
@@ -58,7 +58,7 @@ public:
     void setUri(const QUrl &uri);
 };
 
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcUriRecord, QNdefRecord::NfcRtd, "U")
 
