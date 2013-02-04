@@ -20,6 +20,8 @@ PUBLIC_HEADERS += \
     qndefmessage.h \
     qndeffilter.h \
     qndefnfcurirecord.h \
+    qndefnfcsmartposterrecord.h \
+    qndefnfcsmartposter.h \
     qnearfieldtagtype1.h \
     qnearfieldtagtype2.h \
     qllcpsocket.h \
@@ -43,6 +45,8 @@ SOURCES += \
     qndefmessage.cpp \
     qndeffilter.cpp \
     qndefnfcurirecord.cpp \
+    qndefnfcsmartposterrecord.cpp \
+    qndefnfcsmartposter.cpp \
     qnearfieldtagtype1.cpp \
     qnearfieldtagtype2.cpp \
     qnearfieldtagtype3.cpp \
