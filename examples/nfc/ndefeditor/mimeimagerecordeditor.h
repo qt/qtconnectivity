@@ -48,13 +48,15 @@
 
 #include <qndefrecord.h>
 
+#include "recordeditor.h"
+
 QTNFC_USE_NAMESPACE
 
 namespace Ui {
     class MimeImageRecordEditor;
 }
 
-class MimeImageRecordEditor : public QWidget
+class MimeImageRecordEditor : public RecordEditor
 {
     Q_OBJECT
 

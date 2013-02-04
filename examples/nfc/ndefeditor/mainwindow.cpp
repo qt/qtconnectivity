@@ -44,6 +44,7 @@
 #include "textrecordeditor.h"
 #include "urirecordeditor.h"
 #include "mimeimagerecordeditor.h"
+#include "smartposterrecordeditor.h"
 
 #include <QtCore/QTime>
 #include <QMenu>
@@ -57,16 +58,20 @@
 #include <qndefrecord.h>
 #include <qndefnfctextrecord.h>
 #include <qndefnfcurirecord.h>
+#include <qndefnfcsmartposterrecord.h>
 #include <qndefmessage.h>
 
 #include <QtCore/QDebug>
 
-class EmptyRecordLabel : public QLabel
+class EmptyRecordLabel : public RecordEditor
 {
     Q_OBJECT
 
 public:
-    EmptyRecordLabel() : QLabel(tr("Empty Record")) { }
+    EmptyRecordLabel(QWidget *parent = 0) : RecordEditor(parent)
+    {
+        new QLabel(tr("Empty Record"), this);
+    }
     ~EmptyRecordLabel() { }
 
     void setRecord(const QNdefRecord &record)
@@ -80,12 +85,15 @@ public:
     }
 };
 
-class UnknownRecordLabel : public QLabel
+class UnknownRecordLabel : public RecordEditor
 {
     Q_OBJECT
 
 public:
-    UnknownRecordLabel() : QLabel(tr("Unknown Record Type")) { }
+    UnknownRecordLabel(QWidget *parent = 0) : RecordEditor(parent)
+    {
+        new QLabel(tr("Unknown Record Type"));
+    }
     ~UnknownRecordLabel() { }
 
     void setRecord(const QNdefRecord &record) { m_record = record; }
@@ -95,45 +103,20 @@ private:
     QNdefRecord m_record;
 };
 
-template <typename T>
-void addRecord(Ui::MainWindow *ui, const QNdefRecord &record = QNdefRecord())
-{
-    QVBoxLayout *vbox = qobject_cast<QVBoxLayout *>(ui->scrollAreaWidgetContents->layout());
-    if (!vbox)
-        return;
-
-    if (!vbox->isEmpty()) {
-        QFrame *hline = new QFrame;
-        hline->setFrameShape(QFrame::HLine);
-        hline->setObjectName(QLatin1String("line-spacer"));
-
-        vbox->addWidget(hline);
-    }
-
-    T *recordEditor = new T;
-    recordEditor->setObjectName(QLatin1String("record-editor"));
-
-    if (!record.isEmpty())
-        recordEditor->setRecord(record);
-
-    vbox->addWidget(recordEditor);
-}
-
 MainWindow::MainWindow(QWidget *parent)
 :   QMainWindow(parent), ui(new Ui::MainWindow), m_manager(new QNearFieldManager(this)),
     m_touchAction(NoAction)
 {
     ui->setupUi(this);
 
-    QMenu *addRecordMenu = new QMenu(this);
-    addRecordMenu->addAction(tr("NFC Text Record"), this, SLOT(addNfcTextRecord()));
-    addRecordMenu->addAction(tr("NFC URI Record"), this, SLOT(addNfcUriRecord()));
-    addRecordMenu->addAction(tr("MIME Image Record"), this, SLOT(addMimeImageRecord()));
-    addRecordMenu->addAction(tr("Empty Record"), this, SLOT(addEmptyRecord()));
-    ui->addRecord->setMenu(addRecordMenu);
+    ui->messageEditor->addAction(tr("NFC Text Record"), this, SLOT(addNfcTextRecord()));
+    ui->messageEditor->addAction(tr("NFC URI Record"), this, SLOT(addNfcUriRecord()));
+    ui->messageEditor->addAction(tr("MIME Image Record"), this, SLOT(addMimeImageRecord()));
+    ui->messageEditor->addAction(tr("Smart Poster"), this, SLOT(addSmartPosterRecord()));
+    ui->messageEditor->addAction(tr("Empty Record"), this, SLOT(addEmptyRecord()));
+    ui->addRecord->setMenu(ui->messageEditor->actionMenu());
 
-    QVBoxLayout *vbox = new QVBoxLayout;
-    ui->scrollAreaWidgetContents->setLayout(vbox);
+    connect(ui->clearMessage, SIGNAL(clicked()), ui->messageEditor, SLOT(clearRecords()));
 
     connect(m_manager, SIGNAL(targetDetected(QNearFieldTarget*)),
             this, SLOT(targetDetected(QNearFieldTarget*)));
@@ -148,22 +131,27 @@ MainWindow::~MainWindow()
 
 void MainWindow::addNfcTextRecord()
 {
-    addRecord<TextRecordEditor>(ui);
+    ui->messageEditor->addRecordEditor(new TextRecordEditor);
 }
 
 void MainWindow::addNfcUriRecord()
 {
-    addRecord<UriRecordEditor>(ui);
+    ui->messageEditor->addRecordEditor(new UriRecordEditor);
 }
 
 void MainWindow::addMimeImageRecord()
 {
-    addRecord<MimeImageRecordEditor>(ui);
+    ui->messageEditor->addRecordEditor(new MimeImageRecordEditor);
+}
+
+void MainWindow::addSmartPosterRecord()
+{
+    ui->messageEditor->addRecordEditor(new SmartPosterRecordEditor);
 }
 
 void MainWindow::addEmptyRecord()
 {
-    addRecord<EmptyRecordLabel>(ui);
+    ui->messageEditor->addRecordEditor(new EmptyRecordLabel);
 }
 
 void MainWindow::loadMessage()
@@ -193,7 +181,7 @@ void MainWindow::saveMessage()
     if (!file.open(QIODevice::WriteOnly))
         return;
 
-    file.write(ndefMessage().toByteArray());
+    file.write(ui->messageEditor->ndefMessage().toByteArray());
 
     file.close();
 }
@@ -236,7 +224,7 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
         connect(target, SIGNAL(error(QNearFieldTarget::Error,QNearFieldTarget::RequestId)),
                 this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
 
-        m_request = target->writeNdefMessages(QList<QNdefMessage>() << ndefMessage());
+        m_request = target->writeNdefMessages(QList<QNdefMessage>() << ui->messageEditor->ndefMessage());
         break;
     }
 }
@@ -248,20 +236,22 @@ void MainWindow::targetLost(QNearFieldTarget *target)
 
 void MainWindow::ndefMessageRead(const QNdefMessage &message)
 {
-    clearMessage();
+    ui->messageEditor->clearRecords();
 
     foreach (const QNdefRecord &record, message) {
         if (record.isRecordType<QNdefNfcTextRecord>()) {
-            addRecord<TextRecordEditor>(ui, record);
+            ui->messageEditor->addRecordEditor(new TextRecordEditor, record);
         } else if (record.isRecordType<QNdefNfcUriRecord>()) {
-            addRecord<UriRecordEditor>(ui, record);
+            ui->messageEditor->addRecordEditor(new UriRecordEditor, record);
+        } else if (record.isRecordType<QNdefNfcSmartPosterRecord>()) {
+            ui->messageEditor->addRecordEditor(new SmartPosterRecordEditor, record);
         } else if (record.typeNameFormat() == QNdefRecord::Mime &&
                    record.type().startsWith("image/")) {
-            addRecord<MimeImageRecordEditor>(ui, record);
-        } else if (record.isEmpty()) {
-            addRecord<EmptyRecordLabel>(ui);
+            ui->messageEditor->addRecordEditor(new MimeImageRecordEditor, record);
+        } else if (record.typeNameFormat() == QNdefRecord::Empty) {
+            ui->messageEditor->addRecordEditor(new EmptyRecordLabel);
         } else {
-            addRecord<UnknownRecordLabel>(ui, record);
+            ui->messageEditor->addRecordEditor(new UnknownRecordLabel, record);
         }
     }
 
@@ -321,41 +311,6 @@ void MainWindow::targetError(QNearFieldTarget::Error error, const QNearFieldTarg
         m_manager->stopTargetDetection();
         m_request = QNearFieldTarget::RequestId();
     }
-}
-
-void MainWindow::clearMessage()
-{
-    QWidget *scrollArea = ui->scrollAreaWidgetContents;
-
-    qDeleteAll(scrollArea->findChildren<QWidget *>(QLatin1String("line-spacer")));
-    qDeleteAll(scrollArea->findChildren<QWidget *>(QLatin1String("record-editor")));
-}
-
-QNdefMessage MainWindow::ndefMessage() const
-{
-    QVBoxLayout *vbox = qobject_cast<QVBoxLayout *>(ui->scrollAreaWidgetContents->layout());
-    if (!vbox)
-        return QNdefMessage();
-
-    QNdefMessage message;
-
-    for (int i = 0; i < vbox->count(); ++i) {
-        QWidget *widget = vbox->itemAt(i)->widget();
-
-        if (TextRecordEditor *editor = qobject_cast<TextRecordEditor *>(widget)) {
-            message.append(editor->record());
-        } else if (UriRecordEditor *editor = qobject_cast<UriRecordEditor *>(widget)) {
-            message.append(editor->record());
-        } else if (MimeImageRecordEditor *editor = qobject_cast<MimeImageRecordEditor *>(widget)) {
-            message.append(editor->record());
-        } else if (qobject_cast<EmptyRecordLabel *>(widget)) {
-            message.append(QNdefRecord());
-        } else if (UnknownRecordLabel *label = qobject_cast<UnknownRecordLabel *>(widget)) {
-            message.append(label->record());
-        }
-    }
-
-    return message;
 }
 
 #include "mainwindow.moc"

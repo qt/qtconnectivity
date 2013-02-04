@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -38,37 +38,45 @@
 **
 ****************************************************************************/
 
-#include "urirecordeditor.h"
-#include "ui_urirecordeditor.h"
+#ifndef MESSAGEEDITOR_H
+#define MESSAGEEDITOR_H
 
-#include <QtCore/QUrl>
+#include <QtWidgets/QWidget>
+#include <qndefrecord.h>
+#include <qndefmessage.h>
 
-UriRecordEditor::UriRecordEditor(QWidget *parent)
-:   RecordEditor(parent), ui(new Ui::UriRecordEditor)
-{
-    ui->setupUi(this);
+QT_FORWARD_DECLARE_CLASS(QMenu)
+
+namespace Ui {
+    class MessageEditor;
 }
 
-UriRecordEditor::~UriRecordEditor()
+class RecordEditor;
+
+QTNFC_USE_NAMESPACE
+
+class MessageEditor : public QWidget
 {
-    delete ui;
-}
+    Q_OBJECT
 
-void UriRecordEditor::setRecord(const QNdefRecord &record)
-{
-    if (!record.isRecordType<QNdefNfcUriRecord>())
-        return;
+public:
+    explicit MessageEditor(QWidget *parent = 0);
+    ~MessageEditor();
 
-    QNdefNfcUriRecord uriRecord(record);
+    QMenu *actionMenu() const;
+    void addAction(const QString &title, QObject *receiver, const char *slot);
 
-    ui->uri->setText(uriRecord.uri().toString());
-}
+    void addRecordEditor(RecordEditor *recordEditor, const QNdefRecord &record = QNdefRecord());
 
-QNdefRecord UriRecordEditor::record() const
-{
-    QNdefNfcUriRecord record;
+    QNdefMessage ndefMessage() const;
 
-    record.setUri(ui->uri->text());
+public slots:
+    void clearRecords();
 
-    return record;
-}
+private:
+    Ui::MessageEditor *ui;
+
+    QMenu *m_menu;
+};
+
+#endif // MESSAGEEDITOR_H

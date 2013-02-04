@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -38,37 +38,25 @@
 **
 ****************************************************************************/
 
-#include "urirecordeditor.h"
-#include "ui_urirecordeditor.h"
+#ifndef RECORDEDITOR_H
+#define RECORDEDITOR_H
 
-#include <QtCore/QUrl>
+#include <QtWidgets/QWidget>
 
-UriRecordEditor::UriRecordEditor(QWidget *parent)
-:   RecordEditor(parent), ui(new Ui::UriRecordEditor)
+#include <qndefrecord.h>
+
+QTNFC_USE_NAMESPACE
+
+class RecordEditor : public QWidget
 {
-    ui->setupUi(this);
-}
+    Q_OBJECT
 
-UriRecordEditor::~UriRecordEditor()
-{
-    delete ui;
-}
+public:
+    explicit RecordEditor(QWidget *parent = 0);
+    ~RecordEditor();
 
-void UriRecordEditor::setRecord(const QNdefRecord &record)
-{
-    if (!record.isRecordType<QNdefNfcUriRecord>())
-        return;
+    virtual void setRecord(const QNdefRecord &record) = 0;
+    virtual QNdefRecord record() const = 0;
+};
 
-    QNdefNfcUriRecord uriRecord(record);
-
-    ui->uri->setText(uriRecord.uri().toString());
-}
-
-QNdefRecord UriRecordEditor::record() const
-{
-    QNdefNfcUriRecord record;
-
-    record.setUri(ui->uri->text());
-
-    return record;
-}
+#endif // RECORDEDITOR_H

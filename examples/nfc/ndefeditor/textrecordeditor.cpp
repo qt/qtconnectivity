@@ -43,9 +43,8 @@
 
 #include <QtCore/QDebug>
 
-TextRecordEditor::TextRecordEditor(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::TextRecordEditor)
+TextRecordEditor::TextRecordEditor(QWidget *parent)
+:   RecordEditor(parent), ui(new Ui::TextRecordEditor)
 {
     ui->setupUi(this);
 }
@@ -55,8 +54,13 @@ TextRecordEditor::~TextRecordEditor()
     delete ui;
 }
 
-void TextRecordEditor::setRecord(const QNdefNfcTextRecord &textRecord)
+void TextRecordEditor::setRecord(const QNdefRecord &record)
 {
+    if (!record.isRecordType<QNdefNfcTextRecord>())
+        return;
+
+    QNdefNfcTextRecord textRecord(record);
+
     ui->text->setText(textRecord.text());
     ui->locale->setText(textRecord.locale());
 
@@ -66,7 +70,7 @@ void TextRecordEditor::setRecord(const QNdefNfcTextRecord &textRecord)
         ui->encoding->setCurrentIndex(1);
 }
 
-QNdefNfcTextRecord TextRecordEditor::record() const
+QNdefRecord TextRecordEditor::record() const
 {
     QNdefNfcTextRecord record;
 

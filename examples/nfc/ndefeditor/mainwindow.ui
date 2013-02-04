@@ -115,13 +115,13 @@
       <property name="widgetResizable">
        <bool>true</bool>
       </property>
-      <widget class="QWidget" name="scrollAreaWidgetContents">
+      <widget class="MessageEditor" name="messageEditor">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
          <width>553</width>
-         <height>335</height>
+         <height>355</height>
         </rect>
        </property>
       </widget>
@@ -132,6 +132,14 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>MessageEditor</class>
+   <extends>QWidget</extends>
+   <header>messageeditor.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -191,22 +199,6 @@
     <hint type="sourcelabel">
      <x>334</x>
      <y>47</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>275</x>
-     <y>198</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>clearMessage</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>clearMessage()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>419</x>
-     <y>22</y>
     </hint>
     <hint type="destinationlabel">
      <x>275</x>

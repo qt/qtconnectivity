@@ -46,13 +46,15 @@
 
 #include <qndefnfcurirecord.h>
 
+#include "recordeditor.h"
+
 namespace Ui {
     class UriRecordEditor;
 }
 
 QTNFC_USE_NAMESPACE
 
-class UriRecordEditor : public QWidget
+class UriRecordEditor : public RecordEditor
 {
     Q_OBJECT
 
@@ -60,8 +62,8 @@ public:
     explicit UriRecordEditor(QWidget *parent = 0);
     ~UriRecordEditor();
 
-    void setRecord(const QNdefNfcUriRecord &uriRecord);
-    QNdefNfcUriRecord record() const;
+    void setRecord(const QNdefRecord &record);
+    QNdefRecord record() const;
 
 private:
     Ui::UriRecordEditor *ui;

@@ -70,9 +70,8 @@ private slots:
     void addNfcTextRecord();
     void addNfcUriRecord();
     void addMimeImageRecord();
+    void addSmartPosterRecord();
     void addEmptyRecord();
-
-    void clearMessage();
 
     void loadMessage();
     void saveMessage();
@@ -93,8 +92,6 @@ private:
         ReadNdef,
         WriteNdef
     };
-
-    QNdefMessage ndefMessage() const;
 
 private:
     Ui::MainWindow *ui;

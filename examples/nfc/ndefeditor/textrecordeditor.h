@@ -45,13 +45,15 @@
 
 #include <qndefnfctextrecord.h>
 
+#include "recordeditor.h"
+
 namespace Ui {
     class TextRecordEditor;
 }
 
 QTNFC_USE_NAMESPACE
 
-class TextRecordEditor : public QWidget
+class TextRecordEditor : public RecordEditor
 {
     Q_OBJECT
 
@@ -59,8 +61,8 @@ public:
     explicit TextRecordEditor(QWidget *parent = 0);
     ~TextRecordEditor();
 
-    void setRecord(const QNdefNfcTextRecord &textRecord);
-    QNdefNfcTextRecord record() const;
+    void setRecord(const QNdefRecord &record);
+    QNdefRecord record() const;
 
 private:
     Ui::TextRecordEditor *ui;

@@ -75,9 +75,8 @@ static QString imageFormatToMimeType(const QByteArray &format)
         return QString();
 }
 
-MimeImageRecordEditor::MimeImageRecordEditor(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::MimeImageRecordEditor)
+MimeImageRecordEditor::MimeImageRecordEditor(QWidget *parent)
+:   RecordEditor(parent), ui(new Ui::MimeImageRecordEditor)
 {
     ui->setupUi(this);
 }
@@ -134,6 +133,7 @@ void MimeImageRecordEditor::on_mimeImageOpen_clicked()
     ui->mimeImageFile->setText(mimeDataFile);
     ui->mimeImageImage->setPixmap(QPixmap::fromImage(image));
 
+    m_record.setTypeNameFormat(QNdefRecord::Mime);
     m_record.setType(mimeType.toLatin1());
     m_record.setPayload(imageData);
 }

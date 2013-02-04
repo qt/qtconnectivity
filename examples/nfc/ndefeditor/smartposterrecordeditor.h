@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -38,37 +38,34 @@
 **
 ****************************************************************************/
 
-#include "urirecordeditor.h"
-#include "ui_urirecordeditor.h"
+#ifndef SMARTPOSTERRECORDEDITOR_H
+#define SMARTPOSTERRECORDEDITOR_H
 
-#include <QtCore/QUrl>
+#include "recordeditor.h"
 
-UriRecordEditor::UriRecordEditor(QWidget *parent)
-:   RecordEditor(parent), ui(new Ui::UriRecordEditor)
-{
-    ui->setupUi(this);
+namespace Ui {
+    class SmartPosterRecordEditor;
 }
 
-UriRecordEditor::~UriRecordEditor()
+class SmartPosterRecordEditor : public RecordEditor
 {
-    delete ui;
-}
+    Q_OBJECT
 
-void UriRecordEditor::setRecord(const QNdefRecord &record)
-{
-    if (!record.isRecordType<QNdefNfcUriRecord>())
-        return;
+public:
+    explicit SmartPosterRecordEditor(QWidget *parent = 0);
+    ~SmartPosterRecordEditor();
 
-    QNdefNfcUriRecord uriRecord(record);
+    void setRecord(const QNdefRecord &record);
+    QNdefRecord record() const;
 
-    ui->uri->setText(uriRecord.uri().toString());
-}
+private slots:
+    void addTitleRecord();
+    void addIconRecord();
 
-QNdefRecord UriRecordEditor::record() const
-{
-    QNdefNfcUriRecord record;
+    void on_clear_clicked();
 
-    record.setUri(ui->uri->text());
+private:
+    Ui::SmartPosterRecordEditor *ui;
+};
 
-    return record;
-}
+#endif // SMARTPOSTERRECORDEDITOR_H

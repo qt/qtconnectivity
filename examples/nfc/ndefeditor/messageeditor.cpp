@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -38,37 +38,79 @@
 **
 ****************************************************************************/
 
-#include "urirecordeditor.h"
-#include "ui_urirecordeditor.h"
+#include "ui_messageeditor.h"
+#include "messageeditor.h"
+#include "recordeditor.h"
 
-#include <QtCore/QUrl>
+#include <QtWidgets/QMenu>
 
-UriRecordEditor::UriRecordEditor(QWidget *parent)
-:   RecordEditor(parent), ui(new Ui::UriRecordEditor)
+MessageEditor::MessageEditor(QWidget *parent)
+:   QWidget(parent), ui(new Ui::MessageEditor), m_menu(0)
 {
     ui->setupUi(this);
 }
 
-UriRecordEditor::~UriRecordEditor()
+MessageEditor::~MessageEditor()
 {
     delete ui;
 }
 
-void UriRecordEditor::setRecord(const QNdefRecord &record)
+QMenu *MessageEditor::actionMenu() const
 {
-    if (!record.isRecordType<QNdefNfcUriRecord>())
-        return;
-
-    QNdefNfcUriRecord uriRecord(record);
-
-    ui->uri->setText(uriRecord.uri().toString());
+    return m_menu;
 }
 
-QNdefRecord UriRecordEditor::record() const
+void MessageEditor::addAction(const QString &title, QObject *receiver, const char *slot)
 {
-    QNdefNfcUriRecord record;
+    if (!m_menu)
+        m_menu = new QMenu(this);
 
-    record.setUri(ui->uri->text());
+    m_menu->addAction(title, receiver, slot);
+}
 
-    return record;
+void MessageEditor::addRecordEditor(RecordEditor *recordEditor, const QNdefRecord &record)
+{
+    QVBoxLayout *vbox = qobject_cast<QVBoxLayout *>(layout());
+    if (!vbox)
+        return;
+
+    if (!vbox->isEmpty()) {
+        QFrame *hline = new QFrame;
+        hline->setFrameShape(QFrame::HLine);
+        hline->setObjectName(QLatin1String("line-spacer"));
+
+        vbox->addWidget(hline);
+    }
+
+    recordEditor->setObjectName(QLatin1String("record-editor"));
+
+    if (!record.isEmpty())
+        recordEditor->setRecord(record);
+
+    vbox->addWidget(recordEditor);
+}
+
+QNdefMessage MessageEditor::ndefMessage() const
+{
+    QNdefMessage message;
+
+    foreach (QObject *child, children()) {
+        RecordEditor *editor = qobject_cast<RecordEditor *>(child);
+        if (!editor)
+            continue;
+
+        message.append(editor->record());
+    }
+
+    return message;
+}
+
+void MessageEditor::clearRecords()
+{
+    foreach (QObject *child, children()) {
+        if (child->objectName() == QLatin1String("line-spacer") ||
+            child->objectName() == QLatin1String("record-editor")) {
+            delete child;
+        }
+    }
 }
