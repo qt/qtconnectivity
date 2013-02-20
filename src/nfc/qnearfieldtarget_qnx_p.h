@@ -56,21 +56,20 @@ QT_BEGIN_NAMESPACE_NFC
 template <typename T>
 class NearFieldTarget : public T
 {
-    //Q_OBJECT
 public:
 
     NearFieldTarget(QObject *parent, nfc_target_t *target, const QList<QNdefMessage> &messages)
         :   T(parent), m_target(target)
     {
-        char buf[128];
+        char buf[64];
         size_t bufLength;
 
-        if (nfc_get_tag_name(target, buf, 128, &bufLength) != NFC_RESULT_SUCCESS)
+        if (nfc_get_tag_name(target, buf, 64, &bufLength) != NFC_RESULT_SUCCESS)
             qWarning() << Q_FUNC_INFO << "Could not get tag name";
         else
             m_tagName = QByteArray(buf, bufLength);
 
-        if (nfc_get_tag_id(target, reinterpret_cast<uchar_t *>(buf), 128, &bufLength) != NFC_RESULT_SUCCESS)
+        if (nfc_get_tag_id(target, reinterpret_cast<uchar_t *>(buf), 64, &bufLength) != NFC_RESULT_SUCCESS)
             qWarning() << Q_FUNC_INFO << "Could not get tag id";
         else
             m_tagId = QByteArray(buf,bufLength);
@@ -82,18 +81,30 @@ public:
     {
         //Not entierely sure if this is the right place to do that
         nfc_destroy_target(m_target);
-        //delete m_target;
     }
 
     QByteArray uid() const
     {
-        //TODO id and not the name should be returned
-        return m_tagName;//m_tagId;
+        return m_tagId;
     }
 
     QNearFieldTarget::Type type() const
     {
-        //TODO add tag type detection
+        if (m_tagName == QByteArray("Jewel"))
+            return QNearFieldTarget::NfcTagType1;
+        else if (m_tagName == QByteArray("Topaz"))
+            return QNearFieldTarget::NfcTagType1;
+        else if (m_tagName == QByteArray("Topaz 512"))
+            return QNearFieldTarget::NfcTagType1;
+        else if (m_tagName == QByteArray("Mifare UL"))
+            return QNearFieldTarget::NfcTagType2;
+        else if (m_tagName == QByteArray("Mifare UL C"))
+            return QNearFieldTarget::NfcTagType2;
+        else if (m_tagName == QByteArray("Mifare 1K"))
+            return QNearFieldTarget::MifareTag;
+        else if (m_tagName == QByteArray("Kovio"))
+            return QNearFieldTarget::NfcTagType2;
+
         return QNearFieldTarget::ProprietaryTag;
     }
 
@@ -111,12 +122,12 @@ public:
     QNearFieldTarget::RequestId readNdefMessages()
     {
         for (int i = 0; i < m_ndefMessages.size(); i++) {
-            emit QNearFieldTarget::ndefMessageRead(m_ndefMessages.at(i));
+            Q_EMIT QNearFieldTarget::ndefMessageRead(m_ndefMessages.at(i));
         }
-        QNearFieldTarget::RequestId id = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-        QMetaObject::metaObject()->invokeMethod(this, "requestCompleted",
-                                          Qt::QueuedConnection, Q_ARG(const QNearFieldTarget::RequestId, id));
-        return id;
+        QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
+        QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
+                                  Q_ARG(const QNearFieldTarget::RequestId, requestId));
+        return requestId;
     }
 
     QNearFieldTarget::RequestId sendCommand(const QByteArray &command)
@@ -134,13 +145,20 @@ public:
                 nfc_tag_supports_tag_type (m_target,TAG_TYPE_ISO_15693_3, &isSupported);
                 tagType = TAG_TYPE_ISO_15693_3;
                 //We dont support this tag
-                if (!isSupported)
+                if (!isSupported) {
+                    Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
                     return QNearFieldTarget::RequestId();
+                }
             }
         }
         m_cmdRespons = reinterpret_cast<char *> malloc (256);
-        nfc_tag_transceive (m_target, tagType, command.data(), command.length(), m_cmdRespons, 256, &m_cmdResponseLength);
+        nfc_result_t result = nfc_tag_transceive (m_target, tagType, command.data(), command.length(), m_cmdRespons, 256, &m_cmdResponseLength);
+        if (result != NFC_RESULT_SUCCESS) {
+            Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnknownError, QNearFieldTarget::RequestId());
+            qWarning() << Q_FUNC_INFO << "nfc_tag_transceive failed"
+        }
     #else
+        Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     #endif
     }
@@ -148,11 +166,11 @@ public:
     QNearFieldTarget::RequestId sendCommands(const QList<QByteArray> &commands)
     {
         Q_UNUSED(commands);
+        QNearFieldTarget::RequestId requestId;
         for (int i = 0; i < commands.size(); i++) {
-            sendCommand(commands.at(i));
+            requestId = sendCommand(commands.at(i)); //The request id of the last command will be returned
         }
-        //TODO add the request completed signal and a valid request id
-        return QNearFieldTarget::RequestId();
+        return requestId;
     }
 
     QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages)
@@ -164,6 +182,8 @@ public:
             if (result != NFC_RESULT_SUCCESS) {
                 qWarning() << Q_FUNC_INFO << "Could not convert QNdefMessage to byte array" << result;
                 nfc_delete_ndef_message(newMessage, true);
+                Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnknownError,
+                             QNearFieldTarget::RequestId());
                 return QNearFieldTarget::RequestId();
             }
 
@@ -172,14 +192,17 @@ public:
 
             if (result != NFC_RESULT_SUCCESS) {
                 qWarning() << Q_FUNC_INFO << "Could not write message";
+                Q_EMIT QNearFieldTarget::error(QNearFieldTarget::NdefWriteError,
+                             QNearFieldTarget::RequestId());
+
                 return QNearFieldTarget::RequestId();
             }
 
         }
-        QNearFieldTarget::RequestId id = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-        QMetaObject::invokeMethod(this, "requestCompleted",
-                                          Qt::QueuedConnection, Q_ARG(const QNearFieldTarget::RequestId, id));
-        return id;
+        QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
+        QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
+                                  Q_ARG(const QNearFieldTarget::RequestId, requestId));
+        return requestId;
     }
 
 protected:
