@@ -80,7 +80,7 @@ public:
     void setSecurityFlags(QBluetooth::SecurityFlags security);
     QBluetooth::SecurityFlags securityFlags() const;
 
-signals:
+Q_SIGNALS:
     void newConnection();
 
 protected:

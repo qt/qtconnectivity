@@ -89,7 +89,7 @@ public slots:
     void start();
     void stop();
 
-signals:
+Q_SIGNALS:
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
     void finished();
     void error(QBluetoothDeviceDiscoveryAgent::Error error);

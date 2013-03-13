@@ -68,7 +68,7 @@ public:
     QNdefRecord record() const;
     void setRecord(const QNdefRecord &record);
 
-signals:
+Q_SIGNALS:
     void recordTypeChanged();
 
 private:

@@ -70,7 +70,7 @@ public:
 
     QBluetoothTransferReply *put(const QBluetoothTransferRequest &request, QIODevice *data);    
 
-signals:
+Q_SIGNALS:
     void finished(QBluetoothTransferReply *reply);
 
 };
