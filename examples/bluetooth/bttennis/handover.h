@@ -48,15 +48,15 @@
 #include <qbluetoothuuid.h>
 #include <qnfcglobal.h>
 
-QTNFC_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_NFC
 class QNearFieldManager;
 class QNearFieldTarget;
 class QLlcpServer;
 class QLlcpSocket;
-QTNFC_END_NAMESPACE
+QT_END_NAMESPACE_NFC
 
-QTNFC_USE_NAMESPACE
-QTBLUETOOTH_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE_BLUETOOTH
 
 class Handover : public QObject
 {

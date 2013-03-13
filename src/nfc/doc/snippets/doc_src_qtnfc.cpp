@@ -43,6 +43,6 @@
 //! [include]
 
 //! [namespace]
-QTNFC_USE_NAMESPACE
+QT_USE_NAMESPACE_NFC
 //! [namespace]
 
