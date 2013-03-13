@@ -91,7 +91,7 @@ public slots:
     void stop();
     void clear();
 
-signals:
+Q_SIGNALS:
     void serviceDiscovered(const QBluetoothServiceInfo &info);
     void finished();
     void canceled();
