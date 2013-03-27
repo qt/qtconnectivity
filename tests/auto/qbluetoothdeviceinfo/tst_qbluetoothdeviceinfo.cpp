@@ -323,7 +323,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
 
         QVERIFY(copyInfo1.isValid());
         QVERIFY(copyInfo2.isValid());
-        QVERIFY(!(QBluetoothDeviceInfo() == copyInfo1));
+        QVERIFY(QBluetoothDeviceInfo() != copyInfo1);
 
         QCOMPARE(copyInfo1.address(), address);
         QCOMPARE(copyInfo2.address(), address);
@@ -355,7 +355,7 @@ void tst_QBluetoothDeviceInfo::tst_serviceUuids()
 
     deviceInfo.setServiceUuids(servicesList, QBluetoothDeviceInfo::DataComplete);
     QVERIFY(deviceInfo.serviceUuids().count() > 0);
-    QVERIFY(!(deviceInfo == copyInfo));
+    QVERIFY(deviceInfo != copyInfo);
 
     QVERIFY(deviceInfo.serviceUuidsCompleteness() == QBluetoothDeviceInfo::DataComplete);
 }
@@ -369,7 +369,7 @@ void tst_QBluetoothDeviceInfo::tst_cached()
     QVERIFY(!deviceInfo.isCached());
     deviceInfo.setCached(true);
     QVERIFY(deviceInfo.isCached());
-    QVERIFY(!(deviceInfo == copyInfo));
+    QVERIFY(deviceInfo != copyInfo);
 
     deviceInfo.setCached(false);
     QVERIFY(!(deviceInfo.isCached()));
