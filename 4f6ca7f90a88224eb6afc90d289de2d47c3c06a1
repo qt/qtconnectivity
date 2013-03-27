@@ -1,0 +1,7 @@
+Sanity-Review+1: Qt Sanity Bot <srv.sanitybot@digia.com>
+Code-Review+2: Giuseppe D'Angelo <giuseppe.dangelo@kdab.com>
+Submitted-by: Giuseppe D'Angelo <giuseppe.dangelo@kdab.com>
+Submitted-at: Thu, 28 Mar 2013 00:39:48 +0100
+Reviewed-on: https://codereview.qt-project.org/52493
+Project: qt/qtconnectivity
+Branch: refs/heads/master
