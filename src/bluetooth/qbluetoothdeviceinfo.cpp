@@ -398,6 +398,16 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
 }
 
 /*!
+    Returns true if this object is different from \a other, or false otherwise.
+
+    \sa operator==()
+*/
+bool QBluetoothDeviceInfo::operator!=(const QBluetoothDeviceInfo &other) const
+{
+    return !(*this == other);
+}
+
+/*!
     Returns the address of the device.
 */
 QBluetoothAddress QBluetoothDeviceInfo::address() const
