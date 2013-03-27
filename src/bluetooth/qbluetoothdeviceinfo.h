@@ -208,6 +208,7 @@ public:
 
     QBluetoothDeviceInfo &operator=(const QBluetoothDeviceInfo &other);
     bool operator==(const QBluetoothDeviceInfo &other) const;
+    bool operator!=(const QBluetoothDeviceInfo &other) const;
 
     QBluetoothAddress address() const;
     QString name() const;
