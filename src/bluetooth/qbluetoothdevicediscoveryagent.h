@@ -85,7 +85,7 @@ public:
 
     QList<QBluetoothDeviceInfo> discoveredDevices() const;
 
-public slots:
+public Q_SLOTS:
     void start();
     void stop();
 

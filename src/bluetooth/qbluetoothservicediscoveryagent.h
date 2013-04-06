@@ -86,7 +86,7 @@ public:
     void setUuidFilter(const QBluetoothUuid &uuid);
     QList<QBluetoothUuid> uuidFilter() const;
 
-public slots:
+public Q_SLOTS:
     void start(DiscoveryMode mode = MinimalDiscovery);
     void stop();
     void clear();
