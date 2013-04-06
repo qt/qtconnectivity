@@ -543,7 +543,7 @@ QBluetoothServiceInfo &QBluetoothServiceInfo::operator=(const QBluetoothServiceI
 
 static void dumpAttributeVariant(const QVariant &var, const QString indent)
 {
-    switch (var.type()) {
+    switch (int(var.type())) {
     case QMetaType::Void:
         qDebug("%sEmpty", indent.toLocal8Bit().constData());
         break;
