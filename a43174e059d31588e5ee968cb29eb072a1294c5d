@@ -1,0 +1,7 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanitybot@qt-project.org>
+Code-Review+2: Aaron McCarthy <mccarthy.aaron@gmail.com>
+Submitted-by: Thiago Macieira <thiago.macieira@intel.com>
+Submitted-at: Sun, 07 Apr 2013 18:19:55 +0200
+Reviewed-on: https://codereview.qt-project.org/53108
+Project: qt/qtconnectivity
+Branch: refs/heads/master
