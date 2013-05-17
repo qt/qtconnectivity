@@ -116,6 +116,10 @@ bool ppsSendControlMessage(const char *msg, QObject *sender=0);
 
 void ppsDecodeControlResponse();
 
+int openOPPControl();
+
+void ppsSendOpp(const char *msg, const QByteArray &filename, const QBluetoothAddress &address, QObject *sender);
+
 QVariant ppsReadSetting(const char *property);
 
 QVariant ppsRemoteDeviceStatus(const QByteArray &address, const char *property);

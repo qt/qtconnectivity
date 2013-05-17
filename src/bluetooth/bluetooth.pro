@@ -82,6 +82,9 @@ config_bluez:qtHaveModule(dbus) {
 
     include(qnx/qnx.pri)
 
+    PRIVATE_HEADERS += \
+        qbluetoothtransferreply_qnx_p.h
+
     SOURCES += \
         qbluetoothdevicediscoveryagent_qnx.cpp \
         qbluetoothlocaldevice_qnx.cpp \
@@ -90,7 +93,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_qnx.cpp \
         ql2capserver_p.cpp \
         qrfcommserver_qnx.cpp \
-        qbluetoothtransfermanager_p.cpp
+        qbluetoothtransfermanager_qnx.cpp \
+        qbluetoothtransferreply_qnx.cpp
 
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
@@ -110,3 +114,5 @@ config_bluez:qtHaveModule(dbus) {
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+
+

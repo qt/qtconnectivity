@@ -55,6 +55,7 @@ static QSocketNotifier *ppsCtrlNotifier = 0;
 static const char btControlFDPath[] = "/pps/services/bluetooth/public/control";
 static const char btSettingsFDPath[] = "/pps/services/bluetooth/settings";
 static const char btRemoteDevFDPath[] = "/pps/services/bluetooth/remote_devices/";
+static const char btMediaFDPath[] = "/pps/services/bluetooth/media/control";
 
 static const int ppsBufferSize = 1024;
 
@@ -265,6 +266,20 @@ void ppsDecodeControlResponse()
                 evtRegistration.at(i).second->metaObject()->invokeMethod(evtRegistration.at(i).second, "controlEvent", Q_ARG(ppsResult, result));
         }
     }
+}
+
+void ppsSendOpp(const char *msg, const QByteArray &url, const QBluetoothAddress &address, QObject *sender)
+{
+    pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
+
+    pps_encoder_start_object(encoder, "dat");
+    pps_encoder_add_string(encoder, "address", address.toString().toUtf8().constData());
+    pps_encoder_start_array(encoder, "urls");
+    pps_encoder_add_string(encoder, 0, url.constData());
+    pps_encoder_end_array(encoder);
+    pps_encoder_end_object(encoder);
+
+    endCtrlMessage(encoder);
 }
 
 QVariant ppsReadSetting(const char *property)
