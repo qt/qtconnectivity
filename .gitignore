@@ -25,3 +25,11 @@ tmp
 imports/*
 include
 tests/auto/cmake/build
+examples/bluetooth/btchat/btchat
+examples/bluetooth/btfiletransfer/btfiletransfer
+examples/bluetooth/btscanner/btscanner
+examples/bluetooth/bttennis/bttennis
+examples/bluetooth/scanner/qml_scanner
+examples/nfc/annotatedurl/annotatedurl
+examples/nfc/ndefeditor/ndefeditor
+examples/nfc/poster/qml_poster
