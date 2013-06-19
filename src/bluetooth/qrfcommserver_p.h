@@ -44,7 +44,7 @@
 
 #include <QtGlobal>
 #include <QList>
-#include <qbluetoothsocket.h>
+#include <QtBluetooth/QBluetoothSocket>
 #include "qbluetooth.h"
 
 #ifdef QTM_QNX_BLUETOOTH

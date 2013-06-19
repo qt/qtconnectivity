@@ -44,7 +44,7 @@
 #include <QPixmap>
 
 #include <qbluetoothdeviceinfo.h>
-#include <qbluetoothaddress.h>
+#include <QtBluetooth/QBluetoothAddress>
 
 #include "qdeclarativebluetoothservice_p.h"
 

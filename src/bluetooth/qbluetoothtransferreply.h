@@ -44,8 +44,8 @@
 
 #include <QtCore/QIODevice>
 
-#include <qbluetoothtransferrequest.h>
-#include <qbluetoothtransfermanager.h>
+#include <QtBluetooth/QBluetoothTransferRequest>
+#include <QtBluetooth/QBluetoothTransferManager>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 

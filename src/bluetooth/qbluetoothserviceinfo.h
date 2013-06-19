@@ -42,9 +42,9 @@
 #ifndef QBLUETOOTHSERVICEINFO_H
 #define QBLUETOOTHSERVICEINFO_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 
-#include <qbluetoothuuid.h>
+#include <QtBluetooth/QBluetoothUuid>
 
 #include <QtCore/QMetaType>
 #include <QtCore/QList>
@@ -70,7 +70,7 @@ public:
         PrimaryLanguageBase = 0x0100,
         ServiceName = PrimaryLanguageBase + 0x0000,
         ServiceDescription = PrimaryLanguageBase + 0x0001,
-        ServiceProvider = PrimaryLanguageBase + 0x0002,
+        ServiceProvider = PrimaryLanguageBase + 0x0002
     };
 
     enum Protocol {

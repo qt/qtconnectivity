@@ -42,8 +42,8 @@
 #ifndef QL2CAPSERVER_P_H
 #define QL2CAPSERVER_P_H
 
-#include "qbluetoothglobal.h"
-#include <qbluetoothsocket.h>
+#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/QBluetoothSocket>
 
 #ifdef QT_BLUEZ_BLUETOOTH
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)

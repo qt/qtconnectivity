@@ -42,12 +42,12 @@
 #ifndef QBLUETOOTHSERVICEDISCOVERYAGENT_H
 #define QBLUETOOTHSERVICEDISCOVERYAGENT_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 
 #include <QObject>
 
-#include <qbluetoothserviceinfo.h>
-#include <qbluetoothuuid.h>
+#include <QtBluetooth/QBluetoothServiceInfo>
+#include <QtBluetooth/QBluetoothUuid>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 

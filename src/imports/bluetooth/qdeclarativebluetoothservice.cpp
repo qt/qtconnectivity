@@ -42,8 +42,8 @@
 #include "qdeclarativebluetoothservice_p.h"
 
 #include <qbluetoothdeviceinfo.h>
-#include <qbluetoothsocket.h>
-#include <qbluetoothaddress.h>
+#include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/QBluetoothAddress>
 #include <ql2capserver.h>
 #include <qrfcommserver.h>
 

@@ -42,8 +42,8 @@
 #ifndef QBLUETOOTHTRANSFERMANAGER_H
 #define QBLUETOOTHTRANSFERMANAGER_H
 
-#include "qbluetoothglobal.h"
-#include <qbluetoothaddress.h>
+#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/QBluetoothAddress>
 
 #include <QtCore/QObject>
 

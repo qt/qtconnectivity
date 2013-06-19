@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHDEVICEINFO_H
 #define QBLUETOOTHDEVICEINFO_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 
 #include <QString>
 

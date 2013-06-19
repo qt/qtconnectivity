@@ -42,7 +42,7 @@
 #ifndef QRFCOMMSOCKET_H
 #define QRFCOMMSOCKET_H
 
-#include <qbluetoothsocket.h>
+#include <QtBluetooth/QBluetoothSocket>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 

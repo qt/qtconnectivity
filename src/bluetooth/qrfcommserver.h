@@ -42,13 +42,13 @@
 #ifndef QRFCOMMSERVER_H
 #define QRFCOMMSERVER_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 
 #include <QObject>
 
-#include <qbluetoothaddress.h>
-#include <qbluetooth.h>
-#include <qbluetoothsocket.h>
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/qbluetooth.h>
+#include <QtBluetooth/QBluetoothSocket>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 

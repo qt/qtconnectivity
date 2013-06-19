@@ -42,7 +42,7 @@
 #ifndef QBLUETOOTHTRANSFERREQUESTPRIVATE_H
 #define QBLUETOOTHTRANSFERREQUESTPRIVATE_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 #include "qbluetoothtransferrequest.h"
 
 QT_BEGIN_NAMESPACE_BLUETOOTH

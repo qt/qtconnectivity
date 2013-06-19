@@ -46,7 +46,7 @@
 #include <qqml.h>
 #include <QQmlParserStatus>
 
-#include <qbluetoothsocket.h>
+#include <QtBluetooth/QBluetoothSocket>
 
 #include "qdeclarativebluetoothservice_p.h"
 

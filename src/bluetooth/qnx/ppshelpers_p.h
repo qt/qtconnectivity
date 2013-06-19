@@ -60,8 +60,8 @@
 #include <QSocketNotifier>
 #include <QStringList>
 
-#include <qbluetoothuuid.h>
-#include <qbluetoothaddress.h>
+#include <QtBluetooth/qbluetoothuuid.h>
+#include <QtBluetooth/qbluetoothaddress.h>
 
 #ifdef BT_BBPPSDEBUG
 #define qBBBluetoothDebug qDebug

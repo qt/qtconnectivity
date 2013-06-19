@@ -42,10 +42,10 @@
 #ifndef QBLUETOOTHSOCKET_H
 #define QBLUETOOTHSOCKET_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 
-#include <qbluetoothaddress.h>
-#include <qbluetoothuuid.h>
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothUuid>
 
 #include <QIODevice>
 #include <QtNetwork/QAbstractSocket>

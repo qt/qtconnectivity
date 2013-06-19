@@ -45,8 +45,8 @@
 #include <QtCore/QIODevice>
 #include <QtDBus/QtDBus>
 
-#include <qbluetoothtransferrequest.h>
-#include <qbluetoothtransfermanager.h>
+#include <QtBluetooth/QBluetoothTransferRequest>
+#include <QtBluetooth/QBluetoothTransferManager>
 
 #include "qbluetoothtransferreply.h"
 

@@ -42,8 +42,8 @@
 #ifndef QL2CAPSOCKET_H
 #define QL2CAPSOCKET_H
 
-#include <qbluetoothsocket.h>
-#include <qbluetoothaddress.h>
+#include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/QBluetoothAddress>
 
 #include <QtCore/QObject>
 

@@ -42,11 +42,11 @@
 #ifndef QBLUETOOTHDEVICEDISCOVERYAGENT_H
 #define QBLUETOOTHDEVICEDISCOVERYAGENT_H
 
-#include "qbluetoothglobal.h"
+#include <QtBluetooth/qbluetoothglobal.h>
 
 #include <QObject>
 
-#include <qbluetoothdeviceinfo.h>
+#include <QtBluetooth/QBluetoothDeviceInfo>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 

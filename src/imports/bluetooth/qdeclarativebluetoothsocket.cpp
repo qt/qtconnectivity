@@ -48,8 +48,8 @@
 
 
 #include <qbluetoothdeviceinfo.h>
-#include <qbluetoothaddress.h>
-#include <qbluetoothsocket.h>
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothSocket>
 #include <ql2capserver.h>
 #include <qrfcommserver.h>
 
