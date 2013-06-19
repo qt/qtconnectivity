@@ -130,7 +130,7 @@ QString QNdefNfcTextRecord::text() const
 
     QTextCodec *codec = QTextCodec::codecForName(utf16 ? "UTF-16BE" : "UTF-8");
 
-    return codec->toUnicode(p.constData() + 1 + codeLength, p.length() - 1 - codeLength);
+    return codec ? codec->toUnicode(p.constData() + 1 + codeLength, p.length() - 1 - codeLength) : QString();
 }
 
 /*!
