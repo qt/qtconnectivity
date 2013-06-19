@@ -46,6 +46,10 @@
 
 QT_USE_NAMESPACE_NFC
 
+#ifdef Q_QDOC
+// workaround for qdoc parsing error in namespaced classes (see QTBUG-31851)
+class ForcePrivateForQDoc;
+#endif
 class QDeclarativeNdefMimeRecord : public QDeclarativeNdefRecord
 {
     Q_OBJECT

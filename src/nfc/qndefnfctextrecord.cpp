@@ -66,6 +66,18 @@ QT_BEGIN_NAMESPACE_NFC
 */
 
 /*!
+    \fn QNdefNfcTextRecord::QNdefNfcTextRecord()
+
+    Constructs an empty NFC text record of type \l QNdefRecord::NfcRtd.
+*/
+
+/*!
+    \fn QNdefNfcTextRecord::QNdefNfcTextRecord(const QNdefRecord& other)
+
+    Constructs a new NFC text record that is a copy of \a other.
+*/
+
+/*!
     Returns the locale of the text record.
 */
 QString QNdefNfcTextRecord::locale() const

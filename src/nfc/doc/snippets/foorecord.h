@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -38,8 +38,31 @@
 **
 ****************************************************************************/
 
-//! [import]
-import QtNfc 5.0
-//! [import]
+#ifndef FOORECORD_H
+#define FOORECORD_H
 
-Item { }
+#include <qdeclarativendefrecord.h>
+
+QT_USE_NAMESPACE_NFC
+
+//! [Foo declaration]
+class QDeclarativeNdefFooRecord : public QDeclarativeNdefRecord
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int foo READ foo WRITE setFoo NOTIFY fooChanged)
+
+public:
+    explicit QDeclarativeNdefFooRecord(QObject *parent = 0);
+    Q_INVOKABLE QDeclarativeNdefFooRecord(const QNdefRecord &record, QObject *parent = 0);
+    ~QDeclarativeNdefFooRecord();
+
+    int foo() const;
+    void setFoo(int value);
+
+signals:
+    void fooChanged();
+};
+//! [Foo declaration]
+
+#endif // FOORECORD_H

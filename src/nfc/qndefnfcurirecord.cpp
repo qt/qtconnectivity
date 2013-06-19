@@ -58,6 +58,17 @@ QT_BEGIN_NAMESPACE_NFC
     RTD-URI encapsulates a URI.
 */
 
+/*!
+    \fn QNdefNfcUriRecord::QNdefNfcUriRecord()
+
+    Constructs an empty NFC uri record.
+*/
+
+/*!
+    \fn QNdefNfcUriRecord::QNdefNfcUriRecord(const QNdefRecord& other)
+
+    Constructs a new NFC uri record that is a copy of \a other.
+*/
 static const char * const abbreviations[] = {
     0,
     "http://www.",

@@ -47,10 +47,19 @@
 
 QT_BEGIN_NAMESPACE_NFC
 
+#ifdef Q_QDOC
+// workaround for qdoc parsing error in namespaced classes (see QTBUG-31851)
+class ForcePrivateForQDoc;
+#endif
 class Q_NFC_EXPORT QNdefNfcTextRecord : public QNdefRecord
 {
 public:
+#ifndef Q_QDOC
     Q_DECLARE_NDEF_RECORD(QNdefNfcTextRecord, QNdefRecord::NfcRtd, "T", QByteArray(1, char(0)))
+#else
+    QNdefNfcTextRecord();
+    QNdefNfcTextRecord(const QNdefRecord& other);
+#endif
 
     QString locale() const;
     void setLocale(const QString &locale);

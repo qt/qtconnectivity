@@ -75,7 +75,7 @@
 
     This property holds the NDEF record type that the filter matches.  This property must be set to
     the fully qualified record type, i.e. including the NIS and NSS prefixes.  For example set to
-    \li {urn:nfc:wkt:U} to match NFC RTD-URI records.
+    \c {urn:nfc:wkt:U} to match NFC RTD-URI records.
 */
 
 /*!

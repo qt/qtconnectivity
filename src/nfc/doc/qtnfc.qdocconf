@@ -2,21 +2,22 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtNfc
 description             = Qt NFC Reference Documentation
-version                 = 5.0.0
+url                     = http://qt-project.org/doc/qt-$QT_VER/qtnfc
+version                 = $QT_VERSION
 
 examplesinstallpath     = nfc
 
 qhp.projects            = QtNfc
 
 qhp.QtNfc.file                = qtnfc.qhp
-qhp.QtNfc.namespace           = org.qt-project.qtnfc.500
+qhp.QtNfc.namespace           = org.qt-project.qtnfc.$QT_VERSION_TAG
 qhp.QtNfc.virtualFolder       = qtnfc
 qhp.QtNfc.indexTitle          = Qt NFC
 qhp.QtNfc.indexRoot           =
 
-qhp.QtNfc.filterAttributes    = qtnfc 5.0.0 qtrefdoc
-qhp.QtNfc.customFilters.Qt.name = QtNfc 5.0.0
-qhp.QtNfc.customFilters.Qt.filterAttributes = qtnfc 5.0.0
+qhp.QtNfc.filterAttributes    = qtnfc $QT_VERSION qtrefdoc
+qhp.QtNfc.customFilters.Qt.name = QtNfc $QT_VERSION
+qhp.QtNfc.customFilters.Qt.filterAttributes = qtnfc $QT_VERSION
 qhp.QtNfc.subprojects         = overviews classes qml examples
 qhp.QtNfc.subprojects.classes.title = C++ Classes
 qhp.QtNfc.subprojects.classes.indexTitle = Qt NFC C++ Classes

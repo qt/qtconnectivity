@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -38,8 +38,36 @@
 **
 ****************************************************************************/
 
-//! [import]
-import QtNfc 5.0
-//! [import]
+#include <QtNfc/qndefrecord.h>
+#include <QtNfc/qndefnfctextrecord.h>
 
-Item { }
+#include <QtCore/QDebug>
+
+QT_USE_NAMESPACE_NFC
+
+void snippet_recordConversion()
+{
+    QNdefRecord record;
+
+    //! [Record conversion]
+    if (record.isRecordType<QNdefNfcTextRecord>()) {
+        QNdefNfcTextRecord textRecord(record);
+
+        qDebug() << textRecord.text();
+    }
+    //! [Record conversion]
+}
+
+//! [Specialized class definition]
+class ExampleComF : public QNdefRecord
+{
+public:
+    Q_DECLARE_NDEF_RECORD(ExampleComF, QNdefRecord::ExternalRtd, "example.com:f",
+                          QByteArray(sizeof(int), char(0)))
+
+    int foo() const;
+    void setFoo(int v);
+};
+
+Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(ExampleComF, QNdefRecord::ExternalRtd, "example.com:f")
+//! [Specialized class definition]

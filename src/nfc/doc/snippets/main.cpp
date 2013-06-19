@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 
-//! [import]
-import QtNfc 5.0
-//! [import]
+int main(int /*argc*/, char ** /*argv*/)
+{
+    return 0;
+}
 
-Item { }

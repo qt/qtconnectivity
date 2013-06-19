@@ -49,10 +49,19 @@ QT_FORWARD_DECLARE_CLASS(QUrl)
 
 QT_BEGIN_NAMESPACE_NFC
 
+#ifdef Q_QDOC
+// workaround for qdoc parsing error in namespaced classes (see QTBUG-31851)
+class ForcePrivateForQDoc;
+#endif
 class Q_NFC_EXPORT QNdefNfcUriRecord : public QNdefRecord
 {
 public:
+#ifndef Q_QDOC
     Q_DECLARE_NDEF_RECORD(QNdefNfcUriRecord, QNdefRecord::NfcRtd, "U", QByteArray(0, char(0)))
+#else
+    QNdefNfcUriRecord();
+    QNdefNfcUriRecord(const QNdefRecord& other);
+#endif
 
     QUrl uri() const;
     void setUri(const QUrl &uri);

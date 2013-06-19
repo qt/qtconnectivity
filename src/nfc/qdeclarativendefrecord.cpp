@@ -71,11 +71,11 @@ QT_BEGIN_NAMESPACE_NFC
 
     For example the declaration of such a class may look like the following.
 
-    \snippet ../doc/src/snippets/foorecord.h Foo declaration
+    \snippet foorecord.h Foo declaration
 
     Within the implementation file the Q_DECLARE_NDEFRECORD() macro is expanded:
 
-    \snippet ../doc/src/snippets/foorecord.cpp Declare foo record
+    \snippet foorecord.cpp Declare foo record
 
     Finially the application or plugin code calls qmlRegisterType():
 

@@ -49,10 +49,10 @@
 
 #include "qdeclarativendefrecord.h"
 
-class QDeclarativeNdefFilter;
 
 QT_USE_NAMESPACE_NFC
 
+class QDeclarativeNdefFilter;
 class QDeclarativeNearField : public QObject, public QQmlParserStatus
 {
     Q_OBJECT

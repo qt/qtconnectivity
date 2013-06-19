@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE_NFC
     to test if a conversion is possible.  The following example shows how to test if a QNdefRecord
     is an NFC RTD Text record and extract the text information from it.
 
-    \snippet ../doc/src/snippets/nfc.cpp Record conversion
+    \snippet nfc.cpp Record conversion
 
     \section1 Creating specialized NDEF record classes
 
@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE_NFC
     declaration of the hypothetical \e {example.com:f} record type that encapsulates a single int
     property foo.
 
-    \snippet ../doc/src/snippets/nfc.cpp Specialized class definition
+    \snippet nfc.cpp Specialized class definition
 
     The developer only needs to provide implementations for the \c {foo()} and \c {setFoo()}
     functions that parse and set the contents of the NDEF record's payload.
