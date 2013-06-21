@@ -308,6 +308,25 @@ void QDeclarativeBluetoothSocket::socket_state(QBluetoothSocket::SocketState sta
     emit stateChanged();
 }
 
+/*!
+    \qmlproperty string BluetoothSocket::state
+
+    This property holds the current state of the socket. The property can be one
+    of the following strings:
+
+    \list
+        \li \c{No Service Set}
+        \li \c{Unconnected}
+        \li \c{Service Lookup}
+        \li \c{Connecting}
+        \li \c{Connected}
+        \li \c{Closing}
+        \li \c{Listening}
+        \li \c{Bound}
+    \endlist
+
+    The states are derived from QBluetoothSocket::SocketState. This property is read-only.
+*/
 QString QDeclarativeBluetoothSocket::state()
 {
     return d->m_state;

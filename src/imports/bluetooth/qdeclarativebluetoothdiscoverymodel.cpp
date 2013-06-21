@@ -124,7 +124,7 @@ void QDeclarativeBluetoothDiscoveryModel::componentComplete()
 }
 
 /*!
-  \qmlproperty bool BluetoothSocket::discovery
+  \qmlproperty bool BluetoothDiscoveryModel::discovery
 
   This property starts or stops discovery.
 

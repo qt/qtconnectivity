@@ -109,7 +109,7 @@ QString QBluetoothHostInfo::name() const
 }
 
 /*!
-    Sets the name of the host info object.
+    Sets the \a name of the host info object.
 */
 void QBluetoothHostInfo::setName(const QString &name)
 {

@@ -87,12 +87,12 @@
     To be able to create SPP connections, you need to register a Server one one device by using
     QRfcommServer.
 
-    \snippet chatserver.cpp Create the server
+    \snippet btchat/chatserver.cpp Create the server
 
     Connect to this server from another device playing the client role by using a
     QBluetoothSocket.
 
-    \snippet chatclient.cpp startClient
+    \snippet btchat/chatclient.cpp startClient
 
     Using such a connection allows to exchange any form of data in both directions.
     It is perfectly suited for use cases like gaming or syncing the state between two instances of

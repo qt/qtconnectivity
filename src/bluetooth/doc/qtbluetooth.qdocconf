@@ -2,21 +2,22 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtBluetooth
 description             = Qt Bluetooth Reference Documentation
-version                 = 5.0.0
+url                     = http://qt-project.org/doc/qt-$QT_VER/qtbluetooth
+version                 = $QT_VERSION
 
 examplesinstallpath     = bluetooth
 
 qhp.projects            = QtBluetooth
 
 qhp.QtBluetooth.file                = qtbluetooth.qhp
-qhp.QtBluetooth.namespace           = org.qt-project.qtbluetooth.500
+qhp.QtBluetooth.namespace           = org.qt-project.qtbluetooth.$QT_VERSION_TAG
 qhp.QtBluetooth.virtualFolder       = qtbluetooth
 qhp.QtBluetooth.indexTitle          = Qt Bluetooth
 qhp.QtBluetooth.indexRoot           =
 
-qhp.QtBluetooth.filterAttributes    = qtbluetooth 5.0.0 qtrefdoc
-qhp.QtBluetooth.customFilters.Qt.name = QtBluetooth 5.0.0
-qhp.QtBluetooth.customFilters.Qt.filterAttributes = qtbluetooth 5.0.0
+qhp.QtBluetooth.filterAttributes    = qtbluetooth $QT_VERSION qtrefdoc
+qhp.QtBluetooth.customFilters.Qt.name = QtBluetooth $QT_VERSION
+qhp.QtBluetooth.customFilters.Qt.filterAttributes = qtbluetooth $QT_VERSION
 qhp.QtBluetooth.subprojects         = overviews classes qml examples
 qhp.QtBluetooth.subprojects.classes.title = C++ Classes
 qhp.QtBluetooth.subprojects.classes.indexTitle = Qt Bluetooth C++ Classes
