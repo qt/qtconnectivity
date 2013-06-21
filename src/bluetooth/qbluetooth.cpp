@@ -41,7 +41,7 @@
 
 #include <QtBluetooth/qbluetooth.h>
 
-QT_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_BLUETOOTH
 
 namespace QBluetooth {
 
@@ -76,4 +76,4 @@ namespace QBluetooth {
 */
 }
 
-QT_END_NAMESPACE
+QT_END_NAMESPACE_BLUETOOTH
