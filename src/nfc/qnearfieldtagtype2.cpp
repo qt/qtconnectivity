@@ -272,7 +272,7 @@ bool QNearFieldTagType2::waitForRequestCompleted(const RequestId &id, int msecs)
         QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 1);
 
         // detect passive ack
-        if (timer.elapsed() >= 1)
+        if (timer.elapsed() >= 10)
             break;
     }
 
