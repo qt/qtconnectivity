@@ -1,3 +1,5 @@
+requires(contains(QT_CONFIG, private_tests))
+
 SOURCES += tst_qnearfieldtagtype2.cpp
 TARGET = tst_qnearfieldtagtype2
 CONFIG += testcase
@@ -6,11 +8,6 @@ QT = core nfc-private testlib
 
 INCLUDEPATH += ../../../src/nfc
 VPATH += ../../../src/nfc
-
-# This test includes source code from QtNfc library. Define the namespace which moc generated code
-# should be in.
-DEFINES += QT_BEGIN_MOC_NAMESPACE=\""namespace QtNfc {"\"
-DEFINES += QT_END_MOC_NAMESPACE=\""}"\"
 
 HEADERS += \
     qnearfieldmanagervirtualbase_p.h \

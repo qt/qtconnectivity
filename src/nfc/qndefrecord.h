@@ -112,6 +112,8 @@ private:
     } \
     QT_END_NAMESPACE_NFC
 
+uint qHash(const QNdefRecord &key);
+
 QT_END_NAMESPACE_NFC
 
 #endif // QNDEFRECORD_H

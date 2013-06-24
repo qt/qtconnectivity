@@ -43,6 +43,8 @@
 #include "qndefrecord.h"
 #include "qndefrecord_p.h"
 
+#include <QtCore/QHash>
+
 QT_BEGIN_NAMESPACE_NFC
 
 /*!
@@ -146,6 +148,11 @@ QT_BEGIN_NAMESPACE_NFC
 
     \sa Q_DECLARE_NDEF_RECORD()
 */
+
+uint qHash(const QNdefRecord &key)
+{
+    return qHash(key.type() + key.id() + key.payload());
+}
 
 /*!
     Constructs a new empty NDEF record.

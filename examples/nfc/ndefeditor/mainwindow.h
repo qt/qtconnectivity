@@ -54,9 +54,11 @@ QT_END_NAMESPACE_NFC
 
 QT_USE_NAMESPACE_NFC
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class MainWindow;
 }
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {

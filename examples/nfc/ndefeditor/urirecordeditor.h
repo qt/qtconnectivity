@@ -46,9 +46,11 @@
 
 #include <qndefnfcurirecord.h>
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class UriRecordEditor;
 }
+QT_END_NAMESPACE
 
 QT_USE_NAMESPACE_NFC
 

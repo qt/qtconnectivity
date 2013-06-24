@@ -45,9 +45,11 @@
 
 #include <qndefnfctextrecord.h>
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class TextRecordEditor;
 }
+QT_END_NAMESPACE
 
 QT_USE_NAMESPACE_NFC
 

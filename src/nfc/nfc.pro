@@ -6,11 +6,6 @@ load(qt_module)
 QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
-# All classes in this module are in the QtNfc namespace.  Define the namespace which moc generated
-# code will be in.
-DEFINES += QT_BEGIN_MOC_NAMESPACE=\""namespace QtNfc {"\"
-DEFINES += QT_END_MOC_NAMESPACE=\""}"\"
-
 PUBLIC_HEADERS += \
     qnfcglobal.h \
     qnearfieldmanager.h \

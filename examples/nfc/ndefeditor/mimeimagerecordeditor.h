@@ -50,9 +50,12 @@
 
 QT_USE_NAMESPACE_NFC
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
     class MimeImageRecordEditor;
 }
+QT_END_NAMESPACE
+
 
 class MimeImageRecordEditor : public QWidget
 {
