@@ -211,8 +211,10 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
             i += payloadLength - 1;
         }
 
-        if (!cf)
+        if (!cf) {
             result.append(record);
+            record = QNdefRecord();
+        }
 
         if (!cf && seenMessageEnd)
             break;

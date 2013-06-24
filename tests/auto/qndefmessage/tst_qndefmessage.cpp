@@ -61,6 +61,7 @@ public:
 private slots:
     void tst_parse_data();
     void tst_parse();
+    void messageParsingFromByteArray();
 };
 
 tst_QNdefMessage::tst_QNdefMessage()
@@ -413,6 +414,45 @@ void tst_QNdefMessage::tst_parse()
             QVERIFY(record.isEmpty());
         }
     }
+}
+
+void tst_QNdefMessage::messageParsingFromByteArray()
+{
+    const QByteArray reference("1234567890");
+    QNdefMessage message;
+    QNdefRecord first;
+    QVERIFY(first.isEmpty());
+    first.setTypeNameFormat(QNdefRecord::Uri);
+    QVERIFY(first.isEmpty());
+    first.setPayload(reference);
+    QCOMPARE(first.payload(), reference);
+    QVERIFY(!first.isEmpty());
+    QCOMPARE(first.typeNameFormat(), QNdefRecord::Uri);
+
+    message.append(first);
+
+    QNdefRecord second;
+
+    QCOMPARE(second.payload(), QByteArray());
+    QVERIFY(second.isEmpty());
+    QCOMPARE(second.typeNameFormat(), QNdefRecord::Empty);
+
+    message.append(second);
+
+    QByteArray result = message.toByteArray();
+    QNdefMessage messageCopy = QNdefMessage::fromByteArray(result);
+    QCOMPARE(messageCopy.size(), 2);
+
+    first = messageCopy.at(0);
+    second = messageCopy.at(1);
+
+    QCOMPARE(first.payload(), reference);
+    QVERIFY(!first.isEmpty());
+    QCOMPARE(first.typeNameFormat(), QNdefRecord::Uri);
+    QCOMPARE(second.payload(), QByteArray());
+    QVERIFY(second.isEmpty());
+    QCOMPARE(second.typeNameFormat(), QNdefRecord::Empty);
+
 }
 
 QTEST_MAIN(tst_QNdefMessage)
