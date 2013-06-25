@@ -47,10 +47,6 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-#ifdef Q_QDOC
-// workaround for QTBUG-31851
-class FakeClassForQDoc;
-#endif
 namespace QBluetooth {
     enum Security {
         NoSecurity = 0x00,
