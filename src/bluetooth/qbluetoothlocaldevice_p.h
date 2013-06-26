@@ -132,6 +132,7 @@ public:
     void setAccess(int);
 
     Q_INVOKABLE void controlReply(ppsResult res);
+    Q_INVOKABLE void controlEvent(ppsResult res);
 
 private:
     QBluetoothLocalDevice *q_ptr;

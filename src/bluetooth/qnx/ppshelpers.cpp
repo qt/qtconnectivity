@@ -177,6 +177,8 @@ void ppsSendControlMessage(const char *msg, QObject *sender)
     endCtrlMessage(encoder);
 }
 
+int __newHostMode = -1;
+
 void ppsDecodeControlResponse()
 {
     ppsResult result;
@@ -246,6 +248,14 @@ void ppsDecodeControlResponse()
         pps_decoder_cleanup(&ppsDecoder);
     }
 
+    if (result.msg == "radio_init") {
+        qBBBluetoothDebug() << "Radio initialized";
+    } else if (result.msg == "access_changed" && __newHostMode != -1) {
+        qBBBluetoothDebug() << "Access changed after radio init";
+        ppsSendControlMessage("set_access", QString("{\"access\":%1}").arg(__newHostMode), 0);
+        __newHostMode = -1;
+    }
+
     if (resType == RESPONSE) {
         QPair<int, QObject*> wMessage = takeObjectInWList(result.id);
         if (wMessage.second != 0)
@@ -280,6 +290,15 @@ QVariant ppsReadSetting(const char *property)
             const char *dat;
             if (pps_decoder_get_string(&decoder, property, &dat) == PPS_DECODER_OK) {
                 result = QString::fromUtf8(dat);
+                qBBBluetoothDebug() << "Read setting" << result;
+            } else {
+                qWarning() << Q_FUNC_INFO << "could not read"<< property;
+                return QVariant();
+            }
+        } else if (nodeType == PPS_TYPE_BOOL) {
+            bool dat;
+            if (pps_decoder_get_bool(&decoder, property, &dat) == PPS_DECODER_OK) {
+                result = dat;
                 qBBBluetoothDebug() << "Read setting" << result;
             } else {
                 qWarning() << Q_FUNC_INFO << "could not read"<< property;

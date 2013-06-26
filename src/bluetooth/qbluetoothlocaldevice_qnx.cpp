@@ -98,7 +98,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
     Q_UNUSED(pairing);
-    ppsSendControlMessage("initiate_pairing", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), this);
+    ppsSendControlMessage("initiate_pairing", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), 0);
 }
 
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
@@ -117,11 +117,13 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
 {
     ppsRegisterControl();
+    ppsRegisterForEvent(QString("access_changed"), this);
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
     ppsUnregisterControl(this);
+    ppsUnreguisterForEvent(QString("access_changed"), this);
 }
 
 QBluetoothAddress QBluetoothLocalDevicePrivate::address()
@@ -146,14 +148,15 @@ void QBluetoothLocalDevicePrivate::powerOff()
 
 void QBluetoothLocalDevicePrivate::setHostMode(QBluetoothLocalDevice::HostMode mode)
 {
-    //if (m_currentMode==mode){
-    //    return;
-    //}
+    QBluetoothLocalDevice::HostMode currentHostMode = hostMode();
+    if (currentHostMode == mode){
+        return;
+    }
     //If the device is in PowerOff state and the profile is changed then the power has to be turned on
-    //if (m_currentMode == QBluetoothLocalDevice::HostPoweredOff) {
-    //    powerOn();
-
-    //}
+    if (currentHostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        qBBBluetoothDebug() << "Powering on";
+        powerOn();
+    }
 
     if (mode == QBluetoothLocalDevice::HostPoweredOff) {
         powerOff();
@@ -170,6 +173,9 @@ void QBluetoothLocalDevicePrivate::setHostMode(QBluetoothLocalDevice::HostMode m
 }
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevicePrivate::hostMode() const
 {
+    if (!ppsReadSetting("enabled").toBool())
+        return QBluetoothLocalDevice::HostPoweredOff;
+
     int hostMode = ppsReadSetting("accessibility").toInt();
 
     if (hostMode == 1) //General discoverable and connectable.
@@ -182,17 +188,35 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevicePrivate::hostMode() const
         return QBluetoothLocalDevice::HostPoweredOff;
 }
 
+extern int __newHostMode;
+
 void QBluetoothLocalDevicePrivate::setAccess(int access)
 {
-    ppsSendControlMessage("set_access", QStringLiteral("{\"access\":%1}").arg(access), this);
+    if (!ppsReadSetting("enabled").toBool()) { //We cannot set the host mode until BT is fully powered up
+        __newHostMode = access;
+    } else {
+        ppsSendControlMessage("set_access", QString("{\"access\":%1}").arg(access), 0);
+
+    }
 }
 
 void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
 {
-    qBBBluetoothDebug() << "Ldef reply" << result.msg << result.dat;
+    qBBBluetoothDebug() << Q_FUNC_INFO << result.msg << result.dat;
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
         q_ptr->error(QBluetoothLocalDevice::UnknownError);
+    }
+}
+
+void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
+{
+    if (result.msg == QString("access_changed")) {
+        if (__newHostMode == -1 && result.dat.size() > 1 &&
+                result.dat.first() == "level") {
+            qBBBluetoothDebug() << "New Host mode" << hostMode();
+            Q_EMIT q_ptr->hostModeStateChanged(hostMode());
+        }
     }
 }
 
