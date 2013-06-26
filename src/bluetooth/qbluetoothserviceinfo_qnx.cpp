@@ -93,14 +93,14 @@ bool QBluetoothServiceInfoPrivate::registerService() const
         return false;
     }
     ppsRegisterControl();
-    if (registered)
-        ppsSendControlMessage("deregister_server", 0x1101,  q->serviceUuid(), QString(), 0);
+    //if (registered)
+    //    ppsSendControlMessage("deregister_server", 0x1101,  q->serviceUuid(), QString(), 0);
 
     //If any server instance is already running, it is deregistered
-    //qBBBluetoothDebug() << "deregistering server";
-    //ppsSendControlMessage("deregister_server", 0x1101, q->serviceUuid(), QString(), 0);
+    qBBBluetoothDebug() << "deregistering server";
+    ppsSendControlMessage("deregister_server", 0x1101, q->serviceUuid(), QString(), 0);
     qBBBluetoothDebug() << "registering spp server: UUID" << q->serviceUuid();
-    ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), QString(), 0);
+    ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), q->serviceName(), 0);
 
     registered = true;
     return true;

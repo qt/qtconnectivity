@@ -141,7 +141,9 @@ void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &u
 
     pps_encoder_add_string(encoder, "uuid", uuid.toString().mid(1,36).toUtf8().constData());
 
-    if (!address.isEmpty())
+    if (QByteArray(msg) == QByteArray("register_server"))
+        pps_encoder_add_string(encoder, "name", address.toUtf8().constData());
+    else if (!address.isEmpty())
         pps_encoder_add_string(encoder, "addr", address.toUtf8().constData());
 
     pps_encoder_error_t rese = pps_encoder_end_object(encoder);

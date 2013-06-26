@@ -161,7 +161,7 @@ void QBluetoothSocketPrivate::abort()
     Q_Q(QBluetoothSocket);
     qBBBluetoothDebug() << "Disconnecting service";
     if (q->state() != QBluetoothSocket::ClosingState)
-        ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, m_peerAddress.toString(), this,
+        ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, m_peerAddress.toString(), 0,
                           isServerSocket ? BT_SPP_SERVER_SUBTYPE : BT_SPP_CLIENT_SUBTYPE);
     delete readNotifier;
     readNotifier = 0;
