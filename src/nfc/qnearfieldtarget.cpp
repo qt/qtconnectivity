@@ -101,6 +101,7 @@ QT_BEGIN_NAMESPACE_NFC
 
     This enum describes the access methods a near field target supports.
 
+    \value UnknownAccess            The target supports an unknown access type.
     \value NdefAccess               The target supports reading and writing NDEF messages using
                                     readNdefMessages() and writeNdefMessages().
     \value TagTypeSpecificAccess    The target supports sending tag type specific commands using
