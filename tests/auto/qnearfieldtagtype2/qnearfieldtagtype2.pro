@@ -23,6 +23,3 @@ SOURCES += \
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-
-# This test crashes
-CONFIG += insignificant_test
