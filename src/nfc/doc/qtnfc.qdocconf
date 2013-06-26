@@ -36,7 +36,7 @@ qhp.QtNfc.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtnfc/qtnfc.tags
 
-depends += qtcore
+depends += qtcore qtdoc
 
 headerdirs  += .. \
                 ../../imports/nfc
@@ -49,3 +49,7 @@ exampledirs += ../../../examples/nfc \
 
 
 imagedirs   += images
+
+navigation.landingpage = "Qt NFC"
+navigation.cppclassespage = "Qt NFC C++ Classes"
+navigation.qmltypespage = "Qt NFC QML Types"

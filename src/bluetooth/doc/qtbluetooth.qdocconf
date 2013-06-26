@@ -36,7 +36,7 @@ qhp.QtBluetooth.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtbluetooth/qtbluetooth.tags
 
-depends += qtcore
+depends += qtcore qtdoc
 
 headerdirs  += .. \
                 ../../imports/bluetooth
@@ -49,3 +49,7 @@ exampledirs += ../../../examples/bluetooth \
 
 
 imagedirs   += images
+
+navigation.landingpage = "Qt Bluetooth"
+navigation.cppclassespage = "Qt Bluetooth C++ Classes"
+navigation.qmltypespage = "Qt Bluetooth QML Types"
