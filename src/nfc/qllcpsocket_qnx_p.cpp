@@ -63,7 +63,7 @@ void QLlcpSocketPrivate::connectToService(QNearFieldTarget *target, const QStrin
     }
 
     m_state = QLlcpSocket::ConnectingState;
-    if (nfc_llcp_register_connection_listener(CLIENT, 0, serviceUri.toLocal8Bit().constData(),
+    if (nfc_llcp_register_connection_listener(NFC_LLCP_CLIENT, 0, serviceUri.toLocal8Bit().constData(),
                                               &m_conListener) != NFC_RESULT_SUCCESS) {
         qWarning() << Q_FUNC_INFO << "could not register for connection listener";
         return;

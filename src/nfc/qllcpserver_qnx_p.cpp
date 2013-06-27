@@ -55,7 +55,7 @@ bool QLlcpServerPrivate::listen(const QString &serviceUri)
     if (isListening())
         return false;
 
-    nfc_result_t result = nfc_llcp_register_connection_listener(SERVER, 0, serviceUri.toStdString().c_str(), &m_conListener);
+    nfc_result_t result = nfc_llcp_register_connection_listener(NFC_LLCP_SERVER, 0, serviceUri.toStdString().c_str(), &m_conListener);
     m_connected = true;
     if (result == NFC_RESULT_SUCCESS) {
         m_serviceUri = serviceUri;
