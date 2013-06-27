@@ -100,6 +100,7 @@ public Q_SLOTS: // METHODS
     void pairingCompleted(QDBusPendingCallWatcher*);
 
     void PropertyChanged(QString,QDBusVariant);
+    bool isValid() const;
 
 private:
     QDBusMessage msgConfirmation;
@@ -134,12 +135,20 @@ public:
     Q_INVOKABLE void controlReply(ppsResult res);
     Q_INVOKABLE void controlEvent(ppsResult res);
 
+    bool isValid() const;
+
 private:
     QBluetoothLocalDevice *q_ptr;
+    bool isValidDevice;
 };
 #else
 class QBluetoothLocalDevicePrivate : public QObject
 {
+public:
+    bool isValid() const
+    {
+        return false;
+    }
 };
 #endif
 

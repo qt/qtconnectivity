@@ -50,23 +50,30 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
 :   QObject(parent)
 {
     this->d_ptr = new QBluetoothLocalDevicePrivate();
+    this->d_ptr->isValidDevice = true; //assume single local device on QNX
 }
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent)
 : QObject(parent)
 {
-    Q_UNUSED(address)
     this->d_ptr = new QBluetoothLocalDevicePrivate();
+
+    //works since we assume a single local device on QNX
+    this->d_ptr->isValidDevice = (QBluetoothLocalDevicePrivate::address() == address);
 }
 
 QString QBluetoothLocalDevice::name() const
 {
-    return this->d_ptr->name();
+    if (this->d_ptr->isValid())
+        return this->d_ptr->name();
+    return QString();
 }
 
 QBluetoothAddress QBluetoothLocalDevice::address() const
 {
-    return this->d_ptr->address();
+    if (this->d_ptr->isValid())
+        return this->d_ptr->address();
+    return QBluetoothAddress();
 }
 
 void QBluetoothLocalDevice::powerOn()
@@ -98,11 +105,15 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
     Q_UNUSED(pairing);
-    ppsSendControlMessage("initiate_pairing", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), 0);
+    if (isValid())
+        ppsSendControlMessage("initiate_pairing", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), 0);
 }
 
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
 {
+    if (!isValid())
+        return Unpaired;
+
     QVariant status = ppsRemoteDeviceStatus(address.toString().toLocal8Bit(), "paired");
     if (status.toBool())
         return Paired;
@@ -126,6 +137,11 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
     ppsUnreguisterForEvent(QString("access_changed"), this);
 }
 
+bool QBluetoothLocalDevicePrivate::isValid() const
+{
+    return isValidDevice;
+}
+
 QBluetoothAddress QBluetoothLocalDevicePrivate::address()
 {
     return QBluetoothAddress(ppsReadSetting("btaddr").toString());
@@ -138,16 +154,21 @@ QString QBluetoothLocalDevicePrivate::name()
 
 void QBluetoothLocalDevicePrivate::powerOn()
 {
-    ppsSendControlMessage("radio_init", this);
+    if (isValid())
+        ppsSendControlMessage("radio_init", this);
 }
 
 void QBluetoothLocalDevicePrivate::powerOff()
 {
-    ppsSendControlMessage("radio_shutdown", this);
+    if (isValid())
+        ppsSendControlMessage("radio_shutdown", this);
 }
 
 void QBluetoothLocalDevicePrivate::setHostMode(QBluetoothLocalDevice::HostMode mode)
 {
+    if (!isValid())
+        return;
+
     QBluetoothLocalDevice::HostMode currentHostMode = hostMode();
     if (currentHostMode == mode){
         return;
@@ -173,6 +194,9 @@ void QBluetoothLocalDevicePrivate::setHostMode(QBluetoothLocalDevice::HostMode m
 }
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevicePrivate::hostMode() const
 {
+    if (!isValid())
+        return QBluetoothLocalDevice::HostPoweredOff;
+
     if (!ppsReadSetting("enabled").toBool())
         return QBluetoothLocalDevice::HostPoweredOff;
 

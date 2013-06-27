@@ -104,16 +104,16 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 
 namespace
 {
-class LocalDeviceRegisterMetaTypes
-{
-public:
-    LocalDeviceRegisterMetaTypes()
+    class LocalDeviceRegisterMetaTypes
     {
-        qRegisterMetaType<QBluetoothLocalDevice::HostMode>("QBluetoothLocalDevice::HostMode");
-        qRegisterMetaType<QBluetoothLocalDevice::Pairing>("QBluetoothLocalDevice::Pairing");
-        qRegisterMetaType<QBluetoothLocalDevice::Error>("QBluetoothLocalDevice::Error");
-    }
-} _registerLocalDeviceMetaTypes;
+    public:
+        LocalDeviceRegisterMetaTypes()
+        {
+            qRegisterMetaType<QBluetoothLocalDevice::HostMode>("QBluetoothLocalDevice::HostMode");
+            qRegisterMetaType<QBluetoothLocalDevice::Pairing>("QBluetoothLocalDevice::Pairing");
+            qRegisterMetaType<QBluetoothLocalDevice::Error>("QBluetoothLocalDevice::Error");
+        }
+    } _registerLocalDeviceMetaTypes;
 }
 
 /*!
@@ -130,7 +130,9 @@ QBluetoothLocalDevice::~QBluetoothLocalDevice()
 */
 bool QBluetoothLocalDevice::isValid() const
 {
-    return d_ptr;
+    if (d_ptr)
+        return d_ptr->isValid();
+    return false;
 }
 
 /*!

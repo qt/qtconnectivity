@@ -360,6 +360,11 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
     }
 }
 
+bool QBluetoothLocalDevicePrivate::isValid() const
+{
+    return adapter;
+}
+
 void QBluetoothLocalDevicePrivate::RequestConfirmation(const QDBusObjectPath &in0, uint in1)
 {
     Q_UNUSED(in0);
