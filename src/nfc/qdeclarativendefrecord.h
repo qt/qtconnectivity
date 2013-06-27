@@ -57,6 +57,7 @@ class Q_NFC_EXPORT QDeclarativeNdefRecord : public QObject
     Q_DECLARE_PRIVATE(QDeclarativeNdefRecord)
 
     Q_PROPERTY(QString recordType READ recordType WRITE setRecordType NOTIFY recordTypeChanged)
+    Q_PROPERTY(QNdefRecord record READ record WRITE setRecord NOTIFY recordChanged)
 
 public:
     explicit QDeclarativeNdefRecord(QObject *parent = 0);
@@ -70,6 +71,7 @@ public:
 
 Q_SIGNALS:
     void recordTypeChanged();
+    void recordChanged();
 
 private:
     QDeclarativeNdefRecordPrivate *d_ptr;

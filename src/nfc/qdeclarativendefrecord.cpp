@@ -113,9 +113,21 @@ QT_BEGIN_NAMESPACE_NFC
 */
 
 /*!
+    \qmlproperty string NdefRecord::record
+
+    This property holds the NDEF record.
+*/
+
+/*!
     \fn void QDeclarativeNdefRecord::recordTypeChanged()
 
     This signal is emitted when the record type changes.
+*/
+
+/*!
+    \property QDeclarativeNdefRecord::record
+
+    This property hold the NDEF record that this class represents.
 */
 
 /*!
@@ -262,13 +274,18 @@ QNdefRecord QDeclarativeNdefRecord::record() const
 }
 
 /*!
-    Sets the record to \a record.
+    Sets the record to \a record. If the record is set the recordChanged() signal will
+    be emitted.
 */
 void QDeclarativeNdefRecord::setRecord(const QNdefRecord &record)
 {
     Q_D(QDeclarativeNdefRecord);
 
+    if (d->record == record)
+        return;
+
     d->record = record;
+    emit recordChanged();
 }
 
 QT_END_NAMESPACE_NFC
