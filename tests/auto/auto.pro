@@ -29,5 +29,3 @@ qtHaveModule(nfc) {
         qnearfieldtagtype2 \
         qndefnfcsmartposterrecord
 }
-
-qbluetoothservicediscoveryagent.CONFIG += no_check_target # QTBUG-22017
