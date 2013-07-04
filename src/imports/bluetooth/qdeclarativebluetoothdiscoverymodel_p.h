@@ -66,6 +66,7 @@ class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QQ
     Q_INTERFACES(QQmlParserStatus)
 public:
     explicit QDeclarativeBluetoothDiscoveryModel(QObject *parent = 0);
+    virtual ~QDeclarativeBluetoothDiscoveryModel();
 
     enum {
         ServiceRole =  Qt::UserRole + 500,
@@ -84,10 +85,11 @@ public:
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
 
-    bool minimalDiscovery();
+    bool minimalDiscovery() const;
     void setMinimalDiscovery(bool minimalDiscovery_);
 
-    bool discovery();
+    bool discovery() const;
+    void setDiscovery(bool discovery_);
 
     QString uuidFilter() const;
     void setUuidFilter(QString uuid);
@@ -99,14 +101,13 @@ signals:
     void discoveryChanged();
     void uuidFilterChanged();
 
-public slots:
-    void setDiscovery(bool discovery_);
-
 private slots:
-
     void serviceDiscovered(const QBluetoothServiceInfo &service);
     void finishedDiscovery();
     void errorDiscovery(QBluetoothServiceDiscoveryAgent::Error error);
+
+private:
+    void clearModelIfRequired();
 
 private:
     QDeclarativeBluetoothDiscoveryModelPrivate* d;

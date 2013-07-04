@@ -45,18 +45,16 @@ Item {
     id: top
 
     property BluetoothService currentService
-    property alias minimalDiscovery: myModel.minimalDiscovery
 
     BluetoothDiscoveryModel {
         id: myModel
         minimalDiscovery: true
-        onDiscoveryChanged: busy.running = discovery;
+        onDiscoveryChanged: console.log("Discovery mode: " + discovery)
         onNewServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
    }
 
     Rectangle {
         id: busy
-        property bool running: true
 
         width: top.width/1.2;
         x: top.width/2-width/2
@@ -68,8 +66,7 @@ Item {
         Text {
             id: text
             text: "<b>Scanning</b>"
-            x: busy.width/2-paintedWidth/2
-            y: busy.height/2-paintedHeight/2
+            anchors.centerIn: parent
         }
 
         SequentialAnimation on color {
@@ -81,10 +78,10 @@ Item {
         states: [
             State {
                 name: "stopped"
-                when: !busy.running
+                when: !myModel.discovery
                 PropertyChanges { target: busy; height: 0; }
                 PropertyChanges { target: busyThrobber; running: false }
-                PropertyChanges { target: text; visible: false }
+                PropertyChanges { target: busy; visible: false }
             }
         ]
         transitions: [
@@ -92,7 +89,7 @@ Item {
                 from: "*"
                 to: "stopped"
                 reversible: true
-                NumberAnimation { target: busy; property: "height"; to: 0; duration: 200 }
+                NumberAnimation { property: "height"; to: 0; duration: 200 }
             }
         ]
     }
@@ -102,11 +99,6 @@ Item {
 
         Item {
             id: item
-
-            function item_clicked(service) {
-                console.log("Clicked " + service.deviceName + service.deviceAddress);
-                top.currentService = service;
-            }
 
             property int text_height: 5+(bticon.height > bttext.height ? bticon.height : bttext.height)
 
@@ -176,12 +168,10 @@ Item {
 
         Rectangle {
             id: background
-            anchors.fill: del
             border.color: "#34ca57"
             radius: 5
             border.width: 2
         }
-
     }
 
     ListView {
@@ -202,7 +192,9 @@ Item {
         function button_clicked() {
             myModel.minimalDiscovery = !myModel.minimalDiscovery;
             fullbutton.state = fullbutton.state == "clicked" ? "" : "clicked";
-            myModel.setDiscovery(true);
+            //reset discovery since we changed the discovery mode
+            myModel.discovery = false;
+            myModel.discovery = true;
         }
 
         anchors.bottom:  top.bottom
@@ -219,8 +211,7 @@ Item {
         Text {
             id: label
             text: "Full Discovery"
-            x: parent.width/2-paintedWidth/2;
-            y: parent.height/2-paintedHeight/2;
+            anchors.centerIn: parent
         }
 
         MouseArea {

@@ -9,3 +9,5 @@ RESOURCES += \
 
 OTHER_FILES += \
     scanner.qml
+
+#DEFINES += QMLJSDEBUGGER
