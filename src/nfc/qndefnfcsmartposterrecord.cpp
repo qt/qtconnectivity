@@ -608,7 +608,7 @@ void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
     d->m_iconList.clear();
 
     for (int i = 0; i < icons.length(); ++i) {
-        d->m_titleList.append(icons[i]);
+        d->m_iconList.append(icons[i]);
     }
 
     // Convert to payload
