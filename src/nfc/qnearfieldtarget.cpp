@@ -49,6 +49,9 @@
 
 #include <QtCore/QDebug>
 
+#include <QTime>
+#include <QCoreApplication>
+
 QT_BEGIN_NAMESPACE_NFC
 
 /*!
@@ -396,11 +399,19 @@ QNearFieldTarget::RequestId QNearFieldTarget::sendCommands(const QList<QByteArra
 */
 bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs)
 {
-    Q_UNUSED(msecs);
-
     Q_D(QNearFieldTarget);
 
-    return d->m_decodedResponses.contains(id);
+    QTime timer;
+    timer.start();
+
+    do {
+        if (d->m_decodedResponses.contains(id))
+            return true;
+        else
+            QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 1);
+    } while (timer.elapsed() <= msecs);
+
+    return false;
 }
 
 /*!

@@ -262,26 +262,6 @@ QNearFieldTarget::RequestId QNearFieldTagType2::selectSector(quint8 sector)
 /*!
     \reimp
 */
-bool QNearFieldTagType2::waitForRequestCompleted(const RequestId &id, int msecs)
-{
-    Q_D(QNearFieldTagType2);
-
-    QTime timer;
-    timer.start();
-    while (d->m_pendingSectorSelectCommands.contains(id)) {
-        QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 1);
-
-        // detect passive ack
-        if (timer.elapsed() >= 10)
-            break;
-    }
-
-    return QNearFieldTarget::waitForRequestCompleted(id, msecs);
-}
-
-/*!
-    \reimp
-*/
 bool QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
                                         const QByteArray &response)
 {

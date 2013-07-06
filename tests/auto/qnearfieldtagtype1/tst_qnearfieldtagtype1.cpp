@@ -187,7 +187,7 @@ void tst_QNearFieldTagType1::staticMemoryModel()
             quint8 byte = target->requestResponse(id).toUInt();
 
             id = target->writeByte(i, 0x55);
-            QVERIFY(!target->waitForRequestCompleted(id));
+            QVERIFY(!target->waitForRequestCompleted(id,50));
 
             QVERIFY(!target->requestResponse(id).isValid());
 
@@ -237,7 +237,7 @@ void tst_QNearFieldTagType1::staticMemoryModel()
             quint8 byte = target->requestResponse(id).toUInt();
 
             id = target->writeByte(i, 0x55);
-            QVERIFY(!target->waitForRequestCompleted(id));
+            QVERIFY(!target->waitForRequestCompleted(id,50));
 
             QVERIFY(!target->requestResponse(id).isValid());
 
@@ -285,7 +285,7 @@ void tst_QNearFieldTagType1::dynamicMemoryModel()
                 QCOMPARE(quint8(block.at(7)), quint8(0x00));
 
                 id = target->writeBlock(0x00, QByteArray(8, quint8(0x55)));
-                QVERIFY(!target->waitForRequestCompleted(id));
+                QVERIFY(!target->waitForRequestCompleted(id,50));
                 QVERIFY(!target->requestResponse(id).isValid());
 
                 QCOMPARE(target->uid(), block.left(7));
@@ -351,7 +351,7 @@ void tst_QNearFieldTagType1::dynamicMemoryModel()
                 QByteArray block = target->requestResponse(id).toByteArray();
 
                 id = target->writeBlock(i, QByteArray(8, quint8(0x55)));
-                QVERIFY(!target->waitForRequestCompleted(id));
+                QVERIFY(!target->waitForRequestCompleted(id,50));
                 QVERIFY(!target->requestResponse(id).isValid());
 
                 id = target->readBlock(i);
@@ -363,14 +363,14 @@ void tst_QNearFieldTagType1::dynamicMemoryModel()
 
             for (int i = 0; i < 256; ++i) {
                 QNearFieldTarget::RequestId id = target->readBlock(i);
-                QVERIFY(!target->waitForRequestCompleted(id));
+                QVERIFY(!target->waitForRequestCompleted(id,50));
 
                 id = target->writeBlock(i, QByteArray(8, quint8(0x55)));
-                QVERIFY(!target->waitForRequestCompleted(id));
+                QVERIFY(!target->waitForRequestCompleted(id,50));
             }
             for (int i = 0; i < 16; ++i) {
                 QNearFieldTarget::RequestId id = target->readSegment(i);
-                QVERIFY(!target->waitForRequestCompleted(id));
+                QVERIFY(!target->waitForRequestCompleted(id,50));
             }
         }
     }
