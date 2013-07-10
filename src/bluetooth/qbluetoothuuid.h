@@ -67,6 +67,7 @@ public:
         Tcp = 0x0004,
         TcsBin = 0x0005,
         TcsAt = 0x0006,
+        Att = 0x0007,
         Obex = 0x0008,
         Ip = 0x0009,
         Ftp = 0x000A,

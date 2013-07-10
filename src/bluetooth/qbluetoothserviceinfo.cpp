@@ -98,19 +98,26 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 /*!
     \enum QBluetoothServiceInfo::AttributeId
 
-    Bluetooth service attributes.
+    Bluetooth service attributes. Please check the Bluetooth Core Specification for a more detailed description of these attributes.
 
+    \value ServiceRecordHandle      Specifies a service record from which attributes can be retrieved.
     \value ServiceClassIds          UUIDs of service classes that the service conforms to.
+    \value ServiceRecordState       Attibute changes when any other service attribute is added, deleted or modified.
     \value ServiceId                UUID that uniquely identifies the service.
     \value ProtocolDescriptorList   List of protocols used by the service.
     \value BrowseGroupList          List of browse groups the service is in.
+    \value LanguageBaseAttributeIdList      List of language base attribute IDs to support human-readable attributes.
+    \value ServiceInfoTimeToLive    Number of seconds for which the service record is expected to remain valid and unchanged.
     \value ServiceAvailability      Value indicating the availability of the service.
+    \value BluetoothProfileDescriptorList   List of profiles to which the service conforms.
+    \value DocumentationUrl         URL that points to the documentation on the service..
+    \value ClientExecutableUrl      URL that refers to the location of an application that can be used to utilize the service.
+    \value IconUrl                  URL to the location of the icon representing the service.
+    \value AdditionalProtocolDescriptorList     Additional protocols used by the service. This attribute extends the \l QBluetoothServiceInfo::ProtocolDescriptorList.
     \value PrimaryLanguageBase      Base index for primary language text descriptors.
-    \value ServiceRecordHandle      Specifies a service record from which attributes can be retrieved
     \value ServiceName              Name of the Bluetooth service in the primary language.
     \value ServiceDescription       Description of the Bluetooth service in the primary language.
-    \value ServiceProvider          Name of the company / entity that provides the Bluetooth service primary
-    language.
+    \value ServiceProvider          Name of the company / entity that provides the Bluetooth service primary language.
 */
 
 /*!

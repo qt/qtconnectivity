@@ -71,16 +71,17 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     This enum is a convienience type for Bluetooth protocol UUIDs. Values of this type will be
     implicitly converted into a QBluetoothUuid when necessary.
 
-    \value Sdp      SDP protocol UUID.
-    \value Udp      UDP protocol UUID.
-    \value Rfcomm   RFCOMM protocol UUID.
-    \value Tcp      TCP protocol UUID.
-    \value TcsBin   Telephony Control Specification UUID.
-    \value TcsAt    Telephony Control Specification AT UUID.
-    \value Obex     OBEX protocol UUID.
-    \value Ip       IP protocol UUID.
-    \value Ftp      FTP protocol UUID.
-    \value Http     HTTP protocol UUID.
+    \value Sdp      SDP protocol UUID
+    \value Udp      UDP protocol UUID
+    \value Rfcomm   RFCOMM protocol UUID
+    \value Tcp      TCP protocol UUID
+    \value TcsBin   Telephony Control Specification UUID
+    \value TcsAt    Telephony Control Specification AT UUID
+    \value Att      Attribute protocol UUID
+    \value Obex     OBEX protocol UUID
+    \value Ip       IP protocol UUID
+    \value Ftp      FTP protocol UUID
+    \value Http     HTTP protocol UUID
     \value Wsp      WSP UUID
     \value Bnep     Bluetooth Network Encapsulation Protocol UUID
     \value Upnp     Extended Service Discovery Profile UUID
@@ -94,7 +95,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value UdiCPlain UDI protocol UUID
     \value McapControlChannel Multi-Channel Adaptation Protocol UUID
     \value McapDataChannel Multi-Channel Adaptation Protocol UUID
-    \value L2cap    L2CAP protocol UUID.
+    \value L2cap    L2CAP protocol UUID
 */
 
 /*!
