@@ -42,8 +42,8 @@
 #ifndef QNEARFIELDTARGET_EMULATOR_P_H
 #define QNEARFIELDTARGET_EMULATOR_P_H
 
-#include "qnearfieldtagtype1.h"
-#include "qnearfieldtagtype2.h"
+#include "qnearfieldtagtype1_p.h"
+#include "qnearfieldtagtype2_p.h"
 #include "targetemulator_p.h"
 
 #include <QtCore/QMap>

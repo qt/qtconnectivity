@@ -48,7 +48,7 @@
 #include "ndefhandler_adaptor.h"
 #include "accessrequestor_adaptor.h"
 
-#include <qnearfieldtagtype1.h>
+#include <qnearfieldtagtype1_p.h>
 
 #include <QtDBus/QDBusConnection>
 

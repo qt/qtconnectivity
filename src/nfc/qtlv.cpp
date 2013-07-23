@@ -41,7 +41,7 @@
 
 #include "qtlv_p.h"
 
-#include "qnearfieldtagtype1.h"
+#include "qnearfieldtagtype1_p.h"
 
 #include <QtCore/QVariant>
 

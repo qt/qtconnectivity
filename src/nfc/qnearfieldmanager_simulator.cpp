@@ -42,7 +42,7 @@
 #include "qnearfieldmanager_simulator_p.h"
 #include "qnearfieldmanager.h"
 #include "qnearfieldtarget_p.h"
-#include "qnearfieldtagtype1.h"
+#include "qnearfieldtagtype1_p.h"
 #include "qndefmessage.h"
 
 #include <mobilityconnection_p.h>

@@ -15,11 +15,7 @@ PUBLIC_HEADERS += \
     qndefmessage.h \
     qndeffilter.h \
     qndefnfcurirecord.h \
-    qnearfieldtagtype1.h \
-    qnearfieldtagtype2.h \
     qllcpsocket.h \
-    qnearfieldtagtype3.h \
-    qnearfieldtagtype4.h \
     qllcpserver.h \
     qdeclarativendefrecord.h \
     qndefnfcsmartposterrecord.h
@@ -28,6 +24,10 @@ PRIVATE_HEADERS += \
     qndefrecord_p.h \
     qnearfieldtarget_p.h \
     qnearfieldmanager_p.h \
+    qnearfieldtagtype1_p.h \
+    qnearfieldtagtype2_p.h \
+    qnearfieldtagtype3_p.h \
+    qnearfieldtagtype4_p.h \
     qtlv_p.h \
     checksum_p.h \
     qndefnfcsmartposterrecord_p.h

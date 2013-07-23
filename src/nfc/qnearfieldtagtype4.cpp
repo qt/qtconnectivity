@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qnearfieldtagtype4.h"
+#include "qnearfieldtagtype4_p.h"
 
 QT_BEGIN_NAMESPACE_NFC
 
@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE_NFC
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \internal
 */
 
 /*!

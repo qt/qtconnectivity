@@ -44,7 +44,7 @@
 #include <private/qnearfieldmanager_emulator_p.h>
 #include <qnearfieldmanager.h>
 #include <qndefmessage.h>
-#include <qnearfieldtagtype1.h>
+#include <private/qnearfieldtagtype1_p.h>
 #include <qndefnfctextrecord.h>
 
 QT_USE_NAMESPACE_NFC

@@ -39,60 +39,50 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDTAGTYPE1_H
-#define QNEARFIELDTAGTYPE1_H
+#ifndef QNEARFIELDTAGTYPE3_H
+#define QNEARFIELDTAGTYPE3_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/QList>
+#include <QtCore/QMap>
 #include <QtNfc/QNearFieldTarget>
 
 QT_BEGIN_NAMESPACE_NFC
 
-class QNearFieldTagType1Private;
-
-class Q_NFC_EXPORT QNearFieldTagType1 : public QNearFieldTarget
+class Q_AUTOTEST_EXPORT QNearFieldTagType3 : public QNearFieldTarget
 {
     Q_OBJECT
 
-    Q_DECLARE_PRIVATE(QNearFieldTagType1)
-
 public:
-    enum WriteMode {
-        EraseAndWrite,
-        WriteOnly
-    };
+    explicit QNearFieldTagType3(QObject *parent = 0);
 
-    explicit QNearFieldTagType1(QObject *parent = 0);
-    ~QNearFieldTagType1();
+    Type type() const { return NfcTagType3; }
 
-    Type type() const { return NfcTagType1; }
+    quint16 systemCode();
+    QList<quint16> services();
+    int serviceMemorySize(quint16 serviceCode);
 
-    bool hasNdefMessage();
-    RequestId readNdefMessages();
-    RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
+    virtual RequestId serviceData(quint16 serviceCode);
+    virtual RequestId writeServiceData(quint16 serviceCode, const QByteArray &data);
 
-    quint8 version();
-    virtual int memorySize();
-
-    // DIGPROTO
-    virtual RequestId readIdentification();
-
-    // static memory functions
-    virtual RequestId readAll();
-    virtual RequestId readByte(quint8 address);
-    virtual RequestId writeByte(quint8 address, quint8 data, WriteMode mode = EraseAndWrite);
-
-    // dynamic memory functions
-    virtual RequestId readSegment(quint8 segmentAddress);
-    virtual RequestId readBlock(quint8 blockAddress);
-    virtual RequestId writeBlock(quint8 blockAddress, const QByteArray &data,
-                                 WriteMode mode = EraseAndWrite);
+    virtual RequestId check(const QMap<quint16, QList<quint16> > &serviceBlockList);
+    virtual RequestId update(const QMap<quint16, QList<quint16> > &serviceBlockList,
+                             const QByteArray &data);
 
 protected:
     bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response);
-
-private:
-    QNearFieldTagType1Private *d_ptr;
 };
 
 QT_END_NAMESPACE_NFC
 
-#endif // QNEARFIELDTAGTYPE1_H
+#endif // QNEARFIELDTAGTYPE3_H

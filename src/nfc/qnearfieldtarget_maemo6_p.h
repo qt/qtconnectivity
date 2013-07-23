@@ -48,10 +48,10 @@
 
 #include <qnearfieldtarget.h>
 #include <qnearfieldtarget_p.h>
-#include <qnearfieldtagtype1.h>
-#include <qnearfieldtagtype2.h>
-#include <qnearfieldtagtype3.h>
-#include <qnearfieldtagtype4.h>
+#include <qnearfieldtagtype1_p.h>
+#include <qnearfieldtagtype2_p.h>
+#include <qnearfieldtagtype3_p.h>
+#include <qnearfieldtagtype4_p.h>
 #include <qndefmessage.h>
 
 #include "maemo6/adapter_interface_p.h"
