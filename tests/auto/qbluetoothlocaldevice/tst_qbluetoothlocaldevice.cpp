@@ -53,10 +53,8 @@ QT_USE_NAMESPACE_BLUETOOTH
  * Running the manual tests requires another Bluetooth device in the vincinity.
  * The remote device's address must be passed via the BT_TEST_DEVICE env variable.
  * Every pairing request must be accepted within a 10s interval of appearing.
+ * If BT_TEST_DEVICE is not set manual tests will be skipped.
   **/
-#define BT_TEST_DEVICE "98:D6:F7:D9:A5:3D"
-
-
 
 class tst_QBluetoothLocalDevice : public QObject
 {
@@ -67,6 +65,7 @@ public:
     ~tst_QBluetoothLocalDevice();
 
 private slots:
+    void initTestCase();
     void tst_powerOn();
     void tst_powerOff();
     void tst_hostModes();
@@ -83,16 +82,16 @@ private slots:
 
 private:
     QBluetoothAddress remoteDevice;
+    bool expectRemoteDevice;
 };
 
 tst_QBluetoothLocalDevice::tst_QBluetoothLocalDevice()
+    : expectRemoteDevice(false)
 {
     const QString remote = qgetenv("BT_TEST_DEVICE");
-    if (remote == QStringLiteral("default")) {
-        remoteDevice = QBluetoothAddress(BT_TEST_DEVICE);
-        qWarning() << "Using default remote device for testing";
-    } else if (!remote.isEmpty()) {
+    if (!remote.isEmpty()) {
         remoteDevice = QBluetoothAddress(remote);
+        expectRemoteDevice = true;
         qWarning() << "Using remote device " << remote << " for testing. Ensure that the device is discoverable for pairing requests";
     } else {
         qWarning() << "Not using any remote device for testing. Set BT_TEST_DEVICE env to run manual tests involving a remote device";
@@ -108,6 +107,14 @@ tst_QBluetoothLocalDevice::tst_QBluetoothLocalDevice()
 
 tst_QBluetoothLocalDevice::~tst_QBluetoothLocalDevice()
 {
+}
+
+void tst_QBluetoothLocalDevice::initTestCase()
+{
+    if (expectRemoteDevice) {
+        //test passed Bt address here since we cannot do that in the ctor
+        QVERIFY2(!remoteDevice.isNull(), "BT_TEST_DEVICE is not a valid Bluetooth address" );
+    }
 }
 
 void tst_QBluetoothLocalDevice::tst_powerOn()
