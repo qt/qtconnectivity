@@ -21,8 +21,6 @@ PUBLIC_HEADERS += \
     ql2capserver.h \
     qbluetooth.h \
     qbluetoothlocaldevice.h \
-    ql2capsocket.h \
-    qrfcommsocket.h \
     qbluetoothtransfermanager.h \
     qbluetoothtransferrequest.h \
     qbluetoothtransferreply.h
@@ -55,8 +53,6 @@ SOURCES += \
     ql2capserver.cpp \
     qbluetoothlocaldevice.cpp \
     qbluetooth.cpp \
-    ql2capsocket.cpp \
-    qrfcommsocket.cpp \
     qbluetoothtransfermanager.cpp \
     qbluetoothtransferrequest.cpp \
     qbluetoothtransferreply.cpp
