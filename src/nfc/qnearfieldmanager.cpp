@@ -44,8 +44,6 @@
 
 #if defined(QT_SIMULATOR)
 #include "qnearfieldmanager_simulator_p.h"
-#elif defined(Q_WS_MAEMO_6) || defined (Q_WS_MEEGO)
-#include "qnearfieldmanager_maemo6_p.h"
 #elif defined(QNX_NFC)
 #include "qnearfieldmanager_qnx_p.h"
 #else
@@ -97,39 +95,15 @@ QT_BEGIN_NAMESPACE_NFC
 
     \section2 Automatically launching NDEF message handlers
 
-    It is possible to pre-register an application to receive NDEF messages matching a given
-    criteria. This is useful to get the system to automatically launch your application when a
-    matching NDEF message is received. This removes the need to have the user manually launch NDEF
-    handling applications, prior to touching a tag, or to have those applications always running
-    and using system resources.
+    On some platforms it is possible to pre-register an application to receive NDEF messages
+    matching a given criteria. This is useful to get the system to automatically launch your
+    application when a matching NDEF message is received. This removes the need to have the user
+    manually launch NDEF handling applications, prior to touching a tag, or to have those
+    applications always running and using system resources.
 
-    The process of registering the handler is different on each platform. The platform specifics
-    are documented in the sections below. QtNfc provides a tool, \c {ndefhandlergen}, to
-    generate the platform specific registration files. The output of \c {ndefhandlergen -help} is
-    reproduced here for convenience:
-
-    \code
-        Generate platform specific NFC message handler registration files.
-        Usage: nfcxmlgen [options]
-
-            -template TEMPLATE    Template to use.
-            -appname APPNAME      Name of the application.
-            -apppath APPPATH      Path to installed application binary.
-            -datatype DATATYPE    URN of the NDEF message type to match.
-            -match MATCHSTRING    Platform specific match string.
-
-        The -datatype and -match options are mutually exclusive.
-
-        Available templates: maemo6
-    \endcode
-
-    A typical invocation of the \c ndefhandlergen tool for Maemo6 target:
-
-    \code
-        ndefhandlergen -template maemo6 -appname myapplication -apppath /usr/bin/myapplication -datatype urn:nfc:ext:com.example:f
-    \endcode
-
-    Once the application has been registered as an NDEF message handler, the application only needs
+    The process of registering the handler is different for each platform. Please refer to the
+    platform documentation on how such a registration may be done.
+    If the application has been registered as an NDEF message handler, the application only needs
     to call the registerNdefMessageHandler() function:
 
     \code
@@ -137,11 +111,6 @@ QT_BEGIN_NAMESPACE_NFC
         manager->registerNdefMessageHandler(this,
                                             SLOT(handleNdefMessage(QNdefMessage,QNearFieldTarget)));
     \endcode
-
-    \code
-        <customproperty key="datatype">urn:nfc:wkt:U</customproperty>
-    \endcode
-
 */
 
 /*!

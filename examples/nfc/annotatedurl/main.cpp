@@ -70,11 +70,7 @@ int main(int argc, char *argv[])
     QObject::connect(&annotatedUrl, SIGNAL(annotatedUrl(QUrl,QString,QPixmap)),
                      &mainWindow, SLOT(displayAnnotatedUrl(QUrl,QString,QPixmap)));
 
-#if defined(Q_WS_S60) || defined(Q_WS_MAEMO_6) || defined(Q_WS_MEEGO)
-    mainWindow.showFullScreen();
-#else
     mainWindow.show();
-#endif
 
     return a.exec();
 }

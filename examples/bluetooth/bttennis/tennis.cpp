@@ -82,10 +82,6 @@ Tennis::Tennis(QWidget *parent)
     isConnected = false;
     quickDiscovery = true;
 
-#if defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_6)
-    setWindowState(Qt::WindowMaximized);
-#endif
-
     ui->pongView->setScene(board->getScene());
 
     connect(ui->pongView, SIGNAL(mouseMove(int, int)), this, SLOT(mouseMove(int, int)));

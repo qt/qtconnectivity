@@ -54,10 +54,6 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
-#if defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_6)
-    setWindowState(Qt::WindowFullScreen);
-#endif
-
     connect(ui->inquiryType, SIGNAL(toggled(bool)), this, SLOT(setGeneralUnlimited(bool)));
     connect(ui->scan, SIGNAL(clicked()), this, SLOT(startScan()));
 

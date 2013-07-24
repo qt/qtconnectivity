@@ -52,10 +52,6 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
 {
     ui->setupUi(this);
 
-#if defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_6)
-    setWindowState(Qt::WindowMaximized);
-#endif
-
     setWindowTitle(name);
 
     connect(discoveryAgent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)),

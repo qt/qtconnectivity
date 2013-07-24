@@ -43,8 +43,6 @@
 
 #if defined(QT_SIMULATOR)
 #include "qllcpsocket_simulator_p.h"
-#elif defined(Q_WS_MAEMO_6) || defined(Q_WS_MEEGO)
-#include "qllcpsocket_maemo6_p.h"
 #elif defined(QNX_NFC)
 #include "qllcpsocket_qnx_p.h"
 #else
