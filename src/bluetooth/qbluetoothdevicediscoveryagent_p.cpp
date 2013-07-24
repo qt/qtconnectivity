@@ -51,6 +51,7 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
 
 {
+    inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -64,6 +65,10 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+    errorString = QStringLiteral("No Bluetooth device available");
+    emit q->error(QBluetoothDeviceDiscoveryAgent::IOFailure);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
