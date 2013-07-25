@@ -49,6 +49,7 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/QBluetoothServiceInfo>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
@@ -66,6 +67,7 @@ public:
     void close();
 
     bool listen(const QBluetoothAddress &address = QBluetoothAddress(), quint16 port = 0);
+    QBluetoothServiceInfo listen(const QBluetoothUuid &uuid, const QString &serviceName = QString());
     bool isListening() const;
 
     void setMaxPendingConnections(int numConnections);

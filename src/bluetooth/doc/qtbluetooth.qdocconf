@@ -45,7 +45,8 @@ sourcedirs  += .. \
                 ../../imports/bluetooth \
 
 exampledirs += ../../../examples/bluetooth \
-               snippets/
+               snippets/ \
+               ../
 
 
 imagedirs   += images

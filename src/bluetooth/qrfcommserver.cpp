@@ -42,6 +42,7 @@
 #include "qrfcommserver.h"
 #include "qrfcommserver_p.h"
 #include "qbluetoothsocket.h"
+#include "qbluetoothserviceinfo.h"
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
@@ -139,6 +140,57 @@ QRfcommServer::QRfcommServer(QObject *parent)
 QRfcommServer::~QRfcommServer()
 {
     delete d_ptr;
+}
+
+/*!
+    \fn QBluetoothServiceInfo QRfcommServer::listen(const QBluetoothUuid &uuid, const QString &serviceName)
+
+    Convenience function for registering an SPP service with \a uuid and \a serviceName.
+    Because this function already registers the service, the QBluetoothServiceInfo object
+    which is returned can not be changed any more.
+
+    Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
+    invalid QBluetoothServiceInfo.
+
+    This function is equivalent to following code snippet.
+
+    \snippet qrfcommserver.cpp listen
+
+    \sa isListening(), newConnection(), listen()
+*/
+QBluetoothServiceInfo QRfcommServer::listen(const QBluetoothUuid &uuid, const QString &serviceName)
+{
+    if (!listen())
+        return QBluetoothServiceInfo();
+//! [listen]
+    QBluetoothServiceInfo serviceInfo;
+    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, serviceName);
+    serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
+                             QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+
+    QBluetoothServiceInfo::Sequence classId;
+    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
+    serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
+                             classId);
+
+    serviceInfo.setServiceUuid(uuid);
+
+    QBluetoothServiceInfo::Sequence protocolDescriptorList;
+    QBluetoothServiceInfo::Sequence protocol;
+    protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+    protocolDescriptorList.append(QVariant::fromValue(protocol));
+    protocol.clear();
+    protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+             << QVariant::fromValue(quint8(serverPort()));
+    protocolDescriptorList.append(QVariant::fromValue(protocol));
+    serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
+                             protocolDescriptorList);
+    bool result = serviceInfo.registerService();
+//! [listen]
+    if (!result)
+        return QBluetoothServiceInfo();
+    return serviceInfo;
 }
 
 /*!
