@@ -106,13 +106,13 @@ void ppsUnregisterControl(QObject *obj);
 
 pps_encoder_t *beginCtrlMessage(const char *msg, QObject *sender);
 
-void endCtrlMessage(pps_encoder_t *encoder);
+bool endCtrlMessage(pps_encoder_t *encoder);
 
-void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, QObject *sender=0, const int &subtype=-1);
+bool ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, const QString &serviceName, QObject *sender=0, const int &subtype=-1);
 
-void ppsSendControlMessage(const char *msg,  const QString &dat, QObject *sender=0);
+bool ppsSendControlMessage(const char *msg,  const QString &dat, QObject *sender=0);
 
-void ppsSendControlMessage(const char *msg, QObject *sender=0);
+bool ppsSendControlMessage(const char *msg, QObject *sender=0);
 
 void ppsDecodeControlResponse();
 

@@ -88,6 +88,7 @@ public:
 
 #ifdef QTM_QNX_BLUETOOTH
     QList<QBluetoothSocket *> activeSockets;
+    QString m_serviceName;
 #endif
 
 protected:

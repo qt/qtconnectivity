@@ -121,20 +121,22 @@ pps_encoder_t *beginCtrlMessage(const char *msg, QObject *sender)
     return encoder;
 }
 
-void endCtrlMessage(pps_encoder_t *encoder)
+bool endCtrlMessage(pps_encoder_t *encoder)
 {
     qBBBluetoothDebug() << "writing" << pps_encoder_buffer(encoder);
     if (pps_encoder_buffer(encoder) != 0) {
         int res = write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
-        qBBBluetoothDebug() << QByteArray(pps_encoder_buffer(encoder), pps_encoder_length(encoder));
-        if (res == -1)
-            qWarning() << Q_FUNC_INFO << "Error when writing to control FD";
+        if (res == -1) {
+            qWarning() << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?" << errno;
+            return false;
+        }
     }
 
     pps_encoder_cleanup( encoder );
+    return true;
 }
 
-void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, QObject *sender, const int &subtype)
+bool ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &uuid, const QString &address, const QString &serviceName, QObject *sender, const int &subtype)
 {
     pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
     pps_encoder_start_object(encoder, "dat");
@@ -144,10 +146,10 @@ void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &u
 
     pps_encoder_add_string(encoder, "uuid", uuid.toString().mid(1,36).toUtf8().constData());
 
-    if (QByteArray(msg) == QByteArray("register_server")) {
-        if (!address.isEmpty())
-            pps_encoder_add_string(encoder, "name", address.toUtf8().constData());
-    } else if (!address.isEmpty()) {
+    if (!serviceName.isEmpty()) {
+        pps_encoder_add_string(encoder, "name", serviceName.toUtf8().constData());
+    }
+    if (!address.isEmpty()) {
         pps_encoder_add_string(encoder, "addr", address.toUtf8().constData());
     }
 
@@ -155,23 +157,23 @@ void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &u
 
     if (rese != PPS_ENCODER_OK) {
         errno = EPERM;
-        return;
+        return false;
     }
 
-    endCtrlMessage(encoder);
+    return endCtrlMessage(encoder);
 }
 
-void ppsSendControlMessage(const char *msg, const QString &dat, QObject *sender)
+bool ppsSendControlMessage(const char *msg, const QString &dat, QObject *sender)
 {
     pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
     pps_encoder_add_json(encoder, "dat", dat.toUtf8().constData());
-    endCtrlMessage(encoder);
+    return endCtrlMessage(encoder);
 }
 
-void ppsSendControlMessage(const char *msg, QObject *sender)
+bool ppsSendControlMessage(const char *msg, QObject *sender)
 {
     pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
-    endCtrlMessage(encoder);
+    return endCtrlMessage(encoder);
 }
 
 int __newHostMode = -1;

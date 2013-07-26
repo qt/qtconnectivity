@@ -102,8 +102,11 @@ bool QBluetoothServiceInfoPrivate::registerService() const
         qBBBluetoothDebug() << "Registering server with UUID" <<
                                q->serviceUuid() << " Name" << q->serviceName();
         qDebug() << "Server is" << __fakeServerPorts.key(q->serverChannel());
-        ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), q->serviceName(),
-                              __fakeServerPorts.key(q->serverChannel()), BT_SPP_SERVER_SUBTYPE);
+        if (!ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), QString(), q->serviceName(),
+                              __fakeServerPorts.key(q->serverChannel()), BT_SPP_SERVER_SUBTYPE))
+            return false;
+        //The server needs to know the service name for the socket mount point path
+        __fakeServerPorts.key(q->serverChannel())->m_serviceName = q->serviceName();
     } else {
         return false;
     }

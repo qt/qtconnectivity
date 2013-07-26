@@ -110,7 +110,8 @@ void QRfcommServerPrivate::controlEvent(ppsResult result)
             m_uuid = QBluetoothUuid(result.dat.at(result.dat.indexOf(QStringLiteral("uuid")) + 1));
             int subtype = result.dat.at(result.dat.indexOf(QStringLiteral("subtype")) + 1).toInt();
             qBBBluetoothDebug() << "Getting mount point path" << m_uuid << nextClientAddress<< subtype;
-            ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, nextClientAddress, this, BT_SPP_SERVER_SUBTYPE);
+            ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, nextClientAddress,
+                                  m_serviceName, this, BT_SPP_SERVER_SUBTYPE);
         } else {
             qWarning() << Q_FUNC_INFO << "address not specified in service connect reply";
         }
@@ -127,7 +128,7 @@ void QRfcommServer::close()
     }
     d->socket->close();
     d->socket = 0;
-    ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), 0);
+    ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
     // force active object (socket) to run and shutdown socket.
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
