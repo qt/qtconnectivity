@@ -42,6 +42,7 @@
 #include "ppshelpers_p.h"
 #include <QtCore/private/qcore_unix_p.h>
 #include <QDebug>
+#include "../qrfcommserver_p.h"
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
@@ -58,6 +59,8 @@ static const char btRemoteDevFDPath[] = "/pps/services/bluetooth/remote_devices/
 static const int ppsBufferSize = 1024;
 
 static int ctrlId = 20;
+
+QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
 
 QList<QPair<QString, QObject*> > evtRegistration;
 
@@ -141,10 +144,12 @@ void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &u
 
     pps_encoder_add_string(encoder, "uuid", uuid.toString().mid(1,36).toUtf8().constData());
 
-    if (QByteArray(msg) == QByteArray("register_server"))
-        pps_encoder_add_string(encoder, "name", address.toUtf8().constData());
-    else if (!address.isEmpty())
+    if (QByteArray(msg) == QByteArray("register_server")) {
+        if (!address.isEmpty())
+            pps_encoder_add_string(encoder, "name", address.toUtf8().constData());
+    } else if (!address.isEmpty()) {
         pps_encoder_add_string(encoder, "addr", address.toUtf8().constData());
+    }
 
     pps_encoder_error_t rese = pps_encoder_end_object(encoder);
 
@@ -159,16 +164,6 @@ void ppsSendControlMessage(const char *msg, int service, const QBluetoothUuid &u
 void ppsSendControlMessage(const char *msg, const QString &dat, QObject *sender)
 {
     pps_encoder_t *encoder = beginCtrlMessage(msg, sender);
-
-//    pps_encoder_t json_encoder;
-//    pps_encoder_initialize( &json_encoder, true);
-//    pps_encoder_reset( &json_encoder );
-//    pps_encoder_start_object( &json_encoder, NULL);
-//    if ( pps_encoder_add_int( &json_encoder, "access", 1 ) == PPS_ENCODER_OK ) {
-//        pps_encoder_end_object( &json_encoder );
-//        pps_encoder_add_json(encoder, "dat", pps_encoder_buffer( &json_encoder ) );
-//    }
-//    pps_encoder_cleanup( &json_encoder );
     pps_encoder_add_json(encoder, "dat", dat.toUtf8().constData());
     endCtrlMessage(encoder);
 }

@@ -85,6 +85,8 @@ void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId
     registered = false;
 }
 
+extern QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
+
 bool QBluetoothServiceInfoPrivate::registerService() const
 {
     Q_Q(const QBluetoothServiceInfo);
@@ -92,15 +94,19 @@ bool QBluetoothServiceInfoPrivate::registerService() const
         qWarning() << Q_FUNC_INFO << "Only SPP services can be registered on QNX";
         return false;
     }
-    ppsRegisterControl();
-    //if (registered)
-    //    ppsSendControlMessage("deregister_server", 0x1101,  q->serviceUuid(), QString(), 0);
 
-    //If any server instance is already running, it is deregistered
-    qBBBluetoothDebug() << "deregistering server";
-    ppsSendControlMessage("deregister_server", 0x1101, q->serviceUuid(), QString(), 0);
-    qBBBluetoothDebug() << "registering spp server: UUID" << q->serviceUuid();
-    ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), q->serviceName(), 0);
+    if (q->serverChannel() == -1)
+        return false;
+
+    if (__fakeServerPorts.key(q->serverChannel()) != 0) {
+        qBBBluetoothDebug() << "Registering server with UUID" <<
+                               q->serviceUuid() << " Name" << q->serviceName();
+        qDebug() << "Server is" << __fakeServerPorts.key(q->serverChannel());
+        ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), q->serviceName(),
+                              __fakeServerPorts.key(q->serverChannel()), BT_SPP_SERVER_SUBTYPE);
+    } else {
+        return false;
+    }
 
     registered = true;
     return true;

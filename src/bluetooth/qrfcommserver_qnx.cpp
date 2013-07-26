@@ -51,16 +51,22 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
+extern QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
+
 QRfcommServerPrivate::QRfcommServerPrivate()
     : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
 {
+    socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
     ppsRegisterControl();
 }
 
 QRfcommServerPrivate::~QRfcommServerPrivate()
 {
+    Q_Q(QRfcommServer);
     if (socket)
         delete socket;
+    q->close();
+    __fakeServerPorts.remove(this);
     ppsUnregisterControl(this);
 }
 
@@ -76,13 +82,14 @@ void QRfcommServerPrivate::controlReply(ppsResult result)
 
         int socketFD = ::open(result.dat.first().toStdString().c_str(), O_RDWR | O_NONBLOCK);
         if (socketFD == -1) {
-            qWarning() << Q_FUNC_INFO << "RFCOMM Server: Could not open socket FD";
+            qWarning() << Q_FUNC_INFO << "RFCOMM Server: Could not open socket FD" << errno;
         } else {
-            QBluetoothSocket *newSocket =  new QBluetoothSocket;
-            newSocket->setSocketDescriptor(socketFD, QBluetoothSocket::RfcommSocket,
+            socket->setSocketDescriptor(socketFD, QBluetoothSocket::RfcommSocket,
                                            QBluetoothSocket::ConnectedState);
-            newSocket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
-            activeSockets.append(newSocket);
+            socket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
+            activeSockets.append(socket);
+            socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket, this);
+            socket->setSocketState(QBluetoothSocket::ListeningState);
             emit q->newConnection();
         }
     }
@@ -97,10 +104,11 @@ void QRfcommServerPrivate::controlEvent(ppsResult result)
             qBBBluetoothDebug() << result.dat.at(i);
         }
 
-        if (result.dat.contains("addr") && result.dat.contains("uuid") && result.dat.contains("subtype")) {
-            nextClientAddress = result.dat.at(result.dat.indexOf("addr") + 1);
-            m_uuid = QBluetoothUuid(result.dat.at(result.dat.indexOf("uuid") + 1));
-            int subtype = result.dat.at(result.dat.indexOf("subtype") + 1).toInt();
+        if (result.dat.contains("addr") && result.dat.contains(QStringLiteral("uuid"))
+                && result.dat.contains(QStringLiteral("subtype"))) {
+            nextClientAddress = result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1);
+            m_uuid = QBluetoothUuid(result.dat.at(result.dat.indexOf(QStringLiteral("uuid")) + 1));
+            int subtype = result.dat.at(result.dat.indexOf(QStringLiteral("subtype")) + 1).toInt();
             qBBBluetoothDebug() << "Getting mount point path" << m_uuid << nextClientAddress<< subtype;
             ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, nextClientAddress, this, BT_SPP_SERVER_SUBTYPE);
         } else {
@@ -118,23 +126,41 @@ void QRfcommServer::close()
         return;
     }
     d->socket->close();
+    d->socket = 0;
+    ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), 0);
     // force active object (socket) to run and shutdown socket.
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
 {
-    Q_UNUSED(port)
     Q_UNUSED(address)
     Q_D(QRfcommServer);
     // listen has already been called before
-    if (d->socket)
+    if (d->socket->state() == QBluetoothSocket::ListeningState)
         return true;
 
-    d->socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket, this);
+    //We can not register an actual Rfcomm port, because the platform does not allow it
+    //but we need a way to associate a server with a service
 
-    if (!d->socket)
+    if (port == 0) { //Try to assign a non taken port id
+        for (int i=1; ; i++){
+            if (__fakeServerPorts.key(i) == 0) {
+                port = i;
+                break;
+            }
+        }
+    }
+
+    if (port>=0 && __fakeServerPorts.key(port) == 0) {
+        __fakeServerPorts[d] = port;
+        qBBBluetoothDebug() << "Port" << port << "registered";
+    } else {
+        qWarning() << "server with port" << port << "already registered or port invalid";
         return false;
+    }
+
+    d->socket->setSocketState(QBluetoothSocket::ListeningState);
 
     ppsRegisterForEvent(QStringLiteral("service_connected"),d);
     return true;
@@ -143,7 +169,7 @@ bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
 void QRfcommServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QRfcommServer);
-    d->maxPendingConnections = numConnections;
+    d->maxPendingConnections = numConnections; //Currently not used
 }
 
 QBluetoothAddress QRfcommServer::serverAddress() const
@@ -159,10 +185,7 @@ quint16 QRfcommServer::serverPort() const
 {
     //Currently we do not have access to the port
     Q_D(const QRfcommServer);
-    if (d->socket)
-        return d->socket->localPort();
-    else
-        return 0;
+    return __fakeServerPorts.value((QRfcommServerPrivate*)d);
 }
 
 bool QRfcommServer::hasPendingConnections() const
@@ -177,20 +200,19 @@ QBluetoothSocket *QRfcommServer::nextPendingConnection()
     if (d->activeSockets.isEmpty())
         return 0;
 
-    QBluetoothSocket *next = d->activeSockets.takeFirst();
-    return next;
+    return d->activeSockets.takeFirst();
 }
 
 void QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
     Q_D(QRfcommServer);
-    d->securityFlags = security;
+    d->securityFlags = security; //not used
 }
 
 QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
 {
     Q_D(const QRfcommServer);
-    return d->securityFlags;
+    return d->securityFlags; //not used
 }
 
 QT_END_NAMESPACE_BLUETOOTH
