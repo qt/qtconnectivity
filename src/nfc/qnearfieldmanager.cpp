@@ -40,6 +40,8 @@
 #include "qnearfieldmanager_qnx_p.h"
 #elif defined(NEARD_NFC)
 #include "qnearfieldmanager_neard_p.h"
+#elif defined(ANDROID_NFC)
+#include "qnearfieldmanager_android_p.h"
 #else
 #include "qnearfieldmanagerimpl_p.h"
 #endif

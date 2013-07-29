@@ -148,6 +148,37 @@ simulator {
         qnearfieldsharetargetimpl_p.cpp
 }
 
+# not supported for now
+0 {
+android {
+    NFC_BACKEND_AVAILABLE = yes
+    ANDROID_BUNDLED_JAR_DEPENDENCIES = \
+        jar/QtNfc-bundled.jar:org.qtproject.qt5.android.nfc.QtNfc
+    ANDROID_JAR_DEPENDENCIES = \
+        jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
+    DEFINES += ANDROID_NFC #QQNXNFC_DEBUG
+
+    PRIVATE_HEADERS += \
+        qllcpserver_android_p.h \
+        qllcpsocket_android_p.h \
+        android/androidjninfc_p.h \
+        qnearfieldmanager_android_p.h \
+        qnearfieldtarget_android_p.h \
+        qnearfieldsharemanagerimpl_p.h \
+        qnearfieldsharetargetimpl_p.h
+
+
+    SOURCES += \
+        qllcpserver_android_p.cpp \
+        qllcpsocket_android_p.cpp \
+        android/androidjninfc.cpp \
+        qnearfieldmanager_android.cpp \
+        qnearfieldtarget_android.cpp \
+        qnearfieldsharemanagerimpl_p.cpp \
+        qnearfieldsharetargetimpl_p.cpp
+}
+}
+
 isEmpty(NFC_BACKEND_AVAILABLE) {
     message("Unsupported NFC platform, will not build a working QtNfc library.")
 
@@ -166,4 +197,5 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
         qnearfieldsharetargetimpl_p.cpp
 }
 
-HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS \
+    android/androidglobal.h
