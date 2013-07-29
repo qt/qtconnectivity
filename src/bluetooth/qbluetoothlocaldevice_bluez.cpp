@@ -107,16 +107,26 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
     switch (mode) {
     case HostDiscoverableLimitedInquiry:
     case HostDiscoverable:
-        if (hostMode() != HostPoweredOff)
-            d_ptr->adapter->SetProperty(QLatin1String("Powered"), QDBusVariant(QVariant::fromValue(true)));
-        d_ptr->adapter->SetProperty(QLatin1String("Discoverable"),
+        if (hostMode() == HostPoweredOff) {
+            //We first have to wait for BT to be powered on,
+            //then we can set the host mode correctly
+            d_ptr->pendingHostModeChange = (int) HostDiscoverable;
+            d_ptr->adapter->SetProperty(QStringLiteral("Powered"),
+                                        QDBusVariant(QVariant::fromValue(true)));
+        } else {
+            d_ptr->adapter->SetProperty(QStringLiteral("Discoverable"),
                                 QDBusVariant(QVariant::fromValue(true)));
+        }
         break;
     case HostConnectable:
-        if (hostMode() != HostPoweredOff)
-            d_ptr->adapter->SetProperty(QLatin1String("Powered"), QDBusVariant(QVariant::fromValue(true)));
-        d_ptr->adapter->SetProperty(QLatin1String("Discoverable"),
+        if (hostMode() == HostPoweredOff) {
+            d_ptr->pendingHostModeChange = (int) HostConnectable;
+            d_ptr->adapter->SetProperty(QStringLiteral("Powered"),
+                                        QDBusVariant(QVariant::fromValue(true)));
+        } else {
+            d_ptr->adapter->SetProperty(QStringLiteral("Discoverable"),
                                 QDBusVariant(QVariant::fromValue(false)));
+        }
         break;
     case HostPoweredOff:
         d_ptr->adapter->SetProperty(QLatin1String("Powered"),
@@ -325,7 +335,7 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluet
 }
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress address)
-    : adapter(0), agent(0), localAddress(address), msgConnection(0), q_ptr(q)
+    : adapter(0), agent(0), localAddress(address), pendingHostModeChange(-1), msgConnection(0), q_ptr(q)
 {
     initializeAdapter();
 }
@@ -533,6 +543,22 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
             mode = QBluetoothLocalDevice::HostDiscoverable;
         else
             mode = QBluetoothLocalDevice::HostConnectable;
+
+        if (pendingHostModeChange != -1) {
+            if ((int)mode != pendingHostModeChange) {
+                if (property == QStringLiteral("Powered"))
+                    return;
+                if (pendingHostModeChange == (int)QBluetoothLocalDevice::HostDiscoverable) {
+                    adapter->SetProperty(QStringLiteral("Discoverable"),
+                                        QDBusVariant(QVariant::fromValue(true)));
+                } else {
+                    adapter->SetProperty(QStringLiteral("Discoverable"),
+                                        QDBusVariant(QVariant::fromValue(false)));
+                }
+                pendingHostModeChange = -1;
+                return;
+            }
+        }
     }
 
     if(mode != currentMode)

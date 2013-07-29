@@ -85,6 +85,7 @@ public:
     QBluetoothAddress address;
     QBluetoothLocalDevice::Pairing pairing;
     QBluetoothLocalDevice::HostMode currentMode;
+    int pendingHostModeChange;
 
 public Q_SLOTS: // METHODS
     void Authorize(const QDBusObjectPath &in0, const QString &in1);
