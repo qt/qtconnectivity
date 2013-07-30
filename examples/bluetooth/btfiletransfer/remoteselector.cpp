@@ -228,7 +228,7 @@ void RemoteSelector::on_sendButton_clicked()
         return;
     }
 
-    connect(reply, SIGNAL(uploadProgress(qint64,qint64)), p, SLOT(uploadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(transferProgress(qint64,qint64)), p, SLOT(uploadProgress(qint64,qint64)));
     connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), p, SLOT(finished(QBluetoothTransferReply*)));
     connect(p, SIGNAL(rejected()), reply, SLOT(abort()));
 }

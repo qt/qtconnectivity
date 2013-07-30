@@ -60,11 +60,6 @@ class Q_BLUETOOTH_EXPORT QBluetoothTransferManager : public QObject
     Q_OBJECT
 
 public:
-    enum Operation {
-        GetOperation,
-        PutOperation
-    };
-
     explicit QBluetoothTransferManager(QObject *parent = 0);
     ~QBluetoothTransferManager();
 

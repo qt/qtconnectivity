@@ -50,16 +50,7 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
     \brief The QBluetoothTransferManager class transfers data to another device
     using Object Push Profile (OPP).
 
-    QBluetoothTransferManager uses OBEX to send get and put commands to remote devices.
-*/
-
-/*!
-    \enum QBluetoothTransferManager::Operation
-
-    This enum describes the type of operation that a transfer request is for.
-
-    \value GetOperation     The get operation is used to retrieve an object from a remote device. Not implemented.
-    \value PutOperation     The put operation is used to send an object to a remote device.
+    QBluetoothTransferManager uses OBEX to send put commands to remote devices.
 */
 
 /*!

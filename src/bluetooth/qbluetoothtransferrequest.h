@@ -43,6 +43,7 @@
 #define QBLUETOOTHTRANSFERREQUEST_H
 
 #include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/QBluetoothAddress>
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QVariant>
@@ -63,7 +64,7 @@ public:
         NameAttribute
     };
 
-    QBluetoothTransferRequest(const QBluetoothAddress &address);
+    QBluetoothTransferRequest(const QBluetoothAddress &address = QBluetoothAddress());
     QBluetoothTransferRequest(const QBluetoothTransferRequest &other);
     ~QBluetoothTransferRequest();
 

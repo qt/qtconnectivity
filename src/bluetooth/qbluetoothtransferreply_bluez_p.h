@@ -61,27 +61,22 @@ class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyBluez : public QBluetoothTransfe
     Q_OBJECT
 
 public:
-    explicit QBluetoothTransferReplyBluez(QIODevice *input, QObject *parent = 0);
+    explicit QBluetoothTransferReplyBluez(QIODevice *input, const QBluetoothTransferRequest &request,
+                                          QObject *parent = 0);
     ~QBluetoothTransferReplyBluez();
 
-    QVariant attribute(QBluetoothTransferRequest::Attribute code) const;
     bool isFinished() const;
     bool isRunning() const;
-
-    bool start();
-
-    void startOPP(QString filename);
-
-    void setAddress(const QBluetoothAddress &address);
 
     QBluetoothTransferReply::TransferError error() const;
     QString errorString() const;
 
-protected:
-    qint64 readData(char*, qint64);
-    qint64 writeData(const char*, qint64);
+private Q_SLOTS:
+    bool start();
 
 private:
+    void startOPP(QString filename);
+
     OrgOpenobexClientInterface *client;
     OrgOpenobexManagerInterface *manager;
     AgentAdaptor *agent;
@@ -93,8 +88,6 @@ private:
     bool m_finished;
 
     quint64 m_size;
-
-    QBluetoothAddress address;
 
     QBluetoothTransferReply::TransferError m_error;
     QString m_errorStr;

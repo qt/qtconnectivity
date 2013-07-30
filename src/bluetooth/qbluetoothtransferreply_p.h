@@ -52,9 +52,9 @@ public:
     QBluetoothTransferReplyPrivate();
 
     QBluetoothTransferManager *m_manager;
-    QBluetoothTransferManager::Operation m_operation;
-    QMap<int, QVariant> m_attributes;
     qint64 m_buffersize;
+
+    QBluetoothTransferRequest m_request;
 
     QBluetoothTransferReply *q_ptr;
 

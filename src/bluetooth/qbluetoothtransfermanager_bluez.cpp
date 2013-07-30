@@ -50,13 +50,9 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
                                                         QIODevice *data)
 {
 
-    QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data);
-
-    rep->setAddress(request.address());
+    QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data, request);
 
     connect(rep, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
-
-    rep->start();
 
     return rep;
 }

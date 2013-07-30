@@ -67,31 +67,27 @@ public:
 
     ~QBluetoothTransferReply();
 
-    QVariant attribute(QBluetoothTransferRequest::Attribute code) const;
     virtual bool isFinished() const = 0;
     virtual bool isRunning() const = 0;
 
     QBluetoothTransferManager *manager() const;
 
-    QBluetoothTransferManager::Operation operation() const;
-
     virtual TransferError error() const = 0;
     virtual QString errorString() const = 0;
+
+    QBluetoothTransferRequest request() const;
 
 public Q_SLOTS:
     void abort();
 
 Q_SIGNALS:
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void finished(QBluetoothTransferReply *);
-    void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
+    void transferProgress(qint64 bytesTransferred, qint64 bytesTotal);
 
 protected:
     explicit QBluetoothTransferReply(QObject *parent = 0);
-    void setAttribute(QBluetoothTransferRequest::Attribute code, const QVariant &value);
-    void setOperation(QBluetoothTransferManager::Operation operation);
     void setManager(QBluetoothTransferManager *manager);
-//    void setRequest(QBluetoothTransferRequest *request);
+    void setRequest(const QBluetoothTransferRequest &request);
 
 protected:
     QBluetoothTransferReplyPrivate *d_ptr;

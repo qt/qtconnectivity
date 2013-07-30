@@ -55,18 +55,8 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
     In additional to a copy of the QBluetoothTransferRequest object used to create the request,
     QBluetoothTransferReply contains the contents of the reply itself.
 
-    QBluetoothTransferReply is a sequential-access QIODevice, which means that once data is read
-    from the object, it is no longer kept by the device. It is the application's
-    responsibility to keep this data if it needs to. Whenever more data is received and processed,
-    the readyRead() signal is emitted.
-
-    The downloadProgress() signal is also emitted when data is received, but the number of bytes
-    contained in it may not represent the actual bytes received, if any transformation is done to
-    the contents (for example, decompressing and removing the protocol overhead).
-
-    Even though QBluetoothTransferReply is a QIODevice connected to the contents of the reply, it
-    emits the uploadProgress() signal, which indicates the progress of the upload for
-    operations that have such content.
+    After the file transfer has started, QBluetoothTransferReply emits the transferProgress() signal,
+    which indicates the progress of the file transfer.
 */
 
 /*!
@@ -94,30 +84,23 @@ void QBluetoothTransferReply::abort()
 }
 
 /*!
-    \fn void QBluetoothTransferReply::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
-
-    This signal is emitted whenever data is received. The \a bytesReceived parameter contains the
-    total number of bytes received so far out of \a bytesTotal expected for the entire transfer.
-*/
-
-/*!
     \fn void QBluetoothTransferReply::finished(QBluetoothTransferReply *reply)
 
     This signal is emitted when the transfer is complete for \a reply.
 */
 
 /*!
-    \fn void QBluetoothTransferReply::uploadProgress(qint64 bytesSent, qint64 bytesTotal)
+    \fn void QBluetoothTransferReply::transferProgress(qint64 bytesTransferred, qint64 bytesTotal)
 
-    This signal is emitted whenever data is sent. The \a bytesSent parameter contains the total
-    number of bytes sent so far out of \a bytesTotal.
+    This signal is emitted whenever data is transferred. The \a bytesTransferred parameter contains the total
+    number of bytes transferred so far out of \a bytesTotal.
 */
 
 /*!
     Constructs a new QBluetoothTransferReply with \a parent.
 */
 QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
-:   QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate)
+    : QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate())
 {
     qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply");
 }
@@ -128,16 +111,6 @@ QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
 QBluetoothTransferReply::~QBluetoothTransferReply()
 {
     delete d_ptr;
-}
-
-/*!
-    Returns the attribute associated with \a code. If the attribute has not been set, it
-    returns an invalid QVariant.
-*/
-QVariant QBluetoothTransferReply::attribute(QBluetoothTransferRequest::Attribute code) const
-{
-    Q_D(const QBluetoothTransferReply);
-    return d->m_attributes[code];
 }
 
 /*!
@@ -163,32 +136,13 @@ QBluetoothTransferManager *QBluetoothTransferReply::manager() const
 }
 
 /*!
-    Returns the type of operation that this reply is for.
+    Returns the QBluetoothTransferRequest that was used to create this QBluetoothTransferReply
+    object.
 */
-QBluetoothTransferManager::Operation QBluetoothTransferReply::operation() const
+QBluetoothTransferRequest QBluetoothTransferReply::request() const
 {
     Q_D(const QBluetoothTransferReply);
-    return d->m_operation;
-}
-
-/*!
-    Sets the operation of this QBluetoothTransferReply to \a operation.
-*/
-void QBluetoothTransferReply::setOperation(QBluetoothTransferManager::Operation operation)
-{
-    Q_D(QBluetoothTransferReply);
-    d->m_operation = operation;
-}
-
-/*!
-  \fn QBluetoothTransferReply::setAttribute(QBluetoothTransferRequest::Attribute code, const QVariant &value)
-
-    Set the attribute associated with the \a code to \a value.
-*/
-void QBluetoothTransferReply::setAttribute(QBluetoothTransferRequest::Attribute code, const QVariant &value)
-{
-    Q_D(QBluetoothTransferReply);
-    d->m_attributes.insert(code, value);
+    return d->m_request;
 }
 
 /*!
@@ -201,6 +155,17 @@ void QBluetoothTransferReply::setManager(QBluetoothTransferManager *manager)
 {
     Q_D(QBluetoothTransferReply);
     d->m_manager = manager;
+}
+
+/*!
+  \fn QBluetoothTransferReply::setRequest(const QBluetoothTransferRequest &request)
+
+  Set the reply's request to \a request.
+*/
+void QBluetoothTransferReply::setRequest(const QBluetoothTransferRequest &request)
+{
+    Q_D(QBluetoothTransferReply);
+    d->m_request = request;
 }
 
 /*!

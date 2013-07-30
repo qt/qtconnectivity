@@ -57,11 +57,13 @@ static const QLatin1String agentPath("/qt/agent");
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QObject *parent)
+QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, const QBluetoothTransferRequest &request,
+                                                           QObject *parent)
 :   QBluetoothTransferReply(parent), tempfile(0), source(input),
     m_running(false), m_finished(false), m_size(0),
     m_error(QBluetoothTransferReply::NoError), m_errorStr(), m_transfer_path()
 {
+    setRequest(request);
     client = new OrgOpenobexClientInterface(QLatin1String("org.openobex.client"), QLatin1String("/"),
                                            QDBusConnection::sessionBus());
 
@@ -78,6 +80,8 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, QOb
 //    res = QDBusConnection::sessionBus().registerService("org.qt.bt");
     if(!res)
         qDebug() << "Failed Creating dbus objects";
+
+    QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
 }
 
 /*!
@@ -141,7 +145,7 @@ void QBluetoothTransferReplyBluez::startOPP(QString filename)
     QVariantMap device;
     QStringList files;
 
-    device.insert(QString::fromLatin1("Destination"), address.toString());
+    device.insert(QString::fromLatin1("Destination"), request().address().toString());
     files << filename;
 
     QDBusObjectPath path(m_agent_path);
@@ -209,7 +213,7 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
 void QBluetoothTransferReplyBluez::Progress(const QDBusObjectPath &in0, qulonglong in1)
 {
     Q_UNUSED(in0);
-    emit uploadProgress(in1, m_size);
+    emit transferProgress(in1, m_size);
 }
 
 void QBluetoothTransferReplyBluez::Release()
@@ -253,21 +257,6 @@ void QBluetoothTransferReplyBluez::abort()
         }
         delete xfer;
     }
-}
-
-void QBluetoothTransferReplyBluez::setAddress(const QBluetoothAddress &destination)
-{
-    address = destination;
-}
-
-qint64 QBluetoothTransferReplyBluez::readData(char*, qint64)
-{
-    return 0;
-}
-
-qint64 QBluetoothTransferReplyBluez::writeData(const char*, qint64)
-{
-    return 0;
 }
 
 #include "moc_qbluetoothtransferreply_bluez_p.cpp"
