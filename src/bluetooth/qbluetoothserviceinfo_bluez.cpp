@@ -176,6 +176,11 @@ QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
 {
 }
 
+bool QBluetoothServiceInfoPrivate::isRegistered() const
+{
+    return registered;
+}
+
 bool QBluetoothServiceInfoPrivate::unregisterService() const
 {
     if (!registered)

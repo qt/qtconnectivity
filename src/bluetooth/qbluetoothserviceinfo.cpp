@@ -140,7 +140,7 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 bool QBluetoothServiceInfo::isRegistered() const
 {
     Q_D(const QBluetoothServiceInfo);
-    return d->registered;
+    return d->isRegistered();
 }
 
 /*!
