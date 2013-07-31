@@ -104,7 +104,7 @@ void QRfcommServerPrivate::controlEvent(ppsResult result)
             qBBBluetoothDebug() << result.dat.at(i);
         }
 
-        if (result.dat.contains("addr") && result.dat.contains(QStringLiteral("uuid"))
+        if (result.dat.contains(QStringLiteral("addr")) && result.dat.contains(QStringLiteral("uuid"))
                 && result.dat.contains(QStringLiteral("subtype"))) {
             nextClientAddress = result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1);
             m_uuid = QBluetoothUuid(result.dat.at(result.dat.indexOf(QStringLiteral("uuid")) + 1));
@@ -153,7 +153,7 @@ bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
         }
     }
 
-    if (port>=0 && __fakeServerPorts.key(port) == 0) {
+    if (__fakeServerPorts.key(port) == 0) {
         __fakeServerPorts[d] = port;
         qBBBluetoothDebug() << "Port" << port << "registered";
     } else {

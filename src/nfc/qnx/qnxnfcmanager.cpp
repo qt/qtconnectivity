@@ -78,7 +78,9 @@ void QNXNFCManager::unregisterForInstance()
 
 void QNXNFCManager::unregisterTargetDetection(QObject *obj)
 {
-    //TODO another instance of the nearfieldmanager might still want to detect targets
+    Q_UNUSED(obj)
+    //TODO another instance of the nearfieldmanager might still
+    //want to detect targets so we have to do ref counting
     nfc_unregister_tag_readerwriter();
 }
 
@@ -386,9 +388,9 @@ void QNXNFCManager::targetLost(unsigned int targetId)
 
 bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
 {
+    Q_UNUSED(targetTypes)
     qQNXNFCDebug() << "Start target detection for all types";
     //TODO handle the target types
-    qQNXNFCDebug() << "Starting target detection";
     if (nfc_register_tag_readerwriter(TAG_TYPE_ALL) == NFC_RESULT_SUCCESS) {
         return true;
     } else {
@@ -460,7 +462,7 @@ QNdefMessage QNXNFCManager::decodeMessage(nfc_ndef_message_t *nextMessage)
         newNdefRecord.setId(QByteArray(recordId));
 
         nfc_get_ndef_record_tnf(newRecord, &typeNameFormat);
-        QNdefRecord::TypeNameFormat recordTnf;
+        QNdefRecord::TypeNameFormat recordTnf = QNdefRecord::Unknown;
         switch (typeNameFormat) {
         case NDEF_TNF_WELL_KNOWN: recordTnf = QNdefRecord::NfcRtd; break;
         case NDEF_TNF_EMPTY: recordTnf = QNdefRecord::Empty; break;

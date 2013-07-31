@@ -128,13 +128,13 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
 {
     ppsRegisterControl();
-    ppsRegisterForEvent(QString("access_changed"), this);
+    ppsRegisterForEvent(QStringLiteral("access_changed"), this);
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
     ppsUnregisterControl(this);
-    ppsUnreguisterForEvent(QString("access_changed"), this);
+    ppsUnreguisterForEvent(QStringLiteral("access_changed"), this);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
@@ -219,7 +219,7 @@ void QBluetoothLocalDevicePrivate::setAccess(int access)
     if (!ppsReadSetting("enabled").toBool()) { //We cannot set the host mode until BT is fully powered up
         __newHostMode = access;
     } else {
-        ppsSendControlMessage("set_access", QString("{\"access\":%1}").arg(access), 0);
+        ppsSendControlMessage("set_access", QStringLiteral("{\"access\":%1}").arg(access), 0);
 
     }
 }
@@ -235,9 +235,9 @@ void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
 
 void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
 {
-    if (result.msg == QString("access_changed")) {
+    if (result.msg == QStringLiteral("access_changed")) {
         if (__newHostMode == -1 && result.dat.size() > 1 &&
-                result.dat.first() == "level") {
+                result.dat.first() == QStringLiteral("level")) {
             qBBBluetoothDebug() << "New Host mode" << hostMode();
             Q_EMIT q_ptr->hostModeStateChanged(hostMode());
         }

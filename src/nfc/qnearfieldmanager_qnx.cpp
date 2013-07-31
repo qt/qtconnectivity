@@ -178,6 +178,7 @@ void QNearFieldManagerPrivateImpl::handleMessage(const QNdefMessage &message, QN
 
 void QNearFieldManagerPrivateImpl::newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &messages)
 {
+    Q_UNUSED(messages)
     qQNXNFCDebug() << "New Target";
     emit targetDetected(target);
 }

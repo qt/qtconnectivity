@@ -81,7 +81,7 @@ bool QNXNFCEventFilter::nativeEventFilter(const QByteArray &eventType, void *mes
 
         //message.fromByteArray(data);
 
-        const char* metadata = navigator_invoke_invocation_get_metadata(invoke);
+        //const char* metadata = navigator_invoke_invocation_get_metadata(invoke);
 
         nfc_ndef_message_t *ndefMessage;
         nfc_create_ndef_message_from_bytes(reinterpret_cast<const uchar_t *>(data.data()),

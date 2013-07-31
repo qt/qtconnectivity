@@ -373,13 +373,13 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
-    Q_D(QBluetoothSocket);
 #ifdef QTM_QNX_BLUETOOTH
     Q_UNUSED(port);
     Q_UNUSED(openMode);
     Q_UNUSED(address);
     qWarning("Connecting to port is not supported on QNX");
 #else
+    Q_D(QBluetoothSocket);
     setOpenMode(openMode);
     d->connectToService(address, port, openMode);
 #endif

@@ -181,7 +181,7 @@ int __newHostMode = -1;
 void ppsDecodeControlResponse()
 {
     ppsResult result;
-    ResultType resType;
+    ResultType resType = UNKNOWN;
 
     if (ppsCtrlFD != -1) {
         char buf[ppsBufferSize];
@@ -247,11 +247,11 @@ void ppsDecodeControlResponse()
         pps_decoder_cleanup(&ppsDecoder);
     }
 
-    if (result.msg == "radio_init") {
+    if (result.msg == QStringLiteral("radio_init")) {
         qBBBluetoothDebug() << "Radio initialized";
-    } else if (result.msg == "access_changed" && __newHostMode != -1) {
+    } else if (result.msg == QStringLiteral("access_changed") && __newHostMode != -1) {
         qBBBluetoothDebug() << "Access changed after radio init";
-        ppsSendControlMessage("set_access", QString("{\"access\":%1}").arg(__newHostMode), 0);
+        ppsSendControlMessage("set_access", QStringLiteral("{\"access\":%1}").arg(__newHostMode), 0);
         __newHostMode = -1;
     }
 
