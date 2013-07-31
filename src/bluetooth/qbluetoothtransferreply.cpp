@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-
 #include "qbluetoothtransferreply.h"
 #include "qbluetoothtransferreply_p.h"
 #include "qbluetoothaddress.h"
@@ -80,7 +79,6 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 */
 void QBluetoothTransferReply::abort()
 {
-
 }
 
 /*!

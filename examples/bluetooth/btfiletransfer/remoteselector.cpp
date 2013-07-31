@@ -66,6 +66,7 @@ RemoteSelector::RemoteSelector(QWidget *parent)
     connect(m_discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
             this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
     connect(m_discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
+    connect(m_discoveryAgent, SIGNAL(canceled()), this, SLOT(discoveryFinished()));
 
     ui->remoteDevices->setColumnWidth(3, 75);
     ui->remoteDevices->setColumnWidth(4, 100);
@@ -223,8 +224,8 @@ void RemoteSelector::on_sendButton_clicked()
     QBluetoothTransferReply *reply = mgr.put(req, m_file);
     if (reply->error()){
         qDebug() << "Failed to send file";
-        delete reply;
         p->finished(reply);
+        reply->deleteLater();
         return;
     }
 

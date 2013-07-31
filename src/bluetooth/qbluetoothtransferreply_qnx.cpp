@@ -109,6 +109,14 @@ bool QBluetoothTransferReplyQnx::start()
         Q_EMIT finished(this);
 
     } else {
+        if (!file->exists()) {
+            m_errorStr = tr("File does not exist");
+            m_error = QBluetoothTransferReply::FileNotFoundError;
+            m_finished = true;
+            m_running = false;
+            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            return false;
+        }
         startOPP(file->fileName());
     }
     return true;

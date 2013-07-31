@@ -67,9 +67,6 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
     client = new OrgOpenobexClientInterface(QLatin1String("org.openobex.client"), QLatin1String("/"),
                                            QDBusConnection::sessionBus());
 
-//    manager = new OrgOpenobexManagerInterface(QLatin1String("org.openobex"), QLatin1String("/"),
-//                                           QDBusConnection::sessionBus());
-
     qsrand(QTime::currentTime().msec());
     m_agent_path = agentPath;
     m_agent_path.append(QString::fromLatin1("/%1").arg(qrand()));
@@ -77,10 +74,10 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
     agent = new AgentAdaptor(this);
 
     bool res = QDBusConnection::sessionBus().registerObject(m_agent_path, this);
-//    res = QDBusConnection::sessionBus().registerService("org.qt.bt");
     if(!res)
         qDebug() << "Failed Creating dbus objects";
 
+    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
     QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
 }
 
@@ -97,7 +94,6 @@ bool QBluetoothTransferReplyBluez::start()
 {
     m_running = true;
 
-//    qDebug() << "Got a:" << source->metaObject()->className();
     QFile *file = qobject_cast<QFile *>(source);
 
     if(!file){
@@ -112,6 +108,14 @@ bool QBluetoothTransferReplyBluez::start()
         watcher->setFuture(results);
     }
     else {
+        if (!file->exists()) {
+            m_errorStr = tr("File does not exist");
+            m_error = QBluetoothTransferReply::FileNotFoundError;
+            m_finished = true;
+            m_running = false;
+            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            return false;
+        }
         m_size = file->size();        
         startOPP(file->fileName());
     }
@@ -158,19 +162,20 @@ void QBluetoothTransferReplyBluez::startOPP(QString filename)
 
 void QBluetoothTransferReplyBluez::sendReturned(QDBusPendingCallWatcher *watcher)
 {
-
     QDBusPendingReply<> sendReply = *watcher;
     if(sendReply.isError()){
-        qDebug() << "Failed to send file"<< sendReply.isError() << sendReply.error().message();
         m_finished = true;
         m_running = false;
         m_errorStr = sendReply.error().message();
-        if(m_errorStr == QLatin1String("Could not open file for sending"))
+        if (m_errorStr == QStringLiteral("Could not open file for sending")) {
             m_error = QBluetoothTransferReply::FileNotFoundError;
-        else if(m_errorStr == QLatin1String("The transfer was canceled"))
+            m_errorStr = tr("Could not open file for sending");
+        } else if (m_errorStr == QStringLiteral("The transfer was canceled")) {
             m_error = QBluetoothTransferReply::UserCanceledTransferError;
-        else
+            m_errorStr = tr("The transfer was canceled");
+        } else {
             m_error = QBluetoothTransferReply::UnknownError;
+        }
 
         // allow time for the developer to connect to the signal
         QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
@@ -202,10 +207,15 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
     m_finished = true;
     m_running = false;
     m_errorStr = in1;
-    if (in1 == QLatin1String("Could not open file for sending"))
+    if (in1 == QStringLiteral("Could not open file for sending")) {
         m_error = QBluetoothTransferReply::FileNotFoundError;
-    else
+        m_errorStr = tr("Could not open file for sending");
+    } else if (in1 == QStringLiteral("Operation canceled")) {
+        m_error = QBluetoothTransferReply::UserCanceledTransferError;
+        m_errorStr = tr("Operation canceled");
+    } else {
         m_error = QBluetoothTransferReply::UnknownError;
+    }
 
     emit finished(this);
 }
