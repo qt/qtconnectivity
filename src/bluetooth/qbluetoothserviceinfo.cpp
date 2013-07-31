@@ -93,6 +93,15 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
     Bluetooth service.
 
     QBluetoothServiceInfo provides information about a service offered by a Bluetooth device.
+    In addition it can be used to register new services on the local device. Note that such
+    a registration only affects the Bluetooth SDP entries. Any server listening
+    for incoming connections (e.g an RFCOMM server) must be started before registerService()
+    is called. Deregistration must happen in the reverse order.
+
+    QBluetoothServiceInfo is not a value type in the traditional sense. All copies of the same
+    service info object share the same data as they do not detach upon changing them. This
+    ensures that two copies can (de)register the same Bluetooth service.
+
 */
 
 /*!
@@ -139,8 +148,7 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 
 bool QBluetoothServiceInfo::isRegistered() const
 {
-    Q_D(const QBluetoothServiceInfo);
-    return d->isRegistered();
+    return d_ptr->isRegistered();
 }
 
 /*!
@@ -154,8 +162,7 @@ bool QBluetoothServiceInfo::isRegistered() const
 
 bool QBluetoothServiceInfo::registerService() const
 {
-    Q_D(const QBluetoothServiceInfo);
-    return d->registerService();
+    return d_ptr->registerService();
 }
 
 /*!
@@ -169,8 +176,7 @@ bool QBluetoothServiceInfo::registerService() const
 
 bool QBluetoothServiceInfo::unregisterService() const
 {
-    Q_D(const QBluetoothServiceInfo);
-    return d->unregisterService();
+    return d_ptr->unregisterService();
 }
 
 
@@ -324,19 +330,19 @@ bool QBluetoothServiceInfo::unregisterService() const
     Construct a new invalid QBluetoothServiceInfo;
 */
 QBluetoothServiceInfo::QBluetoothServiceInfo()
-: d_ptr(new QBluetoothServiceInfoPrivate)
+    : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>(new QBluetoothServiceInfoPrivate))
 {
-    d_ptr->q_ptr = this;
 }
 
 /*!
     Construct a new QBluetoothServiceInfo that is a copy of \a other.
+
+    The two copies continue to share the same underlying data which does not detach
+    upon write.
 */
 QBluetoothServiceInfo::QBluetoothServiceInfo(const QBluetoothServiceInfo &other)
-: d_ptr(new QBluetoothServiceInfoPrivate)
+    : d_ptr(other.d_ptr)
 {
-    d_ptr->q_ptr = this;
-    *this = other;
 }
 
 /*!
@@ -344,7 +350,6 @@ QBluetoothServiceInfo::QBluetoothServiceInfo(const QBluetoothServiceInfo &other)
 */
 QBluetoothServiceInfo::~QBluetoothServiceInfo()
 {
-    delete d_ptr;
 }
 
 /*!
@@ -354,9 +359,7 @@ QBluetoothServiceInfo::~QBluetoothServiceInfo()
 */
 bool QBluetoothServiceInfo::isValid() const
 {
-    Q_D(const QBluetoothServiceInfo);
-
-    return !d->attributes.isEmpty();
+    return !d_ptr->attributes.isEmpty();
 }
 
 /*!
@@ -366,9 +369,7 @@ bool QBluetoothServiceInfo::isValid() const
 */
 bool QBluetoothServiceInfo::isComplete() const
 {
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->attributes.keys().contains(ProtocolDescriptorList);
+    return d_ptr->attributes.keys().contains(ProtocolDescriptorList);
 }
 
 /*!
@@ -376,9 +377,7 @@ bool QBluetoothServiceInfo::isComplete() const
 */
 QBluetoothDeviceInfo QBluetoothServiceInfo::device() const
 {
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->deviceInfo;
+    return d_ptr->deviceInfo;
 }
 
 /*!
@@ -386,9 +385,7 @@ QBluetoothDeviceInfo QBluetoothServiceInfo::device() const
 */
 void QBluetoothServiceInfo::setDevice(const QBluetoothDeviceInfo &device)
 {
-    Q_D(QBluetoothServiceInfo);
-
-    d->deviceInfo = device;
+    d_ptr->deviceInfo = device;
 }
 
 /*!
@@ -401,15 +398,13 @@ void QBluetoothServiceInfo::setDevice(const QBluetoothDeviceInfo &device)
 */
 void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QVariant &value)
 {
-    Q_D(QBluetoothServiceInfo);
-
     if (value.type() == QVariant::List)
         qDebug() << "tried attribute with type QVariantList" << value;
 
-    d->attributes[attributeId] = value;
+    d_ptr->attributes[attributeId] = value;
 
     if (isRegistered())
-        d->setRegisteredAttribute(attributeId, value);
+        d_ptr->setRegisteredAttribute(attributeId, value);
 }
 
 /*!
@@ -417,9 +412,7 @@ void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QVariant &va
 */
 QVariant QBluetoothServiceInfo::attribute(quint16 attributeId) const
 {
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->attributes[attributeId];
+    return d_ptr->attributes.value(attributeId);
 }
 
 /*!
@@ -427,9 +420,7 @@ QVariant QBluetoothServiceInfo::attribute(quint16 attributeId) const
 */
 QList<quint16> QBluetoothServiceInfo::attributes() const
 {
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->attributes.keys();
+    return d_ptr->attributes.keys();
 }
 
 /*!
@@ -438,9 +429,7 @@ QList<quint16> QBluetoothServiceInfo::attributes() const
 */
 bool QBluetoothServiceInfo::contains(quint16 attributeId) const
 {
-    Q_D(const QBluetoothServiceInfo);
-
-    return d->attributes.contains(attributeId);
+    return d_ptr->attributes.contains(attributeId);
 }
 
 /*!
@@ -448,12 +437,10 @@ bool QBluetoothServiceInfo::contains(quint16 attributeId) const
 */
 void QBluetoothServiceInfo::removeAttribute(quint16 attributeId)
 {
-    Q_D(QBluetoothServiceInfo);
-
-    d->attributes.remove(attributeId);
+    d_ptr->attributes.remove(attributeId);
 
     if (isRegistered())
-        d->removeRegisteredAttribute(attributeId);
+        d_ptr->removeRegisteredAttribute(attributeId);
 }
 
 /*!
@@ -537,13 +524,11 @@ QBluetoothServiceInfo::Sequence QBluetoothServiceInfo::protocolDescriptor(QBluet
 
 /*!
     Makes a copy of the \a other and assigns it to this QBluetoothServiceInfo object.
+    The two copies continue to share the same service and registration details.
 */
 QBluetoothServiceInfo &QBluetoothServiceInfo::operator=(const QBluetoothServiceInfo &other)
 {
-    Q_D(QBluetoothServiceInfo);
-
-    d->attributes = other.d_func()->attributes;
-    d->deviceInfo = other.d_func()->deviceInfo;
+    d_ptr = other.d_ptr;
 
     return *this;
 }

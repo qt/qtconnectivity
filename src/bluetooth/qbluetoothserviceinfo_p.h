@@ -55,14 +55,9 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 class QBluetoothServiceInfo;
 
 class QBluetoothServiceInfoPrivate
-#ifdef QTM_QNX_BLUETOOTH
-: public QObject
+    : public QObject
 {
     Q_OBJECT
-#else
-{
-#endif
-    Q_DECLARE_PUBLIC(QBluetoothServiceInfo)
 public:
     QBluetoothServiceInfoPrivate();
     ~QBluetoothServiceInfoPrivate();
@@ -86,8 +81,6 @@ private:
 #endif
 
     mutable bool registered;
-
-    QBluetoothServiceInfo *q_ptr;
 };
 
 QT_END_NAMESPACE_BLUETOOTH

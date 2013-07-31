@@ -95,13 +95,55 @@ void tst_QBluetoothServiceInfo::initTestCase()
 void tst_QBluetoothServiceInfo::tst_construction()
 {
     const QString serviceName("My Service");
+    const QString alternateServiceName("Another ServiceName");
     const QBluetoothDeviceInfo deviceInfo(QBluetoothAddress("001122334455"), "Test Device", 0);
+    const QBluetoothDeviceInfo alternatedeviceInfo(QBluetoothAddress("554433221100"), "Test Device2", 0);
+
+    QList<QBluetoothUuid::ProtocolUuid> protUuids;
+    //list taken from qbluetoothuuid.h
+    protUuids << QBluetoothUuid::Sdp;
+    protUuids << QBluetoothUuid::Udp;
+    protUuids << QBluetoothUuid::Rfcomm;
+    protUuids << QBluetoothUuid::Tcp;
+    protUuids << QBluetoothUuid::TcsBin;
+    protUuids << QBluetoothUuid::TcsAt;
+    protUuids << QBluetoothUuid::Att;
+    protUuids << QBluetoothUuid::Obex;
+    protUuids << QBluetoothUuid::Ip;
+    protUuids << QBluetoothUuid::Ftp;
+    protUuids << QBluetoothUuid::Http;
+    protUuids << QBluetoothUuid::Wsp;
+    protUuids << QBluetoothUuid::Bnep;
+    protUuids << QBluetoothUuid::Upnp;
+    protUuids << QBluetoothUuid::Hidp;
+    protUuids << QBluetoothUuid::HardcopyControlChannel;
+    protUuids << QBluetoothUuid::HardcopyDataChannel;
+    protUuids << QBluetoothUuid::HardcopyNotification;
+    protUuids << QBluetoothUuid::Avctp;
+    protUuids << QBluetoothUuid::Avdtp;
+    protUuids << QBluetoothUuid::Cmtp;
+    protUuids << QBluetoothUuid::UdiCPlain;
+    protUuids << QBluetoothUuid::McapControlChannel;
+    protUuids << QBluetoothUuid::McapDataChannel;
+    protUuids << QBluetoothUuid::L2cap;
 
     {
         QBluetoothServiceInfo serviceInfo;
 
         QVERIFY(!serviceInfo.isValid());
         QVERIFY(!serviceInfo.isComplete());
+        QVERIFY(!serviceInfo.isRegistered());
+        QCOMPARE(serviceInfo.serviceName(), QString());
+        QCOMPARE(serviceInfo.serviceDescription(), QString());
+        QCOMPARE(serviceInfo.serviceProvider(), QString());
+        QCOMPARE(serviceInfo.serviceUuid(), QBluetoothUuid());
+        QCOMPARE(serviceInfo.serviceClassUuids().count(), 0);
+        QCOMPARE(serviceInfo.attributes().count(), 0);
+        QCOMPARE(serviceInfo.serverChannel(), -1);
+        QCOMPARE(serviceInfo.protocolServiceMultiplexer(), -1);
+
+        foreach (QBluetoothUuid::ProtocolUuid u, protUuids)
+            QCOMPARE(serviceInfo.protocolDescriptor(u).count(), 0);
     }
 
     {
@@ -110,6 +152,8 @@ void tst_QBluetoothServiceInfo::tst_construction()
         serviceInfo.setDevice(deviceInfo);
 
         QVERIFY(serviceInfo.isValid());
+        QVERIFY(!serviceInfo.isComplete());
+        QVERIFY(!serviceInfo.isRegistered());
 
         QCOMPARE(serviceInfo.serviceName(), serviceName);
         QCOMPARE(serviceInfo.device().address(), deviceInfo.address());
@@ -117,9 +161,25 @@ void tst_QBluetoothServiceInfo::tst_construction()
         QBluetoothServiceInfo copyInfo(serviceInfo);
 
         QVERIFY(copyInfo.isValid());
+        QVERIFY(!copyInfo.isComplete());
+        QVERIFY(!copyInfo.isRegistered());
 
         QCOMPARE(copyInfo.serviceName(), serviceName);
         QCOMPARE(copyInfo.device().address(), deviceInfo.address());
+
+
+        copyInfo.setAttribute(QBluetoothServiceInfo::ServiceName, alternateServiceName);
+        copyInfo.setDevice(alternatedeviceInfo);
+        QCOMPARE(copyInfo.serviceName(), alternateServiceName);
+        QCOMPARE(copyInfo.attribute(QBluetoothServiceInfo::ServiceName).toString(), alternateServiceName);
+        QCOMPARE(serviceInfo.serviceName(), alternateServiceName);
+        QCOMPARE(copyInfo.device().address(), alternatedeviceInfo.address());
+        QCOMPARE(serviceInfo.device().address(), alternatedeviceInfo.address());
+
+        foreach (QBluetoothUuid::ProtocolUuid u, protUuids)
+            QCOMPARE(serviceInfo.protocolDescriptor(u).count(), 0);
+        foreach (QBluetoothUuid::ProtocolUuid u, protUuids)
+            QCOMPARE(copyInfo.protocolDescriptor(u).count(), 0);
     }
 }
 
@@ -148,11 +208,15 @@ void tst_QBluetoothServiceInfo::tst_assignment()
     serviceInfo.setDevice(deviceInfo);
 
     QVERIFY(serviceInfo.isValid());
+    QVERIFY(!serviceInfo.isRegistered());
+    QVERIFY(!serviceInfo.isComplete());
 
     {
         QBluetoothServiceInfo copyInfo = serviceInfo;
 
         QVERIFY(copyInfo.isValid());
+        QVERIFY(!copyInfo.isRegistered());
+        QVERIFY(!copyInfo.isComplete());
 
         QCOMPARE(copyInfo.serviceName(), serviceName);
         QCOMPARE(copyInfo.device().address(), deviceInfo.address());
@@ -162,10 +226,14 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         QBluetoothServiceInfo copyInfo;
 
         QVERIFY(!copyInfo.isValid());
+        QVERIFY(!copyInfo.isRegistered());
+        QVERIFY(!copyInfo.isComplete());
 
         copyInfo = serviceInfo;
 
         QVERIFY(copyInfo.isValid());
+        QVERIFY(!copyInfo.isRegistered());
+        QVERIFY(!copyInfo.isComplete());
 
         QCOMPARE(copyInfo.serviceName(), serviceName);
         QCOMPARE(copyInfo.device().address(), deviceInfo.address());
@@ -176,12 +244,20 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         QBluetoothServiceInfo copyInfo2;
 
         QVERIFY(!copyInfo1.isValid());
+        QVERIFY(!copyInfo1.isRegistered());
+        QVERIFY(!copyInfo1.isComplete());
         QVERIFY(!copyInfo2.isValid());
+        QVERIFY(!copyInfo2.isRegistered());
+        QVERIFY(!copyInfo2.isComplete());
 
         copyInfo1 = copyInfo2 = serviceInfo;
 
         QVERIFY(copyInfo1.isValid());
+        QVERIFY(!copyInfo1.isRegistered());
+        QVERIFY(!copyInfo1.isComplete());
         QVERIFY(copyInfo2.isValid());
+        QVERIFY(!copyInfo2.isRegistered());
+        QVERIFY(!copyInfo2.isComplete());
 
         QCOMPARE(copyInfo1.serviceName(), serviceName);
         QCOMPARE(copyInfo2.serviceName(), serviceName);
@@ -192,7 +268,10 @@ void tst_QBluetoothServiceInfo::tst_assignment()
     {
         QBluetoothServiceInfo copyInfo;
         QVERIFY(!copyInfo.isValid());
+        QVERIFY(!copyInfo.isRegistered());
+        QVERIFY(!copyInfo.isComplete());
         copyInfo = serviceInfo;
+        QVERIFY(copyInfo.contains(QBluetoothServiceInfo::ServiceName));
 
         copyInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, QBluetoothUuid(uuid));
         QVERIFY(copyInfo.contains(QBluetoothServiceInfo::ProtocolDescriptorList));
@@ -237,9 +316,15 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         } else {
             QVERIFY(copyInfo.registerService());
             QVERIFY(copyInfo.isRegistered());
+            QVERIFY(serviceInfo.isRegistered());
+            QBluetoothServiceInfo secondCopy;
+            secondCopy = copyInfo;
+            QVERIFY(secondCopy.isRegistered());
 
-            QVERIFY(copyInfo.unregisterService());
+            QVERIFY(secondCopy.unregisterService());
             QVERIFY(!copyInfo.isRegistered());
+            QVERIFY(!secondCopy.isRegistered());
+            QVERIFY(!serviceInfo.isRegistered());
         }
     }
 }

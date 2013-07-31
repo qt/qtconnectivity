@@ -48,6 +48,7 @@
 
 #include <QtCore/QMetaType>
 #include <QtCore/QList>
+#include <QtCore/QSharedPointer>
 #include <QtCore/QVariant>
 
 #include <QtCore/QDebug>
@@ -151,10 +152,7 @@ protected:
     friend Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, const QBluetoothServiceInfo &);
 
 protected:
-    QBluetoothServiceInfoPrivate *d_ptr;
-
-private:
-    Q_DECLARE_PRIVATE(QBluetoothServiceInfo)
+    QSharedPointer<QBluetoothServiceInfoPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE_BLUETOOTH
