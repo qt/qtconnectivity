@@ -70,9 +70,9 @@ QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const Q
     //qsrand(QTime::currentTime().msec());
     //m_agent_path = agentPath;
     //m_agent_path.append(QString::fromLatin1("/%1").arg(qrand()));
-    ppsRegisterForEvent("opp_update", this);
-    ppsRegisterForEvent("opp_complete", this);
-    ppsRegisterForEvent("opp_cancelled", this);
+    ppsRegisterForEvent(QStringLiteral("opp_update"), this);
+    ppsRegisterForEvent(QStringLiteral("opp_complete"), this);
+    ppsRegisterForEvent(QStringLiteral("opp_cancelled"), this);
 
     QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
 }
@@ -138,7 +138,7 @@ void QBluetoothTransferReplyQnx::copyDone()
 void QBluetoothTransferReplyQnx::startOPP(QString filename)
 {
     qBBBluetoothDebug() << "Sending Push object command";
-    ppsSendOpp("push_object", filename.toUtf8(), m_address, this);
+    ppsSendOpp("push_object", filename.toUtf8(), request().address(), this);
 }
 
 QBluetoothTransferReply::TransferError QBluetoothTransferReplyQnx::error() const
@@ -188,7 +188,7 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
         if (!ok)
             return;
         qBBBluetoothDebug() << "opp update" << sentBytes << totalBytes;
-        Q_EMIT uploadProgress(sentBytes, totalBytes);
+        Q_EMIT transferProgress(sentBytes, totalBytes);
     } else if (result.msg == QStringLiteral("opp_complete")) {
         qBBBluetoothDebug() << "opp complete";
         m_finished = true;
