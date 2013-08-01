@@ -128,7 +128,7 @@ bool ppsReadRemoteDevice(int fd, pps_decoder_t *decoder, QBluetoothAddress *btAd
 
 void ppsRegisterForEvent(const QString &evt, QObject *obj);
 
-void ppsUnreguisterForEvent(const QString &evt, QObject *obj);
+void ppsUnregisterForEvent(const QString &evt, QObject *obj);
 
 QT_END_NAMESPACE_BLUETOOTH
 

@@ -220,6 +220,7 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 
   Set the \a pairing status with \a address.  The results are returned by the signal, pairingFinished().
+  On BlackBerry AuthorizedPaired is not possible and will have the same behavior as Paired.
   Caution: creating a pairing may take minutes, and may require the user to acknowledge.
 */
 

@@ -261,6 +261,7 @@ void ppsDecodeControlResponse()
         if (wMessage.second != 0)
             wMessage.second->metaObject()->invokeMethod(wMessage.second, "controlReply", Q_ARG(ppsResult, result));
     } else if (resType == EVENT) {
+        qBBBluetoothDebug() << "Distributing event" << result.msg;
         for (int i=0; i < evtRegistration.size(); i++) {
             if (result.msg == evtRegistration.at(i).first)
                 evtRegistration.at(i).second->metaObject()->invokeMethod(evtRegistration.at(i).second, "controlEvent", Q_ARG(ppsResult, result));
@@ -421,7 +422,7 @@ void ppsRegisterForEvent(const QString &evt, QObject *obj)
     evtRegistration.append(QPair<QString, QObject*>(evt,obj));
 }
 
-void ppsUnreguisterForEvent(const QString &str, QObject *obj)
+void ppsUnregisterForEvent(const QString &str, QObject *obj)
 {
     for (int i=evtRegistration.size()-1; i >= 0; --i) {
         if (evtRegistration.at(i).first == str && evtRegistration.at(i).second == obj)

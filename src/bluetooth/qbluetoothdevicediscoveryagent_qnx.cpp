@@ -59,8 +59,8 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
     if (pendingStart)
         stop();
 
-    ppsUnreguisterForEvent(QStringLiteral("device_added"), this);
-    ppsUnreguisterForEvent(QStringLiteral("device_search"), this);
+    ppsUnregisterForEvent(QStringLiteral("device_added"), this);
+    ppsUnregisterForEvent(QStringLiteral("device_search"), this);
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const

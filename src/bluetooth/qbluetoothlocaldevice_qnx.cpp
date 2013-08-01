@@ -49,14 +49,14 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
 :   QObject(parent)
 {
-    this->d_ptr = new QBluetoothLocalDevicePrivate();
+    this->d_ptr = new QBluetoothLocalDevicePrivate(this);
     this->d_ptr->isValidDevice = true; //assume single local device on QNX
 }
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent)
 : QObject(parent)
 {
-    this->d_ptr = new QBluetoothLocalDevicePrivate();
+    this->d_ptr = new QBluetoothLocalDevicePrivate(this);
 
     //works since we assume a single local device on QNX
     this->d_ptr->isValidDevice = (QBluetoothLocalDevicePrivate::address() == address);
@@ -104,9 +104,19 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
-    Q_UNUSED(pairing);
-    if (isValid())
-        ppsSendControlMessage("initiate_pairing", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), 0);
+    if (address.isNull()) {
+        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+                                  Q_ARG(QBluetoothLocalDevice::Error, QBluetoothLocalDevice::PairingError));
+        return;
+    }
+
+    const Pairing current_pairing = pairingStatus(address);
+    if (current_pairing == pairing) {
+        QMetaObject::invokeMethod(this, "pairingFinished", Qt::QueuedConnection, Q_ARG(QBluetoothAddress, address),
+                                  Q_ARG(QBluetoothLocalDevice::Pairing, pairing));
+        return;
+    }
+    d_ptr->requestPairing(address, pairing);
 }
 
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
@@ -125,16 +135,21 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
     Q_UNUSED(confirmation);
 }
 
-QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate()
+QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q)
+    : q_ptr(q)
 {
     ppsRegisterControl();
     ppsRegisterForEvent(QStringLiteral("access_changed"), this);
+    ppsRegisterForEvent(QStringLiteral("pairing_complete"), this);
+    ppsRegisterForEvent(QStringLiteral("device_deleted"), this);
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
     ppsUnregisterControl(this);
-    ppsUnreguisterForEvent(QStringLiteral("access_changed"), this);
+    ppsUnregisterForEvent(QStringLiteral("access_changed"), this);
+    ppsUnregisterForEvent(QStringLiteral("pairing_complete"), this);
+    ppsUnregisterForEvent(QStringLiteral("device_deleted"), this);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
@@ -192,6 +207,19 @@ void QBluetoothLocalDevicePrivate::setHostMode(QBluetoothLocalDevice::HostMode m
         setAccess(2);
     }
 }
+
+void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &address,
+                                                  QBluetoothLocalDevice::Pairing pairing)
+{
+    if (pairing == QBluetoothLocalDevice::Paired || pairing == QBluetoothLocalDevice::AuthorizedPaired) {
+        ppsSendControlMessage("initiate_pairing", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()),
+                          this);
+    } else {
+        ppsSendControlMessage("remove_device", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()),
+                          this);
+    }
+}
+
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevicePrivate::hostMode() const
 {
     if (!isValid())
@@ -229,17 +257,44 @@ void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
     qBBBluetoothDebug() << Q_FUNC_INFO << result.msg << result.dat;
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
-        q_ptr->error(QBluetoothLocalDevice::UnknownError);
+        if (result.msg == QStringLiteral("initiate_pairing"))
+            q_ptr->error(QBluetoothLocalDevice::PairingError);
+        else
+            q_ptr->error(QBluetoothLocalDevice::UnknownError);
     }
 }
 
 void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
 {
+    qBBBluetoothDebug() << Q_FUNC_INFO << "Control Event" << result.msg;
     if (result.msg == QStringLiteral("access_changed")) {
         if (__newHostMode == -1 && result.dat.size() > 1 &&
                 result.dat.first() == QStringLiteral("level")) {
-            qBBBluetoothDebug() << "New Host mode" << hostMode();
-            Q_EMIT q_ptr->hostModeStateChanged(hostMode());
+            QBluetoothLocalDevice::HostMode newHostMode = hostMode();
+            qBBBluetoothDebug() << "New Host mode" << newHostMode;
+            Q_EMIT q_ptr->hostModeStateChanged(newHostMode);
+        }
+    } else if (result.msg == QStringLiteral("pairing_complete")) {
+        qBBBluetoothDebug() << "pairing completed";
+        if (result.dat.contains(QStringLiteral("addr"))) {
+            const QBluetoothAddress address = QBluetoothAddress(
+                        result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1));
+
+            QBluetoothLocalDevice::Pairing pairingStatus = QBluetoothLocalDevice::Paired;
+
+            if (result.dat.contains(QStringLiteral("trusted")) &&
+                    result.dat.at(result.dat.indexOf(QStringLiteral("trusted")) + 1) == QStringLiteral("true")) {
+                pairingStatus = QBluetoothLocalDevice::AuthorizedPaired;
+            }
+            qBBBluetoothDebug() << "pairing completed" << address.toString();
+            Q_EMIT q_ptr->pairingFinished(address, pairingStatus);
+        }
+    } else if (result.msg == QStringLiteral("device_deleted")) {
+        qBBBluetoothDebug() << "device deleted";
+        if (result.dat.contains(QStringLiteral("addr"))) {
+            const QBluetoothAddress address = QBluetoothAddress(
+                        result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1));
+            Q_EMIT q_ptr->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
         }
     }
 }

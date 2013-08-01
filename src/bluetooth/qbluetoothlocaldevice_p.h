@@ -119,7 +119,7 @@ class QBluetoothLocalDevicePrivate : public QObject
     Q_OBJECT
     Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
 public:
-    QBluetoothLocalDevicePrivate();
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *);
     ~QBluetoothLocalDevicePrivate();
 
     static QString name();
@@ -130,6 +130,8 @@ public:
 
     void setHostMode(QBluetoothLocalDevice::HostMode mode);
     QBluetoothLocalDevice::HostMode hostMode() const;
+
+    void requestPairing(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 
     void setAccess(int);
 
