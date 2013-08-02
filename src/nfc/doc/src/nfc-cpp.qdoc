@@ -28,6 +28,7 @@
 
 \module QtNfc
 \ingroup modules
+\qtvariable nfc
 
 \title Qt NFC C++ Classes
 \brief An API for accessing NFC Forum Tags and communication with NFC Forum Devices.

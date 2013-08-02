@@ -32,6 +32,7 @@
 \brief An API enabling basic Bluetooth operations like scanning for devices
 and connecting them.
 \ingroup modules
+\qtvariable bluetooth
 
 
     The \l{Qt Bluetooth} C++ API enables an application to scan for devices and
