@@ -60,10 +60,8 @@ class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
     Q_OBJECT    
     Q_DECLARE_PRIVATE(QBluetoothSocket)
 
-    friend class QRfcommServer;
-    friend class QRfcommServerPrivate;
-    friend class QL2capServer;
-    friend class QL2capServerPrivate;
+    friend class QBluetoothServer;
+    friend class QBluetoothServerPrivate;
 
 public:
     enum SocketType {

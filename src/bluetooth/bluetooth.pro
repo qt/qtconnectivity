@@ -17,8 +17,7 @@ PUBLIC_HEADERS += \
     qbluetoothdevicediscoveryagent.h\
     qbluetoothservicediscoveryagent.h\
     qbluetoothsocket.h\
-    qrfcommserver.h \
-    ql2capserver.h \
+    qbluetoothserver.h \
     qbluetooth.h \
     qbluetoothlocaldevice.h \
     qbluetoothtransfermanager.h \
@@ -33,8 +32,7 @@ PRIVATE_HEADERS += \
     qbluetoothdevicediscoveryagent_p.h\
     qbluetoothservicediscoveryagent_p.h\
     qbluetoothsocket_p.h\
-    qrfcommserver_p.h \
-    ql2capserver_p.h \
+    qbluetoothserver_p.h\
     qbluetoothtransferreply_p.h \
     qbluetoothtransferrequest_p.h \
     qprivatelinearbuffer_p.h \
@@ -49,8 +47,7 @@ SOURCES += \
     qbluetoothdevicediscoveryagent.cpp\
     qbluetoothservicediscoveryagent.cpp\
     qbluetoothsocket.cpp\
-    qrfcommserver.cpp \
-    ql2capserver.cpp \
+    qbluetoothserver.cpp \
     qbluetoothlocaldevice.cpp \
     qbluetooth.cpp \
     qbluetoothtransfermanager.cpp \
@@ -71,11 +68,10 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothdevicediscoveryagent_bluez.cpp\
         qbluetoothservicediscoveryagent_bluez.cpp \
         qbluetoothsocket_bluez.cpp \
-        qrfcommserver_bluez.cpp \
+        qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
         qbluetoothtransferreply_bluez.cpp \
-        qbluetoothtransfermanager_bluez.cpp \
-        ql2capserver_bluez.cpp
+        qbluetoothtransfermanager_bluez.cpp
 
 } else:qnx{
     DEFINES += QT_QNX_BLUETOOTH #BT_BBPPSDEBUG
@@ -91,8 +87,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_qnx.cpp \
         qbluetoothservicediscoveryagent_qnx.cpp \
         qbluetoothsocket_qnx.cpp \
-        ql2capserver_p.cpp \
-        qrfcommserver_qnx.cpp \
+        qbluetoothserver_qnx.cpp \
         qbluetoothtransfermanager_qnx.cpp \
         qbluetoothtransferreply_qnx.cpp
 
@@ -105,8 +100,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
-        ql2capserver_p.cpp \
-        qrfcommserver_p.cpp \
+        qbluetoothserver_p.cpp \
         qbluetoothtransfermanager_p.cpp
 
 }

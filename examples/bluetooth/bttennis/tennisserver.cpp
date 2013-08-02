@@ -42,7 +42,7 @@
 #include "tennisserver.h"
 #include "tennis.h"
 
-#include <ql2capserver.h>
+#include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
 
 #include <QDebug>
@@ -74,7 +74,7 @@ void TennisServer::startServer()
         return;
 
     //! [Create the server]
-    l2capServer = new QL2capServer(this);
+    l2capServer = new QBluetoothServer(QBluetoothServer::L2capServer, this);
     connect(l2capServer, SIGNAL(newConnection()), this, SLOT(clientConnected()));
     l2capServer->listen();
     //! [Create the server]

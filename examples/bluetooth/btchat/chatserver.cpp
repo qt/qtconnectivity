@@ -40,7 +40,7 @@
 
 #include "chatserver.h"
 
-#include <qrfcommserver.h>
+#include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
 
 //! [Service UUID]
@@ -63,7 +63,7 @@ void ChatServer::startServer()
         return;
 
     //! [Create the server]
-    rfcommServer = new QRfcommServer(this);
+    rfcommServer = new QBluetoothServer(QBluetoothServer::RfcommServer, this);
     connect(rfcommServer, SIGNAL(newConnection()), this, SLOT(clientConnected()));
     rfcommServer->listen();
     //! [Create the server]

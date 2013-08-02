@@ -39,73 +39,77 @@
 **
 ****************************************************************************/
 
-#include "ql2capserver.h"
-#include "ql2capserver_p.h"
-#include "qbluetoothsocket.h"
+#ifndef QBLUETOOTHSERVER_P_H
+#define QBLUETOOTHSERVER_P_H
+
+#include <QtGlobal>
+#include <QList>
+#include <QtBluetooth/QBluetoothSocket>
+#include "qbluetoothserver.h"
+#include "qbluetooth.h"
+
+#ifdef QT_QNX_BLUETOOTH
+#include "qnx/ppshelpers_p.h"
+#endif
+
+#ifdef QT_BLUEZ_BLUETOOTH
+QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
+#endif
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-QL2capServerPrivate::QL2capServerPrivate()
+class QBluetoothAddress;
+class QBluetoothSocket;
+
+class QBluetoothServer;
+
+class QBluetoothServerPrivate
+#ifdef QT_QNX_BLUETOOTH
+: public QObject
 {
-}
-
-QL2capServerPrivate::~QL2capServerPrivate()
+    Q_OBJECT
+#else
 {
-}
+#endif
+    Q_DECLARE_PUBLIC(QBluetoothServer)
 
-void QL2capServer::close()
-{
-}
-
-bool QL2capServer::listen(const QBluetoothAddress &address, quint16 port)
-{
-    Q_UNUSED(address);
-    Q_UNUSED(port);
-
-    return false;
-}
-
-void QL2capServer::setMaxPendingConnections(int numConnections)
-{
-    Q_UNUSED(numConnections);
-}
-
-bool QL2capServer::hasPendingConnections() const
-{
-    return false;
-}
-
-QBluetoothSocket *QL2capServer::nextPendingConnection()
-{
-    return 0;
-}
-
-QBluetoothAddress QL2capServer::serverAddress() const
-{
-    return QBluetoothAddress();
-}
-
-quint16 QL2capServer::serverPort() const
-{
-    return 0;
-}
-
-void QL2capServer::setSecurityFlags(QBluetooth::SecurityFlags security)
-{
-    Q_UNUSED(security);
-}
-
-QBluetooth::SecurityFlags QL2capServer::securityFlags() const
-{
-    return QBluetooth::NoSecurity;
-}
-
-
+public:
+    QBluetoothServerPrivate(QBluetoothServer::ServerType serverType);
+    ~QBluetoothServerPrivate();
 
 #ifdef QT_BLUEZ_BLUETOOTH
-void QL2capServerPrivate::_q_newConnection()
-{
-}
+    void _q_newConnection();
 #endif
 
+public:
+    QBluetoothSocket *socket;
+
+    int maxPendingConnections;
+    QBluetooth::SecurityFlags securityFlags;
+    QBluetoothServer::ServerType serverType;
+
+#ifdef QT_QNX_BLUETOOTH
+    QList<QBluetoothSocket *> activeSockets;
+    QString m_serviceName;
+#endif
+
+protected:
+    QBluetoothServer *q_ptr;
+
+private:
+#ifdef QT_QNX_BLUETOOTH
+    QBluetoothUuid m_uuid;
+    bool serverRegistered;
+    QString nextClientAddress;
+
+private Q_SLOTS:
+    void controlReply(ppsResult result);
+    void controlEvent(ppsResult result);
+#elif defined(QT_BLUEZ_BLUETOOTH)
+    QSocketNotifier *socketNotifier;
+#endif
+};
+
 QT_END_NAMESPACE_BLUETOOTH
+
+#endif

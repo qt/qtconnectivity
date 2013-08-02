@@ -44,8 +44,7 @@
 #include <qbluetoothdeviceinfo.h>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QBluetoothAddress>
-#include <ql2capserver.h>
-#include <qrfcommserver.h>
+#include <QtBluetooth/QBluetoothServer>
 
 #include <QObject>
 
@@ -347,25 +346,23 @@ bool QDeclarativeBluetoothService::isRegistered() const
 
 int QDeclarativeBluetoothServicePrivate::listen() {
 
+    if (m_protocol != "l2cap" && m_protocol != "rfcomm") {
+        qDebug() << "Unknown protocol, can't make service" << m_protocol;
+        return -1;
+    }
+    QBluetoothServer::ServerType serverType;
     if (m_protocol == "l2cap") {
-        QL2capServer *server = new QL2capServer();
-
-        server->setMaxPendingConnections(1);
-        server->listen(QBluetoothAddress(), m_port);
-        m_port = server->serverPort();
-        m_listen = server;
+        serverType = QBluetoothServer::L2capServer;
     }
     else if (m_protocol == "rfcomm") {
-        QRfcommServer *server = new QRfcommServer();
+        serverType = QBluetoothServer::RfcommServer;
+    }
 
-        server->setMaxPendingConnections(1);
-        server->listen(QBluetoothAddress(), m_port);
-        m_port = server->serverPort();
-        m_listen = server;
-    }
-    else {
-        qDebug() << "Unknown protocol, can't make service" << m_protocol;
-    }
+    QBluetoothServer *server = new QBluetoothServer(serverType);
+    server->setMaxPendingConnections(1);
+    server->listen(QBluetoothAddress(), m_port);
+    m_port = server->serverPort();
+    m_listen = server;
 
     return m_port;
 
@@ -459,22 +456,11 @@ void QDeclarativeBluetoothService::new_connection()
 
 QDeclarativeBluetoothSocket *QDeclarativeBluetoothService::nextClient()
 {
-    QL2capServer *server = qobject_cast<QL2capServer *>(d->m_listen);
+    QBluetoothServer *server = qobject_cast<QBluetoothServer *>(d->m_listen);
     if (server) {
         if (server->hasPendingConnections()) {
             QBluetoothSocket *socket = server->nextPendingConnection();
             return new QDeclarativeBluetoothSocket(socket, this, 0x0);
-        }
-        else {
-            qDebug() << "Socket has no pending connection, failing";
-            return 0x0;
-        }
-    }
-    QRfcommServer *rserver = qobject_cast<QRfcommServer *>(d->m_listen);
-    if (rserver) {
-        if (rserver->hasPendingConnections()) {
-            QBluetoothSocket *socket = rserver->nextPendingConnection();
-            return new QDeclarativeBluetoothSocket(socket, this, 0x0);;
         }
         else {
             qDebug() << "Socket has no pending connection, failing";
@@ -486,22 +472,10 @@ QDeclarativeBluetoothSocket *QDeclarativeBluetoothService::nextClient()
 
 void QDeclarativeBluetoothService::assignNextClient(QDeclarativeBluetoothSocket *dbs)
 {
-    QL2capServer *server = qobject_cast<QL2capServer *>(d->m_listen);
+    QBluetoothServer *server = qobject_cast<QBluetoothServer *>(d->m_listen);
     if (server) {
         if (server->hasPendingConnections()) {
             QBluetoothSocket *socket = server->nextPendingConnection();
-            dbs->newSocket(socket, this);
-            return;
-        }
-        else {
-            qDebug() << "Socket has no pending connection, failing";
-            return;
-        }
-    }
-    QRfcommServer *rserver = qobject_cast<QRfcommServer *>(d->m_listen);
-    if (rserver) {
-        if (rserver->hasPendingConnections()) {
-            QBluetoothSocket *socket = rserver->nextPendingConnection();
             dbs->newSocket(socket, this);
             return;
         }

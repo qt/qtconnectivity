@@ -43,7 +43,7 @@
 
 #include <QDebug>
 
-#include <ql2capserver.h>
+#include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
 
 QT_USE_NAMESPACE_BLUETOOTH
@@ -94,7 +94,7 @@ void tst_QL2capServer::initTestCase()
 void tst_QL2capServer::tst_construction()
 {
     {
-        QL2capServer server;
+        QBluetoothServer server(QBluetoothServer::L2capServer);
 
         QVERIFY(!server.isListening());
         QCOMPARE(server.maxPendingConnections(), 1);
@@ -122,7 +122,7 @@ void tst_QL2capServer::tst_listen()
     QFETCH(quint16, port);
 
     {
-        QL2capServer server;
+        QBluetoothServer server(QBluetoothServer::L2capServer);
 
         bool result = server.listen(address, port);
 
@@ -169,7 +169,7 @@ void tst_QL2capServer::tst_pendingConnections()
     QFETCH(int, maxConnections);
 
     {
-        QL2capServer server;
+        QBluetoothServer server(QBluetoothServer::L2capServer);
 
         server.setMaxPendingConnections(maxConnections);
 
@@ -235,7 +235,7 @@ void tst_QL2capServer::tst_receive()
 {
     QFETCH(QByteArray, expected);
 
-    QL2capServer server;
+    QBluetoothServer server(QBluetoothServer::L2capServer);
 
     bool result = server.listen();
 
@@ -273,7 +273,7 @@ void tst_QL2capServer::tst_receive()
 
 void tst_QL2capServer::tst_secureFlags()
 {
-    QL2capServer server;
+    QBluetoothServer server(QBluetoothServer::L2capServer);
     QCOMPARE(server.securityFlags(), QBluetooth::NoSecurity);
 
     server.setSecurityFlags(QBluetooth::Encryption);

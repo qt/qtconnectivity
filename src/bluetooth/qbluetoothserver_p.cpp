@@ -39,62 +39,65 @@
 **
 ****************************************************************************/
 
-#ifndef QL2CAPSERVER_H
-#define QL2CAPSERVER_H
-
-#include <QtBluetooth/qbluetoothglobal.h>
-
-#include <QObject>
-
-#include <QtBluetooth/QBluetoothAddress>
-#include <QtBluetooth/qbluetooth.h>
-#include <QtBluetooth/QBluetoothSocket>
+#include "qbluetoothserver.h"
+#include "qbluetoothserver_p.h"
+#include "qbluetoothsocket.h"
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-class QL2capServerPrivate;
-class QBluetoothSocket;
-
-class Q_BLUETOOTH_EXPORT QL2capServer : public QObject
+QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
+    : serverType(sType)
 {
-    Q_OBJECT
+}
 
-public:
-    QL2capServer(QObject *parent = 0);
-    ~QL2capServer();
+QBluetoothServerPrivate::~QBluetoothServerPrivate()
+{
+}
 
-    void close();
+void QBluetoothServer::close()
+{
+}
 
-    bool listen(const QBluetoothAddress &address = QBluetoothAddress(), quint16 port = 0);
-    bool isListening() const;
+bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
+{
+    Q_UNUSED(address);
+    Q_UNUSED(port);
+    return false;
+}
 
-    void setMaxPendingConnections(int numConnections);
-    int maxPendingConnections() const;
+void QBluetoothServer::setMaxPendingConnections(int numConnections)
+{
+    Q_UNUSED(numConnections);
+}
 
-    bool hasPendingConnections() const;
-    QBluetoothSocket *nextPendingConnection();
+bool QBluetoothServer::hasPendingConnections() const
+{
+    return false;
+}
 
-    QBluetoothAddress serverAddress() const;
-    quint16 serverPort() const;
+QBluetoothSocket *QBluetoothServer::nextPendingConnection()
+{
+    return 0;
+}
 
-    void setSecurityFlags(QBluetooth::SecurityFlags security);
-    QBluetooth::SecurityFlags securityFlags() const;
+QBluetoothAddress QBluetoothServer::serverAddress() const
+{
+    return QBluetoothAddress();
+}
 
-Q_SIGNALS:
-    void newConnection();
+quint16 QBluetoothServer::serverPort() const
+{
+    return 0;
+}
 
-protected:
-    QL2capServerPrivate *d_ptr;
+void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
+{
+    Q_UNUSED(security);
+}
 
-private:
-    Q_DECLARE_PRIVATE(QL2capServer)
-
-#ifdef QT_BLUEZ_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_newConnection())
-#endif
-
-};
+QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
+{
+    return QBluetooth::NoSecurity;
+}
 
 QT_END_NAMESPACE_BLUETOOTH
-
-#endif

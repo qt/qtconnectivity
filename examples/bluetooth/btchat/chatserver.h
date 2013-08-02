@@ -47,7 +47,7 @@
 #include <QtCore/QList>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
-class QRfcommServer;
+class QBluetoothServer;
 class QBluetoothSocket;
 QT_END_NAMESPACE_BLUETOOTH
 
@@ -79,7 +79,7 @@ private slots:
     void readSocket();
 
 private:
-    QRfcommServer *rfcommServer;
+    QBluetoothServer *rfcommServer;
     QBluetoothServiceInfo serviceInfo;
     QList<QBluetoothSocket *> clientSockets;
 };

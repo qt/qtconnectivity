@@ -44,7 +44,7 @@
 #include "chatclient.h"
 
 #include <qbluetoothuuid.h>
-#include <qrfcommserver.h>
+#include <qbluetoothserver.h>
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothdeviceinfo.h>
 #include <qbluetoothlocaldevice.h>

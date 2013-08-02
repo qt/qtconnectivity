@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
     \class QBluetoothSocket
     \inmodule QtBluetooth
     \brief The QBluetoothSocket class enables connection to a Bluetooth device
-    running an RFCOMM server.
+    running a bluetooth server.
 
     QBluetoothSocket supports two socket types, \l {QBluetoothSocket::L2capSocket}{L2CAP} and
     \l {QBluetoothSocket::RfcommSocket}{RFCOMM}.

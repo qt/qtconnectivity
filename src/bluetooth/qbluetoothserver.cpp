@@ -39,20 +39,20 @@
 **
 ****************************************************************************/
 
-#include "qrfcommserver.h"
-#include "qrfcommserver_p.h"
+#include "qbluetoothserver.h"
+#include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
 #include "qbluetoothserviceinfo.h"
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
 /*!
-    \class QRfcommServer
+    \class QBluetoothServer
     \inmodule QtBluetooth
-    \brief The QRfcommServer class uses the RFCOMM protocol to communicate with
+    \brief The QBluetoothServer class uses the RFCOMM or L2cap protocol to communicate with
     a Bluetooth device.
 
-    QRfcommServer is used to implement Bluetooth services over RFCOMM.
+    QBluetoothServer is used to implement Bluetooth services over RFCOMM or L2cap.
 
     Start listening for incoming connections with listen(). Wait till the newConnection() signal
     is emitted when a new connection is established, and call nextPendingConnection() to get a QBluetoothSocket
@@ -60,13 +60,22 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 
     To enable other devices to find your service, create a QBluetoothServiceInfo with the
     applicable attributes for your service and register it using QBluetoothServiceInfo::registerService().
-    Call serverPort() to get the RFCOMM channel number that is being used.
+    Call serverPort() to get the channel number that is being used.
 
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
 
 /*!
-    \fn void QRfcommServer::newConnection()
+    \enum QBluetoothServer::ServerType
+
+    This enum describes the Bluetooth server type.
+
+    \value L2capServer          L2CAP server.
+    \value RfcommServer         RFCOMM server.
+*/
+
+/*!
+    \fn void QBluetoothServer::newConnection()
 
     This signal is emitted when a new connection is available.
 
@@ -77,24 +86,24 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 */
 
 /*!
-    \fn void QRfcommServer::close()
+    \fn void QBluetoothServer::close()
 
     Closes and resets the listening socket.
 */
 
 /*!
-    \fn bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
+    \fn bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
     Start listening for incoming connections to \a address on \a port.
 
-    Returns true if the operation succeeded and the RFCOMM server is listening for
+    Returns true if the operation succeeded and the server is listening for
     incoming connections, otherwise returns false.
 
     \sa isListening(), newConnection()
 */
 
 /*!
-    \fn void QRfcommServer::setMaxPendingConnections(int numConnections)
+    \fn void QBluetoothServer::setMaxPendingConnections(int numConnections)
 
     Sets the maximum number of pending connections to \a numConnections.
 
@@ -102,48 +111,48 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 */
 
 /*!
-    \fn bool QRfcommServer::hasPendingConnections() const
+    \fn bool QBluetoothServer::hasPendingConnections() const
     Returns true if a connection is pending, otherwise false.
 */
 
 /*!
-    \fn QBluetoothSocket *QRfcommServer::nextPendingConnection()
+    \fn QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 
-    Returns a pointer QBluetoothSocket for the next pending connection. It is the callers
-    responsibility to delete pointer.
+    Returns a pointer to aQBluetoothSocket for the next pending connection. It is the callers
+    responsibility to delete the pointer.
 */
 
 /*!
-    \fn QBluetoothAddress QRfcommServer::serverAddress() const
+    \fn QBluetoothAddress QBluetoothServer::serverAddress() const
 
     Returns the server address.
 */
 
 /*!
-    \fn quint16 QRfcommServer::serverPort() const
+    \fn quint16 QBluetoothServer::serverPort() const
 
     Returns the server port number.
 */
 
 /*!
-    Constructs an RFCOMM server with \a parent.
+    Constructs a bluetooth server with \a parent and a ServerType.
 */
-QRfcommServer::QRfcommServer(QObject *parent)
-    : QObject(parent), d_ptr(new QRfcommServerPrivate)
+QBluetoothServer::QBluetoothServer(ServerType serverType, QObject *parent)
+    : QObject(parent), d_ptr(new QBluetoothServerPrivate(serverType))
 {
     d_ptr->q_ptr = this;
 }
 
 /*!
-    Destroys the RFCOMM server.
+    Destroys the bluetooth server.
 */
-QRfcommServer::~QRfcommServer()
+QBluetoothServer::~QBluetoothServer()
 {
     delete d_ptr;
 }
 
 /*!
-    \fn QBluetoothServiceInfo QRfcommServer::listen(const QBluetoothUuid &uuid, const QString &serviceName)
+    \fn QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const QString &serviceName)
 
     Convenience function for registering an SPP service with \a uuid and \a serviceName.
     Because this function already registers the service, the QBluetoothServiceInfo object
@@ -152,14 +161,17 @@ QRfcommServer::~QRfcommServer()
     Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
     invalid QBluetoothServiceInfo.
 
-    This function is equivalent to following code snippet.
+    For an RFCOMM server this function is equivalent to following code snippet.
 
-    \snippet qrfcommserver.cpp listen
+    \snippet qbluetoothserver.cpp listen
+    \snippet qbluetoothserver.cpp listen2
+    \snippet qbluetoothserver.cpp listen3
 
     \sa isListening(), newConnection(), listen()
 */
-QBluetoothServiceInfo QRfcommServer::listen(const QBluetoothUuid &uuid, const QString &serviceName)
+QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const QString &serviceName)
 {
+    Q_D(const QBluetoothServer);
     if (!listen())
         return QBluetoothServiceInfo();
 //! [listen]
@@ -181,24 +193,30 @@ QBluetoothServiceInfo QRfcommServer::listen(const QBluetoothUuid &uuid, const QS
     protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
     protocolDescriptorList.append(QVariant::fromValue(protocol));
     protocol.clear();
+//! [listen]
+    if (d->serverType == RfcommServer) {
+//! [listen2]
     protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
              << QVariant::fromValue(quint8(serverPort()));
+//! [listen2]
+    }
+//! [listen3]
     protocolDescriptorList.append(QVariant::fromValue(protocol));
     serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                              protocolDescriptorList);
     bool result = serviceInfo.registerService();
-//! [listen]
+//! [listen3]
     if (!result)
         return QBluetoothServiceInfo();
     return serviceInfo;
 }
 
 /*!
-    Returns true if the RFCOMM server is listening for incoming connections, otherwise false.
+    Returns true if the server is listening for incoming connections, otherwise false.
 */
-bool QRfcommServer::isListening() const
+bool QBluetoothServer::isListening() const
 {
-    Q_D(const QRfcommServer);
+    Q_D(const QBluetoothServer);
 
 #ifdef QT_QNX_BLUETOOTH
     if (!d->socket)
@@ -213,23 +231,23 @@ bool QRfcommServer::isListening() const
 
     \sa setMaxPendingConnections()
 */
-int QRfcommServer::maxPendingConnections() const
+int QBluetoothServer::maxPendingConnections() const
 {
-    Q_D(const QRfcommServer);
+    Q_D(const QBluetoothServer);
 
     return d->maxPendingConnections;
 }
 
 /*!
-    \fn QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
+    \fn QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
     Sets the Bluetooth security flags to \a security. This function must be called before calling listen().
 */
 
 /*!
-    \fn QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
+    \fn QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
     Returns the Bluetooth security flags.
 */
 
-#include "moc_qrfcommserver.cpp"
+#include "moc_qbluetoothserver.cpp"
 
 QT_END_NAMESPACE_BLUETOOTH

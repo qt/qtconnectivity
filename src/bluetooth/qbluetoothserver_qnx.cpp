@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qrfcommserver.h"
-#include "qrfcommserver_p.h"
+#include "qbluetoothserver.h"
+#include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
 #include "qbluetoothsocket_p.h"
 #include "qbluetoothlocaldevice.h"
@@ -51,25 +51,25 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-extern QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
+extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
-QRfcommServerPrivate::QRfcommServerPrivate()
-    : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
+QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
+    : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity), serverType(sType)
 {
     ppsRegisterControl();
 }
 
-QRfcommServerPrivate::~QRfcommServerPrivate()
+QBluetoothServerPrivate::~QBluetoothServerPrivate()
 {
-    Q_Q(QRfcommServer);
+    Q_Q(QBluetoothServer);
     q->close();
     __fakeServerPorts.remove(this);
     ppsUnregisterControl(this);
 }
 
-void QRfcommServerPrivate::controlReply(ppsResult result)
+void QBluetoothServerPrivate::controlReply(ppsResult result)
 {
-    Q_Q(QRfcommServer);
+    Q_Q(QBluetoothServer);
 
     if (result.msg == QStringLiteral("register_server")) {
         qBBBluetoothDebug() << "SPP: Server registration succesfull";
@@ -95,7 +95,7 @@ void QRfcommServerPrivate::controlReply(ppsResult result)
     }
 }
 
-void QRfcommServerPrivate::controlEvent(ppsResult result)
+void QBluetoothServerPrivate::controlEvent(ppsResult result)
 {
     if (result.msg == QStringLiteral("service_connected")) {
         qBBBluetoothDebug() << "SPP: Server: Sending request for mount point path";
@@ -118,9 +118,9 @@ void QRfcommServerPrivate::controlEvent(ppsResult result)
     }
 }
 
-void QRfcommServer::close()
+void QBluetoothServer::close()
 {
-    Q_D(QRfcommServer);
+    Q_D(QBluetoothServer);
     if (!d->socket) {
         // there is no way to propagate the error to user
         // so just ignore the problem ;)
@@ -134,10 +134,10 @@ void QRfcommServer::close()
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
+bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_UNUSED(address)
-    Q_D(QRfcommServer);
+    Q_D(QBluetoothServer);
     // listen has already been called before
     if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
         return true;
@@ -170,52 +170,52 @@ bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
     return true;
 }
 
-void QRfcommServer::setMaxPendingConnections(int numConnections)
+void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
-    Q_D(QRfcommServer);
+    Q_D(QBluetoothServer);
     d->maxPendingConnections = numConnections; //Currently not used
 }
 
-QBluetoothAddress QRfcommServer::serverAddress() const
+QBluetoothAddress QBluetoothServer::serverAddress() const
 {
-    Q_D(const QRfcommServer);
+    Q_D(const QBluetoothServer);
     if (d->socket)
         return d->socket->localAddress();
     else
         return QBluetoothAddress();
 }
 
-quint16 QRfcommServer::serverPort() const
+quint16 QBluetoothServer::serverPort() const
 {
     //Currently we do not have access to the port
-    Q_D(const QRfcommServer);
-    return __fakeServerPorts.value((QRfcommServerPrivate*)d);
+    Q_D(const QBluetoothServer);
+    return __fakeServerPorts.value((QBluetoothServerPrivate*)d);
 }
 
-bool QRfcommServer::hasPendingConnections() const
+bool QBluetoothServer::hasPendingConnections() const
 {
-    Q_D(const QRfcommServer);
+    Q_D(const QBluetoothServer);
     return !d->activeSockets.isEmpty();
 }
 
-QBluetoothSocket *QRfcommServer::nextPendingConnection()
+QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 {
-    Q_D(QRfcommServer);
+    Q_D(QBluetoothServer);
     if (d->activeSockets.isEmpty())
         return 0;
 
     return d->activeSockets.takeFirst();
 }
 
-void QRfcommServer::setSecurityFlags(QBluetooth::SecurityFlags security)
+void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
-    Q_D(QRfcommServer);
+    Q_D(QBluetoothServer);
     d->securityFlags = security; //not used
 }
 
-QBluetooth::SecurityFlags QRfcommServer::securityFlags() const
+QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
 {
-    Q_D(const QRfcommServer);
+    Q_D(const QBluetoothServer);
     return d->securityFlags; //not used
 }
 

@@ -42,8 +42,8 @@
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothserviceinfo_p.h"
 
-#include "qrfcommserver_p.h"
-#include "qrfcommserver.h"
+#include "qbluetoothserver_p.h"
+#include "qbluetoothserver.h"
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
@@ -84,7 +84,7 @@ void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId
     registered = false;
 }
 
-extern QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
+extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
 bool QBluetoothServiceInfoPrivate::registerService() const
 {

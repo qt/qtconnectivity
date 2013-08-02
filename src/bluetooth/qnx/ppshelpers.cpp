@@ -42,7 +42,7 @@
 #include "ppshelpers_p.h"
 #include <QtCore/private/qcore_unix_p.h>
 #include <QDebug>
-#include "../qrfcommserver_p.h"
+#include "../qbluetoothserver_p.h"
 #include <QTimer>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
@@ -66,7 +66,7 @@ static QList<QPair<int, QObject*> > waitingCtrlMsgs;
 
 static BBSocketNotifier bbSocketNotifier;
 
-QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
+QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
 QList<QPair<QString, QObject*> > evtRegistration;
 

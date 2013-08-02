@@ -39,72 +39,64 @@
 **
 ****************************************************************************/
 
-#ifndef QRFCOMMSERVER_P_H
-#define QRFCOMMSERVER_P_H
+#ifndef QBLUETOOTHSERVER_H
+#define QBLUETOOTHSERVER_H
 
-#include <QtGlobal>
-#include <QList>
+#include <QtBluetooth/qbluetoothglobal.h>
+
+#include <QObject>
+
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/QBluetoothSocket>
-#include "qbluetooth.h"
-
-#ifdef QT_QNX_BLUETOOTH
-#include "qnx/ppshelpers_p.h"
-#endif
-
-#ifdef QT_BLUEZ_BLUETOOTH
-QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
-#endif
+#include <QtBluetooth/QBluetoothServiceInfo>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-class QBluetoothAddress;
+class QBluetoothServerPrivate;
 class QBluetoothSocket;
 
-class QRfcommServer;
-
-class QRfcommServerPrivate
-#ifdef QT_QNX_BLUETOOTH
-: public QObject
+class Q_BLUETOOTH_EXPORT QBluetoothServer : public QObject
 {
     Q_OBJECT
-#else
-{
-#endif
-    Q_DECLARE_PUBLIC(QRfcommServer)
 
 public:
-    QRfcommServerPrivate();
-    ~QRfcommServerPrivate();
+    enum ServerType {
+        L2capServer = 0,
+        RfcommServer
+    };
+    QBluetoothServer(ServerType serverType, QObject *parent = 0);
+    ~QBluetoothServer();
 
-#ifdef QT_BLUEZ_BLUETOOTH
-    void _q_newConnection();
-#endif
+    void close();
 
-public:
-    QBluetoothSocket *socket;
+    bool listen(const QBluetoothAddress &address = QBluetoothAddress(), quint16 port = 0);
+    QBluetoothServiceInfo listen(const QBluetoothUuid &uuid, const QString &serviceName = QString());
+    bool isListening() const;
 
-    int maxPendingConnections;
-    QBluetooth::SecurityFlags securityFlags;
+    void setMaxPendingConnections(int numConnections);
+    int maxPendingConnections() const;
 
-#ifdef QT_QNX_BLUETOOTH
-    QList<QBluetoothSocket *> activeSockets;
-    QString m_serviceName;
-#endif
+    bool hasPendingConnections() const;
+    QBluetoothSocket *nextPendingConnection();
+
+    QBluetoothAddress serverAddress() const;
+    quint16 serverPort() const;
+
+    void setSecurityFlags(QBluetooth::SecurityFlags security);
+    QBluetooth::SecurityFlags securityFlags() const;
+
+Q_SIGNALS:
+    void newConnection();
 
 protected:
-    QRfcommServer *q_ptr;
+    QBluetoothServerPrivate *d_ptr;
 
 private:
-#ifdef QT_QNX_BLUETOOTH
-    QBluetoothUuid m_uuid;
-    bool serverRegistered;
-    QString nextClientAddress;
+    Q_DECLARE_PRIVATE(QBluetoothServer)
 
-private Q_SLOTS:
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-#elif defined(QT_BLUEZ_BLUETOOTH)
-    QSocketNotifier *socketNotifier;
+#ifdef QT_BLUEZ_BLUETOOTH
+    Q_PRIVATE_SLOT(d_func(), void _q_newConnection())
 #endif
 };
 

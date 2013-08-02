@@ -52,7 +52,7 @@
 #include <QtCore/QTimer>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
-class QL2capServer;
+class QBluetoothServer;
 class QBluetoothSocket;
 class QBluetoothServiceInfo;
 QT_END_NAMESPACE_BLUETOOTH
@@ -92,7 +92,7 @@ private slots:
     void socketError(QBluetoothSocket::SocketError err);
 
 private:
-    QL2capServer *l2capServer;
+    QBluetoothServer *l2capServer;
     QBluetoothServiceInfo serviceInfo;
     QBluetoothSocket *clientSocket;
     QDataStream *stream;

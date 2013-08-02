@@ -50,8 +50,6 @@
 #include <qbluetoothdeviceinfo.h>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothSocket>
-#include <ql2capserver.h>
-#include <qrfcommserver.h>
 
 /* ==================== QDeclarativeBluetoothSocket ======================= */
 
