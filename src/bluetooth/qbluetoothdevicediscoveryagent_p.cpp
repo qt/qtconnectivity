@@ -52,6 +52,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
 
 {
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
+    lastError = QBluetoothDeviceDiscoveryAgent::NoError;
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
