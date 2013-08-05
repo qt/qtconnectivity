@@ -125,7 +125,7 @@ QBluetoothTransferReply::~QBluetoothTransferReply()
 
 /*!
     Returns the QBluetoothTransferManager that was used to create this QBluetoothTransferReply
-    object.
+    object. Initially, it is also the parent object.
 */
 QBluetoothTransferManager *QBluetoothTransferReply::manager() const
 {

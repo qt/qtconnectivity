@@ -62,7 +62,7 @@ class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyBluez : public QBluetoothTransfe
 
 public:
     explicit QBluetoothTransferReplyBluez(QIODevice *input, const QBluetoothTransferRequest &request,
-                                          QObject *parent = 0);
+                                          QBluetoothTransferManager *parent = 0);
     ~QBluetoothTransferReplyBluez();
 
     bool isFinished() const;

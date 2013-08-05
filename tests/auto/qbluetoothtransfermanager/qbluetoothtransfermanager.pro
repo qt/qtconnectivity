@@ -7,5 +7,5 @@ QT = core concurrent bluetooth testlib
 
 INCLUDEPATH += ../../../tests/btclient
 
-CONFIG += insignificant_test    # QTBUG-22017
+TESTDATA += *.txt
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0

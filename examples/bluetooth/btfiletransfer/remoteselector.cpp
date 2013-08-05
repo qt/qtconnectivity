@@ -222,6 +222,9 @@ void RemoteSelector::on_sendButton_clicked()
     p->show();
 
     QBluetoothTransferReply *reply = mgr.put(req, m_file);
+    //mgr is default parent
+    //ensure that mgr doesn't take reply down when leaving scope
+    reply->setParent(this);
     if (reply->error()){
         qDebug() << "Failed to send file";
         p->finished(reply);

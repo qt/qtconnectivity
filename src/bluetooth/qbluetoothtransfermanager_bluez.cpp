@@ -49,11 +49,8 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request,
                                                         QIODevice *data)
 {
-
-    QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data, request);
-
+    QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data, request, this);
     connect(rep, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
-
     return rep;
 }
 

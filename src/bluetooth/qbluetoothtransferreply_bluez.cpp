@@ -58,12 +58,13 @@ static const QLatin1String agentPath("/qt/agent");
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, const QBluetoothTransferRequest &request,
-                                                           QObject *parent)
+                                                           QBluetoothTransferManager *parent)
 :   QBluetoothTransferReply(parent), tempfile(0), source(input),
     m_running(false), m_finished(false), m_size(0),
     m_error(QBluetoothTransferReply::NoError), m_errorStr(), m_transfer_path()
 {
     setRequest(request);
+    setManager(parent);
     client = new OrgOpenobexClientInterface(QLatin1String("org.openobex.client"), QLatin1String("/"),
                                            QDBusConnection::sessionBus());
 
@@ -79,6 +80,7 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 
     qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
     QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
+    m_running = true;
 }
 
 /*!
@@ -92,8 +94,7 @@ QBluetoothTransferReplyBluez::~QBluetoothTransferReplyBluez()
 
 bool QBluetoothTransferReplyBluez::start()
 {
-    m_running = true;
-
+//    qDebug() << "Got a:" << source->metaObject()->className();
     QFile *file = qobject_cast<QFile *>(source);
 
     if(!file){

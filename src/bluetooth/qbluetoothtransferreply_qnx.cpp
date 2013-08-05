@@ -61,11 +61,14 @@
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
 QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const QBluetoothTransferRequest &request,
-                                                       QObject *parent)
+                                                       QBluetoothTransferManager *parent)
 :   QBluetoothTransferReply(parent), tempfile(0), source(input),
     m_running(false), m_finished(false),
     m_error(QBluetoothTransferReply::NoError), m_errorStr()
 {
+    setRequest(request);
+    setManager(parent);
+
     ppsRegisterControl();
     //qsrand(QTime::currentTime().msec());
     //m_agent_path = agentPath;
@@ -75,6 +78,7 @@ QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const Q
     ppsRegisterForEvent(QStringLiteral("opp_cancelled"), this);
 
     QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
+    m_running = true;
 }
 
 /*!
@@ -87,7 +91,6 @@ QBluetoothTransferReplyQnx::~QBluetoothTransferReplyQnx()
 
 bool QBluetoothTransferReplyQnx::start()
 {
-    m_running = true;
     m_error = QBluetoothTransferReply::NoError;
     m_errorStr = QString();
 

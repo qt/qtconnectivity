@@ -56,12 +56,19 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <btclient.h>
 
+/*
+ * Some tests require a Bluetooth device within the vincinity of the test
+ * machine executing this test. The tests require manual interaction
+ * as pairing and file transfer requests must be accepted.
+ * The remote device's address must be passed
+ * via the BT_TEST_DEVICE env variable. The remote device must be
+ * discoverable and the object push service must be accessible. Any
+ **/
+
 QT_USE_NAMESPACE_BLUETOOTH
 
-typedef QMap<int,QVariant> tst_QBluetoothTransferManager_QParameterMap;
+typedef QMap<QBluetoothTransferRequest::Attribute,QVariant> tst_QBluetoothTransferManager_QParameterMap;
 Q_DECLARE_METATYPE(tst_QBluetoothTransferManager_QParameterMap)
-
-char BTADDRESS[] = "00:00:00:00:00:00";
 
 static const int MaxConnectTime = 60 * 1000;   // 1 minute in ms
 
@@ -78,20 +85,14 @@ private slots:
 
     void tst_construction();
 
-    void tst_put_data();
-    void tst_put();
+    void tst_request_data();
+    void tst_request();
 
-    void tst_putAbort_data();
-    void tst_putAbort();
+    void tst_sendFile_data();
+    void tst_sendFile();
 
-    void tst_attribute_data();
-    void tst_attribute();
-
-    void tst_operation_data();
-    void tst_operation();
-
-    void tst_manager_data();
-    void tst_manager();
+    void tst_sendBuffer_data();
+    void tst_sendBuffer();
 
 public slots:
     void serviceDiscovered(const QBluetoothServiceInfo &info);
@@ -99,10 +100,13 @@ public slots:
     void error(QBluetoothServiceDiscoveryAgent::Error error);
 private:
     bool done_discovery;
+    QBluetoothAddress remoteAddress;
+    QBluetoothAddress foundAddress;
 };
 
 tst_QBluetoothTransferManager::tst_QBluetoothTransferManager()
 {
+    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
 }
 
 tst_QBluetoothTransferManager::~tst_QBluetoothTransferManager()
@@ -111,8 +115,22 @@ tst_QBluetoothTransferManager::~tst_QBluetoothTransferManager()
 
 void tst_QBluetoothTransferManager::initTestCase()
 {
+    const QString remote = qgetenv("BT_TEST_DEVICE");
+    if (!remote.isEmpty()) {
+        remoteAddress = QBluetoothAddress(remote);
+        QVERIFY(!remoteAddress.isNull());
+        qWarning() << "Using remote device " << remote << " for testing. Ensure that the device is discoverable for pairing requests";
+    } else {
+        qWarning() << "Not using any remote device for testing. Set BT_TEST_DEVICE env to run manual tests involving a remote device";
+    }
+
+
+
     if (!QBluetoothLocalDevice::allDevices().count())
         QSKIP("Skipping test due to missing Bluetooth device");
+
+    if (remoteAddress.isNull())
+        QSKIP("Remote upload test not possible. Set BT_TEST_DEVICE");
 
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
@@ -127,9 +145,8 @@ void tst_QBluetoothTransferManager::initTestCase()
 
     qDebug() << "Starting discovery";
     done_discovery = false;
-    memset(BTADDRESS, 0, 18);
 
-    sda->setUuidFilter(QBluetoothUuid(QString(ECHO_SERVICE_UUID)));
+    sda->setUuidFilter(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
     sda->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
 
     for (int connectTime = MaxConnectTime; !done_discovery && connectTime > 0; connectTime -= 1000)
@@ -137,15 +154,15 @@ void tst_QBluetoothTransferManager::initTestCase()
 
     sda->stop();
 
-    if (BTADDRESS[0] == 0) {
-        QFAIL("Unable to find test service");
-    }
+    if (foundAddress.isNull())
+        QFAIL("Unable to find test service/device");
+
     delete sda;
 }
 void tst_QBluetoothTransferManager::error(QBluetoothServiceDiscoveryAgent::Error error)
 {
     qDebug() << "Received error" << error;
-//    done_discovery = true;
+    done_discovery = true;
 }
 
 void tst_QBluetoothTransferManager::finished()
@@ -156,9 +173,11 @@ void tst_QBluetoothTransferManager::finished()
 
 void tst_QBluetoothTransferManager::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
-    qDebug() << "Found: " << info.device().name() << info.serviceUuid();
-    strcpy(BTADDRESS, info.device().address().toString().toLatin1());
-    done_discovery = true;
+    qDebug() << "Found: " << info.device().name() << info.device().address().toString() << info.serviceName();
+    if (info.device().address() == remoteAddress) {
+        foundAddress = remoteAddress;
+        done_discovery = true;
+    }
 }
 
 void tst_QBluetoothTransferManager::tst_construction()
@@ -169,115 +188,224 @@ void tst_QBluetoothTransferManager::tst_construction()
     delete manager;
 }
 
-void tst_QBluetoothTransferManager::tst_put_data()
+void tst_QBluetoothTransferManager::tst_request_data()
 {
     QTest::addColumn<QBluetoothAddress>("address");
-    QTest::addColumn<QMap<int, QVariant> >("parameters");
+    QTest::addColumn<QMap<QBluetoothTransferRequest::Attribute, QVariant> >("parameters");
 
-    QMap<int, QVariant> inparameters;
-    inparameters.insert((int)QBluetoothTransferRequest::DescriptionAttribute, "Desciption");
-    inparameters.insert((int)QBluetoothTransferRequest::LengthAttribute, QVariant(1024));
-    inparameters.insert((int)QBluetoothTransferRequest::TypeAttribute, "OPP");
+    QMap<QBluetoothTransferRequest::Attribute, QVariant> inparameters;
+    inparameters.insert(QBluetoothTransferRequest::DescriptionAttribute, "Description");
+    inparameters.insert(QBluetoothTransferRequest::LengthAttribute, QVariant(1024));
+    inparameters.insert(QBluetoothTransferRequest::TypeAttribute, "OPP");
+    inparameters.insert(QBluetoothTransferRequest::NameAttribute, "name");
+    inparameters.insert(QBluetoothTransferRequest::TimeAttribute, QDateTime::currentDateTime());
 
-    QTest::newRow("0x000000 COD") << QBluetoothAddress(BTADDRESS) << inparameters;
+    QTest::newRow("TESTDATA") << QBluetoothAddress("00:11:22:33:44:55:66") << inparameters;
 }
 
-void tst_QBluetoothTransferManager::tst_put()
+void tst_QBluetoothTransferManager::tst_request()
 {
     QFETCH(QBluetoothAddress, address);
     QFETCH(tst_QBluetoothTransferManager_QParameterMap, parameters);
 
     QBluetoothTransferRequest transferRequest(address);
+    foreach (QBluetoothTransferRequest::Attribute key, parameters.keys())
+        QCOMPARE(transferRequest.attribute(key), QVariant());
 
-    foreach (int key, parameters.keys()) {
+    foreach (QBluetoothTransferRequest::Attribute key, parameters.keys())
         transferRequest.setAttribute((QBluetoothTransferRequest::Attribute)key, parameters[key]);
+
+    QCOMPARE(transferRequest.address(), address);
+    foreach (QBluetoothTransferRequest::Attribute key, parameters.keys())
+        QCOMPARE(transferRequest.attribute(key), parameters[key]);
+
+    //test copy constructor
+    QBluetoothTransferRequest constructorCopy = transferRequest;
+    QVERIFY(constructorCopy == transferRequest);
+    QVERIFY(!(constructorCopy != transferRequest));
+    QCOMPARE(constructorCopy.address(), address);
+    foreach (QBluetoothTransferRequest::Attribute key, parameters.keys())
+        QCOMPARE(constructorCopy.attribute(key), parameters[key]);
+
+    //test assignment operator
+    QBluetoothTransferRequest request;
+    QVERIFY(request.address().isNull());
+    foreach (QBluetoothTransferRequest::Attribute key, parameters.keys())
+        QCOMPARE(request.attribute(key), QVariant());
+    request = transferRequest;
+    QCOMPARE(request.address(), address);
+    foreach (QBluetoothTransferRequest::Attribute key, parameters.keys())
+        QCOMPARE(request.attribute(key), parameters[key]);
+
+    //test that it's a true and independent copy
+    constructorCopy.setAttribute(QBluetoothTransferRequest::DescriptionAttribute, "newDescription");
+    request.setAttribute(QBluetoothTransferRequest::TypeAttribute, "FTP");
+
+    QCOMPARE(constructorCopy.attribute(QBluetoothTransferRequest::DescriptionAttribute).toString(),QString("newDescription"));
+    QCOMPARE(request.attribute(QBluetoothTransferRequest::DescriptionAttribute).toString(),QString("Description"));
+    QCOMPARE(transferRequest.attribute(QBluetoothTransferRequest::DescriptionAttribute).toString(),QString("Description"));
+
+    QCOMPARE(constructorCopy.attribute(QBluetoothTransferRequest::TypeAttribute).toString(),QString("OPP"));
+    QCOMPARE(request.attribute(QBluetoothTransferRequest::TypeAttribute).toString(),QString("FTP"));
+    QCOMPARE(transferRequest.attribute(QBluetoothTransferRequest::TypeAttribute).toString(),QString("OPP"));
+}
+
+void tst_QBluetoothTransferManager::tst_sendFile_data()
+{
+    QTest::addColumn<QBluetoothAddress>("deviceAddress");
+    QTest::addColumn<bool>("expectSuccess");
+    QTest::addColumn<bool>("isInvalidFile");
+
+    if (foundAddress.isNull()) {
+        qDebug("Skipping send file test due to not finding remote device");
+    } else {
+        QTest::newRow("Push to remote test device") << foundAddress << true << false;
+        QTest::newRow("Push of non-existing file") << foundAddress << false << true;
+    }
+    QTest::newRow("Push to invalid address") << QBluetoothAddress() << false << false;
+    QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false << false;
+
+}
+
+void tst_QBluetoothTransferManager::tst_sendFile()
+{
+    QFETCH(QBluetoothAddress, deviceAddress);
+    QFETCH(bool, expectSuccess);
+    QFETCH(bool, isInvalidFile);
+
+    QBluetoothLocalDevice dev;
+    if (expectSuccess) {
+        dev.requestPairing(deviceAddress, QBluetoothLocalDevice::Paired);
+        QTest::qWait(2000);
+        QCOMPARE(dev.pairingStatus(deviceAddress), QBluetoothLocalDevice::Paired);
     }
 
+    QBluetoothTransferRequest request(deviceAddress);
+    QCOMPARE(request.address(), deviceAddress);
+
     QBluetoothTransferManager manager;
-}
+    QString fileHandle;
+    if (!isInvalidFile) {
+        fileHandle = QFINDTESTDATA("testfile.txt");
+        QVERIFY(!fileHandle.isEmpty());
+    } else {
+        fileHandle = QFINDTESTDATA("arbitraryFileName.txt"); //file doesn't exist
+        QVERIFY(fileHandle.isEmpty());
+    }
+    QFile f(fileHandle);
+    QCOMPARE(f.exists(), !isInvalidFile);
 
-void tst_QBluetoothTransferManager::tst_putAbort_data()
-{
-    QTest::addColumn<QBluetoothAddress>("address");
-    QTest::addColumn<QMap<int, QVariant> >("parameters");
 
-    QMap<int, QVariant> inparameters;
-    inparameters.insert((int)QBluetoothTransferRequest::DescriptionAttribute, "Desciption");
-    inparameters.insert((int)QBluetoothTransferRequest::LengthAttribute, QVariant(1024));
-    inparameters.insert((int)QBluetoothTransferRequest::TypeAttribute, "OPP");
+    qDebug() << "Transferring file to " << deviceAddress.toString();
+    if (expectSuccess)
+        qDebug() << "Please accept Object push request on remote device";
+    QBluetoothTransferReply* reply = manager.put(request, &f);
+    QSignalSpy finishedSpy(reply, SIGNAL(finished(QBluetoothTransferReply*)));
+    QSignalSpy progressSpy(reply, SIGNAL(transferProgress(qint64,qint64)));
 
-    QTest::newRow("0x000000 COD") << QBluetoothAddress(BTADDRESS) << inparameters;
-}
+    QCOMPARE(reply->request(), request);
+    QVERIFY(reply->manager() == &manager);
+    QVERIFY(!reply->isFinished());
+    QVERIFY(reply->isRunning());
 
-void tst_QBluetoothTransferManager::tst_putAbort()
-{
-    QFETCH(QBluetoothAddress, address);
-    QFETCH(tst_QBluetoothTransferManager_QParameterMap, parameters);
-
-    QBluetoothTransferRequest transferRequest(address);
-
-    foreach (int key, parameters.keys()) {
-        transferRequest.setAttribute((QBluetoothTransferRequest::Attribute)key, parameters[key]);
+    const int maxWaitTime = 20 * 1000; //20s
+    for (int time = 0;
+                time<maxWaitTime && (finishedSpy.count()==0);
+             time+=10000) {
+        QTest::qWait(10000); //if interval
     }
 
-    QBluetoothTransferManager manager;
-}
-
-void tst_QBluetoothTransferManager::tst_attribute_data()
-{
-    QTest::addColumn<QBluetoothAddress>("address");
-    QTest::addColumn<QMap<int, QVariant> >("parameters");
-
-    QMap<int, QVariant> inparameters;
-    inparameters.insert((int)QBluetoothTransferRequest::DescriptionAttribute, "Desciption");
-    inparameters.insert((int)QBluetoothTransferRequest::LengthAttribute, QVariant(1024));
-    inparameters.insert((int)QBluetoothTransferRequest::TypeAttribute, "OPP");
-
-    QTest::newRow("0x000000 COD") << QBluetoothAddress(BTADDRESS) << inparameters;
-}
-
-void tst_QBluetoothTransferManager::tst_attribute()
-{
-    QFETCH(QBluetoothAddress, address);
-    QFETCH(tst_QBluetoothTransferManager_QParameterMap, parameters);
-
-    QBluetoothTransferRequest transferRequest(address);
-
-    foreach (int key, parameters.keys()) {
-        transferRequest.setAttribute((QBluetoothTransferRequest::Attribute)key, parameters[key]);
+    QVERIFY(finishedSpy.count()>0);
+    if (expectSuccess) {
+        QVERIFY(progressSpy.count()>0);
+        QCOMPARE(reply->error(), QBluetoothTransferReply::NoError);
+        QCOMPARE(reply->errorString(), QString());
+    } else {
+        QVERIFY(progressSpy.count() == 0);
+        if (isInvalidFile)
+            QVERIFY(reply->error() == QBluetoothTransferReply::FileNotFoundError);
+        else
+            QVERIFY(reply->error() != QBluetoothTransferReply::NoError);
+        QVERIFY(!reply->errorString().isEmpty());
     }
 
+    QVERIFY(reply->isFinished());
+    QVERIFY(!reply->isRunning());
+}
+
+void tst_QBluetoothTransferManager::tst_sendBuffer_data()
+{
+
+    QTest::addColumn<QBluetoothAddress>("deviceAddress");
+    QTest::addColumn<bool>("expectSuccess");
+    QTest::addColumn<QByteArray>("data");
+
+    if (foundAddress.isNull())
+        qDebug("Skipping send file test due to not finding remote device");
+    else
+        QTest::newRow("Push to remote test device") << foundAddress << true <<
+                        QByteArray("This is a very long byte arry which we are going to access via a QBuffer");                                                       ;
+    //QTest::newRow("Push to invalid address") << QBluetoothAddress() << false;
+    //QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false;
+}
+
+
+
+void tst_QBluetoothTransferManager::tst_sendBuffer()
+{
+    QFETCH(QBluetoothAddress, deviceAddress);
+    QFETCH(bool, expectSuccess);
+    QFETCH(QByteArray, data);
+
+    QBuffer buffer;
+    buffer.setData(data);
+    buffer.open(QIODevice::ReadOnly);
+    buffer.seek(0);
+
+    QBluetoothLocalDevice dev;
+    if (expectSuccess) {
+        dev.requestPairing(deviceAddress, QBluetoothLocalDevice::Paired);
+        QTest::qWait(2000);
+        QCOMPARE(dev.pairingStatus(deviceAddress), QBluetoothLocalDevice::Paired);
+    }
+
+    QBluetoothTransferRequest request(deviceAddress);
+    QCOMPARE(request.address(), deviceAddress);
+
     QBluetoothTransferManager manager;
-}
 
-void tst_QBluetoothTransferManager::tst_operation_data()
-{
-    QTest::addColumn<QBluetoothAddress>("address");
+    qDebug() << "Transferring test buffer to " << deviceAddress.toString();
+    if (expectSuccess)
+        qDebug() << "Please accept Object push request on remote device";
+    QBluetoothTransferReply* reply = manager.put(request, &buffer);
+    QSignalSpy finishedSpy(reply, SIGNAL(finished(QBluetoothTransferReply*)));
+    QSignalSpy progressSpy(reply, SIGNAL(transferProgress(qint64,qint64)));
 
-    QTest::newRow("0x000000 COD") << QBluetoothAddress(BTADDRESS);
-}
+    QCOMPARE(reply->request(), request);
+    QVERIFY(reply->manager() == &manager);
+    QVERIFY(!reply->isFinished());
+    QVERIFY(reply->isRunning());
 
-void tst_QBluetoothTransferManager::tst_operation()
-{
-    QFETCH(QBluetoothAddress, address);
+    const int maxWaitTime = 20 * 1000; //20s
+    for (int time = 0;
+                time<maxWaitTime && (finishedSpy.count()==0);
+             time+=10000) {
+        QTest::qWait(10000); //if interval
+    }
 
-    QBluetoothTransferRequest transferRequest(address);
-    QBluetoothTransferManager manager;
-}
+    QVERIFY(finishedSpy.count()>0);
+    if (expectSuccess) {
+        QVERIFY(progressSpy.count()>0);
+        QCOMPARE(reply->error(), QBluetoothTransferReply::NoError);
+        QCOMPARE(reply->errorString(), QString());
+    } else {
+        QVERIFY(progressSpy.count() == 0);
+        QVERIFY(reply->error() != QBluetoothTransferReply::NoError);
+        QVERIFY(!reply->errorString().isEmpty());
+    }
 
-void tst_QBluetoothTransferManager::tst_manager_data()
-{
-    QTest::addColumn<QBluetoothAddress>("address");
-
-    QTest::newRow("0x000000 COD") << QBluetoothAddress(BTADDRESS);
-}
-
-void tst_QBluetoothTransferManager::tst_manager()
-{
-    QFETCH(QBluetoothAddress, address);
-
-    QBluetoothTransferRequest transferRequest(address);
-    QBluetoothTransferManager manager;
+    QVERIFY(reply->isFinished());
+    QVERIFY(!reply->isRunning());
 }
 
 QTEST_MAIN(tst_QBluetoothTransferManager)
