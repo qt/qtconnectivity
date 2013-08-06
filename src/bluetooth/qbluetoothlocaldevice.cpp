@@ -241,7 +241,8 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
   \fn QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent = 0)
 
-  Construct new QBluetoothLocalDevice for \a address.
+  Construct new QBluetoothLocalDevice for \a address. If \a address is default constructed
+  the resulting local device selects the local default device.
 */
 
 #include "moc_qbluetoothlocaldevice.cpp"
