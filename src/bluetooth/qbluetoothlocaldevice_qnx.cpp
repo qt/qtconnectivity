@@ -59,7 +59,8 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
     this->d_ptr = new QBluetoothLocalDevicePrivate(this);
 
     //works since we assume a single local device on QNX
-    this->d_ptr->isValidDevice = (QBluetoothLocalDevicePrivate::address() == address);
+    this->d_ptr->isValidDevice = (QBluetoothLocalDevicePrivate::address() == address ||
+                                      address == QBluetoothAddress());
 }
 
 QString QBluetoothLocalDevice::name() const
