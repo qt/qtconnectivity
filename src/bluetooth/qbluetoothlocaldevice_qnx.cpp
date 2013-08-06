@@ -79,7 +79,8 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 
 void QBluetoothLocalDevice::powerOn()
 {
-    this->d_ptr->powerOn();
+    if (hostMode() == QBluetoothLocalDevice::HostPoweredOff)
+        this->d_ptr->powerOn();
 }
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
