@@ -142,6 +142,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     ppsRegisterForEvent(QStringLiteral("access_changed"), this);
     ppsRegisterForEvent(QStringLiteral("pairing_complete"), this);
     ppsRegisterForEvent(QStringLiteral("device_deleted"), this);
+    ppsRegisterForEvent(QStringLiteral("radio_shutdown"), this);
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
@@ -150,6 +151,7 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
     ppsUnregisterForEvent(QStringLiteral("access_changed"), this);
     ppsUnregisterForEvent(QStringLiteral("pairing_complete"), this);
     ppsUnregisterForEvent(QStringLiteral("device_deleted"), this);
+    ppsUnregisterForEvent(QStringLiteral("radio_shutdown"), this);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
@@ -296,6 +298,9 @@ void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
                         result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1));
             Q_EMIT q_ptr->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
         }
+    } else if (result.msg == QStringLiteral("radio_shutdown")) {
+        qBBBluetoothDebug() << "radio shutdown";
+        Q_EMIT q_ptr->hostModeStateChanged(QBluetoothLocalDevice::HostPoweredOff);
     }
 }
 
