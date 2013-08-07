@@ -79,9 +79,8 @@ class BBSocketNotifier : public QObject
     Q_OBJECT
 public Q_SLOTS:
     void distribute();
+    void closeControlFD();
 };
-
-static BBSocketNotifier bbSocketNotifier;
 
 enum ResultType {UNKNOWN, EVENT, MESSAGE, RESPONSE};
 
@@ -95,8 +94,6 @@ struct ppsResult {
     QString errorMsg;
     int error;
 };
-
-static QList<QPair<int, QObject*> > waitingCtrlMsgs;
 
 QPair<int, QObject*> takeObjectInWList(int id);
 

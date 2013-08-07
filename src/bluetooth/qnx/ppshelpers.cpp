@@ -43,6 +43,7 @@
 #include <QtCore/private/qcore_unix_p.h>
 #include <QDebug>
 #include "../qrfcommserver_p.h"
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
@@ -61,6 +62,10 @@ static const int ppsBufferSize = 1024;
 
 static int ctrlId = 20;
 
+static QList<QPair<int, QObject*> > waitingCtrlMsgs;
+
+static BBSocketNotifier bbSocketNotifier;
+
 QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
 
 QList<QPair<QString, QObject*> > evtRegistration;
@@ -69,6 +74,16 @@ void BBSocketNotifier::distribute()
 {
     qBBBluetoothDebug() << "Distributing";
     ppsDecodeControlResponse();
+}
+
+void BBSocketNotifier::closeControlFD()
+{
+    if (count <= 0) {
+        qt_safe_close(ppsCtrlFD);
+        ppsCtrlFD = -1;
+        delete ppsCtrlNotifier;
+        ppsCtrlNotifier = 0;
+    }
 }
 
 QPair<int, QObject*> takeObjectInWList(int id)
@@ -84,7 +99,7 @@ void ppsRegisterControl()
 {
     qBBBluetoothDebug() << "Register for Control";
     if (count == 0) {
-        ppsCtrlFD = qt_safe_open(btControlFDPath, O_RDWR | O_NONBLOCK);
+        ppsCtrlFD = qt_safe_open(btControlFDPath, O_RDWR | O_SYNC);
         if (ppsCtrlFD == -1) {
             qWarning() << Q_FUNC_INFO << "ppsCtrlFD - failed to qt_safe_open" << btControlFDPath;
         } else {
@@ -100,10 +115,10 @@ void ppsUnregisterControl(QObject *obj)
     qBBBluetoothDebug() << "Unregistering Control";
     count--;
     if (count == 0) {
-        qt_safe_close(ppsCtrlFD);
-        ppsCtrlFD = -1;
-        delete ppsCtrlNotifier;
-        ppsCtrlNotifier = 0;
+        //QMetaObject::invokeMethod(&bbSocketNotifier, "closeControlFD",Qt::QueuedConnection);
+        //We need to postpone the closing of the file descriptor, otherwise the last message
+        //might not have gone through...a queued connection is not enough here
+        QTimer::singleShot(5, &bbSocketNotifier, SLOT(closeControlFD()));
     }
     for (int i = waitingCtrlMsgs.size()-1; i >= 0 ; i--) {
         if (waitingCtrlMsgs.at(i).second == obj)
@@ -126,7 +141,7 @@ bool endCtrlMessage(pps_encoder_t *encoder)
 {
     qBBBluetoothDebug() << "writing" << pps_encoder_buffer(encoder);
     if (pps_encoder_buffer(encoder) != 0) {
-        int res = write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
+        int res = qt_safe_write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
         if (res == -1) {
             qWarning() << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?" << errno;
             return false;
