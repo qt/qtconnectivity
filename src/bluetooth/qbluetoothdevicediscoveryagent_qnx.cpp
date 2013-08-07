@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate():
     QObject(0), lastError(QBluetoothDeviceDiscoveryAgent::NoError), pendingCancel(false), pendingStart(false), m_rdfd(-1)
 {
+    inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
