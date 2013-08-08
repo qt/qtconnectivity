@@ -63,6 +63,7 @@ QT_END_NAMESPACE
 #include "qnx/ppshelpers_p.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <QTimer>
 #endif
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
@@ -122,10 +123,12 @@ private Q_SLOTS:
     void remoteDevicesChanged(int fd);
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
+    void queryTimeout();
 
 private:
     int m_rdfd;
     QSocketNotifier *rdNotifier;
+    QTimer m_queryTimer;
 #endif
 
 public:

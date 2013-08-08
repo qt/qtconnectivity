@@ -54,7 +54,6 @@ QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
 {
-    ppsUnregisterControl(0);
 }
 
 bool QBluetoothServiceInfoPrivate::isRegistered() const
@@ -98,10 +97,6 @@ bool QBluetoothServiceInfoPrivate::registerService() const
         return false;
 
     if (__fakeServerPorts.key(serverChannel()) != 0) {
-        qBBBluetoothDebug() << "Registering server with UUID" <<
-                               attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>()
-                            << " Name" << attributes.value(QBluetoothServiceInfo::ServiceName).toString();
-        qDebug() << "Server is" << __fakeServerPorts.key(serverChannel());
         if (!ppsSendControlMessage("register_server", 0x1101, attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>(), QString(),
                                    attributes.value(QBluetoothServiceInfo::ServiceName).toString(),
                               __fakeServerPorts.key(serverChannel()), BT_SPP_SERVER_SUBTYPE))

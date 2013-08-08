@@ -96,7 +96,6 @@ QPair<int, QObject*> takeObjectInWList(int id)
 
 void ppsRegisterControl()
 {
-    qBBBluetoothDebug() << "Register for Control";
     count++;
     if (count == 1) {
         if (ppsCtrlFD != -1) {
@@ -115,7 +114,6 @@ void ppsRegisterControl()
 
 void ppsUnregisterControl(QObject *obj)
 {
-    qBBBluetoothDebug() << "Unregistering Control";
     count--;
     if (count == 0) {
         //QMetaObject::invokeMethod(&bbSocketNotifier, "closeControlFD",Qt::QueuedConnection);
@@ -147,7 +145,7 @@ bool endCtrlMessage(pps_encoder_t *encoder)
         int res = qt_safe_write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
         if (res == -1) {
             qWarning() << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?"
-                       << errno << ppsCtrlFD;
+                       << errno << ppsCtrlFD << count;
             return false;
         }
     }
