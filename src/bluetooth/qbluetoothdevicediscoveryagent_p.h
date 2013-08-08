@@ -88,10 +88,9 @@ private:
     QBluetoothDeviceDiscoveryAgent::Error lastError;
     QString errorString;
 
+#ifdef QT_BLUEZ_BLUETOOTH
     bool pendingCancel;
     bool pendingStart;
-
-#ifdef QT_BLUEZ_BLUETOOTH
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
 #elif defined(QTM_QNX_BLUETOOTH)
@@ -100,16 +99,23 @@ private:
     void remoteDevicesChanged(int);
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
+    void startDeviceSearch();
 
 private:
-    void abort();
-
     QSocketNotifier *m_rdNotifier;
     QTimer m_finishedTimer;
 
-    bool m_controlRegistered;
-
     int m_rdfd;
+    bool m_active;
+    enum Ops{
+        None,
+        Cancel,
+        Start
+    };
+    Ops m_nextOp;
+    Ops m_currentOp;
+    void processNextOp();
+    bool isFinished;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

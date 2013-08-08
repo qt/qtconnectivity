@@ -72,16 +72,15 @@ QList<QPair<QString, QObject*> > evtRegistration;
 
 void BBSocketNotifier::distribute()
 {
-    qBBBluetoothDebug() << "Distributing";
     ppsDecodeControlResponse();
 }
 
 void BBSocketNotifier::closeControlFD()
 {
     if (count <= 0) {
+        delete ppsCtrlNotifier;
         qt_safe_close(ppsCtrlFD);
         ppsCtrlFD = -1;
-        delete ppsCtrlNotifier;
         ppsCtrlNotifier = 0;
     }
 }
@@ -98,7 +97,12 @@ QPair<int, QObject*> takeObjectInWList(int id)
 void ppsRegisterControl()
 {
     qBBBluetoothDebug() << "Register for Control";
-    if (count == 0) {
+    count++;
+    if (count == 1) {
+        if (ppsCtrlFD != -1) {
+            qBBBluetoothDebug() << "PPS control FD not properly deinitialized";
+            return;
+        }
         ppsCtrlFD = qt_safe_open(btControlFDPath, O_RDWR | O_SYNC);
         if (ppsCtrlFD == -1) {
             qWarning() << Q_FUNC_INFO << "ppsCtrlFD - failed to qt_safe_open" << btControlFDPath;
@@ -107,7 +111,6 @@ void ppsRegisterControl()
             QObject::connect(ppsCtrlNotifier, SIGNAL(activated(int)), &bbSocketNotifier, SLOT(distribute()));
         }
     }
-    count++;
 }
 
 void ppsUnregisterControl(QObject *obj)
@@ -143,7 +146,8 @@ bool endCtrlMessage(pps_encoder_t *encoder)
     if (pps_encoder_buffer(encoder) != 0) {
         int res = qt_safe_write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
         if (res == -1) {
-            qWarning() << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?" << errno;
+            qWarning() << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?"
+                       << errno << ppsCtrlFD;
             return false;
         }
     }
@@ -201,7 +205,9 @@ void ppsDecodeControlResponse()
 
     if (ppsCtrlFD != -1) {
         char buf[ppsBufferSize];
-        qt_safe_read( ppsCtrlFD, &buf, sizeof(buf) );
+        qt_safe_read(ppsCtrlFD, &buf, sizeof(buf) );
+        if (buf[0] != '@')
+            return;
         qBBBluetoothDebug() << "CTRL Response" << buf;
 
         pps_decoder_t ppsDecoder;
@@ -228,6 +234,11 @@ void ppsDecodeControlResponse()
             //read out the error message if there is one
             if (pps_decoder_get_string(&ppsDecoder, "errstr", &buf) == PPS_DECODER_OK)
                 result.errorMsg = QString::fromUtf8(buf);
+
+            int dat;
+            if (pps_decoder_get_int(&ppsDecoder, "err", &dat) == PPS_DECODER_OK) {
+                result.error = dat;
+            }
 
             //The dat object can be either a string or a array
             pps_node_type_t nodeType = pps_decoder_type(&ppsDecoder,"dat");
@@ -276,7 +287,7 @@ void ppsDecodeControlResponse()
         if (wMessage.second != 0)
             wMessage.second->metaObject()->invokeMethod(wMessage.second, "controlReply", Q_ARG(ppsResult, result));
     } else if (resType == EVENT) {
-        qBBBluetoothDebug() << "Distributing event" << result.msg;
+        //qBBBluetoothDebug() << "Distributing event" << result.msg;
         for (int i=0; i < evtRegistration.size(); i++) {
             if (result.msg == evtRegistration.at(i).first)
                 evtRegistration.at(i).second->metaObject()->invokeMethod(evtRegistration.at(i).second, "controlEvent", Q_ARG(ppsResult, result));
