@@ -87,6 +87,7 @@ public:
 
     QNdefNfcSmartPosterRecord();
     QNdefNfcSmartPosterRecord(const QNdefRecord &other);
+    QNdefNfcSmartPosterRecord(const QNdefNfcSmartPosterRecord &other);
     ~QNdefNfcSmartPosterRecord();
 
     void setPayload(const QByteArray &payload);

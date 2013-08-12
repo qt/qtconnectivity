@@ -91,6 +91,14 @@ QNdefNfcSmartPosterRecord::QNdefNfcSmartPosterRecord(const QNdefRecord &other)
 }
 
 /*!
+    Constructs a new smart poster that is a copy of \a other.
+*/
+QNdefNfcSmartPosterRecord::QNdefNfcSmartPosterRecord(const QNdefNfcSmartPosterRecord &other)
+    : QNdefRecord(other, QNdefRecord::NfcRtd, "Sp"), d(other.d)
+{
+}
+
+/*!
     Destroys the smart poster.
 */
 QNdefNfcSmartPosterRecord::~QNdefNfcSmartPosterRecord()
