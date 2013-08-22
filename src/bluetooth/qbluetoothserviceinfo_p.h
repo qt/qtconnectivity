@@ -44,6 +44,7 @@
 
 #include "qbluetoothuuid.h"
 #include "qbluetoothdeviceinfo.h"
+#include "qbluetoothserviceinfo.h"
 
 #include <QMap>
 #include <QVariant>
@@ -72,6 +73,9 @@ public:
     void removeRegisteredAttribute(quint16 attributeId) const;
     QBluetoothDeviceInfo deviceInfo;
     QMap<quint16, QVariant> attributes;
+
+    QBluetoothServiceInfo::Sequence protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const;
+    int serverChannel() const;
 private:
 #ifdef QT_BLUEZ_BLUETOOTH
     bool ensureSdpConnection() const;

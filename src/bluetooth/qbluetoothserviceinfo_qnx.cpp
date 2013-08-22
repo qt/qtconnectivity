@@ -89,24 +89,25 @@ extern QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
 
 bool QBluetoothServiceInfoPrivate::registerService() const
 {
-    Q_Q(const QBluetoothServiceInfo);
-    if (q->socketProtocol() != QBluetoothServiceInfo::RfcommProtocol) {
+    if (protocolDescriptor(QBluetoothUuid::Rfcomm).isEmpty()) {
         qWarning() << Q_FUNC_INFO << "Only SPP services can be registered on QNX";
         return false;
     }
 
-    if (q->serverChannel() == -1)
+    if (serverChannel() == -1)
         return false;
 
-    if (__fakeServerPorts.key(q->serverChannel()) != 0) {
+    if (__fakeServerPorts.key(serverChannel()) != 0) {
         qBBBluetoothDebug() << "Registering server with UUID" <<
-                               q->serviceUuid() << " Name" << q->serviceName();
-        qDebug() << "Server is" << __fakeServerPorts.key(q->serverChannel());
-        if (!ppsSendControlMessage("register_server", 0x1101, q->serviceUuid(), QString(), q->serviceName(),
-                              __fakeServerPorts.key(q->serverChannel()), BT_SPP_SERVER_SUBTYPE))
+                               attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>()
+                            << " Name" << attributes.value(QBluetoothServiceInfo::ServiceName).toString();
+        qDebug() << "Server is" << __fakeServerPorts.key(serverChannel());
+        if (!ppsSendControlMessage("register_server", 0x1101, attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>(), QString(),
+                                   attributes.value(QBluetoothServiceInfo::ServiceName).toString(),
+                              __fakeServerPorts.key(serverChannel()), BT_SPP_SERVER_SUBTYPE))
             return false;
         //The server needs to know the service name for the socket mount point path
-        __fakeServerPorts.key(q->serverChannel())->m_serviceName = q->serviceName();
+        __fakeServerPorts.key(serverChannel())->m_serviceName = attributes.value(QBluetoothServiceInfo::ServiceName).toString();
     } else {
         return false;
     }

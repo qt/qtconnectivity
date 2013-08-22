@@ -489,14 +489,7 @@ int QBluetoothServiceInfo::protocolServiceMultiplexer() const
 */
 int QBluetoothServiceInfo::serverChannel() const
 {
-    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::Rfcomm);
-
-    if (parameters.isEmpty())
-        return -1;
-    else if (parameters.count() == 1)
-        return 0;
-    else
-        return parameters.at(1).toUInt();
+    return d_ptr->serverChannel();
 }
 
 /*!
@@ -506,20 +499,7 @@ int QBluetoothServiceInfo::serverChannel() const
 */
 QBluetoothServiceInfo::Sequence QBluetoothServiceInfo::protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const
 {
-    if (!contains(QBluetoothServiceInfo::ProtocolDescriptorList))
-        return QBluetoothServiceInfo::Sequence();
-
-    foreach (const QVariant &v, attribute(QBluetoothServiceInfo::ProtocolDescriptorList).value<QBluetoothServiceInfo::Sequence>()) {
-        QBluetoothServiceInfo::Sequence parameters = v.value<QBluetoothServiceInfo::Sequence>();
-        if(parameters.empty())
-            continue;
-        if (parameters.at(0).userType() == qMetaTypeId<QBluetoothUuid>()) {
-            if (parameters.at(0).value<QBluetoothUuid>() == protocol)
-                return parameters;
-        }
-    }
-
-    return QBluetoothServiceInfo::Sequence();
+    return d_ptr->protocolDescriptor(protocol);
 }
 
 /*!
@@ -609,6 +589,36 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
         dumpAttributeVariant(info.attribute(id), QString::fromLatin1("(%1)\t").arg(id));
     }
     return dbg;
+}
+
+QBluetoothServiceInfo::Sequence QBluetoothServiceInfoPrivate::protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const
+{
+    if (!attributes.contains(QBluetoothServiceInfo::ProtocolDescriptorList))
+        return QBluetoothServiceInfo::Sequence();
+
+    foreach (const QVariant &v, attributes.value(QBluetoothServiceInfo::ProtocolDescriptorList).value<QBluetoothServiceInfo::Sequence>()) {
+        QBluetoothServiceInfo::Sequence parameters = v.value<QBluetoothServiceInfo::Sequence>();
+        if (parameters.empty())
+            continue;
+        if (parameters.at(0).userType() == qMetaTypeId<QBluetoothUuid>()) {
+            if (parameters.at(0).value<QBluetoothUuid>() == protocol)
+                return parameters;
+        }
+    }
+
+    return QBluetoothServiceInfo::Sequence();
+}
+
+int QBluetoothServiceInfoPrivate::serverChannel() const
+{
+    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::Rfcomm);
+
+    if (parameters.isEmpty())
+        return -1;
+    else if (parameters.count() == 1)
+        return 0;
+    else
+        return parameters.at(1).toUInt();
 }
 
 QT_END_NAMESPACE_BLUETOOTH
