@@ -47,7 +47,7 @@
 #include <QtBluetooth/QBluetoothSocket>
 #include "qbluetooth.h"
 
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
 #include "qnx/ppshelpers_p.h"
 #endif
 
@@ -63,7 +63,7 @@ class QBluetoothSocket;
 class QRfcommServer;
 
 class QRfcommServerPrivate
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
 : public QObject
 {
     Q_OBJECT
@@ -86,7 +86,7 @@ public:
     int maxPendingConnections;
     QBluetooth::SecurityFlags securityFlags;
 
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
     QList<QBluetoothSocket *> activeSockets;
     QString m_serviceName;
 #endif
@@ -95,7 +95,7 @@ protected:
     QRfcommServer *q_ptr;
 
 private:
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
     QBluetoothUuid m_uuid;
     bool serverRegistered;
     QString nextClientAddress;

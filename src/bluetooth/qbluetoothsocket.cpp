@@ -299,7 +299,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     Q_D(QBluetoothSocket);
     setOpenMode(openMode);
 
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
 #else
     if (service.protocolServiceMultiplexer() > 0) {
@@ -345,7 +345,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode)
 {
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
     Q_D(QBluetoothSocket);
     d->connectToService(address, uuid, openMode);
 #else
@@ -373,7 +373,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
-#ifdef QTM_QNX_BLUETOOTH
+#ifdef QT_QNX_BLUETOOTH
     Q_UNUSED(port);
     Q_UNUSED(openMode);
     Q_UNUSED(address);

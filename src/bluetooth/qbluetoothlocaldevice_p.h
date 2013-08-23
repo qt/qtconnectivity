@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 QT_END_NAMESPACE
 
-#elif defined(QTM_QNX_BLUETOOTH)
+#elif defined(QT_QNX_BLUETOOTH)
 #include <QSocketNotifier>
 #include "qnx/ppshelpers_p.h"
 #endif
@@ -112,7 +112,7 @@ private:
     void initializeAdapter();
 };
 
-#elif defined(QTM_QNX_BLUETOOTH)
+#elif defined(QT_QNX_BLUETOOTH)
 
 class QBluetoothLocalDevicePrivate : public QObject
 {

@@ -53,7 +53,7 @@ class OrgBluezAdapterInterface;
 QT_BEGIN_NAMESPACE
 class QDBusVariant;
 QT_END_NAMESPACE
-#elif defined(QTM_QNX_BLUETOOTH)
+#elif defined(QT_QNX_BLUETOOTH)
 #include "qnx/ppshelpers_p.h"
 #include <QTimer>
 #endif
@@ -61,7 +61,7 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QTM_QNX_BLUETOOTH)
+#if defined(QT_QNX_BLUETOOTH)
 : public QObject {
     Q_OBJECT
 #else
@@ -93,7 +93,7 @@ private:
     bool pendingStart;
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
-#elif defined(QTM_QNX_BLUETOOTH)
+#elif defined(QT_QNX_BLUETOOTH)
     private Q_SLOTS:
     void finished();
     void remoteDevicesChanged(int);

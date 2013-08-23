@@ -78,7 +78,7 @@ config_bluez:qtHaveModule(dbus) {
         ql2capserver_bluez.cpp
 
 } else:qnx{
-    DEFINES += QTM_QNX_BLUETOOTH #BT_BBPPSDEBUG
+    DEFINES += QT_QNX_BLUETOOTH #BT_BBPPSDEBUG
 
     include(qnx/qnx.pri)
 
