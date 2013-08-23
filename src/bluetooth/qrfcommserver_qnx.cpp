@@ -56,15 +56,12 @@ extern QHash<QRfcommServerPrivate*, int> __fakeServerPorts;
 QRfcommServerPrivate::QRfcommServerPrivate()
     : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity)
 {
-    socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
     ppsRegisterControl();
 }
 
 QRfcommServerPrivate::~QRfcommServerPrivate()
 {
     Q_Q(QRfcommServer);
-    if (socket)
-        delete socket;
     q->close();
     __fakeServerPorts.remove(this);
     ppsUnregisterControl(this);
@@ -84,6 +81,9 @@ void QRfcommServerPrivate::controlReply(ppsResult result)
         if (socketFD == -1) {
             qWarning() << Q_FUNC_INFO << "RFCOMM Server: Could not open socket FD" << errno;
         } else {
+            if (!socket)
+                return;
+
             socket->setSocketDescriptor(socketFD, QBluetoothSocket::RfcommSocket,
                                            QBluetoothSocket::ConnectedState);
             socket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
@@ -127,6 +127,7 @@ void QRfcommServer::close()
         return;
     }
     d->socket->close();
+    delete d->socket;
     d->socket = 0;
     ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
     // force active object (socket) to run and shutdown socket.
@@ -138,8 +139,10 @@ bool QRfcommServer::listen(const QBluetoothAddress &address, quint16 port)
     Q_UNUSED(address)
     Q_D(QRfcommServer);
     // listen has already been called before
-    if (d->socket->state() == QBluetoothSocket::ListeningState)
+    if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
         return true;
+
+    d->socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
 
     //We can not register an actual Rfcomm port, because the platform does not allow it
     //but we need a way to associate a server with a service

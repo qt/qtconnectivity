@@ -200,6 +200,11 @@ bool QRfcommServer::isListening() const
 {
     Q_D(const QRfcommServer);
 
+#ifdef QTM_QNX_BLUETOOTH
+    if (!d->socket)
+        return false;
+#endif
+
     return d->socket->state() == QBluetoothSocket::ListeningState;
 }
 
