@@ -48,6 +48,8 @@
 
 #include <QtBluetooth/QBluetoothDeviceInfo>
 
+#include <QtBluetooth/QBluetoothAddress>
+
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
 class QBluetoothDeviceDiscoveryAgentPrivate;
@@ -73,6 +75,7 @@ public:
     };
 
     QBluetoothDeviceDiscoveryAgent(QObject *parent = 0);
+    explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &address, QObject *parent = 0);
     ~QBluetoothDeviceDiscoveryAgent();
 
     QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType() const;

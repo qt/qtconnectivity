@@ -128,7 +128,18 @@ QT_BEGIN_NAMESPACE_BLUETOOTH
     Constructs a new Bluetooth device discovery agent with parent \a parent.
 */
 QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
-: QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate)
+    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress()))
+{
+    d_ptr->q_ptr = this;
+}
+
+/*!
+    Constructs a new Bluetooth device discovery agent with parent \a parent and uses the adapter with
+    address \a address for the device search. If \a address is default constructed the resulting
+    QBluetoothDeviceDiscoveryAgent object will use the local default Bluetooth adapter.
+*/
+QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &address, QObject *parent)
+    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(address))
 {
     d_ptr->q_ptr = this;
 }

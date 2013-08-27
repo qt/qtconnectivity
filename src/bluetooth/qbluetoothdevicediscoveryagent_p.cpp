@@ -48,9 +48,9 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate()
-
+QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &address)
 {
+    Q_UNUSED(address);
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
     lastError = QBluetoothDeviceDiscoveryAgent::NoError;
 }
