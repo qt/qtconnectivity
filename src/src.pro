@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 CONFIG  += ordered
 
-SUBDIRS += bluetooth nfc imports
+SUBDIRS += bluetooth nfc
+qtHaveModules(quick): SUBDIRS += imports
