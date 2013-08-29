@@ -52,9 +52,9 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &address)
-    :   lastError(QBluetoothDeviceDiscoveryAgent::NoError), m_deviceAddress(address),
-      pendingCancel(false), pendingStart(false), adapter(0)
+QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+    :   lastError(QBluetoothDeviceDiscoveryAgent::NoError), m_adapterAddress(deviceAdapter), pendingCancel(false), pendingStart(false),
+        adapter(0)
 {
     manager = new OrgBluezManagerInterface(QLatin1String("org.bluez"), QLatin1String("/"),
                                            QDBusConnection::systemBus());
@@ -86,10 +86,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     discoveredDevices.clear();
     QDBusPendingReply<QDBusObjectPath> reply;
 
-    if (m_deviceAddress.isNull())
+    if (m_adapterAddress.isNull())
         reply = manager->DefaultAdapter();
     else
-        reply = manager->FindAdapter(m_deviceAddress.toString());
+        reply = manager->FindAdapter(m_adapterAddress.toString());
     reply.waitForFinished();
 
     if (reply.isError()) {

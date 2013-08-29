@@ -49,11 +49,11 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &address):
+QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter):
     QObject(0), lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     m_rdfd(-1), m_active(false), m_nextOp(None), m_currentOp(None)
 {
-    Q_UNUSED(address);
+    Q_UNUSED(deviceAdapter);
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
     ppsRegisterControl();
     ppsRegisterForEvent(QStringLiteral("device_added"), this);

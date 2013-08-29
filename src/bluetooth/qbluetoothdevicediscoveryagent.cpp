@@ -134,12 +134,12 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
 }
 
 /*!
-    Constructs a new Bluetooth device discovery agent with parent \a parent and uses the adapter with
-    address \a address for the device search. If \a address is default constructed the resulting
+    Constructs a new Bluetooth device discovery agent with parent \a parent and uses the adapter \a deviceAdapter
+    for the device search. If \a deviceAdapter is default constructed the resulting
     QBluetoothDeviceDiscoveryAgent object will use the local default Bluetooth adapter.
 */
-QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &address, QObject *parent)
-    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(address))
+QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
+    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
 {
     d_ptr->q_ptr = this;
 }

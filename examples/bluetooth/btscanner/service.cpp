@@ -43,14 +43,31 @@
 #include <qbluetoothaddress.h>
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothserviceinfo.h>
+#include <qbluetoothlocaldevice.h>
 
 
 ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
                                                const QBluetoothAddress &address, QWidget *parent)
-:   QDialog(parent), discoveryAgent(new QBluetoothServiceDiscoveryAgent(address)),
-    ui(new Ui_ServiceDiscovery)
+:   QDialog(parent), ui(new Ui_ServiceDiscovery)
 {
     ui->setupUi(this);
+
+    //Using default Bluetooth adapter
+    QBluetoothLocalDevice localDevice;
+    QBluetoothAddress adapterAddress = localDevice.address();
+
+    /*
+     * In case of multiple Bluetooth adapters it is possible to
+     * set which adapter will be used by providing MAC Address.
+     * Example code:
+     *
+     * QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
+     * discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+     */
+
+    discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+
+    bool set = discoveryAgent->setRemoteAddress(address);
 
     setWindowTitle(name);
 

@@ -43,6 +43,7 @@
 
 #include <QDebug>
 #include <QVariant>
+#include <QList>
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothdevicediscoveryagent.h>
@@ -303,7 +304,21 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
     {
         QFETCH(QBluetoothDeviceDiscoveryAgent::InquiryType, inquiryType);
 
-        QBluetoothDeviceDiscoveryAgent discoveryAgent;
+        //Run test in case of multiple Bluetooth adapters
+        QBluetoothLocalDevice localDevice;
+        //We will use default adapter if there is no other adapter
+        QBluetoothAddress address = localDevice.address();
+        int numberOfAdapters = (localDevice.allDevices()).size();
+        QList<QBluetoothAddress> addresses;
+        if (numberOfAdapters > 1) {
+
+            for (int i=0; i < numberOfAdapters; i++) {
+                addresses.append(((QBluetoothHostInfo)localDevice.allDevices().at(i)).address());
+            }
+            address = (QBluetoothAddress)addresses.at(0);
+        }
+
+        QBluetoothDeviceDiscoveryAgent discoveryAgent(address);
         QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
         QVERIFY(discoveryAgent.errorString().isEmpty());
         QVERIFY(!discoveryAgent.isActive());
@@ -361,7 +376,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
 
         if (!remoteDevice.isNull())
             QVERIFY(discoveredSpy.count() > 0);
-
+        int counter = 0;
         // All returned QBluetoothDeviceInfo should be valid.
         while (!discoveredSpy.isEmpty()) {
             const QBluetoothDeviceInfo info =
@@ -369,7 +384,16 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
             QVERIFY(info.isValid());
             qDebug() << "Discovered device:" << info.address().toString() << info.name();
 
+            if (numberOfAdapters > 1) {
+                for (int i= 1; i < numberOfAdapters; i++) {
+                    if (info.address().toString() == addresses[i].toString())
+                        counter++;
+                }
+            }
         }
+        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry
+        if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
+            QVERIFY((numberOfAdapters-1) == counter);
     }
 }
 

@@ -56,10 +56,10 @@
 
 QT_BEGIN_NAMESPACE_BLUETOOTH
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &address)
-:   error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive), deviceAddress(address),
-    deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
-    singleDevice(false), manager(0), device(0)
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+:   error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive), deviceDiscoveryAgent(0),
+    mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
+    manager(0), device(0), m_deviceAdapterAddress(deviceAdapter)
 {
     qRegisterMetaType<ServiceMap>("ServiceMap");
     qDBusRegisterMetaType<ServiceMap>();
@@ -81,15 +81,17 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
     manager = new OrgBluezManagerInterface(QLatin1String("org.bluez"), QLatin1String("/"),
                                            QDBusConnection::systemBus());
+    QDBusPendingReply<QDBusObjectPath> reply;
+    if (m_deviceAdapterAddress.isNull())
+        reply = manager->DefaultAdapter();
+    else
+        reply = manager->FindAdapter(m_deviceAdapterAddress.toString());
 
-    QDBusPendingReply<QDBusObjectPath> reply = manager->DefaultAdapter();
     reply.waitForFinished();
     if (reply.isError()) {
-        if (singleDevice) {
-            error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to find default adapter");
-            emit q->error(error);
-        }
+        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to find appointed local adapter");
+        emit q->error(error);
         _q_serviceDiscoveryFinished();
         return;
     }

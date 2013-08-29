@@ -75,7 +75,7 @@ public:
     };
 
     QBluetoothDeviceDiscoveryAgent(QObject *parent = 0);
-    explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &address, QObject *parent = 0);
+    explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
     ~QBluetoothDeviceDiscoveryAgent();
 
     QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType() const;

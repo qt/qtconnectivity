@@ -119,18 +119,14 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
 }
 
 /*!
-    Constructs a new QBluetoothServiceDiscoveryAgent for \a remoteAddress and with \a parent.
+    Constructs a new QBluetoothServiceDiscoveryAgent for \a deviceAdapter and with \a parent.
 
-    If \a remoteAddress is null, services will be discovred on all contactable Bluetooth
-    devices.
+    If \a deviceAdapter is null, the default adapter will be used.
 */
-QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &remoteAddress, QObject *parent)
-: QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(remoteAddress))
+QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
+: QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(deviceAdapter))
 {
     d_ptr->q_ptr = this;
-    if (!remoteAddress.isNull()) {
-        d_ptr->singleDevice = true;
-    }
 }
 
 /*!
@@ -193,6 +189,36 @@ QList<QBluetoothUuid> QBluetoothServiceDiscoveryAgent::uuidFilter() const
     Q_D(const QBluetoothServiceDiscoveryAgent);
 
     return d->uuidFilter;
+}
+
+/*!
+    Sets remote device address to \a address. If \a address is null, services will be discovered
+    on all contactable Bluetooth devices. A new remote address can only be set while there is
+    no service discovery in progress; otherwise this function returns false.
+
+*/
+bool QBluetoothServiceDiscoveryAgent::setRemoteAddress(const QBluetoothAddress &address)
+{
+    if (isActive())
+        return false;
+    if (!address.isNull())
+        d_ptr->singleDevice = true;
+    d_ptr->deviceAddress = address;
+
+    return true;
+}
+
+/*!
+    Returns the remote device address. If setRemoteAddress is not called, the function
+    will return default QBluetoothAddress.
+
+*/
+QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
+{
+    if (d_ptr->singleDevice == true)
+        return d_ptr->deviceAddress;
+    else
+        return QBluetoothAddress();
 }
 
 /*!

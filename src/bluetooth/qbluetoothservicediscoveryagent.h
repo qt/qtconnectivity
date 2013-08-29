@@ -72,7 +72,7 @@ public:
     };
 
     QBluetoothServiceDiscoveryAgent(QObject *parent = 0);
-    explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &remoteAddress, QObject *parent = 0);
+    explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
     ~QBluetoothServiceDiscoveryAgent();
 
     bool isActive() const;
@@ -85,6 +85,8 @@ public:
     void setUuidFilter(const QList<QBluetoothUuid> &uuids);
     void setUuidFilter(const QBluetoothUuid &uuid);
     QList<QBluetoothUuid> uuidFilter() const;
+    bool setRemoteAddress(const QBluetoothAddress &address);
+    QBluetoothAddress remoteAddress() const;
 
 public Q_SLOTS:
     void start(DiscoveryMode mode = MinimalDiscovery);

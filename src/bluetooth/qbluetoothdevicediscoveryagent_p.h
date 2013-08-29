@@ -48,6 +48,8 @@
 
 #include <qbluetoothaddress.h>
 
+#include <qbluetoothlocaldevice.h>
+
 #ifdef QT_BLUEZ_BLUETOOTH
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
@@ -71,7 +73,7 @@ class QBluetoothDeviceDiscoveryAgentPrivate
 #endif
     Q_DECLARE_PUBLIC(QBluetoothDeviceDiscoveryAgent)
 public:
-    QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &address);
+    QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter);
     ~QBluetoothDeviceDiscoveryAgentPrivate();
 
     void start();
@@ -91,7 +93,7 @@ private:
     QString errorString;
 
 #ifdef QT_BLUEZ_BLUETOOTH
-    QBluetoothAddress m_deviceAddress;
+    QBluetoothAddress m_adapterAddress;
     bool pendingCancel;
     bool pendingStart;
     OrgBluezManagerInterface *manager;

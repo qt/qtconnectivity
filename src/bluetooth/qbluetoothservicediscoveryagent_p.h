@@ -87,7 +87,7 @@ public:
         ServiceDiscovery,
     };
 
-    QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &address);
+    QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter);
     ~QBluetoothServiceDiscoveryAgentPrivate();
 
     void startDeviceDiscovery();
@@ -134,13 +134,12 @@ private:
 public:
     QBluetoothServiceDiscoveryAgent::Error error;
     QString errorString;
-
+    QBluetoothAddress deviceAddress;
     QList<QBluetoothServiceInfo> discoveredServices;
     QList<QBluetoothDeviceInfo> discoveredDevices;
 
 private:
     DiscoveryState state;
-    QBluetoothAddress deviceAddress;
     QList<QBluetoothUuid> uuidFilter;
 
     QBluetoothDeviceDiscoveryAgent *deviceDiscoveryAgent;
@@ -153,6 +152,7 @@ private:
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
+    QBluetoothAddress m_deviceAdapterAddress;
 #endif
 
 protected:

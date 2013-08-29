@@ -48,11 +48,21 @@
 #include <QDebug>
 
 DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent)
-:   QDialog(parent), discoveryAgent(new QBluetoothDeviceDiscoveryAgent),
-    localDevice(new QBluetoothLocalDevice),
+:   QDialog(parent), localDevice(new QBluetoothLocalDevice),
     ui(new Ui_DeviceDiscovery)
 {
     ui->setupUi(this);
+
+    /*
+     * In case of multiple Bluetooth adapters it is possible to set adapter
+     * which will be used. Example code:
+     *
+     * QBluetoothAddress address("XX:XX:XX:XX:XX:XX");
+     * discoveryAgent = new QBluetoothDeviceDiscoveryAgent(address);
+     *
+     **/
+
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
     connect(ui->inquiryType, SIGNAL(toggled(bool)), this, SLOT(setGeneralUnlimited(bool)));
     connect(ui->scan, SIGNAL(clicked()), this, SLOT(startScan()));

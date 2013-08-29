@@ -43,12 +43,14 @@
 
 #include <QDebug>
 #include <QVariant>
-#include <QStringList>
+#include <QList>
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothdevicediscoveryagent.h>
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
+#include <qbluetoothserver.h>
+#include <qbluetoothserviceinfo.h>
 
 QT_USE_NAMESPACE_BLUETOOTH
 
@@ -76,6 +78,7 @@ private slots:
 
     void tst_serviceDiscovery_data();
     void tst_serviceDiscovery();
+    void tst_serviceDiscoveryAdapters();
 
 private:
     QList<QBluetoothDeviceInfo> devices;
@@ -250,6 +253,84 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
         << QBluetoothServiceDiscoveryAgent::NoError;
 }
 
+void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
+{
+    QBluetoothLocalDevice localDevice;
+    int numberOfAdapters = (localDevice.allDevices()).size();
+    if (numberOfAdapters>1) {
+        if (devices.isEmpty())
+            QSKIP("This test requires an in-range bluetooth device");
+
+        QList<QBluetoothAddress> addresses;
+
+        for (int i=0; i<numberOfAdapters; i++) {
+            addresses.append(((QBluetoothHostInfo)localDevice.allDevices().at(i)).address());
+        }
+        QBluetoothServer server(QBluetoothServer::RfcommServer);
+        QBluetoothUuid uuid(QBluetoothUuid::Ftp);
+        server.listen(addresses[0]);
+        QBluetoothServiceInfo serviceInfo;
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, "serviceName");
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
+                                 QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+
+        QBluetoothServiceInfo::Sequence classId;
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
+                                 classId);
+
+        serviceInfo.setServiceUuid(uuid);
+
+        QBluetoothServiceInfo::Sequence protocolDescriptorList;
+        QBluetoothServiceInfo::Sequence protocol;
+        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        protocolDescriptorList.append(QVariant::fromValue(protocol));
+        protocol.clear();
+
+        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                 << QVariant::fromValue(quint8(server.serverPort()));
+
+        protocolDescriptorList.append(QVariant::fromValue(protocol));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
+                                 protocolDescriptorList);
+        QVERIFY(serviceInfo.registerService());
+
+        QVERIFY(server.isListening());
+        qDebug() << "Scanning address" << addresses[0].toString();
+        QBluetoothServiceDiscoveryAgent discoveryAgent(addresses[1]);
+        bool setAddress = discoveryAgent.setRemoteAddress(addresses[0]);
+
+        QVERIFY(setAddress);
+
+        QVERIFY(!discoveryAgent.isActive());
+
+        QVERIFY(discoveryAgent.discoveredServices().isEmpty());
+
+        QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
+
+        discoveryAgent.start();
+        int scanTime = MaxScanTime;
+        while (finishedSpy.count() == 0 && scanTime > 0) {
+            QTest::qWait(1000);
+            scanTime -= 1000;
+        }
+
+        QList<QBluetoothServiceInfo> discServices = discoveryAgent.discoveredServices();
+        QVERIFY(!discServices.empty());
+
+        int counter = 0;
+        for (int i = 0; i<discServices.size(); i++)
+        {
+            QBluetoothServiceInfo service((QBluetoothServiceInfo)discServices.at(i));
+            if (uuid == service.serviceUuid())
+                counter++;
+        }
+        QVERIFY(counter == 1);
+    }
+
+}
+
 
 void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 {
@@ -263,8 +344,13 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     QFETCH(QList<QBluetoothUuid>, uuidFilter);
     QFETCH(QBluetoothServiceDiscoveryAgent::Error, serviceDiscoveryError);
 
+    QBluetoothLocalDevice localDevice;
+
     qDebug() << "Scanning address" << deviceInfo.address().toString();
-    QBluetoothServiceDiscoveryAgent discoveryAgent(deviceInfo.address());
+    QBluetoothServiceDiscoveryAgent discoveryAgent(localDevice.address());
+    bool setAddress = discoveryAgent.setRemoteAddress(deviceInfo.address());
+
+    QVERIFY(setAddress);
 
     QVERIFY(!discoveryAgent.isActive());
 

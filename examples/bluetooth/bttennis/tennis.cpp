@@ -66,14 +66,29 @@
 //#include <qllcpsocket.h>
 
 Tennis::Tennis(QWidget *parent)
-: QDialog(parent), ui(new Ui_Tennis), board(new Board), controller(new Controller), socket(0),
-  m_discoveryAgent(new QBluetoothServiceDiscoveryAgent)//, m_handover(0)
+: QDialog(parent), ui(new Ui_Tennis), board(new Board), controller(new Controller), socket(0)
+  //, m_handover(0)
 {
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     device->powerOn();
     delete device;
     device = 0;
+
+    //Using default Bluetooth adapter
+    QBluetoothLocalDevice localDevice;
+    QBluetoothAddress adapterAddress = localDevice.address();
+
+    /*
+     * In case of multiple Bluetooth adapters it is possible to
+     * set which adapter will be used by providing MAC Address.
+     * Example code:
+     *
+     * QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
+     * m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+     */
+
+    m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress, this);
 
     //! [Construct UI]
     ui->setupUi(this);
