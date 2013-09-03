@@ -9,4 +9,13 @@ find_package(Qt5Core REQUIRED)
 
 include("${_Qt5CTestMacros}")
 
-expect_pass(test_modules)
+set(qt_module_includes
+    Bluetooth QBluetoothAddress
+    Nfc QNdefRecord
+)
+set(QBluetoothAddress_NAMESPACE QtBluetooth)
+set(QNdefRecord_NAMESPACE QtNfc)
+
+test_module_includes(
+    ${qt_module_includes}
+)
