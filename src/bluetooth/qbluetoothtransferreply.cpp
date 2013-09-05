@@ -43,7 +43,7 @@
 #include "qbluetoothtransferreply_p.h"
 #include "qbluetoothaddress.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothTransferReply
@@ -184,4 +184,4 @@ QBluetoothTransferReplyPrivate::QBluetoothTransferReplyPrivate()
 
 #include "moc_qbluetoothtransferreply.cpp"
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

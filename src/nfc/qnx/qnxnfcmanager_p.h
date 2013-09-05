@@ -59,7 +59,7 @@
 #define qQNXNFCDebug QT_NO_QDEBUG_MACRO
 #endif
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QLlcpSocketPrivate;
 
@@ -134,7 +134,7 @@ Q_SIGNALS:
     void llcpDisconnected();
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif
 

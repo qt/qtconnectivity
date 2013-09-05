@@ -55,11 +55,9 @@
 
 #include <QDebug>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
-class QBluetoothServiceDiscoveryAgent;
-QT_END_NAMESPACE_BLUETOOTH
+QT_FORWARD_DECLARE_CLASS(QBluetoothServiceDiscoveryAgent)
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c9");
 

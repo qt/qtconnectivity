@@ -51,7 +51,7 @@
 
 #include "qnx/qnxnfcmanager_p.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 #define TAG_NAME_BUFFER 64
 
@@ -219,6 +219,6 @@ protected:
     QList<QNdefMessage> m_ndefMessages;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNEARFIELDTARGET_QNX_H

@@ -44,7 +44,7 @@
 #include <QtCore/QTextCodec>
 #include <QtCore/QLocale>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNdefNfcTextRecord
@@ -200,4 +200,4 @@ void QNdefNfcTextRecord::setEncoding(Encoding encoding)
     setText(string);
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

@@ -50,7 +50,7 @@
 
 #include "qdeclarativebluetoothservice_p.h"
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 class QDeclarativeBluetoothSocketPrivate;
 class QDeclarativeBluetoothService;

@@ -48,7 +48,7 @@
 
 #include "qnx/qnxnfcmanager_p.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
 {
@@ -87,6 +87,6 @@ private:
     QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNEARFIELDMANAGER_QNX_P_H

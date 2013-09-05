@@ -44,17 +44,7 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(QT_NAMESPACE)
-#  define QT_PREPEND_NAMESPACE_NFC(name) ::QT_NAMESPACE::QtNfc::name
-#  define QT_BEGIN_NAMESPACE_NFC namespace QT_NAMESPACE { namespace QtNfc {
-#  define QT_END_NAMESPACE_NFC } }
-#  define QT_USE_NAMESPACE_NFC using namespace QT_NAMESPACE; using namespace QtNfc;
-#else
-#  define QT_PREPEND_NAMESPACE_NFC(name) ::QtNfc::name
-#  define QT_BEGIN_NAMESPACE_NFC namespace QtNfc {
-#  define QT_END_NAMESPACE_NFC }
-#  define QT_USE_NAMESPACE_NFC using namespace QtNfc;
-#endif
+QT_BEGIN_NAMESPACE
 
 #ifndef QT_STATIC
 #    if defined(QT_BUILD_NFC_LIB)
@@ -65,5 +55,7 @@
 #else
 #    define Q_NFC_EXPORT
 #endif
+
+QT_END_NAMESPACE
 
 #endif // QTNFC_H

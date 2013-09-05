@@ -51,7 +51,7 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 class TextRecordEditor : public QWidget
 {

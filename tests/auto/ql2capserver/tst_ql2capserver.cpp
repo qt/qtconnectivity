@@ -46,7 +46,7 @@
 #include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetooth::SecurityFlags);
 

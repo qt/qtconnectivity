@@ -46,7 +46,7 @@
 
 #include "qllcpsocket.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QLlcpSocketPrivate
 {
@@ -90,6 +90,6 @@ private:
     QLlcpSocket *q_ptr;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QLLCPSOCKET_P_H

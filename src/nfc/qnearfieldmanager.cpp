@@ -53,7 +53,7 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QMetaMethod>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNearFieldManager
@@ -411,4 +411,4 @@ QNearFieldManager::TargetAccessModes QNearFieldManager::targetAccessModes() cons
     return d->m_requestedModes;
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

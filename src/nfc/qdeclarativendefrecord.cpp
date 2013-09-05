@@ -44,7 +44,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QRegExp>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QDeclarativeNdefRecord
@@ -288,4 +288,4 @@ void QDeclarativeNdefRecord::setRecord(const QNdefRecord &record)
     emit recordChanged();
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

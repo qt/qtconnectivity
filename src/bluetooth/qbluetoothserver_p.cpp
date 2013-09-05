@@ -43,7 +43,7 @@
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
     : serverType(sType)
@@ -100,4 +100,4 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
     return QBluetooth::NoSecurity;
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

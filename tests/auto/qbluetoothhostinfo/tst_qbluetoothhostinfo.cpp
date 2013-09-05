@@ -46,7 +46,7 @@
 
 #include <qbluetoothhostinfo.h>
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 class tst_QBluetoothHostInfo : public QObject
 {

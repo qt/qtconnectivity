@@ -42,7 +42,7 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothaddress_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothAddress
@@ -216,4 +216,4 @@ QBluetoothAddressPrivate::QBluetoothAddressPrivate()
     m_address = 0;
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

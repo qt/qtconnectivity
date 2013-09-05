@@ -50,17 +50,17 @@
 
 QT_FORWARD_DECLARE_CLASS(QUrl)
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNdefNfcSmartPosterRecordPrivate;
 
 #define Q_DECLARE_ISRECORDTYPE_FOR_MIME_NDEF_RECORD(className) \
-    QT_BEGIN_NAMESPACE_NFC \
+    QT_BEGIN_NAMESPACE \
     template<> inline bool QNdefRecord::isRecordType<className>() const\
     { \
         return (typeNameFormat() == QNdefRecord::Mime); \
     } \
-    QT_END_NAMESPACE_NFC
+    QT_END_NAMESPACE
 
 #define Q_DECLARE_MIME_NDEF_RECORD(className, initialPayload) \
     className() : QNdefRecord(QNdefRecord::Mime, "") { setPayload(initialPayload); } \
@@ -145,7 +145,7 @@ private:
     void addIconInternal(const QNdefNfcIconRecord &icon);
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcSmartPosterRecord, QNdefRecord::NfcRtd, "Sp")
 Q_DECLARE_ISRECORDTYPE_FOR_MIME_NDEF_RECORD(QNdefNfcIconRecord)

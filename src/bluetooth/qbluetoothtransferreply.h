@@ -47,7 +47,7 @@
 #include <QtBluetooth/QBluetoothTransferRequest>
 #include <QtBluetooth/QBluetoothTransferManager>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothTransferReplyPrivate;
 
@@ -97,8 +97,6 @@ private:
 
 };
 
-QT_END_NAMESPACE_BLUETOOTH
-
-Q_DECLARE_METATYPE(QtBluetooth::QBluetoothTransferReply *)
+QT_END_NAMESPACE
 
 #endif // QBLUETOOTHTRANSFERREPLY_H

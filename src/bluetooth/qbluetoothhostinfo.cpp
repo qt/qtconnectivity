@@ -42,7 +42,7 @@
 #include "qbluetoothhostinfo.h"
 #include "qbluetoothhostinfo_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothHostInfo
@@ -117,4 +117,4 @@ void QBluetoothHostInfo::setName(const QString &name)
     d->m_name = name;
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

@@ -44,7 +44,7 @@
 
 #include <QUrl>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothServiceInfo::Sequence
@@ -621,4 +621,4 @@ int QBluetoothServiceInfoPrivate::serverChannel() const
         return parameters.at(1).toUInt();
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

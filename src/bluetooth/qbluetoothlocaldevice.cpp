@@ -46,7 +46,7 @@
 #include <QtCore/QString>
 #include <QDebug>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothLocalDevice
@@ -247,4 +247,4 @@ bool QBluetoothLocalDevice::isValid() const
 
 #include "moc_qbluetoothlocaldevice.cpp"
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

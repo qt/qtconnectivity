@@ -42,7 +42,7 @@
 #include "qllcpsocket_qnx_p.h"
 #include <unistd.h>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 QLlcpSocketPrivate::QLlcpSocketPrivate(QLlcpSocket *q)
     :   q_ptr(q), m_conListener(0), m_state(QLlcpSocket::UnconnectedState), m_server(false)
@@ -313,5 +313,5 @@ void QLlcpSocketPrivate::enteringIdle()
     }
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 

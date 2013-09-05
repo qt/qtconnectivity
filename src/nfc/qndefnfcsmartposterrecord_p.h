@@ -42,7 +42,7 @@
 #ifndef QNDEFNFCSMARTPOSTERRECORD_P_H
 #define QNDEFNFCSMARTPOSTERRECORD_P_H
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNdefNfcActRecord : public QNdefRecord
 {
@@ -85,7 +85,7 @@ public:
     QNdefNfcTypeRecord *m_type;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcActRecord, QNdefRecord::NfcRtd, "act")
 Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD(QNdefNfcSizeRecord, QNdefRecord::NfcRtd, "s")

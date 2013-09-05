@@ -44,7 +44,7 @@
 
 #include <QDebug>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothDeviceInfo
@@ -538,4 +538,4 @@ void QBluetoothDeviceInfo::setCached(bool cached)
     d->cached = cached;
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

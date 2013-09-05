@@ -50,7 +50,7 @@
 
 #include <QtBluetooth/QBluetoothAddress>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate;
 
@@ -108,6 +108,6 @@ private:
 #endif
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

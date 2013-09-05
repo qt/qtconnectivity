@@ -50,7 +50,7 @@
 #include <QIODevice>
 #include <QtNetwork/QAbstractSocket>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothSocketPrivate;
 class QBluetoothServiceInfo;
@@ -171,6 +171,6 @@ Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketError);
 Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketState);
 #endif
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

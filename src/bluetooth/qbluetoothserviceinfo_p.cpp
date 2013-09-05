@@ -42,7 +42,7 @@
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothserviceinfo_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 {
@@ -79,4 +79,4 @@ void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId
     Q_UNUSED(attributeId);
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

@@ -66,7 +66,7 @@ QT_END_NAMESPACE
 #include <QTimer>
 #endif
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
 
@@ -159,6 +159,6 @@ protected:
     QBluetoothServiceDiscoveryAgent *q_ptr;
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

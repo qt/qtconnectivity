@@ -42,7 +42,7 @@
 #include "qbluetoothsocket.h"
 #include "qbluetoothsocket_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
 {
@@ -145,4 +145,4 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return 0;
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

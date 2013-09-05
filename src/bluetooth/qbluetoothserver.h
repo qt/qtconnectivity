@@ -51,7 +51,7 @@
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QBluetoothServiceInfo>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothServerPrivate;
 class QBluetoothSocket;
@@ -100,6 +100,6 @@ private:
 #endif
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

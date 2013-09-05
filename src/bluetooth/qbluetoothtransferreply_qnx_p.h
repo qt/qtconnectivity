@@ -55,7 +55,7 @@
 
 #include "qnx/ppshelpers_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class Q_BLUETOOTH_EXPORT QBluetoothTransferReplyQnx : public QBluetoothTransferReply
 {
@@ -97,6 +97,6 @@ public slots:
     void abort();
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif // QBLUETOOTHTRANSFERREPLY_QNX_P_H

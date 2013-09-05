@@ -53,7 +53,7 @@
 
 #include <QtCore/QDebug>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfoPrivate;
 class QBluetoothDeviceInfo;
@@ -155,14 +155,13 @@ protected:
     QSharedPointer<QBluetoothServiceInfoPrivate> d_ptr;
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QtBluetooth::QBluetoothServiceInfo)
-Q_DECLARE_METATYPE(QtBluetooth::QBluetoothServiceInfo::Sequence)
-Q_DECLARE_METATYPE(QtBluetooth::QBluetoothServiceInfo::Alternative)
-Q_DECLARE_METATYPE(QList<QtBluetooth::QBluetoothUuid>)
+Q_DECLARE_METATYPE(QBluetoothServiceInfo)
+Q_DECLARE_METATYPE(QBluetoothServiceInfo::Sequence)
+Q_DECLARE_METATYPE(QBluetoothServiceInfo::Alternative)
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 inline void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QBluetoothUuid &value)
 {
@@ -234,6 +233,6 @@ inline QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
     return attribute(ServiceClassIds).value<QList<QBluetoothUuid> >();
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

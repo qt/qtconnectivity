@@ -49,7 +49,7 @@
 #include "qllcpserver_p.h"
 #endif
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QLlcpServer
@@ -198,4 +198,4 @@ QLlcpSocket::SocketError QLlcpServer::serverError() const
     return d->serverError();
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

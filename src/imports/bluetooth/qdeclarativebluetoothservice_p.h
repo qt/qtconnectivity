@@ -49,7 +49,7 @@
 
 class QDeclarativeBluetoothSocket;
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 class QDeclarativeBluetoothServicePrivate;
 

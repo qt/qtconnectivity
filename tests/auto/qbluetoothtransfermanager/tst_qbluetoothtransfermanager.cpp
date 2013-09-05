@@ -65,7 +65,7 @@
  * discoverable and the object push service must be accessible. Any
  **/
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 typedef QMap<QBluetoothTransferRequest::Attribute,QVariant> tst_QBluetoothTransferManager_QParameterMap;
 Q_DECLARE_METATYPE(tst_QBluetoothTransferManager_QParameterMap)

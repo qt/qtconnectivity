@@ -48,7 +48,7 @@
 #include <QtNfc/QNdefRecord>
 #include <QtNfc/QNdefFilter>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNearFieldManagerPrivate;
 class Q_NFC_EXPORT QNearFieldManager : public QObject
@@ -110,6 +110,6 @@ int QNearFieldManager::registerNdefMessageHandler(QObject *object, const char *m
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldManager::TargetAccessModes)
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNEARFIELDMANAGER_H

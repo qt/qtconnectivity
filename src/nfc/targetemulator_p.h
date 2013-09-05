@@ -48,7 +48,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class TagBase
 {
@@ -107,6 +107,6 @@ private:
     bool expectPacket2;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // TARGETEMULATOR_P_H

@@ -51,7 +51,7 @@
 #include "../qnfcglobal.h"
 #include "../qndefmessage.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNXNFCEventFilter : public QObject, public QAbstractNativeEventFilter
 {
@@ -70,6 +70,6 @@ Q_SIGNALS:
     void ndefEvent(const QNdefMessage &msg);
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNXNFCEVENTFILTER_H

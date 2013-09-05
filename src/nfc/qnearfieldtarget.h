@@ -53,7 +53,7 @@ class QString;
 class QUrl;
 QT_END_NAMESPACE
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNdefMessage;
 class QNearFieldTargetPrivate;
@@ -165,9 +165,9 @@ Q_NFC_EXPORT quint16 qNfcChecksum(const char * data, uint len);
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldTarget::AccessMethods)
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QtNfc::QNearFieldTarget::RequestId)
-Q_DECLARE_METATYPE(QtNfc::QNearFieldTarget::Error)
+Q_DECLARE_METATYPE(QNearFieldTarget::RequestId)
+Q_DECLARE_METATYPE(QNearFieldTarget::Error)
 
 #endif // QNEARFIELDTARGET_H

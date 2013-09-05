@@ -48,7 +48,7 @@
 #include <QtCore/QtGlobal>
 #include <QtCore/QVariant>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
 class QBluetoothTransferRequestPrivate;
@@ -85,6 +85,6 @@ private:
 
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif // QBLUETOOTHTRANSFERREQUEST_H

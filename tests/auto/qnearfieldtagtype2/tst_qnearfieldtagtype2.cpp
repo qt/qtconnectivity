@@ -47,7 +47,7 @@
 #include <private/qnearfieldtagtype2_p.h>
 #include <qndefnfctextrecord.h>
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QNearFieldTarget*)
 

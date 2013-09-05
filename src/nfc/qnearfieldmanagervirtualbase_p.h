@@ -46,7 +46,7 @@
 
 #include <QtCore/QMetaMethod>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNearFieldManagerPrivateVirtualBase : public QNearFieldManagerPrivate
 {
@@ -85,6 +85,6 @@ private:
     QList<QNearFieldTarget::Type> m_detectTargetTypes;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNEARFIELDMANAGERVIRTUALBASE_P_H

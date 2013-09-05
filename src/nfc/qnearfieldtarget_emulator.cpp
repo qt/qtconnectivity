@@ -48,7 +48,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 static QMutex tagMutex;
 static QMap<TagBase *, bool> tagMap;
@@ -300,4 +300,4 @@ void TagActivator::timerEvent(QTimerEvent *e)
     tagMutex.unlock();
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

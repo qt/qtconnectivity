@@ -42,7 +42,7 @@
 #include "qllcpserver_qnx_p.h"
 #include "qnx/qnxnfcmanager_p.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
     : q_ptr(q), m_llcpSocket(0), m_connected(false), m_conListener(0)
@@ -123,6 +123,6 @@ void QLlcpServerPrivate::connected(nfc_target_t *target)
     m_llcpSocket->bind(serverPort());
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 

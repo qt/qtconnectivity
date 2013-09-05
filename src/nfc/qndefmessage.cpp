@@ -42,7 +42,7 @@
 #include "qndefmessage.h"
 #include "qndefrecord_p.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNdefMessage
@@ -321,4 +321,4 @@ QByteArray QNdefMessage::toByteArray() const
     return m;
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

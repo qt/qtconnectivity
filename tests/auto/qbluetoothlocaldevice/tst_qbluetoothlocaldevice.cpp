@@ -47,7 +47,7 @@
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 /*
  * Running the manual tests requires another Bluetooth device in the vincinity.

@@ -46,7 +46,7 @@
 #include <QtNfc/qnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNdefFilterPrivate;
 class Q_NFC_EXPORT QNdefFilter
@@ -91,6 +91,6 @@ void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
     appendRecord(record.typeNameFormat(), record.type(), min, max);
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNDEFFILTER_H

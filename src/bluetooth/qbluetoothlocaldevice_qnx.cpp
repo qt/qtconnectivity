@@ -44,7 +44,7 @@
 #include "qbluetoothlocaldevice_p.h"
 #include "qnx/ppshelpers_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
 :   QObject(parent)
@@ -306,4 +306,4 @@ void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
     }
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

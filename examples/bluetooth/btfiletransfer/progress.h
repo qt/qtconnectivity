@@ -45,11 +45,9 @@
 #include <qbluetoothglobal.h>
 #include <QTime>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
-class QBluetoothTransferReply;
-QT_END_NAMESPACE_BLUETOOTH
+QT_FORWARD_DECLARE_CLASS(QBluetoothTransferReply)
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

@@ -47,11 +47,7 @@
 
 #include <QDebug>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
-class QRfcommServer;
-QT_END_NAMESPACE_BLUETOOTH
-
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 class ChatServer;
 class ChatClient;

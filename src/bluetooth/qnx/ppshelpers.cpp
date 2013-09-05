@@ -45,7 +45,7 @@
 #include "../qbluetoothserver_p.h"
 #include <QTimer>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 static int count = 0;
 
@@ -454,4 +454,4 @@ void ppsUnregisterForEvent(const QString &str, QObject *obj)
     }
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

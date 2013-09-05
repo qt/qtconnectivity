@@ -53,7 +53,7 @@
 
 #include <errno.h>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
 {
@@ -312,4 +312,4 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
     return static_cast<QBluetooth::Security>(security);
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

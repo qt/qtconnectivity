@@ -45,7 +45,7 @@
 #include "qllcpserver.h"
 #include "nfc/nfc.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QLlcpServerPrivate : public QObject
 {
@@ -78,6 +78,6 @@ private:
     nfc_target_t *m_target;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QLLCPSERVER_QNX_P_H

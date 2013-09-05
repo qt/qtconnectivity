@@ -51,7 +51,7 @@
 
 class OrgBluezServiceInterface;
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
 
@@ -87,6 +87,6 @@ private:
     mutable bool registered;
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

@@ -44,7 +44,7 @@
 #include "qbluetoothlocaldevice.h"
 #include <sys/stat.h>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
@@ -358,5 +358,5 @@ void QBluetoothSocketPrivate::controlEvent(ppsResult result)
     }
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 

@@ -44,16 +44,13 @@
 #include "ui_service.h"
 
 #include <qbluetoothglobal.h>
-
 #include <QDialog>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
-class QBluetoothServiceDiscoveryAgent;
-class QBluetoothServiceInfo;
-class QBluetoothAddress;
-QT_END_NAMESPACE_BLUETOOTH
+QT_FORWARD_DECLARE_CLASS(QBluetoothAddress)
+QT_FORWARD_DECLARE_CLASS(QBluetoothServiceInfo)
+QT_FORWARD_DECLARE_CLASS(QBluetoothServiceDiscoveryAgent)
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 class ServiceDiscoveryDialog : public QDialog
 {

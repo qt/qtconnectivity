@@ -57,7 +57,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceDiscoveryAgent;
 
@@ -184,6 +184,6 @@ static inline void convertAddress(quint8 (&from)[6], quint64 &to)
          (quint64(from[5]) << 40);
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

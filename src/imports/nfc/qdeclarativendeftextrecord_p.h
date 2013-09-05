@@ -46,7 +46,7 @@
 
 #include <qndefnfctextrecord.h>
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 class QDeclarativeNdefTextRecord : public QDeclarativeNdefRecord
 {

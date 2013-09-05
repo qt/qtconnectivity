@@ -49,7 +49,7 @@
 #include "qllcpsocket_p.h"
 #endif
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QLlcpSocket
@@ -400,4 +400,4 @@ qint64 QLlcpSocket::writeData(const char *data, qint64 len)
     return d->writeData(data, len);
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

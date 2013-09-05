@@ -48,7 +48,7 @@
 
 #include <qndefrecord.h>
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

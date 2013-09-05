@@ -48,7 +48,7 @@
 
 #include <QString>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceInfoPrivate
 {
@@ -71,6 +71,6 @@ public:
     QList<QBluetoothUuid> serviceUuids;
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

@@ -50,7 +50,7 @@
 
 #include <QtCore/QCoreApplication>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 using namespace QtSimulatorPrivate;
 
@@ -202,6 +202,6 @@ void QNearFieldManagerPrivateImpl::targetLeavingProximity(const QByteArray &uid)
     targetDeactivated(target);
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #include "qnearfieldmanager_simulator.moc"

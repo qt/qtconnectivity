@@ -47,7 +47,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QUrl>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNdefNfcSmartPosterRecord
@@ -737,4 +737,4 @@ QByteArray QNdefNfcTypeRecord::typeInfo() const
     return payload();
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

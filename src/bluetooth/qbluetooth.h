@@ -45,7 +45,7 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 namespace QBluetooth {
     enum Security {
@@ -60,6 +60,6 @@ namespace QBluetooth {
     Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif // QBLUETOOTH_H

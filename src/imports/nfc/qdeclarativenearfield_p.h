@@ -50,7 +50,7 @@
 #include "qdeclarativendefrecord.h"
 
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 class QDeclarativeNdefFilter;
 class QDeclarativeNearField : public QObject, public QQmlParserStatus

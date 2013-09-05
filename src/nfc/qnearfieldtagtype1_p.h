@@ -55,7 +55,7 @@
 
 #include <QtNfc/QNearFieldTarget>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QNearFieldTagType1Private;
 
@@ -104,6 +104,6 @@ private:
     QNearFieldTagType1Private *d_ptr;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNEARFIELDTAGTYPE1_H

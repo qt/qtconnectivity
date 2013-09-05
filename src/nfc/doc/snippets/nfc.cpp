@@ -43,7 +43,7 @@
 
 #include <QtCore/QDebug>
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 void snippet_recordConversion()
 {

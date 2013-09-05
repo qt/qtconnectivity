@@ -49,15 +49,10 @@
 #include <QtCore/QTime>
 #include <QtCore/QTimer>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
-class QBluetoothSocket;
-QT_END_NAMESPACE_BLUETOOTH
+QT_FORWARD_DECLARE_CLASS(QBluetoothSocket)
+QT_FORWARD_DECLARE_CLASS(QDataStream)
 
-QT_BEGIN_NAMESPACE
-class QDataStream;
-QT_END_NAMESPACE
-
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 //! [declaration]
 class TennisClient : public QObject

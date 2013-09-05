@@ -46,7 +46,7 @@
 
 #define QT_DEVICEDISCOVERY_DEBUG
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
 {
@@ -91,4 +91,4 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
 }
 #endif
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

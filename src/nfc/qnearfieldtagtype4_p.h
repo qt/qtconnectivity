@@ -55,7 +55,7 @@
 // We mean it.
 //
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class Q_AUTOTEST_EXPORT QNearFieldTagType4 : public QNearFieldTarget
 {
@@ -79,6 +79,6 @@ protected:
     bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response);
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QNEARFIELDTAGTYPE4_H

@@ -45,7 +45,7 @@
 #include "qbluetoothserver_p.h"
 #include "qbluetoothserver.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 :  registered(false)
@@ -111,4 +111,4 @@ bool QBluetoothServiceInfoPrivate::registerService() const
     return true;
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

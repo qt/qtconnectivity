@@ -46,7 +46,7 @@
 #include <qndefnfcurirecord.h>
 #include <qdeclarativendefrecord.h>
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QNdefRecord::TypeNameFormat)
 

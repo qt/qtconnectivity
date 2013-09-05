@@ -46,7 +46,7 @@
 #include <qndefnfctextrecord.h>
 #include <qndefnfcurirecord.h>
 
-QT_USE_NAMESPACE_NFC
+QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QNdefRecord)
 

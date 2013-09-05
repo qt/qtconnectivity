@@ -54,7 +54,7 @@
 #include <QtCore/QDebug>
 #endif
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive), deviceDiscoveryAgent(0),
@@ -330,4 +330,4 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
     }
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

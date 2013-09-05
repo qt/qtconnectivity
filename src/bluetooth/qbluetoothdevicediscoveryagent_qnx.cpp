@@ -47,7 +47,7 @@
 #include <QtCore/private/qcore_unix_p.h>
 
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter):
     QObject(0), lastError(QBluetoothDeviceDiscoveryAgent::NoError),
@@ -272,5 +272,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processNextOp()
     }
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 

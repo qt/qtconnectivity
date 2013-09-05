@@ -50,7 +50,7 @@
 #include <QDebug>
 #include <QSocketNotifier>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothSocket
@@ -679,4 +679,4 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketState state)
 
 #include "moc_qbluetoothsocket.cpp"
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

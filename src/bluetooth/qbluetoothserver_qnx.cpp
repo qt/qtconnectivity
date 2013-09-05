@@ -49,7 +49,7 @@
 
 #include <QCoreApplication>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
@@ -219,5 +219,5 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
     return d->securityFlags; //not used
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 

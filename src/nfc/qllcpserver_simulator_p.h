@@ -46,7 +46,7 @@
 
 #include "qllcpserver.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QLlcpServerPrivate
 {
@@ -70,6 +70,6 @@ private:
     QLlcpServer *q_ptr;
 };
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QLLCPSERVER_P_H

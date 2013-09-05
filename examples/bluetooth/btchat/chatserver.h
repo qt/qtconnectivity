@@ -46,12 +46,10 @@
 #include <QtCore/QObject>
 #include <QtCore/QList>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
-class QBluetoothServer;
-class QBluetoothSocket;
-QT_END_NAMESPACE_BLUETOOTH
+QT_FORWARD_DECLARE_CLASS(QBluetoothServer)
+QT_FORWARD_DECLARE_CLASS(QBluetoothSocket)
 
-QT_USE_NAMESPACE_BLUETOOTH
+QT_USE_NAMESPACE
 
 //! [declaration]
 class ChatServer : public QObject

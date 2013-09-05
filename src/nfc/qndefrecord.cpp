@@ -45,7 +45,7 @@
 
 #include <QtCore/QHash>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNdefRecord
@@ -366,4 +366,4 @@ bool QNdefRecord::operator==(const QNdefRecord &other) const
     return true;
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

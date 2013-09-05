@@ -44,7 +44,7 @@
 #include "qbluetoothtransferrequest_p.h"
 
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothTransferRequest
@@ -181,4 +181,4 @@ QBluetoothTransferRequestPrivate::QBluetoothTransferRequestPrivate()
 {
 }
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

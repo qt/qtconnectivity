@@ -46,7 +46,7 @@
 #include <QtCore/QMetaType>
 #include <QtNfc/QNdefRecord>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 class QDeclarativeNdefRecordPrivate;
 
@@ -93,6 +93,6 @@ bool qRegisterNdefRecordType(QNdefRecord::TypeNameFormat typeNameFormat, const Q
 #define Q_DECLARE_NDEFRECORD(className, typeNameFormat, type) \
 static bool _q_##className##_registered = qRegisterNdefRecordType<className>(typeNameFormat, type);
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
 
 #endif // QDECLARATIVENDEFRECORD_P_H

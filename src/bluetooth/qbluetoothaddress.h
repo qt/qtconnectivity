@@ -48,7 +48,7 @@
 #include <QtCore/QString>
 #include <QtCore/QMetaType>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothAddressPrivate;
 
@@ -79,8 +79,8 @@ private:
     QBluetoothAddressPrivate *d_ptr;
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QtBluetooth::QBluetoothAddress)
+Q_DECLARE_METATYPE(QBluetoothAddress)
 
 #endif

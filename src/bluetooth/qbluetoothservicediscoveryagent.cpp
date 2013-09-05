@@ -44,7 +44,7 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothServiceDiscoveryAgent
@@ -439,4 +439,4 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
 
 #include "moc_qbluetoothservicediscoveryagent.cpp"
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

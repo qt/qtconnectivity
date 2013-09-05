@@ -49,7 +49,7 @@
 #include <QtBluetooth/QBluetoothServiceInfo>
 #include <QtBluetooth/QBluetoothUuid>
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
 class QBluetoothServiceDiscoveryAgentPrivate;
@@ -111,6 +111,6 @@ private:
 #endif
 };
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 
 #endif

@@ -41,7 +41,7 @@
 
 #include "qnearfieldtagtype4_p.h"
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNearFieldTagType4
@@ -160,4 +160,4 @@ bool QNearFieldTagType4::handleResponse(const QNearFieldTarget::RequestId &id,
     return QNearFieldTarget::handleResponse(id, response);
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

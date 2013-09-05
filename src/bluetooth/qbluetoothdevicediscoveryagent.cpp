@@ -42,7 +42,7 @@
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothDeviceDiscoveryAgent
@@ -239,5 +239,5 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
 
 #include "moc_qbluetoothdevicediscoveryagent.cpp"
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE
 

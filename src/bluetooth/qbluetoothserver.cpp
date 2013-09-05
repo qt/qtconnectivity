@@ -44,7 +44,7 @@
 #include "qbluetoothsocket.h"
 #include "qbluetoothserviceinfo.h"
 
-QT_BEGIN_NAMESPACE_BLUETOOTH
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QBluetoothServer
@@ -250,4 +250,4 @@ int QBluetoothServer::maxPendingConnections() const
 
 #include "moc_qbluetoothserver.cpp"
 
-QT_END_NAMESPACE_BLUETOOTH
+QT_END_NAMESPACE

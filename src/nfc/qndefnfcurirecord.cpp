@@ -46,7 +46,7 @@
 
 #include <QtCore/QDebug>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNdefNfcUriRecord
@@ -154,4 +154,4 @@ void QNdefNfcUriRecord::setUri(const QUrl &uri)
     setPayload(p);
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE

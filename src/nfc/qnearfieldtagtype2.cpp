@@ -48,7 +48,7 @@
 
 #include <QtCore/QDebug>
 
-QT_BEGIN_NAMESPACE_NFC
+QT_BEGIN_NAMESPACE
 
 /*!
     \class QNearFieldTagType2
@@ -327,4 +327,4 @@ void QNearFieldTagType2::timerEvent(QTimerEvent *event)
     }
 }
 
-QT_END_NAMESPACE_NFC
+QT_END_NAMESPACE
