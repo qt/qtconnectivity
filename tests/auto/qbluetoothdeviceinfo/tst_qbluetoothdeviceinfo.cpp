@@ -73,8 +73,6 @@ private slots:
     void tst_serviceUuids();
 
     void tst_cached();
-
-    void tst_manufacturerSpecificData();
 };
 
 tst_QBluetoothDeviceInfo::tst_QBluetoothDeviceInfo()
@@ -373,16 +371,6 @@ void tst_QBluetoothDeviceInfo::tst_cached()
 
     deviceInfo.setCached(false);
     QVERIFY(!(deviceInfo.isCached()));
-}
-
-void tst_QBluetoothDeviceInfo::tst_manufacturerSpecificData()
-{
-    QBluetoothDeviceInfo deviceInfo;
-    QByteArray data;
-    bool available;
-    data = deviceInfo.manufacturerSpecificData(&available);
-    // Current API implementation returns only empty QByteArray()
-    QCOMPARE(data, QByteArray());
 }
 
 QTEST_MAIN(tst_QBluetoothDeviceInfo)

@@ -66,11 +66,11 @@ public:
         WearableDevice = 7,
         ToyDevice = 8,
         HealthDevice = 9,
-        UncategorizedDevice = 31,
+        UncategorizedDevice = 31
     };
 
     enum MinorMiscellaneousClass {
-        UncategorizedMiscellaneous = 0,
+        UncategorizedMiscellaneous = 0
     };
 
     enum MinorComputerClass {
@@ -80,7 +80,7 @@ public:
         LaptopComputer = 3,
         HandheldClamShellComputer = 4,
         HandheldComputer = 5,
-        WearableComputer = 6,
+        WearableComputer = 6
     };
 
     enum MinorPhoneClass {
@@ -89,7 +89,7 @@ public:
         CordlessPhone = 2,
         SmartPhone = 3,
         WiredModemOrVoiceGatewayPhone = 4,
-        CommonIsdnAccessPhone = 5,
+        CommonIsdnAccessPhone = 5
     };
 
     enum MinorNetworkClass {
@@ -100,7 +100,7 @@ public:
         NetworkLoadFactorFour = 0x20,
         NetworkLoadFactorFive = 0x28,
         NetworkLoadFactorSix = 0x30,
-        NetworkNoService = 0x38,
+        NetworkNoService = 0x38
     };
 
     enum MinorAudioVideoClass {
@@ -122,7 +122,7 @@ public:
         VideoDisplayAndLoudspeaker = 15,
         VideoConferencing = 16,
         // reserved = 17,
-        GamingDevice = 18,
+        GamingDevice = 18
     };
 
     enum MinorPeripheralClass {
@@ -136,7 +136,7 @@ public:
         RemoteControlPeripheral = 0x03,
         SensingDevicePeripheral = 0x04,
         DigitizerTabletPeripheral = 0x05,
-        CardReaderPeripheral = 0x06,
+        CardReaderPeripheral = 0x06
     };
 
     enum MinorImagingClass {
@@ -153,7 +153,7 @@ public:
         WearablePager = 2,
         WearableJacket = 3,
         WearableHelmet = 4,
-        WearableGlasses = 5,
+        WearableGlasses = 5
     };
 
     enum MinorToyClass {
@@ -162,7 +162,7 @@ public:
         ToyVehicle = 2,
         ToyDoll = 3,
         ToyController = 4,
-        ToyGame = 5,
+        ToyGame = 5
     };
 
     enum MinorHealthClass {
@@ -186,14 +186,14 @@ public:
         AudioService = 0x0020,
         TelephonyService = 0x0040,
         InformationService = 0x0080,
-        AllServices = 0x07ff,
+        AllServices = 0x07ff
     };
     Q_DECLARE_FLAGS(ServiceClasses, ServiceClass)
 
     enum DataCompleteness {
         DataComplete,
         DataIncomplete,
-        DataUnavailable,
+        DataUnavailable
     };
 
     QBluetoothDeviceInfo();
@@ -220,19 +220,9 @@ public:
     qint16 rssi() const;
     void setRssi(qint16 signal);
 
-//    bool matchesMinorClass(MinorComputerClass minor) const;
-//    bool matchesMinorClass(MinorPhoneClass minor) const;
-//    bool matchesMinorClass(MinorNetworkClass minor) const;
-//    bool matchesMinorClass(MinorAudioVideoClass minor) const;
-//    bool matchesMinorClass(MinorPeripheralClass minor) const;
-//    bool matchesMinorClass(MinorImagingClass minor) const;
-
     void setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness);
     QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = 0) const;
     DataCompleteness serviceUuidsCompleteness() const;
-
-    void setManufacturerSpecificData(const QByteArray &data);
-    QByteArray manufacturerSpecificData(bool *available = 0) const;
 
 protected:
     QBluetoothDeviceInfoPrivate *d_ptr;

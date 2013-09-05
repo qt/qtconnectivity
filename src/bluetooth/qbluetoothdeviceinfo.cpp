@@ -500,24 +500,6 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
 }
 
 /*!
-    Sets the manufacturer-specific data returned by Extended Inquiry Responses to \a data.
-*/
-void QBluetoothDeviceInfo::setManufacturerSpecificData(const QByteArray &data)
-{
-    Q_UNUSED(data);
-}
-
-/*!
-    Returns the manufacturer-specific data. If \a available is not 0, it is set to true if
-    manufacturer-specific data is available; otherwise it is set to false.
-*/
-QByteArray QBluetoothDeviceInfo::manufacturerSpecificData(bool *available) const
-{
-    Q_UNUSED(available);
-    return QByteArray();
-}
-
-/*!
     Returns true if the QBluetoothDeviceInfo object is created from cached data.
 */
 bool QBluetoothDeviceInfo::isCached() const
