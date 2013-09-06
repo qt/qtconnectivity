@@ -67,7 +67,7 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
 
     discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
 
-    bool set = discoveryAgent->setRemoteAddress(address);
+    discoveryAgent->setRemoteAddress(address);
 
     setWindowTitle(name);
 

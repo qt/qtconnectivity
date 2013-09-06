@@ -66,7 +66,7 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
 }
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
-    :   maxPendingConnections(1), socketNotifier(0), serverType(sType)
+    :   maxPendingConnections(1), serverType(sType), socketNotifier(0)
 {
     if (sType == QBluetoothServer::RfcommServer)
         socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
