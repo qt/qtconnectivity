@@ -29,7 +29,6 @@ PRIVATE_HEADERS += \
     qnearfieldtagtype3_p.h \
     qnearfieldtagtype4_p.h \
     qtlv_p.h \
-    checksum_p.h \
     qndefnfcsmartposterrecord_p.h
 
 SOURCES += \

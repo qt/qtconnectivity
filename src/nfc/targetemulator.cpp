@@ -47,7 +47,7 @@
 #include <QtCore/QDebug>
 
 // Implementation of qNfcChecksum
-#include "checksum_p.h"
+#include "qnearfieldtarget.h"
 
 QT_BEGIN_NAMESPACE_NFC
 

@@ -130,13 +130,34 @@ QT_BEGIN_NAMESPACE_NFC
 */
 
 /*!
-    \fn qNfcChecksum(const char *data, uint len)
+    \fn quint16 qNfcChecksum(const char *data, uint len)
 
     \relates QNearFieldTarget
 
     Returns the NFC checksum of the first \a len bytes of \a data.
 */
-#include "checksum_p.h"
+// Copied from qbytearray.cpp
+// Modified to initialize the crc with 0x6363 instead of 0xffff and to not invert the final result.
+static const quint16 crc_tbl[16] = {
+    0x0000, 0x1081, 0x2102, 0x3183,
+    0x4204, 0x5285, 0x6306, 0x7387,
+    0x8408, 0x9489, 0xa50a, 0xb58b,
+    0xc60c, 0xd68d, 0xe70e, 0xf78f
+};
+
+quint16 qNfcChecksum(const char *data, uint len)
+{
+    register quint16 crc = 0x6363;
+    uchar c;
+    const uchar *p = reinterpret_cast<const uchar *>(data);
+    while (len--) {
+        c = *p++;
+        crc = ((crc >> 4) & 0x0fff) ^ crc_tbl[((crc ^ c) & 15)];
+        c >>= 4;
+        crc = ((crc >> 4) & 0x0fff) ^ crc_tbl[((crc ^ c) & 15)];
+    }
+    return crc;
+}
 
 /*!
     \fn void QNearFieldTarget::disconnected()
