@@ -15,12 +15,12 @@ PUBLIC_HEADERS += \
     qndefmessage.h \
     qndeffilter.h \
     qndefnfcurirecord.h \
-    qllcpsocket.h \
-    qllcpserver.h \
     qdeclarativendefrecord.h \
     qndefnfcsmartposterrecord.h
 
 PRIVATE_HEADERS += \
+    qllcpsocket_p.h \
+    qllcpserver_p.h \
     qndefrecord_p.h \
     qnearfieldtarget_p.h \
     qnearfieldmanager_p.h \
@@ -93,8 +93,8 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     message("Unsupported NFC platform, will not build a working QtNfc library.")
 
     PRIVATE_HEADERS += \
-        qllcpsocket_p.h \
-        qllcpserver_p.h \
+        qllcpsocket_p_p.h \
+        qllcpserver_p_p.h \
         qnearfieldmanagerimpl_p.h
 
     SOURCES += \

@@ -39,50 +39,40 @@
 **
 ****************************************************************************/
 
-#ifndef SOCKETCONTROLLER_H
-#define SOCKETCONTROLLER_H
+#ifndef QLLCPSERVER_P_H
+#define QLLCPSERVER_P_H
 
-#include <QtCore/QObject>
+#include "qnfcglobal.h"
 
-#include <qnearfieldmanager.h>
-#include <qllcpsocket_p.h>
+#include "qllcpserver_p.h"
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE
 
-class SocketController : public QObject
+class QLlcpServerPrivate
 {
-    Q_OBJECT
+    Q_DECLARE_PUBLIC(QLlcpServer)
 
 public:
-    enum ConnectionType {
-        StreamConnection,
-        DatagramConnection,
-        BoundSocket,
-        ConnectionlessSocket
-    };
+    QLlcpServerPrivate(QLlcpServer *q);
+    ~QLlcpServerPrivate();
 
-    SocketController(ConnectionType type, QObject *parent = 0);
-    ~SocketController();
+    bool listen(const QString &serviceUri);
+    bool isListening() const;
 
-public slots:
-    void connected();
-    void disconnected();
-    void error(QLlcpSocket::SocketError socketError);
-    void stateChanged(QLlcpSocket::SocketState socketState);
-    void readyRead();
-    void targetDetected(QNearFieldTarget *target);
-    void targetLost(QNearFieldTarget *target);
+    void close();
 
-protected:
-    void timerEvent(QTimerEvent *event);
+    QString serviceUri() const;
+    quint8 serverPort() const;
+
+    bool hasPendingConnections() const;
+    QLlcpSocket *nextPendingConnection();
+
+    QLlcpSocket::SocketError serverError() const;
 
 private:
-    QNearFieldManager *m_manager;
-    QLlcpSocket *m_socket;
-    ConnectionType m_connectionType;
-    QString m_service;
-    quint8 m_port;
-    int m_timerId;
+    QLlcpServer *q_ptr;
 };
 
-#endif // SOCKETCONTROLLER_H
+QT_END_NAMESPACE
+
+#endif // QLLCPSERVER_P_H

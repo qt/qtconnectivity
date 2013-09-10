@@ -39,26 +39,61 @@
 **
 ****************************************************************************/
 
-#ifndef QLLCPSOCKET_P_H
-#define QLLCPSOCKET_P_H
+#ifndef QLLCPSOCKET_H
+#define QLLCPSOCKET_H
 
-#include "qnfcglobal.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qllcpsocket.h"
+#include <QtCore/QIODevice>
+#include <QtNetwork/QAbstractSocket>
+#include <QtNfc/qnfcglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QLlcpSocketPrivate
+class QNearFieldTarget;
+class QLlcpSocketPrivate;
+
+class Q_NFC_EXPORT QLlcpSocket : public QIODevice
 {
-    Q_DECLARE_PUBLIC(QLlcpSocket)
+    Q_OBJECT
+
+    Q_DECLARE_PRIVATE(QLlcpSocket)
+
+    friend class QLlcpServerPrivate;
 
 public:
-    QLlcpSocketPrivate(QLlcpSocket *q);
+    enum SocketState {
+        UnconnectedState = QAbstractSocket::UnconnectedState,
+        ConnectingState = QAbstractSocket::ConnectingState,
+        ConnectedState = QAbstractSocket::ConnectedState,
+        ClosingState = QAbstractSocket::ClosingState,
+        BoundState = QAbstractSocket::BoundState,
+        ListeningState = QAbstractSocket::ListeningState
+    };
 
-    ~QLlcpSocketPrivate();
-    
+    enum SocketError {
+        UnknownSocketError = QAbstractSocket::UnknownSocketError,
+        RemoteHostClosedError = QAbstractSocket::RemoteHostClosedError,
+        SocketAccessError = QAbstractSocket::SocketAccessError,
+        SocketResourceError = QAbstractSocket::SocketResourceError
+    };
+
+    explicit QLlcpSocket(QObject *parent = 0);
+    ~QLlcpSocket();
+
     void connectToService(QNearFieldTarget *target, const QString &serviceUri);
     void disconnectFromService();
+
+    void close();
 
     bool bind(quint8 port);
 
@@ -74,24 +109,34 @@ public:
                          QNearFieldTarget *target, quint8 port);
     qint64 writeDatagram(const QByteArray &datagram, QNearFieldTarget *target, quint8 port);
 
-    QLlcpSocket::SocketError error() const;
-    QLlcpSocket::SocketState state() const;
-
-    qint64 readData(char *data, qint64 maxlen);
-    qint64 writeData(const char *data, qint64 len);
+    SocketError error() const;
+    SocketState state() const;
 
     qint64 bytesAvailable() const;
     bool canReadLine() const;
 
-    bool waitForReadyRead(int msecs);
-    bool waitForBytesWritten(int msecs);
-    bool waitForConnected(int msecs);
-    bool waitForDisconnected(int msecs);
+    bool waitForReadyRead(int msecs = 30000);
+    bool waitForBytesWritten(int msecs = 30000);
+    virtual bool waitForConnected(int msecs = 30000);
+    virtual bool waitForDisconnected(int msecs = 30000);
+    bool isSequential() const;
+
+Q_SIGNALS:
+    void connected();
+    void disconnected();
+    void error(QLlcpSocket::SocketError socketError);
+    void stateChanged(QLlcpSocket::SocketState socketState);
+
+protected:
+    qint64 readData(char *data, qint64 maxlen);
+    qint64 writeData(const char *data, qint64 len);
 
 private:
-    QLlcpSocket *q_ptr;
+    QLlcpSocket(QLlcpSocketPrivate *d, QObject *parent);
+
+    QLlcpSocketPrivate *d_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QLLCPSOCKET_P_H
+#endif // QLLCPSOCKET_H

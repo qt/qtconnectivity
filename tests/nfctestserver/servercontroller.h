@@ -44,7 +44,7 @@
 
 #include <QtCore/QObject>
 
-#include <qllcpserver.h>
+#include <qllcpserver_p.h>
 
 QT_USE_NAMESPACE
 

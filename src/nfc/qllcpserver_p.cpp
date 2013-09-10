@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qllcpserver_p.h"
+#include "qllcpserver_p_p.h"
 
 QT_BEGIN_NAMESPACE
 

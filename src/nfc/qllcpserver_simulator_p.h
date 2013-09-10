@@ -44,7 +44,7 @@
 
 #include <qconnectivityglobal.h>
 
-#include "qllcpserver.h"
+#include "qllcpserver_p.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -39,14 +39,14 @@
 **
 ****************************************************************************/
 
-#include "qllcpsocket.h"
+#include "qllcpsocket_p.h"
 
 #if defined(QT_SIMULATOR)
 #include "qllcpsocket_simulator_p.h"
 #elif defined(QNX_NFC)
 #include "qllcpsocket_qnx_p.h"
 #else
-#include "qllcpsocket_p.h"
+#include "qllcpsocket_p_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -54,6 +54,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QLlcpSocket
     \brief The QLlcpSocket class provides an NFC LLCP socket.
+    \internal
 
     \ingroup connectivity-nfc
     \inmodule QtNfc

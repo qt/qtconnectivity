@@ -43,7 +43,7 @@
 #include <QtQml/QQmlExtensionPlugin>
 
 #include "qdeclarativendefrecord.h"
-#include "qdeclarativenearfieldsocket_p.h"
+//#include "qdeclarativenearfieldsocket_p.h"
 #include "qdeclarativenearfield_p.h"
 #include "qdeclarativendeffilter_p.h"
 #include "qdeclarativendeftextrecord_p.h"
@@ -67,7 +67,7 @@ public:
 
         int major = 5;
         int minor = 0;
-        qmlRegisterType<QDeclarativeNearFieldSocket>(uri, major, minor, "NearFieldSocket");
+        //qmlRegisterType<QDeclarativeNearFieldSocket>(uri, major, minor, "NearFieldSocket");
 
         qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
         qmlRegisterType<QDeclarativeNdefFilter>(uri, major, minor, "NdefFilter");

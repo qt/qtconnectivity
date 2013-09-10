@@ -39,22 +39,37 @@
 **
 ****************************************************************************/
 
-#ifndef QLLCPSERVER_P_H
-#define QLLCPSERVER_P_H
+#ifndef QLLCPSERVER_H
+#define QLLCPSERVER_H
 
-#include "qnfcglobal.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qllcpserver.h"
+#include <QtCore/QObject>
+#include <QtNfc/qnfcglobal.h>
+#include "qllcpsocket_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QLlcpServerPrivate 
+class QLlcpServerPrivate;
+
+class Q_NFC_EXPORT QLlcpServer : public QObject
 {
-    Q_DECLARE_PUBLIC(QLlcpServer)
+    Q_OBJECT
+
+    Q_DECLARE_PRIVATE(QLlcpServer)
 
 public:
-    QLlcpServerPrivate(QLlcpServer *q);
-    ~QLlcpServerPrivate();
+    explicit QLlcpServer(QObject *parent = 0);
+    virtual ~QLlcpServer();
 
     bool listen(const QString &serviceUri);
     bool isListening() const;
@@ -64,15 +79,18 @@ public:
     QString serviceUri() const;
     quint8 serverPort() const;
 
-    bool hasPendingConnections() const;
-    QLlcpSocket *nextPendingConnection();
+    virtual bool hasPendingConnections() const;
+    virtual QLlcpSocket *nextPendingConnection();
 
     QLlcpSocket::SocketError serverError() const;
 
+Q_SIGNALS:
+    void newConnection();
+
 private:
-    QLlcpServer *q_ptr;
+    QLlcpServerPrivate *d_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QLLCPSERVER_P_H
+#endif // QLLCPSERVER_H

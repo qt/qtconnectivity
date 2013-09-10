@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qllcpsocket_p.h"
+#include "qllcpsocket_p_p.h"
 
 QT_BEGIN_NAMESPACE
 

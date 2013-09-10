@@ -39,47 +39,59 @@
 **
 ****************************************************************************/
 
-#ifndef QLLCPSERVER_H
-#define QLLCPSERVER_H
+#ifndef QLLCPSOCKET_P_H
+#define QLLCPSOCKET_P_H
 
-#include <QtCore/QObject>
-#include <QtNfc/qnfcglobal.h>
-#include <QtNfc/QLlcpSocket>
+#include "qnfcglobal.h"
+
+#include "qllcpsocket_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QLlcpServerPrivate;
-
-class Q_NFC_EXPORT QLlcpServer : public QObject
+class QLlcpSocketPrivate
 {
-    Q_OBJECT
-
-    Q_DECLARE_PRIVATE(QLlcpServer)
+    Q_DECLARE_PUBLIC(QLlcpSocket)
 
 public:
-    explicit QLlcpServer(QObject *parent = 0);
-    virtual ~QLlcpServer();
+    QLlcpSocketPrivate(QLlcpSocket *q);
 
-    bool listen(const QString &serviceUri);
-    bool isListening() const;
+    ~QLlcpSocketPrivate();
 
-    void close();
+    void connectToService(QNearFieldTarget *target, const QString &serviceUri);
+    void disconnectFromService();
 
-    QString serviceUri() const;
-    quint8 serverPort() const;
+    bool bind(quint8 port);
 
-    virtual bool hasPendingConnections() const;
-    virtual QLlcpSocket *nextPendingConnection();
+    bool hasPendingDatagrams() const;
+    qint64 pendingDatagramSize() const;
 
-    QLlcpSocket::SocketError serverError() const;
+    qint64 writeDatagram(const char *data, qint64 size);
+    qint64 writeDatagram(const QByteArray &datagram);
 
-Q_SIGNALS:
-    void newConnection();
+    qint64 readDatagram(char *data, qint64 maxSize,
+                        QNearFieldTarget **target = 0, quint8 *port = 0);
+    qint64 writeDatagram(const char *data, qint64 size,
+                         QNearFieldTarget *target, quint8 port);
+    qint64 writeDatagram(const QByteArray &datagram, QNearFieldTarget *target, quint8 port);
+
+    QLlcpSocket::SocketError error() const;
+    QLlcpSocket::SocketState state() const;
+
+    qint64 readData(char *data, qint64 maxlen);
+    qint64 writeData(const char *data, qint64 len);
+
+    qint64 bytesAvailable() const;
+    bool canReadLine() const;
+
+    bool waitForReadyRead(int msecs);
+    bool waitForBytesWritten(int msecs);
+    bool waitForConnected(int msecs);
+    bool waitForDisconnected(int msecs);
 
 private:
-    QLlcpServerPrivate *d_ptr;
+    QLlcpSocket *q_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QLLCPSERVER_H
+#endif // QLLCPSOCKET_P_H

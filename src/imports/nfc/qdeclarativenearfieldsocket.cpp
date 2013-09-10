@@ -51,13 +51,12 @@
     \ingroup nfc-qml
     \inqmlmodule QtNfc 5.0
 
-    \sa QLlcpSocket
-    \sa QLlcpServer
-
     The NearFieldSocket type was introduced in \b {QtNfc 5.0}.
 
     The NearFieldSocket type can be used to create a peer-to-peer connection over NFC LLCP
     sockets.  NearfieldSocket can be used for both client and server side sockets.
+
+    \internal
 */
 
 /*!

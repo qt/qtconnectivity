@@ -42,7 +42,7 @@
 #ifndef QLLCPSERVER_QNX_P_H
 #define QLLCPSERVER_QNX_P_H
 
-#include "qllcpserver.h"
+#include "qllcpserver_p.h"
 #include "nfc/nfc.h"
 
 QT_BEGIN_NAMESPACE

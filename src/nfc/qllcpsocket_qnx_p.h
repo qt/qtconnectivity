@@ -42,7 +42,7 @@
 #ifndef QLLCPSOCKET_QNX_P_H
 #define QLLCPSOCKET_QNX_P_H
 
-#include "qllcpsocket.h"
+#include "qllcpsocket_p.h"
 
 #include "qnearfieldtarget_qnx_p.h"
 
