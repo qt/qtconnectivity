@@ -159,17 +159,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QNearFieldManager::transactionDetected(const QByteArray &applicationIdentifier)
-
-    This signal is emitted when ever a transaction is performed with the application identified by
-    \a applicationIdentifier.
-
-    The \a applicationIdentifier is a byte array of up to 16 bytes as defined by ISO 7816-4 and
-    uniquely identifies the application and application vendor that was involved in the
-    transaction.
-*/
-
-/*!
     Constructs a new near field manager with \a parent.
 */
 QNearFieldManager::QNearFieldManager(QObject *parent)
