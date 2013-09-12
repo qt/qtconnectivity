@@ -97,17 +97,15 @@ void tst_QNearFieldManager::initTestCase()
 
 void tst_QNearFieldManager::targetDetected_data()
 {
-    QTest::addColumn<QNearFieldTarget::Type>("type");
     QTest::addColumn<bool>("deleteTarget");
 
-    QTest::newRow("AnyTarget") << QNearFieldTarget::AnyTarget << false;
-    QTest::newRow("NfcTagType1") << QNearFieldTarget::NfcTagType1 << false;
-    QTest::newRow("Delete Target") << QNearFieldTarget::AnyTarget << true;
+    QTest::newRow("AnyTarget") << false;
+    QTest::newRow("NfcTagType1") << false;
+    QTest::newRow("Delete Target") << true;
 }
 
 void tst_QNearFieldManager::targetDetected()
 {
-    QFETCH(QNearFieldTarget::Type, type);
     QFETCH(bool, deleteTarget);
 
     QNearFieldManagerPrivateImpl *emulatorBackend = new QNearFieldManagerPrivateImpl;
@@ -116,7 +114,7 @@ void tst_QNearFieldManager::targetDetected()
     QSignalSpy targetDetectedSpy(&manager, SIGNAL(targetDetected(QNearFieldTarget*)));
     QSignalSpy targetLostSpy(&manager, SIGNAL(targetLost(QNearFieldTarget*)));
 
-    manager.startTargetDetection(type);
+    manager.startTargetDetection();
 
     QTRY_VERIFY(!targetDetectedSpy.isEmpty());
 

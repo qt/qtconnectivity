@@ -73,10 +73,8 @@ public:
         return false;
     }
 
-    virtual bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
+    virtual bool startTargetDetection()
     {
-        Q_UNUSED(targetTypes);
-
         return false;
     }
 

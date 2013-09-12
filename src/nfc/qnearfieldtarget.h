@@ -66,14 +66,12 @@ class Q_NFC_EXPORT QNearFieldTarget : public QObject
 
 public:
     enum Type {
-        AnyTarget,
         ProprietaryTag,
         NfcTagType1,
         NfcTagType2,
         NfcTagType3,
         NfcTagType4,
         MifareTag,
-        NfcForumDevice
     };
 
     enum AccessMethod {

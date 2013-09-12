@@ -386,9 +386,8 @@ void QNXNFCManager::targetLost(unsigned int targetId)
     }
 }
 
-bool QNXNFCManager::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
+bool QNXNFCManager::startTargetDetection()
 {
-    Q_UNUSED(targetTypes)
     qQNXNFCDebug() << "Start target detection for all types";
     //TODO handle the target types
     if (nfc_register_tag_readerwriter(TAG_TYPE_ALL) == NFC_RESULT_SUCCESS) {

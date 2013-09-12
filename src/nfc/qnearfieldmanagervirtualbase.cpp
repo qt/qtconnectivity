@@ -45,11 +45,11 @@
 
 QT_BEGIN_NAMESPACE
 
-static inline bool matchesTarget(QNearFieldTarget::Type type,
-                                 const QList<QNearFieldTarget::Type> &types)
-{
-    return types.contains(type) || types.contains(QNearFieldTarget::AnyTarget);
-}
+//static inline bool matchesTarget(QNearFieldTarget::Type type,
+//                                 const QList<QNearFieldTarget::Type> &types)
+//{
+//    return types.contains(type) || types.contains(QNearFieldTarget::AnyTarget);
+//}
 
 QNearFieldManagerPrivateVirtualBase::QNearFieldManagerPrivateVirtualBase()
 {
@@ -59,15 +59,13 @@ QNearFieldManagerPrivateVirtualBase::~QNearFieldManagerPrivateVirtualBase()
 {
 }
 
-bool QNearFieldManagerPrivateVirtualBase::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
+bool QNearFieldManagerPrivateVirtualBase::startTargetDetection()
 {
-    m_detectTargetTypes = targetTypes;
     return true;
 }
 
 void QNearFieldManagerPrivateVirtualBase::stopTargetDetection()
 {
-    m_detectTargetTypes.clear();
 }
 
 int QNearFieldManagerPrivateVirtualBase::getFreeId()
@@ -125,8 +123,8 @@ bool QNearFieldManagerPrivateVirtualBase::unregisterNdefMessageHandler(int id)
 
 void QNearFieldManagerPrivateVirtualBase::targetActivated(QNearFieldTarget *target)
 {
-    if (matchesTarget(target->type(), m_detectTargetTypes))
-        emit targetDetected(target);
+    //if (matchesTarget(target->type(), m_detectTargetTypes))
+    emit targetDetected(target);
 
     if (target->hasNdefMessage()) {
         QTlvReader reader(target);

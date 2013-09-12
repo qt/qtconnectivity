@@ -104,7 +104,7 @@ void tst_QNearFieldTagType1::waitForMatchingTarget()
 {
     QSignalSpy targetDetectedSpy(manager, SIGNAL(targetDetected(QNearFieldTarget*)));
 
-    manager->startTargetDetection(QNearFieldTarget::NfcTagType1);
+    manager->startTargetDetection();
 
     QTRY_VERIFY(!targetDetectedSpy.isEmpty());
 

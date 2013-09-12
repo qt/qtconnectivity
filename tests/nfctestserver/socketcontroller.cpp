@@ -81,7 +81,7 @@ SocketController::SocketController(ConnectionType type, QObject *parent)
                     this, SLOT(targetDetected(QNearFieldTarget*)));
             connect(m_manager, SIGNAL(targetLost(QNearFieldTarget*)),
                     this, SLOT(targetLost(QNearFieldTarget*)));
-            m_manager->startTargetDetection(QNearFieldTarget::NfcForumDevice);
+            m_manager->startTargetDetection();
         }
         break;
     default:

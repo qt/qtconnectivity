@@ -75,8 +75,7 @@ public:
     void setTargetAccessModes(TargetAccessModes accessModes);
     TargetAccessModes targetAccessModes() const;
 
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
-    bool startTargetDetection(QNearFieldTarget::Type targetType = QNearFieldTarget::AnyTarget);
+    bool startTargetDetection();
     void stopTargetDetection();
 
     template<typename T>

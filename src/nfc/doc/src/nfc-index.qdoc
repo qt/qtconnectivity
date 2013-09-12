@@ -36,8 +36,7 @@ devices are touched together.
 
 The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devices, including
 target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
-on NFC Forum Tags, sending tag specific commands, client and server LLCP sockets for bidirectional
-communication between two NFC Forum Devices.
+on NFC Forum Tags and sending tag specific commands.
 
 \section1 Getting started
 

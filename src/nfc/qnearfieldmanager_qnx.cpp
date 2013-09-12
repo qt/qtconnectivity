@@ -70,10 +70,10 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
     return QNXNFCManager::instance()->isAvailable();
 }
 
-bool QNearFieldManagerPrivateImpl::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
+bool QNearFieldManagerPrivateImpl::startTargetDetection()
 {
-    qQNXNFCDebug() << "STarting targetdetection in nearfieldmanager";
-    if (QNXNFCManager::instance()->startTargetDetection(targetTypes)) {
+    qQNXNFCDebug() << "Starting targetdetection in nearfieldmanager";
+    if (QNXNFCManager::instance()->startTargetDetection()) {
         connect(QNXNFCManager::instance(), SIGNAL(targetDetected(QNearFieldTarget *, const QList<QNdefMessage>&)),
                 this, SLOT(newTarget(QNearFieldTarget *, const QList<QNdefMessage>&)));
         return true;

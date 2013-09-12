@@ -120,7 +120,7 @@ private Q_SLOTS:
 
 public:
     //TODO add a parameter to only detect a special target for now we are detecting all target types
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+    bool startTargetDetection();
 
     void updateNdefFilters(QList<QByteArray>,QObject *);
 

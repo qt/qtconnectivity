@@ -56,7 +56,7 @@ public:
     QNearFieldManagerPrivateVirtualBase();
     ~QNearFieldManagerPrivateVirtualBase();
 
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+    bool startTargetDetection();
     void stopTargetDetection();
 
     int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);

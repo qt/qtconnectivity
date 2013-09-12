@@ -71,10 +71,7 @@ QT_BEGIN_NAMESPACE
 
     NFC Forum devices generally operate as the master in master/slave communications. Some devices
     are also capable of operating as the slave, so called Card Emulation mode. In this mode the
-    local NFC device emulates a NFC Forum Tag or Contactless Card and can be used to perform
-    transactions. The transaction happens entirely within a secure element on the device and only a
-    notification of the transaction is provided. The transactionDetected() signal is emitted
-    whenever a transaction occurs.
+    local NFC device emulates a NFC Forum Tag or Contactless Card.
 
     NFC Forum Tags can contain one or more messages in a standardized format. These messages are
     encapsulated by the QNdefMessage class. Use the registerNdefMessageHandler() functions to
@@ -82,9 +79,9 @@ QT_BEGIN_NAMESPACE
     unregisterNdefMessageHandler() function.
 
     Applications can connect to the targetDetected() and targetLost() signals to get notified when
-    an NFC Forum Device or NFC Forum Tag enters or leaves proximity. Before these signals are
-    emitted target detection must be started with the startTargetDetection() function, which takes
-    a parameter to limit the type of device or tags detected. Target detection can be stopped with
+    an NFC Forum Tag enters or leaves proximity. Before these signals are
+    emitted target detection must be started with the startTargetDetection() function.
+    Target detection can be stopped with
     the stopTargetDetection() function. Before a detected target can be accessed it is necessary to
     request access rights. This must be done before the target device is touched. The
     setTargetAccessModes() function is used to set the types of access the application wants to
@@ -206,34 +203,17 @@ bool QNearFieldManager::isAvailable() const
 }
 
 /*!
-    Starts detecting targets of type \a targetTypes. Returns true if target detection is
-    successfully started; otherwise returns false.
+    \fn bool QNearFieldManager::startTargetDetection()
 
-    Causes the targetDetected() signal to be emitted when a target with a type in \a targetTypes is
-    within proximity. If \a targetTypes is empty targets of all types will be detected.
-
+    Starts detecting targets and returns true if target detection is
+    successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
+    when a target is within proximity.
     \sa stopTargetDetection()
 */
-bool QNearFieldManager::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
+bool QNearFieldManager::startTargetDetection()
 {
     Q_D(QNearFieldManager);
-
-    if (targetTypes.isEmpty())
-        return d->startTargetDetection(QList<QNearFieldTarget::Type>() << QNearFieldTarget::AnyTarget);
-    else
-        return d->startTargetDetection(targetTypes);
-}
-
-/*!
-    \overload
-
-    Starts detecting targets of type \a targetType. Returns true if target detection is
-    successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
-    when a target with the type \a targetType is within proximity.
-*/
-bool QNearFieldManager::startTargetDetection(QNearFieldTarget::Type targetType)
-{
-    return startTargetDetection(QList<QNearFieldTarget::Type>() << targetType);
+    return d->startTargetDetection();
 }
 
 /*!

@@ -60,7 +60,7 @@ public:
 
     bool isAvailable() const;
 
-    bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+    bool startTargetDetection();
 
     void stopTargetDetection();
 

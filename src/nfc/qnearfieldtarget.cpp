@@ -88,15 +88,12 @@ QT_BEGIN_NAMESPACE
 
     This enum describes the type of tag the target is detected as.
 
-    \value AnyTarget        This value is only used when registering handlers to indicate that any
-                            compatible target can be used.
     \value ProprietaryTag   An unidentified proprietary target tag.
     \value NfcTagType1      An NFC tag type 1 target.
     \value NfcTagType2      An NFC tag type 2 target.
     \value NfcTagType3      An NFC tag type 3 target.
     \value NfcTagType4      An NFC tag type 4 target.
     \value MifareTag        A Mifare target.
-    \value NfcForumDevice   An NFC Forum device target.
 */
 
 /*!

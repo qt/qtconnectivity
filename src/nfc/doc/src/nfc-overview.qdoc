@@ -36,18 +36,14 @@
 With the Qt NFC API typical use cases are:
 
 \list
-    \li Detect NFC devices entering and leaving communication range.
+    \li Detect NFC tags entering and leaving communication range.
     \li Read and write NDEF message on NFC Forum Tags.
-    \li Create an LLCP server listening for incoming LLCP socket connections.
-    \li Create an LLCP socket connection to a NFC Forum Device.
     \li Register an NDEF message handler for a particular content type.
 \endlist
 
 The following sections describe how to use QtNfc C++ classes for the above use cases.
 
-\section1 Detect NFC devices entering and leaving communication range.
+\section1 Detect NFC tags entering and leaving communication range.
 \section1 Read and write NDEF message on NFC Forum Tags.
-\section1 Create an LLCP server listening for incoming LLCP socket connections.
-\section1 Create an LLCP socket connection to a NFC Forum Device.
 \section1 Register an NDEF message handler for a particular content type.
 */
