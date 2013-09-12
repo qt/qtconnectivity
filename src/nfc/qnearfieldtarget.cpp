@@ -129,13 +129,6 @@ QT_BEGIN_NAMESPACE
     \value NdefWriteError           Failed to write NDEF messages to the target.
 */
 
-/*!
-    \fn quint16 qNfcChecksum(const char *data, uint len)
-
-    \relates QNearFieldTarget
-
-    Returns the NFC checksum of the first \a len bytes of \a data.
-*/
 // Copied from qbytearray.cpp
 // Modified to initialize the crc with 0x6363 instead of 0xffff and to not invert the final result.
 static const quint16 crc_tbl[16] = {
@@ -145,6 +138,11 @@ static const quint16 crc_tbl[16] = {
     0xc60c, 0xd68d, 0xe70e, 0xf78f
 };
 
+/*!
+    \relates QNearFieldTarget
+
+    Returns the NFC checksum of the first \a len bytes of \a data.
+*/
 quint16 qNfcChecksum(const char *data, uint len)
 {
     register quint16 crc = 0x6363;
