@@ -47,7 +47,7 @@ Item {
     property BluetoothService currentService
 
     BluetoothDiscoveryModel {
-        id: myModel
+        id: btModel
         minimalDiscovery: true
         onDiscoveryChanged: console.log("Discovery mode: " + discovery)
         onNewServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
@@ -56,16 +56,18 @@ Item {
     Rectangle {
         id: busy
 
-        width: top.width/1.2;
-        x: top.width/2-width/2
+        width: top.width * 0.8;
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: top.top;
         height: 20;
         radius: 5
         color: "#1c56f3"
+        visible: btModel.discovery
 
         Text {
             id: text
-            text: "<b>Scanning</b>"
+            text: "Scanning"
+            font.bold: true
             anchors.centerIn: parent
         }
 
@@ -75,138 +77,95 @@ Item {
             ColorAnimation { easing.type: Easing.InOutSine; to: "#1c56f3"; from: "white"; duration: 1000 }
             loops: Animation.Infinite
         }
-        states: [
-            State {
-                name: "stopped"
-                when: !myModel.discovery
-                PropertyChanges { target: busy; height: 0; }
-                PropertyChanges { target: busyThrobber; running: false }
-                PropertyChanges { target: busy; visible: false }
-            }
-        ]
-        transitions: [
-            Transition {
-                from: "*"
-                to: "stopped"
-                reversible: true
-                NumberAnimation { property: "height"; to: 0; duration: 200 }
-            }
-        ]
-    }
-
-    Component {
-        id: del;
-
-        Item {
-            id: item
-
-            property int text_height: 5+(bticon.height > bttext.height ? bticon.height : bttext.height)
-
-            height: text_height
-            width: parent.width
-
-            Column {
-                anchors.fill: item
-                Row {
-                    width: parent.width
-                    Image {
-                        id: bticon
-                        source: icon;
-                        width: del.height;
-                    }
-                    Text {
-                        id: bttext
-                        text: name;
-                        font.family: "FreeSerif"
-                        font.pointSize: 12
-                    }
-                }
-                Text {
-                    function get_details(s) {
-                        var str = "Address: " + s.deviceAddress;
-                        if (s.serviceName) { str += "<br>Service: " + s.serviceName; }
-                        if (s.serviceDescription) { str += "<br>Description: " + s.serviceDescription; }
-                        if (s.serviceProtocol) { str += "<br>Port: " + s.serviceProtocol; }
-                        if (s.servicePort) { str += "<br>Port: " + s.servicePort; }
-                        return str;
-                    }
-
-                    id: details
-                    opacity: 0.0
-                    text: get_details(service)
-                    font: bttext.font
-                    x: bticon.width
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: item.state = ((item.state == "details") ? "" : "details")
-            }
-
-            states: [
-                State {
-                    name: "details"
-                    PropertyChanges { target: item; height: item.text_height+details.height; }
-                    PropertyChanges { target: details; opacity: 1.0 }
-                }
-            ]
-            transitions: [
-                Transition {
-                    from: "*"
-                    to: "details"
-                    reversible: true
-                    NumberAnimation { target: item; property: "height"; duration: 200 }
-                    NumberAnimation { target: details; property: "lopacity"; duration: 200 }
-                }
-            ]
-        }
-    }
-
-    Component {
-        id: highlightBox
-
-        Rectangle {
-            id: background
-            border.color: "#34ca57"
-            radius: 5
-            border.width: 2
-        }
     }
 
     ListView {
         id: mainList
         width: top.width
         anchors.top: busy.bottom
-        anchors.bottom: fullbutton.top
+        anchors.bottom: fullDiscoveryButton.top
 
-        model: myModel
-        highlight: highlightBox
-        delegate: del
+        model: btModel
+        delegate: Rectangle {
+            id: btDelegate
+            width: parent.width
+            height: column.height + 10
+
+            property bool expended: false;
+            clip: true
+            Image {
+                id: bticon
+                source: "qrc:/default.png";
+                width: bttext.height;
+                height: bttext.height;
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.margins: 5
+            }
+
+            Column {
+                id: column
+                anchors.left: bticon.right
+                anchors.leftMargin: 5
+                Text {
+                    id: bttext
+                    text: name;
+                    font.family: "FreeSerif"
+                    font.pointSize: 12
+                }
+
+                Text {
+                    id: details
+                    function get_details(s) {
+                        var str = "Address: " + s.deviceAddress;
+                        if (s.serviceName) { str += "<br>Service: " + s.serviceName; }
+                        if (s.serviceDescription) { str += "<br>Description: " + s.serviceDescription; }
+                        if (s.serviceProtocol) { str += "<br>Protocol: " + s.serviceProtocol; }
+                        if (s.servicePort) { str += "<br>Port: " + s.servicePort; }
+                        return str;
+                    }
+                    visible: opacity !== 0
+                    opacity: btDelegate.expended ? 1 : 0.0
+                    text: get_details(service)
+                    font: bttext.font
+                    Behavior on opacity {
+                        NumberAnimation { duration: 200}
+                    }
+                }
+            }
+            Behavior on height { NumberAnimation { duration: 200} }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: btDelegate.expended = !btDelegate.expended
+            }
+        }
         focus: true
     }
 
     Rectangle {
-        id: fullbutton
+        id: fullDiscoveryButton
 
-        function button_clicked() {
-            myModel.minimalDiscovery = !myModel.minimalDiscovery;
-            fullbutton.state = fullbutton.state == "clicked" ? "" : "clicked";
+        property bool fullDiscovery: false
+
+        onFullDiscoveryChanged: {
+            btModel.minimalDiscovery = !fullDiscovery;
             //reset discovery since we changed the discovery mode
-            myModel.discovery = false;
-            myModel.discovery = true;
+            btModel.discovery = false;
+            btModel.discovery = true;
         }
 
         anchors.bottom:  top.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.margins: 3
 
-        width: top.width-6
-        x: 3
         height: 20
+
+        color: fullDiscovery ? "#1c56f3" : "white"
 
         radius: 5
         border.width: 1
-        color: "white"
 
         Text {
             id: label
@@ -216,22 +175,9 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: fullbutton.button_clicked();
+            onClicked: parent.fullDiscovery = !parent.fullDiscovery
         }
 
-        states: [
-            State {
-                name: "clicked"
-                PropertyChanges { target: fullbutton; color: "#1c56f3" }
-            }
-        ]
-        transitions: [
-            Transition {
-                from: "*"
-                to: "details"
-                reversible: true
-                ColorAnimation { duration: 200 }
-            }
-        ]
+        Behavior on color { ColorAnimation { duration: 200 } }
     }
 }

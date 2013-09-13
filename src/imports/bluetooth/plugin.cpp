@@ -44,7 +44,6 @@
 #include <QtQml/QQmlExtensionPlugin>
 
 #include "qdeclarativebluetoothdiscoverymodel_p.h"
-#include "qdeclarativebluetoothimageprovider_p.h"
 #include "qdeclarativebluetoothservice_p.h"
 #include "qdeclarativebluetoothsocket_p.h"
 
@@ -64,11 +63,6 @@ public:
         qmlRegisterType<QDeclarativeBluetoothDiscoveryModel>(uri, major, minor, "BluetoothDiscoveryModel");
         qmlRegisterType<QDeclarativeBluetoothService>(uri, major, minor, "BluetoothService");
         qmlRegisterType<QDeclarativeBluetoothSocket>(uri, major, minor, "BluetoothSocket");
-    }
-
-    void initializeEngine(QQmlEngine *engine, const char *uri) {
-        Q_UNUSED(uri);
-        engine->addImageProvider("bluetoothicons", new BluetoothThumbnailImageProvider);
     }
 };
 
