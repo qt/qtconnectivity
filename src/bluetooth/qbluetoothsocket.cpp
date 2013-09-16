@@ -61,7 +61,8 @@ QT_BEGIN_NAMESPACE
     QBluetoothSocket supports two socket types, \l {QBluetoothSocket::L2capSocket}{L2CAP} and
     \l {QBluetoothSocket::RfcommSocket}{RFCOMM}.
 
-    \l {QBluetoothSocket::L2capSocket}{L2CAP} is a low level datagram-oriented Bluetooth socket.
+    \l {QBluetoothSocket::L2capSocket}{L2CAP} is a low level datagram-oriented Bluetooth socket
+            (Not supported on BlackBerry).
 
     \l {QBluetoothSocket::RfcommSocket}{RFCOMM} is a reliable, stream-oriented socket.  RFCOMM
     sockets emulate an RS-232 serial port.
@@ -70,6 +71,8 @@ QT_BEGIN_NAMESPACE
     connectToService() passing the Bluetooth address and port number. QBluetoothSocket will emit
     the connected() signal when the connection is established.
 
+    If the \l {QBluetoothSocket::SocketType}{SocketType} is not supported on a platform, calling
+    \l connectToService() will emit a \l {QBluetoothSocket::UnsupportedSocketTypeError}{UnsupportedSocketTypeError} error.
 
 */
 
@@ -79,7 +82,7 @@ QT_BEGIN_NAMESPACE
     This enum describes the Bluetooth socket type.
 
     \value UnknownSocketType    Unknown socket type.
-    \value L2capSocket          L2CAP socket.
+    \value L2capSocket          L2CAP socket. (Not supported on BlackBerry).
     \value RfcommSocket         RFCOMM socket.
 */
 
@@ -106,9 +109,9 @@ QT_BEGIN_NAMESPACE
     \value UnknownSocketError       An unknown error has occurred.
     \value NoSocketError            No error. Used for testing.
     \value ConnectionRefusedError   Connection refused or device not available.
-    \value RemoteHostClosedError    The remote host closed the socket
-    \value HostNotFoundError        Could not find the remote host
-    \value ServiceNotFoundError     Could not find the service UUID on remote host
+    \value RemoteHostClosedError    The remote host closed the socket.
+    \value HostNotFoundError        Could not find the remote host.
+    \value ServiceNotFoundError     Could not find the service UUID on remote host.
     \value NetworkError             Attempt to read or write from socket returned an error
 */
 
@@ -185,6 +188,7 @@ QT_BEGIN_NAMESPACE
     \fn quint16 QBluetoothSocket::localPort() const
 
     Returns the port number of the local socket if available, otherwise returns 0.
+    On BlackBerry, this feature is not supported and returns 0.
 */
 
 /*!
@@ -203,6 +207,7 @@ QT_BEGIN_NAMESPACE
     \fn quint16 QBluetoothSocket::peerPort() const
 
     Return the port number of the peer socket if available, otherwise returns 0.
+    On BlackBerry, this feature is not supported.
 */
 
 /*!
@@ -337,7 +342,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     ConnectingState, and attempts to connect to \a address. If a connection is established,
     QBluetoothSocket enters Connected State and emits connected().
 
-    On QNX the service connection can be established directly using the UUID of the remote service.
+    On BlackBerry, the service connection can be established directly using the UUID of the remote service.
 
     At any point, the socket can emit error() to signal that an error occurred.
 
@@ -367,7 +372,8 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 
     At any point, the socket can emit error() to signal that an error occurred.
 
-    On QNX a connection to a service can not be established using a port.
+    On BlackBerry, a connection to a service can not be established using a port. Calling this function
+    will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}
 
     \sa state(), disconnectFromService()
 */

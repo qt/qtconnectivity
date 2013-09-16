@@ -224,7 +224,7 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
 /*!
     Starts service discovery. \a mode specifies the type of service discovery to perform.
 
-    On Blackberry devices device discovery may lead to pairing requests.
+    On BlackBerry devices, device discovery may lead to pairing requests.
 
     \sa DiscoveryMode
 */

@@ -62,6 +62,8 @@ QT_BEGIN_NAMESPACE
     applicable attributes for your service and register it using QBluetoothServiceInfo::registerService().
     Call serverPort() to get the channel number that is being used.
 
+    If the \l QBluetoothServer::ServerType is not supported by a platform, \l listen() will return \c false.
+
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
 
@@ -70,7 +72,7 @@ QT_BEGIN_NAMESPACE
 
     This enum describes the Bluetooth server type.
 
-    \value L2capServer          L2CAP server.
+    \value L2capServer          L2CAP server (Not supported on BlackBerry).
     \value RfcommServer         RFCOMM server.
 */
 
@@ -131,7 +133,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn quint16 QBluetoothServer::serverPort() const
 
-    Returns the server port number.
+    Returns the server port number. On BlackBerry, this port might not correspond to the real RFCOMM port.
 */
 
 /*!
@@ -241,6 +243,7 @@ int QBluetoothServer::maxPendingConnections() const
 /*!
     \fn QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
     Sets the Bluetooth security flags to \a security. This function must be called before calling listen().
+    On BlackBerry, security flags are not supported and will be ignored.
 */
 
 /*!
