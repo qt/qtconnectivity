@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -48,6 +49,7 @@
 
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothservicediscoveryagent.h>
+#include <qbluetoothdevicediscoveryagent.h>
 
 #include <qbluetoothglobal.h>
 
@@ -59,9 +61,11 @@ class QDeclarativeBluetoothDiscoveryModelPrivate;
 class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
-    Q_PROPERTY(bool minimalDiscovery READ minimalDiscovery WRITE setMinimalDiscovery NOTIFY minimalDiscoveryChanged)
-    Q_PROPERTY(bool discovery READ discovery WRITE setDiscovery NOTIFY discoveryChanged)
+    Q_ENUMS(DiscoveryMode)
+    Q_ENUMS(Error)
+    Q_PROPERTY(Error error READ error NOTIFY errorChanged)
+    Q_PROPERTY(DiscoveryMode discoveryMode READ discoveryMode WRITE setDiscoveryMode NOTIFY discoveryModeChanged)
+    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(QString uuidFilter READ uuidFilter WRITE setUuidFilter NOTIFY uuidFilterChanged)
     Q_INTERFACES(QQmlParserStatus)
 public:
@@ -69,45 +73,63 @@ public:
     virtual ~QDeclarativeBluetoothDiscoveryModel();
 
     enum {
-        ServiceRole =  Qt::UserRole + 500,
-        AddressRole,
-        NameRole
+        Name = Qt::UserRole + 1,
+        ServiceRole,
+        DeviceName,
+        RemoteAddress
     };
 
-    QString error() const;
+    enum DiscoveryMode {
+        MinimalServiceDiscovery,
+        FullServiceDiscovery,
+        DeviceDiscovery
+    };
 
-    // From QDeclarativeParserStatus
-    virtual void classBegin() {}
+    enum Error
+    {
+        NoError,
+        IOFailure,
+        PoweredOffFailure,
+        DeviceDiscoveryError,
+        UnknownError
+    };
 
-    virtual void componentComplete();
+    Error error() const;
+
+    void componentComplete();
+
+    void classBegin() { }
 
     // From QAbstractListModel
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
 
-    bool minimalDiscovery() const;
-    void setMinimalDiscovery(bool minimalDiscovery_);
+    DiscoveryMode discoveryMode() const;
+    void setDiscoveryMode(DiscoveryMode discovery);
 
-    bool discovery() const;
-    void setDiscovery(bool discovery_);
+    bool running() const;
+    void setRunning(bool running);
 
     QString uuidFilter() const;
     void setUuidFilter(QString uuid);
 
 signals:
     void errorChanged();
-    void minimalDiscoveryChanged();
+    void discoveryModeChanged();
     void newServiceDiscovered(QDeclarativeBluetoothService *service);
-    void discoveryChanged();
+    void newDeviceDiscovered();
+    void runningChanged();
     void uuidFilterChanged();
 
 private slots:
     void serviceDiscovered(const QBluetoothServiceInfo &service);
+    void deviceDiscovered(const QBluetoothDeviceInfo &device);
     void finishedDiscovery();
     void errorDiscovery(QBluetoothServiceDiscoveryAgent::Error error);
+    void errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error);
 
 private:
-    void clearModelIfRequired();
+    void clearModel();
 
 private:
     QDeclarativeBluetoothDiscoveryModelPrivate* d;

@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -61,8 +62,9 @@
     contents of the model can be filtered by UUID allowing discovery to be
     limited to a single service such as a game.
 
-    The model roles provided by BluetoothDiscoveryModel are display, decoration and \c Service.
-    Through the \c Service role the BluetoothService can be accessed for more details.
+    The model roles provided by BluetoothDiscoveryModel are
+    \c service, \c name, \c remoteAddress and \c deviceName.
+    Through the \c service role the BluetoothService can be accessed for more details.
 
     \sa QBluetoothServiceDiscoveryAgent
 
@@ -72,32 +74,37 @@ class QDeclarativeBluetoothDiscoveryModelPrivate
 {
 public:
     QDeclarativeBluetoothDiscoveryModelPrivate()
-        :m_agent(0),
-        m_error(QBluetoothServiceDiscoveryAgent::NoError),
-        m_minimal(true),
-        m_componentCompleted(false),
-        m_discovery(false),
-        m_modelDataNeedsReset(false)
+        : m_serviceAgent(0),
+        m_deviceAgent(0),
+        m_error(QDeclarativeBluetoothDiscoveryModel::NoError),
+        m_discoveryMode(QDeclarativeBluetoothDiscoveryModel::MinimalServiceDiscovery),
+        m_running(false),
+        m_runningRequested(true),
+        m_componentCompleted(false)
     {
     }
     ~QDeclarativeBluetoothDiscoveryModelPrivate()
     {
-        if (m_agent)
-            delete m_agent;
+        if (m_deviceAgent)
+            delete m_deviceAgent;
+
+        if (m_serviceAgent)
+            delete m_serviceAgent;
 
         qDeleteAll(m_services);
     }
 
-    QBluetoothServiceDiscoveryAgent *m_agent;
+    QBluetoothServiceDiscoveryAgent *m_serviceAgent;
+    QBluetoothDeviceDiscoveryAgent *m_deviceAgent;
 
-    QBluetoothServiceDiscoveryAgent::Error m_error;
-//    QList<QBluetoothServiceInfo> m_services;
+    QDeclarativeBluetoothDiscoveryModel::Error m_error;
     QList<QDeclarativeBluetoothService *> m_services;
-    bool m_minimal;
-    bool m_componentCompleted;
+    QList<QBluetoothDeviceInfo> m_devices;
+    QDeclarativeBluetoothDiscoveryModel::DiscoveryMode m_discoveryMode;
     QString m_uuid;
-    bool m_discovery;
-    bool m_modelDataNeedsReset;
+    bool m_running;
+    bool m_runningRequested;
+    bool m_componentCompleted;
 };
 
 QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject *parent) :
@@ -107,16 +114,11 @@ QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject
 
     QHash<int, QByteArray> roleNames;
     roleNames = QAbstractItemModel::roleNames();
-    roleNames.insert(Qt::DisplayRole, "name");
-    roleNames.insert(Qt::DecorationRole, "icon");
+    roleNames.insert(Name, "name");
     roleNames.insert(ServiceRole, "service");
+    roleNames.insert(RemoteAddress, "remoteAddress");
+    roleNames.insert(DeviceName, "deviceName");
     setRoleNames(roleNames);
-
-    d->m_agent = new QBluetoothServiceDiscoveryAgent(this);
-    connect(d->m_agent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)), this, SLOT(serviceDiscovered(const QBluetoothServiceInfo&)));
-    connect(d->m_agent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
-    connect(d->m_agent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
-    connect(d->m_agent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
 }
 
 QDeclarativeBluetoothDiscoveryModel::~QDeclarativeBluetoothDiscoveryModel()
@@ -126,107 +128,138 @@ QDeclarativeBluetoothDiscoveryModel::~QDeclarativeBluetoothDiscoveryModel()
 void QDeclarativeBluetoothDiscoveryModel::componentComplete()
 {
     d->m_componentCompleted = true;
-    setDiscovery(true);
-}
-
-/*!
-  \qmlproperty bool BluetoothDiscoveryModel::discovery
-
-  This property starts or stops discovery. A restart of the discovery process
-  requires setting this property to \c false and subsequemtly to \c true again.
-
-*/
-void QDeclarativeBluetoothDiscoveryModel::setDiscovery(bool discovery_)
-{
-    if (!d->m_componentCompleted)
-        return;
-
-    if (d->m_discovery == discovery_)
-        return;
-
-    d->m_discovery = discovery_;
-
-    if (!discovery_) {
-        d->m_agent->stop();
-    } else {
-        if (!d->m_uuid.isEmpty())
-            d->m_agent->setUuidFilter(QBluetoothUuid(d->m_uuid));
-
-        if (d->m_minimal)
-            d->m_agent->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
-        else
-            d->m_agent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
-
-        d->m_modelDataNeedsReset = true;
-    }
-
-    emit discoveryChanged();
+    if (d->m_runningRequested)
+        setRunning(true);
 }
 
 void QDeclarativeBluetoothDiscoveryModel::errorDiscovery(QBluetoothServiceDiscoveryAgent::Error error)
 {
-    d->m_error = error;
+    switch (error) {
+    case QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError:
+        d->m_error = DeviceDiscoveryError;
+        break;
+    case QBluetoothServiceDiscoveryAgent::UnknownError:
+            d->m_error = UnknownError;
+            break;
+    default:
+        d->m_error = UnknownError;
+        break;
+    }
     emit errorChanged();
 }
 
-void QDeclarativeBluetoothDiscoveryModel::clearModelIfRequired()
+void QDeclarativeBluetoothDiscoveryModel::errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error error)
 {
-    if (d->m_modelDataNeedsReset) {
-        d->m_modelDataNeedsReset = false;
-
-        beginResetModel();
-        qDeleteAll(d->m_services);
-        d->m_services.clear();
-        endResetModel();
+    switch (error) {
+    case QBluetoothDeviceDiscoveryAgent::IOFailure:
+        d->m_error = IOFailure;
+        break;
+    case QBluetoothDeviceDiscoveryAgent::PoweredOff:
+        d->m_error = PoweredOffFailure;
+        break;
+    case QBluetoothDeviceDiscoveryAgent::UnknownError:
+        d->m_error = UnknownError;
+        break;
+    default:
+        d->m_error = UnknownError;
+        break;
     }
+    emit errorChanged();
+}
+
+void QDeclarativeBluetoothDiscoveryModel::clearModel()
+{
+    beginResetModel();
+    qDeleteAll(d->m_services);
+    d->m_services.clear();
+    d->m_devices.clear();
+    endResetModel();
 }
 
 /*!
-  \qmlproperty string BluetoothDiscoveryModel::error
+    \qmlproperty enumeration BluetoothDiscoveryModel::error
 
-  This property holds the last error reported during discovery.
+    This property holds the last error reported during discovery.
+    \table
+    \header \li Property \li Description
+    \row \li \c BluetoothDiscoveryModel.NoError
+         \li No error occurred.
+    \row \li \c BluetoothDiscoveryModel.IOFailure
+         \li An IO failure occurred during device discovery
+    \row \li \c BluetoothDiscoveryModel.PoweredOffFailure
+         \li The bluetooth device is not powered on.
+    \row \li \c BluetoothDiscoveryModel.DeviceDiscoveryError
+         \li In order to be able to discover services a device discovery is started first.
+         This error indicates that a problem detected there.
+    \row \li \c BluetoothDiscoveryModel.UnknownError
+         \li An unknown error occurred.
+    \endtable
 
   This property is read-only.
   */
-QString QDeclarativeBluetoothDiscoveryModel::error() const
+QDeclarativeBluetoothDiscoveryModel::Error QDeclarativeBluetoothDiscoveryModel::error() const
 {
-    switch (d->m_error){
-    case QBluetoothServiceDiscoveryAgent::NoError:
-        break;
-    default:
-        return QLatin1String("UnknownError");
-    }
-    return QLatin1String("NoError");
-
+    return d->m_error;
 }
 
 int QDeclarativeBluetoothDiscoveryModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return d->m_services.count();
+    if (discoveryMode() == DeviceDiscovery)
+        return d->m_devices.count();
+    else
+        return d->m_services.count();
 }
 
 QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid())
+    if (!index.isValid() || index.row() < 0)
         return QVariant();
 
-    QDeclarativeBluetoothService *service = d->m_services.value(index.row());
-
-    switch (role) {
-        case Qt::DisplayRole:
-        {
-            QString label = service->deviceName();
-            if (label.isEmpty())
-                label += service->deviceAddress();
-            else
-                label+= QStringLiteral(":");
-            label += QStringLiteral(" ") + service->serviceName();
-            return label;
+    if (discoveryMode() != DeviceDiscovery) {
+        if (index.row() >= d->m_services.count()){
+            qWarning() << "index out of bounds";
+            return QVariant();
         }
-        case ServiceRole:
-            return QVariant::fromValue(service);
+
+        QDeclarativeBluetoothService *service = d->m_services.value(index.row());
+
+        switch (role) {
+            case Name: {
+                QString label = service->deviceName();
+                if (label.isEmpty())
+                    label += service->deviceAddress();
+                else
+                    label+= QStringLiteral(":");
+                label += QStringLiteral(" ") + service->serviceName();
+                return label;
+            }
+            case ServiceRole:
+                return QVariant::fromValue(service);
+            case DeviceName:
+                return service->deviceName();
+            case RemoteAddress:
+                return service->deviceAddress();
+        }
+    } else {
+        if (index.row() >= d->m_devices.count()) {
+            qWarning() << "index out of bounds";
+            return QVariant();
+        }
+
+        QBluetoothDeviceInfo device = d->m_devices.value(index.row());
+        switch (role) {
+            case Name:
+            return (device.name() + QStringLiteral(" (") + device.address().toString() + QStringLiteral(")"));
+            case ServiceRole:
+                break;
+            case DeviceName:
+                return device.name();
+            case RemoteAddress:
+                return device.address().toString();
+        }
     }
+
     return QVariant();
 }
 
@@ -238,7 +271,7 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
 
 void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServiceInfo &service)
 {
-    clearModelIfRequired();
+    //qDebug() << "service discovered";
 
     QDeclarativeBluetoothService *bs = new QDeclarativeBluetoothService(service, this);
     QDeclarativeBluetoothService *current = 0;
@@ -258,6 +291,22 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
 }
 
 /*!
+  \qmlsignal BluetoothDiscoveryModel::newDeviceDiscovered()
+
+  This handler is called when a new device is discovered.
+  */
+
+void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDeviceInfo &device)
+{
+    //qDebug() << "Device discovered" << device.address().toString() << device.name();
+
+    beginInsertRows(QModelIndex(),d->m_devices.count(), d->m_devices.count());
+    d->m_devices.append(device);
+    endInsertRows();
+    emit newDeviceDiscovered();
+}
+
+/*!
     \qmlsignal BluetoothDiscoveryModel::discoveryChanged()
 
     This handler is called when discovery has completed and no
@@ -266,35 +315,102 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
 
 void QDeclarativeBluetoothDiscoveryModel::finishedDiscovery()
 {
-    clearModelIfRequired();
-    if (d->m_discovery) {
-        d->m_discovery = false;
-        emit discoveryChanged();
-    }
+    setRunning(false);
 }
 
 /*!
-  \qmlproperty bool BluetoothDiscoveryModel::minimalDiscovery
+    \qmlproperty enumeration BluetoothDiscoveryModel::discoveryMode
 
-  This property controls minimalDiscovery, which is faster than full discocvery but it
-  only guarantees the device and UUID information to be correct.
+    Sets the discovery mode. The discovery mode has to be set before the discovery is started
+    \table
+    \header \li Property \li Description
+    \row \li \c BluetoothDiscoveryModel.FullServiceDiscovery
+         \li Starts a full discovery of all services of all devices in range.
+    \row \li \c BluetoothDiscoveryModel.MinimalServiceDiscovery
+         \li (Default) Starts a minimal discovery of all services of all devices in range. A minimal discovery is
+         faster but only guarantees the device and UUID information to be correct.
+    \row \li \c BluetoothDiscoveryModel.DeviceDiscovery
+         \li Discovers only devices in range. The service role will be 0 for any model item.
+    \endtable
+*/
 
-  */
-
-bool QDeclarativeBluetoothDiscoveryModel::minimalDiscovery() const
+QDeclarativeBluetoothDiscoveryModel::DiscoveryMode QDeclarativeBluetoothDiscoveryModel::discoveryMode() const
 {
-    return d->m_minimal;
+    return d->m_discoveryMode;
 }
 
-void QDeclarativeBluetoothDiscoveryModel::setMinimalDiscovery(bool minimalDiscovery_)
+void QDeclarativeBluetoothDiscoveryModel::setDiscoveryMode(DiscoveryMode discovery)
 {
-    d->m_minimal = minimalDiscovery_;
-    emit minimalDiscoveryChanged();
+    d->m_discoveryMode = discovery;
+    emit discoveryModeChanged();
 }
 
-bool QDeclarativeBluetoothDiscoveryModel::discovery() const
+/*!
+  \qmlproperty bool BluetoothDiscoveryModel::running
+
+  This property starts or stops discovery. A restart of the discovery process
+  requires setting this property to \c false and subsequemtly to \c true again.
+
+*/
+
+bool QDeclarativeBluetoothDiscoveryModel::running() const
 {
-    return d->m_discovery;
+    return d->m_running;
+}
+
+void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
+{
+    if (!d->m_componentCompleted) {
+        d->m_runningRequested = running;
+        return;
+    }
+
+    if (d->m_running == running)
+        return;
+
+    d->m_running = running;
+
+    if (!running) {
+        if (d->m_deviceAgent) {
+            d->m_deviceAgent->stop();
+        } else if (d->m_serviceAgent) {
+            d->m_serviceAgent->stop();
+        }
+    } else {
+        clearModel();
+        d->m_error = NoError;
+        if (d->m_discoveryMode == DeviceDiscovery) {
+            if (!d->m_deviceAgent) {
+                d->m_deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
+                connect(d->m_deviceAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)), this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
+                connect(d->m_deviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
+                connect(d->m_deviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
+                connect(d->m_deviceAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)), this, SLOT(errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error)));
+            }
+            d->m_deviceAgent->start();
+        } else {
+            if (!d->m_serviceAgent) {
+                d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
+                connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)), this, SLOT(serviceDiscovered(const QBluetoothServiceInfo&)));
+                connect(d->m_serviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
+                connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
+                connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
+            }
+
+            if (!d->m_uuid.isEmpty())
+                d->m_serviceAgent->setUuidFilter(QBluetoothUuid(d->m_uuid));
+
+            if (discoveryMode() == FullServiceDiscovery)  {
+                //qDebug() << "Full Discovery";
+                d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+            } else {
+                //qDebug() << "Minimal Discovery";
+                d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
+            }
+        }
+    }
+
+    Q_EMIT runningChanged();
 }
 
 /*!

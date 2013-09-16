@@ -11,3 +11,6 @@ OTHER_FILES += \
     scanner.qml
 
 #DEFINES += QMLJSDEBUGGER
+
+OTHER_FILES += \
+    Button.qml

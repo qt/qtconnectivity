@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module.
@@ -48,21 +49,22 @@ Item {
 
     BluetoothDiscoveryModel {
         id: btModel
-        minimalDiscovery: true
-        onDiscoveryChanged: console.log("Discovery mode: " + discovery)
+        running: true
+        discoveryMode: BluetoothDiscoveryModel.DeviceDiscovery
+        onDiscoveryModeChanged: console.log("Discovery mode: " + discoveryMode)
         onNewServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
    }
 
     Rectangle {
         id: busy
 
-        width: top.width * 0.8;
+        width: top.width * 0.7;
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: top.top;
-        height: 20;
+        height: 30;
         radius: 5
         color: "#1c56f3"
-        visible: btModel.discovery
+        visible: btModel.running
 
         Text {
             id: text
@@ -83,7 +85,7 @@ Item {
         id: mainList
         width: top.width
         anchors.top: busy.bottom
-        anchors.bottom: fullDiscoveryButton.top
+        anchors.bottom: buttonGroup.top
 
         model: btModel
         delegate: Rectangle {
@@ -117,12 +119,18 @@ Item {
                 Text {
                     id: details
                     function get_details(s) {
-                        var str = "Address: " + s.deviceAddress;
-                        if (s.serviceName) { str += "<br>Service: " + s.serviceName; }
-                        if (s.serviceDescription) { str += "<br>Description: " + s.serviceDescription; }
-                        if (s.serviceProtocol) { str += "<br>Protocol: " + s.serviceProtocol; }
-                        if (s.servicePort) { str += "<br>Port: " + s.servicePort; }
-                        return str;
+                        if (btModel.discoveryMode == BluetoothDiscoveryModel.DeviceDiscovery) {
+                            //We are doing a device discovery
+                            var str = "Address: " + remoteAddress;
+                            return str;
+                        } else {
+                            var str = "Address: " + s.deviceAddress;
+                            if (s.serviceName) { str += "<br>Service: " + s.serviceName; }
+                            if (s.serviceDescription) { str += "<br>Description: " + s.serviceDescription; }
+                            if (s.serviceProtocol) { str += "<br>Protocol: " + s.serviceProtocol; }
+                            if (s.servicePort) { str += "<br>Port: " + s.servicePort; }
+                            return str;
+                        }
                     }
                     visible: opacity !== 0
                     opacity: btDelegate.expended ? 1 : 0.0
@@ -143,41 +151,29 @@ Item {
         focus: true
     }
 
-    Rectangle {
-        id: fullDiscoveryButton
+    Row {
+        id: buttonGroup
+        property var activeButton: devButton
 
-        property bool fullDiscovery: false
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 20
 
-        onFullDiscoveryChanged: {
-            btModel.minimalDiscovery = !fullDiscovery;
-            //reset discovery since we changed the discovery mode
-            btModel.discovery = false;
-            btModel.discovery = true;
-        }
-
-        anchors.bottom:  top.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 3
-
-        height: 20
-
-        color: fullDiscovery ? "#1c56f3" : "white"
-
-        radius: 5
-        border.width: 1
-
-        Text {
-            id: label
+        Button {
+            id: fdButton
             text: "Full Discovery"
-            anchors.centerIn: parent
+            onClicked: btModel.discoveryMode = BluetoothDiscoveryModel.FullServiceDiscovery
         }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: parent.fullDiscovery = !parent.fullDiscovery
+        Button {
+            id: mdButton
+            text: "Minimal Discovery"
+            onClicked: btModel.discoveryMode = BluetoothDiscoveryModel.MinimalServiceDiscovery
         }
-
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Button {
+            id: devButton
+            text: "Device Discovery"
+            onClicked: btModel.discoveryMode = BluetoothDiscoveryModel.DeviceDiscovery
+        }
     }
+
 }
