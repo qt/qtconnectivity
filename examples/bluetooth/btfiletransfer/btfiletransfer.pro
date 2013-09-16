@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = btfiletransfer
 
-QT += concurrent bluetooth widgets
+QT = core bluetooth widgets
 
 SOURCES = \
     main.cpp \

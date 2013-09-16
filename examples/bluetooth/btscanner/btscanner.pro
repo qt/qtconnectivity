@@ -1,6 +1,6 @@
 TARGET = btscanner
 
-QT += concurrent bluetooth widgets
+QT = core bluetooth widgets
 TEMPLATE = app
 
 SOURCES = \

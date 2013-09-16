@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = btchat
 
-QT += concurrent bluetooth widgets
+QT = core bluetooth widgets
 
 SOURCES = \
     main.cpp \

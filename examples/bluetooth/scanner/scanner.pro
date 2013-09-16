@@ -1,4 +1,4 @@
-QT += concurrent network bluetooth quick
+QT = core bluetooth quick
 SOURCES += qmlscanner.cpp
 
 TARGET = qml_scanner

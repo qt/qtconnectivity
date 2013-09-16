@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = bttennis
 
-QT += concurrent bluetooth widgets
+QT = core bluetooth widgets
 #QT += nfc
 
 SOURCES = \

@@ -1,4 +1,4 @@
-QT += quick bluetooth network
+QT = core quick bluetooth
 
 HEADERS += \
     qdeclarativebluetoothservice_p.h \
