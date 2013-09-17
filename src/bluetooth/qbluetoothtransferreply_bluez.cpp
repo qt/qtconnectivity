@@ -76,7 +76,7 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 
     bool res = QDBusConnection::sessionBus().registerObject(m_agent_path, this);
     if(!res)
-        qDebug() << "Failed Creating dbus objects";
+        qWarning() << "Failed Creating dbus objects";
 
     qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
     QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
@@ -264,7 +264,7 @@ void QBluetoothTransferReplyBluez::abort()
         QDBusPendingReply<> reply = xfer->Cancel();
         reply.waitForFinished();
         if(reply.isError()){
-            qDebug() << "Failed to abort transfer" << reply.error();
+            qWarning() << "Failed to abort transfer" << reply.error();
         }
         delete xfer;
     }

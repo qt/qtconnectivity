@@ -398,8 +398,8 @@ void QBluetoothServiceInfo::setDevice(const QBluetoothDeviceInfo &device)
 */
 void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QVariant &value)
 {
-    if (value.type() == QVariant::List)
-        qDebug() << "tried attribute with type QVariantList" << value;
+//    if (value.type() == QVariant::List)
+//        qDebug() << "tried attribute with type QVariantList" << value;
 
     d_ptr->attributes[attributeId] = value;
 

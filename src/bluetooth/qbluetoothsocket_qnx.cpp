@@ -144,7 +144,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
         readNotifier->setEnabled(false);
         connectWriteNotifier->setEnabled(false);
         errorString = QString::fromLocal8Bit(strerror(errsv));
-        qDebug() << Q_FUNC_INFO << socket << " error:" << readFromDevice << errorString; //TODO Try if this actually works
+        qWarning() << Q_FUNC_INFO << socket << " error:" << readFromDevice << errorString; //TODO Try if this actually works
         emit q->error(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
@@ -327,7 +327,7 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
             socket = ::open(path.toStdString().c_str(), O_RDWR);
             if (socket == -1) {
                 errorString = QString::fromLocal8Bit(strerror(errno));
-                qDebug() << Q_FUNC_INFO << socket << " error:" << errno << errorString; //TODO Try if this actually works
+                qWarning() << Q_FUNC_INFO << socket << " error:" << errno << errorString; //TODO Try if this actually works
                 emit q->error(QBluetoothSocket::UnknownSocketError);
 
                 q->disconnectFromService();

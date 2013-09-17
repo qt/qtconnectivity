@@ -347,7 +347,7 @@ bool QDeclarativeBluetoothService::isRegistered() const
 int QDeclarativeBluetoothServicePrivate::listen() {
 
     if (m_protocol != "l2cap" && m_protocol != "rfcomm") {
-        qDebug() << "Unknown protocol, can't make service" << m_protocol;
+        qWarning() << "Unknown protocol, can't make service" << m_protocol;
         return -1;
     }
     QBluetoothServer::ServerType serverType;
@@ -409,7 +409,7 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
 
     d->m_service->setServiceUuid(QBluetoothUuid(d->m_uuid));
 
-    qDebug() << "name/uuid" << d->m_name << d->m_uuid << d->m_port;
+    //qDebug() << "name/uuid" << d->m_name << d->m_uuid << d->m_port;
 
     d->m_service->setAttribute(QBluetoothServiceInfo::BrowseGroupList,
                              QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
@@ -417,7 +417,7 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
     QBluetoothServiceInfo::Sequence protocol;
 
-    qDebug() << "Port" << d->m_port;
+    //qDebug() << "Port" << d->m_port;
 
     if (d->m_protocol == "l2cap") {
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap))
@@ -436,11 +436,12 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
                              protocolDescriptorList);
 
     if (d->m_service->registerService()) {
-        qDebug() << "registered";
+        //qDebug() << "registered";
         emit registeredChanged();
     }
     else {
-        qDebug() << "Failed";
+        qWarning() << "Register service failed";
+        //TODO propaget this error to the user
     }
 }
 
@@ -463,7 +464,7 @@ QDeclarativeBluetoothSocket *QDeclarativeBluetoothService::nextClient()
             return new QDeclarativeBluetoothSocket(socket, this, 0x0);
         }
         else {
-            qDebug() << "Socket has no pending connection, failing";
+            qWarning() << "Socket has no pending connection, failing";
             return 0x0;
         }
     }
@@ -480,7 +481,7 @@ void QDeclarativeBluetoothService::assignNextClient(QDeclarativeBluetoothSocket 
             return;
         }
         else {
-            qDebug() << "Socket has no pending connection, failing";
+            qWarning() << "Socket has no pending connection, failing";
             return;
         }
     }

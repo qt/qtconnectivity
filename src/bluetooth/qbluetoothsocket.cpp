@@ -325,7 +325,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
             qWarning() << "No port, no PSM, and no UUID provided, unable to connect";
             return;
         }
-        qDebug() << "Need a port/psm, doing discovery";
+        //qDebug() << "Need a port/psm, doing discovery";
         doDeviceDiscovery(service, openMode);
     }
 #endif
@@ -476,7 +476,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
 {
     Q_D(QBluetoothSocket);
 
-    qDebug() << "Starting discovery";
+    //qDebug() << "Starting discovery";
 
     if(d->discoveryAgent) {
         delete d->discoveryAgent;
@@ -484,7 +484,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
 
     d->discoveryAgent = new QBluetoothServiceDiscoveryAgent(service.device().address(),this);
 
-    qDebug() << "Got agent";
+    //qDebug() << "Got agent";
 
     connect(d->discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
     connect(d->discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
@@ -500,7 +500,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     // we have to ID the service somehow
     Q_ASSERT(!d->discoveryAgent->uuidFilter().isEmpty());
 
-    qDebug() << "UUID filter" << d->discoveryAgent->uuidFilter();
+    //qDebug() << "UUID filter" << d->discoveryAgent->uuidFilter();
 
     d->discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 }
@@ -508,7 +508,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
 void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
 {
     Q_D(QBluetoothSocket);
-    qDebug() << "FOUND SERVICE!" << service;
+    //qDebug() << "FOUND SERVICE!" << service;
     if(service.protocolServiceMultiplexer() != 0 || service.serverChannel() != 0) {
         connectToService(service, d->openMode);
         d->discoveryAgent->deleteLater();
@@ -518,10 +518,10 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
 
 void QBluetoothSocket::discoveryFinished()
 {
-    qDebug() << "Socket discovery finished";
+    //qDebug() << "Socket discovery finished";
     Q_D(QBluetoothSocket);
     if(d->discoveryAgent){
-        qDebug() << "Didn't find any";
+        //qDebug() << "Didn't find any";
         emit error(QBluetoothSocket::ServiceNotFoundError);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = 0;

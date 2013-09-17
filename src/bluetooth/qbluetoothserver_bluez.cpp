@@ -239,7 +239,7 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
         if (security.testFlag(QBluetooth::Secure))
             lm |= RFCOMM_LM_SECURE;
 
-        qDebug() << hex << "Setting lm to" << lm << security;
+        //qDebug() << hex << "Setting lm to" << lm << security;
 
         if (setsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm)) < 0){
             qWarning() << "Failed to set socket option, closing socket for safety" << errno;

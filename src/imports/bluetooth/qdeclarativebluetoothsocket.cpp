@@ -99,7 +99,7 @@ public:
     void connect()
     {
         Q_ASSERT(m_service);
-        qDebug() << "Connecting to: " << m_service->serviceInfo()->device().address().toString();
+        //qDebug() << "Connecting to: " << m_service->serviceInfo()->device().address().toString();
         m_error = QLatin1String("No Error");
 
         if (m_socket)

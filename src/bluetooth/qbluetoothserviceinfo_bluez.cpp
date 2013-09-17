@@ -163,7 +163,7 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
         }
         break;
             default:
-        qDebug() << "Unknown variant type", attribute.userType();
+        qWarning() << "Unknown variant type", attribute.userType();
     }
 }
 
@@ -237,7 +237,7 @@ bool QBluetoothServiceInfoPrivate::ensureSdpConnection() const
 bool QBluetoothServiceInfoPrivate::registerService() const
 {
     if (!ensureSdpConnection()) {
-        qDebug() << "SDP not connected. Cannot register";
+        qWarning() << "SDP not connected. Cannot register";
         return false;
     }
 
@@ -272,7 +272,7 @@ bool QBluetoothServiceInfoPrivate::registerService() const
         QDBusPendingReply<uint> reply = service->AddRecord(xmlServiceRecord);
         reply.waitForFinished();
         if (reply.isError()) {
-            qDebug() << "AddRecord returned error" << reply.error();
+            qWarning() << "AddRecord returned error" << reply.error();
             return false;
         }
 
@@ -281,7 +281,7 @@ bool QBluetoothServiceInfoPrivate::registerService() const
         QDBusPendingReply<> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
         reply.waitForFinished();
         if (reply.isError()) {
-            qDebug() << "UpdateRecord returned error" << reply.error();
+            qWarning() << "UpdateRecord returned error" << reply.error();
             return false;
         }
     }

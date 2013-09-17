@@ -257,7 +257,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         emit q->serviceDiscovered(serviceInfo);
         // could stop discovery, check for state
         if(discoveryState() == Inactive){
+#ifdef QT_SERVICEDISCOVERY_DEBUG
             qDebug() << "Exit discovery after stop";
+#endif
             break;
         }
     }

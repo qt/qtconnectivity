@@ -117,7 +117,7 @@ QNearFieldTagType2::~QNearFieldTagType2()
 */
 bool QNearFieldTagType2::hasNdefMessage()
 {
-    qDebug() << Q_FUNC_INFO << "is unimplemeted";
+    qWarning() << Q_FUNC_INFO << "is unimplemeted";
     return false;
 }
 
