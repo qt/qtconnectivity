@@ -63,7 +63,7 @@ void ChatServer::startServer()
         return;
 
     //! [Create the server]
-    rfcommServer = new QBluetoothServer(QBluetoothServer::RfcommServer, this);
+    rfcommServer = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
     connect(rfcommServer, SIGNAL(newConnection()), this, SLOT(clientConnected()));
     rfcommServer->listen();
     //! [Create the server]

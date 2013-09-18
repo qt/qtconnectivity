@@ -69,7 +69,7 @@ void TennisClient::startClient(const QBluetoothServiceInfo &remoteService)
     serviceInfo = remoteService;
 
     // Connect to service
-    socket = new QBluetoothSocket(QBluetoothSocket::L2capSocket);
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
     qDebug() << "Create socket";
     socket->connectToService(remoteService);
     qDebug() << "ConnecttoService done";

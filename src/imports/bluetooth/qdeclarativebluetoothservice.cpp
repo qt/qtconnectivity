@@ -350,12 +350,12 @@ int QDeclarativeBluetoothServicePrivate::listen() {
         qWarning() << "Unknown protocol, can't make service" << m_protocol;
         return -1;
     }
-    QBluetoothServer::ServerType serverType;
+    QBluetoothServiceInfo::Protocol serverType;
     if (m_protocol == "l2cap") {
-        serverType = QBluetoothServer::L2capServer;
+        serverType = QBluetoothServiceInfo::L2capProtocol;
     }
     else if (m_protocol == "rfcomm") {
-        serverType = QBluetoothServer::RfcommServer;
+        serverType = QBluetoothServiceInfo::RfcommProtocol;
     }
 
     QBluetoothServer *server = new QBluetoothServer(serverType);

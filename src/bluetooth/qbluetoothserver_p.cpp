@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
+QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
     : serverType(sType)
 {
 }

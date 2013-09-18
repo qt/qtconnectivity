@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
-      socketType(QBluetoothSocket::UnknownSocketType),
+      socketType(QBluetoothServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
       readNotifier(0),
       connectWriteNotifier(0),
@@ -79,7 +79,7 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
     connectWriteNotifier = 0;
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType type)
+bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     if (socket != -1) {
         if (socketType == type)
@@ -95,10 +95,10 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType ty
     socketType = type;
 
     switch (type) {
-    case QBluetoothSocket::L2capSocket:
+    case QBluetoothServiceInfo::L2capProtocol:
         socket = ::socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
         break;
-    case QBluetoothSocket::RfcommSocket:
+    case QBluetoothServiceInfo::RfcommProtocol:
         socket = ::socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
         break;
     default:
@@ -130,7 +130,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     Q_UNUSED(openMode);
     int result = -1;
 
-    if (socketType == QBluetoothSocket::RfcommSocket) {
+    if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
 
         memset(&addr, 0, sizeof(addr));
@@ -143,7 +143,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         readNotifier->setEnabled(true);QString();
 
         result = ::connect(socket, (sockaddr *)&addr, sizeof(addr));
-    } else if (socketType == QBluetoothSocket::L2capSocket) {
+    } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
 
         memset(&addr, 0, sizeof(addr));
@@ -292,7 +292,7 @@ QString QBluetoothSocketPrivate::localName() const
 
 QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
 {
-    if (socketType == QBluetoothSocket::RfcommSocket) {
+    if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -301,7 +301,7 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
             convertAddress(addr.rc_bdaddr.b, bdaddr);
             return QBluetoothAddress(bdaddr);
         }
-    } else if (socketType == QBluetoothSocket::L2capSocket) {
+    } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -317,13 +317,13 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
 
 quint16 QBluetoothSocketPrivate::localPort() const
 {
-    if (socketType == QBluetoothSocket::RfcommSocket) {
+    if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
         if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
             return addr.rc_channel;
-    } else if (socketType == QBluetoothSocket::L2capSocket) {
+    } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -341,7 +341,7 @@ QString QBluetoothSocketPrivate::peerName() const
 
     quint64 bdaddr;
 
-    if (socketType == QBluetoothSocket::RfcommSocket) {
+    if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -349,7 +349,7 @@ QString QBluetoothSocketPrivate::peerName() const
             return QString();
 
         convertAddress(addr.rc_bdaddr.b, bdaddr);
-    } else if (socketType == QBluetoothSocket::L2capSocket) {
+    } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -402,7 +402,7 @@ QString QBluetoothSocketPrivate::peerName() const
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
 {
-    if (socketType == QBluetoothSocket::RfcommSocket) {
+    if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -411,7 +411,7 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
             convertAddress(addr.rc_bdaddr.b, bdaddr);
             return QBluetoothAddress(bdaddr);
         }
-    } else if (socketType == QBluetoothSocket::L2capSocket) {
+    } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -427,13 +427,13 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
 
 quint16 QBluetoothSocketPrivate::peerPort() const
 {
-    if (socketType == QBluetoothSocket::RfcommSocket) {
+    if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
         if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
             return addr.rc_channel;
-    } else if (socketType == QBluetoothSocket::L2capSocket) {
+    } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
@@ -511,7 +511,7 @@ void QBluetoothSocketPrivate::close()
 
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothSocket::SocketType socketType_,
+bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType_,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);

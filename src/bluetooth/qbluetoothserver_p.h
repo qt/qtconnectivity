@@ -74,7 +74,7 @@ class QBluetoothServerPrivate
     Q_DECLARE_PUBLIC(QBluetoothServer)
 
 public:
-    QBluetoothServerPrivate(QBluetoothServer::ServerType serverType);
+    QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol serverType);
     ~QBluetoothServerPrivate();
 
 #ifdef QT_BLUEZ_BLUETOOTH
@@ -86,7 +86,7 @@ public:
 
     int maxPendingConnections;
     QBluetooth::SecurityFlags securityFlags;
-    QBluetoothServer::ServerType serverType;
+    QBluetoothServiceInfo::Protocol serverType;
 
 #ifdef QT_QNX_BLUETOOTH
     QList<QBluetoothSocket *> activeSockets;

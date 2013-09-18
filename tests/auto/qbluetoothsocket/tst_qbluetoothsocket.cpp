@@ -56,7 +56,7 @@
 QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothSocket::SocketState)
-Q_DECLARE_METATYPE(QBluetoothSocket::SocketType)
+Q_DECLARE_METATYPE(QBluetoothServiceInfo::Protocol)
 
 //#define BTADDRESS "00:1A:9F:92:9E:5A"
 char BTADDRESS[] = "00:00:00:00:00:00";
@@ -189,21 +189,21 @@ void tst_QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &info)
 
 void tst_QBluetoothSocket::tst_construction_data()
 {
-    QTest::addColumn<QBluetoothSocket::SocketType>("socketType");
+    QTest::addColumn<QBluetoothServiceInfo::Protocol>("socketType");
 
-    QTest::newRow("unknown socket") << QBluetoothSocket::UnknownSocketType;
-    QTest::newRow("rfcomm socket") << QBluetoothSocket::RfcommSocket;
-    QTest::newRow("l2cap socket") << QBluetoothSocket::L2capSocket;
+    QTest::newRow("unknown protocol") << QBluetoothServiceInfo::UnknownProtocol;
+    QTest::newRow("rfcomm socket") << QBluetoothServiceInfo::RfcommProtocol;
+    QTest::newRow("l2cap socket") << QBluetoothServiceInfo::L2capProtocol;
 }
 
 void tst_QBluetoothSocket::tst_construction()
 {
-    QFETCH(QBluetoothSocket::SocketType, socketType);
+    QFETCH(QBluetoothServiceInfo::Protocol, socketType);
 
     {
         QBluetoothSocket socket;
 
-        QCOMPARE(socket.socketType(), QBluetoothSocket::UnknownSocketType);
+        QCOMPARE(socket.socketType(), QBluetoothServiceInfo::UnknownProtocol);
     }
 
     {
@@ -215,7 +215,7 @@ void tst_QBluetoothSocket::tst_construction()
 
 void tst_QBluetoothSocket::tst_clientConnection_data()
 {
-    QTest::addColumn<QBluetoothSocket::SocketType>("sockettype");
+    QTest::addColumn<QBluetoothServiceInfo::Protocol>("socketprotocol");
     QTest::addColumn<ClientConnectionShutdown>("shutdown");
     QTest::addColumn<QBluetoothAddress>("address");
     QTest::addColumn<quint16>("port");
@@ -225,41 +225,41 @@ void tst_QBluetoothSocket::tst_clientConnection_data()
     QBluetoothAddress address(BTADDRESS);
     quint16 port = 10;
 
-    QTest::newRow("unavailable, error") << QBluetoothSocket::RfcommSocket
+    QTest::newRow("unavailable, error") << QBluetoothServiceInfo::RfcommProtocol
                                         << Error << QBluetoothAddress("112233445566") << quint16(10) << QByteArray();
 
-    QTest::newRow("available, disconnect") << QBluetoothSocket::RfcommSocket
+    QTest::newRow("available, disconnect") << QBluetoothServiceInfo::RfcommProtocol
                                            << Disconnect << address << port << QByteArray();
-    QTest::newRow("available, disconnect with data") << QBluetoothSocket::RfcommSocket
+    QTest::newRow("available, disconnect with data") << QBluetoothServiceInfo::RfcommProtocol
                                                      << Disconnect << address << port << QByteArray("Test message\n");
-    QTest::newRow("available, close") << QBluetoothSocket::RfcommSocket
+    QTest::newRow("available, close") << QBluetoothServiceInfo::RfcommProtocol
                                       << Close << address << port << QByteArray();
-    QTest::newRow("available, abort") << QBluetoothSocket::RfcommSocket
+    QTest::newRow("available, abort") << QBluetoothServiceInfo::RfcommProtocol
                                       << Abort << address << port << QByteArray();
-    QTest::newRow("available, abort with data") << QBluetoothSocket::RfcommSocket
+    QTest::newRow("available, abort with data") << QBluetoothServiceInfo::RfcommProtocol
                                                 << Abort << address << port << QByteArray("Test message\n");
 
 
     port = 0x1011;
-    QTest::newRow("unavailable, error") << QBluetoothSocket::L2capSocket
+    QTest::newRow("unavailable, error") << QBluetoothServiceInfo::L2capProtocol
                                         << Error << QBluetoothAddress("112233445566") << quint16(10) << QByteArray();
 
-    QTest::newRow("available, disconnect") << QBluetoothSocket::L2capSocket
+    QTest::newRow("available, disconnect") << QBluetoothServiceInfo::L2capProtocol
                                            << Disconnect << address << port << QByteArray();
-    QTest::newRow("available, disconnect with data") << QBluetoothSocket::L2capSocket
+    QTest::newRow("available, disconnect with data") << QBluetoothServiceInfo::L2capProtocol
                                                      << Disconnect << address << port << QByteArray("Test message\n");
-    QTest::newRow("available, close") << QBluetoothSocket::L2capSocket
+    QTest::newRow("available, close") << QBluetoothServiceInfo::L2capProtocol
                                       << Close << address << port << QByteArray();
-    QTest::newRow("available, abort") << QBluetoothSocket::L2capSocket
+    QTest::newRow("available, abort") << QBluetoothServiceInfo::L2capProtocol
                                       << Abort << address << port << QByteArray();
-    QTest::newRow("available, abort with data") << QBluetoothSocket::L2capSocket
+    QTest::newRow("available, abort with data") << QBluetoothServiceInfo::L2capProtocol
                                                 << Abort << address << port << QByteArray("Test message\n");
 
 }
 
 void tst_QBluetoothSocket::tst_clientConnection()
 {
-    QFETCH(QBluetoothSocket::SocketType, sockettype);
+    QFETCH(QBluetoothServiceInfo::Protocol, socketprotocol);
     QFETCH(ClientConnectionShutdown, shutdown);
     QFETCH(QBluetoothAddress, address);
     QFETCH(quint16, port);
@@ -268,11 +268,11 @@ void tst_QBluetoothSocket::tst_clientConnection()
 
     tryagain:
     /* Construction */
-    QBluetoothSocket *socket = new QBluetoothSocket(sockettype);
+    QBluetoothSocket *socket = new QBluetoothSocket(socketprotocol);
 
     QSignalSpy stateSpy(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)));
 
-    QCOMPARE(socket->socketType(), sockettype);
+    QCOMPARE(socket->socketType(), socketprotocol);
     QCOMPARE(socket->state(), QBluetoothSocket::UnconnectedState);
 
     /* Connection */
@@ -420,7 +420,7 @@ void tst_QBluetoothSocket::tst_serviceConnection()
 
     QSignalSpy stateSpy(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)));
 
-    QCOMPARE(socket->socketType(), QBluetoothSocket::UnknownSocketType);
+    QCOMPARE(socket->socketType(), QBluetoothServiceInfo::UnknownProtocol);
     QCOMPARE(socket->state(), QBluetoothSocket::UnconnectedState);
 
     /* Connection */
@@ -494,11 +494,11 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     QFETCH(QStringList, data);
 
     /* Construction */
-    QBluetoothSocket *socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
+    QBluetoothSocket *socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 
     QSignalSpy stateSpy(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)));
 
-    QCOMPARE(socket->socketType(), QBluetoothSocket::RfcommSocket);
+    QCOMPARE(socket->socketType(), QBluetoothServiceInfo::RfcommProtocol);
     QCOMPARE(socket->state(), QBluetoothSocket::UnconnectedState);
 
     /* Connection */
@@ -686,11 +686,11 @@ void tst_QBluetoothSocket::tst_localPeer()
 
 
     /* Construction */
-    QBluetoothSocket *socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
+    QBluetoothSocket *socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 
     QSignalSpy stateSpy(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)));
 
-    QCOMPARE(socket->socketType(), QBluetoothSocket::RfcommSocket);
+    QCOMPARE(socket->socketType(), QBluetoothServiceInfo::RfcommProtocol);
     QCOMPARE(socket->state(), QBluetoothSocket::UnconnectedState);
 
     /* Connection */

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
-      socketType(QBluetoothSocket::UnknownSocketType),
+      socketType(QBluetoothSServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
       readNotifier(0),
       connectWriteNotifier(0),
@@ -65,7 +65,7 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
     close();
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType type)
+bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     Q_UNUSED(type);
     return false;
@@ -93,7 +93,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     ppsSendControlMessage("connect_service", 0x1101, uuid, address.toString(), QString(), this, BT_SPP_CLIENT_SUBTYPE);
     ppsRegisterForEvent(QStringLiteral("service_connected"),this);
     ppsRegisterForEvent(QStringLiteral("get_mount_point_path"),this);
-    socketType = QBluetoothSocket::RfcommSocket;
+    socketType = QBluetoothServiceInfo::RfcommProtocol;
 }
 
 void QBluetoothSocketPrivate::_q_writeNotify()
@@ -250,7 +250,7 @@ void QBluetoothSocketPrivate::close()
     abort();
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothSocket::SocketType socketType,
+bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                                   QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);

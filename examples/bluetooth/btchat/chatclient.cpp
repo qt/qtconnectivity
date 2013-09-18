@@ -59,7 +59,7 @@ void ChatClient::startClient(const QBluetoothServiceInfo &remoteService)
         return;
 
     // Connect to service
-    socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     qDebug() << "Create socket";
     socket->connectToService(remoteService);
     qDebug() << "ConnecttoService done";

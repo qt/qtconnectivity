@@ -63,18 +63,9 @@ QT_BEGIN_NAMESPACE
     applicable attributes for your service and register it using QBluetoothServiceInfo::registerService().
     Call serverPort() to get the channel number that is being used.
 
-    If the \l QBluetoothServer::ServerType is not supported by a platform, \l listen() will return \c false.
+    If the \l QBluetoothServiceInfo::Protocol is not supported by a platform, \l listen() will return \c false.
 
     \sa QBluetoothServiceInfo, QBluetoothSocket
-*/
-
-/*!
-    \enum QBluetoothServer::ServerType
-
-    This enum describes the Bluetooth server type.
-
-    \value L2capServer          L2CAP server (Not supported on BlackBerry).
-    \value RfcommServer         RFCOMM server.
 */
 
 /*!
@@ -140,7 +131,7 @@ QT_BEGIN_NAMESPACE
 /*!
     Constructs a bluetooth server with \a parent and \a serverType.
 */
-QBluetoothServer::QBluetoothServer(ServerType serverType, QObject *parent)
+QBluetoothServer::QBluetoothServer(QBluetoothServiceInfo::Protocol serverType, QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothServerPrivate(serverType))
 {
     d_ptr->q_ptr = this;
@@ -197,7 +188,7 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
     protocolDescriptorList.append(QVariant::fromValue(protocol));
     protocol.clear();
 //! [listen]
-    if (d->serverType == RfcommServer) {
+    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
 //! [listen2]
     protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
              << QVariant::fromValue(quint8(serverPort()));
@@ -253,10 +244,10 @@ int QBluetoothServer::maxPendingConnections() const
 */
 
 /*!
-    \fn QBluetooth::ServerType QBluetoothServer::serverType() const
-    Returns the server type of the QBluetoothServer.
+    \fn QBluetoothSocket::ServerType QBluetoothServer::serverType() const
+    Returns the type of the QBluetoothServer.
 */
-QBluetoothServer::ServerType QBluetoothServer::serverType() const
+QBluetoothServiceInfo::Protocol QBluetoothServer::serverType() const
 {
     Q_D(const QBluetoothServer);
     return d->serverType;

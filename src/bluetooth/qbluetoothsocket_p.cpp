@@ -52,7 +52,7 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 {
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothSocket::SocketType type)
+bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     Q_UNUSED(type);
     return false;
@@ -125,7 +125,7 @@ void QBluetoothSocketPrivate::close()
 {
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothSocket::SocketType socketType,
+bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_UNUSED(socketDescriptor);

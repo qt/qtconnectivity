@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
-QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
+QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
     : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity), serverType(sType)
 {
     ppsRegisterControl();
@@ -84,11 +84,11 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
             if (!socket)
                 return;
 
-            socket->setSocketDescriptor(socketFD, QBluetoothSocket::RfcommSocket,
+            socket->setSocketDescriptor(socketFD, QBluetoothServiceInfo::RfcommProtocol,
                                            QBluetoothSocket::ConnectedState);
             socket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
             activeSockets.append(socket);
-            socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket, this);
+            socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
             socket->setSocketState(QBluetoothSocket::ListeningState);
             emit q->newConnection();
         }
@@ -137,7 +137,7 @@ void QBluetoothServer::close()
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_UNUSED(address)
-    if (serverType() == L2capServer)
+    if (serverType() != QBluetoothServiceInfo::RfcommProtocol)
         return false;
 
     Q_D(QBluetoothServer);
@@ -145,7 +145,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
         return true;
 
-    d->socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
+    d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 
     //We can not register an actual Rfcomm port, because the platform does not allow it
     //but we need a way to associate a server with a service

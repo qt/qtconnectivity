@@ -266,7 +266,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
         for (int i=0; i<numberOfAdapters; i++) {
             addresses.append(((QBluetoothHostInfo)localDevice.allDevices().at(i)).address());
         }
-        QBluetoothServer server(QBluetoothServer::RfcommServer);
+        QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
         QBluetoothUuid uuid(QBluetoothUuid::Ftp);
         server.listen(addresses[0]);
         QBluetoothServiceInfo serviceInfo;

@@ -106,7 +106,7 @@ void RfCommClient::startClient(const QBluetoothServiceInfo &remoteService)
     // Connect to service
     if (state == listening)
         state = pendingConnections;
-    socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     qDebug() << "Create socket";
     socket->connectToService(remoteService);
     qDebug() << "ConnecttoService done";

@@ -46,6 +46,7 @@
 
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QBluetoothServiceInfo>
 
 #include <QIODevice>
 #include <QtNetwork/QAbstractSocket>
@@ -64,11 +65,6 @@ class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
     friend class QBluetoothServerPrivate;
 
 public:
-    enum SocketType {
-        UnknownSocketType = -1,
-        L2capSocket,
-        RfcommSocket
-    };
 
     enum SocketState {
         UnconnectedState = QAbstractSocket::UnconnectedState,
@@ -88,10 +84,10 @@ public:
         HostNotFoundError = QAbstractSocket::HostNotFoundError,
         ServiceNotFoundError = QAbstractSocket::SocketAddressNotAvailableError,
         NetworkError = QAbstractSocket::NetworkError,
-        UnsupportedSocketTypeError
+        UnsupportedProtocolError
     };
 
-    explicit QBluetoothSocket(SocketType socketType, QObject *parent = 0);   // create socket of type socketType
+    explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = 0);   // create socket of type socketType
     QBluetoothSocket(QObject *parent = 0);  // create a blank socket
     virtual ~QBluetoothSocket();
 
@@ -125,12 +121,12 @@ public:
     //qint64 readBufferSize() const;
     //void setReadBufferSize(qint64 size);
 
-    bool setSocketDescriptor(int socketDescriptor, SocketType socketType,
+    bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              SocketState socketState = ConnectedState,
                              OpenMode openMode = ReadWrite);
     int socketDescriptor() const;
 
-    SocketType socketType() const;
+    QBluetoothServiceInfo::Protocol socketType() const;
     SocketState state() const;
     SocketError error() const;
     QString errorString() const;

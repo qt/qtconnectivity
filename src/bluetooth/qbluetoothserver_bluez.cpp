@@ -65,13 +65,13 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
     to[5] = (from >> 40) & 0xff;
 }
 
-QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServer::ServerType sType)
+QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
     :   maxPendingConnections(1), serverType(sType), socketNotifier(0)
 {
-    if (sType == QBluetoothServer::RfcommServer)
-        socket = new QBluetoothSocket(QBluetoothSocket::RfcommSocket);
+    if (sType == QBluetoothServiceInfo::RfcommProtocol)
+        socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     else
-       socket = new QBluetoothSocket(QBluetoothSocket::L2capSocket);
+       socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
@@ -107,7 +107,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (sock < 0)
         return false;
 
-    if (d->serverType == RfcommServer) {
+    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
 
         addr.rc_family = AF_BLUETOOTH;
@@ -178,7 +178,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
         return 0;
 
     int pending;
-    if (d->serverType == RfcommServer) {
+    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
         socklen_t length = sizeof(sockaddr_rc);
         pending = ::accept(d->socket->socketDescriptor(),
@@ -192,10 +192,10 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 
     if (pending >= 0) {
         QBluetoothSocket *newSocket = new QBluetoothSocket;
-        if (d->serverType == RfcommServer)
-            newSocket->setSocketDescriptor(pending, QBluetoothSocket::RfcommSocket);
+        if (d->serverType == QBluetoothServiceInfo::RfcommProtocol)
+            newSocket->setSocketDescriptor(pending, QBluetoothServiceInfo::RfcommProtocol);
         else
-            newSocket->setSocketDescriptor(pending, QBluetoothSocket::L2capSocket);
+            newSocket->setSocketDescriptor(pending, QBluetoothServiceInfo::L2capProtocol);
 
         d->socketNotifier->setEnabled(true);
 
@@ -229,7 +229,7 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
     if (security == QBluetooth::NoSecurity)
         lm = 0;
 
-    if (d->serverType == RfcommServer) {
+    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
         if (security.testFlag(QBluetooth::Authorization))
             lm |= RFCOMM_LM_AUTH;
         if (security.testFlag(QBluetooth::Authentication))
@@ -273,7 +273,7 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
     int len = sizeof(lm);
     int security = QBluetooth::NoSecurity;
 
-    if (d->serverType == RfcommServer) {
+    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
         if (getsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, (socklen_t *)&len) < 0) {
             qWarning() << "Failed to get security flags" << strerror(errno);
             return QBluetooth::NoSecurity;

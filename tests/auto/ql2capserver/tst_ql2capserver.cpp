@@ -94,7 +94,7 @@ void tst_QL2capServer::initTestCase()
 void tst_QL2capServer::tst_construction()
 {
     {
-        QBluetoothServer server(QBluetoothServer::L2capServer);
+        QBluetoothServer server(QBluetoothServiceInfo::L2capProtocol);
 
         QVERIFY(!server.isListening());
         QCOMPARE(server.maxPendingConnections(), 1);
@@ -122,7 +122,7 @@ void tst_QL2capServer::tst_listen()
     QFETCH(quint16, port);
 
     {
-        QBluetoothServer server(QBluetoothServer::L2capServer);
+        QBluetoothServer server(QBluetoothServiceInfo::L2capProtocol);
 
         bool result = server.listen(address, port);
 
@@ -169,7 +169,7 @@ void tst_QL2capServer::tst_pendingConnections()
     QFETCH(int, maxConnections);
 
     {
-        QBluetoothServer server(QBluetoothServer::L2capServer);
+        QBluetoothServer server(QBluetoothServiceInfo::L2capProtocol);
 
         server.setMaxPendingConnections(maxConnections);
 
@@ -235,7 +235,7 @@ void tst_QL2capServer::tst_receive()
 {
     QFETCH(QByteArray, expected);
 
-    QBluetoothServer server(QBluetoothServer::L2capServer);
+    QBluetoothServer server(QBluetoothServiceInfo::L2capProtocol);
 
     bool result = server.listen();
 
@@ -273,7 +273,7 @@ void tst_QL2capServer::tst_receive()
 
 void tst_QL2capServer::tst_secureFlags()
 {
-    QBluetoothServer server(QBluetoothServer::L2capServer);
+    QBluetoothServer server(QBluetoothServiceInfo::L2capProtocol);
     QCOMPARE(server.securityFlags(), QBluetooth::NoSecurity);
 
     server.setSecurityFlags(QBluetooth::Encryption);

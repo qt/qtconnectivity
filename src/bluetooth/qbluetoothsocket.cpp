@@ -59,32 +59,21 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothSocket class enables connection to a Bluetooth device
     running a bluetooth server.
 
-    QBluetoothSocket supports two socket types, \l {QBluetoothSocket::L2capSocket}{L2CAP} and
-    \l {QBluetoothSocket::RfcommSocket}{RFCOMM}.
+    QBluetoothSocket supports two socket types, \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} and
+    \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}.
 
-    \l {QBluetoothSocket::L2capSocket}{L2CAP} is a low level datagram-oriented Bluetooth socket
-            (Not supported on BlackBerry).
+    \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} is a low level datagram-oriented Bluetooth socket.
 
-    \l {QBluetoothSocket::RfcommSocket}{RFCOMM} is a reliable, stream-oriented socket.  RFCOMM
+    \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM} is a reliable, stream-oriented socket. RFCOMM
     sockets emulate an RS-232 serial port.
 
     To create a connection to a Bluetooth service, create a socket of the appropriate type and call
     connectToService() passing the Bluetooth address and port number. QBluetoothSocket will emit
     the connected() signal when the connection is established.
 
-    If the \l {QBluetoothSocket::SocketType}{SocketType} is not supported on a platform, calling
-    \l connectToService() will emit a \l {QBluetoothSocket::UnsupportedSocketTypeError}{UnsupportedSocketTypeError} error.
+    If the \l {QBluetoothServiceInfo::Protocol}{Protocol} is not supported on a platform, calling
+    \l connectToService() will emit a \l {QBluetoothSocket::UnsupportedProtocolError}{UnsupportedProtocolError} error.
 
-*/
-
-/*!
-    \enum QBluetoothSocket::SocketType
-
-    This enum describes the Bluetooth socket type.
-
-    \value UnknownSocketType    Unknown socket type.
-    \value L2capSocket          L2CAP socket. (Not supported on BlackBerry).
-    \value RfcommSocket         RFCOMM socket.
 */
 
 /*!
@@ -114,7 +103,7 @@ QT_BEGIN_NAMESPACE
     \value HostNotFoundError        Could not find the remote host.
     \value ServiceNotFoundError     Could not find the service UUID on remote host.
     \value NetworkError             Attempt to read or write from socket returned an error
-    \value UnsupportedSocketTypeError The \l {QBluetoothSocket::SocketType}{SocketType} is not
+    \value UnsupportedProtocolError The \l {QBluetoothServiceInfo::Protocol}{Protocol} is not
                                     supported on this platform.
 */
 
@@ -228,7 +217,7 @@ QT_BEGIN_NAMESPACE
 /*!
     Constructs a Bluetooth socket of \a socketType type, with \a parent.
 */
-QBluetoothSocket::QBluetoothSocket(QBluetoothSocket::SocketType socketType, QObject *parent)
+QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent)
 : QIODevice(parent), d_ptr(new QBluetoothSocketPrivate)
 {
     d_ptr->q_ptr = this;
@@ -308,8 +297,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     setOpenMode(openMode);
 
 #ifdef QT_QNX_BLUETOOTH
-    if (socketType() == L2capSocket) {
-        d->socketError = QBluetoothSocket::UnsupportedSocketTypeError;
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->socketError = QBluetoothSocket::UnsupportedProtocolError;
         d->errorString = tr("Socket type not supported");
         Q_EMIT error(d->socketError);
         return;
@@ -317,13 +306,13 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
 #else
     if (service.protocolServiceMultiplexer() > 0) {
-        if (!d->ensureNativeSocket(L2capSocket)) {
+        if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
             emit error(UnknownSocketError);
             return;
         }
         d->connectToService(service.device().address(), service.protocolServiceMultiplexer(), openMode);
     } else if (service.serverChannel() > 0) {
-        if (!d->ensureNativeSocket(RfcommSocket)) {
+        if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
             emit error(UnknownSocketError);
             return;
         }
@@ -361,10 +350,10 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 {
 #ifdef QT_QNX_BLUETOOTH
     Q_D(QBluetoothSocket);
-    if (socketType() == L2capSocket) {
-        d->socketError = QBluetoothSocket::UnsupportedSocketTypeError;
+    if (socketType() != Rfcomm) {
+        d->socketError = QBluetoothSocket::UnsupportedProtocolError;
         d->errorString = tr("Socket type not supported");
-        Q_EMIT error(d->socketError)
+        Q_EMIT error(d->socketError);
         return;
     }
     d->connectToService(address, uuid, openMode);
@@ -394,16 +383,16 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
+    Q_D(QBluetoothSocket);
 #ifdef QT_QNX_BLUETOOTH
     Q_UNUSED(port);
     Q_UNUSED(openMode);
     Q_UNUSED(address);
     d->socketError = QBluetoothSocket::ServiceNotFoundError;
     d->errorString = tr("Connecting to port is not supported on QNX");
-    Q_EMIT error(d->socketError)
+    Q_EMIT error(d->socketError);
     qWarning("Connecting to port is not supported");
 #else
-    Q_D(QBluetoothSocket);
     setOpenMode(openMode);
     d->connectToService(address, port, openMode);
 #endif
@@ -412,7 +401,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
 /*!
     Returns the socket type.
 */
-QBluetoothSocket::SocketType QBluetoothSocket::socketType() const
+QBluetoothServiceInfo::Protocol QBluetoothSocket::socketType() const
 {
     Q_D(const QBluetoothSocket);
     return d->socketType;
@@ -626,7 +615,7 @@ void QBluetoothSocket::close()
 */
 
 
-bool QBluetoothSocket::setSocketDescriptor(int socketDescriptor, SocketType socketType,
+bool QBluetoothSocket::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                            SocketState socketState, OpenMode openMode)
 {
     Q_D(QBluetoothSocket);

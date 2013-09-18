@@ -62,11 +62,7 @@ class Q_BLUETOOTH_EXPORT QBluetoothServer : public QObject
     Q_OBJECT
 
 public:
-    enum ServerType {
-        L2capServer = 0,
-        RfcommServer
-    };
-    QBluetoothServer(ServerType serverType, QObject *parent = 0);
+    QBluetoothServer(QBluetoothServiceInfo::Protocol serverType, QObject *parent = 0);
     ~QBluetoothServer();
 
     void close();
@@ -87,7 +83,7 @@ public:
     void setSecurityFlags(QBluetooth::SecurityFlags security);
     QBluetooth::SecurityFlags securityFlags() const;
 
-    ServerType serverType() const;
+    QBluetoothServiceInfo::Protocol serverType() const;
 
 Q_SIGNALS:
     void newConnection();

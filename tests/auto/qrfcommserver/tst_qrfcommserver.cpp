@@ -118,7 +118,7 @@ void tst_QRfcommServer::initTestCase()
 void tst_QRfcommServer::tst_construction()
 {
     {
-        QBluetoothServer server(QBluetoothServer::RfcommServer);
+        QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
 
         QVERIFY(!server.isListening());
         QCOMPARE(server.maxPendingConnections(), 1);
@@ -146,7 +146,7 @@ void tst_QRfcommServer::tst_listen()
     QFETCH(quint16, port);
 
     {
-        QBluetoothServer server(QBluetoothServer::RfcommServer);
+        QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
         qDebug() << "tst_listen() address=" << address.toString() << "port=" << port;
         bool result = server.listen(address, port);
         QTest::qWait(1000);
@@ -193,7 +193,7 @@ void tst_QRfcommServer::tst_pendingConnections()
 {
     QFETCH(int, maxConnections);
 
-    QBluetoothServer server(QBluetoothServer::RfcommServer);
+    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
     QBluetoothLocalDevice localDev;
 
     QBluetoothAddress address = localDev.address();
@@ -258,7 +258,7 @@ void tst_QRfcommServer::tst_receive()
 {
     QFETCH(QByteArray, expected);
 
-    QBluetoothServer server(QBluetoothServer::RfcommServer);
+    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
     QBluetoothLocalDevice localDev;
 
     QBluetoothAddress address = localDev.address();
@@ -302,7 +302,7 @@ void tst_QRfcommServer::tst_receive()
 
 void tst_QRfcommServer::tst_secureFlags()
 {
-    QBluetoothServer server(QBluetoothServer::RfcommServer);
+    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
 
     server.setSecurityFlags(QBluetooth::NoSecurity);
     QCOMPARE(server.securityFlags(), QBluetooth::NoSecurity);

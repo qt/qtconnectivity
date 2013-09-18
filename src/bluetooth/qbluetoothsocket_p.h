@@ -94,7 +94,7 @@ public:
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
 
-    bool ensureNativeSocket(QBluetoothSocket::SocketType type);
+    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type);
 
     QString localName() const;
     QBluetoothAddress localAddress() const;
@@ -114,7 +114,7 @@ public:
     qint64 writeData(const char *data, qint64 maxSize);
     qint64 readData(char *data, qint64 maxSize);
 
-    bool setSocketDescriptor(int socketDescriptor, QBluetoothSocket::SocketType socketType,
+    bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
     int socketDescriptor() const;
@@ -125,7 +125,7 @@ public:
     QPrivateLinearBuffer buffer;
     QPrivateLinearBuffer txBuffer;
     int socket;
-    QBluetoothSocket::SocketType socketType;
+    QBluetoothServiceInfo::Protocol socketType;
     QBluetoothSocket::SocketState state;
     QBluetoothSocket::SocketError socketError;
     QSocketNotifier *readNotifier;
