@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -113,6 +114,8 @@ QT_BEGIN_NAMESPACE
     \value HostNotFoundError        Could not find the remote host.
     \value ServiceNotFoundError     Could not find the service UUID on remote host.
     \value NetworkError             Attempt to read or write from socket returned an error
+    \value UnsupportedSocketTypeError The \l {QBluetoothSocket::SocketType}{SocketType} is not
+                                    supported on this platform.
 */
 
 /*!
@@ -305,6 +308,12 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     setOpenMode(openMode);
 
 #ifdef QT_QNX_BLUETOOTH
+    if (socketType() == L2capSocket) {
+        d->socketError = QBluetoothSocket::UnsupportedSocketTypeError;
+        d->errorString = tr("Socket type not supported");
+        Q_EMIT error(d->socketError);
+        return;
+    }
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
 #else
     if (service.protocolServiceMultiplexer() > 0) {
@@ -352,6 +361,12 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 {
 #ifdef QT_QNX_BLUETOOTH
     Q_D(QBluetoothSocket);
+    if (socketType() == L2capSocket) {
+        d->socketError = QBluetoothSocket::UnsupportedSocketTypeError;
+        d->errorString = tr("Socket type not supported");
+        Q_EMIT error(d->socketError)
+        return;
+    }
     d->connectToService(address, uuid, openMode);
 #else
     QBluetoothServiceInfo service;
@@ -383,7 +398,10 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
     Q_UNUSED(port);
     Q_UNUSED(openMode);
     Q_UNUSED(address);
-    qWarning("Connecting to port is not supported on QNX");
+    d->socketError = QBluetoothSocket::ServiceNotFoundError;
+    d->errorString = tr("Connecting to port is not supported on QNX");
+    Q_EMIT error(d->socketError)
+    qWarning("Connecting to port is not supported");
 #else
     Q_D(QBluetoothSocket);
     setOpenMode(openMode);

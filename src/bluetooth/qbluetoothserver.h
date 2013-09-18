@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -85,6 +86,8 @@ public:
 
     void setSecurityFlags(QBluetooth::SecurityFlags security);
     QBluetooth::SecurityFlags securityFlags() const;
+
+    ServerType serverType() const;
 
 Q_SIGNALS:
     void newConnection();

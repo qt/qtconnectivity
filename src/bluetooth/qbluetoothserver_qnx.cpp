@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2012 Research In Motion
+** Copyright (C) 2012 - 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -137,6 +137,9 @@ void QBluetoothServer::close()
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_UNUSED(address)
+    if (serverType() == L2capServer)
+        return false;
+
     Q_D(QBluetoothServer);
     // listen has already been called before
     if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)

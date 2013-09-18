@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -250,6 +251,16 @@ int QBluetoothServer::maxPendingConnections() const
     \fn QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
     Returns the Bluetooth security flags.
 */
+
+/*!
+    \fn QBluetooth::ServerType QBluetoothServer::serverType() const
+    Returns the server type of the QBluetoothServer.
+*/
+QBluetoothServer::ServerType QBluetoothServer::serverType() const
+{
+    Q_D(const QBluetoothServer);
+    return d->serverType;
+}
 
 #include "moc_qbluetoothserver.cpp"
 
