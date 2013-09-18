@@ -51,8 +51,6 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothSocket>
 
-/* ==================== QDeclarativeBluetoothSocket ======================= */
-
 /*!
     \qmltype BluetoothSocket
     \instantiates QDeclarativeBluetoothSocket
@@ -83,8 +81,8 @@ class QDeclarativeBluetoothSocketPrivate
 public:
     QDeclarativeBluetoothSocketPrivate(QDeclarativeBluetoothSocket *bs)
         : m_dbs(bs), m_service(0), m_socket(0),
-          m_error(QLatin1String("No Error")),
-          m_state(QLatin1String("No Service Set")),
+          m_error(QDeclarativeBluetoothSocket::NoError),
+          m_state(QDeclarativeBluetoothSocket::NoServiceSet),
           m_componentCompleted(false),
           m_connected(false)
     {
@@ -100,13 +98,20 @@ public:
     {
         Q_ASSERT(m_service);
         //qDebug() << "Connecting to: " << m_service->serviceInfo()->device().address().toString();
-        m_error = QLatin1String("No Error");
+        m_error = QDeclarativeBluetoothSocket::NoError;
 
         if (m_socket)
             m_socket->deleteLater();
 
-//        delete m_socket;
-        m_socket = new QBluetoothSocket();
+        QBluetoothServiceInfo::Protocol socketProtocol;
+        if (m_service->serviceInfo()->socketProtocol() == QBluetoothServiceInfo::L2capProtocol)
+            socketProtocol = QBluetoothServiceInfo::L2capProtocol;
+        else if (m_service->serviceInfo()->socketProtocol() == QBluetoothServiceInfo::RfcommProtocol)
+            socketProtocol = QBluetoothServiceInfo::RfcommProtocol;
+        else
+            socketProtocol = QBluetoothServiceInfo::UnknownProtocol;
+
+        m_socket = new QBluetoothSocket(socketProtocol);
         m_socket->connectToService(*m_service->serviceInfo());
         QObject::connect(m_socket, SIGNAL(connected()), m_dbs, SLOT(socket_connected()));
         QObject::connect(m_socket, SIGNAL(disconnected()), m_dbs, SLOT(socket_disconnected()));
@@ -120,8 +125,8 @@ public:
     QDeclarativeBluetoothSocket *m_dbs;
     QDeclarativeBluetoothService *m_service;
     QBluetoothSocket *m_socket;
-    QString m_error;
-    QString m_state;
+    QDeclarativeBluetoothSocket::Error m_error;
+    QDeclarativeBluetoothSocket::SocketState m_state;
     bool m_componentCompleted;
     bool m_connected;
     QDataStream *m_stream;
@@ -211,7 +216,7 @@ void QDeclarativeBluetoothSocket::setService(QDeclarativeBluetoothService *servi
   */
 
 
-bool QDeclarativeBluetoothSocket::connected()
+bool QDeclarativeBluetoothSocket::connected() const
 {
     if (!d->m_socket)
         return false;
@@ -237,14 +242,25 @@ void QDeclarativeBluetoothSocket::setConnected(bool connected)
 }
 
 /*!
-  \qmlproperty string BluetoothSocket::error
+    \qmlproperty enumeration BluetoothSocket::error
 
-  This property holds the string for the last reported error
-  This property is read-only.
-  */
+    This property holds the last error that happened.
+    \list
+        \li \c{NoError}
+        \li \c{UnknownSocketError}
+        \li \c{ConnectionRefusedError}
+        \li \c{RemoteHostClosedError}
+        \li \c{HostNotFoundError}
+        \li \c{ServiceNotFoundError}
+        \li \c{NetworkError}
+        \li \c{UnsupportedProtocolError}
+    \endlist
+
+    The errors are derived from \l QBluetoothSocket::SocketError. This property is read-only.
+*/
 
 
-QString QDeclarativeBluetoothSocket::error()
+QDeclarativeBluetoothSocket::Error QDeclarativeBluetoothSocket::error() const
 {
     return d->m_error;
 }
@@ -261,61 +277,29 @@ void QDeclarativeBluetoothSocket::socket_disconnected()
     emit connectedChanged();
 }
 
-void QDeclarativeBluetoothSocket::socket_error(QBluetoothSocket::SocketError err)
+void QDeclarativeBluetoothSocket::socket_error(QBluetoothSocket::SocketError error)
 {
-    if (err == QBluetoothSocket::ConnectionRefusedError)
-        d->m_error = QLatin1String("Connection Refused");
-    else if (err == QBluetoothSocket::RemoteHostClosedError)
-        d->m_error = QLatin1String("Connection Closed by Remote Host");
-    else if (err == QBluetoothSocket::HostNotFoundError)
-        d->m_error = QLatin1String("Host Not Found");
-    else if (err == QBluetoothSocket::ServiceNotFoundError)
-        d->m_error = QLatin1String("Could not find service at remote host");
-    else
-        d->m_error = QLatin1String("Unknown Error");
+    d->m_error = static_cast<QDeclarativeBluetoothSocket::Error>(error);
 
     emit errorChanged();
 }
 
 void QDeclarativeBluetoothSocket::socket_state(QBluetoothSocket::SocketState state)
 {
-    switch (state) {
-    case QBluetoothSocket::UnconnectedState:
-        d->m_state = QLatin1String("Unconnected");
-        break;
-    case QBluetoothSocket::ServiceLookupState:
-        d->m_state = QLatin1String("Service Lookup");
-        break;
-    case QBluetoothSocket::ConnectingState:
-        d->m_state = QLatin1String("Connecting");
-        break;
-    case QBluetoothSocket::ConnectedState:
-        d->m_state = QLatin1String("Connected");
-        break;
-    case QBluetoothSocket::ClosingState:
-        d->m_state = QLatin1String("Closing");
-        break;
-    case QBluetoothSocket::ListeningState:
-        d->m_state = QLatin1String("Listening");
-        break;
-    case QBluetoothSocket::BoundState:
-        d->m_state = QLatin1String("Bound");
-        break;
-    }
+    d->m_state = static_cast<QDeclarativeBluetoothSocket::SocketState>(state);
 
     emit stateChanged();
 }
 
 /*!
-    \qmlproperty string BluetoothSocket::state
+    \qmlproperty enumeration BluetoothSocket::state
 
-    This property holds the current state of the socket. The property can be one
-    of the following strings:
+    This property holds the current state of the socket.
 
     \list
-        \li \c{No Service Set}
+        \li \c{NoServiceSet}
         \li \c{Unconnected}
-        \li \c{Service Lookup}
+        \li \c{ServiceLookup}
         \li \c{Connecting}
         \li \c{Connected}
         \li \c{Closing}
@@ -323,9 +307,9 @@ void QDeclarativeBluetoothSocket::socket_state(QBluetoothSocket::SocketState sta
         \li \c{Bound}
     \endlist
 
-    The states are derived from QBluetoothSocket::SocketState. This property is read-only.
+    The states are derived from \l QBluetoothSocket::SocketState. This property is read-only.
 */
-QString QDeclarativeBluetoothSocket::state()
+QDeclarativeBluetoothSocket::SocketState QDeclarativeBluetoothSocket::state() const
 {
     return d->m_state;
 }
@@ -398,7 +382,7 @@ void QDeclarativeBluetoothSocket::newSocket(QBluetoothSocket *socket, QDeclarati
     d->m_socket = socket;
     d->m_connected = true;
     d->m_componentCompleted = true;
-    d->m_error = QLatin1String("No Error");
+    d->m_error = NoSocketerror;
 
     QObject::connect(socket, SIGNAL(connected()), this, SLOT(socket_connected()));
     QObject::connect(socket, SIGNAL(disconnected()), this, SLOT(socket_disconnected()));

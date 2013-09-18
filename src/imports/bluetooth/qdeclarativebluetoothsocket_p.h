@@ -60,12 +60,38 @@ class QDeclarativeBluetoothSocket : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_PROPERTY(QDeclarativeBluetoothService *service READ service WRITE setService NOTIFY serviceChanged)
     Q_PROPERTY(bool connected READ connected WRITE setConnected NOTIFY connectedChanged)
-    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
-    Q_PROPERTY(QString state READ state NOTIFY stateChanged)
+    Q_PROPERTY(Error error READ error NOTIFY errorChanged)
+    Q_PROPERTY(SocketState socketState READ state NOTIFY stateChanged)
     Q_PROPERTY(QString stringData READ stringData WRITE sendStringData NOTIFY dataAvailable)
     Q_INTERFACES(QQmlParserStatus)
+    Q_ENUMS(Error)
+    Q_ENUMS(SocketState)
 
 public:
+
+    enum Error {
+        NoError = QBluetoothSocket::NoSocketError,
+        UnknownSocketError = QBluetoothSocket::UnknownSocketError,
+        ConnectionRefusedError = QBluetoothSocket::ConnectionRefusedError,
+        RemoteHostClosedError = QBluetoothSocket::RemoteHostClosedError,
+        HostNotFoundError = QBluetoothSocket::HostNotFoundError,
+        ServiceNotFoundError = QBluetoothSocket::ServiceNotFoundError,
+        NetworkError = QBluetoothSocket::NetworkError,
+        UnsupportedProtocolError = QBluetoothSocket::UnsupportedProtocolError,
+        NoSocketerror
+    };
+
+    enum SocketState {
+        Unconnected = QBluetoothSocket::UnconnectedState,
+        ServiceLookup = QBluetoothSocket::ServiceLookupState,
+        Connecting = QBluetoothSocket::ConnectingState,
+        Connected = QBluetoothSocket::ConnectedState,
+        Bound = QBluetoothSocket::BoundState,
+        Closing = QBluetoothSocket::ClosingState,
+        Listening = QBluetoothSocket::ListeningState,
+        NoServiceSet
+    };
+
     explicit QDeclarativeBluetoothSocket(QObject *parent = 0);
     explicit QDeclarativeBluetoothSocket(QDeclarativeBluetoothService *service,
                                          QObject *parent = 0);
@@ -74,9 +100,9 @@ public:
     ~QDeclarativeBluetoothSocket();
 
     QDeclarativeBluetoothService *service();
-    bool connected();
-    QString error();
-    QString state();
+    bool connected() const;
+    Error error() const;
+    SocketState state() const;
 
     QString stringData();
 
