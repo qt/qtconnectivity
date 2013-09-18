@@ -105,6 +105,7 @@ public:
     bool m_running;
     bool m_runningRequested;
     bool m_componentCompleted;
+    QString m_remoteAddress;
 };
 
 QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject *parent) :
@@ -397,6 +398,8 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
                 connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
             }
 
+            d->m_serviceAgent->setRemoteAddress(QBluetoothAddress(d->m_remoteAddress));
+
             if (!d->m_uuid.isEmpty())
                 d->m_serviceAgent->setUuidFilter(QBluetoothUuid(d->m_uuid));
 
@@ -442,4 +445,27 @@ void QDeclarativeBluetoothDiscoveryModel::setUuidFilter(QString uuid)
     }
     d->m_uuid = uuid;
     emit uuidFilterChanged();
+}
+
+/*!
+    \qmlproperty string BluetoothDiscoveryModel::remoteAddress
+
+    This property holds an optional bluetooth address for a remote bluetooth device.
+    Only services on this remote device will be discovered. It has no effect if
+    an invalid bluetooth address was set or if the property was set after the discovery
+    was started.
+
+    The property is ignored if device discovery is selected.
+
+*/
+
+QString QDeclarativeBluetoothDiscoveryModel::remoteAddress()
+{
+    return d->m_remoteAddress;
+}
+
+void QDeclarativeBluetoothDiscoveryModel::setRemoteAddress(QString address)
+{
+    d->m_remoteAddress = address;
+    Q_EMIT remoteAddressChanged();
 }

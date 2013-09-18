@@ -67,6 +67,7 @@ class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QQ
     Q_PROPERTY(DiscoveryMode discoveryMode READ discoveryMode WRITE setDiscoveryMode NOTIFY discoveryModeChanged)
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(QString uuidFilter READ uuidFilter WRITE setUuidFilter NOTIFY uuidFilterChanged)
+    Q_PROPERTY(QString remoteAddress READ remoteAddress WRITE setRemoteAddress NOTIFY remoteAddressChanged)
     Q_INTERFACES(QQmlParserStatus)
 public:
     explicit QDeclarativeBluetoothDiscoveryModel(QObject *parent = 0);
@@ -113,6 +114,9 @@ public:
     QString uuidFilter() const;
     void setUuidFilter(QString uuid);
 
+    QString remoteAddress();
+    void setRemoteAddress(QString);
+
 signals:
     void errorChanged();
     void discoveryModeChanged();
@@ -120,6 +124,7 @@ signals:
     void newDeviceDiscovered();
     void runningChanged();
     void uuidFilterChanged();
+    void remoteAddressChanged();
 
 private slots:
     void serviceDiscovered(const QBluetoothServiceInfo &service);
