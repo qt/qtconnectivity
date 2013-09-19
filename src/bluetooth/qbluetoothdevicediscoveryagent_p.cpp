@@ -67,9 +67,9 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
-    lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+    lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
     errorString = QStringLiteral("No Bluetooth device available");
-    emit q->error(QBluetoothDeviceDiscoveryAgent::IOFailure);
+    emit q->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()

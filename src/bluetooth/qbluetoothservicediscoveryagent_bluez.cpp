@@ -89,7 +89,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
     reply.waitForFinished();
     if (reply.isError()) {
-        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to find appointed local adapter");
         emit q->error(error);
         _q_serviceDiscoveryFinished();
@@ -150,7 +150,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
         deviceObjectPath.waitForFinished();
         if (deviceObjectPath.isError()) {
             if (singleDevice) {
-                error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+                error = QBluetoothServiceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
                 emit q->error(error);
             }

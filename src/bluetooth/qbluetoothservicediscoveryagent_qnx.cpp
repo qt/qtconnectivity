@@ -76,7 +76,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(address.toString().toUtf8().constData()).constData();
     if ((m_rdfd = qt_safe_open(filePath, O_RDONLY)) == -1) {
         qWarning() << "Failed to open " << filePath;
-        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         errorString = QStringLiteral("Failed to open remote device file");
         q->error(error);
         _q_serviceDiscoveryFinished();
@@ -89,7 +89,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
             connect(rdNotifier, SIGNAL(activated(int)), this, SLOT(remoteDevicesChanged(int)));
         } else {
             qWarning() << "Service Discovery: Failed to connect to rdNotifier";
-            error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = QStringLiteral("Failed to connect to rdNotifier");
             q->error(error);
             _q_serviceDiscoveryFinished();
@@ -206,7 +206,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
-        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         q->error(error);
     } else {
         _q_serviceDiscoveryFinished();
@@ -223,7 +223,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlEvent(ppsResult result)
     if (!result.errorMsg.isEmpty()) {
         qWarning() << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
-        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         q->error(error);
     } else {
         _q_serviceDiscoveryFinished();
@@ -233,7 +233,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlEvent(ppsResult result)
 void QBluetoothServiceDiscoveryAgentPrivate::queryTimeout()
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
-    error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+    error = QBluetoothServiceDiscoveryAgent::UnknownError;
     errorString = QStringLiteral("Service query timed out");
     q->error(error);
     _q_serviceDiscoveryFinished();

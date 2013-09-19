@@ -64,14 +64,14 @@ public:
     // FIXME: add bluez error handling
     enum Error {
         NoError,
-        IOFailure,
-        PoweredOff,
-        UnknownError = 100
+        InputOutputError,
+        PoweredOffError,
+        UnknownError = 100 //New errors must be added before Unknown error
     };
 
     enum InquiryType {
         GeneralUnlimitedInquiry,
-        LimitedInquiry,
+        LimitedInquiry
     };
 
     QBluetoothDeviceDiscoveryAgent(QObject *parent = 0);

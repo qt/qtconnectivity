@@ -135,36 +135,13 @@ void QDeclarativeBluetoothDiscoveryModel::componentComplete()
 
 void QDeclarativeBluetoothDiscoveryModel::errorDiscovery(QBluetoothServiceDiscoveryAgent::Error error)
 {
-    switch (error) {
-    case QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError:
-        d->m_error = DeviceDiscoveryError;
-        break;
-    case QBluetoothServiceDiscoveryAgent::UnknownError:
-            d->m_error = UnknownError;
-            break;
-    default:
-        d->m_error = UnknownError;
-        break;
-    }
+    d->m_error = static_cast<QDeclarativeBluetoothDiscoveryModel::Error>(error);
     emit errorChanged();
 }
 
 void QDeclarativeBluetoothDiscoveryModel::errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error error)
 {
-    switch (error) {
-    case QBluetoothDeviceDiscoveryAgent::IOFailure:
-        d->m_error = IOFailure;
-        break;
-    case QBluetoothDeviceDiscoveryAgent::PoweredOff:
-        d->m_error = PoweredOffFailure;
-        break;
-    case QBluetoothDeviceDiscoveryAgent::UnknownError:
-        d->m_error = UnknownError;
-        break;
-    default:
-        d->m_error = UnknownError;
-        break;
-    }
+    d->m_error = static_cast<QDeclarativeBluetoothDiscoveryModel::Error>(error);
     emit errorChanged();
 }
 
@@ -185,13 +162,10 @@ void QDeclarativeBluetoothDiscoveryModel::clearModel()
     \header \li Property \li Description
     \row \li \c BluetoothDiscoveryModel.NoError
          \li No error occurred.
-    \row \li \c BluetoothDiscoveryModel.IOFailure
+    \row \li \c BluetoothDiscoveryModel.InputOutputError
          \li An IO failure occurred during device discovery
-    \row \li \c BluetoothDiscoveryModel.PoweredOffFailure
+    \row \li \c BluetoothDiscoveryModel.PoweredOffError
          \li The bluetooth device is not powered on.
-    \row \li \c BluetoothDiscoveryModel.DeviceDiscoveryError
-         \li In order to be able to discover services a device discovery is started first.
-         This error indicates that a problem detected there.
     \row \li \c BluetoothDiscoveryModel.UnknownError
          \li An unknown error occurred.
     \endtable

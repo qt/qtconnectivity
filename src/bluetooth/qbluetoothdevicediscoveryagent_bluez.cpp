@@ -97,7 +97,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 #ifdef QT_DEVICEDISCOVERY_DEBUG
         qDebug() << Q_FUNC_INFO << "ERROR: " << errorString;
 #endif
-        lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
         emit q->error(lastError);
         return;
@@ -115,11 +115,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     QDBusPendingReply<QVariantMap> propertiesReply = adapter->GetProperties();
     propertiesReply.waitForFinished();
     if(propertiesReply.isError()) {
+        errorString = propertiesReply.error().message();
 #ifdef QT_DEVICEDISCOVERY_DEBUG
         qDebug() << Q_FUNC_INFO << "ERROR: " << errorString;
 #endif
-        errorString = propertiesReply.error().message();
-        lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
         emit q->error(lastError);
         return;
@@ -130,7 +130,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         delete adapter;
         adapter = 0;
         errorString = discoveryReply.error().message();
-        lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
         emit q->error(lastError);
 #ifdef QT_DEVICEDISCOVERY_DEBUG

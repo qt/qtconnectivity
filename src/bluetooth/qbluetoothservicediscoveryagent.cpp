@@ -74,9 +74,10 @@ QT_BEGIN_NAMESPACE
 
     This enum describes errors that can occur during service discovery.
 
-    \value NoError              No error.
-    \value DeviceDiscoveryError Error occurred during device discovery.
-    \value UnknownError         An unidentified error occurred.
+    \value NoError          No error has occurred.
+    \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
+    \value InputOutputError    Writing or reading from the device resulted in an error.
+    \value UnknownError     An unknown error has occurred.
 */
 
 /*!
@@ -362,7 +363,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
 {
     if (deviceDiscoveryAgent->error() != QBluetoothDeviceDiscoveryAgent::NoError) {
-        error = QBluetoothServiceDiscoveryAgent::DeviceDiscoveryError;
+        //Forward the device discovery error
+        error = static_cast<QBluetoothServiceDiscoveryAgent::Error>(deviceDiscoveryAgent->error());
 
         setDiscoveryState(Inactive);
         Q_Q(QBluetoothServiceDiscoveryAgent);

@@ -96,7 +96,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     } else if ((m_rdfd = qt_safe_open("/pps/services/bluetooth/remote_devices/.all", O_RDONLY)) == -1) {
         qWarning() << Q_FUNC_INFO << "rdfd - failed to open /pps/services/bluetooth/remote_devices/.all"
                       << m_rdfd;
-        lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         emit q->error(lastError);
         stop();
         return;
@@ -104,7 +104,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         m_rdNotifier = new QSocketNotifier(m_rdfd, QSocketNotifier::Read, this);
         if (!m_rdNotifier) {
             qWarning() << Q_FUNC_INFO << "failed to connect to m_rdNotifier";
-            lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
             emit q->error(lastError);
             stop();
             return;
@@ -118,7 +118,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     } else {
         qWarning() << "Could not write to control FD";
         m_active = false;
-        q->error(QBluetoothDeviceDiscoveryAgent::IOFailure);
+        q->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
         return;
     }
 }
@@ -214,18 +214,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::controlReply(ppsResult result)
             return;
         } else {
             qWarning("A PPS Bluetooth error occurred:");
-            q_ptr->error(QBluetoothDeviceDiscoveryAgent::IOFailure);
-            lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
             errorString = result.errorMsg;
+            Q_EMIT q_ptr->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
             stop();
         }
         processNextOp();
     } else if (result.msg == QStringLiteral("cancel_device_search") && m_currentOp == Cancel && !isFinished) {
         qBBBluetoothDebug() << "Cancel device search";
 //        if (!result.errorMsg.isEmpty()) {
-//            lastError = QBluetoothDeviceDiscoveryAgent::IOFailure;
+//            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
 //            errorString = result.errorMsg;
-//            q_ptr->error(QBluetoothDeviceDiscoveryAgent::IOFailure);
+//            q_ptr->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
 //        }
         emit q->canceled();
         processNextOp();

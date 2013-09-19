@@ -89,9 +89,8 @@ public:
     enum Error
     {
         NoError,
-        IOFailure,
-        PoweredOffFailure,
-        DeviceDiscoveryError,
+        InputOutputError,
+        PoweredOffError,
         UnknownError
     };
 

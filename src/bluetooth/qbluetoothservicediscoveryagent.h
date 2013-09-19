@@ -48,6 +48,7 @@
 
 #include <QtBluetooth/QBluetoothServiceInfo>
 #include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,9 +62,12 @@ class Q_BLUETOOTH_EXPORT QBluetoothServiceDiscoveryAgent : public QObject
 
 public:
     enum Error {
-        NoError,
-        DeviceDiscoveryError,
-        UnknownError = 100
+        NoError =  QBluetoothDeviceDiscoveryAgent::NoError,
+        InputOutputError = QBluetoothDeviceDiscoveryAgent::InputOutputError,
+        PoweredOffError = QBluetoothDeviceDiscoveryAgent::PoweredOffError,
+        UnknownError = QBluetoothDeviceDiscoveryAgent::UnknownError //=100
+        //New Errors must be added after Unknown Error the space before UnknownError is reserved
+        //for future device discovery errors
     };
 
     enum DiscoveryMode {

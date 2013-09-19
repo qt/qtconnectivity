@@ -69,8 +69,8 @@ QT_BEGIN_NAMESPACE
     Indicates all possible error conditions found during Bluetooth device discovery.
 
     \value NoError          No error has occurred.
-    \value PoweredOff       The Bluetooth adaptor is powered off, power it on before doing discovery.
-    \value IOFailure        Writing or reading from the device resulted in an error.
+    \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
+    \value InputOutputError    Writing or reading from the device resulted in an error.
     \value UnknownError     An unknown error has occurred.
 */
 
