@@ -97,6 +97,7 @@ protected:
     QBluetoothServer *q_ptr;
 
 private:
+    QBluetoothServer::Error m_lastError;
 #ifdef QT_QNX_BLUETOOTH
     QBluetoothUuid m_uuid;
     bool serverRegistered;

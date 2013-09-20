@@ -46,7 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
-    : serverType(sType)
+    : serverType(sType), m_lastError(QBluetoothServer::NoError)
 {
 }
 
@@ -62,6 +62,9 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_UNUSED(address);
     Q_UNUSED(port);
+    Q_D(QBluetoothServer);
+    d->m_lastError = UnsupportedProtocolError;
+    emit error(d->m_lastError);
     return false;
 }
 

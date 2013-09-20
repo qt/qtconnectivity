@@ -54,7 +54,8 @@ QT_BEGIN_NAMESPACE
 extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
-    : socket(0),maxPendingConnections(1),securityFlags(QBluetooth::NoSecurity), serverType(sType)
+    : socket(0),maxPendingConnections(1), securityFlags(QBluetooth::NoSecurity), serverType(sType),
+      m_lastError(QBluetoothServer::NoError)
 {
     ppsRegisterControl();
 }
@@ -79,10 +80,16 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
 
         int socketFD = ::open(result.dat.first().toStdString().c_str(), O_RDWR | O_NONBLOCK);
         if (socketFD == -1) {
+            m_lastError = QBluetoothServer::InputOutputError;
+            emit q->error(m_lastError);
             qWarning() << Q_FUNC_INFO << "RFCOMM Server: Could not open socket FD" << errno;
         } else {
-            if (!socket)
+            if (!socket) { // Should never happen
+                qWarning() << "Socket not valid";
+                m_lastError = QBluetoothServer::UnknownError;
+                emit q->error(m_lastError);
                 return;
+            }
 
             socket->setSocketDescriptor(socketFD, QBluetoothServiceInfo::RfcommProtocol,
                                            QBluetoothSocket::ConnectedState);
@@ -97,6 +104,7 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
 
 void QBluetoothServerPrivate::controlEvent(ppsResult result)
 {
+    Q_Q(QBluetoothServer);
     if (result.msg == QStringLiteral("service_connected")) {
         qBBBluetoothDebug() << "SPP: Server: Sending request for mount point path";
         qBBBluetoothDebug() << result.dat;
@@ -113,6 +121,8 @@ void QBluetoothServerPrivate::controlEvent(ppsResult result)
             ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, nextClientAddress,
                                   m_serviceName, this, BT_SPP_SERVER_SUBTYPE);
         } else {
+            m_lastError = QBluetoothServer::InputOutputError;
+            emit q->error(m_lastError);
             qWarning() << Q_FUNC_INFO << "address not specified in service connect reply";
         }
     }
@@ -122,8 +132,8 @@ void QBluetoothServer::close()
 {
     Q_D(QBluetoothServer);
     if (!d->socket) {
-        // there is no way to propagate the error to user
-        // so just ignore the problem ;)
+        d->m_lastError = UnknownError;
+        emit error(d->m_lastError);
         return;
     }
     d->socket->close();
@@ -137,10 +147,13 @@ void QBluetoothServer::close()
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_UNUSED(address)
-    if (serverType() != QBluetoothServiceInfo::RfcommProtocol)
-        return false;
-
     Q_D(QBluetoothServer);
+    if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->m_lastError = UnsupportedProtocolError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
     // listen has already been called before
     if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
         return true;
@@ -164,6 +177,8 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         qBBBluetoothDebug() << "Port" << port << "registered";
     } else {
         qWarning() << "server with port" << port << "already registered or port invalid";
+        d->m_lastError = ServiceAlreadyRegisteredError;
+        emit error(d->m_lastError);
         return false;
     }
 

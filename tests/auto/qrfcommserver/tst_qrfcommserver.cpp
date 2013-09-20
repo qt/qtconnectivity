@@ -78,6 +78,8 @@ private slots:
     void tst_receive_data();
     void tst_receive();
 
+    void tst_error();
+
 private:
     QBluetoothLocalDevice localDevice;
 };
@@ -309,6 +311,21 @@ void tst_QRfcommServer::tst_secureFlags()
 
     server.setSecurityFlags(QBluetooth::Encryption);
     QCOMPARE(server.securityFlags(), QBluetooth::Encryption);
+}
+
+
+void tst_QRfcommServer::tst_error()
+{
+    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
+    QSignalSpy errorSpy(&server, SIGNAL(error(QBluetoothServer::Error)));
+    QCOMPARE(errorSpy.count(), 0);
+    const QBluetoothServer::Error e = server.error();
+
+    QVERIFY(e != QBluetoothServer::UnknownError
+            && e != QBluetoothServer::PoweredOffError
+            && e != QBluetoothServer::InputOutputError
+            && e != QBluetoothServer::ServiceAlreadyRegisteredError
+            && e != QBluetoothServer::UnsupportedProtocolError);
 }
 
 QTEST_MAIN(tst_QRfcommServer)

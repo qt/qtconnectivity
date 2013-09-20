@@ -66,12 +66,13 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
 }
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
-    :   maxPendingConnections(1), serverType(sType), socketNotifier(0)
+    :   maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError),
+        socketNotifier(0)
 {
     if (sType == QBluetoothServiceInfo::RfcommProtocol)
         socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     else
-       socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+        socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
@@ -104,8 +105,10 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     Q_D(QBluetoothServer);
 
     int sock = d->socket->socketDescriptor();
-    if (sock < 0)
+    if (sock < 0) {
+        d->m_lastError = InputOutputError;
         return false;
+    }
 
     if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
@@ -119,8 +122,11 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
             convertAddress(Q_UINT64_C(0), addr.rc_bdaddr.b);
 
 
-        if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0)
+        if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0) {
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
             return false;
+        }
     } else {
         sockaddr_l2 addr;
 
@@ -133,12 +139,18 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         else
             convertAddress(Q_UINT64_C(0), addr.l2_bdaddr.b);
 
-        if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_l2)) < 0)
+        if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_l2)) < 0) {
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
             return false;
+        }
     }
 
-    if (::listen(sock, d->maxPendingConnections) < 0)
+    if (::listen(sock, d->maxPendingConnections) < 0) {
+        d->m_lastError = InputOutputError;
+        emit error(d->m_lastError);
         return false;
+    }
 
     d->socket->setSocketState(QBluetoothSocket::ListeningState);
 
@@ -244,6 +256,8 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
         if (setsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm)) < 0){
             qWarning() << "Failed to set socket option, closing socket for safety" << errno;
             qWarning() << "Error: " << strerror(errno);
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
             d->socket->close();
         }
     } else {
@@ -259,6 +273,8 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
         if (setsockopt(d->socket->socketDescriptor(), SOL_L2CAP, L2CAP_LM, &lm, sizeof(lm)) < 0){
             qWarning() << "Failed to set socket option, closing socket for safety" << errno;
             qWarning() << "Error: " << strerror(errno);
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
             d->socket->close();
         }
     }

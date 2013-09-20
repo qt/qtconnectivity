@@ -755,10 +755,8 @@ void tst_QBluetoothSocket::tst_error()
     QCOMPARE(errorSpy.count(), 0);
     const QBluetoothSocket::SocketError e = socket.error();
 
-    QVERIFY(e != QBluetoothSocket::ConnectionRefusedError
-            && e != QBluetoothSocket::HostNotFoundError
+    QVERIFY(e != QBluetoothSocket::HostNotFoundError
             && e != QBluetoothSocket::NetworkError
-            && e != QBluetoothSocket::RemoteHostClosedError
             && e != QBluetoothSocket::ServiceNotFoundError
             && e != QBluetoothSocket::UnknownSocketError);
 

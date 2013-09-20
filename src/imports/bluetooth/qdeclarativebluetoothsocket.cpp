@@ -248,8 +248,6 @@ void QDeclarativeBluetoothSocket::setConnected(bool connected)
     \list
         \li \c{NoError}
         \li \c{UnknownSocketError}
-        \li \c{ConnectionRefusedError}
-        \li \c{RemoteHostClosedError}
         \li \c{HostNotFoundError}
         \li \c{ServiceNotFoundError}
         \li \c{NetworkError}

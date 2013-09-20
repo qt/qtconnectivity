@@ -80,9 +80,31 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \fn void QBluetoothServer::error(QBluetoothServer::Error error)
+
+    This signal is emitted when an \a error occurs.
+
+    \sa error(), QBluetoothServer::Error
+*/
+
+/*!
     \fn void QBluetoothServer::close()
 
     Closes and resets the listening socket.
+*/
+
+/*!
+    \enum QBluetoothServer::Error
+
+    This enum describes Bluetooth server error types.
+
+    \value NoError                  No error.
+    \value UnknownError             An unknown error occurred.
+    \value PoweredOffError          The Bluetooth adapter is powered off.
+    \value InputOutputError         An input output error occurred.
+    \value ServiceAlreadyRegisteredError  The service or port was already registered
+    \value UnsupportedProtocolError The \l {QBluetoothServiceInfo::Protocol}{Protocol} is not
+                                    supported on this platform.
 */
 
 /*!
@@ -251,6 +273,16 @@ QBluetoothServiceInfo::Protocol QBluetoothServer::serverType() const
 {
     Q_D(const QBluetoothServer);
     return d->serverType;
+}
+
+/*!
+    \fn QBluetoothServer::Error QBluetoothServer::error() const
+    Returns the last error of the QBluetoothServer.
+*/
+QBluetoothServer::Error QBluetoothServer::error() const
+{
+    Q_D(const QBluetoothServer);
+    return d->m_lastError;
 }
 
 #include "moc_qbluetoothserver.cpp"

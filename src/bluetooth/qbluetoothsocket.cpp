@@ -98,8 +98,6 @@ QT_BEGIN_NAMESPACE
 
     \value UnknownSocketError       An unknown error has occurred.
     \value NoSocketError            No error. Used for testing.
-    \value ConnectionRefusedError   Connection refused or device not available.
-    \value RemoteHostClosedError    The remote host closed the socket.
     \value HostNotFoundError        Could not find the remote host.
     \value ServiceNotFoundError     Could not find the service UUID on remote host.
     \value NetworkError             Attempt to read or write from socket returned an error
@@ -640,12 +638,6 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketError error)
     switch (error) {
     case QBluetoothSocket::UnknownSocketError:
         debug << "QBluetoothSocket::UnknownSocketError";
-        break;
-    case QBluetoothSocket::ConnectionRefusedError:
-        debug << "QBluetoothSocket::ConnectionRefusedError";
-        break;
-    case QBluetoothSocket::RemoteHostClosedError:
-        debug << "QBluetoothSocket::RemoteHostClosedError";
         break;
     case QBluetoothSocket::HostNotFoundError:
         debug << "QBluetoothSocket::HostNotFoundError";

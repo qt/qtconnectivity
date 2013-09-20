@@ -62,6 +62,14 @@ class Q_BLUETOOTH_EXPORT QBluetoothServer : public QObject
     Q_OBJECT
 
 public:
+    enum Error {
+        NoError,
+        UnknownError,
+        PoweredOffError,
+        InputOutputError,
+        ServiceAlreadyRegisteredError,
+        UnsupportedProtocolError
+    };
     QBluetoothServer(QBluetoothServiceInfo::Protocol serverType, QObject *parent = 0);
     ~QBluetoothServer();
 
@@ -85,8 +93,11 @@ public:
 
     QBluetoothServiceInfo::Protocol serverType() const;
 
+    Error error() const;
+
 Q_SIGNALS:
     void newConnection();
+    void error(Error);
 
 protected:
     QBluetoothServerPrivate *d_ptr;

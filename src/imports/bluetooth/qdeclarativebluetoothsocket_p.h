@@ -72,8 +72,6 @@ public:
     enum Error {
         NoError = QBluetoothSocket::NoSocketError,
         UnknownSocketError = QBluetoothSocket::UnknownSocketError,
-        ConnectionRefusedError = QBluetoothSocket::ConnectionRefusedError,
-        RemoteHostClosedError = QBluetoothSocket::RemoteHostClosedError,
         HostNotFoundError = QBluetoothSocket::HostNotFoundError,
         ServiceNotFoundError = QBluetoothSocket::ServiceNotFoundError,
         NetworkError = QBluetoothSocket::NetworkError,
