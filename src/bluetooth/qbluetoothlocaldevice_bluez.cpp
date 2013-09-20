@@ -435,6 +435,7 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
 QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
 {
+    Q_UNUSED(in0)
     Q_Q(QBluetoothLocalDevice);
     //qDebug() << Q_FUNC_INFO << in0.path();
     // seeded in constructor, 6 digit pin
