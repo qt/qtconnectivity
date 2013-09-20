@@ -70,8 +70,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_bluez.cpp \
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
-        qbluetoothtransferreply_bluez.cpp \
-        qbluetoothtransfermanager_bluez.cpp
+        qbluetoothtransferreply_bluez.cpp
 
 } else:qnx{
     DEFINES += QT_QNX_BLUETOOTH #BT_BBPPSDEBUG
@@ -88,7 +87,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_qnx.cpp \
         qbluetoothsocket_qnx.cpp \
         qbluetoothserver_qnx.cpp \
-        qbluetoothtransfermanager_qnx.cpp \
         qbluetoothtransferreply_qnx.cpp
 
 } else {
@@ -100,8 +98,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
-        qbluetoothserver_p.cpp \
-        qbluetoothtransfermanager_p.cpp
+        qbluetoothserver_p.cpp
 
 }
 

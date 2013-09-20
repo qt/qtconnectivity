@@ -41,6 +41,13 @@
 
 #include "qbluetoothtransfermanager.h"
 #include "qbluetoothtransferrequest.h"
+#include "qbluetoothtransferreply.h"
+#ifdef QT_BLUEZ_BLUETOOTH
+#include "qbluetoothtransferreply_bluez_p.h"
+#elif QT_QNX_BLUETOOTH
+#include "qbluetoothtransferreply_qnx_p.h"
+#else
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -83,6 +90,23 @@ QBluetoothTransferManager::~QBluetoothTransferManager()
 {
 }
 
+QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request,
+                                                        QIODevice *data)
+{
+#ifdef QT_BLUEZ_BLUETOOTH
+    QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data, request, this);
+    connect(rep, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
+    return rep;
+#elif QT_QNX_BLUETOOTH
+    QBluetoothTransferReplyQnx *reply = new QBluetoothTransferReplyQnx(data, request, this);
+    connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
+    return reply;
+#else
+    Q_UNUSED(request);
+    Q_UNUSED(data);
+    return 0;
+#endif
+}
 #include "moc_qbluetoothtransfermanager.cpp"
 
 QT_END_NAMESPACE
