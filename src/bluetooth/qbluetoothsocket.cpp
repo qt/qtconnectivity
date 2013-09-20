@@ -350,7 +350,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 {
 #ifdef QT_QNX_BLUETOOTH
     Q_D(QBluetoothSocket);
-    if (socketType() != Rfcomm) {
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
         d->socketError = QBluetoothSocket::UnsupportedProtocolError;
         d->errorString = tr("Socket type not supported");
         Q_EMIT error(d->socketError);

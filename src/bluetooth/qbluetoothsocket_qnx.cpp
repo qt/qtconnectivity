@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
-      socketType(QBluetoothSServiceInfo::UnknownProtocol),
+      socketType(QBluetoothServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
       readNotifier(0),
       connectWriteNotifier(0),
