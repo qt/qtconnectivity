@@ -105,6 +105,7 @@ public:
     void _q_deviceDiscoveryFinished();
     void _q_deviceDiscovered(const QBluetoothDeviceInfo &info);
     void _q_serviceDiscoveryFinished();
+    void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error);
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);

@@ -99,7 +99,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn QBluetoothServiceDiscoveryAgent::finished()
 
-    This signal is emitted when Bluetooth service discovery completes.
+    This signal is emitted when Bluetooth service discovery completes. This signal will even
+    be emitted when an error occurred during the service discovery.
 */
 
 /*!
@@ -338,6 +339,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
                          q, SLOT(_q_deviceDiscoveryFinished()));
         QObject::connect(deviceDiscoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
                          q, SLOT(_q_deviceDiscovered(QBluetoothDeviceInfo)));
+        QObject::connect(deviceDiscoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
+                         q, SLOT(_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error)));
 
     }
 
@@ -372,6 +375,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
 
         setDiscoveryState(Inactive);
         Q_Q(QBluetoothServiceDiscoveryAgent);
+        emit q->error(error);
         emit q->finished();
         return;
     }
@@ -403,6 +407,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered(const QBluetoot
         }
         discoveredDevices.prepend(info);
     }
+}
+
+void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error newError)
+{
+    error = static_cast<QBluetoothServiceDiscoveryAgent::Error>(newError);
+
+    deviceDiscoveryAgent->stop();
+    delete deviceDiscoveryAgent;
+    deviceDiscoveryAgent = 0;
+
+    setDiscoveryState(Inactive);
+    Q_Q(QBluetoothServiceDiscoveryAgent);
+    emit q->error(error);
+    emit q->finished();
 }
 
 /*!

@@ -57,6 +57,7 @@ RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *p
     connect(m_discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
             this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
     connect(m_discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
+    connect(m_discoveryAgent, SIGNAL(canceled()), this, SLOT(discoveryFinished()));
 }
 
 RemoteSelector::~RemoteSelector()
@@ -67,6 +68,7 @@ RemoteSelector::~RemoteSelector()
 
 void RemoteSelector::startDiscovery(const QBluetoothUuid &uuid)
 {
+    ui->status->setText(tr("Scanning..."));
     if (m_discoveryAgent->isActive())
         m_discoveryAgent->stop();
 
@@ -75,7 +77,6 @@ void RemoteSelector::startDiscovery(const QBluetoothUuid &uuid)
     m_discoveryAgent->setUuidFilter(uuid);
     m_discoveryAgent->start();
 
-    ui->status->setText(tr("Scanning..."));
 }
 
 void RemoteSelector::stopDiscovery()
