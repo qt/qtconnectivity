@@ -152,21 +152,27 @@ bool QBluetoothServiceInfo::isRegistered() const
 }
 
 /*!
-    \fn bool QBluetoothServiceInfo::registerService() const
+    \fn bool QBluetoothServiceInfo::registerService()
 
     Registers this service with the platform's Service Discovery Protocol (SDP) implementation,
     making it findable by other devices when they perform service discovery.  Returns true if the
     service is successfully registered, otherwise returns false.  Once registered changes to the record
     cannot be made. The service must be unregistered and registered again with the changes.
+
+    The \l localAdapter parameter determines the local Bluetooth adapter under which
+    the service should be registered. If \a localAdapter is \c null the default Bluetooth adapter
+    will be used. If this service info object is already registered via a local adapter
+    and this is function is called using a different local adapter, the previous registration
+    is removed and the service reregistered using the new adapter.
 */
 
-bool QBluetoothServiceInfo::registerService() const
+bool QBluetoothServiceInfo::registerService(const QBluetoothAddress &localAdapter)
 {
-    return d_ptr->registerService();
+    return d_ptr->registerService(localAdapter);
 }
 
 /*!
-    \fn bool QBluetoothServiceInfo::unregisterService() const
+    \fn bool QBluetoothServiceInfo::unregisterService()
 
     Unregisters this service with the platform's Service Discovery Protocol (SDP) implementation.
     After this, the service will no longer be findable by other devices through service discovery.
@@ -174,7 +180,7 @@ bool QBluetoothServiceInfo::registerService() const
     Returns true if the service is successfully unregistered, otherwise returns false.
 */
 
-bool QBluetoothServiceInfo::unregisterService() const
+bool QBluetoothServiceInfo::unregisterService()
 {
     return d_ptr->unregisterService();
 }

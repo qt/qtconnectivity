@@ -42,6 +42,7 @@
 
 #include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
+#include <qbluetoothlocaldevice.h>
 
 //! [Service UUID]
 static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
@@ -57,7 +58,7 @@ ChatServer::~ChatServer()
     stopServer();
 }
 
-void ChatServer::startServer()
+void ChatServer::startServer(const QBluetoothAddress& localAdapter)
 {
     if (rfcommServer)
         return;
@@ -65,7 +66,11 @@ void ChatServer::startServer()
     //! [Create the server]
     rfcommServer = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
     connect(rfcommServer, SIGNAL(newConnection()), this, SLOT(clientConnected()));
-    rfcommServer->listen();
+    bool result = rfcommServer->listen(localAdapter);
+    if (!result) {
+        qWarning() << "Cannot bind chat server to" << localAdapter.toString();
+        return;
+    }
     //! [Create the server]
 
     serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceRecordHandle, (uint)0x00010010);
@@ -81,7 +86,7 @@ void ChatServer::startServer()
     serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, tr("Bt Chat Server"));
     serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceDescription,
                              tr("Example bluetooth chat server"));
-    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceProvider, tr("Nokia, QtDF"));
+    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceProvider, tr("qt-project.org"));
     //! [Service name, description and provider]
 
     //! [Service UUID set]
@@ -107,7 +112,7 @@ void ChatServer::startServer()
     //! [Protocol descriptor list]
 
     //! [Register service]
-    serviceInfo.registerService();
+    serviceInfo.registerService(localAdapter);
     //! [Register service]
 }
 
@@ -146,7 +151,6 @@ void ChatServer::clientConnected()
     connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
     connect(socket, SIGNAL(disconnected()), this, SLOT(clientDisconnected()));
     clientSockets.append(socket);
-
     emit clientConnected(socket->peerName());
 }
 //! [clientConnected]

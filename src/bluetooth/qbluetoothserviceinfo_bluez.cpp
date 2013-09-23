@@ -181,12 +181,12 @@ bool QBluetoothServiceInfoPrivate::isRegistered() const
     return registered;
 }
 
-bool QBluetoothServiceInfoPrivate::unregisterService() const
+bool QBluetoothServiceInfoPrivate::unregisterService()
 {
     if (!registered)
         return false;
 
-    if (!ensureSdpConnection())
+    if (!ensureSdpConnection(currentLocalAdapter))
         return false;
 
     QDBusPendingReply<> reply = service->RemoveRecord(serviceRecord);
@@ -200,7 +200,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService() const
     return true;
 }
 
-void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value) const
+void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value)
 {
     Q_UNUSED(attributeId);
     Q_UNUSED(value);
@@ -208,35 +208,47 @@ void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, c
     registerService();
 }
 
-void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId) const
+void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId)
 {
     Q_UNUSED(attributeId);
 
     registerService();
 }
 
-bool QBluetoothServiceInfoPrivate::ensureSdpConnection() const
+bool QBluetoothServiceInfoPrivate::ensureSdpConnection(const QBluetoothAddress &localAdapter)
 {
-    if (service)
+    if (service && currentLocalAdapter == localAdapter)
         return true;
+
+    delete service;
 
     OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
                                      QDBusConnection::systemBus());
 
-    QDBusPendingReply<QDBusObjectPath> reply = manager.FindAdapter(QLatin1String("any"));
+
+    QDBusPendingReply<QDBusObjectPath> reply;
+    if (localAdapter.isNull())
+        reply = manager.DefaultAdapter();
+    else
+        reply = manager.FindAdapter(localAdapter.toString());
     reply.waitForFinished();
     if (reply.isError())
         return false;
 
+    currentLocalAdapter = localAdapter;
     service = new OrgBluezServiceInterface(QLatin1String("org.bluez"), reply.value().path(),
-                                           QDBusConnection::systemBus());
+                                           QDBusConnection::systemBus(), this);
 
     return true;
 }
 
-bool QBluetoothServiceInfoPrivate::registerService() const
+bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &localAdapter)
 {
-    if (!ensureSdpConnection()) {
+    //if new adapter unregister previous one first
+    if (registered && localAdapter != currentLocalAdapter)
+        unregisterService();
+
+    if (!ensureSdpConnection(localAdapter)) {
         qWarning() << "SDP not connected. Cannot register";
         return false;
     }

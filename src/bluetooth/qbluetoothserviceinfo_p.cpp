@@ -57,24 +57,25 @@ bool QBluetoothServiceInfoPrivate::isRegistered() const
     return false;
 }
 
-bool QBluetoothServiceInfoPrivate::registerService() const
+bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &localAdapter)
+{
+    Q_UNUSED(localAdapter);
+    return false;
+}
+
+bool QBluetoothServiceInfoPrivate::unregisterService()
 {
     return false;
 }
 
-bool QBluetoothServiceInfoPrivate::unregisterService() const
-{
-    return false;
-}
 
-
-void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value) const
+void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value)
 {
     Q_UNUSED(attributeId);
     Q_UNUSED(value);
 }
 
-void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId) const
+void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId)
 {
     Q_UNUSED(attributeId);
 }

@@ -15,6 +15,32 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QGroupBox" name="localAdapterBox">
+     <property name="title">
+      <string>Local Bluetooth Adapter</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QRadioButton" name="firstAdapter">
+        <property name="text">
+         <string>Default</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="secondAdapter">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QTextEdit" name="chat">
      <property name="focusPolicy">
       <enum>Qt::NoFocus</enum>

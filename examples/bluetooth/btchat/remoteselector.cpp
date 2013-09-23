@@ -47,25 +47,12 @@
 
 QT_USE_NAMESPACE
 
-RemoteSelector::RemoteSelector(QWidget *parent)
+RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *parent)
 :   QDialog(parent), ui(new Ui::RemoteSelector)
 {
     ui->setupUi(this);
 
-    //Using default Bluetooth adapter
-    QBluetoothLocalDevice localDevice;
-    QBluetoothAddress adapterAddress = localDevice.address();
-
-    /*
-     * In case of multiple Bluetooth adapters it is possible to
-     * set which adapter will be used by providing MAC Address.
-     * Example code:
-     *
-     * QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
-     * m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
-     */
-
-    m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+    m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(localAdapter);
 
     connect(m_discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
             this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
