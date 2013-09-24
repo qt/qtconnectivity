@@ -70,8 +70,6 @@ public:
 
     bool unregisterService();
 
-    void setRegisteredAttribute(quint16 attributeId, const QVariant &value);
-    void removeRegisteredAttribute(quint16 attributeId);
     QBluetoothDeviceInfo deviceInfo;
     QMap<quint16, QVariant> attributes;
 

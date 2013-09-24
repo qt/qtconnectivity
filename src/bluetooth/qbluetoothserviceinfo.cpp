@@ -152,14 +152,14 @@ bool QBluetoothServiceInfo::isRegistered() const
 }
 
 /*!
-    \fn bool QBluetoothServiceInfo::registerService()
+    \fn bool QBluetoothServiceInfo::registerService(const QBluetoothAddress &localAdapter)
 
     Registers this service with the platform's Service Discovery Protocol (SDP) implementation,
     making it findable by other devices when they perform service discovery.  Returns true if the
     service is successfully registered, otherwise returns false.  Once registered changes to the record
     cannot be made. The service must be unregistered and registered again with the changes.
 
-    The \l localAdapter parameter determines the local Bluetooth adapter under which
+    The \a localAdapter parameter determines the local Bluetooth adapter under which
     the service should be registered. If \a localAdapter is \c null the default Bluetooth adapter
     will be used. If this service info object is already registered via a local adapter
     and this is function is called using a different local adapter, the previous registration
@@ -192,6 +192,9 @@ bool QBluetoothServiceInfo::unregisterService()
     This is a convenience function.
 
     Sets the attribute identified by \a attributeId to \a value.
+
+    If the service information is already registered with the platform's SDP database,
+    the database entry will not be updated until \l registerService() was called again.
 */
 
 /*!
@@ -200,6 +203,9 @@ bool QBluetoothServiceInfo::unregisterService()
     This is a convenience function.
 
     Sets the attribute identified by \a attributeId to \a value.
+
+    If the service information is already registered with the platform's SDP database,
+    the database entry will not be updated until \l registerService() was called again.
 */
 
 /*!
@@ -208,6 +214,9 @@ bool QBluetoothServiceInfo::unregisterService()
     This is a convenience function.
 
     Sets the attribute identified by \a attributeId to \a value.
+
+    If the service information is already registered with the platform's SDP database,
+    the database entry will not be updated until \l registerService() was called again.
 */
 
 /*!
@@ -397,20 +406,14 @@ void QBluetoothServiceInfo::setDevice(const QBluetoothDeviceInfo &device)
 /*!
     Sets the attribute identified by \a attributeId to \a value.
 
-    If the service information is registered with the platforms SDP database, the database entry is also
-    updated.
+    If the service information is already registered with the platform's SDP database,
+    the database entry will not be updated until \l registerService() was called again.
 
     \sa isRegistered(), registerService()
 */
 void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QVariant &value)
 {
-//    if (value.type() == QVariant::List)
-//        qDebug() << "tried attribute with type QVariantList" << value;
-
     d_ptr->attributes[attributeId] = value;
-
-    if (isRegistered())
-        d_ptr->setRegisteredAttribute(attributeId, value);
 }
 
 /*!
@@ -440,13 +443,13 @@ bool QBluetoothServiceInfo::contains(quint16 attributeId) const
 
 /*!
     Removes the attribute \a attributeId from the QBluetoothServiceInfo object.
+
+    If the service information is already registered with the platforms SDP database,
+    the database entry will not be updated until \l registerService() was called again.
 */
 void QBluetoothServiceInfo::removeAttribute(quint16 attributeId)
 {
     d_ptr->attributes.remove(attributeId);
-
-    if (isRegistered())
-        d_ptr->removeRegisteredAttribute(attributeId);
 }
 
 /*!

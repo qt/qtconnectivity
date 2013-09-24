@@ -69,21 +69,6 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     return false;
 }
 
-
-void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value)
-{
-    Q_UNUSED(attributeId);
-    Q_UNUSED(value);
-
-    registerService();
-}
-
-void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId)
-{
-    Q_UNUSED(attributeId);
-    registered = false;
-}
-
 extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& localAdapter)

@@ -200,21 +200,6 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     return true;
 }
 
-void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value)
-{
-    Q_UNUSED(attributeId);
-    Q_UNUSED(value);
-
-    registerService();
-}
-
-void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId)
-{
-    Q_UNUSED(attributeId);
-
-    registerService();
-}
-
 bool QBluetoothServiceInfoPrivate::ensureSdpConnection(const QBluetoothAddress &localAdapter)
 {
     if (service && currentLocalAdapter == localAdapter)
