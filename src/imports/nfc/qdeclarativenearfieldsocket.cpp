@@ -49,7 +49,7 @@
     \brief The NearFieldSocket type represents an LLCP socket.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     The NearFieldSocket type was introduced in \b {QtNfc 5.0}.
 

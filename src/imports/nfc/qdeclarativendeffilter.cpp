@@ -47,7 +47,7 @@
     \brief The NdefFilter type represents a filtering constraint for NDEF message records.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \sa NearField
     \sa QNdefFilter

@@ -53,7 +53,7 @@
 /*!
     \qmltype BluetoothService
     \instantiates QDeclarativeBluetoothService
-    \inqmlmodule QtBluetooth 5.0
+    \inqmlmodule QtBluetooth
     \brief Provides information about a particular Bluetooth service.
 
     \sa QBluetoothAddress

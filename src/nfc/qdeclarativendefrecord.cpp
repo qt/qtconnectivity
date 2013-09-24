@@ -90,7 +90,7 @@ QT_BEGIN_NAMESPACE
     \brief The NdefRecord type represents a record in an NDEF message.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \sa NdefFilter
     \sa NearField

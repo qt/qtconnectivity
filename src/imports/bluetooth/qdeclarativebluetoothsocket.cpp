@@ -54,7 +54,7 @@
 /*!
     \qmltype BluetoothSocket
     \instantiates QDeclarativeBluetoothSocket
-    \inqmlmodule QtBluetooth 5.0
+    \inqmlmodule QtBluetooth
     \brief Enables you to connect and communicate with a Bluetooth service or
     device.
 

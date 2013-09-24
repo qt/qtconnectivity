@@ -46,7 +46,7 @@
     \brief The NdefMimeRecord type represents an NFC MIME record.
 
     \ingroup connectivity-nfc
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \inherits NdefRecord
 

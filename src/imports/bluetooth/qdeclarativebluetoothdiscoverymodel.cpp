@@ -52,7 +52,7 @@
 /*!
     \qmltype BluetoothDiscoveryModel
     \instantiates QDeclarativeBluetoothDiscoveryModel
-    \inqmlmodule QtBluetooth 5.0
+    \inqmlmodule QtBluetooth
     \brief Enables you to search for the Bluetooth devices and services in
     range.
 
