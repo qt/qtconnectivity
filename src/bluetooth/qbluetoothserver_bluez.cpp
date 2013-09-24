@@ -107,6 +107,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     int sock = d->socket->socketDescriptor();
     if (sock < 0) {
         d->m_lastError = InputOutputError;
+        emit error(d->m_lastError);
         return false;
     }
 

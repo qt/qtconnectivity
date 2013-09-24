@@ -175,7 +175,8 @@ QBluetoothServer::~QBluetoothServer()
     which is returned can not be changed any more.
 
     Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
-    invalid QBluetoothServiceInfo.
+    invalid QBluetoothServiceInfo. This function always assumes that the default Bluetooth adapter
+    should be used.
 
     For an RFCOMM server this function is equivalent to following code snippet.
 
