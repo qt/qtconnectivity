@@ -108,6 +108,21 @@ QT_BEGIN_NAMESPACE
         manager->registerNdefMessageHandler(this,
                                             SLOT(handleNdefMessage(QNdefMessage,QNearFieldTarget)));
     \endcode
+
+    On BlackBerry the registration for NDEF message handlers is done over the
+    \l{https://developer.blackberry.com/native/documentation/core/invocation_framework.html}{Invocation Framework}.
+    This means that the application has to set an invoke target in the bar descriptor xml file when using
+    \l registerNdefMessageHandler().
+
+    \code
+    <invoke-target id="com.myapp.id">
+        <type>APPLICATION</type>
+        <filter>
+            <action>bb.action.OPEN</action>
+            <mime-type>application/vnd.rim.nfc.ndef</mime-type>
+        </filter>
+    </invoke-target>
+    \endcode
 */
 
 /*!
