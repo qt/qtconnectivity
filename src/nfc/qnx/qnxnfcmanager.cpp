@@ -43,6 +43,7 @@
 #include <QMetaMethod>
 #include <QMetaObject>
 #include "../qllcpsocket_qnx_p.h"
+#include <QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -360,10 +361,14 @@ void QNXNFCManager::setupInvokeTarget() {
     QByteArray filter = "actions=bb.action.OPEN;types=application/vnd.rim.nfc.ndef;" + uriFilter;
     filters[0] = filter.constData();
 
-    if (BPS_SUCCESS != navigator_invoke_set_filters("20", "org.qtm.NFCTest", filters, 1)) {
+    //Get the correct target-id
+    QString targetId = QCoreApplication::instance()->arguments().first();
+    targetId = targetId.left(targetId.lastIndexOf("."));
+
+    if (BPS_SUCCESS != navigator_invoke_set_filters("20", targetId.toLatin1().constData(), filters, 1)) {
         qWarning() << "NFC Error setting share target filter";
     } else {
-        qQNXNFCDebug() << "NFC share target filter set" << filters[0];
+        qQNXNFCDebug() << "NFC share target filter set" << filters[0] << " Target:" << targetId;
     }
 }
 
