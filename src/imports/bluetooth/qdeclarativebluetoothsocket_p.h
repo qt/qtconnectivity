@@ -120,7 +120,7 @@ signals:
 public slots:
     void setService(QDeclarativeBluetoothService *service);
     void setConnected(bool connected);
-    void sendStringData(QString data);
+    void sendStringData(const QString& data);
 
 private slots:
     void socket_connected();

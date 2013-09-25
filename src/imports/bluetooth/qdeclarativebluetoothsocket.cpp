@@ -118,8 +118,6 @@ public:
         QObject::connect(m_socket, SIGNAL(error(QBluetoothSocket::SocketError)), m_dbs, SLOT(socket_error(QBluetoothSocket::SocketError)));
         QObject::connect(m_socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)), m_dbs, SLOT(socket_state(QBluetoothSocket::SocketState)));
         QObject::connect(m_socket, SIGNAL(readyRead()), m_dbs, SLOT(socket_readyRead()));
-
-        m_stream = new QDataStream(m_socket);
     }
 
     QDeclarativeBluetoothSocket *m_dbs;
@@ -129,8 +127,6 @@ public:
     QDeclarativeBluetoothSocket::SocketState m_state;
     bool m_componentCompleted;
     bool m_connected;
-    QDataStream *m_stream;
-
 };
 
 QDeclarativeBluetoothSocket::QDeclarativeBluetoothSocket(QObject *parent) :
@@ -160,9 +156,6 @@ QDeclarativeBluetoothSocket::QDeclarativeBluetoothSocket(QBluetoothSocket *socke
     QObject::connect(socket, SIGNAL(error(QBluetoothSocket::SocketError)), this, SLOT(socket_error(QBluetoothSocket::SocketError)));
     QObject::connect(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)), this, SLOT(socket_state(QBluetoothSocket::SocketState)));
     QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(socket_readyRead()));
-
-    d->m_stream = new QDataStream(socket);
-
 }
 
 
@@ -312,15 +305,6 @@ QDeclarativeBluetoothSocket::SocketState QDeclarativeBluetoothSocket::state() co
     return d->m_state;
 }
 
-/*!
-  \qmlsignal BluetoothSocket::dataAvailable()
-
-  This signal indicates the arrival of new data. It is emitted each time the socket has new
-  data available. The data can be read from the property stringData.
-  \sa stringData
-  \sa sendStringData
- */
-
 void QDeclarativeBluetoothSocket::socket_readyRead()
 {
     emit dataAvailable();
@@ -344,30 +328,30 @@ QString QDeclarativeBluetoothSocket::stringData()
         return QString();
 
     QString data;
-    *d->m_stream >> data;
+    while (d->m_socket->canReadLine()) {
+        QByteArray line = d->m_socket->readLine();
+        data += QString::fromUtf8(line.constData(), line.length());
+    }
+
     return data;
 }
 
 /*!
-  \qmlmethod BluetoothSocket::sendStringData(data)
-
   This method transmits the string data passed with "data" to the remote device.
   If excessive amounts of data are sent, the function may block sending.
   \sa dataAvailable
   \sa stringData
  */
 
-void QDeclarativeBluetoothSocket::sendStringData(QString data)
+void QDeclarativeBluetoothSocket::sendStringData(const QString &data)
 {
     if (!d->m_connected || !d->m_socket){
         qWarning() << "Writing data to unconnected socket";
         return;
     }
 
-    QByteArray b;
-    QDataStream s(&b, QIODevice::WriteOnly);
-    s << data;
-    d->m_socket->write(b);
+    QByteArray text = data.toUtf8() + '\n';
+    d->m_socket->write(text);
 }
 
 void QDeclarativeBluetoothSocket::newSocket(QBluetoothSocket *socket, QDeclarativeBluetoothService *service)
@@ -387,8 +371,6 @@ void QDeclarativeBluetoothSocket::newSocket(QBluetoothSocket *socket, QDeclarati
     QObject::connect(socket, SIGNAL(error(QBluetoothSocket::SocketError)), this, SLOT(socket_error(QBluetoothSocket::SocketError)));
     QObject::connect(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)), this, SLOT(socket_state(QBluetoothSocket::SocketState)));
     QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(socket_readyRead()));
-
-    d->m_stream = new QDataStream(socket);
 
     socket_state(socket->state());
 
