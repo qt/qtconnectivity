@@ -323,7 +323,6 @@ QString QDeclarativeBluetoothSocket::stringData()
         QByteArray line = d->m_socket->readLine();
         data += QString::fromUtf8(line.constData(), line.length());
     }
-
     return data;
 }
 
