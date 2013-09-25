@@ -119,6 +119,20 @@ void QDeclarativeNdefFilter::setType(const QString &t)
     emit typeChanged();
 }
 
+QDeclarativeNdefRecord::TypeNameFormat QDeclarativeNdefFilter::typeNameFormat() const
+{
+    return m_typeNameFormat;
+}
+
+void QDeclarativeNdefFilter::setTypeNameFormat(QDeclarativeNdefRecord::TypeNameFormat format)
+{
+    if (m_typeNameFormat == format)
+        return;
+
+    m_typeNameFormat = format;
+    Q_EMIT(typeNameFormatChanged());
+}
+
 int QDeclarativeNdefFilter::minimum() const
 {
     return m_minimum;

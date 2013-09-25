@@ -106,10 +106,32 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string NdefRecord::recordType
+    \qmlproperty string NdefRecord::type
 
-    This property holds the fully qualified record type of the NDEF record.  The fully qualified
-    record type includes the NIS and NSS prefixes.
+    This property holds the type of the NDEF record.
+*/
+
+/*!
+    \qmlproperty enumeration NdefRecord::typeNameFormat
+
+    This property holds the TNF of the NDEF record.
+
+    \table
+    \header \li Property \li Description
+    \row \li \c NdefRecord.Empty
+         \li An empty NDEF record, the record does not contain a payload.
+    \row \li \c NdefRecord.NfcRtd
+         \li The NDEF record type is defined by an NFC RTD Specification.
+    \row \li \c NdefRecord.Mime
+         \li The NDEF record type follows the construct described in RFC 2046.
+    \row \li \c NdefRecord.Uri
+         \li The NDEF record type follows the construct described in RFC 3986.
+    \row \li \c NdefRecord.ExternalRtd
+         \li The NDEF record type follows the construct for external type names
+             described the NFC RTD Specification.
+    \endtable
+
+    \sa QNdefRecord::typeNameFormat()
 */
 
 /*!
@@ -119,7 +141,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QDeclarativeNdefRecord::recordTypeChanged()
+    \fn void QDeclarativeNdefRecord::typeChanged()
 
     This signal is emitted when the record type changes.
 */
@@ -131,9 +153,15 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \property QDeclarativeNdefRecord::recordType
+    \property QDeclarativeNdefRecord::type
 
-    This property hold the record type of the NDEF record that this class represents.
+    This property hold the type of the NDEF record.
+*/
+
+/*!
+    \property QDeclarativeNdefRecord::typeNameFormat
+
+    This property hold the TNF of the NDEF record.
 */
 
 /*!
@@ -223,44 +251,76 @@ QDeclarativeNdefRecord::QDeclarativeNdefRecord(const QNdefRecord &record, QObjec
 }
 
 /*!
-    Returns the fully qualified record type of the record.  The fully qualified record type
-    includes both the NIS and NSS prefixes.
+    \enum QDeclarativeNdefRecord::TypeNameFormat
+
+    This enum describes the type name format of an NDEF record. The values of this enum are according to
+    \l QNdefRecord::TypeNameFormat
+
+    \value Empty        An empty NDEF record, the record does not contain a payload.
+    \value NfcRtd       The NDEF record type is defined by an NFC RTD Specification.
+    \value Mime         The NDEF record type follows the construct described in RFC 2046.
+    \value Uri          The NDEF record type follows the construct described in RFC 3986.
+    \value ExternalRtd  The NDEF record type follows the construct for external type names
+                        described the NFC RTD Specification.
 */
-QString QDeclarativeNdefRecord::recordType() const
+
+/*!
+    Returns the type of the record.
+
+    \sa QNdefRecord::setType(), QNdefRecord::type()
+*/
+QString QDeclarativeNdefRecord::type() const
 {
     Q_D(const QDeclarativeNdefRecord);
 
-    if (d->record.typeNameFormat() == QNdefRecord::Empty)
-        return QString();
-
-    return urnForRecordType(d->record.typeNameFormat(), d->record.type());
+    return QLatin1String(d->record.type());
 }
 
 /*!
     Sets the record type to \a type if it is not currently equal to \a type; otherwise does
-    nothing.  If the record type is set the recordTypeChanged() signal will be emitted.
+    nothing.  If the record type is set the typeChanged() signal will be emitted.
+
+    \sa QNdefRecord::setType(), QNdefRecord::type()
 */
-void QDeclarativeNdefRecord::setRecordType(const QString &type)
+void QDeclarativeNdefRecord::setType(const QString &newtype)
 {
-    if (type == recordType())
+    if (newtype == type())
         return;
 
     Q_D(QDeclarativeNdefRecord);
+    d->record.setType(newtype.toUtf8());
 
-    if (type.startsWith(QLatin1String("urn:nfc:wkt:"))) {
-        d->record.setTypeNameFormat(QNdefRecord::NfcRtd);
-        d->record.setType(type.mid(12).toUtf8());
-    } else if (type.startsWith(QLatin1String("urn:nfc:ext:"))) {
-        d->record.setTypeNameFormat(QNdefRecord::ExternalRtd);
-        d->record.setType(type.mid(12).toUtf8());
-    } else if (type.startsWith(QLatin1String("urn:nfc:mime:"))) {
-        d->record.setTypeNameFormat(QNdefRecord::Mime);
-        d->record.setType(type.mid(13).toUtf8());
-    } else {
-        qWarning("Don't know how to decode NDEF type %s\n", qPrintable(type));
+    emit typeChanged();
+}
+
+/*!
+    Sets the type name format of the NDEF record to \a typeNameFormat.
+*/
+void QDeclarativeNdefRecord::setTypeNameFormat(QDeclarativeNdefRecord::TypeNameFormat typeNameFormat)
+{
+    Q_D(QDeclarativeNdefRecord);
+    bool emitChanged = true;
+    if (static_cast<QDeclarativeNdefRecord::TypeNameFormat>(d->record.typeNameFormat()) == typeNameFormat) {
+        emitChanged = false;
     }
 
-    emit recordTypeChanged();
+    //We always have to set the tnf, otherwise we run into problems when tnf is empty. Then
+    //the QNdefRecordPrivate is not created
+    d->record.setTypeNameFormat(static_cast<QNdefRecord::TypeNameFormat>(typeNameFormat));
+
+    if (emitChanged)
+        Q_EMIT(typeNameFormatChanged());
+}
+
+/*!
+    \fn QDeclarativeNdefRecord::TypeNameFormat QDeclarativeNdefRecord::typeNameFormat() const
+
+    Returns the type name format of the NDEF record.
+*/
+QDeclarativeNdefRecord::TypeNameFormat QDeclarativeNdefRecord::typeNameFormat() const
+{
+    Q_D(const QDeclarativeNdefRecord);
+    return static_cast<QDeclarativeNdefRecord::TypeNameFormat>(d->record.typeNameFormat());
 }
 
 /*!

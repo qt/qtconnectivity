@@ -56,21 +56,36 @@ class Q_NFC_EXPORT QDeclarativeNdefRecord : public QObject
 
     Q_DECLARE_PRIVATE(QDeclarativeNdefRecord)
 
-    Q_PROPERTY(QString recordType READ recordType WRITE setRecordType NOTIFY recordTypeChanged)
+    Q_PROPERTY(QString type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(TypeNameFormat typeNameFormat READ typeNameFormat WRITE setTypeNameFormat NOTIFY typeNameFormatChanged)
     Q_PROPERTY(QNdefRecord record READ record WRITE setRecord NOTIFY recordChanged)
 
+    Q_ENUMS(TypeNameFormat)
 public:
+    enum TypeNameFormat {
+        Empty = QNdefRecord::Empty,
+        NfcRtd = QNdefRecord::NfcRtd,
+        Mime = QNdefRecord::Mime,
+        Uri = QNdefRecord::Uri,
+        ExternalRtd = QNdefRecord::ExternalRtd,
+        Unknown = QNdefRecord::Unknown
+    };
+
     explicit QDeclarativeNdefRecord(QObject *parent = 0);
     explicit QDeclarativeNdefRecord(const QNdefRecord &record, QObject *parent = 0);
 
-    QString recordType() const;
-    void setRecordType(const QString &t);
+    QString type() const;
+    void setType(const QString &t);
+
+    void setTypeNameFormat(TypeNameFormat typeNameFormat);
+    TypeNameFormat typeNameFormat() const;
 
     QNdefRecord record() const;
     void setRecord(const QNdefRecord &record);
 
 Q_SIGNALS:
-    void recordTypeChanged();
+    void typeChanged();
+    void typeNameFormatChanged();
     void recordChanged();
 
 private:

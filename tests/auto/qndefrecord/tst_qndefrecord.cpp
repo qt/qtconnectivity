@@ -101,7 +101,8 @@ void tst_QNdefRecord::tst_record()
 
         QDeclarativeNdefRecord declRecord;
         QCOMPARE(declRecord.record(), record);
-        QCOMPARE(declRecord.recordType(), QString());
+        QCOMPARE(declRecord.type(), QString());
+        QCOMPARE(declRecord.typeNameFormat(), QDeclarativeNdefRecord::Empty);
     }
 
     // test type name format
@@ -257,7 +258,8 @@ void tst_QNdefRecord::tst_textRecord()
 
         QDeclarativeNdefRecord declRecord(record);
         QCOMPARE(declRecord.record(), QNdefRecord(record));
-        QCOMPARE(declRecord.recordType(), QString("urn:nfc:wkt:T"));
+        QCOMPARE(declRecord.type(), QString("T"));
+        QCOMPARE(declRecord.typeNameFormat(), QDeclarativeNdefRecord::NfcRtd);
     }
 
     // test getters
@@ -325,7 +327,8 @@ void tst_QNdefRecord::tst_uriRecord()
 
         QDeclarativeNdefRecord declRecord(record);
         QCOMPARE(declRecord.record(), QNdefRecord(record));
-        QCOMPARE(declRecord.recordType(), QString("urn:nfc:wkt:U"));
+        QCOMPARE(declRecord.type(), QString("U"));
+        QCOMPARE(declRecord.typeNameFormat(), QDeclarativeNdefRecord::NfcRtd);
     }
 
     // test getters
@@ -360,27 +363,21 @@ void tst_QNdefRecord::tst_uriRecord()
 void tst_QNdefRecord::tst_declarative_record_data()
 {
     QTest::addColumn<QNdefRecord::TypeNameFormat>("typeNameFormat");
-    QTest::addColumn<QNdefRecord::TypeNameFormat>("typeNameFormatOut");
     QTest::addColumn<QByteArray>("type");
-    QTest::addColumn<QByteArray>("typeOut");
-    QTest::addColumn<QString>("recordType");
 
-    QTest::newRow("NfcRtd:U") << QNdefRecord::NfcRtd << QNdefRecord::NfcRtd << QByteArray("U") << QByteArray("U") << QString("urn:nfc:wkt:U");
-    QTest::newRow("NfcRtd:T") << QNdefRecord::NfcRtd << QNdefRecord::NfcRtd << QByteArray("T") << QByteArray("T") << QString("urn:nfc:wkt:T");
-    QTest::newRow("Empty:BLAH") << QNdefRecord::Empty << QNdefRecord::Empty << QByteArray("BLAH") << QByteArray("") << QString("");
-    QTest::newRow("Empty") << QNdefRecord::Empty << QNdefRecord::Empty << QByteArray("") << QByteArray("") << QString("");
-    QTest::newRow("Unknown") << QNdefRecord::Unknown << QNdefRecord::Empty << QByteArray("BLAHfoo") << QByteArray("") << QString("");
-    QTest::newRow("Mime") << QNdefRecord::Mime << QNdefRecord::Mime << QByteArray("foobar") << QByteArray("foobar") << QString("urn:nfc:mime:foobar");
-    QTest::newRow("ExternalRtd") << QNdefRecord::ExternalRtd << QNdefRecord::ExternalRtd << QByteArray("") << QByteArray("") << QString("urn:nfc:ext:");
+    QTest::newRow("NfcRtd:U") << QNdefRecord::NfcRtd << QByteArray("U");
+    QTest::newRow("NfcRtd:T") << QNdefRecord::NfcRtd << QByteArray("T");
+    QTest::newRow("Empty:BLAH") << QNdefRecord::Empty << QByteArray("BLAH");
+    QTest::newRow("Empty") << QNdefRecord::Empty << QByteArray("");
+    QTest::newRow("Unknown") << QNdefRecord::Unknown << QByteArray("BLAHfoo");
+    QTest::newRow("Mime") << QNdefRecord::Mime << QByteArray("foobar");
+    QTest::newRow("ExternalRtd") << QNdefRecord::ExternalRtd << QByteArray("");
 }
 
 void tst_QNdefRecord::tst_declarative_record()
 {
     QFETCH(QNdefRecord::TypeNameFormat, typeNameFormat);
-    QFETCH(QNdefRecord::TypeNameFormat, typeNameFormatOut);
     QFETCH(QByteArray, type);
-    QFETCH(QByteArray, typeOut);
-    QFETCH(QString, recordType);
 
     {
         QNdefRecord record;
@@ -393,74 +390,94 @@ void tst_QNdefRecord::tst_declarative_record()
         QCOMPARE(declRecord.record(), record);
         QCOMPARE(declRecord.record().typeNameFormat(), typeNameFormat);
         QCOMPARE(declRecord.record().type(), type);
-        QCOMPARE(declRecord.recordType(), recordType);
+        QCOMPARE(declRecord.type(), QString(type));
+        QCOMPARE(declRecord.typeNameFormat(), static_cast<QDeclarativeNdefRecord::TypeNameFormat>(typeNameFormat));
 
         QDeclarativeNdefRecord declRecord2;
         declRecord2.setRecord(record);
         QCOMPARE(declRecord2.record(), record);
         QCOMPARE(declRecord2.record().typeNameFormat(), typeNameFormat);
         QCOMPARE(declRecord2.record().type(), type);
-        QCOMPARE(declRecord2.recordType(), recordType);
+        QCOMPARE(declRecord2.type(), QString(type));
+        QCOMPARE(declRecord2.typeNameFormat(), static_cast<QDeclarativeNdefRecord::TypeNameFormat>(typeNameFormat));
 
         QDeclarativeNdefRecord declRecord3;
-        declRecord3.setRecordType(recordType);
-        QCOMPARE(declRecord3.recordType(), recordType);
-        QCOMPARE(declRecord3.record().typeNameFormat(), typeNameFormatOut);
-        QCOMPARE(declRecord3.record().type(), typeOut);
+        declRecord3.setTypeNameFormat((QDeclarativeNdefRecord::TypeNameFormat)typeNameFormat);
+        declRecord3.setType(type);
+        QCOMPARE(declRecord3.type(), QString(type));
+        QCOMPARE(declRecord3.record().typeNameFormat(), typeNameFormat);
+        QCOMPARE(declRecord3.record().type(), type);
+        QCOMPARE(declRecord3.typeNameFormat(), static_cast<QDeclarativeNdefRecord::TypeNameFormat>(typeNameFormat));
     }
 }
 
 void tst_QNdefRecord::tst_declarativeChangedSignals()
 {
     QDeclarativeNdefRecord record;
-    QSignalSpy typeSpy(&record, SIGNAL(recordTypeChanged()));
+    QSignalSpy typeSpy(&record, SIGNAL(typeChanged()));
+    QSignalSpy tnfSpy(&record, SIGNAL(typeNameFormatChanged()));
     QSignalSpy recordSpy(&record, SIGNAL(recordChanged()));
 
     QCOMPARE(typeSpy.count(), 0);
     QCOMPARE(recordSpy.count(), 0);
 
-    record.setRecordType("urn:nfc:wkt:U");
+    record.setType("U");
+    record.setTypeNameFormat(QDeclarativeNdefRecord::NfcRtd);
     QCOMPARE(typeSpy.count(), 1);
+    QCOMPARE(tnfSpy.count(), 1);
     QCOMPARE(recordSpy.count(), 0);
-    QCOMPARE(record.recordType(), QString("urn:nfc:wkt:U"));
+    QCOMPARE(record.type(), QString("U"));
     QCOMPARE(record.record().type(), QByteArray("U"));
     QCOMPARE(record.record().typeNameFormat(), QNdefRecord::NfcRtd);
+    QCOMPARE(record.typeNameFormat(), QDeclarativeNdefRecord::NfcRtd);
 
-    record.setRecordType("urn:nfc:wkt:U"); //same value, no signal
+    record.setType("U"); //same value, no signal
     QCOMPARE(typeSpy.count(), 1);
+    QCOMPARE(tnfSpy.count(), 1);
     QCOMPARE(recordSpy.count(), 0);
-    QCOMPARE(record.recordType(), QString("urn:nfc:wkt:U"));
+    QCOMPARE(record.type(), QString("U"));
     QCOMPARE(record.record().type(), QByteArray("U"));
     QCOMPARE(record.record().typeNameFormat(), QNdefRecord::NfcRtd);
+    QCOMPARE(record.typeNameFormat(), QDeclarativeNdefRecord::NfcRtd);
 
-    record.setRecordType("urn:nfc:ext:blah");
-    record.setRecordType("urn:nfc:ext:blah2");
+    record.setType("blah");
+    record.setType("blah2");
+    record.setTypeNameFormat(QDeclarativeNdefRecord::ExternalRtd);
     QCOMPARE(typeSpy.count(), 3);
+    QCOMPARE(tnfSpy.count(), 2);
     QCOMPARE(recordSpy.count(), 0);
-    QCOMPARE(record.recordType(), QString("urn:nfc:ext:blah2"));
+    QCOMPARE(record.type(), QString("blah2"));
     QCOMPARE(record.record().type(), QByteArray("blah2"));
     QCOMPARE(record.record().typeNameFormat(), QNdefRecord::ExternalRtd);
+    QCOMPARE(record.typeNameFormat(), QDeclarativeNdefRecord::ExternalRtd);
 
-    record.setRecordType("Rubbish");
+    record.setType("Rubbish");
     QCOMPARE(typeSpy.count(), 4);
+    QCOMPARE(tnfSpy.count(), 2);
     QCOMPARE(recordSpy.count(), 0);
-    QCOMPARE(record.recordType(), QString("urn:nfc:ext:blah2"));
-    QCOMPARE(record.record().type(), QByteArray("blah2"));
+    QCOMPARE(record.type(), QString("Rubbish"));
+    QCOMPARE(record.record().type(), QByteArray("Rubbish"));
     QCOMPARE(record.record().typeNameFormat(), QNdefRecord::ExternalRtd);
+    QCOMPARE(record.typeNameFormat(), QDeclarativeNdefRecord::ExternalRtd);
 
-    record.setRecordType("urn:nfc:mime:QQQQ");
+    record.setType("QQQQ");
+    record.setTypeNameFormat(QDeclarativeNdefRecord::Mime);
     QCOMPARE(typeSpy.count(), 5);
+    QCOMPARE(tnfSpy.count(), 3);
     QCOMPARE(recordSpy.count(), 0);
-    QCOMPARE(record.recordType(), QString("urn:nfc:mime:QQQQ"));
+    QCOMPARE(record.type(), QString("QQQQ"));
     QCOMPARE(record.record().type(), QByteArray("QQQQ"));
     QCOMPARE(record.record().typeNameFormat(), QNdefRecord::Mime);
+    QCOMPARE(record.typeNameFormat(), QDeclarativeNdefRecord::Mime);
 
     record.setRecord(QNdefRecord());
     QCOMPARE(typeSpy.count(), 5);  //setting record -> no recordChanged signal
+    QCOMPARE(tnfSpy.count(), 3);
     QCOMPARE(recordSpy.count(), 1);
-    QCOMPARE(record.recordType(), QString(""));
+    QCOMPARE(record.type(), QString(""));
     QCOMPARE(record.record().type(), QByteArray());
     QCOMPARE(record.record().typeNameFormat(), QNdefRecord::Empty);
+    QCOMPARE(record.typeNameFormat(), QDeclarativeNdefRecord::Empty);
 }
 
 QTEST_MAIN(tst_QNdefRecord)

@@ -72,7 +72,7 @@
 
     \code
         NearField {
-            filter: [ NdefFilter { type: "urn:nfc:wkt:U"; minimum: 1; maximum: 1 } ]
+            filter: [ NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 } ]
             orderMatch: false
 
             onMessageRecordsChanged: displayMessage()
@@ -143,7 +143,7 @@ void QDeclarativeNearField::componentComplete()
 {
     m_componentCompleted = true;
 
-    if (!m_filter.isEmpty())
+    if (!m_filterList.isEmpty())
         registerMessageHandler();
 }
 
@@ -156,27 +156,20 @@ void QDeclarativeNearField::registerMessageHandler()
         m_manager->unregisterNdefMessageHandler(m_messageHandlerId);
 
     // no filter abort
-    if (m_filter.isEmpty())
+    if (m_filterList.isEmpty())
         return;
 
-    QNdefFilter filter;
-    filter.setOrderMatch(m_orderMatch);
-    foreach (QDeclarativeNdefFilter *f, m_filter) {
-        const QString type = f->type();
-        uint min = f->minimum() < 0 ? UINT_MAX : f->minimum();
-        uint max = f->maximum() < 0 ? UINT_MAX : f->maximum();
+    QNdefFilter ndefFilter;
+    ndefFilter.setOrderMatch(m_orderMatch);
+    foreach (const QDeclarativeNdefFilter *filter, m_filterList) {
+        const QString type = filter->type();
+        uint min = filter->minimum() < 0 ? UINT_MAX : filter->minimum();
+        uint max = filter->maximum() < 0 ? UINT_MAX : filter->maximum();
 
-        if (type.startsWith(QLatin1String("urn:nfc:wkt:")))
-            filter.appendRecord(QNdefRecord::NfcRtd, type.mid(12).toUtf8(), min, max);
-        else if (type.startsWith(QLatin1String("urn:nfc:ext:")))
-            filter.appendRecord(QNdefRecord::ExternalRtd, type.mid(12).toUtf8(), min, max);
-        else if (type.startsWith(QLatin1String("urn:nfc:mime")))
-            filter.appendRecord(QNdefRecord::Mime, type.mid(13).toUtf8(), min, max);
-        else
-            qWarning("Unknown NDEF record type %s", qPrintable(type));
+        ndefFilter.appendRecord(static_cast<QNdefRecord::TypeNameFormat>(filter->typeNameFormat()), type.toUtf8(), min, max);
     }
 
-    m_messageHandlerId = m_manager->registerNdefMessageHandler(filter, this, SLOT(_q_handleNdefMessage(QNdefMessage)));
+    m_messageHandlerId = m_manager->registerNdefMessageHandler(ndefFilter, this, SLOT(_q_handleNdefMessage(QNdefMessage)));
 }
 
 void QDeclarativeNearField::_q_handleNdefMessage(const QNdefMessage &message)
@@ -246,7 +239,7 @@ void QDeclarativeNearField::append_filter(QQmlListProperty<QDeclarativeNdefFilte
         return;
 
     filter->setParent(nearField);
-    nearField->m_filter.append(filter);
+    nearField->m_filterList.append(filter);
     emit nearField->filterChanged();
 
     if (nearField->m_componentCompleted)
@@ -259,7 +252,7 @@ int QDeclarativeNearField::count_filters(QQmlListProperty<QDeclarativeNdefFilter
     if (!nearField)
         return 0;
 
-    return nearField->m_filter.count();
+    return nearField->m_filterList.count();
 }
 
 QDeclarativeNdefFilter *QDeclarativeNearField::at_filter(QQmlListProperty<QDeclarativeNdefFilter> *list,
@@ -269,7 +262,7 @@ QDeclarativeNdefFilter *QDeclarativeNearField::at_filter(QQmlListProperty<QDecla
     if (!nearField)
         return 0;
 
-    return nearField->m_filter.at(index);
+    return nearField->m_filterList.at(index);
 }
 
 void QDeclarativeNearField::clear_filter(QQmlListProperty<QDeclarativeNdefFilter> *list)
@@ -278,8 +271,8 @@ void QDeclarativeNearField::clear_filter(QQmlListProperty<QDeclarativeNdefFilter
     if (!nearField)
         return;
 
-    qDeleteAll(nearField->m_filter);
-    nearField->m_filter.clear();
+    qDeleteAll(nearField->m_filterList);
+    nearField->m_filterList.clear();
     emit nearField->filterChanged();
     if (nearField->m_componentCompleted)
         nearField->registerMessageHandler();

@@ -87,7 +87,7 @@ private slots:
 
 private:
     QList<QDeclarativeNdefRecord *> m_message;
-    QList<QDeclarativeNdefFilter *> m_filter;
+    QList<QDeclarativeNdefFilter *> m_filterList;
     bool m_orderMatch;
     bool m_componentCompleted;
     bool m_messageUpdating;
