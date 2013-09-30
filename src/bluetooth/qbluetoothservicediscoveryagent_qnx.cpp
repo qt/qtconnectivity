@@ -169,7 +169,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         }
 
         //Check if the UUID is in the uuidFilter
-        if (!uuidFilter.isEmpty() && !uuidFilter.contains(suuid))
+        if (!uuidFilter.isEmpty() && !uuidFilter.contains(serviceInfo.serviceUuid()))
             continue;
 
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
