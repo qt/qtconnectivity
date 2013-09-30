@@ -67,7 +67,7 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 
 bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
-    Q_UNUSED(type);
+    socketType = type;
     return false;
 }
 

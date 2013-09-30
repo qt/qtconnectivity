@@ -160,8 +160,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
             if (serviceName.size() == 2) {
                 serviceInfo.setServiceUuid(QBluetoothUuid(QLatin1String(serviceName.last())));
                 suuid = QBluetoothUuid((quint16)(serviceName.first().toUInt(&ok,16)));
-                if (suuid == QBluetoothUuid::SerialPort)
-                    protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm));
+                if (suuid == QBluetoothUuid::SerialPort) {
+                    QBluetoothServiceInfo::Sequence protocol;
+                    protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                             << QVariant::fromValue(0);
+                    protocolDescriptorList.append(QVariant::fromValue(protocol));
+                }
             }
         } else {
             //We do not have anything better, so we set the service class UUID as service UUID
