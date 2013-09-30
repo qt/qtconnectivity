@@ -90,7 +90,10 @@
     \qmlproperty list<NdefFilter> NearField::filter
 
     This property holds the NDEF filter constraints.  The \l messageRecords property will only be
-    set to NDEF messages which match the filter.
+    set to NDEF messages which match the filter. If no filter is set, a message handler for
+    all NDEF messages will be registered.
+
+    \l QNearFieldManager::registerNdefMessageHandler()
 */
 
 /*!
@@ -143,8 +146,7 @@ void QDeclarativeNearField::componentComplete()
 {
     m_componentCompleted = true;
 
-    if (!m_filterList.isEmpty())
-        registerMessageHandler();
+    registerMessageHandler();
 }
 
 void QDeclarativeNearField::registerMessageHandler()
@@ -154,10 +156,6 @@ void QDeclarativeNearField::registerMessageHandler()
 
     if (m_messageHandlerId != -1)
         m_manager->unregisterNdefMessageHandler(m_messageHandlerId);
-
-    // no filter abort
-    if (m_filterList.isEmpty())
-        return;
 
     QNdefFilter ndefFilter;
     ndefFilter.setOrderMatch(m_orderMatch);
