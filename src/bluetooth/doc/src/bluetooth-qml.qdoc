@@ -31,10 +31,10 @@
 \qmlmodule QtBluetooth 5.2
 \title Qt Bluetooth QML Types
 \ingroup qmlmodules
-\brief Provides QML types for basic Bluetooth operations on devices
+\brief Provides QML types for basic Bluetooth operations on devices.
 
-The Qt Bluetooth QML Types enable an application to scan for devices and connect and
-interact with them in an easier way than the C++ Classes. However, it is a bit
+The Qt Bluetooth QML Types enable an application to scan for devices and connect
+and interact with them in an easier way than the C++ Classes. However, it is a bit
 more limited than the C++ API. You can always use the C++ API to create QML
 plugins with the flexibility you need.
 

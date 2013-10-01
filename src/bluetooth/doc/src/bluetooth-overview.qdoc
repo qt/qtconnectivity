@@ -59,7 +59,7 @@
     \section1 Scanning for Bluetooth Devices
 
     Similar to the QBluetoothLocalDevice, the API offers QBluetoothDeviceInfo which provides
-    that information for remote devices. While you can just create QBluetoothDeviceInfo objects on
+    that information for remote devices. Although you can just create QBluetoothDeviceInfo objects on
     your own and fill them with data, the easier way is to use the QBluetoothDeviceDiscoveryAgent to
     start an automated search for visible Bluetooth devices within the connectable range.
 
@@ -69,7 +69,7 @@
 
     Once the desired device is found, there are two main use cases provided by Qt Bluetooth. The
     simpler is to send files via the Obex Object Push Profile (OPP). As the name describes, this
-    profile can only push files from one device to another but not pull files or browse the remote
+    profile can only push files from one device to another, but not pull files or browse the remote
     file system. Because of this limitation, this profile does not require the two devices to be
     paired before exchanging data. To push files to remote devices, create a
     QBluetoothTransferRequest and ask the QBluetoothTransferManager to push the file contained in
@@ -79,7 +79,7 @@
 
     \section1 Exchanging Data Between Devices
 
-    The more flexible approach to do communication between two Bluetooth enabled devices, is to
+    The more flexible approach for communication between two Bluetooth enabled devices, is to
     create a virtual serial port connection and freely exchange data over that connection. This can
     be done by the Serial Port Profile (SPP). The Serial Port Profile emulates a serial connection
     over the Bluetooth transport protocol RFCOMM.
@@ -95,7 +95,7 @@
     \snippet btchat/chatclient.cpp startClient
 
     Using such a connection allows to exchange any form of data in both directions.
-    It is perfectly suited for use cases like gaming or syncing the state between two instances of
+    It is perfectly suited for gaming or for syncing the state between two instances of
     an application on two devices. For more detailed descriptions on how to configure the server
     and client, please refer to the detailed description sections in the QRfcommServer and
     QBluetoothSocket classes. A good example to start with SPP is the \l{btchat}{Bluetooth Chat}

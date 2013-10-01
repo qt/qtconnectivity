@@ -29,8 +29,8 @@
 \example poster
 \title QML Poster Example
 
-The QML Poster example displays the contents of specifically formated NDEF messages read from an
-NFC Tag. The NDEF message should contain a URI record, an optional image/* MIME record and one
+The QML Poster example displays the contents of specifically formatted NDEF messages read from an
+NFC Tag. The NDEF message should contain a URI record, an optional image/* MIME record, and one
 or more localized Text records.
 
 \image qml-poster-example.png
