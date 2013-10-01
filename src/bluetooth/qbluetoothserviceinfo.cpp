@@ -110,10 +110,12 @@ QT_BEGIN_NAMESPACE
     Bluetooth service attributes. Please check the Bluetooth Core Specification for a more detailed description of these attributes.
 
     \value ServiceRecordHandle      Specifies a service record from which attributes can be retrieved.
-    \value ServiceClassIds          UUIDs of service classes that the service conforms to.
+    \value ServiceClassIds          UUIDs of service classes that the service conforms to. The
+                                    most common service classes are defined in (\l QBluetoothUuid::ServiceClassUuid)
     \value ServiceRecordState       Attibute changes when any other service attribute is added, deleted or modified.
     \value ServiceId                UUID that uniquely identifies the service.
-    \value ProtocolDescriptorList   List of protocols used by the service.
+    \value ProtocolDescriptorList   List of protocols used by the service. The most common protocol Uuids are defined
+                                    in \l QBluetoothUuid::ProtocolUuid
     \value BrowseGroupList          List of browse groups the service is in.
     \value LanguageBaseAttributeIdList      List of language base attribute IDs to support human-readable attributes.
     \value ServiceInfoTimeToLive    Number of seconds for which the service record is expected to remain valid and unchanged.

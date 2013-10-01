@@ -96,6 +96,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value McapControlChannel Multi-Channel Adaptation Protocol UUID
     \value McapDataChannel Multi-Channel Adaptation Protocol UUID
     \value L2cap    L2CAP protocol UUID
+
+    \sa QBluetoothServiceInfo::ProtocolDescriptorList
 */
 
 /*!
@@ -161,6 +163,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value HDP                    Health Device Profile
     \value HDPSource              Health Device Profile
     \value HDPSink                Health Device Profile
+
+    \sa QBluetoothServiceInfo::ServiceClassIds
 */
 
 /*!
