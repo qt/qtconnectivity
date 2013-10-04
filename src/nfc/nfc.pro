@@ -15,7 +15,7 @@ PUBLIC_HEADERS += \
     qndefmessage.h \
     qndeffilter.h \
     qndefnfcurirecord.h \
-    qdeclarativendefrecord.h \
+    qqmlndefrecord.h \
     qndefnfcsmartposterrecord.h
 
 PRIVATE_HEADERS += \
@@ -46,7 +46,7 @@ SOURCES += \
     qnearfieldtagtype4.cpp \
     qtlv.cpp \
     qllcpserver.cpp \
-    qdeclarativendefrecord.cpp \
+    qqmlndefrecord.cpp \
     qndefnfcsmartposterrecord.cpp
 
 qnx {

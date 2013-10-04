@@ -43,14 +43,14 @@
 #define QDECLARATIVENDEFFILTER_P_H
 
 #include <QtCore/QObject>
-#include <qdeclarativendefrecord.h>
+#include <qqmlndefrecord.h>
 
 class QDeclarativeNdefFilter : public QObject
 {
     Q_OBJECT
 
     Q_PROPERTY(QString type READ type WRITE setType NOTIFY typeChanged)
-    Q_PROPERTY(QDeclarativeNdefRecord::TypeNameFormat typeNameFormat READ typeNameFormat WRITE setTypeNameFormat NOTIFY typeNameFormatChanged)
+    Q_PROPERTY(QQmlNdefRecord::TypeNameFormat typeNameFormat READ typeNameFormat WRITE setTypeNameFormat NOTIFY typeNameFormatChanged)
     Q_PROPERTY(int minimum READ minimum WRITE setMinimum NOTIFY minimumChanged)
     Q_PROPERTY(int maximum READ maximum WRITE setMaximum NOTIFY maximumChanged)
 public:
@@ -59,8 +59,8 @@ public:
     QString type() const;
     void setType(const QString &t);
 
-    QDeclarativeNdefRecord::TypeNameFormat typeNameFormat() const;
-    void setTypeNameFormat(QDeclarativeNdefRecord::TypeNameFormat format);
+    QQmlNdefRecord::TypeNameFormat typeNameFormat() const;
+    void setTypeNameFormat(QQmlNdefRecord::TypeNameFormat format);
 
     int minimum() const;
     void setMinimum(int value);
@@ -78,7 +78,7 @@ private:
     QString m_type;
     int m_minimum;
     int m_maximum;
-    QDeclarativeNdefRecord::TypeNameFormat m_typeNameFormat;
+    QQmlNdefRecord::TypeNameFormat m_typeNameFormat;
 };
 
 #endif // QDECLARATIVENDEFFILTER_P_H

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativendefrecord.h"
+#include "qqmlndefrecord.h"
 
 #include <QtCore/QMap>
 #include <QtCore/QRegExp>
@@ -47,15 +47,15 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class QDeclarativeNdefRecord
-    \brief The QDeclarativeNdefRecord class implements the NdefRecord type in QML.
+    \class QQmlNdefRecord
+    \brief The QQmlNdefRecord class implements the NdefRecord type in QML.
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
 
     \sa NdefRecord
 
-    The QDeclarativeNdefRecord class is the base class for all NdefRecord types in QML.  To
+    The QQmlNdefRecord class is the base class for all NdefRecord types in QML.  To
     support a new NDEF record type in QML subclass this class and expose new properties, member
     functions and signals appropriate for the new record type.  The following must be done to
     create a new NDEF record type in QML:
@@ -80,13 +80,13 @@ QT_BEGIN_NAMESPACE
     Finially the application or plugin code calls qmlRegisterType():
 
     \code
-        qmlRegisterType<QDeclarativeNdefFooRecord>(uri, 1, 0, "NdefFooRecord");
+        qmlRegisterType<QQmlNdefFooRecord>(uri, 1, 0, "NdefFooRecord");
     \endcode
 */
 
 /*!
     \qmltype NdefRecord
-    \instantiates QDeclarativeNdefRecord
+    \instantiates QQmlNdefRecord
     \brief The NdefRecord type represents a record in an NDEF message.
 
     \ingroup nfc-qml
@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
 
     This class is not intended to be used directly, but extended from C++.
 
-    \sa QDeclarativeNdefRecord
+    \sa QQmlNdefRecord
 */
 
 /*!
@@ -141,32 +141,32 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QDeclarativeNdefRecord::typeChanged()
+    \fn void QQmlNdefRecord::typeChanged()
 
     This signal is emitted when the record type changes.
 */
 
 /*!
-    \property QDeclarativeNdefRecord::record
+    \property QQmlNdefRecord::record
 
     This property hold the NDEF record that this class represents.
 */
 
 /*!
-    \property QDeclarativeNdefRecord::type
+    \property QQmlNdefRecord::type
 
     This property hold the type of the NDEF record.
 */
 
 /*!
-    \property QDeclarativeNdefRecord::typeNameFormat
+    \property QQmlNdefRecord::typeNameFormat
 
     This property hold the TNF of the NDEF record.
 */
 
 /*!
     \macro Q_DECLARE_NDEFRECORD(className, typeNameFormat, type)
-    \relates QDeclarativeNdefRecord
+    \relates QQmlNdefRecord
 
     This macro ensures that \a className is declared as the class implementing the NDEF record
     identified by \a typeNameFormat and \a type.
@@ -176,7 +176,7 @@ QT_BEGIN_NAMESPACE
 
 static QMap<QString, const QMetaObject *> registeredNdefRecordTypes;
 
-class QDeclarativeNdefRecordPrivate
+class QQmlNdefRecordPrivate
 {
 public:
     QNdefRecord record;
@@ -209,7 +209,7 @@ void qRegisterNdefRecordTypeHelper(const QMetaObject *metaObject,
 /*!
     \internal
 */
-QDeclarativeNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record)
+QQmlNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record)
 {
     const QString urn = urnForRecordType(record.typeNameFormat(), record.type());
 
@@ -225,33 +225,33 @@ QDeclarativeNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord
         if (!metaObject)
             continue;
 
-        return static_cast<QDeclarativeNdefRecord *>(metaObject->newInstance(
+        return static_cast<QQmlNdefRecord *>(metaObject->newInstance(
             Q_ARG(QNdefRecord, record), Q_ARG(QObject *, 0)));
     }
 
-    return new QDeclarativeNdefRecord(record);
+    return new QQmlNdefRecord(record);
 }
 
 /*!
-    Constructs a new empty QDeclarativeNdefRecord with \a parent.
+    Constructs a new empty QQmlNdefRecord with \a parent.
 */
-QDeclarativeNdefRecord::QDeclarativeNdefRecord(QObject *parent)
-:   QObject(parent), d_ptr(new QDeclarativeNdefRecordPrivate)
+QQmlNdefRecord::QQmlNdefRecord(QObject *parent)
+:   QObject(parent), d_ptr(new QQmlNdefRecordPrivate)
 {
 }
 
 /*!
-   Constructs a new QDeclarativeNdefRecord representing \a record.  The parent of the newly
+   Constructs a new QQmlNdefRecord representing \a record.  The parent of the newly
    constructed object will be set to \a parent.
 */
-QDeclarativeNdefRecord::QDeclarativeNdefRecord(const QNdefRecord &record, QObject *parent)
-:   QObject(parent), d_ptr(new QDeclarativeNdefRecordPrivate)
+QQmlNdefRecord::QQmlNdefRecord(const QNdefRecord &record, QObject *parent)
+:   QObject(parent), d_ptr(new QQmlNdefRecordPrivate)
 {
     d_ptr->record = record;
 }
 
 /*!
-    \enum QDeclarativeNdefRecord::TypeNameFormat
+    \enum QQmlNdefRecord::TypeNameFormat
 
     This enum describes the type name format of an NDEF record. The values of this enum are according to
     \l QNdefRecord::TypeNameFormat
@@ -269,9 +269,9 @@ QDeclarativeNdefRecord::QDeclarativeNdefRecord(const QNdefRecord &record, QObjec
 
     \sa QNdefRecord::setType(), QNdefRecord::type()
 */
-QString QDeclarativeNdefRecord::type() const
+QString QQmlNdefRecord::type() const
 {
-    Q_D(const QDeclarativeNdefRecord);
+    Q_D(const QQmlNdefRecord);
 
     return QLatin1String(d->record.type());
 }
@@ -282,12 +282,12 @@ QString QDeclarativeNdefRecord::type() const
 
     \sa QNdefRecord::setType(), QNdefRecord::type()
 */
-void QDeclarativeNdefRecord::setType(const QString &newtype)
+void QQmlNdefRecord::setType(const QString &newtype)
 {
     if (newtype == type())
         return;
 
-    Q_D(QDeclarativeNdefRecord);
+    Q_D(QQmlNdefRecord);
     d->record.setType(newtype.toUtf8());
 
     emit typeChanged();
@@ -296,11 +296,11 @@ void QDeclarativeNdefRecord::setType(const QString &newtype)
 /*!
     Sets the type name format of the NDEF record to \a typeNameFormat.
 */
-void QDeclarativeNdefRecord::setTypeNameFormat(QDeclarativeNdefRecord::TypeNameFormat typeNameFormat)
+void QQmlNdefRecord::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat typeNameFormat)
 {
-    Q_D(QDeclarativeNdefRecord);
+    Q_D(QQmlNdefRecord);
     bool emitChanged = true;
-    if (static_cast<QDeclarativeNdefRecord::TypeNameFormat>(d->record.typeNameFormat()) == typeNameFormat) {
+    if (static_cast<QQmlNdefRecord::TypeNameFormat>(d->record.typeNameFormat()) == typeNameFormat) {
         emitChanged = false;
     }
 
@@ -313,22 +313,22 @@ void QDeclarativeNdefRecord::setTypeNameFormat(QDeclarativeNdefRecord::TypeNameF
 }
 
 /*!
-    \fn QDeclarativeNdefRecord::TypeNameFormat QDeclarativeNdefRecord::typeNameFormat() const
+    \fn QQmlNdefRecord::TypeNameFormat QQmlNdefRecord::typeNameFormat() const
 
     Returns the type name format of the NDEF record.
 */
-QDeclarativeNdefRecord::TypeNameFormat QDeclarativeNdefRecord::typeNameFormat() const
+QQmlNdefRecord::TypeNameFormat QQmlNdefRecord::typeNameFormat() const
 {
-    Q_D(const QDeclarativeNdefRecord);
-    return static_cast<QDeclarativeNdefRecord::TypeNameFormat>(d->record.typeNameFormat());
+    Q_D(const QQmlNdefRecord);
+    return static_cast<QQmlNdefRecord::TypeNameFormat>(d->record.typeNameFormat());
 }
 
 /*!
     Returns a copy of the record.
 */
-QNdefRecord QDeclarativeNdefRecord::record() const
+QNdefRecord QQmlNdefRecord::record() const
 {
-    Q_D(const QDeclarativeNdefRecord);
+    Q_D(const QQmlNdefRecord);
 
     return d->record;
 }
@@ -337,9 +337,9 @@ QNdefRecord QDeclarativeNdefRecord::record() const
     Sets the record to \a record. If the record is set the recordChanged() signal will
     be emitted.
 */
-void QDeclarativeNdefRecord::setRecord(const QNdefRecord &record)
+void QQmlNdefRecord::setRecord(const QNdefRecord &record)
 {
-    Q_D(QDeclarativeNdefRecord);
+    Q_D(QQmlNdefRecord);
 
     if (d->record == record)
         return;

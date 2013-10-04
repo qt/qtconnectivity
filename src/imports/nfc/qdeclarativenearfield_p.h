@@ -47,7 +47,7 @@
 #include <QtQml/QQmlParserStatus>
 #include <QtNfc/QNearFieldManager>
 
-#include "qdeclarativendefrecord.h"
+#include "qqmlndefrecord.h"
 
 
 QT_USE_NAMESPACE
@@ -57,7 +57,7 @@ class QDeclarativeNearField : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQmlListProperty<QDeclarativeNdefRecord> messageRecords READ messageRecords NOTIFY messageRecordsChanged)
+    Q_PROPERTY(QQmlListProperty<QQmlNdefRecord> messageRecords READ messageRecords NOTIFY messageRecordsChanged)
     Q_PROPERTY(QQmlListProperty<QDeclarativeNdefFilter> filter READ filter NOTIFY filterChanged)
     Q_PROPERTY(bool orderMatch READ orderMatch WRITE setOrderMatch NOTIFY orderMatchChanged)
 
@@ -66,7 +66,7 @@ class QDeclarativeNearField : public QObject, public QQmlParserStatus
 public:
     explicit QDeclarativeNearField(QObject *parent = 0);
 
-    QQmlListProperty<QDeclarativeNdefRecord> messageRecords();
+    QQmlListProperty<QQmlNdefRecord> messageRecords();
 
     QQmlListProperty<QDeclarativeNdefFilter> filter();
 
@@ -86,7 +86,7 @@ private slots:
     void _q_handleNdefMessage(const QNdefMessage &message);
 
 private:
-    QList<QDeclarativeNdefRecord *> m_message;
+    QList<QQmlNdefRecord *> m_message;
     QList<QDeclarativeNdefFilter *> m_filterList;
     bool m_orderMatch;
     bool m_componentCompleted;
@@ -97,12 +97,12 @@ private:
 
     void registerMessageHandler();
 
-    static void append_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
-                                     QDeclarativeNdefRecord *record);
-    static int count_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list);
-    static QDeclarativeNdefRecord *at_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
+    static void append_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
+                                     QQmlNdefRecord *record);
+    static int count_messageRecords(QQmlListProperty<QQmlNdefRecord> *list);
+    static QQmlNdefRecord *at_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
                                                     int index);
-    static void clear_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list);
+    static void clear_messageRecords(QQmlListProperty<QQmlNdefRecord> *list);
 
     static void append_filter(QQmlListProperty<QDeclarativeNdefFilter> *list,
                               QDeclarativeNdefFilter *filter);

@@ -18,13 +18,13 @@ Module {
     }
     Component {
         name: "QDeclarativeNdefMimeRecord"
-        prototype: "QDeclarativeNdefRecord"
+        prototype: "QQmlNdefRecord"
         exports: ["QtNfc/NdefMimeRecord 5.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "uri"; type: "string"; isReadonly: true }
     }
     Component {
-        name: "QDeclarativeNdefRecord"
+        name: "QQmlNdefRecord"
         prototype: "QObject"
         exports: ["QtNfc/NdefRecord 5.0"]
         exportMetaObjectRevisions: [0]
@@ -33,7 +33,7 @@ Module {
     }
     Component {
         name: "QDeclarativeNdefTextRecord"
-        prototype: "QDeclarativeNdefRecord"
+        prototype: "QQmlNdefRecord"
         exports: ["QtNfc/NdefTextRecord 5.0"]
         exportMetaObjectRevisions: [0]
         Enum {
@@ -51,7 +51,7 @@ Module {
     }
     Component {
         name: "QDeclarativeNdefUriRecord"
-        prototype: "QDeclarativeNdefRecord"
+        prototype: "QQmlNdefRecord"
         exports: ["QtNfc/NdefUriRecord 5.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "uri"; type: "string" }
@@ -63,7 +63,7 @@ Module {
         exportMetaObjectRevisions: [0]
         Property {
             name: "messageRecords"
-            type: "QDeclarativeNdefRecord"
+            type: "QQmlNdefRecord"
             isList: true
             isReadonly: true
         }

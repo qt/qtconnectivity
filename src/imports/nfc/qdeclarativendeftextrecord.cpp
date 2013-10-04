@@ -108,12 +108,12 @@
 Q_DECLARE_NDEFRECORD(QDeclarativeNdefTextRecord, QNdefRecord::NfcRtd, "T")
 
 QDeclarativeNdefTextRecord::QDeclarativeNdefTextRecord(QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcTextRecord(), parent)
+:   QQmlNdefRecord(QNdefNfcTextRecord(), parent)
 {
 }
 
 QDeclarativeNdefTextRecord::QDeclarativeNdefTextRecord(const QNdefRecord &record, QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcTextRecord(record), parent)
+:   QQmlNdefRecord(QNdefNfcTextRecord(record), parent)
 {
 }
 

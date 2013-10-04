@@ -119,12 +119,12 @@ void QDeclarativeNdefFilter::setType(const QString &t)
     emit typeChanged();
 }
 
-QDeclarativeNdefRecord::TypeNameFormat QDeclarativeNdefFilter::typeNameFormat() const
+QQmlNdefRecord::TypeNameFormat QDeclarativeNdefFilter::typeNameFormat() const
 {
     return m_typeNameFormat;
 }
 
-void QDeclarativeNdefFilter::setTypeNameFormat(QDeclarativeNdefRecord::TypeNameFormat format)
+void QDeclarativeNdefFilter::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat format)
 {
     if (m_typeNameFormat == format)
         return;

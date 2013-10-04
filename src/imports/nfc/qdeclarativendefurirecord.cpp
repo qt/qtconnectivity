@@ -66,12 +66,12 @@
 Q_DECLARE_NDEFRECORD(QDeclarativeNdefUriRecord, QNdefRecord::NfcRtd, "U")
 
 QDeclarativeNdefUriRecord::QDeclarativeNdefUriRecord(QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcUriRecord(), parent)
+:   QQmlNdefRecord(QNdefNfcUriRecord(), parent)
 {
 }
 
 QDeclarativeNdefUriRecord::QDeclarativeNdefUriRecord(const QNdefRecord &record, QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcUriRecord(record), parent)
+:   QQmlNdefRecord(QNdefNfcUriRecord(record), parent)
 {
 }
 

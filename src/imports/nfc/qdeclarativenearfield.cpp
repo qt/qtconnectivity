@@ -109,9 +109,9 @@ QDeclarativeNearField::QDeclarativeNearField(QObject *parent)
 {
 }
 
-QQmlListProperty<QDeclarativeNdefRecord> QDeclarativeNearField::messageRecords()
+QQmlListProperty<QQmlNdefRecord> QDeclarativeNearField::messageRecords()
 {
-    return QQmlListProperty<QDeclarativeNdefRecord>(this, 0,
+    return QQmlListProperty<QQmlNdefRecord>(this, 0,
                                                     &QDeclarativeNearField::append_messageRecord,
                                                     &QDeclarativeNearField::count_messageRecords,
                                                     &QDeclarativeNearField::at_messageRecord,
@@ -186,8 +186,8 @@ void QDeclarativeNearField::_q_handleNdefMessage(const QNdefMessage &message)
     emit messageRecordsChanged();
 }
 
-void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
-                                                 QDeclarativeNdefRecord *record)
+void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
+                                                 QQmlNdefRecord *record)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
     if (!nearField)
@@ -199,7 +199,7 @@ void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QDeclarativeNd
         emit nearField->messageRecordsChanged();
 }
 
-int QDeclarativeNearField::count_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list)
+int QDeclarativeNearField::count_messageRecords(QQmlListProperty<QQmlNdefRecord> *list)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
     if (!nearField)
@@ -208,7 +208,7 @@ int QDeclarativeNearField::count_messageRecords(QQmlListProperty<QDeclarativeNde
     return nearField->m_message.count();
 }
 
-QDeclarativeNdefRecord *QDeclarativeNearField::at_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
+QQmlNdefRecord *QDeclarativeNearField::at_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
                                                                 int index)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
@@ -218,7 +218,7 @@ QDeclarativeNdefRecord *QDeclarativeNearField::at_messageRecord(QQmlListProperty
     return nearField->m_message.at(index);
 }
 
-void QDeclarativeNearField::clear_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list)
+void QDeclarativeNearField::clear_messageRecords(QQmlListProperty<QQmlNdefRecord> *list)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
     if (nearField) {

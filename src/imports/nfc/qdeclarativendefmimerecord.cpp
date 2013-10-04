@@ -80,12 +80,12 @@ static inline QNdefRecord castToMimeRecord(const QNdefRecord &record)
 }
 
 QDeclarativeNdefMimeRecord::QDeclarativeNdefMimeRecord(QObject *parent)
-:   QDeclarativeNdefRecord(createMimeRecord(), parent)
+:   QQmlNdefRecord(createMimeRecord(), parent)
 {
 }
 
 QDeclarativeNdefMimeRecord::QDeclarativeNdefMimeRecord(const QNdefRecord &record, QObject *parent)
-:   QDeclarativeNdefRecord(castToMimeRecord(record), parent)
+:   QQmlNdefRecord(castToMimeRecord(record), parent)
 {
 }
 

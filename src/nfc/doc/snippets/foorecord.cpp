@@ -42,7 +42,7 @@
 #include <qndefrecord.h>
 
 //! [Declare foo record]
-Q_DECLARE_NDEFRECORD(QDeclarativeNdefFooRecord, QNdefRecord::ExternalRtd, "com.example:f")
+Q_DECLARE_NDEFRECORD(QQmlNdefFooRecord, QNdefRecord::ExternalRtd, "com.example:f")
 //! [Declare foo record]
 
 //! [createFooRecord]
@@ -69,22 +69,22 @@ static inline QNdefRecord copyFooRecord(const QNdefRecord &record)
 //! [copyFooRecord]
 
 //! [Constructors]
-QDeclarativeNdefFooRecord::QDeclarativeNdefFooRecord(QObject *parent)
-:   QDeclarativeNdefRecord(createFooRecord(), parent)
+QQmlNdefFooRecord::QQmlNdefFooRecord(QObject *parent)
+:   QQmlNdefRecord(createFooRecord(), parent)
 {
 }
 
-QDeclarativeNdefFooRecord::QDeclarativeNdefFooRecord(const QNdefRecord &record, QObject *parent)
-:   QDeclarativeNdefRecord(copyFooRecord(record), parent)
+QQmlNdefFooRecord::QQmlNdefFooRecord(const QNdefRecord &record, QObject *parent)
+:   QQmlNdefRecord(copyFooRecord(record), parent)
 {
 }
 //! [Constructors]
 
-QDeclarativeNdefFooRecord::~QDeclarativeNdefFooRecord()
+QQmlNdefFooRecord::~QQmlNdefFooRecord()
 {
 }
 
-int QDeclarativeNdefFooRecord::foo() const
+int QQmlNdefFooRecord::foo() const
 {
     QByteArray payload = record().payload();
 
@@ -96,7 +96,7 @@ int QDeclarativeNdefFooRecord::foo() const
     return value;
 }
 
-void QDeclarativeNdefFooRecord::setFoo(int value)
+void QQmlNdefFooRecord::setFoo(int value)
 {
     if (foo() == value)
         return;
