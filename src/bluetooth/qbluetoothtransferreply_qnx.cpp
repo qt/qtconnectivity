@@ -192,12 +192,16 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
         Q_EMIT finished(this);
     } else if (result.msg == QStringLiteral("opp_update")) {
         bool ok;
-        int sentBytes = result.dat.at(result.dat.indexOf(QStringLiteral("sent")) + 1).toInt(&ok);
-        if (!ok)
+        qint64 sentBytes = result.dat.at(result.dat.indexOf(QStringLiteral("sent")) + 1).toDouble(&ok);
+        if (!ok) {
+            qWarning() << "Could not convert sent bytes";
             return;
-        int totalBytes = result.dat.at(result.dat.indexOf(QStringLiteral("total")) + 1).toInt(&ok);
-        if (!ok)
+        }
+        qint64 totalBytes = result.dat.at(result.dat.indexOf(QStringLiteral("total")) + 1).toDouble(&ok);
+        if (!ok) {
+            qWarning() << "Could not convert total bytes";
             return;
+        }
         qBBBluetoothDebug() << "opp update" << sentBytes << totalBytes;
         Q_EMIT transferProgress(sentBytes, totalBytes);
     } else if (result.msg == QStringLiteral("opp_complete")) {
