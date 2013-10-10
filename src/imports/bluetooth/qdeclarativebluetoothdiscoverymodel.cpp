@@ -63,11 +63,33 @@
     limited to a single service such as a game.
 
     The model roles provided by BluetoothDiscoveryModel are
-    \c service, \c name, \c remoteAddress and \c deviceName.
-    Through the \c service role the BluetoothService can be accessed for more details.
+    \c service, \c name, \c remoteAddress and \c deviceName. The meaning of the roles
+    changes based on the current \l discoveryMode.
+
+    \table
+        \header
+            \li Model role
+            \li Device Discovery
+            \li Service Discovery
+         \row
+            \li \c name
+            \li The device's name and address.
+            \li The service name and the name of the device offering the service. If the device name is empty the devices address will be used.
+         \row
+            \li \c deviceName
+            \li The name of the device.
+            \li The name of the device offering the service.
+         \row
+            \li \c service
+            \li The role is undefined in this mode.
+            \li The \l BluetoothService object describing the discovered service.
+         \row
+            \li \c remoteAddress
+            \li The address of the found device.
+            \li The address of the device offering the service.
+    \endtable
 
     \sa QBluetoothServiceDiscoveryAgent
-
 */
 
 class QDeclarativeBluetoothDiscoveryModelPrivate
