@@ -141,7 +141,7 @@ private:
         size_t newCapacity = qMax(capacity, size_t(QPRIVATELINEARBUFFER_BUFFERSIZE));
         while (newCapacity < required)
             newCapacity *= 2;
-        int moveOffset = (where == freeSpaceAtEnd) ? 0 : newCapacity - len;
+        const int moveOffset = (where == freeSpaceAtEnd) ? 0 : int(newCapacity) - len;
         if (newCapacity > capacity) {
             // allocate more space
             char* newBuf = new char[newCapacity];
