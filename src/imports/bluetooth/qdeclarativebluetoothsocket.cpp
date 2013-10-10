@@ -313,13 +313,11 @@ void QDeclarativeBluetoothSocket::socket_readyRead()
 /*!
   \qmlproperty string BluetoothSocket::stringData
 
-  This property receives or sends data to remote Bluetooth device. Arrival of
-  data is signaled by the dataAvailable signal and can be read by
-  stringData. Calling sendStringData will transmit the string.
+  This property receives or sends data to a remote Bluetooth device. Arrival of
+  data can be detected by connecting to this properties changed signal and can be read via
+  stringData. Setting stringData will transmit the string.
   If excessive amounts of data are sent, the function may block sending. Reading will
   never block.
-  \sa dataAvailable
-  \sa sendStringData
   */
 
 QString QDeclarativeBluetoothSocket::stringData()
@@ -339,8 +337,6 @@ QString QDeclarativeBluetoothSocket::stringData()
 /*!
   This method transmits the string data passed with "data" to the remote device.
   If excessive amounts of data are sent, the function may block sending.
-  \sa dataAvailable
-  \sa stringData
  */
 
 void QDeclarativeBluetoothSocket::sendStringData(const QString &data)

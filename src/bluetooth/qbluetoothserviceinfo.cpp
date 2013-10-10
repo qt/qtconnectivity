@@ -124,7 +124,7 @@ QT_BEGIN_NAMESPACE
     \value DocumentationUrl         URL that points to the documentation on the service..
     \value ClientExecutableUrl      URL that refers to the location of an application that can be used to utilize the service.
     \value IconUrl                  URL to the location of the icon representing the service.
-    \value AdditionalProtocolDescriptorList     Additional protocols used by the service. This attribute extends the \l QBluetoothServiceInfo::ProtocolDescriptorList.
+    \value AdditionalProtocolDescriptorList     Additional protocols used by the service. This attribute extends \c ProtocolDescriptorList.
     \value PrimaryLanguageBase      Base index for primary language text descriptors.
     \value ServiceName              Name of the Bluetooth service in the primary language.
     \value ServiceDescription       Description of the Bluetooth service in the primary language.
