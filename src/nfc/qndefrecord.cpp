@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     QNdefRecord and derived classes are used to parse the contents of
     \l {QNdefMessage}{NDEF messages} and create new NDEF messages.
 
-    Use typeNameFormat(), userTypeNameFormat(), setTypeNameFormat() and setUserTypeNameFormat() to
+    Use typeNameFormat() and setTypeNameFormat() to
     get and set the type name format of the NDEF record.
 
     Use type() and setType() to get and set the type of the NDEF record.
