@@ -294,22 +294,17 @@ void QQmlNdefRecord::setType(const QString &newtype)
 }
 
 /*!
-    Sets the type name format of the NDEF record to \a typeNameFormat.
+    Sets the type name format of the NDEF record to \a newTypeNameFormat.
 */
-void QQmlNdefRecord::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat typeNameFormat)
+void QQmlNdefRecord::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat newTypeNameFormat)
 {
+    if (newTypeNameFormat == typeNameFormat())
+        return;
+
     Q_D(QQmlNdefRecord);
-    bool emitChanged = true;
-    if (static_cast<QQmlNdefRecord::TypeNameFormat>(d->record.typeNameFormat()) == typeNameFormat) {
-        emitChanged = false;
-    }
+    d->record.setTypeNameFormat(static_cast<QNdefRecord::TypeNameFormat>(newTypeNameFormat));
 
-    //We always have to set the tnf, otherwise we run into problems when tnf is empty. Then
-    //the QNdefRecordPrivate is not created
-    d->record.setTypeNameFormat(static_cast<QNdefRecord::TypeNameFormat>(typeNameFormat));
-
-    if (emitChanged)
-        Q_EMIT(typeNameFormatChanged());
+    emit typeNameFormatChanged();
 }
 
 /*!
