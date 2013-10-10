@@ -93,15 +93,8 @@ private slots:
 
     void tst_sendBuffer_data();
     void tst_sendBuffer();
-
-public slots:
-    void serviceDiscovered(const QBluetoothServiceInfo &info);
-    void finished();
-    void error(QBluetoothServiceDiscoveryAgent::Error error);
 private:
-    bool done_discovery;
     QBluetoothAddress remoteAddress;
-    QBluetoothAddress foundAddress;
 };
 
 tst_QBluetoothTransferManager::tst_QBluetoothTransferManager()
@@ -122,62 +115,16 @@ void tst_QBluetoothTransferManager::initTestCase()
         qWarning() << "Using remote device " << remote << " for testing. Ensure that the device is discoverable for pairing requests";
     } else {
         qWarning() << "Not using any remote device for testing. Set BT_TEST_DEVICE env to run manual tests involving a remote device";
+        QSKIP("Remote upload test not possible. Set BT_TEST_DEVICE");
     }
-
-
 
     if (!QBluetoothLocalDevice::allDevices().count())
         QSKIP("Skipping test due to missing Bluetooth device");
-
-    if (remoteAddress.isNull())
-        QSKIP("Remote upload test not possible. Set BT_TEST_DEVICE");
 
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     device->powerOn();
     delete device;
-
-    // Go find an echo server for BTADDRESS
-    QBluetoothServiceDiscoveryAgent *sda = new QBluetoothServiceDiscoveryAgent(this);
-    connect(sda, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-    connect(sda, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(error(QBluetoothServiceDiscoveryAgent::Error)));
-    connect(sda, SIGNAL(finished()), this, SLOT(finished()));
-
-    qDebug() << "Starting discovery";
-    done_discovery = false;
-
-    sda->setUuidFilter(QBluetoothUuid(QBluetoothUuid::ObexObjectPush));
-    sda->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
-
-    for (int connectTime = MaxConnectTime; !done_discovery && connectTime > 0; connectTime -= 1000)
-        QTest::qWait(1000);
-
-    sda->stop();
-
-    if (foundAddress.isNull())
-        QFAIL("Unable to find test service/device");
-
-    delete sda;
-}
-void tst_QBluetoothTransferManager::error(QBluetoothServiceDiscoveryAgent::Error error)
-{
-    qDebug() << "Received error" << error;
-    done_discovery = true;
-}
-
-void tst_QBluetoothTransferManager::finished()
-{
-    qDebug() << "Finished";
-    done_discovery = true;
-}
-
-void tst_QBluetoothTransferManager::serviceDiscovered(const QBluetoothServiceInfo &info)
-{
-    qDebug() << "Found: " << info.device().name() << info.device().address().toString() << info.serviceName();
-    if (info.device().address() == remoteAddress) {
-        foundAddress = remoteAddress;
-        done_discovery = true;
-    }
 }
 
 void tst_QBluetoothTransferManager::tst_construction()
@@ -256,12 +203,8 @@ void tst_QBluetoothTransferManager::tst_sendFile_data()
     QTest::addColumn<bool>("expectSuccess");
     QTest::addColumn<bool>("isInvalidFile");
 
-    if (foundAddress.isNull()) {
-        qDebug("Skipping send file test due to not finding remote device");
-    } else {
-        QTest::newRow("Push to remote test device") << foundAddress << true << false;
-        QTest::newRow("Push of non-existing file") << foundAddress << false << true;
-    }
+    QTest::newRow("Push to remote test device") << remoteAddress << true << false;
+    QTest::newRow("Push of non-existing file") << remoteAddress << false << true;
     QTest::newRow("Push to invalid address") << QBluetoothAddress() << false << false;
     QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false << false;
 
@@ -339,13 +282,10 @@ void tst_QBluetoothTransferManager::tst_sendBuffer_data()
     QTest::addColumn<bool>("expectSuccess");
     QTest::addColumn<QByteArray>("data");
 
-    if (foundAddress.isNull())
-        qDebug("Skipping send file test due to not finding remote device");
-    else
-        QTest::newRow("Push to remote test device") << foundAddress << true <<
+    QTest::newRow("Push to remote test device") << remoteAddress << true <<
                         QByteArray("This is a very long byte arry which we are going to access via a QBuffer");                                                       ;
-    //QTest::newRow("Push to invalid address") << QBluetoothAddress() << false;
-    //QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false;
+    QTest::newRow("Push to invalid address") << QBluetoothAddress() << false << QByteArray("test");
+    QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false << QByteArray("test");
 }
 
 
