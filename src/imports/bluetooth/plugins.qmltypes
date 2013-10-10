@@ -35,54 +35,36 @@ Module {
         Property { name: "uuidFilter"; type: "string" }
         Property { name: "remoteAddress"; type: "string" }
         Signal {
-            name: "newServiceDiscovered"
+            name: "serviceDiscovered"
             Parameter { name: "service"; type: "QDeclarativeBluetoothService"; isPointer: true }
         }
-        Signal { name: "newDeviceDiscovered" }
+        Signal {
+            name: "deviceDiscovered"
+            Parameter { name: "device"; type: "string" }
+        }
     }
     Component {
         name: "QDeclarativeBluetoothService"
         prototype: "QObject"
         exports: ["QtBluetooth/BluetoothService 5.0"]
         exportMetaObjectRevisions: [0]
+        Enum {
+            name: "Protocol"
+            values: {
+                "RfcommProtocol": 2,
+                "L2CapProtocol": 1,
+                "UnknownProtocol": 0
+            }
+        }
         Property { name: "deviceName"; type: "string"; isReadonly: true }
         Property { name: "deviceAddress"; type: "string" }
         Property { name: "serviceName"; type: "string" }
         Property { name: "serviceDescription"; type: "string" }
         Property { name: "serviceUuid"; type: "string" }
-        Property { name: "serviceProtocol"; type: "string" }
-        Property { name: "servicePort"; type: "int" }
+        Property { name: "serviceProtocol"; type: "Protocol" }
         Property { name: "registered"; type: "bool" }
         Signal { name: "detailsChanged" }
         Signal { name: "newClient" }
-        Method {
-            name: "setServiceName"
-            Parameter { name: "name"; type: "string" }
-        }
-        Method {
-            name: "setDeviceAddress"
-            Parameter { name: "address"; type: "string" }
-        }
-        Method {
-            name: "setServiceDescription"
-            Parameter { name: "description"; type: "string" }
-        }
-        Method {
-            name: "setServiceUuid"
-            Parameter { name: "uuid"; type: "string" }
-        }
-        Method {
-            name: "setServiceProtocol"
-            Parameter { name: "protocol"; type: "string" }
-        }
-        Method {
-            name: "setServicePort"
-            Parameter { name: "port"; type: "int" }
-        }
-        Method {
-            name: "setRegistered"
-            Parameter { name: "registered"; type: "bool" }
-        }
         Method { name: "nextClient"; type: "QDeclarativeBluetoothSocket*" }
         Method {
             name: "assignNextClient"
