@@ -52,7 +52,8 @@ Item {
         running: true
         discoveryMode: BluetoothDiscoveryModel.DeviceDiscovery
         onDiscoveryModeChanged: console.log("Discovery mode: " + discoveryMode)
-        onNewServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
+        onServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
+        onDeviceDiscovered: console.log("New device: " + device)
    }
 
     Rectangle {
@@ -86,6 +87,9 @@ Item {
         width: top.width
         anchors.top: busy.bottom
         anchors.bottom: buttonGroup.top
+        anchors.bottomMargin: 10
+        anchors.topMargin: 10
+        clip: true
 
         model: btModel
         delegate: Rectangle {
@@ -128,7 +132,6 @@ Item {
                             if (s.serviceName) { str += "<br>Service: " + s.serviceName; }
                             if (s.serviceDescription) { str += "<br>Description: " + s.serviceDescription; }
                             if (s.serviceProtocol) { str += "<br>Protocol: " + s.serviceProtocol; }
-                            if (s.servicePort) { str += "<br>Port: " + s.servicePort; }
                             return str;
                         }
                     }

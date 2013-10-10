@@ -239,9 +239,12 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
 }
 
 /*!
-  \qmlsignal BluetoothDiscoveryModel::newServiceDiscovered()
+  \qmlsignal BluetoothDiscoveryModel::serviceDiscovered(BluetoothService service)
 
-  This handler is called when a new service is discovered.
+  This handler is called when a new service is discovered. The \a service
+  parameter contains the service details.
+
+  \sa BluetoothService
   */
 
 void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServiceInfo &service)
@@ -262,13 +265,14 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
     beginInsertRows(QModelIndex(),d->m_services.count(), d->m_services.count());
     d->m_services.append(bs);
     endInsertRows();
-    emit newServiceDiscovered(bs);
+    emit serviceDiscovered(bs);
 }
 
 /*!
-  \qmlsignal BluetoothDiscoveryModel::newDeviceDiscovered()
+  \qmlsignal BluetoothDiscoveryModel::deviceDiscovered(string device)
 
-  This handler is called when a new device is discovered.
+  This handler is called when a new device is discovered. \a device contains
+  the Bluetooth address of the discovred device.
   */
 
 void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDeviceInfo &device)
@@ -278,15 +282,8 @@ void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDevic
     beginInsertRows(QModelIndex(),d->m_devices.count(), d->m_devices.count());
     d->m_devices.append(device);
     endInsertRows();
-    emit newDeviceDiscovered();
+    emit deviceDiscovered(device.address().toString());
 }
-
-/*!
-    \qmlsignal BluetoothDiscoveryModel::discoveryChanged()
-
-    This handler is called when discovery has completed and no
-    further results will be generated.
-*/
 
 void QDeclarativeBluetoothDiscoveryModel::finishedDiscovery()
 {
