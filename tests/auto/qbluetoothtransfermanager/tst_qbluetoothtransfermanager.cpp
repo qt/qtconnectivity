@@ -276,7 +276,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
     QBluetoothLocalDevice dev;
     if (expectSuccess) {
         dev.requestPairing(deviceAddress, QBluetoothLocalDevice::Paired);
-        QTest::qWait(2000);
+        QTest::qWait(5000);
         QCOMPARE(dev.pairingStatus(deviceAddress), QBluetoothLocalDevice::Paired);
     }
 
@@ -289,8 +289,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
         fileHandle = QFINDTESTDATA("testfile.txt");
         QVERIFY(!fileHandle.isEmpty());
     } else {
-        fileHandle = QFINDTESTDATA("arbitraryFileName.txt"); //file doesn't exist
-        QVERIFY(fileHandle.isEmpty());
+        fileHandle = ("arbitraryFileName.txt"); //file doesn't exist
     }
     QFile f(fileHandle);
     QCOMPARE(f.exists(), !isInvalidFile);
@@ -311,8 +310,8 @@ void tst_QBluetoothTransferManager::tst_sendFile()
     const int maxWaitTime = 20 * 1000; //20s
     for (int time = 0;
                 time<maxWaitTime && (finishedSpy.count()==0);
-             time+=10000) {
-        QTest::qWait(10000); //if interval
+             time+=1000) {
+        QTest::qWait(1000); //if interval
     }
 
     QVERIFY(finishedSpy.count()>0);
