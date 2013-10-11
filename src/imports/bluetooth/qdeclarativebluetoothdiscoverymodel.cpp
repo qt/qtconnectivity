@@ -54,7 +54,7 @@
     \instantiates QDeclarativeBluetoothDiscoveryModel
     \inqmlmodule QtBluetooth
     \since 5.2
-    \brief Enables you to search for the Bluetooth devices and services in
+    \brief Enables searching for the Bluetooth devices and services in
     range.
 
     BluetoothDiscoveryModel provides a model of connectable services. The

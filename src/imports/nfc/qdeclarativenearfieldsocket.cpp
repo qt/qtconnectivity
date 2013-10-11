@@ -47,7 +47,7 @@
     \qmltype NearFieldSocket
     \instantiates QDeclarativeNearFieldSocket
     \since 5.2
-    \brief The NearFieldSocket type represents an LLCP socket.
+    \brief Represents an LLCP socket.
 
     \ingroup nfc-qml
     \inqmlmodule QtNfc

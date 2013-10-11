@@ -45,7 +45,7 @@
     \qmltype NdefFilter
     \instantiates QDeclarativeNdefFilter
     \since 5.2
-    \brief The NdefFilter type represents a filtering constraint for NDEF message records.
+    \brief Represents a filtering constraint for NDEF message records.
 
     \ingroup nfc-qml
     \inqmlmodule QtNfc

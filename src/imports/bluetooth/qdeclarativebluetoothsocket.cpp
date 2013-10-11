@@ -56,7 +56,7 @@
     \instantiates QDeclarativeBluetoothSocket
     \inqmlmodule QtBluetooth
     \since 5.2
-    \brief Enables you to connect and communicate with a Bluetooth service or
+    \brief Enables connecting and communicating with a Bluetooth service or
     device.
 
    \sa QBluetoothSocket

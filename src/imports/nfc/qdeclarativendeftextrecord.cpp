@@ -46,7 +46,7 @@
 /*!
     \qmltype NdefTextRecord
     \since 5.2
-    \brief The NdefTextRecord type represents an NFC RTD-Text NDEF record.
+    \brief Represents an NFC RTD-Text NDEF record.
 
     \ingroup nfc-qml
     \inqmlmodule QtNfc

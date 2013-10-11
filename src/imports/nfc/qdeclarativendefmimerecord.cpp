@@ -44,7 +44,7 @@
 /*!
     \qmltype NdefMimeRecord
     \since 5.2
-    \brief The NdefMimeRecord type represents an NFC MIME record.
+    \brief Represents an NFC MIME record.
 
     \ingroup connectivity-nfc
     \inqmlmodule QtNfc

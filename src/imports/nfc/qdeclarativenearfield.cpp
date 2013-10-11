@@ -53,7 +53,7 @@
     \qmltype NearField
     \instantiates QDeclarativeNearField
     \since 5.2
-    \brief The NearField type provides access to NDEF messages stored on NFC Forum tags.
+    \brief Provides access to NDEF messages stored on NFC Forum tags.
 
     \ingroup nfc-qml
     \inqmlmodule QtNfc
