@@ -45,6 +45,7 @@
 
 /*!
     \qmltype NdefTextRecord
+    \since 5.2
     \brief The NdefTextRecord type represents an NFC RTD-Text NDEF record.
 
     \ingroup nfc-qml
@@ -53,8 +54,6 @@
     \inherits NdefRecord
 
     \sa QNdefNfcTextRecord
-
-    The NdefTextRecord type was introduced in \b {QtNfc 5.0}.
 
     The NdefTextRecord type contains a localized piece of text that can be display to the user.
     An NDEF message may contain many text records for different locales, it is up to the

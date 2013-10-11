@@ -43,14 +43,13 @@
 
 /*!
     \qmltype NdefMimeRecord
+    \since 5.2
     \brief The NdefMimeRecord type represents an NFC MIME record.
 
     \ingroup connectivity-nfc
     \inqmlmodule QtNfc
 
     \inherits NdefRecord
-
-    The NdefMimeRecord type was introduced in \b {QtNfc 5.0}.
 
     The NdefMimeRecord type can contain data with an associated MIME type.  The data is
     accessible from the uri in the \l {NdefMimeRecord::uri}{uri} property.

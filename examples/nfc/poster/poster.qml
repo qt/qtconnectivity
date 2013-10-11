@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtNfc 5.0
+import QtNfc 5.2
 
 Rectangle {
     id: root

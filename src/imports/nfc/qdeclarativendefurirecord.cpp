@@ -45,6 +45,7 @@
 
 /*!
     \qmltype NdefUriRecord
+    \since 5.2
     \brief The NdefUriRecord type represents an NFC RTD-URI NDEF record.
 
     \ingroup nfc-qml
@@ -54,7 +55,7 @@
 
     \sa QNdefNfcUriRecord
 
-    The NdefUriRecord type was introduced in \b {QtNfc 5.0}.
+    The NdefUriRecord type can contain a uniform resource identifier.
 */
 
 /*!

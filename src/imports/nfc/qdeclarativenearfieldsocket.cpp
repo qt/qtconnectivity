@@ -46,12 +46,11 @@
 /*!
     \qmltype NearFieldSocket
     \instantiates QDeclarativeNearFieldSocket
+    \since 5.2
     \brief The NearFieldSocket type represents an LLCP socket.
 
     \ingroup nfc-qml
     \inqmlmodule QtNfc
-
-    The NearFieldSocket type was introduced in \b {QtNfc 5.0}.
 
     The NearFieldSocket type can be used to create a peer-to-peer connection over NFC LLCP
     sockets.  NearfieldSocket can be used for both client and server side sockets.

@@ -44,6 +44,7 @@
 /*!
     \qmltype NdefFilter
     \instantiates QDeclarativeNdefFilter
+    \since 5.2
     \brief The NdefFilter type represents a filtering constraint for NDEF message records.
 
     \ingroup nfc-qml
@@ -51,8 +52,6 @@
 
     \sa NearField
     \sa QNdefFilter
-
-    The NdefFilter type was introduced in \b {QtNfc 5.0}.
 
     The NdefFilter type is used with the NearField type to read NDEF messages from NFC Forum
     tags that match a given structure.
