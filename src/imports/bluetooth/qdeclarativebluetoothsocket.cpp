@@ -55,13 +55,12 @@
     \qmltype BluetoothSocket
     \instantiates QDeclarativeBluetoothSocket
     \inqmlmodule QtBluetooth
+    \since 5.2
     \brief Enables you to connect and communicate with a Bluetooth service or
     device.
 
    \sa QBluetoothSocket
    \sa QDataStream
-
-    The BluetoothSocket type was introduced in \b{QtBluetooth 5.0}.
 
     It allows a QML class connect to another Bluetooth device and exchange strings
     with it. Data is sent and received using a QDataStream object allowing type

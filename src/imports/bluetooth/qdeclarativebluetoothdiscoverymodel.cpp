@@ -53,10 +53,9 @@
     \qmltype BluetoothDiscoveryModel
     \instantiates QDeclarativeBluetoothDiscoveryModel
     \inqmlmodule QtBluetooth
+    \since 5.2
     \brief Enables you to search for the Bluetooth devices and services in
     range.
-
-    The BluetoothDiscoveryModel type was introduced in \b{QtBluetooth 5.0}.
 
     BluetoothDiscoveryModel provides a model of connectable services. The
     contents of the model can be filtered by UUID allowing discovery to be
