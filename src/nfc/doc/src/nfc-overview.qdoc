@@ -41,7 +41,7 @@ With the Qt NFC API typical use cases are:
     \li Register an NDEF message handler for a particular content type.
 \endlist
 
-The following sections describe how to use QtNfc C++ classes for the above use cases.
+The following sections describe how to use Qt NFC C++ classes for the above use cases.
 
 \section1 Detect NFC tags entering and leaving communication range.
 \section1 Read and write an NDEF message on NFC Forum Tags.
