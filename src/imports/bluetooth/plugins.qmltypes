@@ -93,8 +93,7 @@ Module {
                 "HostNotFoundError": 2,
                 "ServiceNotFoundError": 9,
                 "NetworkError": 7,
-                "UnsupportedProtocolError": 8,
-                "NoSocketerror": 9
+                "UnsupportedProtocolError": 8
             }
         }
         Enum {
@@ -107,7 +106,7 @@ Module {
                 "Bound": 4,
                 "Closing": 6,
                 "Listening": 5,
-                "NoServiceSet": 6
+                "NoServiceSet": 100
             }
         }
         Property { name: "service"; type: "QDeclarativeBluetoothService"; isPointer: true }

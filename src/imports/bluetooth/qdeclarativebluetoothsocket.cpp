@@ -359,7 +359,7 @@ void QDeclarativeBluetoothSocket::newSocket(QBluetoothSocket *socket, QDeclarati
     d->m_socket = socket;
     d->m_connected = true;
     d->m_componentCompleted = true;
-    d->m_error = NoSocketerror;
+    d->m_error = NoError;
 
     QObject::connect(socket, SIGNAL(connected()), this, SLOT(socket_connected()));
     QObject::connect(socket, SIGNAL(disconnected()), this, SLOT(socket_disconnected()));
