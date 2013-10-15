@@ -77,6 +77,10 @@ config_bluez:qtHaveModule(dbus) {
 
     include(qnx/qnx.pri)
 
+    config_btapi10_2_1 {
+         DEFINES += QT_QNX_BT_BLUETOOTH
+    }
+
     PRIVATE_HEADERS += \
         qbluetoothtransferreply_qnx_p.h
 
