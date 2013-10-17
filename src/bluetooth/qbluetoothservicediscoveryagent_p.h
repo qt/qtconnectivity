@@ -64,6 +64,7 @@ QT_END_NAMESPACE
 #include <fcntl.h>
 #include <unistd.h>
 #include <QTimer>
+#include <btapi/btdevice.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -124,11 +125,15 @@ private Q_SLOTS:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
     void queryTimeout();
+#ifdef QT_QNX_BT_BLUETOOTH
+    static void deviceServicesDiscoveryCallback(bt_sdp_list_t *, void *, uint8_t);
+#endif
 
 private:
     int m_rdfd;
     QSocketNotifier *rdNotifier;
     QTimer m_queryTimer;
+    bool m_btInitialized;
 #endif
 
 public:

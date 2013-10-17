@@ -49,18 +49,94 @@
 #include "qbluetoothuuid.h"
 
 #include <sys/pps.h>
+#ifdef QT_QNX_BT_BLUETOOTH
+#include <errno.h>
+#include <QPointer>
+#endif
 
 #include <QtCore/private/qcore_unix_p.h>
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_QNX_BT_BLUETOOTH
+void QBluetoothServiceDiscoveryAgentPrivate::deviceServicesDiscoveryCallback(bt_sdp_list_t *result, void *user_data, uint8_t error)
+{
+    if (error != 0)
+        qWarning() << "Error received in callback: " << errno << strerror(errno);
+    QPointer<QBluetoothServiceDiscoveryAgentPrivate> *classPointer = static_cast<QPointer<QBluetoothServiceDiscoveryAgentPrivate> *>(user_data);
+    if (classPointer->isNull()) {
+        qBBBluetoothDebug() << "Pointer received in callback is null";
+        return;
+    }
+    QBluetoothServiceDiscoveryAgentPrivate *p = classPointer->data();
+    if ( result == 0) {
+        qBBBluetoothDebug() << "Result received in callback is null.";
+        p->errorString = QBluetoothServiceDiscoveryAgent::tr("Result received in callback is null.");
+        p->error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+        p->q_ptr->error(p->error);
+        p->_q_serviceDiscoveryFinished();
+        return;
+    }
+
+    for (int i = 0; i < result->num_records; i++) {
+        bt_sdp_record_t rec = result->record[i];
+        QBluetoothServiceInfo serviceInfo;
+        serviceInfo.setDevice(p->discoveredDevices.at(0));
+        serviceInfo.setServiceName(rec.name);
+        serviceInfo.setServiceDescription(rec.description);
+        //serviceInfo.setServiceAvailability(rec.availability);
+        serviceInfo.setServiceProvider(QString(rec.provider));
+        QBluetoothServiceInfo::Sequence  protocolDescriptorList;
+        for ( int j = 0; j < rec.num_protocol; j++) {
+            bt_sdp_prot_t protoc = rec.protocol[j];
+            QString protocolUuid(protoc.uuid);
+            protocolUuid = QStringLiteral("0x") + protocolUuid;
+            QBluetoothUuid pUuid(protocolUuid.toUShort(0,0));
+            protocolDescriptorList << QVariant::fromValue(pUuid);
+            for ( int k = 0; k < 2; k++)
+                protocolDescriptorList << QVariant::fromValue(QString::fromLatin1(protoc.parm[k]));
+        }
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+        qBBBluetoothDebug() << "Service name " << rec.name << " Description: " << rec.description << "uuid " << rec.serviceId << "provider: " << rec.provider;
+        qBBBluetoothDebug() << "num protocol " << rec.num_protocol << "record handle " << rec.record_handle << "class id" << rec.num_classId << "availability " << rec.availability << rec.num_language;
+
+        QList<QBluetoothUuid> serviceClassId;
+
+        for (int j = 0; j < rec.num_classId; j++) {
+            bt_sdp_class_t uuid = rec.classId[j];
+            qBBBluetoothDebug() << "uuid: " << uuid.uuid;
+            QString protocolUuid(uuid.uuid);
+            protocolUuid = QStringLiteral("0x") + protocolUuid;
+            QBluetoothUuid Uuid(protocolUuid.toUShort(0,0));
+            if (j == 0) {
+                serviceInfo.setServiceUuid(Uuid);
+                //Check if the UUID is in the uuidFilter
+                if (!p->uuidFilter.isEmpty() && !p->uuidFilter.contains(Uuid))
+                    continue;
+            }
+            serviceClassId << Uuid;
+        }
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, QVariant::fromValue(serviceClassId));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
+                                     QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        p->q_ptr->serviceDiscovered(serviceInfo);
+    }
+    p->_q_serviceDiscoveryFinished();
+    //delete p;
+    //delete classPointer;
+}
+#endif
+
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
-    : m_rdfd(-1), rdNotifier(0), error(QBluetoothServiceDiscoveryAgent::NoError), deviceAddress(deviceAdapter), state(Inactive),
+    : m_rdfd(-1), rdNotifier(0), m_btInitialized(false), error(QBluetoothServiceDiscoveryAgent::NoError), deviceAddress(deviceAdapter), state(Inactive),
       deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery)
 {
     ppsRegisterControl();
     connect(&m_queryTimer, SIGNAL(timeout()), this, SLOT(queryTimeout()));
     ppsRegisterForEvent(QStringLiteral("service_updated"), this);
+    //Needed for connecting signals and slots from static function
+    qRegisterMetaType<QBluetoothServiceInfo>("QBluetoothServiceInfo");
+    qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>("QBluetoothServiceDiscoveryAgent::Error");
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
@@ -72,6 +148,50 @@ QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate(
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
+#ifdef QT_QNX_BT_BLUETOOTH
+    errno = 0;
+    if (!m_btInitialized) {
+        if (bt_device_init( 0 ) < 0) {
+            qWarning() << "Failed to initialize bluetooth stack.";
+            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+            errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to open to initialize bluetooth stack");
+            q->error(error);
+            _q_serviceDiscoveryFinished();
+            return;
+        }
+    }
+    m_btInitialized = true;
+    errno = 0;
+    bt_remote_device_t *remoteDevice = bt_rdev_get_device(address.toString().toLocal8Bit().constData());
+    int deviceType = bt_rdev_get_type(remoteDevice);
+    if (deviceType == -1) {
+        qWarning() << "Could not retrieve remote device (address is 00:00:00:00:00:00).";
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Could not retrieve remote device (address is 00:00:00:00:00:00).");
+        q->error(error);
+        _q_serviceDiscoveryFinished();
+        return;
+    }
+    /*
+         * In case remote device is LE device, calling bt_rdev_sdp_search_async will cause memory fault.
+         */
+
+    if ( deviceType >1) {
+        errno = 0;
+        QPointer<QBluetoothServiceDiscoveryAgentPrivate> *classPointer = new QPointer<QBluetoothServiceDiscoveryAgentPrivate>(this);
+        int b = bt_rdev_sdp_search_async(remoteDevice, 0, &(this->deviceServicesDiscoveryCallback), classPointer);
+        if ( b != 0 ) {
+            qWarning() << "Failed to run search on device: " << address.toString();
+            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+            errorString = QBluetoothServiceDiscoveryAgent::tr(strerror(errno));
+            q->error(error);
+            _q_serviceDiscoveryFinished();
+            return;
+        }
+    }
+    else
+        _q_serviceDiscoveryFinished();
+#else
     qBBBluetoothDebug() << "Starting Service discovery for" << address.toString();
     const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(address.toString().toUtf8().constData()).constData();
     if ((m_rdfd = qt_safe_open(filePath, O_RDONLY)) == -1) {
@@ -98,6 +218,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     }
     m_queryTimer.start(10000);
     ppsSendControlMessage("service_query", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), this);
+#endif
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::stop()
