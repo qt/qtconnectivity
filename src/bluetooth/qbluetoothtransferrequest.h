@@ -64,7 +64,7 @@ public:
         NameAttribute
     };
 
-    QBluetoothTransferRequest(const QBluetoothAddress &address = QBluetoothAddress());
+    explicit QBluetoothTransferRequest(const QBluetoothAddress &address = QBluetoothAddress());
     QBluetoothTransferRequest(const QBluetoothTransferRequest &other);
     ~QBluetoothTransferRequest();
 

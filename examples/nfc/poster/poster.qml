@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtNfc 5.0
+import QtNfc 5.2
 
 Rectangle {
     id: root
@@ -50,8 +50,8 @@ Rectangle {
         id: nearfield
 
         filter: [
-            NdefFilter { type: "urn:nfc:wkt:U"; minimum: 1; maximum: 1 },
-            NdefFilter { type: "urn:nfc:wkt:T"; minimum: 1 }
+            NdefFilter { type: "U"; typeNameFormat: NearFiledRecord.NfcRtd; minimum: 1; maximum: 1 },
+            NdefFilter { type: "T"; typeNameFormat: NearFiledRecord.NfcRtd; minimum: 1 }
         ]
 
         onMessageRecordsChanged: {

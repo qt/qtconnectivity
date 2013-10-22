@@ -43,6 +43,7 @@
 #define QBLUETOOTHSERVICEINFO_P_H
 
 #include "qbluetoothuuid.h"
+#include "qbluetoothaddress.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserviceinfo.h"
 
@@ -63,14 +64,12 @@ public:
     QBluetoothServiceInfoPrivate();
     ~QBluetoothServiceInfoPrivate();
 
-    bool registerService() const;
+    bool registerService(const QBluetoothAddress &localAdapter = QBluetoothAddress());
 
     bool isRegistered() const;
 
-    bool unregisterService() const;
+    bool unregisterService();
 
-    void setRegisteredAttribute(quint16 attributeId, const QVariant &value) const;
-    void removeRegisteredAttribute(quint16 attributeId) const;
     QBluetoothDeviceInfo deviceInfo;
     QMap<quint16, QVariant> attributes;
 
@@ -78,10 +77,11 @@ public:
     int serverChannel() const;
 private:
 #ifdef QT_BLUEZ_BLUETOOTH
-    bool ensureSdpConnection() const;
+    bool ensureSdpConnection(const QBluetoothAddress &localAdapter = QBluetoothAddress());
 
-    mutable OrgBluezServiceInterface *service;
-    mutable quint32 serviceRecord;
+    OrgBluezServiceInterface *service;
+    quint32 serviceRecord;
+    QBluetoothAddress currentLocalAdapter;
 #endif
 
     mutable bool registered;

@@ -52,22 +52,43 @@
 /*!
     \qmltype BluetoothDiscoveryModel
     \instantiates QDeclarativeBluetoothDiscoveryModel
-    \inqmlmodule QtBluetooth 5.0
-    \brief Enables you to search for the Bluetooth devices and services in
+    \inqmlmodule QtBluetooth
+    \since 5.2
+    \brief Enables searching for the Bluetooth devices and services in
     range.
-
-    The BluetoothDiscoveryModel type was introduced in \b{QtBluetooth 5.0}.
 
     BluetoothDiscoveryModel provides a model of connectable services. The
     contents of the model can be filtered by UUID allowing discovery to be
     limited to a single service such as a game.
 
     The model roles provided by BluetoothDiscoveryModel are
-    \c service, \c name, \c remoteAddress and \c deviceName.
-    Through the \c service role the BluetoothService can be accessed for more details.
+    \c service, \c name, \c remoteAddress and \c deviceName. The meaning of the roles
+    changes based on the current \l discoveryMode.
+
+    \table
+        \header
+            \li Model role
+            \li Device Discovery
+            \li Service Discovery
+         \row
+            \li \c name
+            \li The device's name and address.
+            \li The service name and the name of the device offering the service. If the device name is empty the devices address will be used.
+         \row
+            \li \c deviceName
+            \li The name of the device.
+            \li The name of the device offering the service.
+         \row
+            \li \c service
+            \li The role is undefined in this mode.
+            \li The \l BluetoothService object describing the discovered service.
+         \row
+            \li \c remoteAddress
+            \li The address of the found device.
+            \li The address of the device offering the service.
+    \endtable
 
     \sa QBluetoothServiceDiscoveryAgent
-
 */
 
 class QDeclarativeBluetoothDiscoveryModelPrivate
@@ -239,9 +260,12 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
 }
 
 /*!
-  \qmlsignal BluetoothDiscoveryModel::newServiceDiscovered()
+  \qmlsignal BluetoothDiscoveryModel::serviceDiscovered(BluetoothService service)
 
-  This handler is called when a new service is discovered.
+  This handler is called when a new service is discovered. The \a service
+  parameter contains the service details.
+
+  \sa BluetoothService
   */
 
 void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServiceInfo &service)
@@ -262,13 +286,14 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
     beginInsertRows(QModelIndex(),d->m_services.count(), d->m_services.count());
     d->m_services.append(bs);
     endInsertRows();
-    emit newServiceDiscovered(bs);
+    emit serviceDiscovered(bs);
 }
 
 /*!
-  \qmlsignal BluetoothDiscoveryModel::newDeviceDiscovered()
+  \qmlsignal BluetoothDiscoveryModel::deviceDiscovered(string device)
 
-  This handler is called when a new device is discovered.
+  This handler is called when a new device is discovered. \a device contains
+  the Bluetooth address of the discovred device.
   */
 
 void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDeviceInfo &device)
@@ -278,15 +303,8 @@ void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDevic
     beginInsertRows(QModelIndex(),d->m_devices.count(), d->m_devices.count());
     d->m_devices.append(device);
     endInsertRows();
-    emit newDeviceDiscovered();
+    emit deviceDiscovered(device.address().toString());
 }
-
-/*!
-    \qmlsignal BluetoothDiscoveryModel::discoveryChanged()
-
-    This handler is called when discovery has completed and no
-    further results will be generated.
-*/
 
 void QDeclarativeBluetoothDiscoveryModel::finishedDiscovery()
 {

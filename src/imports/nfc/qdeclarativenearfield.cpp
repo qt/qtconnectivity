@@ -52,10 +52,11 @@
 /*!
     \qmltype NearField
     \instantiates QDeclarativeNearField
-    \brief The NearField type provides access to NDEF messages stored on NFC Forum tags.
+    \since 5.2
+    \brief Provides access to NDEF messages stored on NFC Forum tags.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \sa NdefFilter
     \sa NdefRecord
@@ -64,15 +65,13 @@
     \sa QNdefMessage
     \sa QNdefRecord
 
-    The NearField type was introduced in \b {QtNfc 5.0}.
-
     The NearField type can be used to read NDEF messages from NFC Forum tags.  Set the \l filter
     and \l orderMatch properties to match the required NDEF messages.  Once an NDEF message is
     successfully read from a tag the \l messageRecords property is updated.
 
     \code
         NearField {
-            filter: [ NdefFilter { type: "urn:nfc:wkt:U"; minimum: 1; maximum: 1 } ]
+            filter: [ NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 } ]
             orderMatch: false
 
             onMessageRecordsChanged: displayMessage()
@@ -90,7 +89,10 @@
     \qmlproperty list<NdefFilter> NearField::filter
 
     This property holds the NDEF filter constraints.  The \l messageRecords property will only be
-    set to NDEF messages which match the filter.
+    set to NDEF messages which match the filter. If no filter is set, a message handler for
+    all NDEF messages will be registered.
+
+    \l QNearFieldManager::registerNdefMessageHandler()
 */
 
 /*!
@@ -106,9 +108,9 @@ QDeclarativeNearField::QDeclarativeNearField(QObject *parent)
 {
 }
 
-QQmlListProperty<QDeclarativeNdefRecord> QDeclarativeNearField::messageRecords()
+QQmlListProperty<QQmlNdefRecord> QDeclarativeNearField::messageRecords()
 {
-    return QQmlListProperty<QDeclarativeNdefRecord>(this, 0,
+    return QQmlListProperty<QQmlNdefRecord>(this, 0,
                                                     &QDeclarativeNearField::append_messageRecord,
                                                     &QDeclarativeNearField::count_messageRecords,
                                                     &QDeclarativeNearField::at_messageRecord,
@@ -143,8 +145,7 @@ void QDeclarativeNearField::componentComplete()
 {
     m_componentCompleted = true;
 
-    if (!m_filter.isEmpty())
-        registerMessageHandler();
+    registerMessageHandler();
 }
 
 void QDeclarativeNearField::registerMessageHandler()
@@ -155,28 +156,17 @@ void QDeclarativeNearField::registerMessageHandler()
     if (m_messageHandlerId != -1)
         m_manager->unregisterNdefMessageHandler(m_messageHandlerId);
 
-    // no filter abort
-    if (m_filter.isEmpty())
-        return;
+    QNdefFilter ndefFilter;
+    ndefFilter.setOrderMatch(m_orderMatch);
+    foreach (const QDeclarativeNdefFilter *filter, m_filterList) {
+        const QString type = filter->type();
+        uint min = filter->minimum() < 0 ? UINT_MAX : filter->minimum();
+        uint max = filter->maximum() < 0 ? UINT_MAX : filter->maximum();
 
-    QNdefFilter filter;
-    filter.setOrderMatch(m_orderMatch);
-    foreach (QDeclarativeNdefFilter *f, m_filter) {
-        const QString type = f->type();
-        uint min = f->minimum() < 0 ? UINT_MAX : f->minimum();
-        uint max = f->maximum() < 0 ? UINT_MAX : f->maximum();
-
-        if (type.startsWith(QLatin1String("urn:nfc:wkt:")))
-            filter.appendRecord(QNdefRecord::NfcRtd, type.mid(12).toUtf8(), min, max);
-        else if (type.startsWith(QLatin1String("urn:nfc:ext:")))
-            filter.appendRecord(QNdefRecord::ExternalRtd, type.mid(12).toUtf8(), min, max);
-        else if (type.startsWith(QLatin1String("urn:nfc:mime")))
-            filter.appendRecord(QNdefRecord::Mime, type.mid(13).toUtf8(), min, max);
-        else
-            qWarning("Unknown NDEF record type %s", qPrintable(type));
+        ndefFilter.appendRecord(static_cast<QNdefRecord::TypeNameFormat>(filter->typeNameFormat()), type.toUtf8(), min, max);
     }
 
-    m_messageHandlerId = m_manager->registerNdefMessageHandler(filter, this, SLOT(_q_handleNdefMessage(QNdefMessage)));
+    m_messageHandlerId = m_manager->registerNdefMessageHandler(ndefFilter, this, SLOT(_q_handleNdefMessage(QNdefMessage)));
 }
 
 void QDeclarativeNearField::_q_handleNdefMessage(const QNdefMessage &message)
@@ -195,8 +185,8 @@ void QDeclarativeNearField::_q_handleNdefMessage(const QNdefMessage &message)
     emit messageRecordsChanged();
 }
 
-void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
-                                                 QDeclarativeNdefRecord *record)
+void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
+                                                 QQmlNdefRecord *record)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
     if (!nearField)
@@ -208,7 +198,7 @@ void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QDeclarativeNd
         emit nearField->messageRecordsChanged();
 }
 
-int QDeclarativeNearField::count_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list)
+int QDeclarativeNearField::count_messageRecords(QQmlListProperty<QQmlNdefRecord> *list)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
     if (!nearField)
@@ -217,7 +207,7 @@ int QDeclarativeNearField::count_messageRecords(QQmlListProperty<QDeclarativeNde
     return nearField->m_message.count();
 }
 
-QDeclarativeNdefRecord *QDeclarativeNearField::at_messageRecord(QQmlListProperty<QDeclarativeNdefRecord> *list,
+QQmlNdefRecord *QDeclarativeNearField::at_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
                                                                 int index)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
@@ -227,7 +217,7 @@ QDeclarativeNdefRecord *QDeclarativeNearField::at_messageRecord(QQmlListProperty
     return nearField->m_message.at(index);
 }
 
-void QDeclarativeNearField::clear_messageRecords(QQmlListProperty<QDeclarativeNdefRecord> *list)
+void QDeclarativeNearField::clear_messageRecords(QQmlListProperty<QQmlNdefRecord> *list)
 {
     QDeclarativeNearField *nearField = qobject_cast<QDeclarativeNearField *>(list->object);
     if (nearField) {
@@ -246,7 +236,7 @@ void QDeclarativeNearField::append_filter(QQmlListProperty<QDeclarativeNdefFilte
         return;
 
     filter->setParent(nearField);
-    nearField->m_filter.append(filter);
+    nearField->m_filterList.append(filter);
     emit nearField->filterChanged();
 
     if (nearField->m_componentCompleted)
@@ -259,7 +249,7 @@ int QDeclarativeNearField::count_filters(QQmlListProperty<QDeclarativeNdefFilter
     if (!nearField)
         return 0;
 
-    return nearField->m_filter.count();
+    return nearField->m_filterList.count();
 }
 
 QDeclarativeNdefFilter *QDeclarativeNearField::at_filter(QQmlListProperty<QDeclarativeNdefFilter> *list,
@@ -269,7 +259,7 @@ QDeclarativeNdefFilter *QDeclarativeNearField::at_filter(QQmlListProperty<QDecla
     if (!nearField)
         return 0;
 
-    return nearField->m_filter.at(index);
+    return nearField->m_filterList.at(index);
 }
 
 void QDeclarativeNearField::clear_filter(QQmlListProperty<QDeclarativeNdefFilter> *list)
@@ -278,8 +268,8 @@ void QDeclarativeNearField::clear_filter(QQmlListProperty<QDeclarativeNdefFilter
     if (!nearField)
         return;
 
-    qDeleteAll(nearField->m_filter);
-    nearField->m_filter.clear();
+    qDeleteAll(nearField->m_filterList);
+    nearField->m_filterList.clear();
     emit nearField->filterChanged();
     if (nearField->m_componentCompleted)
         nearField->registerMessageHandler();

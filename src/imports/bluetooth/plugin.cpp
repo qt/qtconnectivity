@@ -56,13 +56,25 @@ class QBluetoothQmlPlugin : public QQmlExtensionPlugin
 public:
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(uri == QLatin1String("QtBluetooth"));
+        // @uri QtBluetooth
+
+        Q_ASSERT(uri == QStringLiteral("QtBluetooth"));
 
         int major = 5;
         int minor = 0;
-        qmlRegisterType<QDeclarativeBluetoothDiscoveryModel>(uri, major, minor, "BluetoothDiscoveryModel");
-        qmlRegisterType<QDeclarativeBluetoothService>(uri, major, minor, "BluetoothService");
-        qmlRegisterType<QDeclarativeBluetoothSocket>(uri, major, minor, "BluetoothSocket");
+
+        // Register the 5.0 types
+        //5.0 is silent and not advertised
+        qmlRegisterType<QDeclarativeBluetoothDiscoveryModel >(uri, major, minor, "BluetoothDiscoveryModel");
+        qmlRegisterType<QDeclarativeBluetoothService        >(uri, major, minor, "BluetoothService");
+        qmlRegisterType<QDeclarativeBluetoothSocket         >(uri, major, minor, "BluetoothSocket");
+
+        // Register the 5.2 types
+        minor = 2;
+        qmlRegisterType<QDeclarativeBluetoothDiscoveryModel >(uri, major, minor, "BluetoothDiscoveryModel");
+        qmlRegisterType<QDeclarativeBluetoothService        >(uri, major, minor, "BluetoothService");
+        qmlRegisterType<QDeclarativeBluetoothSocket         >(uri, major, minor, "BluetoothSocket");
+
     }
 };
 

@@ -29,10 +29,10 @@
 \ingroup all-examples
 \page nfc-examples.html
 \title Qt NFC Examples
-\brief Examples for the QtNfc module
+\brief Examples for the Qt NFC module.
 
-This is a variety of examples that cover the entire range of the the Qt NFC API. You will find them
-in their own documentation but are also accessible from here.
+This is a variety of examples that cover the entire range of the Qt NFC API. You will find them
+in their own documentation, but they are also accessible from here.
 
 \section2 C++ Tutorial
 

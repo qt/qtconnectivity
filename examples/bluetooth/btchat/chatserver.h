@@ -42,6 +42,7 @@
 #define CHATSERVER_H
 
 #include <qbluetoothserviceinfo.h>
+#include <qbluetoothaddress.h>
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
@@ -60,7 +61,7 @@ public:
     explicit ChatServer(QObject *parent = 0);
     ~ChatServer();
 
-    void startServer();
+    void startServer(const QBluetoothAddress &localAdapter = QBluetoothAddress());
     void stopServer();
 
 public slots:

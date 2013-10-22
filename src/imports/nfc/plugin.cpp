@@ -42,7 +42,7 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlExtensionPlugin>
 
-#include "qdeclarativendefrecord.h"
+#include "qqmlndefrecord.h"
 //#include "qdeclarativenearfieldsocket_p.h"
 #include "qdeclarativenearfield_p.h"
 #include "qdeclarativendeffilter_p.h"
@@ -55,23 +55,32 @@ QT_USE_NAMESPACE
 class QNfcQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 
 public:
     void registerTypes(const char *uri)
     {
-        Q_ASSERT(uri == QLatin1String("QtNfc"));
+        Q_ASSERT(uri == QStringLiteral("QtNfc"));
 
         // @uri QtNfc
 
+        // Register the 5.0 types
         int major = 5;
         int minor = 0;
         //qmlRegisterType<QDeclarativeNearFieldSocket>(uri, major, minor, "NearFieldSocket");
 
         qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
         qmlRegisterType<QDeclarativeNdefFilter>(uri, major, minor, "NdefFilter");
-        qmlRegisterType<QDeclarativeNdefRecord>(uri, major, minor, "NdefRecord");
+        qmlRegisterType<QQmlNdefRecord>(uri, major, minor, "NdefRecord");
+        qmlRegisterType<QDeclarativeNdefTextRecord>(uri, major, minor, "NdefTextRecord");
+        qmlRegisterType<QDeclarativeNdefUriRecord>(uri, major, minor, "NdefUriRecord");
+        qmlRegisterType<QDeclarativeNdefMimeRecord>(uri, major, minor, "NdefMimeRecord");
+
+        // Register the 5.2 types
+        minor = 2;
+        qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
+        qmlRegisterType<QDeclarativeNdefFilter>(uri, major, minor, "NdefFilter");
+        qmlRegisterType<QQmlNdefRecord>(uri, major, minor, "NdefRecord");
         qmlRegisterType<QDeclarativeNdefTextRecord>(uri, major, minor, "NdefTextRecord");
         qmlRegisterType<QDeclarativeNdefUriRecord>(uri, major, minor, "NdefUriRecord");
         qmlRegisterType<QDeclarativeNdefMimeRecord>(uri, major, minor, "NdefMimeRecord");

@@ -53,8 +53,11 @@ QT_BEGIN_NAMESPACE
 class QNdefRecordPrivate : public QSharedData
 {
 public:
-    //bool messageBegin : 1;
-    //bool messageEnd : 1;
+    QNdefRecordPrivate() : QSharedData()
+    {
+        typeNameFormat = 0; //TypeNameFormat::Empty
+    }
+
     unsigned int typeNameFormat : 3;
 
     QByteArray type;

@@ -42,13 +42,13 @@
 #ifndef QDECLARATIVENDEFTEXTRECORD_P_H
 #define QDECLARATIVENDEFTEXTRECORD_P_H
 
-#include <qdeclarativendefrecord.h>
+#include <qqmlndefrecord.h>
 
 #include <qndefnfctextrecord.h>
 
 QT_USE_NAMESPACE
 
-class QDeclarativeNdefTextRecord : public QDeclarativeNdefRecord
+class QDeclarativeNdefTextRecord : public QQmlNdefRecord
 {
     Q_OBJECT
 

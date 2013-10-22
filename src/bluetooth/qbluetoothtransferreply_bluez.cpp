@@ -110,8 +110,16 @@ bool QBluetoothTransferReplyBluez::start()
     }
     else {
         if (!file->exists()) {
-            m_errorStr = tr("File does not exist");
+            m_errorStr = QBluetoothTransferReply::tr("File does not exist");
             m_error = QBluetoothTransferReply::FileNotFoundError;
+            m_finished = true;
+            m_running = false;
+            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            return false;
+        }
+        if (request().address().isNull()) {
+            m_errorStr = QBluetoothTransferReply::tr("Invalid target address");
+            m_error = QBluetoothTransferReply::HostNotFoundError;
             m_finished = true;
             m_running = false;
             QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));

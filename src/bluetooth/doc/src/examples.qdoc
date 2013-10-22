@@ -29,12 +29,15 @@
     \ingroup all-examples
     \page bluetooth-examples.html
     \title Qt Bluetooth Examples
-    \brief Examples for the QtBluetooth module
+    \brief Examples for the Qt Bluetooth module.
 
-    This is a variety of examples that cover the entire range of the the Qt Bluetooth API. You will find them in their own documentation but are also accessible from here.
+    This is a variety of examples that cover the entire range of the the Qt
+    Bluetooth API. You will find them in their own documentation but they are also
+    accessible from here.
 
     \section2 C++ Tutorial
-    The \l{btchat}{Bluetooth Chat} example contains a tutorial on how to use the C++ API to create a RFCOMM server and client and exchange data between them.
+    The \l{btchat}{Bluetooth Chat} example contains a tutorial on how to use the
+    C++ API to create a RFCOMM server and client, and exchange data between them.
 
     \section2 C++ Examples
     \table 80%
@@ -60,8 +63,8 @@
             \li Description
         \row
             \li \l{bttennis}{QML Bluetooth Tennis}
-            \li The tennis game using a QML interface to the Bluetooth API. It must connect to an
-            instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
+            \li The tennis game using a QML interface to the Bluetooth API. It
+            must connect to an instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
         \row
             \li \l{btscanner}{QML Bluetooth Scanner}
             \li A QML implementation of the Bluetooth device scanner.

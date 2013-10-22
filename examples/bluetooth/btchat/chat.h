@@ -44,6 +44,7 @@
 
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothsocket.h>
+#include <qbluetoothhostinfo.h>
 
 #include <QDebug>
 
@@ -75,11 +76,16 @@ private slots:
     void clientDisconnected();
     void connected(const QString &name);
 
+    void newAdapterSelected();
+
 private:
+    int adapterFromUserSelection() const;
+    int currentAdapterIndex;
     Ui_Chat *ui;
 
     ChatServer *server;
     QList<ChatClient *> clients;
+    QList<QBluetoothHostInfo> localAdapters;
 
     QString localName;
 };

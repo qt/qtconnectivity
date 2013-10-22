@@ -42,11 +42,11 @@
 #ifndef QDECLARATIVENDEFMIMERECORD_P_H
 #define QDECLARATIVENDEFMIMERECORD_P_H
 
-#include <qdeclarativendefrecord.h>
+#include <qqmlndefrecord.h>
 
 QT_USE_NAMESPACE
 
-class QDeclarativeNdefMimeRecord : public QDeclarativeNdefRecord
+class QDeclarativeNdefMimeRecord : public QQmlNdefRecord
 {
     Q_OBJECT
 

@@ -45,6 +45,7 @@
 #include <QtBluetooth/qbluetoothglobal.h>
 
 #include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QBluetoothAddress>
 
 #include <QtCore/QMetaType>
 #include <QtCore/QList>
@@ -145,8 +146,8 @@ public:
     QBluetoothServiceInfo &operator=(const QBluetoothServiceInfo &other);
 
     bool isRegistered() const;
-    bool registerService() const;
-    bool unregisterService() const;
+    bool registerService(const QBluetoothAddress &localAdapter = QBluetoothAddress());
+    bool unregisterService();
 
 protected:
     friend Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, const QBluetoothServiceInfo &);

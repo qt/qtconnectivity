@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVENDEFRECORD_P_H
-#define QDECLARATIVENDEFRECORD_P_H
+#ifndef QQMLNDEFRECORD_H
+#define QQMLNDEFRECORD_H
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaType>
@@ -48,40 +48,55 @@
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeNdefRecordPrivate;
+class QQmlNdefRecordPrivate;
 
-class Q_NFC_EXPORT QDeclarativeNdefRecord : public QObject
+class Q_NFC_EXPORT QQmlNdefRecord : public QObject
 {
     Q_OBJECT
 
-    Q_DECLARE_PRIVATE(QDeclarativeNdefRecord)
+    Q_DECLARE_PRIVATE(QQmlNdefRecord)
 
-    Q_PROPERTY(QString recordType READ recordType WRITE setRecordType NOTIFY recordTypeChanged)
+    Q_PROPERTY(QString type READ type WRITE setType NOTIFY typeChanged)
+    Q_PROPERTY(TypeNameFormat typeNameFormat READ typeNameFormat WRITE setTypeNameFormat NOTIFY typeNameFormatChanged)
     Q_PROPERTY(QNdefRecord record READ record WRITE setRecord NOTIFY recordChanged)
 
+    Q_ENUMS(TypeNameFormat)
 public:
-    explicit QDeclarativeNdefRecord(QObject *parent = 0);
-    explicit QDeclarativeNdefRecord(const QNdefRecord &record, QObject *parent = 0);
+    enum TypeNameFormat {
+        Empty = QNdefRecord::Empty,
+        NfcRtd = QNdefRecord::NfcRtd,
+        Mime = QNdefRecord::Mime,
+        Uri = QNdefRecord::Uri,
+        ExternalRtd = QNdefRecord::ExternalRtd,
+        Unknown = QNdefRecord::Unknown
+    };
 
-    QString recordType() const;
-    void setRecordType(const QString &t);
+    explicit QQmlNdefRecord(QObject *parent = 0);
+    explicit QQmlNdefRecord(const QNdefRecord &record, QObject *parent = 0);
+
+    QString type() const;
+    void setType(const QString &t);
+
+    void setTypeNameFormat(TypeNameFormat typeNameFormat);
+    TypeNameFormat typeNameFormat() const;
 
     QNdefRecord record() const;
     void setRecord(const QNdefRecord &record);
 
 Q_SIGNALS:
-    void recordTypeChanged();
+    void typeChanged();
+    void typeNameFormatChanged();
     void recordChanged();
 
 private:
-    QDeclarativeNdefRecordPrivate *d_ptr;
+    QQmlNdefRecordPrivate *d_ptr;
 };
 
 void Q_NFC_EXPORT qRegisterNdefRecordTypeHelper(const QMetaObject *metaObject,
                                                          QNdefRecord::TypeNameFormat typeNameFormat,
                                                          const QByteArray &type);
 
-Q_NFC_EXPORT QDeclarativeNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record);
+Q_NFC_EXPORT QQmlNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record);
 
 template<typename T>
 bool qRegisterNdefRecordType(QNdefRecord::TypeNameFormat typeNameFormat, const QByteArray &type)
@@ -95,4 +110,4 @@ static bool _q_##className##_registered = qRegisterNdefRecordType<className>(typ
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVENDEFRECORD_P_H
+#endif // QQMLNDEFRECORD_H

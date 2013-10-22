@@ -63,7 +63,7 @@ class RemoteSelector : public QDialog
     Q_OBJECT
 
 public:
-    explicit RemoteSelector(QWidget *parent = 0);
+    explicit RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *parent = 0);
     ~RemoteSelector();
 
     void startDiscovery(const QBluetoothUuid &uuid);

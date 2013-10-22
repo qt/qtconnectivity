@@ -47,29 +47,17 @@
 
 QT_USE_NAMESPACE
 
-RemoteSelector::RemoteSelector(QWidget *parent)
+RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *parent)
 :   QDialog(parent), ui(new Ui::RemoteSelector)
 {
     ui->setupUi(this);
 
-    //Using default Bluetooth adapter
-    QBluetoothLocalDevice localDevice;
-    QBluetoothAddress adapterAddress = localDevice.address();
-
-    /*
-     * In case of multiple Bluetooth adapters it is possible to
-     * set which adapter will be used by providing MAC Address.
-     * Example code:
-     *
-     * QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
-     * m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
-     */
-
-    m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+    m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(localAdapter);
 
     connect(m_discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
             this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
     connect(m_discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
+    connect(m_discoveryAgent, SIGNAL(canceled()), this, SLOT(discoveryFinished()));
 }
 
 RemoteSelector::~RemoteSelector()
@@ -80,6 +68,7 @@ RemoteSelector::~RemoteSelector()
 
 void RemoteSelector::startDiscovery(const QBluetoothUuid &uuid)
 {
+    ui->status->setText(tr("Scanning..."));
     if (m_discoveryAgent->isActive())
         m_discoveryAgent->stop();
 
@@ -88,7 +77,6 @@ void RemoteSelector::startDiscovery(const QBluetoothUuid &uuid)
     m_discoveryAgent->setUuidFilter(uuid);
     m_discoveryAgent->start();
 
-    ui->status->setText(tr("Scanning..."));
 }
 
 void RemoteSelector::stopDiscovery()

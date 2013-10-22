@@ -28,10 +28,10 @@
 /*!
 \page qtnfc-index.html
 \title Qt NFC
-\brief Qt NFC enables connectivity between NFC enabled devices.
+\brief Enables connectivity between NFC enabled devices.
 
 NFC is an extremely short-range (less than 20 centimeters) wireless technology and has a
-maximum transfer rate of 424 kbit/s.  NFC is ideal for transferring small packets of data when two
+maximum transfer rate of 424 kbit/s. NFC is ideal for transferring small packets of data when two
 devices are touched together.
 
 The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devices, including

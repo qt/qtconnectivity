@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVENDEFURIRECORD_P_H
 #define QDECLARATIVENDEFURIRECORD_P_H
 
-#include <qdeclarativendefrecord.h>
+#include <qqmlndefrecord.h>
 
 #include <qndefnfcurirecord.h>
 
@@ -50,7 +50,7 @@
 
 QT_USE_NAMESPACE
 
-class QDeclarativeNdefUriRecord : public QDeclarativeNdefRecord
+class QDeclarativeNdefUriRecord : public QQmlNdefRecord
 {
     Q_OBJECT
 

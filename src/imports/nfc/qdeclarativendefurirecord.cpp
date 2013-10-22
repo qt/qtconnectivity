@@ -45,16 +45,17 @@
 
 /*!
     \qmltype NdefUriRecord
-    \brief The NdefUriRecord type represents an NFC RTD-URI NDEF record.
+    \since 5.2
+    \brief Represents an NFC RTD-URI NDEF record.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \inherits NdefRecord
 
     \sa QNdefNfcUriRecord
 
-    The NdefUriRecord type was introduced in \b {QtNfc 5.0}.
+    The NdefUriRecord type can contain a uniform resource identifier.
 */
 
 /*!
@@ -66,12 +67,12 @@
 Q_DECLARE_NDEFRECORD(QDeclarativeNdefUriRecord, QNdefRecord::NfcRtd, "U")
 
 QDeclarativeNdefUriRecord::QDeclarativeNdefUriRecord(QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcUriRecord(), parent)
+:   QQmlNdefRecord(QNdefNfcUriRecord(), parent)
 {
 }
 
 QDeclarativeNdefUriRecord::QDeclarativeNdefUriRecord(const QNdefRecord &record, QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcUriRecord(record), parent)
+:   QQmlNdefRecord(QNdefNfcUriRecord(record), parent)
 {
 }
 

@@ -54,6 +54,8 @@
 #include <QPointer>
 #endif
 
+#include <QFile>
+
 #include <QtCore/private/qcore_unix_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -195,10 +197,15 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     qBBBluetoothDebug() << "Starting Service discovery for" << address.toString();
     const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(address.toString().toUtf8().constData()).constData();
     if ((m_rdfd = qt_safe_open(filePath, O_RDONLY)) == -1) {
-        qWarning() << "Failed to open " << filePath;
-        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-        errorString = QStringLiteral("Failed to open remote device file");
-        q->error(error);
+        if (QFile::exists(QLatin1String(filePath) + QLatin1String("-00")) ||
+            QFile::exists(QLatin1String(filePath) + QLatin1String("-01"))) {
+            qBBBluetoothDebug() << "LE device discovered...skipping";
+        } else {
+            qWarning() << "Failed to open " << filePath;
+            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+            errorString = QStringLiteral("Failed to open remote device file");
+            q->error(error);
+        }
         _q_serviceDiscoveryFinished();
         return;
     } else {
@@ -274,8 +281,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
             if (serviceName.size() == 2) {
                 serviceInfo.setServiceUuid(QBluetoothUuid(QLatin1String(serviceName.last())));
                 suuid = QBluetoothUuid((quint16)(serviceName.first().toUInt(&ok,16)));
-                if (suuid == QBluetoothUuid::SerialPort)
-                    protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm));
+                if (suuid == QBluetoothUuid::SerialPort) {
+                    QBluetoothServiceInfo::Sequence protocol;
+                    protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                             << QVariant::fromValue(0);
+                    protocolDescriptorList.append(QVariant::fromValue(protocol));
+                }
             }
         } else {
             //We do not have anything better, so we set the service class UUID as service UUID
@@ -283,7 +294,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         }
 
         //Check if the UUID is in the uuidFilter
-        if (!uuidFilter.isEmpty() && !uuidFilter.contains(suuid))
+        if (!uuidFilter.isEmpty() && !uuidFilter.contains(serviceInfo.serviceUuid()))
             continue;
 
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);

@@ -41,21 +41,21 @@
 #ifndef FOORECORD_H
 #define FOORECORD_H
 
-#include <qdeclarativendefrecord.h>
+#include <qqmlndefrecord.h>
 
 QT_USE_NAMESPACE
 
 //! [Foo declaration]
-class QDeclarativeNdefFooRecord : public QDeclarativeNdefRecord
+class QQmlNdefFooRecord : public QQmlNdefRecord
 {
     Q_OBJECT
 
     Q_PROPERTY(int foo READ foo WRITE setFoo NOTIFY fooChanged)
 
 public:
-    explicit QDeclarativeNdefFooRecord(QObject *parent = 0);
-    Q_INVOKABLE QDeclarativeNdefFooRecord(const QNdefRecord &record, QObject *parent = 0);
-    ~QDeclarativeNdefFooRecord();
+    explicit QQmlNdefFooRecord(QObject *parent = 0);
+    Q_INVOKABLE QQmlNdefFooRecord(const QNdefRecord &record, QObject *parent = 0);
+    ~QQmlNdefFooRecord();
 
     int foo() const;
     void setFoo(int value);

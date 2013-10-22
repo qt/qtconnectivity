@@ -78,8 +78,6 @@ public:
     bool startTargetDetection();
     void stopTargetDetection();
 
-    template<typename T>
-    int registerNdefMessageHandler(QObject *object, const char *method);
     int registerNdefMessageHandler(QObject *object, const char *method);
     int registerNdefMessageHandler(QNdefRecord::TypeNameFormat typeNameFormat,
                                    const QByteArray &type,
@@ -96,15 +94,6 @@ Q_SIGNALS:
 private:
     QNearFieldManagerPrivate *d_ptr;
 };
-
-template<typename T>
-int QNearFieldManager::registerNdefMessageHandler(QObject *object, const char *method)
-{
-    T record;
-
-    return registerNdefMessageHandler(record.userTypeNameFormat(), record.type(),
-                                         object, method);
-}
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldManager::TargetAccessModes)
 

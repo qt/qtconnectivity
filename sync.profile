@@ -14,6 +14,5 @@
 %dependencies = (
     "qtbase" => "",
     "qtdeclarative" => "",
-    "qtsystems" => "",
     "qtxmlpatterns" => "",
 );

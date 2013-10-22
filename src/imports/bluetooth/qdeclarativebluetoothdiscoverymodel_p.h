@@ -119,8 +119,8 @@ public:
 signals:
     void errorChanged();
     void discoveryModeChanged();
-    void newServiceDiscovered(QDeclarativeBluetoothService *service);
-    void newDeviceDiscovered();
+    void serviceDiscovered(QDeclarativeBluetoothService *service);
+    void deviceDiscovered(const QString& device);
     void runningChanged();
     void uuidFilterChanged();
     void remoteAddressChanged();

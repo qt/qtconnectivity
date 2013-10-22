@@ -61,7 +61,7 @@ bool QBluetoothServiceInfoPrivate::isRegistered() const
     return registered;
 }
 
-bool QBluetoothServiceInfoPrivate::unregisterService() const
+bool QBluetoothServiceInfoPrivate::unregisterService()
 {
     if (!registered)
         return false;
@@ -69,25 +69,11 @@ bool QBluetoothServiceInfoPrivate::unregisterService() const
     return false;
 }
 
-
-void QBluetoothServiceInfoPrivate::setRegisteredAttribute(quint16 attributeId, const QVariant &value) const
-{
-    Q_UNUSED(attributeId);
-    Q_UNUSED(value);
-
-    registerService();
-}
-
-void QBluetoothServiceInfoPrivate::removeRegisteredAttribute(quint16 attributeId) const
-{
-    Q_UNUSED(attributeId);
-    registered = false;
-}
-
 extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
-bool QBluetoothServiceInfoPrivate::registerService() const
+bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& localAdapter)
 {
+    Q_UNUSED(localAdapter); //QNX always uses default local adapter
     if (protocolDescriptor(QBluetoothUuid::Rfcomm).isEmpty()) {
         qWarning() << Q_FUNC_INFO << "Only SPP services can be registered on QNX";
         return false;

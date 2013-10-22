@@ -33,7 +33,7 @@
 \title Qt NFC C++ Classes
 \brief An API for accessing NFC Forum Tags.
 
-The \l{Qt NFC} C++ API enables an application to access NFC Forum Tagss.
+The \l{Qt NFC} C++ API enables an application to access NFC Forum Tags.
 
 To use the C++ library in your application, add the following configuration
 option to your \c .pro file:

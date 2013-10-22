@@ -44,15 +44,14 @@
 /*!
     \qmltype NdefFilter
     \instantiates QDeclarativeNdefFilter
-    \brief The NdefFilter type represents a filtering constraint for NDEF message records.
+    \since 5.2
+    \brief Represents a filtering constraint for NDEF message records.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \sa NearField
     \sa QNdefFilter
-
-    The NdefFilter type was introduced in \b {QtNfc 5.0}.
 
     The NdefFilter type is used with the NearField type to read NDEF messages from NFC Forum
     tags that match a given structure.
@@ -117,6 +116,20 @@ void QDeclarativeNdefFilter::setType(const QString &t)
 
     m_type = t;
     emit typeChanged();
+}
+
+QQmlNdefRecord::TypeNameFormat QDeclarativeNdefFilter::typeNameFormat() const
+{
+    return m_typeNameFormat;
+}
+
+void QDeclarativeNdefFilter::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat format)
+{
+    if (m_typeNameFormat == format)
+        return;
+
+    m_typeNameFormat = format;
+    Q_EMIT(typeNameFormatChanged());
 }
 
 int QDeclarativeNdefFilter::minimum() const

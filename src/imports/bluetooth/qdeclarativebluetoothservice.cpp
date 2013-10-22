@@ -53,13 +53,12 @@
 /*!
     \qmltype BluetoothService
     \instantiates QDeclarativeBluetoothService
-    \inqmlmodule QtBluetooth 5.0
+    \inqmlmodule QtBluetooth
+    \since 5.2
     \brief Provides information about a particular Bluetooth service.
 
     \sa QBluetoothAddress
     \sa QBluetoothSocket
-
-    The BluetoothService type was introduced in \b{QtBluetooth 5.0}.
 
     It allows a QML project to get information about a remote service, or describe a service
     for a BluetoothSocket to connect to.
@@ -86,9 +85,8 @@ class QDeclarativeBluetoothServicePrivate
 public:
     QDeclarativeBluetoothServicePrivate()
         : m_componentComplete(false),
-          m_service(0), m_port(0),
-          m_needsRegistration(false),
-          m_listen(0)
+          m_service(0),
+          m_server(0)
     {
 
     }
@@ -102,20 +100,15 @@ public:
 
     bool m_componentComplete;
     QBluetoothServiceInfo *m_service;
-    QString m_protocol;
-    qint32 m_port;
-    QString m_description;
-    QString m_name;
-    QString m_uuid;
-    bool m_needsRegistration;
-    QObject *m_listen;
-
+    QDeclarativeBluetoothService::Protocol m_protocol;
+    QBluetoothServer *m_server;
 };
 
 QDeclarativeBluetoothService::QDeclarativeBluetoothService(QObject *parent) :
     QObject(parent)
 {
     d = new QDeclarativeBluetoothServicePrivate;
+    d->m_service = new QBluetoothServiceInfo();
 }
 
 QDeclarativeBluetoothService::QDeclarativeBluetoothService(const QBluetoothServiceInfo &service, QObject *parent)
@@ -134,7 +127,7 @@ void QDeclarativeBluetoothService::componentComplete()
 {
     d->m_componentComplete = true;
 
-    if (d->m_needsRegistration)
+    if (!d->m_service->isRegistered())
         setRegistered(true);
 }
 
@@ -148,8 +141,6 @@ void QDeclarativeBluetoothService::componentComplete()
 
 QString QDeclarativeBluetoothService::deviceName() const
 {
-    if (!d->m_service)
-        return QString();
 
     return d->m_service->device().name();
 }
@@ -165,19 +156,13 @@ QString QDeclarativeBluetoothService::deviceName() const
 
 QString QDeclarativeBluetoothService::deviceAddress() const
 {
-    if (!d->m_service)
-        return QString();
-
     return d->m_service->device().address().toString();
 }
 
-void QDeclarativeBluetoothService::setDeviceAddress(QString address)
+void QDeclarativeBluetoothService::setDeviceAddress(const QString &newAddress)
 {
-    if (!d->m_service)
-        d->m_service = new QBluetoothServiceInfo();
-
-    QBluetoothAddress a(address);
-    QBluetoothDeviceInfo device(a, QString(), QBluetoothDeviceInfo::ComputerDevice);
+    QBluetoothAddress address(newAddress);
+    QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::ComputerDevice);
     d->m_service->setDevice(device);
 }
 
@@ -190,18 +175,12 @@ void QDeclarativeBluetoothService::setDeviceAddress(QString address)
 
 QString QDeclarativeBluetoothService::serviceName() const
 {
-    if (!d->m_service)
-        return QString();
-
-    if (!d->m_name.isEmpty())
-        return d->m_name;
-
     return d->m_service->serviceName();
 }
 
-void QDeclarativeBluetoothService::setServiceName(QString name)
+void QDeclarativeBluetoothService::setServiceName(const QString &name)
 {
-    d->m_name = name;
+    d->m_service->setServiceName(name);
 }
 
 
@@ -213,51 +192,43 @@ void QDeclarativeBluetoothService::setServiceName(QString name)
   */
 QString QDeclarativeBluetoothService::serviceDescription() const
 {
-    if (!d->m_service)
-        return QString();
-
-    if (!d->m_description.isEmpty())
-        return d->m_name;
-
     return d->m_service->serviceDescription();
 }
 
-void QDeclarativeBluetoothService::setServiceDescription(QString description)
+void QDeclarativeBluetoothService::setServiceDescription(const QString &description)
 {
-    d->m_description = description;
+    d->m_service->setServiceDescription(description);
     emit detailsChanged();
 }
 
 /*!
-    \qmlproperty string BluetoothService::serviceProtocol
+    \qmlproperty enumeration BluetoothService::serviceProtocol
 
-    This property holds the protocol used for the service. Can be the string,
-    "l2cap" or "rfcomm". Changing this property emits the
+    This property holds the protocol used for the service. Changing this property emits the
     detailsChanged signal.
+
+    Possible values for this property are:
+    \table
+    \header \li Property \li Description
+    \row \li \c BluetoothService.RfcommProtocol
+         \li The Rfcomm protocol is used.
+    \row \li \c BluetoothService.L2capProtocol
+         \li The L2cap protocol is used.
+    \row \li \c BluetoothService.UnknownProtocol
+         \li The protocol is unknown.
+    \endtable
+
+    \sa QBluetoothServiceInfo::Protocol
 
   */
 
-QString QDeclarativeBluetoothService::serviceProtocol() const
+QDeclarativeBluetoothService::Protocol QDeclarativeBluetoothService::serviceProtocol() const
 {
-    if (!d->m_protocol.isEmpty())
-        return d->m_protocol;
-
-    if (!d->m_service)
-        return QString();
-
-    if (d->m_service->socketProtocol() == QBluetoothServiceInfo::L2capProtocol)
-        return QLatin1String("l2cap");
-    if (d->m_service->socketProtocol() == QBluetoothServiceInfo::RfcommProtocol)
-        return QLatin1String("rfcomm");
-
-    return QLatin1String("unknown");
+    return d->m_protocol;
 }
 
-void QDeclarativeBluetoothService::setServiceProtocol(QString protocol)
+void QDeclarativeBluetoothService::setServiceProtocol(QDeclarativeBluetoothService::Protocol protocol)
 {
-    if (protocol != "rfcomm" && protocol != "l2cap")
-        qWarning() << "Invalid protocol" << protocol;
-
     d->m_protocol = protocol;
     emit detailsChanged();
 }
@@ -265,67 +236,21 @@ void QDeclarativeBluetoothService::setServiceProtocol(QString protocol)
 /*!
     \qmlproperty string BluetoothService::serviceUuid
 
-    This property holds the UUID of the remote service. Service UUID or port,
-    and the address must be set to connect to a remote service. If UUID and
-    port are set, the port is used. The UUID takes longer to connect as
-    service discovery must be initiated to discover the port value. Changing
+    This property holds the UUID of the remote service. Service UUID,
+    and the address must be set to connect to a remote service. Changing
     this property emits the detailsChanged signal.
 
 */
 
 QString QDeclarativeBluetoothService::serviceUuid() const
 {
-    if (!d->m_uuid.isEmpty())
-        return d->m_uuid;
-
-    if (!d->m_service)
-        return QString();
-
-    return d->m_service->attribute(QBluetoothServiceInfo::ServiceId).toString();
+    return d->m_service->serviceUuid().toString();
 }
 
-void QDeclarativeBluetoothService::setServiceUuid(QString uuid)
+void QDeclarativeBluetoothService::setServiceUuid(const QString &uuid)
 {
-    d->m_uuid = uuid;
-    if (!d->m_service)
-        d->m_service = new QBluetoothServiceInfo();
-    d->m_service->setAttribute(QBluetoothServiceInfo::ServiceId, QBluetoothUuid(uuid));
-
+    d->m_service->setServiceUuid(QBluetoothUuid(uuid));
     emit detailsChanged();
-}
-
-/*!
-    \qmlproperty int BluetoothService::servicePort
-
-    This property holds the port value for the remote service. Bluetooth does not
-    use well defined port values, so port values should not be stored and used
-    later. Connecting using UUID is much more consistent. Changing this property emits the
-    detailsChanged signal.
-*/
-qint32 QDeclarativeBluetoothService::servicePort() const
-{
-    if (d->m_port > 0)
-        return d->m_port;
-
-    if (!d->m_service)
-        return -1;
-
-    if (d->m_service->serverChannel() > 0)
-        return d->m_service->serverChannel();
-    if (d->m_service->protocolServiceMultiplexer() > 0)
-        return d->m_service->protocolServiceMultiplexer();
-
-    return -1;
-}
-
-void QDeclarativeBluetoothService::setServicePort(qint32 port)
-{
-    if (d->m_port != port){
-        d->m_port = port;
-        if (isRegistered())
-            setRegistered(true);
-        emit detailsChanged();
-    }
 }
 
 /*!
@@ -337,77 +262,57 @@ void QDeclarativeBluetoothService::setServicePort(qint32 port)
 
 bool QDeclarativeBluetoothService::isRegistered() const
 {
-    if (!d->m_service)
-        return false;
-
     return d->m_service->isRegistered();
 }
 
 
 int QDeclarativeBluetoothServicePrivate::listen() {
 
-    if (m_protocol != "l2cap" && m_protocol != "rfcomm") {
+    if (m_service->socketProtocol() == QBluetoothServiceInfo::UnknownProtocol) {
         qWarning() << "Unknown protocol, can't make service" << m_protocol;
         return -1;
     }
     QBluetoothServiceInfo::Protocol serverType;
-    if (m_protocol == "l2cap") {
+    if (m_service->socketProtocol() == QBluetoothServiceInfo::L2capProtocol) {
         serverType = QBluetoothServiceInfo::L2capProtocol;
     }
-    else if (m_protocol == "rfcomm") {
+    else if (m_service->socketProtocol() == QBluetoothServiceInfo::RfcommProtocol) {
         serverType = QBluetoothServiceInfo::RfcommProtocol;
     }
 
     QBluetoothServer *server = new QBluetoothServer(serverType);
     server->setMaxPendingConnections(1);
-    server->listen(QBluetoothAddress(), m_port);
-    m_port = server->serverPort();
-    m_listen = server;
+    server->listen(QBluetoothAddress());
+    server->serverPort();
+    m_server = server;
 
-    return m_port;
-
+    return server->serverPort();
 }
 
 void QDeclarativeBluetoothService::setRegistered(bool registered)
 {
-
-    d->m_needsRegistration = registered;
-
     if (!d->m_componentComplete) {
         return;
     }
 
+    delete d->m_server;
+    d->m_server = 0;
+
     if (!registered) {
-        if (!d->m_service)
-            return;
         d->m_service->unregisterService();
         emit registeredChanged();
+        return;
     }
-
-    if (!d->m_service) {
-        d->m_service = new QBluetoothServiceInfo();
-    }
-
-
-    delete d->m_listen;
-    d->m_listen = 0;
 
     d->listen();
-    connect(d->m_listen, SIGNAL(newConnection()), this, SLOT(new_connection()));
+    connect(d->m_server, SIGNAL(newConnection()), this, SLOT(new_connection()));
 
 
     d->m_service->setAttribute(QBluetoothServiceInfo::ServiceRecordHandle, (uint)0x00010010);
 
-//    QBluetoothServiceInfo::Sequence classId;
-////    classId << QVariant::fromVhttp://theunderstatement.com/alue(QBluetoothUuid(serviceUuid));
-//    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-//    d->m_service->setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
-
-    d->m_service->setAttribute(QBluetoothServiceInfo::ServiceName, d->m_name);
-    d->m_service->setAttribute(QBluetoothServiceInfo::ServiceDescription,
-                             d->m_description);
-
-    d->m_service->setServiceUuid(QBluetoothUuid(d->m_uuid));
+    QBluetoothServiceInfo::Sequence classId;
+    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+    d->m_service->setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
     //qDebug() << "name/uuid" << d->m_name << d->m_uuid << d->m_port;
 
@@ -417,16 +322,14 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
     QBluetoothServiceInfo::Sequence protocol;
 
-    //qDebug() << "Port" << d->m_port;
-
-    if (d->m_protocol == "l2cap") {
+    if (d->m_protocol == L2CapProtocol) {
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap))
-                 << QVariant::fromValue(quint16(d->m_port));
+                 << QVariant::fromValue(quint16(d->m_server->serverPort()));
         protocolDescriptorList.append(QVariant::fromValue(protocol));
     }
-    else if (d->m_protocol == "rfcomm") {
+    else if (d->m_protocol == RfcommProtocol) {
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
-                 << QVariant::fromValue(quint8(d->m_port));
+                 << QVariant::fromValue(quint8(d->m_server->serverPort()));
         protocolDescriptorList.append(QVariant::fromValue(protocol));
     }
     else {
@@ -436,7 +339,6 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
                              protocolDescriptorList);
 
     if (d->m_service->registerService()) {
-        //qDebug() << "registered";
         emit registeredChanged();
     }
     else {
@@ -457,23 +359,23 @@ void QDeclarativeBluetoothService::new_connection()
 
 QDeclarativeBluetoothSocket *QDeclarativeBluetoothService::nextClient()
 {
-    QBluetoothServer *server = qobject_cast<QBluetoothServer *>(d->m_listen);
+    QBluetoothServer *server = qobject_cast<QBluetoothServer *>(d->m_server);
     if (server) {
         if (server->hasPendingConnections()) {
             QBluetoothSocket *socket = server->nextPendingConnection();
-            return new QDeclarativeBluetoothSocket(socket, this, 0x0);
+            return new QDeclarativeBluetoothSocket(socket, this, 0);
         }
         else {
             qWarning() << "Socket has no pending connection, failing";
-            return 0x0;
+            return 0;
         }
     }
-    return 0x0;
+    return 0;
 }
 
 void QDeclarativeBluetoothService::assignNextClient(QDeclarativeBluetoothSocket *dbs)
 {
-    QBluetoothServer *server = qobject_cast<QBluetoothServer *>(d->m_listen);
+    QBluetoothServer *server = qobject_cast<QBluetoothServer *>(d->m_server);
     if (server) {
         if (server->hasPendingConnections()) {
             QBluetoothSocket *socket = server->nextPendingConnection();

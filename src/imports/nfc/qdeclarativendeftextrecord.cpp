@@ -45,16 +45,15 @@
 
 /*!
     \qmltype NdefTextRecord
-    \brief The NdefTextRecord type represents an NFC RTD-Text NDEF record.
+    \since 5.2
+    \brief Represents an NFC RTD-Text NDEF record.
 
     \ingroup nfc-qml
-    \inqmlmodule QtNfc 5.0
+    \inqmlmodule QtNfc
 
     \inherits NdefRecord
 
     \sa QNdefNfcTextRecord
-
-    The NdefTextRecord type was introduced in \b {QtNfc 5.0}.
 
     The NdefTextRecord type contains a localized piece of text that can be display to the user.
     An NDEF message may contain many text records for different locales, it is up to the
@@ -108,12 +107,12 @@
 Q_DECLARE_NDEFRECORD(QDeclarativeNdefTextRecord, QNdefRecord::NfcRtd, "T")
 
 QDeclarativeNdefTextRecord::QDeclarativeNdefTextRecord(QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcTextRecord(), parent)
+:   QQmlNdefRecord(QNdefNfcTextRecord(), parent)
 {
 }
 
 QDeclarativeNdefTextRecord::QDeclarativeNdefTextRecord(const QNdefRecord &record, QObject *parent)
-:   QDeclarativeNdefRecord(QNdefNfcTextRecord(record), parent)
+:   QQmlNdefRecord(QNdefNfcTextRecord(record), parent)
 {
 }
 

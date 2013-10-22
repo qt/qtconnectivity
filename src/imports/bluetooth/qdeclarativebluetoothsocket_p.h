@@ -75,8 +75,7 @@ public:
         HostNotFoundError = QBluetoothSocket::HostNotFoundError,
         ServiceNotFoundError = QBluetoothSocket::ServiceNotFoundError,
         NetworkError = QBluetoothSocket::NetworkError,
-        UnsupportedProtocolError = QBluetoothSocket::UnsupportedProtocolError,
-        NoSocketerror
+        UnsupportedProtocolError = QBluetoothSocket::UnsupportedProtocolError
     };
 
     enum SocketState {
@@ -87,7 +86,7 @@ public:
         Bound = QBluetoothSocket::BoundState,
         Closing = QBluetoothSocket::ClosingState,
         Listening = QBluetoothSocket::ListeningState,
-        NoServiceSet
+        NoServiceSet = 100 //Leave gap for future enums and to avoid collision with QBluetoothSocket enums
     };
 
     explicit QDeclarativeBluetoothSocket(QObject *parent = 0);
@@ -120,7 +119,7 @@ signals:
 public slots:
     void setService(QDeclarativeBluetoothService *service);
     void setConnected(bool connected);
-    void sendStringData(QString data);
+    void sendStringData(const QString& data);
 
 private slots:
     void socket_connected();

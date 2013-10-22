@@ -362,12 +362,13 @@ QString QBluetoothSocketPrivate::peerName() const
         return QString();
     }
 
-    const QString address = QBluetoothAddress(bdaddr).toString();
+    const QString peerAddress = QBluetoothAddress(bdaddr).toString();
+    const QString localAdapter = localAddress().toString();
 
     OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
                                      QDBusConnection::systemBus());
 
-    QDBusPendingReply<QDBusObjectPath> reply = manager.DefaultAdapter();
+    QDBusPendingReply<QDBusObjectPath> reply = manager.FindAdapter(localAdapter);
     reply.waitForFinished();
     if (reply.isError())
         return QString();
@@ -375,13 +376,13 @@ QString QBluetoothSocketPrivate::peerName() const
     OrgBluezAdapterInterface adapter(QLatin1String("org.bluez"), reply.value().path(),
                                      QDBusConnection::systemBus());
 
-    QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.CreateDevice(address);
+    QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.CreateDevice(peerAddress);
     deviceObjectPath.waitForFinished();
     if (deviceObjectPath.isError()) {
         if (deviceObjectPath.error().name() != QLatin1String("org.bluez.Error.AlreadyExists"))
             return QString();
 
-        deviceObjectPath = adapter.FindDevice(address);
+        deviceObjectPath = adapter.FindDevice(peerAddress);
         deviceObjectPath.waitForFinished();
         if (deviceObjectPath.isError())
             return QString();
