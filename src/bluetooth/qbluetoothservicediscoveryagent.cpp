@@ -206,7 +206,6 @@ bool QBluetoothServiceDiscoveryAgent::setRemoteAddress(const QBluetoothAddress &
     if (!address.isNull())
         d_ptr->singleDevice = true;
     d_ptr->deviceAddress = address;
-
     return true;
 }
 

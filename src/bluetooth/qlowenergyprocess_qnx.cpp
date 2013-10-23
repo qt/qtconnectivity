@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,57 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
-
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
-
-#include <QString>
-
+#include "qlowenergyprocess_p.h"
+#include <btapi/btdevice.h>
+#include <errno.h>
+#include "qlowenergyserviceinfo.h"
+#include "qlowenergyserviceinfo_p.h"
+#include <btapi/btgatt.h>
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+Q_GLOBAL_STATIC(QLowEnergyProcess, processInstance)
+
+void QLowEnergyProcess::handleEvent(const int event, const char *bt_address, const char *event_data)
 {
-public:
-    QBluetoothDeviceInfoPrivate();
+    qDebug() << "[HANDLE Event] (event, address, event data): " << event << bt_address << event_data;
+}
 
-    bool valid;
-    bool cached;
+QLowEnergyProcess::QLowEnergyProcess()
+{
+    connected = false;
+    if (bt_device_init( &(this->handleEvent) ) < 0)
+        qDebug() << "[INIT] Init problem." << errno << strerror(errno);
+    else
+        connected = true;
 
-    QBluetoothAddress address;
-    QString name;
+}
 
-    qint16 rssi;
+/*!
+    Destroys the QLowEnergyProcess object.
+*/
+QLowEnergyProcess::~QLowEnergyProcess()
+{
+    bt_device_deinit();
+    bt_gatt_deinit();
+    m_classPointers.clear();
+}
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
+/*!
+    Returns the instance of this clas. This class is a singleton class.
+*/
 
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
-};
+QLowEnergyProcess *QLowEnergyProcess::instance()
+{
+    return processInstance();
+}
 
+bool QLowEnergyProcess::isConnected() const
+{
+    return connected;
+}
+
+void QLowEnergyProcess::addPointer(QLowEnergyServiceInfoPrivate* classPointer)
+{
+    m_classPointers.append(classPointer);
+}
 QT_END_NAMESPACE
-
-#endif

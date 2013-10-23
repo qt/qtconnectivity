@@ -196,6 +196,13 @@ public:
         DataUnavailable
     };
 
+    enum CoreConfiguration {
+        BaseRateCoreConfiguration = 0x01,
+        BaseRateAndLowEnergyCoreConfiguration = 0x02,
+        LowEnergyCoreConfiguration = 0x03
+    };
+    Q_DECLARE_FLAGS(CoreConfigurations, CoreConfiguration)
+
     QBluetoothDeviceInfo();
     QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name, quint32 classOfDevice);
     QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other);
@@ -223,6 +230,8 @@ public:
     void setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness);
     QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = 0) const;
     DataCompleteness serviceUuidsCompleteness() const;
+    void setCoreConfiguration(const CoreConfiguration &coreConfig);
+    CoreConfiguration coreConfiguration() const;
 
 protected:
     QBluetoothDeviceInfoPrivate *d_ptr;

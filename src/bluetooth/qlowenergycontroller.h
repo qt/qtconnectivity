@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,50 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
+#ifndef QLOWENERGYCONTROLLER_H
+#define QLOWENERGYCONTROLLER_H
+#include <QtBluetooth/qbluetoothglobal.h>
 
-#include "qbluetoothdeviceinfo.h"
+#include <QObject>
+#include "qlowenergyserviceinfo.h"
+#include "qlowenergycharacteristicinfo.h"
 #include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
 
-#include <QString>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+class QLowEnergyControllerPrivate;
+
+class Q_BLUETOOTH_EXPORT QLowEnergyController: public QObject
 {
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QLowEnergyController)
 public:
-    QBluetoothDeviceInfoPrivate();
+    QLowEnergyController(QObject *parent = 0);
+    ~QLowEnergyController();
+    QList<QLowEnergyServiceInfo> services() const;
+    void connectToService(const QLowEnergyServiceInfo &leService);
+    void disconnectFromService(const QLowEnergyServiceInfo &leService = QLowEnergyServiceInfo());
+    void enableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
+    void disableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
 
-    bool valid;
-    bool cached;
+Q_SIGNALS:
+    void connected(const QLowEnergyServiceInfo &);
+    void error(const QLowEnergyServiceInfo &);
+    void disconnected(const QLowEnergyServiceInfo &);
+    void valueChanged(const QLowEnergyCharacteristicInfo &);
 
-    QBluetoothAddress address;
-    QString name;
 
-    qint16 rssi;
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
+private:
+    QLowEnergyControllerPrivate *d_ptr;
 
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+    Q_PRIVATE_SLOT(d_func(), void _q_serviceConnected(const QBluetoothUuid &uuid))
+    Q_PRIVATE_SLOT(d_func(), void _q_serviceError(const QBluetoothUuid &uuid))
+    Q_PRIVATE_SLOT(d_func(), void _q_valueReceived(const QBluetoothUuid &uuid))
+    Q_PRIVATE_SLOT(d_func(), void _q_serviceDisconnected(const QBluetoothUuid &uuid))
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QLOWENERGYCONTROLLER_H

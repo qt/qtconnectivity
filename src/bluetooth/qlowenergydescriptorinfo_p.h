@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,21 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
-
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
-
-#include <QString>
+#ifndef QLOWENERGYDESCRIPTORINFO_P_H
+#define QLOWENERGYDESCRIPTORINFO_P_H
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+class QLowEnergyDescriptorInfoPrivate
 {
 public:
-    QBluetoothDeviceInfoPrivate();
-
-    bool valid;
-    bool cached;
-
-    QBluetoothAddress address;
-    QString name;
-
-    qint16 rssi;
-
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
-
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+    QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle);
+    ~QLowEnergyDescriptorInfoPrivate();
+    QByteArray m_value;
+    QBluetoothUuid m_uuid;
+    QString m_handle;
+    QVariantMap m_properties;
+    QString m_name;
 };
-
 QT_END_NAMESPACE
-
-#endif
+#endif // QLOWENERGYDESCRIPTORINFO_P_H

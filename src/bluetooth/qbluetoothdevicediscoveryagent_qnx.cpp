@@ -165,11 +165,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
     int cod = 0;
     int dev_type = 0;
     int rssi = 0;
-
+    bool hasGatt = false;
     pps_decoder_get_bool(&ppsDecoder, "paired", &paired);
     pps_decoder_get_int(&ppsDecoder, "cod", &cod);
     pps_decoder_get_int(&ppsDecoder, "dev_type", &dev_type);
     pps_decoder_get_int(&ppsDecoder, "rssi", &rssi);
+    pps_decoder_push(&ppsDecoder, "gatt_available_services");
+    const char *next_service = 0;
+
+    for (int service_count=0; pps_decoder_get_string(&ppsDecoder, 0, &next_service ) == PPS_DECODER_OK; service_count++) {
+        hasGatt = true;
+        //qBluetoothDebug() << next_service;
+    }
     pps_decoder_cleanup(&ppsDecoder);
 
     QBluetoothDeviceInfo deviceInfo(deviceAddr, deviceName, cod);
@@ -191,7 +198,21 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
     //Starts the timer again
     m_finishedTimer.start(7000);
     if (!deviceAddr.isNull()) {
-        qBBBluetoothDebug() << "Device discovered: " << deviceName << deviceAddr.toString();
+        //qDebug() << "Device discovered: " << deviceName << deviceAddr.toString();
+        /* Looking for device type. Only Low energy devices will be added
+         * BT_DEVICE_TYPE_LE_PUBLIC is 0 --->LE device
+         * BT_DEVICE_TYPE_LE_PRIVATE is 1 ---> LE device
+         * BT_DEVICE_TYPE_REGULAR is 32
+         * BT_DEVICE_TYPE_UNKNOWN is 255
+         */
+        if (dev_type == 0 || dev_type == 1)
+            deviceInfo.setCoreConfiguration(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+        else{
+            if (hasGatt)
+                deviceInfo.setCoreConfiguration(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+            else
+                deviceInfo.setCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        }
         discoveredDevices.append(deviceInfo);
         if (!updated)//We are not allowed to emit a signal with the updated version
             emit q_ptr->deviceDiscovered(discoveredDevices.last());

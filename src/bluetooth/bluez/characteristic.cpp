@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -38,40 +38,17 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "characteristic_p.h"
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
+/*
+ * Implementation of interface class OrgBluezCharacteristicInterface
+ */
 
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
-
-#include <QString>
-
-QT_BEGIN_NAMESPACE
-
-class QBluetoothDeviceInfoPrivate
+OrgBluezCharacteristicInterface::OrgBluezCharacteristicInterface(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
+    : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
-public:
-    QBluetoothDeviceInfoPrivate();
+}
 
-    bool valid;
-    bool cached;
-
-    QBluetoothAddress address;
-    QString name;
-
-    qint16 rssi;
-
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
-
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
-};
-
-QT_END_NAMESPACE
-
-#endif
+OrgBluezCharacteristicInterface::~OrgBluezCharacteristicInterface()
+{
+}

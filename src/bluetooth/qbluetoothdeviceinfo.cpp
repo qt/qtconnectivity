@@ -249,12 +249,24 @@ QT_BEGIN_NAMESPACE
     \value DataUnavailable  No data is available.
 */
 
+/*!
+    \enum QBluetoothDeviceInfo::CoreConfiguration
+
+    This enum describes the configuration of the device.
+
+    \value BaseRateCoreConfiguration            The device is a standard Bluetooth device.
+    \value BaseRateAndLowEnergyConfiguration    The device is a Bluetooth Smart device with support
+                                                for standard and Low Energy device.
+    \value LowEnergyCoreCOnfiguration           The device is a Bluetooth Low Energy device.
+*/
+
 QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate()
     : valid(false), cached(false), rssi(1),
       serviceClasses(QBluetoothDeviceInfo::NoService),
       majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
       minorDeviceClass(0),
-      serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable)
+      serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
+      deviceCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration)
 {
 }
 
@@ -361,6 +373,7 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
     d->serviceUuidsCompleteness = other.d_func()->serviceUuidsCompleteness;
     d->serviceUuids = other.d_func()->serviceUuids;
     d->rssi = other.d_func()->rssi;
+    d->deviceCoreConfiguration = other.d_func()->deviceCoreConfiguration;
 
     return *this;
 }
@@ -372,25 +385,27 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
 {
     Q_D(const QBluetoothDeviceInfo);
 
-    if(d->cached != other.d_func()->cached)
+    if (d->cached != other.d_func()->cached)
         return false;
-    if(d->valid != other.d_func()->valid)
+    if (d->valid != other.d_func()->valid)
         return false;
-    if(d->majorDeviceClass != other.d_func()->majorDeviceClass)
+    if (d->majorDeviceClass != other.d_func()->majorDeviceClass)
         return false;
-    if(d->minorDeviceClass != other.d_func()->minorDeviceClass)
+    if (d->minorDeviceClass != other.d_func()->minorDeviceClass)
         return false;
-    if(d->serviceClasses != other.d_func()->serviceClasses)
+    if (d->serviceClasses != other.d_func()->serviceClasses)
         return false;
-    if(d->name != other.d_func()->name)
+    if (d->name != other.d_func()->name)
         return false;
-    if(d->address != other.d_func()->address)
+    if (d->address != other.d_func()->address)
         return false;
-    if(d->serviceUuidsCompleteness != other.d_func()->serviceUuidsCompleteness)
+    if (d->serviceUuidsCompleteness != other.d_func()->serviceUuidsCompleteness)
         return false;
-    if(d->serviceUuids.count() != other.d_func()->serviceUuids.count())
+    if (d->serviceUuids.count() != other.d_func()->serviceUuids.count())
         return false;
-    if(d->serviceUuids != other.d_func()->serviceUuids)
+    if (d->serviceUuids != other.d_func()->serviceUuids)
+        return false;
+    if (d->deviceCoreConfiguration != other.d_func()->deviceCoreConfiguration)
         return false;
 
     return true;
@@ -497,6 +512,29 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
     Q_D(const QBluetoothDeviceInfo);
 
     return d->serviceUuidsCompleteness;
+}
+
+/*!
+    Sets the CoreConfiguration of the device to a \a coreConfig. This will help to make a difference
+    between regular and Low Energy devices.
+*/
+void QBluetoothDeviceInfo::setCoreConfiguration(const CoreConfiguration &coreConfig)
+{
+    Q_D(QBluetoothDeviceInfo);
+
+    d->deviceCoreConfiguration = coreConfig;
+}
+
+/*!
+    Returns the configuration of the device. If device configuration is not set,
+    basic rate device configuration will be returned.
+    \sa setCoreConfiguration
+*/
+QBluetoothDeviceInfo::CoreConfiguration QBluetoothDeviceInfo::coreConfiguration() const
+{
+    Q_D(const QBluetoothDeviceInfo);
+
+    return d->deviceCoreConfiguration;
 }
 
 /*!

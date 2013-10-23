@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,73 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
-
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
+#ifndef QGATTCHARACTERISTICINFO_H
+#define QGATTCHARACTERISTICINFO_H
 #include "qbluetoothuuid.h"
-
-#include <QString>
+#include "qlowenergydescriptorinfo.h"
+#include <QtCore/QSharedPointer>
+#include <QObject>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+class QBluetoothUuid;
+class QLowEnergyCharacteristicInfoPrivate;
+
+class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
 {
+    Q_DECLARE_PRIVATE(QLowEnergyCharacteristicInfo)
+    friend class QLowEnergyServiceInfo;
+    friend class QLowEnergyServiceInfoPrivate;
+    friend class QLowEnergyController;
+    friend class QLowEnergyControllerPrivate;
 public:
-    QBluetoothDeviceInfoPrivate();
 
-    bool valid;
-    bool cached;
+    enum Error {
+        NotificationFail = 0x001,
+        NotConnected = 0x002,
+        UnknownError = 0x003
+    };
 
-    QBluetoothAddress address;
-    QString name;
+    enum Property {
+        Broadcasting = 0x01,
+        Read = 0x02,
+        WriteNoResponse = 0x04,
+        Write = 0x08,
+        Notify = 0x10,
+        Indicate = 0x20,
+        WriteSigned = 0x40,
+        ExtendedProperty = 0x80
+    };
 
-    qint16 rssi;
+    QLowEnergyCharacteristicInfo();
+    QLowEnergyCharacteristicInfo(const QBluetoothUuid &uuid);
+    QLowEnergyCharacteristicInfo(const QLowEnergyCharacteristicInfo &other);
+    ~QLowEnergyCharacteristicInfo();
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
+    QLowEnergyCharacteristicInfo &operator=(const QLowEnergyCharacteristicInfo &other);
 
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+    QString name() const;
+
+    QBluetoothUuid uuid() const;
+
+    void writeValue(const QByteArray &value);
+    QByteArray value() const;
+
+    int permissions() const;
+    QVariantMap properties() const;
+    QString handle() const;
+
+    bool isNotificationCharacteristic() const;
+
+    QList<QLowEnergyDescriptorInfo> getDescriptors() const;
+
+    bool isValid() const;
+
+protected:
+    QSharedPointer<QLowEnergyCharacteristicInfoPrivate> d_ptr;
+
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QGATTCHARACTERISTICINFO_H

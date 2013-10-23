@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -44,6 +45,9 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothlocaldevice.h>
+#include <qlowenergyserviceinfo.h>
+#include <qlowenergycharacteristicinfo.h>
+#include <qbluetoothuuid.h>
 
 
 ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
@@ -74,6 +78,8 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
     connect(discoveryAgent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)),
             this, SLOT(addService(const QBluetoothServiceInfo&)));
     connect(discoveryAgent, SIGNAL(finished()), ui->status, SLOT(hide()));
+    connect(discoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
+            this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
 
     discoveryAgent->start();
 }
@@ -94,6 +100,13 @@ void ServiceDiscoveryDialog::addService(const QBluetoothServiceInfo &info)
         line.append("\n\t" + info.serviceDescription());
     if (!info.serviceProvider().isEmpty())
         line.append("\n\t" + info.serviceProvider());
+
+    ui->list->addItem(line);
+}
+
+void ServiceDiscoveryDialog::addLowEnergyService(const QLowEnergyServiceInfo &gatt)
+{
+    QString line = gatt.name();
 
     ui->list->addItem(line);
 }

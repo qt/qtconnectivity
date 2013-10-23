@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,38 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
+#ifndef QLOWENERGYDESCRIPTORINFO_H
+#define QLOWENERGYDESCRIPTORINFO_H
 
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
-
-#include <QString>
+#include <QtCore>
+#include <QVariantMap>
+#include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+class QBluetoothUuid;
+class QLowEnergyCharacteristicInfo;
+class QLowEnergyDescriptorInfoPrivate;
+
+class Q_BLUETOOTH_EXPORT QLowEnergyDescriptorInfo
 {
+    friend class QLowEnergyCharacteristicInfo;
+    friend class QLowEnergyCharacteristicInfoPrivate;
+    friend class QLowEnergyServiceInfoPrivate;
 public:
-    QBluetoothDeviceInfoPrivate();
+    QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, const QString &handle);
+    ~QLowEnergyDescriptorInfo();
+    QByteArray value();
+    QBluetoothUuid uuid() const;
+    QString handle() const;
+    QVariantMap properties() const;
+    QString name() const;
 
-    bool valid;
-    bool cached;
-
-    QBluetoothAddress address;
-    QString name;
-
-    qint16 rssi;
-
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
-
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+private:
+    QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QLOWENERGYDESCRIPTORINFO_H

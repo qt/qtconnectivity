@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,54 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
-
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
-
-#include <QString>
+#include "qlowenergycharacteristicinfo_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
 {
-public:
-    QBluetoothDeviceInfoPrivate();
 
-    bool valid;
-    bool cached;
+}
 
-    QBluetoothAddress address;
-    QString name;
+QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
+{
 
-    qint16 rssi;
+}
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
+void QLowEnergyCharacteristicInfoPrivate::propertyChanged(QString valueName, QDBusVariant value)
+{
+    Q_UNUSED(valueName);
+    Q_UNUSED(value);
+}
 
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
-};
+void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
+{
+    Q_UNUSED(wantedValue);
+}
+
+void QLowEnergyCharacteristicInfoPrivate::enableNotification()
+{
+
+}
+
+void QLowEnergyCharacteristicInfoPrivate::disableNotification()
+{
+
+}
+
+void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
+{
+
+}
+
+void QLowEnergyCharacteristicInfoPrivate::readValue()
+{
+
+}
+
+bool QLowEnergyCharacteristicInfoPrivate::valid()
+{
+    return false;
+}
 
 QT_END_NAMESPACE
-
-#endif

@@ -177,6 +177,16 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
     }
     device.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
     device.setCached(dict.value(QLatin1String("Cached")).toBool());
+
+    /*
+     * Bluez v4.1 does not have extra bit which gives information if device is Bluetooth
+     * Low Energy device and the way to discover it is with Class property of the Bluetooth device.
+     * Low Energy devices do not have property Class.
+     */
+    if (btClass == 0)
+        device.setCoreConfiguration(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    else
+        device.setCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
     for(int i = 0; i < discoveredDevices.size(); i++){
         if(discoveredDevices[i].address() == device.address()) {
             if(discoveredDevices[i] == device) {

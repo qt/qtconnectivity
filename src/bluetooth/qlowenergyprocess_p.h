@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,60 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
+#ifndef QLOWENERGYPROCESS_H
+#define QLOWENERGYPROCESS_H
 
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
-
-#include <QString>
-
+#include <QtCore>
+#include <QObject>
+#ifdef QT_QNX_BLUETOOTH
+#include <QList>
+#include <QPointer>
+#include "qlowenergyserviceinfo_p.h"
+#endif
+#ifdef QT_BLUEZ_BLUETOOTH
+#include <QProcess>
+#endif
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+class QLowEnergyProcess: public QObject
 {
+    Q_OBJECT
+    friend class QLowEnergyServiceInfoPrivate;
 public:
-    QBluetoothDeviceInfoPrivate();
+    QLowEnergyProcess();
+    ~QLowEnergyProcess();
 
-    bool valid;
-    bool cached;
+    static QLowEnergyProcess *instance();
+    bool isConnected() const;
+#ifdef QT_QNX_BLUETOOTH
+    static void handleEvent(const int, const char *, const char *);
+    void addPointer(QLowEnergyServiceInfoPrivate* classPointer);
+#endif
+#ifdef QT_BLUEZ_BLUETOOTH
+    QProcess *getProcess();
 
-    QBluetoothAddress address;
-    QString name;
+    void startCommand(const QString &command);
+    void executeCommand(const QString &command);
+    void endProcess();
+    void addConnection();
 
-    qint16 rssi;
+Q_SIGNALS:
+    void replySend(const QString &reply);
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
+private slots:
+    void replyRead();
+#endif
 
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+private:
+#ifdef QT_BLUEZ_BLUETOOTH
+    QProcess *m_process;
+    int m_counter;
+#endif
+#ifdef QT_QNX_BLUETOOTH
+    QList<QObject*> m_classPointers;
+#endif
+    bool connected;
 };
-
 QT_END_NAMESPACE
 
-#endif
+#endif // QLOWENERGYPROCESS_H

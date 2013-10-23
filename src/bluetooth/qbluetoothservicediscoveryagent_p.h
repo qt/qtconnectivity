@@ -46,13 +46,16 @@
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothservicediscoveryagent.h"
+#include "qlowenergyserviceinfo.h"
 
 #include <QStack>
+#include <QStringList>
 
 #ifdef QT_BLUEZ_BLUETOOTH
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
+class OrgBluezCharacteristicInterface;
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 class QXmlStreamReader;
@@ -102,7 +105,6 @@ public:
     void setDiscoveryMode(QBluetoothServiceDiscoveryAgent::DiscoveryMode m) { mode = m; }
     QBluetoothServiceDiscoveryAgent::DiscoveryMode DiscoveryMode() { return mode; }
 
-    // private slots
     void _q_deviceDiscoveryFinished();
     void _q_deviceDiscovered(const QBluetoothDeviceInfo &info);
     void _q_serviceDiscoveryFinished();
@@ -110,6 +112,12 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
+    //Slots below are used for discovering Bluetooth Low Energy devices. It will be used with Bluez 5.x version.
+    /*
+    void _g_discoveredGattService();
+    void _q_discoverGattCharacteristics(QDBusPendingCallWatcher *watcher);
+    void _q_discoveredGattCharacteristic(QDBusPendingCallWatcher *watcher);
+    */
 #endif
 
 private:
@@ -135,6 +143,7 @@ private:
     QSocketNotifier *rdNotifier;
     QTimer m_queryTimer;
     bool m_btInitialized;
+    bool m_serviceScanDone;
 #endif
 
 public:
@@ -153,12 +162,16 @@ private:
     QBluetoothServiceDiscoveryAgent::DiscoveryMode mode;
 
     bool singleDevice;
-
 #ifdef QT_BLUEZ_BLUETOOTH
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
     QBluetoothAddress m_deviceAdapterAddress;
+    //Varibles below are used for discovering Bluetooth Low Energy devices
+    OrgBluezCharacteristicInterface *characteristic;
+    QStringList gattServices;
+    QStringList gattCharacteristics;
+    QLowEnergyCharacteristicInfo gattCharacteristic;
 #endif
 
 protected:

@@ -1,6 +1,6 @@
-/****************************************************************************
+/***************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,39 +39,76 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHDEVICEINFO_P_H
-#define QBLUETOOTHDEVICEINFO_P_H
-
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothaddress.h"
+#ifndef QGATTSERVICEINFO_H
+#define QGATTSERVICEINFO_H
 #include "qbluetoothuuid.h"
-
-#include <QString>
+#include "qlowenergycharacteristicinfo.h"
+#include "qbluetoothdevicediscoveryagent.h"
+#include "qbluetoothaddress.h"
+#include <QtCore/QSharedPointer>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfoPrivate
+class QBluetoothUuid;
+class QLowEnergyServiceInfoPrivate;
+class QBluetoothAddress;
+class QBluetoothDeviceInfo;
+
+class Q_BLUETOOTH_EXPORT QLowEnergyServiceInfo
 {
+    Q_DECLARE_PRIVATE(QLowEnergyServiceInfo)
+    friend class QBluetoothServiceDiscoveryAgent;
+    friend class QBluetoothServiceDiscoveryAgentPrivate;
+    friend class QLowEnergyController;
+    friend class QLowEnergyControllerPrivate;
 public:
-    QBluetoothDeviceInfoPrivate();
+    enum ServiceType {
+        PrimaryService = 0x00000001,
+        IncludedService = 0x00000002
+    };
 
-    bool valid;
-    bool cached;
+    enum Error {
+        ConnectionRefused = 0x001,
+        DeviceBusy = 0x002,
+        InitializationFailed = 0x003,
+        MemoryAllocation = 0x004,
+        DisconnectFail = 0x005,
+        UnknownError = 0x006
+    };
 
-    QBluetoothAddress address;
-    QString name;
+    QLowEnergyServiceInfo();
+    QLowEnergyServiceInfo(const QBluetoothUuid &uuid);
+    QLowEnergyServiceInfo(const QLowEnergyServiceInfo &other);
 
-    qint16 rssi;
+    ~QLowEnergyServiceInfo();
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
+    QLowEnergyServiceInfo &operator=(const QLowEnergyServiceInfo &other);
 
-    QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
-    QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+    void setDevice(const QBluetoothDeviceInfo &info);
+    QBluetoothDeviceInfo device() const;
+
+    QBluetoothUuid uuid() const;
+
+    QList<QLowEnergyCharacteristicInfo> getCharacteristics() const;
+
+    QString name() const;
+
+    void setServiceType(QLowEnergyServiceInfo::ServiceType type);
+    QLowEnergyServiceInfo::ServiceType getServiceType() const;
+
+    void setRandomAddress();
+
+    bool isConnected() const;
+
+    QString errorString() const;
+
+    bool isValid() const;
+
+protected:
+    QSharedPointer<QLowEnergyServiceInfoPrivate> d_ptr;
+
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QGATTSERVICEINFO_H

@@ -2,6 +2,7 @@ TARGET = QtBluetooth
 QT = core
 QT_PRIVATE = concurrent
 
+
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
@@ -22,7 +23,11 @@ PUBLIC_HEADERS += \
     qbluetoothlocaldevice.h \
     qbluetoothtransfermanager.h \
     qbluetoothtransferrequest.h \
-    qbluetoothtransferreply.h
+    qlowenergyserviceinfo.h \
+    qlowenergycharacteristicinfo.h \
+    qlowenergydescriptorinfo.h \
+    qbluetoothtransferreply.h \
+    qlowenergycontroller.h
 
 PRIVATE_HEADERS += \
     qbluetoothaddress_p.h\
@@ -36,7 +41,12 @@ PRIVATE_HEADERS += \
     qbluetoothtransferreply_p.h \
     qbluetoothtransferrequest_p.h \
     qprivatelinearbuffer_p.h \
-    qbluetoothlocaldevice_p.h
+    qbluetoothlocaldevice_p.h \
+    qlowenergyserviceinfo_p.h \
+    qlowenergycharacteristicinfo_p.h \
+    qlowenergyprocess_p.h \
+    qlowenergydescriptorinfo_p.h \
+    qlowenergycontroller_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -52,7 +62,11 @@ SOURCES += \
     qbluetooth.cpp \
     qbluetoothtransfermanager.cpp \
     qbluetoothtransferrequest.cpp \
-    qbluetoothtransferreply.cpp
+    qbluetoothtransferreply.cpp \
+    qlowenergyserviceinfo.cpp \
+    qlowenergycharacteristicinfo.cpp \
+    qlowenergydescriptorinfo.cpp \
+    qlowenergycontroller.cpp
 
 config_bluez:qtHaveModule(dbus) {
     QT *= dbus
@@ -70,7 +84,10 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_bluez.cpp \
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
-        qbluetoothtransferreply_bluez.cpp
+        qbluetoothtransferreply_bluez.cpp \
+        qlowenergyprocess_bluez.cpp \
+        qlowenergyserviceinfo_bluez.cpp \
+        qlowenergycharacteristicinfo_bluez.cpp
 
 } else:qnx{
     DEFINES += QT_QNX_BLUETOOTH #BT_BBPPSDEBUG
@@ -92,7 +109,10 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_qnx.cpp \
         qbluetoothsocket_qnx.cpp \
         qbluetoothserver_qnx.cpp \
-        qbluetoothtransferreply_qnx.cpp
+        qbluetoothtransferreply_qnx.cpp \
+        qlowenergycharacteristicinfo_qnx.cpp \
+        qlowenergyserviceinfo_qnx.cpp \
+        qlowenergyprocess_qnx.cpp
 
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
@@ -103,12 +123,18 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
-        qbluetoothserver_p.cpp
-
+        qbluetoothserver_p.cpp \
+        qbluetoothtransfermanager_p.cpp \
+        qlowenergyserviceinfo_p.cpp \
+        qlowenergycharacteristicinfo_p.cpp \
+        qlowenergyprocess_p.cpp
 }
 
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+
+
+
 
 

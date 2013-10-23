@@ -44,6 +44,7 @@
 #include <QMetaObject>
 #include "../qllcpsocket_qnx_p.h"
 #include <QCoreApplication>
+#include <QStringList>
 
 QT_BEGIN_NAMESPACE
 
