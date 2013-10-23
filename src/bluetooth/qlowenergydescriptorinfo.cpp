@@ -63,12 +63,21 @@ QString parseDescriptorUuid(const QBluetoothUuid &uuid)
 }
 
 QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle):
-    m_uuid(uuid), m_handle(handle), m_value(QByteArray())
+    m_value(QByteArray()), m_uuid(uuid), m_handle(handle), m_properties(QVariantMap()), m_name(QStringLiteral(""))
 {
 
 }
 
 QLowEnergyDescriptorInfoPrivate::~QLowEnergyDescriptorInfoPrivate()
+{
+
+}
+
+/*!
+    Construct a new QLowEnergyCharacteristicInfo with given \a uuid.
+*/
+QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid):
+    d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, QStringLiteral("0x0000")))
 {
 
 }
@@ -88,6 +97,16 @@ QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, c
 QLowEnergyDescriptorInfo::~QLowEnergyDescriptorInfo()
 {
 
+}
+
+/*!
+    Makes a copy of the \a other and assigns it to this QLowEnergyDescriptorInfo object.
+    The two copies continue to share the same service and registration details.
+*/
+QLowEnergyDescriptorInfo &QLowEnergyDescriptorInfo::operator=(const QLowEnergyDescriptorInfo &other)
+{
+    d_ptr = other.d_ptr;
+    return *this;
 }
 
 /*!

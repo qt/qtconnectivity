@@ -59,8 +59,10 @@ class Q_BLUETOOTH_EXPORT QLowEnergyDescriptorInfo
     friend class QLowEnergyCharacteristicInfoPrivate;
     friend class QLowEnergyServiceInfoPrivate;
 public:
-    QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, const QString &handle);
+    explicit QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid);
     ~QLowEnergyDescriptorInfo();
+
+    QLowEnergyDescriptorInfo &operator=(const QLowEnergyDescriptorInfo &other);
     QByteArray value();
     QBluetoothUuid uuid() const;
     QString handle() const;
@@ -69,6 +71,7 @@ public:
 
 private:
     QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;
+    QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, const QString &handle);
 };
 
 QT_END_NAMESPACE

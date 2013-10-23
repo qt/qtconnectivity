@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QGATTSERVICEINFO_P_H
-#define QGATTSERVICEINFO_P_H
+#ifndef QLOWENERGYSERVICEINFO_P_H
+#define QLOWENERGYSERVICEINFO_P_H
 #include "qbluetoothuuid.h"
 #include "qlowenergyserviceinfo.h"
 #include "qlowenergycharacteristicinfo.h"
@@ -61,7 +61,6 @@ class QLowEnergyProcess;
 class QLowEnergyServiceInfoPrivate: public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PUBLIC(QLowEnergyServiceInfo)
 
 public:
     QLowEnergyServiceInfoPrivate();
@@ -88,6 +87,7 @@ public:
     QString endingHandle;
     QString path;
     QBluetoothAddress adapterAddress;
+    bool randomAddress;
     void connectToTerminal();
     void setHandles();
     void setCharacteristics();
@@ -120,13 +120,9 @@ private:
     int m_valueCounter;
     int m_readCounter;
 #endif
-    bool randomAddress;
     int m_instance;
-
-protected:
-    QLowEnergyServiceInfo *q_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QGATTSERVICEINFO_P_H
+#endif // QLOWENERGYSERVICEINFO_P_H

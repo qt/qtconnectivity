@@ -246,20 +246,21 @@ void QLowEnergyController::disconnectFromService(const QLowEnergyServiceInfo &le
 
 /*!
     Enables receiving notifications from the given \a characteristic. If the service characteristic
-    does not belong to one of the services, nothing wil lbe done.
-
-    \sa addLeService
+    does not belong to one of the services or characteristic permissions do not allow notifications,
+    the function will return false.
 */
-void QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
+bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
 {
+    bool enable = false;
     for (int i = 0; i < d_ptr->m_leServices.size(); i++) {
         for (int j = 0; j < d_ptr->m_leServices.at(i).getCharacteristics().size(); j++) {
             if (d_ptr->m_leServices.at(i).getCharacteristics().at(j).uuid() == characteristic.uuid()) {
                 connect(d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
-                d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr->enableNotification();
+                enable = d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr->enableNotification();
             }
         }
     }
+    return enable;
 }
 
 /*!

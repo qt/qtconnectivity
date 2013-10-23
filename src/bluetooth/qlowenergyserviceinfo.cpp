@@ -113,7 +113,7 @@ QString parseUuid(const QBluetoothUuid &uuid)
 QLowEnergyServiceInfo::QLowEnergyServiceInfo():
     d_ptr(QSharedPointer<QLowEnergyServiceInfoPrivate>(new QLowEnergyServiceInfoPrivate))
 {
-    d_ptr->q_ptr = this;
+
 }
 
 /*!
@@ -125,7 +125,6 @@ QLowEnergyServiceInfo::QLowEnergyServiceInfo(const QBluetoothUuid &uuid):
     d_ptr(QSharedPointer<QLowEnergyServiceInfoPrivate>(new QLowEnergyServiceInfoPrivate))
 {
     d_ptr->uuid = QBluetoothUuid(uuid);
-    d_ptr->q_ptr = this;
     d_ptr->serviceName = parseUuid(d_ptr->uuid);
 }
 
@@ -138,7 +137,7 @@ QLowEnergyServiceInfo::QLowEnergyServiceInfo(const QBluetoothUuid &uuid):
 QLowEnergyServiceInfo::QLowEnergyServiceInfo(const QLowEnergyServiceInfo &other):
     d_ptr(other.d_ptr)
 {
-    d_ptr->q_ptr = this;
+
 }
 
 /*!
@@ -198,7 +197,6 @@ QLowEnergyServiceInfo::ServiceType QLowEnergyServiceInfo::getServiceType() const
 QLowEnergyServiceInfo &QLowEnergyServiceInfo::operator=(const QLowEnergyServiceInfo &other)
 {
     d_ptr = other.d_ptr;
-    d_ptr->q_ptr = this;
     return *this;
 }
 

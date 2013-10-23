@@ -1,4 +1,3 @@
-
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
@@ -89,7 +88,7 @@ QProcess *QLowEnergyProcess::getProcess()
 void QLowEnergyProcess::replyRead()
 {
     QByteArray result = m_process->readAll();
-    QString back = QString(result.data());
+    QString back = QString::fromLocal8Bit(result.data());
     if (back.size() > 10)
         emit replySend(back);
 }

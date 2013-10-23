@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QGATTSERVICEINFO_H
-#define QGATTSERVICEINFO_H
+#ifndef QLOWENERGYSERVICEINFO_H
+#define QLOWENERGYSERVICEINFO_H
 #include "qbluetoothuuid.h"
 #include "qlowenergycharacteristicinfo.h"
 #include "qbluetoothdevicediscoveryagent.h"
@@ -56,7 +56,6 @@ class QBluetoothDeviceInfo;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyServiceInfo
 {
-    Q_DECLARE_PRIVATE(QLowEnergyServiceInfo)
     friend class QBluetoothServiceDiscoveryAgent;
     friend class QBluetoothServiceDiscoveryAgentPrivate;
     friend class QLowEnergyController;
@@ -111,4 +110,4 @@ protected:
 
 QT_END_NAMESPACE
 
-#endif // QGATTSERVICEINFO_H
+#endif // QLOWENERGYSERVICEINFO_H

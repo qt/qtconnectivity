@@ -158,7 +158,7 @@ QString parseUuid(QBluetoothUuid uuid) {
 QLowEnergyCharacteristicInfo::QLowEnergyCharacteristicInfo():
     d_ptr(new QLowEnergyCharacteristicInfoPrivate)
 {
-    d_ptr->q_ptr = this;
+
 }
 
 /*!
@@ -167,7 +167,6 @@ QLowEnergyCharacteristicInfo::QLowEnergyCharacteristicInfo():
 QLowEnergyCharacteristicInfo::QLowEnergyCharacteristicInfo(const QBluetoothUuid &uuid):
     d_ptr(new QLowEnergyCharacteristicInfoPrivate)
 {
-    d_ptr->q_ptr = this;
     d_ptr->uuid = uuid;
 }
 
@@ -180,7 +179,7 @@ QLowEnergyCharacteristicInfo::QLowEnergyCharacteristicInfo(const QBluetoothUuid 
 QLowEnergyCharacteristicInfo::QLowEnergyCharacteristicInfo(const QLowEnergyCharacteristicInfo &other):
     d_ptr(other.d_ptr)
 {
-    d_ptr->q_ptr = this;
+
 }
 
 /*!

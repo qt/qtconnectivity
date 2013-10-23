@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QGATTCHARACTERISTICINFO_H
-#define QGATTCHARACTERISTICINFO_H
+#ifndef QLOWENERGYCHARACTERISTICINFO_H
+#define QLOWENERGYCHARACTERISTICINFO_H
 #include "qbluetoothuuid.h"
 #include "qlowenergydescriptorinfo.h"
 #include <QtCore/QSharedPointer>
@@ -53,7 +53,6 @@ class QLowEnergyCharacteristicInfoPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
 {
-    Q_DECLARE_PRIVATE(QLowEnergyCharacteristicInfo)
     friend class QLowEnergyServiceInfo;
     friend class QLowEnergyServiceInfoPrivate;
     friend class QLowEnergyController;
@@ -108,4 +107,4 @@ protected:
 
 QT_END_NAMESPACE
 
-#endif // QGATTCHARACTERISTICINFO_H
+#endif // QLOWENERGYCHARACTERISTICINFO_H

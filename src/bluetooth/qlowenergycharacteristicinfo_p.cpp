@@ -64,9 +64,9 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
     Q_UNUSED(wantedValue);
 }
 
-void QLowEnergyCharacteristicInfoPrivate::enableNotification()
+bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 {
-
+    return false;
 }
 
 void QLowEnergyCharacteristicInfoPrivate::disableNotification()
@@ -88,5 +88,4 @@ bool QLowEnergyCharacteristicInfoPrivate::valid()
 {
     return false;
 }
-
 QT_END_NAMESPACE

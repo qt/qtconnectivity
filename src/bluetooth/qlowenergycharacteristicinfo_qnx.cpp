@@ -134,25 +134,27 @@ void QLowEnergyCharacteristicInfoPrivate::serviceNotification(int instance, shor
         qBBBluetoothDebug() << "Notificiation received and does not belong to this characteristic.";
 }
 
-void QLowEnergyCharacteristicInfoPrivate::enableNotification()
+bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 {
     if (instance == -1) {
         qBBBluetoothDebug() << " GATT service not connected ";
         //q_ptr->error(QLowEnergyCharacteristicInfo::NotConnected);
-        return;
+        return false;
     }
     if ( (permission & QLowEnergyCharacteristicInfo::Notify) == 0) {
         qBBBluetoothDebug() << "Notification changes not allowed";
-        return;
+        return false;
     }
 
     int rc = bt_gatt_enable_notify(instance, &characteristic, 1);
     if (rc != 0) {
         qBBBluetoothDebug() << "bt_gatt_enable_notify errno=" << errno << strerror(errno);
         //emit q_ptr->error(QLowEnergyCharacteristicInfo::NotificationFail);
-        return;
-    } else
+        return false;
+    } else {
         qBBBluetoothDebug() << "bt_gatt_enable_notify was presumably OK";
+        return true;
+    }
 }
 
 void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)

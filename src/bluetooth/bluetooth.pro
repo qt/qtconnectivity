@@ -133,8 +133,3 @@ config_bluez:qtHaveModule(dbus) {
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
-
-
-
-
-

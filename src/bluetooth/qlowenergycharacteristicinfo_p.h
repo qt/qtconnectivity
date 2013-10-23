@@ -66,7 +66,6 @@ class QLowEnergyCharacteristicInfo;
 class QLowEnergyCharacteristicInfoPrivate: public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PUBLIC(QLowEnergyCharacteristicInfo)
 public:
     QLowEnergyCharacteristicInfoPrivate();
     ~QLowEnergyCharacteristicInfoPrivate();
@@ -74,7 +73,7 @@ public:
     void setValue(const QByteArray &wantedValue);
     void readValue();
     bool valid();
-    void enableNotification();
+    bool enableNotification();
     void disableNotification();
     void readDescriptors();
 
@@ -113,9 +112,6 @@ private:
     bool m_signalConnected;
 #endif
 
-
-protected:
-    QLowEnergyCharacteristicInfo *q_ptr;
 };
 QT_END_NAMESPACE
 

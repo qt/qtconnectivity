@@ -89,12 +89,11 @@ void QLowEnergyCharacteristicInfoPrivate::replyReceived(const QString &reply)
 #endif
         for (int i = 0; i< update.size(); i ++) {
             if (update.at(i).contains(QStringLiteral("Notification handle"))) {
-                row = update.at(i).split(QRegularExpression("\\W+"), QString::SkipEmptyParts);
+                row = update.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
 #ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
                 qDebug() << "Handle : "<< handle << row;
 #endif
                 if (row.at(2) == handle) {
-
                     QString notificationValue = QStringLiteral("");
                     for (int j = 4 ; j< row.size(); j++)
                         notificationValue += row.at(j);
@@ -114,7 +113,7 @@ void QLowEnergyCharacteristicInfoPrivate::replyReceived(const QString &reply)
         update = reply.split(QStringLiteral("\n"));
         for (int i = 0; i< update.size(); i ++) {
             if (update.at(i).contains(QStringLiteral("Characteristic value/descriptor:"))) {
-                row = update.at(i).split(QRegularExpression("\\W+"), QString::SkipEmptyParts);
+                row = update.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
                 QString val = QStringLiteral("");
                 for ( int j = 3; j<row.size(); j++)
                    val += row.at(j);
@@ -138,9 +137,9 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
     value = wantedValue;
     QString command;
     if (notification == true)
-        command = QStringLiteral("char-write-req ") + notificationHandle + QStringLiteral(" ") + QString(value.constData());
+        command = QStringLiteral("char-write-req ") + notificationHandle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
     else
-        command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString(value.constData());
+        command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
 
 
 #ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
@@ -148,22 +147,30 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
 #endif
     process->executeCommand(command);
     process->executeCommand(QStringLiteral("\n"));
-
     t++;
 
 }
 
-void QLowEnergyCharacteristicInfoPrivate::enableNotification()
+bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 {
+    if (!notification)
+        return false;
     /*
      *  Wanted value to enable notifications is 0100
      */
+    if ( (permission & QLowEnergyCharacteristicInfo::Notify) == 0) {
+#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
+        qDebug() << "Notification changes not allowed";
+#endif
+        return false;
+    }
     QByteArray val;
     val.append(48);
     val.append(49);
     val.append(48);
     val.append(48);
     setValue(val);
+    return true;
 }
 
 void QLowEnergyCharacteristicInfoPrivate::disableNotification()
