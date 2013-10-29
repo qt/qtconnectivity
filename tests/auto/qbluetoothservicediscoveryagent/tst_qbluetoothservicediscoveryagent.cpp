@@ -51,11 +51,15 @@
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothserver.h>
 #include <qbluetoothserviceinfo.h>
+#include <qlowenergyserviceinfo.h>
+#include <qlowenergycontroller.h>
+#include <qlowenergycharacteristicinfo.h>
 
 QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
 Q_DECLARE_METATYPE(QBluetoothServiceDiscoveryAgent::Error)
+Q_DECLARE_METATYPE(QLowEnergyServiceInfo)
 
 // Maximum time to for bluetooth device scan
 const int MaxScanTime = 5 * 60 * 1000;  // 5 minutes in ms
@@ -71,6 +75,7 @@ public:
 public slots:
     void deviceDiscoveryDebug(const QBluetoothDeviceInfo &info);
     void serviceDiscoveryDebug(const QBluetoothServiceInfo &info);
+    void leServiceDiscoveryDebug(const QLowEnergyServiceInfo &info);
     void serviceError(const QBluetoothServiceDiscoveryAgent::Error err);
 
 private slots:
@@ -99,6 +104,7 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
 
     qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
     qRegisterMetaType<QBluetoothServiceInfo>("QBluetoothServiceInfo");
+    qRegisterMetaType<QLowEnergyServiceInfo>("QLowEnergyServiceInfo");
     qRegisterMetaType<QList<QBluetoothUuid> >("QList<QBluetoothUuid>");
     qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>("QBluetoothServiceDiscoveryAgent::Error");
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>("QBluetoothDeviceDiscoveryAgent::Error");
@@ -159,6 +165,14 @@ void tst_QBluetoothServiceDiscoveryAgent::serviceDiscoveryDebug(const QBluetooth
     qDebug() << "\tProvider:" << info.attribute(QBluetoothServiceInfo::ServiceProvider).toString();
     qDebug() << "\tL2CAP protocol service multiplexer:" << info.protocolServiceMultiplexer();
     qDebug() << "\tRFCOMM server channel:" << info.serverChannel();
+}
+
+void tst_QBluetoothServiceDiscoveryAgent::leServiceDiscoveryDebug(const QLowEnergyServiceInfo &info)
+{
+    qDebug() << "Discovered LE service on"
+             << info.device().name() << info.device().address().toString();
+    qDebug() << "\tService name:" << info.name();
+    qDebug() << "\tUUID:" << info.uuid();
 }
 
 static void dumpAttributeVariant(const QVariant &var, const QString indent)
@@ -297,7 +311,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
         QVERIFY(serviceInfo.registerService());
 
         QVERIFY(server.isListening());
-        qDebug() << "Scanning address" << addresses[0].toString();
+        qDebug() << "Scanning address " << addresses[0].toString();
         QBluetoothServiceDiscoveryAgent discoveryAgent(addresses[1]);
         bool setAddress = discoveryAgent.setRemoteAddress(addresses[0]);
 
@@ -343,9 +357,9 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     QFETCH(QBluetoothDeviceInfo, deviceInfo);
     QFETCH(QList<QBluetoothUuid>, uuidFilter);
     QFETCH(QBluetoothServiceDiscoveryAgent::Error, serviceDiscoveryError);
-
+    QLowEnergyController leController;
+    bool leDevice = false;
     QBluetoothLocalDevice localDevice;
-
     qDebug() << "Scanning address" << deviceInfo.address().toString();
     QBluetoothServiceDiscoveryAgent discoveryAgent(localDevice.address());
     bool setAddress = discoveryAgent.setRemoteAddress(deviceInfo.address());
@@ -365,10 +379,15 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
     QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)));
     QSignalSpy discoveredSpy(&discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)));
+    QSignalSpy leDiscoveredSpy(&discoveryAgent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)));
 //    connect(&discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
 //            this, SLOT(serviceDiscoveryDebug(QBluetoothServiceInfo)));
+//    connect(&discoveryAgent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)),
+//                this, SLOT(leServiceDiscoveryDebug(QLowEnergyServiceInfo)));
     connect(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
             this, SLOT(serviceError(QBluetoothServiceDiscoveryAgent::Error)));
+
+    QSignalSpy leConnectedSpy(&leController, SIGNAL(connected(QLowEnergyServiceInfo)));
 
     discoveryAgent.start();
 
@@ -426,6 +445,80 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
             QFAIL("Unknown type returned by service discovery");
         }
 
+    }
+    int leCounter = 0;
+    while (!leDiscoveredSpy.isEmpty()) {
+        const QVariant v = leDiscoveredSpy.takeFirst().at(0);
+        if (v.userType() == qMetaTypeId<QLowEnergyServiceInfo>())
+        {
+            const QLowEnergyServiceInfo info =
+                *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
+
+            QVERIFY(info.isValid());
+            if (info.device().coreConfiguration() == QBluetoothDeviceInfo::LowEnergyCoreConfiguration || info.device().coreConfiguration() == QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration) {
+                leDevice = true;
+                leController.connectToService(info);
+                leCounter ++;
+            }
+
+        } else {
+            QFAIL("Unknown type returned by service discovery");
+        }
+
+    }
+
+    // In case it is not LE device next steps will be skipped.
+    // In case of regular Bluetooth devices there is no need to go in to the loop below.
+    if (leDevice) {
+        scanTime = MaxScanTime;
+        while (leConnectedSpy.count() != leCounter && scanTime > 0) {
+            QTest::qWait(1000);
+            scanTime -= 1000;
+        }
+        int leTestCounter = 0;
+        QSignalSpy leDisonnectedSpy(&leController, SIGNAL(disconnected(QLowEnergyServiceInfo)));
+        while (!leConnectedSpy.isEmpty()) {
+            const QVariant v = leConnectedSpy.takeFirst().at(0);
+            if (v.userType() == qMetaTypeId<QLowEnergyServiceInfo>())
+            {
+                const QLowEnergyServiceInfo info =
+                    *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
+
+                QVERIFY(info.isValid());
+                QCOMPARE(info.errorString(), QString());
+                QVERIFY((info.characteristics().size() > 0));
+                qDebug() << "LE Service Connected: " << info.name() << info.uuid();
+                leTestCounter++;
+                for (int i = 0; i < info.characteristics().size(); i++)
+                    QVERIFY(info.characteristics().at(i).isValid());
+                leController.disconnectFromService(info);
+            } else {
+                QFAIL("Unknown type returned by service discovery");
+            }
+
+        }
+        QCOMPARE(leCounter, leTestCounter);
+        scanTime = MaxScanTime;
+        while (leDisonnectedSpy.count() != leTestCounter && scanTime > 0) {
+            QTest::qWait(1000);
+            scanTime -= 1000;
+        }
+
+        while (!leDisonnectedSpy.isEmpty()) {
+            const QVariant v = leDisonnectedSpy.takeFirst().at(0);
+            if (v.userType() == qMetaTypeId<QLowEnergyServiceInfo>())
+            {
+                const QLowEnergyServiceInfo info =
+                    *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
+
+                QVERIFY(info.isValid());
+                QCOMPARE(info.errorString(), QString());
+                qDebug() << "LE Service Disconnected: " << info.name() << info.uuid();
+            } else {
+                QFAIL("Unknown type returned by service discovery");
+            }
+
+        }
     }
 
     QVERIFY(discoveryAgent.discoveredServices().count() != 0);
