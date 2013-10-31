@@ -49,7 +49,7 @@ SOURCES += \
     qqmlndefrecord.cpp \
     qndefnfcsmartposterrecord.cpp
 
-qnx {
+CONFIG(blackberry) {
     NFC_BACKEND_AVAILABLE = yes
     DEFINES += QNX_NFC #QQNXNFC_DEBUG
 
