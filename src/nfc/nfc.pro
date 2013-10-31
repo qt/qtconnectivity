@@ -53,7 +53,7 @@ qnx {
     NFC_BACKEND_AVAILABLE = yes
     DEFINES += QNX_NFC #QQNXNFC_DEBUG
 
-    LIBS += -lnfc
+    LIBS_PRIVATE += -lnfc
 
     PRIVATE_HEADERS += \
         qllcpserver_qnx_p.h \
