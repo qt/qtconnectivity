@@ -51,9 +51,11 @@
 #include <QDBusContext>
 #include <QDBusObjectPath>
 #include <QDBusMessage>
+#include <QSet>
 
 class OrgBluezAdapterInterface;
 class OrgBluezAgentAdaptor;
+class OrgBluezDeviceInterface;
 
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
@@ -78,8 +80,13 @@ public:
     QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress localAddress = QBluetoothAddress());
     ~QBluetoothLocalDevicePrivate();
 
+    QSet<OrgBluezDeviceInterface *> devices;
+    QSet<QBluetoothAddress> connectedDevicesSet;
     OrgBluezAdapterInterface *adapter;
     OrgBluezAgentAdaptor *agent;
+
+    QList<QBluetoothAddress> connectedDevices() const;
+
     QString agent_path;
     QBluetoothAddress localAddress;
     QBluetoothAddress address;
@@ -101,13 +108,21 @@ public Q_SLOTS: // METHODS
     void pairingCompleted(QDBusPendingCallWatcher*);
 
     void PropertyChanged(QString,QDBusVariant);
+    void _q_deviceCreated(const QDBusObjectPath &device);
+    void _q_deviceRemoved(const QDBusObjectPath &device);
+    void _q_devicePropertyChanged(const QString &property, const QDBusVariant &value);
     bool isValid() const;
 
 private:
+    void createCache();
+    void connectDeviceChanges();
+
     QDBusMessage msgConfirmation;
     QDBusConnection *msgConnection;
 
     QBluetoothLocalDevice *q_ptr;
+
+    bool connectedCached;
 
     void initializeAdapter();
 };

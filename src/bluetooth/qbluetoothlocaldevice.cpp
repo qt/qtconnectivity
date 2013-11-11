@@ -188,6 +188,27 @@ bool QBluetoothLocalDevice::isValid() const
 */
 
 /*!
+  \fn void QBluetoothLocalDevice::deviceConnected(const QBluetoothAddress &address)
+  \since 5.3
+
+  A device with \a address is connected with this device.
+*/
+
+/*!
+  \fn void QBluetoothLocalDevice::deviceDisconnected(const QBluetoothAddress &address)
+  \since 5.3
+
+  A device with \a address is disconnected from this device.
+*/
+
+/*!
+  \fn QList<QBluetoothAddress> connectedDevices() const
+  \since 5.3
+
+  Returns the list of connected devices.
+*/
+
+/*!
   \fn QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
 
   Returns the current bluetooth pairing status of \a address, if it's unpaired, paired, or paired and authorized.

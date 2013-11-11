@@ -93,6 +93,12 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
     return this->d_ptr->hostMode();
 }
 
+QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
+{
+    qWarning() << Q_FUNC_INFO << " is not implemented for QNX backend yet.";
+    return QList<QBluetoothAddress>(); //TODO: implement
+}
+
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
     //We only have one device

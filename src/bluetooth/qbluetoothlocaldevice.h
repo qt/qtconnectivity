@@ -91,6 +91,7 @@ public:
 
     void setHostMode(QBluetoothLocalDevice::HostMode mode);
     HostMode hostMode() const;
+    QList<QBluetoothAddress> connectedDevices() const;
 
     void powerOn();
 
@@ -104,6 +105,8 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
+    void deviceConnected(const QBluetoothAddress &address) const;
+    void deviceDisconnected(const QBluetoothAddress &address) const;
     void pairingFinished(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 
     void pairingDisplayPinCode(const QBluetoothAddress &address, QString pin);
