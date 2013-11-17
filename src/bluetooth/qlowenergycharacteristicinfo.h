@@ -57,6 +57,7 @@ class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
     friend class QLowEnergyServiceInfoPrivate;
     friend class QLowEnergyController;
     friend class QLowEnergyControllerPrivate;
+    friend class QLowEnergyCharacteristicInfoPrivate;
 public:
 
     enum Error {

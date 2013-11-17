@@ -82,12 +82,12 @@ public:
     bool connected;
     QBluetoothDeviceInfo deviceInfo;
     QString errorString;
+    bool randomAddress;
 #ifdef QT_BLUEZ_BLUETOOTH
     QString startingHandle;
     QString endingHandle;
     QString path;
     QBluetoothAddress adapterAddress;
-    bool randomAddress;
     void connectToTerminal();
     void setHandles();
     void setCharacteristics();
