@@ -29,7 +29,8 @@
 \ingroup technology-apis
 \title Qt Bluetooth Overview
 \page qtbluetooth-overview.html
-\brief The Qt Bluetooth API enables connectivity with other Bluetooth enabled devices.
+\brief The Qt Bluetooth API enables connectivity with other regular Bluetooth
+       and Bluetooth Low Energy enabled devices.
 
 \tableofcontents
 
@@ -41,6 +42,9 @@
         \li Push files to remote devices using the OBEX Object Push Profile (OPP).
         \li Connect to remote devices through a RFCOMM channel using the Serial Port Profile (SPP).
         \li Create a RFCOMM server that allows incoming connections using SPP.
+        \li Retrieve specification about Bluetooth Low Energy device.
+        \li Connect to Bluetooth Low Energy device.
+        \li Receive advertisement from Bluetooth Low Energy device.
         \endlist
 
     The following sections describe how to use the Qt Bluetooth C++ API classes
@@ -100,5 +104,104 @@
     and client, please refer to the detailed description sections in the QRfcommServer and
     QBluetoothSocket classes. A good example to start with SPP is the \l{btchat}{Bluetooth Chat}
     example.
+
+    \section1 Bluetooth Low Energy
+
+    Bluetooth Low Energy (in later text BLE), also known as Bluetooth Smart is a wireless computer
+    network technology, which was officially introduced in 2011. It works at the same,
+    2,4HGz frequency, as ”classic” Bluetooth. The main difference is, as stated by its technology name,
+    low energy consumption. It provides an opportunity for BLE devices to operate for months,
+    even years, on coin-cell batteries. This technology was introduced with Bluetooth v 4.0
+    and devices which support this technology are called Bluetooth Smart Ready Devices.
+    The key features of technology are:
+    \list
+    \li Ultra-low peak, average and idle mode power consumption
+    \li Ability to run for years on standard, coin-cell batteries
+    \li Low cost
+    \li Multi-vendor interoperability
+    \li Enhanced range
+    \endlist
+
+    BLE uses a client-server architecture. The server (BLE device) offers services (temperature,
+    heart rate or any other measurements) and advertises them. The client (PC, smartphone
+    or any other Bluetooth Smart Ready device) connects to the server and reads the values
+    advertised by the server. The BLE API is based on GATT (Generic Attribute Profile) concepts.
+    GATT commands are initiated by the client, as mentioned above, and the server is receiving
+    GATT commands and sends replies.
+
+    These GATT commands initiate the services, which consist of characteristics. A characteristic
+    is data that is being transferred. Each characteristic has descriptors, which give additional
+    information about the characteristic. Services, characteristics and descriptors are recognized
+    by their 128bits UUIDs.
+
+    To be able to get and read characteristics, it is required to connect to the LE device service.
+
+    \code
+    QObject::connect(m_serviceDiscoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
+                this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
+    QObject::connect(m_serviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(serviceScanDone()));
+    m_serviceDiscoveryAgent->setRemoteAddress(device.address());
+    m_serviceDiscoveryAgent->start();
+    lowEnergyController = new QLowEnergyController();
+    QObject::connect(lowEnergyController, SIGNAL(connected(QLowEnergyServiceInfo)),
+                this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
+    QObject::connect(lowEnergyController, SIGNAL(error(QLowEnergyServiceInfo)),
+                this, SLOT(errorReceived(QLowEnergyServiceInfo)));
+    QObject::connect(lowEnergyController, SIGNAL(valueChanged(QLowEnergyCharacteristicInfo)),
+                this, SLOT(receiveMeasurement(QLowEnergyCharacteristicInfo)));
+    QObject::connect(lowEnergyController, SIGNAL(disconnected(QLowEnergyServiceInfo)),
+                this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
+
+    \endcode
+
+    We start a service discovery with a \l QBluetoothServiceDiscoveryAgent class and connect its
+    signal \l serviceDiscovered(QLowEnergyServiceInfo) to our slot
+    \l addLowEnergyService(QLowEnergyServiceInfo). This way, it is possible to store all LE services
+    or connect to the desired one. \l QLowEnergyController is used for connecting to service,
+    receiving emitted errors from the service and disconnecting from the service.
+
+    Even though it is possible to connect to an LE service before the service scan is done,
+    it is advisable to do it after the service scan is done.
+
+    \code
+    void serviceScanDone()
+    {
+        lowEnergyController->connectToService(wantedLowEnergyService);
+    }
+    \endcode
+
+    Here, the \c wantedLowEnergyService can be one service or you can pick more or all services
+    to connect. Some LE devices, become available one or two seconds after service scan.
+
+    \code
+    void serviceConnected(const QLowEnergyServiceInfo &leService)
+    {
+        QList<QLowEnergyCharacteristicInfo> lowEnergyCharacteristics = leService.getCharacteristics();
+        for (int i = 0; i<lowEnergyCharacteristics.size(); i++) {
+            QLowEnergyCharacteristicInfo wantedCharacteristic =
+                        QLowEnergyCharacteristicInfo(lowEnergyCharacteristics.at(i));
+            lowEnergyController->enableNotifications(wantedCharacteristic);
+        }
+    }
+    \endcode
+
+    In the code example above all characteristics will be enabled for the notifications, but not
+    all of them have that option as explained in \l QLowEnergyController documentation. It is possible
+    to select only one characteristic, for instance \l QBluetoothUuid::HeartRateMeasurement.
+
+    Finally, to receive updates, the receiveMeasurement(QLowEnergyCharacteristicInfo) slot was defined.
+
+    \code
+    void HeartRate::receiveMeasurement(const QLowEnergyCharacteristicInfo &characteristic)
+    {
+        wantedCharacteristic = QLowEnergyCharacteristicInfo(characteristic);
+        wantedCharacteristic.value();
+    }
+    \endcode
+
+    The returned value is the hexadecimal value. The procedure of reading and converting hexadecimal
+    value properly depends on the BLE devices that is sending updates since every device has a different
+    value structure.
+
 
 */
