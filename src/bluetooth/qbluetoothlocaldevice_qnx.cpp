@@ -42,7 +42,10 @@
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
 #include "qbluetoothlocaldevice_p.h"
+#include <sys/pps.h>
 #include "qnx/ppshelpers_p.h"
+#include <QDir>
+#include <QtCore/private/qcore_unix_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,8 +98,42 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 
 QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
 {
-    qWarning() << Q_FUNC_INFO << " is not implemented for QNX backend yet.";
-    return QList<QBluetoothAddress>(); //TODO: implement
+    QList<QBluetoothAddress> devices;
+    QDir bluetoothDevices(QStringLiteral("/pps/services/bluetooth/remote_devices/"));
+    QStringList allFiles = bluetoothDevices.entryList(QDir::NoDotAndDotDot| QDir::Files);
+    for (int i = 0; i < allFiles.size(); i++) {
+        qBBBluetoothDebug() << allFiles.at(i);
+        int fileId;
+        const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(allFiles.at(i).toUtf8().constData()).constData();
+        if ((fileId = qt_safe_open(filePath, O_RDONLY)) == -1)
+            qWarning() << "Failed to open remote device file";
+        else {
+            pps_decoder_t ppsDecoder;
+            pps_decoder_initialize(&ppsDecoder, 0);
+
+            QBluetoothAddress deviceAddr;
+            QString deviceName;
+
+            if (!ppsReadRemoteDevice(fileId, &ppsDecoder, &deviceAddr, &deviceName)) {
+                pps_decoder_cleanup(&ppsDecoder);
+                qDebug() << "Failed to open remote device file";
+            }
+
+            bool connectedDevice = false;
+            int a = pps_decoder_get_bool(&ppsDecoder, "acl_connected", &connectedDevice);
+            if (a == PPS_DECODER_OK) {
+                if (connectedDevice)
+                    devices.append(deviceAddr);
+            }
+            else if ( a == PPS_DECODER_BAD_TYPE)
+                qBBBluetoothDebug() << "Type missmatch";
+            else
+                qBBBluetoothDebug() << "An unknown error occurred while checking connected status.";
+            pps_decoder_cleanup(&ppsDecoder);
+        }
+    }
+
+    return devices;
 }
 
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
@@ -262,6 +299,25 @@ void QBluetoothLocalDevicePrivate::setAccess(int access)
     }
 }
 
+void QBluetoothLocalDevicePrivate::connectedDevices()
+{
+    QList<QBluetoothAddress> devices = q_ptr->connectedDevices();
+    for (int i = 0; i < devices.size(); i ++) {
+        if (!connectedDevicesSet.contains(devices.at(i))) {
+            QBluetoothAddress addr = devices.at(i);
+            connectedDevicesSet.append(addr);
+            emit q_ptr->deviceConnected(devices.at(i));
+        }
+    }
+    for (int i = 0; i < connectedDevicesSet.size(); i ++) {
+        if (!devices.contains(connectedDevicesSet.at(i))) {
+            QBluetoothAddress addr = connectedDevicesSet.at(i);
+            emit q_ptr->deviceDisconnected(addr);
+            connectedDevicesSet.removeOne(addr);
+        }
+    }
+}
+
 void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
 {
     qBBBluetoothDebug() << Q_FUNC_INFO << result.msg << result.dat;
@@ -282,6 +338,7 @@ void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
                 result.dat.first() == QStringLiteral("level")) {
             QBluetoothLocalDevice::HostMode newHostMode = hostMode();
             qBBBluetoothDebug() << "New Host mode" << newHostMode;
+            connectedDevices();
             Q_EMIT q_ptr->hostModeStateChanged(newHostMode);
         }
     } else if (result.msg == QStringLiteral("pairing_complete")) {

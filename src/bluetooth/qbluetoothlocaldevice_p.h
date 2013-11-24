@@ -149,6 +149,8 @@ public:
     void requestPairing(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 
     void setAccess(int);
+    // This method will be used for emitting signals.
+    void connectedDevices();
 
     Q_INVOKABLE void controlReply(ppsResult res);
     Q_INVOKABLE void controlEvent(ppsResult res);
@@ -158,6 +160,7 @@ public:
 private:
     QBluetoothLocalDevice *q_ptr;
     bool isValidDevice;
+    QList<QBluetoothAddress> connectedDevicesSet;
 };
 #else
 class QBluetoothLocalDevicePrivate : public QObject
