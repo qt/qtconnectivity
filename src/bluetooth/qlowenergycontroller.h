@@ -69,6 +69,7 @@ public:
 Q_SIGNALS:
     void connected(const QLowEnergyServiceInfo &);
     void error(const QLowEnergyServiceInfo &);
+    void error(const QLowEnergyCharacteristicInfo &);
     void disconnected(const QLowEnergyServiceInfo &);
     void valueChanged(const QLowEnergyCharacteristicInfo &);
 
@@ -79,6 +80,7 @@ private:
 
     Q_PRIVATE_SLOT(d_func(), void _q_serviceConnected(const QBluetoothUuid &uuid))
     Q_PRIVATE_SLOT(d_func(), void _q_serviceError(const QBluetoothUuid &uuid))
+    Q_PRIVATE_SLOT(d_func(), void _q_characteristicError(const QBluetoothUuid &uuid))
     Q_PRIVATE_SLOT(d_func(), void _q_valueReceived(const QBluetoothUuid &uuid))
     Q_PRIVATE_SLOT(d_func(), void _q_serviceDisconnected(const QBluetoothUuid &uuid))
 };

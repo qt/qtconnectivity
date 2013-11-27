@@ -56,6 +56,7 @@ public:
 
     void _q_serviceConnected(const QBluetoothUuid &uuid);
     void _q_serviceError(const QBluetoothUuid &uuid);
+    void _q_characteristicError(const QBluetoothUuid &uuid);
     void _q_valueReceived(const QBluetoothUuid &uuid);
     void _q_serviceDisconnected(const QBluetoothUuid &uuid);
 

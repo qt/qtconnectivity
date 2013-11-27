@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate():
-    value (QByteArray()), permission(0), notification (false), handle(QStringLiteral("0x0000")), properties(QVariantMap()), characteristic(0), m_signalConnected(false)
+    value (QByteArray()), permission(0), notification (false), handle(QStringLiteral("0x0000")), properties(QVariantMap()), errorString(""), characteristic(0), m_signalConnected(false)
 {
     process = process->instance();
     t=0;
@@ -129,26 +129,31 @@ void QLowEnergyCharacteristicInfoPrivate::replyReceived(const QString &reply)
 
 void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
 {
-    process = process->instance();
-    if (!m_signalConnected) {
-        connect(process, SIGNAL(replySend(const QString &)), this, SLOT(replyReceived(const QString &)));
-        m_signalConnected = true;
+    if (permission & QLowEnergyCharacteristicInfo::Write) {
+        process = process->instance();
+        if (!m_signalConnected) {
+            connect(process, SIGNAL(replySend(const QString &)), this, SLOT(replyReceived(const QString &)));
+            m_signalConnected = true;
+        }
+        value = wantedValue;
+        QString command;
+        if (notification == true)
+            command = QStringLiteral("char-write-req ") + notificationHandle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
+        else
+            command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
+
+
+    #ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
+        qDebug() << command << t << process;
+    #endif
+        process->executeCommand(command);
+        process->executeCommand(QStringLiteral("\n"));
+        t++;
     }
-    value = wantedValue;
-    QString command;
-    if (notification == true)
-        command = QStringLiteral("char-write-req ") + notificationHandle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
-    else
-        command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
-
-
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-    qDebug() << command << t << process;
-#endif
-    process->executeCommand(command);
-    process->executeCommand(QStringLiteral("\n"));
-    t++;
-
+    else {
+        errorString = QStringLiteral("This characteristic does not support write operations.");
+        emit error(uuid);
+    }
 }
 
 bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
@@ -162,6 +167,8 @@ bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 #ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
         qDebug() << "Notification changes not allowed";
 #endif
+        errorString = QStringLiteral("This characteristic does not support notifications.");
+        emit error(uuid);
         return false;
     }
     QByteArray val;

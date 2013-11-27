@@ -81,9 +81,17 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QLowEnergyController::error(const QLowEnergyServiceInfo &)
 
-    This signal is emitted when an error occurs.
+    This signal is emitted when the service error occurs.
 
     \sa QLowEnergyServiceInfo::errorString()
+*/
+
+/*!
+    \fn void QLowEnergyController::error(const QLowEnergyCharacteristicInfo &)
+
+    This signal is emitted when the characteristic error occurs.
+
+    \sa QLowEnergyCharacteristicInfo::errorString()
 */
 
 /*!
@@ -126,6 +134,17 @@ void QLowEnergyControllerPrivate::_q_serviceError(const QBluetoothUuid &uuid)
     for (int i = 0; i < m_leServices.size(); i++) {
         if (((QLowEnergyServiceInfo)m_leServices.at(i)).uuid() == uuid)
             emit q_ptr->error((QLowEnergyServiceInfo)m_leServices.at(i));
+    }
+}
+
+void QLowEnergyControllerPrivate::_q_characteristicError(const QBluetoothUuid &uuid)
+{
+    for (int i = 0; i < m_leServices.size(); i++) {
+        QList<QLowEnergyCharacteristicInfo> characteristics = m_leServices.at(i).characteristics();
+        for (int j = 0; j < characteristics.size(); j++) {
+            if (characteristics.at(j).uuid() == uuid)
+                emit q_ptr->error(characteristics.at(j));
+        }
     }
 }
 

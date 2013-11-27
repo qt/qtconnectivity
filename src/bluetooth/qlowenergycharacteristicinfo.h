@@ -101,6 +101,8 @@ public:
 
     bool isValid() const;
 
+    QString errorString() const;
+
 protected:
     QSharedPointer<QLowEnergyCharacteristicInfoPrivate> d_ptr;
 

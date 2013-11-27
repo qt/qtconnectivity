@@ -86,6 +86,7 @@ public:
     QString notificationHandle;
     int instance;
     QVariantMap properties;
+    QString errorString;
     QList<QLowEnergyDescriptorInfo> descriptorsList;
 #ifdef QT_QNX_BLUETOOTH
     bt_gatt_characteristic_t characteristic;
@@ -104,6 +105,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void notifyValue(const QBluetoothUuid &);
+    void error(const QBluetoothUuid &);
 
 private:
 #ifdef QT_BLUEZ_BLUETOOTH

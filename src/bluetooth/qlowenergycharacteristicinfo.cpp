@@ -249,9 +249,10 @@ bool QLowEnergyCharacteristicInfo::isNotificationCharacteristic() const
 }
 
 /*!
-    Writes the value \a value directly to LE device.
+    Writes the value \a value directly to LE device. If the value was not written successfully
+    an error will be emitted with an error string.
 
-    \sa setValue()
+    \sa errorString()
 */
 void QLowEnergyCharacteristicInfo::writeValue(const QByteArray &value)
 {
@@ -289,6 +290,17 @@ bool QLowEnergyCharacteristicInfo::isValid() const
 QList<QLowEnergyDescriptorInfo> QLowEnergyCharacteristicInfo::descriptors() const
 {
     return d_ptr->descriptorsList;
+}
+
+/*!
+    Returns an error string if error occurred. An error is emitted in the
+    QLowEnergyController class.
+
+    \sa QLowEnergyController::error(const QLowEnergyCharacteristicInfo &)
+*/
+QString QLowEnergyCharacteristicInfo::errorString() const
+{
+    return d_ptr->errorString;
 }
 
 QT_END_NAMESPACE

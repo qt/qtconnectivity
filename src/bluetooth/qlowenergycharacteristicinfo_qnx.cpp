@@ -89,7 +89,7 @@ int stringToBuffer(const QString &stringData, uint8_t *buffer, int bufferLength)
 }
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate():
-    name(QString()), value(QByteArray()), permission(0), instance(-1), properties(QVariantMap()), handle(QStringLiteral("0x0000"))
+    name(QString()), value(QByteArray()), permission(0), instance(-1), handle(QStringLiteral("0x0000")), properties(QVariantMap()), errorString("")
 {
 
 }
@@ -138,18 +138,22 @@ bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 {
     if (instance == -1) {
         qBBBluetoothDebug() << " GATT service not connected ";
-        //q_ptr->error(QLowEnergyCharacteristicInfo::NotConnected);
+        errorString = QStringLiteral("Service is not connected");
+        emit error(uuid);
         return false;
     }
     if ( (permission & QLowEnergyCharacteristicInfo::Notify) == 0) {
         qBBBluetoothDebug() << "Notification changes not allowed";
+        errorString = QStringLiteral("This characteristic does not support notifications.");
+        emit error(uuid);
         return false;
     }
 
     int rc = bt_gatt_enable_notify(instance, &characteristic, 1);
     if (rc != 0) {
         qBBBluetoothDebug() << "bt_gatt_enable_notify errno=" << errno << strerror(errno);
-        //emit q_ptr->error(QLowEnergyCharacteristicInfo::NotificationFail);
+        errorString = QString::fromLatin1(strerror(errno));
+        emit error(uuid);
         return false;
     } else {
         qBBBluetoothDebug() << "bt_gatt_enable_notify was presumably OK";
@@ -164,6 +168,8 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
         uint8_t *characteristicBuffer = (uint8_t *)alloca(characteristicLen / 2 + 1);
         if (!characteristicBuffer) {
             qBBBluetoothDebug() << "GATT characteristic: Not enough memory";
+            errorString = QStringLiteral("Not enough memory.");
+            emit error(uuid);
             bt_gatt_disconnect_instance(instance);
             return;
         }
@@ -176,8 +182,14 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
 
             if (byteCount < 0) {
                 qBBBluetoothDebug() << "Unable to write characteristic value: " << errno << strerror(errno);
+                errorString = QStringLiteral("Unable to write characteristic value: ") + QString::fromLatin1(strerror(errno));
+                emit error(uuid);
             }
         }
+    }
+    else {
+        errorString = QStringLiteral("Characteristic does not allow write operations. The wanted value was not written to the device.");
+        emit error(uuid);
     }
     value = wantedValue;
     properties[QStringLiteral("value")] = value;
