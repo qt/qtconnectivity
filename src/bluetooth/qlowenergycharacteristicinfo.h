@@ -97,7 +97,7 @@ public:
 
     bool isNotificationCharacteristic() const;
 
-    QList<QLowEnergyDescriptorInfo> getDescriptors() const;
+    QList<QLowEnergyDescriptorInfo> descriptors() const;
 
     bool isValid() const;
 

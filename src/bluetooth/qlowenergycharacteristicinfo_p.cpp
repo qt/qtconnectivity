@@ -53,12 +53,6 @@ QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
 
 }
 
-void QLowEnergyCharacteristicInfoPrivate::propertyChanged(QString valueName, QDBusVariant value)
-{
-    Q_UNUSED(valueName);
-    Q_UNUSED(value);
-}
-
 void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
 {
     Q_UNUSED(wantedValue);

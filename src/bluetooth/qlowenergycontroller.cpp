@@ -133,7 +133,7 @@ void QLowEnergyControllerPrivate::_q_serviceError(const QBluetoothUuid &uuid)
 void QLowEnergyControllerPrivate::_q_valueReceived(const QBluetoothUuid &uuid)
 {
      for (int i = 0; i < m_leServices.size(); i++) {
-         QList<QLowEnergyCharacteristicInfo> characteristics = m_leServices.at(i).getCharacteristics();
+         QList<QLowEnergyCharacteristicInfo> characteristics = m_leServices.at(i).characteristics();
          for (int j = 0; j < characteristics.size(); j++) {
              if (characteristics.at(j).uuid() == uuid)
                  emit q_ptr->valueChanged(characteristics.at(j));
@@ -253,10 +253,10 @@ bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInf
 {
     bool enable = false;
     for (int i = 0; i < d_ptr->m_leServices.size(); i++) {
-        for (int j = 0; j < d_ptr->m_leServices.at(i).getCharacteristics().size(); j++) {
-            if (d_ptr->m_leServices.at(i).getCharacteristics().at(j).uuid() == characteristic.uuid()) {
-                connect(d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
-                enable = d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr->enableNotification();
+        for (int j = 0; j < d_ptr->m_leServices.at(i).characteristics().size(); j++) {
+            if (d_ptr->m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()) {
+                connect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
+                enable = d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr->enableNotification();
             }
         }
     }
@@ -272,10 +272,10 @@ bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInf
 void QLowEnergyController::disableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
 {
     for (int i = 0; i < d_ptr->m_leServices.size(); i++) {
-        for (int j = 0; j < d_ptr->m_leServices.at(i).getCharacteristics().size(); j++) {
-            if (d_ptr->m_leServices.at(i).getCharacteristics().at(j).uuid() == characteristic.uuid()){
-                disconnect(d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
-                d_ptr->m_leServices.at(i).getCharacteristics().at(j).d_ptr->disableNotification();
+        for (int j = 0; j < d_ptr->m_leServices.at(i).characteristics().size(); j++) {
+            if (d_ptr->m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()){
+                disconnect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
+                d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr->disableNotification();
             }
         }
     }

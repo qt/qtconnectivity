@@ -283,4 +283,12 @@ bool QLowEnergyCharacteristicInfo::isValid() const
     return true;
 }
 
+/*!
+    Returns the list of characteristic descriptors.
+*/
+QList<QLowEnergyDescriptorInfo> QLowEnergyCharacteristicInfo::descriptors() const
+{
+    return d_ptr->descriptorsList;
+}
+
 QT_END_NAMESPACE

@@ -88,12 +88,12 @@ public:
 
     QBluetoothUuid uuid() const;
 
-    QList<QLowEnergyCharacteristicInfo> getCharacteristics() const;
+    QList<QLowEnergyCharacteristicInfo> characteristics() const;
 
     QString name() const;
 
     void setServiceType(QLowEnergyServiceInfo::ServiceType type);
-    QLowEnergyServiceInfo::ServiceType getServiceType() const;
+    QLowEnergyServiceInfo::ServiceType serviceType() const;
 
     void setRandomAddress();
 
