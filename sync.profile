@@ -15,4 +15,5 @@
     "qtbase" => "",
     "qtdeclarative" => "",
     "qtxmlpatterns" => "",
+    "qtandroidextras" => "",
 );
