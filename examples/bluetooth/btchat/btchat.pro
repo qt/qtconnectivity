@@ -19,3 +19,6 @@ HEADERS = \
 FORMS = \
     chat.ui \
     remoteselector.ui
+
+target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/btchat
+INSTALLS += target
