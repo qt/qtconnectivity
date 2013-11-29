@@ -8,9 +8,11 @@ RESOURCES += \
     scanner.qrc
 
 OTHER_FILES += \
-    scanner.qml
+    scanner.qml \
+    Button.qml \
+    default.png
 
 #DEFINES += QMLJSDEBUGGER
 
-OTHER_FILES += \
-    Button.qml
+target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/scanner
+INSTALLS += target
