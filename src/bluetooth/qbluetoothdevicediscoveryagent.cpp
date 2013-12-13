@@ -38,6 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "qbluetoothhostinfo.h"
 
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
@@ -71,6 +72,7 @@ QT_BEGIN_NAMESPACE
     \value NoError          No error has occurred.
     \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
     \value InputOutputError    Writing or reading from the device resulted in an error.
+    \value InvalidBluetoothAdapterError An invalid Bluetooth adapter was specified
     \value UnknownError     An unknown error has occurred.
 */
 
@@ -137,11 +139,24 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
     Constructs a new Bluetooth device discovery agent with parent \a parent and uses the adapter \a deviceAdapter
     for the device search. If \a deviceAdapter is default constructed the resulting
     QBluetoothDeviceDiscoveryAgent object will use the local default Bluetooth adapter.
+    If an invalid Bluetooth adapter address is specified, \a error will be set to
+    \a InvalidBluetoothAdapterError.
+
+    \sa error
 */
 QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
 {
     d_ptr->q_ptr = this;
+    if (!deviceAdapter.isNull()) {
+        const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
+        foreach (const QBluetoothHostInfo &hostInfo, localDevices) {
+            if (hostInfo.address() == deviceAdapter)
+                return;
+        }
+        d_ptr->lastError = InvalidBluetoothAdapterError;
+        d_ptr->errorString = tr("Invalid Bluetooth adapter address");
+    }
 }
 
 /*!
@@ -194,7 +209,7 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
-    if (!isActive())
+    if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
         d->start();
 }
 

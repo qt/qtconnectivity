@@ -66,6 +66,7 @@ public:
         NoError,
         InputOutputError,
         PoweredOffError,
+        InvalidBluetoothAdapterError,
         UnknownError = 100 //New errors must be added before Unknown error
     };
 

@@ -65,6 +65,7 @@ public:
         NoError =  QBluetoothDeviceDiscoveryAgent::NoError,
         InputOutputError = QBluetoothDeviceDiscoveryAgent::InputOutputError,
         PoweredOffError = QBluetoothDeviceDiscoveryAgent::PoweredOffError,
+        InvalidBluetoothAdapterError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
         UnknownError = QBluetoothDeviceDiscoveryAgent::UnknownError //=100
         //New Errors must be added after Unknown Error the space before UnknownError is reserved
         //for future device discovery errors

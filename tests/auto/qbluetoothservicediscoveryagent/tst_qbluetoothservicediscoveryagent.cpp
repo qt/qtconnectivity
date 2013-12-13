@@ -76,6 +76,7 @@ public slots:
 private slots:
     void initTestCase();
 
+    void tst_invalidBtAddress();
     void tst_serviceDiscovery_data();
     void tst_serviceDiscovery();
     void tst_serviceDiscoveryAdapters();
@@ -147,6 +148,24 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 
         devices = discoveryAgent.discoveredDevices();
     }
+}
+
+void tst_QBluetoothServiceDiscoveryAgent::tst_invalidBtAddress()
+{
+    QBluetoothServiceDiscoveryAgent *discoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress("11:11:11:11:11:11"));
+
+    QCOMPARE(discoveryAgent->error(), QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError);
+    discoveryAgent->start();
+    QCOMPARE(discoveryAgent->isActive(), false);
+    delete discoveryAgent;
+
+    discoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress());
+    QCOMPARE(discoveryAgent->error(), QBluetoothServiceDiscoveryAgent::NoError);
+    if (QBluetoothLocalDevice::allDevices().count() > 0) {
+        discoveryAgent->start();
+        QCOMPARE(discoveryAgent->isActive(), true);
+    }
+    delete discoveryAgent;
 }
 
 void tst_QBluetoothServiceDiscoveryAgent::serviceDiscoveryDebug(const QBluetoothServiceInfo &info)

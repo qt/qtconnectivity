@@ -86,6 +86,8 @@ private slots:
 
     void tst_properties();
 
+    void tst_invalidBtAddress();
+
     void tst_startStopDeviceDiscoveries();
 
     void tst_deviceDiscovery_data();
@@ -141,6 +143,24 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_properties()
     QCOMPARE(discoveryAgent.inquiryType(), QBluetoothDeviceDiscoveryAgent::LimitedInquiry);
     discoveryAgent.setInquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
     QCOMPARE(discoveryAgent.inquiryType(), QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
+}
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_invalidBtAddress()
+{
+    QBluetoothDeviceDiscoveryAgent *discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress("11:11:11:11:11:11"));
+
+    QCOMPARE(discoveryAgent->error(), QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
+    discoveryAgent->start();
+    QCOMPARE(discoveryAgent->isActive(), false);
+    delete discoveryAgent;
+
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress());
+    QCOMPARE(discoveryAgent->error(), QBluetoothDeviceDiscoveryAgent::NoError);
+    if (QBluetoothLocalDevice::allDevices().count() > 0) {
+        discoveryAgent->start();
+        QCOMPARE(discoveryAgent->isActive(), true);
+    }
+    delete discoveryAgent;
 }
 
 void tst_QBluetoothDeviceDiscoveryAgent::deviceDiscoveryDebug(const QBluetoothDeviceInfo &info)

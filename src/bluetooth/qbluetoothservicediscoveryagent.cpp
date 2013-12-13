@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include "qbluetoothhostinfo.h"
+#include "qbluetoothlocaldevice.h"
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
 
@@ -78,6 +80,7 @@ QT_BEGIN_NAMESPACE
     \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
     \value InputOutputError    Writing or reading from the device resulted in an error.
     \value UnknownError     An unknown error has occurred.
+    \value InvalidBluetoothAdapterError An invalid Bluetooth adapter was specified
 */
 
 /*!
@@ -123,12 +126,24 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
 /*!
     Constructs a new QBluetoothServiceDiscoveryAgent for \a deviceAdapter and with \a parent.
 
-    If \a deviceAdapter is null, the default adapter will be used.
+    If \a deviceAdapter is null, the default adapter will be used. If an invalid Bluetooth adapter address
+    is specified, \a error will be set to \a InvalidBluetoothAdapterError.
+
+    \sa error
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
 : QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(deviceAdapter))
 {
     d_ptr->q_ptr = this;
+    if (!deviceAdapter.isNull()) {
+        const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
+        foreach (const QBluetoothHostInfo &hostInfo, localDevices) {
+            if (hostInfo.address() == deviceAdapter)
+                return;
+        }
+        d_ptr->error = InvalidBluetoothAdapterError;
+        d_ptr->errorString = tr("Invalid Bluetooth adapter address");
+    }
 }
 
 /*!
@@ -234,7 +249,8 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
 
-    if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive) {
+    if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
+            && d->error != InvalidBluetoothAdapterError) {
         d->setDiscoveryMode(mode);
         if (d->deviceAddress.isNull()) {
             d->startDeviceDiscovery();
