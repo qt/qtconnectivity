@@ -45,9 +45,12 @@
 #include "bluez/manager_p.h"
 #include "bluez/service_p.h"
 
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QXmlStreamWriter>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 {
@@ -163,7 +166,7 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
         }
         break;
             default:
-        qWarning() << "Unknown variant type", attribute.userType();
+        qCWarning(QT_BT_BLUEZ) << "Unknown variant type", attribute.userType();
     }
 }
 
@@ -234,7 +237,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         unregisterService();
 
     if (!ensureSdpConnection(localAdapter)) {
-        qWarning() << "SDP not connected. Cannot register";
+        qCWarning(QT_BT_BLUEZ) << "SDP not connected. Cannot register";
         return false;
     }
 
@@ -263,13 +266,13 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     stream.writeEndDocument();
 
-//    qDebug() << xmlServiceRecord;
+    qCDebug(QT_BT_BLUEZ) << xmlServiceRecord;
 
     if (!registered) {
         QDBusPendingReply<uint> reply = service->AddRecord(xmlServiceRecord);
         reply.waitForFinished();
         if (reply.isError()) {
-            qWarning() << "AddRecord returned error" << reply.error();
+            qCWarning(QT_BT_BLUEZ) << "AddRecord returned error" << reply.error();
             return false;
         }
 
@@ -278,7 +281,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         QDBusPendingReply<> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
         reply.waitForFinished();
         if (reply.isError()) {
-            qWarning() << "UpdateRecord returned error" << reply.error();
+            qCWarning(QT_BT_BLUEZ) << "UpdateRecord returned error" << reply.error();
             return false;
         }
     }

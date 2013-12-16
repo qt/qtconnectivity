@@ -73,7 +73,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothtransferreply_bluez.cpp
 
 } else:CONFIG(blackberry) {
-    DEFINES += QT_QNX_BLUETOOTH #BT_BBPPSDEBUG
+    DEFINES += QT_QNX_BLUETOOTH
 
     include(qnx/qnx.pri)
 

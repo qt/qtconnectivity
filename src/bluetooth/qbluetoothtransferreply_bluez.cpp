@@ -49,6 +49,7 @@
 #include "bluez/obex_transfer_p.h"
 #include "qbluetoothtransferreply.h"
 
+#include <QtCore/QLoggingCategory>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrentRun>
@@ -56,6 +57,8 @@
 static const QLatin1String agentPath("/qt/agent");
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, const QBluetoothTransferRequest &request,
                                                            QBluetoothTransferManager *parent)
@@ -76,7 +79,7 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 
     bool res = QDBusConnection::sessionBus().registerObject(m_agent_path, this);
     if(!res)
-        qWarning() << "Failed Creating dbus objects";
+        qCWarning(QT_BT_BLUEZ) << "Failed Creating dbus objects";
 
     qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
     QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
@@ -100,7 +103,7 @@ bool QBluetoothTransferReplyBluez::start()
     if(!file){
         tempfile = new QTemporaryFile(this );
         tempfile->open();
-//        qDebug() << "Not a QFile, making a copy" << tempfile->fileName();
+        qCDebug(QT_BT_BLUEZ) << "Not a QFile, making a copy" << tempfile->fileName();
 
         QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
         QObject::connect(watcher, SIGNAL(finished()), this, SLOT(copyDone()));
@@ -272,7 +275,7 @@ void QBluetoothTransferReplyBluez::abort()
         QDBusPendingReply<> reply = xfer->Cancel();
         reply.waitForFinished();
         if(reply.isError()){
-            qWarning() << "Failed to abort transfer" << reply.error();
+            qCWarning(QT_BT_BLUEZ) << "Failed to abort transfer" << reply.error();
         }
         delete xfer;
     }

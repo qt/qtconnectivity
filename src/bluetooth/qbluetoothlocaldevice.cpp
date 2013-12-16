@@ -44,7 +44,6 @@
 #include "qbluetoothaddress.h"
 
 #include <QtCore/QString>
-#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 

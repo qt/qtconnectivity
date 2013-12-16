@@ -42,13 +42,8 @@
 #include "qbluetoothuuid.h"
 
 #include <QStringList>
-
-#include <QDebug>
-
 #include <QtEndian>
 
-//#include <arpa/inet.h>
-//#include <netinet/in.h>
 #include <string.h>
 
 QT_BEGIN_NAMESPACE

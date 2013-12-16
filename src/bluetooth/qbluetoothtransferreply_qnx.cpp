@@ -150,14 +150,14 @@ bool QBluetoothTransferReplyQnx::copyToTempFile(QIODevice *to, QIODevice *from)
 
 void QBluetoothTransferReplyQnx::copyDone()
 {
-    qBBBluetoothDebug() << "Copy done";
+    qCDebug(QT_BT_QNX) << "Copy done";
     startOPP(tempfile->fileName());
     QObject::sender()->deleteLater();
 }
 
 void QBluetoothTransferReplyQnx::startOPP(QString filename)
 {
-    qBBBluetoothDebug() << "Sending Push object command";
+    qCDebug(QT_BT_QNX) << "Sending Push object command";
     ppsSendOpp("push_object", filename.toUtf8(), request().address(), this);
 }
 
@@ -182,7 +182,7 @@ void QBluetoothTransferReplyQnx::controlReply(ppsResult result)
 void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
 {
     if (result.msg == QStringLiteral("opp_cancelled")) {
-        qBBBluetoothDebug() << "opp cancelled" << result.errorMsg << result.error;
+        qCDebug(QT_BT_QNX) << "opp cancelled" << result.errorMsg << result.error;
         if (m_running)
             return;
         m_finished = true;
@@ -203,18 +203,18 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
         bool ok;
         qint64 sentBytes = result.dat.at(result.dat.indexOf(QStringLiteral("sent")) + 1).toDouble(&ok);
         if (!ok) {
-            qWarning() << "Could not convert sent bytes";
+            qCWarning(QT_BT_QNX) << "Could not convert sent bytes";
             return;
         }
         qint64 totalBytes = result.dat.at(result.dat.indexOf(QStringLiteral("total")) + 1).toDouble(&ok);
         if (!ok) {
-            qWarning() << "Could not convert total bytes";
+            qCWarning(QT_BT_QNX) << "Could not convert total bytes";
             return;
         }
-        qBBBluetoothDebug() << "opp update" << sentBytes << totalBytes;
+        qCDebug(QT_BT_QNX) << "opp update" << sentBytes << totalBytes;
         Q_EMIT transferProgress(sentBytes, totalBytes);
     } else if (result.msg == QStringLiteral("opp_complete")) {
-        qBBBluetoothDebug() << "opp complete";
+        qCDebug(QT_BT_QNX) << "opp complete";
         m_finished = true;
         m_running = false;
         Q_EMIT finished(this);
