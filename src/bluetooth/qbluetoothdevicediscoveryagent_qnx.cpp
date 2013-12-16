@@ -97,6 +97,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         qWarning() << Q_FUNC_INFO << "rdfd - failed to open /pps/services/bluetooth/remote_devices/.all"
                       << m_rdfd;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+        errorString = "Cannot open remote device socket";
         emit q->error(lastError);
         stop();
         return;
@@ -105,6 +106,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         if (!m_rdNotifier) {
             qWarning() << Q_FUNC_INFO << "failed to connect to m_rdNotifier";
             lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+            errorString = "Cannot connect to Bluetooth socket notifier";
             emit q->error(lastError);
             stop();
             return;
@@ -118,6 +120,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     } else {
         qWarning() << "Could not write to control FD";
         m_active = false;
+        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+        errorString = "Cannot start device inquiry";
         q->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
         return;
     }
