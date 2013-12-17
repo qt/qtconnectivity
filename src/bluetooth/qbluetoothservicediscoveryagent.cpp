@@ -69,6 +69,10 @@ QT_BEGIN_NAMESPACE
     use cases this is adequate as QBluetoothSocket::connectToService() will perform additional
     discovery if required.  If full service information is required, pass \l FullDiscovery as the
     discoveryMode parameter to start().
+
+    This class may internally utilize \l QBluetoothDeviceDiscoveryAgent to find unknown devices.
+
+    \sa QBluetoothDeviceDiscoveryAgent
 */
 
 /*!
@@ -79,8 +83,9 @@ QT_BEGIN_NAMESPACE
     \value NoError          No error has occurred.
     \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
     \value InputOutputError    Writing or reading from the device resulted in an error.
+    \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
+                                        adapter address of any local Bluetooth device.
     \value UnknownError     An unknown error has occurred.
-    \value InvalidBluetoothAdapterError An invalid Bluetooth adapter was specified
 */
 
 /*!
@@ -114,8 +119,8 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    Constructs a new QBluetoothServiceDiscoveryAgent with \a parent. Services will be discovered on all
-    contactable devices.
+    Constructs a new QBluetoothServiceDiscoveryAgent with \a parent. The search is performed via the
+    local default Bluetooth adapter.
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent)
 : QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(QBluetoothAddress()))
@@ -126,10 +131,14 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
 /*!
     Constructs a new QBluetoothServiceDiscoveryAgent for \a deviceAdapter and with \a parent.
 
-    If \a deviceAdapter is null, the default adapter will be used. If an invalid Bluetooth adapter address
-    is specified, \a error will be set to \a InvalidBluetoothAdapterError.
+    It uses \a deviceAdapter for the service search. If \a deviceAdapter is default constructed
+    the resulting QBluetoothServiceDiscoveryAgent object will use the local default Bluetooth adapter.
 
-    \sa error
+    If a \a deviceAdapter is specified that is not a local adapter \l error() will be set to
+    \l InvalidBluetoothAdapterError. Therefore it is recommended to test the error flag immediately after
+    using this constructor.
+
+    \sa error()
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
 : QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(deviceAdapter))
