@@ -68,7 +68,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-    errorString = QStringLiteral("No Bluetooth device available");
+    errorString = QBluetoothDeviceDiscoveryAgent::tr("No Bluetooth device available");
     emit q->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
 }
 
