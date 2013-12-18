@@ -16,7 +16,9 @@ PUBLIC_HEADERS += \
     qndeffilter.h \
     qndefnfcurirecord.h \
     qqmlndefrecord.h \
-    qndefnfcsmartposterrecord.h
+    qndefnfcsmartposterrecord.h \
+    qnearfieldsharemanager.h \
+    qnearfieldsharetarget.h
 
 PRIVATE_HEADERS += \
     qllcpsocket_p.h \
@@ -29,7 +31,9 @@ PRIVATE_HEADERS += \
     qnearfieldtagtype3_p.h \
     qnearfieldtagtype4_p.h \
     qtlv_p.h \
-    qndefnfcsmartposterrecord_p.h
+    qndefnfcsmartposterrecord_p.h \
+    qnearfieldsharemanager_p.h \
+    qnearfieldsharetarget_p.h
 
 SOURCES += \
     qnearfieldmanager.cpp \
@@ -47,13 +51,15 @@ SOURCES += \
     qtlv.cpp \
     qllcpserver.cpp \
     qqmlndefrecord.cpp \
-    qndefnfcsmartposterrecord.cpp
+    qndefnfcsmartposterrecord.cpp \
+    qnearfieldsharemanager.cpp \
+    qnearfieldsharetarget.cpp
 
 CONFIG(blackberry) {
     NFC_BACKEND_AVAILABLE = yes
     DEFINES += QNX_NFC #QQNXNFC_DEBUG
 
-    LIBS_PRIVATE += -lnfc
+    LIBS += -lnfc -l:libbbsystem.so.2
 
     PRIVATE_HEADERS += \
         qllcpserver_qnx_p.h \
@@ -61,14 +67,20 @@ CONFIG(blackberry) {
         qnearfieldmanager_qnx_p.h \
         qnx/qnxnfcmanager_p.h \
         qnearfieldtarget_qnx_p.h \
-        qnx/qnxnfceventfilter_p.h
+        qnx/qnxnfceventfilter_p.h \
+        qnearfieldsharemanager_qnx_p.h \
+        qnearfieldsharetarget_qnx_p.h \
+        qnx/qnxnfcsharemanager_p.h
 
     SOURCES += \
         qllcpserver_qnx_p.cpp \
         qllcpsocket_qnx_p.cpp \
         qnearfieldmanager_qnx.cpp \
         qnx/qnxnfcmanager.cpp \
-        qnx/qnxnfceventfilter.cpp
+        qnx/qnxnfceventfilter.cpp \
+        qnearfieldsharemanager_qnx_p.cpp \
+        qnearfieldsharetarget_qnx_p.cpp \
+        qnx/qnxnfcsharemanager_p.cpp
 }
 
 simulator {
@@ -95,12 +107,16 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     PRIVATE_HEADERS += \
         qllcpsocket_p_p.h \
         qllcpserver_p_p.h \
-        qnearfieldmanagerimpl_p.h
+        qnearfieldmanagerimpl_p.h \
+        qnearfieldsharemanagerimpl_p.h \
+        qnearfieldsharetargetimpl_p.h
 
     SOURCES += \
         qllcpsocket_p.cpp \
         qllcpserver_p.cpp \
-        qnearfieldmanagerimpl_p.cpp
+        qnearfieldmanagerimpl_p.cpp \
+        qnearfieldsharemanagerimpl_p.cpp \
+        qnearfieldsharetargetimpl_p.cpp
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
