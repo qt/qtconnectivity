@@ -45,6 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+    : state(Inactive)
 {
     Q_UNUSED(deviceAdapter);
 }
