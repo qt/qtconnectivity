@@ -129,7 +129,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
     m_active = false;
     m_finishedTimer.stop();
     if (m_currentOp == Start) {

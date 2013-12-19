@@ -363,7 +363,7 @@ void QNXNFCManager::setupInvokeTarget() {
 
     //Get the correct target-id
     QString targetId = QCoreApplication::instance()->arguments().first();
-    targetId = targetId.left(targetId.lastIndexOf("."));
+    targetId = targetId.left(targetId.lastIndexOf(QLatin1Char('.')));
 
     if (BPS_SUCCESS != navigator_invoke_set_filters("20", targetId.toLatin1().constData(), filters, 1)) {
         qWarning() << "NFC Error setting share target filter";
