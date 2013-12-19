@@ -68,6 +68,9 @@
         \row
             \li \l{btscanner}{QML Bluetooth Scanner}
             \li A QML implementation of the Bluetooth device scanner.
+        \row
+            \li \l{lowenergyscanner}{QML Bluetooth Low Energy Scanner}
+            \li Scan for Bluetooth Low Energy devices, services and characteristics.
     \endtable
 
 */
