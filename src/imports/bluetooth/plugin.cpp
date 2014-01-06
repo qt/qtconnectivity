@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-
+#include <QtCore/QLoggingCategory>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlExtensionPlugin>
 
@@ -77,5 +77,7 @@ public:
 
     }
 };
+
+Q_LOGGING_CATEGORY(QT_BT_QML, "qt.bluetooth.qml")
 
 #include "plugin.moc"
