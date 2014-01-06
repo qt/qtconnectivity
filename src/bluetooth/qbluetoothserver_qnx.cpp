@@ -73,19 +73,19 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
     Q_Q(QBluetoothServer);
 
     if (result.msg == QStringLiteral("register_server")) {
-        qBBBluetoothDebug() << "SPP: Server registration succesfull";
+        qCDebug(QT_BT_QNX) << "SPP: Server registration succesfull";
 
     } else if (result.msg == QStringLiteral("get_mount_point_path")) {
-        qBBBluetoothDebug() << "SPP: Mount point for server" << result.dat.first();
+        qCDebug(QT_BT_QNX) << "SPP: Mount point for server" << result.dat.first();
 
         int socketFD = ::open(result.dat.first().toStdString().c_str(), O_RDWR | O_NONBLOCK);
         if (socketFD == -1) {
             m_lastError = QBluetoothServer::InputOutputError;
             emit q->error(m_lastError);
-            qWarning() << Q_FUNC_INFO << "RFCOMM Server: Could not open socket FD" << errno;
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "RFCOMM Server: Could not open socket FD" << errno;
         } else {
             if (!socket) { // Should never happen
-                qWarning() << "Socket not valid";
+                qCWarning(QT_BT_QNX) << "Socket not valid";
                 m_lastError = QBluetoothServer::UnknownError;
                 emit q->error(m_lastError);
                 return;
@@ -106,10 +106,10 @@ void QBluetoothServerPrivate::controlEvent(ppsResult result)
 {
     Q_Q(QBluetoothServer);
     if (result.msg == QStringLiteral("service_connected")) {
-        qBBBluetoothDebug() << "SPP: Server: Sending request for mount point path";
-        qBBBluetoothDebug() << result.dat;
+        qCDebug(QT_BT_QNX) << "SPP: Server: Sending request for mount point path";
+        qCDebug(QT_BT_QNX) << result.dat;
         for (int i=0; i<result.dat.size(); i++) {
-            qBBBluetoothDebug() << result.dat.at(i);
+            qCDebug(QT_BT_QNX) << result.dat.at(i);
         }
 
         if (result.dat.contains(QStringLiteral("addr")) && result.dat.contains(QStringLiteral("uuid"))
@@ -117,13 +117,13 @@ void QBluetoothServerPrivate::controlEvent(ppsResult result)
             nextClientAddress = result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1);
             m_uuid = QBluetoothUuid(result.dat.at(result.dat.indexOf(QStringLiteral("uuid")) + 1));
             int subtype = result.dat.at(result.dat.indexOf(QStringLiteral("subtype")) + 1).toInt();
-            qBBBluetoothDebug() << "Getting mount point path" << m_uuid << nextClientAddress<< subtype;
+            qCDebug(QT_BT_QNX) << "Getting mount point path" << m_uuid << nextClientAddress<< subtype;
             ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, nextClientAddress,
                                   m_serviceName, this, BT_SPP_SERVER_SUBTYPE);
         } else {
             m_lastError = QBluetoothServer::InputOutputError;
             emit q->error(m_lastError);
-            qWarning() << Q_FUNC_INFO << "address not specified in service connect reply";
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "address not specified in service connect reply";
         }
     }
 }
@@ -174,9 +174,9 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
     if (__fakeServerPorts.key(port) == 0) {
         __fakeServerPorts[d] = port;
-        qBBBluetoothDebug() << "Port" << port << "registered";
+        qCDebug(QT_BT_QNX) << "Port" << port << "registered";
     } else {
-        qWarning() << "server with port" << port << "already registered or port invalid";
+        qCWarning(QT_BT_QNX) << "server with port" << port << "already registered or port invalid";
         d->m_lastError = ServiceAlreadyRegisteredError;
         emit error(d->m_lastError);
         return false;

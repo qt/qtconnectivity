@@ -57,22 +57,19 @@
 #include <errno.h>
 #include <sys/pps.h>
 
-#include <QSocketNotifier>
-#include <QStringList>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QSocketNotifier>
+#include <QtCore/QStringList>
 
 #include <QtBluetooth/qbluetoothuuid.h>
 #include <QtBluetooth/qbluetoothaddress.h>
-
-#ifdef BT_BBPPSDEBUG
-#define qBBBluetoothDebug qDebug
-#else
-#define qBBBluetoothDebug QT_NO_QDEBUG_MACRO
-#endif
 
 #define BT_SPP_SERVER_SUBTYPE 1
 #define BT_SPP_CLIENT_SUBTYPE 2
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
 class BBSocketNotifier : public QObject
 {

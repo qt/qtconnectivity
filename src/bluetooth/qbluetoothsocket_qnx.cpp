@@ -74,7 +74,7 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode)
 {
     Q_UNUSED(openMode);
-    qBBBluetoothDebug() << "Connecting socket";
+    qCDebug(QT_BT_QNX) << "Connecting socket";
     if (isServerSocket) {
         m_peerAddress = address;
         m_uuid = uuid;
@@ -82,7 +82,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     }
 
     if (state != QBluetoothSocket::UnconnectedState) {
-        qBBBluetoothDebug() << "Socket already connected";
+        qCDebug(QT_BT_QNX) << "Socket already connected";
         return;
     }
     state = QBluetoothSocket::ConnectingState;
@@ -144,7 +144,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
         readNotifier->setEnabled(false);
         connectWriteNotifier->setEnabled(false);
         errorString = QString::fromLocal8Bit(strerror(errsv));
-        qWarning() << Q_FUNC_INFO << socket << " error:" << readFromDevice << errorString; //TODO Try if this actually works
+        qCWarning(QT_BT_QNX) << Q_FUNC_INFO << socket << " error:" << readFromDevice << errorString; //TODO Try if this actually works
         emit q->error(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
@@ -159,7 +159,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
 void QBluetoothSocketPrivate::abort()
 {
     Q_Q(QBluetoothSocket);
-    qBBBluetoothDebug() << "Disconnecting service";
+    qCDebug(QT_BT_QNX) << "Disconnecting service";
     if (q->state() != QBluetoothSocket::ClosingState)
         ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, m_peerAddress.toString(), QString(), 0,
                           isServerSocket ? BT_SPP_SERVER_SUBTYPE : BT_SPP_CLIENT_SUBTYPE);
@@ -213,7 +213,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     if (q->openMode() & QIODevice::Unbuffered) {
         if (::write(socket, data, maxSize) != maxSize) {
             socketError = QBluetoothSocket::NetworkError;
-            qWarning() << Q_FUNC_INFO << "Socket error";
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Socket error";
             Q_EMIT q->error(socketError);
         }
 
@@ -300,34 +300,34 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
 
     if (result.msg == QStringLiteral("connect_service")) {
         if (!result.errorMsg.isEmpty()) {
-            qWarning() << Q_FUNC_INFO << "Error connecting to service:" << result.errorMsg;
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Error connecting to service:" << result.errorMsg;
             errorString = result.errorMsg;
             socketError = QBluetoothSocket::UnknownSocketError;
             emit q->error(QBluetoothSocket::UnknownSocketError);
             q->setSocketState(QBluetoothSocket::UnconnectedState);
             return;
         } else {
-            qBBBluetoothDebug() << Q_FUNC_INFO << "Sending request for mount point";
+            qCDebug(QT_BT_QNX) << Q_FUNC_INFO << "Sending request for mount point";
             ppsSendControlMessage("get_mount_point_path", 0x1101, m_uuid, m_peerAddress.toString(), QString(), this, BT_SPP_CLIENT_SUBTYPE);
         }
     } else if (result.msg == QStringLiteral("get_mount_point_path")) {
         QString path;
         path = result.dat.first();
-        qBBBluetoothDebug() << Q_FUNC_INFO << "PATH is" << path;
+        qCDebug(QT_BT_QNX) << Q_FUNC_INFO << "PATH is" << path;
 
         if (!result.errorMsg.isEmpty()) {
-            qWarning() << Q_FUNC_INFO << result.errorMsg;
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << result.errorMsg;
             errorString = result.errorMsg;
             socketError = QBluetoothSocket::UnknownSocketError;
             emit q->error(QBluetoothSocket::UnknownSocketError);
             q->setSocketState(QBluetoothSocket::UnconnectedState);
             return;
         } else {
-            qBBBluetoothDebug() << "Mount point path is:" << path;
+            qCDebug(QT_BT_QNX) << "Mount point path is:" << path;
             socket = ::open(path.toStdString().c_str(), O_RDWR);
             if (socket == -1) {
                 errorString = QString::fromLocal8Bit(strerror(errno));
-                qWarning() << Q_FUNC_INFO << socket << " error:" << errno << errorString; //TODO Try if this actually works
+                qCWarning(QT_BT_QNX) << Q_FUNC_INFO << socket << " error:" << errno << errorString; //TODO Try if this actually works
                 emit q->error(QBluetoothSocket::UnknownSocketError);
 
                 q->disconnectFromService();

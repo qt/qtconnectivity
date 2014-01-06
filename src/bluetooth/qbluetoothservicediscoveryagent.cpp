@@ -397,7 +397,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
     if (deviceDiscoveryAgent->error() != QBluetoothDeviceDiscoveryAgent::NoError) {
         //Forward the device discovery error
         error = static_cast<QBluetoothServiceDiscoveryAgent::Error>(deviceDiscoveryAgent->error());
-
+        errorString = deviceDiscoveryAgent->errorString();
         setDiscoveryState(Inactive);
         Q_Q(QBluetoothServiceDiscoveryAgent);
         emit q->error(error);
@@ -437,6 +437,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered(const QBluetoot
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error newError)
 {
     error = static_cast<QBluetoothServiceDiscoveryAgent::Error>(newError);
+    errorString = deviceDiscoveryAgent->errorString();
 
     deviceDiscoveryAgent->stop();
     delete deviceDiscoveryAgent;
