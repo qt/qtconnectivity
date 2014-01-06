@@ -431,8 +431,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
-    setDiscoveryState(ServiceDiscovery);
-
     if (discoveredDevices.isEmpty()) {
         setDiscoveryState(Inactive);
         emit q->finished();
