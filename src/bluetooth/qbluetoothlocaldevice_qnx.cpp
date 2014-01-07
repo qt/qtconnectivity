@@ -106,7 +106,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
         int fileId;
         const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(allFiles.at(i).toUtf8().constData()).constData();
         if ((fileId = qt_safe_open(filePath, O_RDONLY)) == -1)
-            qWarning() << "Failed to open remote device file";
+            qCWarning(QT_BT_QNX) << "Failed to open remote device file";
         else {
             pps_decoder_t ppsDecoder;
             pps_decoder_initialize(&ppsDecoder, 0);

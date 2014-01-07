@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 void QBluetoothServiceDiscoveryAgentPrivate::deviceServicesDiscoveryCallback(bt_sdp_list_t *result, void *user_data, uint8_t error)
 {
     if (error != 0)
-        qWarning() << "Error received in callback: " << errno << strerror(errno);
+        qCWarning(QT_BT_QNX) << "Error received in callback: " << errno << strerror(errno);
     QPointer<QBluetoothServiceDiscoveryAgentPrivate> *classPointer = static_cast<QPointer<QBluetoothServiceDiscoveryAgentPrivate> *>(user_data);
     if (classPointer->isNull()) {
         qBBBluetoothDebug() << "Pointer received in callback is null";
@@ -154,7 +154,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     errno = 0;
     if (!m_btInitialized) {
         if (bt_device_init( 0 ) < 0) {
-            qWarning() << "Failed to initialize bluetooth stack.";
+            qCWarning(QT_BT_QNX) << "Failed to initialize bluetooth stack.";
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to open to initialize bluetooth stack");
             q->error(error);
@@ -167,7 +167,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     bt_remote_device_t *remoteDevice = bt_rdev_get_device(address.toString().toLocal8Bit().constData());
     int deviceType = bt_rdev_get_type(remoteDevice);
     if (deviceType == -1) {
-        qWarning() << "Could not retrieve remote device (address is 00:00:00:00:00:00).";
+        qCWarning(QT_BT_QNX) << "Could not retrieve remote device (address is 00:00:00:00:00:00).";
         error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothServiceDiscoveryAgent::tr("Could not retrieve remote device (address is 00:00:00:00:00:00).");
         q->error(error);
@@ -183,7 +183,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         QPointer<QBluetoothServiceDiscoveryAgentPrivate> *classPointer = new QPointer<QBluetoothServiceDiscoveryAgentPrivate>(this);
         int b = bt_rdev_sdp_search_async(remoteDevice, 0, &(this->deviceServicesDiscoveryCallback), classPointer);
         if ( b != 0 ) {
-            qWarning() << "Failed to run search on device: " << address.toString();
+            qCWarning(QT_BT_QNX) << "Failed to run search on device: " << address.toString();
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = QBluetoothServiceDiscoveryAgent::tr(strerror(errno));
             q->error(error);

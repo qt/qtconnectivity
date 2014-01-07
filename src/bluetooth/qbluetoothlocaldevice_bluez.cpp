@@ -479,7 +479,7 @@ void QBluetoothLocalDevicePrivate::_q_devicePropertyChanged(const QString &prope
         QDBusPendingReply<QVariantMap> propertiesReply = deviceInterface->GetProperties();
         propertiesReply.waitForFinished();
         if (propertiesReply.isError()) {
-            qWarning() << propertiesReply.error().message();
+            qCWarning(QT_BT_BLUEZ) << propertiesReply.error().message();
             return;
         }
         const QVariantMap properties = propertiesReply.value();
@@ -504,7 +504,7 @@ void QBluetoothLocalDevicePrivate::createCache()
     QDBusPendingReply<QList<QDBusObjectPath> > reply = adapter->ListDevices();
     reply.waitForFinished();
     if (reply.isError()) {
-        qWarning() << reply.error().message();
+        qCWarning(QT_BT_BLUEZ) << reply.error().message();
         return;
     }
     foreach (const QDBusObjectPath &device, reply.value()) {
@@ -513,7 +513,7 @@ void QBluetoothLocalDevicePrivate::createCache()
         QDBusPendingReply<QVariantMap> properties = deviceInterface.asyncCall(QLatin1String("GetProperties"));
         properties.waitForFinished();
         if (!properties.isValid()) {
-            qWarning() << "Unable to get properties for device " << device.path();
+            qCWarning(QT_BT_BLUEZ) << "Unable to get properties for device " << device.path();
             return;
         }
 
