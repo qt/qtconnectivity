@@ -67,12 +67,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::deviceServicesDiscoveryCallback(bt_
         qCWarning(QT_BT_QNX) << "Error received in callback: " << errno << strerror(errno);
     QPointer<QBluetoothServiceDiscoveryAgentPrivate> *classPointer = static_cast<QPointer<QBluetoothServiceDiscoveryAgentPrivate> *>(user_data);
     if (classPointer->isNull()) {
-        qBBBluetoothDebug() << "Pointer received in callback is null";
+        qCDebug(QT_BT_QNX) << "Pointer received in callback is null";
         return;
     }
     QBluetoothServiceDiscoveryAgentPrivate *p = classPointer->data();
     if ( result == 0) {
-        qBBBluetoothDebug() << "Result received in callback is null.";
+        qCDebug(QT_BT_QNX) << "Result received in callback is null.";
         p->errorString = QBluetoothServiceDiscoveryAgent::tr("Result received in callback is null.");
         p->error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         p->q_ptr->error(p->error);
@@ -99,14 +99,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::deviceServicesDiscoveryCallback(bt_
                 protocolDescriptorList << QVariant::fromValue(QString::fromLatin1(protoc.parm[k]));
         }
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
-        qBBBluetoothDebug() << "Service name " << rec.name << " Description: " << rec.description << "uuid " << rec.serviceId << "provider: " << rec.provider;
-        qBBBluetoothDebug() << "num protocol " << rec.num_protocol << "record handle " << rec.record_handle << "class id" << rec.num_classId << "availability " << rec.availability << rec.num_language;
+        qCDebug(QT_BT_QNX) << "Service name " << rec.name << " Description: " << rec.description << "uuid " << rec.serviceId << "provider: " << rec.provider;
+        qCDebug(QT_BT_QNX) << "num protocol " << rec.num_protocol << "record handle " << rec.record_handle << "class id" << rec.num_classId << "availability " << rec.availability << rec.num_language;
 
         QList<QBluetoothUuid> serviceClassId;
 
         for (int j = 0; j < rec.num_classId; j++) {
             bt_sdp_class_t uuid = rec.classId[j];
-            qBBBluetoothDebug() << "uuid: " << uuid.uuid;
+            qCDebug(QT_BT_QNX) << "uuid: " << uuid.uuid;
             QString protocolUuid(uuid.uuid);
             protocolUuid = QStringLiteral("0x") + protocolUuid;
             QBluetoothUuid Uuid(protocolUuid.toUShort(0,0));

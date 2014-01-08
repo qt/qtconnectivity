@@ -102,7 +102,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
     QDir bluetoothDevices(QStringLiteral("/pps/services/bluetooth/remote_devices/"));
     QStringList allFiles = bluetoothDevices.entryList(QDir::NoDotAndDotDot| QDir::Files);
     for (int i = 0; i < allFiles.size(); i++) {
-        qBBBluetoothDebug() << allFiles.at(i);
+        qCDebug(QT_BT_QNX) << allFiles.at(i);
         int fileId;
         const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(allFiles.at(i).toUtf8().constData()).constData();
         if ((fileId = qt_safe_open(filePath, O_RDONLY)) == -1)
@@ -126,9 +126,9 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
                     devices.append(deviceAddr);
             }
             else if ( a == PPS_DECODER_BAD_TYPE)
-                qBBBluetoothDebug() << "Type missmatch";
+                qCDebug(QT_BT_QNX) << "Type missmatch";
             else
-                qBBBluetoothDebug() << "An unknown error occurred while checking connected status.";
+                qCDebug(QT_BT_QNX) << "An unknown error occurred while checking connected status.";
             pps_decoder_cleanup(&ppsDecoder);
         }
     }
