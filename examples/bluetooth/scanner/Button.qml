@@ -48,9 +48,7 @@ Rectangle {
     property alias text: label.text
 
     signal clicked()
-
-    height: 60
-    width: 105
+    height: label.height*1.1
 
     color: active ? "#1c56f3" : "white"
 
@@ -61,9 +59,11 @@ Rectangle {
         id: label
         text: "Full Discovery"
         font.bold: true
-        anchors.fill: parent
+        font.pointSize: 17
+        width: parent.width
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
+        anchors.centerIn: parent
     }
 
     MouseArea {
