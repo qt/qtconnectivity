@@ -41,13 +41,13 @@
 
 #include "qdeclarativebluetoothsocket_p.h"
 
-#include <QPointer>
-#include <QStringList>
-#include <QDataStream>
-#include <QByteArray>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QPointer>
+#include <QtCore/QStringList>
+#include <QtCore/QDataStream>
+#include <QtCore/QByteArray>
 
-
-#include <qbluetoothdeviceinfo.h>
+#include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothSocket>
 
@@ -74,6 +74,8 @@
     or service UUID is required.  This is specified by creating a BluetoothService,
     or passing in the service return from BluetoothDiscoveryModel.
  */
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QML)
 
 class QDeclarativeBluetoothSocketPrivate
 {
@@ -224,7 +226,7 @@ void QDeclarativeBluetoothSocket::setConnected(bool connected)
             d->connect();
         }
         else {
-            qWarning() << "BluetoothSocket::setConnected called before a service was set";
+            qCWarning(QT_BT_QML) << "BluetoothSocket::setConnected called before a service was set";
         }
     }
 
@@ -341,7 +343,7 @@ QString QDeclarativeBluetoothSocket::stringData()
 void QDeclarativeBluetoothSocket::sendStringData(const QString &data)
 {
     if (!d->m_connected || !d->m_socket){
-        qWarning() << "Writing data to unconnected socket";
+        qCWarning(QT_BT_QML) << "Writing data to unconnected socket";
         return;
     }
 

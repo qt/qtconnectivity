@@ -41,7 +41,9 @@
 
 #include "qdeclarativebluetoothservice_p.h"
 
-#include <qbluetoothdeviceinfo.h>
+#include <QtCore/QLoggingCategory>
+
+#include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothServer>
@@ -79,6 +81,8 @@
         \li serviceUuid
     \endlist
 */
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QML)
 
 class QDeclarativeBluetoothServicePrivate
 {
@@ -269,7 +273,7 @@ bool QDeclarativeBluetoothService::isRegistered() const
 int QDeclarativeBluetoothServicePrivate::listen() {
 
     if (m_service->socketProtocol() == QBluetoothServiceInfo::UnknownProtocol) {
-        qWarning() << "Unknown protocol, can't make service" << m_protocol;
+        qCWarning(QT_BT_QML) << "Unknown protocol, can't make service" << m_protocol;
         return -1;
     }
     QBluetoothServiceInfo::Protocol serverType = QBluetoothServiceInfo::UnknownProtocol;
@@ -331,7 +335,7 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
         protocolDescriptorList.append(QVariant::fromValue(protocol));
     }
     else {
-        qWarning() << "No protocol specified for bluetooth service";
+        qCWarning(QT_BT_QML) << "No protocol specified for bluetooth service";
     }
     d->m_service->setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                              protocolDescriptorList);
@@ -340,7 +344,7 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
         emit registeredChanged();
     }
     else {
-        qWarning() << "Register service failed";
+        qCWarning(QT_BT_QML) << "Register service failed";
         //TODO propaget this error to the user
     }
 }
@@ -364,7 +368,7 @@ QDeclarativeBluetoothSocket *QDeclarativeBluetoothService::nextClient()
             return new QDeclarativeBluetoothSocket(socket, this, 0);
         }
         else {
-            qWarning() << "Socket has no pending connection, failing";
+            qCWarning(QT_BT_QML) << "Socket has no pending connection, failing";
             return 0;
         }
     }
@@ -381,7 +385,7 @@ void QDeclarativeBluetoothService::assignNextClient(QDeclarativeBluetoothSocket 
             return;
         }
         else {
-            qWarning() << "Socket has no pending connection, failing";
+            qCWarning(QT_BT_QML) << "Socket has no pending connection, failing";
             return;
         }
     }
