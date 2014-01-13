@@ -71,6 +71,7 @@ QLowEnergyProcess::~QLowEnergyProcess()
 {
     bt_device_deinit();
     bt_gatt_deinit();
+    qDeleteAll(m_classPointers);
     m_classPointers.clear();
 }
 

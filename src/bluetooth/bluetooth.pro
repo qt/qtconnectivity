@@ -94,9 +94,9 @@ config_bluez:qtHaveModule(dbus) {
 
     include(qnx/qnx.pri)
 
+    LIBS += -lbtapi
     config_btapi10_2_1 {
          DEFINES += QT_QNX_BT_BLUETOOTH
-         LIBS += -lbtapi
     }
 
     PRIVATE_HEADERS += \

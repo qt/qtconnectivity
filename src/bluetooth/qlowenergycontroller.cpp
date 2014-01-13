@@ -275,6 +275,7 @@ bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInf
         for (int j = 0; j < d_ptr->m_leServices.at(i).characteristics().size(); j++) {
             if (d_ptr->m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()) {
                 connect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
+                connect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), this, SLOT(_q_characteristicError(QBluetoothUuid)));
                 enable = d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr->enableNotification();
             }
         }
@@ -294,6 +295,7 @@ void QLowEnergyController::disableNotifications(const QLowEnergyCharacteristicIn
         for (int j = 0; j < d_ptr->m_leServices.at(i).characteristics().size(); j++) {
             if (d_ptr->m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()){
                 disconnect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
+                disconnect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), this, SLOT(_q_characteristicError(QBluetoothUuid)));
                 d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr->disableNotification();
             }
         }
