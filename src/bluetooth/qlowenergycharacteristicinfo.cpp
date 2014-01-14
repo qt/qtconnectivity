@@ -46,6 +46,19 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \class QLowEnergyCharacteristicInfo
+    \inmodule QtBluetooth
+    \brief The QLowEnergyCharacteristicInfo class stores information about a Bluetooth
+    Low Energy service characteristic.
+
+    QLowEnergyCharacteristicInfo provides information about a Bluetooth Low Energy
+    service characteristic's name, UUID, value, permissions, handle and descriptors.
+    To get the full characteristic specification and information it is necessary to
+    connect to the service using QLowEnergyServiceInfo and QLowEnergyController classes.
+    Some characteristics can contain none, one or more descriptors.
+*/
+
+/*!
     \enum QLowEnergyCharacteristicInfo::Error
 
     This enum describes the type of an error that can appear.

@@ -45,6 +45,21 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \class QLowEnergyServiceInfo
+    \inmodule QtBluetooth
+    \brief The QLowEnergyServiceInfo class stores information about the Bluetooth
+    Low Energy service.
+
+    QLowEnergyServiceInfo provides information about a Bluetooth Low Energy
+    service's name, device, UUID, connection status, service type, handle
+    and characteristics. A Bluetooth Low Energy device can have one or more
+    low energy services. Each low energy service contains one or more
+    characteristics. The class is used with the QLowEnergyController
+    class. It is necessary to connect to the service first in order
+    to get the all service information and characteristics.
+*/
+
+/*!
     \enum QLowEnergyServiceInfo::ServiceType
 
     This enum describes the type of the service. One LE device can have one or more primary services.
