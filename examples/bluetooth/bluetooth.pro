@@ -6,4 +6,4 @@ qtHaveModule(widgets) {
                bttennis
 }
 
-SUBDIRS += scanner
+qtHaveModule(quick): SUBDIRS += scanner
