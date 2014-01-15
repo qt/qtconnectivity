@@ -105,12 +105,14 @@ QT_BEGIN_NAMESPACE
     \fn void QBluetoothDeviceDiscoveryAgent::finished()
 
     This signal is emitted when Bluetooth device discovery completes.
+    The signal is not going to be emitted if the device discovery finishes with an error.
 */
 
 /*!
     \fn void QBluetoothDeviceDiscoveryAgent::error(QBluetoothDeviceDiscoveryAgent::Error error)
 
     This signal is emitted when an \a error occurs during Bluetooth device discovery.
+    The \a error parameter describes the error that occurred.
 
     \sa error(), errorString()
 */

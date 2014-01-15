@@ -107,14 +107,18 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn QBluetoothServiceDiscoveryAgent::finished()
 
-    This signal is emitted when Bluetooth service discovery completes. This signal will even
-    be emitted when an error occurred during the service discovery.
+    This signal is emitted when the Bluetooth service discovery completes.
+
+    Unlike the \l QBluetoothDeviceDiscoveryAgent::finished() signal this
+    signal will even be emitted when an error occurred during the service discovery. Therefore
+    it is recommended to check the \l error() signal to evaluate the success of the
+    service discovery discovery.
 */
 
 /*!
     \fn void QBluetoothServiceDiscoveryAgent::error(QBluetoothServiceDiscoveryAgent::Error error)
 
-    This signal is emitted when an error occurs. The \a error parameter describes the error that
+    This signal is emitted when an \a error occurs. The \a error parameter describes the error that
     occurred.
 */
 
