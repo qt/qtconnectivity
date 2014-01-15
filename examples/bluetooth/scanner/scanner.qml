@@ -54,6 +54,18 @@ Item {
         onDiscoveryModeChanged: console.log("Discovery mode: " + discoveryMode)
         onServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
         onDeviceDiscovered: console.log("New device: " + device)
+        onErrorChanged: {
+                switch (btModel.error) {
+                case BluetoothDiscoveryModel.PoweredOffError:
+                    console.log("Error: Bluetooth device not turned on"); break;
+                case BluetoothDiscoveryModel.InputOutputError:
+                    console.log("Error: Bluetooth I/O Error"); break;
+                case BluetoothDiscoveryModel.NoError:
+                    break;
+                default:
+                    console.log("Error: Unknown Error"); break;
+                }
+        }
    }
 
     Rectangle {
