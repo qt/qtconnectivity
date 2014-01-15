@@ -167,6 +167,11 @@ void QDeclarativeBluetoothDiscoveryModel::errorDeviceDiscovery(QBluetoothDeviceD
 {
     d->m_error = static_cast<QDeclarativeBluetoothDiscoveryModel::Error>(error);
     emit errorChanged();
+
+    //QBluetoothDeviceDiscoveryAgent::finished() signal is not emitted in case of an error
+    //Note that this behavior is different from QBluetoothServiceDiscoveryAgent.
+    //This reset the models running flag.
+    setRunning(false);
 }
 
 void QDeclarativeBluetoothDiscoveryModel::clearModel()
