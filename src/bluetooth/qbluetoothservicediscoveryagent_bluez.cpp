@@ -199,8 +199,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
     foreach (const QString &record, reply.value()) {
         QXmlStreamReader xml(record);
 
-        qCDebug(QT_BT_BLUEZ) << "Service xml" << record;
-
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(discoveredDevices.at(0));
 
