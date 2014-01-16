@@ -161,22 +161,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     delete adapter;
     adapter = 0;
 
-    QDBusPendingReply<QVariantMap> deviceReply = device->GetProperties();
-    deviceReply.waitForFinished();
-    if (deviceReply.isError()) {
-        qCDebug(QT_BT_BLUEZ) << "GetProperties error: " << error << deviceObjectPath.error().name();
-        delete device;
-        return;
-    }
-    QVariantMap v = deviceReply.value();
-    QStringList device_uuids = v.value(QLatin1String("UUIDs")).toStringList();
-
     QString pattern;
     foreach (const QBluetoothUuid &uuid, uuidFilter)
         pattern += uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}')) + QLatin1Char(' ');
 
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "Discover: " << pattern.trimmed();
-    QDBusPendingReply<ServiceMap> discoverReply = device->DiscoverServices(pattern.trimmed());
+    pattern = pattern.trimmed();
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "Discover restrictions:" << pattern;
+
+    QDBusPendingReply<ServiceMap> discoverReply = device->DiscoverServices(pattern);
     watcher = new QDBusPendingCallWatcher(discoverReply, q);
     QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
                      q, SLOT(_q_discoveredServices(QDBusPendingCallWatcher*)));
