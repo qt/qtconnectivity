@@ -65,6 +65,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     delete manager;
+    delete adapter;
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -115,6 +116,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     propertiesReply.waitForFinished();
     if(propertiesReply.isError()) {
         errorString = propertiesReply.error().message();
+        delete adapter;
+        adapter = 0;
         qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "ERROR: " << errorString;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
