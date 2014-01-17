@@ -117,7 +117,7 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     Q_Q(QBluetoothSocket);
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
     QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
-    connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);    
+    connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
     QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
 
     connectWriteNotifier->setEnabled(false);
@@ -215,7 +215,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
             connectWriteNotifier->setEnabled(false);
             this->close();
         }
-    }    
+    }
 }
 
 // TODO: move to private backend?
@@ -238,7 +238,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
             emit q->error(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
-        q->setSocketState(QBluetoothSocket::UnconnectedState);        
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
     }
     else {
         buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
@@ -467,7 +467,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
             return 0;
 
         if(txBuffer.size() == 0) {
-            connectWriteNotifier->setEnabled(true);        
+            connectWriteNotifier->setEnabled(true);
             QMetaObject::invokeMethod(q, "_q_writeNotify", Qt::QueuedConnection);
         }
 

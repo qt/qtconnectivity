@@ -118,11 +118,11 @@ struct fdlist {
 
 struct fdlist *head = 0;
 
-void removefd(struct fdlist *fdl, int fd){    
+void removefd(struct fdlist *fdl, int fd) {
     struct fdlist *prev = fdl;
     while(fdl && fdl->fd != fd) {
         prev = fdl;
-        fdl = fdl->next;    
+        fdl = fdl->next;
     }
     assert(fdl);
 
@@ -482,7 +482,7 @@ void registerService()
     // change path to use any
     strcpy(rindex(path, '/'), "/any");
 
-    printf("Using path: %s\n", path);   
+    printf("Using path: %s\n", path);
 
     dbus_message_unref(msg);
 
@@ -538,9 +538,9 @@ void registerService()
 
 int main(int argc, char **argv)
 {
-        int socket;        
+        int socket;
 #define MAX_POLL 256
-        struct pollfd fds[MAX_POLL];        
+        struct pollfd fds[MAX_POLL];
 
         UNUSED(argc);
         UNUSED(argv);
@@ -558,7 +558,7 @@ int main(int argc, char **argv)
 
         while(1){
             int n = mkpoll(head, fds, MAX_POLL);
-            if(poll(fds, n, -1)){                
+            if (poll(fds, n, -1)) {
                 struct fdlist *fdl = head;
                 int i;
 

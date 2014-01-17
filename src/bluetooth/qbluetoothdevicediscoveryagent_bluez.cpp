@@ -163,7 +163,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
 {
     const QBluetoothAddress btAddress(address);
     const QString btName = dict.value(QLatin1String("Name")).toString();
-    quint32 btClass = dict.value(QLatin1String("Class")).toUInt();    
+    quint32 btClass = dict.value(QLatin1String("Class")).toUInt();
 
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << address << btName
              << "Num UUIDs" << dict.value(QLatin1String("UUIDs")).toStringList().count()
@@ -202,7 +202,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
 
 void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &name,
                                                                const QDBusVariant &value)
-{    
+{
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << name << value.variant();
 
     if (name == QLatin1String("Discovering") && !value.variant().toBool()) {

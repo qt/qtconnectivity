@@ -142,7 +142,7 @@ public:
     enum MinorImagingClass {
         UncategorizedImagingDevice = 0,
         ImageDisplay = 0x04,
-        ImageCamera = 0x08,       
+        ImageCamera = 0x08,
         ImageScanner = 0x10,
         ImagePrinter = 0x20
     };

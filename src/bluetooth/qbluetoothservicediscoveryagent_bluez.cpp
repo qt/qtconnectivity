@@ -70,7 +70,7 @@ QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate(
 
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
 {
-    Q_Q(QBluetoothServiceDiscoveryAgent);    
+    Q_Q(QBluetoothServiceDiscoveryAgent);
 
     qCDebug(QT_BT_BLUEZ) << "Full discovery on: " << address.toString();
 

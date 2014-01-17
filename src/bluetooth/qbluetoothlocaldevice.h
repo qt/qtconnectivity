@@ -68,7 +68,7 @@ public:
         AuthorizedPaired
     };
 
-    enum HostMode {        
+    enum HostMode {
         HostPoweredOff,
         HostConnectable,
         HostDiscoverable,

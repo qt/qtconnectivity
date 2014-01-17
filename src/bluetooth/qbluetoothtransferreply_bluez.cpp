@@ -128,7 +128,7 @@ bool QBluetoothTransferReplyBluez::start()
             QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
             return false;
         }
-        m_size = file->size();        
+        m_size = file->size();
         startOPP(file->fileName());
     }
     return true;

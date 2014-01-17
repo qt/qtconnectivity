@@ -50,7 +50,7 @@ QLlcpSocketPrivate::QLlcpSocketPrivate(QLlcpSocket *q)
 
 QLlcpSocketPrivate::~QLlcpSocketPrivate()
 {
-  
+
 }
 
 void QLlcpSocketPrivate::connectToService(QNearFieldTarget *target, const QString &serviceUri)

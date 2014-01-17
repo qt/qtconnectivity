@@ -73,7 +73,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
 }
 
 QString QBluetoothLocalDevice::name() const
-{    
+{
     if (!d_ptr || !d_ptr->adapter)
         return QString();
 

@@ -85,7 +85,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
 
 void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &name,
                                                                const QDBusVariant &value)
-{    
+{
     Q_UNUSED(name);
     Q_UNUSED(value);
 }

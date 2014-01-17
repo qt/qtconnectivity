@@ -49,7 +49,7 @@ QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
 }
 
 QLlcpServerPrivate::~QLlcpServerPrivate()
-{  
+{
 }
 
 bool QLlcpServerPrivate::listen(const QString &serviceUri)

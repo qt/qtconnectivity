@@ -58,7 +58,7 @@ class QBluetoothServiceInfo;
 
 class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 {
-    Q_OBJECT    
+    Q_OBJECT
     Q_DECLARE_PRIVATE(QBluetoothSocket)
 
     friend class QBluetoothServer;
