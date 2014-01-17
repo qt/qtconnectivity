@@ -280,13 +280,18 @@ void QBluetoothServiceDiscoveryAgent::stop()
 }
 
 /*!
-    Clears the results of previous service discoveries.
+    Clears the results of previous service discoveries and resets \l uuidFilter().
+    This function does nothing during an ongoing service discovery (see \l isActive()).
 
     \sa discoveredServices()
 */
 void QBluetoothServiceDiscoveryAgent::clear()
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
+
+    //don't clear the list while the search is ongoing
+    if (isActive())
+        return;
 
     d->discoveredDevices.clear();
     d->discoveredServices.clear();
