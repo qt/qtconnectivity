@@ -390,23 +390,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
-    if(mode == QBluetoothServiceDiscoveryAgent::FullDiscovery) {
-        // look for duplicates, and cached entries
-        for(int i = 0; i < discoveredDevices.count(); i++){
-            if(discoveredDevices.at(i).address() == info.address()){
-                discoveredDevices.removeAt(i);
-            }
-        }
-        discoveredDevices.prepend(info);
+    // look for duplicates, and cached entries
+    for (int i = 0; i < discoveredDevices.count(); i++) {
+        if (discoveredDevices.at(i).address() == info.address())
+            discoveredDevices.removeAt(i);
     }
-    else {
-        for(int i = 0; i < discoveredDevices.count(); i++){
-            if(discoveredDevices.at(i).address() == info.address()){
-                discoveredDevices.removeAt(i);
-            }
-        }
-        discoveredDevices.prepend(info);
-    }
+    discoveredDevices.prepend(info);
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error newError)
