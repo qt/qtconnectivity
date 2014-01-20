@@ -281,6 +281,9 @@ void QBluetoothServiceDiscoveryAgent::stop()
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
 
+    if (d->error == InvalidBluetoothAdapterError)
+        return;
+
     switch (d->discoveryState()) {
     case QBluetoothServiceDiscoveryAgentPrivate::DeviceDiscovery:
         d->stopDeviceDiscovery();

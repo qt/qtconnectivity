@@ -228,7 +228,7 @@ void QBluetoothDeviceDiscoveryAgent::start()
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
-    if (isActive())
+    if (isActive() && d->lastError != InvalidBluetoothAdapterError)
         d->stop();
 }
 
