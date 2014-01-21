@@ -266,6 +266,9 @@ void QBluetoothServiceDiscoveryAgent::stop()
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
 
+    if (!isActive())
+        return;
+
     switch (d->discoveryState()) {
     case QBluetoothServiceDiscoveryAgentPrivate::DeviceDiscovery:
         d->stopDeviceDiscovery();
