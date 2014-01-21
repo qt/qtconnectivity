@@ -108,21 +108,33 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 void QBluetoothServiceDiscoveryAgentPrivate::stop()
 {
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "Stop called";
-    if(device){
+    if (device) {
+        //we are waiting for _q_discoveredServices() slot to be called
+        // adapter is already 0
         QDBusPendingReply<> reply = device->CancelDiscovery();
         reply.waitForFinished();
 
-        discoveredDevices.clear();
-        setDiscoveryState(Inactive);
-        Q_Q(QBluetoothServiceDiscoveryAgent);
-        emit q->canceled();
-
-        qCDebug(QT_BT_BLUEZ) << "Stop done";
+        device->deleteLater();
+        device = 0;
+        Q_ASSERT(!adapter);
+    } else if (adapter) {
+        //we are waiting for _q_createdDevice() slot to be called
+        adapter->deleteLater();
+        adapter = 0;
+        Q_ASSERT(!device);
     }
+
+    discoveredDevices.clear();
+    setDiscoveryState(Inactive);
+    Q_Q(QBluetoothServiceDiscoveryAgent);
+    emit q->canceled();
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWatcher *watcher)
 {
+    if (!adapter)
+        return;
+
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     const QBluetoothAddress &address = watcher->property("_q_BTaddress").value<QBluetoothAddress>();
@@ -176,6 +188,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingCallWatcher *watcher)
 {
+    if (!device)
+        return;
+
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
 
     QDBusPendingReply<ServiceMap> reply = *watcher;
