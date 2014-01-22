@@ -262,6 +262,7 @@ QQmlNdefRecord::QQmlNdefRecord(const QNdefRecord &record, QObject *parent)
     \value Uri          The NDEF record type follows the construct described in RFC 3986.
     \value ExternalRtd  The NDEF record type follows the construct for external type names
                         described the NFC RTD Specification.
+    \value Unknown      The NDEF record type is unknown.
 */
 
 /*!
