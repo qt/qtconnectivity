@@ -196,7 +196,6 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         }
 
         char buf[1024];
-        Q_Q(QBluetoothSocket);
 
         int size = txBuffer.read(buf, 1024);
 
@@ -258,6 +257,7 @@ void QBluetoothSocketPrivate::abort()
     // we don't call disconnectFromService or
     // QBluetoothSocket::close
     QT_CLOSE(socket);
+    socket = -1;
 
     Q_Q(QBluetoothSocket);
     emit q->disconnected();
@@ -510,7 +510,8 @@ void QBluetoothSocketPrivate::close()
         // We are disconnected now, so go to unconnected.
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         emit q->disconnected();
-        ::close(socket);
+        QT_CLOSE(socket);
+        socket = -1;
     }
 
 }
