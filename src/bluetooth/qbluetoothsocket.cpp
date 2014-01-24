@@ -488,10 +488,12 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     qCDebug(QT_BT) << "Starting discovery";
 
     if(d->discoveryAgent) {
+        d->discoveryAgent->stop();
         delete d->discoveryAgent;
     }
 
-    d->discoveryAgent = new QBluetoothServiceDiscoveryAgent(service.device().address(),this);
+    d->discoveryAgent = new QBluetoothServiceDiscoveryAgent(this);
+    d->discoveryAgent->setRemoteAddress(service.device().address());
 
     //qDebug() << "Got agent";
 

@@ -361,7 +361,7 @@ QString QBluetoothSocketPrivate::peerName() const
 
         convertAddress(addr.l2_bdaddr.b, bdaddr);
     } else {
-        qCWarning(QT_BT_BLUEZ) << "peerName() called on socket of known type";
+        qCWarning(QT_BT_BLUEZ) << "peerName() called on socket of unknown type";
         return QString();
     }
 
