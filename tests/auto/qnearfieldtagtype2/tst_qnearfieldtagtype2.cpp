@@ -163,14 +163,14 @@ void tst_QNearFieldTagType2::staticMemoryModel()
             QCOMPARE(readBlock, QByteArray(4, 0x55) + initialBlock.mid(4));
 
             // Write 0xaa
-            id = target->writeBlock(i, QByteArray(4, 0xaa));
+            id = target->writeBlock(i, QByteArray(4, char(0xaa)));
             QVERIFY(target->waitForRequestCompleted(id));
             QVERIFY(target->requestResponse(id).toBool());
 
             id = target->readBlock(i);
             QVERIFY(target->waitForRequestCompleted(id));
             readBlock = target->requestResponse(id).toByteArray();
-            QCOMPARE(readBlock, QByteArray(4, 0xaa) + initialBlock.mid(4));
+            QCOMPARE(readBlock, QByteArray(4, char(0xaa)) + initialBlock.mid(4));
         }
     }
 }
@@ -240,14 +240,14 @@ void tst_QNearFieldTagType2::dynamicMemoryModel()
                 QCOMPARE(readBlock, QByteArray(4, 0x55) + initialBlock.mid(4));
 
                 // Write 0xaa
-                id = target->writeBlock(i, QByteArray(4, 0xaa));
+                id = target->writeBlock(i, QByteArray(4, char(0xaa)));
                 QVERIFY(target->waitForRequestCompleted(id));
                 QVERIFY(target->requestResponse(id).toBool());
 
                 id = target->readBlock(i);
                 QVERIFY(target->waitForRequestCompleted(id));
                 readBlock = target->requestResponse(id).toByteArray();
-                QCOMPARE(readBlock, QByteArray(4, 0xaa) + initialBlock.mid(4));
+                QCOMPARE(readBlock, QByteArray(4, char(0xaa)) + initialBlock.mid(4));
             }
 
             // change to sector 0
