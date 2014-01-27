@@ -31,6 +31,7 @@ examples/bluetooth/scanner/qml_scanner
 examples/nfc/annotatedurl/annotatedurl
 examples/nfc/ndefeditor/ndefeditor
 examples/nfc/poster/qml_poster
+examples/nfc/corkboard/qml_corkboard
 tests/auto/cmake/build
 tests/auto/qbluetoothaddress/tst_qbluetoothaddress
 tests/auto/qbluetoothdevicediscoveryagent/tst_qbluetoothdevicediscoveryagent

@@ -1,9 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtNfc module of the Qt Toolkit.
+** This file is part of the examples of the QtNfc module.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 
 Item {
     id: page
@@ -73,8 +74,8 @@ Item {
             id: stickyPage
             z: 2
 
-            x: Math.random() * (listView.width-100) +100
-            y: Math.random() * (listView.height-50) +50
+            x: Math.random() * (listView.width-listView.width*0.30) + listView.width*0.10
+            y: Math.random() * (listView.height-listView.height*0.30) + listView.height*0.10
 
             rotation: -listView.horizontalVelocity / 200;
             Behavior on rotation {

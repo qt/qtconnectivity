@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the documentation of the Qt Toolkit.
+** This file is part of the examples of the QtNfc module.
 **
 ** $QT_BEGIN_LICENSE:FDL$
 ** Commercial License Usage
@@ -26,40 +26,14 @@
 ****************************************************************************/
 
 /*!
-\ingroup all-examples
-\page nfc-examples.html
-\title Qt NFC Examples
-\brief Examples for the Qt NFC module.
+\example corkboard
+\title QML CorkBoard Example
 
-This is a variety of examples that cover the entire range of the Qt NFC API. You will find them
-in their own documentation, but they are also accessible from here.
+The QML CorkBoard example displays the contents of NDEF messages read from an
+NFC Tag. Each newly detected NDEF message is added to the corkboard and can be
+dragged into an arbitrary position on the board. The corkboard has a "Personal"
+and "Work" space. The workspace can be changed by sliding left or right.
 
-\section2 C++ Tutorial
+\image corkboard.png
 
-\section2 C++ Examples
-\table 80%
-    \header
-        \li Example
-        \li Description
-    \row
-        \li \l{annotatedurl}{Annotated URL}
-        \li Displays URLs stored on NFC Forum Tags.
-    \row
-        \li \l{ndefeditor}{NDEF Editor}
-        \li Create new or modify existing NDEF messages on NFC Forum Tags.
-\endtable
-
-\section2 QML Examples
-\table 80%
-    \header
-        \li Example
-        \li Description
-    \row
-        \li \l{corkboard} {CorkBoard}
-        \li Displays NDEF text tags on a corkboard.
-    \row
-        \li \l{poster}{QML Poster}
-        \li Displays URLs stored on NFC Forum Tags.
-\endtable
 */
-

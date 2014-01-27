@@ -1,9 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtNfc module of the Qt Toolkit.
+** This file is part of the examples of the QtNfc module.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,8 +39,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtNfc 5.0
+import QtQuick 2.1
+import QtNfc 5.2
 
 Rectangle {
     width: 800; height: 480

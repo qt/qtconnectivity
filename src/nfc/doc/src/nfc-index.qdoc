@@ -67,6 +67,7 @@ import statement in your \c .qml file:
 \list
     \li QML
     \list
+        \li \l {corkboard}{CorkBoard}
         \li \l {poster}{QML Poster}
     \endlist
     \li C++
