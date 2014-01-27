@@ -169,19 +169,30 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn QString QBluetoothSocket::localName() const
 
     Returns the name of the local device.
+
+    Although some platforms may differ the socket must generally be connected to guarantee
+    the return of a valid name. In particular, this is true when dealing with platforms
+    that support multiple local Bluetooth adapters.
 */
 
 /*!
     \fn QBluetoothAddress QBluetoothSocket::localAddress() const
 
     Returns the address of the local device.
+
+    Although some platforms may differ the socket must generally be connected to guarantee
+    the return of a valid address. In particular, this is true when dealing with platforms
+    that support multiple local Bluetooth adapters.
 */
 
 /*!
     \fn quint16 QBluetoothSocket::localPort() const
 
     Returns the port number of the local socket if available, otherwise returns 0.
-    On BlackBerry, this feature is not supported and returns 0.
+    Although some platforms may differ the socket must generally be connected to guarantee
+    the return of a valid port number.
+
+    On BlackBerry, this feature is not supported at all and the function always returns 0.
 */
 
 /*!
