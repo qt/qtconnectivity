@@ -195,7 +195,7 @@ quint16 QBluetoothSocketPrivate::localPort() const
 
 QString QBluetoothSocketPrivate::peerName() const
 {
-    return m_peerName;
+    return QString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const

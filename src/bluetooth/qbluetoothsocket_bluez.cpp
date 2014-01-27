@@ -266,9 +266,6 @@ void QBluetoothSocketPrivate::abort()
 
 QString QBluetoothSocketPrivate::localName() const
 {
-    if (!m_localName.isEmpty())
-        return m_localName;
-
     const QBluetoothAddress address = localAddress();
     if (address.isNull())
         return QString();
@@ -289,9 +286,7 @@ QString QBluetoothSocketPrivate::localName() const
     if (properties.isError())
         return QString();
 
-    m_localName = properties.value().value(QLatin1String("Name")).toString();
-
-    return m_localName;
+    return properties.value().value(QLatin1String("Name")).toString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
@@ -340,9 +335,6 @@ quint16 QBluetoothSocketPrivate::localPort() const
 
 QString QBluetoothSocketPrivate::peerName() const
 {
-    if (!m_peerName.isEmpty())
-        return m_peerName;
-
     quint64 bdaddr;
 
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
@@ -400,9 +392,7 @@ QString QBluetoothSocketPrivate::peerName() const
     if (properties.isError())
         return QString();
 
-    m_peerName = properties.value().value(QLatin1String("Alias")).toString();
-
-    return m_peerName;
+    return properties.value().value(QLatin1String("Alias")).toString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
