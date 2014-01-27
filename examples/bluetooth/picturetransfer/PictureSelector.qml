@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -38,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 import Qt.labs.folderlistmodel 1.0
 
 Item {
@@ -76,12 +77,14 @@ Item {
             NumberAnimation { properties: "x"; from: 1000; duration: 500 }
         }
 
+//! [FileSelect-1]
         model: FolderListModel {
             folder: "file://"+SystemPictureFolder
             showDirs: false
         }
 
         delegate: Rectangle {
+//! [FileSelect-1]
             opacity: 0.7
             height: label.height + 130
             width: listView.width + 2
@@ -98,17 +101,22 @@ Item {
                 source: "file://" + model.filePath
             }
 
+//! [FileSelect-2]
             Text {
+//! [FileSelect-2]
                 id: label
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.margins: 20
                 anchors.left: picture.right
+//! [FileSelect-3]
                 text: model.fileName
+//! [FileSelect-3]
                 font.bold: true
                 font.pointSize: 10
                 color: "white"
                 wrapMode: Text.WordWrap
+//! [FileSelect-4]
             }
             MouseArea {
                 id: mArea
@@ -119,5 +127,6 @@ Item {
                 }
             }
         }
+//! [FileSelect-4]
     }
 }

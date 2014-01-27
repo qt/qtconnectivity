@@ -66,8 +66,11 @@
             \li The tennis game using a QML interface to the Bluetooth API. It
             must connect to an instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
         \row
-            \li \l{btscanner}{QML Bluetooth Scanner}
+            \li \l{scanner}{QML Bluetooth Scanner}
             \li A QML implementation of the Bluetooth device scanner.
+        \row
+            \li \l{picturetransfer}{QML Picture Push Example}
+            \li A QML application that transfers pictures between Bluetooth devices.
     \endtable
 
 */

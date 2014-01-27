@@ -38,26 +38,28 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 
-Image {
-    id: root
-    width: 600; height: 800
-    fillMode: Image.PreserveAspectCrop
-    source: "background.png"
-    property string remoteDevice;
-    property string fileName;
-    onRemoteDeviceChanged: {
-        loader.source = "PictureSelector.qml"
+Rectangle {
+    property alias text: label.text
+    signal clicked();
+    opacity: 0.7
+    height: label.height + 30
+    width: label.width + 90
+    border.color: Qt.lighter("#67b0d1")
+    border.width: 1
+    color: mArea.pressed ? "#5c9fba" : "#67b0d1"
+    Text {
+        id: label
+        anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        font.pointSize: 10
+        color: "black"
     }
-    onFileNameChanged: {
-        fileTransfer.initTransfer(remoteDevice, fileName);
-        loader.source = "FileSending.qml"
-    }
-
-    Loader {
-        id: loader
+    MouseArea {
+        id: mArea
         anchors.fill: parent
-        source: "DeviceDiscovery.qml"
+        onClicked: parent.clicked()
     }
 }

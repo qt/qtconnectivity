@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -38,26 +39,53 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QtQml/QQmlEngine>
-#include <QtQuick/QQuickView>
-#include <QDebug>
-#include <QQmlContext>
-#include <QStandardPaths>
-#include "filetransfer.h"
+import QtQuick 2.1
+import QtBluetooth 5.2
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication application(argc, argv);
-    QQuickView view;
-    FileTransfer fileTransfer;
-    view.rootContext()->setContextProperty("fileTransfer", QVariant::fromValue(&fileTransfer));
-    view.rootContext()->setContextProperty("SystemPictureFolder",
-                      QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first());
+Item {
+    Rectangle {
+        id: title
+        opacity: 0.7
+        height: titleLabel.height + 90
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 100
 
-    view.setSource(QUrl(QLatin1String("qrc:/bttransfer.qml")));
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    QObject::connect(view.engine(), SIGNAL(quit()), qApp, SLOT(quit()));
-    view.show();
-    return application.exec();
+        color: "#5c9fba"
+        Text {
+            id: titleLabel
+            text: "Select device"
+            color: "black"
+            font.pointSize: 15
+            anchors.centerIn: parent
+        }
+    }
+
+//! [Discovery-1]
+    ListView {
+//! [Discovery-1]
+        id: listView
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.top: title.bottom
+        anchors.topMargin: 0
+        anchors.margins: 100
+        clip: true
+        add: Transition {
+            NumberAnimation { properties: "x"; from: 1000; duration: 500 }
+        }
+//! [Discovery-2]
+        model: BluetoothDiscoveryModel {
+            discoveryMode: BluetoothDiscoveryModel.DeviceDiscovery
+        }
+
+        delegate: Button {
+            width: listView.width + 2
+            text: model.name
+            onClicked: root.remoteDevice = model.remoteAddress
+        }
+    }
+//! [Discovery-2]
 }

@@ -68,6 +68,7 @@ import statement in your \c .qml file:
     \li QML
     \list
         \li \l {scanner}{QML Bluetooth Scanner}
+        \li \l {picturetransfer}{QML Bluetooth Picture Push}
     \endlist
     \li C++
     \list

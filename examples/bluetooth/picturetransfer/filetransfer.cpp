@@ -48,7 +48,7 @@ FileTransfer::FileTransfer(QObject *parent) :
 {
 }
 
-
+//! [Transfer-1]
 void FileTransfer::initTransfer(QString address, QString fileName)
 {
     qDebug() << "Begin sharing file: " << address << fileName;
@@ -58,6 +58,7 @@ void FileTransfer::initTransfer(QString address, QString fileName)
     reply = manager.put(request, file);
     connect(reply, SIGNAL(transferProgress(qint64,qint64)), this, SLOT(updateProgress(qint64,qint64)));
 }
+//! [Transfer-1]
 
 void FileTransfer::updateProgress(qint64 transferred, qint64 total)
 {
