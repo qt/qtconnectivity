@@ -180,7 +180,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         ::getsockopt(socket, SOL_SOCKET, SO_ERROR, &errorno, (socklen_t*)&len);
         if(errorno) {
             errorString = QString::fromLocal8Bit(strerror(errorno));
-            emit q->error(QBluetoothSocket::UnknownSocketError);
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
             return;
         }
 
@@ -201,8 +201,8 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         int size = txBuffer.read(buf, 1024);
 
         if (::write(socket, buf, size) != size) {
-            socketError = QBluetoothSocket::NetworkError;
-            emit q->error(socketError);
+            errorString = QBluetoothSocket::tr("Network error");
+            q->setSocketError(QBluetoothSocket::NetworkError);
         }
         else {
             emit q->bytesWritten(size);
@@ -233,9 +233,9 @@ void QBluetoothSocketPrivate::_q_readNotify()
         errorString = QString::fromLocal8Bit(strerror(errsv));
         qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << socket << "error:" << readFromDevice << errorString;
         if(errsv == EHOSTDOWN)
-            emit q->error(QBluetoothSocket::HostNotFoundError);
+            q->setSocketError(QBluetoothSocket::HostNotFoundError);
         else
-            emit q->error(QBluetoothSocket::UnknownSocketError);
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
         q->setSocketState(QBluetoothSocket::UnconnectedState);        
@@ -444,8 +444,8 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     Q_Q(QBluetoothSocket);
     if (q->openMode() & QIODevice::Unbuffered) {
         if (::write(socket, data, maxSize) != maxSize) {
-            socketError = QBluetoothSocket::NetworkError;
-            emit q->error(socketError);
+            errorString = QBluetoothSocket::tr("Network error");
+            q->setSocketError(QBluetoothSocket::NetworkError);
         }
 
         emit q->bytesWritten(maxSize);

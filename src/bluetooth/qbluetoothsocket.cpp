@@ -319,13 +319,15 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 #else
     if (service.protocolServiceMultiplexer() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
-            emit error(UnknownSocketError);
+            d->errorString = tr("Unknown socket error");
+            setSocketError(UnknownSocketError);
             return;
         }
         d->connectToService(service.device().address(), service.protocolServiceMultiplexer(), openMode);
     } else if (service.serverChannel() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
-            emit error(UnknownSocketError);
+            d->errorString = tr("Unknown socket error");
+            setSocketError(UnknownSocketError);
             return;
         }
         d->connectToService(service.device().address(), service.serverChannel(), openMode);
@@ -544,7 +546,8 @@ void QBluetoothSocket::discoveryFinished()
     Q_D(QBluetoothSocket);
     if (d->discoveryAgent){
         qCDebug(QT_BT) << "Didn't find any";
-        emit error(QBluetoothSocket::ServiceNotFoundError);
+        d->errorString = tr("Service cannot be found");
+        setSocketError(ServiceNotFoundError);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = 0;
     }

@@ -118,8 +118,8 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         int size = txBuffer.read(buf, 1024);
 
         if (::write(socket, buf, size) != size) {
-            socketError = QBluetoothSocket::NetworkError;
-            emit q->error(socketError);
+            errorString = QBluetoothSocket::tr("Network Error");
+            q->setSocketError(QBluetoothSocket::NetworkError);
         }
         else {
             emit q->bytesWritten(size);
@@ -144,9 +144,9 @@ void QBluetoothSocketPrivate::_q_readNotify()
         int errsv = errno;
         readNotifier->setEnabled(false);
         connectWriteNotifier->setEnabled(false);
-        errorString = QString::fromLocal8Bit(strerror(errsv));
         qCWarning(QT_BT_QNX) << Q_FUNC_INFO << socket << " error:" << readFromDevice << errorString; //TODO Try if this actually works
-        emit q->error(QBluetoothSocket::UnknownSocketError);
+        errorString = QString::fromLocal8Bit(strerror(errsv));
+        q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
         q->setSocketState(QBluetoothSocket::UnconnectedState);
@@ -213,9 +213,9 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     Q_Q(QBluetoothSocket);
     if (q->openMode() & QIODevice::Unbuffered) {
         if (::write(socket, data, maxSize) != maxSize) {
-            socketError = QBluetoothSocket::NetworkError;
+            errorString = QBluetoothSocket::tr("Network Error");
+            q->setSocketError(QBluetoothSocket::NetworkError);
             qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Socket error";
-            Q_EMIT q->error(socketError);
         }
 
         Q_EMIT q->bytesWritten(maxSize);
@@ -303,8 +303,7 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
         if (!result.errorMsg.isEmpty()) {
             qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Error connecting to service:" << result.errorMsg;
             errorString = result.errorMsg;
-            socketError = QBluetoothSocket::UnknownSocketError;
-            emit q->error(QBluetoothSocket::UnknownSocketError);
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
             q->setSocketState(QBluetoothSocket::UnconnectedState);
             return;
         } else {
@@ -319,8 +318,7 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
         if (!result.errorMsg.isEmpty()) {
             qCWarning(QT_BT_QNX) << Q_FUNC_INFO << result.errorMsg;
             errorString = result.errorMsg;
-            socketError = QBluetoothSocket::UnknownSocketError;
-            emit q->error(QBluetoothSocket::UnknownSocketError);
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
             q->setSocketState(QBluetoothSocket::UnconnectedState);
             return;
         } else {
@@ -328,8 +326,8 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
             socket = ::open(path.toStdString().c_str(), O_RDWR);
             if (socket == -1) {
                 errorString = QString::fromLocal8Bit(strerror(errno));
+                q->setSocketError(QBluetoothSocket::UnknownSocketError);
                 qCWarning(QT_BT_QNX) << Q_FUNC_INFO << socket << " error:" << errno << errorString; //TODO Try if this actually works
-                emit q->error(QBluetoothSocket::UnknownSocketError);
 
                 q->disconnectFromService();
                 q->setSocketState(QBluetoothSocket::UnconnectedState);
