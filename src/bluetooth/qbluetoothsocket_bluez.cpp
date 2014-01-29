@@ -166,7 +166,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         connecting = true;
         q->setSocketState(QBluetoothSocket::ConnectingState);
     } else {
-        errorString = QString::fromLocal8Bit(strerror(errno));
+        errorString = qt_error_string(errno);
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
     }
 }
@@ -179,7 +179,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         len = sizeof(errorno);
         ::getsockopt(socket, SOL_SOCKET, SO_ERROR, &errorno, (socklen_t*)&len);
         if(errorno) {
-            errorString = QString::fromLocal8Bit(strerror(errorno));
+            errorString = qt_error_string(errorno);
             q->setSocketError(QBluetoothSocket::UnknownSocketError);
             return;
         }
@@ -230,7 +230,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
         int errsv = errno;
         readNotifier->setEnabled(false);
         connectWriteNotifier->setEnabled(false);
-        errorString = QString::fromLocal8Bit(strerror(errsv));
+        errorString = qt_error_string(errsv);
         qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << socket << "error:" << readFromDevice << errorString;
         if(errsv == EHOSTDOWN)
             q->setSocketError(QBluetoothSocket::HostNotFoundError);

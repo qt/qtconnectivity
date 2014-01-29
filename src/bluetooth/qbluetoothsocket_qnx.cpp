@@ -145,7 +145,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
         readNotifier->setEnabled(false);
         connectWriteNotifier->setEnabled(false);
         qCWarning(QT_BT_QNX) << Q_FUNC_INFO << socket << " error:" << readFromDevice << errorString; //TODO Try if this actually works
-        errorString = QString::fromLocal8Bit(strerror(errsv));
+        errorString = qt_error_string(errsv);
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
@@ -325,7 +325,7 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
             qCDebug(QT_BT_QNX) << "Mount point path is:" << path;
             socket = ::open(path.toStdString().c_str(), O_RDWR);
             if (socket == -1) {
-                errorString = QString::fromLocal8Bit(strerror(errno));
+                errorString = qt_error_string(errno);
                 q->setSocketError(QBluetoothSocket::UnknownSocketError);
                 qCWarning(QT_BT_QNX) << Q_FUNC_INFO << socket << " error:" << errno << errorString; //TODO Try if this actually works
 
