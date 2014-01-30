@@ -8,4 +8,5 @@ qtHaveModule(widgets) {
 
 qtHaveModule(quick): SUBDIRS += scanner \
                                 picturetransfer \
-                                lowenergyscanner
+                                lowenergyscanner \
+                                heartlistener
