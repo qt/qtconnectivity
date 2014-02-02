@@ -392,7 +392,7 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
         } else {
             if (!d->m_serviceAgent) {
                 d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
-                connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)), this, SLOT(serviceDiscovered(const QBluetoothServiceInfo&)));
+                connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
                 connect(d->m_serviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
                 connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
                 connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));

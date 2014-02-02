@@ -154,7 +154,7 @@ QNXNFCManager::QNXNFCManager()
 
     ndefEventFilter = new QNXNFCEventFilter();
     ndefEventFilter->installOnEventDispatcher(QAbstractEventDispatcher::instance());
-    connect(ndefEventFilter, SIGNAL(ndefEvent(const QNdefMessage&)), this, SLOT(invokeNdefMessage(const QNdefMessage&)));
+    connect(ndefEventFilter, SIGNAL(ndefEvent(QNdefMessage)), this, SLOT(invokeNdefMessage(QNdefMessage)));
 }
 
 QNXNFCManager::~QNXNFCManager()
