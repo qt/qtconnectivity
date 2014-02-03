@@ -372,11 +372,10 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
     d->m_running = running;
 
     if (!running) {
-        if (d->m_deviceAgent) {
+        if (d->m_deviceAgent)
             d->m_deviceAgent->stop();
-        } else if (d->m_serviceAgent) {
+        if (d->m_serviceAgent)
             d->m_serviceAgent->stop();
-        }
     } else {
         clearModel();
         d->m_error = NoError;

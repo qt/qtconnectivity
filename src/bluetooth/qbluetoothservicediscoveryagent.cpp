@@ -172,6 +172,13 @@ QBluetoothServiceDiscoveryAgent::~QBluetoothServiceDiscoveryAgent()
 
 /*!
     Returns the list of all discovered services.
+
+    This list of services accumulates newly discovered services from multiple calls
+    to \l start(). Unless \l clear() is called the list cannot decrease in size. This implies
+    that if a remote Bluetooth device moves out of range in between two subsequent calls
+    to \l start() the list may contain stale entries.
+
+    \sa clear()
 */
 QList<QBluetoothServiceInfo> QBluetoothServiceDiscoveryAgent::discoveredServices() const
 {
@@ -222,10 +229,15 @@ QList<QBluetoothUuid> QBluetoothServiceDiscoveryAgent::uuidFilter() const
 }
 
 /*!
-    Sets remote device address to \a address. If \a address is null, services will be discovered
-    on all contactable Bluetooth devices. A new remote address can only be set while there is
-    no service discovery in progress; otherwise this function returns false.
+    Sets the remote device address to \a address. If \a address is default constructed,
+    services will be discovered on all contactable Bluetooth devices. A new remote
+    address can only be set while there is no service discovery in progress; otherwise
+    this function returns false.
 
+    On some platforms such as Blackberry the service discovery might lead to pairing requests.
+    Therefore it is not recommended to do service discoveries on all devices.
+
+    \sa remoteAddress()
 */
 bool QBluetoothServiceDiscoveryAgent::setRemoteAddress(const QBluetoothAddress &address)
 {
@@ -239,9 +251,10 @@ bool QBluetoothServiceDiscoveryAgent::setRemoteAddress(const QBluetoothAddress &
 }
 
 /*!
-    Returns the remote device address. If setRemoteAddress is not called, the function
-    will return default QBluetoothAddress.
+    Returns the remote device address. If \l setRemoteAddress() is not called, the function
+    will return a default constructed \l QBluetoothAddress.
 
+    \sa setRemoteAddress()
 */
 QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
 {
@@ -275,13 +288,14 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 }
 
 /*!
-    Stops service discovery.
+    Stops the service discovery process. The \l canceled() signal will be emitted once
+    the search has stopped.
 */
 void QBluetoothServiceDiscoveryAgent::stop()
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
 
-    if (d->error == InvalidBluetoothAdapterError)
+    if (d->error == InvalidBluetoothAdapterError || !isActive())
         return;
 
     switch (d->discoveryState()) {
@@ -298,11 +312,18 @@ void QBluetoothServiceDiscoveryAgent::stop()
 }
 
 /*!
-    Clears the results of a previous service discovery.
+    Clears the results of previous service discoveries and resets \l uuidFilter().
+    This function does nothing during an ongoing service discovery (see \l isActive()).
+
+    \sa discoveredServices()
 */
 void QBluetoothServiceDiscoveryAgent::clear()
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
+
+    //don't clear the list while the search is ongoing
+    if (isActive())
+        return;
 
     d->discoveredDevices.clear();
     d->discoveredServices.clear();
@@ -310,7 +331,8 @@ void QBluetoothServiceDiscoveryAgent::clear()
 }
 
 /*!
-    Returns true if service discovery is currently active, otherwise returns false.
+    Returns \c true if the service discovery is currently active; otherwise returns \c false.
+    An active discovery can be stopped by calling \l stop().
 */
 bool QBluetoothServiceDiscoveryAgent::isActive() const
 {
@@ -320,9 +342,9 @@ bool QBluetoothServiceDiscoveryAgent::isActive() const
 }
 
 /*!
-    Returns the type of error that last occurred. If service discovery is done
-    on a signle address it will return errors that occured while trying to discover
-    services on that device. If the alternate constructor is used and devices are
+    Returns the type of error that last occurred. If the service discovery is done
+    for a single \l remoteAddress() it will return errors that occurred while trying to discover
+    services on that device. If the \l remoteAddress() is not set and devices are
     discovered by a scan, errors during service discovery on individual
     devices are not saved and no signals are emitted. In this case, errors are
     fairly normal as some devices may not respond to discovery or
@@ -338,8 +360,8 @@ QBluetoothServiceDiscoveryAgent::Error QBluetoothServiceDiscoveryAgent::error() 
 }
 
 /*!
-    Returns a human-readable description of the last error that occurred during
-    service discovery on a single device.
+    Returns a human-readable description of the last error that occurred during the
+    service discovery.
 */
 QString QBluetoothServiceDiscoveryAgent::errorString() const
 {
@@ -350,7 +372,8 @@ QString QBluetoothServiceDiscoveryAgent::errorString() const
 
 /*!
     \fn QBluetoothServiceDiscoveryAgent::canceled()
-    Signals the cancellation of the service discovery.
+
+    This signal is triggered when the service discovery was canceled via a call to \l stop().
  */
 
 

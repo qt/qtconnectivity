@@ -169,19 +169,30 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn QString QBluetoothSocket::localName() const
 
     Returns the name of the local device.
+
+    Although some platforms may differ the socket must generally be connected to guarantee
+    the return of a valid name. In particular, this is true when dealing with platforms
+    that support multiple local Bluetooth adapters.
 */
 
 /*!
     \fn QBluetoothAddress QBluetoothSocket::localAddress() const
 
     Returns the address of the local device.
+
+    Although some platforms may differ the socket must generally be connected to guarantee
+    the return of a valid address. In particular, this is true when dealing with platforms
+    that support multiple local Bluetooth adapters.
 */
 
 /*!
     \fn quint16 QBluetoothSocket::localPort() const
 
     Returns the port number of the local socket if available, otherwise returns 0.
-    On BlackBerry, this feature is not supported and returns 0.
+    Although some platforms may differ the socket must generally be connected to guarantee
+    the return of a valid port number.
+
+    On BlackBerry, this feature is not supported at all and the function always returns 0.
 */
 
 /*!
@@ -308,13 +319,15 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 #else
     if (service.protocolServiceMultiplexer() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
-            emit error(UnknownSocketError);
+            d->errorString = tr("Unknown socket error");
+            setSocketError(UnknownSocketError);
             return;
         }
         d->connectToService(service.device().address(), service.protocolServiceMultiplexer(), openMode);
     } else if (service.serverChannel() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
-            emit error(UnknownSocketError);
+            d->errorString = tr("Unknown socket error");
+            setSocketError(UnknownSocketError);
             return;
         }
         d->connectToService(service.device().address(), service.serverChannel(), openMode);
@@ -488,10 +501,12 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     qCDebug(QT_BT) << "Starting discovery";
 
     if(d->discoveryAgent) {
+        d->discoveryAgent->stop();
         delete d->discoveryAgent;
     }
 
-    d->discoveryAgent = new QBluetoothServiceDiscoveryAgent(service.device().address(),this);
+    d->discoveryAgent = new QBluetoothServiceDiscoveryAgent(this);
+    d->discoveryAgent->setRemoteAddress(service.device().address());
 
     //qDebug() << "Got agent";
 
@@ -531,7 +546,8 @@ void QBluetoothSocket::discoveryFinished()
     Q_D(QBluetoothSocket);
     if (d->discoveryAgent){
         qCDebug(QT_BT) << "Didn't find any";
-        emit error(QBluetoothSocket::ServiceNotFoundError);
+        d->errorString = tr("Service cannot be found");
+        setSocketError(ServiceNotFoundError);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = 0;
     }
