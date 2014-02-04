@@ -112,8 +112,11 @@ QT_BEGIN_NAMESPACE
 
     Start listening for incoming connections to \a address on \a port.
 
-    Returns true if the operation succeeded and the server is listening for
-    incoming connections, otherwise returns false.
+    Returns \c true if the operation succeeded and the server is listening for
+    incoming connections, otherwise returns \c false.
+
+    If the server object is already listening for incoming connections this function
+    always returns \c false. \l close() should be called before calling this function.
 
     \sa isListening(), newConnection()
 */
@@ -172,11 +175,16 @@ QBluetoothServer::~QBluetoothServer()
 
     Convenience function for registering an SPP service with \a uuid and \a serviceName.
     Because this function already registers the service, the QBluetoothServiceInfo object
-    which is returned can not be changed any more.
+    which is returned can not be changed any more. To shutdown the server later on it is
+    required to call \l QBluetoothServiceInfo::unregisterService() and \l close() on this
+    server object.
 
     Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
     invalid QBluetoothServiceInfo. This function always assumes that the default Bluetooth adapter
     should be used.
+
+    If the server object is already listening for incoming connections this function
+    returns an invalid \l QBluetoothServiceInfo.
 
     For an RFCOMM server this function is equivalent to following code snippet.
 
@@ -223,8 +231,10 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
                              protocolDescriptorList);
     bool result = serviceInfo.registerService();
 //! [listen3]
-    if (!result)
+    if (!result) {
+        close(); //close the still listening socket
         return QBluetoothServiceInfo();
+    }
     return serviceInfo;
 }
 

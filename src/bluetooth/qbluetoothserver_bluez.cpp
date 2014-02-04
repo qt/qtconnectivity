@@ -105,11 +105,32 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_D(QBluetoothServer);
 
+    if (d->socket->state() == QBluetoothSocket::ListeningState) {
+        qCWarning(QT_BT_BLUEZ) << "Socket already in listen mode, close server first";
+        return false; //already listening, nothing to do
+    }
+
     int sock = d->socket->socketDescriptor();
     if (sock < 0) {
-        d->m_lastError = InputOutputError;
-        emit error(d->m_lastError);
-        return false;
+        /* Negative socket descriptor is not always an error case
+         * Another cause could be a call to close()/abort()
+         * Check whether we can recover by re-creating the socket
+         * we should really call Bluez::QBluetoothSocketPrivate::ensureNativeSocket
+         * but a re-creation of the socket will do as well.
+         */
+
+        delete d->socket;
+        if (serverType() == QBluetoothServiceInfo::RfcommProtocol)
+            d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+        else
+            d->socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+
+        sock = d->socket->socketDescriptor();
+        if (sock < 0) {
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
+            return false;
+        }
     }
 
     if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
