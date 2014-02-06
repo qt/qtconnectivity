@@ -141,7 +141,7 @@ public:
     inline void setServiceUuid(const QBluetoothUuid &uuid);
     inline QBluetoothUuid serviceUuid() const;
 
-    inline QList<QBluetoothUuid> serviceClassUuids() const;
+    QList<QBluetoothUuid> serviceClassUuids() const;
 
     QBluetoothServiceInfo &operator=(const QBluetoothServiceInfo &other);
 
@@ -228,12 +228,6 @@ inline QBluetoothUuid QBluetoothServiceInfo::serviceUuid() const
 {
     return attribute(ServiceId).value<QBluetoothUuid>();
 }
-
-inline QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
-{
-    return attribute(ServiceClassIds).value<QList<QBluetoothUuid> >();
-}
-
 QT_END_NAMESPACE
 
 #endif
