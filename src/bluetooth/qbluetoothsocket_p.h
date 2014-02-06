@@ -150,8 +150,6 @@ protected:
     QBluetoothSocket *q_ptr;
 
 private:
-    mutable QString m_localName;
-    mutable QString m_peerName;
 #ifdef QT_QNX_BLUETOOTH
     QBluetoothAddress m_peerAddress;
     QBluetoothUuid m_uuid;
