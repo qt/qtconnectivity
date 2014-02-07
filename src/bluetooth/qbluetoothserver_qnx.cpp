@@ -156,7 +156,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
     // listen has already been called before
     if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
-        return true;
+        return false;
 
     d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 

@@ -332,18 +332,6 @@ bool QBluetoothServiceInfo::unregisterService()
 */
 
 /*!
-    \fn QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
-
-    This is a convenience function. It is equivalent to calling
-    attribute(QBluetoothServiceInfo::ServiceClassIds).value<QList<QBluetoothUuid> >().
-
-    Returns a list of UUIDs describing the service classes that this service conforms to.
-
-    \sa attribute()
-*/
-
-
-/*!
     Construct a new invalid QBluetoothServiceInfo;
 */
 QBluetoothServiceInfo::QBluetoothServiceInfo()
@@ -511,6 +499,30 @@ int QBluetoothServiceInfo::serverChannel() const
 QBluetoothServiceInfo::Sequence QBluetoothServiceInfo::protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const
 {
     return d_ptr->protocolDescriptor(protocol);
+}
+
+/*!
+    Returns a list of UUIDs describing the service classes that this service conforms to.
+
+    This is a convenience function. It is equivalent to calling
+    attribute(QBluetoothServiceInfo::ServiceClassIds).value<QBluetoothServiceInfo::Sequence>()
+    and subsequently iterating over its QBluetoothUuid entries.
+
+    \sa attribute()
+*/
+QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
+{
+    QList<QBluetoothUuid> results;
+
+    const QVariant var = attribute(QBluetoothServiceInfo::ServiceClassIds);
+    if (!var.isValid())
+        return results;
+
+    const QBluetoothServiceInfo::Sequence seq = var.value<QBluetoothServiceInfo::Sequence>();
+    for (int i = 0; i < seq.count(); i++)
+        results.append(seq.at(i).value<QBluetoothUuid>());
+
+    return results;
 }
 
 /*!
