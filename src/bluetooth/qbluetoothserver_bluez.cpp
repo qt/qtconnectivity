@@ -201,7 +201,7 @@ bool QBluetoothServer::hasPendingConnections() const
     if (!d || !d->socketNotifier)
         return false;
 
-    // if the socket notifier is disable there is a pending connection waiting for us to accept.
+    // if the socket notifier is disabled there is a pending connection waiting for us to accept.
     return !d->socketNotifier->isEnabled();
 }
 

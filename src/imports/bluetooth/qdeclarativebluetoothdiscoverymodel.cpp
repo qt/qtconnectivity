@@ -285,7 +285,8 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
     for (int i = 0; i < d->m_services.count(); i++) {
         current = d->m_services.at(i);
         if (bs->deviceAddress() == current->deviceAddress()
-                && bs->serviceName() == current->serviceName()) {
+                && bs->serviceName() == current->serviceName()
+                && bs->serviceUuid() == current->serviceUuid()) {
             delete bs;
             return;
         }

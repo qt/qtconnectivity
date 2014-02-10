@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,95 +39,30 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHSERVER_P_H
-#define QBLUETOOTHSERVER_P_H
+#ifndef SERVICEDISCOVERYBROADCASTRECEIVER_H
+#define SERVICEDISCOVERYBROADCASTRECEIVER_H
 
-#include <QtGlobal>
-#include <QList>
-#include <QtBluetooth/QBluetoothSocket>
-#include "qbluetoothserver.h"
-#include "qbluetooth.h"
-
-#ifdef QT_QNX_BLUETOOTH
-#include "qnx/ppshelpers_p.h"
-#endif
-
-#ifdef QT_BLUEZ_BLUETOOTH
-QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
-#endif
-
-#ifdef QT_ANDROID_BLUETOOTH
-#include <QtAndroidExtras/QAndroidJniEnvironment>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include "android/androidbroadcastreceiver_p.h"
+#include <QtCore/QList>
+#include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
 #include <QtBluetooth/QBluetoothUuid>
-
-class ServerAcceptanceThread;
-#endif
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothAddress;
-class QBluetoothSocket;
+class QBluetoothDeviceInfo;
 
-class QBluetoothServer;
-
-class QBluetoothServerPrivate
-#ifdef QT_QNX_BLUETOOTH
-: public QObject
+class ServiceDiscoveryBroadcastReceiver : public AndroidBroadcastReceiver
 {
     Q_OBJECT
-#else
-{
-#endif
-    Q_DECLARE_PUBLIC(QBluetoothServer)
-
 public:
-    QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol serverType);
-    ~QBluetoothServerPrivate();
+    ServiceDiscoveryBroadcastReceiver(QObject* parent = 0);
+    virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
 
-#ifdef QT_BLUEZ_BLUETOOTH
-    void _q_newConnection();
-#endif
+    static QList<QBluetoothUuid> convertParcelableArray(const QAndroidJniObject &obj);
 
-public:
-    QBluetoothSocket *socket;
-
-    int maxPendingConnections;
-    QBluetooth::SecurityFlags securityFlags;
-    QBluetoothServiceInfo::Protocol serverType;
-
-#ifdef QT_QNX_BLUETOOTH
-    QList<QBluetoothSocket *> activeSockets;
-    QString m_serviceName;
-#endif
-
-protected:
-    QBluetoothServer *q_ptr;
-
-private:
-    QBluetoothServer::Error m_lastError;
-#ifdef QT_QNX_BLUETOOTH
-    QBluetoothUuid m_uuid;
-    bool serverRegistered;
-    QString nextClientAddress;
-
-private Q_SLOTS:
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-#elif defined(QT_BLUEZ_BLUETOOTH)
-    QSocketNotifier *socketNotifier;
-#elif defined(QT_ANDROID_BLUETOOTH)
-    ServerAcceptanceThread *thread;
-    QString m_serviceName;
-    QBluetoothUuid m_uuid;
-public:
-    bool isListening() const;
-    bool initiateActiveListening(const QBluetoothUuid& uuid, const QString &serviceName);
-    bool deactivateActiveListening();
-
-#endif
+signals:
+    void uuidFetchFinished(const QBluetoothAddress &addr, const QList<QBluetoothUuid> &serviceUuid);
 };
 
 QT_END_NAMESPACE
-
-#endif
+#endif // SERVICEDISCOVERYBROADCASTRECEIVER_H

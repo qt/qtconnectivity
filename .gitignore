@@ -17,6 +17,7 @@ moc_*.cpp
 ui_*.h
 qrc_*.cpp
 *.moc
+*so-deployment-settings.json
 .qmake.cache
 config.log
 tmp

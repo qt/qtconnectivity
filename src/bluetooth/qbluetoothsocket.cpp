@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
@@ -66,6 +66,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}.
 
     \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} is a low level datagram-oriented Bluetooth socket.
+    Android and BlackBerry do not support \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} for socket
+    connections.
 
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM} is a reliable, stream-oriented socket. RFCOMM
     sockets emulate an RS-232 serial port.
@@ -106,6 +108,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \value NetworkError             Attempt to read or write from socket returned an error
     \value UnsupportedProtocolError The \l {QBluetoothServiceInfo::Protocol}{Protocol} is not
                                     supported on this platform.
+    \value OperationError           An operation was attempted while the socket was in a state
+                                    that did not permit it.
 */
 
 /*!
@@ -192,7 +196,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On BlackBerry, this feature is not supported at all and the function always returns 0.
+    On BlackBerry and Android, this feature is not supported and returns 0.
 */
 
 /*!
@@ -211,7 +215,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn quint16 QBluetoothSocket::peerPort() const
 
     Return the port number of the peer socket if available, otherwise returns 0.
-    On BlackBerry, this feature is not supported.
+    On BlackBerry and Android, this feature is not supported.
 */
 
 /*!
@@ -291,28 +295,37 @@ qint64 QBluetoothSocket::bytesToWrite() const
 /*!
     Attempts to connect to the service described by \a service.
 
-    The socket is opened in the given \a openMode.
+    The socket is opened in the given \a openMode. The \l socketType() may change
+    depending on the protocol required by \a service.
 
-    For BlueZ, the socket first enters ConnectingState and attempts to connect to the device providing
+    The socket first enters ConnectingState and attempts to connect to the device providing
     \a service. If a connection is established, QBluetoothSocket enters ConnectedState and
     emits connected().
 
-    On QNX the service connection can be established directly using the UUID of the remote service.
+    At any point, the socket can emit error() to signal that an error occurred.
 
-    At any point, the socket can emit error() to siganl that an error occurred.
+    Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
+    the connection process may fail.
 
     \sa state(), disconnectFromService()
 */
 void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
     Q_D(QBluetoothSocket);
+
+    if (state() != QBluetoothSocket::UnconnectedState) {
+        qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
+        d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
+        setSocketError(QBluetoothSocket::OperationError);
+        return;
+    }
+
     setOpenMode(openMode);
 
-#ifdef QT_QNX_BLUETOOTH
-    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->socketError = QBluetoothSocket::UnsupportedProtocolError;
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+    if (!d->ensureNativeSocket(service.socketProtocol())) {
         d->errorString = tr("Socket type not supported");
-        Q_EMIT error(d->socketError);
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
@@ -349,25 +362,38 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 
     The socket is opened in the given \a openMode.
 
-    For BlueZ, the socket first enters the ServiceLookupState and queries the connection parameters for
+    For BlueZ, the socket first enters the \l ServiceLookupState and queries the connection parameters for
     \a uuid. If the service parameters are successfully retrieved the socket enters
     ConnectingState, and attempts to connect to \a address. If a connection is established,
     QBluetoothSocket enters Connected State and emits connected().
 
-    On BlackBerry, the service connection can be established directly using the UUID of the remote service.
+    On BlackBerry and Android, the service connection can directly be established
+    using the UUID of the remote service. Therefore these platforms do not require
+    the \l ServiceLookupState and \l socketType() is always set to
+    \l QBluetoothServiceInfo::RfcommProtocol.
 
     At any point, the socket can emit error() to signal that an error occurred.
+
+    Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
+    the connection process may fail.
 
     \sa state(), disconnectFromService()
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode)
 {
-#ifdef QT_QNX_BLUETOOTH
     Q_D(QBluetoothSocket);
-    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->socketError = QBluetoothSocket::UnsupportedProtocolError;
+
+    if (state() != QBluetoothSocket::UnconnectedState) {
+        qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
+        d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
+        setSocketError(QBluetoothSocket::OperationError);
+        return;
+    }
+
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+    if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
         d->errorString = tr("Socket type not supported");
-        Q_EMIT error(d->socketError);
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
     d->connectToService(address, uuid, openMode);
@@ -390,30 +416,43 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 
     At any point, the socket can emit error() to signal that an error occurred.
 
-    On BlackBerry, a connection to a service can not be established using a port. Calling this function
+    On BlackBerry and Android, a connection to a service can not be established using a port. Calling this function
     will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}
+
+    Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
+    the connection process may fail.
 
     \sa state(), disconnectFromService()
 */
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
     Q_D(QBluetoothSocket);
-#ifdef QT_QNX_BLUETOOTH
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
     Q_UNUSED(port);
     Q_UNUSED(openMode);
     Q_UNUSED(address);
-    d->socketError = QBluetoothSocket::ServiceNotFoundError;
-    d->errorString = tr("Connecting to port is not supported on QNX");
-    Q_EMIT error(d->socketError);
-    qCWarning(QT_BT_QNX) << "Connecting to port is not supported";
+    d->errorString = tr("Connecting to port is not supported");
+    setSocketError(QBluetoothSocket::ServiceNotFoundError);
+    qCWarning(QT_BT) << "Connecting to port is not supported";
 #else
+    if (state() != QBluetoothSocket::UnconnectedState) {
+        qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
+        d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
+        setSocketError(QBluetoothSocket::OperationError);
+        return;
+    }
+
     setOpenMode(openMode);
     d->connectToService(address, port, openMode);
 #endif
 }
 
 /*!
-    Returns the socket type.
+    Returns the socket type. The socket automatically adjusts to the protocol
+    offered by the remote service.
+
+    Blackberry and Android only support \l{QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}
+    based sockets.
 */
 QBluetoothServiceInfo::Protocol QBluetoothSocket::socketType() const
 {
@@ -555,6 +594,9 @@ void QBluetoothSocket::discoveryFinished()
 
 void QBluetoothSocket::abort()
 {
+    if (state() == UnconnectedState)
+        return;
+
     Q_D(QBluetoothSocket);
     d->abort();
     setSocketState(QBluetoothSocket::UnconnectedState);
@@ -562,9 +604,7 @@ void QBluetoothSocket::abort()
 
 void QBluetoothSocket::disconnectFromService()
 {
-    // TODO: is this all we need to do?
-    Q_D(QBluetoothSocket);
-    d->close();
+    close();
 }
 
 QString QBluetoothSocket::localName() const
@@ -617,6 +657,9 @@ qint64 QBluetoothSocket::readData(char *data, qint64 maxSize)
 
 void QBluetoothSocket::close()
 {
+    if (state() == UnconnectedState)
+        return;
+
     Q_D(QBluetoothSocket);
     setSocketState(ClosingState);
 

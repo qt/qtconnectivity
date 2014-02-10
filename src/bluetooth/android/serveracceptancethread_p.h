@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,95 +39,54 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHSERVER_P_H
-#define QBLUETOOTHSERVER_P_H
+#ifndef SERVERACCEPTANCETHREAD_H
+#define SERVERACCEPTANCETHREAD_H
 
-#include <QtGlobal>
-#include <QList>
-#include <QtBluetooth/QBluetoothSocket>
-#include "qbluetoothserver.h"
-#include "qbluetooth.h"
-
-#ifdef QT_QNX_BLUETOOTH
-#include "qnx/ppshelpers_p.h"
-#endif
-
-#ifdef QT_BLUEZ_BLUETOOTH
-QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
-#endif
-
-#ifdef QT_ANDROID_BLUETOOTH
-#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtCore/QMutex>
+#include <QtCore/QThread>
 #include <QtAndroidExtras/QAndroidJniObject>
 #include <QtBluetooth/QBluetoothUuid>
+#include "qbluetooth.h"
 
-class ServerAcceptanceThread;
-#endif
 
-QT_BEGIN_NAMESPACE
-
-class QBluetoothAddress;
-class QBluetoothSocket;
-
-class QBluetoothServer;
-
-class QBluetoothServerPrivate
-#ifdef QT_QNX_BLUETOOTH
-: public QObject
+class ServerAcceptanceThread : public QThread
 {
     Q_OBJECT
-#else
-{
-#endif
-    Q_DECLARE_PUBLIC(QBluetoothServer)
-
 public:
-    QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol serverType);
-    ~QBluetoothServerPrivate();
+    enum AndroidError {
+        AndroidNoError
+    };
 
-#ifdef QT_BLUEZ_BLUETOOTH
-    void _q_newConnection();
-#endif
+    explicit ServerAcceptanceThread(QObject *parent = 0);
+    ~ServerAcceptanceThread();
+    void setServiceDetails(const QBluetoothUuid &uuid, const QString &serviceName,
+                           QBluetooth::SecurityFlags securityFlags);
+    virtual void run();
 
-public:
-    QBluetoothSocket *socket;
+    void stop();
+    bool hasPendingConnections() const;
+    QAndroidJniObject nextPendingConnection();
+    void setMaxPendingConnections(int maximumCount);
 
-    int maxPendingConnections;
-    QBluetooth::SecurityFlags securityFlags;
-    QBluetoothServiceInfo::Protocol serverType;
-
-#ifdef QT_QNX_BLUETOOTH
-    QList<QBluetoothSocket *> activeSockets;
-    QString m_serviceName;
-#endif
-
-protected:
-    QBluetoothServer *q_ptr;
+signals:
+    void newConnection();
+    void error(ServerAcceptanceThread::AndroidError);
 
 private:
-    QBluetoothServer::Error m_lastError;
-#ifdef QT_QNX_BLUETOOTH
-    QBluetoothUuid m_uuid;
-    bool serverRegistered;
-    QString nextClientAddress;
+    bool validSetup() const;
+    void shutdownPendingConnections();
 
-private Q_SLOTS:
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-#elif defined(QT_BLUEZ_BLUETOOTH)
-    QSocketNotifier *socketNotifier;
-#elif defined(QT_ANDROID_BLUETOOTH)
-    ServerAcceptanceThread *thread;
+    QList<QAndroidJniObject> pendingSockets;
+    QAndroidJniObject btAdapter;
+    QAndroidJniObject btServerSocket;
+    mutable QMutex m_mutex;
     QString m_serviceName;
     QBluetoothUuid m_uuid;
-public:
-    bool isListening() const;
-    bool initiateActiveListening(const QBluetoothUuid& uuid, const QString &serviceName);
-    bool deactivateActiveListening();
+    bool m_stop;
+    AndroidError lastError;
+    int maxPendingConnections;
+    QBluetooth::SecurityFlags secFlags;
 
-#endif
 };
 
-QT_END_NAMESPACE
-
-#endif
+#endif // SERVERACCEPTANCETHREAD_H

@@ -435,8 +435,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
         return;
     }
 
-//    discoveredDevices = deviceDiscoveryAgent->discoveredDevices();
-
     delete deviceDiscoveryAgent;
     deviceDiscoveryAgent = 0;
 

@@ -47,6 +47,11 @@
 #ifdef QT_QNX_BLUETOOTH
 #include "qnx/ppshelpers_p.h"
 #endif
+#ifdef QT_ANDROID_BLUETOOTH
+#include <QtAndroidExtras/QAndroidJniObject>
+#include "android/inputstreamthread_p.h"
+#include <jni.h>
+#endif
 
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
 #define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)
@@ -74,7 +79,7 @@ class QBluetoothSocket;
 class QBluetoothServiceDiscoveryAgent;
 
 class QBluetoothSocketPrivate
-#ifdef QT_QNX_BLUETOOTH
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
 : public QObject
 {
     Q_OBJECT
@@ -87,12 +92,16 @@ public:
     QBluetoothSocketPrivate();
     ~QBluetoothSocketPrivate();
 
-//On qnx we connect using the uuid not the port
-#ifdef QT_QNX_BLUETOOTH
+//On QNX and Android we connect using the uuid not the port
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode);
 #else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
+#ifdef QT_ANDROID_BLUETOOTH
+    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
+#endif
+
 
     bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type);
 
@@ -114,6 +123,11 @@ public:
     qint64 writeData(const char *data, qint64 maxSize);
     qint64 readData(char *data, qint64 maxSize);
 
+#ifdef QT_ANDROID_BLUETOOTH
+    bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
+                             QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
+#endif
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
@@ -145,6 +159,19 @@ public:
     void _q_writeNotify();
     void _q_serviceDiscovered(const QBluetoothServiceInfo &service);
     void _q_discoveryFinished();
+
+#ifdef QT_ANDROID_BLUETOOTH
+    QAndroidJniObject adapter;
+    QAndroidJniObject socketObject;
+    QAndroidJniObject remoteDevice;
+    QAndroidJniObject inputStream;
+    QAndroidJniObject outputStream;
+    InputStreamThread *inputThread;
+
+private Q_SLOTS:
+    void inputThreadError();
+
+#endif
 
 protected:
     QBluetoothSocket *q_ptr;

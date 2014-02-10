@@ -70,6 +70,12 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
+#ifdef QT_ANDROID_BLUETOOTH
+class ServiceDiscoveryBroadcastReceiver;
+class LocalDeviceBroadcastReceiver;
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtBluetooth/QBluetoothLocalDevice>
+#endif
 
 class QBluetoothServiceDiscoveryAgentPrivate
 #ifdef QT_QNX_BLUETOOTH
@@ -97,7 +103,7 @@ public:
     void stopServiceDiscovery();
 
     void setDiscoveryState(DiscoveryState s) { state = s; }
-    DiscoveryState discoveryState() { return state; }
+    inline DiscoveryState discoveryState() { return state; }
 
     void setDiscoveryMode(QBluetoothServiceDiscoveryAgent::DiscoveryMode m) { mode = m; }
     QBluetoothServiceDiscoveryAgent::DiscoveryMode DiscoveryMode() { return mode; }
@@ -110,6 +116,14 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
+#endif
+#ifdef QT_ANDROID_BLUETOOTH
+    void _q_processFetchedUuids(const QBluetoothAddress &address, const QList<QBluetoothUuid> &uuids);
+
+    void populateDiscoveredServices(const QBluetoothDeviceInfo &remoteDevice,
+                                    const QList<QBluetoothUuid> &uuids);
+    void _q_fetchUuidsTimeout();
+    void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
 #endif
 
 private:
@@ -143,6 +157,7 @@ public:
     QBluetoothAddress deviceAddress;
     QList<QBluetoothServiceInfo> discoveredServices;
     QList<QBluetoothDeviceInfo> discoveredDevices;
+    QBluetoothAddress m_deviceAdapterAddress;
 
 private:
     DiscoveryState state;
@@ -158,7 +173,14 @@ private:
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
-    QBluetoothAddress m_deviceAdapterAddress;
+#endif
+
+#ifdef QT_ANDROID_BLUETOOTH
+    ServiceDiscoveryBroadcastReceiver *receiver;
+    LocalDeviceBroadcastReceiver *localDeviceReceiver;
+
+    QAndroidJniObject btAdapter;
+    QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
 #endif
 
 protected:

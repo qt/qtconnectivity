@@ -65,12 +65,58 @@ QT_END_NAMESPACE
 #include <QSocketNotifier>
 #include "qnx/ppshelpers_p.h"
 #endif
+#ifdef QT_ANDROID_BLUETOOTH
+#include <jni.h>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QPair>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
 
-#if defined(QT_BLUEZ_BLUETOOTH)
+#ifdef QT_ANDROID_BLUETOOTH
+class LocalDeviceBroadcastReceiver;
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_OBJECT
+public:
+    QBluetoothLocalDevicePrivate(
+            QBluetoothLocalDevice *q,
+            const QBluetoothAddress &address = QBluetoothAddress());
+    ~QBluetoothLocalDevicePrivate();
+
+    QAndroidJniObject *adapter();
+    void initialize(const QBluetoothAddress& address);
+    static bool startDiscovery();
+    static bool cancelDiscovery();
+    static bool isDiscovering();
+    bool isValid() const;
+
+
+private slots:
+    void processHostModeChange(QBluetoothLocalDevice::HostMode newMode);
+    void processPairingStateChanged(const QBluetoothAddress &address,
+                            QBluetoothLocalDevice::Pairing pairing);
+    void processConnectDeviceChanges(const QBluetoothAddress &address, bool isConnectEvent);
+    void processDisplayConfirmation(const QBluetoothAddress &address, const QString &pin);
+
+private:
+    QBluetoothLocalDevice *q_ptr;
+    QAndroidJniObject *obj;
+
+    int pendingPairing(const QBluetoothAddress &address);
+
+public:
+    LocalDeviceBroadcastReceiver *receiver;
+    bool pendingHostModeTransition;
+    QList<QPair<QBluetoothAddress, bool> > pendingPairings;
+
+    QList<QBluetoothAddress> connectedDevices;
+};
+
+#elif defined(QT_BLUEZ_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject,
                                      protected QDBusContext
 {

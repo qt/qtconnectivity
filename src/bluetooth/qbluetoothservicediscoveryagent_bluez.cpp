@@ -54,9 +54,9 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
-:   error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive), deviceDiscoveryAgent(0),
+:   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
-    manager(0), device(0), m_deviceAdapterAddress(deviceAdapter)
+    manager(0), adapter(0), device(0)
 {
     qRegisterMetaType<ServiceMap>("ServiceMap");
     qDBusRegisterMetaType<ServiceMap>();
