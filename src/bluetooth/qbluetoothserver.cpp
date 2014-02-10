@@ -207,10 +207,12 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
 
     QBluetoothServiceInfo::Sequence classId;
     classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
     serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
                              classId);
 
+    //Android requires custom uuid to be set as service class
+    classId.prepend(QVariant::fromValue(uuid));
+    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
     serviceInfo.setServiceUuid(uuid);
 
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
