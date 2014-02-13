@@ -548,6 +548,7 @@ void QBluetoothSocket::discoveryFinished()
         qCDebug(QT_BT) << "Didn't find any";
         d->errorString = tr("Service cannot be found");
         setSocketError(ServiceNotFoundError);
+        setSocketState(QBluetoothSocket::UnconnectedState);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = 0;
     }
