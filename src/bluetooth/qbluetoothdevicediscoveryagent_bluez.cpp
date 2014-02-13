@@ -130,7 +130,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     if (!propertiesReply.value().value(QStringLiteral("Powered")).toBool()) {
         qCDebug(QT_BT_BLUEZ) << "Aborting device discovery due to offline Bluetooth Adapter";
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off.");
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         delete adapter;
         adapter = 0;
         emit q->error(lastError);

@@ -94,7 +94,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device does not support Bluetooth.");
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device does not support Bluetooth");
         emit q->error(lastError);
         return;
     }
@@ -111,7 +111,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     const int state = adapter.callMethod<jint>("getState");
     if (state != 12 ) { //BluetoothAdapter.STATE_ON
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off.");
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         emit q->error(lastError);
         return;
     }
@@ -130,7 +130,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     const bool success = adapter.callMethod<jboolean>("startDiscovery");
     if (!success) {
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be started.");
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be started");
         emit q->error(lastError);
         return;
     }
@@ -152,7 +152,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
     bool success = adapter.callMethod<jboolean>("cancelDiscovery");
     if (!success) {
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be stopped.");
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be stopped");
         emit q->error(lastError);
         return;
     }
@@ -181,7 +181,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveryFinished()
         const int state = adapter.callMethod<jint>("getState");
         if (state != 12 ) { //BluetoothAdapter.STATE_ON
             lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
-            errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off.");
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
             emit q->error(lastError);
             return;
         }

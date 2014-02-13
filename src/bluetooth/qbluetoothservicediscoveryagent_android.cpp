@@ -108,7 +108,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
     if (!btAdapter.isValid()) {
         error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Platform does not support Bluetooth.");
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Platform does not support Bluetooth");
 
         //abort any outstanding discoveries
         discoveredDevices.clear();
@@ -130,7 +130,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         qCWarning(QT_BT_ANDROID) << "Aborting SDP enquiry due to too low Android API version (requires v15+)";
 
         error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Android API below v15 does not support SDP discovery.");
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Android API below v15 does not support SDP discovery");
 
         //abort any outstanding discoveries
         sdpCache.clear();
@@ -154,7 +154,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         //if it was only device then its error -> otherwise go to next device
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Cannot create Android BluetoothDevice.");
+            errorString = QBluetoothServiceDiscoveryAgent::tr("Cannot create Android BluetoothDevice");
 
             qCWarning(QT_BT_ANDROID) << "Cannot start SDP for" << discoveredDevices.at(0).name()
                                      << "(" << address.toString() << ")";
@@ -176,7 +176,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         if (!parcelUuidArray.isValid()) {
             if (singleDevice) {
                 error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-                errorString = QBluetoothServiceDiscoveryAgent::tr("Cannot obtain service uuids.");
+                errorString = QBluetoothServiceDiscoveryAgent::tr("Cannot obtain service uuids");
                 emit q->error(error);
             }
             qCWarning(QT_BT_ANDROID) << "Cannot retrieve SDP UUIDs for" << discoveredDevices.at(0).name()
@@ -314,7 +314,7 @@ static QString serviceNameForClassUuid(const uint value)
     case QBluetoothUuid::HeadsetAG: return QBluetoothServiceDiscoveryAgent::tr("Headset AG");
     case QBluetoothUuid::PANU: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (PANU)");
     case QBluetoothUuid::NAP: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (NAP)");
-    case QBluetoothUuid::GN: return QBluetoothServiceDiscoveryAgent::tr("Personak Area Networking (GN)");
+    case QBluetoothUuid::GN: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (GN)");
     case QBluetoothUuid::DirectPrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Printing (DP)");
     //case QBluetoothUuid::ReferencePrinting: return QBluetoothServiceDiscoveryAgent::tr("");
     case QBluetoothUuid::ImagingResponder: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Responder");
@@ -337,7 +337,7 @@ static QString serviceNameForClassUuid(const uint value)
     case QBluetoothUuid::HeadsetHS: return QBluetoothServiceDiscoveryAgent::tr("Headset HS");
     case QBluetoothUuid::MessageAccessServer: return QBluetoothServiceDiscoveryAgent::tr("Message Access Server");
     case QBluetoothUuid::MessageNotificationServer: return QBluetoothServiceDiscoveryAgent::tr("Message Notification Server");
-    case QBluetoothUuid::MessageAccessProfile: return QBluetoothServiceDiscoveryAgent::tr("Message Accress");
+    case QBluetoothUuid::MessageAccessProfile: return QBluetoothServiceDiscoveryAgent::tr("Message Access");
     case QBluetoothUuid::PnPInformation: return QBluetoothServiceDiscoveryAgent::tr("Navigation Satellite System");
     //case QBluetoothUuid::GenericNetworking: return QBluetoothServiceDiscoveryAgent::tr("");
     //case QBluetoothUuid::GenericFileTransfer: return QBluetoothServiceDiscoveryAgent::tr("");
@@ -498,7 +498,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_hostModeStateChanged(QBluetoothL
         discoveredDevices.clear();
         sdpCache.clear();
         error = QBluetoothServiceDiscoveryAgent::PoweredOffError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Device is powered off.");
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Device is powered off");
 
         //kill receiver to limit load of signals
         receiver->deleteLater();

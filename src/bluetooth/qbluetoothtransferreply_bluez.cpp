@@ -113,7 +113,7 @@ bool QBluetoothTransferReplyBluez::start()
     }
     else {
         if (!file->exists()) {
-            m_errorStr = QBluetoothTransferReply::tr("File does not exist");
+            m_errorStr = QBluetoothTransferReply::tr("Source file does not exist");
             m_error = QBluetoothTransferReply::FileNotFoundError;
             m_finished = true;
             m_running = false;

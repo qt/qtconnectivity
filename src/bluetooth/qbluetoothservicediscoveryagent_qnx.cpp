@@ -73,7 +73,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::deviceServicesDiscoveryCallback(bt_
     QBluetoothServiceDiscoveryAgentPrivate *p = classPointer->data();
     if ( result == 0) {
         qCDebug(QT_BT_QNX) << "Result received in callback is null.";
-        p->errorString = QBluetoothServiceDiscoveryAgent::tr("Result received in callback is null.");
+        p->errorString = QBluetoothServiceDiscoveryAgent::tr("Result received in callback is null");
         p->error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         p->q_ptr->error(p->error);
         p->_q_serviceDiscoveryFinished();
@@ -154,9 +154,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     errno = 0;
     if (!m_btInitialized) {
         if (bt_device_init( 0 ) < 0) {
-            qCWarning(QT_BT_QNX) << "Failed to initialize bluetooth stack.";
+            qCWarning(QT_BT_QNX) << "Failed to initialize Bluetooth stack.";
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to open to initialize bluetooth stack");
+            errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to initialize Bluetooth stack");
             q->error(error);
             _q_serviceDiscoveryFinished();
             return;
@@ -167,9 +167,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     bt_remote_device_t *remoteDevice = bt_rdev_get_device(address.toString().toLocal8Bit().constData());
     int deviceType = bt_rdev_get_type(remoteDevice);
     if (deviceType == -1) {
-        qCWarning(QT_BT_QNX) << "Could not retrieve remote device (address is 00:00:00:00:00:00).";
+        qCWarning(QT_BT_QNX) << "Could not retrieve remote device address (address is 00:00:00:00:00:00).";
         error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Could not retrieve remote device (address is 00:00:00:00:00:00).");
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Could not retrieve remote device address");
         q->error(error);
         _q_serviceDiscoveryFinished();
         return;

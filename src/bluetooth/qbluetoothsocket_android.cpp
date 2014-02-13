@@ -109,7 +109,7 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     const int state = adapter.callMethod<jint>("getState");
     if (state != 12 ) { //BluetoothAdapter.STATE_ON
         qCWarning(QT_BT_ANDROID) << "Bt device offline";
-        errorString = QBluetoothSocket::tr("Device is powered off.");
+        errorString = QBluetoothSocket::tr("Device is powered off");
         q->setSocketError(QBluetoothSocket::NetworkError);
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         return;
@@ -124,7 +124,7 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
         env->ExceptionDescribe();
         env->ExceptionClear();
 
-        errorString = QBluetoothSocket::tr("Cannot access address %1").arg(address.toString());
+        errorString = QBluetoothSocket::tr("Cannot access address %1", "%1 = Bt address e.g. 11:22:33:44:55:66").arg(address.toString());
         q->setSocketError(QBluetoothSocket::HostNotFoundError);
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         return;
