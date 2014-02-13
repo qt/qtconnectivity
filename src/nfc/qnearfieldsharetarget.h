@@ -43,11 +43,10 @@
 #ifndef QNEARFIELDSHARETARGET_H
 #define QNEARFIELDSHARETARGET_H
 
-#include "qnearfieldsharemanager.h"
-
 #include <QtCore/QObject>
 #include <QFileInfo>
 #include <QtNfc/QNdefMessage>
+#include <QtNfc/QNearFieldShareManager>
 
 QT_BEGIN_NAMESPACE
 

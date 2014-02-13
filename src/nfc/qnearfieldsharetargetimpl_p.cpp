@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QNearFieldShareTargetPrivateImpl::QNearFieldShareTargetPrivateImpl(QNearFieldShareManager::ShareModes modes, QNearFieldShareTarget *q)
+QNearFieldShareTargetPrivateImpl::QNearFieldShareTargetPrivateImpl(QNearFieldShareManager::ShareModes /*modes*/, QNearFieldShareTarget *q)
     : QNearFieldShareTargetPrivate(QNearFieldShareManager::NoShare, q)
 {
 }
