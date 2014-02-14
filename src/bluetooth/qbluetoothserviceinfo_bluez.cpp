@@ -266,8 +266,6 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     stream.writeEndDocument();
 
-    qCDebug(QT_BT_BLUEZ) << xmlServiceRecord;
-
     if (!registered) {
         QDBusPendingReply<uint> reply = service->AddRecord(xmlServiceRecord);
         reply.waitForFinished();
