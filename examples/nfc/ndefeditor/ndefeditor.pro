@@ -21,3 +21,6 @@ FORMS += \
     textrecordeditor.ui \
     urirecordeditor.ui \
     mimeimagerecordeditor.ui
+
+target.path = $$[QT_INSTALL_EXAMPLES]/nfc/ndefeditor
+INSTALLS += target

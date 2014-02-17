@@ -38,6 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "qbluetoothhostinfo.h"
 
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
@@ -71,6 +72,8 @@ QT_BEGIN_NAMESPACE
     \value NoError          No error has occurred.
     \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
     \value InputOutputError    Writing or reading from the device resulted in an error.
+    \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
+                                        adapter address of any local Bluetooth device.
     \value UnknownError     An unknown error has occurred.
 */
 
@@ -102,12 +105,14 @@ QT_BEGIN_NAMESPACE
     \fn void QBluetoothDeviceDiscoveryAgent::finished()
 
     This signal is emitted when Bluetooth device discovery completes.
+    The signal is not going to be emitted if the device discovery finishes with an error.
 */
 
 /*!
     \fn void QBluetoothDeviceDiscoveryAgent::error(QBluetoothDeviceDiscoveryAgent::Error error)
 
     This signal is emitted when an \a error occurs during Bluetooth device discovery.
+    The \a error parameter describes the error that occurred.
 
     \sa error(), errorString()
 */
@@ -134,14 +139,30 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
 }
 
 /*!
-    Constructs a new Bluetooth device discovery agent with parent \a parent and uses the adapter \a deviceAdapter
-    for the device search. If \a deviceAdapter is default constructed the resulting
+    Constructs a new Bluetooth device discovery agent with \a parent.
+
+    It uses \a deviceAdapter for the device search. If \a deviceAdapter is default constructed the resulting
     QBluetoothDeviceDiscoveryAgent object will use the local default Bluetooth adapter.
+
+    If a \a deviceAdapter is specified that is not a local adapter \l error() will be set to
+    \l InvalidBluetoothAdapterError. Therefore it is recommended to test the error flag immediately after
+    using this constructor.
+
+    \sa error()
 */
 QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
 {
     d_ptr->q_ptr = this;
+    if (!deviceAdapter.isNull()) {
+        const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
+        foreach (const QBluetoothHostInfo &hostInfo, localDevices) {
+            if (hostInfo.address() == deviceAdapter)
+                return;
+        }
+        d_ptr->lastError = InvalidBluetoothAdapterError;
+        d_ptr->errorString = tr("Invalid Bluetooth adapter address");
+    }
 }
 
 /*!
@@ -194,7 +215,7 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
-    if (!isActive())
+    if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
         d->start();
 }
 
@@ -207,7 +228,7 @@ void QBluetoothDeviceDiscoveryAgent::start()
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
-    if (isActive())
+    if (isActive() && d->lastError != InvalidBluetoothAdapterError)
         d->stop();
 }
 

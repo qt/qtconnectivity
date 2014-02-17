@@ -28,3 +28,9 @@ FORMS = \
 
 RESOURCES += \
     tennis.qrc
+
+OTHER_FILES = \
+    connect.png
+
+target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/bttennis
+INSTALLS += target

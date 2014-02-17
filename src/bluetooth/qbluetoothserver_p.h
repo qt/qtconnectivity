@@ -56,6 +56,14 @@
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
 
+#ifdef QT_ANDROID_BLUETOOTH
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtBluetooth/QBluetoothUuid>
+
+class ServerAcceptanceThread;
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -108,6 +116,15 @@ private Q_SLOTS:
     void controlEvent(ppsResult result);
 #elif defined(QT_BLUEZ_BLUETOOTH)
     QSocketNotifier *socketNotifier;
+#elif defined(QT_ANDROID_BLUETOOTH)
+    ServerAcceptanceThread *thread;
+    QString m_serviceName;
+    QBluetoothUuid m_uuid;
+public:
+    bool isListening() const;
+    bool initiateActiveListening(const QBluetoothUuid& uuid, const QString &serviceName);
+    bool deactivateActiveListening();
+
 #endif
 };
 

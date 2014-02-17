@@ -54,6 +54,18 @@ Item {
         onDiscoveryModeChanged: console.log("Discovery mode: " + discoveryMode)
         onServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
         onDeviceDiscovered: console.log("New device: " + device)
+        onErrorChanged: {
+                switch (btModel.error) {
+                case BluetoothDiscoveryModel.PoweredOffError:
+                    console.log("Error: Bluetooth device not turned on"); break;
+                case BluetoothDiscoveryModel.InputOutputError:
+                    console.log("Error: Bluetooth I/O Error"); break;
+                case BluetoothDiscoveryModel.NoError:
+                    break;
+                default:
+                    console.log("Error: Unknown Error"); break;
+                }
+        }
    }
 
     Rectangle {
@@ -62,7 +74,7 @@ Item {
         width: top.width * 0.7;
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: top.top;
-        height: 30;
+        height: text.height*1.2;
         radius: 5
         color: "#1c56f3"
         visible: btModel.running
@@ -71,6 +83,7 @@ Item {
             id: text
             text: "Scanning"
             font.bold: true
+            font.pointSize: 20
             anchors.centerIn: parent
         }
 
@@ -115,9 +128,9 @@ Item {
                 anchors.leftMargin: 5
                 Text {
                     id: bttext
-                    text: name;
+                    text: deviceName ? deviceName : name
                     font.family: "FreeSerif"
-                    font.pointSize: 12
+                    font.pointSize: 16
                 }
 
                 Text {
@@ -138,7 +151,8 @@ Item {
                     visible: opacity !== 0
                     opacity: btDelegate.expended ? 1 : 0.0
                     text: get_details(service)
-                    font: bttext.font
+                    font.family: "FreeSerif"
+                    font.pointSize: 14
                     Behavior on opacity {
                         NumberAnimation { duration: 200}
                     }
@@ -160,20 +174,28 @@ Item {
 
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 20
+        anchors.bottomMargin: 5
+        spacing: 10
 
         Button {
             id: fdButton
+            width: top.width/3*0.9
+            //mdButton has longest text
+            height: mdButton.height
             text: "Full Discovery"
             onClicked: btModel.discoveryMode = BluetoothDiscoveryModel.FullServiceDiscovery
         }
         Button {
             id: mdButton
+            width: top.width/3*0.9
             text: "Minimal Discovery"
             onClicked: btModel.discoveryMode = BluetoothDiscoveryModel.MinimalServiceDiscovery
         }
         Button {
             id: devButton
+            width: top.width/3*0.9
+            //mdButton has longest text
+            height: mdButton.height
             text: "Device Discovery"
             onClicked: btModel.discoveryMode = BluetoothDiscoveryModel.DeviceDiscovery
         }

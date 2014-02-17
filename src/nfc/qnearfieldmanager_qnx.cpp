@@ -52,7 +52,7 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     m_handlerID(0)
 {
     QNXNFCManager::instance()->registerForNewInstance();
-    connect(QNXNFCManager::instance(), SIGNAL(ndefMessage(const QNdefMessage&, QNearFieldTarget *)), this, SLOT(handleMessage(const QNdefMessage&, QNearFieldTarget *)));
+    connect(QNXNFCManager::instance(), SIGNAL(ndefMessage(QNdefMessage,QNearFieldTarget*)), this, SLOT(handleMessage(QNdefMessage,QNearFieldTarget*)));
 
     m_requestedModes = QNearFieldManager::NdefWriteTargetAccess;
     qQNXNFCDebug() << "Nearfieldmanager created";
@@ -74,8 +74,8 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
 {
     qQNXNFCDebug() << "Starting targetdetection in nearfieldmanager";
     if (QNXNFCManager::instance()->startTargetDetection()) {
-        connect(QNXNFCManager::instance(), SIGNAL(targetDetected(QNearFieldTarget *, const QList<QNdefMessage>&)),
-                this, SLOT(newTarget(QNearFieldTarget *, const QList<QNdefMessage>&)));
+        connect(QNXNFCManager::instance(), SIGNAL(targetDetected(QNearFieldTarget*,QList<QNdefMessage>)),
+                this, SLOT(newTarget(QNearFieldTarget*,QList<QNdefMessage>)));
         return true;
     } else {
         qWarning()<<Q_FUNC_INFO<<"Could not start Target detection";
@@ -85,8 +85,8 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection()
 {
-    disconnect(QNXNFCManager::instance(), SIGNAL(targetDetected(NearFieldTarget *, const QList<QNdefMessage> &)),
-               this, SLOT(newTarget(NearFieldTarget *, const QList<QNdefMessage> &)));
+    disconnect(QNXNFCManager::instance(), SIGNAL(targetDetected(NearFieldTarget*,QList<QNdefMessage>)),
+               this, SLOT(newTarget(NearFieldTarget*,QList<QNdefMessage>)));
     QNXNFCManager::instance()->unregisterTargetDetection(this);
 }
 

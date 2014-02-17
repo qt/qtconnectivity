@@ -79,6 +79,11 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
     return HostPoweredOff;
 }
 
+QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
+{
+    return QList<QBluetoothAddress>();
+}
+
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
     QList<QBluetoothHostInfo> localDevices;

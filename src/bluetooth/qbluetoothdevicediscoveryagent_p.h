@@ -43,12 +43,15 @@
 #define QBLUETOOTHDEVICEDISCOVERYAGENT_P_H
 
 #include "qbluetoothdevicediscoveryagent.h"
+#ifdef QT_ANDROID_BLUETOOTH
+#include <QtAndroidExtras/QAndroidJniObject>
+#include "android/devicediscoverybroadcastreceiver_p.h"
+#endif
 
-#include <QVariantMap>
+#include <QtCore/QVariantMap>
 
-#include <qbluetoothaddress.h>
-
-#include <qbluetoothlocaldevice.h>
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothLocalDevice>
 
 #ifdef QT_BLUEZ_BLUETOOTH
 class OrgBluezManagerInterface;
@@ -65,7 +68,7 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QT_QNX_BLUETOOTH)
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
 : public QObject {
     Q_OBJECT
 #else
@@ -92,7 +95,19 @@ private:
     QBluetoothDeviceDiscoveryAgent::Error lastError;
     QString errorString;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#ifdef QT_ANDROID_BLUETOOTH
+private Q_SLOTS:
+    void processDiscoveryFinished();
+    void processDiscoveredDevices(const QBluetoothDeviceInfo& info);
+
+private:
+    DeviceDiscoveryBroadcastReceiver* receiver;
+    QBluetoothAddress m_adapterAddress;
+    bool m_active;
+    QAndroidJniObject adapter;
+
+    bool pendingCancel, pendingStart;
+#elif defined(QT_BLUEZ_BLUETOOTH)
     QBluetoothAddress m_adapterAddress;
     bool pendingCancel;
     bool pendingStart;

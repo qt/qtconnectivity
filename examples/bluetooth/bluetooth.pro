@@ -6,5 +6,6 @@ qtHaveModule(widgets) {
                bttennis
 }
 
-SUBDIRS += scanner \
-           lowenergyscanner
+qtHaveModule(quick): SUBDIRS += scanner \
+                                picturetransfer \
+                                lowenergyscanner

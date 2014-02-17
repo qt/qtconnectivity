@@ -11,3 +11,6 @@ RESOURCES += \
 
 OTHER_FILES += \
     poster.qml
+
+target.path = $$[QT_INSTALL_EXAMPLES]/nfc/poster
+INSTALLS += target

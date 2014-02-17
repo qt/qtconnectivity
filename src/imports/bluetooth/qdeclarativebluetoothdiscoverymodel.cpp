@@ -44,7 +44,8 @@
 
 #include <QPixmap>
 
-#include <qbluetoothdeviceinfo.h>
+#include <QtCore/QLoggingCategory>
+#include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothAddress>
 
 #include "qdeclarativebluetoothservice_p.h"
@@ -90,6 +91,8 @@
 
     \sa QBluetoothServiceDiscoveryAgent
 */
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QML)
 
 class QDeclarativeBluetoothDiscoveryModelPrivate
 {
@@ -164,6 +167,11 @@ void QDeclarativeBluetoothDiscoveryModel::errorDeviceDiscovery(QBluetoothDeviceD
 {
     d->m_error = static_cast<QDeclarativeBluetoothDiscoveryModel::Error>(error);
     emit errorChanged();
+
+    //QBluetoothDeviceDiscoveryAgent::finished() signal is not emitted in case of an error
+    //Note that this behavior is different from QBluetoothServiceDiscoveryAgent.
+    //This reset the models running flag.
+    setRunning(false);
 }
 
 void QDeclarativeBluetoothDiscoveryModel::clearModel()
@@ -214,7 +222,7 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
 
     if (discoveryMode() != DeviceDiscovery) {
         if (index.row() >= d->m_services.count()){
-            qWarning() << "index out of bounds";
+            qCWarning(QT_BT_QML) << "index out of bounds";
             return QVariant();
         }
 
@@ -239,7 +247,7 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
         }
     } else {
         if (index.row() >= d->m_devices.count()) {
-            qWarning() << "index out of bounds";
+            qCWarning(QT_BT_QML) << "index out of bounds";
             return QVariant();
         }
 
@@ -277,7 +285,8 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
     for (int i = 0; i < d->m_services.count(); i++) {
         current = d->m_services.at(i);
         if (bs->deviceAddress() == current->deviceAddress()
-                && bs->serviceName() == current->serviceName()) {
+                && bs->serviceName() == current->serviceName()
+                && bs->serviceUuid() == current->serviceUuid()) {
             delete bs;
             return;
         }
@@ -364,11 +373,10 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
     d->m_running = running;
 
     if (!running) {
-        if (d->m_deviceAgent) {
+        if (d->m_deviceAgent)
             d->m_deviceAgent->stop();
-        } else if (d->m_serviceAgent) {
+        if (d->m_serviceAgent)
             d->m_serviceAgent->stop();
-        }
     } else {
         clearModel();
         d->m_error = NoError;
@@ -384,7 +392,7 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
         } else {
             if (!d->m_serviceAgent) {
                 d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
-                connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)), this, SLOT(serviceDiscovered(const QBluetoothServiceInfo&)));
+                connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
                 connect(d->m_serviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
                 connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
                 connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
@@ -432,7 +440,7 @@ void QDeclarativeBluetoothDiscoveryModel::setUuidFilter(QString uuid)
 
     QBluetoothUuid qbuuid(uuid);
     if (qbuuid.isNull()) {
-        qWarning() << "Invalid UUID providded " << uuid;
+        qCWarning(QT_BT_QML) << "Invalid UUID providded " << uuid;
         return;
     }
     d->m_uuid = uuid;

@@ -67,8 +67,8 @@ if (localDevice.isValid()) {
 //! [discovery]
 // Create a discovery agent and connect to its signals
 QBluetoothDiscoveryAgent *discoveryAgent = new QBluetoothDiscoveryAgent(this);
-connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
-        this, SLOT(deviceDiscovered(const QBluetoothDeviceInfo&)));
+connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+        this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
 
 // Start a discovery
 discoveryAgent->start();

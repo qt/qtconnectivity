@@ -41,9 +41,11 @@
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickView>
 #include <QtQml/QQmlEngine>
+#include <QtCore/QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication application(argc, argv);
     const QString mainQmlApp = QLatin1String("qrc:/scanner.qml");
     QQuickView view;

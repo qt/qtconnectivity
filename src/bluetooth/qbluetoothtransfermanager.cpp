@@ -58,6 +58,8 @@ QT_BEGIN_NAMESPACE
     using Object Push Profile (OPP).
 
     QBluetoothTransferManager uses OBEX to send put commands to remote devices.
+
+    Note that this API is not currently supported on Android.
 */
 
 /*!
@@ -65,6 +67,8 @@ QT_BEGIN_NAMESPACE
 
     Sends the contents of \a data to the remote device identified by \a request, and returns a new
     QBluetoothTransferReply that can be used to track the request's progress.
+
+    If the platform does not support the Object Push profile, this function will return \c 0.
 */
 
 

@@ -90,7 +90,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QBluetoothServer::close()
 
-    Closes and resets the listening socket.
+    Closes and resets the listening socket. Any already established \l QBluetoothSocket
+    continues to operate and must be separately \l {QBluetoothSocket::close()}{closed}.
 */
 
 /*!
@@ -110,10 +111,17 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
-    Start listening for incoming connections to \a address on \a port.
+    Start listening for incoming connections to \a address on \a port. \a address
+    must be a local Bluetooth adapter address and \a port must be larger than zero
+    and not be taken already by another Bluetooth server object. It is recommended
+    to avoid setting a port number to enable the system to automatically choose
+    a port.
 
-    Returns true if the operation succeeded and the server is listening for
-    incoming connections, otherwise returns false.
+    Returns \c true if the operation succeeded and the server is listening for
+    incoming connections, otherwise returns \c false.
+
+    If the server object is already listening for incoming connections this function
+    always returns \c false. \l close() should be called before calling this function.
 
     \sa isListening(), newConnection()
 */
@@ -121,7 +129,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QBluetoothServer::setMaxPendingConnections(int numConnections)
 
-    Sets the maximum number of pending connections to \a numConnections.
+    Sets the maximum number of pending connections to \a numConnections. If
+    the number of pending sockets exceeds this limit new sockets will be rejected.
 
     \sa maxPendingConnections()
 */
@@ -172,11 +181,16 @@ QBluetoothServer::~QBluetoothServer()
 
     Convenience function for registering an SPP service with \a uuid and \a serviceName.
     Because this function already registers the service, the QBluetoothServiceInfo object
-    which is returned can not be changed any more.
+    which is returned can not be changed any more. To shutdown the server later on it is
+    required to call \l QBluetoothServiceInfo::unregisterService() and \l close() on this
+    server object.
 
     Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
     invalid QBluetoothServiceInfo. This function always assumes that the default Bluetooth adapter
     should be used.
+
+    If the server object is already listening for incoming connections this function
+    returns an invalid \l QBluetoothServiceInfo.
 
     For an RFCOMM server this function is equivalent to following code snippet.
 
@@ -199,10 +213,12 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
 
     QBluetoothServiceInfo::Sequence classId;
     classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
     serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
                              classId);
 
+    //Android requires custom uuid to be set as service class
+    classId.prepend(QVariant::fromValue(uuid));
+    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
     serviceInfo.setServiceUuid(uuid);
 
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
@@ -223,8 +239,10 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
                              protocolDescriptorList);
     bool result = serviceInfo.registerService();
 //! [listen3]
-    if (!result)
+    if (!result) {
+        close(); //close the still listening socket
         return QBluetoothServiceInfo();
+    }
     return serviceInfo;
 }
 
@@ -238,6 +256,8 @@ bool QBluetoothServer::isListening() const
 #ifdef QT_QNX_BLUETOOTH
     if (!d->socket)
         return false;
+#elif defined(QT_ANDROID_BLUETOOTH)
+    return d->isListening();
 #endif
 
     return d->socket->state() == QBluetoothSocket::ListeningState;
@@ -258,6 +278,13 @@ int QBluetoothServer::maxPendingConnections() const
 /*!
     \fn QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
     Sets the Bluetooth security flags to \a security. This function must be called before calling listen().
+    The Bluetooth link will always be encrypted when using Bluetooth 2.1 devices as encryption is
+    mandatory.
+
+    Android only supports two levels of security (secure and non-secure). If this flag is set to
+    \l QBluetooth::NoSecurity the server object will not employ any authentication or encryption.
+    Any other security flag combination will trigger a secure Bluetooth connection.
+
     On BlackBerry, security flags are not supported and will be ignored.
 */
 

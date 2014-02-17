@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-
-#include <QDBusContext>
+#include <QtCore/QLoggingCategory>
+#include <QtDBus/QDBusContext>
 
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
@@ -53,7 +53,14 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
+
 static const QLatin1String agentPath("/qt/agent");
+
+inline uint qHash(const QBluetoothAddress &address)
+{
+    return ::qHash(address.toUInt64());
+}
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent), d_ptr(new QBluetoothLocalDevicePrivate(this))
@@ -66,7 +73,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
 }
 
 QString QBluetoothLocalDevice::name() const
-{    
+{
     if (!d_ptr || !d_ptr->adapter)
         return QString();
 
@@ -155,6 +162,11 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
     return HostPoweredOff;
 }
 
+QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
+{
+    return d_ptr->connectedDevices();
+}
+
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
     QList<QBluetoothHostInfo> localDevices;
@@ -194,7 +206,7 @@ static inline OrgBluezDeviceInterface *getDevice(const QBluetoothAddress &addres
     QDBusPendingReply<QDBusObjectPath> reply = d_ptr->adapter->FindDevice(address.toString());
     reply.waitForFinished();
     if(reply.isError()){
-        qWarning() << Q_FUNC_INFO << "reply failed" << reply.error();
+        qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "reply failed" << reply.error();
         return 0;
     }
 
@@ -230,7 +242,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
             if(!res){
                 QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                           Q_ARG(QBluetoothLocalDevice::Error, QBluetoothLocalDevice::PairingError));
-                qWarning() << "Failed to register agent";
+                qCWarning(QT_BT_BLUEZ) << "Failed to register agent";
                 return;
             }
         }
@@ -245,7 +257,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
             QDBusPendingReply<> deviceReply = device->SetProperty(QLatin1String("Trusted"), QDBusVariant(true));
             deviceReply.waitForFinished();
             if(deviceReply.isError()){
-                qWarning() << Q_FUNC_INFO << "reply failed" << deviceReply.error();
+                qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "reply failed" << deviceReply.error();
                 QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                           Q_ARG(QBluetoothLocalDevice::Error, QBluetoothLocalDevice::PairingError));
                 return;
@@ -264,7 +276,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
             QDBusPendingReply<> deviceReply = device->SetProperty(QLatin1String("Trusted"), QDBusVariant(false));
             deviceReply.waitForFinished();
             if(deviceReply.isError()){
-                qWarning() << Q_FUNC_INFO << "reply failed" << deviceReply.error();
+                qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "reply failed" << deviceReply.error();
                 QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                           Q_ARG(QBluetoothLocalDevice::Error, QBluetoothLocalDevice::PairingError));
                 return;
@@ -283,14 +295,14 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
             connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)), d_ptr, SLOT(pairingCompleted(QDBusPendingCallWatcher*)));
 
             if(reply.isError())
-                qWarning() << Q_FUNC_INFO << reply.error() << d_ptr->agent_path;
+                qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << reply.error() << d_ptr->agent_path;
         }
     }
     else if(pairing == Unpaired) {
         QDBusPendingReply<QDBusObjectPath> reply = this->d_ptr->adapter->FindDevice(address.toString());
         reply.waitForFinished();
         if(reply.isError()) {
-            qWarning() << Q_FUNC_INFO << "failed to find device" << reply.error();
+            qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "failed to find device" << reply.error();
             QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                       Q_ARG(QBluetoothLocalDevice::Error, QBluetoothLocalDevice::PairingError));
             return;
@@ -298,7 +310,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         QDBusPendingReply<> removeReply = this->d_ptr->adapter->RemoveDevice(reply.value());
         removeReply.waitForFinished();
         if(removeReply.isError()){
-            qWarning() << Q_FUNC_INFO << "failed to remove device" << removeReply.error();
+            qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "failed to remove device" << removeReply.error();
             QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                       Q_ARG(QBluetoothLocalDevice::Error, QBluetoothLocalDevice::PairingError));
         } else {
@@ -335,9 +347,19 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluet
 }
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress address)
-    : adapter(0), agent(0), localAddress(address), pendingHostModeChange(-1), msgConnection(0), q_ptr(q)
+    : adapter(0), agent(0), localAddress(address), pendingHostModeChange(-1), msgConnection(0), q_ptr(q), connectedCached(false)
 {
     initializeAdapter();
+    connectDeviceChanges();
+}
+
+void QBluetoothLocalDevicePrivate::connectDeviceChanges()
+{
+    if (adapter) { //invalid QBluetoothLocalDevice due to wrong local adapter address
+        connect(adapter, SIGNAL(PropertyChanged(QString,QDBusVariant)), SLOT(PropertyChanged(QString,QDBusVariant)));
+        connect(adapter, SIGNAL(DeviceCreated(QDBusObjectPath)), SLOT(_q_deviceCreated(QDBusObjectPath)));
+        connect(adapter, SIGNAL(DeviceRemoved(QDBusObjectPath)), SLOT(_q_deviceRemoved(QDBusObjectPath)));
+    }
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
@@ -345,6 +367,7 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
     delete msgConnection;
     delete adapter;
     delete agent;
+    qDeleteAll(devices);
 }
 
 void QBluetoothLocalDevicePrivate::initializeAdapter()
@@ -412,6 +435,103 @@ void QBluetoothLocalDevicePrivate::RequestConfirmation(const QDBusObjectPath &in
     return;
 }
 
+void QBluetoothLocalDevicePrivate::_q_deviceCreated(const QDBusObjectPath &device)
+{
+    OrgBluezDeviceInterface *deviceInterface =
+            new OrgBluezDeviceInterface(QLatin1String("org.bluez"), device.path(), QDBusConnection::systemBus());
+    connect(deviceInterface, SIGNAL(PropertyChanged(QString,QDBusVariant)), SLOT(_q_devicePropertyChanged(QString,QDBusVariant)));
+    devices << deviceInterface;
+    QDBusPendingReply<QVariantMap> properties = deviceInterface->asyncCall(QLatin1String("GetProperties"));
+
+    properties.waitForFinished();
+    if (!properties.isValid()) {
+        qCritical() << "Unable to get device properties from: " << device.path();
+        return;
+    }
+    const QBluetoothAddress address = QBluetoothAddress(properties.value().value(QLatin1String("Address")).toString());
+    const bool connected = properties.value().value(QLatin1String("Connected")).toBool();
+
+    if (connectedCached) {
+        if (connected)
+            connectedDevicesSet.insert(address);
+        else
+            connectedDevicesSet.remove(address);
+    }
+    if (connected)
+        emit q_ptr->deviceConnected(address);
+    else
+        emit q_ptr->deviceDisconnected(address);
+}
+
+void QBluetoothLocalDevicePrivate::_q_deviceRemoved(const QDBusObjectPath &device)
+{
+    foreach (OrgBluezDeviceInterface *deviceInterface, devices) {
+        if (deviceInterface->path() == device.path()) {
+            devices.remove(deviceInterface);
+            delete deviceInterface; //deviceDisconnected is already emitted by _q_devicePropertyChanged
+            break;
+        }
+    }
+}
+
+void QBluetoothLocalDevicePrivate::_q_devicePropertyChanged(const QString &property, const QDBusVariant &value)
+{
+    OrgBluezDeviceInterface *deviceInterface = qobject_cast<OrgBluezDeviceInterface*>(sender());
+    if (deviceInterface && property == QLatin1String("Connected")) {
+        QDBusPendingReply<QVariantMap> propertiesReply = deviceInterface->GetProperties();
+        propertiesReply.waitForFinished();
+        if (propertiesReply.isError()) {
+            qCWarning(QT_BT_BLUEZ) << propertiesReply.error().message();
+            return;
+        }
+        const QVariantMap properties = propertiesReply.value();
+        const QBluetoothAddress address = QBluetoothAddress(properties.value(QLatin1String("Address")).toString());
+        const bool connected = value.variant().toBool();
+
+        if (connectedCached) {
+            if (connected)
+                connectedDevicesSet.insert(address);
+            else
+                connectedDevicesSet.remove(address);
+        }
+        if (connected)
+            emit q_ptr->deviceConnected(address);
+        else
+            emit q_ptr->deviceDisconnected(address);
+    }
+}
+
+void QBluetoothLocalDevicePrivate::createCache()
+{
+    QDBusPendingReply<QList<QDBusObjectPath> > reply = adapter->ListDevices();
+    reply.waitForFinished();
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << reply.error().message();
+        return;
+    }
+    foreach (const QDBusObjectPath &device, reply.value()) {
+        OrgBluezDeviceInterface deviceInterface(QLatin1String("org.bluez"), device.path(), QDBusConnection::systemBus());
+
+        QDBusPendingReply<QVariantMap> properties = deviceInterface.asyncCall(QLatin1String("GetProperties"));
+        properties.waitForFinished();
+        if (!properties.isValid()) {
+            qCWarning(QT_BT_BLUEZ) << "Unable to get properties for device " << device.path();
+            return;
+        }
+
+        if (properties.value().value(QLatin1String("Connected")).toBool())
+            connectedDevicesSet.insert(QBluetoothAddress(properties.value().value(QLatin1String("Address")).toString()));
+    }
+    connectedCached = true;
+}
+
+QList<QBluetoothAddress> QBluetoothLocalDevicePrivate::connectedDevices() const
+{
+    if (!connectedCached)
+        const_cast<QBluetoothLocalDevicePrivate *>(this)->createCache();
+    return connectedDevicesSet.toList();
+}
+
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 {
     if(!d_ptr ||
@@ -437,7 +557,7 @@ QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
 {
     Q_UNUSED(in0)
     Q_Q(QBluetoothLocalDevice);
-    //qDebug() << Q_FUNC_INFO << in0.path();
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path();
     // seeded in constructor, 6 digit pin
     QString pin = QString::fromLatin1("%1").arg(qrand()&1000000);
     pin = QString::fromLatin1("%1").arg(pin, 6, QLatin1Char('0'));
@@ -452,7 +572,7 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
     QDBusPendingReply<> reply = *watcher;
 
     if(reply.isError()) {
-        qWarning() << Q_FUNC_INFO << "failed to create pairing" << reply.error();
+        qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "failed to create pairing" << reply.error();
         emit q->error(QBluetoothLocalDevice::PairingError);
         delete watcher;
         return;
@@ -461,7 +581,7 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
     QDBusPendingReply<QDBusObjectPath> findReply = adapter->FindDevice(address.toString());
     findReply.waitForFinished();
     if(findReply.isError()) {
-        qWarning() << Q_FUNC_INFO << "failed to find device" << findReply.error();
+        qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "failed to find device" << findReply.error();
         emit q->error(QBluetoothLocalDevice::PairingError);
         delete watcher;
         return;
@@ -487,19 +607,19 @@ void QBluetoothLocalDevicePrivate::Authorize(const QDBusObjectPath &in0, const Q
     Q_UNUSED(in0)
     Q_UNUSED(in1)
     //TODO implement this
-    //qDebug() << "Got authorize for" << in0.path() << in1;
+    qCDebug(QT_BT_BLUEZ) << "Got authorize for" << in0.path() << in1;
 }
 
 void QBluetoothLocalDevicePrivate::Cancel()
 {
     //TODO implement this
-    //qDebug() << Q_FUNC_INFO;
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
 }
 
 void QBluetoothLocalDevicePrivate::Release()
 {
     //TODO implement this
-    //qDebug() << Q_FUNC_INFO;
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
 }
 
 
@@ -507,7 +627,7 @@ void QBluetoothLocalDevicePrivate::ConfirmModeChange(const QString &in0)
 {
     Q_UNUSED(in0)
     //TODO implement this
-    //qDebug() << Q_FUNC_INFO << in0;
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0;
 }
 
 void QBluetoothLocalDevicePrivate::DisplayPasskey(const QDBusObjectPath &in0, uint in1, uchar in2)
@@ -516,13 +636,13 @@ void QBluetoothLocalDevicePrivate::DisplayPasskey(const QDBusObjectPath &in0, ui
     Q_UNUSED(in1)
     Q_UNUSED(in2)
     //TODO implement this
-    //qDebug() << Q_FUNC_INFO << in0.path() << in1 << in2;
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path() << in1 << in2;
 }
 
 uint QBluetoothLocalDevicePrivate::RequestPasskey(const QDBusObjectPath &in0)
 {
     Q_UNUSED(in0);
-    //qDebug() << Q_FUNC_INFO;
+    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
     return qrand()&0x1000000;
 }
 
@@ -541,7 +661,7 @@ void QBluetoothLocalDevicePrivate::PropertyChanged(QString property, QDBusVarian
     QDBusPendingReply<QVariantMap> reply = adapter->GetProperties();
     reply.waitForFinished();
     if (reply.isError()){
-        qWarning() << "Failed to get bluetooth properties for mode change";
+        qCWarning(QT_BT_BLUEZ) << "Failed to get bluetooth properties for mode change";
         return;
     }
 

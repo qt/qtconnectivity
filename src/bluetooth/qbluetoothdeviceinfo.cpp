@@ -42,8 +42,6 @@
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothdeviceinfo_p.h"
 
-#include <QDebug>
-
 QT_BEGIN_NAMESPACE
 
 /*!

@@ -48,6 +48,7 @@
 
 #include <qplatformdefs.h>
 
+#include <QtCore/QLoggingCategory>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/l2cap.h>
@@ -60,10 +61,13 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
+
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
       socketType(QBluetoothServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
+      socketError(QBluetoothSocket::NoSocketError),
       readNotifier(0),
       connectWriteNotifier(0),
       connecting(false),
@@ -114,7 +118,7 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     Q_Q(QBluetoothSocket);
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
     QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
-    connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);    
+    connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
     QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
 
     connectWriteNotifier->setEnabled(false);
@@ -162,7 +166,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         connecting = true;
         q->setSocketState(QBluetoothSocket::ConnectingState);
     } else {
-        errorString = QString::fromLocal8Bit(strerror(errno));
+        errorString = qt_error_string(errno);
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
     }
 }
@@ -175,8 +179,8 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         len = sizeof(errorno);
         ::getsockopt(socket, SOL_SOCKET, SO_ERROR, &errorno, (socklen_t*)&len);
         if(errorno) {
-            errorString = QString::fromLocal8Bit(strerror(errorno));
-            emit q->error(QBluetoothSocket::UnknownSocketError);
+            errorString = qt_error_string(errorno);
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
             return;
         }
 
@@ -193,13 +197,12 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         }
 
         char buf[1024];
-        Q_Q(QBluetoothSocket);
 
         int size = txBuffer.read(buf, 1024);
 
         if (::write(socket, buf, size) != size) {
-            socketError = QBluetoothSocket::NetworkError;
-            emit q->error(socketError);
+            errorString = QBluetoothSocket::tr("Network Error");
+            q->setSocketError(QBluetoothSocket::NetworkError);
         }
         else {
             emit q->bytesWritten(size);
@@ -212,7 +215,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
             connectWriteNotifier->setEnabled(false);
             this->close();
         }
-    }    
+    }
 }
 
 // TODO: move to private backend?
@@ -227,15 +230,15 @@ void QBluetoothSocketPrivate::_q_readNotify()
         int errsv = errno;
         readNotifier->setEnabled(false);
         connectWriteNotifier->setEnabled(false);
-        errorString = QString::fromLocal8Bit(strerror(errsv));
-        qWarning() << Q_FUNC_INFO << socket << "error:" << readFromDevice << errorString;
+        errorString = qt_error_string(errsv);
+        qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << socket << "error:" << readFromDevice << errorString;
         if(errsv == EHOSTDOWN)
-            emit q->error(QBluetoothSocket::HostNotFoundError);
+            q->setSocketError(QBluetoothSocket::HostNotFoundError);
         else
-            emit q->error(QBluetoothSocket::UnknownSocketError);
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
-        q->setSocketState(QBluetoothSocket::UnconnectedState);        
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
     }
     else {
         buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
@@ -255,6 +258,7 @@ void QBluetoothSocketPrivate::abort()
     // we don't call disconnectFromService or
     // QBluetoothSocket::close
     QT_CLOSE(socket);
+    socket = -1;
 
     Q_Q(QBluetoothSocket);
     emit q->disconnected();
@@ -262,9 +266,6 @@ void QBluetoothSocketPrivate::abort()
 
 QString QBluetoothSocketPrivate::localName() const
 {
-    if (!m_localName.isEmpty())
-        return m_localName;
-
     const QBluetoothAddress address = localAddress();
     if (address.isNull())
         return QString();
@@ -285,9 +286,7 @@ QString QBluetoothSocketPrivate::localName() const
     if (properties.isError())
         return QString();
 
-    m_localName = properties.value().value(QLatin1String("Name")).toString();
-
-    return m_localName;
+    return properties.value().value(QLatin1String("Name")).toString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
@@ -336,9 +335,6 @@ quint16 QBluetoothSocketPrivate::localPort() const
 
 QString QBluetoothSocketPrivate::peerName() const
 {
-    if (!m_peerName.isEmpty())
-        return m_peerName;
-
     quint64 bdaddr;
 
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
@@ -358,7 +354,7 @@ QString QBluetoothSocketPrivate::peerName() const
 
         convertAddress(addr.l2_bdaddr.b, bdaddr);
     } else {
-        qWarning("peerName() called on socket of known type");
+        qCWarning(QT_BT_BLUEZ) << "peerName() called on socket of unknown type";
         return QString();
     }
 
@@ -396,9 +392,7 @@ QString QBluetoothSocketPrivate::peerName() const
     if (properties.isError())
         return QString();
 
-    m_peerName = properties.value().value(QLatin1String("Alias")).toString();
-
-    return m_peerName;
+    return properties.value().value(QLatin1String("Alias")).toString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
@@ -450,8 +444,8 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     Q_Q(QBluetoothSocket);
     if (q->openMode() & QIODevice::Unbuffered) {
         if (::write(socket, data, maxSize) != maxSize) {
-            socketError = QBluetoothSocket::NetworkError;
-            emit q->error(socketError);
+            errorString = QBluetoothSocket::tr("Network Error");
+            q->setSocketError(QBluetoothSocket::NetworkError);
         }
 
         emit q->bytesWritten(maxSize);
@@ -464,7 +458,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
             return 0;
 
         if(txBuffer.size() == 0) {
-            connectWriteNotifier->setEnabled(true);        
+            connectWriteNotifier->setEnabled(true);
             QMetaObject::invokeMethod(q, "_q_writeNotify", Qt::QueuedConnection);
         }
 
@@ -507,7 +501,8 @@ void QBluetoothSocketPrivate::close()
         // We are disconnected now, so go to unconnected.
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         emit q->disconnected();
-        ::close(socket);
+        QT_CLOSE(socket);
+        socket = -1;
     }
 
 }

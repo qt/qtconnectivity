@@ -89,8 +89,8 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergyserviceinfo_bluez.cpp \
         qlowenergycharacteristicinfo_bluez.cpp
 
-} else:qnx{
-    DEFINES += QT_QNX_BLUETOOTH #BT_BBPPSDEBUG
+} else:CONFIG(blackberry) {
+    DEFINES += QT_QNX_BLUETOOTH
 
     include(qnx/qnx.pri)
 
@@ -113,6 +113,27 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergycharacteristicinfo_qnx.cpp \
         qlowenergyserviceinfo_qnx.cpp \
         qlowenergyprocess_qnx.cpp
+
+} else:android:!android-no-sdk {
+    include(android/android.pri)
+    DEFINES += QT_ANDROID_BLUETOOTH
+    QT += core-private androidextras
+
+    ANDROID_PERMISSIONS = \
+        android.permission.BLUETOOTH \
+        android.permission.BLUETOOTH_ADMIN
+    ANDROID_BUNDLED_JAR_DEPENDENCIES = \
+        jar/QtAndroidBluetooth-bundled.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
+    ANDROID_JAR_DEPENDENCIES = \
+        jar/QtAndroidBluetooth.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
+
+    SOURCES += \
+        qbluetoothdevicediscoveryagent_android.cpp \
+        qbluetoothlocaldevice_android.cpp \
+        qbluetoothserviceinfo_android.cpp \
+        qbluetoothservicediscoveryagent_android.cpp \
+        qbluetoothsocket_android.cpp \
+        qbluetoothserver_android.cpp
 
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")

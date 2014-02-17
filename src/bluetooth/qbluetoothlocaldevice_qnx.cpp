@@ -42,7 +42,10 @@
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
 #include "qbluetoothlocaldevice_p.h"
+#include <sys/pps.h>
 #include "qnx/ppshelpers_p.h"
+#include <QDir>
+#include <QtCore/private/qcore_unix_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,6 +94,46 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 {
     return this->d_ptr->hostMode();
+}
+
+QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
+{
+    QList<QBluetoothAddress> devices;
+    QDir bluetoothDevices(QStringLiteral("/pps/services/bluetooth/remote_devices/"));
+    QStringList allFiles = bluetoothDevices.entryList(QDir::NoDotAndDotDot| QDir::Files);
+    for (int i = 0; i < allFiles.size(); i++) {
+        qCDebug(QT_BT_QNX) << allFiles.at(i);
+        int fileId;
+        const char *filePath = QByteArray("/pps/services/bluetooth/remote_devices/").append(allFiles.at(i).toUtf8().constData()).constData();
+        if ((fileId = qt_safe_open(filePath, O_RDONLY)) == -1)
+            qCWarning(QT_BT_QNX) << "Failed to open remote device file";
+        else {
+            pps_decoder_t ppsDecoder;
+            pps_decoder_initialize(&ppsDecoder, 0);
+
+            QBluetoothAddress deviceAddr;
+            QString deviceName;
+
+            if (!ppsReadRemoteDevice(fileId, &ppsDecoder, &deviceAddr, &deviceName)) {
+                pps_decoder_cleanup(&ppsDecoder);
+                qDebug() << "Failed to open remote device file";
+            }
+
+            bool connectedDevice = false;
+            int a = pps_decoder_get_bool(&ppsDecoder, "acl_connected", &connectedDevice);
+            if (a == PPS_DECODER_OK) {
+                if (connectedDevice)
+                    devices.append(deviceAddr);
+            }
+            else if ( a == PPS_DECODER_BAD_TYPE)
+                qCDebug(QT_BT_QNX) << "Type missmatch";
+            else
+                qCDebug(QT_BT_QNX) << "An unknown error occurred while checking connected status.";
+            pps_decoder_cleanup(&ppsDecoder);
+        }
+    }
+
+    return devices;
 }
 
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
@@ -194,7 +237,7 @@ void QBluetoothLocalDevicePrivate::setHostMode(QBluetoothLocalDevice::HostMode m
     }
     //If the device is in PowerOff state and the profile is changed then the power has to be turned on
     if (currentHostMode == QBluetoothLocalDevice::HostPoweredOff) {
-        qBBBluetoothDebug() << "Powering on";
+        qCDebug(QT_BT_QNX) << "Powering on";
         powerOn();
     }
 
@@ -256,11 +299,30 @@ void QBluetoothLocalDevicePrivate::setAccess(int access)
     }
 }
 
+void QBluetoothLocalDevicePrivate::connectedDevices()
+{
+    QList<QBluetoothAddress> devices = q_ptr->connectedDevices();
+    for (int i = 0; i < devices.size(); i ++) {
+        if (!connectedDevicesSet.contains(devices.at(i))) {
+            QBluetoothAddress addr = devices.at(i);
+            connectedDevicesSet.append(addr);
+            emit q_ptr->deviceConnected(devices.at(i));
+        }
+    }
+    for (int i = 0; i < connectedDevicesSet.size(); i ++) {
+        if (!devices.contains(connectedDevicesSet.at(i))) {
+            QBluetoothAddress addr = connectedDevicesSet.at(i);
+            emit q_ptr->deviceDisconnected(addr);
+            connectedDevicesSet.removeOne(addr);
+        }
+    }
+}
+
 void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
 {
-    qBBBluetoothDebug() << Q_FUNC_INFO << result.msg << result.dat;
+    qCDebug(QT_BT_QNX) << Q_FUNC_INFO << result.msg << result.dat;
     if (!result.errorMsg.isEmpty()) {
-        qWarning() << Q_FUNC_INFO << result.errorMsg;
+        qCWarning(QT_BT_QNX) << Q_FUNC_INFO << result.errorMsg;
         if (result.msg == QStringLiteral("initiate_pairing"))
             q_ptr->error(QBluetoothLocalDevice::PairingError);
         else
@@ -270,16 +332,17 @@ void QBluetoothLocalDevicePrivate::controlReply(ppsResult result)
 
 void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
 {
-    qBBBluetoothDebug() << Q_FUNC_INFO << "Control Event" << result.msg;
+    qCDebug(QT_BT_QNX) << Q_FUNC_INFO << "Control Event" << result.msg;
     if (result.msg == QStringLiteral("access_changed")) {
         if (__newHostMode == -1 && result.dat.size() > 1 &&
                 result.dat.first() == QStringLiteral("level")) {
             QBluetoothLocalDevice::HostMode newHostMode = hostMode();
-            qBBBluetoothDebug() << "New Host mode" << newHostMode;
+            qCDebug(QT_BT_QNX) << "New Host mode" << newHostMode;
+            connectedDevices();
             Q_EMIT q_ptr->hostModeStateChanged(newHostMode);
         }
     } else if (result.msg == QStringLiteral("pairing_complete")) {
-        qBBBluetoothDebug() << "pairing completed";
+        qCDebug(QT_BT_QNX) << "pairing completed";
         if (result.dat.contains(QStringLiteral("addr"))) {
             const QBluetoothAddress address = QBluetoothAddress(
                         result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1));
@@ -290,18 +353,18 @@ void QBluetoothLocalDevicePrivate::controlEvent(ppsResult result)
                     result.dat.at(result.dat.indexOf(QStringLiteral("trusted")) + 1) == QStringLiteral("true")) {
                 pairingStatus = QBluetoothLocalDevice::AuthorizedPaired;
             }
-            qBBBluetoothDebug() << "pairing completed" << address.toString();
+            qCDebug(QT_BT_QNX) << "pairing completed" << address.toString();
             Q_EMIT q_ptr->pairingFinished(address, pairingStatus);
         }
     } else if (result.msg == QStringLiteral("device_deleted")) {
-        qBBBluetoothDebug() << "device deleted";
+        qCDebug(QT_BT_QNX) << "device deleted";
         if (result.dat.contains(QStringLiteral("addr"))) {
             const QBluetoothAddress address = QBluetoothAddress(
                         result.dat.at(result.dat.indexOf(QStringLiteral("addr")) + 1));
             Q_EMIT q_ptr->pairingFinished(address, QBluetoothLocalDevice::Unpaired);
         }
     } else if (result.msg == QStringLiteral("radio_shutdown")) {
-        qBBBluetoothDebug() << "radio shutdown";
+        qCDebug(QT_BT_QNX) << "radio shutdown";
         Q_EMIT q_ptr->hostModeStateChanged(QBluetoothLocalDevice::HostPoweredOff);
     }
 }

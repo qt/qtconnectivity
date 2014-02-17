@@ -68,7 +68,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-    errorString = QStringLiteral("No Bluetooth device available");
+    errorString = QBluetoothDeviceDiscoveryAgent::tr("No Bluetooth device available");
     emit q->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
 }
 
@@ -85,7 +85,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
 
 void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &name,
                                                                const QDBusVariant &value)
-{    
+{
     Q_UNUSED(name);
     Q_UNUSED(value);
 }

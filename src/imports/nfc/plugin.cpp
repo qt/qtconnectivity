@@ -84,6 +84,11 @@ public:
         qmlRegisterType<QDeclarativeNdefTextRecord>(uri, major, minor, "NdefTextRecord");
         qmlRegisterType<QDeclarativeNdefUriRecord>(uri, major, minor, "NdefUriRecord");
         qmlRegisterType<QDeclarativeNdefMimeRecord>(uri, major, minor, "NdefMimeRecord");
+
+        // Register the 5.3 types
+        // introduces 5.3 version, other existing 5.2 exports automatically become availabe under 5.3 as well
+        minor = 3;
+        qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
     }
 };
 

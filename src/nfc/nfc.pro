@@ -16,7 +16,9 @@ PUBLIC_HEADERS += \
     qndeffilter.h \
     qndefnfcurirecord.h \
     qqmlndefrecord.h \
-    qndefnfcsmartposterrecord.h
+    qndefnfcsmartposterrecord.h \
+    qnearfieldsharemanager.h \
+    qnearfieldsharetarget.h
 
 PRIVATE_HEADERS += \
     qllcpsocket_p.h \
@@ -29,7 +31,9 @@ PRIVATE_HEADERS += \
     qnearfieldtagtype3_p.h \
     qnearfieldtagtype4_p.h \
     qtlv_p.h \
-    qndefnfcsmartposterrecord_p.h
+    qndefnfcsmartposterrecord_p.h \
+    qnearfieldsharemanager_p.h \
+    qnearfieldsharetarget_p.h
 
 SOURCES += \
     qnearfieldmanager.cpp \
@@ -47,9 +51,11 @@ SOURCES += \
     qtlv.cpp \
     qllcpserver.cpp \
     qqmlndefrecord.cpp \
-    qndefnfcsmartposterrecord.cpp
+    qndefnfcsmartposterrecord.cpp \
+    qnearfieldsharemanager.cpp \
+    qnearfieldsharetarget.cpp
 
-qnx {
+CONFIG(blackberry) {
     NFC_BACKEND_AVAILABLE = yes
     DEFINES += QNX_NFC #QQNXNFC_DEBUG
 
@@ -69,6 +75,28 @@ qnx {
         qnearfieldmanager_qnx.cpp \
         qnx/qnxnfcmanager.cpp \
         qnx/qnxnfceventfilter.cpp
+
+    config_libbb2 {
+        SOURCES += \
+            qnearfieldsharemanager_qnx_p.cpp \
+            qnearfieldsharetarget_qnx_p.cpp \
+            qnx/qnxnfcsharemanager_p.cpp
+
+        PRIVATE_HEADERS += \
+            qnearfieldsharemanager_qnx_p.h \
+            qnearfieldsharetarget_qnx_p.h \
+            qnx/qnxnfcsharemanager_p.h
+
+        LIBS += -l:libbbsystem.so.2
+    } else {
+        SOURCES += \
+            qnearfieldsharemanagerimpl_p.cpp \
+            qnearfieldsharetargetimpl_p.cpp
+
+        PRIVATE_HEADERS += \
+            qnearfieldsharemanagerimpl_p.h \
+            qnearfieldsharetargetimpl_p.h
+    }
 }
 
 simulator {
@@ -80,13 +108,18 @@ simulator {
         qnearfieldmanagervirtualbase_p.h \
         qnearfieldmanager_simulator_p.h \
         qllcpsocket_simulator_p.h \
-        qllcpserver_simulator_p.h
+        qllcpserver_simulator_p.h \
+        qnearfieldsharemanagerimpl_p.h \
+        qnearfieldsharetargetimpl_p.h
+
 
     SOURCES += \
         qnearfieldmanagervirtualbase.cpp \
         qnearfieldmanager_simulator.cpp \
         qllcpsocket_simulator_p.cpp \
-        qllcpserver_simulator_p.cpp
+        qllcpserver_simulator_p.cpp \
+        qnearfieldsharemanagerimpl_p.cpp \
+        qnearfieldsharetargetimpl_p.cpp
 }
 
 isEmpty(NFC_BACKEND_AVAILABLE) {
@@ -95,12 +128,16 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     PRIVATE_HEADERS += \
         qllcpsocket_p_p.h \
         qllcpserver_p_p.h \
-        qnearfieldmanagerimpl_p.h
+        qnearfieldmanagerimpl_p.h \
+        qnearfieldsharemanagerimpl_p.h \
+        qnearfieldsharetargetimpl_p.h
 
     SOURCES += \
         qllcpsocket_p.cpp \
         qllcpserver_p.cpp \
-        qnearfieldmanagerimpl_p.cpp
+        qnearfieldmanagerimpl_p.cpp \
+        qnearfieldsharemanagerimpl_p.cpp \
+        qnearfieldsharetargetimpl_p.cpp
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS

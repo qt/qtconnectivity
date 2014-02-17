@@ -231,7 +231,7 @@ qint64 QLlcpSocket::writeDatagram(const char *data, qint64 size)
 */
 bool QLlcpSocket::isSequential() const
 {
-	return true;
+    return true;
 }
 
 /*!

@@ -71,6 +71,8 @@ private slots:
 
     void tst_assignment_data();
     void tst_assignment();
+
+    void tst_serviceClassUuids();
 };
 
 tst_QBluetoothServiceInfo::tst_QBluetoothServiceInfo()
@@ -327,6 +329,27 @@ void tst_QBluetoothServiceInfo::tst_assignment()
             QVERIFY(!serviceInfo.isRegistered());
         }
     }
+}
+
+void tst_QBluetoothServiceInfo::tst_serviceClassUuids()
+{
+    QBluetoothServiceInfo info;
+    QCOMPARE(info.serviceClassUuids().count(), 0);
+
+    QBluetoothServiceInfo::Sequence classIds;
+    classIds << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+    QCOMPARE(classIds.count(), 1);
+
+    QBluetoothUuid uuid(QString("e8e10f95-1a70-4b27-9ccf-02010264e9c8"));
+    classIds.prepend(QVariant::fromValue(uuid));
+    QCOMPARE(classIds.count(), 2);
+    QCOMPARE(classIds.at(0).value<QBluetoothUuid>(), uuid);
+
+    info.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classIds);
+    QList<QBluetoothUuid> svclids = info.serviceClassUuids();
+    QCOMPARE(svclids.count(), 2);
+    QCOMPARE(svclids.at(0), uuid);
+    QCOMPARE(svclids.at(1), QBluetoothUuid(QBluetoothUuid::SerialPort));
 }
 
 QTEST_MAIN(tst_QBluetoothServiceInfo)

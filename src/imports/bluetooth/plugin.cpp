@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-
+#include <QtCore/QLoggingCategory>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlExtensionPlugin>
 
@@ -75,7 +75,13 @@ public:
         qmlRegisterType<QDeclarativeBluetoothService        >(uri, major, minor, "BluetoothService");
         qmlRegisterType<QDeclarativeBluetoothSocket         >(uri, major, minor, "BluetoothSocket");
 
+        // Register the 5.3 types
+        // introduces 5.3 version, other existing 5.2 exports automatically become availabe under 5.3 as well
+        minor = 3;
+        qmlRegisterType<QDeclarativeBluetoothDiscoveryModel >(uri, major, minor, "BluetoothDiscoveryModel");
     }
 };
+
+Q_LOGGING_CATEGORY(QT_BT_QML, "qt.bluetooth.qml")
 
 #include "plugin.moc"

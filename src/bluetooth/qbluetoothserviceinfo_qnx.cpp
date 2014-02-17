@@ -75,7 +75,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& loca
 {
     Q_UNUSED(localAdapter); //QNX always uses default local adapter
     if (protocolDescriptor(QBluetoothUuid::Rfcomm).isEmpty()) {
-        qWarning() << Q_FUNC_INFO << "Only SPP services can be registered on QNX";
+        qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Only SPP services can be registered on QNX";
         return false;
     }
 

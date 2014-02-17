@@ -99,12 +99,12 @@ void ppsRegisterControl()
     count++;
     if (count == 1) {
         if (ppsCtrlFD != -1) {
-            qBBBluetoothDebug() << "PPS control FD not properly deinitialized";
+            qCDebug(QT_BT_QNX) << "PPS control FD not properly deinitialized";
             return;
         }
         ppsCtrlFD = qt_safe_open(btControlFDPath, O_RDWR | O_SYNC);
         if (ppsCtrlFD == -1) {
-            qWarning() << Q_FUNC_INFO << "ppsCtrlFD - failed to qt_safe_open" << btControlFDPath;
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "ppsCtrlFD - failed to qt_safe_open" << btControlFDPath;
         } else {
             ppsCtrlNotifier = new QSocketNotifier(ppsCtrlFD, QSocketNotifier::Read);
             QObject::connect(ppsCtrlNotifier, SIGNAL(activated(int)), &bbSocketNotifier, SLOT(distribute()));
@@ -140,11 +140,11 @@ pps_encoder_t *beginCtrlMessage(const char *msg, QObject *sender)
 
 bool endCtrlMessage(pps_encoder_t *encoder)
 {
-    qBBBluetoothDebug() << "writing" << pps_encoder_buffer(encoder);
+    qCDebug(QT_BT_QNX) << "writing" << pps_encoder_buffer(encoder);
     if (pps_encoder_buffer(encoder) != 0) {
         int res = qt_safe_write(ppsCtrlFD, pps_encoder_buffer(encoder), pps_encoder_length(encoder));
         if (res == -1) {
-            qWarning() << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?"
+            qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Error when writing to control FD. Is Bluetooth powerd on?"
                        << errno << ppsCtrlFD << count;
             return false;
         }
@@ -206,7 +206,7 @@ void ppsDecodeControlResponse()
         qt_safe_read(ppsCtrlFD, &buf, sizeof(buf) );
         if (buf[0] != '@')
             return;
-        qBBBluetoothDebug() << "CTRL Response" << buf;
+        qCDebug(QT_BT_QNX) << "CTRL Response" << buf;
 
         pps_decoder_t ppsDecoder;
         pps_decoder_initialize(&ppsDecoder, 0);
@@ -266,16 +266,16 @@ void ppsDecodeControlResponse()
                      }
                  }
             } else {
-                qBBBluetoothDebug() << "Control Response: No node type" << result.msg;
+                qCDebug(QT_BT_QNX) << "Control Response: No node type" << result.msg;
             }
         }
         pps_decoder_cleanup(&ppsDecoder);
     }
 
     if (result.msg == QStringLiteral("radio_init")) {
-        qBBBluetoothDebug() << "Radio initialized";
+        qCDebug(QT_BT_QNX) << "Radio initialized";
     } else if (result.msg == QStringLiteral("access_changed") && __newHostMode != -1) {
-        qBBBluetoothDebug() << "Access changed after radio init";
+        qCDebug(QT_BT_QNX) << "Access changed after radio init";
         ppsSendControlMessage("set_access", QStringLiteral("{\"access\":%1}").arg(__newHostMode), 0);
         __newHostMode = -1;
     }
@@ -285,7 +285,7 @@ void ppsDecodeControlResponse()
         if (wMessage.second != 0)
             wMessage.second->metaObject()->invokeMethod(wMessage.second, "controlReply", Q_ARG(ppsResult, result));
     } else if (resType == EVENT) {
-        //qBBBluetoothDebug() << "Distributing event" << result.msg;
+        //qCDebug(QT_BT_QNX) << "Distributing event" << result.msg;
         for (int i=0; i < evtRegistration.size(); i++) {
             if (result.msg == evtRegistration.at(i).first)
                 evtRegistration.at(i).second->metaObject()->invokeMethod(evtRegistration.at(i).second, "controlEvent", Q_ARG(ppsResult, result));
@@ -312,7 +312,7 @@ QVariant ppsReadSetting(const char *property)
     int settingsFD;
     char buf[ppsBufferSize];
     if ((settingsFD = qt_safe_open(btSettingsFDPath, O_RDONLY)) == -1) {
-        qWarning() << Q_FUNC_INFO << "failed to open "<< btSettingsFDPath;
+        qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "failed to open "<< btSettingsFDPath;
         return QVariant();
     }
 
@@ -329,31 +329,31 @@ QVariant ppsReadSetting(const char *property)
             const char *dat;
             if (pps_decoder_get_string(&decoder, property, &dat) == PPS_DECODER_OK) {
                 result = QString::fromUtf8(dat);
-                qBBBluetoothDebug() << "Read setting" << result;
+                qCDebug(QT_BT_QNX) << "Read setting" << result;
             } else {
-                qWarning() << Q_FUNC_INFO << "could not read"<< property;
+                qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "could not read"<< property;
                 return QVariant();
             }
         } else if (nodeType == PPS_TYPE_BOOL) {
             bool dat;
             if (pps_decoder_get_bool(&decoder, property, &dat) == PPS_DECODER_OK) {
                 result = dat;
-                qBBBluetoothDebug() << "Read setting" << result;
+                qCDebug(QT_BT_QNX) << "Read setting" << result;
             } else {
-                qWarning() << Q_FUNC_INFO << "could not read"<< property;
+                qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "could not read"<< property;
                 return QVariant();
             }
         } else if (nodeType == PPS_TYPE_NUMBER) {
             int dat;
             if (pps_decoder_get_int(&decoder, property, &dat) == PPS_DECODER_OK) {
                 result = dat;
-                qBBBluetoothDebug() << "Read setting" << result;
+                qCDebug(QT_BT_QNX) << "Read setting" << result;
             } else {
-                qWarning() << Q_FUNC_INFO << "could not read"<< property;
+                qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "could not read"<< property;
                 return QVariant();
             }
         } else {
-            qBBBluetoothDebug() << Q_FUNC_INFO << "unrecognized entry for settings";
+            qCDebug(QT_BT_QNX) << Q_FUNC_INFO << "unrecognized entry for settings";
         }
     }
     pps_decoder_cleanup(&decoder);
@@ -369,7 +369,7 @@ QVariant ppsRemoteDeviceStatus(const QByteArray &address, const char *property)
     filename.append(address);
 
     if ((rmFD = qt_safe_open(filename.constData(), O_RDONLY)) < 0) {
-        qWarning() << Q_FUNC_INFO << "failed to open "<< btRemoteDevFDPath << address;
+        qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "failed to open "<< btRemoteDevFDPath << address;
         return false;
     }
 
@@ -392,7 +392,7 @@ QVariant ppsRemoteDeviceStatus(const QByteArray &address, const char *property)
             pps_decoder_get_bool(&ppsDecoder,property,&dat);
             res = QVariant(dat);
         } else {
-            qBBBluetoothDebug() << "RDStatus: No node type" << property;
+            qCDebug(QT_BT_QNX) << "RDStatus: No node type" << property;
         }
     }
     pps_decoder_cleanup(&ppsDecoder);
@@ -408,11 +408,11 @@ bool ppsReadRemoteDevice(int fd, pps_decoder_t *decoder, QBluetoothAddress *btAd
     addr_buf[17] = '\0';
 
     if (qt_safe_read(fd, &buf, sizeof(buf)) == -1) {
-        qWarning() << Q_FUNC_INFO << "Could not qt_safe_read from pps remote device file";
+        qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Could not qt_safe_read from pps remote device file";
         return false;
     }
 
-    qBBBluetoothDebug() << "Remote device" << buf;
+    qCDebug(QT_BT_QNX) << "Remote device" << buf;
 
     //the address of the BT device is stored at the beginning of the qt_safe_read
     if (buf[0] != '-') {

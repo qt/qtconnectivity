@@ -51,9 +51,11 @@
 #include <QDBusContext>
 #include <QDBusObjectPath>
 #include <QDBusMessage>
+#include <QSet>
 
 class OrgBluezAdapterInterface;
 class OrgBluezAgentAdaptor;
+class OrgBluezDeviceInterface;
 
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
@@ -63,12 +65,58 @@ QT_END_NAMESPACE
 #include <QSocketNotifier>
 #include "qnx/ppshelpers_p.h"
 #endif
+#ifdef QT_ANDROID_BLUETOOTH
+#include <jni.h>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QPair>
+#endif
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
 
-#if defined(QT_BLUEZ_BLUETOOTH)
+#ifdef QT_ANDROID_BLUETOOTH
+class LocalDeviceBroadcastReceiver;
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_OBJECT
+public:
+    QBluetoothLocalDevicePrivate(
+            QBluetoothLocalDevice *q,
+            const QBluetoothAddress &address = QBluetoothAddress());
+    ~QBluetoothLocalDevicePrivate();
+
+    QAndroidJniObject *adapter();
+    void initialize(const QBluetoothAddress& address);
+    static bool startDiscovery();
+    static bool cancelDiscovery();
+    static bool isDiscovering();
+    bool isValid() const;
+
+
+private slots:
+    void processHostModeChange(QBluetoothLocalDevice::HostMode newMode);
+    void processPairingStateChanged(const QBluetoothAddress &address,
+                            QBluetoothLocalDevice::Pairing pairing);
+    void processConnectDeviceChanges(const QBluetoothAddress &address, bool isConnectEvent);
+    void processDisplayConfirmation(const QBluetoothAddress &address, const QString &pin);
+
+private:
+    QBluetoothLocalDevice *q_ptr;
+    QAndroidJniObject *obj;
+
+    int pendingPairing(const QBluetoothAddress &address);
+
+public:
+    LocalDeviceBroadcastReceiver *receiver;
+    bool pendingHostModeTransition;
+    QList<QPair<QBluetoothAddress, bool> > pendingPairings;
+
+    QList<QBluetoothAddress> connectedDevices;
+};
+
+#elif defined(QT_BLUEZ_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject,
                                      protected QDBusContext
 {
@@ -78,8 +126,13 @@ public:
     QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress localAddress = QBluetoothAddress());
     ~QBluetoothLocalDevicePrivate();
 
+    QSet<OrgBluezDeviceInterface *> devices;
+    QSet<QBluetoothAddress> connectedDevicesSet;
     OrgBluezAdapterInterface *adapter;
     OrgBluezAgentAdaptor *agent;
+
+    QList<QBluetoothAddress> connectedDevices() const;
+
     QString agent_path;
     QBluetoothAddress localAddress;
     QBluetoothAddress address;
@@ -101,13 +154,21 @@ public Q_SLOTS: // METHODS
     void pairingCompleted(QDBusPendingCallWatcher*);
 
     void PropertyChanged(QString,QDBusVariant);
+    void _q_deviceCreated(const QDBusObjectPath &device);
+    void _q_deviceRemoved(const QDBusObjectPath &device);
+    void _q_devicePropertyChanged(const QString &property, const QDBusVariant &value);
     bool isValid() const;
 
 private:
+    void createCache();
+    void connectDeviceChanges();
+
     QDBusMessage msgConfirmation;
     QDBusConnection *msgConnection;
 
     QBluetoothLocalDevice *q_ptr;
+
+    bool connectedCached;
 
     void initializeAdapter();
 };
@@ -134,6 +195,8 @@ public:
     void requestPairing(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 
     void setAccess(int);
+    // This method will be used for emitting signals.
+    void connectedDevices();
 
     Q_INVOKABLE void controlReply(ppsResult res);
     Q_INVOKABLE void controlEvent(ppsResult res);
@@ -143,6 +206,7 @@ public:
 private:
     QBluetoothLocalDevice *q_ptr;
     bool isValidDevice;
+    QList<QBluetoothAddress> connectedDevicesSet;
 };
 #else
 class QBluetoothLocalDevicePrivate : public QObject

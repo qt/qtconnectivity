@@ -5,3 +5,5 @@ qtHaveModule(widgets) {
         ndefeditor \
         poster
 }
+
+qtHaveModule(quick): SUBDIRS += corkboard

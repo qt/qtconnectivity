@@ -43,9 +43,8 @@
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
 
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QSocketNotifier>
-
-#include <QtCore/QDebug>
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
@@ -54,6 +53,8 @@
 #include <errno.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
 {
@@ -104,11 +105,32 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_D(QBluetoothServer);
 
+    if (d->socket->state() == QBluetoothSocket::ListeningState) {
+        qCWarning(QT_BT_BLUEZ) << "Socket already in listen mode, close server first";
+        return false; //already listening, nothing to do
+    }
+
     int sock = d->socket->socketDescriptor();
     if (sock < 0) {
-        d->m_lastError = InputOutputError;
-        emit error(d->m_lastError);
-        return false;
+        /* Negative socket descriptor is not always an error case
+         * Another cause could be a call to close()/abort()
+         * Check whether we can recover by re-creating the socket
+         * we should really call Bluez::QBluetoothSocketPrivate::ensureNativeSocket
+         * but a re-creation of the socket will do as well.
+         */
+
+        delete d->socket;
+        if (serverType() == QBluetoothServiceInfo::RfcommProtocol)
+            d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+        else
+            d->socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+
+        sock = d->socket->socketDescriptor();
+        if (sock < 0) {
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
+            return false;
+        }
     }
 
     if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
@@ -179,7 +201,7 @@ bool QBluetoothServer::hasPendingConnections() const
     if (!d || !d->socketNotifier)
         return false;
 
-    // if the socket notifier is disable there is a pending connection waiting for us to accept.
+    // if the socket notifier is disabled there is a pending connection waiting for us to accept.
     return !d->socketNotifier->isEnabled();
 }
 
@@ -252,11 +274,11 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
         if (security.testFlag(QBluetooth::Secure))
             lm |= RFCOMM_LM_SECURE;
 
-        //qDebug() << hex << "Setting lm to" << lm << security;
+        qCDebug(QT_BT_BLUEZ) << hex << "Setting lm to" << lm << security;
 
         if (setsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm)) < 0){
-            qWarning() << "Failed to set socket option, closing socket for safety" << errno;
-            qWarning() << "Error: " << strerror(errno);
+            qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errno;
+            qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errno);
             d->m_lastError = InputOutputError;
             emit error(d->m_lastError);
             d->socket->close();
@@ -272,8 +294,8 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
             lm |= L2CAP_LM_SECURE;
 
         if (setsockopt(d->socket->socketDescriptor(), SOL_L2CAP, L2CAP_LM, &lm, sizeof(lm)) < 0){
-            qWarning() << "Failed to set socket option, closing socket for safety" << errno;
-            qWarning() << "Error: " << strerror(errno);
+            qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errno;
+            qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errno);
             d->m_lastError = InputOutputError;
             emit error(d->m_lastError);
             d->socket->close();
@@ -292,7 +314,7 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
 
     if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
         if (getsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, (socklen_t *)&len) < 0) {
-            qWarning() << "Failed to get security flags" << strerror(errno);
+            qCWarning(QT_BT_BLUEZ) << "Failed to get security flags" << qt_error_string(errno);
             return QBluetooth::NoSecurity;
         }
 
@@ -309,7 +331,7 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
             security |= QBluetooth::Authorization;
     } else {
         if (getsockopt(d->socket->socketDescriptor(), SOL_L2CAP, L2CAP_LM, &lm, (socklen_t *)&len) < 0) {
-            qWarning() << "Failed to get security flags" << strerror(errno);
+            qCWarning(QT_BT_BLUEZ) << "Failed to get security flags" << qt_error_string(errno);
             return QBluetooth::NoSecurity;
         }
 

@@ -44,7 +44,6 @@
 #include "qbluetoothaddress.h"
 
 #include <QtCore/QString>
-#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -93,12 +92,13 @@ QT_BEGIN_NAMESPACE
     if they have previously been paired with it or otherwise know its address. This powers up the
     device if it was powered off.
     \value HostDiscoverable     Remote Bluetooth devices can discover the presence of the local
-    Bluetooth device. The device will also be connectable, and powered on.
+    Bluetooth device. The device will also be connectable, and powered on. On Android, this mode can only be active
+    for a maximum of 5 minutes.
     \value HostDiscoverableLimitedInquiry Remote Bluetooth devices can discover the presence of the local
      Bluetooth device when performing a limited inquiry. This should be used for locating services that are
      only made discoverable for a limited period of time. This can speed up discovery between gaming devices,
      as service discovery can be skipped on devices not in LimitedInquiry mode. In this mode, the device will
-     be connectable and powered on, if required.
+     be connectable and powered on, if required. This mode is is not supported on Android.
 
 */
 
@@ -188,6 +188,42 @@ bool QBluetoothLocalDevice::isValid() const
 */
 
 /*!
+  \fn QBluetoothLocalDevice::deviceConnected(const QBluetoothAddress &address)
+  \since 5.3
+
+  This signal is emitted when the local device establishes a connection to a remote device
+  with \a address.
+
+  \sa deviceDisconnected(), connectedDevices()
+*/
+
+/*!
+  \fn QBluetoothLocalDevice::deviceDisconnected(const QBluetoothAddress &address)
+  \since 5.3
+
+  This signal is emitted when the local device disconnects from a remote Bluetooth device
+  with \a address.
+
+  \sa deviceConnected(), connectedDevices()
+*/
+
+/*!
+  \fn QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
+  \since 5.3
+
+  Returns the list of connected devices. This list is different from the list of currently
+  paired devices.
+
+  On Android it is not possible to retrieve a list of connected devices. It is only possible to
+  listen to (dis)connect changes. For convenience, this class monitors all connect
+  and disconnect events since its instanciation and returns the current list when calling this function.
+  Therefore it is possible that this function returns an empty list shortly after creating an
+  instance.
+
+  \sa deviceConnected(), deviceDisconnected()
+*/
+
+/*!
   \fn QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
 
   Returns the current bluetooth pairing status of \a address, if it's unpaired, paired, or paired and authorized.
@@ -198,8 +234,12 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::pairingDisplayConfirmation(const QBluetoothAddress &address, QString pin)
 
   Signal by some platforms to display a pairing confirmation dialog for \a address.  The user
-  is asked to confirm the \a pin is the same on both devices.  QBluetoothLocalDevice::pairingConfirmation(bool)
+  is asked to confirm the \a pin is the same on both devices.  The \l pairingConfirmation() function
   must be called to indicate if the user accepts or rejects the displayed pin.
+
+  This signal is only emitted for pairing requests issues by calling \l requestPairing().
+
+  \sa pairingConfirmation()
 */
 
 /*!
@@ -207,6 +247,8 @@ bool QBluetoothLocalDevice::isValid() const
 
   To be called after getting a pairingDisplayConfirmation().  The \a accept parameter either
   accepts the pairing or rejects it.
+
+  Accepting a pairing always refers to the last pairing request issued via \l requestPairing().
 */
 
 /*!
@@ -214,6 +256,8 @@ bool QBluetoothLocalDevice::isValid() const
 
   Signal by some platforms to display the \a pin to the user for \a address.  The pin is automatically
   generated, and does not need to be confirmed.
+
+  This signal is only emitted for pairing requests issues by calling \l requestPairing().
 */
 
 /*!
@@ -229,7 +273,8 @@ bool QBluetoothLocalDevice::isValid() const
 
   Pairing or unpairing has completed with \a address. Current pairing status is in \a pairing.
   If the pairing request was not successful, this signal will not be emitted. The error() signal
-  is emitted if the pairing request failed.
+  is emitted if the pairing request failed. The signal is only ever emitted for pairing requests
+  which have previously requested by calling \l requestPairing() of the current object instance.
 */
 
 /*!

@@ -58,7 +58,7 @@ class QBluetoothServiceInfo;
 
 class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 {
-    Q_OBJECT    
+    Q_OBJECT
     Q_DECLARE_PRIVATE(QBluetoothSocket)
 
     friend class QBluetoothServer;
@@ -78,11 +78,13 @@ public:
 
     enum SocketError {
         NoSocketError = -2,
-        UnknownSocketError = QAbstractSocket::UnknownSocketError,
-        HostNotFoundError = QAbstractSocket::HostNotFoundError,
-        ServiceNotFoundError = QAbstractSocket::SocketAddressNotAvailableError,
-        NetworkError = QAbstractSocket::NetworkError,
-        UnsupportedProtocolError
+        UnknownSocketError = QAbstractSocket::UnknownSocketError, //-1
+        HostNotFoundError = QAbstractSocket::HostNotFoundError, //2
+        ServiceNotFoundError = QAbstractSocket::SocketAddressNotAvailableError, //9
+        NetworkError = QAbstractSocket::NetworkError, //7
+        UnsupportedProtocolError = 8,
+        OperationError = QAbstractSocket::OperationError //19
+        //New enums (independent of QAbstractSocket) should be added from 100 onwards
     };
 
     explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = 0);   // create socket of type socketType
