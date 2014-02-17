@@ -176,28 +176,26 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     delete adapter;
     adapter = 0;
 
+    QVariantMap deviceProperties;
+    QString classType;
     QDBusPendingReply<QVariantMap> deviceReply = device->GetProperties();
     deviceReply.waitForFinished();
-    if (deviceReply.isError()) {
-        qCDebug(QT_BT_BLUEZ) << "GetProperties error: " << error << deviceObjectPath.error().name();
-        //TODO if we abort here who deletes device?
-        //TODO what happens to still pending discoveredDevices?
-        return;
+    if (!deviceReply.isError()) {
+        deviceProperties = deviceReply.value();
+        classType = deviceProperties.value(QStringLiteral("Class")).toString();
     }
-    QVariantMap deviceProperties = deviceReply.value();
-    QString classType = deviceProperties.value(QStringLiteral("Class")).toString();
+
     /*
      * Low Energy services in bluez are represented as the list of the paths that can be
      * accessed with org.bluez.Characteristic
      */
     //QDBusArgument services = v.value(QLatin1String("Services")).value<QDBusArgument>();
     const QStringList deviceUuids = deviceProperties.value(QStringLiteral("UUIDs")).toStringList();
-
     for (int i = 0; i < deviceUuids.size(); i++) {
         QString b = deviceUuids.at(i);
         b = b.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
 
-        //TODO this should be bit field and not String operations
+        //TODO this should be bit field and not string operations
         const QString leServiceCheck = QString(b.at(4)) + QString(b.at(5));
         /*
              * In this part we want to emit only Bluetooth Low Energy service. BLE services
@@ -207,27 +205,34 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
         //TODO where is the uuidFilter match -> uuidFilter could contain a BLE uuid
         if ((leServiceCheck == QStringLiteral("18") || b.contains(QStringLiteral("000000000000"))) && uuidFilter.size() == 0) {
+            qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << deviceUuids.at(i) << leServiceCheck << uuidFilter.size() << b;
             QBluetoothUuid uuid(b);
             QLowEnergyServiceInfo lowEnergyService(uuid);
             //TODO Fix m_DeviceAdapterAddress may not be the actual address
             lowEnergyService.d_ptr->adapterAddress = m_deviceAdapterAddress;
             lowEnergyService.setDevice(discoveredDevices.at(0));
-            q_ptr->serviceDiscovered(lowEnergyService);
+            emit q->serviceDiscovered(lowEnergyService);
         }
-
     }
+
     /*
      * Bluez v4.1 does not have extra bit which gives information if device is Bluetooth
      * Low Energy device and the way to discover it is with Class property of the Bluetooth device.
      * Low Energy devices do not have property Class.
-     * In case we have have LE device finish service discovery; otherwise search for regular services.
+     * In case we have LE device finish service discovery; otherwise search for regular services.
      */
-    if (classType.isEmpty()) //is BLE device
-        //TODO is is not correct why finish here? We have other devices to discover...
-        //finished signal should not be emitted by this class
-        //Furthermore there is the assumption here that a BLE device cannot have std Bt service. Is that true?
-        q_ptr->finished();
-    else {
+    if (classType.isEmpty()) { //is BLE device or device properties above not retrievable
+        qCDebug(QT_BT_BLUEZ) << "Discovered BLE-only device. Normal service discovery skipped.";
+        delete device;
+        device = 0;
+
+        if (singleDevice && deviceReply.isError()) {
+            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+            errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
+            emit q->error(error);
+        }
+        _q_serviceDiscoveryFinished();
+    } else {
         QString pattern;
         foreach (const QBluetoothUuid &uuid, uuidFilter)
             pattern += uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}')) + QLatin1Char(' ');
