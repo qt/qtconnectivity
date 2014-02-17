@@ -46,7 +46,7 @@
 
 #include <QtDBus/QDBusPendingCallWatcher>
 
-#define QT_LOWENERGYCHARACTERISTIC_DEBUG
+//#define QT_LOWENERGYCHARACTERISTIC_DEBUG
 
 #ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
 #include <QtCore/QDebug>
@@ -130,7 +130,7 @@ void QLowEnergyCharacteristicInfoPrivate::replyReceived(const QString &reply)
 
 void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
 {
-    if (permission & QLowEnergyCharacteristicInfo::Write) {
+    if (permission & QLowEnergyCharacteristicInfo::Write || notification) {
         process = process->instance();
         if (!m_signalConnected) {
             connect(process, SIGNAL(replySend(const QString &)), this, SLOT(replyReceived(const QString &)));
