@@ -145,7 +145,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
-        qbluetoothtransfermanager_p.cpp \
         qlowenergyserviceinfo_p.cpp \
         qlowenergycharacteristicinfo_p.cpp \
         qlowenergyprocess_p.cpp
