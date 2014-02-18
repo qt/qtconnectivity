@@ -351,7 +351,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
 
         QString lowEnergyUuid(next_service);
         lowEnergyUuid = QStringLiteral("0x") + lowEnergyUuid;
-        qBBBluetoothDebug() << "LE Service: " << lowEnergyUuid << next_service;
+        qCDebug(QT_BT_QNX) << "LE Service: " << lowEnergyUuid << next_service;
         QBluetoothUuid leUuid;
 
         //In case of UUIDs that are id development phase (e.g. Texas Instruments SenstorTag LE Device)
@@ -364,7 +364,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
 
         QLowEnergyServiceInfo lowEnergyService(leUuid);
         lowEnergyService.setDevice(discoveredDevices.at(0));
-        qBBBluetoothDebug() << "Adding Low Energy service" << lowEnergyService.uuid();
+        qCDebug(QT_BT_QNX) << "Adding Low Energy service" << lowEnergyService.uuid();
         q_ptr->serviceDiscovered(lowEnergyService);
     }
 

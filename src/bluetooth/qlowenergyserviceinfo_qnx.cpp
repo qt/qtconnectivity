@@ -40,6 +40,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QLoggingCategory>
 #include "qlowenergyserviceinfo_p.h"
 #include "qlowenergycharacteristicinfo.h"
 #include "qlowenergycharacteristicinfo_p.h"
@@ -54,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
+
 void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const char *service, int instance, int err, short unsigned int connInt, short unsigned int latency, short unsigned int superTimeout, void *userData)
 {
     Q_UNUSED(latency);
@@ -61,13 +64,13 @@ void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const ch
     Q_UNUSED(superTimeout);
     QPointer<QLowEnergyServiceInfoPrivate> *classPointer = static_cast<QPointer<QLowEnergyServiceInfoPrivate> *>(userData);
     QLowEnergyServiceInfoPrivate *p = classPointer->data();
-    qBBBluetoothDebug() << "---------------------------------------------------";
-    qBBBluetoothDebug() << "[SERVICE: Connected] (service uuid, instance):" << p->uuid << instance;
-    qBBBluetoothDebug() << "[SERVICE: Connected] Device address: " << bdaddr;
-    qBBBluetoothDebug() << "[SERVICE: Connected] Device service: " << service;
-    qBBBluetoothDebug() << "[SERVICE: Connected] Possible error: " << err;
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "[SERVICE: Connected] (service uuid, instance):" << p->uuid << instance;
+    qCDebug(QT_BT_QNX) << "[SERVICE: Connected] Device address: " << bdaddr;
+    qCDebug(QT_BT_QNX) << "[SERVICE: Connected] Device service: " << service;
+    qCDebug(QT_BT_QNX) << "[SERVICE: Connected] Possible error: " << err;
     if (err != 0) {
-        qBBBluetoothDebug() << "An error occurred in service connected callback: " << strerror(err);
+        qCDebug(QT_BT_QNX) << "An error occurred in service connected callback: " << strerror(err);
         p->errorString = QString::fromLatin1(strerror(err));
         p->error(p->uuid);
     }
@@ -75,7 +78,7 @@ void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const ch
     bt_gatt_characteristic_t* data;
     data = (bt_gatt_characteristic_t*) malloc(sizeof(bt_gatt_characteristic_t));
     if (0 == data) {
-        qBBBluetoothDebug() << "[SERVICE: Connected] GATT characteristics: Not enough memory";
+        qCDebug(QT_BT_QNX) << "[SERVICE: Connected] GATT characteristics: Not enough memory";
         bt_gatt_disconnect_instance(instance);
         p->errorString = QStringLiteral("GATT characteristics: Not enough memory");
         p->error(p->uuid);
@@ -85,12 +88,12 @@ void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const ch
     int num_characteristics = bt_gatt_characteristics_count(instance);
 
     if (num_characteristics > -1) {
-        qBBBluetoothDebug() << "Characteristics number: "<< num_characteristics;
+        qCDebug(QT_BT_QNX) << "Characteristics number: "<< num_characteristics;
         bt_gatt_characteristic_t *allCharacteristicList;
 
         allCharacteristicList = (bt_gatt_characteristic_t*) malloc(num_characteristics * sizeof(bt_gatt_characteristic_t));
         if (0 == allCharacteristicList) {
-            qBBBluetoothDebug() <<" GATT characteristics: Not enough memory";
+            qCDebug(QT_BT_QNX) <<" GATT characteristics: Not enough memory";
             bt_gatt_disconnect_instance(instance);
             p->errorString = QStringLiteral("GATT characteristics: Not enough memory");
             p->error(p->uuid);
@@ -107,7 +110,7 @@ void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const ch
         int characteristicListSize = number;
 
         for (int i = 0; i < characteristicListSize; i++) {
-            qBBBluetoothDebug() << "Characteristic: uuid,handle,value_handle, properties:" << allCharacteristicList[i].uuid << "," << allCharacteristicList[i].handle << "," << allCharacteristicList[i].value_handle << ", " << allCharacteristicList[i].properties;
+            qCDebug(QT_BT_QNX) << "Characteristic: uuid,handle,value_handle, properties:" << allCharacteristicList[i].uuid << "," << allCharacteristicList[i].handle << "," << allCharacteristicList[i].value_handle << ", " << allCharacteristicList[i].properties;
             QString charUuid = QString::fromLatin1(allCharacteristicList[i].uuid);
             QString handleUuid;
             handleUuid.setNum(allCharacteristicList[i].value_handle);
@@ -135,12 +138,12 @@ void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const ch
             if (sub == false) {
                 int rc = bt_gatt_reg_notifications(instance, &(characteristicInfo.d_ptr->serviceNotification));
                 if (rc != 0) {
-                    qBBBluetoothDebug() << "[SERVICE: Connected] bt_gatt_reg_notifications failed." << errno << strerror(errno);
+                    qCDebug(QT_BT_QNX) << "[SERVICE: Connected] bt_gatt_reg_notifications failed." << errno << strerror(errno);
                     p->errorString = QString::fromLatin1(strerror(errno));
                     p->error(p->uuid);
                 }
                 else
-                    qBBBluetoothDebug() << "[SERVICE: Connected] bt_gatt_reg_notifications was presumably OK";
+                    qCDebug(QT_BT_QNX) << "[SERVICE: Connected] bt_gatt_reg_notifications was presumably OK";
                 sub = true;
             }
             p->characteristicList.append(characteristicInfo);
@@ -156,9 +159,9 @@ void QLowEnergyServiceInfoPrivate::serviceConnected(const char *bdaddr, const ch
     }
 
     p->connected = true;
-    qBBBluetoothDebug() << p;
+    qCDebug(QT_BT_QNX) << p;
     emit p->connectedToService(p->uuid);
-    qBBBluetoothDebug() << "---------------------------------------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------------------------------------";
 }
 
 void QLowEnergyServiceInfoPrivate::serviceUpdate(const char *bdaddr, int instance, short unsigned int connInt, short unsigned int latency, short unsigned int superTimeout, void *userData)
@@ -167,10 +170,10 @@ void QLowEnergyServiceInfoPrivate::serviceUpdate(const char *bdaddr, int instanc
     Q_UNUSED(connInt);
     Q_UNUSED(superTimeout);
     Q_UNUSED(userData);
-    qBBBluetoothDebug() << "---------------------------------------------------";
-    qBBBluetoothDebug() << "[SERVICE: Update] (instance):" << instance;
-    qBBBluetoothDebug() << "[SERVICE: Update] Device address: " << bdaddr;
-    qBBBluetoothDebug() << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "[SERVICE: Update] (instance):" << instance;
+    qCDebug(QT_BT_QNX) << "[SERVICE: Update] Device address: " << bdaddr;
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
 }
 
 void QLowEnergyServiceInfoPrivate::serviceDisconnected(const char *bdaddr, const char *service, int instance, int reason, void *userData)
@@ -178,10 +181,10 @@ void QLowEnergyServiceInfoPrivate::serviceDisconnected(const char *bdaddr, const
     QPointer<QLowEnergyServiceInfoPrivate> *classPointer = static_cast<QPointer<QLowEnergyServiceInfoPrivate> *>(userData);
     QLowEnergyServiceInfoPrivate *p = classPointer->data();
     emit p->disconnectedFromService(p->uuid);
-    qBBBluetoothDebug() << "---------------------------------------------------";
-    qBBBluetoothDebug() << "[SERVICE: Disconnect] (service, instance, reason):" << service << instance << reason;
-    qBBBluetoothDebug() << "[SERVICE: Disconnect] Device address: " << bdaddr;
-    qBBBluetoothDebug() << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "[SERVICE: Disconnect] (service, instance, reason):" << service << instance << reason;
+    qCDebug(QT_BT_QNX) << "[SERVICE: Disconnect] Device address: " << bdaddr;
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
     delete p;
     delete classPointer;
 }
@@ -203,7 +206,7 @@ void QLowEnergyServiceInfoPrivate::registerServiceWatcher()
     errno=0;
     process = process->instance();
     if (!process->isConnected()) {
-        qBBBluetoothDebug() << "[INIT] Init problem." << errno << strerror(errno);
+        qCDebug(QT_BT_QNX) << "[INIT] Init problem." << errno << strerror(errno);
         errorString = QStringLiteral("Initialization of device falied. ") + QString::fromLatin1(strerror(errno));
         emit error(uuid);
         return;
@@ -211,7 +214,7 @@ void QLowEnergyServiceInfoPrivate::registerServiceWatcher()
 
     errno=0;
     if (bt_gatt_init(&gatt_callbacks) < 0) {
-        qBBBluetoothDebug() << "[INIT] GAT Init problem." << errno << strerror(errno);
+        qCDebug(QT_BT_QNX) << "[INIT] GAT Init problem." << errno << strerror(errno);
         errorString = QStringLiteral("Callbacks initialization failed. ") + QString::fromLatin1(strerror(errno));
         emit error(uuid);
         return;
@@ -234,11 +237,11 @@ void QLowEnergyServiceInfoPrivate::registerServiceWatcher()
     conParm.latency = 0;
     conParm.superTimeout = 50;
     if (bt_gatt_connect_service(deviceInfo.address().toString().toLocal8Bit().constData(), serviceUuid.toLocal8Bit().constData(), 0, &conParm, classPointer) < 0) {
-        qBBBluetoothDebug() << "[SERVICE] Connection to service failed." << errno << strerror(errno);
+        qCDebug(QT_BT_QNX) << "[SERVICE] Connection to service failed." << errno << strerror(errno);
         errorString = QStringLiteral("[SERVICE] Connection to service failed.") + QString::fromLatin1(strerror(errno));
         emit error(uuid);
     }
-    qBBBluetoothDebug() << "errno after connect: " << errno;
+    qCDebug(QT_BT_QNX) << "errno after connect: " << errno;
 }
 
 void QLowEnergyServiceInfoPrivate::unregisterServiceWatcher()
@@ -249,11 +252,11 @@ void QLowEnergyServiceInfoPrivate::unregisterServiceWatcher()
     else
         serviceUuid = QStringLiteral("0x") + serviceUuid[4] + serviceUuid[5] + serviceUuid[6] + serviceUuid[7];
     if (bt_gatt_disconnect_service(deviceInfo.address().toString().toLocal8Bit().constData(), serviceUuid.toLocal8Bit().constData()) < 0) {
-            qBBBluetoothDebug() << "[SERVICE] Disconnect service request failed. " << errno << strerror(errno);
+            qCDebug(QT_BT_QNX) << "[SERVICE] Disconnect service request failed. " << errno << strerror(errno);
             emit error(uuid);
         } else {
             emit disconnectedFromService(uuid);
-            qBBBluetoothDebug() << "[SERVICE] Disconnected from service OK.";
+            qCDebug(QT_BT_QNX) << "[SERVICE] Disconnected from service OK.";
     }
 }
 

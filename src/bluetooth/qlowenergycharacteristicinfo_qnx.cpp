@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QLoggingCategory>
 #include "qlowenergycharacteristicinfo_p.h"
 #include <btapi/btdevice.h>
 #include <btapi/btgatt.h>
@@ -51,6 +52,8 @@
 
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
 int hexValue(char inChar)
 {
@@ -105,9 +108,9 @@ void QLowEnergyCharacteristicInfoPrivate::serviceNotification(int instance, shor
         return;
     QPointer<QLowEnergyServiceInfoPrivate> *ClassPointer = static_cast<QPointer<QLowEnergyServiceInfoPrivate> *>(userData);
     QLowEnergyServiceInfoPrivate *p = ClassPointer->data();
-    qBBBluetoothDebug() << "---------------------------------------------------";
-    qBBBluetoothDebug() << "[Notification] received (service uuid, handle, value, instance):" << p->uuid << handle << val << instance;
-    qBBBluetoothDebug() << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
+    qCDebug(QT_BT_QNX) << "[Notification] received (service uuid, handle, value, instance):" << p->uuid << handle << val << instance;
+    qCDebug(QT_BT_QNX) << "---------------------------------------------------";
     //Check if the notification from wanted characteristic
     bool current = false;
     QLowEnergyCharacteristicInfo chars;
@@ -131,19 +134,19 @@ void QLowEnergyCharacteristicInfoPrivate::serviceNotification(int instance, shor
     }
 
     if (!current)
-        qBBBluetoothDebug() << "Notificiation received and does not belong to this characteristic.";
+        qCDebug(QT_BT_QNX) << "Notificiation received and does not belong to this characteristic.";
 }
 
 bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 {
     if (instance == -1) {
-        qBBBluetoothDebug() << " GATT service not connected ";
+        qCDebug(QT_BT_QNX) << " GATT service not connected ";
         errorString = QStringLiteral("Service is not connected");
         emit error(uuid);
         return false;
     }
     if ( (permission & QLowEnergyCharacteristicInfo::Notify) == 0) {
-        qBBBluetoothDebug() << "Notification changes not allowed";
+        qCDebug(QT_BT_QNX) << "Notification changes not allowed";
         errorString = QStringLiteral("This characteristic does not support notifications.");
         emit error(uuid);
         return false;
@@ -151,12 +154,12 @@ bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
 
     int rc = bt_gatt_enable_notify(instance, &characteristic, 1);
     if (rc != 0) {
-        qBBBluetoothDebug() << "bt_gatt_enable_notify errno=" << errno << strerror(errno);
+        qCDebug(QT_BT_QNX) << "bt_gatt_enable_notify errno=" << errno << strerror(errno);
         errorString = QString::fromLatin1(strerror(errno));
         emit error(uuid);
         return false;
     } else {
-        qBBBluetoothDebug() << "bt_gatt_enable_notify was presumably OK";
+        qCDebug(QT_BT_QNX) << "bt_gatt_enable_notify was presumably OK";
         return true;
     }
 }
@@ -167,7 +170,7 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
         const int characteristicLen = wantedValue.size();
         uint8_t *characteristicBuffer = (uint8_t *)alloca(characteristicLen / 2 + 1);
         if (!characteristicBuffer) {
-            qBBBluetoothDebug() << "GATT characteristic: Not enough memory";
+            qCDebug(QT_BT_QNX) << "GATT characteristic: Not enough memory";
             errorString = QStringLiteral("Not enough memory.");
             emit error(uuid);
             bt_gatt_disconnect_instance(instance);
@@ -181,7 +184,7 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
             byteCount = bt_gatt_write_value(instance, handle.toUShort(), 0, characteristicBuffer, (consumed / 2));
 
             if (byteCount < 0) {
-                qBBBluetoothDebug() << "Unable to write characteristic value: " << errno << strerror(errno);
+                qCDebug(QT_BT_QNX) << "Unable to write characteristic value: " << errno << strerror(errno);
                 errorString = QStringLiteral("Unable to write characteristic value: ") + QString::fromLatin1(strerror(errno));
                 emit error(uuid);
             }
@@ -201,9 +204,9 @@ void QLowEnergyCharacteristicInfoPrivate::disableNotification()
 {
     int rc = bt_gatt_enable_notify(instance, &characteristic, 0);
     if (rc != 0)
-        qBBBluetoothDebug() << "bt_gatt_enable_notify errno=" << errno << strerror(errno);
+        qCDebug(QT_BT_QNX) << "bt_gatt_enable_notify errno=" << errno << strerror(errno);
     else
-        qBBBluetoothDebug() << "bt_gatt_enable_notify was presumably OK";
+        qCDebug(QT_BT_QNX) << "bt_gatt_enable_notify was presumably OK";
 
 }
 
@@ -222,7 +225,7 @@ void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
     if (count > 0) {
         descriptorList = (bt_gatt_descriptor_t*)alloca(count * sizeof(bt_gatt_descriptor_t));
         if (!descriptorList) {
-            qBBBluetoothDebug() <<"GATT descriptors: Not enough memory";
+            qCDebug(QT_BT_QNX) <<"GATT descriptors: Not enough memory";
             bt_gatt_disconnect_instance(instance);
             return;
         }
@@ -238,7 +241,7 @@ void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
     }
 
     if (count == -1) {
-        qBBBluetoothDebug() << "GATT descriptors failed: %1 (%2)" << errno << strerror(errno);
+        qCDebug(QT_BT_QNX) << "GATT descriptors failed: %1 (%2)" << errno << strerror(errno);
         bt_gatt_disconnect_instance(instance);
         return;
     }
@@ -247,7 +250,7 @@ void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
 
     uint8_t *descriptorBuffer = (uint8_t *)alloca(characteristicMtu);
     if (!descriptorBuffer) {
-        qBBBluetoothDebug() <<"GATT descriptors: Not enough memory";
+        qCDebug(QT_BT_QNX) <<"GATT descriptors: Not enough memory";
         bt_gatt_disconnect_instance(instance);
         return;
     }
@@ -269,7 +272,7 @@ void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
         for (int offset = 0; more; offset += byteCount) {
             byteCount = bt_gatt_read_value(instance, descriptorList[i].handle, offset, descriptorBuffer, characteristicMtu, &more);
             if (byteCount < 0) {
-                qBBBluetoothDebug() << "Unable to read descriptor value:"<< errno<< strerror(errno);
+                qCDebug(QT_BT_QNX) << "Unable to read descriptor value:"<< errno<< strerror(errno);
                 break;
             }
             descriptor.d_ptr->m_value = QByteArray();
@@ -291,13 +294,13 @@ void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
 void QLowEnergyCharacteristicInfoPrivate::readValue()
 {
     if ((permission & QLowEnergyCharacteristicInfo::Read) == 0) {
-        qBBBluetoothDebug() << "GATT characteristic: Read not permitted";
+        qCDebug(QT_BT_QNX) << "GATT characteristic: Read not permitted";
         return;
     }
 
     uint8_t *characteristicBuffer = (uint8_t *)alloca(characteristicMtu);
     if (!characteristicBuffer) {
-        qBBBluetoothDebug() << "GATT characteristic: Not enough memory";
+        qCDebug(QT_BT_QNX) << "GATT characteristic: Not enough memory";
         bt_gatt_disconnect_instance(instance);
         return;
     }
@@ -309,7 +312,7 @@ void QLowEnergyCharacteristicInfoPrivate::readValue()
     for (int offset = 0; more; offset += byteCount) {
         byteCount = bt_gatt_read_value(instance, handle.toUShort(), offset, characteristicBuffer, characteristicMtu, &more);
         if (byteCount < 0) {
-            qBBBluetoothDebug() << "Unable to read characteristic value: " << errno << strerror(errno);
+            qCDebug(QT_BT_QNX) << "Unable to read characteristic value: " << errno << strerror(errno);
             break;
         }
         value = QByteArray();
