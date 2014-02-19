@@ -41,18 +41,16 @@
 
 #ifndef QLOWENERGYSERVICEINFO_H
 #define QLOWENERGYSERVICEINFO_H
-#include "qbluetoothuuid.h"
-#include "qlowenergycharacteristicinfo.h"
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qbluetoothaddress.h"
 #include <QtCore/QSharedPointer>
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothDeviceInfo>
+#include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothUuid;
 class QLowEnergyServiceInfoPrivate;
 class QBluetoothAddress;
-class QBluetoothDeviceInfo;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyServiceInfo
 {

@@ -41,13 +41,12 @@
 
 #ifndef QLOWENERGYCONTROLLER_H
 #define QLOWENERGYCONTROLLER_H
+
+#include <QtCore/QObject>
 #include <QtBluetooth/qbluetoothglobal.h>
-
-#include <QObject>
-#include "qlowenergyserviceinfo.h"
-#include "qlowenergycharacteristicinfo.h"
-#include "qbluetoothaddress.h"
-
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QLowEnergyCharacteristicInfo>
+#include <QtBluetooth/QLowEnergyServiceInfo>
 
 QT_BEGIN_NAMESPACE
 

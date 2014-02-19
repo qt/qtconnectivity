@@ -42,14 +42,12 @@
 #ifndef QLOWENERGYDESCRIPTORINFO_H
 #define QLOWENERGYDESCRIPTORINFO_H
 
-#include "qbluetoothuuid.h"
-#include <QtCore>
-#include <QVariantMap>
 #include <QtCore/QSharedPointer>
+#include <QtCore/QVariantMap>
+#include <QtBluetooth/QBluetoothUuid>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothUuid;
 class QLowEnergyCharacteristicInfo;
 class QLowEnergyDescriptorInfoPrivate;
 

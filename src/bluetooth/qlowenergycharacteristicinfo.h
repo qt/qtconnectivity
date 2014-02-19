@@ -41,10 +41,10 @@
 
 #ifndef QLOWENERGYCHARACTERISTICINFO_H
 #define QLOWENERGYCHARACTERISTICINFO_H
-#include "qbluetoothuuid.h"
-#include "qlowenergydescriptorinfo.h"
 #include <QtCore/QSharedPointer>
-#include <QObject>
+#include <QtCore/QObject>
+#include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QLowEnergyDescriptorInfo>
 
 QT_BEGIN_NAMESPACE
 
