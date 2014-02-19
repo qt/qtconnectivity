@@ -54,8 +54,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate():
-    value (QByteArray()), permission(0), notification (false), handle(QStringLiteral("0x0000")), properties(QVariantMap()), errorString(""), characteristic(0), m_signalConnected(false)
+QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
+    :   permission(0), notification (false), handle(QStringLiteral("0x0000")),
+        properties(QVariantMap()), characteristic(0), m_signalConnected(false)
 {
     process = process->instance();
     t=0;

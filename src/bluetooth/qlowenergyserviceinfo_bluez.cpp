@@ -182,8 +182,9 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
 #endif
                     QString charHandle = l.at(8);
                     if ( charHandle.toUShort(0,0) >= startingHandle.toUShort(0,0) && charHandle.toUShort(0,0) <= endingHandle.toUShort(0,0)) {
-                        QString uuidParts = l.at(10) + "-" + l.at(11) + "-" + l.at(12) + "-" + l.at(13) + "-" + l.at(14);
-                        QBluetoothUuid charUuid(uuidParts);
+                        QString u(QStringLiteral("%1-%2-%3-%4-%5"));
+                        u = u.arg(l.at(10)).arg(l.at(11)).arg(l.at(12)).arg(l.at(13)).arg(l.at(14));
+                        QBluetoothUuid charUuid(u);
                         QVariantMap map = QVariantMap();
 
                         QLowEnergyCharacteristicInfo chars(charUuid);
