@@ -106,7 +106,7 @@ void ServiceDiscoveryDialog::addService(const QBluetoothServiceInfo &info)
 
 void ServiceDiscoveryDialog::addLowEnergyService(const QLowEnergyServiceInfo &gatt)
 {
-    QString line = gatt.name();
+    QString line = gatt.serviceName();
 
     ui->list->addItem(line);
 }

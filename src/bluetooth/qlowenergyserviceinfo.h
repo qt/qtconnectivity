@@ -84,11 +84,11 @@ public:
     void setDevice(const QBluetoothDeviceInfo &info);
     QBluetoothDeviceInfo device() const;
 
-    QBluetoothUuid uuid() const;
+    QBluetoothUuid serviceUuid() const;
 
     QList<QLowEnergyCharacteristicInfo> characteristics() const;
 
-    QString name() const;
+    QString serviceName() const;
 
     void setServiceType(QLowEnergyServiceInfo::ServiceType type);
     QLowEnergyServiceInfo::ServiceType serviceType() const;
@@ -96,8 +96,6 @@ public:
     void setRandomAddress();
 
     bool isConnected() const;
-
-    QString errorString() const;
 
     bool isValid() const;
 

@@ -155,7 +155,7 @@ void HeartRate::connectToService(const QString &address)
 
 void HeartRate::addLowEnergyService(const QLowEnergyServiceInfo &gatt)
 {
-    if (gatt.uuid() == QBluetoothUuid::HeartRate) {
+    if (gatt.serviceUuid() == QBluetoothUuid::HeartRate) {
         setMessage("Heart Rate service discovered. Waiting for service scan to be done...");
         m_heartRateService = QLowEnergyServiceInfo(gatt);
         foundHeartRateService = true;
@@ -185,7 +185,7 @@ void HeartRate::startConnection()
 void HeartRate::serviceConnected(const QLowEnergyServiceInfo &leService)
 {
     setMessage("Connected to service. Waiting for updates");
-    if (leService.uuid() == QBluetoothUuid::HeartRate) {
+    if (leService.serviceUuid() == QBluetoothUuid::HeartRate) {
         for ( int i = 0; i<leService.characteristics().size(); i++) {
             if (leService.characteristics().at(i).uuid() == QBluetoothUuid::HeartRateMeasurement) {
                 m_start = QDateTime::currentDateTime();
@@ -257,12 +257,14 @@ int HeartRate::hR() const
 //! [Error handling]
 void HeartRate::errorReceived(const QLowEnergyServiceInfo &leService)
 {
-    setMessage(QStringLiteral("Error: ") + leService.errorString());
+    qWarning() << "Error: " << leService.serviceUuid() << m_leInfo->errorString();
+    setMessage(QStringLiteral("Error: ") + m_leInfo->errorString());
 }
 
 void HeartRate::errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &leCharacteristic)
 {
-    setMessage(QStringLiteral("Error: ") + leCharacteristic.errorString());
+    qWarning() << "Error: " << leCharacteristic.uuid() << m_leInfo->errorString();
+    setMessage(QStringLiteral("Error: ") + m_leInfo->errorString());
 }
 //! [Error handling]
 
@@ -352,7 +354,7 @@ float HeartRate::caloriesCalculation()
 void HeartRate::serviceDisconnected(const QLowEnergyServiceInfo &service)
 {
     setMessage("Heart Rate service disconnected");
-    qWarning() << "Service disconnected: " << service.uuid();
+    qWarning() << "Service disconnected: " << service.serviceUuid();
 }
 
 int HeartRate::numDevices() const

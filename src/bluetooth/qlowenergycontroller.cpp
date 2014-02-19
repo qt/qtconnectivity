@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the service error occurs.
 
-    \sa QLowEnergyServiceInfo::errorString()
+    \sa errorString()
 */
 
 /*!
@@ -91,7 +91,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the characteristic error occurs.
 
-    \sa QLowEnergyCharacteristicInfo::errorString()
+    \sa errorString()
 */
 
 /*!
@@ -123,7 +123,7 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 void QLowEnergyControllerPrivate::_q_serviceConnected(const QBluetoothUuid &uuid)
 {
     for (int i = 0; i < m_leServices.size(); i++) {
-        if (((QLowEnergyServiceInfo)m_leServices.at(i)).uuid() == uuid)
+        if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == uuid)
             emit q_ptr->connected((QLowEnergyServiceInfo)m_leServices.at(i));
 
     }
@@ -132,8 +132,11 @@ void QLowEnergyControllerPrivate::_q_serviceConnected(const QBluetoothUuid &uuid
 void QLowEnergyControllerPrivate::_q_serviceError(const QBluetoothUuid &uuid)
 {
     for (int i = 0; i < m_leServices.size(); i++) {
-        if (((QLowEnergyServiceInfo)m_leServices.at(i)).uuid() == uuid)
-            emit q_ptr->error((QLowEnergyServiceInfo)m_leServices.at(i));
+        if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == uuid) {
+            QLowEnergyServiceInfo service((QLowEnergyServiceInfo)m_leServices.at(i));
+            errorString = service.d_ptr->errorString;
+            emit q_ptr->error(service);
+        }
     }
 }
 
@@ -142,8 +145,10 @@ void QLowEnergyControllerPrivate::_q_characteristicError(const QBluetoothUuid &u
     for (int i = 0; i < m_leServices.size(); i++) {
         QList<QLowEnergyCharacteristicInfo> characteristics = m_leServices.at(i).characteristics();
         for (int j = 0; j < characteristics.size(); j++) {
-            if (characteristics.at(j).uuid() == uuid)
+            if (characteristics.at(j).uuid() == uuid) {
+                errorString = characteristics.at(j).d_ptr->errorString;
                 emit q_ptr->error(characteristics.at(j));
+            }
         }
     }
 }
@@ -165,7 +170,7 @@ void QLowEnergyControllerPrivate::_q_valueReceived(const QBluetoothUuid &uuid)
 void QLowEnergyControllerPrivate::_q_serviceDisconnected(const QBluetoothUuid &uuid)
 {
     for (int i = 0; i < m_leServices.size(); i++) {
-        if (((QLowEnergyServiceInfo)m_leServices.at(i)).uuid() == uuid) {
+        if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == uuid) {
             QObject::disconnect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(connectedToService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceConnected(QBluetoothUuid)));
             QObject::disconnect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), q_ptr, SLOT(_q_serviceError(QBluetoothUuid)));
             QObject::disconnect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(disconnectedFromService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceDisconnected(QBluetoothUuid)));
@@ -179,7 +184,7 @@ void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &se
     bool in = false;
     if (service.isValid()) {
         for (int i = 0; i < m_leServices.size(); i++) {
-            if (((QLowEnergyServiceInfo)m_leServices.at(i)).uuid() == service.uuid() && !((QLowEnergyServiceInfo)m_leServices.at(i)).isConnected()) {
+            if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == service.serviceUuid() && !((QLowEnergyServiceInfo)m_leServices.at(i)).isConnected()) {
                 in = true;
                 QObject::connect(m_leServices.at(i).d_ptr.data(), SIGNAL(connectedToService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceConnected(QBluetoothUuid)));
                 QObject::connect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), q_ptr, SLOT(_q_serviceError(QBluetoothUuid)));
@@ -202,7 +207,7 @@ void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo 
 {
     if (service.isValid()) {
         for (int i = 0; i < m_leServices.size(); i++) {
-            if (((QLowEnergyServiceInfo)m_leServices.at(i)).uuid() == service.uuid() && service.isConnected()) {
+            if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == service.serviceUuid() && service.isConnected()) {
                 ((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr->unregisterServiceWatcher();
                 break;
             }
@@ -300,5 +305,15 @@ void QLowEnergyController::disableNotifications(const QLowEnergyCharacteristicIn
             }
         }
     }
+}
+
+/*!
+    Returns a human-readable description of the last error that occurred.
+
+    \sa error(const QLowEnergyServiceInfo &), error(const QLowEnergyCharacteristicInfo &)
+*/
+QString QLowEnergyController::errorString() const
+{
+    return d_ptr->errorString;
 }
 QT_END_NAMESPACE

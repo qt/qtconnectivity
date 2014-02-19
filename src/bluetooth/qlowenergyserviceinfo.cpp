@@ -166,7 +166,7 @@ QLowEnergyServiceInfo::~QLowEnergyServiceInfo()
 /*!
     Returns the gatt service uuid.
 */
-QBluetoothUuid QLowEnergyServiceInfo::uuid() const
+QBluetoothUuid QLowEnergyServiceInfo::serviceUuid() const
 {
     return d_ptr->uuid;
 }
@@ -183,7 +183,7 @@ QList<QLowEnergyCharacteristicInfo> QLowEnergyServiceInfo::characteristics() con
 /*!
     Returns the service name.
 */
-QString QLowEnergyServiceInfo::name() const
+QString QLowEnergyServiceInfo::serviceName() const
 {
     return d_ptr->serviceName;
 }
@@ -231,14 +231,6 @@ bool QLowEnergyServiceInfo::isConnected() const
 void QLowEnergyServiceInfo::setRandomAddress()
 {
     d_ptr->randomAddress = true;
-}
-
-/*!
-    Returns an error string if error occurred.
- */
-QString QLowEnergyServiceInfo::errorString() const
-{
-    return d_ptr->errorString;
 }
 
 /*!

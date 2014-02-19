@@ -176,7 +176,7 @@ void Device::connectToService(const QString &uuid)
     for (int i = 0; i < m_services.size(); i++) {
         ServiceInfo *service = (ServiceInfo*)m_services.at(i);
         a = QLowEnergyServiceInfo(service->getLeService());
-        if (a.uuid() == u)
+        if (a.serviceUuid() == u)
             info->connectToService(a);
     }
 }
@@ -195,8 +195,8 @@ void Device::serviceConnected(const QLowEnergyServiceInfo &service)
 
 void Device::errorReceived(const QLowEnergyServiceInfo &service)
 {
-    qDebug() << "Error: " << service.errorString();
-    setUpdate(service.errorString());
+    qDebug() << "Error: " << info->errorString() << service.serviceUuid();
+    setUpdate(info->errorString());
 }
 
 void Device::setUpdate(QString message)

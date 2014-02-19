@@ -303,7 +303,7 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
 void BtLocalDevice::leServiceDiscovered(const QLowEnergyServiceInfo &info)
 {
     qDebug() << "$$ Found new BTLE service" << info.device().address().toString()
-             << info.uuid() << info.name();
+             << info.serviceUuid() << info.serviceName();
 }
 
 void BtLocalDevice::serviceDiscoveryFinished()

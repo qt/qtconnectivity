@@ -103,7 +103,6 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         QCOMPARE(characteristicInfo.name(), QString(""));
         QCOMPARE(characteristicInfo.isNotificationCharacteristic(), false);
         QCOMPARE(characteristicInfo.descriptors().count(), 0);
-        QCOMPARE(characteristicInfo.errorString(), QString(""));
     }
 
     {
@@ -118,7 +117,6 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         QCOMPARE(characteristicInfo.name(), QString(""));
         QCOMPARE(characteristicInfo.isNotificationCharacteristic(), false);
         QCOMPARE(characteristicInfo.descriptors().count(), 0);
-        QCOMPARE(characteristicInfo.errorString(), QString(""));
 
         QLowEnergyCharacteristicInfo copyInfo(characteristicInfo);
 
@@ -136,9 +134,7 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         QCOMPARE(copyInfo.name(), QString(""));
         QCOMPARE(copyInfo.isNotificationCharacteristic(), false);
         QCOMPARE(copyInfo.descriptors().count(), 0);
-        QCOMPARE(copyInfo.errorString(), QString(""));
         copyInfo.writeValue("test");
-        QVERIFY(copyInfo.errorString().size() > 0);
     }
 }
 

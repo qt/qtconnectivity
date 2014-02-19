@@ -305,15 +305,4 @@ QList<QLowEnergyDescriptorInfo> QLowEnergyCharacteristicInfo::descriptors() cons
     return d_ptr->descriptorsList;
 }
 
-/*!
-    Returns an error string if error occurred. An error is emitted in the
-    QLowEnergyController class.
-
-    \sa QLowEnergyController::error(const QLowEnergyCharacteristicInfo &)
-*/
-QString QLowEnergyCharacteristicInfo::errorString() const
-{
-    return d_ptr->errorString;
-}
-
 QT_END_NAMESPACE

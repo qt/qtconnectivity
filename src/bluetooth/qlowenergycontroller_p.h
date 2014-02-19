@@ -61,6 +61,7 @@ public:
     void _q_serviceDisconnected(const QBluetoothUuid &uuid);
 
     QList<QLowEnergyServiceInfo> m_leServices;
+    QString errorString;
 
 private:
     QLowEnergyController *q_ptr;

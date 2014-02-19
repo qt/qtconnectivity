@@ -190,8 +190,8 @@ void tst_QBluetoothServiceDiscoveryAgent::leServiceDiscoveryDebug(const QLowEner
 {
     qDebug() << "Discovered LE service on"
              << info.device().name() << info.device().address().toString();
-    qDebug() << "\tService name:" << info.name();
-    qDebug() << "\tUUID:" << info.uuid();
+    qDebug() << "\tService name:" << info.serviceName();
+    qDebug() << "\tUUID:" << info.serviceUuid();
 }
 
 static void dumpAttributeVariant(const QVariant &var, const QString indent)
@@ -504,9 +504,9 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
                     *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
 
                 QVERIFY(info.isValid());
-                QCOMPARE(info.errorString(), QString());
+                QCOMPARE(leController.errorString(), QString());
                 QVERIFY((info.characteristics().size() > 0));
-                qDebug() << "LE Service Connected: " << info.name() << info.uuid();
+                qDebug() << "LE Service Connected: " << info.serviceName() << info.serviceUuid();
                 leTestCounter++;
                 for (int i = 0; i < info.characteristics().size(); i++)
                     QVERIFY(info.characteristics().at(i).isValid());
@@ -531,8 +531,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
                     *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
 
                 QVERIFY(info.isValid());
-                QCOMPARE(info.errorString(), QString());
-                qDebug() << "LE Service Disconnected: " << info.name() << info.uuid();
+                qDebug() << "LE Service Disconnected: " << info.serviceName() << info.serviceUuid();
             } else {
                 QFAIL("Unknown type returned by service discovery");
             }

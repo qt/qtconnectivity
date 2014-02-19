@@ -59,10 +59,10 @@ QLowEnergyServiceInfo ServiceInfo::getLeService() const
 
 QString ServiceInfo::getName()
 {
-    return m_serviceLe.name();
+    return m_serviceLe.serviceName();
 }
 
 QString ServiceInfo::getUuid()
 {
-    return m_serviceLe.uuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+    return m_serviceLe.serviceUuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
 }

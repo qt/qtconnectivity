@@ -364,7 +364,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
 
         QLowEnergyServiceInfo lowEnergyService(leUuid);
         lowEnergyService.setDevice(discoveredDevices.at(0));
-        qCDebug(QT_BT_QNX) << "Adding Low Energy service" << lowEnergyService.uuid();
+        qCDebug(QT_BT_QNX) << "Adding Low Energy service" << lowEnergyService.serviceUuid();
         q_ptr->serviceDiscovered(lowEnergyService);
     }
 

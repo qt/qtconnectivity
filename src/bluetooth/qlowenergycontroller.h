@@ -64,6 +64,7 @@ public:
     void disconnectFromService(const QLowEnergyServiceInfo &leService = QLowEnergyServiceInfo());
     bool enableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
     void disableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
+    QString errorString() const;
 
 Q_SIGNALS:
     void connected(const QLowEnergyServiceInfo &);
