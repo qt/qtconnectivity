@@ -89,6 +89,7 @@ Rectangle {
                 id: characteristicValue
                 textContent: ("Value: " + modelData.characteristicValue)
                 anchors.bottom: characteristicHandle.top
+                horizontalAlignment: Text.AlignHCenter
                 anchors.topMargin: 5
             }
 

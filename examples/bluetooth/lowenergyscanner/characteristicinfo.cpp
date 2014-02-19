@@ -72,11 +72,12 @@ QString CharacteristicInfo::getUuid() const
 QString CharacteristicInfo::getValue() const
 {
     // All characteristics values are in hexadecimal format.
-    QString hexvalue = "";
+    // Show human string first and hex value below
     QByteArray a = m_characteristic.value();
-    for (int i = 0; i < a.size(); i++){
-        hexvalue.append(a.at(i));}
-    return hexvalue;
+    QString result;
+    result += QByteArray::fromHex(a) + QLatin1Char('\n');
+    result += a;
+    return result;
 }
 
 QString CharacteristicInfo::getHandle() const
