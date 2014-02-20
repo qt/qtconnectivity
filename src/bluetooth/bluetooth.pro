@@ -133,7 +133,10 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_android.cpp \
         qbluetoothservicediscoveryagent_android.cpp \
         qbluetoothsocket_android.cpp \
-        qbluetoothserver_android.cpp
+        qbluetoothserver_android.cpp \
+        qlowenergyserviceinfo_p.cpp \
+        qlowenergycharacteristicinfo_p.cpp \
+        qlowenergyprocess_p.cpp
 
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
