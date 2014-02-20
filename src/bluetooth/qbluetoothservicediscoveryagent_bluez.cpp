@@ -51,6 +51,7 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtDBus/QDBusPendingCallWatcher>
+#include <QtCore/QUuid>
 
 QT_BEGIN_NAMESPACE
 
@@ -190,30 +191,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
      * accessed with org.bluez.Characteristic
      */
     //QDBusArgument services = v.value(QLatin1String("Services")).value<QDBusArgument>();
-    const QStringList deviceUuids = deviceProperties.value(QStringLiteral("UUIDs")).toStringList();
-    for (int i = 0; i < deviceUuids.size(); i++) {
-        QString b = deviceUuids.at(i);
-        b = b.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
 
-        //TODO this should be bit field and not string operations
-        const QString leServiceCheck = QString(b.at(4)) + QString(b.at(5));
-        /*
-             * In this part we want to emit only Bluetooth Low Energy service. BLE services
-             * have 18xx UUID. Some LE Services contain zeros in last part of UUID.
-             * In the end in case there is an uuidFilter we need to prevent emitting LE services
-             */
-
-        //TODO where is the uuidFilter match -> uuidFilter could contain a BLE uuid
-        if ((leServiceCheck == QStringLiteral("18") || b.contains(QStringLiteral("000000000000"))) && uuidFilter.size() == 0) {
-            qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << deviceUuids.at(i) << leServiceCheck << uuidFilter.size() << b;
-            QBluetoothUuid uuid(b);
-            QLowEnergyServiceInfo lowEnergyService(uuid);
-            //TODO Fix m_DeviceAdapterAddress may not be the actual address
-            lowEnergyService.d_ptr->adapterAddress = m_deviceAdapterAddress;
-            lowEnergyService.setDevice(discoveredDevices.at(0));
-            emit q->serviceDiscovered(lowEnergyService);
-        }
-    }
 
     /*
      * Bluez v4.1 does not have extra bit which gives information if device is Bluetooth
@@ -225,6 +203,29 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
         qCDebug(QT_BT_BLUEZ) << "Discovered BLE-only device. Normal service discovery skipped.";
         delete device;
         device = 0;
+
+        const QStringList deviceUuids = deviceProperties.value(QStringLiteral("UUIDs")).toStringList();
+        for (int i = 0; i < deviceUuids.size(); i++) {
+            QString b = deviceUuids.at(i);
+            b = b.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+            const QBluetoothUuid uuid(b);
+
+            qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << uuid << uuidFilter.size();
+            QLowEnergyServiceInfo lowEnergyService(uuid);
+            //TODO Fix m_DeviceAdapterAddress may not be the actual address
+            lowEnergyService.d_ptr->adapterAddress = m_deviceAdapterAddress;
+            lowEnergyService.setDevice(discoveredDevices.at(0));
+            if (uuidFilter.isEmpty())
+                emit q->serviceDiscovered(lowEnergyService);
+            else {
+                for (int j = 0; j < uuidFilter.size(); j++) {
+                    if (uuidFilter.at(j) == uuid)
+                        emit q->serviceDiscovered(lowEnergyService);
+
+                }
+            }
+
+        }
 
         if (singleDevice && deviceReply.isError()) {
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
@@ -274,36 +275,50 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
     qCDebug(QT_BT_BLUEZ) << "Parsing xml" << discoveredDevices.at(0).address().toString() << discoveredDevices.count() << map.count();
 
+    Q_Q(QBluetoothServiceDiscoveryAgent);
+
     foreach (const QString &record, reply.value()) {
         QXmlStreamReader xml(record);
 
         QBluetoothServiceInfo serviceInfo;
-        serviceInfo.setDevice(discoveredDevices.at(0));
 
+        bool btle = false; // Detecting potential BTLE services
         while (!xml.atEnd()) {
             xml.readNext();
 
-            if (xml.tokenType() == QXmlStreamReader::StartElement &&
-                xml.name() == QLatin1String("attribute")) {
-                quint16 attributeId =
-                    xml.attributes().value(QLatin1String("id")).toString().toUShort(0, 0);
+            if (xml.tokenType() == QXmlStreamReader::StartElement && xml.name() == QStringLiteral("attribute")) {
+                quint16 attributeId = xml.attributes().value(QStringLiteral("id")).toString().toUShort(0, 0);
 
                 if (xml.readNextStartElement()) {
                     QVariant value = readAttributeValue(xml);
-
+                    if (attributeId == 1) {// Attribute with id 1 contains UUID of the service
+                        const QBluetoothServiceInfo::Sequence seq = value.value<QBluetoothServiceInfo::Sequence>();
+                        for (int i = 0; i < seq.count(); i++) {
+                            const QBluetoothUuid uuid = seq.at(i).value<QBluetoothUuid>();
+                            if ((uuid.data1 & 0x1800) == 0x1800) {// We are taking into consideration that LE services starts at 0x1800
+                                QLowEnergyServiceInfo leService(uuid);
+                                leService.setDevice(discoveredDevices.at(0));
+                                btle = true;
+                                emit q->serviceDiscovered(leService);
+                                break;
+                            }
+                        }
+                    }
                     serviceInfo.setAttribute(attributeId, value);
                 }
             }
         }
 
-        if (!serviceInfo.isValid())
-            continue;
+        if (!btle) {
+            serviceInfo.setDevice(discoveredDevices.at(0));
+            if (!serviceInfo.isValid())
+                continue;
 
-        Q_Q(QBluetoothServiceDiscoveryAgent);
+            discoveredServices.append(serviceInfo);
+            qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString();
+            emit q->serviceDiscovered(serviceInfo);
+        }
 
-        discoveredServices.append(serviceInfo);
-        qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString();
-        emit q->serviceDiscovered(serviceInfo);
         // could stop discovery, check for state
         if(discoveryState() == Inactive){
             qCDebug(QT_BT_BLUEZ) << "Exit discovery after stop";
