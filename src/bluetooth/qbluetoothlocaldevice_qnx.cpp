@@ -168,11 +168,42 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluet
 {
     if (!isValid())
         return Unpaired;
+    bool paired = false;
+    bool btle = false; // Bluetooth Low Energy devices
+    QByteArray qnxPath("/pps/services/bluetooth/remote_devices/");
+    qnxPath.append(address.toString().toUtf8());
+    int m_rdfd;
+    if ((m_rdfd = qt_safe_open(qnxPath.constData(), O_RDONLY)) == -1){
+        btle = true;
+        qnxPath.append("-00");
+        if ((m_rdfd = qt_safe_open(qnxPath.constData(), O_RDONLY)) == -1) {
+            qnxPath.replace((qnxPath.length()-3), 3, "-01");
+            if ((m_rdfd = qt_safe_open(qnxPath.constData(), O_RDONLY)) == -1)
+                return Unpaired;
+        }
+    }
 
-    QVariant status = ppsRemoteDeviceStatus(address.toString().toLocal8Bit(), "paired");
-    if (status.toBool())
+    pps_decoder_t ppsDecoder;
+    pps_decoder_initialize(&ppsDecoder, NULL);
+
+    QBluetoothAddress deviceAddr;
+    QString deviceName;
+
+    if (!ppsReadRemoteDevice(m_rdfd, &ppsDecoder, &deviceAddr, &deviceName))
+        return Unpaired;
+    bool known = false;
+    // Paired BTLE devices have only known field set to true.
+    if (btle)
+        pps_decoder_get_bool(&ppsDecoder, "known", &known);
+    pps_decoder_get_bool(&ppsDecoder, "paired", &paired);
+    pps_decoder_cleanup(&ppsDecoder);
+
+    if (paired)
         return Paired;
-    return Unpaired;
+    else if (btle && known)
+        return Paired;
+    else
+        return Unpaired;
 }
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
