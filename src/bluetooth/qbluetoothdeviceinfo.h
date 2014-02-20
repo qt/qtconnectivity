@@ -197,9 +197,9 @@ public:
     };
 
     enum CoreConfiguration {
-        BaseRateCoreConfiguration = 0x01,
-        BaseRateAndLowEnergyCoreConfiguration = 0x02,
-        LowEnergyCoreConfiguration = 0x03
+        LowEnergyCoreConfiguration = 0x01,
+        BaseRateCoreConfiguration = 0x02,
+        BaseRateAndLowEnergyCoreConfiguration = 0x03
     };
     Q_DECLARE_FLAGS(CoreConfigurations, CoreConfiguration)
 
