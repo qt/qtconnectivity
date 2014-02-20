@@ -41,6 +41,8 @@
 
 #include "qlowenergyprocess_p.h"
 
+QT_BEGIN_NAMESPACE
+
 Q_GLOBAL_STATIC(QLowEnergyProcess, processInstance)
 
 /*!
@@ -140,3 +142,5 @@ void QLowEnergyProcess::addConnection()
     m_counter++;
     connected = true;
 }
+
+QT_END_NAMESPACE

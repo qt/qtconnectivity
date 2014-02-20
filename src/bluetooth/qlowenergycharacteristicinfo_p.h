@@ -56,7 +56,7 @@
 #endif
 #ifdef QT_BLUEZ_BLUETOOTH
 class OrgBluezCharacteristicInterface;
-class QLowEnergyProcess;
+QT_FORWARD_DECLARE_CLASS(QLowEnergyProcess);
 #endif
 
 QT_BEGIN_NAMESPACE
