@@ -44,7 +44,6 @@
 #include "qbluetoothuuid.h"
 #include "qlowenergyserviceinfo.h"
 #include "qlowenergycharacteristicinfo.h"
-#include "stdint.h"
 #include <QPointer>
 
 #ifdef QT_BLUEZ_BLUETOOTH
