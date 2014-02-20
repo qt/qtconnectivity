@@ -97,7 +97,6 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     Q_Q(QBluetoothSocket);
     Q_UNUSED(openMode);
 
-    qDebug() << "GGGGConnecting to" << address.toString() << uuid.toString();
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         errorString = QBluetoothSocket::tr("Device does not support Bluetooth");
@@ -411,6 +410,8 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socke
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         return false;
     }
+
+    remoteDevice = socketObject.callObjectMethod("getRemoteDevice", "()Landroid/bluetooth/BluetoothDevice;");
 
     if (inputThread) {
         inputThread->stop();

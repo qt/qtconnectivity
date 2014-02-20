@@ -43,49 +43,49 @@
 #define SERVERACCEPTANCETHREAD_H
 
 #include <QtCore/QMutex>
-#include <QtCore/QThread>
 #include <QtAndroidExtras/QAndroidJniObject>
+#include <QtBluetooth/QBluetoothServer>
 #include <QtBluetooth/QBluetoothUuid>
 #include "qbluetooth.h"
 
 
-class ServerAcceptanceThread : public QThread
+class ServerAcceptanceThread : public QObject
 {
     Q_OBJECT
 public:
-    enum AndroidError {
-        AndroidNoError
-    };
-
     explicit ServerAcceptanceThread(QObject *parent = 0);
     ~ServerAcceptanceThread();
     void setServiceDetails(const QBluetoothUuid &uuid, const QString &serviceName,
                            QBluetooth::SecurityFlags securityFlags);
-    virtual void run();
 
-    void stop();
+
     bool hasPendingConnections() const;
     QAndroidJniObject nextPendingConnection();
     void setMaxPendingConnections(int maximumCount);
 
+    void javaThreadErrorOccurred(int errorCode);
+    void javaNewSocket(jobject socket);
+
+    void run();
+    void stop();
+    bool isRunning() const;
+
 signals:
     void newConnection();
-    void error(ServerAcceptanceThread::AndroidError);
+    void error(QBluetoothServer::Error);
 
 private:
     bool validSetup() const;
     void shutdownPendingConnections();
 
     QList<QAndroidJniObject> pendingSockets;
-    QAndroidJniObject btAdapter;
-    QAndroidJniObject btServerSocket;
     mutable QMutex m_mutex;
     QString m_serviceName;
     QBluetoothUuid m_uuid;
-    bool m_stop;
-    AndroidError lastError;
     int maxPendingConnections;
     QBluetooth::SecurityFlags secFlags;
+
+    QAndroidJniObject javaThread;
 
 };
 

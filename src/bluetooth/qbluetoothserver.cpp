@@ -145,7 +145,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 
-    Returns a pointer to aQBluetoothSocket for the next pending connection. It is the callers
+    Returns a pointer to the QBluetoothSocket for the next pending connection. It is the callers
     responsibility to delete the pointer.
 */
 
