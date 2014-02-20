@@ -278,10 +278,12 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(deviceInfo.serviceClasses(), serviceClasses);
         QCOMPARE(deviceInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(deviceInfo.minorDeviceClass(), minorDeviceClass);
+        QCOMPARE(deviceInfo.coreConfiguration(), QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+
+        deviceInfo.setCoreConfiguration(coreConfiguration);
         QCOMPARE(deviceInfo.coreConfiguration(), coreConfiguration);
 
         QBluetoothDeviceInfo copyInfo(deviceInfo);
-
         QVERIFY(copyInfo.isValid());
 
         QCOMPARE(copyInfo.address(), address);
