@@ -155,10 +155,10 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     }
 
     // listen has already been called before
-    if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
+    if (!d->socket)
+        d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+    else if (d->socket->state() == QBluetoothSocket::ListeningState)
         return false;
-
-    d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 
     //We can not register an actual Rfcomm port, because the platform does not allow it
     //but we need a way to associate a server with a service
