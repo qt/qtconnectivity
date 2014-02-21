@@ -144,7 +144,10 @@ void QBluetoothServer::close()
         d->socket->close();
         delete d->socket;
         d->socket = 0;
-        ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+        if (__fakeServerPorts.contains(d)) {
+            ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+            __fakeServerPorts.remove(d);
+        }
         // force active object (socket) to run and shutdown socket.
         qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     }
