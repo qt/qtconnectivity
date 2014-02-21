@@ -132,6 +132,8 @@ QT_BEGIN_NAMESPACE
     Sets the maximum number of pending connections to \a numConnections. If
     the number of pending sockets exceeds this limit new sockets will be rejected.
 
+    QNX platform supports only one device at the time and it will ignore this value.
+
     \sa maxPendingConnections()
 */
 

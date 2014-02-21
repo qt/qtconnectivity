@@ -197,7 +197,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
-    d->maxPendingConnections = numConnections; //Currently not used
+    //QNX supports only one device at the time
 }
 
 QBluetoothAddress QBluetoothServer::serverAddress() const
