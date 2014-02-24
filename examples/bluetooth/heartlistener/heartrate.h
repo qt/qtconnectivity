@@ -130,7 +130,7 @@ private:
     bool foundHeartRateService;
     bool foundHeartRateCharacteristic;
     int m_HRMeasurement;
-    QVector<qint8> m_measurements;
+    QVector<quint8> m_measurements;
     QDateTime m_start;
     QDateTime m_stop;
     int m_max;

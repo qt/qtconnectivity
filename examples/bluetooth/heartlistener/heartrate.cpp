@@ -206,34 +206,33 @@ void HeartRate::receiveMeasurement(const QLowEnergyCharacteristicInfo &character
     qint16 energy_expended = 0;
     int flags = 0;
     int index = 0;
+
+    //8 bit flags
     val[0] = m_heartRateCharacteristic.value().at(index++);
-    // Each Heart Belt has its own settings and fetarues, besides heart rate measurement
+    val[1] = m_heartRateCharacteristic.value().at(index++);
+    flags = val.toUInt(0, 16);
+
+    // Each Heart Belt has its own settings and features, besides heart rate measurement
     // By checking the flags we can determine whether it has energy feature. We will go through the array
     // of the characters in the characteristic value.
-    if (val.toUInt(0, 16) > 3)
-        flags = val.toUInt(0, 16);
-    else {
-        val[1] = m_heartRateCharacteristic.value().at(index++);
-        flags = val.toUInt(0, 16);
+    // The following flags are used to determine what kind of value is being sent from the device.
+    // see https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
+    quint8 heartRateValueIs16BitFlag = 0x1; //8 bit or 16 bit
+    quint8 energyExpendedFeatureFlag = 0x8;
+
+    val.clear();
+    val[0] = m_heartRateCharacteristic.value().at(index++); //1st 4 bit
+    val[1] = m_heartRateCharacteristic.value().at(index++); //2nd 4 bit
+    if (flags & heartRateValueIs16BitFlag) { //16 bit value
+        val[2] = m_heartRateCharacteristic.value().at(index++);
+        val[3] = m_heartRateCharacteristic.value().at(index++);
     }
-    QString value;
-    value[0] = m_heartRateCharacteristic.value().at(index++);
-    value[1] = m_heartRateCharacteristic.value().at(index++);
-    m_HRMeasurement = value.toUInt(0, 16);
+
+    m_HRMeasurement = val.toUInt(0, 16);
     //! [Reading value]
     m_measurements.append(m_HRMeasurement);
-    // The following flags are used to determine what kind of value is being sent from the device.
-    // FLAGS field bit mask values
-    qint8 heartRateValueFormat = 1;// 0
-    qint8 energyExpendedFeature = 8;// 3
-    bool hrDataFormat = false;
-    bool energyExpendedFeatureSupported = false;
 
-    hrDataFormat = ((flags & heartRateValueFormat) != heartRateValueFormat); // 0 means 8 bit, 1 means 16 bit
-    energyExpendedFeatureSupported = ((flags & energyExpendedFeature) == 0);
-    if (!hrDataFormat)
-        qWarning() << "XXXX 16 bit heart rate measurement data encountered!";
-    if (energyExpendedFeatureSupported) {
+    if (flags & energyExpendedFeatureFlag) {
         QString energy;
         int counter1 = 0;
         for (int i = index; i < (m_heartRateCharacteristic.value().size() - 1); i++) {
@@ -243,7 +242,6 @@ void HeartRate::receiveMeasurement(const QLowEnergyCharacteristicInfo &character
             counter1 ++;
         }
         energy_expended = energy.toUInt(0, 16);
-        index = index + 2;
     }
     qWarning() << "Used energy: " << energy_expended;
     Q_EMIT hrChanged();
@@ -329,7 +327,7 @@ float HeartRate::average()
 
 int HeartRate::measurements(int index)
 {
-    if (index> m_measurements.size())
+    if (index > m_measurements.size())
         return 0;
     else
         return (int)m_measurements.value(index);
