@@ -84,11 +84,10 @@ void QLowEnergyServiceInfoPrivate::registerServiceWatcher()
     process = process->instance();
     if (!process->isConnected()) {
         connect(process, SIGNAL(replySend(const QString &)), this, SLOT(replyReceived(const QString &)));
-        QString command;
+        QString command = QStringLiteral("gatttool -i ") + adapterAddress.toString() + QStringLiteral(" -b ") + deviceInfo.address().toString() + QStringLiteral(" -I");
         if (randomAddress)
-            command = QStringLiteral("gatttool -i ") + adapterAddress.toString() + QStringLiteral(" -b ") + deviceInfo.address().toString() +QStringLiteral(" -I -t random");
-        else
-            command = QStringLiteral("gatttool -i ") + adapterAddress.toString() + QStringLiteral(" -b ") + deviceInfo.address().toString() + QStringLiteral(" -I");
+            command += QStringLiteral(" -t random");
+
 #ifdef QT_LOWENERGYSERVICE_DEBUG
         qDebug() << "[REGISTER] uuid inside: " << uuid << command;
 #endif
@@ -105,10 +104,6 @@ void QLowEnergyServiceInfoPrivate::unregisterServiceWatcher()
 {
     if (connected) {
         process = process->instance();
-        //process->executeCommand(QStringLiteral("disconnect"));
-        //process->executeCommand(QStringLiteral("\n"));
-        //process->executeCommand(QStringLiteral("exit"));
-        //process->executeCommand(QStringLiteral("\n"));
         process->endProcess();
         connected = false;
         m_step = 0;
@@ -153,14 +148,16 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
         break;
     case 2:
         if (reply.contains(QStringLiteral("attr")) && reply.contains(QStringLiteral("uuid"))){
-            QStringList chars = reply.split(QStringLiteral("\n"));
-            for (int i = 1; i<chars.size(); i++){
-                if (chars.at(i).contains(QStringLiteral("attr")) && chars.at(i).contains(QStringLiteral("uuid"))){
-                    QStringList l = chars.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
-                    QString checkUuid = l.at(8) + QStringLiteral("-") + l.at(9) + QStringLiteral("-") + l.at(10) + QStringLiteral("-") + l.at(11) + QStringLiteral("-") + l.at(12);
-                    if ( checkUuid == uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'))) {
-                        startingHandle = l.at(2);
-                        endingHandle = l.at(6);
+            const QStringList handles = reply.split(QStringLiteral("\n"));
+            foreach (const QString &handle, handles) {
+                if (handle.contains(QStringLiteral("attr")) && handle.contains(QStringLiteral("uuid"))) {
+                    const QStringList handleDetails = handle.split(QRegularExpression(QStringLiteral("[\\s+|,]")),
+                                                                   QString::SkipEmptyParts);
+                    Q_ASSERT(handleDetails.count() == 9);
+                    const QBluetoothUuid foundUuid(handleDetails.at(8));
+                    if (foundUuid == uuid) {
+                        startingHandle = handleDetails.at(2);
+                        endingHandle = handleDetails.at(6);
                         stepSet = true;
                     }
                 }
@@ -170,44 +167,43 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
         }
         break;
     case 3:
-        stepSet = false;
         if (reply.contains(QStringLiteral("char")) && reply.contains(QStringLiteral("uuid"))) {
-            QStringList chars = reply.split(QStringLiteral("\n"));
-            for (int i = 1; i<chars.size(); i++){
-
-                if (chars.at(i).contains(QStringLiteral("char")) && chars.at(i).contains(QStringLiteral("uuid"))){
-                    QStringList l = chars.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
+            const QStringList handles = reply.split(QStringLiteral("\n"));
+            foreach (const QString& handle, handles) {
+                if (handle.contains(QStringLiteral("char")) && handle.contains(QStringLiteral("uuid"))) {
+                    const QStringList handleDetails = handle.split(QRegularExpression(QStringLiteral("[\\s+|,]")),
+                                                                   QString::SkipEmptyParts);
 #ifdef QT_LOWENERGYSERVICE_DEBUG
-                    qDebug() <<l;
+                    qDebug() << handleDetails;
 #endif
-                    QString charHandle = l.at(8);
-                    if ( charHandle.toUShort(0,0) >= startingHandle.toUShort(0,0) && charHandle.toUShort(0,0) <= endingHandle.toUShort(0,0)) {
-                        QString u(QStringLiteral("%1-%2-%3-%4-%5"));
-                        u = u.arg(l.at(10)).arg(l.at(11)).arg(l.at(12)).arg(l.at(13)).arg(l.at(14));
-                        QBluetoothUuid charUuid(u);
-                        QVariantMap map = QVariantMap();
+                    Q_ASSERT(handleDetails.count() == 11);
+                    const QString charHandle = handleDetails.at(8);
+                    ushort charHandleId = charHandle.toUShort(0, 0);
+                    if ( charHandleId >= startingHandle.toUShort(0,0) &&
+                            charHandleId <= endingHandle.toUShort(0,0))
+                    {
+                        const QBluetoothUuid charUuid(handleDetails.at(10));
+                        QVariantMap map;
 
-                        QLowEnergyCharacteristicInfo chars(charUuid);
-                        chars.d_ptr->handle = charHandle;
-                        chars.d_ptr->startingHandle = l.at(1);
-                        QString perm = l.at(4);
-                        chars.d_ptr->permission = perm.toUShort(0,0);
+                        QLowEnergyCharacteristicInfo charInfo(charUuid);
+                        charInfo.d_ptr->handle = charHandle;
+                        charInfo.d_ptr->startingHandle = handleDetails.at(1);
+                        charInfo.d_ptr->permission = handleDetails.at(4).toUShort(0,0);
                         map[QStringLiteral("uuid")] = charUuid.toString();
                         map[QStringLiteral("handle")] = charHandle;
-                        map[QStringLiteral("permission")] = chars.d_ptr->permission;
-                        chars.d_ptr->properties = map;
-                        if ((chars.d_ptr->permission & QLowEnergyCharacteristicInfo::Read) == 0) {
+                        map[QStringLiteral("permission")] = charInfo.d_ptr->permission;
+                        charInfo.d_ptr->properties = map;
+                        if (!(charInfo.d_ptr->permission & QLowEnergyCharacteristicInfo::Read)) {
 #ifdef QT_LOWENERGYSERVICE_DEBUG
-                            qDebug() << "GATT characteristic: Read not permitted: " << chars.d_ptr->uuid;
+                            qDebug() << "GATT characteristic: Read not permitted: " << charInfo.d_ptr->uuid;
 #endif
-                        }
-                        else
+                        } else {
                             m_readCounter++;
-                        characteristicList.append(chars);
+                        }
+                        characteristicList.append(charInfo);
                         stepSet = true;
                     }
                 }
-
             }
 #ifdef QT_LOWENERGYSERVICE_DEBUG
             qDebug() << "COUNTER : " << m_readCounter;
@@ -217,33 +213,33 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
         }
         break;
     case 4:
-        stepSet = false;
         if (reply.contains(QStringLiteral("handle")) && reply.contains(QStringLiteral("value"))) {
-            QStringList chars = reply.split(QStringLiteral("\n"));
-            for (int i = 1; i<chars.size(); i++){
-
-                if (chars.at(i).contains(QStringLiteral("handle")) && chars.at(i).contains(QStringLiteral("value"))){
-                    QStringList l = chars.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
+            const QStringList handles = reply.split(QStringLiteral("\n"));
+            foreach (const QString handle, handles) {
+                if (handle.contains(QStringLiteral("handle")) && handle.contains(QStringLiteral("value"))) {
+                    const QStringList handleDetails = handle.split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
                     if (!characteristicList.isEmpty()) {
                         for (int j = 0; j < (characteristicList.size()-1); j++) {
-                            QLowEnergyCharacteristicInfo chars((QLowEnergyCharacteristicInfo)characteristicList.at(j));
+                            QLowEnergyCharacteristicInfo chars = characteristicList.at(j);
+                            QLowEnergyCharacteristicInfo charsNext = characteristicList.at(j+1);
+                            const QString handleId = handleDetails.at(1);
+                            ushort h = handleId.toUShort(0, 0);
 #ifdef QT_LOWENERGYSERVICE_DEBUG
-                            qDebug() << l.at(1) << l.at(1).toUShort(0,0)<< chars.handle() << chars.handle().toUShort(0,0);
+                            qDebug() << handleId << h  << chars.handle() << chars.handle().toUShort(0,0);
 #endif
-                            QLowEnergyCharacteristicInfo charsNext = (QLowEnergyCharacteristicInfo)characteristicList.at(j+1);
-                            if (l.at(1).toUShort(0,0) > chars.handle().toUShort(0,0) && l.at(1).toUShort(0,0) < charsNext.handle().toUShort(0,0)) {
-                                chars.d_ptr->notificationHandle = l.at(1);
+                            if (h > chars.handle().toUShort(0,0) && h < charsNext.handle().toUShort(0,0)) {
+                                chars.d_ptr->notificationHandle = handleId;
                                 chars.d_ptr->notification = true;
-                                QString notUuid = QStringLiteral("0x2902");
-                                QBluetoothUuid descUuid(notUuid.toUShort(0,0));
-                                QLowEnergyDescriptorInfo descriptor(descUuid, l.at(1));
-                                QString val = QStringLiteral("");
-                                for (int k = 0; k < l.size(); k++)
-                                    val = val + l.at(k);
+                                QBluetoothUuid descUuid((ushort)0x2902);
+                                QLowEnergyDescriptorInfo descriptor(descUuid, handleId);
+                                QString val;
+                                //TODO why do we start parsing value from k = 0? Shouldn't it be k = 2
+                                for (int k = 3; k < handleDetails.size(); k++)
+                                    val = val + handleDetails.at(k);
                                 descriptor.d_ptr->m_value = val.toUtf8();
-                                QVariantMap map = QVariantMap();
+                                QVariantMap map;
                                 map[QStringLiteral("uuid")] = descUuid.toString();
-                                map[QStringLiteral("handle")] = l.at(1);
+                                map[QStringLiteral("handle")] = handleId;
                                 map[QStringLiteral("value")] = val.toUtf8();
                                 characteristicList[j].d_ptr->descriptorsList.append(descriptor);
 #ifdef QT_LOWENERGYSERVICE_DEBUG
@@ -251,11 +247,8 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
 #endif
                             }
                         }
-
                     }
-
                 }
-
             }
 #ifdef QT_LOWENERGYSERVICE_DEBUG
             qDebug() << "COUNTER : " << m_readCounter;
@@ -275,21 +268,23 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
     case 5:
         // This part is for reading characteristic values
         if (reply.contains(QStringLiteral("handle")) && reply.contains(QStringLiteral("value"))) {
-            QStringList chars = reply.split(QStringLiteral("\n"));
-            for (int i = 1; i<chars.size(); i++){
-
-                if (chars.at(i).contains(QStringLiteral("handle")) && chars.at(i).contains(QStringLiteral("value"))){
-                    QStringList l = chars.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
+            const QStringList handles = reply.split(QStringLiteral("\n"));
+            foreach (const QString &handle, handles) {
+                if (handle.contains(QStringLiteral("handle")) &&
+                        handle.contains(QStringLiteral("value")))
+                {
+                    const QStringList handleDetails = handle.split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
                     if (!characteristicList.isEmpty()) {
                         for (int j = 0; j < characteristicList.size(); j++) {
-                            QLowEnergyCharacteristicInfo chars((QLowEnergyCharacteristicInfo)characteristicList.at(j));
+                            const QLowEnergyCharacteristicInfo chars = characteristicList.at(j);
+                            const QString handleId = handleDetails.at(1);
 #ifdef QT_LOWENERGYSERVICE_DEBUG
-                            qDebug() << l.at(1) << l.at(1).toUShort(0,0)<< chars.handle() << chars.handle().toUShort(0,0);
+                            qDebug() << handleId << handleId.toUShort(0,0) << chars.handle() << chars.handle().toUShort(0,0);
 #endif
-                            if (((QString)l.at(1)).toUShort(0,0) == chars.handle().toUShort(0,0)) {
-                                QString value = QStringLiteral("");
-                                for ( int k = 3; k < l.size(); k++)
-                                    value = value + l.at(k);
+                            if (handleId.toUShort(0,0) == chars.handle().toUShort(0,0)) {
+                                QString value;
+                                for ( int k = 3; k < handleDetails.size(); k++)
+                                    value = value + handleDetails.at(k);
                                 characteristicList[j].d_ptr->value = value.toUtf8();
 #ifdef QT_LOWENERGYSERVICE_DEBUG
                                 qDebug() << "Characteristic value set." << chars.d_ptr->handle << value;
@@ -297,11 +292,8 @@ void QLowEnergyServiceInfoPrivate::replyReceived(const QString &reply)
                                 m_valueCounter++;
                             }
                         }
-
                     }
-
                 }
-
             }
             if (m_valueCounter == m_readCounter) {
                 m_step++;
@@ -332,20 +324,19 @@ void QLowEnergyServiceInfoPrivate::connectToTerminal()
 
 void QLowEnergyServiceInfoPrivate::setHandles()
 {
-    QString command = QStringLiteral("primary ");
 #ifdef QT_LOWENERGYSERVICE_DEBUG
-    qDebug() << "Setting handles: " << command;
+    qDebug() << "Setting handles: primary";
 #endif
-    process->executeCommand(command);
+    process->executeCommand(QStringLiteral("primary"));
     process->executeCommand(QStringLiteral("\n"));
     m_step++;
 }
 
 void QLowEnergyServiceInfoPrivate::setCharacteristics()
 {
-    QString command = QStringLiteral("characteristics ") + startingHandle + QStringLiteral(" ") + endingHandle;
+    const QString command = QStringLiteral("characteristics ") + startingHandle + QStringLiteral(" ") + endingHandle;
 #ifdef QT_LOWENERGYSERVICE_DEBUG
-    qDebug() << "Setting characteristics: " <<command;
+    qDebug() << "Setting characteristics: " << command;
 #endif
     process->executeCommand(command);
     process->executeCommand(QStringLiteral("\n"));
@@ -354,8 +345,10 @@ void QLowEnergyServiceInfoPrivate::setCharacteristics()
 
 void QLowEnergyServiceInfoPrivate::setNotifications()
 {
-    QString command = QStringLiteral("char-read-uuid 2902");
-    process->executeCommand(command);
+#ifdef QT_LOWENERGYSERVICE_DEBUG
+    qDebug() << "Setting notifications: char-read-uuid 2902";
+#endif
+    process->executeCommand(QStringLiteral("char-read-uuid 2902"));
     process->executeCommand(QStringLiteral("\n"));
     m_step++;
 }
@@ -363,9 +356,12 @@ void QLowEnergyServiceInfoPrivate::setNotifications()
 void QLowEnergyServiceInfoPrivate::readCharacteristicValue()
 {
     for (int i = 0; i < characteristicList.size(); i++) {
-        if ((characteristicList.at(i).d_ptr->permission & QLowEnergyCharacteristicInfo::Read) != 0) {
-            QString uuidHandle = characteristicList.at(i).uuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
-            QString command = QStringLiteral("char-read-uuid ") + uuidHandle;
+        if ((characteristicList.at(i).d_ptr->permission & QLowEnergyCharacteristicInfo::Read)) {
+            const QString uuidHandle = characteristicList.at(i).uuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+#ifdef QT_LOWENERGYSERVICE_DEBUG
+    qDebug() << "FFFFFF Setting notifications: char-read-uuid " << uuidHandle ;
+#endif
+            const QString command = QStringLiteral("char-read-uuid ") + uuidHandle;
             process->executeCommand(command);
             process->executeCommand(QStringLiteral("\n"));
         }
@@ -375,7 +371,7 @@ void QLowEnergyServiceInfoPrivate::readCharacteristicValue()
 
 void QLowEnergyServiceInfoPrivate::readDescriptors()
 {
-    QString command = QStringLiteral("char-desc ") + startingHandle + QStringLiteral(" ") + endingHandle;
+    const QString command = QStringLiteral("char-desc ") + startingHandle + QStringLiteral(" ") + endingHandle;
     process->executeCommand(command);
     process->executeCommand(QStringLiteral("\n"));
 
