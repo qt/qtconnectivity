@@ -75,9 +75,9 @@ public:
         qmlRegisterType<QDeclarativeBluetoothService        >(uri, major, minor, "BluetoothService");
         qmlRegisterType<QDeclarativeBluetoothSocket         >(uri, major, minor, "BluetoothSocket");
 
-        // Register the 5.3 types
-        // introduces 5.3 version, other existing 5.2 exports automatically become availabe under 5.3 as well
-        minor = 3;
+        // Register the 5.4 types
+        // introduces 5.4 version, other existing 5.2 exports become automatically available under 5.2-5.4
+        minor = 4;
         qmlRegisterType<QDeclarativeBluetoothDiscoveryModel >(uri, major, minor, "BluetoothDiscoveryModel");
     }
 };
