@@ -1,4 +1,4 @@
-QT += qml quick network nfc widgets
+QT += qml quick network nfc
 
 SOURCES += \
     qmlposter.cpp

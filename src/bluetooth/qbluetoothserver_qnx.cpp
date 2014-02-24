@@ -66,6 +66,8 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
     q->close();
     __fakeServerPorts.remove(this);
     ppsUnregisterControl(this);
+    qDeleteAll(activeSockets);
+    activeSockets.clear();
 }
 
 void QBluetoothServerPrivate::controlReply(ppsResult result)
@@ -131,17 +133,20 @@ void QBluetoothServerPrivate::controlEvent(ppsResult result)
 void QBluetoothServer::close()
 {
     Q_D(QBluetoothServer);
-    if (!d->socket) {
-        d->m_lastError = UnknownError;
-        emit error(d->m_lastError);
-        return;
+    if (!d->activeSockets.isEmpty()) {
+        for (int i = 0; i < d->activeSockets.size(); i++)
+            d->activeSockets.at(i)->close();
+        qDeleteAll(d->activeSockets);
+        d->activeSockets.clear();
     }
-    d->socket->close();
-    delete d->socket;
-    d->socket = 0;
-    ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
-    // force active object (socket) to run and shutdown socket.
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    if (d->socket) {
+        d->socket->close();
+        delete d->socket;
+        d->socket = 0;
+        ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+        // force active object (socket) to run and shutdown socket.
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
 }
 
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
@@ -155,10 +160,10 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     }
 
     // listen has already been called before
-    if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
+    if (!d->socket)
+        d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+    else if (d->socket->state() == QBluetoothSocket::ListeningState)
         return false;
-
-    d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 
     //We can not register an actual Rfcomm port, because the platform does not allow it
     //but we need a way to associate a server with a service

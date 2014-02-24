@@ -313,7 +313,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 {
     Q_D(QBluetoothSocket);
 
-    if (state() != QBluetoothSocket::UnconnectedState) {
+    if (state() != QBluetoothSocket::UnconnectedState && state() != QBluetoothSocket::ServiceLookupState) {
         qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
         d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
         setSocketError(QBluetoothSocket::OperationError);
