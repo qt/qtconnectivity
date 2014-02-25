@@ -95,7 +95,8 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
 
             socket->setSocketDescriptor(socketFD, QBluetoothServiceInfo::RfcommProtocol,
                                            QBluetoothSocket::ConnectedState);
-            socket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
+            socket->d_ptr->m_peerAddress = QBluetoothAddress(nextClientAddress);
+            socket->d_ptr->m_uuid = m_uuid;
             activeSockets.append(socket);
             socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
             socket->setSocketState(QBluetoothSocket::ListeningState);

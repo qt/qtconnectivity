@@ -87,6 +87,8 @@ class QBluetoothSocketPrivate
 {
 #endif
     Q_DECLARE_PUBLIC(QBluetoothSocket)
+    friend class QBluetoothServerPrivate;
+
 public:
 
     QBluetoothSocketPrivate();
