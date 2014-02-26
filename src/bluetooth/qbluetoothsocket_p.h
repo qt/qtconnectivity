@@ -170,7 +170,7 @@ public:
     InputStreamThread *inputThread;
 
 private Q_SLOTS:
-    void inputThreadError();
+    void inputThreadError(int errorCode);
 
 #endif
 

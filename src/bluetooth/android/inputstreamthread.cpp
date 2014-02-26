@@ -40,6 +40,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 
 #include "android/inputstreamthread_p.h"
@@ -47,34 +48,29 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 InputStreamThread::InputStreamThread(QBluetoothSocketPrivate *socket)
-    : QThread(), m_stop(false)
+    : QObject(), m_socket_p(socket), expectClosure(false)
 {
-    m_socket_p = socket;
 }
 
-void InputStreamThread::run()
+bool InputStreamThread::run()
 {
-    qint32 byte;
-    Q_UNUSED(byte)
-    while (1) {
-        {
-            QMutexLocker locker(&m_mutex);
-            if (m_stop)
-                break;
-        }
-        readFromInputStream();
-    }
+    QMutexLocker lock(&m_mutex);
 
-    QAndroidJniEnvironment env;
-    if (m_socket_p->inputStream.isValid())
-        m_socket_p->inputStream.callMethod<void>("close");
+    javaInputStreamThread = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothInputStreamThread");
+    if (!javaInputStreamThread.isValid() || !m_socket_p->inputStream.isValid())
+        return false;
 
-    if (env->ExceptionCheck()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-    }
+    javaInputStreamThread.callMethod<void>("setInputStream", "(Ljava/io/InputStream;)V",
+                                           m_socket_p->inputStream.object<jobject>());
+    javaInputStreamThread.setField<jlong>("qtObject", reinterpret_cast<long>(this));
+    javaInputStreamThread.setField<jboolean>("logEnabled", QT_BT_ANDROID().isDebugEnabled());
+
+    javaInputStreamThread.callMethod<void>("start");
+
+    return true;
 }
 
 bool InputStreamThread::bytesAvailable() const
@@ -83,68 +79,42 @@ bool InputStreamThread::bytesAvailable() const
     return m_socket_p->buffer.size();
 }
 
-//This runs inside the thread.
-void InputStreamThread::readFromInputStream()
-{
-    QAndroidJniEnvironment env;
-
-    int bufLen = 1000; // Seems to magical number that also low-end products can survive.
-    jbyteArray nativeArray = env->NewByteArray(bufLen);
-
-
-    jint ret = m_socket_p->inputStream.callMethod<jint>("read", "([BII)I", nativeArray, 0, bufLen);
-
-    if (env->ExceptionCheck() || ret < 0) {
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
-        env->DeleteLocalRef(nativeArray);
-        QMutexLocker lock(&m_mutex);
-        m_stop = true;
-
-        /*
-         * We cannot distinguish IOException due to valid closure or due to other error
-         * Therefore we always have to throw an error and a disconnect signal
-         * A genuine disconnect wouldn't need the error signal.
-         * For now we always signal error which implicitly emits disconnect() too.
-         */
-
-        emit error();
-        return;
-    }
-
-    if (ret == 0) {
-        qDebug() << "Nothing to read";
-        env->DeleteLocalRef(nativeArray);
-        return;
-    }
-
-    QMutexLocker lock(&m_mutex);
-    char *writePtr = m_socket_p->buffer.reserve(bufLen);
-    env->GetByteArrayRegion(nativeArray, 0, ret, reinterpret_cast<jbyte*>(writePtr));
-    env->DeleteLocalRef(nativeArray);
-    m_socket_p->buffer.chop(bufLen - ret);
-    emit dataAvailable();
-}
-
-void InputStreamThread::stop()
-{
-    QMutexLocker locker(&m_mutex);
-    m_stop = true;
-}
-
 qint64 InputStreamThread::readData(char *data, qint64 maxSize)
 {
     QMutexLocker locker(&m_mutex);
-
-    if (m_stop)
-        return -1;
 
     if (!m_socket_p->buffer.isEmpty())
         return m_socket_p->buffer.read(data, maxSize);
 
     return 0;
+}
+
+//inside the java thread
+void InputStreamThread::javaThreadErrorOccurred(int errorCode)
+{
+    QMutexLocker lock(&m_mutex);
+
+    if (!expectClosure)
+        emit error(errorCode);
+    else
+        emit error(-1); //magic error, -1 means error was expected due to expected close()
+}
+
+//inside the java thread
+void InputStreamThread::javaReadyRead(jbyteArray buffer, int bufferLength)
+{
+    QAndroidJniEnvironment env;
+
+    QMutexLocker lock(&m_mutex);
+    char *writePtr = m_socket_p->buffer.reserve(bufferLength);
+    env->GetByteArrayRegion(buffer, 0, bufferLength, reinterpret_cast<jbyte*>(writePtr));
+    emit dataAvailable();
+}
+
+void InputStreamThread::prepareForClosure()
+{
+    QMutexLocker lock(&m_mutex);
+    expectClosure = true;
 }
 
 QT_END_NAMESPACE

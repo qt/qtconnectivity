@@ -1,6 +1,5 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Lauri Laanmets (Proekspert AS) <lauri.laanmets@eesti.ee>
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
@@ -40,44 +39,65 @@
 **
 ****************************************************************************/
 
-#ifndef INPUTSTREAMTHREAD_H
-#define INPUTSTREAMTHREAD_H
+package org.qtproject.qt5.android.bluetooth;
 
-#include <QtCore/QObject>
-#include <QtCore/QMutex>
-#include <QtAndroidExtras/QAndroidJniObject>
-#include <jni.h>
+import java.io.InputStream;
+import java.io.IOException;
+import android.util.Log;
 
-QT_BEGIN_NAMESPACE
-
-class QBluetoothSocketPrivate;
-
-class InputStreamThread : public QObject
+public class QtBluetoothInputStreamThread extends Thread
 {
-    Q_OBJECT
-public:
-    explicit InputStreamThread(QBluetoothSocketPrivate *socket_p);
+    /* Pointer to the Qt object that "owns" the Java object */
+    long qtObject = 0;
+    public boolean logEnabled = false;
+    private static final String TAG = "QtBluetooth";
+    private InputStream m_inputStream = null;
 
-    bool bytesAvailable() const;
-    bool run();
+    //error codes
+    public static final int QT_MISSING_INPUT_STREAM = 0;
+    public static final int QT_READ_FAILED = 1;
+    public static final int QT_THREAD_INTERRUPTED = 2;
 
-    qint64 readData(char *data, qint64 maxSize);
-    void javaThreadErrorOccurred(int errorCode);
-    void javaReadyRead(jbyteArray buffer, int bufferLength);
+    public QtBluetoothInputStreamThread()
+    {
+        setName("QtBtInputStreamThread");
+    }
 
-    void prepareForClosure();
+    public void setInputStream(InputStream stream)
+    {
+        m_inputStream = stream;
+    }
 
-signals:
-    void dataAvailable();
-    void error(int errorCode);
+    public void run()
+    {
+        if (m_inputStream == null) {
+            errorOccurred(qtObject, QT_MISSING_INPUT_STREAM);
+            return;
+        }
 
-private:
-    QBluetoothSocketPrivate *m_socket_p;
-    QAndroidJniObject javaInputStreamThread;
-    mutable QMutex m_mutex;
-    bool expectClosure;
-};
+        byte[] buffer = new byte[1000];
+        int bytesRead = 0;
 
-QT_END_NAMESPACE
+        try {
+            while (!isInterrupted()) {
+                //this blocks until we see incoming data
+                //or close() on related BluetoothSocket is called
+                bytesRead = m_inputStream.read(buffer);
+                readyData(qtObject, buffer, bytesRead);
+            }
 
-#endif // INPUTSTREAMTHREAD_H
+            errorOccurred(qtObject, QT_THREAD_INTERRUPTED);
+        } catch (IOException ex) {
+            if (logEnabled)
+                Log.d(TAG, "InputStream.read() failed:" + ex.toString());
+            ex.printStackTrace();
+            errorOccurred(qtObject, QT_READ_FAILED);
+        }
+
+        if (logEnabled)
+            Log.d(TAG, "Leaving input stream thread");
+    }
+
+    public static native void errorOccurred(long qtObject, int errorCode);
+    public static native void readyData(long qtObject, byte[] buffer, int bufferLength);
+}
