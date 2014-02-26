@@ -57,12 +57,12 @@ QLowEnergyServiceInfo ServiceInfo::getLeService() const
     return m_serviceLe;
 }
 
-QString ServiceInfo::getName()
+QString ServiceInfo::getName() const
 {
     return m_serviceLe.serviceName();
 }
 
-QString ServiceInfo::getUuid()
+QString ServiceInfo::getUuid() const
 {
     return m_serviceLe.serviceUuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
 }

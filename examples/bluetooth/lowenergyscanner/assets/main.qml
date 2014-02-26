@@ -44,6 +44,11 @@ Rectangle {
     id: back
     width: 300
     height: 600
+    property string message: device.update
+    onMessageChanged: {
+        if (device.update != "Scanning for devices..." && device.update != "Search")
+            info.visible = false;
+    }
 
     Header {
         id: header

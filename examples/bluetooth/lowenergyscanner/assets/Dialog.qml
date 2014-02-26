@@ -50,7 +50,10 @@ Rectangle {
     radius: 10
 
     Text {
-        anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        anchors.fill: parent
+        elide: Text.ElideMiddle
         text: dialogText
         color: "#363636"
     }

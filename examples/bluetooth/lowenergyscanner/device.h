@@ -46,14 +46,14 @@
 #include <QObject>
 #include <QVariant>
 #include <QList>
+#include <QBluetoothServiceDiscoveryAgent>
+#include <QBluetoothDeviceDiscoveryAgent>
 #include "deviceinfo.h"
 #include "qlowenergyserviceinfo.h"
 #include "serviceinfo.h"
 #include "characteristicinfo.h"
 
-QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceDiscoveryAgent)
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS (QBluetoothServiceDiscoveryAgent)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyCharacteristicInfo)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyController)
@@ -78,6 +78,7 @@ public slots:
     void addDevice(const QBluetoothDeviceInfo&);
     void startDeviceDiscovery();
     void scanFinished();
+    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
     void scanServices(QString address);
     void addLowEnergyService(const QLowEnergyServiceInfo&);
     void serviceScanDone();
@@ -86,6 +87,7 @@ public slots:
     void errorReceived(const QLowEnergyServiceInfo &service);
     void disconnectFromService();
     void serviceDisconnected(const QLowEnergyServiceInfo &service);
+    void serviceScanError(QBluetoothServiceDiscoveryAgent::Error);
 
 Q_SIGNALS:
     void devicesDone();
@@ -95,9 +97,7 @@ Q_SIGNALS:
 
 private:
     void setUpdate(QString message);
-    bool m_adapterPresent;
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
-    QBluetoothLocalDevice *localDevice;
     QBluetoothServiceDiscoveryAgent *serviceDiscoveryAgent;
     DeviceInfo currentDevice;
     QList<QObject*> devices;

@@ -10,15 +10,7 @@ SOURCES += main.cpp \
     serviceinfo.cpp \
     characteristicinfo.cpp
 
-OTHER_FILES += assets/Menu.qml \
-    assets/Services.qml \
-    bar-descriptor.xml \
-    assets/Characteristics.qml \
-    assets/Details.qml \
-    bar-descriptor.xml \
-    assets/Dialog.qml \
-    assets/Header.qml \
-    assets/Label.qml
+OTHER_FILES += assets/*.qml
 
 HEADERS += \
     device.h \

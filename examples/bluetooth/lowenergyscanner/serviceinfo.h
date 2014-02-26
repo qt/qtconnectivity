@@ -53,8 +53,8 @@ public:
     ServiceInfo();
     ServiceInfo(const QLowEnergyServiceInfo &service);
     QLowEnergyServiceInfo getLeService() const;
-    QString getUuid();
-    QString getName();
+    QString getUuid() const;
+    QString getName() const;
 
 Q_SIGNALS:
     void serviceChanged();

@@ -51,20 +51,22 @@
 #include <QList>
 
 Device::Device():
-    localDevice(new QBluetoothLocalDevice()), m_message(QString()), connected(false)
+    connected(false), info(0)
 {
-    if (localDevice->allDevices().size() == 0) {
-        setUpdate("Bluetooth adapter not discovered");
-        m_adapterPresent = false;
-    }
-    else
-        m_adapterPresent = true;
-    QBluetoothAddress adapterAddress(localDevice->address());
-    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(adapterAddress);
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
     connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
             this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
+    connect(discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
+            this, SLOT(deviceScanError(QBluetoothDeviceDiscoveryAgent::Error)));
     connect(discoveryAgent, SIGNAL(finished()), this, SLOT(scanFinished()));
-    serviceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+    serviceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress());
+
+    //Connecting signals and slots for service discovery
+    connect(serviceDiscoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
+            this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
+    connect(serviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(serviceScanDone()));
+    connect(serviceDiscoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
+            this, SLOT(serviceScanError(QBluetoothServiceDiscoveryAgent::Error)));
 
     setUpdate("Search");
 }
@@ -72,8 +74,8 @@ Device::Device():
 Device::~Device()
 {
     delete discoveryAgent;
-    delete localDevice;
     delete serviceDiscoveryAgent;
+    delete info;
     qDeleteAll(devices);
     qDeleteAll(m_services);
     qDeleteAll(m_characteristics);
@@ -84,18 +86,14 @@ Device::~Device()
 
 void Device::startDeviceDiscovery()
 {
-    if (m_adapterPresent) {
-        devices.clear();
-        setUpdate("Scanning for devices ...");
-        discoveryAgent->start();
-    }
-    else
-        setUpdate("Bluetooth adapter not discovered");
+    devices.clear();
+    setUpdate("Scanning for devices ...");
+    discoveryAgent->start();
 }
 
 void Device::addDevice(const QBluetoothDeviceInfo &info)
 {
-    if (info.coreConfiguration() == QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    if (info.coreConfiguration() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         DeviceInfo *d = new DeviceInfo(info);
         devices.append(d);
         setUpdate("Last device added: " + d->getName());
@@ -105,7 +103,10 @@ void Device::addDevice(const QBluetoothDeviceInfo &info)
 void Device::scanFinished()
 {
     Q_EMIT devicesDone();
-    setUpdate("Done! Scan Again!");
+    if (devices.isEmpty())
+        setUpdate("No Low Energy devices found...");
+    else
+        setUpdate("Done! Scan Again!");
 }
 
 QVariant Device::getDevices()
@@ -138,20 +139,18 @@ void Device::scanServices(QString address)
     }
 
     m_services.clear();
-    //Connecting signals and slots for service discovery
     QBluetoothDeviceInfo dev = currentDevice.getDevice();
-    connect(serviceDiscoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
-            this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
-    connect(serviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(serviceScanDone()));
     serviceDiscoveryAgent->setRemoteAddress(dev.address());
     serviceDiscoveryAgent->start();
     setUpdate("Scanning for services...");
 
-    // Connecting signals and slots for connecting to LE services.
-    info = new QLowEnergyController();
-    connect(info, SIGNAL(connected(QLowEnergyServiceInfo)), this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
-    connect(info, SIGNAL(error(QLowEnergyServiceInfo)), this, SLOT(errorReceived(QLowEnergyServiceInfo)));
-    connect(info, SIGNAL(disconnected(QLowEnergyServiceInfo)), this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
+    if (!info) {
+        // Connecting signals and slots for connecting to LE services.
+        info = new QLowEnergyController();
+        connect(info, SIGNAL(connected(QLowEnergyServiceInfo)), this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
+        connect(info, SIGNAL(error(QLowEnergyServiceInfo)), this, SLOT(errorReceived(QLowEnergyServiceInfo)));
+        connect(info, SIGNAL(disconnected(QLowEnergyServiceInfo)), this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
+    }
 }
 
 void Device::addLowEnergyService(const QLowEnergyServiceInfo &service)
@@ -171,7 +170,6 @@ void Device::connectToService(const QString &uuid)
     QString serviceUuid = uuid;
     serviceUuid = serviceUuid.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
     QBluetoothUuid u(serviceUuid);
-    qDebug() << u;
     QLowEnergyServiceInfo a;
     for (int i = 0; i < m_services.size(); i++) {
         ServiceInfo *service = (ServiceInfo*)m_services.at(i);
@@ -195,7 +193,7 @@ void Device::serviceConnected(const QLowEnergyServiceInfo &service)
 
 void Device::errorReceived(const QLowEnergyServiceInfo &service)
 {
-    qDebug() << "Error: " << info->errorString() << service.serviceUuid();
+    qWarning() << "Error: " << info->errorString() << service.serviceUuid();
     setUpdate(info->errorString());
 }
 
@@ -213,5 +211,25 @@ void Device::disconnectFromService()
 
 void Device::serviceDisconnected(const QLowEnergyServiceInfo &service)
 {
-    setUpdate("Service Disconnected");
+    setUpdate("Service Disconnected " + service.serviceName());
+}
+
+void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
+{
+    if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError)
+        setUpdate("The Bluetooth adaptor is powered off, power it on before doing discovery.");
+    else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
+        setUpdate("Writing or reading from the device resulted in an error.");
+    else
+        setUpdate("An unknown error has occurred.");
+}
+
+void Device::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)
+{
+    if (error == QBluetoothServiceDiscoveryAgent::PoweredOffError)
+        setUpdate("The Bluetooth adaptor is powered off, power it on before doing discovery.");
+    else if (error == QBluetoothServiceDiscoveryAgent::InputOutputError)
+        setUpdate("Writing or reading from the device resulted in an error.");
+    else
+        setUpdate("An unknown error has occurred.");
 }

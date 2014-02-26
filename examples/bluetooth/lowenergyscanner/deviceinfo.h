@@ -55,8 +55,8 @@ class DeviceInfo: public QObject
 public:
     DeviceInfo();
     DeviceInfo(const QBluetoothDeviceInfo &d);
-    QString getAddress();
-    QString getName();
+    QString getAddress() const;
+    QString getName() const;
     QBluetoothDeviceInfo getDevice();
     void setDevice(const QBluetoothDeviceInfo &dev);
 

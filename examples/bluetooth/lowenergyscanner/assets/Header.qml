@@ -45,13 +45,17 @@ Rectangle {
     height: 70
     border.width: 1
     border.color: "#363636"
+    radius: 5
     property string headerText: ""
 
     Text {
-        anchors.centerIn: parent
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        anchors.fill: parent
         text: headerText
         font.bold: true
         font.pixelSize: 30
+        elide: Text.ElideMiddle
         color: "#363636"
     }
 }

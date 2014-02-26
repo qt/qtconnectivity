@@ -51,12 +51,12 @@ DeviceInfo::DeviceInfo(const QBluetoothDeviceInfo &d)
     Q_EMIT deviceChanged();
 }
 
-QString DeviceInfo::getAddress()
+QString DeviceInfo::getAddress() const
 {
     return device.address().toString();
 }
 
-QString DeviceInfo::getName()
+QString DeviceInfo::getName() const
 {
     return device.name();
 }

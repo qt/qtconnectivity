@@ -60,8 +60,11 @@ Rectangle {
         radius: 10
         Text {
             id: searchText
-            anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            anchors.fill: parent
             text: menuText
+            elide: Text.ElideMiddle
             color: "#E3E3E3"
         }
 
@@ -78,7 +81,6 @@ Rectangle {
             }
 
             onClicked: {
-                ColorAnimation: { to: "#4D4C4C"; duration: 200 }
                 buttonClick()
             }
         }

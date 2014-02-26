@@ -45,5 +45,6 @@ Text {
     font.pixelSize: 30
     anchors.horizontalCenter: parent.horizontalCenter
     color: "#363636"
+    elide: Text.ElideMiddle
     text: textContent
 }
