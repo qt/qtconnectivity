@@ -43,6 +43,7 @@
 #include <QtQml/QQmlExtensionPlugin>
 
 #include "qqmlndefrecord.h"
+//#include "qdeclarativenearfieldsocket_p.h"
 #include "qdeclarativenearfield_p.h"
 #include "qdeclarativendeffilter_p.h"
 #include "qdeclarativendeftextrecord_p.h"
@@ -66,6 +67,7 @@ public:
         // Register the 5.0 types
         int major = 5;
         int minor = 0;
+        //qmlRegisterType<QDeclarativeNearFieldSocket>(uri, major, minor, "NearFieldSocket");
 
         qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
         qmlRegisterType<QDeclarativeNdefFilter>(uri, major, minor, "NdefFilter");
@@ -83,9 +85,9 @@ public:
         qmlRegisterType<QDeclarativeNdefUriRecord>(uri, major, minor, "NdefUriRecord");
         qmlRegisterType<QDeclarativeNdefMimeRecord>(uri, major, minor, "NdefMimeRecord");
 
-        // Register the 5.4 types
-        // introduces 5.4 version, other existing 5.2 exports become automatically available under 5.2-5.4l
-        minor = 4;
+        // Register the 5.3 types
+        // introduces 5.3 version, other existing 5.2 exports automatically become availabe under 5.3 as well
+        minor = 3;
         qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
     }
 };
