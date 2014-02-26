@@ -135,11 +135,6 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     return false;
 }
 
-int QBluetoothSocketPrivate::socketDescriptor() const
-{
-    return 0;
-}
-
 qint64 QBluetoothSocketPrivate::bytesAvailable() const
 {
     return 0;

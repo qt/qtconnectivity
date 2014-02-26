@@ -434,11 +434,6 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socke
     return true;
 }
 
-int QBluetoothSocketPrivate::socketDescriptor() const
-{
-    return 0;
-}
-
 qint64 QBluetoothSocketPrivate::bytesAvailable() const
 {
     //We cannot access buffer directly as it is part of different thread
