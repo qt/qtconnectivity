@@ -5,8 +5,6 @@ testcase.timeout = 250 # this test is slow
 
 QT = core concurrent network bluetooth testlib
 
-INCLUDEPATH += ../../../tests/btclient
-
 OTHER_FILES += \
     README.txt
 

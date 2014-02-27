@@ -54,7 +54,6 @@
 #include <qbluetoothdeviceinfo.h>
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothservicediscoveryagent.h>
-#include <btclient.h>
 
 /*
  * Some tests require a Bluetooth device within the vincinity of the test
