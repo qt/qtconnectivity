@@ -356,7 +356,7 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
     Q_Q(QBluetoothSocket);
     if (state != QBluetoothSocket::ConnectedState || !inputThread) {
         qCWarning(QT_BT_ANDROID) << "Socket::readData: " << state << inputThread ;
-        errorString = QBluetoothSocket::tr("Cannot write while not connected");
+        errorString = QBluetoothSocket::tr("Cannot read while not connected");
         q->setSocketError(QBluetoothSocket::OperationError);
         return -1;
     }
