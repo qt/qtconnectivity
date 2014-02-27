@@ -100,6 +100,15 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     adapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"), reply.value().path(),
                                            QDBusConnection::systemBus());
 
+    if (m_deviceAdapterAddress.isNull()) {
+        QDBusPendingReply<QVariantMap> reply = adapter->GetProperties();
+        reply.waitForFinished();
+        if (!reply.isError()) {
+            const QBluetoothAddress path_address(reply.value().value(QStringLiteral("Address")).toString());
+            m_deviceAdapterAddress = path_address;
+        }
+    }
+
     QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter->CreateDevice(address.toString());
 
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(deviceObjectPath, q);
@@ -212,7 +221,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
             qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << uuid << uuidFilter.size();
             QLowEnergyServiceInfo lowEnergyService(uuid);
-            //TODO Fix m_DeviceAdapterAddress may not be the actual address
             lowEnergyService.d_ptr->adapterAddress = m_deviceAdapterAddress;
             lowEnergyService.setDevice(discoveredDevices.at(0));
             if (uuidFilter.isEmpty())
