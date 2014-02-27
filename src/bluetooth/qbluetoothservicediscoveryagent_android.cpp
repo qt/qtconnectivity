@@ -197,7 +197,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         if (!receiver) {
             receiver = new ServiceDiscoveryBroadcastReceiver();
             QObject::connect(receiver, SIGNAL(uuidFetchFinished(QBluetoothAddress,QList<QBluetoothUuid>)),
-                    q, SLOT(_q_processFetchedUuids(const QBluetoothAddress&,const QList<QBluetoothUuid>&)));
+                    q, SLOT(_q_processFetchedUuids(QBluetoothAddress,QList<QBluetoothUuid>)));
         }
 
         if (!localDeviceReceiver) {

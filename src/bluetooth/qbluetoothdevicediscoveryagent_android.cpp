@@ -120,8 +120,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     if (!receiver) {
         receiver = new DeviceDiscoveryBroadcastReceiver();
         qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
-        QObject::connect(receiver, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
-                         this, SLOT(processDiscoveredDevices(const QBluetoothDeviceInfo&)));
+        QObject::connect(receiver, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+                         this, SLOT(processDiscoveredDevices(QBluetoothDeviceInfo)));
         QObject::connect(receiver, SIGNAL(finished()), this, SLOT(processDiscoveryFinished()));
     }
 
