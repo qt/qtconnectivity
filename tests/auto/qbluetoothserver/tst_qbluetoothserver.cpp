@@ -58,13 +58,13 @@ Q_DECLARE_METATYPE(QBluetoothServer::Error)
 // Max time to wait for connection
 static const int MaxConnectTime = 60 * 1000;   // 1 minute in ms
 
-class tst_QRfcommServer : public QObject
+class tst_QBluetoothServer : public QObject
 {
     Q_OBJECT
 
 public:
-    tst_QRfcommServer();
-    ~tst_QRfcommServer();
+    tst_QBluetoothServer();
+    ~tst_QBluetoothServer();
 
 private slots:
     void initTestCase();
@@ -82,15 +82,15 @@ private:
     QBluetoothLocalDevice::HostMode initialHostMode;
 };
 
-tst_QRfcommServer::tst_QRfcommServer()
+tst_QBluetoothServer::tst_QBluetoothServer()
 {
 }
 
-tst_QRfcommServer::~tst_QRfcommServer()
+tst_QBluetoothServer::~tst_QBluetoothServer()
 {
 }
 
-void tst_QRfcommServer::setHostMode(const QBluetoothAddress &localAdapter,
+void tst_QBluetoothServer::setHostMode(const QBluetoothAddress &localAdapter,
                                     QBluetoothLocalDevice::HostMode newHostMode)
 {
     QBluetoothLocalDevice device(localAdapter);
@@ -124,7 +124,7 @@ void tst_QRfcommServer::setHostMode(const QBluetoothAddress &localAdapter,
     }
 }
 
-void tst_QRfcommServer::initTestCase()
+void tst_QBluetoothServer::initTestCase()
 {
     qRegisterMetaType<QBluetooth::SecurityFlags>("QBluetooth::SecurityFlags");
     qRegisterMetaType<QBluetoothServer::Error>("QBluetoothServer::Error");
@@ -142,13 +142,13 @@ void tst_QRfcommServer::initTestCase()
     QVERIFY(hostMode != QBluetoothLocalDevice::HostPoweredOff);
 }
 
-void tst_QRfcommServer::cleanupTestCase()
+void tst_QBluetoothServer::cleanupTestCase()
 {
     QBluetoothLocalDevice device;
     setHostMode(device.address(), initialHostMode);
 }
 
-void tst_QRfcommServer::tst_construction()
+void tst_QBluetoothServer::tst_construction()
 {
     {
         QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
@@ -173,14 +173,14 @@ void tst_QRfcommServer::tst_construction()
     }
 }
 
-void tst_QRfcommServer::tst_receive_data()
+void tst_QBluetoothServer::tst_receive_data()
 {
     QTest::addColumn<QBluetoothLocalDevice::HostMode>("hostmode");
     QTest::newRow("offline mode") << QBluetoothLocalDevice::HostPoweredOff;
     QTest::newRow("online mode") << QBluetoothLocalDevice::HostConnectable;
 }
 
-void tst_QRfcommServer::tst_receive()
+void tst_QBluetoothServer::tst_receive()
 {
     QFETCH(QBluetoothLocalDevice::HostMode, hostmode);
 
@@ -235,6 +235,6 @@ void tst_QRfcommServer::tst_receive()
 }
 
 
-QTEST_MAIN(tst_QRfcommServer)
+QTEST_MAIN(tst_QBluetoothServer)
 
-#include "tst_qrfcommserver.moc"
+#include "tst_qbluetoothserver.moc"

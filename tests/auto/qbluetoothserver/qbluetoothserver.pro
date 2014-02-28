@@ -1,5 +1,5 @@
-SOURCES += tst_qrfcommserver.cpp
-TARGET = tst_qrfcommserver
+SOURCES += tst_qbluetoothserver.cpp
+TARGET = tst_qbluetoothserver
 CONFIG += testcase
 
 QT = core concurrent bluetooth testlib
