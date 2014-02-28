@@ -55,20 +55,16 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
-int hexValue(char inChar)
+int hexValue(QChar inChar)
 {
-    if (isxdigit(inChar)) {
-        if (isdigit(inChar)) {
-            return (inChar - '0');
-        } else {
-            return (toupper(inChar) - 'A' + 10);
-        }
-    } else {
-        return -1;
-    }
+    if (inChar.isDigit())
+        return (inChar.unicode() - '0');
+    else
+        return (inChar.toUpper().unicode() - 'A' + 10);
+    return -1;
 }
 
-int stringToBuffer(const QString &stringData, uint8_t *buffer, int bufferLength)
+int stringToBuffer(const QString &stringData, quint8 *buffer, int bufferLength)
 {
     int consumed = 0;
     for (int i = 0; i < bufferLength; i++) {
@@ -92,7 +88,7 @@ int stringToBuffer(const QString &stringData, uint8_t *buffer, int bufferLength)
 }
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate():
-    name(QString()), value(QByteArray()), permission(0), instance(-1), handle(QStringLiteral("0x0000")), properties(QVariantMap()), errorString("")
+    permission(0), handle(QStringLiteral("0x0000")), instance(-1)
 {
 
 }
