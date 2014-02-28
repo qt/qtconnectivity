@@ -276,14 +276,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         pps_decoder_cleanup(&ppsDecoder);
         return;
     }
-
+    // Checking for standard Bluetooth services
     pps_decoder_push(&ppsDecoder, "available_services");
-
+    bool standardService = false;
     const char *next_service = 0;
     for (int service_count=0; pps_decoder_get_string(&ppsDecoder, 0, &next_service ) == PPS_DECODER_OK; service_count++) {
         if (next_service == 0)
             break;
-
+        standardService = true;
         qCDebug(QT_BT_QNX) << Q_FUNC_INFO << "Service" << next_service;
 
         QBluetoothServiceInfo serviceInfo;
@@ -343,6 +343,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         }
     }
 
+    if (standardService) // we need to pop back for the LE service scan
+        pps_decoder_pop(&ppsDecoder);
+    //Checking for Bluetooth Low Energy services
     pps_decoder_push(&ppsDecoder, "gatt_available_services");
 
     for (int service_count=0; pps_decoder_get_string(&ppsDecoder, 0, &next_service ) == PPS_DECODER_OK; service_count++) {
@@ -350,17 +353,17 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
             break;
 
         QString lowEnergyUuid(next_service);
-        lowEnergyUuid = QStringLiteral("0x") + lowEnergyUuid;
         qCDebug(QT_BT_QNX) << "LE Service: " << lowEnergyUuid << next_service;
         QBluetoothUuid leUuid;
 
-        //In case of UUIDs that are id development phase (e.g. Texas Instruments SenstorTag LE Device)
-        if ( lowEnergyUuid.toUShort(0, 0) == 0 && lowEnergyUuid.contains("000000000000") ) {
-            lowEnergyUuid = lowEnergyUuid.remove(0,2);
+        //In case of custom UUIDs (e.g. Texas Instruments SenstorTag LE Device)
+        if ( lowEnergyUuid.length() > 4 ) {
             leUuid = QBluetoothUuid(lowEnergyUuid);
         }
-        else
+        else {// Official UUIDs are presented in 4 characters (for instance 180A)
+            lowEnergyUuid = QStringLiteral("0x") + lowEnergyUuid;
             leUuid = QBluetoothUuid(lowEnergyUuid.toUShort(0,0));
+        }
 
         QLowEnergyServiceInfo lowEnergyService(leUuid);
         lowEnergyService.setDevice(discoveredDevices.at(0));
