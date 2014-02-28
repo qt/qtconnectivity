@@ -127,9 +127,20 @@ void QBluetoothServer::close()
 
 bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 port)
 {
+    Q_D(QBluetoothServer);
+    if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->m_lastError = UnsupportedProtocolError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
     const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
-    if (!localDevices.count())
+    if (!localDevices.count()) {
+        qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
         return false; //no Bluetooth device
+    }
 
     if (!localAdapter.isNull()) {
         bool found = false;
@@ -144,13 +155,6 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
             qCWarning(QT_BT_ANDROID) << localAdapter.toString() << "is not a valid local Bt adapter";
             return false;
         }
-    }
-
-    Q_D(QBluetoothServer);
-    if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->m_lastError = UnsupportedProtocolError;
-        emit error(d->m_lastError);
-        return false;
     }
 
     if (d->isListening())

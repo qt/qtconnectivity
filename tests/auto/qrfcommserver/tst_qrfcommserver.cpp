@@ -49,7 +49,11 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetooth::SecurityFlags);
+//same uuid as tests/bttestui
+#define TEST_SERVICE_UUID "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
+
+Q_DECLARE_METATYPE(QBluetooth::SecurityFlags)
+Q_DECLARE_METATYPE(QBluetoothServer::Error)
 
 // Max time to wait for connection
 static const int MaxConnectTime = 60 * 1000;   // 1 minute in ms
@@ -64,24 +68,18 @@ public:
 
 private slots:
     void initTestCase();
+    void cleanupTestCase();
 
     void tst_construction();
-
-    void tst_listen_data();
-    void tst_listen();
-
-    void tst_secureFlags();
-
-    void tst_pendingConnections_data();
-    void tst_pendingConnections();
 
     void tst_receive_data();
     void tst_receive();
 
-    void tst_error();
+    void setHostMode(const QBluetoothAddress &localAdapter, QBluetoothLocalDevice::HostMode newHostMode);
 
 private:
     QBluetoothLocalDevice localDevice;
+    QBluetoothLocalDevice::HostMode initialHostMode;
 };
 
 tst_QRfcommServer::tst_QRfcommServer()
@@ -92,29 +90,62 @@ tst_QRfcommServer::~tst_QRfcommServer()
 {
 }
 
+void tst_QRfcommServer::setHostMode(const QBluetoothAddress &localAdapter,
+                                    QBluetoothLocalDevice::HostMode newHostMode)
+{
+    QBluetoothLocalDevice device(localAdapter);
+    QSignalSpy hostModeSpy(&device, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
+
+    if (!device.isValid())
+        return;
+
+    if (device.hostMode() == newHostMode)
+        return;
+
+    //We distinguish powerOn() and setHostMode(HostConnectable) because
+    //Android uses different permission levels, we want to avoid interaction with user
+    //which implies usage of powerOn -> unfortunately powerOn() is not equivalent to HostConnectable
+    //Unfortunately the discoverable mode always requires a user confirmation
+    switch (newHostMode) {
+    case QBluetoothLocalDevice::HostPoweredOff:
+    case QBluetoothLocalDevice::HostDiscoverable:
+    case QBluetoothLocalDevice::HostDiscoverableLimitedInquiry:
+        device.setHostMode(newHostMode);
+        break;
+    case QBluetoothLocalDevice::HostConnectable:
+        device.powerOn();
+        break;
+    }
+
+    int connectTime = 5000;  // ms
+    while (hostModeSpy.count() < 1 && connectTime > 0) {
+        QTest::qWait(500);
+        connectTime -= 500;
+    }
+}
+
 void tst_QRfcommServer::initTestCase()
 {
     qRegisterMetaType<QBluetooth::SecurityFlags>("QBluetooth::SecurityFlags");
+    qRegisterMetaType<QBluetoothServer::Error>("QBluetoothServer::Error");
 
-    if (!QBluetoothLocalDevice::allDevices().count())
-        QSKIP("Skipping test due to missing Bluetooth device");
+    QBluetoothLocalDevice device;
+    if (!device.isValid())
+        return;
 
-    // turn on BT in case it is not on
-    if (localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
-        QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
-        QVERIFY(hostModeSpy.isEmpty());
-        localDevice.powerOn();
-        int connectTime = 5000;  // ms
-        while (hostModeSpy.count() < 1 && connectTime > 0) {
-            QTest::qWait(500);
-            connectTime -= 500;
-        }
-        QVERIFY(hostModeSpy.count() > 0);
-    }
+    initialHostMode = device.hostMode();
+
+    setHostMode(device.address(), QBluetoothLocalDevice::HostConnectable);
+
     QBluetoothLocalDevice::HostMode hostMode= localDevice.hostMode();
-    QVERIFY(hostMode == QBluetoothLocalDevice::HostConnectable
-         || hostMode == QBluetoothLocalDevice::HostDiscoverable
-         || hostMode == QBluetoothLocalDevice::HostDiscoverableLimitedInquiry);
+
+    QVERIFY(hostMode != QBluetoothLocalDevice::HostPoweredOff);
+}
+
+void tst_QRfcommServer::cleanupTestCase()
+{
+    QBluetoothLocalDevice device;
+    setHostMode(device.address(), initialHostMode);
 }
 
 void tst_QRfcommServer::tst_construction()
@@ -126,207 +157,83 @@ void tst_QRfcommServer::tst_construction()
         QCOMPARE(server.maxPendingConnections(), 1);
         QVERIFY(!server.hasPendingConnections());
         QVERIFY(server.nextPendingConnection() == 0);
-        QVERIFY(server.serverAddress().isNull());
-        QCOMPARE(server.serverPort(), quint16(0));
+        QCOMPARE(server.error(), QBluetoothServer::NoError);
+        QCOMPARE(server.serverType(), QBluetoothServiceInfo::RfcommProtocol);
     }
-}
-
-void tst_QRfcommServer::tst_listen_data()
-{
-    QTest::addColumn<QBluetoothAddress>("address");
-    QTest::addColumn<quint16>("port");
-
-    QTest::newRow("default") << QBluetoothAddress() << quint16(0);
-    QTest::newRow("specified address") << QBluetoothAddress("00:11:B1:08:AD:B8") << quint16(0);
-    QTest::newRow("specified port") << QBluetoothAddress() << quint16(10);
-    QTest::newRow("specified address/port") << QBluetoothAddress("00:11:B1:08:AD:B8") << quint16(10);
-}
-
-void tst_QRfcommServer::tst_listen()
-{
-    QFETCH(QBluetoothAddress, address);
-    QFETCH(quint16, port);
 
     {
-        QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
-        qDebug() << "tst_listen() address=" << address.toString() << "port=" << port;
-        bool result = server.listen(address, port);
-        QTest::qWait(1000);
-
-        QVERIFY(result);
-        QVERIFY(server.isListening());
-
-        if (!address.isNull())
-            QCOMPARE(server.serverAddress(), address);
-
-        qDebug()<<"Server Port="<<server.serverPort();
-        if (port != 0)
-            QCOMPARE(server.serverPort(), port);
-        else
-            QVERIFY(server.serverPort() != 0);
-
-        QCOMPARE(server.maxPendingConnections(), 1);
-
-        QVERIFY(!server.hasPendingConnections());
-        QVERIFY(server.nextPendingConnection() == 0);
-
-        server.close();
-        QTest::qWait(2000);
+        QBluetoothServer server(QBluetoothServiceInfo::L2capProtocol);
 
         QVERIFY(!server.isListening());
-
-        QVERIFY(server.serverAddress().isNull());
-        QVERIFY(server.serverPort() == 0);
-
-        QVERIFY(server.hasPendingConnections() == false);
+        QCOMPARE(server.maxPendingConnections(), 1);
+        QVERIFY(!server.hasPendingConnections());
         QVERIFY(server.nextPendingConnection() == 0);
+        QCOMPARE(server.error(), QBluetoothServer::NoError);
+        QCOMPARE(server.serverType(), QBluetoothServiceInfo::L2capProtocol);
     }
-}
-
-void tst_QRfcommServer::tst_pendingConnections_data()
-{
-    QTest::addColumn<int>("maxConnections");
-
-    QTest::newRow("1 connection") << 1;
-    //QTest::newRow("2 connections") << 2;
-}
-
-void tst_QRfcommServer::tst_pendingConnections()
-{
-    QFETCH(int, maxConnections);
-
-    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
-    QBluetoothLocalDevice localDev;
-
-    QBluetoothAddress address = localDev.address();
-    server.setMaxPendingConnections(maxConnections);
-    bool result = server.listen(address, 20);  // port == 20
-    QTest::qWait(1000);
-
-    QVERIFY(result);
-    QVERIFY(server.isListening());
-
-    qDebug() << "tst_pendingConnections() Listening on address " << address.toString() << "RFCOMM channel:" << server.serverPort();
-
-    QCOMPARE(server.maxPendingConnections(), maxConnections);
-
-    QVERIFY(!server.hasPendingConnections());
-    QVERIFY(server.nextPendingConnection() == 0);
-
-    /* wait for maxConnections simultaneous connections */
-    qDebug() << "Waiting for" << maxConnections << "simultaneous connections.";
-
-    QSignalSpy connectionSpy(&server, SIGNAL(newConnection()));
-
-    int connectTime = MaxConnectTime;
-    while (connectionSpy.count() < maxConnections && connectTime > 0) {
-        QTest::qWait(1000);
-        connectTime -= 1000;
-    }
-
-    QList<QBluetoothSocket *> sockets;
-    while (server.hasPendingConnections())
-        sockets.append(server.nextPendingConnection());
-
-    QCOMPARE(connectionSpy.count(), maxConnections);
-    QCOMPARE(sockets.count(), maxConnections);
-
-    foreach (QBluetoothSocket *socket, sockets) {
-        qDebug() << socket->state();
-        QVERIFY(socket->state() == QBluetoothSocket::ConnectedState);
-        QVERIFY(socket->openMode() == QIODevice::ReadWrite);
-    }
-
-    QVERIFY(!server.hasPendingConnections());
-    QVERIFY(server.nextPendingConnection() == 0);
-
-    while (!sockets.isEmpty()) {
-        QBluetoothSocket *socket = sockets.takeFirst();
-        socket->close();
-        delete socket;
-    }
-
-    server.close();
 }
 
 void tst_QRfcommServer::tst_receive_data()
 {
-    QTest::addColumn<QByteArray>("expected");
-
-    QTest::newRow("test") << QByteArray("hello\r\n");
+    QTest::addColumn<QBluetoothLocalDevice::HostMode>("hostmode");
+    QTest::newRow("offline mode") << QBluetoothLocalDevice::HostPoweredOff;
+    QTest::newRow("online mode") << QBluetoothLocalDevice::HostConnectable;
 }
 
 void tst_QRfcommServer::tst_receive()
 {
-    QFETCH(QByteArray, expected);
+    QFETCH(QBluetoothLocalDevice::HostMode, hostmode);
 
-    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
     QBluetoothLocalDevice localDev;
+    const QBluetoothAddress address = localDev.address();
 
-    QBluetoothAddress address = localDev.address();
+    bool localDeviceAvailable = localDev.isValid();
+
+    if (localDeviceAvailable) {
+        setHostMode(address, hostmode);
+
+        if (hostmode == QBluetoothLocalDevice::HostPoweredOff)
+            QCOMPARE(localDevice.hostMode(), hostmode);
+        else
+            QVERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+    }
+    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
+    QSignalSpy errorSpy(&server, SIGNAL(error(QBluetoothServer::Error)));
+
     bool result = server.listen(address, 20);  // port == 20
     QTest::qWait(1000);
 
+    if (!result) {
+        QCOMPARE(server.serverAddress(), QBluetoothAddress());
+        QCOMPARE(server.serverPort(), quint16(0));
+        QVERIFY(errorSpy.count() > 0);
+        QVERIFY(!server.isListening());
+        if (!localDeviceAvailable) {
+            QVERIFY(server.error() != QBluetoothServer::NoError);
+        } else {
+            //local device but poweredOff
+            QCOMPARE(server.error(), QBluetoothServer::PoweredOffError);
+        }
+        return;
+    }
+
     QVERIFY(result);
+
+    QVERIFY(QBluetoothLocalDevice::allDevices().count());
+    QCOMPARE(server.error(), QBluetoothServer::NoError);
+    QCOMPARE(server.serverAddress(), address);
+    QCOMPARE(server.serverPort(), quint16(20));
     QVERIFY(server.isListening());
+    QVERIFY(!server.hasPendingConnections());
 
-    qDebug() << "Listening on address " << address.toString() << "RFCOMM channel:" << server.serverPort();
-
-    int connectTime = MaxConnectTime;
-    while (!server.hasPendingConnections() && connectTime > 0) {
-        QTest::qWait(1000);
-        connectTime -= 1000;
-    }
-
-    QVERIFY(server.hasPendingConnections());
-
-    qDebug() << "Got connection";
-
-    QBluetoothSocket *socket = server.nextPendingConnection();
-
-    QVERIFY(socket->state() == QBluetoothSocket::ConnectedState);
-    QVERIFY(socket->openMode() == QIODevice::ReadWrite);
-
-    QSignalSpy readyReadSpy(socket, SIGNAL(readyRead()));
-
-    int readyReadTime = 60000;
-    while (readyReadSpy.isEmpty() && readyReadTime > 0) {
-        QTest::qWait(1000);
-        readyReadTime -= 1000;
-    }
-
-    QVERIFY(!readyReadSpy.isEmpty());
-
-    const QByteArray data = socket->readAll();
-
-    QCOMPARE(data, expected);
+    server.close();
+    QCOMPARE(server.error(), QBluetoothServer::NoError);
+    QVERIFY(server.serverAddress() == address || server.serverAddress() == QBluetoothAddress());
+    QVERIFY(server.serverPort() == 0);
+    QVERIFY(!server.isListening());
+    QVERIFY(!server.hasPendingConnections());
 }
 
-void tst_QRfcommServer::tst_secureFlags()
-{
-    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
-
-    server.setSecurityFlags(QBluetooth::NoSecurity);
-    QCOMPARE(server.securityFlags(), QBluetooth::NoSecurity);
-
-    server.setSecurityFlags(QBluetooth::Encryption);
-    QCOMPARE(server.securityFlags(), QBluetooth::Encryption);
-}
-
-
-void tst_QRfcommServer::tst_error()
-{
-    QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
-    QSignalSpy errorSpy(&server, SIGNAL(error(QBluetoothServer::Error)));
-    QCOMPARE(errorSpy.count(), 0);
-    const QBluetoothServer::Error e = server.error();
-
-    QVERIFY(e != QBluetoothServer::UnknownError
-            && e != QBluetoothServer::PoweredOffError
-            && e != QBluetoothServer::InputOutputError
-            && e != QBluetoothServer::ServiceAlreadyRegisteredError
-            && e != QBluetoothServer::UnsupportedProtocolError);
-}
 
 QTEST_MAIN(tst_QRfcommServer)
 

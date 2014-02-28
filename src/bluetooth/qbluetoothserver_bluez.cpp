@@ -42,6 +42,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
+#include "qbluetoothlocaldevice.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QSocketNotifier>
@@ -108,6 +109,23 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (d->socket->state() == QBluetoothSocket::ListeningState) {
         qCWarning(QT_BT_BLUEZ) << "Socket already in listen mode, close server first";
         return false; //already listening, nothing to do
+    }
+
+    QBluetoothLocalDevice device(address);
+    if (!device.isValid()) {
+        qCWarning(QT_BT_BLUEZ) << "Device does not support Bluetooth or"
+                                 << address.toString() << "is not a valid local adapter";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    QBluetoothLocalDevice::HostMode hostMode = device.hostMode();
+    if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        d->m_lastError = QBluetoothServer::PoweredOffError;
+        emit error(d->m_lastError);
+        qCWarning(QT_BT_BLUEZ) << "Bluetooth device is powered off";
+        return false;
     }
 
     int sock = d->socket->socketDescriptor();

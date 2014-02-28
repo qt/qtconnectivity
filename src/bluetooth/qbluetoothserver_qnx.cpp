@@ -163,6 +163,23 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
     }
 
+    QBluetoothLocalDevice device(address);
+    if (!device.isValid()) {
+        qCWarning(QT_BT_QNX) << "Device does not support Bluetooth or"
+                                 << address.toString() << "is not a valid local adapter";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    QBluetoothLocalDevice::HostMode hostMode= device.hostMode();
+    if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        d->m_lastError = QBluetoothServer::PoweredOffError;
+        emit error(d->m_lastError);
+        qCWarning(QT_BT_QNX) << "Bluetooth device is powered off";
+        return false;
+    }
+
     // listen has already been called before
     if (!d->socket)
         d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
