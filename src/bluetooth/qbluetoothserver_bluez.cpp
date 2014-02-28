@@ -160,7 +160,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         if (!address.isNull())
             convertAddress(address.toUInt64(), addr.rc_bdaddr.b);
         else
-            convertAddress(Q_UINT64_C(0), addr.rc_bdaddr.b);
+            convertAddress(device.address().toUInt64(), addr.rc_bdaddr.b);
 
 
         if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0) {
