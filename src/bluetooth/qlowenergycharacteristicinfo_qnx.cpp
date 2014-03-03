@@ -88,7 +88,7 @@ int stringToBuffer(const QString &stringData, quint8 *buffer, int bufferLength)
 }
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate():
-    permission(0), handle(QStringLiteral("0x0000")), instance(-1)
+    permission(0), notification(false), handle(QStringLiteral("0x0000")), instance(-1)
 {
 
 }
@@ -119,11 +119,12 @@ void QLowEnergyCharacteristicInfoPrivate::serviceNotification(int instance, shor
             QByteArray receivedValue;
 
             for (int j = 0; j < len; j++) {
-                QString hexadecimal;
-                hexadecimal.setNum(val[j], 16);
-                receivedValue.append(hexadecimal.toLatin1());
+                QByteArray hexadecimal;
+                hexadecimal.append(val[j]);
+                receivedValue.append(hexadecimal.toHex());
             }
 
+            p->characteristicList.at(i).d_ptr->notification = true;
             p->characteristicList.at(i).d_ptr->setValue(receivedValue);
             current = true;
         }
@@ -186,7 +187,7 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
             }
         }
     }
-    else {
+    else if (!notification) {
         errorString = QStringLiteral("Characteristic does not allow write operations. The wanted value was not written to the device.");
         emit error(uuid);
     }
