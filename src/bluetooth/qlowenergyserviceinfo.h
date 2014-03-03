@@ -64,15 +64,6 @@ public:
         IncludedService = 0x00000002
     };
 
-    enum Error {
-        ConnectionRefused = 0x001,
-        DeviceBusy = 0x002,
-        InitializationFailed = 0x003,
-        MemoryAllocation = 0x004,
-        DisconnectFail = 0x005,
-        UnknownError = 0x006
-    };
-
     QLowEnergyServiceInfo();
     QLowEnergyServiceInfo(const QBluetoothUuid &uuid);
     QLowEnergyServiceInfo(const QLowEnergyServiceInfo &other);

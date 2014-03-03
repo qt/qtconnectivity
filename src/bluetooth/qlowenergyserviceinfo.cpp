@@ -70,22 +70,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \enum QLowEnergyServiceInfo::Error
-
-    This enum describes the type of an error that can appear.
-
-    \value ConnectionRefused        The connection to the service was refused. This can be caused if the device
-                                    got turned off or it has a random device address. To solve
-                                    the case if device has a random address on linux platform
-                                    setRandomAddress() method must be called before connecting.
-    \value DeviceBusy               The device is already connected to another Bluetooth device.
-    \value InitializationFailed     Could not initialize GATT callbacks.
-    \value MemoryAllocation         Could not initialize memory needed for reading GATT characteristics.
-    \value DisconnectFail           Could not disconnect from the service.
-    \value UnknownError             Unknown error.
-*/
-
-/*!
     Method for parsing the service name with given \a uuid.
  * \brief parseUuid
  * \param uuid

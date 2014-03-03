@@ -59,16 +59,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \enum QLowEnergyCharacteristicInfo::Error
-
-    This enum describes the type of an error that can appear.
-
-    \value NotificationFail         Could not subscribe or could not get notifications from wanted characteristic.
-    \value NotConnected             GATT Service is not connected.
-    \value UnknownError             Unknown error.
-*/
-
-/*!
     \enum QLowEnergyCharacteristicInfo::Property
 
     This enum describes the properties of a characteristic.

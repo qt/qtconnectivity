@@ -60,12 +60,6 @@ class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
     friend class QLowEnergyCharacteristicInfoPrivate;
 public:
 
-    enum Error {
-        NotificationFail = 0x001,
-        NotConnected = 0x002,
-        UnknownError = 0x003
-    };
-
     enum Property {
         Broadcasting = 0x01,
         Read = 0x02,
