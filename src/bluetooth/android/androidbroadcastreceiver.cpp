@@ -91,13 +91,12 @@ void AndroidBroadcastReceiver::unregisterReceiver()
                 broadcastReceiverObject.object<jobject>());
 }
 
-void AndroidBroadcastReceiver::addAction(const QString &action)
+void AndroidBroadcastReceiver::addAction(const QAndroidJniObject &action)
 {
-    if (!valid)
+    if (!valid || !action.isValid())
         return;
 
-    QAndroidJniObject actionString = QAndroidJniObject::fromString(action);
-    intentFilterObject.callMethod<void>("addAction", "(Ljava/lang/String;)V", actionString.object<jstring>());
+    intentFilterObject.callMethod<void>("addAction", "(Ljava/lang/String;)V", action.object<jstring>());
 
     activityObject.callObjectMethod(
                 "registerReceiver",

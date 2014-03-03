@@ -1,6 +1,5 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Lauri Laanmets (Proekspert AS) <lauri.laanmets@eesti.ee>
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
@@ -40,38 +39,39 @@
 **
 ****************************************************************************/
 
-#ifndef JNIBROADCASTRECEIVER_H
-#define JNIBROADCASTRECEIVER_H
-#include <jni.h>
-#include <QtCore/QObject>
-#include <android/log.h>
+#ifndef JNI_ANDROID_P_H
+#define JNI_ANDROID_P_H
+
+#include <QtAndroidExtras/QAndroidJniEnvironment>
 #include <QtAndroidExtras/QAndroidJniObject>
 
 QT_BEGIN_NAMESPACE
 
-void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, jobject, jobject);
-
-class AndroidBroadcastReceiver: public QObject
-{
-    Q_OBJECT
-public:
-    AndroidBroadcastReceiver(QObject* parent = 0);
-    virtual ~AndroidBroadcastReceiver();
-
-    void addAction(const QAndroidJniObject &filter);
-    bool isValid() const;
-
-protected:
-    friend void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, jobject, jobject);
-    virtual void onReceive(JNIEnv *env, jobject context, jobject intent) = 0;
-
-    void unregisterReceiver();
-
-    QAndroidJniObject activityObject;
-    QAndroidJniObject intentFilterObject;
-    QAndroidJniObject broadcastReceiverObject;
-    bool valid;
+enum JavaNames {
+    BluetoothAdapter = 0,
+    BluetoothDevice,
+    ActionAclConnected,
+    ActionAclDisconnected,
+    ActionBondStateChanged,
+    ActionDiscoveryStarted,
+    ActionDiscoveryFinished,
+    ActionFound,
+    ActionPairingRequest,
+    ActionScanModeChanged,
+    ActionUuid,
+    ExtraBondState,
+    ExtraDevice,
+    ExtraPairingKey,
+    ExtraPairingVariant,
+    ExtraRssi,
+    ExtraScanMode,
+    ExtraUuid
 };
 
+QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName);
+
+
+
 QT_END_NAMESPACE
-#endif // JNIBROADCASTRECEIVER_H
+
+#endif // JNI_ANDROID_P_H
