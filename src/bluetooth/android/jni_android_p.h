@@ -70,8 +70,6 @@ enum JavaNames {
 
 QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName);
 
-
-
 QT_END_NAMESPACE
 
 #endif // JNI_ANDROID_P_H

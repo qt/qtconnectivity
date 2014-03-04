@@ -48,6 +48,9 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
+const char *scanModes[] = {"SCAN_MODE_NONE", "SCAN_MODE_CONNECTABLE", "SCAN_MODE_CONNECTABLE_DISCOVERABLE"};
+const char *bondModes[] = {"BOND_NONE", "BOND_BONDING", "BOND_BONDED"};
+
 LocalDeviceBroadcastReceiver::LocalDeviceBroadcastReceiver(QObject *parent) :
     AndroidBroadcastReceiver(parent), previousScanMode(0)
 {
@@ -57,6 +60,31 @@ LocalDeviceBroadcastReceiver::LocalDeviceBroadcastReceiver(QObject *parent) :
     addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionAclDisconnected));
     if (QtAndroidPrivate::androidSdkVersion() >= 19)
         addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionPairingRequest)); //API 19
+
+    //cache integer values for host & bonding mode
+    //don't use the java fields directly but refer to them by name
+    QAndroidJniEnvironment env;
+    for (uint i = 0; i < (sizeof(hostModePreset)/sizeof(hostModePreset[0])); i++) {
+        hostModePreset[i] = QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothAdapter",
+                                                scanModes[i]);
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+            hostModePreset[i] = 0;
+        }
+    }
+
+    for (uint i = 0; i < (sizeof(bondingModePreset)/sizeof(bondingModePreset[0])); i++) {
+        bondingModePreset[i] = QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothDevice",
+                                                bondModes[i]);
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+            bondingModePreset[i] = 0;
+        }
+    }
 }
 
 void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobject intent)
@@ -83,20 +111,14 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
         if (previousScanMode != extra) {
             previousScanMode = extra;
 
-            switch (extra) {
-                case 20: //BluetoothAdapter.SCAN_MODE_NONE
-                    emit hostModeStateChanged(QBluetoothLocalDevice::HostPoweredOff);
-                    break;
-                case 21: //BluetoothAdapter.SCAN_MODE_CONNECTABLE
-                    emit hostModeStateChanged(QBluetoothLocalDevice::HostConnectable);
-                    break;
-                case 23: //BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
-                    emit hostModeStateChanged(QBluetoothLocalDevice::HostDiscoverable);
-                    break;
-                default:
-                    qCWarning(QT_BT_ANDROID) << "Unknown Host State";
-                    break;
-            }
+            if (extra == hostModePreset[0])
+                emit hostModeStateChanged(QBluetoothLocalDevice::HostPoweredOff);
+            else if (extra == hostModePreset[1])
+                emit hostModeStateChanged(QBluetoothLocalDevice::HostConnectable);
+            else if (extra == hostModePreset[2])
+                emit hostModeStateChanged(QBluetoothLocalDevice::HostDiscoverable);
+            else
+                qCWarning(QT_BT_ANDROID) << "Unknown Host State";
         }
     } else if (action == valueForStaticField(JavaNames::BluetoothDevice,
                                              JavaNames::ActionBondStateChanged).toString()) {
@@ -120,17 +142,13 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
         if (address.isNull())
                 return;
 
-        switch (bondState) {
-        case 10: //BluetoothDevice.BOND_NONE
+        if (bondState == bondingModePreset[0])
             emit pairingStateChanged(address, QBluetoothLocalDevice::Unpaired);
-            break;
-        case 11: //BluetoothDevice.BOND_BONDING
-            //we ignore this as Qt doesn't have equivalent API.
-            break;
-        case 12: //BluetoothDevice.BOND_BONDED
+        else if (bondState == bondingModePreset[1])
+            ; //we ignore this as Qt doesn't have equivalent API value
+        else if (bondState == bondingModePreset[2])
             emit pairingStateChanged(address, QBluetoothLocalDevice::Paired);
-            break;
-        default:
+        else
             qCWarning(QT_BT_ANDROID) << "Unknown BOND_STATE_CHANGED value:" << bondState;
 
     } else if (action == valueForStaticField(JavaNames::BluetoothDevice,
