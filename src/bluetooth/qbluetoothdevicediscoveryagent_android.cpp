@@ -70,7 +70,10 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
     if (m_active)
         stop();
 
-    delete receiver;
+    if (receiver) {
+        receiver->unregisterReceiver();
+        delete receiver;
+    }
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const

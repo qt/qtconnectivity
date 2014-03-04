@@ -60,12 +60,12 @@ public:
 
     void addAction(const QAndroidJniObject &filter);
     bool isValid() const;
+    void unregisterReceiver();
 
 protected:
     friend void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, jobject, jobject);
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent) = 0;
 
-    void unregisterReceiver();
 
     QAndroidJniObject activityObject;
     QAndroidJniObject intentFilterObject;
