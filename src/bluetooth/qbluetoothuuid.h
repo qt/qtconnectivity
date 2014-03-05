@@ -133,7 +133,7 @@ public:
         MessageAccessServer = 0x1132,
         MessageNotificationServer = 0x1133,
         MessageAccessProfile = 0x1134,
-        PnPInformation = 0x1135,
+        PnPInformation = 0x1200,
         GenericNetworking = 0x1201,
         GenericFileTransfer = 0x1202,
         GenericAudio = 0x1203,

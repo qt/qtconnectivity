@@ -338,7 +338,7 @@ static QString serviceNameForClassUuid(const uint value)
     case QBluetoothUuid::MessageAccessServer: return QBluetoothServiceDiscoveryAgent::tr("Message Access Server");
     case QBluetoothUuid::MessageNotificationServer: return QBluetoothServiceDiscoveryAgent::tr("Message Notification Server");
     case QBluetoothUuid::MessageAccessProfile: return QBluetoothServiceDiscoveryAgent::tr("Message Access");
-    case QBluetoothUuid::PnPInformation: return QBluetoothServiceDiscoveryAgent::tr("Navigation Satellite System");
+    case QBluetoothUuid::PnPInformation: return QBluetoothServiceDiscoveryAgent::tr("Device Identification");
     //case QBluetoothUuid::GenericNetworking: return QBluetoothServiceDiscoveryAgent::tr("");
     //case QBluetoothUuid::GenericFileTransfer: return QBluetoothServiceDiscoveryAgent::tr("");
     //case QBluetoothUuid::GenericAudio: return QBluetoothServiceDiscoveryAgent::tr("");
