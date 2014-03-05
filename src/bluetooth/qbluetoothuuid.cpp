@@ -158,9 +158,6 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value HDP                    Health Device Profile
     \value HDPSource              Health Device Profile
     \value HDPSink                Health Device Profile
-
-    \sa QBluetoothServiceInfo::ServiceClassIds
-
     \value HardcopyCableReplacement   Hardcopy Cable Replacement Profile (HCRP)
     \value HCRPrint                   Hardcopy Cable Replacement Profile (HCRP)
     \value HCRScan                    Hardcopy Cable Replacement Profile (HCRP)
@@ -183,45 +180,50 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value HDP                        Health Device Profile
     \value HDPSource                  Health Device Profile
     \value HDPSink                    Health Device Profile
-    \value AlertNotificationService   The Alert Notification service exposes alert information on a device.
-    \value BatteryService             The Battery Service exposes the state of a battery within a device.
-    \value BloodPressure              This service exposes blood pressure and other data from a blood pressure
-                                      monitor intended for healthcare applications.
-    \value CurrentTimeService         This service defines how the current time can be exposed using
+    \value GenericAccess              Generic access service for Bluetooth Low Energy devices UUID (service).
+                                      It contains generic information about the device. All available Characteristics are readonly.
+    \value GenericAttribute
+    \value ImmediateAlert             Immediate Alert UUID (service). The service exposes a control point to allow a peer
+                                      device to cause the device to immediately alert.
+    \value LinkLoss                   Link Loss UUID (service). The service defines behavior when a link is lost between two devices.
+    \value TxPower                    Transmission Power UUID (service). The service exposes a device’s current
+                                      transmit power level when in a connection.
+    \value CurrentTimeService         Current Time UUID (service). The service defines how the current time can be exposed using
                                       the Generic Attribute Profile (GATT).
-    \value CyclingPower               This service exposes power- and force-related data and
+    \value ReferenceTimeUpdateService Reference Time update UUID (service). The service defines how a client can request
+                                      an update from a reference time source from a time server.
+    \value NextDSTChangeService       Next DST change UUID (service). The service defines how the information about an
+                                      upcoming DST change can be exposed.
+    \value Glucose                    Glucose UUID (service). The service exposes glucose and other data from a glucose sensor
+                                      for use in consumer and professional healthcare applications.
+    \value HealthThermometer          Health Thermometer UUID (service). The Health Thermometer service exposes temperature
+                                      and other data from a thermometer intended for healthcare and fitness applications.
+    \value DeviceInformation          Device Information UUID (service). The Device Information Service exposes manufacturer
+                                      and/or vendor information about a device.
+    \value HeartRate                  Heart Rate UUID (service). The service exposes the heart rate and other data from a
+                                      Heart Rate Sensor intended for fitness applications.
+    \value PhoneAlertStatusService    Phone Alert Status UUID (service). The service exposes the phone alert status when
+                                      in a connection.
+    \value BatteryService             Battery UUID (service). The Battery Service exposes the state of a battery within a device.
+    \value BloodPressure              Blood Pressure UUID (service). The service exposes blood pressure and other data from a blood pressure
+                                      monitor intended for healthcare applications.
+    \value AlertNotificationService   Alert Notification UUID (service). The Alert Notification service exposes alert
+                                      information on a device.
+    \value HumanInterfaceDevice       Human Interface UUID (service). The service exposes the HID reports and other HID data
+                                      intended for HID Hosts and HID Devices.
+    \value ScanParameters             Scan Parameters UUID (service). The Scan Parameters Service enables a GATT Server device
+                                      to expose a characteristic for the GATT Client to write its scan interval and scan window
+                                      on the GATT Server device.
+    \value RunningSpeedAndCadence     Runnung Speed and Cadence UUID (service). The service exposes speed, cadence and other
+                                      data from a Running Speed and Cadence Sensor intended for fitness applications.
+    \value CyclingSpeedAndCadence     Cycling Speed and Cadence UUID (service). The service exposes speed-related and
+                                      cadence-related data from a Cycling Speed and Cadence sensor intended for fitness
+                                      applications.
+    \value CyclingPower               Cycling Speed UUID (service). The service exposes power- and force-related data and
                                       optionally speed- and cadence-related data from a Cycling Power
                                       sensor intended for sports and fitness applications.
-    \value CyclingSpeedAndCadence     This service exposes speed-related and cadence-related data from
-                                      a Cycling Speed and Cadence sensor intended for fitness applications.
-    \value DeviceInformation          The Device Information Service exposes manufacturer and/or vendor
-                                      information about a device.
-    \value GenericAccess              The generic_access service contains generic information about the device.
-                                      All available Characteristics are readonly.
-    \value GenericAttribute
-    \value Glucose                    This service exposes glucose and other data from a glucose sensor for use
-                                      in consumer and professional healthcare applications.
-    \value HealthThermometer          The Health Thermometer service exposes temperature and other data from
-                                      a thermometer intended for healthcare and fitness applications.
-    \value HeartRate                  This service exposes heart rate and other data from a Heart Rate Sensor
-                                      intended for fitness applications.
-    \value HumanInterfaceDevice       This service exposes the HID reports and other HID data intended for
-                                      HID Hosts and HID Devices.
-    \value ImmediateAlert             This service exposes a control point to allow a peer device to cause
-                                      the device to immediately alert.
-    \value LinkLoss                   This service defines behavior when a link is lost between two devices.
-    \value LocationAndNavigation      This service exposes location and navigation-related data from
-                                      a Location and Navigation sensor intended for outdoor activity applications.
-    \value NextDSTChangeService       This service defines how the information about an upcoming DST change can be
-                                      exposed using the Generic Attribute Profile (GATT).
-    \value PhoneAlertStatusService    This service dexposes the phone alert status when in a connection.
-    \value ReferenceTimeUpdateService This service defines how a client can request an update from a reference
-                                      time source from a time server using the Generic Attribute Profile (GATT)
-    \value RunningSpeedAndCadence     This service exposes speed, cadence and other data from a Running Speed and
-                                      Cadence Sensor intended for fitness applications.
-    \value ScanParameters             The Scan Parameters Service enables a GATT Server device to expose a characteristic
-                                      for the GATT Client to write its scan interval and scan window on the GATT Server device.
-    \value TxPower                    This service exposes a device’s current transmit power level when in a connection
+    \value LocationAndNavigation      Location Navigation UUID (service). The service exposes location and navigation-related
+                                      data from a Location and Navigation sensor intended for outdoor activity applications.
 */
 
 /*!

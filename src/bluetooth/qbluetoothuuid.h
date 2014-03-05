@@ -166,7 +166,6 @@ public:
         CyclingSpeedAndCadence = 0x1816,
         CyclingPower = 0x1818,
         LocationAndNavigation = 0x1819,
-        TISimpleKeyService = 0xffe0
     };
 
     enum CharacteristicId {
