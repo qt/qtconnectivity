@@ -452,16 +452,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
         if (!customUuids.contains(i)) {
             //if we don't have custom uuid use it as class id as well
-            QList<QBluetoothUuid> serviceClassId;
-            serviceClassId << uuids.at(i);
-            serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, QVariant::fromValue(serviceClassId));
+            QBluetoothServiceInfo::Sequence classId;
+            classId << QVariant::fromValue(uuids.at(i));
+            serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
             serviceInfo.setServiceName(serviceNameForClassUuid(uuids.at(i).data1));
         }
 
         //don't include the service if we already discovered it before
         bool alreadyDiscovered = false;
-        for (int i = 0; i < discoveredServices.count(); i++) {
-            const QBluetoothServiceInfo &info = discoveredServices.at(i);
+        for (int j = 0; j < discoveredServices.count(); j++) {
+            const QBluetoothServiceInfo &info = discoveredServices.at(j);
             if (info.device() == serviceInfo.device()
                     && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
                     && info.serviceUuid() == serviceInfo.serviceUuid()) {
