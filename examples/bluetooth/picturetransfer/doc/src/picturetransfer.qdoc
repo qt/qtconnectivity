@@ -1,4 +1,4 @@
-/****************************************************************************
+a/****************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -30,7 +30,8 @@
 \title QML Bluetooth Picture Push Example
 
 The Bluetooth Picture Push example shows how to use the \l QBluetoothTransferManager
-API. The example transfers a local image to a remote device.
+API. The example transfers a local image to a remote device. Unfortunately this example cannot be used on
+Android as Qt does not support the Object Push Profile on this platform.
 
 On the first user interface page the application scans for remote Bluetooth devices. The user must select
 the appropriate device to continue:
@@ -38,7 +39,7 @@ the appropriate device to continue:
 \image opp-example-1.png
 
 The next page presents a list of image files on the device. The files must be located under
-\l QStandardPaths::PictureLocation}:
+\l QStandardPaths::PicturesLocation}:
 
 \image opp-example-2.png
 

@@ -84,8 +84,14 @@ if (localDevice.isValid()) {
 
     // Make it visible to others
     localDevice.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+
+    // Get connected devices
+    QList<QBluetoothAddress> remotes;
+    remotes = localDevice.connectedDevices();
 }
 //! [turningon]
+
+
 }
 
 //! [discovery]

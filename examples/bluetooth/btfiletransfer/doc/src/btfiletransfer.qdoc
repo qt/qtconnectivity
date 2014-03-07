@@ -30,7 +30,8 @@
     \title Bluetooth File Transfer Example
 
     The Bluetooth File Transfer example is an application to transfer files
-    via a bluetooth connection.
+    via a bluetooth connection. This example does not work on Android due to
+    missing Object Push support.
 
     \image btfiletransfer-example.png
 
