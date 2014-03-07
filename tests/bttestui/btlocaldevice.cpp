@@ -271,9 +271,11 @@ void BtLocalDevice::stopServiceDiscovery()
 
 void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
-
+    QString classIds;
+    foreach (const QBluetoothUuid uuid, info.serviceClassUuids())
+        classIds += uuid.toString() + QLatin1Char(' ');
     qDebug() << "$$ Found new service" << info.device().address().toString()
-             << info.serviceUuid() << info.serviceName() << info.serviceDescription();
+             << info.serviceUuid() << info.serviceName() << classIds;
 
     if (info.serviceUuid() == QBluetoothUuid(QString(TEST_SERVICE_UUID))
             || info.serviceClassUuids().contains(QBluetoothUuid(QString(TEST_SERVICE_UUID))))
@@ -314,6 +316,15 @@ void BtLocalDevice::serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error
 
 void BtLocalDevice::dumpServiceDiscovery()
 {
+    if (deviceAgent) {
+        qDebug() << "Device Discovery active:" << deviceAgent->isActive();
+        qDebug() << "Error:" << deviceAgent->error() << deviceAgent->errorString();
+        QList<QBluetoothDeviceInfo> list = deviceAgent->discoveredDevices();
+        qDebug() << "Discovered Devices:" << list.count();
+
+        foreach (const QBluetoothDeviceInfo &info, list)
+            qDebug() << info.name() << info.address().toString();
+    }
     if (serviceAgent) {
         qDebug() << "Service Discovery active:" << serviceAgent->isActive();
         qDebug() << "Error:" << serviceAgent->error() << serviceAgent->errorString();
