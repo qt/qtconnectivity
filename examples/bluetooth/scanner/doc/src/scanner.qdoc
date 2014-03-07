@@ -29,5 +29,25 @@
 \example scanner
 \title QML Bluetooth Scanner Example
 
-An example on how to locate Bluetooth devices in QML.
+This is an example on how to locate Bluetooth devices in QML.
+
+The user has the choice to run three different types of Bluetooth scans. The device retrieves
+information about the remote device within Bluetooth range. This implies that the remote
+device can be discovered. The picture below demonstrates the potential result of such
+a search:
+
+\image devicescan.png
+
+The second and third type of scan dicover the types of services offered by each remote device.
+A full service discovery can take quite some time to finish. The local device connects to each
+remote device and performs an SDP enquiry. The results of such an enquiry can be seen below.
+
+\image servicescan.png
+
+In general a service discovery is based on the results of a previously run device enquiry. A minimal
+service discovery returns the same data set as a full discovery except that the results are retrieved
+from local cache information and may not always be complete and accurate. The primary reason to
+perform a minimal discovery are time constraints. A full service discovery can take up to two minutes.
+Note that not every platform supports a minimal discovery. In such cases the API performs a full discovery.
+
 */
