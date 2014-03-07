@@ -87,7 +87,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothtransferreply_bluez.cpp \
         qlowenergyprocess_bluez.cpp \
         qlowenergyserviceinfo_bluez.cpp \
-        qlowenergycharacteristicinfo_bluez.cpp
+        qlowenergycharacteristicinfo_bluez.cpp \
+        qlowenergycontroller_bluez.cpp
 
 } else:CONFIG(blackberry) {
     DEFINES += QT_QNX_BLUETOOTH
@@ -136,7 +137,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserver_android.cpp \
         qlowenergyserviceinfo_p.cpp \
         qlowenergycharacteristicinfo_p.cpp \
-        qlowenergyprocess_p.cpp
+        qlowenergyprocess_p.cpp \
+        qlowenergycontroller_p.cpp
 
 } else {
     message("Unsupported bluetooth platform, will not build a working QBluetooth library")
@@ -150,7 +152,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserver_p.cpp \
         qlowenergyserviceinfo_p.cpp \
         qlowenergycharacteristicinfo_p.cpp \
-        qlowenergyprocess_p.cpp
+        qlowenergyprocess_p.cpp \
+        qlowenergycontroller_p.cpp
 }
 
 OTHER_FILES +=

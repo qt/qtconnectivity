@@ -84,8 +84,6 @@ public:
     void setServiceType(QLowEnergyServiceInfo::ServiceType type);
     QLowEnergyServiceInfo::ServiceType serviceType() const;
 
-    void setRandomAddress();
-
     bool isConnected() const;
 
     bool isValid() const;

@@ -41,9 +41,11 @@
 #ifndef QLOWENERGYCONTROLLER_P_H
 #define QLOWENERGYCONTROLLER_P_H
 #include "qlowenergycontroller.h"
+
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyController;
+class QLowEnergyProcess;
 
 class QLowEnergyControllerPrivate
 {
@@ -59,11 +61,28 @@ public:
     void _q_characteristicError(const QBluetoothUuid &uuid);
     void _q_valueReceived(const QBluetoothUuid &uuid);
     void _q_serviceDisconnected(const QBluetoothUuid &uuid);
+    void disconnectAllServices();
 
     QList<QLowEnergyServiceInfo> m_leServices;
     QString errorString;
 
+#ifdef QT_BLUEZ_BLUETOOTH
+    void connectToTerminal();
+    void setHandles();
+    void setCharacteristics(int);
+    void setNotifications();
+    void readCharacteristicValue(int);
+public slots:
+    void _q_replyReceived(const QString &reply);
+#endif
 private:
+    bool m_randomAddress;
+#ifdef QT_BLUEZ_BLUETOOTH
+    QLowEnergyProcess *process;
+    int m_step;
+    bool m_deviceConnected;
+    bool m_commandStarted;
+#endif
     QLowEnergyController *q_ptr;
 };
 QT_END_NAMESPACE

@@ -43,7 +43,6 @@
 #include "qlowenergycontroller_p.h"
 #include "qlowenergyserviceinfo_p.h"
 #include "qlowenergycharacteristicinfo_p.h"
-#include "moc_qlowenergycontroller.cpp"
 
 QT_BEGIN_NAMESPACE
 /*!
@@ -110,118 +109,6 @@ QT_BEGIN_NAMESPACE
     \sa enableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
 */
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-{
-
-}
-
-QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
-{
-
-}
-
-void QLowEnergyControllerPrivate::_q_serviceConnected(const QBluetoothUuid &uuid)
-{
-    for (int i = 0; i < m_leServices.size(); i++) {
-        if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == uuid)
-            emit q_ptr->connected((QLowEnergyServiceInfo)m_leServices.at(i));
-
-    }
-}
-
-void QLowEnergyControllerPrivate::_q_serviceError(const QBluetoothUuid &uuid)
-{
-    for (int i = 0; i < m_leServices.size(); i++) {
-        if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == uuid) {
-            QLowEnergyServiceInfo service((QLowEnergyServiceInfo)m_leServices.at(i));
-            errorString = service.d_ptr->errorString;
-            emit q_ptr->error(service);
-        }
-    }
-}
-
-void QLowEnergyControllerPrivate::_q_characteristicError(const QBluetoothUuid &uuid)
-{
-    for (int i = 0; i < m_leServices.size(); i++) {
-        QList<QLowEnergyCharacteristicInfo> characteristics = m_leServices.at(i).characteristics();
-        for (int j = 0; j < characteristics.size(); j++) {
-            if (characteristics.at(j).uuid() == uuid) {
-                errorString = characteristics.at(j).d_ptr->errorString;
-                emit q_ptr->error(characteristics.at(j));
-            }
-        }
-    }
-}
-
-
-void QLowEnergyControllerPrivate::_q_valueReceived(const QBluetoothUuid &uuid)
-{
-     for (int i = 0; i < m_leServices.size(); i++) {
-         QList<QLowEnergyCharacteristicInfo> characteristics = m_leServices.at(i).characteristics();
-         for (int j = 0; j < characteristics.size(); j++) {
-             if (characteristics.at(j).uuid() == uuid)
-                 emit q_ptr->valueChanged(characteristics.at(j));
-         }
-     }
-}
-
-
-
-void QLowEnergyControllerPrivate::_q_serviceDisconnected(const QBluetoothUuid &uuid)
-{
-    for (int i = 0; i < m_leServices.size(); i++) {
-        if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == uuid) {
-            QObject::disconnect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(connectedToService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceConnected(QBluetoothUuid)));
-            QObject::disconnect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), q_ptr, SLOT(_q_serviceError(QBluetoothUuid)));
-            QObject::disconnect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(disconnectedFromService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceDisconnected(QBluetoothUuid)));
-            emit q_ptr->disconnected((QLowEnergyServiceInfo)m_leServices.at(i));
-        }
-    }
-}
-
-void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &service)
-{
-    bool in = false;
-    if (service.isValid()) {
-        for (int i = 0; i < m_leServices.size(); i++) {
-            if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == service.serviceUuid() && !((QLowEnergyServiceInfo)m_leServices.at(i)).isConnected()) {
-                in = true;
-                QObject::connect(m_leServices.at(i).d_ptr.data(), SIGNAL(connectedToService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceConnected(QBluetoothUuid)));
-                QObject::connect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), q_ptr, SLOT(_q_serviceError(QBluetoothUuid)));
-                QObject::connect(((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr.data(), SIGNAL(disconnectedFromService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceDisconnected(QBluetoothUuid)));
-                ((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr->registerServiceWatcher();
-                break;
-            }
-        }
-        if (!in) {
-            m_leServices.append(service);
-            QObject::connect(((QLowEnergyServiceInfo)m_leServices.last()).d_ptr.data(), SIGNAL(connectedToService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceConnected(QBluetoothUuid)));
-            QObject::connect(((QLowEnergyServiceInfo)m_leServices.last()).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), q_ptr, SLOT(_q_serviceError(QBluetoothUuid)));
-            QObject::connect(((QLowEnergyServiceInfo)m_leServices.last()).d_ptr.data(), SIGNAL(disconnectedFromService(QBluetoothUuid)), q_ptr, SLOT(_q_serviceDisconnected(QBluetoothUuid)));
-            ((QLowEnergyServiceInfo)m_leServices.last()).d_ptr->registerServiceWatcher();
-        }
-    }
-}
-
-void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo &service)
-{
-    if (service.isValid()) {
-        for (int i = 0; i < m_leServices.size(); i++) {
-            if (((QLowEnergyServiceInfo)m_leServices.at(i)).serviceUuid() == service.serviceUuid() && service.isConnected()) {
-                ((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr->unregisterServiceWatcher();
-                break;
-            }
-        }
-    }
-    else {
-        for (int i = 0; i < m_leServices.size(); i++) {
-            if (((QLowEnergyServiceInfo)m_leServices.at(i)).isConnected()) {
-                ((QLowEnergyServiceInfo)m_leServices.at(i)).d_ptr->unregisterServiceWatcher();
-                break;
-            }
-        }
-    }
-}
 
 /*!
     Construct a new QLowEnergyInfo object with the \a parent.
@@ -316,4 +203,14 @@ QString QLowEnergyController::errorString() const
 {
     return d_ptr->errorString;
 }
+
+/*!
+    This method is called for the Linux platform if a device has a random device address that
+    is used for connecting.
+ */
+void QLowEnergyController::setRandomAddress()
+{
+    d_ptr->m_randomAddress = true;
+}
+
 QT_END_NAMESPACE

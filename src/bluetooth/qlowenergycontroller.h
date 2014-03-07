@@ -65,6 +65,7 @@ public:
     bool enableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
     void disableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
     QString errorString() const;
+    void setRandomAddress();
 
 Q_SIGNALS:
     void connected(const QLowEnergyServiceInfo &);
@@ -83,6 +84,9 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_characteristicError(const QBluetoothUuid &uuid))
     Q_PRIVATE_SLOT(d_func(), void _q_valueReceived(const QBluetoothUuid &uuid))
     Q_PRIVATE_SLOT(d_func(), void _q_serviceDisconnected(const QBluetoothUuid &uuid))
+#ifdef QT_BLUEZ_BLUETOOTH
+    Q_PRIVATE_SLOT(d_func(), void _q_replyReceived(const QString &reply))
+#endif
 };
 
 QT_END_NAMESPACE

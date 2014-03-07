@@ -208,16 +208,6 @@ bool QLowEnergyServiceInfo::isConnected() const
 }
 
 /*!
-    This method is called if a device has a random device address that is used for connecting.
-    It should be called before connecting to a service; otherwise connecting will not be
-    successful and ConnectionRefused error will be emitted.
- */
-void QLowEnergyServiceInfo::setRandomAddress()
-{
-    d_ptr->randomAddress = true;
-}
-
-/*!
     Returns the address of the Bluetooth device that provides this service.
 */
 QBluetoothDeviceInfo QLowEnergyServiceInfo::device() const

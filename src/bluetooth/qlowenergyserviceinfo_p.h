@@ -60,6 +60,7 @@ class QLowEnergyProcess;
 class QLowEnergyServiceInfoPrivate: public QObject
 {
     Q_OBJECT
+    friend class QLowEnergyControllerPrivate;
 
 public:
     QLowEnergyServiceInfoPrivate();
@@ -80,21 +81,11 @@ public:
     QLowEnergyServiceInfo::ServiceType serviceType;
     bool connected;
     QBluetoothDeviceInfo deviceInfo;
-    QString errorString;
-    bool randomAddress;
 #ifdef QT_BLUEZ_BLUETOOTH
     QString startingHandle;
     QString endingHandle;
     QString path;
     QBluetoothAddress adapterAddress;
-    void connectToTerminal();
-    void setHandles();
-    void setCharacteristics();
-    void setNotifications();
-    void readCharacteristicValue();
-    void readDescriptors();
-public slots:
-    void replyReceived(const QString &reply);
 #endif
 
 #ifdef QT_QNX_BLUETOOTH

@@ -62,6 +62,7 @@ QLowEnergyProcess::QLowEnergyProcess()
 */
 QLowEnergyProcess::~QLowEnergyProcess()
 {
+    m_process->kill();
     delete m_process;
 }
 
@@ -79,7 +80,6 @@ QLowEnergyProcess *QLowEnergyProcess::instance()
 */
 QProcess *QLowEnergyProcess::getProcess()
 {
-
     return m_process;
 }
 
@@ -128,7 +128,6 @@ void QLowEnergyProcess::endProcess()
         executeCommand(QStringLiteral("disconnect"));
         executeCommand(QStringLiteral("\n"));
         connected = false;
-        m_process->terminate();
     }
 }
 

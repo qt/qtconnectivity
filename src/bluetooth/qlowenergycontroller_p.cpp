@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,40 +39,59 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYDESCRIPTORINFO_H
-#define QLOWENERGYDESCRIPTORINFO_H
-
-#include <QtCore/QSharedPointer>
-#include <QtCore/QVariantMap>
-#include <QtBluetooth/QBluetoothUuid>
+#include "qlowenergycontroller_p.h"
+#include "moc_qlowenergycontroller.cpp"
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyCharacteristicInfo;
-class QLowEnergyDescriptorInfoPrivate;
-
-class Q_BLUETOOTH_EXPORT QLowEnergyDescriptorInfo
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 {
-    friend class QLowEnergyCharacteristicInfo;
-    friend class QLowEnergyCharacteristicInfoPrivate;
-    friend class QLowEnergyServiceInfoPrivate;
-    friend class QLowEnergyControllerPrivate;
-public:
-    explicit QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid);
-    ~QLowEnergyDescriptorInfo();
 
-    QLowEnergyDescriptorInfo &operator=(const QLowEnergyDescriptorInfo &other);
-    QByteArray value();
-    QBluetoothUuid uuid() const;
-    QString handle() const;
-    QVariantMap properties() const;
-    QString name() const;
+}
 
-private:
-    QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;
-    QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, const QString &handle);
-};
+QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+{
+
+}
+
+void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &service)
+{
+    Q_UNUSED(service);
+}
+
+void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo &leService)
+{
+    Q_UNUSED(leService);
+}
+
+void QLowEnergyControllerPrivate::disconnectAllServices()
+{
+
+}
+
+void QLowEnergyControllerPrivate::_q_characteristicError(const QBluetoothUuid &uuid)
+{
+    Q_UNUSED(uuid);
+}
+
+void QLowEnergyControllerPrivate::_q_serviceConnected(const QBluetoothUuid &uuid)
+{
+    Q_UNUSED(uuid);
+}
+
+void QLowEnergyControllerPrivate::_q_serviceDisconnected(const QBluetoothUuid &uuid)
+{
+    Q_UNUSED(uuid);
+}
+
+void QLowEnergyControllerPrivate::_q_serviceError(const QBluetoothUuid &uuid)
+{
+    Q_UNUSED(uuid);
+}
+
+void QLowEnergyControllerPrivate::_q_valueReceived(const QBluetoothUuid &uuid)
+{
+    Q_UNUSED(uuid);
+}
 
 QT_END_NAMESPACE
-
-#endif // QLOWENERGYDESCRIPTORINFO_H
