@@ -44,9 +44,9 @@ Rectangle {
     id: back
     width: 300
     height: 600
-    property string message: device.update
-    onMessageChanged: {
-        if (device.update != "Scanning for devices..." && device.update != "Search")
+    property bool deviceState: device.state
+    onDeviceStateChanged: {
+        if (!device.state)
             info.visible = false;
     }
 

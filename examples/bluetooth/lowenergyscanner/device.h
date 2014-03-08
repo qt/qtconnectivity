@@ -66,6 +66,7 @@ class Device: public QObject
     Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesDone)
     Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsDone)
     Q_PROPERTY(QString update READ getUpdate NOTIFY updateChanged)
+    Q_PROPERTY(bool state READ state NOTIFY stateChanged)
 public:
     Device();
     ~Device();
@@ -73,6 +74,7 @@ public:
     QVariant getServices();
     QVariant getCharacteristics();
     QString getUpdate();
+    bool state();
 
 public slots:
     void addDevice(const QBluetoothDeviceInfo&);
@@ -94,6 +96,7 @@ Q_SIGNALS:
     void servicesDone();
     void characteristicsDone();
     void updateChanged();
+    void stateChanged();
 
 private:
     void setUpdate(QString message);
@@ -106,6 +109,7 @@ private:
     QString m_message;
     bool connected;
     QLowEnergyController *info;
+    bool m_deviceScanState;
 };
 
 #endif // DEVICE_H

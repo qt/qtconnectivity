@@ -51,7 +51,7 @@
 #include <QList>
 
 Device::Device():
-    connected(false), info(0)
+    connected(false), info(0), m_deviceScanState(false)
 {
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
     connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
@@ -89,6 +89,8 @@ void Device::startDeviceDiscovery()
     devices.clear();
     setUpdate("Scanning for devices ...");
     discoveryAgent->start();
+    m_deviceScanState = true;
+    Q_EMIT stateChanged();
 }
 
 void Device::addDevice(const QBluetoothDeviceInfo &info)
@@ -103,6 +105,8 @@ void Device::addDevice(const QBluetoothDeviceInfo &info)
 void Device::scanFinished()
 {
     Q_EMIT devicesDone();
+    m_deviceScanState = false;
+    Q_EMIT stateChanged();
     if (devices.isEmpty())
         setUpdate("No Low Energy devices found...");
     else
@@ -232,4 +236,9 @@ void Device::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)
         setUpdate("Writing or reading from the device resulted in an error.");
     else
         setUpdate("An unknown error has occurred.");
+}
+
+bool Device::state()
+{
+    return m_deviceScanState;
 }
