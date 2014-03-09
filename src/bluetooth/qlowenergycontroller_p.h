@@ -55,6 +55,8 @@ public:
     ~QLowEnergyControllerPrivate();
     void connectService(const QLowEnergyServiceInfo &service);
     void disconnectService(const QLowEnergyServiceInfo &leService = QLowEnergyServiceInfo());
+    bool enableNotification(const QLowEnergyCharacteristicInfo &characteristic);
+    void disableNotification(const QLowEnergyCharacteristicInfo &characteristic);
 
     void _q_serviceConnected(const QBluetoothUuid &uuid);
     void _q_serviceError(const QBluetoothUuid &uuid);
@@ -72,6 +74,7 @@ public:
     void setCharacteristics(int);
     void setNotifications();
     void readCharacteristicValue(int);
+    void writeValue(const QString &, const QByteArray &);
 public slots:
     void _q_replyReceived(const QString &reply);
 #endif

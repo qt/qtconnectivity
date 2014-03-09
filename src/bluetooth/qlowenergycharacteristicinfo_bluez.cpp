@@ -67,67 +67,6 @@ QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
     delete characteristic;
 }
 
-void QLowEnergyCharacteristicInfoPrivate::replyReceived(const QString &reply)
-{
-    QStringList update, row;
-    update = QStringList();
-    row = QStringList();
-    if (reply.contains(QStringLiteral("[CON]"))) {
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-        qDebug() << "Char connected" << t;
-#endif
-    }
-    if (reply.contains(QStringLiteral("[CON]")) && t == 1) {
-        QString command = QStringLiteral("char-read-hnd ") + handle;
-        process->executeCommand(command);
-        process->executeCommand(QStringLiteral("\n"));
-        t++;
-    }
-    if (reply.contains(QStringLiteral("Notification handle"))) {
-        update = reply.split(QStringLiteral("\n"));
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-        qDebug() << update.size();
-#endif
-        for (int i = 0; i< update.size(); i ++) {
-            if (update.at(i).contains(QStringLiteral("Notification handle"))) {
-                row = update.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-                qDebug() << "Handle : "<< handle << row;
-#endif
-                if (row.at(2) == handle) {
-                    QString notificationValue = QStringLiteral("");
-                    for (int j = 4 ; j< row.size(); j++)
-                        notificationValue += row.at(j);
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-                    qDebug() << notificationValue;
-#endif
-                    value = notificationValue.toUtf8();
-                    properties[QStringLiteral("value")] = value;
-                    emit notifyValue(uuid);
-                }
-            }
-
-        }
-    }
-
-    if (reply.contains(QStringLiteral("Characteristic value/descriptor:"))) {
-        update = reply.split(QStringLiteral("\n"));
-        for (int i = 0; i< update.size(); i ++) {
-            if (update.at(i).contains(QStringLiteral("Characteristic value/descriptor:"))) {
-                row = update.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
-                QString val = QStringLiteral("");
-                for ( int j = 3; j<row.size(); j++)
-                   val += row.at(j);
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-                   qDebug() << "HANDLE: " << uuid << val;
-#endif
-                   value = val.toUtf8();
-                   properties[QStringLiteral("value")] = value;
-            }
-        }
-    }
-}
-
 void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
 {
     if (permission & QLowEnergyCharacteristicInfo::Write || notification) {
@@ -157,43 +96,6 @@ void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue
     }
 }
 
-bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
-{
-    if (!notification)
-        return false;
-    /*
-     *  Wanted value to enable notifications is 0100
-     */
-    if ( (permission & QLowEnergyCharacteristicInfo::Notify) == 0) {
-#ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-        qDebug() << "Notification changes not allowed";
-#endif
-        errorString = QStringLiteral("This characteristic does not support notifications.");
-        emit error(uuid);
-        return false;
-    }
-    QByteArray val;
-    val.append(48);
-    val.append(49);
-    val.append(48);
-    val.append(48);
-    setValue(val);
-    return true;
-}
-
-void QLowEnergyCharacteristicInfoPrivate::disableNotification()
-{
-    /*
-     *  Wanted value to disable notifications is 0000
-     */
-    QByteArray val;
-    val.append(48);
-    val.append(48);
-    val.append(48);
-    val.append(48);
-    setValue(val);
-}
-
 void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
 {
 
@@ -209,6 +111,16 @@ void QLowEnergyCharacteristicInfoPrivate::readValue()
 bool QLowEnergyCharacteristicInfoPrivate::valid()
 {
     return true;
+}
+
+bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
+{
+    return false;
+}
+
+void QLowEnergyCharacteristicInfoPrivate::disableNotification()
+{
+
 }
 
 QT_END_NAMESPACE

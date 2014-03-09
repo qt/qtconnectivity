@@ -162,17 +162,7 @@ void QLowEnergyController::disconnectFromService(const QLowEnergyServiceInfo &le
 */
 bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
 {
-    bool enable = false;
-    for (int i = 0; i < d_ptr->m_leServices.size(); i++) {
-        for (int j = 0; j < d_ptr->m_leServices.at(i).characteristics().size(); j++) {
-            if (d_ptr->m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()) {
-                connect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
-                connect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), this, SLOT(_q_characteristicError(QBluetoothUuid)));
-                enable = d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr->enableNotification();
-            }
-        }
-    }
-    return enable;
+    return d_ptr->enableNotification(characteristic);
 }
 
 /*!
@@ -183,15 +173,7 @@ bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInf
 */
 void QLowEnergyController::disableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
 {
-    for (int i = 0; i < d_ptr->m_leServices.size(); i++) {
-        for (int j = 0; j < d_ptr->m_leServices.at(i).characteristics().size(); j++) {
-            if (d_ptr->m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()){
-                disconnect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(notifyValue(QBluetoothUuid)), this, SLOT(_q_valueReceived(QBluetoothUuid)));
-                disconnect(d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr.data(), SIGNAL(error(QBluetoothUuid)), this, SLOT(_q_characteristicError(QBluetoothUuid)));
-                d_ptr->m_leServices.at(i).characteristics().at(j).d_ptr->disableNotification();
-            }
-        }
-    }
+    d_ptr->disableNotification(characteristic);
 }
 
 /*!

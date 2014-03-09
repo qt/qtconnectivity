@@ -94,4 +94,15 @@ void QLowEnergyControllerPrivate::_q_valueReceived(const QBluetoothUuid &uuid)
     Q_UNUSED(uuid);
 }
 
+bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    Q_UNUSED(characteristic);
+    return false;
+}
+
+void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    Q_UNUSED(characteristic);
+}
+
 QT_END_NAMESPACE

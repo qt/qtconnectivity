@@ -73,9 +73,9 @@ public:
     void setValue(const QByteArray &wantedValue);
     void readValue();
     bool valid();
+    void readDescriptors();
     bool enableNotification();
     void disableNotification();
-    void readDescriptors();
 
     QString name;
     QBluetoothUuid uuid;
@@ -98,9 +98,6 @@ public:
     QString path;
     int t;
     QString startingHandle;
-public Q_SLOTS:
-
-    void replyReceived(const QString &reply);
 #endif
 
 Q_SIGNALS:

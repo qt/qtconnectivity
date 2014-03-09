@@ -177,7 +177,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
 {
     qCDebug(QT_BT_BLUEZ) << "reply: " << reply;
     // STEP 0
-    if (m_step == 0)
+    if (m_step == 0 && !m_leServices.isEmpty())
         connectToTerminal();
     if (reply.contains(QStringLiteral("Connection refused (111)"))) {
         errorString = QStringLiteral("Connection refused (111)");
@@ -338,6 +338,31 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                 }
             }
         }
+
+        // READING ADVERTISEMENT FROM THE BLE DEVICE
+        if (reply.contains(QStringLiteral("Notification handle"))) {
+            QStringList update, row;
+            update = reply.split(QStringLiteral("\n"));
+            for (int i = 0; i< update.size(); i ++) {
+                if (update.at(i).contains(QStringLiteral("Notification handle"))) {
+                    row = update.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
+                    for (int j = 0; j < m_leServices.size(); j++) {
+                        for (int k = 0; k < m_leServices.at(j).characteristics().size(); k++) {
+                            if (m_leServices.at(j).characteristics().at(k).handle() == row.at(2)) {
+
+                                QString notificationValue = QStringLiteral("");
+                                for (int s = 4 ; s< row.size(); s++)
+                                    notificationValue += row.at(s);
+                                m_leServices.at(j).characteristics().at(k).d_ptr->value = notificationValue.toUtf8();
+                                m_leServices.at(j).characteristics().at(k).d_ptr->properties[QStringLiteral("value")] = notificationValue.toUtf8();
+                                emit q_ptr->valueChanged(m_leServices.at(j).characteristics().at(k));
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }
 
@@ -400,6 +425,68 @@ void QLowEnergyControllerPrivate::readCharacteristicValue(int index)
         }
     }
     m_leServices.at(index).d_ptr->m_step++;
+}
+
+void QLowEnergyControllerPrivate::writeValue(const QString &handle, const QByteArray &value)
+{
+    process = process->instance();
+    QString command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
+    process->executeCommand(command);
+    process->executeCommand(QStringLiteral("\n"));
+
+}
+
+bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    bool foundCharacteristic = false;
+    bool foundDescriptor = false;
+    const QBluetoothUuid descUuid((ushort)0x2902);
+    for (int i = 0; i < m_leServices.size(); i++) {
+        for (int j = 0; j < m_leServices.at(i).characteristics().size(); j++) {
+            if (m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()) {
+                foundCharacteristic = true;
+                for (int k = 0; k < m_leServices.at(i).characteristics().at(j).descriptors().size(); k++) {
+                    if (m_leServices.at(i).characteristics().at(j).descriptors().at(k).uuid() == descUuid){
+                        foundDescriptor = true;
+                        QByteArray val;
+                        val.append(48);
+                        val.append(49);
+                        val.append(48);
+                        val.append(48);
+                        writeValue(m_leServices.at(i).characteristics().at(j).descriptors().at(k).handle(), val);
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    if (!foundDescriptor || !foundCharacteristic) {
+        errorString = QStringLiteral("Characteristic or notification descriptor not found.");
+        emit q_ptr->error(characteristic);
+        return false;
+    }
+
+}
+
+void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    const QBluetoothUuid descUuid((ushort)0x2902);
+    for (int i = 0; i < m_leServices.size(); i++) {
+        for (int j = 0; j < m_leServices.at(i).characteristics().size(); j++) {
+            if (m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()) {
+                for (int k = 0; k < m_leServices.at(i).characteristics().at(j).descriptors().size(); k++) {
+                    if (m_leServices.at(i).characteristics().at(j).descriptors().at(k).uuid() == descUuid){
+                        QByteArray val;
+                        val.append(48);
+                        val.append(48);
+                        val.append(48);
+                        val.append(48);
+                        writeValue(m_leServices.at(i).characteristics().at(j).descriptors().at(k).handle(), val);
+                    }
+                }
+            }
+        }
+    }
 }
 
 QT_END_NAMESPACE
