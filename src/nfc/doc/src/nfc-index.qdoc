@@ -38,6 +38,8 @@ The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devi
 target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
 on NFC Forum Tags and sending tag specific commands.
 
+Currently the API is supported on BlackBerry 10.
+
 \section1 Getting started
 
 To use the C++ library in your application, add the following configuration
