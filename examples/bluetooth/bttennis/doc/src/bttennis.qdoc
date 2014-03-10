@@ -30,7 +30,10 @@
     \title Bluetooth Tennis Example
 
     The Bluetooth Tennis example shows how to use the Qt Connectivity Bluetooth API
-    to implement real-time data transfer for interactive applications.
+    to implement real-time data transfer for interactive applications. The example
+    establishes a \l {QBluetoothServiceInfo::L2capProtocol}{L2CP} socket connection.
+    Since this protocol type is not supported on Android and BlackBerry the example
+    does not work on those platforms.
 
     \image bttennis-example.png
 

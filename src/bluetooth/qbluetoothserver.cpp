@@ -132,6 +132,8 @@ QT_BEGIN_NAMESPACE
     Sets the maximum number of pending connections to \a numConnections. If
     the number of pending sockets exceeds this limit new sockets will be rejected.
 
+    QNX platform supports only one device at the time and it will ignore this value.
+
     \sa maxPendingConnections()
 */
 
@@ -143,7 +145,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 
-    Returns a pointer to aQBluetoothSocket for the next pending connection. It is the callers
+    Returns a pointer to the QBluetoothSocket for the next pending connection. It is the callers
     responsibility to delete the pointer.
 */
 

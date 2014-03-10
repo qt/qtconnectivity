@@ -59,8 +59,8 @@ QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol
     : socket(0),maxPendingConnections(1), securityFlags(QBluetooth::NoSecurity), serverType(sType),
       m_lastError(QBluetoothServer::NoError)
 {
-        thread = new ServerAcceptanceThread();
-        thread->setMaxPendingConnections(maxPendingConnections);
+    thread = new ServerAcceptanceThread();
+    thread->setMaxPendingConnections(maxPendingConnections);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
@@ -71,10 +71,6 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
 
     __fakeServerPorts.remove(this);
 
-    if (thread->isRunning()) {
-        thread->stop();
-        thread->wait();
-    }
     thread->deleteLater();
     thread = 0;
 }
@@ -82,33 +78,33 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
 bool QBluetoothServerPrivate::initiateActiveListening(
         const QBluetoothUuid& uuid, const QString &serviceName)
 {
-    Q_UNUSED(uuid);
-    Q_UNUSED(serviceName);
     qCDebug(QT_BT_ANDROID) << "Initiate active listening" << uuid.toString() << serviceName;
 
     if (uuid.isNull() || serviceName.isEmpty())
         return false;
 
     //no change of SP profile details -> do nothing
-    if (uuid == m_uuid && serviceName == m_serviceName)
+    if (uuid == m_uuid && serviceName == m_serviceName && thread->isRunning())
         return true;
 
     m_uuid = uuid;
     m_serviceName = serviceName;
     thread->setServiceDetails(m_uuid, m_serviceName, securityFlags);
 
-    Q_ASSERT(!thread->isRunning());
-    thread->start();
-    Q_ASSERT(thread->isRunning());
+    thread->run();
+    if (!thread->isRunning())
+        return false;
 
     return true;
 }
 
 bool QBluetoothServerPrivate::deactivateActiveListening()
 {
-    thread->stop();
-    thread->wait();
-
+    if (isListening()) {
+        //suppress last error signal due to intended closure
+        thread->disconnect();
+        thread->stop();
+    }
     return true;
 }
 
@@ -121,19 +117,30 @@ void QBluetoothServer::close()
 {
     Q_D(QBluetoothServer);
 
-    d->thread->stop();
-    d->thread->wait();
-
-    if (d->thread)
-        d->thread->disconnect();
     __fakeServerPorts.remove(d);
+    if (d->thread->isRunning()) {
+        //suppress last error signal due to intended closure
+        d->thread->disconnect();
+        d->thread->stop();
+    }
 }
 
 bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 port)
 {
+    Q_D(QBluetoothServer);
+    if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->m_lastError = UnsupportedProtocolError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
     const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
-    if (!localDevices.count())
+    if (!localDevices.count()) {
+        qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
         return false; //no Bluetooth device
+    }
 
     if (!localAdapter.isNull()) {
         bool found = false;
@@ -148,13 +155,6 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
             qCWarning(QT_BT_ANDROID) << localAdapter.toString() << "is not a valid local Bt adapter";
             return false;
         }
-    }
-
-    Q_D(QBluetoothServer);
-    if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->m_lastError = UnsupportedProtocolError;
-        emit error(d->m_lastError);
-        return false;
     }
 
     if (d->isListening())
@@ -202,7 +202,11 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
         return false;
     }
 
-    connect(d->thread, SIGNAL(newConnection()), this, SIGNAL(newConnection()));
+    connect(d->thread, SIGNAL(newConnection()),
+            this, SIGNAL(newConnection()));
+    connect(d->thread, SIGNAL(error(QBluetoothServer::Error)),
+            this, SIGNAL(error(QBluetoothServer::Error)), Qt::QueuedConnection);
+
     return true;
 }
 

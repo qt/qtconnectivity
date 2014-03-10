@@ -98,66 +98,81 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 /*!
     \enum QBluetoothUuid::ServiceClassUuid
 
-    This enum is a convienience type for Bluetooth service class UUIDs. Values of this type will be
-    implicitly converted into a QBluetoothUuid when necessary.
+    This enum is a convienience type for Bluetooth service class and profile UUIDs. Values of this type will be
+    implicitly converted into a QBluetoothUuid when necessary. Some UUIDs refer to service class ids, others to profile
+    ids and some can be used as both. In general, profile UUIDs shall only be used in a
+    \l QBluetoothServiceInfo::BluetoothProfileDescriptorList attribute and service class UUIDs shall only be used
+    in a \l QBluetoothServiceInfo::ServiceClassIds attribute. If the UUID is marked as profile and service class UUID
+    it can be used as a value for either of the above service attributes. Such a dual use has historical reasons
+    but is no longer permissible for newer UUIDs.
 
-    \value PublicBrowseGroup    Public browse group service class. Services which have the public
-    browse group in their \l {QBluetoothServiceInfo::BrowseGroupList}{browse group list} are discoverable
-    by the remote devices.
-    \value ObexObjectPush       OBEX object push service UUID.
-    \value ServiceDiscoveryServer
-    \value BrowseGroupDescriptor Browser group descriptor
-    \value SerialPort            Serial Port Profile UUID
-    \value LANAccessUsingPPP     LAN Access Profile UUID
-    \value DialupNetworking      Dial-up Networking Profile UUID
-    \value IrMCSync              Synchronization Profile UUID
-    \value OBEXFileTransfer      File Transfer Profile (FTP) UUID
-    \value IrMCSyncCommand       Synchronization Profile UUID
-    \value Headset               Headset Profile (HSP) UUID
-    \value AudioSource           Advanced Audio Distribution Profile (A2DP) UUID
-    \value AudioSink             Advanced Audio Distribution Profile (A2DP) UUID
-    \value AV_RemoteControlTarget Audio/Video Remote Control Profile (AVRCP) UUID
-    \value AdvancedAudioDistribution Advanced Audio Distribution Profile (A2DP) UUID
-    \value AV_RemoteControl       Audio/Video Remote Control Profile (AVRCP) UUID
-    \value AV_RemoteControlController Audio/Video Remote Control Profile UUID
-    \value HeadsetAG              Headset Profile (HSP) UUID
-    \value PANU                   Personal Area Networking Profile (PAN) UUID
-    \value NAP                    Personal Area Networking Profile (PAN) UUID
-    \value GN                     Personal Area Networking Profile (PAN) UUID
-    \value DirectPrinting         Basic Printing Profile (BPP) UUID
-    \value ReferencePrinting      Related to Basic Printing Profile (BPP) UUID
-    \value ImagingResponder       Basic Imaging Profile (BIP) UUID
-    \value ImagingAutomaticArchive Basic Imaging Profile (BIP) UUID
-    \value ImagingReferenceObjects Basic Imaging Profile (BIP) UUID
-    \value Handsfree              Hands-Free Profile (HFP) Service Class Identifier and Profile Identifier
-    \value HandsfreeAudioGateway  Hands-free Profile (HFP) UUID
-    \value DirectPrintingReferenceObjectsService Basic Printing Profile (BPP) UUID
-    \value ReflectedUI            Basic Printing Profile (BPP) UUID
-    \value BasicPrinting          Basic Printing Profile (BPP) UUID
-    \value PrintingStatus         Basic Printing Profile (BPP) UUID
-    \value HumanInterfaceDeviceService Human Interface Device (HID) UUID
-    \value HardcopyCableReplacement Hardcopy Cable Replacement Profile (HCRP)
-    \value HCRPrint               Hardcopy Cable Replacement Profile (HCRP)
-    \value HCRScan                Hardcopy Cable Replacement Profile (HCRP)
-    \value SIMAccess              SIM Access Profile (SAP) UUID
-    \value PhonebookAccessPCE     Phonebook Access Profile (PBAP) UUID
-    \value PhonebookAccessPSE     Phonebook Access Profile (PBAP) UUID
-    \value PhonebookAccess        Phonebook Access Profile (PBAP)
-    \value HeadsetHS              Headset Profile (HSP) UUID
-    \value MessageAccessServer    Message Access Profile (MAP) UUID
-    \value MessageNotificationServer Message Access Profile (MAP) UUID
-    \value MessageAccessProfile   Message Access Profile (MAP) UUID
-    \value PnPInformation         Device Identification (DID) UUID
-    \value GenericNetworking      Generic networking
-    \value GenericFileTransfer    Generic file transfer
-    \value GenericAudio           Generic audio
-    \value GenericTelephony       Generic telephone
-    \value VideoSource            Video Distribution Profile (VDP)
-    \value VideoSink              Video Distribution Profile (VDP)
-    \value VideoDistribution      Video Distribution Profile (VDP)
-    \value HDP                    Health Device Profile
-    \value HDPSource              Health Device Profile
-    \value HDPSink                Health Device Profile
+    The list below explicitly states as what type each UUID shall be used.
+
+    \value ServiceDiscoveryServer Service discovery server UUID (service)
+    \value BrowseGroupDescriptor Browser group descriptor (service)
+    \value PublicBrowseGroup     Public browse group service class. Services which have the public
+                                 browse group in their \l {QBluetoothServiceInfo::BrowseGroupList}{browse group list}
+                                 are discoverable by the remote devices.
+    \value SerialPort            Serial Port Profile UUID (service & profile)
+    \value LANAccessUsingPPP     LAN Access Profile UUID (service & profile)
+    \value DialupNetworking      Dial-up Networking Profile UUID (service & profile)
+    \value IrMCSync              Synchronization Profile UUID (service & profile)
+    \value ObexObjectPush        OBEX object push service UUID (service & profile)
+    \value OBEXFileTransfer      File Transfer Profile (FTP) UUID (service & profile)
+    \value IrMCSyncCommand       Synchronization Profile UUID (profile)
+    \value Headset               Headset Profile (HSP) UUID (service & profile)
+    \value AudioSource           Advanced Audio Distribution Profile (A2DP) UUID (service)
+    \value AudioSink             Advanced Audio Distribution Profile (A2DP) UUID (service)
+    \value AV_RemoteControlTarget Audio/Video Remote Control Profile (AVRCP) UUID (service)
+    \value AdvancedAudioDistribution Advanced Audio Distribution Profile (A2DP) UUID (profile)
+    \value AV_RemoteControl       Audio/Video Remote Control Profile (AVRCP) UUID (service & profile)
+    \value AV_RemoteControlController Audio/Video Remote Control Profile UUID (service)
+    \value HeadsetAG              Headset Profile (HSP) UUID (service)
+    \value PANU                   Personal Area Networking Profile (PAN) UUID (service & profile)
+    \value NAP                    Personal Area Networking Profile (PAN) UUID (service & profile)
+    \value GN                     Personal Area Networking Profile (PAN) UUID (service & profile)
+    \value DirectPrinting         Basic Printing Profile (BPP) UUID (service)
+    \value ReferencePrinting      Related to Basic Printing Profile (BPP) UUID (service)
+    \value BasicImage             Basic Imaging Profile (BIP) UUID (profile)
+    \value ImagingResponder       Basic Imaging Profile (BIP) UUID (service)
+    \value ImagingAutomaticArchive Basic Imaging Profile (BIP) UUID (service)
+    \value ImagingReferenceObjects Basic Imaging Profile (BIP) UUID (service)
+    \value Handsfree              Hands-Free Profile (HFP) UUID (service & profile)
+    \value HandsfreeAudioGateway  Hands-Free Audio Gateway (HFP) UUID (service)
+    \value DirectPrintingReferenceObjectsService Basic Printing Profile (BPP) UUID (service)
+    \value ReflectedUI            Basic Printing Profile (BPP) UUID (service)
+    \value BasicPrinting          Basic Printing Profile (BPP) UUID (profile)
+    \value PrintingStatus         Basic Printing Profile (BPP) UUID (service)
+    \value HumanInterfaceDeviceService Human Interface Device (HID) UUID (service & profile)
+    \value HardcopyCableReplacement Hardcopy Cable Replacement Profile (HCRP) (profile)
+    \value HCRPrint               Hardcopy Cable Replacement Profile (HCRP) (service)
+    \value HCRScan                Hardcopy Cable Replacement Profile (HCRP) (service)
+    \value SIMAccess              SIM Access Profile (SAP) UUID (service and profile)
+    \value PhonebookAccessPCE     Phonebook Access Profile (PBAP) UUID (service)
+    \value PhonebookAccessPSE     Phonebook Access Profile (PBAP) UUID (service)
+    \value PhonebookAccess        Phonebook Access Profile (PBAP) (profile)
+    \value HeadsetHS              Headset Profile (HSP) UUID (service)
+    \value MessageAccessServer    Message Access Profile (MAP) UUID (service)
+    \value MessageNotificationServer Message Access Profile (MAP) UUID (service)
+    \value MessageAccessProfile   Message Access Profile (MAP) UUID (profile)
+    \value GNSS                   Global Navigation Satellite System UUID (profile)
+    \value GNSSServer             Global Navigation Satellite System Server (UUID) (service)
+    \value Display3D              3D Synchronization Display UUID (service)
+    \value Glasses3D              3D Synchronization Glasses UUID (service)
+    \value Synchronization3D      3D Synchronization UUID (profile)
+    \value MPSProfile             Multi-Profile Specification UUID (profile)
+    \value MPSService             Multi-Profile Specification UUID (service)
+    \value PnPInformation         Device Identification (DID) UUID (service & profile)
+    \value GenericNetworking      Generic networking UUID (service)
+    \value GenericFileTransfer    Generic file transfer UUID (service)
+    \value GenericAudio           Generic audio UUID (service)
+    \value GenericTelephony       Generic telephone UUID (service)
+    \value VideoSource            Video Distribution Profile (VDP) UUID (service)
+    \value VideoSink              Video Distribution Profile (VDP) UUID (service)
+    \value VideoDistribution      Video Distribution Profile (VDP) UUID (profile)
+    \value HDP                    Health Device Profile (HDP) UUID (profile)
+    \value HDPSource              Health Device Profile Source (HDP) UUID (service)
+    \value HDPSink                Health Device Profile Sink (HDP) UUID (service)
 
     \sa QBluetoothServiceInfo::ServiceClassIds
 */

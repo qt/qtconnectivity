@@ -442,6 +442,13 @@ quint16 QBluetoothSocketPrivate::peerPort() const
 qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 {
     Q_Q(QBluetoothSocket);
+
+    if (state != QBluetoothSocket::ConnectedState) {
+        errorString = QBluetoothSocket::tr("Cannot write while not connected");
+        q->setSocketError(QBluetoothSocket::OperationError);
+        return -1;
+    }
+
     if (q->openMode() & QIODevice::Unbuffered) {
         if (::write(socket, data, maxSize) != maxSize) {
             errorString = QBluetoothSocket::tr("Network Error");
@@ -471,11 +478,19 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 
 qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
 {
-    if(!buffer.isEmpty()){
+    Q_Q(QBluetoothSocket);
+
+    if (state != QBluetoothSocket::ConnectedState) {
+        errorString = QBluetoothSocket::tr("Cannot read while not connected");
+        q->setSocketError(QBluetoothSocket::OperationError);
+        return -1;
+    }
+
+    if (!buffer.isEmpty()) {
         int i = buffer.read(data, maxSize);
         return i;
-
     }
+
     return 0;
 }
 
@@ -533,11 +548,6 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     q->setOpenMode(openMode);
 
     return true;
-}
-
-int QBluetoothSocketPrivate::socketDescriptor() const
-{
-    return socket;
 }
 
 qint64 QBluetoothSocketPrivate::bytesAvailable() const

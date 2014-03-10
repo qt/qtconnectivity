@@ -67,8 +67,8 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent)
     connect(ui->inquiryType, SIGNAL(toggled(bool)), this, SLOT(setGeneralUnlimited(bool)));
     connect(ui->scan, SIGNAL(clicked()), this, SLOT(startScan()));
 
-    connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
-            this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
+    connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+            this, SLOT(addDevice(QBluetoothDeviceInfo)));
     connect(discoveryAgent, SIGNAL(finished()), this, SLOT(scanFinished()));
 
     connect(ui->list, SIGNAL(itemActivated(QListWidgetItem*)),
@@ -81,8 +81,8 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent)
     // add context menu for devices to be able to pair device
     ui->list->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->list, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(displayPairingMenu(QPoint)));
-    connect(localDevice, SIGNAL(pairingFinished(const QBluetoothAddress&, QBluetoothLocalDevice::Pairing))
-        , this, SLOT(pairingDone(const QBluetoothAddress&, QBluetoothLocalDevice::Pairing)));
+    connect(localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing))
+        , this, SLOT(pairingDone(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
 
 }
 

@@ -99,7 +99,7 @@ Tennis::Tennis(QWidget *parent)
 
     ui->pongView->setScene(board->getScene());
 
-    connect(ui->pongView, SIGNAL(mouseMove(int, int)), this, SLOT(mouseMove(int, int)));
+    connect(ui->pongView, SIGNAL(mouseMove(int,int)), this, SLOT(mouseMove(int,int)));
     ui->pongView->setMouseTracking(false);
 
     connect(board, SIGNAL(ballCollision(Board::Edge)), controller, SLOT(ballCollision(Board::Edge)));
@@ -108,7 +108,7 @@ Tennis::Tennis(QWidget *parent)
     connect(this, SIGNAL(moveLeftPaddle(int)), board, SLOT(setLeftPaddle(int)));
     connect(this, SIGNAL(moveRightPaddle(int)), board, SLOT(setRightPaddle(int)));
     connect(controller, SIGNAL(score(int,int)), board, SLOT(setScore(int,int)));
-    connect(controller, SIGNAL(fps(const QString&)), this, SLOT(fps(const QString&)));
+    connect(controller, SIGNAL(fps(QString)), this, SLOT(fps(QString)));
 
     setFocusPolicy(Qt::WheelFocus);
 

@@ -46,6 +46,8 @@
 #include <QtBluetooth/qbluetoothglobal.h>
 #include <QtAndroidExtras/QAndroidJniObject>
 #include "android/androidbroadcastreceiver_p.h"
+#include "android/serveracceptancethread_p.h"
+#include "android/inputstreamthread_p.h"
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
@@ -55,9 +57,48 @@ void QtBroadcastReceiver_jniOnReceive(JNIEnv *env, jobject /*javaObject*/,
     reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceive(env, context, intent);
 }
 
+static void QtBluetoothSocketServer_errorOccurred(JNIEnv */*env*/, jobject /*javaObject*/,
+                                           jlong qtObject, jint errorCode)
+{
+    reinterpret_cast<ServerAcceptanceThread*>(qtObject)->javaThreadErrorOccurred(errorCode);
+}
+
+static void QtBluetoothSocketServer_newSocket(JNIEnv */*env*/, jobject /*javaObject*/,
+                                       jlong qtObject, jobject socket)
+{
+    reinterpret_cast<ServerAcceptanceThread*>(qtObject)->javaNewSocket(socket);
+}
+
+static void QtBluetoothInputStreamThread_errorOccurred(JNIEnv */*env*/, jobject /*javaObject*/,
+                                           jlong qtObject, jint errorCode)
+{
+    reinterpret_cast<InputStreamThread*>(qtObject)->javaThreadErrorOccurred(errorCode);
+}
+
+static void QtBluetoothInputStreamThread_readyData(JNIEnv */*env*/, jobject /*javaObject*/,
+                                       jlong qtObject, jbyteArray buffer, jint bufferLength)
+{
+    reinterpret_cast<InputStreamThread*>(qtObject)->javaReadyRead(buffer, bufferLength);
+}
+
+
 static JNINativeMethod methods[] = {
     {"jniOnReceive", "(JLandroid/content/Context;Landroid/content/Intent;)V",
-               (void *) QtBroadcastReceiver_jniOnReceive},
+                (void *) QtBroadcastReceiver_jniOnReceive},
+};
+
+static JNINativeMethod methods_server[] = {
+        {"errorOccurred", "(JI)V",
+                    (void *) QtBluetoothSocketServer_errorOccurred},
+        {"newSocket", "(JLandroid/bluetooth/BluetoothSocket;)V",
+                    (void *) QtBluetoothSocketServer_newSocket},
+};
+
+static JNINativeMethod methods_inputStream[] = {
+        {"errorOccurred", "(JI)V",
+                    (void *) QtBluetoothInputStreamThread_errorOccurred},
+        {"readyData", "(J[BI)V",
+                    (void *) QtBluetoothInputStreamThread_readyData},
 };
 
 static const char logTag[] = "QtBluetooth";
@@ -75,8 +116,22 @@ static bool registerNatives(JNIEnv *env)
     jclass clazz;
     FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver");
 
+
     if (env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives failed");
+        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for BraodcastReceiver failed");
+        return false;
+    }
+
+    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothSocketServer");
+    if (env->RegisterNatives(clazz, methods_server, sizeof(methods_server) / sizeof(methods_server[0])) < 0) {
+        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for SocketServer failed");
+        return false;
+    }
+
+    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothInputStreamThread");
+    if (env->RegisterNatives(clazz, methods_inputStream,
+                             sizeof(methods_inputStream) / sizeof(methods_inputStream[0])) < 0) {
+        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for InputStreamThread failed");
         return false;
     }
 

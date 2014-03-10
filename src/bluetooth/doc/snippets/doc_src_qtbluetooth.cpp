@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -39,13 +39,36 @@
 ****************************************************************************/
 
 //! [include]
-#include <qbluetoothlocaldevice.h>
+#include <QtBluetooth/QBluetoothLocalDevice>
 //! [include]
+#include <QtCore/QCoreApplication>
+#include <QtCore/QDebug>
+#include <QtCore/QFile>
+#include <QtCore/QObject>
+#include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
+#include <QtBluetooth/QBluetoothTransferManager>
+#include <QtBluetooth/QBluetoothTransferRequest>
+#include <QtBluetooth/QBluetoothTransferReply>
 
 //! [namespace]
 QT_USE_NAMESPACE
 //! [namespace]
 
+class MyClass : public QObject
+{
+    Q_OBJECT
+public:
+    MyClass() : QObject() {}
+    void localDevice();
+    void startDiscovery();
+    void objectPush();
+
+public slots:
+    void deviceDiscovered(const QBluetoothDeviceInfo &device);
+    void transferFinished(QBluetoothTransferReply* reply);
+};
+
+void MyClass::localDevice() {
 //! [turningon]
 QBluetoothLocalDevice localDevice;
 QString localDeviceName;
@@ -60,20 +83,31 @@ if (localDevice.isValid()) {
     localDeviceName = localDevice.name();
 
     // Make it visible to others
-    localDevice.setHostMode(QBluetoothLocalDevice::HostDiscoverable)
+    localDevice.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+
+    // Get connected devices
+    QList<QBluetoothAddress> remotes;
+    remotes = localDevice.connectedDevices();
 }
 //! [turningon]
 
+
+}
+
 //! [discovery]
-// Create a discovery agent and connect to its signals
-QBluetoothDiscoveryAgent *discoveryAgent = new QBluetoothDiscoveryAgent(this);
-connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
-        this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
+void MyClass::startDiscovery()
+{
 
-// Start a discovery
-discoveryAgent->start();
+    // Create a discovery agent and connect to its signals
+    QBluetoothDeviceDiscoveryAgent *discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+            this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
 
-...
+    // Start a discovery
+    discoveryAgent->start();
+
+    //...
+}
 
 // In your local slot, read information about the found devices
 void MyClass::deviceDiscovered(const QBluetoothDeviceInfo &device)
@@ -82,18 +116,36 @@ void MyClass::deviceDiscovered(const QBluetoothDeviceInfo &device)
 }
 //! [discovery]
 
+void MyClass::objectPush()
+{
 //! [sendfile]
 // Create a transfer manager
 QBluetoothTransferManager *transferManager = new QBluetoothTransferManager(this);
 
 // Create the transfer request and file to be sent
-QBluetoothTransferRequest request(device.address());
+QBluetoothAddress remoteAddress("00:11:22:33:44:55:66");
+QBluetoothTransferRequest request(remoteAddress);
 QFile *file = new QFile("testfile.txt");
 
 // Ask the transfer manager to send it
 QBluetoothTransferReply *reply = transferManager->put(request, file);
 
 // Connect to the reply's signals to be informed about the status and do cleanups when done
-connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
-        this, SLOT(transferFinished(QBluetoothTransferReply*)));
+QObject::connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
+                 this, SLOT(transferFinished(QBluetoothTransferReply*)));
 //! [sendfile]
+}
+
+void MyClass::transferFinished(QBluetoothTransferReply* /*reply*/)
+{
+}
+
+int main(int argc, char** argv)
+{
+    QCoreApplication app(argc, argv);
+    MyClass cl;
+
+    return app.exec();
+}
+
+#include "doc_src_qtbluetooth.moc"

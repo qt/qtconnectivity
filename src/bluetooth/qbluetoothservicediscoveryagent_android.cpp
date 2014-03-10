@@ -197,7 +197,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         if (!receiver) {
             receiver = new ServiceDiscoveryBroadcastReceiver();
             QObject::connect(receiver, SIGNAL(uuidFetchFinished(QBluetoothAddress,QList<QBluetoothUuid>)),
-                    q, SLOT(_q_processFetchedUuids(const QBluetoothAddress&,const QList<QBluetoothUuid>&)));
+                    q, SLOT(_q_processFetchedUuids(QBluetoothAddress,QList<QBluetoothUuid>)));
         }
 
         if (!localDeviceReceiver) {
@@ -315,8 +315,9 @@ static QString serviceNameForClassUuid(const uint value)
     case QBluetoothUuid::PANU: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (PANU)");
     case QBluetoothUuid::NAP: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (NAP)");
     case QBluetoothUuid::GN: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (GN)");
-    case QBluetoothUuid::DirectPrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Printing (DP)");
-    //case QBluetoothUuid::ReferencePrinting: return QBluetoothServiceDiscoveryAgent::tr("");
+    case QBluetoothUuid::DirectPrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Direct Printing (BPP)");
+    case QBluetoothUuid::ReferencePrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Reference Printing (BPP)");
+    case QBluetoothUuid::BasicImage: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Profile");
     case QBluetoothUuid::ImagingResponder: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Responder");
     case QBluetoothUuid::ImagingAutomaticArchive: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Archive");
     case QBluetoothUuid::ImagingReferenceObjects: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Ref Objects");
@@ -338,7 +339,14 @@ static QString serviceNameForClassUuid(const uint value)
     case QBluetoothUuid::MessageAccessServer: return QBluetoothServiceDiscoveryAgent::tr("Message Access Server");
     case QBluetoothUuid::MessageNotificationServer: return QBluetoothServiceDiscoveryAgent::tr("Message Notification Server");
     case QBluetoothUuid::MessageAccessProfile: return QBluetoothServiceDiscoveryAgent::tr("Message Access");
-    case QBluetoothUuid::PnPInformation: return QBluetoothServiceDiscoveryAgent::tr("Navigation Satellite System");
+    case QBluetoothUuid::GNSS: return QBluetoothServiceDiscoveryAgent::tr("Global Navigation Satellite System");
+    case QBluetoothUuid::GNSSServer: return QBluetoothServiceDiscoveryAgent::tr("Global Navigation Satellite System Server");
+    case QBluetoothUuid::Display3D: return QBluetoothServiceDiscoveryAgent::tr("3D Synchronization Display");
+    case QBluetoothUuid::Glasses3D: return QBluetoothServiceDiscoveryAgent::tr("3D Synchronization Glasses");
+    case QBluetoothUuid::Synchronization3D: return QBluetoothServiceDiscoveryAgent::tr("3D Synchronization");
+    case QBluetoothUuid::MPSProfile: return QBluetoothServiceDiscoveryAgent::tr("Multi-Profile Specification (Profile)");
+    case QBluetoothUuid::MPSService: return QBluetoothServiceDiscoveryAgent::tr("Multi-Profile Specification");
+    case QBluetoothUuid::PnPInformation: return QBluetoothServiceDiscoveryAgent::tr("Device Identification");
     //case QBluetoothUuid::GenericNetworking: return QBluetoothServiceDiscoveryAgent::tr("");
     //case QBluetoothUuid::GenericFileTransfer: return QBluetoothServiceDiscoveryAgent::tr("");
     //case QBluetoothUuid::GenericAudio: return QBluetoothServiceDiscoveryAgent::tr("");
@@ -444,16 +452,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
         if (!customUuids.contains(i)) {
             //if we don't have custom uuid use it as class id as well
-            QList<QBluetoothUuid> serviceClassId;
-            serviceClassId << uuids.at(i);
-            serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, QVariant::fromValue(serviceClassId));
+            QBluetoothServiceInfo::Sequence classId;
+            classId << QVariant::fromValue(uuids.at(i));
+            serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
             serviceInfo.setServiceName(serviceNameForClassUuid(uuids.at(i).data1));
         }
 
         //don't include the service if we already discovered it before
         bool alreadyDiscovered = false;
-        for (int i = 0; i < discoveredServices.count(); i++) {
-            const QBluetoothServiceInfo &info = discoveredServices.at(i);
+        for (int j = 0; j < discoveredServices.count(); j++) {
+            const QBluetoothServiceInfo &info = discoveredServices.at(j);
             if (info.device() == serviceInfo.device()
                     && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
                     && info.serviceUuid() == serviceInfo.serviceUuid()) {

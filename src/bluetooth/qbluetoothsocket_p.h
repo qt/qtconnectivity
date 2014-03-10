@@ -87,6 +87,8 @@ class QBluetoothSocketPrivate
 {
 #endif
     Q_DECLARE_PUBLIC(QBluetoothSocket)
+    friend class QBluetoothServerPrivate;
+
 public:
 
     QBluetoothSocketPrivate();
@@ -131,7 +133,6 @@ public:
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
-    int socketDescriptor() const;
 
     qint64 bytesAvailable() const;
 
@@ -169,7 +170,7 @@ public:
     InputStreamThread *inputThread;
 
 private Q_SLOTS:
-    void inputThreadError();
+    void inputThreadError(int errorCode);
 
 #endif
 

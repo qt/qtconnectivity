@@ -503,6 +503,9 @@ void QBluetoothLocalDevicePrivate::_q_devicePropertyChanged(const QString &prope
 
 void QBluetoothLocalDevicePrivate::createCache()
 {
+    if (!adapter)
+        return;
+
     QDBusPendingReply<QList<QDBusObjectPath> > reply = adapter->ListDevices();
     reply.waitForFinished();
     if (reply.isError()) {

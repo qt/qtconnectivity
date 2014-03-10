@@ -95,7 +95,8 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
 
             socket->setSocketDescriptor(socketFD, QBluetoothServiceInfo::RfcommProtocol,
                                            QBluetoothSocket::ConnectedState);
-            socket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
+            socket->d_ptr->m_peerAddress = QBluetoothAddress(nextClientAddress);
+            socket->d_ptr->m_uuid = m_uuid;
             activeSockets.append(socket);
             socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
             socket->setSocketState(QBluetoothSocket::ListeningState);
@@ -143,7 +144,10 @@ void QBluetoothServer::close()
         d->socket->close();
         delete d->socket;
         d->socket = 0;
-        ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+        if (__fakeServerPorts.contains(d)) {
+            ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+            __fakeServerPorts.remove(d);
+        }
         // force active object (socket) to run and shutdown socket.
         qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     }
@@ -156,6 +160,23 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
         d->m_lastError = UnsupportedProtocolError;
         emit error(d->m_lastError);
+        return false;
+    }
+
+    QBluetoothLocalDevice device(address);
+    if (!device.isValid()) {
+        qCWarning(QT_BT_QNX) << "Device does not support Bluetooth or"
+                                 << address.toString() << "is not a valid local adapter";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    QBluetoothLocalDevice::HostMode hostMode= device.hostMode();
+    if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        d->m_lastError = QBluetoothServer::PoweredOffError;
+        emit error(d->m_lastError);
+        qCWarning(QT_BT_QNX) << "Bluetooth device is powered off";
         return false;
     }
 
@@ -196,7 +217,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
-    d->maxPendingConnections = numConnections; //Currently not used
+    //QNX supports only one device at the time
 }
 
 QBluetoothAddress QBluetoothServer::serverAddress() const

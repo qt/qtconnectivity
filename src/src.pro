@@ -1,6 +1,13 @@
 TEMPLATE = subdirs
-CONFIG  += ordered
 
 SUBDIRS += bluetooth nfc
 android: SUBDIRS += android
-qtHaveModule(quick): SUBDIRS += imports
+
+bluetooth_doc_snippets.subdir = bluetooth/doc/snippets
+bluetooth_doc_snippets.depends = bluetooth
+SUBDIRS += bluetooth_doc_snippets
+
+qtHaveModule(quick) {
+    imports.depends += bluetooth nfc
+    SUBDIRS += imports
+}

@@ -686,6 +686,7 @@ bool QBluetoothSocket::setSocketDescriptor(int socketDescriptor, QBluetoothServi
 
 /*!
   Returns the platform-specific socket descriptor, if available.
+  This function returns -1 if the descriptor is not available or an error has occurred.
 */
 
 int QBluetoothSocket::socketDescriptor() const
