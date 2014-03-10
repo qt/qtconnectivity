@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.3
 
     Applications can share NDEF data or file content using NFC technology by tapping two NFC-enabled devices
     together. The QNearFieldShareManager provides a high level entry point to access this functionality.

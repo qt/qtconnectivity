@@ -58,9 +58,12 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.3
 
     The QNearFieldShareTarget class can be used for sharing NDEF message or files to a remote
     NFC enabled device supporting the same protocol.
+
+    \sa QNearFieldShareManager
 */
 
 /*!
