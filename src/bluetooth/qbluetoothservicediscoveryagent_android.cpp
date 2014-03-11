@@ -443,7 +443,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
-            //TODO Remove line below - work around
             serviceInfo.setServiceUuid(uuids.at(i));
         } else if (customUuids.contains(i)) {
             //custom uuid but no serial port

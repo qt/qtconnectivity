@@ -226,6 +226,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
             errorString = QBluetoothSocket::tr("Network Error");
             q->setSocketError(QBluetoothSocket::NetworkError);
             qCWarning(QT_BT_QNX) << Q_FUNC_INFO << "Socket error";
+            return -1;
         }
 
         Q_EMIT q->bytesWritten(maxSize);
@@ -233,7 +234,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
         return maxSize;
     } else {
         if (!connectWriteNotifier)
-            return 0;
+            return -1;
 
         if (txBuffer.size() == 0) {
             connectWriteNotifier->setEnabled(true);
