@@ -195,4 +195,28 @@ void QLowEnergyController::setRandomAddress()
     d_ptr->m_randomAddress = true;
 }
 
+/*!
+    This method writes the wanted \a characteristic taking its value. This value is written directly
+    to the Bluetooth Low Energy device. In case wanted characteristic is not connected or does not
+    have write permission, it will return false with the corresponding error string.
+
+    \sa QLowEnergyCharacteristicInfo::setValue(), errorString(), error()
+ */
+bool QLowEnergyController::writeCharacteristic(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    return d_ptr->write(characteristic);
+}
+
+/*!
+    This method writes the wanted \a descriptor taking its value. This value is written directly
+    to the Bluetooth Low Energy device. In case wanted descriptor is not connected it will return
+    false with the corresponding error string.
+
+    \sa QLowEnergyDescriptorInfo::setValue(), errorString(), error()
+ */
+bool QLowEnergyController::writeDescriptor(const QLowEnergyDescriptorInfo &descriptor)
+{
+    return d_ptr->write(descriptor);
+}
+
 QT_END_NAMESPACE

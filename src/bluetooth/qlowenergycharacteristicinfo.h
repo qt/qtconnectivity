@@ -82,7 +82,7 @@ public:
 
     QBluetoothUuid uuid() const;
 
-    void writeValue(const QByteArray &value);
+    void setValue(const QByteArray &value);
     QByteArray value() const;
 
     int permissions() const;

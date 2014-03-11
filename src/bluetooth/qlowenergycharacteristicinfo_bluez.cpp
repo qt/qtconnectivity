@@ -69,31 +69,8 @@ QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
 
 void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
 {
-    if (permission & QLowEnergyCharacteristicInfo::Write || notification) {
-        process = process->instance();
-        if (!m_signalConnected) {
-            connect(process, SIGNAL(replySend(const QString &)), this, SLOT(replyReceived(const QString &)));
-            m_signalConnected = true;
-        }
-        value = wantedValue;
-        QString command;
-        if (notification == true)
-            command = QStringLiteral("char-write-req ") + notificationHandle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
-        else
-            command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
+    Q_UNUSED(wantedValue);
 
-
-    #ifdef QT_LOWENERGYCHARACTERISTIC_DEBUG
-        qDebug() << command << t << process;
-    #endif
-        process->executeCommand(command);
-        process->executeCommand(QStringLiteral("\n"));
-        t++;
-    }
-    else {
-        errorString = QStringLiteral("This characteristic does not support write operations.");
-        emit error(uuid);
-    }
 }
 
 void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
@@ -103,9 +80,7 @@ void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
 
 void QLowEnergyCharacteristicInfoPrivate::readValue()
 {
-    QString command = QStringLiteral("char-read-hnd ") + handle;
-    process->executeCommand(command);
-    process->executeCommand(QStringLiteral("\n"));
+
 }
 
 bool QLowEnergyCharacteristicInfoPrivate::valid()

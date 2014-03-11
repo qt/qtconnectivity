@@ -140,7 +140,7 @@ QString QLowEnergyDescriptorInfo::handle() const
 /*!
     Returns the value of the descriptor.
 */
-QByteArray QLowEnergyDescriptorInfo::value()
+QByteArray QLowEnergyDescriptorInfo::value() const
 {
     return d_ptr->m_value;
 }
@@ -159,6 +159,17 @@ QVariantMap QLowEnergyDescriptorInfo::properties() const
 QString QLowEnergyDescriptorInfo::name() const
 {
     return d_ptr->m_name;
+}
+
+/*!
+    Sets the value \a value of the descriptor. This only caches the value. To write
+    a value directly to the device QLowEnergyController class must be used.
+
+    \sa QLowEnergyController::writeDescriptor()
+*/
+void QLowEnergyDescriptorInfo::setValue(const QByteArray &value)
+{
+    d_ptr->m_value = value;
 }
 
 QT_END_NAMESPACE

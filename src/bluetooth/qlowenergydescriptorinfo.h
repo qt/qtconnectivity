@@ -62,11 +62,12 @@ public:
     ~QLowEnergyDescriptorInfo();
 
     QLowEnergyDescriptorInfo &operator=(const QLowEnergyDescriptorInfo &other);
-    QByteArray value();
+    QByteArray value() const;
     QBluetoothUuid uuid() const;
     QString handle() const;
     QVariantMap properties() const;
     QString name() const;
+    void setValue(const QByteArray &value);
 
 private:
     QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;

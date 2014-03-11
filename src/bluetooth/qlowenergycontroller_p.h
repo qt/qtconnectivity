@@ -57,6 +57,8 @@ public:
     void disconnectService(const QLowEnergyServiceInfo &leService = QLowEnergyServiceInfo());
     bool enableNotification(const QLowEnergyCharacteristicInfo &characteristic);
     void disableNotification(const QLowEnergyCharacteristicInfo &characteristic);
+    bool write(const QLowEnergyCharacteristicInfo &characteristic);
+    bool write(const QLowEnergyDescriptorInfo &descriptor);
 
     void _q_serviceConnected(const QBluetoothUuid &uuid);
     void _q_serviceError(const QBluetoothUuid &uuid);

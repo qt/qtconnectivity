@@ -47,6 +47,7 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QLowEnergyCharacteristicInfo>
 #include <QtBluetooth/QLowEnergyServiceInfo>
+#include <QtBluetooth/QLowEnergyDescriptorInfo>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,6 +65,8 @@ public:
     void disconnectFromService(const QLowEnergyServiceInfo &leService = QLowEnergyServiceInfo());
     bool enableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
     void disableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
+    bool writeCharacteristic(const QLowEnergyCharacteristicInfo &characteristic);
+    bool writeDescriptor(const QLowEnergyDescriptorInfo &descriptor);
     QString errorString() const;
     void setRandomAddress();
 

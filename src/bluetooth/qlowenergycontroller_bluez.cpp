@@ -489,4 +489,30 @@ void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteri
     }
 }
 
+bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    if (process->isConnected() && characteristic.isValid()) {
+        if (QLowEnergyCharacteristicInfo::Write & characteristic.permissions()) {
+            writeValue(characteristic.handle(), characteristic.value());
+            return true;
+        } else {
+            errorString = QStringLiteral("This characteristic does not support write operations.");
+            emit q_ptr->error(characteristic);
+            return false;
+        }
+    } else {
+        errorString = QStringLiteral("The device is not connected or characteristic is not valid");
+        emit q_ptr->error(characteristic);
+        return false;
+    }
+}
+
+bool QLowEnergyControllerPrivate::write(const QLowEnergyDescriptorInfo &descriptor)
+{
+    if (process->isConnected()) {
+        writeValue(descriptor.handle(), descriptor.value());
+        return true;
+    }
+}
+
 QT_END_NAMESPACE

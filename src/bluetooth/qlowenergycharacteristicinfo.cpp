@@ -252,14 +252,14 @@ bool QLowEnergyCharacteristicInfo::isNotificationCharacteristic() const
 }
 
 /*!
-    Writes the value \a value directly to LE device. If the value was not written successfully
-    an error will be emitted with an error string.
+    Sets the value \a value of the characteristic. This only caches the value. To write
+    a value directly to the device QLowEnergyController class must be used.
 
-    \sa errorString()
+    \sa QLowEnergyController::writeCharacteristic()
 */
-void QLowEnergyCharacteristicInfo::writeValue(const QByteArray &value)
+void QLowEnergyCharacteristicInfo::setValue(const QByteArray &value)
 {
-    d_ptr->setValue(value);
+    d_ptr->value = value;
 }
 
 /*!

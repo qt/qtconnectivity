@@ -105,4 +105,16 @@ void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteri
     Q_UNUSED(characteristic);
 }
 
+bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &characteristic)
+{
+    Q_UNUSED(characteristic);
+    return false;
+}
+
+bool QLowEnergyControllerPrivate::write(const QLowEnergyDescriptorInfo &descriptor)
+{
+    Q_UNUSED(descriptor);
+    return false;
+}
+
 QT_END_NAMESPACE
