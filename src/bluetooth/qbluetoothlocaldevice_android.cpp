@@ -437,8 +437,42 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
 QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
 {
-    //TODO Support BLuetoothManager::getConnectedDevices(int) from API 18 onwards
-    return d_ptr->connectedDevices;
+    /*
+     * Android does not have an API to list all connected devices. We have to collect
+     * the information based on a few indicators.
+     *
+     * Primarily we detect connected devices by monitoring connect/disconnect signals.
+     * Unfortunately the list may only be complete after very long monitoring time.
+     * However there are some Android APIs which provide the list of connected devices
+     * for specific Bluetooth profiles. QtBluetoothBroadcastReceiver.getConnectedDevices()
+     * returns a few connections of common profiles. The returned list is not complete either
+     * but at least it can complement our already detected connections.
+     */
+    QAndroidJniObject connectedDevices = QAndroidJniObject::callStaticObjectMethod(
+                                    "org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver",
+                                    "getConnectedDevices",
+                                    "()[Ljava/lang/String;");
+
+    if (!connectedDevices.isValid())
+        return d_ptr->connectedDevices;
+
+    jobjectArray connectedDevicesArray = connectedDevices.object<jobjectArray>();
+    if (!connectedDevicesArray)
+        return d_ptr->connectedDevices;
+
+    QAndroidJniEnvironment env;
+    QList<QBluetoothAddress> knownAddresses = d_ptr->connectedDevices;
+    QAndroidJniObject p;
+
+    jint size = env->GetArrayLength(connectedDevicesArray);
+    for (int i = 0; i < size; i++) {
+        p = env->GetObjectArrayElement(connectedDevicesArray, i);
+        QBluetoothAddress address(p.toString());
+        if (!address.isNull() && !knownAddresses.contains(address))
+            knownAddresses.append(address);
+    }
+
+    return knownAddresses;
 }
 
 QT_END_NAMESPACE

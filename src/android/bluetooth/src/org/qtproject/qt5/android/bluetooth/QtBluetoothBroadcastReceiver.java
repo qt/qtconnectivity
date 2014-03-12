@@ -49,7 +49,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.List;
 
 public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 {
@@ -126,4 +129,53 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         return true;
     }
 
+    /*
+     * Returns a list of remote devices confirmed to be connected.
+     *
+     * This list is not complete as it only detects GATT/BtLE related connections.
+     * Unfortunately there is no API that provides the complete list.
+     *
+     * The function uses Android API v11 & v18. We need to use reflection.
+     */
+    static public String[] getConnectedDevices()
+    {
+        try {
+            //Bluetooth service name
+            Field f = Context.class.getField("BLUETOOTH_SERVICE");
+            String serviceValueString = (String)f.get(qtactivity);
+
+            Class btProfileClz = Class.forName("android.bluetooth.BluetoothProfile");
+
+            //value of BluetoothProfile.GATT
+            f = btProfileClz.getField("GATT");
+            int gatt = f.getInt(null);
+
+            //value of BluetoothProfile.GATT_SERVER
+            f = btProfileClz.getField("GATT_SERVER");
+            int gattServer = f.getInt(null);
+
+            //get BluetoothManager instance
+            Object bluetoothManager = qtactivity.getSystemService(serviceValueString);
+
+            Class[] cArg = new Class[1];
+            cArg[0] = int.class;
+            Method m = bluetoothManager.getClass().getMethod("getConnectedDevices", cArg);
+
+            List gattConnections = (List) m.invoke(bluetoothManager, gatt);
+            List gattServerConnections = (List) m.invoke(bluetoothManager, gattServer);
+
+            //process found remote connections but avoid duplications
+            HashSet<String> set = new HashSet<String>();
+            for (int i = 0; i < gattConnections.size(); i++)
+                set.add(gattConnections.get(i).toString());
+
+            for (int i = 0; i < gattServerConnections.size(); i++)
+                set.add(gattServerConnections.get(i).toString());
+
+            return set.toArray(new String[set.size()]);
+        } catch (Exception ex) {
+            //API is less than 18
+            return new String[0];
+        }
+    }
 }
