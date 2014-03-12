@@ -59,16 +59,20 @@ public:
     void disableNotification(const QLowEnergyCharacteristicInfo &characteristic);
     bool write(const QLowEnergyCharacteristicInfo &characteristic);
     bool write(const QLowEnergyDescriptorInfo &descriptor);
-
-    void _q_serviceConnected(const QBluetoothUuid &uuid);
-    void _q_serviceError(const QBluetoothUuid &uuid);
-    void _q_characteristicError(const QBluetoothUuid &uuid);
-    void _q_valueReceived(const QBluetoothUuid &uuid);
-    void _q_serviceDisconnected(const QBluetoothUuid &uuid);
     void disconnectAllServices();
 
     QList<QLowEnergyServiceInfo> m_leServices;
     QString errorString;
+
+#ifdef QT_QNX_BLUETOOTH
+    static void serviceConnected(const char*, const char*, int, int, short unsigned int, short unsigned int, short unsigned int, void*);
+    static void serviceUpdate(const char *, int , short unsigned int, short unsigned int, short unsigned int, void *);
+    static void serviceDisconnected(const char *, const char *, int, int, void *);
+    static void serviceNotification(int, short unsigned int, const char unsigned *, short unsigned int, void *);
+    void readDescriptors(QLowEnergyCharacteristicInfo &characteristic);
+    void readValue(QLowEnergyCharacteristicInfo &characteristic);
+    void writeValue(const int &instance, const QString &handle, const QByteArray &value);
+#endif
 
 #ifdef QT_BLUEZ_BLUETOOTH
     void connectToTerminal();
@@ -82,8 +86,8 @@ public slots:
 #endif
 private:
     bool m_randomAddress;
-#ifdef QT_BLUEZ_BLUETOOTH
     QLowEnergyProcess *process;
+#ifdef QT_BLUEZ_BLUETOOTH
     int m_step;
     bool m_deviceConnected;
     bool m_commandStarted;

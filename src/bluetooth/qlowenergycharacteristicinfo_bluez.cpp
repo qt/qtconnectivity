@@ -67,35 +67,10 @@ QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
     delete characteristic;
 }
 
-void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
-{
-    Q_UNUSED(wantedValue);
-
-}
-
-void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
-{
-
-}
-
-void QLowEnergyCharacteristicInfoPrivate::readValue()
-{
-
-}
 
 bool QLowEnergyCharacteristicInfoPrivate::valid()
 {
     return true;
-}
-
-bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
-{
-    return false;
-}
-
-void QLowEnergyCharacteristicInfoPrivate::disableNotification()
-{
-
 }
 
 QT_END_NAMESPACE

@@ -69,31 +69,6 @@ void QLowEnergyControllerPrivate::disconnectAllServices()
 
 }
 
-void QLowEnergyControllerPrivate::_q_characteristicError(const QBluetoothUuid &uuid)
-{
-    Q_UNUSED(uuid);
-}
-
-void QLowEnergyControllerPrivate::_q_serviceConnected(const QBluetoothUuid &uuid)
-{
-    Q_UNUSED(uuid);
-}
-
-void QLowEnergyControllerPrivate::_q_serviceDisconnected(const QBluetoothUuid &uuid)
-{
-    Q_UNUSED(uuid);
-}
-
-void QLowEnergyControllerPrivate::_q_serviceError(const QBluetoothUuid &uuid)
-{
-    Q_UNUSED(uuid);
-}
-
-void QLowEnergyControllerPrivate::_q_valueReceived(const QBluetoothUuid &uuid)
-{
-    Q_UNUSED(uuid);
-}
-
 bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteristicInfo &characteristic)
 {
     Q_UNUSED(characteristic);

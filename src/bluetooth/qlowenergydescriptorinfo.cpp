@@ -77,7 +77,9 @@ QString parseDescriptorUuid(const QBluetoothUuid &uuid)
 QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle):
     m_value(QByteArray()), m_uuid(uuid), m_handle(handle), m_properties(QVariantMap()), m_name(QStringLiteral(""))
 {
-
+#ifdef QT_QNX_BLUETOOTH
+    instance = -1;
+#endif
 }
 
 QLowEnergyDescriptorInfoPrivate::~QLowEnergyDescriptorInfoPrivate()

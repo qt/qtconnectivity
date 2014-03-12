@@ -113,7 +113,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothtransferreply_qnx.cpp \
         qlowenergycharacteristicinfo_qnx.cpp \
         qlowenergyserviceinfo_qnx.cpp \
-        qlowenergyprocess_qnx.cpp
+        qlowenergyprocess_qnx.cpp \
+        qlowenergycontroller_qnx.cpp
 
 } else:android:!android-no-sdk {
     include(android/android.pri)

@@ -63,19 +63,12 @@ QT_BEGIN_NAMESPACE
 class QBluetoothUuid;
 class QLowEnergyCharacteristicInfo;
 
-class QLowEnergyCharacteristicInfoPrivate: public QObject
+class QLowEnergyCharacteristicInfoPrivate
 {
-    Q_OBJECT
 public:
     QLowEnergyCharacteristicInfoPrivate();
     ~QLowEnergyCharacteristicInfoPrivate();
-
-    void setValue(const QByteArray &wantedValue);
-    void readValue();
     bool valid();
-    void readDescriptors();
-    bool enableNotification();
-    void disableNotification();
 
     QString name;
     QBluetoothUuid uuid;
@@ -92,17 +85,12 @@ public:
     bt_gatt_characteristic_t characteristic;
     int characteristicMtu;
     bt_gatt_char_prop_mask characteristicProperties;
-    static void serviceNotification(int, short unsigned int, const unsigned char*, short unsigned int, void *);
 #endif
 #ifdef QT_BLUEZ_BLUETOOTH
     QString path;
     int t;
     QString startingHandle;
 #endif
-
-Q_SIGNALS:
-    void notifyValue(const QBluetoothUuid &);
-    void error(const QBluetoothUuid &);
 
 private:
 #ifdef QT_BLUEZ_BLUETOOTH

@@ -54,6 +54,9 @@ public:
     QString m_handle;
     QVariantMap m_properties;
     QString m_name;
+#ifdef QT_QNX_BLUETOOTH
+    int instance;
+#endif
 };
 QT_END_NAMESPACE
 #endif // QLOWENERGYDESCRIPTORINFO_P_H

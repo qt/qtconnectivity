@@ -81,12 +81,6 @@ Q_SIGNALS:
 
 private:
     QLowEnergyControllerPrivate *d_ptr;
-
-    Q_PRIVATE_SLOT(d_func(), void _q_serviceConnected(const QBluetoothUuid &uuid))
-    Q_PRIVATE_SLOT(d_func(), void _q_serviceError(const QBluetoothUuid &uuid))
-    Q_PRIVATE_SLOT(d_func(), void _q_characteristicError(const QBluetoothUuid &uuid))
-    Q_PRIVATE_SLOT(d_func(), void _q_valueReceived(const QBluetoothUuid &uuid))
-    Q_PRIVATE_SLOT(d_func(), void _q_serviceDisconnected(const QBluetoothUuid &uuid))
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_replyReceived(const QString &reply))
 #endif

@@ -42,8 +42,6 @@
 #include "qlowenergyprocess_p.h"
 #include <btapi/btdevice.h>
 #include <errno.h>
-#include "qlowenergyserviceinfo.h"
-#include "qlowenergyserviceinfo_p.h"
 #include <btapi/btgatt.h>
 QT_BEGIN_NAMESPACE
 
@@ -89,7 +87,7 @@ bool QLowEnergyProcess::isConnected() const
     return connected;
 }
 
-void QLowEnergyProcess::addPointer(QLowEnergyServiceInfoPrivate* classPointer)
+void QLowEnergyProcess::addPointer(QLowEnergyControllerPrivate* classPointer)
 {
     m_classPointers.append(classPointer);
 }

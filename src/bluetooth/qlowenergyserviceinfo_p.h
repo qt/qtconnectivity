@@ -57,9 +57,8 @@ class QLowEnergyServiceInfo;
 class QLowEnergyCharacteristicInfo;
 class QLowEnergyProcess;
 
-class QLowEnergyServiceInfoPrivate: public QObject
+class QLowEnergyServiceInfoPrivate
 {
-    Q_OBJECT
     friend class QLowEnergyControllerPrivate;
 
 public:
@@ -69,8 +68,6 @@ public:
 #endif
     ~QLowEnergyServiceInfoPrivate();
 
-    void registerServiceWatcher();
-    void unregisterServiceWatcher();
     bool valid();
 
     QString serviceName;
@@ -89,18 +86,8 @@ public:
 #endif
 
 #ifdef QT_QNX_BLUETOOTH
-    static void serviceConnected(const char*, const char*, int, int, short unsigned int, short unsigned int, short unsigned int, void*);
-    static void serviceUpdate(const char *, int , short unsigned int, short unsigned int, short unsigned int, void *);
-    static void serviceDisconnected(const char *, const char *, int, int, void *);
     static void serviceNotification(int, short unsigned int, const char unsigned *, short unsigned int, void *);
-    //static void handleEvent(const int, const char *, const char *);
 #endif
-
-Q_SIGNALS:
-    void finished();
-    void connectedToService(const QBluetoothUuid &);
-    void error(const QBluetoothUuid &);
-    void disconnectedFromService(const QBluetoothUuid &);
 
 private:
     QLowEnergyProcess *process;

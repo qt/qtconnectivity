@@ -102,7 +102,7 @@ QString parseUuid(const QBluetoothUuid &uuid)
         uuidnames[0x1818] = QStringLiteral("Cycling Power");
         uuidnames[0x1819] = QStringLiteral("Location and Navigation");
     }
-    QString name = uuidnames.value(uuid.toUInt16(), QStringLiteral("Unknow Service"));
+    QString name = uuidnames.value(uuid.toUInt16(), QStringLiteral("Unknown Service"));
     return name;
 }
 

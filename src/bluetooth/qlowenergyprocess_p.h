@@ -47,7 +47,7 @@
 #ifdef QT_QNX_BLUETOOTH
 #include <QList>
 #include <QPointer>
-#include "qlowenergyserviceinfo_p.h"
+#include "qlowenergycontroller_p.h"
 #endif
 #ifdef QT_BLUEZ_BLUETOOTH
 #include <QProcess>
@@ -66,7 +66,7 @@ public:
     bool isConnected() const;
 #ifdef QT_QNX_BLUETOOTH
     static void handleEvent(const int, const char *, const char *);
-    void addPointer(QLowEnergyServiceInfoPrivate* classPointer);
+    void addPointer(QLowEnergyControllerPrivate* classPointer);
 #endif
 #ifdef QT_BLUEZ_BLUETOOTH
     QProcess *getProcess();
@@ -89,7 +89,7 @@ private:
     int m_counter;
 #endif
 #ifdef QT_QNX_BLUETOOTH
-    QList<QObject*> m_classPointers;
+    QList<QLowEnergyControllerPrivate*> m_classPointers;
 #endif
     bool connected;
 };

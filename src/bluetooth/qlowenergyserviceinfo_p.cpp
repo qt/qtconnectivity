@@ -53,16 +53,6 @@ QLowEnergyServiceInfoPrivate::~QLowEnergyServiceInfoPrivate()
 
 }
 
-void QLowEnergyServiceInfoPrivate::registerServiceWatcher()
-{
-
-}
-
-void QLowEnergyServiceInfoPrivate::unregisterServiceWatcher()
-{
-
-}
-
 bool QLowEnergyServiceInfoPrivate::valid()
 {
     return false;

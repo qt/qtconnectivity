@@ -53,30 +53,6 @@ QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
 
 }
 
-void QLowEnergyCharacteristicInfoPrivate::setValue(const QByteArray &wantedValue)
-{
-    Q_UNUSED(wantedValue);
-}
-
-bool QLowEnergyCharacteristicInfoPrivate::enableNotification()
-{
-    return false;
-}
-
-void QLowEnergyCharacteristicInfoPrivate::disableNotification()
-{
-
-}
-
-void QLowEnergyCharacteristicInfoPrivate::readDescriptors()
-{
-
-}
-
-void QLowEnergyCharacteristicInfoPrivate::readValue()
-{
-
-}
 
 bool QLowEnergyCharacteristicInfoPrivate::valid()
 {
