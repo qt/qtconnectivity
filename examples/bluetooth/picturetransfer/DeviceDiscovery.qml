@@ -79,6 +79,14 @@ Item {
 //! [Discovery-2]
         model: BluetoothDiscoveryModel {
             discoveryMode: BluetoothDiscoveryModel.DeviceDiscovery
+            onErrorChanged: {
+                if (error == BluetoothDiscoveryModel.NoError)
+                    return;
+                if (error == BluetoothDiscoveryModel.PoweredOffError)
+                    titleLabel.text = "Bluetooth turned off";
+                else
+                    titleLabel.text = "Cannot find devices";
+            }
         }
 
         delegate: Button {
