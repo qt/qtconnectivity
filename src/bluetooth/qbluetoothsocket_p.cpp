@@ -123,7 +123,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
         q->setSocketError(QBluetoothSocket::OperationError);
         return -1;
     }
-    return 0;
+    return -1;
 }
 
 qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
@@ -139,7 +139,7 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
         return -1;
     }
 
-    return 0;
+    return -1;
 }
 
 void QBluetoothSocketPrivate::close()

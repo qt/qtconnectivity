@@ -39,37 +39,37 @@
 **
 ****************************************************************************/
 
-#include "android/androidbroadcastreceiver_p.h"
-#include <QtBluetooth/QBluetoothAddress>
-#include <QtBluetooth/QBluetoothLocalDevice>
+#ifndef JNI_ANDROID_P_H
+#define JNI_ANDROID_P_H
 
-#ifndef LOCALDEVICEBROADCASTRECEIVER_H
-#define LOCALDEVICEBROADCASTRECEIVER_H
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
 
 QT_BEGIN_NAMESPACE
 
-class LocalDeviceBroadcastReceiver : public AndroidBroadcastReceiver
-{
-    Q_OBJECT
-public:
-    explicit LocalDeviceBroadcastReceiver(QObject *parent = 0);
-    virtual ~LocalDeviceBroadcastReceiver() {}
-    virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
-    bool pairingConfirmation(bool accept);
-
-signals:
-    void hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
-    void pairingStateChanged(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
-    void connectDeviceChanges(const QBluetoothAddress &address, bool isConnectEvent);
-    void pairingDisplayConfirmation(const QBluetoothAddress &address, const QString& pin);
-private:
-    int previousScanMode;
-    QAndroidJniObject pairingDevice;
-
-    int bondingModePreset[3];
-    int hostModePreset[3];
+enum JavaNames {
+    BluetoothAdapter = 0,
+    BluetoothDevice,
+    ActionAclConnected,
+    ActionAclDisconnected,
+    ActionBondStateChanged,
+    ActionDiscoveryStarted,
+    ActionDiscoveryFinished,
+    ActionFound,
+    ActionPairingRequest,
+    ActionScanModeChanged,
+    ActionUuid,
+    ExtraBondState,
+    ExtraDevice,
+    ExtraPairingKey,
+    ExtraPairingVariant,
+    ExtraRssi,
+    ExtraScanMode,
+    ExtraUuid
 };
+
+QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName);
 
 QT_END_NAMESPACE
 
-#endif // LOCALDEVICEBROADCASTRECEIVER_H
+#endif // JNI_ANDROID_P_H

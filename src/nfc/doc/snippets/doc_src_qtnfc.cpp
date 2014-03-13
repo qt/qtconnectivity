@@ -38,11 +38,35 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QObject>
 //! [include]
 #include <QtNfc/QNearFieldManager>
 //! [include]
+#include <QtNfc/QNdefMessage>
 
 //! [namespace]
 QT_USE_NAMESPACE
 //! [namespace]
+
+class MyClass : public QObject
+{
+    Q_OBJECT
+public:
+    MyClass() : QObject()
+    {
+//formatting adjusted to improve usage in docs
+//! [handleNdefMessage]
+QNearFieldManager *manager = new QNearFieldManager(this);
+manager->registerNdefMessageHandler(this,
+            SLOT(handleNdefMessage(QNdefMessage,QNearFieldTarget*)));
+//! [handleNdefMessage]
+    }
+
+public Q_SLOTS:
+    void handleNdefMessage(QNdefMessage,QNearFieldTarget*)
+    {
+    }
+};
+
+#include "doc_src_qtnfc.moc"
 

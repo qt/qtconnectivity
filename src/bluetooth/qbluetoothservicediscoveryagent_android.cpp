@@ -98,8 +98,14 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
 {
-    delete receiver;
-    delete localDeviceReceiver;
+    if (receiver) {
+        receiver->unregisterReceiver();
+        delete receiver;
+    }
+    if (localDeviceReceiver) {
+        localDeviceReceiver->unregisterReceiver();
+        delete localDeviceReceiver;
+    }
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
@@ -209,6 +215,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         jboolean result = remoteDevice.callMethod<jboolean>("fetchUuidsWithSdp");
         if (!result) {
             //kill receiver to limit load of signals
+            receiver->unregisterReceiver();
             receiver->deleteLater();
             receiver = 0;
             qCWarning(QT_BT_ANDROID) << "Cannot start dynamic fetch.";
@@ -223,6 +230,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     discoveredDevices.clear();
 
     //kill receiver to limit load of signals
+    receiver->unregisterReceiver();
     receiver->deleteLater();
     receiver = 0;
 
@@ -435,7 +443,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
-            //TODO Remove line below - work around
             serviceInfo.setServiceUuid(uuids.at(i));
         } else if (customUuids.contains(i)) {
             //custom uuid but no serial port
@@ -493,6 +500,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_fetchUuidsTimeout()
     Q_ASSERT(sdpCache.isEmpty());
 
     //kill receiver to limit load of signals
+    receiver->unregisterReceiver();
     receiver->deleteLater();
     receiver = 0;
     _q_serviceDiscoveryFinished();
@@ -509,6 +517,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_hostModeStateChanged(QBluetoothL
         errorString = QBluetoothServiceDiscoveryAgent::tr("Device is powered off");
 
         //kill receiver to limit load of signals
+        receiver->unregisterReceiver();
         receiver->deleteLater();
         receiver = 0;
 

@@ -120,8 +120,7 @@ void addRecord(Ui::MainWindow *ui, const QNdefRecord &record = QNdefRecord())
 }
 
 MainWindow::MainWindow(QWidget *parent)
-:   QMainWindow(parent), ui(new Ui::MainWindow), m_manager(new QNearFieldManager(this)),
-    m_touchAction(NoAction)
+:   QMainWindow(parent), ui(new Ui::MainWindow), m_touchAction(NoAction)
 {
     ui->setupUi(this);
 
@@ -135,10 +134,13 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *vbox = new QVBoxLayout;
     ui->scrollAreaWidgetContents->setLayout(vbox);
 
+    //! [QNearFieldManager init]
+    m_manager = new QNearFieldManager(this);
     connect(m_manager, SIGNAL(targetDetected(QNearFieldTarget*)),
             this, SLOT(targetDetected(QNearFieldTarget*)));
     connect(m_manager, SIGNAL(targetLost(QNearFieldTarget*)),
             this, SLOT(targetLost(QNearFieldTarget*)));
+    //! [QNearFieldManager init]
 }
 
 MainWindow::~MainWindow()
@@ -205,7 +207,9 @@ void MainWindow::touchReceive()
     m_touchAction = ReadNdef;
 
     m_manager->setTargetAccessModes(QNearFieldManager::NdefReadTargetAccess);
+    //! [QNearFieldManager start detection]
     m_manager->startTargetDetection();
+    //! [QNearFieldManager start detection]
 }
 
 void MainWindow::touchStore()
@@ -218,6 +222,7 @@ void MainWindow::touchStore()
     m_manager->startTargetDetection();
 }
 
+//! [QNearFieldTarget detected]
 void MainWindow::targetDetected(QNearFieldTarget *target)
 {
     switch (m_touchAction) {
@@ -240,11 +245,14 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
         break;
     }
 }
+//! [QNearFieldTarget detected]
 
+//! [QNearFieldTarget lost]
 void MainWindow::targetLost(QNearFieldTarget *target)
 {
     target->deleteLater();
 }
+//! [QNearFieldTarget lost]
 
 void MainWindow::ndefMessageRead(const QNdefMessage &message)
 {
@@ -267,7 +275,9 @@ void MainWindow::ndefMessageRead(const QNdefMessage &message)
 
     ui->status->setStyleSheet(QString());
     m_manager->setTargetAccessModes(QNearFieldManager::NoTargetAccess);
+    //! [QNearFieldManager stop detection]
     m_manager->stopTargetDetection();
+    //! [QNearFieldManager stop detection]
     m_request = QNearFieldTarget::RequestId();
     ui->statusBar->clearMessage();
 }

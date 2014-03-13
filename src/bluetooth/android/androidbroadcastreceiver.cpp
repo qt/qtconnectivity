@@ -72,7 +72,6 @@ AndroidBroadcastReceiver::AndroidBroadcastReceiver(QObject* parent)
 
 AndroidBroadcastReceiver::~AndroidBroadcastReceiver()
 {
-    unregisterReceiver();
 }
 
 bool AndroidBroadcastReceiver::isValid() const
@@ -85,19 +84,15 @@ void AndroidBroadcastReceiver::unregisterReceiver()
     if (!valid)
         return;
 
-    activityObject.callObjectMethod(
-                "unregisterReceiver",
-                "(Landroid/content/BroadcastReceiver;)V",
-                broadcastReceiverObject.object<jobject>());
+    broadcastReceiverObject.callMethod<void>("unregisterReceiver");
 }
 
-void AndroidBroadcastReceiver::addAction(const QString &action)
+void AndroidBroadcastReceiver::addAction(const QAndroidJniObject &action)
 {
-    if (!valid)
+    if (!valid || !action.isValid())
         return;
 
-    QAndroidJniObject actionString = QAndroidJniObject::fromString(action);
-    intentFilterObject.callMethod<void>("addAction", "(Ljava/lang/String;)V", actionString.object<jstring>());
+    intentFilterObject.callMethod<void>("addAction", "(Ljava/lang/String;)V", action.object<jstring>());
 
     activityObject.callObjectMethod(
                 "registerReceiver",

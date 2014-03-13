@@ -324,7 +324,6 @@ quint16 QBluetoothSocketPrivate::peerPort() const
 qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 {
     //TODO implement buffered behavior (so far only unbuffered)
-    //TODO check that readData and writeData return -1 on error (on all platforms)
     Q_Q(QBluetoothSocket);
     if (state != QBluetoothSocket::ConnectedState || !outputStream.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Socket::writeData: " << state << outputStream.isValid();
