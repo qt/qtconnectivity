@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <QtBluetooth/QBluetoothLocalDevice>
 #include "qlowenergycontroller.h"
 #include "qlowenergycontroller_p.h"
 #include "qlowenergyserviceinfo_p.h"
@@ -83,7 +84,14 @@ void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &se
             connectToTerminal();
         else {
             QObject::connect(process, SIGNAL(replySend(const QString &)), q_ptr, SLOT(_q_replyReceived(const QString &)));
-            QString command = QStringLiteral("gatttool -i ") + service.d_ptr->adapterAddress.toString() + QStringLiteral(" -b ") + service.d_ptr->deviceInfo.address().toString() + QStringLiteral(" -I");
+            if (localAdapter.isNull()) {
+                QBluetoothLocalDevice localDevice;
+                localAdapter = localDevice.address();
+            }
+            QString command = QStringLiteral("gatttool -i ") + localAdapter.toString()
+                                + QStringLiteral(" -b ")
+                                + service.d_ptr->deviceInfo.address().toString()
+                                + QStringLiteral(" -I");
             if (m_randomAddress)
                 command += QStringLiteral(" -t random");
             qCDebug(QT_BT_BLUEZ) << "[REGISTER] uuid inside: " << service.d_ptr->uuid << command;

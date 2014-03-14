@@ -61,8 +61,6 @@ public:
     QLowEnergyServiceInfoPrivate();
     ~QLowEnergyServiceInfoPrivate();
 
-    bool valid();
-
     QString serviceName;
 
     QBluetoothUuid uuid;
@@ -74,7 +72,6 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     QString startingHandle;
     QString endingHandle;
-    QBluetoothAddress adapterAddress;
 #endif
 
 #ifdef QT_QNX_BLUETOOTH

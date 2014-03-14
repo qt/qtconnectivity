@@ -232,8 +232,6 @@ bool QLowEnergyServiceInfo::isValid() const
         return false;
     if (!d_ptr->deviceInfo.isValid())
         return false;
-    if (!d_ptr->valid())
-        return false;
     return true;
 }
 

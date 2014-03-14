@@ -111,14 +111,30 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    Construct a new QLowEnergyInfo object with the \a parent.
+    Construct a new QLowEnergyController object with \a parent.
 */
-QLowEnergyController::QLowEnergyController(QObject *parent):
-    QObject(parent), d_ptr(new QLowEnergyControllerPrivate)
+QLowEnergyController::QLowEnergyController(QObject *parent)
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate)
 {
     d_ptr->q_ptr = this;
 }
 
+/*!
+   Constructs a new QLowEnergyController for \a localAdapter and with \a parent.
+
+   It uses \a localAdapter for the device connection. If \a localAdapter is default constructed
+   the resulting object will use the local default Bluetooth adapter.
+*/
+QLowEnergyController::QLowEnergyController(const QBluetoothAddress &localAdapter, QObject *parent)
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate)
+{
+    d_ptr->q_ptr = this;
+    d_ptr->localAdapter = localAdapter;
+}
+
+/*!
+    Destroys the QLowEnergyController instance.
+*/
 QLowEnergyController::~QLowEnergyController()
 {
 

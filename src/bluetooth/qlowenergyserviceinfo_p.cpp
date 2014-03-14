@@ -53,8 +53,4 @@ QLowEnergyServiceInfoPrivate::~QLowEnergyServiceInfoPrivate()
 
 }
 
-bool QLowEnergyServiceInfoPrivate::valid()
-{
-    return false;
-}
 QT_END_NAMESPACE

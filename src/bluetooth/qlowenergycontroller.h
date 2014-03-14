@@ -59,6 +59,7 @@ class Q_BLUETOOTH_EXPORT QLowEnergyController: public QObject
     Q_DECLARE_PRIVATE(QLowEnergyController)
 public:
     QLowEnergyController(QObject *parent = 0);
+    QLowEnergyController(const QBluetoothAddress &localAdapter, QObject *parent = 0);
     ~QLowEnergyController();
     QList<QLowEnergyServiceInfo> services() const;
     void connectToService(const QLowEnergyServiceInfo &leService);

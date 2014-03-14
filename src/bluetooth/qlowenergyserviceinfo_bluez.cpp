@@ -44,7 +44,6 @@
 #include "qlowenergycharacteristicinfo.h"
 #include "qlowenergycharacteristicinfo_p.h"
 #include "qlowenergyprocess_p.h"
-#include "qbluetoothlocaldevice.h"
 #include "qlowenergydescriptorinfo.h"
 #include "qlowenergydescriptorinfo_p.h"
 
@@ -59,19 +58,10 @@ QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate():
     m_valueCounter(0), m_readCounter(0)
 {
     m_step = 0;
-    QBluetoothLocalDevice localDevice;
-    adapterAddress = localDevice.address();
 }
 
 QLowEnergyServiceInfoPrivate::~QLowEnergyServiceInfoPrivate()
 {
-}
-
-bool QLowEnergyServiceInfoPrivate::valid()
-{
-    if (adapterAddress == QBluetoothAddress())
-        return false;
-    return true;
 }
 
 QT_END_NAMESPACE

@@ -57,7 +57,6 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
-
 QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate():
 {
 
@@ -66,12 +65,6 @@ QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate():
 QLowEnergyServiceInfoPrivate::~QLowEnergyServiceInfoPrivate()
 {
 
-}
-
-
-bool QLowEnergyServiceInfoPrivate::valid()
-{
-    return true;
 }
 
 QT_END_NAMESPACE

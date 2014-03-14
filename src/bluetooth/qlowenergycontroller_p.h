@@ -87,6 +87,7 @@ public slots:
 private:
     bool m_randomAddress;
     QLowEnergyProcess *process;
+    QBluetoothAddress localAdapter;
 #ifdef QT_BLUEZ_BLUETOOTH
     int m_step;
     bool m_deviceConnected;

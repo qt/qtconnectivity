@@ -221,7 +221,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
             qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << uuid << uuidFilter.size();
             QLowEnergyServiceInfo lowEnergyService(uuid);
-            lowEnergyService.d_ptr->adapterAddress = m_deviceAdapterAddress;
             lowEnergyService.setDevice(discoveredDevices.at(0));
             if (uuidFilter.isEmpty())
                 emit q->serviceDiscovered(lowEnergyService);
