@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module.
@@ -63,8 +63,10 @@ AnnotatedUrl::~AnnotatedUrl()
 {
 }
 
+//! [handleMessage 1]
 void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *target)
 {
+//! [handleMessage 1]
     Q_UNUSED(target);
 
     enum {
@@ -81,39 +83,40 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
     QUrl url;
     QPixmap pixmap;
 
+//! [handleMessage 2]
     foreach (const QNdefRecord &record, message) {
         if (record.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord textRecord(record);
 
+            title = textRecord.text();
             QLocale locale(textRecord.locale());
-
+//! [handleMessage 2]
             // already found best match
             if (bestMatch == MatchedLanguageAndCountry) {
                 // do nothing
             } else if (bestMatch <= MatchedLanguage && locale == defaultLocale) {
-                title = textRecord.text();
                 bestMatch = MatchedLanguageAndCountry;
             } else if (bestMatch <= MatchedEnglish &&
                        locale.language() == defaultLocale.language()) {
-                title = textRecord.text();
                 bestMatch = MatchedLanguage;
             } else if (bestMatch <= MatchedFirst && locale.language() == QLocale::English) {
-                title = textRecord.text();
                 bestMatch = MatchedEnglish;
             } else if (bestMatch == MatchedNone) {
-                title = textRecord.text();
                 bestMatch = MatchedFirst;
             }
+//! [handleMessage 3]
         } else if (record.isRecordType<QNdefNfcUriRecord>()) {
             QNdefNfcUriRecord uriRecord(record);
 
             url = uriRecord.uri();
+//! [handleMessage 3]
         } else if (record.typeNameFormat() == QNdefRecord::Mime &&
                    record.type().startsWith("image/")) {
             pixmap = QPixmap::fromImage(QImage::fromData(record.payload()));
+//! [handleMessage 4]
         }
     }
 
     emit annotatedUrl(url, title, pixmap);
 }
-
+//! [handleMessage 4]

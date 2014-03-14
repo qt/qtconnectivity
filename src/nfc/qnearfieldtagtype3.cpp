@@ -109,7 +109,7 @@ QNearFieldTarget::RequestId QNearFieldTagType3::serviceData(quint16 serviceCode)
 }
 
 /*!
-    Writes \a data to the the service specified by \a serviceCode. Returns a request id which can
+    Writes \a data to the service specified by \a serviceCode. Returns a request id which can
     be used to track the completion status of the request.
 
     Once the request completes the response can be retrieved from the requestResponse() function.

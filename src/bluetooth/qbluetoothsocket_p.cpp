@@ -45,6 +45,10 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
+    : socket(-1),
+      socketType(QBluetoothServiceInfo::UnknownProtocol),
+      state(QBluetoothSocket::UnconnectedState),
+      socketError(QBluetoothSocket::NoSocketError)
 {
 }
 
@@ -54,7 +58,7 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 
 bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
-    Q_UNUSED(type);
+    socketType = type;
     return false;
 }
 
@@ -111,14 +115,31 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 {
     Q_UNUSED(data);
     Q_UNUSED(maxSize);
-    return 0;
+
+    Q_Q(QBluetoothSocket);
+
+    if (state != QBluetoothSocket::ConnectedState) {
+        errorString = QBluetoothSocket::tr("Cannot write while not connected");
+        q->setSocketError(QBluetoothSocket::OperationError);
+        return -1;
+    }
+    return -1;
 }
 
 qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
 {
     Q_UNUSED(data);
     Q_UNUSED(maxSize);
-    return 0;
+
+    Q_Q(QBluetoothSocket);
+
+    if (state != QBluetoothSocket::ConnectedState) {
+        errorString = QBluetoothSocket::tr("Cannot write while not connected");
+        q->setSocketError(QBluetoothSocket::OperationError);
+        return -1;
+    }
+
+    return -1;
 }
 
 void QBluetoothSocketPrivate::close()
@@ -133,11 +154,6 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     Q_UNUSED(socketState);
     Q_UNUSED(openMode);
     return false;
-}
-
-int QBluetoothSocketPrivate::socketDescriptor() const
-{
-    return 0;
 }
 
 qint64 QBluetoothSocketPrivate::bytesAvailable() const

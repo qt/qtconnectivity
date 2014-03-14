@@ -66,6 +66,8 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
     q->close();
     __fakeServerPorts.remove(this);
     ppsUnregisterControl(this);
+    qDeleteAll(activeSockets);
+    activeSockets.clear();
 }
 
 void QBluetoothServerPrivate::controlReply(ppsResult result)
@@ -93,7 +95,8 @@ void QBluetoothServerPrivate::controlReply(ppsResult result)
 
             socket->setSocketDescriptor(socketFD, QBluetoothServiceInfo::RfcommProtocol,
                                            QBluetoothSocket::ConnectedState);
-            socket->connectToService(QBluetoothAddress(nextClientAddress), m_uuid);
+            socket->d_ptr->m_peerAddress = QBluetoothAddress(nextClientAddress);
+            socket->d_ptr->m_uuid = m_uuid;
             activeSockets.append(socket);
             socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
             socket->setSocketState(QBluetoothSocket::ListeningState);
@@ -131,17 +134,23 @@ void QBluetoothServerPrivate::controlEvent(ppsResult result)
 void QBluetoothServer::close()
 {
     Q_D(QBluetoothServer);
-    if (!d->socket) {
-        d->m_lastError = UnknownError;
-        emit error(d->m_lastError);
-        return;
+    if (!d->activeSockets.isEmpty()) {
+        for (int i = 0; i < d->activeSockets.size(); i++)
+            d->activeSockets.at(i)->close();
+        qDeleteAll(d->activeSockets);
+        d->activeSockets.clear();
     }
-    d->socket->close();
-    delete d->socket;
-    d->socket = 0;
-    ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
-    // force active object (socket) to run and shutdown socket.
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    if (d->socket) {
+        d->socket->close();
+        delete d->socket;
+        d->socket = 0;
+        if (__fakeServerPorts.contains(d)) {
+            ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+            __fakeServerPorts.remove(d);
+        }
+        // force active object (socket) to run and shutdown socket.
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
 }
 
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
@@ -154,11 +163,28 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
     }
 
-    // listen has already been called before
-    if (d->socket && d->socket->state() == QBluetoothSocket::ListeningState)
+    QBluetoothLocalDevice device(address);
+    if (!device.isValid()) {
+        qCWarning(QT_BT_QNX) << "Device does not support Bluetooth or"
+                                 << address.toString() << "is not a valid local adapter";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
         return false;
+    }
 
-    d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+    QBluetoothLocalDevice::HostMode hostMode= device.hostMode();
+    if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        d->m_lastError = QBluetoothServer::PoweredOffError;
+        emit error(d->m_lastError);
+        qCWarning(QT_BT_QNX) << "Bluetooth device is powered off";
+        return false;
+    }
+
+    // listen has already been called before
+    if (!d->socket)
+        d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+    else if (d->socket->state() == QBluetoothSocket::ListeningState)
+        return false;
 
     //We can not register an actual Rfcomm port, because the platform does not allow it
     //but we need a way to associate a server with a service
@@ -191,7 +217,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
-    d->maxPendingConnections = numConnections; //Currently not used
+    //QNX supports only one device at the time
 }
 
 QBluetoothAddress QBluetoothServer::serverAddress() const

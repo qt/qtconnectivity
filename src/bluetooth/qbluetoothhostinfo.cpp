@@ -82,6 +82,19 @@ QBluetoothHostInfo::~QBluetoothHostInfo()
 }
 
 /*!
+    Assigns \a other to this QBluetoothHostInfo instance.
+*/
+QBluetoothHostInfo &QBluetoothHostInfo::operator=(const QBluetoothHostInfo &other)
+{
+    Q_D(QBluetoothHostInfo);
+
+    d->m_address = other.d_func()->m_address;
+    d->m_name = other.d_func()->m_name;
+
+    return *this;
+}
+
+/*!
     Returns the Bluetooth address as a QBluetoothAddress.
 */
 QBluetoothAddress QBluetoothHostInfo::address() const

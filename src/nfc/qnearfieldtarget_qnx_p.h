@@ -147,7 +147,7 @@ public:
             if (!isSupported) {
                 nfc_tag_supports_tag_type (m_target,TAG_TYPE_ISO_15693_3, &isSupported);
                 tagType = TAG_TYPE_ISO_15693_3;
-                //We dont support this tag
+                //We don't support this tag
                 if (!isSupported) {
                     Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
                     return QNearFieldTarget::RequestId();

@@ -139,13 +139,13 @@ bool QNearFieldManagerPrivateImpl::unregisterNdefMessageHandler(int handlerId)
 void QNearFieldManagerPrivateImpl::requestAccess(QNearFieldManager::TargetAccessModes accessModes)
 {
     Q_UNUSED(accessModes);
-    //Do nothing, because we dont have access modes for the target
+    //Do nothing, because we don't have access modes for the target
 }
 
 void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccessModes accessModes)
 {
     Q_UNUSED(accessModes);
-    //Do nothing, because we dont have access modes for the target
+    //Do nothing, because we don't have access modes for the target
 }
 
 void QNearFieldManagerPrivateImpl::handleMessage(const QNdefMessage &message, QNearFieldTarget *target)

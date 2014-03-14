@@ -186,7 +186,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
     deviceInfo.setRssi(rssi);
 
     bool updated = false;
-    //Prevent a device from beeing listed twice
+    //Prevent a device from being listed twice
     for (int i=0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices.at(i).address() == deviceInfo.address()) {
             updated = true;

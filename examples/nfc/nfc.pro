@@ -2,7 +2,10 @@ TEMPLATE = subdirs
 qtHaveModule(widgets) {
     SUBDIRS += \
         annotatedurl \
-        ndefeditor \
+        ndefeditor
+}
+qtHaveModule(quick) {
+    SUBDIRS += \
         poster
 }
 

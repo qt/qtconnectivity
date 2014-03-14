@@ -32,10 +32,11 @@
 
 Bluetooth is a short-range (less than 100 meters) wireless technology. It
 has a reasonably high data transfer rate of 2.1 Mbit/s, which makes it ideal
-for transferring data between devices.
+for transferring data between devices. Currently the API is supported on
+Linux (Bluez 4.x), Android and BlackBerry 10.
 
 Bluetooth connectivity is based on basic device management, such as scanning
-for devices, gathering information about them, and exchaning data between
+for devices, gathering information about them, and exchanging data between
 them.
 
 \section1 Getting started
@@ -43,7 +44,7 @@ them.
 To use the C++ library in your application, add the following configuration
 option to your \c .pro file:
 
-\snippet doc_src_qtbluetooth.pro contacts project modification
+\snippet snippets.pro contacts project modification
 
 To use the classes of the module in your application you need the following
 import statement in your \c .qml file:

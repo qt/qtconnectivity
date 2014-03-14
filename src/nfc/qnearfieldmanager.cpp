@@ -103,11 +103,7 @@ QT_BEGIN_NAMESPACE
     If the application has been registered as an NDEF message handler, the application only needs
     to call the registerNdefMessageHandler() function:
 
-    \code
-        QNearFieldManager *manager = new QNearFieldManager;
-        manager->registerNdefMessageHandler(this,
-                                            SLOT(handleNdefMessage(QNdefMessage,QNearFieldTarget)));
-    \endcode
+    \snippet doc_src_qtnfc.cpp handleNdefMessage
 
     On BlackBerry the registration for NDEF message handlers is done over the
     \l{https://developer.blackberry.com/native/documentation/core/invocation_framework.html}{Invocation Framework}.

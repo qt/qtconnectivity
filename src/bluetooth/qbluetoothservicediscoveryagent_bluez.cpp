@@ -522,7 +522,6 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         qCWarning(QT_BT_BLUEZ) << "unknown attribute type"
                                << xml.name().toString()
                                << xml.attributes().value(QLatin1String("value")).toString();
-        Q_ASSERT(false);
         xml.skipCurrentElement();
         return QVariant();
     }

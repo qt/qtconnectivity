@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow mainWindow;
 
+    //! [QNearFieldManager register handler]
     QNearFieldManager manager;
     AnnotatedUrl annotatedUrl;
 
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
     filter.appendRecord<QNdefNfcUriRecord>();
     manager.registerNdefMessageHandler(filter, &annotatedUrl,
                                        SLOT(handleMessage(QNdefMessage,QNearFieldTarget*)));
+    //! [QNearFieldManager register handler]
 
     QObject::connect(&annotatedUrl, SIGNAL(annotatedUrl(QUrl,QString,QPixmap)),
                      &mainWindow, SLOT(displayAnnotatedUrl(QUrl,QString,QPixmap)));

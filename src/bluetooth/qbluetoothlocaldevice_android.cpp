@@ -74,6 +74,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
+    receiver->unregisterReceiver();
     delete receiver;
     delete obj;
 }

@@ -55,6 +55,8 @@ public:
     QBluetoothHostInfo(const QBluetoothHostInfo &other);
     ~QBluetoothHostInfo();
 
+    QBluetoothHostInfo &operator=(const QBluetoothHostInfo &other);
+
     QBluetoothAddress address() const;
     void setAddress(const QBluetoothAddress &address);
 
