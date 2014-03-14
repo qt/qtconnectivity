@@ -28,6 +28,8 @@ examples/bluetooth/btchat/btchat
 examples/bluetooth/btfiletransfer/btfiletransfer
 examples/bluetooth/btscanner/btscanner
 examples/bluetooth/bttennis/bttennis
+examples/bluetooth/heartlistener/heartlistener
+examples/bluetooth/lowenergyscanner/lowenergyscanner
 examples/bluetooth/picturetransfer/qml_picturetransfer
 examples/bluetooth/scanner/qml_scanner
 examples/nfc/annotatedurl/annotatedurl
