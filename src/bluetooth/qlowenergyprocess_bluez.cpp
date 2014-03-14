@@ -125,8 +125,7 @@ void QLowEnergyProcess::endProcess()
 {
     m_counter--;
     if (m_counter == 0) {
-        executeCommand(QStringLiteral("disconnect"));
-        executeCommand(QStringLiteral("\n"));
+        executeCommand(QStringLiteral("disconnect\n"));
         connected = false;
     }
 }

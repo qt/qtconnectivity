@@ -45,11 +45,8 @@
 #include "qlowenergycharacteristicinfo_p.h"
 #include "qlowenergyprocess_p.h"
 #include "qbluetoothlocaldevice.h"
-#include "bluez/characteristic_p.h"
 #include "qlowenergydescriptorinfo.h"
 #include "qlowenergydescriptorinfo_p.h"
-
-//#define QT_LOWENERGYSERVICE_DEBUG
 
 #ifdef QT_LOWENERGYSERVICE_DEBUG
 #include <QtCore/QDebug>
@@ -58,22 +55,16 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate():
-    serviceType(QLowEnergyServiceInfo::PrimaryService), connected(false), characteristic(0), m_valueCounter(0), m_readCounter(0)
+    serviceType(QLowEnergyServiceInfo::PrimaryService), connected(false),
+    m_valueCounter(0), m_readCounter(0)
 {
     m_step = 0;
     QBluetoothLocalDevice localDevice;
     adapterAddress = localDevice.address();
 }
 
-QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate(const QString &servicePath):
-    serviceType(QLowEnergyServiceInfo::PrimaryService), connected(false), path(servicePath), characteristic(0)
-{
-    m_step = 0;
-}
-
 QLowEnergyServiceInfoPrivate::~QLowEnergyServiceInfoPrivate()
 {
-    delete characteristic;
 }
 
 bool QLowEnergyServiceInfoPrivate::valid()

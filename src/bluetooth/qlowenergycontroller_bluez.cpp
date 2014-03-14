@@ -329,8 +329,7 @@ void QLowEnergyControllerPrivate::disconnectAllServices()
 
 void QLowEnergyControllerPrivate::connectToTerminal()
 {
-    process->executeCommand(QStringLiteral("connect"));
-    process->executeCommand(QStringLiteral("\n"));
+    process->executeCommand(QStringLiteral("connect\n"));
     for (int i = 0; i < m_leServices.size(); i++)
         m_leServices.at(i).d_ptr->m_step = 1;
     m_step++;
@@ -338,8 +337,7 @@ void QLowEnergyControllerPrivate::connectToTerminal()
 
 void QLowEnergyControllerPrivate::setHandles()
 {
-    process->executeCommand(QStringLiteral("primary"));
-    process->executeCommand(QStringLiteral("\n"));
+    process->executeCommand(QStringLiteral("primary\n"));
     m_step++;
 }
 
@@ -353,8 +351,7 @@ void QLowEnergyControllerPrivate::setCharacteristics(int a)
 
 void QLowEnergyControllerPrivate::setNotifications()
 {
-    process->executeCommand(QStringLiteral("char-read-uuid 2902"));
-    process->executeCommand(QStringLiteral("\n"));
+    process->executeCommand(QStringLiteral("char-read-uuid 2902\n"));
 }
 
 void QLowEnergyControllerPrivate::readCharacteristicValue(int index)
@@ -381,16 +378,12 @@ void QLowEnergyControllerPrivate::writeValue(const QString &handle, const QByteA
 
 bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteristicInfo &characteristic)
 {
-    bool foundCharacteristic = false;
-    bool foundDescriptor = false;
     const QBluetoothUuid descUuid((ushort)0x2902);
     for (int i = 0; i < m_leServices.size(); i++) {
         for (int j = 0; j < m_leServices.at(i).characteristics().size(); j++) {
             if (m_leServices.at(i).characteristics().at(j).uuid() == characteristic.uuid()) {
-                foundCharacteristic = true;
                 for (int k = 0; k < m_leServices.at(i).characteristics().at(j).descriptors().size(); k++) {
                     if (m_leServices.at(i).characteristics().at(j).descriptors().at(k).uuid() == descUuid){
-                        foundDescriptor = true;
                         QByteArray val;
                         val.append(48);
                         val.append(49);
@@ -403,12 +396,10 @@ bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteris
             }
         }
     }
-    if (!foundDescriptor || !foundCharacteristic) {
-        errorString = QStringLiteral("Characteristic or notification descriptor not found.");
-        emit q_ptr->error(characteristic);
-        return false;
-    }
 
+    errorString = QStringLiteral("Characteristic or notification descriptor not found.");
+    emit q_ptr->error(characteristic);
+    return false;
 }
 
 void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteristicInfo &characteristic)
@@ -440,14 +431,13 @@ bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &char
             return true;
         } else {
             errorString = QStringLiteral("This characteristic does not support write operations.");
-            emit q_ptr->error(characteristic);
-            return false;
         }
     } else {
         errorString = QStringLiteral("The device is not connected or characteristic is not valid");
-        emit q_ptr->error(characteristic);
-        return false;
     }
+
+    emit q_ptr->error(characteristic);
+    return false;
 }
 
 bool QLowEnergyControllerPrivate::write(const QLowEnergyDescriptorInfo &descriptor)
@@ -456,6 +446,8 @@ bool QLowEnergyControllerPrivate::write(const QLowEnergyDescriptorInfo &descript
         writeValue(descriptor.handle(), descriptor.value());
         return true;
     }
+
+    return false;
 }
 
 QT_END_NAMESPACE

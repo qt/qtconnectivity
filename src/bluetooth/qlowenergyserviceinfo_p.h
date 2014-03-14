@@ -46,10 +46,6 @@
 #include "qlowenergycharacteristicinfo.h"
 #include <QPointer>
 
-#ifdef QT_BLUEZ_BLUETOOTH
-class OrgBluezCharacteristicInterface;
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QBluetoothUuid;
@@ -63,9 +59,6 @@ class QLowEnergyServiceInfoPrivate
 
 public:
     QLowEnergyServiceInfoPrivate();
-#ifdef QT_BLUEZ_BLUETOOTH
-    QLowEnergyServiceInfoPrivate(const QString &servicePath);
-#endif
     ~QLowEnergyServiceInfoPrivate();
 
     bool valid();
@@ -81,7 +74,6 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     QString startingHandle;
     QString endingHandle;
-    QString path;
     QBluetoothAddress adapterAddress;
 #endif
 
@@ -90,14 +82,11 @@ public:
 #endif
 
 private:
-    QLowEnergyProcess *process;
 #ifdef QT_BLUEZ_BLUETOOTH
-    OrgBluezCharacteristicInterface *characteristic;
     int m_step;
     int m_valueCounter;
     int m_readCounter;
 #endif
-    int m_instance;
 };
 
 QT_END_NAMESPACE

@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QLoggingCategory>
 #include <QQmlContext>
 #include <QGuiApplication>
 #include <QQuickView>
@@ -46,6 +47,7 @@
 
 int main(int argc, char *argv[])
 {
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication app(argc, argv);
 
 

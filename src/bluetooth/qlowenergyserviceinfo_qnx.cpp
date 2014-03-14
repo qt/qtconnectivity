@@ -59,7 +59,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
 
 QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate():
-    m_instance(0)
 {
 
 }
