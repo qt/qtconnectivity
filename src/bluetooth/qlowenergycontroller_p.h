@@ -44,7 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyController;
 class QLowEnergyProcess;
 
 class QLowEnergyControllerPrivate

@@ -56,31 +56,36 @@ class QLowEnergyControllerPrivate;
 class Q_BLUETOOTH_EXPORT QLowEnergyController: public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QLowEnergyController)
 public:
     QLowEnergyController(QObject *parent = 0);
     QLowEnergyController(const QBluetoothAddress &localAdapter, QObject *parent = 0);
     ~QLowEnergyController();
+
     QList<QLowEnergyServiceInfo> services() const;
+
     void connectToService(const QLowEnergyServiceInfo &leService);
     void disconnectFromService(const QLowEnergyServiceInfo &leService = QLowEnergyServiceInfo());
+
     bool enableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
     void disableNotifications(const QLowEnergyCharacteristicInfo &characteristic);
+
     bool writeCharacteristic(const QLowEnergyCharacteristicInfo &characteristic);
     bool writeDescriptor(const QLowEnergyDescriptorInfo &descriptor);
+
     QString errorString() const;
+
     void setRandomAddress();
 
 Q_SIGNALS:
     void connected(const QLowEnergyServiceInfo &);
-    void error(const QLowEnergyServiceInfo &);
-    void error(const QLowEnergyCharacteristicInfo &);
     void disconnected(const QLowEnergyServiceInfo &);
+
     void valueChanged(const QLowEnergyCharacteristicInfo &);
 
-
-
+    void error(const QLowEnergyServiceInfo &);
+    void error(const QLowEnergyCharacteristicInfo &);
 private:
+    Q_DECLARE_PRIVATE(QLowEnergyController)
     QLowEnergyControllerPrivate *d_ptr;
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_replyReceived(const QString &reply))

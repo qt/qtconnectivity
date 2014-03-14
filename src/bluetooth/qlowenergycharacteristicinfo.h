@@ -53,11 +53,8 @@ class QLowEnergyCharacteristicInfoPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
 {
-    friend class QLowEnergyServiceInfo;
-    friend class QLowEnergyServiceInfoPrivate;
     friend class QLowEnergyController;
     friend class QLowEnergyControllerPrivate;
-    friend class QLowEnergyCharacteristicInfoPrivate;
 public:
 
     enum Property {

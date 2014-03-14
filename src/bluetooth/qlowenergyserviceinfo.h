@@ -54,9 +54,6 @@ class QBluetoothAddress;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyServiceInfo
 {
-    friend class QBluetoothServiceDiscoveryAgent;
-    friend class QBluetoothServiceDiscoveryAgentPrivate;
-    friend class QLowEnergyController;
     friend class QLowEnergyControllerPrivate;
 public:
     enum ServiceType {
