@@ -43,34 +43,39 @@
 #ifndef INPUTSTREAMTHREAD_H
 #define INPUTSTREAMTHREAD_H
 
-#include <QtCore/QThread>
+#include <QtCore/QObject>
 #include <QtCore/QMutex>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <jni.h>
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothSocketPrivate;
 
-class InputStreamThread : public QThread
+class InputStreamThread : public QObject
 {
     Q_OBJECT
 public:
     explicit InputStreamThread(QBluetoothSocketPrivate *socket_p);
-    virtual void run();
 
     bool bytesAvailable() const;
-    void stop();
+    bool run();
 
     qint64 readData(char *data, qint64 maxSize);
+    void javaThreadErrorOccurred(int errorCode);
+    void javaReadyRead(jbyteArray buffer, int bufferLength);
+
+    void prepareForClosure();
+
 signals:
     void dataAvailable();
-    void error();
+    void error(int errorCode);
 
 private:
-    void readFromInputStream();
-
     QBluetoothSocketPrivate *m_socket_p;
+    QAndroidJniObject javaInputStreamThread;
     mutable QMutex m_mutex;
-    bool m_stop;
+    bool expectClosure;
 };
 
 QT_END_NAMESPACE

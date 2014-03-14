@@ -42,6 +42,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
+#include "qbluetoothlocaldevice.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QSocketNotifier>
@@ -110,6 +111,23 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false; //already listening, nothing to do
     }
 
+    QBluetoothLocalDevice device(address);
+    if (!device.isValid()) {
+        qCWarning(QT_BT_BLUEZ) << "Device does not support Bluetooth or"
+                                 << address.toString() << "is not a valid local adapter";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    QBluetoothLocalDevice::HostMode hostMode = device.hostMode();
+    if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        d->m_lastError = QBluetoothServer::PoweredOffError;
+        emit error(d->m_lastError);
+        qCWarning(QT_BT_BLUEZ) << "Bluetooth device is powered off";
+        return false;
+    }
+
     int sock = d->socket->socketDescriptor();
     if (sock < 0) {
         /* Negative socket descriptor is not always an error case
@@ -142,7 +160,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         if (!address.isNull())
             convertAddress(address.toUInt64(), addr.rc_bdaddr.b);
         else
-            convertAddress(Q_UINT64_C(0), addr.rc_bdaddr.b);
+            convertAddress(device.address().toUInt64(), addr.rc_bdaddr.b);
 
 
         if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0) {

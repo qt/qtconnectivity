@@ -61,15 +61,30 @@ bool QBluetoothServiceInfoPrivate::isRegistered() const
     return registered;
 }
 
+extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
+
 bool QBluetoothServiceInfoPrivate::unregisterService()
 {
     if (!registered)
         return false;
-
-    return false;
+    if (serverChannel() == -1)
+        return false;
+    if ( __fakeServerPorts.key(serverChannel()) != 0) {
+        if (!ppsSendControlMessage("deregister_server", 0x1101, attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>(), QString(),
+                                   attributes.value(QBluetoothServiceInfo::ServiceName).toString(),
+                                   __fakeServerPorts.key(serverChannel()), BT_SPP_SERVER_SUBTYPE)) {
+            return false;
+        }
+        else {
+            __fakeServerPorts.remove(__fakeServerPorts.key(serverChannel()));
+            registered = false;
+            return true;
+        }
+    }
+    else {
+        return false;
+    }
 }
-
-extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& localAdapter)
 {

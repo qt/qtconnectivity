@@ -39,54 +39,65 @@
 **
 ****************************************************************************/
 
-#ifndef SERVERACCEPTANCETHREAD_H
-#define SERVERACCEPTANCETHREAD_H
+package org.qtproject.qt5.android.bluetooth;
 
-#include <QtCore/QMutex>
-#include <QtAndroidExtras/QAndroidJniObject>
-#include <QtBluetooth/QBluetoothServer>
-#include <QtBluetooth/QBluetoothUuid>
-#include "qbluetooth.h"
+import java.io.InputStream;
+import java.io.IOException;
+import android.util.Log;
 
-
-class ServerAcceptanceThread : public QObject
+public class QtBluetoothInputStreamThread extends Thread
 {
-    Q_OBJECT
-public:
-    explicit ServerAcceptanceThread(QObject *parent = 0);
-    ~ServerAcceptanceThread();
-    void setServiceDetails(const QBluetoothUuid &uuid, const QString &serviceName,
-                           QBluetooth::SecurityFlags securityFlags);
+    /* Pointer to the Qt object that "owns" the Java object */
+    long qtObject = 0;
+    public boolean logEnabled = false;
+    private static final String TAG = "QtBluetooth";
+    private InputStream m_inputStream = null;
 
+    //error codes
+    public static final int QT_MISSING_INPUT_STREAM = 0;
+    public static final int QT_READ_FAILED = 1;
+    public static final int QT_THREAD_INTERRUPTED = 2;
 
-    bool hasPendingConnections() const;
-    QAndroidJniObject nextPendingConnection();
-    void setMaxPendingConnections(int maximumCount);
+    public QtBluetoothInputStreamThread()
+    {
+        setName("QtBtInputStreamThread");
+    }
 
-    void javaThreadErrorOccurred(int errorCode);
-    void javaNewSocket(jobject socket);
+    public void setInputStream(InputStream stream)
+    {
+        m_inputStream = stream;
+    }
 
-    void run();
-    void stop();
-    bool isRunning() const;
+    public void run()
+    {
+        if (m_inputStream == null) {
+            errorOccurred(qtObject, QT_MISSING_INPUT_STREAM);
+            return;
+        }
 
-signals:
-    void newConnection();
-    void error(QBluetoothServer::Error);
+        byte[] buffer = new byte[1000];
+        int bytesRead = 0;
 
-private:
-    bool validSetup() const;
-    void shutdownPendingConnections();
+        try {
+            while (!isInterrupted()) {
+                //this blocks until we see incoming data
+                //or close() on related BluetoothSocket is called
+                bytesRead = m_inputStream.read(buffer);
+                readyData(qtObject, buffer, bytesRead);
+            }
 
-    QList<QAndroidJniObject> pendingSockets;
-    mutable QMutex m_mutex;
-    QString m_serviceName;
-    QBluetoothUuid m_uuid;
-    int maxPendingConnections;
-    QBluetooth::SecurityFlags secFlags;
+            errorOccurred(qtObject, QT_THREAD_INTERRUPTED);
+        } catch (IOException ex) {
+            if (logEnabled)
+                Log.d(TAG, "InputStream.read() failed:" + ex.toString());
+            ex.printStackTrace();
+            errorOccurred(qtObject, QT_READ_FAILED);
+        }
 
-    QAndroidJniObject javaThread;
+        if (logEnabled)
+            Log.d(TAG, "Leaving input stream thread");
+    }
 
-};
-
-#endif // SERVERACCEPTANCETHREAD_H
+    public static native void errorOccurred(long qtObject, int errorCode);
+    public static native void readyData(long qtObject, byte[] buffer, int bufferLength);
+}

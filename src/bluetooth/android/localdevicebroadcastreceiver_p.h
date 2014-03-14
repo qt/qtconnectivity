@@ -65,6 +65,9 @@ signals:
 private:
     int previousScanMode;
     QAndroidJniObject pairingDevice;
+
+    int bondingModePreset[3];
+    int hostModePreset[3];
 };
 
 QT_END_NAMESPACE

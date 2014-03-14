@@ -4,7 +4,8 @@ PRIVATE_HEADERS +=  \
         android/servicediscoverybroadcastreceiver_p.h \
         android/androidbroadcastreceiver_p.h \
         android/localdevicebroadcastreceiver_p.h \
-        android/serveracceptancethread_p.h
+        android/serveracceptancethread_p.h \
+        android/jni_android_p.h
 
 
 SOURCES += \

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtNfc module of the Qt Toolkit.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,78 +39,37 @@
 **
 ****************************************************************************/
 
-#ifndef RFCOMMCLIENT_H
-#define RFCOMMCLIENT_H
+#ifndef JNI_ANDROID_P_H
+#define JNI_ANDROID_P_H
 
-#include <qbluetoothserviceinfo.h>
-#include <qbluetoothsocket.h>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
 
-#include <QtCore/QObject>
-#include <QtCore/QTime>
-#include <QtCore/QTimer>
-#include <QBluetoothLocalDevice>
-#include <QThread>
+QT_BEGIN_NAMESPACE
 
-static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c9");
-
-class QBluetoothSocket;
-
-class QDataStream;
-
-class MyThread : public QThread
-{
-public:
-    void sleep(int seconds);
+enum JavaNames {
+    BluetoothAdapter = 0,
+    BluetoothDevice,
+    ActionAclConnected,
+    ActionAclDisconnected,
+    ActionBondStateChanged,
+    ActionDiscoveryStarted,
+    ActionDiscoveryFinished,
+    ActionFound,
+    ActionPairingRequest,
+    ActionScanModeChanged,
+    ActionUuid,
+    ExtraBondState,
+    ExtraDevice,
+    ExtraPairingKey,
+    ExtraPairingVariant,
+    ExtraRssi,
+    ExtraScanMode,
+    ExtraUuid
 };
 
+QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName);
 
-//! [declaration]
-class RfCommClient : public QObject
-{
-    Q_OBJECT
+QT_END_NAMESPACE
 
-    enum States {
-        listening,
-        pendingConnections,
-        dataTransfer
-    };
-public:
-    explicit RfCommClient(QObject *parent = 0);
-    ~RfCommClient();
-
-    void startClient(const QBluetoothServiceInfo &remoteService);
-    void stopClient();
-
-public slots:
-    void error(QBluetoothSocket::SocketError);
-
-signals:
-    void connected(const QString &name);
-    void disconnected();
-    void done();
-    void lag(int ms);
-
-private slots:
-    void readSocket();
-    void connected();
-    void sendText();
-    void socketDisconnected();
-    void hostModeStateChanged(QBluetoothLocalDevice::HostMode);
-
-private:
-    bool powerOn();
-
-private:
-    QBluetoothSocket *socket;
-    QDataStream *stream;
-    QByteArray buffer;
-    QBluetoothServiceInfo serviceInfo;
-    QBluetoothLocalDevice localDevice;
-    QTime *elapsed;
-    QTimer lagTimer;
-    int lagTimeout;
-    RfCommClient::States state;
-};
-//! [declaration]
-
-#endif // RFCOMMCLIENT_H
+#endif // JNI_ANDROID_P_H

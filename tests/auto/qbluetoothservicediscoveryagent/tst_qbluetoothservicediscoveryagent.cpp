@@ -134,9 +134,9 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 
         QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
         QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
-        QSignalSpy discoveredSpy(&discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)));
-    //    connect(&discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
-    //            this, SLOT(deviceDiscoveryDebug(const QBluetoothDeviceInfo&)));
+        QSignalSpy discoveredSpy(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)));
+    //    connect(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+    //            this, SLOT(deviceDiscoveryDebug(QBluetoothDeviceInfo)));
 
         discoveryAgent.start();
 

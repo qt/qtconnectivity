@@ -337,7 +337,7 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
     localDevice.powerOn();
     QVERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
 
-    QSignalSpy pairingSpy(&localDevice, SIGNAL(pairingFinished(const QBluetoothAddress &,QBluetoothLocalDevice::Pairing)) );
+    QSignalSpy pairingSpy(&localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)) );
     QSignalSpy errorSpy(&localDevice, SIGNAL(error(QBluetoothLocalDevice::Error)));
     // there should be no signals yet
     QVERIFY(pairingSpy.isValid());

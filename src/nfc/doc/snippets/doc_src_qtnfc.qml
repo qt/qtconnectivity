@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -42,4 +43,13 @@
 import QtNfc 5.2
 //! [import]
 
-Item { }
+Item {
+//! [QML register for messages]
+    NearField {
+        filter: [ NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 } ]
+        orderMatch: false
+
+        onMessageRecordsChanged: displayMessage()
+    }
+//! [QML register for messages]
+}

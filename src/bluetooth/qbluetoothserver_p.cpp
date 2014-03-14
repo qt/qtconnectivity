@@ -46,12 +46,17 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
-    : serverType(sType), m_lastError(QBluetoothServer::NoError)
+    : maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError)
 {
+    if (sType == QBluetoothServiceInfo::RfcommProtocol)
+        socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+    else
+        socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
 {
+    delete socket;
 }
 
 void QBluetoothServer::close()

@@ -274,10 +274,8 @@ void BtLocalDevice::stopServiceDiscovery()
 void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
     QStringList classIds;
-    const QList<QBluetoothUuid> classIdsList = info.serviceClassUuids();
-    foreach (const QBluetoothUuid &id, classIdsList)
-        classIds.append(id.toString());
-
+    foreach (const QBluetoothUuid &uuid, info.serviceClassUuids())
+        classIds.append(uuid.toString());
     qDebug() << "$$ Found new service" << info.device().address().toString()
              << info.serviceUuid() << info.serviceName() << info.serviceDescription() << classIds;
 
@@ -326,6 +324,15 @@ void BtLocalDevice::serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error
 
 void BtLocalDevice::dumpServiceDiscovery()
 {
+    if (deviceAgent) {
+        qDebug() << "Device Discovery active:" << deviceAgent->isActive();
+        qDebug() << "Error:" << deviceAgent->error() << deviceAgent->errorString();
+        QList<QBluetoothDeviceInfo> list = deviceAgent->discoveredDevices();
+        qDebug() << "Discovered Devices:" << list.count();
+
+        foreach (const QBluetoothDeviceInfo &info, list)
+            qDebug() << info.name() << info.address().toString();
+    }
     if (serviceAgent) {
         qDebug() << "Service Discovery active:" << serviceAgent->isActive();
         qDebug() << "Error:" << serviceAgent->error() << serviceAgent->errorString();
@@ -425,6 +432,7 @@ void BtLocalDevice::dumpSocketInformation()
                  << socket->peerName() << socket->peerPort();
         qDebug() << "socket type:" << socket->socketType();
         qDebug() << "socket state:" << socket->state();
+        qDebug() << "socket bytesAvailable()" << socket->bytesAvailable();
         QString tmp;
         switch (socket->error()) {
             case QBluetoothSocket::NoSocketError: tmp += "NoSocketError"; break;
@@ -595,9 +603,18 @@ void BtLocalDevice::clientSocketReadyRead()
         return;
 
     while (socket->canReadLine()) {
-        QByteArray line = socket->readLine().trimmed();
+        const QByteArray line = socket->readLine().trimmed();
+        QString lineString = QString::fromUtf8(line.constData(), line.length());
         qDebug() <<  ">>(" << socket->peerName() << ")>>"
-                 << QString::fromUtf8(line.constData(), line.length());
+                 << lineString;
+
+        //when using the tst_QBluetoothSocket we echo received text back
+        //Any line starting with "Echo:" will be echoed
+        if (lineString.startsWith(QStringLiteral("Echo:"))) {
+            qDebug() << "Assuming tst_qbluetoothsocket as client. Echoing back.";
+            lineString += QLatin1Char('\n');
+            socket->write(lineString.toUtf8());
+        }
     }
 }
 
@@ -628,6 +645,7 @@ void BtLocalDevice::dumpServerInformation()
             qDebug() << "##" << client->peerAddress().toString()
                      << client->peerName() << client->peerPort();
             qDebug() << client->socketType() << client->state();
+            qDebug() << "Pending bytes: " << client->bytesAvailable();
             QString tmp;
             switch (client->error()) {
             case QBluetoothSocket::NoSocketError: tmp += "NoSocketError"; break;

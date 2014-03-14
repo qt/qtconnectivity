@@ -42,6 +42,6 @@
     To use the C++ library in your application, add the following configuration
     option to your \c .pro file:
 
-    \snippet doc_src_qtbluetooth.pro contacts project modification
+    \snippet snippets.pro contacts project modification
 */
 

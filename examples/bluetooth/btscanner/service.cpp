@@ -75,8 +75,8 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
 
     setWindowTitle(name);
 
-    connect(discoveryAgent, SIGNAL(serviceDiscovered(const QBluetoothServiceInfo&)),
-            this, SLOT(addService(const QBluetoothServiceInfo&)));
+    connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
+            this, SLOT(addService(QBluetoothServiceInfo)));
     connect(discoveryAgent, SIGNAL(finished()), ui->status, SLOT(hide()));
     connect(discoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
             this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));

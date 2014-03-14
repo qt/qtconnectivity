@@ -65,6 +65,8 @@ private slots:
 
     void tst_construction_data();
     void tst_construction();
+
+    void tst_copy();
 };
 
 tst_QBluetoothHostInfo::tst_QBluetoothHostInfo()
@@ -169,6 +171,22 @@ void tst_QBluetoothHostInfo::tst_construction()
     QCOMPARE(setter.name(), QString());
     QCOMPARE(setter.address().toString(), btAddress);
     QCOMPARE(setter.address().isNull(), !validBtAddress);
+}
+
+void tst_QBluetoothHostInfo::tst_copy()
+{
+    QBluetoothHostInfo original;
+    original.setAddress(QBluetoothAddress("11:22:33:44:55:66"));
+    original.setName(QStringLiteral("FunkyName"));
+
+    QBluetoothHostInfo assignConstructor(original);
+    QCOMPARE(assignConstructor.name(), original.name());
+    QCOMPARE(assignConstructor.address(), original.address());
+
+    QBluetoothHostInfo assignOperator;
+    assignOperator = original;
+    QCOMPARE(assignOperator.name(), original.name());
+    QCOMPARE(assignOperator.address(), original.address());
 }
 
 QTEST_MAIN(tst_QBluetoothHostInfo)

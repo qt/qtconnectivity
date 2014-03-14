@@ -69,14 +69,7 @@
     and \l orderMatch properties to match the required NDEF messages.  Once an NDEF message is
     successfully read from a tag the \l messageRecords property is updated.
 
-    \code
-        NearField {
-            filter: [ NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 } ]
-            orderMatch: false
-
-            onMessageRecordsChanged: displayMessage()
-        }
-    \endcode
+    \snippet doc_src_qtnfc.qml QML register for messages
 */
 
 /*!

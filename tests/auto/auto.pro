@@ -16,8 +16,7 @@ qtHaveModule(bluetooth) {
         qbluetoothtransfermanager \
         qbluetoothtransferrequest \
         qbluetoothuuid \
-        ql2capserver \
-        qrfcommserver
+        qbluetoothserver
 }
 
 qtHaveModule(nfc) {

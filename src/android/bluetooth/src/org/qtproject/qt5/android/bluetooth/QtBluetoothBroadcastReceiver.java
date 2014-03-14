@@ -62,7 +62,20 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 
     public void onReceive(Context context, Intent intent)
     {
-        jniOnReceive(qtObject, context, intent);
+        synchronized (qtactivity) {
+            if (qtObject == 0)
+                return;
+
+            jniOnReceive(qtObject, context, intent);
+        }
+    }
+
+    public void unregisterReceiver()
+    {
+        synchronized (qtactivity) {
+            qtObject = 0;
+            qtactivity.unregisterReceiver(this);
+        }
     }
 
     public native void jniOnReceive(long qtObject, Context context, Intent intent);

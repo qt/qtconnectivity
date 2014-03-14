@@ -85,7 +85,7 @@ RemoteSelector::RemoteSelector(QWidget *parent)
     ui->remoteDevices->setColumnWidth(3, 75);
     ui->remoteDevices->setColumnWidth(4, 100);
 
-    connect(m_localDevice, SIGNAL(pairingDisplayPinCode(const QBluetoothAddress &,QString)), this, SLOT(displayPin(const QBluetoothAddress &, QString)));
+    connect(m_localDevice, SIGNAL(pairingDisplayPinCode(QBluetoothAddress,QString)), this, SLOT(displayPin(QBluetoothAddress,QString)));
     connect(m_localDevice, SIGNAL(pairingDisplayConfirmation(QBluetoothAddress,QString)), this, SLOT(displayConfirmation(QBluetoothAddress,QString)));
     connect(m_localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)), this, SLOT(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
 
