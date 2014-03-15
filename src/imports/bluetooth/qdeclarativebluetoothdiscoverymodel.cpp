@@ -270,8 +270,10 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
 /*!
   \qmlsignal BluetoothDiscoveryModel::serviceDiscovered(BluetoothService service)
 
-  This handler is called when a new service is discovered. The \a service
+  This signal is emitted when a new service is discovered. The \a service
   parameter contains the service details.
+
+  The corresponding handler is \c onServiceDiscovered.
 
   \sa BluetoothService
   */
@@ -301,8 +303,10 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
 /*!
   \qmlsignal BluetoothDiscoveryModel::deviceDiscovered(string device)
 
-  This handler is called when a new device is discovered. \a device contains
+  This signal is emitted when a new device is discovered. \a device contains
   the Bluetooth address of the discovred device.
+
+  The corresponding handler is \c onDeviceDiscovered.
   */
 
 void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDeviceInfo &device)

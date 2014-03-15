@@ -69,7 +69,7 @@
 /*!
     \qmlsignal BluetoothService::detailsChanged()
 
-    This handler is called when any of the following properties changes:
+    This signal is emitted when any of the following properties changes:
 
     \list
         \li deviceAddress
@@ -80,6 +80,8 @@
         \li serviceProtocol
         \li serviceUuid
     \endlist
+
+    The corresponding handler is \c onDetailsChanged.
 */
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_QML)
