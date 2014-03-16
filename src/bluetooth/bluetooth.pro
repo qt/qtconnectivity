@@ -116,8 +116,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserver_android.cpp
 
 } else {
-    message("Unsupported bluetooth platform, will not build a working QBluetooth library")
-    message("Either no Qt dBus found or no Bluez headers")
+    message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
+    message("Either no Qt D-Bus found or no BlueZ headers.")
     SOURCES += \
         qbluetoothdevicediscoveryagent_p.cpp \
         qbluetoothlocaldevice_p.cpp \
