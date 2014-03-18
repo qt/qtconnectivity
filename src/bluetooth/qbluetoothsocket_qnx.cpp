@@ -358,6 +358,7 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
 
             connectWriteNotifier->setEnabled(true);
             readNotifier->setEnabled(true);
+            state = QBluetoothSocket::ConnectedState;
             emit q->connected();
             ppsRegisterForEvent(QStringLiteral("service_disconnected"),this);
         }
