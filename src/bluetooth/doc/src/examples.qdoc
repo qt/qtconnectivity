@@ -54,6 +54,9 @@
         \row
             \li \l{btscanner}{Bluetooth Scanner}
             \li Scan for Bluetooth devices.
+        \row
+            \li \l{pingpong}{QML Bluetooth PingPong}
+            \li The ping pong game demonstrates Bluetooth socket communication between two devices.
     \endtable
 
     \section2 QML Examples

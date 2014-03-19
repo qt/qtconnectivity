@@ -6,4 +6,4 @@ qtHaveModule(widgets) {
                bttennis
 }
 
-qtHaveModule(quick): SUBDIRS += scanner picturetransfer
+qtHaveModule(quick): SUBDIRS += scanner picturetransfer pingpong
