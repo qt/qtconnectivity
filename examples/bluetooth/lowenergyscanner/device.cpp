@@ -152,7 +152,8 @@ void Device::scanServices(QString address)
         // Connecting signals and slots for connecting to LE services.
         info = new QLowEnergyController();
         connect(info, SIGNAL(connected(QLowEnergyServiceInfo)), this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
-        connect(info, SIGNAL(error(QLowEnergyServiceInfo)), this, SLOT(errorReceived(QLowEnergyServiceInfo)));
+        connect(info, SIGNAL(error(QLowEnergyServiceInfo, QLowEnergyCOntroller::Error)),
+                this, SLOT(errorReceived(QLowEnergyServiceInfo,QLowEnergyCOntroller::Error)));
         connect(info, SIGNAL(disconnected(QLowEnergyServiceInfo)), this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
     }
 }
@@ -195,9 +196,9 @@ void Device::serviceConnected(const QLowEnergyServiceInfo &service)
     emit characteristicsDone();
 }
 
-void Device::errorReceived(const QLowEnergyServiceInfo &service)
+void Device::errorReceived(const QLowEnergyServiceInfo &service, QLowEnergyController::Error error)
 {
-    qWarning() << "Error: " << info->errorString() << service.serviceUuid();
+    qWarning() << "Error: " << info->errorString() << service.serviceUuid() << error;
     setUpdate(info->errorString());
 }
 

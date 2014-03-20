@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate():
-    m_randomAddress(false), m_step(0), m_commandStarted(false)
+    error(QLowEnergyController::NoError), m_randomAddress(false), m_step(0), m_commandStarted(false)
 {
 
 }
@@ -132,14 +132,17 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
         connectToTerminal();
     if (reply.contains(QStringLiteral("Connection refused (111)"))) {
         errorString = QStringLiteral("Connection refused (111)");
+        error = QLowEnergyController::InputOutputError;
         disconnectAllServices();
     }
     else if (reply.contains(QStringLiteral("Device busy"))) {
-        errorString = QStringLiteral("Connection refused (111)");
+        errorString = QStringLiteral("Device busy");
+        error = QLowEnergyController::InputOutputError;
         disconnectAllServices();
     }
     else if (reply.contains(QStringLiteral("disconnected"))) {
         errorString = QStringLiteral("Trying to execute command on disconnected service");
+        error = QLowEnergyController::OperationError;
         disconnectAllServices();
     }
     else {
@@ -328,8 +331,8 @@ void QLowEnergyControllerPrivate::disconnectAllServices()
             m_leServices.at(i).d_ptr->connected = false;
             emit q_ptr->disconnected(m_leServices.at(i));
         }
-        if (errorString != QString())
-            emit q_ptr->error(m_leServices.at(i));
+        if (error != QLowEnergyController::NoError)
+            emit q_ptr->error(m_leServices.at(i), error);
         m_step = 0;
     }
     m_leServices.clear();
@@ -404,9 +407,9 @@ bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteris
             }
         }
     }
-
+    error = QLowEnergyController::UnknownError;
     errorString = QStringLiteral("Characteristic or notification descriptor not found.");
-    emit q_ptr->error(characteristic);
+    emit q_ptr->error(characteristic, error);
     return false;
 }
 
@@ -438,13 +441,15 @@ bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &char
             writeValue(characteristic.handle(), characteristic.value());
             return true;
         } else {
+            error = QLowEnergyController::PermissionError;
             errorString = QStringLiteral("This characteristic does not support write operations.");
         }
     } else {
+        error = QLowEnergyController::OperationError;
         errorString = QStringLiteral("The device is not connected or characteristic is not valid");
     }
 
-    emit q_ptr->error(characteristic);
+    emit q_ptr->error(characteristic, error);
     return false;
 }
 

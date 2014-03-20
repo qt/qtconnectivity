@@ -145,8 +145,10 @@ void HeartRate::connectToService(const QString &address)
             m_leInfo = new QLowEnergyController();
             connect(m_leInfo, SIGNAL(connected(QLowEnergyServiceInfo)), this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
             connect(m_leInfo, SIGNAL(disconnected(QLowEnergyServiceInfo)), this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
-            connect(m_leInfo, SIGNAL(error(QLowEnergyServiceInfo)), this, SLOT(errorReceived(QLowEnergyServiceInfo)));
-            connect(m_leInfo, SIGNAL(error(QLowEnergyCharacteristicInfo)), this, SLOT(errorReceivedCharacteristic(QLowEnergyCharacteristicInfo)));
+            connect(m_leInfo, SIGNAL(error(QLowEnergyServiceInfo,QLowEnergyController::Error)),
+                    this, SLOT(errorReceived(QLowEnergyServiceInfo,QLowEnergyController::Error)));
+            connect(m_leInfo, SIGNAL(error(QLowEnergyCharacteristicInfo,QLowEnergyController::Error)),
+                    this, SLOT(errorReceivedCharacteristic(QLowEnergyCharacteristicInfo,QLowEnergyController::Error)));
             connect(m_leInfo, SIGNAL(valueChanged(QLowEnergyCharacteristicInfo)), this, SLOT(receiveMeasurement(QLowEnergyCharacteristicInfo)));
         }
         //! [Connect signals]
@@ -253,15 +255,15 @@ int HeartRate::hR() const
 }
 
 //! [Error handling]
-void HeartRate::errorReceived(const QLowEnergyServiceInfo &leService)
+void HeartRate::errorReceived(const QLowEnergyServiceInfo &leService, QLowEnergyController::Error error)
 {
-    qWarning() << "Error: " << leService.serviceUuid() << m_leInfo->errorString();
+    qWarning() << "Error: " << leService.serviceUuid() << m_leInfo->errorString() << error;
     setMessage(QStringLiteral("Error: ") + m_leInfo->errorString());
 }
 
-void HeartRate::errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &leCharacteristic)
+void HeartRate::errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &leCharacteristic, QLowEnergyController::Error error)
 {
-    qWarning() << "Error: " << leCharacteristic.uuid() << m_leInfo->errorString();
+    qWarning() << "Error: " << leCharacteristic.uuid() << m_leInfo->errorString() << error;
     setMessage(QStringLiteral("Error: ") + m_leInfo->errorString());
 }
 //! [Error handling]

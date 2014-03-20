@@ -62,6 +62,7 @@ public:
 
     QList<QLowEnergyServiceInfo> m_leServices;
     QString errorString;
+    QLowEnergyController::Error error;
 
 #ifdef QT_QNX_BLUETOOTH
     static void serviceConnected(const char*, const char*, int, int, short unsigned int, short unsigned int, short unsigned int, void*);

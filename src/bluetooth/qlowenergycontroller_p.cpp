@@ -44,7 +44,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate():
+    error(QLowEnergyController::NoError)
 {
 
 }

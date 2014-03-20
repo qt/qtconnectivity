@@ -65,7 +65,20 @@ QT_BEGIN_NAMESPACE
     service on the same LE device.
 
 
-    \sa QLowEnergyServiceInfo, QLowEnergyCharacteristicInfo
+    \sa QLowEnergyServiceInfo, QLowEnergyCharacteristicInfo, QLowEnergyDescriptorInfo
+*/
+
+/*!
+    \enum QLowEnergyController::Error
+
+    Indicates all possible error conditions found during Bluetooth Low Energy communication.
+
+    \value NoError      No error has occurred.
+    \value UnknownError     An unknown error has occurred.
+    \value InputOutputError     BLE device is not responding.
+    \value OperationError       The error occurred while communicating with the BLE device
+                                (connecting, disconnecting, receiving updates,etc).
+    \value PermissionError      Characteristic does not have required permissions.
 */
 
 /*!
@@ -78,7 +91,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QLowEnergyController::error(const QLowEnergyServiceInfo &)
+    \fn void QLowEnergyController::error(const QLowEnergyServiceInfo &, QLowEnergyController::Error)
 
     This signal is emitted when the service error occurs.
 
@@ -86,7 +99,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QLowEnergyController::error(const QLowEnergyCharacteristicInfo &)
+    \fn void QLowEnergyController::error(const QLowEnergyCharacteristicInfo &, QLowEnergyController::Error)
 
     This signal is emitted when the characteristic error occurs.
 
@@ -233,6 +246,16 @@ bool QLowEnergyController::writeCharacteristic(const QLowEnergyCharacteristicInf
 bool QLowEnergyController::writeDescriptor(const QLowEnergyDescriptorInfo &descriptor)
 {
     return d_ptr->write(descriptor);
+}
+
+/*!
+    This method returns the last error that was emitted.
+
+    \sa errorString(), error()
+ */
+QLowEnergyController::Error QLowEnergyController::error() const
+{
+    return d_ptr->error;
 }
 
 QT_END_NAMESPACE

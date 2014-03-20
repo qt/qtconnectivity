@@ -57,6 +57,13 @@ class Q_BLUETOOTH_EXPORT QLowEnergyController: public QObject
 {
     Q_OBJECT
 public:
+    enum Error {
+        NoError,
+        UnknownError,
+        OperationError,
+        InputOutputError,
+        PermissionError
+    };
     QLowEnergyController(QObject *parent = 0);
     QLowEnergyController(const QBluetoothAddress &localAdapter, QObject *parent = 0);
     ~QLowEnergyController();
@@ -75,15 +82,15 @@ public:
     QString errorString() const;
 
     void setRandomAddress();
+    Error error() const;
 
 Q_SIGNALS:
     void connected(const QLowEnergyServiceInfo &);
+    void error(const QLowEnergyServiceInfo &, QLowEnergyController::Error);
+    void error(const QLowEnergyCharacteristicInfo &, QLowEnergyController::Error);
     void disconnected(const QLowEnergyServiceInfo &);
-
     void valueChanged(const QLowEnergyCharacteristicInfo &);
 
-    void error(const QLowEnergyServiceInfo &);
-    void error(const QLowEnergyCharacteristicInfo &);
 private:
     Q_DECLARE_PRIVATE(QLowEnergyController)
     QLowEnergyControllerPrivate *d_ptr;

@@ -59,7 +59,6 @@
 
 QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyCharacteristicInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyController)
 
 QT_USE_NAMESPACE
 class HeartRate: public QObject
@@ -98,8 +97,8 @@ public slots:
     void serviceScanError(QBluetoothServiceDiscoveryAgent::Error);
     void serviceConnected(const QLowEnergyServiceInfo &);
     void receiveMeasurement(const QLowEnergyCharacteristicInfo &);
-    void errorReceived(const QLowEnergyServiceInfo &);
-    void errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &);
+    void errorReceived(const QLowEnergyServiceInfo &, QLowEnergyController::Error);
+    void errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &, QLowEnergyController::Error);
     void serviceDisconnected(const QLowEnergyServiceInfo &);
     void disconnectService();
     void obtainResults();

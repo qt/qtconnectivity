@@ -505,6 +505,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
                 QVERIFY(info.isValid());
                 QCOMPARE(leController.errorString(), QString());
+                QCOMPARE(leController.error(), QLowEnergyController::NoError);
                 QVERIFY((info.characteristics().size() > 0));
                 qDebug() << "LE Service Connected: " << info.serviceName() << info.serviceUuid();
                 leTestCounter++;

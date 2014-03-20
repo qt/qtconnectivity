@@ -129,8 +129,9 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
 
     if (err != 0) {
         qCDebug(QT_BT_QNX) << "An error occurred in service connected callback: " << qt_error_string(err);
+        p->error = QLowEnergyController::OperationError;
         p->errorString = qt_error_string(err);
-        p->q_ptr->error(p->m_leServices.at(index));
+        Q_EMIT p->q_ptr->error(p->m_leServices.at(index), p->error);
     }
     if (index != -1) {
         p->m_leServices.at(index).d_ptr->characteristicList.clear();
@@ -139,8 +140,9 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
         if (!data) {
             qCDebug(QT_BT_QNX) << "[SERVICE: Connected] GATT characteristics: Not enough memory";
             bt_gatt_disconnect_instance(instance);
+            p->error = QLowEnergyController::OperationError;
             p->errorString = QStringLiteral("GATT characteristics: Not enough memory");
-            p->q_ptr->error(p->m_leServices.at(index));
+            Q_EMIT p->q_ptr->error(p->m_leServices.at(index), p->error);
             return;
         }
 
@@ -154,8 +156,9 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
             if (!allCharacteristicList) {
                 qCDebug(QT_BT_QNX) <<" GATT characteristics: Not enough memory";
                 bt_gatt_disconnect_instance(instance);
+                p->error = QLowEnergyController::OperationError;
                 p->errorString = QStringLiteral("GATT characteristics: Not enough memory");
-                p->q_ptr->error(p->m_leServices.at(index));
+                Q_EMIT p->q_ptr->error(p->m_leServices.at(index), p->error);
                 return;
             }
 
@@ -200,8 +203,9 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
                     int rc = bt_gatt_reg_notifications(instance, &(p->serviceNotification));
                     if (!rc) {
                         qCDebug(QT_BT_QNX) << "[SERVICE: Connected] bt_gatt_reg_notifications failed." << errno << qt_error_string(errno);
+                        p->error = QLowEnergyController::OperationError;
                         p->errorString = qt_error_string(errno);
-                        p->q_ptr->error(p->m_leServices.at(index));
+                        Q_EMIT p->q_ptr->error(p->m_leServices.at(index), p->error);
                     } else {
                         qCDebug(QT_BT_QNX) << "[SERVICE: Connected] bt_gatt_reg_notifications was presumably OK";
                     }
@@ -222,7 +226,7 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
         p->m_leServices.at(index).d_ptr->connected = true;
 
         qCDebug(QT_BT_QNX) << p;
-        emit p->q_ptr->connected(p->m_leServices.at(index));
+        Q_EMIT p->q_ptr->connected(p->m_leServices.at(index));
         qCDebug(QT_BT_QNX) << "---------------------------------------------------------------------------------";
     } else {
         qCDebug(QT_BT_QNX) << "Unregistered service connected";
@@ -263,7 +267,7 @@ void QLowEnergyControllerPrivate::serviceNotification(int instance, short unsign
 
                 p->m_leServices.at(i).d_ptr->characteristicList.at(j).d_ptr->notification = true;
                 p->m_leServices.at(i).d_ptr->characteristicList.at(j).d_ptr->value = receivedValue;
-                p->q_ptr->valueChanged(p->m_leServices.at(i).d_ptr->characteristicList.at(j));
+                Q_EMIT p->q_ptr->valueChanged(p->m_leServices.at(i).d_ptr->characteristicList.at(j));
                 current = true;
             }
         }
@@ -305,7 +309,7 @@ void QLowEnergyControllerPrivate::serviceDisconnected(const char *bdaddr, const 
         leUuid = QBluetoothUuid(lowEnergyUuid.toUShort(0,0));
     }
     QLowEnergyServiceInfo leService(leUuid);
-    emit p->q_ptr->connected(leService);
+    Q_EMIT p->q_ptr->connected(leService);
 
     qCDebug(QT_BT_QNX) << "---------------------------------------------------";
     qCDebug(QT_BT_QNX) << "[SERVICE: Disconnect] (service, instance, reason):" << service << instance << reason;
@@ -315,7 +319,8 @@ void QLowEnergyControllerPrivate::serviceDisconnected(const char *bdaddr, const 
     delete classPointer;
 }
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate():
+    error(QLowEnergyController::NoError)
 {
     qRegisterMetaType<QLowEnergyServiceInfo>("QLowEnergyServiceInfo");
     qRegisterMetaType<QLowEnergyCharacteristicInfo>("QLowEnergyCharacteristicInfo");
@@ -328,9 +333,11 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 
 void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &service)
 {
+    Q_Q(QLowEnergyController);
     if (!service.isValid()) {
+        error = QLowEnergyController::UnknownError;
         errorString = QStringLiteral("Service not valid.");
-        emit q_ptr->error(service);
+        Q_EMIT q->error(service, error);
         return;
     }
 
@@ -338,8 +345,9 @@ void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &se
     for (int i = 0; i < m_leServices.size(); i++) {
         if (m_leServices.at(i).serviceUuid() == service.serviceUuid()) {
             if (m_leServices.at(i).isConnected()) {
+                error = QLowEnergyController::OperationError;
                 errorString = QStringLiteral("Service already connected");
-                emit q_ptr->error(m_leServices.at(i));
+                Q_EMIT q->error(m_leServices.at(i), error);
             }
             else {
                 m_leServices.replace(i, service);
@@ -357,16 +365,18 @@ void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &se
     process = process->instance();
     if (!process->isConnected()) {
         qCDebug(QT_BT_QNX) << "[INIT] Init problem." << errno << qt_error_string(errno);
+        error = QLowEnergyController::InputOutputError;
         errorString = QStringLiteral("Initialization of device falied. ") + qt_error_string(errno);
-        emit q_ptr->error(service);
+        Q_EMIT q->error(service, error);
         return;
     }
 
     errno = 0;
     if (bt_gatt_init(&gatt_callbacks) < 0) {
         qCDebug(QT_BT_QNX) << "[INIT] GAT Init problem." << errno << qt_error_string(errno);
+        error = QLowEnergyController::UnknownError;
         errorString = QStringLiteral("Callbacks initialization failed. ") + qt_error_string(errno);
-        emit q_ptr->error(service);
+        Q_EMIT q->error(service, error);
         return;
     }
     if (bt_le_init(0) != EOK) {
@@ -390,14 +400,16 @@ void QLowEnergyControllerPrivate::connectService(const QLowEnergyServiceInfo &se
 
     if (bt_gatt_connect_service(service.device().address().toString().toLocal8Bit().constData(), serviceUuid.toLocal8Bit().constData(), 0, &conParm, classPointer) < 0) {
         qCDebug(QT_BT_QNX) << "[SERVICE] Connection to service failed." << errno << qt_error_string(errno);
+        error = QLowEnergyController::OperationError;
         errorString = QStringLiteral("[SERVICE] Connection to service failed.") + qt_error_string(errno);
-        emit q_ptr->error(service);
+        Q_EMIT q->error(service, error);
     }
     qCDebug(QT_BT_QNX) << "errno after connect: " << errno;
 }
 
 void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo &leService)
 {
+    Q_Q(QLowEnergyController);
     if (leService.isValid()){
         QString serviceUuid = leService.serviceUuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
         if (leService.serviceName() == QStringLiteral("Unknown Service"))
@@ -407,8 +419,9 @@ void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo 
         if (leService.isConnected()) {
             if (bt_gatt_disconnect_service(leService.device().address().toString().toLocal8Bit().constData(), serviceUuid.toLocal8Bit().constData()) < 0) {
                 qCDebug(QT_BT_QNX) << "[SERVICE] Disconnect service request failed. " << errno << qt_error_string(errno);
+                error = QLowEnergyController::OperationError;
                 errorString = QStringLiteral("[SERVICE] Disconnect service request failed. ") + qt_error_string(errno);
-                emit q_ptr->error(leService);
+                Q_EMIT q->error(leService, error);
             } else {
                 for (int i = 0; i < m_leServices.size(); i++) {
                     if (leService.serviceUuid() == m_leServices.at(i).serviceUuid()) {
@@ -417,12 +430,13 @@ void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo 
                     }
                 }
                 leService.d_ptr->connected = false;
-                emit q_ptr->disconnected(leService);
+                Q_EMIT q->disconnected(leService);
                 qCDebug(QT_BT_QNX) << "[SERVICE] Disconnected from service OK.";
             }
         } else {
+            error = QLowEnergyController::UnknownError;
             errorString = QStringLiteral("Service is not connected");
-            q_ptr->error(leService);
+            Q_EMIT q->error(leService, error);
         }
     } else {
         disconnectAllServices();
@@ -431,6 +445,7 @@ void QLowEnergyControllerPrivate::disconnectService(const QLowEnergyServiceInfo 
 
 void QLowEnergyControllerPrivate::disconnectAllServices()
 {
+    Q_Q(QLowEnergyController);
     for (int i = 0; i < m_leServices.size(); i++) {
         QString serviceUuid = m_leServices.at(i).serviceUuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
         if (m_leServices.at(i).serviceName() == QStringLiteral("Unknown Service"))
@@ -442,11 +457,12 @@ void QLowEnergyControllerPrivate::disconnectAllServices()
             qCDebug(QT_BT_QNX) << m_leServices.at(i).device().address().toString().toLocal8Bit().constData() << serviceUuid.toLocal8Bit().constData();
             if (bt_gatt_disconnect_service( m_leServices.at(i).device().address().toString().toLocal8Bit().constData(), serviceUuid.toLocal8Bit().constData()) < 0) {
                 qCDebug(QT_BT_QNX) << "[SERVICE] Disconnect service request failed. " << errno << qt_error_string(errno);
+                error = QLowEnergyController::OperationError;
                 errorString = QStringLiteral("[SERVICE] Disconnect service request failed. ") + qt_error_string(errno);
-                emit q_ptr->error( m_leServices.at(i));
+                Q_EMIT q->error( m_leServices.at(i), error);
             } else {
                 m_leServices.at(i).d_ptr->connected = false;
-                emit q_ptr->disconnected(m_leServices.at(i));
+                Q_EMIT q->disconnected(m_leServices.at(i));
                 qCDebug(QT_BT_QNX) << "[SERVICE] Disconnected from service OK.";
             }
         }
@@ -456,24 +472,28 @@ void QLowEnergyControllerPrivate::disconnectAllServices()
 
 bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteristicInfo &characteristic)
 {
+    Q_Q(QLowEnergyController);
     if (characteristic.d_ptr->instance == -1) {
         qCDebug(QT_BT_QNX) << " GATT service not connected ";
+        error = QLowEnergyController::UnknownError;
         errorString = QStringLiteral("Service is not connected");
-        emit q_ptr->error(characteristic);
+        Q_EMIT q->error(characteristic, error);
         return false;
     }
     if (!(characteristic.d_ptr->permission & QLowEnergyCharacteristicInfo::Notify)) {
         qCDebug(QT_BT_QNX) << "Notification changes not allowed";
+        error = QLowEnergyController::PermissionError;
         errorString = QStringLiteral("This characteristic does not support notifications.");
-        emit q_ptr->error(characteristic);
+        Q_EMIT q->error(characteristic, error);
         return false;
     }
 
     int rc = bt_gatt_enable_notify(characteristic.d_ptr->instance, &characteristic.d_ptr->characteristic, 1);
     if (!rc) {
         qCDebug(QT_BT_QNX) << "bt_gatt_enable_notify errno=" << errno << qt_error_string(errno);
+        error = QLowEnergyController::OperationError;
         errorString = qt_error_string(errno);
-        emit q_ptr->error(characteristic);
+        Q_EMIT q->error(characteristic, error);
         return false;
     } else {
         qCDebug(QT_BT_QNX) << "bt_gatt_enable_notify was presumably OK";
@@ -492,9 +512,11 @@ void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteri
 
 bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &characteristic)
 {
+    Q_Q(QLowEnergyController);
     if (!characteristic.isValid()) {
+        error = QLowEnergyController::UnknownError;
         errorString = QStringLiteral("Characteristic not valid.");
-        emit q_ptr->error(characteristic);
+        Q_EMIT q->error(characteristic, error);
         return false;
     }
 
@@ -503,12 +525,14 @@ bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &char
         if (errorString == QString()) {
             return true;
         } else {
-            emit q_ptr->error(characteristic);
+            error = QLowEnergyController::OperationError;
+            Q_EMIT q->error(characteristic, error);
             return false;
         }
     } else {
+        error = QLowEnergyController::PermissionError;
         errorString = QStringLiteral("Characteristic does not allow write operations. The wanted value was not written to the device.");
-        emit q_ptr->error(characteristic);
+        Q_EMIT q->error(characteristic, error);
         return false;
     }
 

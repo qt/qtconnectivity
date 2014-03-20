@@ -49,6 +49,7 @@
 #include <QBluetoothServiceDiscoveryAgent>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include "deviceinfo.h"
+#include "qlowenergycontroller.h"
 #include "qlowenergyserviceinfo.h"
 #include "serviceinfo.h"
 #include "characteristicinfo.h"
@@ -56,7 +57,6 @@
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyCharacteristicInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyController)
 QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
 
 class Device: public QObject
@@ -86,7 +86,7 @@ public slots:
     void serviceScanDone();
     void serviceConnected(const QLowEnergyServiceInfo &service);
     void connectToService(const QString &uuid);
-    void errorReceived(const QLowEnergyServiceInfo &service);
+    void errorReceived(const QLowEnergyServiceInfo &service, QLowEnergyController::Error);
     void disconnectFromService();
     void serviceDisconnected(const QLowEnergyServiceInfo &service);
     void serviceScanError(QBluetoothServiceDiscoveryAgent::Error);
