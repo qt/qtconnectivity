@@ -75,7 +75,9 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     return false;
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
+                                               const QBluetoothUuid &uuid,
+                                               QIODevice::OpenMode openMode)
 {
     Q_UNUSED(openMode);
     qCDebug(QT_BT_QNX) << "Connecting socket";
@@ -356,6 +358,7 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
 
             connectWriteNotifier->setEnabled(true);
             readNotifier->setEnabled(true);
+            state = QBluetoothSocket::ConnectedState;
             emit q->connected();
             ppsRegisterForEvent(QStringLiteral("service_disconnected"),this);
         }
