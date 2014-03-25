@@ -201,8 +201,8 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     inputThread = new InputStreamThread(this);
     QObject::connect(inputThread, SIGNAL(dataAvailable()),
                      q, SIGNAL(readyRead()), Qt::QueuedConnection);
-    QObject::connect(inputThread, SIGNAL(error()),
-                     this, SLOT(inputThreadError()), Qt::QueuedConnection);
+    QObject::connect(inputThread, SIGNAL(error(int)),
+                     this, SLOT(inputThreadError(int)), Qt::QueuedConnection);
 
     if (!inputThread->run()) {
         //close socket again
