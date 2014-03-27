@@ -349,9 +349,9 @@ void QNXNFCManager::setupInvokeTarget() {
         }
         uriFilter.append(absNdefFilters.at(i));
         if (i==absNdefFilters.size()-1)
-            uriFilter += ";";
+            uriFilter += ';';
         else
-            uriFilter += ",";
+            uriFilter += ',';
     }
     if (registerAll) {
         uriFilter = "uris=ndef://;";
