@@ -68,6 +68,8 @@ QT_BEGIN_NAMESPACE
     \value FileNotFoundError Unable to open the file specified
     \value HostNotFoundError Unable to connect to the target host
     \value UserCanceledTransferError User terminated the transfer
+    \value IODeviceNotReadableError File was not open before initiating the sending command
+    \value ResourceBusyError  Unable to access the resource.
 */
 
 

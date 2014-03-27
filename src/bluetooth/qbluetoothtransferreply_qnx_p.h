@@ -50,10 +50,11 @@
 
 #include "qbluetoothtransferreply.h"
 
-#include <QTemporaryFile>
 #include <QSocketNotifier>
 
 #include "qnx/ppshelpers_p.h"
+
+QT_FORWARD_DECLARE_CLASS(QFile)
 
 QT_BEGIN_NAMESPACE
 
@@ -80,7 +81,8 @@ private Q_SLOTS:
 
 private:
     void startOPP(QString filename);
-    QTemporaryFile *tempfile;
+    void removeTempFile();
+    QFile *tempfile;
     QIODevice *source;
 
     bool m_running;

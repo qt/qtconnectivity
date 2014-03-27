@@ -61,7 +61,9 @@ public:
         UnknownError,
         FileNotFoundError,
         HostNotFoundError,
-        UserCanceledTransferError
+        UserCanceledTransferError,
+        IODeviceNotReadableError,
+        ResourceBusyError
     };
 
 
