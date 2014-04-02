@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the documentation of the Qt local connectivty modules.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:FDL$
 ** Commercial License Usage
@@ -45,18 +45,14 @@
             \li Example
             \li Description
         \row
-            \li \l{bttennis}{Bluetooth Tennis}
-            \li The classic game of \l {http://en.wikipedia.org/wiki/Pong}{Pong}. Supports multiplayer
-            over Bluetooth and touch-to-play functionality on devices that support NFC.
+            \li \l{btchat}{Bluetooth Chat}
+            \li Simple chat server and client via Bluetooth.
         \row
             \li \l{btfiletransfer}{Bluetooth File Transfer}
             \li Transfer files between Bluetooth devices.
         \row
             \li \l{btscanner}{Bluetooth Scanner}
             \li Scan for Bluetooth devices.
-        \row
-            \li \l{pingpong}{QML Bluetooth PingPong}
-            \li The ping pong game demonstrates Bluetooth socket communication between two devices.
     \endtable
 
     \section2 QML Examples
@@ -65,9 +61,8 @@
             \li Example
             \li Description
         \row
-            \li \l{bttennis}{QML Bluetooth Tennis}
-            \li The tennis game using a QML interface to the Bluetooth API. It
-            must connect to an instance of the C++ \l{bttennis}{Bluetooth Tennis} game to play.
+            \li \l{pingpong}{QML Bluetooth PingPong}
+            \li A QML ping pong game demonstrating Bluetooth socket communication between two devices.
         \row
             \li \l{scanner}{QML Bluetooth Scanner}
             \li A QML implementation of the Bluetooth device scanner.

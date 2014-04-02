@@ -2,8 +2,7 @@ TEMPLATE = subdirs
 qtHaveModule(widgets) {
     SUBDIRS += btchat \
                btscanner \
-               btfiletransfer \
-               bttennis
+               btfiletransfer
 }
 
 qtHaveModule(quick): SUBDIRS += scanner picturetransfer pingpong

@@ -82,7 +82,6 @@ import statement in your \c .qml file:
     \list
         \li \l {btchat}{Bluetooth Chat}
         \li \l {btscanner}{Bluetooth Scanner}
-        \li \l {bttennis}{Bluetooth Tennis}
         \li \l {btfiletransfer}{Bluetooth File Transfer}
     \endlist
 \endlist
