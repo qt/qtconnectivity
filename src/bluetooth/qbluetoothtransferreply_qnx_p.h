@@ -43,18 +43,15 @@
 #ifndef QBLUETOOTHTRANSFERREPLY_QNX_P_H
 #define QBLUETOOTHTRANSFERREPLY_QNX_P_H
 
-#include <QtCore/QIODevice>
-
 #include <qbluetoothtransferrequest.h>
 #include <qbluetoothtransfermanager.h>
 
 #include "qbluetoothtransferreply.h"
 
-#include <QSocketNotifier>
-
 #include "qnx/ppshelpers_p.h"
 
 QT_FORWARD_DECLARE_CLASS(QFile)
+QT_FORWARD_DECLARE_CLASS(QIODevice)
 
 QT_BEGIN_NAMESPACE
 
