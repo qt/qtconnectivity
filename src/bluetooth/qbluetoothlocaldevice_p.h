@@ -52,10 +52,15 @@
 #include <QDBusObjectPath>
 #include <QDBusMessage>
 #include <QSet>
+#include "bluez/bluez5_helper_p.h"
 
 class OrgBluezAdapterInterface;
+class OrgBluezAdapter1Interface;
+class OrgFreedesktopDBusPropertiesInterface;
+class OrgFreedesktopDBusObjectManagerInterface;
 class OrgBluezAgentAdaptor;
 class OrgBluezDeviceInterface;
+class OrgBluezDevice1Interface;
 
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
@@ -126,7 +131,11 @@ public:
 
     QSet<OrgBluezDeviceInterface *> devices;
     QSet<QBluetoothAddress> connectedDevicesSet;
-    OrgBluezAdapterInterface *adapter;
+    OrgBluezAdapterInterface *adapter; //Bluez 4
+    OrgBluezAdapter1Interface *adapterBluez5; //Bluez 5
+    OrgFreedesktopDBusPropertiesInterface *adapterProperties; //Bluez 5
+    OrgFreedesktopDBusObjectManagerInterface *managerBluez5; //Bluez 5
+    QMap<QString, OrgFreedesktopDBusPropertiesInterface *> deviceChangeMonitors; //Bluez 5
     OrgBluezAgentAdaptor *agent;
 
     QList<QBluetoothAddress> connectedDevices() const;
@@ -135,6 +144,9 @@ public:
     QBluetoothAddress localAddress;
     QBluetoothAddress address;
     QBluetoothLocalDevice::Pairing pairing;
+    OrgBluezDevice1Interface *pairingTarget;
+    QTimer *pairingDiscoveryTimer;
+    bool discoveryWasAlreadyActive;
     QBluetoothLocalDevice::HostMode currentMode;
     int pendingHostModeChange;
 
@@ -157,6 +169,21 @@ public slots:
     void _q_devicePropertyChanged(const QString &property, const QDBusVariant &value);
     bool isValid() const;
 
+    void requestPairingBluez5(const QBluetoothAddress &address,
+                              QBluetoothLocalDevice::Pairing targetPairing);
+
+private Q_SLOTS:
+    void PropertiesChanged(const QString &interface,
+                           const QVariantMap &changed_properties,
+                           const QStringList &invalidated_properties);
+    void InterfacesAdded(const QDBusObjectPath &object_path,
+                         InterfaceList interfaces_and_properties);
+    void InterfacesRemoved(const QDBusObjectPath &object_path,
+                           const QStringList &interfaces);
+    void processPairingBluez5(const QString &objectPath,
+                              QBluetoothLocalDevice::Pairing target);
+    void pairingDiscoveryTimedOut();
+
 private:
     void createCache();
     void connectDeviceChanges();
@@ -169,6 +196,7 @@ private:
     bool connectedCached;
 
     void initializeAdapter();
+    void initializeAdapterBluez5();
 };
 
 #elif defined(QT_QNX_BLUETOOTH)

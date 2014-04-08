@@ -144,10 +144,20 @@ void BtLocalDevice::requestPairingUpdate(bool isPairing)
     if (baddr.isNull())
         return;
 
-    if (isPairing)
-        localDevice->requestPairing(baddr, QBluetoothLocalDevice::Paired);
-    else
+
+
+    if (isPairing) {
+        //toggle between authorized and non-authorized pairing to achieve better
+        //level of testing
+        static short pairing = 0;
+        if ((pairing%2) == 1)
+            localDevice->requestPairing(baddr, QBluetoothLocalDevice::Paired);
+        else
+            localDevice->requestPairing(baddr, QBluetoothLocalDevice::AuthorizedPaired);
+        pairing++;
+    } else {
         localDevice->requestPairing(baddr, QBluetoothLocalDevice::Unpaired);
+    }
 
     for (int i = 0; i < foundTestServers.count(); i++) {
         if (isPairing)
