@@ -138,72 +138,29 @@
 
     To be able to get and read characteristics, it is required to connect to the LE device service.
 
-    \code
-    QObject::connect(m_serviceDiscoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
-                this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
-    QObject::connect(m_serviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(serviceScanDone()));
-    m_serviceDiscoveryAgent->setRemoteAddress(device.address());
-    m_serviceDiscoveryAgent->start();
-    lowEnergyController = new QLowEnergyController();
-    QObject::connect(lowEnergyController, SIGNAL(connected(QLowEnergyServiceInfo)),
-                this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
-    QObject::connect(lowEnergyController, SIGNAL(error(QLowEnergyServiceInfo)),
-                this, SLOT(errorReceived(QLowEnergyServiceInfo)));
-    QObject::connect(lowEnergyController, SIGNAL(valueChanged(QLowEnergyCharacteristicInfo)),
-                this, SLOT(receiveMeasurement(QLowEnergyCharacteristicInfo)));
-    QObject::connect(lowEnergyController, SIGNAL(disconnected(QLowEnergyServiceInfo)),
-                this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
-
-    \endcode
+    \snippet heartlistener/heartrate.cpp Connect signals
 
     We start a service discovery with a \l QBluetoothServiceDiscoveryAgent class and connect its
-    signal \l serviceDiscovered(QLowEnergyServiceInfo) to our slot
-    \l addLowEnergyService(QLowEnergyServiceInfo). This way, it is possible to store all LE services
-    or connect to the desired one. \l QLowEnergyController is used for connecting to service,
-    receiving emitted errors from the service and disconnecting from the service.
+    signal \l serviceDiscovered(QLowEnergyServiceInfo) to the slot in the application.
+    This way, it is possible to store all LE services or connect to the desired one.
+    \l QLowEnergyController is used for connecting to service, emitting values,
+    receiving emitted errors from the service and characteristics, and disconnecting from the service.
 
     Even though it is possible to connect to an LE service before the service scan is done,
     it is advisable to do it after the service scan is done.
 
-    \code
-    void serviceScanDone()
-    {
-        lowEnergyController->connectToService(wantedLowEnergyService);
-    }
-    \endcode
+    \snippet heartlistener/heartrate.cpp Connecting to service
 
-    Here, the \c wantedLowEnergyService can be one service or you can pick more or all services
-    to connect. Some LE devices, become available one or two seconds after service scan.
+    In the code example above, the wanted characteristics will be enabled for the notifications, but not
+    all of them have that option as explained in \l QLowEnergyController documentation. In this case,
+    it was a characteristic \l QBluetoothUuid::HeartRateMeasurement.
 
-    \code
-    void serviceConnected(const QLowEnergyServiceInfo &leService)
-    {
-        QList<QLowEnergyCharacteristicInfo> lowEnergyCharacteristics = leService.getCharacteristics();
-        for (int i = 0; i<lowEnergyCharacteristics.size(); i++) {
-            QLowEnergyCharacteristicInfo wantedCharacteristic =
-                        QLowEnergyCharacteristicInfo(lowEnergyCharacteristics.at(i));
-            lowEnergyController->enableNotifications(wantedCharacteristic);
-        }
-    }
-    \endcode
+    Finally, to receive updates, we defined the slot where we read the emitted value.
 
-    In the code example above all characteristics will be enabled for the notifications, but not
-    all of them have that option as explained in \l QLowEnergyController documentation. It is possible
-    to select only one characteristic, for instance \l QBluetoothUuid::HeartRateMeasurement.
-
-    Finally, to receive updates, the receiveMeasurement(QLowEnergyCharacteristicInfo) slot was defined.
-
-    \code
-    void HeartRate::receiveMeasurement(const QLowEnergyCharacteristicInfo &characteristic)
-    {
-        wantedCharacteristic = QLowEnergyCharacteristicInfo(characteristic);
-        wantedCharacteristic.value();
-    }
-    \endcode
+    \snippet heartlistener/heartrate.cpp Reading value
 
     The returned value is the hexadecimal value. The procedure of reading and converting hexadecimal
     value properly depends on the BLE devices that is sending updates since every device has a different
     value structure.
-
 
 */
