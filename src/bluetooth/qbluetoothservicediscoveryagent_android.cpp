@@ -416,7 +416,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
     }
 
     for (int i = 0; i < uuids.count(); i++) {
-        if (i == sppIndex) //skip SPP service class id
+        if (i == sppIndex && !customUuids.isEmpty())
             continue;
 
         QBluetoothServiceInfo serviceInfo;
@@ -443,6 +443,21 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
+            serviceInfo.setServiceUuid(uuids.at(i));
+        } else if (sppIndex == i && customUuids.isEmpty()) {
+            //set rfcomm protocol
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                     << QVariant::fromValue(0);
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+
+            QBluetoothServiceInfo::Sequence classId;
+            classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+            serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
+                                     classId);
+
+            //also we need to set the custom uuid to the SPP uuid
+            //otherwise QBluetoothSocket::connectToService() would fail due to a missing service uuid
             serviceInfo.setServiceUuid(uuids.at(i));
         } else if (customUuids.contains(i)) {
             //custom uuid but no serial port
