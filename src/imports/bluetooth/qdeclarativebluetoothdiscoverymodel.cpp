@@ -403,6 +403,7 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
             }
 
             d->m_serviceAgent->setRemoteAddress(QBluetoothAddress(d->m_remoteAddress));
+            d->m_serviceAgent->clear();
 
             if (!d->m_uuid.isEmpty())
                 d->m_serviceAgent->setUuidFilter(QBluetoothUuid(d->m_uuid));
