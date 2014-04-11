@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -240,9 +240,24 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
         Q_Q(QBluetoothServiceDiscoveryAgent);
 
-        discoveredServices.append(serviceInfo);
-        qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString();
-        emit q->serviceDiscovered(serviceInfo);
+        //don't include the service if we already discovered it before
+        bool alreadyDiscovered = false;
+        for (int j = 0; j < discoveredServices.count(); j++) {
+            const QBluetoothServiceInfo &info = discoveredServices.at(j);
+            if (info.device() == serviceInfo.device()
+                    && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
+                    && info.serviceUuid() == serviceInfo.serviceUuid()) {
+                alreadyDiscovered = true;
+                break;
+            }
+        }
+
+        if (!alreadyDiscovered) {
+            discoveredServices.append(serviceInfo);
+            qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString();
+            emit q->serviceDiscovered(serviceInfo);
+        }
+
         // could stop discovery, check for state
         if(discoveryState() == Inactive){
             qCDebug(QT_BT_BLUEZ) << "Exit discovery after stop";
