@@ -3,14 +3,19 @@ TEMPLATE = subdirs
 SUBDIRS += bluetooth nfc
 android: SUBDIRS += android
 
-!android {
+contains(QT_CONFIG, private_tests) {
     bluetooth_doc_snippets.subdir = bluetooth/doc/snippets
     bluetooth_doc_snippets.depends = bluetooth
-    SUBDIRS += bluetooth_doc_snippets
 
     nfc_doc_snippets.subdir = nfc/doc/snippets
     nfc_doc_snippets.depends = nfc
-    SUBDIRS += nfc_doc_snippets
+
+    !contains(QT_BUILD_PARTS, examples) {
+        bluetooth_doc_snippets.CONFIG = no_default_target no_default_install
+        nfc_doc_snippets.CONFIG = no_default_target no_default_install
+    }
+
+    SUBDIRS += bluetooth_doc_snippets nfc_doc_snippets
 }
 
 qtHaveModule(quick) {
