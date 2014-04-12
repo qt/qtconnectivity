@@ -226,6 +226,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
     char *writePointer = buffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
 //    qint64 readFromDevice = q->readData(writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
     int readFromDevice = ::read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
+    buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
     if(readFromDevice <= 0){
         int errsv = errno;
         readNotifier->setEnabled(false);
@@ -240,8 +241,6 @@ void QBluetoothSocketPrivate::_q_readNotify()
         q->disconnectFromService();
     }
     else {
-        buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
-
         emit q->readyRead();
     }
 }
