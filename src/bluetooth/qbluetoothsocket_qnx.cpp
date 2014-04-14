@@ -176,8 +176,6 @@ void QBluetoothSocketPrivate::abort()
 
     ::close(socket);
 
-    q->setSocketState(QBluetoothSocket::UnconnectedState);
-    Q_EMIT q->disconnected();
     isServerSocket = false;
 }
 

@@ -238,7 +238,6 @@ void QBluetoothSocketPrivate::_q_readNotify()
             q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
     }
     else {
         buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
@@ -259,9 +258,6 @@ void QBluetoothSocketPrivate::abort()
     // QBluetoothSocket::close
     QT_CLOSE(socket);
     socket = -1;
-
-    Q_Q(QBluetoothSocket);
-    emit q->disconnected();
 }
 
 QString QBluetoothSocketPrivate::localName() const
@@ -508,17 +504,7 @@ void QBluetoothSocketPrivate::close()
         connectWriteNotifier->setEnabled(true);
     }
     else {
-
-        delete readNotifier;
-        readNotifier = 0;
-        delete connectWriteNotifier;
-        connectWriteNotifier = 0;
-
-        // We are disconnected now, so go to unconnected.
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
-        emit q->disconnected();
-        QT_CLOSE(socket);
-        socket = -1;
+        abort();
     }
 
 }
