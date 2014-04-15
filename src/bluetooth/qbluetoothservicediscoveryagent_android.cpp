@@ -246,6 +246,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
     if (discoveredDevices.count() == 0)
         return;
 
+    //could not find any service for the current address/device -> go to next one
+    if (address.isNull() || uuids.isEmpty()) {
+        _q_serviceDiscoveryFinished();
+        return;
+    }
+
     if (QT_BT_ANDROID().isDebugEnabled()) {
         qCDebug(QT_BT_ANDROID) << "Found UUID for" << address.toString()
                                << "\ncount: " << uuids.count();

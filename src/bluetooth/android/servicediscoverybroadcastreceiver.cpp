@@ -76,8 +76,10 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
                                                 "getParcelableArrayExtra",
                                                 "(Ljava/lang/String;)[Landroid/os/Parcelable;",
                                                 keyExtra.object<jstring>());
-        if (!parcelableUuids.isValid())
+        if (!parcelableUuids.isValid()) {
+            emit uuidFetchFinished(QBluetoothAddress(), QList<QBluetoothUuid>());
             return;
+        }
         const QList<QBluetoothUuid> result = ServiceDiscoveryBroadcastReceiver::convertParcelableArray(parcelableUuids);
 
         keyExtra = valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ExtraDevice);
@@ -89,6 +91,8 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
         if (bluetoothDevice.isValid()) {
             address = QBluetoothAddress(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
             emit uuidFetchFinished(address, result);
+        } else {
+            emit uuidFetchFinished(QBluetoothAddress(), QList<QBluetoothUuid>());
         }
     }
 }
