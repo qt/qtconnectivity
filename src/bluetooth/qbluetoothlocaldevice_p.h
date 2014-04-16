@@ -168,8 +168,6 @@ private:
 
     QBluetoothLocalDevice *q_ptr;
 
-    bool connectedCached;
-
     void initializeAdapter();
 };
 
