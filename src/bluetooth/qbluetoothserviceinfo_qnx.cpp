@@ -45,6 +45,11 @@
 #include "qbluetoothserver_p.h"
 #include "qbluetoothserver.h"
 
+#ifdef QT_QNX_BT_BLUETOOTH
+#include <btapi/btspp.h>
+#include <errno.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
@@ -70,11 +75,19 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     if (serverChannel() == -1)
         return false;
     if ( __fakeServerPorts.key(serverChannel()) != 0) {
+#ifdef QT_QNX_BT_BLUETOOTH
+        QByteArray b_uuid = attributes.value(QBluetoothServiceInfo::ServiceId).
+                value<QBluetoothUuid>().toByteArray();
+        b_uuid = b_uuid.mid(1, b_uuid.length() - 2);
+        if (bt_spp_close_server(b_uuid.data()) == -1)
+            return false;
+#else
         if (!ppsSendControlMessage("deregister_server", 0x1101, attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>(), QString(),
                                    attributes.value(QBluetoothServiceInfo::ServiceName).toString(),
                                    __fakeServerPorts.key(serverChannel()), BT_SPP_SERVER_SUBTYPE)) {
             return false;
         }
+#endif
         else {
             __fakeServerPorts.remove(__fakeServerPorts.key(serverChannel()));
             registered = false;
@@ -98,10 +111,28 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& loca
         return false;
 
     if (__fakeServerPorts.key(serverChannel()) != 0) {
+#ifdef QT_QNX_BT_BLUETOOTH
+        QByteArray b_uuid = attributes.value(QBluetoothServiceInfo::ServiceId)
+                .value<QBluetoothUuid>().toByteArray();
+        b_uuid = b_uuid.mid(1, b_uuid.length() - 2);
+        qCDebug(QT_BT_QNX) << "Registering server. " << b_uuid.data()
+                           << attributes.value(QBluetoothServiceInfo::ServiceName)
+                              .toString();
+        if (bt_spp_open_server(attributes.value(QBluetoothServiceInfo::ServiceName)
+                               .toString().toUtf8().data(),
+                               b_uuid.data(), true, &QBluetoothServerPrivate::btCallback,
+                               reinterpret_cast<long>(__fakeServerPorts.key(serverChannel()))) == -1) {
+            qCDebug(QT_BT_QNX) << "Could not open the server. "
+                               << qt_error_string(errno) << errno;
+            bt_spp_close_server(b_uuid.data());
+            return false;
+        }
+#else
         if (!ppsSendControlMessage("register_server", 0x1101, attributes.value(QBluetoothServiceInfo::ServiceId).value<QBluetoothUuid>(), QString(),
                                    attributes.value(QBluetoothServiceInfo::ServiceName).toString(),
                               __fakeServerPorts.key(serverChannel()), BT_SPP_SERVER_SUBTYPE))
             return false;
+#endif
         //The server needs to know the service name for the socket mount point path
         __fakeServerPorts.key(serverChannel())->m_serviceName = attributes.value(QBluetoothServiceInfo::ServiceName).toString();
     } else {
