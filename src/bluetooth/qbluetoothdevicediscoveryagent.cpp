@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \li and call start().
     \endlist
 
-    \snippet doc_src_qtbluetooth.cpp discovery
+    \snippet doc_src_qtbluetooth.cpp device_discovery
 
     To retrieve results asynchronously, connect to the deviceDiscovered() signal. To get a list of
     all discovered devices, call discoveredDevices() after the finished() signal.
