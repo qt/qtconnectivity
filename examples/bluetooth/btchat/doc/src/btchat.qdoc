@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt local connectivty modules.
@@ -28,8 +28,9 @@
 /*!
     \example btchat
     \title Bluetooth Chat Example
+    \brief An example showing communication through Bluetooth.
 
-    The Bluetooth Chat example shows how to use the Qt Connectivity Bluetooth API to communicate
+    The Bluetooth Chat example shows how to use the \l{Qt Bluetooth} API to communicate
     with another application on a remote device using Bluetooth.
 
     \image btchat-example.png
@@ -37,6 +38,8 @@
     The Bluetooth Chat example implements a simple chat program between multiple parties. The
     application always acts as both a server and a client eliminating the need to determine who
     should connect to whom.
+
+    \include examples-run.qdocinc
 
     \section1 Chat Server
 

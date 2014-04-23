@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
@@ -28,6 +29,7 @@
 /*!
 \example scanner
 \title QML Bluetooth Scanner Example
+\brief A QML example about locating Bluetooth devices.
 
 This is an example on how to locate Bluetooth devices in QML.
 
@@ -50,4 +52,7 @@ from local cache information and may not always be complete and accurate. The pr
 perform a minimal discovery are time constraints. A full service discovery can take up to two minutes.
 Note that not every platform supports a minimal discovery. In such cases the API performs a full discovery.
 
+\include examples-run.qdocinc
+
+\sa {Qt Bluetooth}
 */
