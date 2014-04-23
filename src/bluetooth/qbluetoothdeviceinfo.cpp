@@ -216,7 +216,6 @@ QT_BEGIN_NAMESPACE
     \value HealthStepCounter            A pedometer.
 */
 
-
 /*!
     \enum QBluetoothDeviceInfo::ServiceClass
 
@@ -247,20 +246,22 @@ QT_BEGIN_NAMESPACE
     \value DataUnavailable  No data is available.
 */
 
-QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate()
-    : valid(false), cached(false), rssi(1),
-      serviceClasses(QBluetoothDeviceInfo::NoService),
-      majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
-      minorDeviceClass(0),
-      serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable)
+QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
+    valid(false),
+    cached(false),
+    rssi(1),
+    serviceClasses(QBluetoothDeviceInfo::NoService),
+    majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
+    minorDeviceClass(0),
+    serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable)
 {
 }
 
 /*!
     Constructs an invalid QBluetoothDeviceInfo object.
 */
-QBluetoothDeviceInfo::QBluetoothDeviceInfo()
-: d_ptr(new QBluetoothDeviceInfoPrivate)
+QBluetoothDeviceInfo::QBluetoothDeviceInfo() :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
 {
 }
 
@@ -278,8 +279,9 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo()
         \row \li 13 - 23 \li 11 \li Service class.
     \endtable
 */
-QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name, quint32 classOfDevice)
-: d_ptr(new QBluetoothDeviceInfoPrivate)
+QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name,
+                                           quint32 classOfDevice) :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
 {
     Q_D(QBluetoothDeviceInfo);
 
@@ -300,8 +302,8 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, con
 /*!
     Constructs a QBluetoothDeviceInfo that is a copy of \a other.
 */
-QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other)
-: d_ptr(new QBluetoothDeviceInfoPrivate)
+QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other) :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
 {
     *this = other;
 }
@@ -323,6 +325,7 @@ bool QBluetoothDeviceInfo::isValid() const
 
     return d->valid;
 }
+
 /*!
   Returns the signal strength when the device was last scanned
   */
@@ -370,29 +373,28 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
 {
     Q_D(const QBluetoothDeviceInfo);
 
-    if(d->cached != other.d_func()->cached)
+    if (d->cached != other.d_func()->cached)
         return false;
-    if(d->valid != other.d_func()->valid)
+    if (d->valid != other.d_func()->valid)
         return false;
-    if(d->majorDeviceClass != other.d_func()->majorDeviceClass)
+    if (d->majorDeviceClass != other.d_func()->majorDeviceClass)
         return false;
-    if(d->minorDeviceClass != other.d_func()->minorDeviceClass)
+    if (d->minorDeviceClass != other.d_func()->minorDeviceClass)
         return false;
-    if(d->serviceClasses != other.d_func()->serviceClasses)
+    if (d->serviceClasses != other.d_func()->serviceClasses)
         return false;
-    if(d->name != other.d_func()->name)
+    if (d->name != other.d_func()->name)
         return false;
-    if(d->address != other.d_func()->address)
+    if (d->address != other.d_func()->address)
         return false;
-    if(d->serviceUuidsCompleteness != other.d_func()->serviceUuidsCompleteness)
+    if (d->serviceUuidsCompleteness != other.d_func()->serviceUuidsCompleteness)
         return false;
-    if(d->serviceUuids.count() != other.d_func()->serviceUuids.count())
+    if (d->serviceUuids.count() != other.d_func()->serviceUuids.count())
         return false;
-    if(d->serviceUuids != other.d_func()->serviceUuids)
+    if (d->serviceUuids != other.d_func()->serviceUuids)
         return false;
 
     return true;
-
 }
 
 /*!
@@ -458,7 +460,8 @@ quint8 QBluetoothDeviceInfo::minorDeviceClass() const
 /*!
     Sets the list of service UUIDs to \a uuids and the completeness of the data to \a completeness.
 */
-void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness)
+void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids,
+                                           DataCompleteness completeness)
 {
     Q_D(QBluetoothDeviceInfo);
 

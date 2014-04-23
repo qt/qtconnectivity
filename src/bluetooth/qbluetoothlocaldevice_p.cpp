@@ -39,19 +39,20 @@
 **
 ****************************************************************************/
 
-
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
 
 QT_BEGIN_NAMESPACE
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
-    QObject(parent), d_ptr(0)
+    QObject(parent),
+    d_ptr(0)
 {
 }
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &, QObject *parent) :
-    QObject(parent), d_ptr(0)
+    QObject(parent),
+    d_ptr(0)
 {
 }
 
@@ -96,7 +97,8 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
     Q_UNUSED(pairing);
 }
 
-QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
+QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
+    const QBluetoothAddress &address) const
 {
     Q_UNUSED(address);
     return Unpaired;

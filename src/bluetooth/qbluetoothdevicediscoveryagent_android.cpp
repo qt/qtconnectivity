@@ -51,14 +51,15 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
-                                                    const QBluetoothAddress &deviceAdapter)
-    : inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
-      lastError(QBluetoothDeviceDiscoveryAgent::NoError), errorString(QStringLiteral()),
-      receiver(0),
-      m_adapterAddress(deviceAdapter),
-      m_active(false),
-      pendingCancel(false),
-      pendingStart(false)
+    const QBluetoothAddress &deviceAdapter) :
+    inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
+    lastError(QBluetoothDeviceDiscoveryAgent::NoError),
+    errorString(QStringLiteral()),
+    receiver(0),
+    m_adapterAddress(deviceAdapter),
+    m_active(false),
+    pendingCancel(false),
+    pendingStart(false)
 {
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
@@ -102,8 +103,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         return;
     }
 
-    if (!m_adapterAddress.isNull() &&
-            adapter.callObjectMethod<jstring>("getAddress").toString() != m_adapterAddress.toString()) {
+    if (!m_adapterAddress.isNull()
+        && adapter.callObjectMethod<jstring>("getAddress").toString()
+        != m_adapterAddress.toString()) {
         qCWarning(QT_BT_ANDROID) << "Incorrect local adapter passed.";
         lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Passed address is not a local device.");
@@ -112,14 +114,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     }
 
     const int state = adapter.callMethod<jint>("getState");
-    if (state != 12 ) { //BluetoothAdapter.STATE_ON
+    if (state != 12) {  // BluetoothAdapter.STATE_ON
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         emit q->error(lastError);
         return;
     }
 
-    //install Java BroadcastReceiver
+    // install Java BroadcastReceiver
     if (!receiver) {
         receiver = new DeviceDiscoveryBroadcastReceiver();
         qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
@@ -140,7 +142,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     m_active = true;
 
-    qCDebug(QT_BT_ANDROID) << "QBluetoothDeviceDiscoveryAgentPrivate::start() - successfully executed.";
+    qCDebug(QT_BT_ANDROID)
+        << "QBluetoothDeviceDiscoveryAgentPrivate::start() - successfully executed.";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -163,9 +166,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveryFinished()
 {
-    //We need to guard because Android sends two DISCOVERY_FINISHED when cancelling
-    //Also if we have two active agents both receive the same signal.
-    //If this one is not active ignore the device information
+    // We need to guard because Android sends two DISCOVERY_FINISHED when cancelling
+    // Also if we have two active agents both receive the same signal.
+    // If this one is not active ignore the device information
     if (!m_active)
         return;
 
@@ -180,9 +183,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveryFinished()
         pendingStart = pendingCancel = false;
         start();
     } else {
-        //check that it didn't finish due to turned off Bluetooth Device
+        // check that it didn't finish due to turned off Bluetooth Device
         const int state = adapter.callMethod<jint>("getState");
-        if (state != 12 ) { //BluetoothAdapter.STATE_ON
+        if (state != 12) {  // BluetoothAdapter.STATE_ON
             lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
             emit q->error(lastError);
@@ -192,9 +195,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveryFinished()
     }
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(const QBluetoothDeviceInfo &info)
+void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
+    const QBluetoothDeviceInfo &info)
 {
-    //If we have two active agents both receive the same signal.
+    // If we have two active agents both receive the same signal.
     // If this one is not active ignore the device information
     if (!m_active)
         return;
@@ -205,4 +209,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(const QBlue
     qCDebug(QT_BT_ANDROID) << "Device found: " << info.name() << info.address().toString();
     emit q->deviceDiscovered(info);
 }
+
 QT_END_NAMESPACE

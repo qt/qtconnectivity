@@ -69,7 +69,10 @@ public:
 
     bool operator<(const QBluetoothAddress &other) const;
     bool operator==(const QBluetoothAddress &other) const;
-    inline bool operator!=(const QBluetoothAddress &other) const { return !operator==(other); }
+    inline bool operator!=(const QBluetoothAddress &other) const
+    {
+        return !operator==(other);
+    }
 
     quint64 toUInt64() const;
     QString toString() const;

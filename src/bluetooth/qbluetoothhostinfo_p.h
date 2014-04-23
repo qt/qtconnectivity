@@ -49,7 +49,9 @@ QT_BEGIN_NAMESPACE
 class QBluetoothHostInfoPrivate
 {
 public:
-    QBluetoothHostInfoPrivate() {}
+    QBluetoothHostInfoPrivate()
+    {
+    }
 
     QBluetoothAddress m_address;
     QString m_name;

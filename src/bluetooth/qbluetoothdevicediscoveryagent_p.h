@@ -69,7 +69,8 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
 #if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
-: public QObject {
+    : public QObject
+{
     Q_OBJECT
 #else
 {
@@ -98,10 +99,10 @@ private:
 #ifdef QT_ANDROID_BLUETOOTH
 private Q_SLOTS:
     void processDiscoveryFinished();
-    void processDiscoveredDevices(const QBluetoothDeviceInfo& info);
+    void processDiscoveredDevices(const QBluetoothDeviceInfo &info);
 
 private:
-    DeviceDiscoveryBroadcastReceiver* receiver;
+    DeviceDiscoveryBroadcastReceiver *receiver;
     QBluetoothAddress m_adapterAddress;
     bool m_active;
     QAndroidJniObject adapter;
@@ -114,7 +115,7 @@ private:
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
 #elif defined(QT_QNX_BLUETOOTH)
-    private Q_SLOTS:
+private Q_SLOTS:
     void finished();
     void remoteDevicesChanged(int);
     void controlReply(ppsResult result);
@@ -127,7 +128,7 @@ private:
 
     int m_rdfd;
     bool m_active;
-    enum Ops{
+    enum Ops {
         None,
         Cancel,
         Start
@@ -139,7 +140,6 @@ private:
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;
-
 };
 
 QT_END_NAMESPACE

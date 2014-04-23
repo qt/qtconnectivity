@@ -68,7 +68,6 @@ private:
     QBluetoothHostInfoPrivate *d_ptr;
 };
 
-
 QT_END_NAMESPACE
 
 #endif

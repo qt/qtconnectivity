@@ -132,8 +132,9 @@ QT_BEGIN_NAMESPACE
 /*!
     Constructs a new Bluetooth device discovery agent with parent \a parent.
 */
-QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
-    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress()))
+QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent) :
+    QObject(parent),
+    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress()))
 {
     d_ptr->q_ptr = this;
 }
@@ -150,8 +151,10 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
 
     \sa error()
 */
-QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
-    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
+QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(
+    const QBluetoothAddress &deviceAdapter, QObject *parent) :
+    QObject(parent),
+    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
 {
     d_ptr->q_ptr = this;
     if (!deviceAdapter.isNull()) {
@@ -238,7 +241,6 @@ bool QBluetoothDeviceDiscoveryAgent::isActive() const
     return d->isActive();
 }
 
-
 /*!
     Returns the last error.
 */
@@ -261,4 +263,3 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
 #include "moc_qbluetoothdevicediscoveryagent.cpp"
 
 QT_END_NAMESPACE
-

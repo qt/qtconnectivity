@@ -197,7 +197,8 @@ public:
     };
 
     QBluetoothDeviceInfo();
-    QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name, quint32 classOfDevice);
+    QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name,
+                         quint32 classOfDevice);
     QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other);
     ~QBluetoothDeviceInfo();
 

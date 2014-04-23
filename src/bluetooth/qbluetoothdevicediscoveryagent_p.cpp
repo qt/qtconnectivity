@@ -48,7 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
+    const QBluetoothAddress &deviceAdapter)
 {
     Q_UNUSED(deviceAdapter);
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
@@ -75,6 +76,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
 }
+
 #ifdef QT_BLUEZ_BLUETOOTH
 void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &address,
                                                            const QVariantMap &dict)
@@ -89,6 +91,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
     Q_UNUSED(name);
     Q_UNUSED(value);
 }
+
 #endif
 
 QT_END_NAMESPACE

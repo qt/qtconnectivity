@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-
 #ifndef QBLUETOOTH_H
 #define QBLUETOOTH_H
 
@@ -48,16 +47,16 @@
 QT_BEGIN_NAMESPACE
 
 namespace QBluetooth {
-    enum Security {
-        NoSecurity = 0x00,
-        Authorization = 0x01,
-        Authentication = 0x02,
-        Encryption = 0x04,
-        Secure = 0x08
-    };
+enum Security {
+    NoSecurity = 0x00,
+    Authorization = 0x01,
+    Authentication = 0x02,
+    Encryption = 0x04,
+    Secure = 0x08
+};
 
-    Q_DECLARE_FLAGS(SecurityFlags, Security)
-    Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
+Q_DECLARE_FLAGS(SecurityFlags, Security)
+Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
 }
 
 QT_END_NAMESPACE

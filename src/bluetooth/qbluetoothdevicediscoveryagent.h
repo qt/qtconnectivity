@@ -45,9 +45,7 @@
 #include <QtBluetooth/qbluetoothglobal.h>
 
 #include <QObject>
-
 #include <QtBluetooth/QBluetoothDeviceInfo>
-
 #include <QtBluetooth/QBluetoothAddress>
 
 QT_BEGIN_NAMESPACE
@@ -57,7 +55,8 @@ class QBluetoothDeviceDiscoveryAgentPrivate;
 class Q_BLUETOOTH_EXPORT QBluetoothDeviceDiscoveryAgent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType READ inquiryType WRITE setInquiryType)
+    Q_PROPERTY(QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType
+               READ inquiryType WRITE setInquiryType)
 
 public:
     // FIXME: add more errors
@@ -67,7 +66,7 @@ public:
         InputOutputError,
         PoweredOffError,
         InvalidBluetoothAdapterError,
-        UnknownError = 100 //New errors must be added before Unknown error
+        UnknownError = 100 // New errors must be added before Unknown error
     };
 
     enum InquiryType {
@@ -76,7 +75,8 @@ public:
     };
 
     QBluetoothDeviceDiscoveryAgent(QObject *parent = 0);
-    explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
+    explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter,
+                                            QObject *parent = 0);
     ~QBluetoothDeviceDiscoveryAgent();
 
     QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType() const;
