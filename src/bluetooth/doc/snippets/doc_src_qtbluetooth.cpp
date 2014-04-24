@@ -61,7 +61,8 @@ class MyClass : public QObject
 public:
     MyClass() : QObject() {}
     void localDevice();
-    void startDiscovery();
+    void startDeviceDiscovery();
+    void startServiceDiscovery();
     void objectPush();
 
 public slots:
@@ -97,7 +98,7 @@ if (localDevice.isValid()) {
 }
 
 //! [device_discovery]
-void MyClass::startDiscovery()
+void MyClass::startDeviceDiscovery()
 {
 
     // Create a discovery agent and connect to its signals
@@ -119,13 +120,13 @@ void MyClass::deviceDiscovered(const QBluetoothDeviceInfo &device)
 //! [device_discovery]
 
 //! [service_discovery]
-void MyClass::startDiscovery()
+void MyClass::startServiceDiscovery()
 {
 
     // Create a discovery agent and connect to its signals
     QBluetoothServiceDiscoveryAgent *discoveryAgent = new QBluetoothServiceDiscoveryAgent(this);
     connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(serviceDiscovered(QBluetoothServiceInfo));
+            this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
 
     // Start a discovery
     discoveryAgent->start();
