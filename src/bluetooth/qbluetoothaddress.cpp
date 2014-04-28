@@ -42,6 +42,10 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothaddress_p.h"
 
+#ifndef QT_NO_DEBUG_STREAM
+#include <QDebug>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -214,5 +218,13 @@ QBluetoothAddressPrivate::QBluetoothAddressPrivate()
 {
     m_address = 0;
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, QBluetoothAddress &address)
+{
+    debug << address.toString();
+    return debug;
+}
+#endif
 
 QT_END_NAMESPACE

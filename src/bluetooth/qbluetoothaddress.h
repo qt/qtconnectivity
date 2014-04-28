@@ -82,6 +82,10 @@ private:
     QBluetoothAddressPrivate *d_ptr;
 };
 
+#ifndef QT_NO_DEBUG_STREAM
+Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothAddress &);
+#endif
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothAddress)
