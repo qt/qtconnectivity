@@ -174,11 +174,14 @@ public:
     quint128 toUInt128() const;
 };
 
+#ifndef QT_NO_DEBUG_STREAM
+/// TODO: Move implementation to .cpp, uninline and add Q_BLUETOOTH_EXPORT for Qt 6
 inline QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
 {
     debug << uuid.toString();
     return debug;
 }
+#endif
 
 QT_END_NAMESPACE
 
