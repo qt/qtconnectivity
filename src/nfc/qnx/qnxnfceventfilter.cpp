@@ -94,7 +94,7 @@ bool QNXNFCEventFilter::nativeEventFilter(const QByteArray &eventType, void *mes
 
         qQNXNFCDebug() << "Got Invoke event" << uri << "Type" << type;
 
-        Q_EMIT ndefEvent(message);
+        emit ndefEvent(message);
     }
 
     return false;

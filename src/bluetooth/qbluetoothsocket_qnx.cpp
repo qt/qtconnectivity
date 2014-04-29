@@ -177,7 +177,7 @@ void QBluetoothSocketPrivate::abort()
     ::close(socket);
 
     q->setSocketState(QBluetoothSocket::UnconnectedState);
-    Q_EMIT q->disconnected();
+    emit q->disconnected();
     isServerSocket = false;
 }
 
@@ -231,7 +231,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
             return -1;
         }
 
-        Q_EMIT q->bytesWritten(maxSize);
+        emit q->bytesWritten(maxSize);
 
         return maxSize;
     } else {

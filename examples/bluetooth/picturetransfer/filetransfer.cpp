@@ -63,5 +63,5 @@ void FileTransfer::initTransfer(QString address, QString fileName)
 void FileTransfer::updateProgress(qint64 transferred, qint64 total)
 {
     m_progress = ((float)transferred)/((float)total);
-    Q_EMIT progressChanged();
+    emit progressChanged();
 }

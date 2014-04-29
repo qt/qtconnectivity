@@ -60,7 +60,7 @@ PingPong::~PingPong()
 void PingPong::startGame()
 {
     m_showDialog = false;
-    Q_EMIT showDialogChanged();
+    emit showDialogChanged();
     //! [Start the game]
     if (m_role == 1)
         updateDirection();
@@ -91,7 +91,7 @@ void PingPong::update()
         size.append(size1);
         size.append(" \n");
         socket->write(size.constData());
-        Q_EMIT ballChanged();
+        emit ballChanged();
     }
     else if (m_role == 2) {
         size.setNum(m_rightBlockY);
@@ -111,7 +111,7 @@ void PingPong::setSize(const float &x, const float &y)
     m_targetY = m_boardHeight/2;
     m_ballPreviousX = m_ballX = m_boardWidth/2;
     m_ballPreviousY = m_ballY = m_boardHeight - m_boardWidth/54;
-    Q_EMIT ballChanged();
+    emit ballChanged();
 }
 
 void PingPong::updateBall(const float &bX, const float &bY)
@@ -176,7 +176,7 @@ void PingPong::checkBoundaries()
         result.append(" \n");
         socket->write(result);
         qDebug() << result;
-        Q_EMIT resultChanged();
+        emit resultChanged();
     }
     else if (m_ballX < 0) {
         m_resultRight++;
@@ -196,7 +196,7 @@ void PingPong::checkBoundaries()
         result.append(res);
         result.append(" \n");
         socket->write(result);
-        Q_EMIT resultChanged();
+        emit resultChanged();
     }
 }
 
@@ -240,7 +240,7 @@ void PingPong::startServer()
     setMessage(QStringLiteral("Server started, waiting for the client. You are the left player."));
     // m_role is set to 1 if it is a server
     m_role = 1;
-    Q_EMIT roleChanged();
+    emit roleChanged();
 }
 
 void PingPong::startClient()
@@ -259,7 +259,7 @@ void PingPong::startClient()
     setMessage(QStringLiteral("Starting server discovery. You are the right player"));
     // m_role is set to 2 if it is a client
     m_role = 2;
-    Q_EMIT roleChanged();
+    emit roleChanged();
 }
 
 void PingPong::clientConnected()
@@ -380,7 +380,7 @@ void PingPong::readSocket()
                 QByteArray rightSide = result.at(2);
                 m_resultLeft = leftSide.toInt();
                 m_resultRight = rightSide.toInt();
-                Q_EMIT resultChanged();
+                emit resultChanged();
                 checkResult();
             }
         }
@@ -401,7 +401,7 @@ void PingPong::readSocket()
         if (boardSize.size() > 1) {
             QByteArray rightBlockY = boardSize.at(0);
             m_rightBlockY = m_proportionY * rightBlockY.toFloat();
-            Q_EMIT rightBlockChanged();
+            emit rightBlockChanged();
         }
     }
     else if (m_role == 2) {
@@ -413,8 +413,8 @@ void PingPong::readSocket()
             m_ballX = m_proportionX * ballX.toFloat();
             m_ballY = m_proportionY * ballY.toFloat();
             m_leftBlockY = m_proportionY * leftBlockY.toFloat();
-            Q_EMIT leftBlockChanged();
-            Q_EMIT ballChanged();
+            emit leftBlockChanged();
+            emit ballChanged();
         }
     }
 }
@@ -423,7 +423,7 @@ void PingPong::setMessage(const QString &message)
 {
     m_showDialog = true;
     m_message = message;
-    Q_EMIT showDialogChanged();
+    emit showDialogChanged();
 }
 
 int PingPong::role() const

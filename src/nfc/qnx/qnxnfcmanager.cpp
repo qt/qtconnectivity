@@ -220,7 +220,7 @@ void QNXNFCManager::newNfcEvent(int fd)
 
 void QNXNFCManager::invokeNdefMessage(const QNdefMessage &msg)
 {
-    Q_EMIT ndefMessage(msg, 0);
+    emit ndefMessage(msg, 0);
 }
 
 void QNXNFCManager::llcpReadComplete(nfc_event_t *nfcEvent)

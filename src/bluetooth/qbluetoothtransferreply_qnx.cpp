@@ -114,7 +114,7 @@ bool QBluetoothTransferReplyQnx::start()
             m_error = QBluetoothTransferReply::ResourceBusyError;
             m_finished = true;
             m_running = false;
-            Q_EMIT finished(this);
+            emit finished(this);
             return false;
         }
         if (!source->isReadable()) {
@@ -123,7 +123,7 @@ bool QBluetoothTransferReplyQnx::start()
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;
             m_running = false;
-            Q_EMIT finished(this);
+            emit finished(this);
             return false;
         }
         QString fileName = agentPath + QStringLiteral("Qt5OPP_tmp");
@@ -223,7 +223,7 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
         m_errorStr = result.errorMsg;
         m_error = QBluetoothTransferReply::UnknownError;
 //      }
-        Q_EMIT finished(this);
+        emit finished(this);
     } else if (result.msg == QStringLiteral("opp_update")) {
         bool ok;
         qint64 sentBytes = result.dat.at(result.dat.indexOf(QStringLiteral("sent")) + 1).toDouble(&ok);
@@ -237,13 +237,13 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
             return;
         }
         qCDebug(QT_BT_QNX) << "opp update" << sentBytes << totalBytes;
-        Q_EMIT transferProgress(sentBytes, totalBytes);
+        emit transferProgress(sentBytes, totalBytes);
     } else if (result.msg == QStringLiteral("opp_complete")) {
         qCDebug(QT_BT_QNX) << "opp complete";
         removeTempFile();
         m_finished = true;
         m_running = false;
-        Q_EMIT finished(this);
+        emit finished(this);
     }
 }
 

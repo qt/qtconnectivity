@@ -225,7 +225,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::controlReply(ppsResult result)
             qCWarning(QT_BT_QNX) << "A PPS Bluetooth error occurred:";
             lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
             errorString = result.errorMsg;
-            Q_EMIT q_ptr->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
+            emit q_ptr->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
             stop();
         }
         processNextOp();

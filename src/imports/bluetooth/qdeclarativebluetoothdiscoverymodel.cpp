@@ -417,7 +417,7 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
         }
     }
 
-    Q_EMIT runningChanged();
+    emit runningChanged();
 }
 
 /*!
@@ -471,5 +471,5 @@ QString QDeclarativeBluetoothDiscoveryModel::remoteAddress()
 void QDeclarativeBluetoothDiscoveryModel::setRemoteAddress(QString address)
 {
     d->m_remoteAddress = address;
-    Q_EMIT remoteAddressChanged();
+    emit remoteAddressChanged();
 }
