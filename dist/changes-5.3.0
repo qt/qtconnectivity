@@ -45,7 +45,7 @@ QtBluetooth
    * Test application added. This application enables easier testing
      and debugging of the various API features.
 
- - BluetoothDiscoveryModel:
+ - BluetoothDiscoveryModel (QML):
    * Improved error handling of device discovery process.
    * Fixed incorrect behavior when changing from device to service discovery
      and vice versa.
@@ -120,6 +120,7 @@ Android
  - [QTBUG-33792] QtBluetooth has been ported to Android.
 
 BlackBerry 10:
+--------------
 
  - [QTBUG-36626] Fixed a memory leak in QBluetoothServer::listen().
  - Fixed incomplete implementation of QBluetoothServer::close().
@@ -132,7 +133,7 @@ BlackBerry 10:
    together with a QFile.
 
 Bluez/Linux
--------
+-----------
 
  - The handling of powered-off local Bluetooth adapters was improved.
  - Fixed memory leaks in service and device discovery classes.
@@ -149,6 +150,4 @@ Bluez/Linux
    is already in the ServiceLoockupState.
  - Fixed failing call to QBluetoothServer::listen(QBluetoothAddress) if the passed
    address was null.
-
-
 
