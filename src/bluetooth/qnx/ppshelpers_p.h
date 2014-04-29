@@ -74,7 +74,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 class BBSocketNotifier : public QObject
 {
     Q_OBJECT
-public Q_SLOTS:
+public slots:
     void distribute();
     void closeControlFD();
 };

@@ -121,7 +121,7 @@ public:
     virtual bool waitForDisconnected(int msecs = 30000);
     bool isSequential() const;
 
-Q_SIGNALS:
+signals:
     void connected();
     void disconnected();
     void error(QLlcpSocket::SocketError socketError);

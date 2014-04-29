@@ -111,7 +111,7 @@ private:
     bool serverRegistered;
     QString nextClientAddress;
 
-private Q_SLOTS:
+private slots:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
 #elif defined(QT_BLUEZ_BLUETOOTH)

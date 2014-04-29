@@ -138,7 +138,7 @@ public:
     QBluetoothLocalDevice::HostMode currentMode;
     int pendingHostModeChange;
 
-public Q_SLOTS: // METHODS
+public slots:
     void Authorize(const QDBusObjectPath &in0, const QString &in1);
     void Cancel();
     void ConfirmModeChange(const QString &in0);

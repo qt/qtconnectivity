@@ -70,7 +70,7 @@ public:
     QBluetoothTransferReply::TransferError error() const;
     QString errorString() const;
 
-private Q_SLOTS:
+private slots:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
     void copyDone();

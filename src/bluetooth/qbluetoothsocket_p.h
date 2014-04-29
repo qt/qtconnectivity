@@ -169,7 +169,7 @@ public:
     QAndroidJniObject outputStream;
     InputStreamThread *inputThread;
 
-private Q_SLOTS:
+private slots:
     void inputThreadError(int errorCode);
 
 #endif
@@ -183,7 +183,7 @@ private:
     QBluetoothUuid m_uuid;
     bool isServerSocket;
 
-private Q_SLOTS:
+private slots:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
 #endif

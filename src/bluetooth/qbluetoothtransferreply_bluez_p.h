@@ -71,7 +71,7 @@ public:
     QBluetoothTransferReply::TransferError error() const;
     QString errorString() const;
 
-private Q_SLOTS:
+private slots:
     bool start();
 
 private:

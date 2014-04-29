@@ -65,7 +65,7 @@ public:
     bool isShareInProgress() const;
     QNearFieldShareManager::ShareError shareError() const;
 
-private Q_SLOTS:
+private slots:
     void onShareModeChanged(bb::system::NfcShareMode::Type mode);
     void onError(bb::system::NfcShareError::Type error);
     void onFinished(bb::system::NfcShareSuccess::Type result);

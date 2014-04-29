@@ -74,7 +74,7 @@ public:
 
     void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
 
-private Q_SLOTS:
+private slots:
     void handleMessage(const QNdefMessage&, QNearFieldTarget *);
     void newTarget(QNearFieldTarget *target, const QList<QNdefMessage> &);
 

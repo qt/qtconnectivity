@@ -135,7 +135,7 @@ private:
 #endif
 
 #ifdef QT_QNX_BLUETOOTH
-private Q_SLOTS:
+private slots:
     void remoteDevicesChanged(int fd);
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);

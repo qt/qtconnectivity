@@ -97,7 +97,7 @@ private:
     QString errorString;
 
 #ifdef QT_ANDROID_BLUETOOTH
-private Q_SLOTS:
+private slots:
     void processDiscoveryFinished();
     void processDiscoveredDevices(const QBluetoothDeviceInfo &info);
 
@@ -115,7 +115,7 @@ private:
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
 #elif defined(QT_QNX_BLUETOOTH)
-private Q_SLOTS:
+private slots:
     void finished();
     void remoteDevicesChanged(int);
     void controlReply(ppsResult result);
