@@ -54,8 +54,13 @@
 #include <QtBluetooth/QBluetoothLocalDevice>
 
 #ifdef QT_BLUEZ_BLUETOOTH
+#include "bluez/bluez5_helper_p.h"
+
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
+class OrgFreedesktopDBusObjectManagerInterface;
+class OrgBluezAdapter1Interface;
+class OrgBluezDevice1Interface;
 
 QT_BEGIN_NAMESPACE
 class QDBusVariant;
@@ -77,7 +82,9 @@ class QBluetoothDeviceDiscoveryAgentPrivate
 #endif
     Q_DECLARE_PUBLIC(QBluetoothDeviceDiscoveryAgent)
 public:
-    QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter);
+    QBluetoothDeviceDiscoveryAgentPrivate(
+            const QBluetoothAddress &deviceAdapter,
+            QBluetoothDeviceDiscoveryAgent *parent);
     ~QBluetoothDeviceDiscoveryAgentPrivate();
 
     void start();
@@ -87,6 +94,9 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_deviceFound(const QString &address, const QVariantMap &dict);
     void _q_propertyChanged(const QString &name, const QDBusVariant &value);
+    void _q_InterfacesAdded(const QDBusObjectPath &object_path, InterfaceList interfaces_and_properties);
+    void _q_discoveryFinished();
+    void _q_discoveryInterrupted(const QString &path);
 #endif
 
 private:
@@ -114,6 +124,12 @@ private:
     bool pendingStart;
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
+    OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
+    OrgBluezAdapter1Interface *adapterBluez5;
+    QTimer *discoveryTimer;
+
+    void deviceFoundBluez5(const QString& devicePath);
+    void startBluez5();
 #elif defined(QT_QNX_BLUETOOTH)
 private slots:
     void finished();

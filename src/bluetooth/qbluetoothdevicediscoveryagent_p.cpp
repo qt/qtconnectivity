@@ -49,7 +49,9 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
-    const QBluetoothAddress &deviceAdapter)
+                const QBluetoothAddress &deviceAdapter,
+                QBluetoothDeviceDiscoveryAgent *parent)
+    :   q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;

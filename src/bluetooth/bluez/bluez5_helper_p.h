@@ -55,6 +55,36 @@ QT_BEGIN_NAMESPACE
 
 bool isBluez5();
 
+class QtBluezDiscoveryManagerPrivate;
+class QtBluezDiscoveryManager : public QObject
+{
+    Q_OBJECT
+public:
+    QtBluezDiscoveryManager(QObject* parent = 0);
+    ~QtBluezDiscoveryManager();
+    static QtBluezDiscoveryManager *instance();
+
+    bool registerDiscoveryInterest(const QString &adapterPath);
+    void unregisterDiscoveryInterest(const QString &adapterPath);
+
+    //void dumpState() const;
+
+signals:
+    void discoveryInterrupted(const QString &adapterPath);
+
+private slots:
+    void InterfacesRemoved(const QDBusObjectPath &object_path,
+                           const QStringList &interfaces);
+    void PropertiesChanged(const QString &interface,
+                           const QVariantMap &changed_properties,
+                           const QStringList &invalidated_properties);
+
+private:
+    void removeAdapterFromMonitoring(const QString &dbusPath);
+
+    QtBluezDiscoveryManagerPrivate *d;
+};
+
 QT_END_NAMESPACE
 
 #endif

@@ -49,13 +49,14 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
-    const QBluetoothAddress &deviceAdapter) :
-    QObject(0),
+    const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
+    QObject(parent),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     m_rdfd(-1),
     m_active(false),
     m_nextOp(None),
-    m_currentOp(None)
+    m_currentOp(None),
+    q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;

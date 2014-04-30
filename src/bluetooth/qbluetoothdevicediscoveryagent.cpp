@@ -134,9 +134,8 @@ QT_BEGIN_NAMESPACE
 */
 QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent) :
     QObject(parent),
-    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress()))
+    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress(), this))
 {
-    d_ptr->q_ptr = this;
 }
 
 /*!
@@ -154,9 +153,8 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent) 
 QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(
     const QBluetoothAddress &deviceAdapter, QObject *parent) :
     QObject(parent),
-    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
+    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter, this))
 {
-    d_ptr->q_ptr = this;
     if (!deviceAdapter.isNull()) {
         const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
         foreach (const QBluetoothHostInfo &hostInfo, localDevices) {

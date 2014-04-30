@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
-    const QBluetoothAddress &deviceAdapter) :
+    const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
     inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     errorString(QStringLiteral()),
@@ -59,7 +59,8 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     m_adapterAddress(deviceAdapter),
     m_active(false),
     pendingCancel(false),
-    pendingStart(false)
+    pendingStart(false),
+    q_ptr(parent)
 {
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
