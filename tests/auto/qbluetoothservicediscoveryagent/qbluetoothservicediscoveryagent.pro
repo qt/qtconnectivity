@@ -3,7 +3,7 @@ TARGET = tst_qbluetoothservicediscoveryagent
 CONFIG += testcase
 
 QT = core concurrent bluetooth testlib
-qnx {
+blackberry {
     LIBS += -lbtapi
 }
 
