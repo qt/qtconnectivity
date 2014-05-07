@@ -44,6 +44,7 @@
 
 #include <QtCore/QObject>
 #include <QtDBus/QtDBus>
+#include <bluetooth/sdp.h>
 
 typedef QMap<QString, QVariantMap> InterfaceList;
 typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
@@ -54,6 +55,8 @@ Q_DECLARE_METATYPE(ManagedObjectList)
 QT_BEGIN_NAMESPACE
 
 bool isBluez5();
+
+QByteArray parseSdpRecord(sdp_record_t *record);
 
 class QtBluezDiscoveryManagerPrivate;
 class QtBluezDiscoveryManager : public QObject

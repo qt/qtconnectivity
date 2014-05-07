@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -53,6 +53,7 @@
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
+class OrgFreedesktopDBusObjectManagerInterface;
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 class QXmlStreamReader;
@@ -116,6 +117,9 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
+    void _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error errorCode,
+                          const QString &errorDescription,
+                          const QStringList &xmlRecords);
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     void _q_processFetchedUuids(const QBluetoothAddress &address, const QList<QBluetoothUuid> &uuids);
@@ -131,7 +135,12 @@ private:
     void stop();
 
 #ifdef QT_BLUEZ_BLUETOOTH
+    void startBluez5(const QBluetoothAddress &address);
+    void runSdpScan(const QBluetoothAddress &remoteAddress,
+                    const QBluetoothAddress localAddress);
     QVariant readAttributeValue(QXmlStreamReader &xml);
+    QBluetoothServiceInfo parseServiceXml(const QString& xml);
+    void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
 #endif
 
 #ifdef QT_QNX_BLUETOOTH
@@ -170,7 +179,9 @@ private:
     bool singleDevice;
 
 #ifdef QT_BLUEZ_BLUETOOTH
+    QString foundHostAdapterPath;
     OrgBluezManagerInterface *manager;
+    OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
 #endif

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -178,6 +178,8 @@ QBluetoothServiceDiscoveryAgent::~QBluetoothServiceDiscoveryAgent()
     that if a remote Bluetooth device moves out of range in between two subsequent calls
     to \l start() the list may contain stale entries.
 
+    \note The list of services should always be cleared before the discovery mode is changed.
+
     \sa clear()
 */
 QList<QBluetoothServiceInfo> QBluetoothServiceDiscoveryAgent::discoveredServices() const
@@ -277,6 +279,11 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 
     if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
             && d->error != InvalidBluetoothAdapterError) {
+#ifdef QT_BLUEZ_BLUETOOTH
+        // done to avoid repeated parsing for adapter address
+        // on Bluez5
+        d->foundHostAdapterPath.clear();
+#endif
         d->setDiscoveryMode(mode);
         if (d->deviceAddress.isNull()) {
             d->startDeviceDiscovery();

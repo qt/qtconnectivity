@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -172,6 +172,8 @@ public:
     quint16 toUInt16(bool *ok = 0) const;
     quint32 toUInt32(bool *ok = 0) const;
     quint128 toUInt128() const;
+
+    static QString serviceClassToString(ServiceClassUuid uuid);
 };
 
 #ifndef QT_NO_DEBUG_STREAM

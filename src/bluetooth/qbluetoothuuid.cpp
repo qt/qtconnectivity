@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qbluetoothuuid.h"
+#include "qbluetoothservicediscoveryagent.h"
 
 #include <QStringList>
 #include <QtEndian>
@@ -361,6 +362,85 @@ quint128 QBluetoothUuid::toUInt128() const
     memcpy(&uuid.data[8], data4, 8);
 
     return uuid;
+}
+
+/*!
+    Returns a human-readable and translated name for the given service class
+    represented by \a uuid.
+
+    \sa QBluetoothUuid::ServiceClassUuid
+ */
+QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uuid)
+{
+    switch (uuid) {
+    case QBluetoothUuid::ServiceDiscoveryServer: return QBluetoothServiceDiscoveryAgent::tr("Service Discovery");
+    case QBluetoothUuid::BrowseGroupDescriptor: return QBluetoothServiceDiscoveryAgent::tr("Browse Group Descriptor");
+    case QBluetoothUuid::PublicBrowseGroup: return QBluetoothServiceDiscoveryAgent::tr("Public Browse Group");
+    case QBluetoothUuid::SerialPort: return QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile");
+    case QBluetoothUuid::LANAccessUsingPPP: return QBluetoothServiceDiscoveryAgent::tr("LAN Access Profile");
+    case QBluetoothUuid::DialupNetworking: return QBluetoothServiceDiscoveryAgent::tr("Dial-Up Networking");
+    case QBluetoothUuid::IrMCSync: return QBluetoothServiceDiscoveryAgent::tr("Synchronization");
+    case QBluetoothUuid::ObexObjectPush: return QBluetoothServiceDiscoveryAgent::tr("Object Push");
+    case QBluetoothUuid::OBEXFileTransfer: return QBluetoothServiceDiscoveryAgent::tr("File Transfer");
+    case QBluetoothUuid::IrMCSyncCommand: return QBluetoothServiceDiscoveryAgent::tr("Synchronization Command");
+    case QBluetoothUuid::Headset: return QBluetoothServiceDiscoveryAgent::tr("Headset");
+    case QBluetoothUuid::AudioSource: return QBluetoothServiceDiscoveryAgent::tr("Audio Source");
+    case QBluetoothUuid::AudioSink: return QBluetoothServiceDiscoveryAgent::tr("Audio Sink");
+    case QBluetoothUuid::AV_RemoteControlTarget: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Remote Control Target");
+    case QBluetoothUuid::AdvancedAudioDistribution: return QBluetoothServiceDiscoveryAgent::tr("Advanced Audio Distribution");
+    case QBluetoothUuid::AV_RemoteControl: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Remote Control");
+    case QBluetoothUuid::AV_RemoteControlController: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Remote Control Controller");
+    case QBluetoothUuid::HeadsetAG: return QBluetoothServiceDiscoveryAgent::tr("Headset AG");
+    case QBluetoothUuid::PANU: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (PANU)");
+    case QBluetoothUuid::NAP: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (NAP)");
+    case QBluetoothUuid::GN: return QBluetoothServiceDiscoveryAgent::tr("Personal Area Networking (GN)");
+    case QBluetoothUuid::DirectPrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Direct Printing (BPP)");
+    case QBluetoothUuid::ReferencePrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Reference Printing (BPP)");
+    case QBluetoothUuid::BasicImage: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Profile");
+    case QBluetoothUuid::ImagingResponder: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Responder");
+    case QBluetoothUuid::ImagingAutomaticArchive: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Archive");
+    case QBluetoothUuid::ImagingReferenceObjects: return QBluetoothServiceDiscoveryAgent::tr("Basic Imaging Ref Objects");
+    case QBluetoothUuid::Handsfree: return QBluetoothServiceDiscoveryAgent::tr("Hands-Free");
+    case QBluetoothUuid::HandsfreeAudioGateway: return QBluetoothServiceDiscoveryAgent::tr("Hands-Free AG");
+    case QBluetoothUuid::DirectPrintingReferenceObjectsService: return QBluetoothServiceDiscoveryAgent::tr("Basic Printing RefObject Service");
+    case QBluetoothUuid::ReflectedUI: return QBluetoothServiceDiscoveryAgent::tr("Basic Printing Reflected UI");
+    case QBluetoothUuid::BasicPrinting: return QBluetoothServiceDiscoveryAgent::tr("Basic Printing");
+    case QBluetoothUuid::PrintingStatus: return QBluetoothServiceDiscoveryAgent::tr("Basic Printing Status");
+    case QBluetoothUuid::HumanInterfaceDeviceService: return QBluetoothServiceDiscoveryAgent::tr("Human Interface Device");
+    case QBluetoothUuid::HardcopyCableReplacement: return QBluetoothServiceDiscoveryAgent::tr("Hardcopy Cable Replacement");
+    case QBluetoothUuid::HCRPrint: return QBluetoothServiceDiscoveryAgent::tr("Hardcopy Cable Replacement Print");
+    case QBluetoothUuid::HCRScan: return QBluetoothServiceDiscoveryAgent::tr("Hardcopy Cable Replacement Scan");
+    case QBluetoothUuid::SIMAccess: return QBluetoothServiceDiscoveryAgent::tr("SIM Access Server");
+    case QBluetoothUuid::PhonebookAccessPCE: return QBluetoothServiceDiscoveryAgent::tr("Phonebook Access PCE");
+    case QBluetoothUuid::PhonebookAccessPSE: return QBluetoothServiceDiscoveryAgent::tr("Phonebook Access PSE");
+    case QBluetoothUuid::PhonebookAccess: return QBluetoothServiceDiscoveryAgent::tr("Phonebook Access");
+    case QBluetoothUuid::HeadsetHS: return QBluetoothServiceDiscoveryAgent::tr("Headset HS");
+    case QBluetoothUuid::MessageAccessServer: return QBluetoothServiceDiscoveryAgent::tr("Message Access Server");
+    case QBluetoothUuid::MessageNotificationServer: return QBluetoothServiceDiscoveryAgent::tr("Message Notification Server");
+    case QBluetoothUuid::MessageAccessProfile: return QBluetoothServiceDiscoveryAgent::tr("Message Access");
+    case QBluetoothUuid::GNSS: return QBluetoothServiceDiscoveryAgent::tr("Global Navigation Satellite System");
+    case QBluetoothUuid::GNSSServer: return QBluetoothServiceDiscoveryAgent::tr("Global Navigation Satellite System Server");
+    case QBluetoothUuid::Display3D: return QBluetoothServiceDiscoveryAgent::tr("3D Synchronization Display");
+    case QBluetoothUuid::Glasses3D: return QBluetoothServiceDiscoveryAgent::tr("3D Synchronization Glasses");
+    case QBluetoothUuid::Synchronization3D: return QBluetoothServiceDiscoveryAgent::tr("3D Synchronization");
+    case QBluetoothUuid::MPSProfile: return QBluetoothServiceDiscoveryAgent::tr("Multi-Profile Specification (Profile)");
+    case QBluetoothUuid::MPSService: return QBluetoothServiceDiscoveryAgent::tr("Multi-Profile Specification");
+    case QBluetoothUuid::PnPInformation: return QBluetoothServiceDiscoveryAgent::tr("Device Identification");
+    case QBluetoothUuid::GenericNetworking: return QBluetoothServiceDiscoveryAgent::tr("Generic Networking");
+    case QBluetoothUuid::GenericFileTransfer: return QBluetoothServiceDiscoveryAgent::tr("Generic File Transfer");
+    case QBluetoothUuid::GenericAudio: return QBluetoothServiceDiscoveryAgent::tr("Generic Audio");
+    case QBluetoothUuid::GenericTelephony: return QBluetoothServiceDiscoveryAgent::tr("Generic Telephony");
+    case QBluetoothUuid::VideoSource: return QBluetoothServiceDiscoveryAgent::tr("Video Source");
+    case QBluetoothUuid::VideoSink: return QBluetoothServiceDiscoveryAgent::tr("Video Sink");
+    case QBluetoothUuid::VideoDistribution: return QBluetoothServiceDiscoveryAgent::tr("Video Distribution");
+    case QBluetoothUuid::HDP: return QBluetoothServiceDiscoveryAgent::tr("Health Device");
+    case QBluetoothUuid::HDPSource: return QBluetoothServiceDiscoveryAgent::tr("Health Device Source");
+    case QBluetoothUuid::HDPSink: return QBluetoothServiceDiscoveryAgent::tr("Health Device Sink");
+    default:
+        break;
+    }
+
+    return QString();
 }
 
 /*!

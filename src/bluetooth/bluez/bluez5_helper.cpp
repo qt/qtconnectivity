@@ -46,6 +46,7 @@
 #include "objectmanager_p.h"
 #include "properties_p.h"
 #include "adapter1_bluez5_p.h"
+#include <bluetooth/sdp_lib.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -267,6 +268,193 @@ void QtBluezDiscoveryManager::removeAdapterFromMonitoring(const QString &dbusPat
     delete data;
 
     emit discoveryInterrupted(dbusPath);
+}
+
+#define BUFFER_SIZE 1024
+
+static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &xmlOutput)
+{
+    if (!data)
+        return;
+
+    const int length = indentation*2 + 1;
+    QByteArray indentString(length, ' ');
+
+    char snBuffer[BUFFER_SIZE];
+
+    xmlOutput.append(indentString);
+
+    // deal with every dtd type
+    switch (data->dtd) {
+    case SDP_DATA_NIL:
+        xmlOutput.append("<nil/>\n");
+        break;
+    case SDP_UINT8:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<uint8 value=\"0x%02x\"/>\n", data->val.uint8);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_UINT16:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<uint16 value=\"0x%04x\"/>\n", data->val.uint16);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_UINT32:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<uint32 value=\"0x%08x\"/>\n", data->val.uint32);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_UINT64:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016x\"/>\n", data->val.uint64);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_UINT128:
+        xmlOutput.append("<uint128 value=\"0x");
+        for (int i = 0; i < 16; i++)
+            ::sprintf(&snBuffer[i * 2], "%02x", data->val.uint128.data[i]);
+        xmlOutput.append(snBuffer);
+        xmlOutput.append("\"/>\n");
+        break;
+    case SDP_INT8:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<int8 value=\"%d\"/>/n", data->val.int8);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_INT16:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<int16 value=\"%d\"/>/n", data->val.int16);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_INT32:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<int32 value=\"%d\"/>/n", data->val.int32);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_INT64:
+        qsnprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%d\"/>/n", data->val.int64);
+        xmlOutput.append(snBuffer);
+        break;
+    case SDP_INT128:
+        xmlOutput.append("<int128 value=\"0x");
+        for (int i = 0; i < 16; i++)
+            ::sprintf(&snBuffer[i * 2], "%02x", data->val.int128.data[i]);
+        xmlOutput.append(snBuffer);
+        xmlOutput.append("\"/>\n");
+        break;
+    case SDP_UUID_UNSPEC:
+        break;
+    case SDP_UUID16:
+    case SDP_UUID32:
+        xmlOutput.append("<uuid value=\"0x");
+        sdp_uuid2strn(&(data->val.uuid), snBuffer, BUFFER_SIZE);
+        xmlOutput.append(snBuffer);
+        xmlOutput.append("\"/>\n");
+        break;
+    case SDP_UUID128:
+        xmlOutput.append("<uuid value=\"");
+        sdp_uuid2strn(&(data->val.uuid), snBuffer, BUFFER_SIZE);
+        xmlOutput.append(snBuffer);
+        xmlOutput.append("\"/>\n");
+        break;
+    case SDP_TEXT_STR_UNSPEC:
+        break;
+    case SDP_TEXT_STR8:
+    case SDP_TEXT_STR16:
+    case SDP_TEXT_STR32:
+    {
+        xmlOutput.append("<text ");
+        QByteArray text = QByteArray::fromRawData(data->val.str, data->unitSize);
+
+        bool hasNonPrintableChar = false;
+        for (int i = 0; i < text.count() && !hasNonPrintableChar; i++) {
+            if (!isprint(text[i])) {
+                hasNonPrintableChar = true;
+                break;
+            }
+        }
+
+        if (hasNonPrintableChar) {
+            xmlOutput.append("encoding=\"hex\" value=\"");
+            xmlOutput.append(text.toHex());
+        } else {
+            text.replace("&", "&amp");
+            text.replace("<", "&lt");
+            text.replace(">", "&gt");
+            text.replace("\"", "&quot");
+
+            xmlOutput.append("value=\"");
+            xmlOutput.append(text);
+        }
+
+        xmlOutput.append("\"/>\n");
+        break;
+    }
+    case SDP_BOOL:
+        if (data->val.uint8)
+            xmlOutput.append("<boolean value=\"true\"/>\n");
+        else
+            xmlOutput.append("<boolean value=\"false\"/>\n");
+        break;
+    case SDP_SEQ_UNSPEC:
+        break;
+    case SDP_SEQ8:
+    case SDP_SEQ16:
+    case SDP_SEQ32:
+        xmlOutput.append("<sequence>\n");
+        parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
+        xmlOutput.append(indentString);
+        xmlOutput.append("</sequence>\n");
+        break;
+    case SDP_ALT_UNSPEC:
+        break;
+    case SDP_ALT8:
+    case SDP_ALT16:
+    case SDP_ALT32:
+        xmlOutput.append("<alternate>\n");
+        parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
+        xmlOutput.append(indentString);
+        xmlOutput.append("</alternate>\n");
+        break;
+    case SDP_URL_STR_UNSPEC:
+        break;
+    case SDP_URL_STR8:
+    case SDP_URL_STR16:
+    case SDP_URL_STR32:
+        strncpy(snBuffer, data->val.str, data->unitSize - 1);
+        xmlOutput.append("<url value=\"");
+        xmlOutput.append(snBuffer);
+        xmlOutput.append("\"/>\n");
+        break;
+    default:
+        qDebug(QT_BT_BLUEZ) << "Unknown dtd type";
+    }
+
+    parseAttributeValues(data->next, indentation, xmlOutput);
+}
+
+static void parseAttribute(void *value, void *extraData)
+{
+    sdp_data_t *data = (sdp_data_t *) value;
+    QByteArray *xmlOutput = static_cast<QByteArray *>(extraData);
+
+    char buffer[BUFFER_SIZE];
+
+    ::qsnprintf(buffer, BUFFER_SIZE, "  <attribute id=\"0x%04x\">\n", data->attrId);
+    xmlOutput->append(buffer);
+
+    parseAttributeValues(data, 2, *xmlOutput);
+
+    xmlOutput->append("  </attribute>\n");
+}
+
+// the resulting xml output is based on the already used xml parser
+QByteArray parseSdpRecord(sdp_record_t *record)
+{
+    if (!record || !record->attrlist)
+        return QByteArray();
+
+    QByteArray xmlOutput;
+
+    xmlOutput.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<record>\n");
+
+    sdp_list_foreach(record->attrlist, parseAttribute, &xmlOutput);
+    xmlOutput.append("</record>");
+
+    return xmlOutput;
 }
 
 QT_END_NAMESPACE

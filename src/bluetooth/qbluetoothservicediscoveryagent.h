@@ -114,6 +114,7 @@ private:
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_discoveredServices(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_createdDevice(QDBusPendingCallWatcher*))
+    Q_PRIVATE_SLOT(d_func(), void _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error, const QString &, const QStringList &))
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_processFetchedUuids(const QBluetoothAddress &address,
