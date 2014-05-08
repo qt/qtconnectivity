@@ -43,8 +43,15 @@
 #include "qbluetoothsocket_p.h"
 #include "qbluetoothlocaldevice.h"
 #include <sys/stat.h>
+#ifdef QT_QNX_BT_BLUETOOTH
+#include <errno.h>
+#include <btapi/btspp.h>
+#endif
 
 QT_BEGIN_NAMESPACE
+#ifdef QT_QNX_BT_BLUETOOTH
+static int initCounter = 0;
+#endif
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
@@ -57,12 +64,28 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       discoveryAgent(0),
       isServerSocket(false)
 {
+#ifdef QT_QNX_BT_BLUETOOTH
+    if (!initCounter && (bt_spp_init() == -1))
+        qCDebug(QT_BT_QNX) << "Could not initialize Bluetooth library. "
+                           << qt_error_string(errno);
+
+    initCounter++;
+#else
     ppsRegisterControl();
+#endif
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 {
+#ifdef QT_QNX_BT_BLUETOOTH
+    if (initCounter == 1 && (bt_spp_deinit() == -1))
+        qCDebug(QT_BT_QNX) << "Could not deinitialize Bluetooth library."
+                              "SPP connection is still open.";
+
+    initCounter--;
+#else
     ppsUnregisterControl(this);
+#endif
     close();
 }
 
@@ -79,27 +102,47 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
                                                const QBluetoothUuid &uuid,
                                                QIODevice::OpenMode openMode)
 {
+    Q_Q(QBluetoothSocket);
     Q_UNUSED(openMode);
     qCDebug(QT_BT_QNX) << "Connecting socket";
-    if (isServerSocket) {
-        m_peerAddress = address;
-        m_uuid = uuid;
+
+    m_peerAddress = address;
+#ifdef QT_QNX_BT_BLUETOOTH
+    QByteArray b_uuid = uuid.toByteArray();
+    b_uuid = b_uuid.mid(1, b_uuid.length() - 2);
+    socket = bt_spp_open(address.toString().toUtf8().data(), b_uuid.data(), false);
+    if (socket == -1) {
+        qCWarning(QT_BT_QNX) << "Could not connect to" << address.toString() << b_uuid <<  qt_error_string(errno);
+        errorString = qt_error_string(errno);
+        q->setSocketError(QBluetoothSocket::NetworkError);
         return;
     }
+
+    delete readNotifier;
+    delete connectWriteNotifier;
+
+    readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
+    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+
+    connecting = true;
+    q->setOpenMode(openMode);
+#else
+    m_uuid = uuid;
+    if (isServerSocket)
+        return;
 
     if (state != QBluetoothSocket::UnconnectedState) {
         qCDebug(QT_BT_QNX) << "Socket already connected";
         return;
     }
-    state = QBluetoothSocket::ConnectingState;
-
-    m_uuid = uuid;
-    m_peerAddress = address;
 
     ppsSendControlMessage("connect_service", 0x1101, uuid, address.toString(), QString(), this, BT_SPP_CLIENT_SUBTYPE);
     ppsRegisterForEvent(QStringLiteral("service_connected"),this);
     ppsRegisterForEvent(QStringLiteral("get_mount_point_path"),this);
-    socketType = QBluetoothServiceInfo::RfcommProtocol;
+#endif
+    q->setSocketState(QBluetoothSocket::ConnectingState);
 }
 
 void QBluetoothSocketPrivate::_q_writeNotify()
@@ -166,9 +209,16 @@ void QBluetoothSocketPrivate::abort()
 {
     Q_Q(QBluetoothSocket);
     qCDebug(QT_BT_QNX) << "Disconnecting service";
+#ifdef QT_QNX_BT_BLUETOOTH
+    if (isServerSocket)
+        bt_spp_close_server(m_uuid.toString().toUtf8().data());
+    else
+        bt_spp_close(socket);
+#else
     if (q->state() != QBluetoothSocket::ClosingState)
         ppsSendControlMessage("disconnect_service", 0x1101, m_uuid, m_peerAddress.toString(), QString(), 0,
                           isServerSocket ? BT_SPP_SERVER_SUBTYPE : BT_SPP_CLIENT_SUBTYPE);
+#endif
     delete readNotifier;
     readNotifier = 0;
     delete connectWriteNotifier;
@@ -176,8 +226,6 @@ void QBluetoothSocketPrivate::abort()
 
     ::close(socket);
 
-    q->setSocketState(QBluetoothSocket::UnconnectedState);
-    emit q->disconnected();
     isServerSocket = false;
 }
 
@@ -284,11 +332,6 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     socket = socketDescriptor;
     socketType = socketType_;
 
-    // ensure that O_NONBLOCK is set on new connections.
-    int flags = fcntl(socket, F_GETFL, 0);
-    if (!(flags & O_NONBLOCK))
-        fcntl(socket, F_SETFL, flags | O_NONBLOCK);
-
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
     QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
@@ -301,7 +344,9 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
         emit q->connected();
 
     isServerSocket = true;
+#ifndef QT_QNX_BT_BLUETOOTH
     ppsRegisterForEvent(QStringLiteral("service_disconnected"),this);
+#endif
 
     return true;
 }
@@ -313,6 +358,7 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
 
 void QBluetoothSocketPrivate::controlReply(ppsResult result)
 {
+#ifndef QT_QNX_BT_BLUETOOTH
     Q_Q(QBluetoothSocket);
 
     if (result.msg == QStringLiteral("connect_service")) {
@@ -363,15 +409,18 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
             ppsRegisterForEvent(QStringLiteral("service_disconnected"),this);
         }
     }
+#endif
 }
 
 void QBluetoothSocketPrivate::controlEvent(ppsResult result)
 {
+#ifndef QT_QNX_BT_BLUETOOTH
     Q_Q(QBluetoothSocket);
     if (result.msg == QStringLiteral("service_disconnected")) {
         q->setSocketState(QBluetoothSocket::ClosingState);
         close();
     }
+#endif
 }
 
 QT_END_NAMESPACE

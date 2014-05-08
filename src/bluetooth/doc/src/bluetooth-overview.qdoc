@@ -51,7 +51,7 @@
     \section1 Retrieving Local Device Information
 
     The Qt Bluetooth API has three main purposes. The first one is to
-    obtain local and remote device information. The first steps in retrieving device information is
+    obtain local and remote device information. The first steps in retrieving device information are
     to check if Bluetooth is available on the device and read the local device address and name.
     QBluetoothLocalDevice is the class that provides all of this information. Additionally you can use it
     to turn Bluetooth on/off, set the visibility of the device and determine the current connections.
@@ -65,7 +65,7 @@
     your own and fill them with data, the easier way is to use the QBluetoothDeviceDiscoveryAgent to
     start an automated search for visible Bluetooth devices within the connectable range.
 
-    \snippet doc_src_qtbluetooth.cpp discovery
+    \snippet doc_src_qtbluetooth.cpp device_discovery
 
     \section1 Pushing Files to Remote Devices
 

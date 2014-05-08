@@ -28,12 +28,17 @@
 /*!
 \example corkboard
 \title QML CorkBoard Example
+\brief A QML example about displaying NFC Data Exchange Format (NDEF) messages.
 
 The QML CorkBoard example displays the contents of NDEF messages read from an
 NFC Tag. Each newly detected NDEF message is added to the corkboard and can be
-dragged into an arbitrary position on the board. The corkboard has a "Personal"
-and "Work" space. The workspace can be changed by sliding left or right.
+dragged into an arbitrary position on the board. The corkboard has a \e Personal
+and \e Work space. The workspace can be changed by sliding left or right.
 
 \image corkboard.png
+
+\include examples-run.qdocinc
+
+\sa {Qt NFC}
 
 */

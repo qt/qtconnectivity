@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt local connectivty modules.
@@ -28,10 +28,16 @@
 /*!
 \example annotatedurl
 \title Annotated URL Example
+\brief An example showing reading from formatted NFC Data Exchange Format (NDEF) messages.
 
-The Annotated URL example displays the contents of specifically formatted NDEF messages read from
-an NFC Tag. The NDEF message should contain a URI record, an optional image/* MIME record, and one
-or more localized Text records.
+The Annotated URL example displays the contents of specifically formatted NFC
+Data Exchange Format (NDEF) messages read from an NFC Tag. The NDEF message
+should contain a URI record, an optional \c image/* MIME record, and one or more
+localized Text records.
 
 \image annotatedurl.png
+
+\include examples-run.qdocinc
+
+\sa {Qt NFC}
 */

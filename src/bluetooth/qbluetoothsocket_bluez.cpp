@@ -134,6 +134,12 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     Q_UNUSED(openMode);
     int result = -1;
 
+    if (socket == -1 && !ensureNativeSocket(socketType)) {
+        errorString = QObject::tr("Unknown socket error");
+        q->setSocketError(QBluetoothSocket::UnknownSocketError);
+        return;
+    }
+
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
 
@@ -226,6 +232,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
     char *writePointer = buffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
 //    qint64 readFromDevice = q->readData(writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
     int readFromDevice = ::read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
+    buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
     if(readFromDevice <= 0){
         int errsv = errno;
         readNotifier->setEnabled(false);
@@ -238,11 +245,8 @@ void QBluetoothSocketPrivate::_q_readNotify()
             q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
     }
     else {
-        buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
-
         emit q->readyRead();
     }
 }
@@ -259,9 +263,6 @@ void QBluetoothSocketPrivate::abort()
     // QBluetoothSocket::close
     QT_CLOSE(socket);
     socket = -1;
-
-    Q_Q(QBluetoothSocket);
-    emit q->disconnected();
 }
 
 QString QBluetoothSocketPrivate::localName() const
@@ -508,17 +509,7 @@ void QBluetoothSocketPrivate::close()
         connectWriteNotifier->setEnabled(true);
     }
     else {
-
-        delete readNotifier;
-        readNotifier = 0;
-        delete connectWriteNotifier;
-        connectWriteNotifier = 0;
-
-        // We are disconnected now, so go to unconnected.
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
-        emit q->disconnected();
-        QT_CLOSE(socket);
-        socket = -1;
+        abort();
     }
 
 }

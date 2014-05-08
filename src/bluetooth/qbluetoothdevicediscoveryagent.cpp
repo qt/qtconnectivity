@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \li and call start().
     \endlist
 
-    \snippet doc_src_qtbluetooth.cpp discovery
+    \snippet doc_src_qtbluetooth.cpp device_discovery
 
     To retrieve results asynchronously, connect to the deviceDiscovered() signal. To get a list of
     all discovered devices, call discoveredDevices() after the finished() signal.
@@ -91,8 +91,8 @@ QT_BEGIN_NAMESPACE
     support it, GeneralUnlimitedInquiry will be used instead. Setting LimitedInquiry is useful
     for multi-player Bluetooth-based games that needs faster communication between the devices.
     The phone scans for devices in LimitedInquiry and Service Discovery is done on one or two devices
-    to speed up the service scan. After the game has connected to the device it intends to,the device
-    returns to GeneralUnilimitedInquiry.
+    to speed up the service scan. After the game has connected to the device it intended to,
+    the device returns to GeneralUnlimitedInquiry.
 */
 
 /*!
