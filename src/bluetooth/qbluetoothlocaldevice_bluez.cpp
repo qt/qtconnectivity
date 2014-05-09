@@ -433,8 +433,8 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
     //are we already discovering something? -> abort those attempts
     if (pairingDiscoveryTimer && pairingDiscoveryTimer->isActive()) {
         pairingDiscoveryTimer->stop();
-        if (!discoveryWasAlreadyActive)
-            adapterBluez5->StopDiscovery();
+        QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
+                    adapterBluez5->path());
     }
 
     if (pairingTarget) {
@@ -474,13 +474,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
     }
 
     //no device matching -> turn on discovery
-
-    //remember whether we were discovering already
-    //if it was on don't modify it
-    discoveryWasAlreadyActive = adapterBluez5->discovering();
-
-    if (!discoveryWasAlreadyActive)
-        adapterBluez5->StartDiscovery();
+    QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapterBluez5->path());
 
     address = targetAddress;
     pairing = targetPairing;
@@ -513,8 +507,8 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
     if (pairingDiscoveryTimer && pairingDiscoveryTimer->isActive()) {
         pairingDiscoveryTimer->stop();
 
-        if (!discoveryWasAlreadyActive)
-            adapterBluez5->StopDiscovery();
+        QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
+                    adapterBluez5->path());
     }
 
     pairingTarget = new OrgBluezDevice1Interface(QStringLiteral("org.bluez"), objectPath,
@@ -573,8 +567,8 @@ void QBluetoothLocalDevicePrivate::pairingDiscoveryTimedOut()
 {
     qCWarning(QT_BT_BLUEZ) << "Discovery for pairing purposes failed. Cannot find parable device.";
 
-    if (!discoveryWasAlreadyActive)
-        adapterBluez5->StopDiscovery();
+    QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
+                adapterBluez5->path());
 
     emit q_ptr->error(QBluetoothLocalDevice::PairingError);
 }
@@ -645,7 +639,6 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
         localAddress(address),
         pairingTarget(0),
         pairingDiscoveryTimer(0),
-        discoveryWasAlreadyActive(true),
         pendingHostModeChange(-1),
         msgConnection(0),
         q_ptr(q)
@@ -929,14 +922,8 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
         //device discovery for pairing found new remote device
         OrgBluezDevice1Interface device(QStringLiteral("org.bluez"),
                                         object_path.path(), QDBusConnection::systemBus());
-        if (!address.isNull() && address == QBluetoothAddress(device.address())) {
-            pairingDiscoveryTimer->stop();
-            if (!discoveryWasAlreadyActive)
-                adapterBluez5->StopDiscovery();
-
+        if (!address.isNull() && address == QBluetoothAddress(device.address()))
             processPairingBluez5(object_path.path(), pairing);
-
-        }
     }
 }
 

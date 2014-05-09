@@ -146,7 +146,6 @@ public:
     QBluetoothLocalDevice::Pairing pairing;
     OrgBluezDevice1Interface *pairingTarget;
     QTimer *pairingDiscoveryTimer;
-    bool discoveryWasAlreadyActive;
     QBluetoothLocalDevice::HostMode currentMode;
     int pendingHostModeChange;
 
