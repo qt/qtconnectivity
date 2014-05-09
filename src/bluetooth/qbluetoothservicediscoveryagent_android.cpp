@@ -55,8 +55,6 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-Q_GLOBAL_STATIC_WITH_ARGS(QUuid, btBaseUuid, ("{00000000-0000-1000-8000-00805F9B34FB}"))
-
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
         const QBluetoothAddress &deviceAdapter)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
@@ -329,21 +327,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         if (uuid.isNull())
             continue;
 
-        bool isBaseUuuidSuffix = false;
-        if (btBaseUuid()->data2 == uuid.data2 && btBaseUuid()->data3 == uuid.data3
-                   && btBaseUuid()->data4[0] == uuid.data4[0] && btBaseUuid()->data4[1] == uuid.data4[1]
-                   && btBaseUuid()->data4[2] == uuid.data4[2] && btBaseUuid()->data4[3] == uuid.data4[3]
-                   && btBaseUuid()->data4[4] == uuid.data4[4] && btBaseUuid()->data4[5] == uuid.data4[5]
-                   && btBaseUuid()->data4[6] == uuid.data4[6] && btBaseUuid()->data4[7] == uuid.data4[7])
-        {
-            isBaseUuuidSuffix = true;
-        }
-
         //check for SPP protocol
-        if (isBaseUuuidSuffix && ((uuid.data1 & 0xffff) == QBluetoothUuid::SerialPort))
+        bool ok = false;
+        quint16 uuid16 = uuid.toUInt16(&ok);
+        if (ok && uuid16 == QBluetoothUuid::SerialPort)
             sppIndex = i;
 
-        if (!isBaseUuuidSuffix)
+        //check for custom uuid
+        if (uuid.minimumSize() == 16)
             customUuids.append(i);
     }
 

@@ -71,8 +71,6 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
     to[5] = (from >> 40) & 0xff;
 }
 
-Q_GLOBAL_STATIC_WITH_ARGS(QUuid, btBaseUuid, ("{00000000-0000-1000-8000-00805F9B34FB}"));
-
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
@@ -609,20 +607,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         if (!uuidFilter.isEmpty() && !uuidFilter.contains(uuid))
             continue;
 
-        bool isBaseUuid = false;
-        if (btBaseUuid()->data2 == uuid.data2 && btBaseUuid()->data3 == uuid.data3
-                   && btBaseUuid()->data4[0] == uuid.data4[0] && btBaseUuid()->data4[1] == uuid.data4[1]
-                   && btBaseUuid()->data4[2] == uuid.data4[2] && btBaseUuid()->data4[3] == uuid.data4[3]
-                   && btBaseUuid()->data4[4] == uuid.data4[4] && btBaseUuid()->data4[5] == uuid.data4[5]
-                   && btBaseUuid()->data4[6] == uuid.data4[6] && btBaseUuid()->data4[7] == uuid.data4[7])
-        {
-            isBaseUuid = true;
-        }
-
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(discoveredDevices.at(0));
 
-        if (!isBaseUuid) {
+        if (uuid.minimumSize() == 16) { // not derived from Bluetooth Base UUID
             serviceInfo.setServiceUuid(uuid);
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Custom Service"));
         } else {
