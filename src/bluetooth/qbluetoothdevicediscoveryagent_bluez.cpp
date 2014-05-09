@@ -52,6 +52,7 @@
 #include "bluez/objectmanager_p.h"
 #include "bluez/adapter1_bluez5_p.h"
 #include "bluez/device1_bluez5_p.h"
+#include "bluez/properties_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -350,6 +351,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
                          << "total device" << discoveredDevices.count() << "cached"
                          << "RSSI" << device.rSSI();
 
+    OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
+                QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
+    QObject::connect(prop, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
+                     q, SLOT(_q_PropertiesChanged(QString,QVariantMap,QStringList)));
+    // remember what we have to cleanup
+    propertyMonitors.append(prop);
+
     // read information
     QBluetoothDeviceInfo deviceInfo(btAddress, btName, btClass);
     deviceInfo.setRssi(device.rSSI());
@@ -422,6 +430,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryFinished()
     QtBluezDiscoveryManager::instance()->disconnect(q);
     QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(adapterBluez5->path());
 
+    qDeleteAll(propertyMonitors);
+    propertyMonitors.clear();
+
     delete adapterBluez5;
     adapterBluez5 = 0;
 
@@ -460,6 +471,32 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         emit q->error(lastError);
+    }
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &interface,
+                                                                 const QVariantMap &changed_properties,
+                                                                 const QStringList &)
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    if (interface == QStringLiteral("org.bluez.Device1")
+            && changed_properties.contains(QStringLiteral("RSSI"))) {
+        OrgFreedesktopDBusPropertiesInterface *props =
+                qobject_cast<OrgFreedesktopDBusPropertiesInterface *>(q->sender());
+        if (!props)
+            return;
+
+        OrgBluezDevice1Interface device(QStringLiteral("org.bluez"), props->path(),
+                                            QDBusConnection::systemBus());
+        for (int i = 0; i < discoveredDevices.size(); i++) {
+            if (discoveredDevices[i].address().toString() == device.address()) {
+                qCDebug(QT_BT_BLUEZ) << "Updating RSSI for" << device.address()
+                         << changed_properties.value(QStringLiteral("RSSI"));
+                discoveredDevices[i].setRssi(
+                            changed_properties.value(QStringLiteral("RSSI")).toInt());
+                return;
+            }
+        }
     }
 }
 

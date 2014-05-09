@@ -99,6 +99,16 @@ QT_BEGIN_NAMESPACE
     \fn void QBluetoothDeviceDiscoveryAgent::deviceDiscovered(const QBluetoothDeviceInfo &info)
 
     This signal is emitted when the Bluetooth device described by \a info is discovered.
+
+    The signal is emitted as soon as the most important device information
+    has been collected. However, as long as the \l finished() signal has not
+    been emitted the information collection continues even for already discovered
+    devices. This is particularly true for signal strength information (RSSI). If
+    signal strength information is required it is advisable to retrieve the device
+    information via \l discoveredDevices() once the discovery has finished. This
+    will yield the most recent RSSI information.
+
+    \sa QBluetoothDeviceInfo::rssi()
 */
 
 /*!

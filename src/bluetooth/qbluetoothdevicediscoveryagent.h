@@ -109,6 +109,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_InterfacesAdded(const QDBusObjectPath &path, InterfaceList interfaceList))
     Q_PRIVATE_SLOT(d_func(), void _q_discoveryFinished())
     Q_PRIVATE_SLOT(d_func(), void _q_discoveryInterrupted(const QString &path))
+    Q_PRIVATE_SLOT(d_func(), void _q_PropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties))
 #endif
 };
 

@@ -59,6 +59,7 @@
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgFreedesktopDBusObjectManagerInterface;
+class OrgFreedesktopDBusPropertiesInterface;
 class OrgBluezAdapter1Interface;
 class OrgBluezDevice1Interface;
 
@@ -94,9 +95,13 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_deviceFound(const QString &address, const QVariantMap &dict);
     void _q_propertyChanged(const QString &name, const QDBusVariant &value);
-    void _q_InterfacesAdded(const QDBusObjectPath &object_path, InterfaceList interfaces_and_properties);
+    void _q_InterfacesAdded(const QDBusObjectPath &object_path,
+                            InterfaceList interfaces_and_properties);
     void _q_discoveryFinished();
     void _q_discoveryInterrupted(const QString &path);
+    void _q_PropertiesChanged(const QString &interface,
+                              const QVariantMap &changed_properties,
+                              const QStringList &invalidated_properties);
 #endif
 
 private:
@@ -127,6 +132,7 @@ private:
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
     OrgBluezAdapter1Interface *adapterBluez5;
     QTimer *discoveryTimer;
+    QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
 
     void deviceFoundBluez5(const QString& devicePath);
     void startBluez5();

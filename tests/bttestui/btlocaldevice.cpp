@@ -333,7 +333,7 @@ void BtLocalDevice::dumpServiceDiscovery()
         qDebug() << "Discovered Devices:" << list.count();
 
         foreach (const QBluetoothDeviceInfo &info, list)
-            qDebug() << info.name() << info.address().toString();
+            qDebug() << info.name() << info.address().toString() << info.rssi();
     }
     if (serviceAgent) {
         qDebug() << "Service Discovery active:" << serviceAgent->isActive();
