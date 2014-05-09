@@ -93,7 +93,7 @@ QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldNam
     case JavaNames::BluetoothDevice:
         className = javaBluetoothDeviceClassName; break;
     default:
-        qWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
+        qCWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
         return QAndroidJniObject();
     }
 
@@ -132,7 +132,7 @@ QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldNam
     case JavaNames::ExtraUuid:
         fieldName = javaExtraUuid; break;
     default:
-        qWarning(QT_BT_ANDROID) << "Unknown java field name passed to valueForStaticField():" << javaFieldName;
+        qCWarning(QT_BT_ANDROID) << "Unknown java field name passed to valueForStaticField():" << javaFieldName;
         return QAndroidJniObject();
     }
 
