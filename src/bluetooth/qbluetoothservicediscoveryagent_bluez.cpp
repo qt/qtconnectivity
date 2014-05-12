@@ -333,7 +333,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
         error = errorCode;
         errorString = errorDescription;
         emit q->error(error);
-    } else if (!xmlRecords.isEmpty()) {
+    } else if (!xmlRecords.isEmpty() && discoveryState() != Inactive) {
         foreach (const QString &record, xmlRecords) {
             const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
@@ -363,10 +363,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
 
                 emit q->serviceDiscovered(serviceInfo);
             }
-
-            // could stop discovery, check for state
-            if (discoveryState() == Inactive)
-                qCDebug(QT_BT_BLUEZ) << "Exit discovery after stop";
         }
     }
 
