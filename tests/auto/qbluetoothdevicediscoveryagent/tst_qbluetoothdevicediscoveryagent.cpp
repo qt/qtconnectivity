@@ -250,13 +250,27 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
     QVERIFY(discoveryAgent.errorString().isEmpty());
 
+    /*
+        Starting case 4: start-stop-start-stop:
+        We are testing that two subsequent stop() calls reduce total number
+        of cancel() signals to 1 if the true cancellation requires
+        asynchronous function calls (signal consolidation); otherwise we
+        expect 2x cancel() signal.
 
-    // Starting case 4: start-stop-start-stop, expecting only 1 cancel signal
+        Examples are:
+            - Bluez4 (event loop needs to run for cancel)
+            - Bluez5 (no event loop required)
+    */
+
+    bool immediateSignal = false;
     discoveryAgent.start();
     QVERIFY(discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // cancel current request.
     discoveryAgent.stop();
+    //should only have triggered cancel() if stop didn't involve the event loop
+    if (cancelSpy.count() == 1) immediateSignal = true;
+
     // start a new one
     discoveryAgent.start();
     // we should be active now
@@ -264,6 +278,8 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(errorSpy.isEmpty());
     // stop
     discoveryAgent.stop();
+    if (immediateSignal)
+        QVERIFY(cancelSpy.count() == 2);
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
     waitTime = MaxWaitForCancelTime;
@@ -271,12 +287,15 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
         QTest::qWait(100);
         waitTime-=100;
     }
-
     // we should not be active anymore
     QVERIFY(!discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // should only have 1 cancel
-    QVERIFY(cancelSpy.count() == 1);
+
+    if (immediateSignal)
+        QVERIFY(cancelSpy.count() == 2);
+    else
+        QVERIFY(cancelSpy.count() == 1);
     cancelSpy.clear();
 
     // Starting case 5: start-stop-start: expecting finished signal & no cancel
