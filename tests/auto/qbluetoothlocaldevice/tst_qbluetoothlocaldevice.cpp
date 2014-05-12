@@ -295,16 +295,18 @@ void tst_QBluetoothLocalDevice::tst_pairDevice_data()
 
     QTest::newRow("UnPaired Device: DUMMY->unpaired") << QBluetoothAddress("11:00:00:00:00:00")
             << QBluetoothLocalDevice::Unpaired << 1000 << false;
+    //Bluez5 may have to do a device search which can take up to 20s
     QTest::newRow("UnPaired Device: DUMMY->paired") << QBluetoothAddress("11:00:00:00:00:00")
-            << QBluetoothLocalDevice::Paired << 1000 << true;
+            << QBluetoothLocalDevice::Paired << 21000 << true;
     QTest::newRow("UnPaired Device: DUMMY") << QBluetoothAddress()
             << QBluetoothLocalDevice::Unpaired << 1000 << true;
 
     if (!remoteDevice.isNull()) {
         QTest::newRow("UnParing Test device 1") << QBluetoothAddress(remoteDevice)
                 << QBluetoothLocalDevice::Unpaired << 1000 << false;
+        //Bluez5 may have to do a device search which can take up to 20s
         QTest::newRow("Pairing Test Device") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Paired << 10000 << false;
+                << QBluetoothLocalDevice::Paired << 21000 << false;
         QTest::newRow("Pairing upgrade for Authorization") << QBluetoothAddress(remoteDevice)
                 << QBluetoothLocalDevice::AuthorizedPaired << 1000 << false;
         QTest::newRow("Unpairing Test device 2") << QBluetoothAddress(remoteDevice)
