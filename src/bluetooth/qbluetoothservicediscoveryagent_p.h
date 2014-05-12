@@ -133,6 +133,7 @@ public:
 private:
     void start(const QBluetoothAddress &address);
     void stop();
+    bool isDuplicatedService(const QBluetoothServiceInfo &serviceInfo) const;
 
 #ifdef QT_BLUEZ_BLUETOOTH
     void startBluez5(const QBluetoothAddress &address);

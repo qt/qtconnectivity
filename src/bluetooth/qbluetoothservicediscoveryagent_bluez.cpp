@@ -355,13 +355,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
             if (!serviceInfo.isValid())
                 continue;
 
-            discoveredServices.append(serviceInfo);
-            qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString()
-                                 << serviceInfo.serviceName() << serviceInfo.serviceUuid()
-                                 << ">>>" << serviceInfo.serviceClassUuids();
+            if (!isDuplicatedService(serviceInfo)) {
+                discoveredServices.append(serviceInfo);
+                qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString()
+                                     << serviceInfo.serviceName() << serviceInfo.serviceUuid()
+                                     << ">>>" << serviceInfo.serviceClassUuids();
 
-            // TODO check for duplicates (wait until stable has merged due to related change)
-            emit q->serviceDiscovered(serviceInfo);
+                emit q->serviceDiscovered(serviceInfo);
+            }
 
             // could stop discovery, check for state
             if (discoveryState() == Inactive)
@@ -492,19 +493,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
         Q_Q(QBluetoothServiceDiscoveryAgent);
 
-        //don't include the service if we already discovered it before
-        bool alreadyDiscovered = false;
-        for (int j = 0; j < discoveredServices.count(); j++) {
-            const QBluetoothServiceInfo &info = discoveredServices.at(j);
-            if (info.device() == serviceInfo.device()
-                    && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
-                    && info.serviceUuid() == serviceInfo.serviceUuid()) {
-                alreadyDiscovered = true;
-                break;
-            }
-        }
-
-        if (!alreadyDiscovered) {
+        if (!isDuplicatedService(serviceInfo)) {
             discoveredServices.append(serviceInfo);
             qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString()
                                  << serviceInfo.serviceName();
@@ -624,20 +613,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         }
 
         //don't include the service if we already discovered it before
-        bool alreadyDiscovered = false;
-        for (int j = 0; j < discoveredServices.count(); j++) {
-            const QBluetoothServiceInfo &info = discoveredServices.at(j);
-            if (info.device() == serviceInfo.device()
-                    && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
-                    && info.serviceUuid() == serviceInfo.serviceUuid()) {
-                alreadyDiscovered = true;
-                break;
-            }
-        }
-
-        if (!alreadyDiscovered) {
+        if (!isDuplicatedService(serviceInfo)) {
             discoveredServices << serviceInfo;
-            //qCDebug(QT_BT_ANDROID) << serviceInfo;
+            qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString()
+                                 << serviceInfo.serviceName();
             emit q->serviceDiscovered(serviceInfo);
         }
     }

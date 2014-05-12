@@ -509,6 +509,21 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
     startServiceDiscovery();
 }
 
+bool QBluetoothServiceDiscoveryAgentPrivate::isDuplicatedService(
+        const QBluetoothServiceInfo &serviceInfo) const
+{
+    //check the service is not already part of our known list
+    for (int j = 0; j < discoveredServices.count(); j++) {
+        const QBluetoothServiceInfo &info = discoveredServices.at(j);
+        if (info.device() == serviceInfo.device()
+                && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
+                && info.serviceUuid() == serviceInfo.serviceUuid()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 #include "moc_qbluetoothservicediscoveryagent.cpp"
 
 QT_END_NAMESPACE

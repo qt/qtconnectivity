@@ -306,19 +306,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
                                      QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
 
-        bool entryExists = false;
         //Did we already discover this service?
-        foreach (QBluetoothServiceInfo sInfo, q_ptr->discoveredServices()) {
-            if (sInfo.device() == serviceInfo.device()
-                    && sInfo.serviceUuid() == serviceInfo.serviceUuid()
-                    && sInfo.serviceClassUuids() == serviceInfo.serviceClassUuids()) {
-                entryExists = true;
-                //qCDebug(QT_BT_QNX) << "Entry exists" << serviceInfo.serviceClassUuids().first() << sInfo.serviceClassUuids().first();
-                break;
-            }
-        }
-
-        if (!entryExists) {
+        if (!isDuplicatedService(serviceInfo)) {
             qCDebug(QT_BT_QNX) << "Adding service" << next_service << " " << serviceInfo.socketProtocol();
             discoveredServices << serviceInfo;
             q_ptr->serviceDiscovered(serviceInfo);

@@ -406,18 +406,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         }
 
         //don't include the service if we already discovered it before
-        bool alreadyDiscovered = false;
-        for (int j = 0; j < discoveredServices.count(); j++) {
-            const QBluetoothServiceInfo &info = discoveredServices.at(j);
-            if (info.device() == serviceInfo.device()
-                    && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
-                    && info.serviceUuid() == serviceInfo.serviceUuid()) {
-                alreadyDiscovered = true;
-                break;
-            }
-        }
-
-        if (!alreadyDiscovered) {
+        if (!isDuplicatedService(serviceInfo)) {
             discoveredServices << serviceInfo;
             //qCDebug(QT_BT_ANDROID) << serviceInfo;
             emit q->serviceDiscovered(serviceInfo);
