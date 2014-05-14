@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -164,7 +164,7 @@ void tst_QNdefRecord::tst_record()
     {
         QNdefRecord record;
         record.setTypeNameFormat(QNdefRecord::ExternalRtd);
-        record.setType("qt.nokia.com:test-rtd");
+        record.setType("qt-project.org:test-rtd");
         record.setId("test id");
         record.setPayload("test payload");
 
@@ -196,13 +196,13 @@ void tst_QNdefRecord::tst_record()
     {
         QNdefRecord record;
         record.setTypeNameFormat(QNdefRecord::ExternalRtd);
-        record.setType("qt.nokia.com:test-rtd");
+        record.setType("qt-project.org:test-rtd");
         record.setId("test id");
         record.setPayload("test payload");
 
         QNdefRecord other;
         other.setTypeNameFormat(QNdefRecord::ExternalRtd);
-        other.setType("qt.nokia.com:test-other-rtd");
+        other.setType("qt-project.org:test-other-rtd");
         other.setId("test other id");
         other.setPayload("test other payload");
 
@@ -301,14 +301,14 @@ void tst_QNdefRecord::tst_uriRecord_data()
     QTest::addColumn<QByteArray>("payload");
 
 
-    QTest::newRow("http") << QString::fromLatin1("http://qt.nokia.com/")
-                                << QByteArray::fromHex("0371742E6E6F6B69612E636F6D2F");
+    QTest::newRow("http") << QString::fromLatin1("http://qt-project.org/")
+                                << QByteArray::fromHex("0371742d70726f6a6563742e6f72672f");
     QTest::newRow("tel") << QString::fromLatin1("tel:+1234567890")
                          << QByteArray::fromHex("052B31323334353637383930");
     QTest::newRow("mailto") << QString::fromLatin1("mailto:test@example.com")
                             << QByteArray::fromHex("0674657374406578616D706C652E636F6D");
-    QTest::newRow("urn") << QString::fromLatin1("urn:nfc:ext:qt.nokia.com:test")
-                         << QByteArray::fromHex("136E66633A6578743A71742E6E6F6B69612E636F6D3A74657374");
+    QTest::newRow("urn") << QString::fromLatin1("urn:nfc:ext:qt-project.org:test")
+                         << QByteArray::fromHex("136E66633A6578743A71742D70726F6A6563742E6F72673A74657374");
 }
 
 void tst_QNdefRecord::tst_uriRecord()

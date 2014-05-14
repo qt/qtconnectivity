@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -244,7 +244,7 @@ void tst_QNdefMessage::tst_parse_data()
         QByteArray type("U");
         QByteArray payload;
         payload.append(char(0x00));
-        payload.append("http://qt.nokia.com/");
+        payload.append("http://qt-project.org/");
 
         QByteArray data;
         data.append(char(0xc1));
@@ -259,13 +259,13 @@ void tst_QNdefMessage::tst_parse_data()
         QNdefRecord record;
         record.setTypeNameFormat(QNdefRecord::NfcRtd);
         record.setType("U");
-        record.setPayload(QByteArray("\000http://qt.nokia.com/", 21));
+        record.setPayload(QByteArray("\000http://qt-project.org/", 23));
         QList<QNdefRecord> recordList;
         recordList.append(record);
-        QTest::newRow("nfc-rtd uri http://qt.nokia.com/")
+        QTest::newRow("nfc-rtd uri http://qt-project.org/")
             << data << QNdefMessage(recordList)
-            << (QVariantList() << QUrl(QStringLiteral("http://qt.nokia.com/")));
-        QCOMPARE(qHash(record), 4030951038LL);
+            << (QVariantList() << QUrl(QStringLiteral("http://qt-project.org/")));
+        QCOMPARE(qHash(record), 3736709795LL);
     }
 
     // NFC-RTD URI
@@ -273,7 +273,7 @@ void tst_QNdefMessage::tst_parse_data()
         QByteArray type("U");
         QByteArray payload;
         payload.append(char(0x03));
-        payload.append("qt.nokia.com/");
+        payload.append("qt-project.org/");
 
         QByteArray data;
         data.append(char(0xc1));
@@ -288,13 +288,13 @@ void tst_QNdefMessage::tst_parse_data()
         QNdefRecord record;
         record.setTypeNameFormat(QNdefRecord::NfcRtd);
         record.setType("U");
-        record.setPayload(QByteArray("\003qt.nokia.com/", 14));
+        record.setPayload(QByteArray("\003qt-project.org/", 16));
         QList<QNdefRecord> recordList;
         recordList.append(record);
-        QTest::newRow("nfc-rtd uri abbrev http://qt.nokia.com/")
+        QTest::newRow("nfc-rtd uri abbrev http://qt-project.org/")
             << data << QNdefMessage(recordList)
-            << (QVariantList() << QUrl(QStringLiteral("http://qt.nokia.com/")));
-        QCOMPARE(qHash(record), 132405495LL);
+            << (QVariantList() << QUrl(QStringLiteral("http://qt-project.org/")));
+        QCOMPARE(qHash(record),2445925084LL);
     }
 
     // NFC-RTD URI
@@ -332,7 +332,7 @@ void tst_QNdefMessage::tst_parse_data()
         QByteArray id("Test ID");
         QByteArray payload;
         payload.append(char(0x00));
-        payload.append("http://qt.nokia.com/");
+        payload.append("http://qt-project.org/");
         QByteArray data;
         data.append(char(0xc9));   // MB=1, ME=1, IL=1
 
