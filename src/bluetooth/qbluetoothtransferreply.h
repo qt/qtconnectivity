@@ -63,7 +63,8 @@ public:
         HostNotFoundError,
         UserCanceledTransferError,
         IODeviceNotReadableError,
-        ResourceBusyError
+        ResourceBusyError,
+        SessionError
     };
 
 

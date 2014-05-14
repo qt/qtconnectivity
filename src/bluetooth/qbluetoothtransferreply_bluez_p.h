@@ -51,8 +51,9 @@
 #include "qbluetoothtransferreply.h"
 
 class OrgOpenobexClientInterface;
-class OrgOpenobexManagerInterface;
 class AgentAdaptor;
+class OrgBluezObexClient1Interface;
+class OrgBluezObexObjectPush1Interface;
 
 QT_BEGIN_NAMESPACE
 
@@ -75,14 +76,16 @@ private slots:
     bool start();
 
 private:
-    void startOPP(QString filename);
+    void startOPP(const QString &filename);
 
-    OrgOpenobexClientInterface *client;
-    OrgOpenobexManagerInterface *manager;
-    AgentAdaptor *agent;
+    OrgOpenobexClientInterface *m_client;
+    AgentAdaptor *m_agent;
+    OrgBluezObexClient1Interface *m_clientBluez;
+    OrgBluezObexObjectPush1Interface *m_objectPushBluez;
 
-    QTemporaryFile *tempfile;
-    QIODevice *source;
+
+    QTemporaryFile *m_tempfile;
+    QIODevice *m_source;
 
     bool m_running;
     bool m_finished;
@@ -95,11 +98,18 @@ private:
     QString m_agent_path;
 
     QString m_transfer_path;
+    QString fileToTranser;
 
     static bool copyToTempFile(QIODevice *to, QIODevice *from);
+    void cleanupSession();
 
 private slots:
     void copyDone();
+    void sessionCreated(QDBusPendingCallWatcher *watcher);
+    void sessionStarted(QDBusPendingCallWatcher *watcher);
+    void sessionChanged(const QString &interface,
+                        const QVariantMap &changed_properties,
+                        const QStringList &invalidated_properties);
 
 public slots:
     void abort();
