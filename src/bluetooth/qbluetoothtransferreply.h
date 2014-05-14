@@ -83,6 +83,7 @@ public Q_SLOTS:
     void abort();
 
 Q_SIGNALS:
+    //TODO Remove QBluetoothTransferReply* parameter in Qt 6
     void finished(QBluetoothTransferReply *);
     void transferProgress(qint64 bytesTransferred, qint64 bytesTotal);
 
