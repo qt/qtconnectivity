@@ -212,15 +212,15 @@ void TagActivator::initialize()
     if (!tagMap.isEmpty())
         return;
 
-    QDirIterator nfcTargets(QDir::currentPath(), QStringList(QLatin1String("*.nfc")), QDir::Files);
+    QDirIterator nfcTargets(QDir::currentPath(), QStringList(QStringLiteral("*.nfc")), QDir::Files);
     while (nfcTargets.hasNext()) {
         const QString targetFilename = nfcTargets.next();
 
         QSettings target(targetFilename, QSettings::IniFormat);
 
-        target.beginGroup(QLatin1String("Target"));
+        target.beginGroup(QStringLiteral("Target"));
 
-        const QString tagType = target.value(QLatin1String("Type")).toString();
+        const QString tagType = target.value(QStringLiteral("Type")).toString();
 
         target.endGroup();
 

@@ -68,8 +68,8 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 {
     setRequest(request);
     setManager(parent);
-    client = new OrgOpenobexClientInterface(QLatin1String("org.openobex.client"), QLatin1String("/"),
-                                           QDBusConnection::sessionBus());
+    client = new OrgOpenobexClientInterface(QStringLiteral("org.openobex.client"), QStringLiteral("/"),
+                                            QDBusConnection::sessionBus());
 
     qsrand(QTime::currentTime().msec());
     m_agent_path = agentPath;
@@ -279,7 +279,8 @@ bool QBluetoothTransferReplyBluez::isRunning() const
 void QBluetoothTransferReplyBluez::abort()
 {
     if(!m_transfer_path.isEmpty()){
-        OrgOpenobexTransferInterface *xfer = new OrgOpenobexTransferInterface(QLatin1String("org.openobex.client"), m_transfer_path,
+        OrgOpenobexTransferInterface *xfer = new OrgOpenobexTransferInterface(QStringLiteral("org.openobex.client"),
+                                                                              m_transfer_path,
                                                                               QDBusConnection::sessionBus());
         QDBusPendingReply<> reply = xfer->Cancel();
         reply.waitForFinished();

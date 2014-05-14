@@ -203,7 +203,7 @@ quint64 QBluetoothAddress::toUInt64() const
 */
 QString QBluetoothAddress::toString() const
 {
-    QString s(QLatin1String("%1:%2:%3:%4:%5:%6"));
+    QString s(QStringLiteral("%1:%2:%3:%4:%5:%6"));
     Q_D(const QBluetoothAddress);
 
     for (int i = 5; i >= 0; --i) {

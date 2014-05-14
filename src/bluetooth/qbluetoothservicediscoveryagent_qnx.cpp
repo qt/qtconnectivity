@@ -197,8 +197,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     qCDebug(QT_BT_QNX) << "Starting Service discovery for" << address.toString();
     const QString filePath = QStringLiteral("/pps/services/bluetooth/remote_devices/").append(address.toString());
     if ((m_rdfd = qt_safe_open(filePath.toLocal8Bit().constData(), O_RDONLY)) == -1) {
-        if (QFile::exists(filePath + QLatin1String("-00")) ||
-            QFile::exists(filePath + QLatin1String("-01"))) {
+        if (QFile::exists(filePath + QStringLiteral("-00")) ||
+            QFile::exists(filePath + QStringLiteral("-01"))) {
             qCDebug(QT_BT_QNX) << "LE device discovered...skipping";
         } else {
             qCWarning(QT_BT_QNX) << "Failed to open " << filePath;

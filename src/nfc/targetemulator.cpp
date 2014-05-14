@@ -79,18 +79,18 @@ NfcTagType1::~NfcTagType1()
 
 void NfcTagType1::load(QSettings *settings)
 {
-    settings->beginGroup(QLatin1String("TagType1"));
+    settings->beginGroup(QStringLiteral("TagType1"));
 
-    hr0 = settings->value(QLatin1String("HR0"), 0x11).toUInt();
+    hr0 = settings->value(QStringLiteral("HR0"), 0x11).toUInt();
 
     if (!(hr0 & 0x10)) {
         settings->endGroup();
         return;
     }
 
-    hr1 = settings->value(QLatin1String("HR1"), 0x00).toUInt();
+    hr1 = settings->value(QStringLiteral("HR1"), 0x00).toUInt();
 
-    memory = settings->value(QLatin1String("Data")).toByteArray();
+    memory = settings->value(QStringLiteral("Data")).toByteArray();
 
     //quint8 nmn = memory.at(8);
 
@@ -302,9 +302,9 @@ NfcTagType2::~NfcTagType2()
 
 void NfcTagType2::load(QSettings *settings)
 {
-    settings->beginGroup(QLatin1String("TagType2"));
+    settings->beginGroup(QStringLiteral("TagType2"));
 
-    memory = settings->value(QLatin1String("Data")).toByteArray();
+    memory = settings->value(QStringLiteral("Data")).toByteArray();
 
     settings->endGroup();
 }

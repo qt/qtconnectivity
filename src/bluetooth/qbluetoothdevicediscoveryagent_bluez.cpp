@@ -81,7 +81,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                          q, SLOT(_q_InterfacesAdded(QDBusObjectPath,InterfaceList)));
 
     } else {
-        manager = new OrgBluezManagerInterface(QLatin1String("org.bluez"), QLatin1String("/"),
+        manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus(), parent);
     }
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
@@ -134,7 +134,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         return;
     }
 
-    adapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"), reply.value().path(),
+    adapter = new OrgBluezAdapterInterface(QStringLiteral("org.bluez"), reply.value().path(),
                                            QDBusConnection::systemBus());
 
     Q_Q(QBluetoothDeviceDiscoveryAgent);
@@ -288,23 +288,23 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
                                                            const QVariantMap &dict)
 {
     const QBluetoothAddress btAddress(address);
-    const QString btName = dict.value(QLatin1String("Name")).toString();
-    quint32 btClass = dict.value(QLatin1String("Class")).toUInt();
+    const QString btName = dict.value(QStringLiteral("Name")).toString();
+    quint32 btClass = dict.value(QStringLiteral("Class")).toUInt();
 
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << address << btName
-                         << "Num UUIDs" << dict.value(QLatin1String("UUIDs")).toStringList().count()
+                         << "Num UUIDs" << dict.value(QStringLiteral("UUIDs")).toStringList().count()
                          << "total device" << discoveredDevices.count() << "cached"
-                         << dict.value(QLatin1String("Cached")).toBool()
-                         << "RSSI" << dict.value(QLatin1String("RSSI")).toInt();
+                         << dict.value(QStringLiteral("Cached")).toBool()
+                         << "RSSI" << dict.value(QStringLiteral("RSSI")).toInt();
 
     QBluetoothDeviceInfo device(btAddress, btName, btClass);
-    if (dict.value(QLatin1String("RSSI")).isValid())
-        device.setRssi(dict.value(QLatin1String("RSSI")).toInt());
+    if (dict.value(QStringLiteral("RSSI")).isValid())
+        device.setRssi(dict.value(QStringLiteral("RSSI")).toInt());
     QList<QBluetoothUuid> uuids;
     foreach (const QString &u, dict.value(QLatin1String("UUIDs")).toStringList())
         uuids.append(QBluetoothUuid(u));
     device.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
-    device.setCached(dict.value(QLatin1String("Cached")).toBool());
+    device.setCached(dict.value(QStringLiteral("Cached")).toBool());
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == device.address()) {
             if (discoveredDevices[i] == device) {

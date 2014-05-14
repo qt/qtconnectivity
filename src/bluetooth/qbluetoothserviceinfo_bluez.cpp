@@ -54,104 +54,104 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 {
-    const QString unsignedFormat(QLatin1String("0x%1"));
+    const QString unsignedFormat(QStringLiteral("0x%1"));
 
     switch (int(attribute.type())) {
     case QMetaType::Void:
-        stream->writeEmptyElement(QLatin1String("nil"));
+        stream->writeEmptyElement(QStringLiteral("nil"));
         break;
     case QMetaType::UChar:
-        stream->writeEmptyElement(QLatin1String("uint8"));
-        stream->writeAttribute(QLatin1String("value"),
+        stream->writeEmptyElement(QStringLiteral("uint8"));
+        stream->writeAttribute(QStringLiteral("value"),
                                unsignedFormat.arg(attribute.value<quint8>(), 2, 16,
                                                   QLatin1Char('0')));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::UShort:
-        stream->writeEmptyElement(QLatin1String("uint16"));
-        stream->writeAttribute(QLatin1String("value"),
+        stream->writeEmptyElement(QStringLiteral("uint16"));
+        stream->writeAttribute(QStringLiteral("value"),
                                unsignedFormat.arg(attribute.value<quint16>(), 4, 16,
                                                   QLatin1Char('0')));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::UInt:
-        stream->writeEmptyElement(QLatin1String("uint32"));
-        stream->writeAttribute(QLatin1String("value"),
+        stream->writeEmptyElement(QStringLiteral("uint32"));
+        stream->writeAttribute(QStringLiteral("value"),
                                unsignedFormat.arg(attribute.value<quint32>(), 8, 16,
                                                   QLatin1Char('0')));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::Char:
-        stream->writeEmptyElement(QLatin1String("int8"));
-        stream->writeAttribute(QLatin1String("value"),
+        stream->writeEmptyElement(QStringLiteral("int8"));
+        stream->writeAttribute(QStringLiteral("value"),
                                QString::number(attribute.value<uchar>(), 16));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::Short:
-        stream->writeEmptyElement(QLatin1String("int16"));
-        stream->writeAttribute(QLatin1String("value"),
+        stream->writeEmptyElement(QStringLiteral("int16"));
+        stream->writeAttribute(QStringLiteral("value"),
                                QString::number(attribute.value<qint16>(), 16));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::Int:
-        stream->writeEmptyElement(QLatin1String("int32"));
-        stream->writeAttribute(QLatin1String("value"),
+        stream->writeEmptyElement(QStringLiteral("int32"));
+        stream->writeAttribute(QStringLiteral("value"),
                                QString::number(attribute.value<qint32>(), 16));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::QString:
-        stream->writeEmptyElement(QLatin1String("text"));
+        stream->writeEmptyElement(QStringLiteral("text"));
         if (/* require hex encoding */ false) {
-            stream->writeAttribute(QLatin1String("value"), QString::fromLatin1(
+            stream->writeAttribute(QStringLiteral("value"), QString::fromLatin1(
                                        attribute.value<QString>().toUtf8().toHex().constData()));
-            stream->writeAttribute(QLatin1String("encoding"), QLatin1String("hex"));
+            stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("hex"));
         } else {
-            stream->writeAttribute(QLatin1String("value"), attribute.value<QString>());
-            stream->writeAttribute(QLatin1String("encoding"), QLatin1String("normal"));
+            stream->writeAttribute(QStringLiteral("value"), attribute.value<QString>());
+            stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("normal"));
         }
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
             case QMetaType::Bool:
-        stream->writeEmptyElement(QLatin1String("boolean"));
+        stream->writeEmptyElement(QStringLiteral("boolean"));
         if (attribute.value<bool>())
-            stream->writeAttribute(QLatin1String("value"), QLatin1String("true"));
+            stream->writeAttribute(QStringLiteral("value"), QStringLiteral("true"));
         else
-            stream->writeAttribute(QLatin1String("value"), QLatin1String("false"));
-        //stream->writeAttribute(QLatin1String("name"), foo);
+            stream->writeAttribute(QStringLiteral("value"), QStringLiteral("false"));
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
             case QMetaType::QUrl:
-        stream->writeEmptyElement(QLatin1String("url"));
-        stream->writeAttribute(QLatin1String("value"), attribute.value<QUrl>().toString());
-        //stream->writeAttribute(QLatin1String("name"), foo);
+        stream->writeEmptyElement(QStringLiteral("url"));
+        stream->writeAttribute(QStringLiteral("value"), attribute.value<QUrl>().toString());
+        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
             case QVariant::UserType:
         if (attribute.userType() == qMetaTypeId<QBluetoothUuid>()) {
-            stream->writeEmptyElement(QLatin1String("uuid"));
+            stream->writeEmptyElement(QStringLiteral("uuid"));
 
             QBluetoothUuid uuid = attribute.value<QBluetoothUuid>();
             switch (uuid.minimumSize()) {
             case 0:
-                stream->writeAttribute(QLatin1String("value"),
+                stream->writeAttribute(QStringLiteral("value"),
                                        unsignedFormat.arg(quint16(0), 4, 16, QLatin1Char('0')));
                 break;
             case 2:
-                stream->writeAttribute(QLatin1String("value"),
+                stream->writeAttribute(QStringLiteral("value"),
                                        unsignedFormat.arg(uuid.toUInt16(), 4, 16,
                                                           QLatin1Char('0')));
                 break;
             case 4:
-                stream->writeAttribute(QLatin1String("value"),
+                stream->writeAttribute(QStringLiteral("value"),
                                        unsignedFormat.arg(uuid.toUInt32(), 8, 16,
                                                           QLatin1Char('0')));
                 break;
             case 16:
-                stream->writeAttribute(QLatin1String("value"), uuid.toString().mid(1, 36));
+                stream->writeAttribute(QStringLiteral("value"), uuid.toString().mid(1, 36));
                 break;
             default:
-                stream->writeAttribute(QLatin1String("value"), uuid.toString().mid(1, 36));
+                stream->writeAttribute(QStringLiteral("value"), uuid.toString().mid(1, 36));
             }
         } else if (attribute.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
-            stream->writeStartElement(QLatin1String("sequence"));
+            stream->writeStartElement(QStringLiteral("sequence"));
             const QBluetoothServiceInfo::Sequence *sequence =
                     static_cast<const QBluetoothServiceInfo::Sequence *>(attribute.data());
             foreach (const QVariant &v, *sequence)
@@ -210,7 +210,7 @@ bool QBluetoothServiceInfoPrivate::ensureSdpConnection(const QBluetoothAddress &
 
     delete service;
 
-    OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
+    OrgBluezManagerInterface manager(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                      QDBusConnection::systemBus());
 
 
@@ -224,7 +224,7 @@ bool QBluetoothServiceInfoPrivate::ensureSdpConnection(const QBluetoothAddress &
         return false;
 
     currentLocalAdapter = localAdapter;
-    service = new OrgBluezServiceInterface(QLatin1String("org.bluez"), reply.value().path(),
+    service = new OrgBluezServiceInterface(QStringLiteral("org.bluez"), reply.value().path(),
                                            QDBusConnection::systemBus(), this);
 
     return true;
@@ -246,16 +246,16 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     QXmlStreamWriter stream(&xmlServiceRecord);
     stream.setAutoFormatting(true);
 
-    stream.writeStartDocument(QLatin1String("1.0"));
+    stream.writeStartDocument(QStringLiteral("1.0"));
 
-    stream.writeStartElement(QLatin1String("record"));
+    stream.writeStartElement(QStringLiteral("record"));
 
-    const QString unsignedFormat(QLatin1String("0x%1"));
+    const QString unsignedFormat(QStringLiteral("0x%1"));
 
     QMap<quint16, QVariant>::ConstIterator i = attributes.constBegin();
     while (i != attributes.constEnd()) {
-        stream.writeStartElement(QLatin1String("attribute"));
-        stream.writeAttribute(QLatin1String("id"), unsignedFormat.arg(i.key(), 4, 16, QLatin1Char('0')));
+        stream.writeStartElement(QStringLiteral("attribute"));
+        stream.writeAttribute(QStringLiteral("id"), unsignedFormat.arg(i.key(), 4, 16, QLatin1Char('0')));
         writeAttribute(&stream, i.value());
         stream.writeEndElement();
 

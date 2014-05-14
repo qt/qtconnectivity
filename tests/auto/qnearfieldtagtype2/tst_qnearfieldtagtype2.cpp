@@ -313,7 +313,7 @@ void tst_QNearFieldTagType2::ndefMessages()
 
         QList<QNdefMessage> messages;
         QNdefNfcTextRecord textRecord;
-        textRecord.setText(QLatin1String("tst_QNearFieldTagType2::ndefMessages"));
+        textRecord.setText(QStringLiteral("tst_QNearFieldTagType2::ndefMessages"));
 
         QNdefMessage message;
         message.append(textRecord);

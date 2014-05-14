@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 {
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication application(argc, argv);
-    const QString mainQmlApp = QLatin1String("qrc:/scanner.qml");
+    const QString mainQmlApp(QStringLiteral("qrc:/scanner.qml"));
     QQuickView view;
     view.setSource(QUrl(mainQmlApp));
     view.setResizeMode(QQuickView::SizeRootObjectToView);

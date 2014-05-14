@@ -271,7 +271,7 @@ QString QBluetoothSocketPrivate::localName() const
     if (address.isNull())
         return QString();
 
-    OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
+    OrgBluezManagerInterface manager(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                      QDBusConnection::systemBus());
 
     QDBusPendingReply<QDBusObjectPath> reply = manager.FindAdapter(address.toString());
@@ -279,7 +279,7 @@ QString QBluetoothSocketPrivate::localName() const
     if (reply.isError())
         return QString();
 
-    OrgBluezAdapterInterface adapter(QLatin1String("org.bluez"), reply.value().path(),
+    OrgBluezAdapterInterface adapter(QStringLiteral("org.bluez"), reply.value().path(),
                                      QDBusConnection::systemBus());
 
     QDBusPendingReply<QVariantMap> properties = adapter.GetProperties();
@@ -287,7 +287,7 @@ QString QBluetoothSocketPrivate::localName() const
     if (properties.isError())
         return QString();
 
-    return properties.value().value(QLatin1String("Name")).toString();
+    return properties.value().value(QStringLiteral("Name")).toString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
@@ -362,7 +362,7 @@ QString QBluetoothSocketPrivate::peerName() const
     const QString peerAddress = QBluetoothAddress(bdaddr).toString();
     const QString localAdapter = localAddress().toString();
 
-    OrgBluezManagerInterface manager(QLatin1String("org.bluez"), QLatin1String("/"),
+    OrgBluezManagerInterface manager(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                      QDBusConnection::systemBus());
 
     QDBusPendingReply<QDBusObjectPath> reply = manager.FindAdapter(localAdapter);
@@ -370,13 +370,13 @@ QString QBluetoothSocketPrivate::peerName() const
     if (reply.isError())
         return QString();
 
-    OrgBluezAdapterInterface adapter(QLatin1String("org.bluez"), reply.value().path(),
+    OrgBluezAdapterInterface adapter(QStringLiteral("org.bluez"), reply.value().path(),
                                      QDBusConnection::systemBus());
 
     QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.CreateDevice(peerAddress);
     deviceObjectPath.waitForFinished();
     if (deviceObjectPath.isError()) {
-        if (deviceObjectPath.error().name() != QLatin1String("org.bluez.Error.AlreadyExists"))
+        if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.AlreadyExists"))
             return QString();
 
         deviceObjectPath = adapter.FindDevice(peerAddress);
@@ -385,7 +385,7 @@ QString QBluetoothSocketPrivate::peerName() const
             return QString();
     }
 
-    OrgBluezDeviceInterface device(QLatin1String("org.bluez"), deviceObjectPath.value().path(),
+    OrgBluezDeviceInterface device(QStringLiteral("org.bluez"), deviceObjectPath.value().path(),
                                    QDBusConnection::systemBus());
 
     QDBusPendingReply<QVariantMap> properties = device.GetProperties();
@@ -393,7 +393,7 @@ QString QBluetoothSocketPrivate::peerName() const
     if (properties.isError())
         return QString();
 
-    return properties.value().value(QLatin1String("Alias")).toString();
+    return properties.value().value(QStringLiteral("Alias")).toString();
 }
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const

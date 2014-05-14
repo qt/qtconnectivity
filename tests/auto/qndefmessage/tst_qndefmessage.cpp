@@ -202,8 +202,8 @@ void tst_QNdefMessage::tst_parse_data()
         QList<QNdefRecord> recordList;
         recordList.append(record);
         QTest::newRow("nfc-rtd text") << data << QNdefMessage(recordList)
-                                      << (QVariantList() << QLatin1String("Test String")
-                                                         << QLatin1String("en"));
+                                      << (QVariantList() << QStringLiteral("Test String")
+                                                         << QStringLiteral("en"));
         QCOMPARE(qHash(record), 3247259560LL);
     }
 
@@ -235,7 +235,7 @@ void tst_QNdefMessage::tst_parse_data()
             << data << QNdefMessage(recordList)
             << (QVariantList() << QString::fromUtf8("\343\203\206\343\202\271\343\203\210\346\226"
                                                     "\207\345\255\227\345\210\227")
-                               << QLatin1String("ja"));
+                               << QStringLiteral("ja"));
         QCOMPARE(qHash(record), 3407917933LL);
     }
 
@@ -264,7 +264,7 @@ void tst_QNdefMessage::tst_parse_data()
         recordList.append(record);
         QTest::newRow("nfc-rtd uri http://qt.nokia.com/")
             << data << QNdefMessage(recordList)
-            << (QVariantList() << QUrl(QLatin1String("http://qt.nokia.com/")));
+            << (QVariantList() << QUrl(QStringLiteral("http://qt.nokia.com/")));
         QCOMPARE(qHash(record), 4030951038LL);
     }
 
@@ -293,7 +293,7 @@ void tst_QNdefMessage::tst_parse_data()
         recordList.append(record);
         QTest::newRow("nfc-rtd uri abbrev http://qt.nokia.com/")
             << data << QNdefMessage(recordList)
-            << (QVariantList() << QUrl(QLatin1String("http://qt.nokia.com/")));
+            << (QVariantList() << QUrl(QStringLiteral("http://qt.nokia.com/")));
         QCOMPARE(qHash(record), 132405495LL);
     }
 
@@ -322,7 +322,7 @@ void tst_QNdefMessage::tst_parse_data()
         recordList.append(record);
         QTest::newRow("nfc-rtd uri tel:+1234567890")
             << data << QNdefMessage(recordList)
-            << (QVariantList() << QUrl(QLatin1String("tel:+1234567890")));
+            << (QVariantList() << QUrl(QStringLiteral("tel:+1234567890")));
         QCOMPARE(qHash(record), 3757269174LL);
     }
 

@@ -61,7 +61,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
     qRegisterMetaType<ServiceMap>("ServiceMap");
     qDBusRegisterMetaType<ServiceMap>();
 
-    manager = new OrgBluezManagerInterface(QLatin1String("org.bluez"), QLatin1String("/"),
+    manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus());
 }
 
@@ -93,7 +93,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         return;
     }
 
-    adapter = new OrgBluezAdapterInterface(QLatin1String("org.bluez"), reply.value().path(),
+    adapter = new OrgBluezAdapterInterface(QStringLiteral("org.bluez"), reply.value().path(),
                                            QDBusConnection::systemBus());
 
     QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter->CreateDevice(address.toString());
@@ -143,7 +143,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 
     QDBusPendingReply<QDBusObjectPath> deviceObjectPath = *watcher;
     if (deviceObjectPath.isError()) {
-        if (deviceObjectPath.error().name() != QLatin1String("org.bluez.Error.AlreadyExists")) {
+        if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.AlreadyExists")) {
             delete adapter;
             adapter = 0;
             _q_serviceDiscoveryFinished();
@@ -167,7 +167,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
         }
     }
 
-    device = new OrgBluezDeviceInterface(QLatin1String("org.bluez"),
+    device = new OrgBluezDeviceInterface(QStringLiteral("org.bluez"),
                                          deviceObjectPath.value().path(),
                                          QDBusConnection::systemBus());
     delete adapter;
@@ -225,7 +225,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
             if (xml.tokenType() == QXmlStreamReader::StartElement &&
                 xml.name() == QLatin1String("attribute")) {
                 quint16 attributeId =
-                    xml.attributes().value(QLatin1String("id")).toString().toUShort(0, 0);
+                    xml.attributes().value(QStringLiteral("id")).toString().toUShort(0, 0);
 
                 if (xml.readNextStartElement()) {
                     QVariant value = readAttributeValue(xml);
@@ -275,29 +275,29 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamReader &xml)
 {
     if (xml.name() == QLatin1String("boolean")) {
-        const QString value = xml.attributes().value(QLatin1String("value")).toString();
+        const QString value = xml.attributes().value(QStringLiteral("value")).toString();
         xml.skipCurrentElement();
         return value == QLatin1String("true");
     } else if (xml.name() == QLatin1String("uint8")) {
-        quint8 value = xml.attributes().value(QLatin1String("value")).toString().toUShort(0, 0);
+        quint8 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(0, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint16")) {
-        quint16 value = xml.attributes().value(QLatin1String("value")).toString().toUShort(0, 0);
+        quint16 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(0, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint32")) {
-        quint32 value = xml.attributes().value(QLatin1String("value")).toString().toUInt(0, 0);
+        quint32 value = xml.attributes().value(QStringLiteral("value")).toString().toUInt(0, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint64")) {
-        quint64 value = xml.attributes().value(QLatin1String("value")).toString().toULongLong(0, 0);
+        quint64 value = xml.attributes().value(QStringLiteral("value")).toString().toULongLong(0, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uuid")) {
         QBluetoothUuid uuid;
-        const QString value = xml.attributes().value(QLatin1String("value")).toString();
-        if (value.startsWith(QLatin1String("0x"))) {
+        const QString value = xml.attributes().value(QStringLiteral("value")).toString();
+        if (value.startsWith(QStringLiteral("0x"))) {
             if (value.length() == 6) {
                 quint16 v = value.toUShort(0, 0);
                 uuid = QBluetoothUuid(v);
@@ -311,8 +311,8 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         xml.skipCurrentElement();
         return QVariant::fromValue(uuid);
     } else if (xml.name() == QLatin1String("text")) {
-        QString value = xml.attributes().value(QLatin1String("value")).toString();
-        if (xml.attributes().value(QLatin1String("encoding")) == QLatin1String("hex"))
+        QString value = xml.attributes().value(QStringLiteral("value")).toString();
+        if (xml.attributes().value(QStringLiteral("encoding")) == QLatin1String("hex"))
             value = QString::fromUtf8(QByteArray::fromHex(value.toLatin1()));
         xml.skipCurrentElement();
         return value;
@@ -328,7 +328,7 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
     } else {
         qCWarning(QT_BT_BLUEZ) << "unknown attribute type"
                                << xml.name().toString()
-                               << xml.attributes().value(QLatin1String("value")).toString();
+                               << xml.attributes().value(QStringLiteral("value")).toString();
         xml.skipCurrentElement();
         return QVariant();
     }
