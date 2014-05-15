@@ -25,7 +25,8 @@ HEADERS += bluez/manager_p.h \
            bluez/objectmanager_p.h \
            bluez/properties_p.h \
            bluez/adapter1_bluez5_p.h \
-           bluez/device1_bluez5_p.h
+           bluez/device1_bluez5_p.h \
+           bluez/profile1_p.h
 
 
 SOURCES += bluez/manager.cpp \
@@ -42,4 +43,5 @@ SOURCES += bluez/manager.cpp \
            bluez/properties.cpp \
            bluez/adapter1_bluez5.cpp \
            bluez/device1_bluez5.cpp \
-           bluez/bluez5_helper.cpp
+           bluez/bluez5_helper.cpp \
+           bluez/profile1.cpp
