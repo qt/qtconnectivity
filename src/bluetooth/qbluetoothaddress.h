@@ -83,7 +83,7 @@ private:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothAddress &);
+Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, const QBluetoothAddress &address);
 #endif
 
 QT_END_NAMESPACE

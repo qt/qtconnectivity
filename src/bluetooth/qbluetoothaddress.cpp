@@ -220,7 +220,7 @@ QBluetoothAddressPrivate::QBluetoothAddressPrivate()
 }
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug debug, QBluetoothAddress &address)
+QDebug operator<<(QDebug debug, const QBluetoothAddress &address)
 {
     debug << address.toString();
     return debug;
