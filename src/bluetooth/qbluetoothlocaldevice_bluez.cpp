@@ -775,51 +775,14 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
     connect(managerBluez5, SIGNAL(InterfacesRemoved(QDBusObjectPath,QStringList)),
             SLOT(InterfacesRemoved(QDBusObjectPath,QStringList)));
 
-    QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
-    reply.waitForFinished();
-    if (reply.isError())
+    bool ok = true;
+    const QString adapterPath = findAdapterForAddress(localAddress, &ok);
+    if (!ok || adapterPath.isEmpty())
         return;
 
-    typedef QPair<QString, QBluetoothAddress> AddressForPathType;
-    QList<AddressForPathType> localAdapters;
-
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
-        const InterfaceList ifaceList = reply.value().value(path);
-        foreach (const QString &iface, ifaceList.keys()) {
-            if (iface == QStringLiteral("org.bluez.Adapter1")) {
-                AddressForPathType pair;
-                pair.first = path.path();
-                pair.second = QBluetoothAddress(ifaceList.value(iface).value(
-                                                    QStringLiteral("Address")).toString());
-                if (!pair.second.isNull())
-                    localAdapters.append(pair);
-                break;
-            }
-        }
-    }
-
-    if (localAdapters.isEmpty())
-        return;
-
-    if (localAddress.isNull()) {
-        //concept of DefaultAdapter doesn't exist anymore.
-        //we define the first adapter as default
-        adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
-                                                       localAdapters.front().first,
-                                                       QDBusConnection::systemBus(), this);
-    } else {
-        foreach (const AddressForPathType &pair, localAdapters) {
-            if (pair.second == localAddress) {
-                adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
-                                                               pair.first,
-                                                               QDBusConnection::systemBus(), this);
-                break;
-            }
-        }
-
-        if (!adapterBluez5) //no match
-            return;
-    }
+    adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
+                                                   adapterPath,
+                                                   QDBusConnection::systemBus(), this);
 
     if (adapterBluez5) {
         //hook up propertiesChanged for current adapter

@@ -143,36 +143,15 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
     if (foundHostAdapterPath.isEmpty()) {
         // check that we match adapter addresses or use first if it wasn't specified
 
-        QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
-        reply.waitForFinished();
-        if (reply.isError()) {
+        bool ok = false;
+        foundHostAdapterPath  = findAdapterForAddress(m_deviceAdapterAddress, &ok);
+        if (!ok) {
             discoveredDevices.clear();
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-            errorString = reply.error().message();
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Cannot access adapter during service discovery");
             emit q->error(error);
             _q_serviceDiscoveryFinished();
             return;
-        }
-
-        const QString desiredAdapter = m_deviceAdapterAddress.toString();
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
-                if (iface == QStringLiteral("org.bluez.Adapter1")) {
-                    if (m_deviceAdapterAddress.isNull()
-                        || desiredAdapter == ifaceList.value(iface).
-                                value(QStringLiteral("Address")).toString()) {
-                        // use first adapter or we just matched one
-                        foundHostAdapterPath = path.path();
-                    }
-
-                    if (!foundHostAdapterPath.isEmpty())
-                        break;
-                }
-            }
-
-            if (!foundHostAdapterPath.isEmpty())
-                break;
         }
 
         if (foundHostAdapterPath.isEmpty()) {

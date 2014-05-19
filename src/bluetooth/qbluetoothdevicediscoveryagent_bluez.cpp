@@ -186,75 +186,52 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
-    QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
-    reply.waitForFinished();
-    if (reply.isError()) {
-        errorString = reply.error().message();
-        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        emit q->error(lastError);
-        return;
-    }
 
-
-    OrgBluezAdapter1Interface *tempAdapter = 0;
-    QMap<QString, QVariantMap> devicesForAdapter; // dbus path for devices for matching adapter
-
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
-        const InterfaceList ifaceList = reply.value().value(path);
-        foreach (const QString &iface, ifaceList.keys()) {
-            if (iface == QStringLiteral("org.bluez.Adapter1")) {
-                if (tempAdapter)
-                    continue;
-
-                if (m_adapterAddress.isNull()) {
-                    // use the first found adapter as default
-                    tempAdapter = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
-                                                                path.path(),
-                                                                QDBusConnection::systemBus());
-                } else {
-                    const QString addressString = ifaceList.value(iface).
-                            value(QStringLiteral("Address")).toString();
-                    if (m_adapterAddress == QBluetoothAddress(addressString)) {
-                        tempAdapter = new OrgBluezAdapter1Interface(
-                                                QStringLiteral("org.bluez"),
-                                                path.path(),
-                                                QDBusConnection::systemBus());
-                    }
-                }
-            } else if (iface == QStringLiteral("org.bluez.Device1")) {
-                devicesForAdapter.insert(path.path(), ifaceList.value(iface));
-            }
-        }
-    }
-
-    if (!tempAdapter) {
-        qCDebug(QT_BT_BLUEZ) << "Cannot find Bluez 5 adapter for device search";
+    bool ok = false;
+    const QString adapterPath = findAdapterForAddress(m_adapterAddress, &ok);
+    if (!ok || adapterPath.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot find Bluez 5 adapter for device search" << ok;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Cannot find valid Bluetooth adapter.");
         q->error(lastError);
         return;
     }
 
-    if (!tempAdapter->powered()) {
+    adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
+                                                  adapterPath,
+                                                  QDBusConnection::systemBus());
+
+    if (!adapterBluez5->powered()) {
         qCDebug(QT_BT_BLUEZ) << "Aborting device discovery due to offline Bluetooth Adapter";
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
-        delete tempAdapter;
+        delete adapterBluez5;
+        adapterBluez5 = 0;
         emit q->error(lastError);
         return;
     }
 
-    adapterBluez5 = tempAdapter;
+
     QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapterBluez5->path());
     QObject::connect(QtBluezDiscoveryManager::instance(), SIGNAL(discoveryInterrupted(QString)),
             q, SLOT(_q_discoveryInterrupted(QString)));
 
     // collect initial set of information
-    foreach (const QString &path, devicesForAdapter.keys()) {
-        if (path.indexOf(adapterBluez5->path()) != 0)
-            continue; //devices path doesnt start with same path as adapter
+    QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
+    reply.waitForFinished();
+    if (!reply.isError()) {
+        foreach (const QDBusObjectPath &path, reply.value().keys()) {
+            const InterfaceList ifaceList = reply.value().value(path);
+            foreach (const QString &iface, ifaceList.keys()) {
+                if (iface == QStringLiteral("org.bluez.Device1")) {
 
-        deviceFoundBluez5(path);
+                    if (path.path().indexOf(adapterBluez5->path()) != 0)
+                        continue; //devices whose path doesn't start with same path we skip
+
+                    deviceFoundBluez5(path.path());
+                }
+            }
+        }
     }
 
     // wait 20s and sum up what was found
