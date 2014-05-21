@@ -469,7 +469,10 @@ void BtLocalDevice::readData()
     if (socket) {
         while (socket->canReadLine()) {
             QByteArray line = socket->readLine().trimmed();
-            qDebug() << ">>>>" << QString::fromUtf8(line.constData(), line.length());
+            qDebug() << ">> peer(" << socket->peerName() << socket->peerAddress()
+                     << socket->peerPort() << ") local("
+                     << socket->localName() << socket->localAddress() << socket->localPort()
+                     << ")>>" << QString::fromUtf8(line.constData(), line.length());
         }
     }
 }
@@ -607,7 +610,7 @@ void BtLocalDevice::clientSocketReadyRead()
     while (socket->canReadLine()) {
         const QByteArray line = socket->readLine().trimmed();
         QString lineString = QString::fromUtf8(line.constData(), line.length());
-        qDebug() <<  ">>(" << socket->peerName() << ")>>"
+        qDebug() <<  ">>(" << server->serverAddress() << server->serverPort()  <<")>>"
                  << lineString;
 
         //when using the tst_QBluetoothSocket we echo received text back
