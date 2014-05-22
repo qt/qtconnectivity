@@ -369,6 +369,7 @@ quint128 QBluetoothUuid::toUInt128() const
     represented by \a uuid.
 
     \sa QBluetoothUuid::ServiceClassUuid
+    \since Qt 5.4
  */
 QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uuid)
 {
@@ -436,6 +437,50 @@ QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uu
     case QBluetoothUuid::HDP: return QBluetoothServiceDiscoveryAgent::tr("Health Device");
     case QBluetoothUuid::HDPSource: return QBluetoothServiceDiscoveryAgent::tr("Health Device Source");
     case QBluetoothUuid::HDPSink: return QBluetoothServiceDiscoveryAgent::tr("Health Device Sink");
+    default:
+        break;
+    }
+
+    return QString();
+}
+
+
+/*!
+    Returns a human-readable and translated name for the given protocol
+    represented by \a uuid.
+
+    \sa QBluetoothUuid::ProtocolUuid
+
+    \since Qt 5.4
+ */
+QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
+{
+    switch (uuid) {
+    case QBluetoothUuid::Sdp: return QBluetoothServiceDiscoveryAgent::tr("Service Discovery Protocol");
+    case QBluetoothUuid::Udp: return QBluetoothServiceDiscoveryAgent::tr("User Datagram Protocol");
+    case QBluetoothUuid::Rfcomm: return QBluetoothServiceDiscoveryAgent::tr("Radio Frequency Communication");
+    case QBluetoothUuid::Tcp: return QBluetoothServiceDiscoveryAgent::tr("Transmission Control Protocol");
+    case QBluetoothUuid::TcsBin: return QBluetoothServiceDiscoveryAgent::tr("Telephony Control Specification - Binary");
+    case QBluetoothUuid::TcsAt: return QBluetoothServiceDiscoveryAgent::tr("Telephony Control Specification - AT");
+    case QBluetoothUuid::Att: return QBluetoothServiceDiscoveryAgent::tr("Attribute Protocol");
+    case QBluetoothUuid::Obex: return QBluetoothServiceDiscoveryAgent::tr("Object Exchange Protocol");
+    case QBluetoothUuid::Ip: return QBluetoothServiceDiscoveryAgent::tr("Internet Protocol");
+    case QBluetoothUuid::Ftp: return QBluetoothServiceDiscoveryAgent::tr("File Transfer Protocol");
+    case QBluetoothUuid::Http: return QBluetoothServiceDiscoveryAgent::tr("Hypertext Transfer Protocol");
+    case QBluetoothUuid::Wsp: return QBluetoothServiceDiscoveryAgent::tr("Wireless Short Packet Protocol");
+    case QBluetoothUuid::Bnep: return QBluetoothServiceDiscoveryAgent::tr("Bluetooth Network Encapsulation Protocol");
+    case QBluetoothUuid::Upnp: return QBluetoothServiceDiscoveryAgent::tr("Extended Service Discovery Protocol");
+    case QBluetoothUuid::Hidp: return QBluetoothServiceDiscoveryAgent::tr("Human Interface Device Protocol");
+    case QBluetoothUuid::HardcopyControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Hardcopy Control Channel");
+    case QBluetoothUuid::HardcopyDataChannel: return QBluetoothServiceDiscoveryAgent::tr("Hardcopy Data Channel");
+    case QBluetoothUuid::HardcopyNotification: return QBluetoothServiceDiscoveryAgent::tr("Hardcopy Notification");
+    case QBluetoothUuid::Avctp: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Control Transport Protocol");
+    case QBluetoothUuid::Avdtp: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Distribution Transport Protocol");
+    case QBluetoothUuid::Cmtp: return QBluetoothServiceDiscoveryAgent::tr("Common ISDN Access Protocol");
+    case QBluetoothUuid::UdiCPlain: return QBluetoothServiceDiscoveryAgent::tr("UdiCPlain");
+    case QBluetoothUuid::McapControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol -Conrol");
+    case QBluetoothUuid::McapDataChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol - Data");
+    case QBluetoothUuid::L2cap: return QBluetoothServiceDiscoveryAgent::tr("Layer 2 Control Protocol");
     default:
         break;
     }

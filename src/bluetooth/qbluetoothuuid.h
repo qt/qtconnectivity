@@ -174,6 +174,7 @@ public:
     quint128 toUInt128() const;
 
     static QString serviceClassToString(ServiceClassUuid uuid);
+    static QString protocolToString(ProtocolUuid uuid);
 };
 
 #ifndef QT_NO_DEBUG_STREAM
