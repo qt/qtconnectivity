@@ -927,10 +927,11 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
     }
 }
 
-void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &object_path, const QStringList &interfaces)
+void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &object_path,
+                                                     const QStringList &interfaces)
 {
     if (deviceChangeMonitors.contains(object_path.path())
-            && interfaces.contains(QStringLiteral("org.bluez.Device1"))) {
+            && interfaces.contains(QLatin1String("org.bluez.Device1"))) {
 
         //a device was removed
         delete deviceChangeMonitors.take(object_path.path());
@@ -943,6 +944,27 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
         bool found = connectedDevicesSet.remove(address);
         if (found)
             emit q_ptr->deviceDisconnected(address);
+    }
+
+    if (adapterBluez5
+            && object_path.path() == adapterBluez5->path()
+            && interfaces.contains(QLatin1String("org.bluez.Adapter1"))) {
+        qCDebug(QT_BT_BLUEZ) << "Adapter" << adapterBluez5->path() << "was removed";
+        // current adapter was removed -> invalidate the instance
+        delete adapterBluez5;
+        adapterBluez5 = 0;
+        managerBluez5->deleteLater();
+        managerBluez5 = 0;
+        delete adapterProperties;
+        adapterProperties = 0;
+
+        delete pairingTarget;
+        pairingTarget = 0;
+
+        // turn  off connectivity monitoring
+        qDeleteAll(deviceChangeMonitors);
+        deviceChangeMonitors.clear();
+        connectedDevicesSet.clear();
     }
 }
 
