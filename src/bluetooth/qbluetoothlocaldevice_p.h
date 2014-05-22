@@ -56,6 +56,7 @@
 class OrgBluezAdapterInterface;
 class OrgBluezAgentAdaptor;
 class OrgBluezDeviceInterface;
+class OrgBluezManagerInterface;
 
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
@@ -130,6 +131,7 @@ public:
     QSet<QBluetoothAddress> connectedDevicesSet;
     OrgBluezAdapterInterface *adapter;
     OrgBluezAgentAdaptor *agent;
+    OrgBluezManagerInterface *manager;
 
     QList<QBluetoothAddress> connectedDevices() const;
 
@@ -158,6 +160,7 @@ public Q_SLOTS: // METHODS
     void _q_deviceRemoved(const QDBusObjectPath &device);
     void _q_devicePropertyChanged(const QString &property, const QDBusVariant &value);
     bool isValid() const;
+    void adapterRemoved(const QDBusObjectPath &device);
 
 private:
     void createCache();

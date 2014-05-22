@@ -125,8 +125,16 @@ QBluetoothLocalDevice::~QBluetoothLocalDevice()
 }
 
 /*!
-    Returns true if the QBluetoothLocalDevice represents an available local Bluetooth device;
+    Returns \c true if the QBluetoothLocalDevice represents an available local Bluetooth device;
     otherwise return false.
+
+    If the local Bluetooth adapter represented by an instance of this class
+    is removed from the system (e.g. removal of the underlying Bluetooth dongle)
+    then this instance will become invalid. An already invalid QBluetoothLocalDevice instance
+    remains invalid even if the same Bluetooth adapter is returned to
+    the system.
+
+    \sa allDevices()
 */
 bool QBluetoothLocalDevice::isValid() const
 {
