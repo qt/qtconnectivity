@@ -343,7 +343,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
     if (btAddress.isNull()) // no point reporting an empty address
         return;
 
-    const QString btName = device.name();
+    const QString btName = device.alias();
     quint32 btClass = device.classProperty();
 
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << btAddress.toString() << btName

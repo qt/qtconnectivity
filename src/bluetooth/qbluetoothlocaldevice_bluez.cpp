@@ -89,7 +89,7 @@ QString QBluetoothLocalDevice::name() const
 
         return reply.value().value(QStringLiteral("Name")).toString();
     } else if (d_ptr->adapterBluez5) {
-        return d_ptr->adapterBluez5->name();
+        return d_ptr->adapterBluez5->alias();
     }
 
     return QString();
