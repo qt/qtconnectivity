@@ -49,9 +49,9 @@
 #include "bluez/objectmanager_p.h"
 #include "bluez/adapter1_bluez5_p.h"
 
-#include "bluetooth/bluetooth.h"
-#include "bluetooth/sdp.h"
-#include "bluetooth/sdp_lib.h"
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/sdp.h>
+#include <bluetooth/sdp_lib.h>
 
 #include <QtCore/QLoggingCategory>
 #include <QtDBus/QDBusPendingCallWatcher>
