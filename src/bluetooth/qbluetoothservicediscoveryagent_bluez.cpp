@@ -482,7 +482,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
         if (!serviceInfo.isValid())
-            return;
+            continue;
 
         // Don't need to apply uuidFilter because Bluez 4 applies
         // search pattern during DiscoverServices() call
