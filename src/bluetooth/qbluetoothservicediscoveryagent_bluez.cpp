@@ -458,7 +458,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
     qCDebug(QT_BT_BLUEZ) << "Parsing xml" << discoveredDevices.at(0).address().toString() << discoveredDevices.count() << map.count();
 
     foreach (const QString &record, reply.value()) {
-        const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
+        QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
         if (!serviceInfo.isValid())
             continue;
@@ -467,6 +467,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         // search pattern during DiscoverServices() call
 
         Q_Q(QBluetoothServiceDiscoveryAgent);
+        // Some service uuids are unknown to Bluez. In such cases we fall back
+        // to our own naming resolution.
+        if (serviceInfo.serviceName().isEmpty()
+            && !serviceInfo.serviceClassUuids().isEmpty()) {
+            foreach (const QBluetoothUuid &classUuid, serviceInfo.serviceClassUuids()) {
+                bool ok = false;
+                QBluetoothUuid::ServiceClassUuid clsId
+                    = static_cast<QBluetoothUuid::ServiceClassUuid>(classUuid.toUInt16(&ok));
+                if (ok) {
+                    serviceInfo.setServiceName(QBluetoothUuid::serviceClassToString(clsId));
+                    break;
+                }
+            }
+        }
 
         if (!isDuplicatedService(serviceInfo)) {
             discoveredServices.append(serviceInfo);
