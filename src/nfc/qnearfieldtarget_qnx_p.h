@@ -124,7 +124,7 @@ public:
     QNearFieldTarget::RequestId readNdefMessages()
     {
         for (int i = 0; i < m_ndefMessages.size(); i++) {
-            Q_EMIT QNearFieldTarget::ndefMessageRead(m_ndefMessages.at(i));
+            emit QNearFieldTarget::ndefMessageRead(m_ndefMessages.at(i));
         }
         QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
         QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
@@ -149,7 +149,7 @@ public:
                 tagType = TAG_TYPE_ISO_15693_3;
                 //We don't support this tag
                 if (!isSupported) {
-                    Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+                    emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
                     return QNearFieldTarget::RequestId();
                 }
             }
@@ -157,11 +157,11 @@ public:
         m_cmdRespons = reinterpret_cast<char *> malloc (max_nfc_command_length);
         nfc_result_t result = nfc_tag_transceive (m_target, tagType, command.data(), command.length(), m_cmdRespons, max_nfc_command_length, &m_cmdResponseLength);
         if (result != NFC_RESULT_SUCCESS) {
-            Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnknownError, QNearFieldTarget::RequestId());
+            emit QNearFieldTarget::error(QNearFieldTarget::UnknownError, QNearFieldTarget::RequestId());
             qWarning() << Q_FUNC_INFO << "nfc_tag_transceive failed"
         }
     #else
-        Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+        emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     #endif
     }
@@ -185,7 +185,7 @@ public:
             if (result != NFC_RESULT_SUCCESS) {
                 qWarning() << Q_FUNC_INFO << "Could not convert QNdefMessage to byte array" << result;
                 nfc_delete_ndef_message(newMessage, true);
-                Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnknownError,
+                emit QNearFieldTarget::error(QNearFieldTarget::UnknownError,
                              QNearFieldTarget::RequestId());
                 return QNearFieldTarget::RequestId();
             }
@@ -195,7 +195,7 @@ public:
 
             if (result != NFC_RESULT_SUCCESS) {
                 qWarning() << Q_FUNC_INFO << "Could not write message";
-                Q_EMIT QNearFieldTarget::error(QNearFieldTarget::NdefWriteError,
+                emit QNearFieldTarget::error(QNearFieldTarget::NdefWriteError,
                              QNearFieldTarget::RequestId());
 
                 return QNearFieldTarget::RequestId();

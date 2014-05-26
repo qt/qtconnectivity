@@ -105,13 +105,13 @@ void addRecord(Ui::MainWindow *ui, const QNdefRecord &record = QNdefRecord())
     if (!vbox->isEmpty()) {
         QFrame *hline = new QFrame;
         hline->setFrameShape(QFrame::HLine);
-        hline->setObjectName(QLatin1String("line-spacer"));
+        hline->setObjectName(QStringLiteral("line-spacer"));
 
         vbox->addWidget(hline);
     }
 
     T *recordEditor = new T;
-    recordEditor->setObjectName(QLatin1String("record-editor"));
+    recordEditor->setObjectName(QStringLiteral("record-editor"));
 
     if (!record.isEmpty())
         recordEditor->setRecord(record);
@@ -202,7 +202,7 @@ void MainWindow::saveMessage()
 
 void MainWindow::touchReceive()
 {
-    ui->status->setStyleSheet(QLatin1String("background: blue"));
+    ui->status->setStyleSheet(QStringLiteral("background: blue"));
 
     m_touchAction = ReadNdef;
 
@@ -214,7 +214,7 @@ void MainWindow::touchReceive()
 
 void MainWindow::touchStore()
 {
-    ui->status->setStyleSheet(QLatin1String("background: yellow"));
+    ui->status->setStyleSheet(QStringLiteral("background: yellow"));
 
     m_touchAction = WriteNdef;
 
@@ -337,8 +337,8 @@ void MainWindow::clearMessage()
 {
     QWidget *scrollArea = ui->scrollAreaWidgetContents;
 
-    qDeleteAll(scrollArea->findChildren<QWidget *>(QLatin1String("line-spacer")));
-    qDeleteAll(scrollArea->findChildren<QWidget *>(QLatin1String("record-editor")));
+    qDeleteAll(scrollArea->findChildren<QWidget *>(QStringLiteral("line-spacer")));
+    qDeleteAll(scrollArea->findChildren<QWidget *>(QStringLiteral("record-editor")));
 }
 
 QNdefMessage MainWindow::ndefMessage() const

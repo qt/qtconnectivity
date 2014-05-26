@@ -46,6 +46,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QObject>
 #include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
+#include <QtBluetooth/QBluetoothServiceDiscoveryAgent>
 #include <QtBluetooth/QBluetoothTransferManager>
 #include <QtBluetooth/QBluetoothTransferRequest>
 #include <QtBluetooth/QBluetoothTransferReply>
@@ -60,11 +61,13 @@ class MyClass : public QObject
 public:
     MyClass() : QObject() {}
     void localDevice();
-    void startDiscovery();
+    void startDeviceDiscovery();
+    void startServiceDiscovery();
     void objectPush();
 
 public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);
+    void serviceDiscovered(const QBluetoothServiceInfo &service);
     void transferFinished(QBluetoothTransferReply* reply);
 };
 
@@ -94,8 +97,8 @@ if (localDevice.isValid()) {
 
 }
 
-//! [discovery]
-void MyClass::startDiscovery()
+//! [device_discovery]
+void MyClass::startDeviceDiscovery()
 {
 
     // Create a discovery agent and connect to its signals
@@ -114,7 +117,30 @@ void MyClass::deviceDiscovered(const QBluetoothDeviceInfo &device)
 {
     qDebug() << "Found new device:" << device.name() << '(' << device.address().toString() << ')';
 }
-//! [discovery]
+//! [device_discovery]
+
+//! [service_discovery]
+void MyClass::startServiceDiscovery()
+{
+
+    // Create a discovery agent and connect to its signals
+    QBluetoothServiceDiscoveryAgent *discoveryAgent = new QBluetoothServiceDiscoveryAgent(this);
+    connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
+            this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
+
+    // Start a discovery
+    discoveryAgent->start();
+
+    //...
+}
+
+// In your local slot, read information about the found devices
+void MyClass::serviceDiscovered(const QBluetoothServiceInfo &service)
+{
+    qDebug() << "Found new service:" << service.serviceName()
+             << '(' << service.device().address().toString() << ')';
+}
+//! [service_discovery]
 
 void MyClass::objectPush()
 {

@@ -270,8 +270,10 @@ QVariant QDeclarativeBluetoothDiscoveryModel::data(const QModelIndex &index, int
 /*!
   \qmlsignal BluetoothDiscoveryModel::serviceDiscovered(BluetoothService service)
 
-  This handler is called when a new service is discovered. The \a service
+  This signal is emitted when a new service is discovered. The \a service
   parameter contains the service details.
+
+  The corresponding handler is \c onServiceDiscovered.
 
   \sa BluetoothService
   */
@@ -301,8 +303,10 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
 /*!
   \qmlsignal BluetoothDiscoveryModel::deviceDiscovered(string device)
 
-  This handler is called when a new device is discovered. \a device contains
+  This signal is emitted when a new device is discovered. \a device contains
   the Bluetooth address of the discovred device.
+
+  The corresponding handler is \c onDeviceDiscovered.
   */
 
 void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDeviceInfo &device)
@@ -399,6 +403,7 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
             }
 
             d->m_serviceAgent->setRemoteAddress(QBluetoothAddress(d->m_remoteAddress));
+            d->m_serviceAgent->clear();
 
             if (!d->m_uuid.isEmpty())
                 d->m_serviceAgent->setUuidFilter(QBluetoothUuid(d->m_uuid));
@@ -413,7 +418,7 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
         }
     }
 
-    Q_EMIT runningChanged();
+    emit runningChanged();
 }
 
 /*!
@@ -467,5 +472,5 @@ QString QDeclarativeBluetoothDiscoveryModel::remoteAddress()
 void QDeclarativeBluetoothDiscoveryModel::setRemoteAddress(QString address)
 {
     d->m_remoteAddress = address;
-    Q_EMIT remoteAddressChanged();
+    emit remoteAddressChanged();
 }

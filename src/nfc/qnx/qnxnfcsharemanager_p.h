@@ -77,7 +77,7 @@ private:
     bb::system::NfcShareManager *_manager;
     static const char *RECORD_NDEF;
 
-Q_SIGNALS:
+signals:
     void shareModeChanged(bb::system::NfcShareMode::Type);
     void error(bb::system::NfcShareError::Type);
     void finished(bb::system::NfcShareSuccess::Type);

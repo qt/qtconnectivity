@@ -66,7 +66,7 @@ private:
 
     QAbstractNativeEventFilter *prevFilter;
 
-Q_SIGNALS:
+signals:
     void ndefEvent(const QNdefMessage &msg);
 };
 

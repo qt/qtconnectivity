@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -421,7 +421,7 @@ void tst_QNearFieldTagType1::ndefMessages()
 
         QList<QNdefMessage> messages;
         QNdefNfcTextRecord textRecord;
-        textRecord.setText(QLatin1String("tst_QNearFieldTagType1::ndefMessages"));
+        textRecord.setText(QStringLiteral("tst_QNearFieldTagType1::ndefMessages"));
 
         QNdefMessage message;
         message.append(textRecord);
@@ -429,7 +429,7 @@ void tst_QNearFieldTagType1::ndefMessages()
         if (target->memorySize() > 120) {
             QNdefRecord record;
             record.setTypeNameFormat(QNdefRecord::ExternalRtd);
-            record.setType("com.nokia.qt:ndefMessagesTest");
+            record.setType("org.qt-project:ndefMessagesTest");
             record.setPayload(QByteArray(120, quint8(0x55)));
             message.append(record);
         }

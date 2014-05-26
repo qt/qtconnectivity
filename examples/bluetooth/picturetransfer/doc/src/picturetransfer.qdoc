@@ -28,18 +28,20 @@ a/****************************************************************************
 /*!
 \example picturetransfer
 \title QML Bluetooth Picture Push Example
+\brief An example showing the use Bluetooth Object Push Profile (OPP).
 
-The Bluetooth Picture Push example shows how to use the \l QBluetoothTransferManager
-API. The example transfers a local image to a remote device. Unfortunately this example cannot be used on
-Android as Qt does not support the Object Push Profile on this platform.
+The Bluetooth Picture Push example shows how to use the \l
+QBluetoothTransferManager API. The example transfers a local image to a remote
+device. Unfortunately this example cannot be used on Android as Qt does not
+support the Object Push Profile (OPP) on this platform.
 
-On the first user interface page the application scans for remote Bluetooth devices. The user must select
-the appropriate device to continue:
+On the first user interface page the application scans for remote Bluetooth
+devices. The user must select the appropriate device to continue:
 
 \image opp-example-1.png
 
-The next page presents a list of image files on the device. The files must be located under
-\l QStandardPaths::PicturesLocation}:
+The next page presents a list of image files on the device. The files must be
+located under \l QStandardPaths::PicturesLocation}:
 
 \image opp-example-2.png
 
@@ -47,29 +49,35 @@ Once the picture was selected the UI shows the progress of the file transfer:
 
 \image opp-example-3.png
 
+\include examples-run.qdocinc
+
+\sa {Qt Bluetooth}
+
 \section1 Device Discovery
 
-The device discovery uses the \l BluetoothDiscoveryModel to detect the remote devices. Each discovery is displayed
-as an entry in a list. Once a device was selected the device address is stored in the \c root element. More
-details about the \c root element will follow further below.
+The device discovery uses the \l BluetoothDiscoveryModel to detect the remote
+devices. Each discovery is displayed as an entry in a list. Once a device was
+selected the device address is stored in the \c root element. More details about
+the \c root element will follow further below.
 
 \snippet picturetransfer/DeviceDiscovery.qml Discovery-1
 \snippet picturetransfer/DeviceDiscovery.qml Discovery-2
 
 \section1 File Selection
 
-The file is selected with the help of \l FolderListModel. Once again the selected file is stored in the \c root
-element:
+The file is selected with the help of \l FolderListModel. Once again the
+selected file is stored in the \c root element:
 
 \snippet picturetransfer/PictureSelector.qml FileSelect-1
 \snippet picturetransfer/PictureSelector.qml FileSelect-2
 \snippet picturetransfer/PictureSelector.qml FileSelect-3
 \snippet picturetransfer/PictureSelector.qml FileSelect-4
 
-\section1 The root element
+\section1 Root Element
 
-The already mentioned \c root element collects the necessary pieces of data for the picture transfer.
-Once the file name has been set it triggers the file transfer:
+The already mentioned \c root element collects the necessary pieces of data for
+the picture transfer. Once the file name has been set it triggers the file
+transfer:
 
 
 \snippet picturetransfer/bttransfer.qml Root-1
@@ -77,7 +85,7 @@ Once the file name has been set it triggers the file transfer:
 \snippet picturetransfer/bttransfer.qml Root-3
 \snippet picturetransfer/bttransfer.qml Root-3
 
-\section1 The File Transfer
+\section1 File Transfer
 
 The file transfer is implemented in C++:
 

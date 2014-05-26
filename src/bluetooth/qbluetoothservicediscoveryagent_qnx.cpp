@@ -204,10 +204,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     const QString filePath = QStringLiteral("/pps/services/bluetooth/remote_devices/").append(address.toString());
     bool hasError = false;
     if ((m_rdfd = qt_safe_open(filePath.toLocal8Bit().constData(), O_RDONLY)) == -1) {
-        if (QFile::exists(filePath + QLatin1String("-00")) ||
-                        QFile::exists(filePath + QLatin1String("-01")))
+        if (QFile::exists(filePath + QStringLiteral("-00")) ||
+            QFile::exists(filePath + QStringLiteral("-01")))
         {
-            qCDebug(QT_BT_QNX) << "LE device discovered...";
+            qCDebug(QT_BT_QNX) << "LE device discovered...skipping";
             QString lePath = filePath + QStringLiteral("-00");
             if ((m_rdfd = qt_safe_open(lePath.toLocal8Bit().constData(), O_RDONLY)) == -1) {
                 lePath = filePath + QStringLiteral("-01");
@@ -324,19 +324,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
                                      QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
 
-        bool entryExists = false;
         //Did we already discover this service?
-        foreach (QBluetoothServiceInfo sInfo, q_ptr->discoveredServices()) {
-            if (sInfo.device() == serviceInfo.device()
-                    && sInfo.serviceUuid() == serviceInfo.serviceUuid()
-                    && sInfo.serviceClassUuids() == serviceInfo.serviceClassUuids()) {
-                entryExists = true;
-                //qCDebug(QT_BT_QNX) << "Entry exists" << serviceInfo.serviceClassUuids().first() << sInfo.serviceClassUuids().first();
-                break;
-            }
-        }
-
-        if (!entryExists) {
+        if (!isDuplicatedService(serviceInfo)) {
             qCDebug(QT_BT_QNX) << "Adding service" << next_service << " " << serviceInfo.socketProtocol();
             discoveredServices << serviceInfo;
             q_ptr->serviceDiscovered(serviceInfo);

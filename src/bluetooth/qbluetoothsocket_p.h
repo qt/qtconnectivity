@@ -96,7 +96,7 @@ public:
 
 //On QNX and Android we connect using the uuid not the port
 #if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
-    void connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode);
+    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
 #else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
@@ -169,7 +169,7 @@ public:
     QAndroidJniObject outputStream;
     InputStreamThread *inputThread;
 
-private Q_SLOTS:
+private slots:
     void inputThreadError(int errorCode);
 
 #endif
@@ -183,7 +183,7 @@ private:
     QBluetoothUuid m_uuid;
     bool isServerSocket;
 
-private Q_SLOTS:
+private slots:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
 #endif

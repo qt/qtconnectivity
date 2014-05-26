@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \li and call start().
     \endlist
 
-    \snippet doc_src_qtbluetooth.cpp discovery
+    \snippet doc_src_qtbluetooth.cpp device_discovery
 
     To retrieve results asynchronously, connect to the deviceDiscovered() signal. To get a list of
     all discovered devices, call discoveredDevices() after the finished() signal.
@@ -91,14 +91,24 @@ QT_BEGIN_NAMESPACE
     support it, GeneralUnlimitedInquiry will be used instead. Setting LimitedInquiry is useful
     for multi-player Bluetooth-based games that needs faster communication between the devices.
     The phone scans for devices in LimitedInquiry and Service Discovery is done on one or two devices
-    to speed up the service scan. After the game has connected to the device it intends to,the device
-    returns to GeneralUnilimitedInquiry.
+    to speed up the service scan. After the game has connected to the device it intended to,
+    the device returns to GeneralUnlimitedInquiry.
 */
 
 /*!
     \fn void QBluetoothDeviceDiscoveryAgent::deviceDiscovered(const QBluetoothDeviceInfo &info)
 
     This signal is emitted when the Bluetooth device described by \a info is discovered.
+
+    The signal is emitted as soon as the most important device information
+    has been collected. However, as long as the \l finished() signal has not
+    been emitted the information collection continues even for already discovered
+    devices. This is particularly true for signal strength information (RSSI). If
+    signal strength information is required it is advisable to retrieve the device
+    information via \l discoveredDevices() once the discovery has finished. This
+    will yield the most recent RSSI information.
+
+    \sa QBluetoothDeviceInfo::rssi()
 */
 
 /*!
@@ -132,10 +142,10 @@ QT_BEGIN_NAMESPACE
 /*!
     Constructs a new Bluetooth device discovery agent with parent \a parent.
 */
-QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
-    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress()))
+QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent) :
+    QObject(parent),
+    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(QBluetoothAddress(), this))
 {
-    d_ptr->q_ptr = this;
 }
 
 /*!
@@ -150,10 +160,11 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(QObject *parent)
 
     \sa error()
 */
-QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
-    : QObject(parent), d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter))
+QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(
+    const QBluetoothAddress &deviceAdapter, QObject *parent) :
+    QObject(parent),
+    d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter, this))
 {
-    d_ptr->q_ptr = this;
     if (!deviceAdapter.isNull()) {
         const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
         foreach (const QBluetoothHostInfo &hostInfo, localDevices) {
@@ -238,7 +249,6 @@ bool QBluetoothDeviceDiscoveryAgent::isActive() const
     return d->isActive();
 }
 
-
 /*!
     Returns the last error.
 */
@@ -261,4 +271,3 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
 #include "moc_qbluetoothdevicediscoveryagent.cpp"
 
 QT_END_NAMESPACE
-

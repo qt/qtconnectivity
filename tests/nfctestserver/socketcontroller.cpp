@@ -97,7 +97,7 @@ SocketController::~SocketController()
 void SocketController::connected()
 {
     qDebug() << "Client connected";
-    const QString data = QLatin1String("HELLO ") + m_service;
+    const QString data = QStringLiteral("HELLO ") + m_service;
     switch (m_connectionType) {
     case StreamConnection:
         m_socket->write(data.toUtf8() + '\n');

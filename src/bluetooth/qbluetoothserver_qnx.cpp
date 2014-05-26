@@ -48,7 +48,9 @@
 #include <QSocketNotifier>
 
 #include <QCoreApplication>
-
+#ifdef QT_QNX_BT_BLUETOOTH
+#include <btapi/btspp.h>
+#endif
 QT_BEGIN_NAMESPACE
 
 extern QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
@@ -70,6 +72,42 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
     activeSockets.clear();
 }
 
+#ifdef QT_QNX_BT_BLUETOOTH
+void QBluetoothServerPrivate::btCallback(long param, int socket)
+{
+    QBluetoothServerPrivate *impl = reinterpret_cast<QBluetoothServerPrivate*>(param);
+    QMetaObject::invokeMethod(impl, "setBtCallbackParameters",
+                              Qt::BlockingQueuedConnection,
+                              Q_ARG(int, socket));
+}
+
+void QBluetoothServerPrivate::setBtCallbackParameters(int receivedSocket)
+{
+    Q_Q(QBluetoothServer);
+    if (receivedSocket == -1) {
+        qCDebug(QT_BT_QNX) << "Socket error: " << qt_error_string(errno);
+        m_lastError = QBluetoothServer::InputOutputError;
+        emit q->error(m_lastError);
+        return;
+    }
+    socket->setSocketDescriptor(receivedSocket, QBluetoothServiceInfo::RfcommProtocol,
+                                QBluetoothSocket::ConnectedState,
+                                QBluetoothSocket::ReadWrite);
+    char addr[18];
+    if (bt_spp_get_address(receivedSocket, addr) == -1) {
+        qCDebug(QT_BT_QNX) << "Could not obtain the remote address. "
+                           << qt_error_string(errno);
+        m_lastError = QBluetoothServer::InputOutputError;
+        emit q->error(m_lastError);
+        return;
+    }
+    socket->d_ptr->m_peerAddress = QBluetoothAddress(addr);
+    activeSockets.append(socket);
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+    socket->setSocketState(QBluetoothSocket::ListeningState);
+    emit q->newConnection();
+}
+#else
 void QBluetoothServerPrivate::controlReply(ppsResult result)
 {
     Q_Q(QBluetoothServer);
@@ -130,6 +168,7 @@ void QBluetoothServerPrivate::controlEvent(ppsResult result)
         }
     }
 }
+#endif
 
 void QBluetoothServer::close()
 {
@@ -142,14 +181,19 @@ void QBluetoothServer::close()
     }
     if (d->socket) {
         d->socket->close();
-        delete d->socket;
-        d->socket = 0;
         if (__fakeServerPorts.contains(d)) {
-            ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid, QString(), QString(), 0);
+#ifdef QT_QNX_BT_BLUETOOTH
+            QByteArray b_uuid = d->m_uuid.toByteArray();
+            b_uuid = b_uuid.mid(1, b_uuid.length()-2);
+            bt_spp_close_server(b_uuid.data());
+#else
+            ppsSendControlMessage("deregister_server", 0x1101, d->m_uuid,
+                                  QString(), QString(), 0);
+#endif
             __fakeServerPorts.remove(d);
         }
-        // force active object (socket) to run and shutdown socket.
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+        delete d->socket;
+        d->socket = 0;
     }
 }
 
@@ -208,9 +252,10 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
     }
 
-    d->socket->setSocketState(QBluetoothSocket::ListeningState);
-
+#ifndef QT_QNX_BT_BLUETOOTH
     ppsRegisterForEvent(QStringLiteral("service_connected"),d);
+#endif
+    d->socket->setSocketState(QBluetoothSocket::ListeningState);
     return true;
 }
 

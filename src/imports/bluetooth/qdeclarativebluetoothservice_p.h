@@ -68,6 +68,7 @@ class QDeclarativeBluetoothService : public QObject, public QQmlParserStatus
     Q_ENUMS(Protocol)
 
 public:
+    /// TODO: Merge/Replace with QBluetoothServiceInfo::Protocol in Qt 6
     enum Protocol {
         RfcommProtocol = QBluetoothServiceInfo::RfcommProtocol,
         L2CapProtocol = QBluetoothServiceInfo::L2capProtocol,

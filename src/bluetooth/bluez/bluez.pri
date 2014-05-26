@@ -21,7 +21,12 @@ HEADERS += bluez/manager_p.h \
            bluez/obex_agent_p.h \
            bluez/obex_transfer_p.h \
            bluez/obex_manager_p.h \
-           bluez/characteristic_p.h
+           bluez/characteristic_p.h \
+           bluez/bluez5_helper_p.h \
+           bluez/objectmanager_p.h \
+           bluez/properties_p.h \
+           bluez/adapter1_bluez5_p.h \
+           bluez/device1_bluez5_p.h
 
 
 SOURCES += bluez/manager.cpp \
@@ -34,4 +39,9 @@ SOURCES += bluez/manager.cpp \
            bluez/obex_agent.cpp \
            bluez/obex_transfer.cpp \
            bluez/obex_manager.cpp \
-           bluez/characteristic.cpp
+           bluez/characteristic.cpp \
+           bluez/objectmanager.cpp \
+           bluez/properties.cpp \
+           bluez/adapter1_bluez5.cpp \
+           bluez/device1_bluez5.cpp \
+           bluez/bluez5_helper.cpp

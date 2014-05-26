@@ -68,8 +68,8 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 {
     setRequest(request);
     setManager(parent);
-    client = new OrgOpenobexClientInterface(QLatin1String("org.openobex.client"), QLatin1String("/"),
-                                           QDBusConnection::sessionBus());
+    client = new OrgOpenobexClientInterface(QStringLiteral("org.openobex.client"), QStringLiteral("/"),
+                                            QDBusConnection::sessionBus());
 
     qsrand(QTime::currentTime().msec());
     m_agent_path = agentPath;
@@ -104,6 +104,15 @@ bool QBluetoothTransferReplyBluez::start()
         tempfile = new QTemporaryFile(this );
         tempfile->open();
         qCDebug(QT_BT_BLUEZ) << "Not a QFile, making a copy" << tempfile->fileName();
+        if (!source->isReadable()) {
+            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read."
+                                                     "Make sure it is open for reading.");
+            m_error = QBluetoothTransferReply::IODeviceNotReadableError;
+            m_finished = true;
+            m_running = false;
+            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            return false;
+        }
 
         QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
         QObject::connect(watcher, SIGNAL(finished()), this, SLOT(copyDone()));
@@ -139,7 +148,7 @@ bool QBluetoothTransferReplyBluez::copyToTempFile(QIODevice *to, QIODevice *from
     char *block = new char[4096];
     int size;
 
-    while((size = from->read(block, 4096))) {
+    while ((size = from->read(block, 4096)) > 0) {
         if(size != to->write(block, size)){
             return false;
         }
@@ -270,7 +279,8 @@ bool QBluetoothTransferReplyBluez::isRunning() const
 void QBluetoothTransferReplyBluez::abort()
 {
     if(!m_transfer_path.isEmpty()){
-        OrgOpenobexTransferInterface *xfer = new OrgOpenobexTransferInterface(QLatin1String("org.openobex.client"), m_transfer_path,
+        OrgOpenobexTransferInterface *xfer = new OrgOpenobexTransferInterface(QStringLiteral("org.openobex.client"),
+                                                                              m_transfer_path,
                                                                               QDBusConnection::sessionBus());
         QDBusPendingReply<> reply = xfer->Cancel();
         reply.waitForFinished();

@@ -97,6 +97,10 @@ public:
     QBluetoothServiceInfo::Protocol serverType;
 
 #ifdef QT_QNX_BLUETOOTH
+#ifdef QT_QNX_BT_BLUETOOTH
+    static void btCallback(long param, int socket);
+    Q_INVOKABLE void setBtCallbackParameters(int receivedSocket);
+#endif
     QList<QBluetoothSocket *> activeSockets;
     QString m_serviceName;
 #endif
@@ -111,9 +115,11 @@ private:
     bool serverRegistered;
     QString nextClientAddress;
 
-private Q_SLOTS:
+private slots:
+#ifndef QT_QNX_BT_BLUETOOTH
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
+#endif
 #elif defined(QT_BLUEZ_BLUETOOTH)
     QSocketNotifier *socketNotifier;
 #elif defined(QT_ANDROID_BLUETOOTH)

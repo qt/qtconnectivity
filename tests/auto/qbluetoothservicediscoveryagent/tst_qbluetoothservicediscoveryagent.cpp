@@ -410,7 +410,11 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     discoveryAgent.start();
 
-    QVERIFY(discoveryAgent.isActive());
+    /*
+     * Either we wait for discovery agent to run its course (e.g. Bluez 4) or
+     * we have an immediate result (e.g. Bluez 5)
+     */
+    QVERIFY(discoveryAgent.isActive() || !finishedSpy.isEmpty());
 
     // Wait for up to MaxScanTime for the scan to finish
     int scanTime = MaxScanTime;

@@ -323,8 +323,8 @@ void tst_QBluetoothSocket::tst_clientCommunication_data()
 
     {
         QStringList data;
-        data << QLatin1String("Echo: Test line one.\n");
-        data << QLatin1String("Echo: Test line two, with longer data.\n");
+        data << QStringLiteral("Echo: Test line one.\n");
+        data << QStringLiteral("Echo: Test line two, with longer data.\n");
 
         QTest::newRow("two line test") << data;
     }

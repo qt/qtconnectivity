@@ -146,10 +146,20 @@ void BtLocalDevice::requestPairingUpdate(bool isPairing)
     if (baddr.isNull())
         return;
 
-    if (isPairing)
-        localDevice->requestPairing(baddr, QBluetoothLocalDevice::Paired);
-    else
+
+
+    if (isPairing) {
+        //toggle between authorized and non-authorized pairing to achieve better
+        //level of testing
+        static short pairing = 0;
+        if ((pairing%2) == 1)
+            localDevice->requestPairing(baddr, QBluetoothLocalDevice::Paired);
+        else
+            localDevice->requestPairing(baddr, QBluetoothLocalDevice::AuthorizedPaired);
+        pairing++;
+    } else {
         localDevice->requestPairing(baddr, QBluetoothLocalDevice::Unpaired);
+    }
 
     for (int i = 0; i < foundTestServers.count(); i++) {
         if (isPairing)
@@ -331,7 +341,7 @@ void BtLocalDevice::dumpServiceDiscovery()
         qDebug() << "Discovered Devices:" << list.count();
 
         foreach (const QBluetoothDeviceInfo &info, list)
-            qDebug() << info.name() << info.address().toString();
+            qDebug() << info.name() << info.address().toString() << info.rssi();
     }
     if (serviceAgent) {
         qDebug() << "Service Discovery active:" << serviceAgent->isActive();
@@ -467,7 +477,10 @@ void BtLocalDevice::readData()
     if (socket) {
         while (socket->canReadLine()) {
             QByteArray line = socket->readLine().trimmed();
-            qDebug() << ">>>>" << QString::fromUtf8(line.constData(), line.length());
+            qDebug() << ">> peer(" << socket->peerName() << socket->peerAddress()
+                     << socket->peerPort() << ") local("
+                     << socket->localName() << socket->localAddress() << socket->localPort()
+                     << ")>>" << QString::fromUtf8(line.constData(), line.length());
         }
     }
 }
@@ -605,7 +618,7 @@ void BtLocalDevice::clientSocketReadyRead()
     while (socket->canReadLine()) {
         const QByteArray line = socket->readLine().trimmed();
         QString lineString = QString::fromUtf8(line.constData(), line.length());
-        qDebug() <<  ">>(" << socket->peerName() << ")>>"
+        qDebug() <<  ">>(" << server->serverAddress() << server->serverPort()  <<")>>"
                  << lineString;
 
         //when using the tst_QBluetoothSocket we echo received text back

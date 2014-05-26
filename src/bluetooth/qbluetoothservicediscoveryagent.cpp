@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     \li and call start().
     \endlist
 
-    \snippet doc_src_qtbluetooth.cpp discovery
+    \snippet doc_src_qtbluetooth.cpp service_discovery
 
     By default a minimal service discovery is performed. In this mode, the QBluetotohServiceInfo
     objects returned are guaranteed to contain only device and service UUID information. Depending
@@ -178,6 +178,8 @@ QBluetoothServiceDiscoveryAgent::~QBluetoothServiceDiscoveryAgent()
     that if a remote Bluetooth device moves out of range in between two subsequent calls
     to \l start() the list may contain stale entries.
 
+    \note The list of services should always be cleared before the discovery mode is changed.
+
     \sa clear()
 */
 QList<QBluetoothServiceInfo> QBluetoothServiceDiscoveryAgent::discoveredServices() const
@@ -276,6 +278,11 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 
     if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
             && d->error != InvalidBluetoothAdapterError) {
+#ifdef QT_BLUEZ_BLUETOOTH
+        // done to avoid repeated parsing for adapter address
+        // on Bluez5
+        d->foundHostAdapterPath.clear();
+#endif
         d->setDiscoveryMode(mode);
         if (d->deviceAddress.isNull()) {
             d->startDeviceDiscovery();
@@ -499,6 +506,21 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
     }
 
     startServiceDiscovery();
+}
+
+bool QBluetoothServiceDiscoveryAgentPrivate::isDuplicatedService(
+        const QBluetoothServiceInfo &serviceInfo) const
+{
+    //check the service is not already part of our known list
+    for (int j = 0; j < discoveredServices.count(); j++) {
+        const QBluetoothServiceInfo &info = discoveredServices.at(j);
+        if (info.device() == serviceInfo.device()
+                && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
+                && info.serviceUuid() == serviceInfo.serviceUuid()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #include "moc_qbluetoothservicediscoveryagent.cpp"

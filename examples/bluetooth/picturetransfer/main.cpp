@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
                       QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first());
     qDebug() << QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
 
-    view.setSource(QUrl(QLatin1String("qrc:/bttransfer.qml")));
+    view.setSource(QUrl(QStringLiteral("qrc:/bttransfer.qml")));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     QObject::connect(view.engine(), SIGNAL(quit()), qApp, SLOT(quit()));
     view.show();

@@ -56,8 +56,11 @@
 #include <QtCore/private/qcore_unix_p.h>
 
 #include <QTime>
+#include <QDir>
+#include <QCoreApplication>
 
-//static const QLatin1String agentPath("/shared/tmp/opp");
+static const QString agentPath(QStringLiteral("/accounts/1000/shared/misc/"));
+static bool busy;
 
 QT_BEGIN_NAMESPACE
 
@@ -69,7 +72,6 @@ QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const Q
 {
     setRequest(request);
     setManager(parent);
-
     ppsRegisterControl();
     //qsrand(QTime::currentTime().msec());
     //m_agent_path = agentPath;
@@ -87,6 +89,8 @@ QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const Q
 */
 QBluetoothTransferReplyQnx::~QBluetoothTransferReplyQnx()
 {
+    removeTempFile();
+    delete tempfile;
     ppsUnregisterControl(this);
 }
 
@@ -98,19 +102,39 @@ bool QBluetoothTransferReplyQnx::start()
     QFile *file = qobject_cast<QFile *>(source);
 
     if (!file){
-//        tempfile = new QTemporaryFile(this );
-//        tempfile->open();
+        // Deleting temporary files in case of app crash
+        QDir directory(agentPath);
+        QString appName = QStringLiteral("Qt5OPP_tmp") + QCoreApplication::applicationName();
+        if (directory.exists(appName) && !busy) {
+            QFile file(agentPath + appName);
+            file.remove();
+        }
+        else if (directory.exists(appName) && busy) {
+            m_errorStr = QBluetoothTransferReply::tr("Resurce busy.");
+            m_error = QBluetoothTransferReply::ResourceBusyError;
+            m_finished = true;
+            m_running = false;
+            emit finished(this);
+            return false;
+        }
+        if (!source->isReadable()) {
+            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read."
+                                                     "Make sure it is open for reading.");
+            m_error = QBluetoothTransferReply::IODeviceNotReadableError;
+            m_finished = true;
+            m_running = false;
+            emit finished(this);
+            return false;
+        }
+        QString fileName = agentPath + QStringLiteral("Qt5OPP_tmp");
+        tempfile = new QFile(fileName);
+        tempfile->open(QIODevice::WriteOnly);
 
-//        QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
-//        QObject::connect(watcher, SIGNAL(finished()), this, SLOT(copyDone()));
-
-//        QFuture<bool> results = QtConcurrent::run(QBluetoothTransferReplyQnx::copyToTempFile, tempfile, source);
-//        watcher->setFuture(results);
-        //QTemporaryFile does not work properly yet
-        m_error = QBluetoothTransferReply::UnknownError;
-        m_finished = true;
-        m_running = false;
-        Q_EMIT finished(this);
+        QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
+        QObject::connect(watcher, SIGNAL(finished()), this, SLOT(copyDone()));
+        QFuture<bool> results = QtConcurrent::run(QBluetoothTransferReplyQnx::copyToTempFile, tempfile, source);
+        watcher->setFuture(results);
+        busy = true;
 
     } else {
         if (!file->exists()) {
@@ -139,7 +163,7 @@ bool QBluetoothTransferReplyQnx::copyToTempFile(QIODevice *to, QIODevice *from)
     char *block = new char[4096];
     int size;
 
-    while ((size = from->read(block, 4096))) {
+    while ((size = from->read(block, 4096)) > 0) {
         if (size != to->write(block, size))
             return false;
     }
@@ -150,14 +174,14 @@ bool QBluetoothTransferReplyQnx::copyToTempFile(QIODevice *to, QIODevice *from)
 
 void QBluetoothTransferReplyQnx::copyDone()
 {
-    qCDebug(QT_BT_QNX) << "Copy done";
     startOPP(tempfile->fileName());
     QObject::sender()->deleteLater();
 }
 
 void QBluetoothTransferReplyQnx::startOPP(QString filename)
 {
-    qCDebug(QT_BT_QNX) << "Sending Push object command";
+    qCDebug(QT_BT_QNX) << "Sending push object command"
+                       << request().address().toString() << filename;
     ppsSendOpp("push_object", filename.toUtf8(), request().address(), this);
 }
 
@@ -183,6 +207,7 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
 {
     if (result.msg == QStringLiteral("opp_cancelled")) {
         qCDebug(QT_BT_QNX) << "opp cancelled" << result.errorMsg << result.error;
+        removeTempFile();
         if (m_running)
             return;
         m_finished = true;
@@ -198,7 +223,7 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
         m_errorStr = result.errorMsg;
         m_error = QBluetoothTransferReply::UnknownError;
 //      }
-        Q_EMIT finished(this);
+        emit finished(this);
     } else if (result.msg == QStringLiteral("opp_update")) {
         bool ok;
         qint64 sentBytes = result.dat.at(result.dat.indexOf(QStringLiteral("sent")) + 1).toDouble(&ok);
@@ -212,12 +237,13 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
             return;
         }
         qCDebug(QT_BT_QNX) << "opp update" << sentBytes << totalBytes;
-        Q_EMIT transferProgress(sentBytes, totalBytes);
+        emit transferProgress(sentBytes, totalBytes);
     } else if (result.msg == QStringLiteral("opp_complete")) {
         qCDebug(QT_BT_QNX) << "opp complete";
+        removeTempFile();
         m_finished = true;
         m_running = false;
-        Q_EMIT finished(this);
+        emit finished(this);
     }
 }
 
@@ -240,6 +266,16 @@ bool QBluetoothTransferReplyQnx::isRunning() const
 void QBluetoothTransferReplyQnx::abort()
 {
     //not supported yet
+}
+
+void QBluetoothTransferReplyQnx::removeTempFile()
+{
+    if (tempfile) {
+        if (tempfile->exists()) {
+            tempfile->remove();
+            busy = false;
+        }
+    }
 }
 
 #include "moc_qbluetoothtransferreply_qnx_p.cpp"

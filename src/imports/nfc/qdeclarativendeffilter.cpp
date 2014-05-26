@@ -129,7 +129,7 @@ void QDeclarativeNdefFilter::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat fo
         return;
 
     m_typeNameFormat = format;
-    Q_EMIT(typeNameFormatChanged());
+    emit typeNameFormatChanged();
 }
 
 int QDeclarativeNdefFilter::minimum() const

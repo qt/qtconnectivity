@@ -204,7 +204,8 @@ public:
     Q_DECLARE_FLAGS(CoreConfigurations, CoreConfiguration)
 
     QBluetoothDeviceInfo();
-    QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name, quint32 classOfDevice);
+    QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name,
+                         quint32 classOfDevice);
     QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other);
     ~QBluetoothDeviceInfo();
 

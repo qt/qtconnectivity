@@ -51,9 +51,7 @@ class QBluetoothAddressPrivate
 public:
     QBluetoothAddressPrivate();
 
-
     quint64 m_address;
-
 };
 
 QT_END_NAMESPACE

@@ -54,8 +54,14 @@
 #include <QtBluetooth/QBluetoothLocalDevice>
 
 #ifdef QT_BLUEZ_BLUETOOTH
+#include "bluez/bluez5_helper_p.h"
+
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
+class OrgFreedesktopDBusObjectManagerInterface;
+class OrgFreedesktopDBusPropertiesInterface;
+class OrgBluezAdapter1Interface;
+class OrgBluezDevice1Interface;
 
 QT_BEGIN_NAMESPACE
 class QDBusVariant;
@@ -69,14 +75,17 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
 #if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
-: public QObject {
+    : public QObject
+{
     Q_OBJECT
 #else
 {
 #endif
     Q_DECLARE_PUBLIC(QBluetoothDeviceDiscoveryAgent)
 public:
-    QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter);
+    QBluetoothDeviceDiscoveryAgentPrivate(
+            const QBluetoothAddress &deviceAdapter,
+            QBluetoothDeviceDiscoveryAgent *parent);
     ~QBluetoothDeviceDiscoveryAgentPrivate();
 
     void start();
@@ -86,6 +95,13 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_deviceFound(const QString &address, const QVariantMap &dict);
     void _q_propertyChanged(const QString &name, const QDBusVariant &value);
+    void _q_InterfacesAdded(const QDBusObjectPath &object_path,
+                            InterfaceList interfaces_and_properties);
+    void _q_discoveryFinished();
+    void _q_discoveryInterrupted(const QString &path);
+    void _q_PropertiesChanged(const QString &interface,
+                              const QVariantMap &changed_properties,
+                              const QStringList &invalidated_properties);
 #endif
 
 private:
@@ -96,12 +112,12 @@ private:
     QString errorString;
 
 #ifdef QT_ANDROID_BLUETOOTH
-private Q_SLOTS:
+private slots:
     void processDiscoveryFinished();
-    void processDiscoveredDevices(const QBluetoothDeviceInfo& info);
+    void processDiscoveredDevices(const QBluetoothDeviceInfo &info);
 
 private:
-    DeviceDiscoveryBroadcastReceiver* receiver;
+    DeviceDiscoveryBroadcastReceiver *receiver;
     QBluetoothAddress m_adapterAddress;
     bool m_active;
     QAndroidJniObject adapter;
@@ -113,8 +129,15 @@ private:
     bool pendingStart;
     OrgBluezManagerInterface *manager;
     OrgBluezAdapterInterface *adapter;
+    OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
+    OrgBluezAdapter1Interface *adapterBluez5;
+    QTimer *discoveryTimer;
+    QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
+
+    void deviceFoundBluez5(const QString& devicePath);
+    void startBluez5();
 #elif defined(QT_QNX_BLUETOOTH)
-    private Q_SLOTS:
+private slots:
     void finished();
     void remoteDevicesChanged(int);
     void controlReply(ppsResult result);
@@ -127,7 +150,7 @@ private:
 
     int m_rdfd;
     bool m_active;
-    enum Ops{
+    enum Ops {
         None,
         Cancel,
         Start
@@ -139,7 +162,6 @@ private:
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;
-
 };
 
 QT_END_NAMESPACE

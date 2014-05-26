@@ -193,7 +193,7 @@ void QNearFieldManagerPrivateImpl::updateNdefFilter()
     } else if (ndefFilterHandlers.size() > 0){
         for (int i = 0; i < ndefFilterHandlers.count(); i++) {
             QByteArray filter = "ndef://" + QByteArray::number(ndefFilterHandlers.at(i).second.first.recordAt(0).typeNameFormat)
-                    + "/" + ndefFilterHandlers.at(i).second.first.recordAt(0).type;
+                    + '/' + ndefFilterHandlers.at(i).second.first.recordAt(0).type;
             if (!filterList.contains(filter))
                 filterList.append(filter);
         }

@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,6 +30,13 @@
 \page qtnfc-index.html
 \title Qt NFC
 \brief Enables connectivity between NFC enabled devices.
+\ingroup technology-apis
+
+The NFC API provides connectivity between NFC enabled devices.
+
+Currently the API is supported on \l{Qt for BlackBerry}{BlackBerry 10}.
+
+\section1 Overview
 
 NFC is an extremely short-range (less than 20 centimeters) wireless technology and has a
 maximum transfer rate of 424 kbit/s. NFC is ideal for transferring small packets of data when two
@@ -38,7 +46,6 @@ The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devi
 target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
 on NFC Forum Tags and sending tag specific commands.
 
-Currently the API is supported on BlackBerry 10.
 
 \section1 Getting started
 

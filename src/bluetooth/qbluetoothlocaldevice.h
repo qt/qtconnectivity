@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-
 #ifndef QBLUETOOTHLOCALDEVICE_H
 #define QBLUETOOTHLOCALDEVICE_H
 
@@ -76,9 +75,9 @@ public:
     };
 
     enum Error {
-            NoError,
-            PairingError,
-            UnknownError = 100
+        NoError,
+        PairingError,
+        UnknownError = 100
     };
     QBluetoothLocalDevice(QObject *parent = 0);
     explicit QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent = 0);

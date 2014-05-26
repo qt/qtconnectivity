@@ -117,9 +117,14 @@ void RemoteSelector::startDiscovery(const QBluetoothUuid &uuid)
     m_discoveryAgent->setUuidFilter(uuid);
     m_discoveryAgent->start();
 
-    ui->status->setText(tr("Scanning..."));
-    ui->busyWidget->show();
-    ui->busyWidget->movie()->start();
+    if (!m_discoveryAgent->isActive() ||
+            m_discoveryAgent->error() != QBluetoothServiceDiscoveryAgent::NoError) {
+        ui->status->setText(tr("Cannot find remote services."));
+    } else {
+        ui->status->setText(tr("Scanning..."));
+        ui->busyWidget->show();
+        ui->busyWidget->movie()->start();
+    }
 }
 
 QBluetoothServiceInfo RemoteSelector::service() const

@@ -252,7 +252,7 @@ void tst_QBluetoothUuid::tst_conversion_data()
 
         QTest::newRow("00112233-4455-6677-8899-AABBCCDDEEFF")
             << false << quint16(0) << false << quint32(0) << true << uuid128
-            << QString(QLatin1String("{00112233-4455-6677-8899-AABBCCDDEEFF}"));
+            << QStringLiteral("{00112233-4455-6677-8899-AABBCCDDEEFF}");
     }
 }
 

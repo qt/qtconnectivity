@@ -600,7 +600,12 @@ void QBluetoothSocket::abort()
 
     Q_D(QBluetoothSocket);
     d->abort();
+
+#ifndef QT_ANDROID_BLUETOOTH
+    //Android closes when the Java event loop comes around
     setSocketState(QBluetoothSocket::UnconnectedState);
+    emit disconnected();
+#endif
 }
 
 void QBluetoothSocket::disconnectFromService()
@@ -666,7 +671,11 @@ void QBluetoothSocket::close()
 
     d->close();
 
+#ifndef QT_ANDROID_BLUETOOTH
+    //Android closes when the Java event loop comes around
     setSocketState(UnconnectedState);
+    emit disconnected();
+#endif
 }
 
 /*!

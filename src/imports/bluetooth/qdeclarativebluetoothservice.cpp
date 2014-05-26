@@ -69,7 +69,7 @@
 /*!
     \qmlsignal BluetoothService::detailsChanged()
 
-    This handler is called when any of the following properties changes:
+    This signal is emitted when any of the following properties changes:
 
     \list
         \li deviceAddress
@@ -80,6 +80,8 @@
         \li serviceProtocol
         \li serviceUuid
     \endlist
+
+    The corresponding handler is \c onDetailsChanged.
 */
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_QML)
@@ -99,8 +101,6 @@ public:
     {
         delete m_service;
     }
-
-    int listen();
 
     bool m_componentComplete;
     QBluetoothServiceInfo *m_service;
@@ -269,28 +269,6 @@ bool QDeclarativeBluetoothService::isRegistered() const
     return d->m_service->isRegistered();
 }
 
-
-int QDeclarativeBluetoothServicePrivate::listen() {
-
-    if (m_service->socketProtocol() == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT_QML) << "Unknown protocol, can't make service" << m_protocol;
-        return -1;
-    }
-    QBluetoothServiceInfo::Protocol serverType = QBluetoothServiceInfo::UnknownProtocol;
-    if (m_service->socketProtocol() == QBluetoothServiceInfo::L2capProtocol)
-        serverType = QBluetoothServiceInfo::L2capProtocol;
-    else if (m_service->socketProtocol() == QBluetoothServiceInfo::RfcommProtocol)
-        serverType = QBluetoothServiceInfo::RfcommProtocol;
-
-    QBluetoothServer *server = new QBluetoothServer(serverType);
-    server->setMaxPendingConnections(1);
-    server->listen(QBluetoothAddress());
-    server->serverPort();
-    m_server = server;
-
-    return server->serverPort();
-}
-
 void QDeclarativeBluetoothService::setRegistered(bool registered)
 {
     if (!d->m_componentComplete) {
@@ -306,9 +284,21 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
         return;
     }
 
-    d->listen();
-    connect(d->m_server, SIGNAL(newConnection()), this, SLOT(new_connection()));
+    if (d->m_protocol == UnknownProtocol) {
+        qCWarning(QT_BT_QML) << "Unknown protocol, can't make service" << d->m_protocol;
+        return;
+    }
 
+    QBluetoothServer *server
+            = new QBluetoothServer(static_cast<QBluetoothServiceInfo::Protocol>(d->m_protocol));
+    server->setMaxPendingConnections(1);
+    if (!server->listen()) {
+        qCWarning(QT_BT_QML) << "Could not start server. Error:" << server->error();
+        return;
+    }
+
+    d->m_server = server;
+    connect(d->m_server, SIGNAL(newConnection()), this, SLOT(new_connection()));
 
     d->m_service->setAttribute(QBluetoothServiceInfo::ServiceRecordHandle, (uint)0x00010010);
 
@@ -319,7 +309,7 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
     //qDebug() << "name/uuid" << d->m_name << d->m_uuid << d->m_port;
 
     d->m_service->setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                             QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+                               QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
 
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
     QBluetoothServiceInfo::Sequence protocol;
@@ -327,26 +317,19 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
     if (d->m_protocol == L2CapProtocol) {
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap))
                  << QVariant::fromValue(quint16(d->m_server->serverPort()));
-        protocolDescriptorList.append(QVariant::fromValue(protocol));
-    }
-    else if (d->m_protocol == RfcommProtocol) {
+    } else if (d->m_protocol == RfcommProtocol) {
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
                  << QVariant::fromValue(quint8(d->m_server->serverPort()));
-        protocolDescriptorList.append(QVariant::fromValue(protocol));
     }
-    else {
-        qCWarning(QT_BT_QML) << "No protocol specified for bluetooth service";
-    }
-    d->m_service->setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
-                             protocolDescriptorList);
+    protocolDescriptorList.append(QVariant::fromValue(protocol));
 
-    if (d->m_service->registerService()) {
+    d->m_service->setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
+                               protocolDescriptorList);
+
+    if (d->m_service->registerService())
         emit registeredChanged();
-    }
-    else {
-        qCWarning(QT_BT_QML) << "Register service failed";
-        //TODO propaget this error to the user
-    }
+    else
+        qCWarning(QT_BT_QML) << "Register service failed"; // TODO: propagate this error to the user
 }
 
 QBluetoothServiceInfo *QDeclarativeBluetoothService::serviceInfo() const

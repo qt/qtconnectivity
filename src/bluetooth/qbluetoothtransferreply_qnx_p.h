@@ -43,17 +43,15 @@
 #ifndef QBLUETOOTHTRANSFERREPLY_QNX_P_H
 #define QBLUETOOTHTRANSFERREPLY_QNX_P_H
 
-#include <QtCore/QIODevice>
-
 #include <qbluetoothtransferrequest.h>
 #include <qbluetoothtransfermanager.h>
 
 #include "qbluetoothtransferreply.h"
 
-#include <QTemporaryFile>
-#include <QSocketNotifier>
-
 #include "qnx/ppshelpers_p.h"
+
+QT_FORWARD_DECLARE_CLASS(QFile)
+QT_FORWARD_DECLARE_CLASS(QIODevice)
 
 QT_BEGIN_NAMESPACE
 
@@ -72,7 +70,7 @@ public:
     QBluetoothTransferReply::TransferError error() const;
     QString errorString() const;
 
-private Q_SLOTS:
+private slots:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
     void copyDone();
@@ -80,7 +78,8 @@ private Q_SLOTS:
 
 private:
     void startOPP(QString filename);
-    QTemporaryFile *tempfile;
+    void removeTempFile();
+    QFile *tempfile;
     QIODevice *source;
 
     bool m_running;

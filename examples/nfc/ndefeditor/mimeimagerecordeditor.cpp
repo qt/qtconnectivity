@@ -48,29 +48,29 @@
 static QString imageFormatToMimeType(const QByteArray &format)
 {
     if (format == "bmp")
-        return QLatin1String("image/bmp");
+        return QStringLiteral("image/bmp");
     else if (format == "gif")
-        return QLatin1String("image/gif");
+        return QStringLiteral("image/gif");
     else if (format == "jpg" || format == "jpeg")
-        return QLatin1String("image/jpeg");
+        return QStringLiteral("image/jpeg");
     else if (format == "mng")
-        return QLatin1String("video/x-mng");
+        return QStringLiteral("video/x-mng");
     else if (format == "png")
-        return QLatin1String("image/png");
+        return QStringLiteral("image/png");
     else if (format == "pbm")
-        return QLatin1String("image/x-portable-bitmap");
+        return QStringLiteral("image/x-portable-bitmap");
     else if (format == "pgm")
-        return QLatin1String("image/x-portable-graymap");
+        return QStringLiteral("image/x-portable-graymap");
     else if (format == "ppm")
-        return QLatin1String("image/x-portable-pixmap");
+        return QStringLiteral("image/x-portable-pixmap");
     else if (format == "tiff")
-        return QLatin1String("image/tiff");
+        return QStringLiteral("image/tiff");
     else if (format == "xbm")
-        return QLatin1String("image/x-xbitmap");
+        return QStringLiteral("image/x-xbitmap");
     else if (format == "xpm")
-        return QLatin1String("image/x-xpixmap");
+        return QStringLiteral("image/x-xpixmap");
     else if (format == "svg")
-        return QLatin1String("image/svg+xml");
+        return QStringLiteral("image/svg+xml");
     else
         return QString();
 }

@@ -94,7 +94,7 @@ public:
     void dataRead(QByteArray&);
     void dataWritten();
 
-public Q_SLOTS:
+public slots:
     void disconnectFromService();
 
 private:
@@ -115,7 +115,7 @@ private:
         Idle, Reading, Writing
     } socketState;
 
-private Q_SLOTS:
+private slots:
     void read();
     void enteringIdle();
 };

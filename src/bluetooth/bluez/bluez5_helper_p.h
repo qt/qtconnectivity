@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the Qt Toolkit.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,31 +39,55 @@
 **
 ****************************************************************************/
 
+#ifndef BLUEZ5_HELPER_H
+#define BLUEZ5_HELPER_H
 
-#include "tennisview.h"
+#include <QtCore/QObject>
+#include <QtDBus/QtDBus>
+#include <bluetooth/sdp.h>
 
-#include <QMouseEvent>
+typedef QMap<QString, QVariantMap> InterfaceList;
+typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
 
-TennisView::TennisView(QWidget *parent) :
-    QGraphicsView(parent)
+Q_DECLARE_METATYPE(InterfaceList)
+Q_DECLARE_METATYPE(ManagedObjectList)
+
+QT_BEGIN_NAMESPACE
+
+bool isBluez5();
+
+QByteArray parseSdpRecord(sdp_record_t *record);
+
+class QtBluezDiscoveryManagerPrivate;
+class QtBluezDiscoveryManager : public QObject
 {
-}
+    Q_OBJECT
+public:
+    QtBluezDiscoveryManager(QObject* parent = 0);
+    ~QtBluezDiscoveryManager();
+    static QtBluezDiscoveryManager *instance();
 
-void TennisView::mousePressEvent(QMouseEvent *event)
-{
-    QPointF p = mapToScene(event->x(), event->y());
-    emit mousePress(p.x(), p.y());
-    emit mouseMove(p.x(), p.y());
-    last_y = p.y();
-}
+    bool registerDiscoveryInterest(const QString &adapterPath);
+    void unregisterDiscoveryInterest(const QString &adapterPath);
 
-void TennisView::mouseMoveEvent(QMouseEvent *event)
-{
-    if (event->buttons()) {
-        QPointF p = mapToScene(event->x(), event->y());
-        if (10 < abs(last_y - event->y())) {
-//            emit mouseMove(p.x(), p.y());
-            last_y = p.y();
-        }
-    }
-}
+    //void dumpState() const;
+
+signals:
+    void discoveryInterrupted(const QString &adapterPath);
+
+private slots:
+    void InterfacesRemoved(const QDBusObjectPath &object_path,
+                           const QStringList &interfaces);
+    void PropertiesChanged(const QString &interface,
+                           const QVariantMap &changed_properties,
+                           const QStringList &invalidated_properties);
+
+private:
+    void removeAdapterFromMonitoring(const QString &dbusPath);
+
+    QtBluezDiscoveryManagerPrivate *d;
+};
+
+QT_END_NAMESPACE
+
+#endif

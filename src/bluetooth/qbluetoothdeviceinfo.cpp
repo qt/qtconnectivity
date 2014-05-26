@@ -216,7 +216,6 @@ QT_BEGIN_NAMESPACE
     \value HealthStepCounter            A pedometer.
 */
 
-
 /*!
     \enum QBluetoothDeviceInfo::ServiceClass
 
@@ -257,22 +256,23 @@ QT_BEGIN_NAMESPACE
                                                 for standard and Low Energy device.
     \value LowEnergyCoreCOnfiguration           The device is a Bluetooth Low Energy device.
 */
-
-QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate()
-    : valid(false), cached(false), rssi(1),
-      serviceClasses(QBluetoothDeviceInfo::NoService),
-      majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
-      minorDeviceClass(0),
-      serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
-      deviceCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration)
+QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
+    valid(false),
+    cached(false),
+    rssi(1),
+    serviceClasses(QBluetoothDeviceInfo::NoService),
+    majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
+    minorDeviceClass(0),
+    serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
+    deviceCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration)
 {
 }
 
 /*!
     Constructs an invalid QBluetoothDeviceInfo object.
 */
-QBluetoothDeviceInfo::QBluetoothDeviceInfo()
-: d_ptr(new QBluetoothDeviceInfoPrivate)
+QBluetoothDeviceInfo::QBluetoothDeviceInfo() :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
 {
 }
 
@@ -290,8 +290,9 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo()
         \row \li 13 - 23 \li 11 \li Service class.
     \endtable
 */
-QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name, quint32 classOfDevice)
-: d_ptr(new QBluetoothDeviceInfoPrivate)
+QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name,
+                                           quint32 classOfDevice) :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
 {
     Q_D(QBluetoothDeviceInfo);
 
@@ -312,8 +313,8 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, con
 /*!
     Constructs a QBluetoothDeviceInfo that is a copy of \a other.
 */
-QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other)
-: d_ptr(new QBluetoothDeviceInfoPrivate)
+QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other) :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
 {
     *this = other;
 }
@@ -335,6 +336,7 @@ bool QBluetoothDeviceInfo::isValid() const
 
     return d->valid;
 }
+
 /*!
   Returns the signal strength when the device was last scanned
   */
@@ -407,7 +409,6 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
         return false;
 
     return true;
-
 }
 
 /*!
@@ -473,7 +474,8 @@ quint8 QBluetoothDeviceInfo::minorDeviceClass() const
 /*!
     Sets the list of service UUIDs to \a uuids and the completeness of the data to \a completeness.
 */
-void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness)
+void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids,
+                                           DataCompleteness completeness)
 {
     Q_D(QBluetoothDeviceInfo);
 

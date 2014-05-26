@@ -114,7 +114,7 @@ private:
 
     void setupInvokeTarget();
 
-private Q_SLOTS:
+private slots:
     void newNfcEvent(int fd);
     void invokeNdefMessage(const QNdefMessage &);
 
@@ -126,7 +126,7 @@ public:
 
     QNdefMessage decodeMessage(nfc_ndef_message_t *nextMessage);
 
-Q_SIGNALS:
+signals:
     void newLlcpConnection(nfc_target_t *);
     void ndefMessage(const QNdefMessage &, QNearFieldTarget *);
     void targetDetected(QNearFieldTarget *, const QList<QNdefMessage> &);

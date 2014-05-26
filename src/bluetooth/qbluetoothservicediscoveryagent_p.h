@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -56,6 +56,8 @@ class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
 class OrgBluezCharacteristicInterface;
+class OrgFreedesktopDBusObjectManagerInterface;
+
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 class QXmlStreamReader;
@@ -124,6 +126,9 @@ public:
     void _q_discoverGattCharacteristics(QDBusPendingCallWatcher *watcher);
     void _q_discoveredGattCharacteristic(QDBusPendingCallWatcher *watcher);
     */
+    void _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error errorCode,
+                          const QString &errorDescription,
+                          const QStringList &xmlRecords);
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     void _q_processFetchedUuids(const QBluetoothAddress &address, const QList<QBluetoothUuid> &uuids);
@@ -137,13 +142,19 @@ public:
 private:
     void start(const QBluetoothAddress &address);
     void stop();
+    bool isDuplicatedService(const QBluetoothServiceInfo &serviceInfo) const;
 
 #ifdef QT_BLUEZ_BLUETOOTH
+    void startBluez5(const QBluetoothAddress &address);
+    void runSdpScan(const QBluetoothAddress &remoteAddress,
+                    const QBluetoothAddress localAddress);
     QVariant readAttributeValue(QXmlStreamReader &xml);
+    QBluetoothServiceInfo parseServiceXml(const QString& xml, bool *isBtleService);
+    void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
 #endif
 
 #ifdef QT_QNX_BLUETOOTH
-private Q_SLOTS:
+private slots:
     void remoteDevicesChanged(int fd);
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
@@ -178,7 +189,9 @@ private:
 
     bool singleDevice;
 #ifdef QT_BLUEZ_BLUETOOTH
+    QString foundHostAdapterPath;
     OrgBluezManagerInterface *manager;
+    OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
     // variables below are used for discovering Bluetooth Low Energy devices

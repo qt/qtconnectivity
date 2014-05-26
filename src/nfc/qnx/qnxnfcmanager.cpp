@@ -221,7 +221,7 @@ void QNXNFCManager::newNfcEvent(int fd)
 
 void QNXNFCManager::invokeNdefMessage(const QNdefMessage &msg)
 {
-    Q_EMIT ndefMessage(msg, 0);
+    emit ndefMessage(msg, 0);
 }
 
 void QNXNFCManager::llcpReadComplete(nfc_event_t *nfcEvent)
@@ -350,9 +350,9 @@ void QNXNFCManager::setupInvokeTarget() {
         }
         uriFilter.append(absNdefFilters.at(i));
         if (i==absNdefFilters.size()-1)
-            uriFilter += ";";
+            uriFilter += ';';
         else
-            uriFilter += ",";
+            uriFilter += ',';
     }
     if (registerAll) {
         uriFilter = "uris=ndef://;";

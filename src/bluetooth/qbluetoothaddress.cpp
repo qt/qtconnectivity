@@ -42,6 +42,10 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothaddress_p.h"
 
+#ifndef QT_NO_DEBUG_STREAM
+#include <QDebug>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -62,8 +66,7 @@ QT_BEGIN_NAMESPACE
     Returns true if the Bluetooth addresses are not equal, otherwise returns false.
 */
 
-namespace
-{
+namespace {
 class BluetoothAddressRegisterMetaTypes
 {
 public:
@@ -77,16 +80,16 @@ public:
 /*!
     Constructs an null Bluetooth address.
 */
-QBluetoothAddress::QBluetoothAddress()
-    : d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress() :
+    d_ptr(new QBluetoothAddressPrivate)
 {
 }
 
 /*!
     Constructs a new Bluetooth address and assigns \a address to it.
 */
-QBluetoothAddress::QBluetoothAddress(quint64 address)
-    : d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress(quint64 address) :
+    d_ptr(new QBluetoothAddressPrivate)
 {
     Q_D(QBluetoothAddress);
     d->m_address = address;
@@ -98,8 +101,8 @@ QBluetoothAddress::QBluetoothAddress(quint64 address)
     The format of \a address can be either XX:XX:XX:XX:XX:XX or XXXXXXXXXXXX,
     where X is a hexadecimal digit.  Case is not important.
 */
-QBluetoothAddress::QBluetoothAddress(const QString &address)
-    : d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress(const QString &address) :
+    d_ptr(new QBluetoothAddressPrivate)
 {
     Q_D(QBluetoothAddress);
 
@@ -121,8 +124,8 @@ QBluetoothAddress::QBluetoothAddress(const QString &address)
 /*!
     Constructs a new Bluetooth address which is a copy of \a other.
 */
-QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &other)
-    : d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &other) :
+    d_ptr(new QBluetoothAddressPrivate)
 {
     *this = other;
 }
@@ -200,7 +203,7 @@ quint64 QBluetoothAddress::toUInt64() const
 */
 QString QBluetoothAddress::toString() const
 {
-    QString s(QLatin1String("%1:%2:%3:%4:%5:%6"));
+    QString s(QStringLiteral("%1:%2:%3:%4:%5:%6"));
     Q_D(const QBluetoothAddress);
 
     for (int i = 5; i >= 0; --i) {
@@ -215,5 +218,13 @@ QBluetoothAddressPrivate::QBluetoothAddressPrivate()
 {
     m_address = 0;
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QBluetoothAddress &address)
+{
+    debug << address.toString();
+    return debug;
+}
+#endif
 
 QT_END_NAMESPACE

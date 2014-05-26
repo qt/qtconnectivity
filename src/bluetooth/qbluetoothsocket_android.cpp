@@ -82,8 +82,9 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     return false;
 }
 
-//TODO Convert uuid parameter to const reference (affects QNX too)
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, QBluetoothUuid uuid, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
+                                               const QBluetoothUuid &uuid,
+                                               QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
 
@@ -200,8 +201,8 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     inputThread = new InputStreamThread(this);
     QObject::connect(inputThread, SIGNAL(dataAvailable()),
                      q, SIGNAL(readyRead()), Qt::QueuedConnection);
-    QObject::connect(inputThread, SIGNAL(error()),
-                     this, SLOT(inputThreadError()), Qt::QueuedConnection);
+    QObject::connect(inputThread, SIGNAL(error(int)),
+                     this, SLOT(inputThreadError(int)), Qt::QueuedConnection);
 
     if (!inputThread->run()) {
         //close socket again

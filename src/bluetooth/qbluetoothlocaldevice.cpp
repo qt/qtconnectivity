@@ -102,18 +102,17 @@ QT_BEGIN_NAMESPACE
 
 */
 
-namespace
+namespace {
+class LocalDeviceRegisterMetaTypes
 {
-    class LocalDeviceRegisterMetaTypes
+public:
+    LocalDeviceRegisterMetaTypes()
     {
-    public:
-        LocalDeviceRegisterMetaTypes()
-        {
-            qRegisterMetaType<QBluetoothLocalDevice::HostMode>("QBluetoothLocalDevice::HostMode");
-            qRegisterMetaType<QBluetoothLocalDevice::Pairing>("QBluetoothLocalDevice::Pairing");
-            qRegisterMetaType<QBluetoothLocalDevice::Error>("QBluetoothLocalDevice::Error");
-        }
-    } _registerLocalDeviceMetaTypes;
+        qRegisterMetaType<QBluetoothLocalDevice::HostMode>("QBluetoothLocalDevice::HostMode");
+        qRegisterMetaType<QBluetoothLocalDevice::Pairing>("QBluetoothLocalDevice::Pairing");
+        qRegisterMetaType<QBluetoothLocalDevice::Error>("QBluetoothLocalDevice::Error");
+    }
+} _registerLocalDeviceMetaTypes;
 }
 
 /*!
@@ -233,7 +232,6 @@ bool QBluetoothLocalDevice::isValid() const
   Returns the current bluetooth pairing status of \a address, if it's unpaired, paired, or paired and authorized.
 */
 
-
 /*!
   \fn QBluetoothLocalDevice::pairingDisplayConfirmation(const QBluetoothAddress &address, QString pin)
 
@@ -285,7 +283,6 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::error(QBluetoothLocalDevice::Error error)
   Signal emitted if there's an exceptional \a error while pairing.
 */
-
 
 /*!
   \fn QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent = 0)

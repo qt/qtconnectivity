@@ -186,11 +186,11 @@ static QString urnForRecordType(QNdefRecord::TypeNameFormat typeNameFormat, cons
 {
     switch (typeNameFormat) {
     case QNdefRecord::NfcRtd:
-        return QLatin1String("urn:nfc:wkt:") + QString::fromLatin1(type);
+        return QStringLiteral("urn:nfc:wkt:") + QString::fromLatin1(type);
     case QNdefRecord::ExternalRtd:
-        return QLatin1String("urn:nfc:ext:") + QString::fromLatin1(type);
+        return QStringLiteral("urn:nfc:ext:") + QString::fromLatin1(type);
     case QNdefRecord::Mime:
-        return QLatin1String("urn:nfc:mime:") + QString::fromLatin1(type);
+        return QStringLiteral("urn:nfc:mime:") + QString::fromLatin1(type);
     default:
         return QString();
     }
