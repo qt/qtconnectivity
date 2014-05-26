@@ -310,7 +310,7 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         }
         xml.skipCurrentElement();
         return QVariant::fromValue(uuid);
-    } else if (xml.name() == QLatin1String("text")) {
+    } else if (xml.name() == QLatin1String("text") || xml.name() == QStringLiteral("url")) {
         QString value = xml.attributes().value(QLatin1String("value")).toString();
         if (xml.attributes().value(QLatin1String("encoding")) == QLatin1String("hex"))
             value = QString::fromUtf8(QByteArray::fromHex(value.toLatin1()));
