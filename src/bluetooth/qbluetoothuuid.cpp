@@ -667,6 +667,28 @@ QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uu
     case QBluetoothUuid::HDP: return QBluetoothServiceDiscoveryAgent::tr("Health Device");
     case QBluetoothUuid::HDPSource: return QBluetoothServiceDiscoveryAgent::tr("Health Device Source");
     case QBluetoothUuid::HDPSink: return QBluetoothServiceDiscoveryAgent::tr("Health Device Sink");
+    case QBluetoothUuid::GenericAccess: return QBluetoothServiceDiscoveryAgent::tr("Generic Access");
+    case QBluetoothUuid::GenericAttribute: return QBluetoothServiceDiscoveryAgent::tr("Generic Attribute");
+    case QBluetoothUuid::ImmediateAlert: return QBluetoothServiceDiscoveryAgent::tr("Immediate Alert");
+    case QBluetoothUuid::LinkLoss: return QBluetoothServiceDiscoveryAgent::tr("Link Loss");
+    case QBluetoothUuid::TxPower: return QBluetoothServiceDiscoveryAgent::tr("Tx Power");
+    case QBluetoothUuid::CurrentTimeService: return QBluetoothServiceDiscoveryAgent::tr("Current Time Service");
+    case QBluetoothUuid::ReferenceTimeUpdateService: return QBluetoothServiceDiscoveryAgent::tr("Reference Time Update Service");
+    case QBluetoothUuid::NextDSTChangeService: return QBluetoothServiceDiscoveryAgent::tr("Next DST Change Service");
+    case QBluetoothUuid::Glucose: return QBluetoothServiceDiscoveryAgent::tr("Glucose");
+    case QBluetoothUuid::HealthThermometer: return QBluetoothServiceDiscoveryAgent::tr("Health Thermometer");
+    case QBluetoothUuid::DeviceInformation: return QBluetoothServiceDiscoveryAgent::tr("Device Information");
+    case QBluetoothUuid::HeartRate: return QBluetoothServiceDiscoveryAgent::tr("Heart Rate");
+    case QBluetoothUuid::PhoneAlertStatusService: return QBluetoothServiceDiscoveryAgent::tr("Phone Alert Status Service");
+    case QBluetoothUuid::BatteryService: return QBluetoothServiceDiscoveryAgent::tr("Battery Service");
+    case QBluetoothUuid::BloodPressure: return QBluetoothServiceDiscoveryAgent::tr("Blood Pressure");
+    case QBluetoothUuid::AlertNotificationService: return QBluetoothServiceDiscoveryAgent::tr("Alert Notification Service");
+    case QBluetoothUuid::HumanInterfaceDevice: return QBluetoothServiceDiscoveryAgent::tr("Human Interface Device");
+    case QBluetoothUuid::ScanParameters: return QBluetoothServiceDiscoveryAgent::tr("Scan Parameters");
+    case QBluetoothUuid::RunningSpeedAndCadence: return QBluetoothServiceDiscoveryAgent::tr("Running Speed and Cadance");
+    case QBluetoothUuid::CyclingSpeedAndCadence: return QBluetoothServiceDiscoveryAgent::tr("Cycling Speed and Cadance");
+    case QBluetoothUuid::CyclingPower: return QBluetoothServiceDiscoveryAgent::tr("Cycling Power");
+    case QBluetoothUuid::LocationAndNavigation: return QBluetoothServiceDiscoveryAgent::tr("Location and Navigation");
     default:
         break;
     }

@@ -61,8 +61,6 @@ public:
     QLowEnergyServiceInfoPrivate();
     ~QLowEnergyServiceInfoPrivate();
 
-    QString serviceName;
-
     QBluetoothUuid uuid;
 
     QList<QLowEnergyCharacteristicInfo> characteristicList;

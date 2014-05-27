@@ -41,6 +41,7 @@
 
 #include "qlowenergyserviceinfo.h"
 #include "qlowenergyserviceinfo_p.h"
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,43 +71,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    Method for parsing the service name with given \a uuid.
- * \brief parseUuid
- * \param uuid
- * \return
- */
-QString parseUuid(const QBluetoothUuid &uuid)
-{
-    static QHash<int, QString> uuidnames;
-    if ( uuidnames.isEmpty() ) {
-        uuidnames[0x1800] = QStringLiteral("Generic Access");
-        uuidnames[0x1801] = QStringLiteral("Generic Attribute");
-        uuidnames[0x1802] = QStringLiteral("ImmediateAlert");
-        uuidnames[0x1803] = QStringLiteral("Link Loss");
-        uuidnames[0x1804] = QStringLiteral("Tx Power");
-        uuidnames[0x1805] = QStringLiteral("Current Time Service");
-        uuidnames[0x1806] = QStringLiteral("Reference Time Update Service");
-        uuidnames[0x1807] = QStringLiteral("Next DST Change Service");
-        uuidnames[0x1808] = QStringLiteral("Glucose");
-        uuidnames[0x1809] = QStringLiteral("Health Thermometer");
-        uuidnames[0x180A] = QStringLiteral("Device Information");
-        uuidnames[0x180D] = QStringLiteral("Heart Rate");
-        uuidnames[0x180E] = QStringLiteral("Phone Alert Status Service");
-        uuidnames[0x180F] = QStringLiteral("Battery Service");
-        uuidnames[0x1810] = QStringLiteral("Blood Pressure");
-        uuidnames[0x1811] = QStringLiteral("Alert Notification Service");
-        uuidnames[0x1812] = QStringLiteral("Human Interface Device");
-        uuidnames[0x1813] = QStringLiteral("Scan Parameters");
-        uuidnames[0x1814] = QStringLiteral("Running Speed and Cadance");
-        uuidnames[0x1816] = QStringLiteral("Cycling Speed and Cadance");
-        uuidnames[0x1818] = QStringLiteral("Cycling Power");
-        uuidnames[0x1819] = QStringLiteral("Location and Navigation");
-    }
-    QString name = uuidnames.value(uuid.toUInt16(), QStringLiteral("Unknown Service"));
-    return name;
-}
-
-/*!
     Construct a new QLowEnergyServiceInfo.
 */
 QLowEnergyServiceInfo::QLowEnergyServiceInfo():
@@ -124,7 +88,6 @@ QLowEnergyServiceInfo::QLowEnergyServiceInfo(const QBluetoothUuid &uuid):
     d_ptr(QSharedPointer<QLowEnergyServiceInfoPrivate>(new QLowEnergyServiceInfoPrivate))
 {
     d_ptr->uuid = QBluetoothUuid(uuid);
-    d_ptr->serviceName = parseUuid(d_ptr->uuid);
 }
 
 /*!
@@ -169,7 +132,16 @@ QList<QLowEnergyCharacteristicInfo> QLowEnergyServiceInfo::characteristics() con
 */
 QString QLowEnergyServiceInfo::serviceName() const
 {
-    return d_ptr->serviceName;
+    bool ok = false;
+    quint16 clsId = d_ptr->uuid.toUInt16(&ok);
+    if (ok) {
+        QBluetoothUuid::ServiceClassUuid id
+                = static_cast<QBluetoothUuid::ServiceClassUuid>(clsId);
+        return QBluetoothUuid::serviceClassToString(id);
+    }
+    return qApp ?
+           qApp->translate("QBluetoothServiceDiscoveryAgent", "Unknown service") :
+           QStringLiteral("Unknown Service");
 }
 
 /*!
