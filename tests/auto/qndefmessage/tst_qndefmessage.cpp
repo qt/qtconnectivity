@@ -174,7 +174,10 @@ void tst_QNdefMessage::tst_parse_data()
         QList<QNdefRecord> recordList;
         recordList.append(record);
         QTest::newRow("chunked") << data << QNdefMessage(recordList) << QVariantList();
-        QCOMPARE(qHash(record), 1887494681LL);
+
+        const QByteArray recordContent = record.type() + record.id()
+                                         + record.payload();
+        QCOMPARE(recordContent, QByteArray::fromHex(QByteArray("7479706569647061796c6f6164")));
     }
 
     // NFC-RTD Text
@@ -204,7 +207,11 @@ void tst_QNdefMessage::tst_parse_data()
         QTest::newRow("nfc-rtd text") << data << QNdefMessage(recordList)
                                       << (QVariantList() << QStringLiteral("Test String")
                                                          << QStringLiteral("en"));
-        QCOMPARE(qHash(record), 3247259560LL);
+
+        const QByteArray recordContent = record.type() + record.id()
+                                         + record.payload();
+        QCOMPARE(recordContent,
+                 QByteArray::fromHex(QByteArray("5402656e5465737420537472696e67")));
     }
 
     // NFC-RTD Text
@@ -236,7 +243,11 @@ void tst_QNdefMessage::tst_parse_data()
             << (QVariantList() << QString::fromUtf8("\343\203\206\343\202\271\343\203\210\346\226"
                                                     "\207\345\255\227\345\210\227")
                                << QStringLiteral("ja"));
-        QCOMPARE(qHash(record), 3407917933LL);
+
+        const QByteArray recordContent = record.type() + record.id()
+                                         + record.payload();
+        QCOMPARE(recordContent,
+                 QByteArray::fromHex(QByteArray("54026a61e38386e382b9e38388e69687e5ad97e58897")));
     }
 
     // NFC-RTD URI
@@ -265,7 +276,11 @@ void tst_QNdefMessage::tst_parse_data()
         QTest::newRow("nfc-rtd uri http://qt-project.org/")
             << data << QNdefMessage(recordList)
             << (QVariantList() << QUrl(QStringLiteral("http://qt-project.org/")));
-        QCOMPARE(qHash(record), 3736709795LL);
+
+        const QByteArray recordContent = record.type() + record.id()
+                                         + record.payload();
+        QCOMPARE(recordContent,
+                 QByteArray::fromHex(QByteArray("5500687474703a2f2f71742d70726f6a6563742e6f72672f")));
     }
 
     // NFC-RTD URI
@@ -294,7 +309,11 @@ void tst_QNdefMessage::tst_parse_data()
         QTest::newRow("nfc-rtd uri abbrev http://qt-project.org/")
             << data << QNdefMessage(recordList)
             << (QVariantList() << QUrl(QStringLiteral("http://qt-project.org/")));
-        QCOMPARE(qHash(record),2445925084LL);
+
+        const QByteArray recordContent = record.type() + record.id()
+                                         + record.payload();
+        QCOMPARE(recordContent,
+                 QByteArray::fromHex(QByteArray("550371742d70726f6a6563742e6f72672f")));
     }
 
     // NFC-RTD URI
@@ -323,7 +342,11 @@ void tst_QNdefMessage::tst_parse_data()
         QTest::newRow("nfc-rtd uri tel:+1234567890")
             << data << QNdefMessage(recordList)
             << (QVariantList() << QUrl(QStringLiteral("tel:+1234567890")));
-        QCOMPARE(qHash(record), 3757269174LL);
+
+        const QByteArray recordContent = record.type() + record.id()
+                                         + record.payload();
+        QCOMPARE(recordContent,
+                 QByteArray::fromHex(QByteArray("55052b31323334353637383930")));
     }
 
     // Truncated message
