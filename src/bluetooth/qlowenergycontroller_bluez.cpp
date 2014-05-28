@@ -146,7 +146,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
         disconnectAllServices();
     }
     else {
-        // STEP 1
+        // STEP 1 -> connect
         if (reply.contains(QStringLiteral("[CON]"))) {
             for (int i = 0; i < m_leServices.size(); i++) {
                 if (m_leServices.at(i).d_ptr->m_step == 1) {
@@ -156,7 +156,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
             }
         }
 
-        // STEP 2
+        // STEP 2 -> primary
         if (reply.contains(QStringLiteral("attr")) && reply.contains(QStringLiteral("uuid"))){
             const QStringList handles = reply.split(QStringLiteral("\n"));
             foreach (const QString &handle, handles) {
@@ -176,7 +176,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
             }
         }
 
-        // STEP 3
+        // STEP 3 -> "characteristics startHandle endHandle"
         if (reply.contains(QStringLiteral("char")) && reply.contains(QStringLiteral("uuid")) && reply.contains(QStringLiteral("properties"))) {
             const QStringList handles = reply.split(QStringLiteral("\n"));
             int stepSet = -1;
@@ -217,7 +217,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                 readCharacteristicValue(stepSet);
         }
 
-        // STEP 4  and STEP 5
+        // STEP 4  and STEP 5 -> char-read-uuid
         // This part is for reading characteristic values and setting the notifications
         if (reply.contains(QStringLiteral("handle")) && reply.contains(QStringLiteral("value")) && !reply.contains(QStringLiteral("char"))) {
             int index = -1; // setting characteristics values
@@ -340,7 +340,7 @@ void QLowEnergyControllerPrivate::disconnectAllServices()
 
 void QLowEnergyControllerPrivate::connectToTerminal()
 {
-    process->executeCommand(QStringLiteral("connect\n"));
+    process->executeCommand(QStringLiteral("connect"));
     for (int i = 0; i < m_leServices.size(); i++)
         m_leServices.at(i).d_ptr->m_step = 1;
     m_step++;
@@ -348,43 +348,52 @@ void QLowEnergyControllerPrivate::connectToTerminal()
 
 void QLowEnergyControllerPrivate::setHandles()
 {
-    process->executeCommand(QStringLiteral("primary\n"));
+    process->executeCommand(QStringLiteral("primary"));
     m_step++;
 }
 
 void QLowEnergyControllerPrivate::setCharacteristics(int a)
 {
-    const QString command = QStringLiteral("characteristics ") + m_leServices.at(a).d_ptr->startingHandle + QStringLiteral(" ") + m_leServices.at(a).d_ptr->endingHandle;
+    const QString command = QStringLiteral("characteristics ") + m_leServices.at(a).d_ptr->startingHandle
+                            + QStringLiteral(" ") + m_leServices.at(a).d_ptr->endingHandle;
     process->executeCommand(command);
-    process->executeCommand(QStringLiteral("\n"));
     m_leServices.at(a).d_ptr->m_step++;
 }
 
 void QLowEnergyControllerPrivate::setNotifications()
 {
-    process->executeCommand(QStringLiteral("char-read-uuid 2902\n"));
+    process->executeCommand(QStringLiteral("char-read-uuid 2902"));
 }
 
 void QLowEnergyControllerPrivate::readCharacteristicValue(int index)
 {
-    for (int i = 0; i < m_leServices.at(index).d_ptr->characteristicList.size(); i++) {
-        if ((m_leServices.at(index).d_ptr->characteristicList.at(i).d_ptr->permission & QLowEnergyCharacteristicInfo::Read)) {
-            const QString uuidHandle = m_leServices.at(index).d_ptr->characteristicList.at(i).uuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+    bool charReadRequested = false;
+
+    QLowEnergyServiceInfo info = m_leServices.at(index);
+    for (int i = 0; i < info.d_ptr->characteristicList.size(); i++) {
+        if ((info.d_ptr->characteristicList.at(i).d_ptr->permission & QLowEnergyCharacteristicInfo::Read)) {
+            const QString uuidHandle = info.d_ptr->characteristicList.at(i).uuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
             const QString command = QStringLiteral("char-read-uuid ") + uuidHandle;
             process->executeCommand(command);
-            process->executeCommand(QStringLiteral("\n"));
+            charReadRequested = true;
         }
     }
-    m_leServices.at(index).d_ptr->m_step++;
+   info.d_ptr->m_step++;
+
+    // Sometimes the service doesn't have readable characteristics
+    // Finish service connect request
+    if (!charReadRequested) {
+        info.d_ptr->connected = true;
+        emit q_ptr->connected(info);
+    }
 }
 
 void QLowEnergyControllerPrivate::writeValue(const QString &handle, const QByteArray &value)
 {
     process = process->instance();
-    QString command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ") + QString::fromLocal8Bit(value.constData());
+    QString command = QStringLiteral("char-write-req ") + handle + QStringLiteral(" ")
+                      + QString::fromLocal8Bit(value.constData());
     process->executeCommand(command);
-    process->executeCommand(QStringLiteral("\n"));
-
 }
 
 bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteristicInfo &characteristic)

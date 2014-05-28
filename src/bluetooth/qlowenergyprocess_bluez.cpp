@@ -41,9 +41,12 @@
 
 #include "qlowenergyprocess_p.h"
 
+#include <QtCore/QLoggingCategory>
+
 QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QLowEnergyProcess, processInstance)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 /*!
  * Private constructor. Constructs the new QLowEnergyProcess, sets variables and connects
@@ -115,7 +118,9 @@ void QLowEnergyProcess::startCommand(const QString &command)
 */
 void QLowEnergyProcess::executeCommand(const QString &command)
 {
-    m_process->write(command.toUtf8().constData());
+    qCDebug(QT_BT_BLUEZ) << "gatttool command:" << command;
+    QByteArray cmd(command.toUtf8() + '\n');
+    m_process->write(cmd.constData());
 }
 
 /*!
@@ -125,7 +130,7 @@ void QLowEnergyProcess::endProcess()
 {
     m_counter--;
     if (m_counter == 0) {
-        executeCommand(QStringLiteral("disconnect\n"));
+        executeCommand(QStringLiteral("disconnect"));
         connected = false;
     }
 }
