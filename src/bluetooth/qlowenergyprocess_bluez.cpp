@@ -70,7 +70,7 @@ QLowEnergyProcess::~QLowEnergyProcess()
 }
 
 /*!
-    Returns the instance of this clas. This class is a singleton class.
+    Returns the instance of this class. This class is a singleton class.
 */
 
 QLowEnergyProcess *QLowEnergyProcess::instance()

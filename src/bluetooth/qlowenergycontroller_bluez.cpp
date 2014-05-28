@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
@@ -257,9 +258,10 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                         }
                     }
                     if (index1 != -1) {
-                        for (int j = 0; j < (m_leServices.at(index1).d_ptr->characteristicList.size()-1); j++) {
-                            QLowEnergyCharacteristicInfo chars = m_leServices.at(index1).d_ptr->characteristicList.at(j);
-                            QLowEnergyCharacteristicInfo charsNext = m_leServices.at(index1).d_ptr->characteristicList.at(j+1);
+                        QLowEnergyServiceInfo service = m_leServices.at(index1);
+                        for (int j = 0; j < service.d_ptr->characteristicList.size()-1; j++) {
+                            QLowEnergyCharacteristicInfo chars = service.d_ptr->characteristicList.at(j);
+                            QLowEnergyCharacteristicInfo charsNext = service.d_ptr->characteristicList.at(j+1);
                             const QString handleId = handleDetails.at(1);
                             ushort h = handleId.toUShort(0, 0);
                             qCDebug(QT_BT_BLUEZ) << handleId << h  << chars.handle() << chars.handle().toUShort(0,0);
@@ -267,25 +269,25 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                             if (h > chars.handle().toUShort(0,0) && h < charsNext.handle().toUShort(0,0)) {
                                 chars.d_ptr->notificationHandle = handleId;
                                 chars.d_ptr->notification = true;
-                                QBluetoothUuid descUuid((ushort)0x2902);
-                                QLowEnergyDescriptorInfo descriptor(descUuid, handleId);
+                                QLowEnergyDescriptorInfo descriptor(
+                                            service.d_ptr->characteristicList[j].uuid(),
+                                            QBluetoothUuid::ClientCharacteristicConfiguration,
+                                            handleId);
                                 QString val;
                                 //TODO why do we start parsing value from k = 0? Shouldn't it be k = 2
                                 for (int k = 3; k < handleDetails.size(); k++)
                                     val = val + handleDetails.at(k);
                                 descriptor.d_ptr->m_value = val.toUtf8();
-                                QVariantMap map;
-                                map[QStringLiteral("uuid")] = descUuid.toString();
-                                map[QStringLiteral("handle")] = handleId;
-                                map[QStringLiteral("value")] = val.toUtf8();
-                                m_leServices.at(index1).d_ptr->characteristicList[j].d_ptr->descriptorsList.append(descriptor);
-                                qCDebug(QT_BT_BLUEZ) << "Notification characteristic set." << chars.d_ptr->handle << chars.d_ptr->notificationHandle;
+                                service.d_ptr->characteristicList[j].d_ptr->descriptorsList.append(descriptor);
+                                qCDebug(QT_BT_BLUEZ) << "Notification characteristic set."
+                                                     << chars.d_ptr->handle
+                                                     << chars.d_ptr->notificationHandle;
                             }
                         }
                         if (!lastStep) {
-                            m_leServices.at(index1).d_ptr->m_step++;
-                            m_leServices.at(index1).d_ptr->connected = true;
-                            emit q_ptr->connected(m_leServices.at(index1));
+                            service.d_ptr->m_step++;
+                            service.d_ptr->connected = true;
+                            emit q_ptr->connected(service);
                         }
                         lastStep = true;
                     }
@@ -362,6 +364,8 @@ void QLowEnergyControllerPrivate::setCharacteristics(int a)
 
 void QLowEnergyControllerPrivate::setNotifications()
 {
+    // TODO at the moment we only search for 2902 descriptors
+    // it doesn't show all 2902's and we leave a lot of other descriptors out
     process->executeCommand(QStringLiteral("char-read-uuid 2902"));
 }
 

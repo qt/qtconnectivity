@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
@@ -57,6 +58,7 @@ class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
     friend class QLowEnergyControllerPrivate;
 public:
 
+    //TODO rename enum name
     enum Property {
         Broadcasting = 0x01,
         Read = 0x02,
@@ -82,9 +84,9 @@ public:
     void setValue(const QByteArray &value);
     QByteArray value() const;
 
-    int permissions() const;
+    int permissions() const; //TODO should be of Type QLowEnergyCharacteristicInfo::Property
     QVariantMap properties() const;
-    QString handle() const;
+    QString handle() const; //TODO should be int
 
     bool isNotificationCharacteristic() const;
 

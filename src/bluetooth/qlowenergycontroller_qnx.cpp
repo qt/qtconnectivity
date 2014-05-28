@@ -620,6 +620,7 @@ void QLowEnergyControllerPrivate::readDescriptors(QLowEnergyCharacteristicInfo &
         descriptor.d_ptr->instance = characteristic.d_ptr->instance;
         map[QStringLiteral("value")] = descriptor.d_ptr->m_value;
         descriptor.d_ptr->m_properties = map;
+        //TODO what are these properties? Bluez doesn't have these atm
         characteristic.d_ptr->descriptorsList.append(descriptor);
     }
 

@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
@@ -68,9 +69,13 @@ public:
     QVariantMap properties() const;
     QString name() const;
 
+    QBluetoothUuid::CharacteristicDescriptor type() const;
+
 private:
     QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;
-    QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, const QString &handle);
+    QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
+                             QBluetoothUuid::CharacteristicDescriptor desc,
+                             const QString &handle);
 };
 
 QT_END_NAMESPACE

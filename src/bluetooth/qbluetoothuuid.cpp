@@ -375,9 +375,11 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 */
 
 /*!
-    \enum QBluetoothUuid::DescriptorID
+    \enum QBluetoothUuid::CharacteristicDescriptor
 
-    This enum is a convienience type for Bluetooth low energy service descriptor class UUIDs. Values of this type
+    Descriptors are attributes that describe Bluetooth Low Energy characteristic values.
+
+    This enum is a convienience type for descriptor class UUIDs. Values of this type
     will be implicitly converted into a QBluetoothUuid when necessary.
 
     \value CharacteristicExtendedProperties  Descriptor defines additional Characteristic Properties.
@@ -426,13 +428,24 @@ QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the characteristic id \a uuid.
+    Constructs a new Bluetooth UUID from the characteristic type \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(CharacteristicId uuid)
+QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
 :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
           baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
           baseUuid()->data4[6], baseUuid()->data4[7])
 {
+}
+
+/*!
+    Constructs a new Bluetooth UUID from the descriptor type \a uuid.
+*/
+QBluetoothUuid::QBluetoothUuid(QBluetoothUuid::CharacteristicDescriptor uuid)
+    :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
+              baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
+              baseUuid()->data4[6], baseUuid()->data4[7])
+{
+
 }
 
 /*!

@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
@@ -97,12 +98,17 @@ QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid):
 }
 
 /*!
-    Construct a new QLowEnergyDescriptorInfo with given \a uuid and the \a handle.
+    \internal
+    Construct a new QLowEnergyDescriptorInfo with given parent
+    characteristic \a uuid, descriptor \a type and \a handle.
 */
-QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid, const QString &handle):
+QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
+                                                   QBluetoothUuid::CharacteristicDescriptor type,
+                                                   const QString &handle):
     d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, handle))
 {
-     d_ptr->m_name = parseDescriptorUuid(uuid);
+    d_ptr->m_type = type;
+    d_ptr->m_name = parseDescriptorUuid(uuid);
 }
 
 /*!
@@ -124,8 +130,10 @@ QLowEnergyDescriptorInfo &QLowEnergyDescriptorInfo::operator=(const QLowEnergyDe
 }
 
 /*!
-    Returns the UUID of the descriptor.
+    Returns the UUID of the characteristic that this descriptor belongs to.
 */
+
+//TODO should this return the characteristic uuid or indeed 0x2902?
 QBluetoothUuid QLowEnergyDescriptorInfo::uuid() const
 {
     return d_ptr->m_uuid;
@@ -161,6 +169,14 @@ QVariantMap QLowEnergyDescriptorInfo::properties() const
 QString QLowEnergyDescriptorInfo::name() const
 {
     return d_ptr->m_name;
+}
+
+/*!
+    Returns the type of descriptor.
+ */
+QBluetoothUuid::CharacteristicDescriptor QLowEnergyDescriptorInfo::type() const
+{
+    return d_ptr->m_type;
 }
 
 /*!

@@ -1,5 +1,6 @@
 /***************************************************************************
 **
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
@@ -42,6 +43,8 @@
 #ifndef QLOWENERGYDESCRIPTORINFO_P_H
 #define QLOWENERGYDESCRIPTORINFO_P_H
 
+#include <QtBluetooth/QBluetoothUuid>
+
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyDescriptorInfoPrivate
@@ -54,6 +57,7 @@ public:
     QString m_handle;
     QVariantMap m_properties;
     QString m_name;
+    QBluetoothUuid::CharacteristicDescriptor m_type;
 #ifdef QT_QNX_BLUETOOTH
     int instance;
 #endif

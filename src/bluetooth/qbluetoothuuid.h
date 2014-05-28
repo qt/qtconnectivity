@@ -176,7 +176,7 @@ public:
         LocationAndNavigation = 0x1819,
     };
 
-    enum CharacteristicId {
+    enum CharacteristicType {
         AlertCategoryID = 0x2a43,
         AlertCategoryIDBitMask = 0x2a42,
         AlertLevel = 0x2a06,
@@ -260,7 +260,7 @@ public:
         UnreadAlertStatus = 0x2a45
     };
 
-    enum DescriptorID {
+    enum CharacteristicDescriptor {
         CharacteristicExtendedProperties = 0x2900,
         CharacteristicUserDescription = 0x2901,
         ClientCharacteristicConfiguration = 0x2902,
@@ -275,7 +275,8 @@ public:
     QBluetoothUuid();
     QBluetoothUuid(ProtocolUuid uuid);
     QBluetoothUuid(ServiceClassUuid uuid);
-    QBluetoothUuid(CharacteristicId uuid);
+    QBluetoothUuid(CharacteristicType uuid);
+    QBluetoothUuid(CharacteristicDescriptor uuid);
     explicit QBluetoothUuid(quint16 uuid);
     explicit QBluetoothUuid(quint32 uuid);
     explicit QBluetoothUuid(quint128 uuid);
