@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inmodule QtBluetooth
     \brief The QLowEnergyDescriptorInfo class stores information about the Bluetooth
     Low Energy descriptor.
+    \since 5.4
 
     QLowEnergyDescriptorInfo provides information about a Bluetooth Low Energy
     descriptor's name, UUID, value and handle. Descriptors are contained in the
@@ -103,7 +104,7 @@ QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid):
     characteristic \a uuid, descriptor \a type and \a handle.
 */
 QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
-                                                   QBluetoothUuid::CharacteristicDescriptor type,
+                                                   QBluetoothUuid::DescriptorType type,
                                                    const QString &handle):
     d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, handle))
 {
@@ -166,7 +167,7 @@ QString QLowEnergyDescriptorInfo::name() const
 /*!
     Returns the type of descriptor.
  */
-QBluetoothUuid::CharacteristicDescriptor QLowEnergyDescriptorInfo::type() const
+QBluetoothUuid::DescriptorType QLowEnergyDescriptorInfo::type() const
 {
     return d_ptr->m_type;
 }

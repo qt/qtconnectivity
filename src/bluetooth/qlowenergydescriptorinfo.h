@@ -68,12 +68,12 @@ public:
     QString handle() const;
     QString name() const;
 
-    QBluetoothUuid::CharacteristicDescriptor type() const;
+    QBluetoothUuid::DescriptorType type() const;
 
 private:
     QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;
     QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
-                             QBluetoothUuid::CharacteristicDescriptor desc,
+                             QBluetoothUuid::DescriptorType desc,
                              const QString &handle);
 };
 

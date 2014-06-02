@@ -220,7 +220,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 */
 
 /*!
-    \enum QBluetoothUuid::CharacteristicId
+    \enum QBluetoothUuid::CharacteristicType
 
     This enum is a convienience type for Bluetooth low energy service characteristics class UUIDs. Values of this type
     will be implicitly converted into a QBluetoothUuid when necessary.
@@ -375,7 +375,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 */
 
 /*!
-    \enum QBluetoothUuid::CharacteristicDescriptor
+    \enum QBluetoothUuid::DescriptorType
 
     Descriptors are attributes that describe Bluetooth Low Energy characteristic values.
 
@@ -440,7 +440,7 @@ QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
 /*!
     Constructs a new Bluetooth UUID from the descriptor type \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(QBluetoothUuid::CharacteristicDescriptor uuid)
+QBluetoothUuid::QBluetoothUuid(DescriptorType uuid)
     :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
               baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
               baseUuid()->data4[6], baseUuid()->data4[7])
@@ -716,7 +716,7 @@ QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uu
 
     \sa QBluetoothUuid::ProtocolUuid
 
-    \since Qt 5.4
+    \since 5.4
  */
 QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
 {
@@ -746,6 +746,125 @@ QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
     case QBluetoothUuid::McapControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol -Conrol");
     case QBluetoothUuid::McapDataChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol - Data");
     case QBluetoothUuid::L2cap: return QBluetoothServiceDiscoveryAgent::tr("Layer 2 Control Protocol");
+    default:
+        break;
+    }
+
+    return QString();
+}
+
+/*!
+    Returns a human-readable and translated name for the given characteristic
+    represented by \a uuid.
+
+    \sa QBluetoothUuid::CharacteristicType
+
+    \since 5.4
+*/
+QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
+{
+    switch (uuid) {
+    case QBluetoothUuid::DeviceName: return QBluetoothServiceDiscoveryAgent::tr("GAP Device Name");
+    case QBluetoothUuid::Appearance: return QBluetoothServiceDiscoveryAgent::tr("GAP Appearance");
+    case QBluetoothUuid::PeripheralPrivacyFlag:
+        return QBluetoothServiceDiscoveryAgent::tr("GAP Peripheral Privacy Flag");
+    case QBluetoothUuid::ReconnectionAddress:
+        return QBluetoothServiceDiscoveryAgent::tr("GAP Reconnection Address");
+    case QBluetoothUuid::PeripheralPreferredConnectionParameters:
+        return QBluetoothServiceDiscoveryAgent::tr("GAP Peripheral Preferred Connection Parameters");
+    case QBluetoothUuid::ServiceChanged: return QBluetoothServiceDiscoveryAgent::tr("GATT Service Changed");
+    case QBluetoothUuid::AlertLevel: return QBluetoothServiceDiscoveryAgent::tr("Alert Level");
+    case QBluetoothUuid::TxPowerLevel: return QBluetoothServiceDiscoveryAgent::tr("TX Power");
+    case QBluetoothUuid::DateTime: return QBluetoothServiceDiscoveryAgent::tr("Date Time");
+    case QBluetoothUuid::DayOfWeek: return QBluetoothServiceDiscoveryAgent::tr("Day Of Week");
+    case QBluetoothUuid::DayDateTime: return QBluetoothServiceDiscoveryAgent::tr("Day Date Time");
+    case QBluetoothUuid::ExactTime256: return QBluetoothServiceDiscoveryAgent::tr("Exact Time 256");
+    case QBluetoothUuid::DSTOffset: return QBluetoothServiceDiscoveryAgent::tr("DST Offset");
+    case QBluetoothUuid::TimeZone: return QBluetoothServiceDiscoveryAgent::tr("Time Zone");
+    case QBluetoothUuid::LocalTimeInformation:
+        return QBluetoothServiceDiscoveryAgent::tr("Local Time Information");
+    case QBluetoothUuid::TimeWithDST: return QBluetoothServiceDiscoveryAgent::tr("Time With DST");
+    case QBluetoothUuid::TimeAccuracy: return QBluetoothServiceDiscoveryAgent::tr("Time Accuracy");
+    case QBluetoothUuid::TimeSource: return QBluetoothServiceDiscoveryAgent::tr("Time Source");
+    case QBluetoothUuid::ReferenceTimeInformation:
+        return QBluetoothServiceDiscoveryAgent::tr("Reference Time Information");
+    case QBluetoothUuid::TimeUpdateControlPoint:
+        return QBluetoothServiceDiscoveryAgent::tr("Time Update Control Point");
+    case QBluetoothUuid::TimeUpdateState: return QBluetoothServiceDiscoveryAgent::tr("Time Update State");
+    case QBluetoothUuid::GlucoseMeasurement: return QBluetoothServiceDiscoveryAgent::tr("Glucose Measurement");
+    case QBluetoothUuid::BatteryLevel: return QBluetoothServiceDiscoveryAgent::tr("Battery Level");
+    case QBluetoothUuid::TemperatureMeasurement:
+        return QBluetoothServiceDiscoveryAgent::tr("Temperature Measurement");
+    case QBluetoothUuid::TemperatureType: return QBluetoothServiceDiscoveryAgent::tr("Temperature Type");
+    case QBluetoothUuid::IntermediateTemperature:
+        return QBluetoothServiceDiscoveryAgent::tr("Intermediate Temperature");
+    case QBluetoothUuid::MeasurementInterval: return QBluetoothServiceDiscoveryAgent::tr("Measurement Interval");
+    case QBluetoothUuid::BootKeyboardInputReport: return QBluetoothServiceDiscoveryAgent::tr("Boot Keyboard Input Report");
+    case QBluetoothUuid::SystemID: return QBluetoothServiceDiscoveryAgent::tr("System ID");
+    case QBluetoothUuid::ModelNumberString: return QBluetoothServiceDiscoveryAgent::tr("Model Number String");
+    case QBluetoothUuid::SerialNumberString: return QBluetoothServiceDiscoveryAgent::tr("Serial Number String");
+    case QBluetoothUuid::FirmwareRevisionString: return QBluetoothServiceDiscoveryAgent::tr("Firmware Revision String");
+    case QBluetoothUuid::HardwareRevisionString: return QBluetoothServiceDiscoveryAgent::tr("Hardware Revision String");
+    case QBluetoothUuid::SoftwareRevisionString: return QBluetoothServiceDiscoveryAgent::tr("Software Revision String");
+    case QBluetoothUuid::ManufacturerNameString: return QBluetoothServiceDiscoveryAgent::tr("Manufacturer Name String");
+    case QBluetoothUuid::IEEE1107320601RegulatoryCertificationDataList:
+        return QBluetoothServiceDiscoveryAgent::tr("IEEE 11073 20601 Regulatory Certification Data List");
+    case QBluetoothUuid::CurrentTime: return QBluetoothServiceDiscoveryAgent::tr("Current Time");
+    case QBluetoothUuid::ScanRefresh: return QBluetoothServiceDiscoveryAgent::tr("Scan Refresh");
+    case QBluetoothUuid::BootKeyboardOutputReport:
+        return QBluetoothServiceDiscoveryAgent::tr("Boot Keyboard Output Report");
+    case QBluetoothUuid::BootMouseInputReport: return QBluetoothServiceDiscoveryAgent::tr("Boot Mouse Input Report");
+    case QBluetoothUuid::GlucoseMeasurementContext:
+        return QBluetoothServiceDiscoveryAgent::tr("Glucose Measurement Context");
+    case QBluetoothUuid::BloodPressureMeasurement:
+        return QBluetoothServiceDiscoveryAgent::tr("Blood Pressure Measurement");
+    case QBluetoothUuid::IntermediateCuffPressure:
+        return QBluetoothServiceDiscoveryAgent::tr("Intermediate Cuff Pressure");
+    case QBluetoothUuid::HeartRateMeasurement: return QBluetoothServiceDiscoveryAgent::tr("Heart Rate Measurement");
+    case QBluetoothUuid::BodySensorLocation: return QBluetoothServiceDiscoveryAgent::tr("Body Sensor Location");
+    case QBluetoothUuid::HeartRateControlPoint: return QBluetoothServiceDiscoveryAgent::tr("Heart Rate Control Point");
+    case QBluetoothUuid::AlertStatus: return QBluetoothServiceDiscoveryAgent::tr("Alert Status");
+    case QBluetoothUuid::RingerControlPoint: return QBluetoothServiceDiscoveryAgent::tr("Ringer Control Point");
+    case QBluetoothUuid::RingerSetting: return QBluetoothServiceDiscoveryAgent::tr("Ringer Setting");
+    case QBluetoothUuid::AlertCategoryIDBitMask:
+        return QBluetoothServiceDiscoveryAgent::tr("Alert Category ID Bit Mask");
+    case QBluetoothUuid::AlertCategoryID: return QBluetoothServiceDiscoveryAgent::tr("Alert Category ID");
+    case QBluetoothUuid::AlertNotificationControlPoint:
+        return QBluetoothServiceDiscoveryAgent::tr("Alert Notification Control Point");
+    case QBluetoothUuid::UnreadAlertStatus: return QBluetoothServiceDiscoveryAgent::tr("Unread Alert Status");
+    case QBluetoothUuid::NewAlert: return QBluetoothServiceDiscoveryAgent::tr("New Alert");
+    case QBluetoothUuid::SupportedNewAlertCategory:
+        return QBluetoothServiceDiscoveryAgent::tr("Supported New Alert Category");
+    case QBluetoothUuid::SupportedUnreadAlertCategory:
+        return QBluetoothServiceDiscoveryAgent::tr("Supported Unread Alert Category");
+    case QBluetoothUuid::BloodPressureFeature: return QBluetoothServiceDiscoveryAgent::tr("Blood Pressure Feature");
+    case QBluetoothUuid::HIDInformation: return QBluetoothServiceDiscoveryAgent::tr("HID Information");
+    case QBluetoothUuid::ReportMap: return QBluetoothServiceDiscoveryAgent::tr("Report Map");
+    case QBluetoothUuid::HIDControlPoint: return QBluetoothServiceDiscoveryAgent::tr("HID Control Point");
+    case QBluetoothUuid::Report: return QBluetoothServiceDiscoveryAgent::tr("Report");
+    case QBluetoothUuid::ProtocolMode: return QBluetoothServiceDiscoveryAgent::tr("Protocol Mode");
+    case QBluetoothUuid::ScanIntervalWindow: return QBluetoothServiceDiscoveryAgent::tr("Scan Interval Window");
+    case QBluetoothUuid::PnPID: return QBluetoothServiceDiscoveryAgent::tr("PnP ID");
+    case QBluetoothUuid::GlucoseFeature: return QBluetoothServiceDiscoveryAgent::tr("Glucose Feature");
+    case QBluetoothUuid::RecordAccessControlPoint:
+        return QBluetoothServiceDiscoveryAgent::tr("Record Access Control Point");
+    case QBluetoothUuid::RSCMeasurement: return QBluetoothServiceDiscoveryAgent::tr("RSC Measurement");
+    case QBluetoothUuid::RSCFeature: return QBluetoothServiceDiscoveryAgent::tr("RSC Feature");
+    case QBluetoothUuid::SCControlPoint: return QBluetoothServiceDiscoveryAgent::tr("SC Control Point");
+    case QBluetoothUuid::CSCMeasurement: return QBluetoothServiceDiscoveryAgent::tr("CSC Measurement");
+    case QBluetoothUuid::CSCFeature: return QBluetoothServiceDiscoveryAgent::tr("CSC Feature");
+    case QBluetoothUuid::SensorLocation: return QBluetoothServiceDiscoveryAgent::tr("Sensor Location");
+    case QBluetoothUuid::CyclingPowerMeasurement:
+        return QBluetoothServiceDiscoveryAgent::tr("Cycling Power Measurement");
+    case QBluetoothUuid::CyclingPowerVector: return QBluetoothServiceDiscoveryAgent::tr("Cycling Power Vector");
+    case QBluetoothUuid::CyclingPowerFeature: return QBluetoothServiceDiscoveryAgent::tr("Cycling Power Feature");
+    case QBluetoothUuid::CyclingPowerControlPoint:
+        return QBluetoothServiceDiscoveryAgent::tr("Cycling Power COntrol Point");
+    case QBluetoothUuid::LocationAndSpeed: return QBluetoothServiceDiscoveryAgent::tr("Location And Speed");
+    case QBluetoothUuid::Navigation: return QBluetoothServiceDiscoveryAgent::tr("Navigation");
+    case QBluetoothUuid::PositionQuality: return QBluetoothServiceDiscoveryAgent::tr("Position Quality");
+    case QBluetoothUuid::LNFeature: return QBluetoothServiceDiscoveryAgent::tr("LN Feature");
+    case QBluetoothUuid::LNControlPoint: return QBluetoothServiceDiscoveryAgent::tr("LN Control Point");
     default:
         break;
     }

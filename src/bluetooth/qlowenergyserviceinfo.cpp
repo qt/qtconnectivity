@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inmodule QtBluetooth
     \brief The QLowEnergyServiceInfo class stores information about the Bluetooth
     Low Energy service.
+    \since 5.4
 
     QLowEnergyServiceInfo provides information about a Bluetooth Low Energy
     service's name, device, UUID, connection status, service type, handle

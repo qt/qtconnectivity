@@ -51,6 +51,8 @@ QT_BEGIN_NAMESPACE
     \brief The QLowEnergyCharacteristicInfo class stores information about a Bluetooth
     Low Energy service characteristic.
 
+    \since 5.4
+
     QLowEnergyCharacteristicInfo provides information about a Bluetooth Low Energy
     service characteristic's name, UUID, value, permissions, handle and descriptors.
     To get the full characteristic specification and information it is necessary to
@@ -73,87 +75,6 @@ QT_BEGIN_NAMESPACE
     \value ExtendedProperty         Additional characteristic properties are defined in the characteristic
                                     extended properties descriptor.
 */
-
-/*!
-    Method for parsing the characteristic name with given \a uuid.
- * \brief parseUuid
- * \param uuid
- * \return
- */
-QString parseUuid(QBluetoothUuid uuid) {
-    static QHash<int, QString> uuidnames;
-    if ( uuidnames.isEmpty() ) {
-        uuidnames[0x2a43] = QStringLiteral("Alert Category ID");
-        uuidnames[0x2A42] = QStringLiteral("Alert Category ID Bit Mask");
-        uuidnames[0x2A06] = QStringLiteral("Alert Level");
-        uuidnames[0x2A44] = QStringLiteral("Alert Notification Control Point");
-        uuidnames[0x2A3F] = QStringLiteral("Alert Status");
-        uuidnames[0x2A01] = QStringLiteral("GAP Appearance");
-        uuidnames[0x2A19] = QStringLiteral("Battery Level");
-        uuidnames[0x2A49] = QStringLiteral("Blood Pressure Feature");
-        uuidnames[0x2A35] = QStringLiteral("Blood Pressure Measurement");
-        uuidnames[0x2A38] = QStringLiteral("Body Sensor Location");
-        uuidnames[0x2A22] = QStringLiteral("Boot Keyboard Input Report");
-        uuidnames[0x2A32] = QStringLiteral("Boot Keyboard Output Report");
-        uuidnames[0x2A33] = QStringLiteral("Boot Mouse Input Report");
-        uuidnames[0x2A2B] = QStringLiteral("Current Time");
-        uuidnames[0x2A08] = QStringLiteral("Date Time");
-        uuidnames[0x2A0A] = QStringLiteral("Day Date Time");
-        uuidnames[0x2A09] = QStringLiteral("Day of Week");
-        uuidnames[0x2A00] = QStringLiteral("GAP Device Name");
-        uuidnames[0x2A0D] = QStringLiteral("DST Offset");
-        uuidnames[0x2A0C] = QStringLiteral("Exact Time 256");
-        uuidnames[0x2A26] = QStringLiteral("Firmware Revision String");
-        uuidnames[0x2A51] = QStringLiteral("Glucose Feature");
-        uuidnames[0x2A18] = QStringLiteral("Glucose Measurement");
-        uuidnames[0x2A34] = QStringLiteral("Glucose Measurement Context");
-        uuidnames[0x2A27] = QStringLiteral("Hardware Revision String");
-        uuidnames[0x2A39] = QStringLiteral("Heart Rate Control Point");
-        uuidnames[0x2A37] = QStringLiteral("Heart Rate Measurement");
-        uuidnames[0x2A4C] = QStringLiteral("HID Control Point");
-        uuidnames[0x2A4A] = QStringLiteral("HID Information");
-        uuidnames[0x2A2A] = QStringLiteral("IEEE 11073 20601 Regulatory Certification Data List");
-        uuidnames[0x2A36] = QStringLiteral("Intermediate Blood Pressure");
-        uuidnames[0x2A1E] = QStringLiteral("Iintermediate Temperature");
-        uuidnames[0x2A0F] = QStringLiteral("Local Time Information");
-        uuidnames[0x2A29] = QStringLiteral("Manufacturer Name String");
-        uuidnames[0x2A21] = QStringLiteral("Measurement Interval");
-        uuidnames[0x2A24] = QStringLiteral("Model Number String");
-        uuidnames[0x2A46] = QStringLiteral("New Alert");
-        uuidnames[0x2A04] = QStringLiteral("GAP Peripheral Preferred Connection Parameters");
-        uuidnames[0x2A02] = QStringLiteral("GAP Peripheral Privacy Flag");
-        uuidnames[0x2A50] = QStringLiteral("PNP ID");
-        uuidnames[0x2A4E] = QStringLiteral("Protocol Mode");
-        uuidnames[0x2A03] = QStringLiteral("GAP Reconnection Address");
-        uuidnames[0x2A52] = QStringLiteral("Record Access Control Point");
-        uuidnames[0x2A14] = QStringLiteral("Reference Time Information");
-        uuidnames[0x2A4D] = QStringLiteral("Report");
-        uuidnames[0x2A4B] = QStringLiteral("Report Map");
-        uuidnames[0x2A40] = QStringLiteral("Ringer Control Point");
-        uuidnames[0x2A41] = QStringLiteral("Ringer Setting");
-        uuidnames[0x2A4F] = QStringLiteral("Scan Interval Window");
-        uuidnames[0x2A31] = QStringLiteral("Scan Refresh");
-        uuidnames[0x2A25] = QStringLiteral("Serial Number String");
-        uuidnames[0x2A05] = QStringLiteral("GATT Service Changed");
-        uuidnames[0x2A28] = QStringLiteral("Software Revision String");
-        uuidnames[0x2A47] = QStringLiteral("Supported New Alert Category");
-        uuidnames[0x2A48] = QStringLiteral("Supported Unread Alert Category");
-        uuidnames[0x2A23] = QStringLiteral("System ID");
-        uuidnames[0x2A1C] = QStringLiteral("Temperature Measurement");
-        uuidnames[0x2A1D] = QStringLiteral("Temperature Type");
-        uuidnames[0x2A12] = QStringLiteral("Time Accuracy");
-        uuidnames[0x2A13] = QStringLiteral("Time Source");
-        uuidnames[0x2A16] = QStringLiteral("Time Update Control Point");
-        uuidnames[0x2A17] = QStringLiteral("Time Update State");
-        uuidnames[0x2A11] = QStringLiteral("Time With DST");
-        uuidnames[0x2A0E] = QStringLiteral("Time Zone");
-        uuidnames[0x2A07] = QStringLiteral("TX Power");
-        uuidnames[0x2A45] = QStringLiteral("Unread Alert Status");
-    }
-    QString name = uuidnames.value(uuid.toUInt16(), QStringLiteral("Unknown Characteristic"));
-    return name;
-
-}
 
 /*!
     Construct a new QLowEnergyCharacteristicInfo.
@@ -198,8 +119,8 @@ QLowEnergyCharacteristicInfo::~QLowEnergyCharacteristicInfo()
 */
 QString QLowEnergyCharacteristicInfo::name() const
 {
-    d_ptr->name = parseUuid(d_ptr->uuid);
-    return d_ptr->name;
+    return QBluetoothUuid::characteristicToString(
+                static_cast<QBluetoothUuid::CharacteristicType>(d_ptr->uuid.toUInt16()));
 }
 
 /*!

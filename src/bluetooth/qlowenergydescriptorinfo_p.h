@@ -56,7 +56,7 @@ public:
     QBluetoothUuid m_uuid;
     QString m_handle;
     QString m_name;
-    QBluetoothUuid::CharacteristicDescriptor m_type;
+    QBluetoothUuid::DescriptorType m_type;
 #ifdef QT_QNX_BLUETOOTH
     int instance;
 #endif

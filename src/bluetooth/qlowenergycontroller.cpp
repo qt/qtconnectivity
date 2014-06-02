@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inmodule QtBluetooth
     \brief The QLowEnergyController class is used for connecting and reading data from LE device
     services.
+    \since 5.4
 
     To read data contained in LE service characteristics, the LE device must be paired and turned on.
     First, connect necessary signals from the class and then connect to service by passing the wanted service
