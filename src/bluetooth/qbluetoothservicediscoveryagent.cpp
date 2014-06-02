@@ -105,6 +105,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \fn QBluetoothServiceDiscoveryAgent::serviceDiscovered(const QLowEnergyServiceInfo &info)
+
+    This signal is emitted when the Bluetooth Low Energy service described by \a info is discovered.
+*/
+
+/*!
     \fn QBluetoothServiceDiscoveryAgent::finished()
 
     This signal is emitted when the Bluetooth service discovery completes.

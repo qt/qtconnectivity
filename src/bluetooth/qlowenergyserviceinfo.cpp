@@ -163,7 +163,7 @@ QLowEnergyServiceInfo::ServiceType QLowEnergyServiceInfo::serviceType() const
 }
 
 /*!
-    Makes a copy of the \a other and assigns it to this QLowEnergyServiceInfo object.
+    Returns a copy of \a other and assigns it to this QLowEnergyServiceInfo object.
     The two copies continue to share the same service and registration details.
 */
 QLowEnergyServiceInfo &QLowEnergyServiceInfo::operator=(const QLowEnergyServiceInfo &other)
@@ -173,7 +173,7 @@ QLowEnergyServiceInfo &QLowEnergyServiceInfo::operator=(const QLowEnergyServiceI
 }
 
 /*!
-    Checks whether service is connected.
+    Returns \c true if this service is connected; otherwise returns \c false.
  */
 bool QLowEnergyServiceInfo::isConnected() const
 {

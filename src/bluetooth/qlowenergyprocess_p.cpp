@@ -46,7 +46,7 @@ QLowEnergyProcess::QLowEnergyProcess()
 
 }
 
-/*!
+/*
     Destroys the QLowEnergyProcess object.
 */
 QLowEnergyProcess::~QLowEnergyProcess()
@@ -54,8 +54,8 @@ QLowEnergyProcess::~QLowEnergyProcess()
 
 }
 
-/*!
-    Returns the instance of this class. This class is a singleton class.
+/*
+    Returns the singleton instance of this class.
 */
 QLowEnergyProcess *QLowEnergyProcess::instance()
 {

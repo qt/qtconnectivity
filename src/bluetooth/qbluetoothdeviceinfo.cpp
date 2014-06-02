@@ -252,9 +252,9 @@ QT_BEGIN_NAMESPACE
     This enum describes the configuration of the device.
 
     \value BaseRateCoreConfiguration            The device is a standard Bluetooth device.
-    \value BaseRateAndLowEnergyConfiguration    The device is a Bluetooth Smart device with support
+    \value BaseRateAndLowEnergyCoreConfiguration    The device is a Bluetooth Smart device with support
                                                 for standard and Low Energy device.
-    \value LowEnergyCoreCOnfiguration           The device is a Bluetooth Low Energy device.
+    \value LowEnergyCoreConfiguration           The device is a Bluetooth Low Energy device.
 */
 QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     valid(false),
@@ -517,6 +517,8 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
 /*!
     Sets the CoreConfiguration of the device to a \a coreConfig. This will help to make a difference
     between regular and Low Energy devices.
+
+    \sa coreConfiguration()
 */
 void QBluetoothDeviceInfo::setCoreConfiguration(const CoreConfiguration &coreConfig)
 {
@@ -528,7 +530,8 @@ void QBluetoothDeviceInfo::setCoreConfiguration(const CoreConfiguration &coreCon
 /*!
     Returns the configuration of the device. If device configuration is not set,
     basic rate device configuration will be returned.
-    \sa setCoreConfiguration
+
+    \sa setCoreConfiguration()
 */
 QBluetoothDeviceInfo::CoreConfiguration QBluetoothDeviceInfo::coreConfiguration() const
 {

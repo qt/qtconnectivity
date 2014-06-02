@@ -128,39 +128,45 @@
     heart rate or any other measurements) and advertises them. The client (PC, smartphone
     or any other Bluetooth Smart Ready device) connects to the server and reads the values
     advertised by the server. The BLE API is based on GATT (Generic Attribute Profile) concepts.
-    GATT commands are initiated by the client, as mentioned above, and the server is receiving
-    GATT commands and sends replies.
+    GATT commands are initiated by the client, and the server processes them. Each command is
+    usually answered by a reply.
 
-    These GATT commands initiate the services, which consist of characteristics. A characteristic
-    is data that is being transferred. Each characteristic has descriptors, which give additional
-    information about the characteristic. Services, characteristics and descriptors are recognized
-    by their 128bits UUIDs.
+    Each BLE service may consist of one or more characteristics. A characteristic
+    contains data  and can be further described by descriptors, which provide additional
+    information or means of manipulating the characteristic. All services, characteristics and
+    descriptors are recognized by their 128bits UUIDs. Further details on known uuids can be found
+    in \l QBluetoothUuid.
 
-    To be able to get and read characteristics, it is required to connect to the LE device service.
+    To be able to read and write characteristics, it is necessary to connect to the LE service.
 
     \snippet heartlistener/heartrate.cpp Connect signals
 
     We start a service discovery with a \l QBluetoothServiceDiscoveryAgent class and connect its
-    signal \l serviceDiscovered(QLowEnergyServiceInfo) to the slot in the application.
-    This way, it is possible to store all LE services or connect to the desired one.
-    \l QLowEnergyController is used for connecting to service, emitting values,
-    receiving emitted errors from the service and characteristics, and disconnecting from the service.
+    \l {QBluetoothServiceDiscoveryAgent::}{serviceDiscovered()} signal. Within the receiving slot we connect to the desired service.
+    \l QLowEnergyController is used to connect or disconnect to services, emits service-related value changes
+    and propagates errors in relation to the service management.
 
     Even though it is possible to connect to an LE service before the service scan is done,
-    it is advisable to do it after the service scan is done.
+    it is advisable to delay until after the service search has finished.
 
     \snippet heartlistener/heartrate.cpp Connecting to service
 
-    In the code example above, the wanted characteristics will be enabled for the notifications, but not
-    all of them have that option as explained in \l QLowEnergyController documentation. In this case,
-    it was a characteristic \l QBluetoothUuid::HeartRateMeasurement.
+    In the code example above, the desired characteristics is of type
+    \l {QBluetoothUuid::HeartRateMeasurement}{HeartRateMeasurement}. Since the application measures
+    the heart rate changes, it must enable change notifications for the characteristic.
+    Note that not all characteristics provide change notifications. Since the HeartRate characteristic
+    has been standardized it is possible to assume that notifications can be received. Ultimately
+    \l QLowEnergyCharacteristicInfo::isNotificationCharacteristic() must return \c true to
+    verify the availability of notifications.
 
-    Finally, to receive updates, we defined the slot where we read the emitted value.
+    Finally, we process the value of the HeartRate characteristic, as per Bluetooth Low Energy standard:
 
     \snippet heartlistener/heartrate.cpp Reading value
 
-    The returned value is the hexadecimal value. The procedure of reading and converting hexadecimal
-    value properly depends on the BLE devices that is sending updates since every device has a different
-    value structure.
-
+    In general a characterisitic value is a series of hexadecimal numbers. The precise interpretation of
+    those hexadecimal numbers depends on the characteristic type and its value structure.
+    A significant number has been standardized by the
+    \l {https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}{Bluetooth SIG} whereas others
+    may follow a custom protocol. The above code snippet demonstrates how to the read the standardized
+    HeartRate value.
 */

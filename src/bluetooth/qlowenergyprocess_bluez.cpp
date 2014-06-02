@@ -48,10 +48,10 @@ QT_BEGIN_NAMESPACE
 Q_GLOBAL_STATIC(QLowEnergyProcess, processInstance)
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-/*!
- * Private constructor. Constructs the new QLowEnergyProcess, sets variables and connects
- * signal to a slot.
- */
+/*
+    Private constructor. Constructs the new QLowEnergyProcess, sets variables and connects
+    signal to a slot.
+*/
 QLowEnergyProcess::QLowEnergyProcess()
 {
     m_process = new QProcess();
@@ -60,7 +60,7 @@ QLowEnergyProcess::QLowEnergyProcess()
     connect(m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(replyRead()));
 }
 
-/*!
+/*
     Destroys the QLowEnergyProcess object.
 */
 QLowEnergyProcess::~QLowEnergyProcess()
@@ -69,8 +69,8 @@ QLowEnergyProcess::~QLowEnergyProcess()
     delete m_process;
 }
 
-/*!
-    Returns the instance of this class. This class is a singleton class.
+/*
+    Returns the singleton instance of this class.
 */
 
 QLowEnergyProcess *QLowEnergyProcess::instance()
@@ -78,7 +78,7 @@ QLowEnergyProcess *QLowEnergyProcess::instance()
     return processInstance();
 }
 
-/*!
+/*
     Slot that emits a signal replySend. This slot is connected with QProcess signal
     and it is called whenever something comes to output.
 */
@@ -90,7 +90,7 @@ void QLowEnergyProcess::replyRead()
         emit replySend(back);
 }
 
-/*!
+/*
     Starts the process with \a command. This method is used only when starting the
     process.
 
@@ -103,7 +103,7 @@ void QLowEnergyProcess::startCommand(const QString &command)
         qDebug() << "Could not start the process under the command: "<<command;
 }
 
-/*!
+/*
     Executes the \a command. This method is called after process started.
 
     \sa startCommand()
@@ -115,7 +115,7 @@ void QLowEnergyProcess::executeCommand(const QString &command)
     m_process->write(cmd.constData());
 }
 
-/*!
+/*
     Terminate running process.
 */
 void QLowEnergyProcess::endProcess()

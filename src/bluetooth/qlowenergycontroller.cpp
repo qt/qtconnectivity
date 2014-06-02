@@ -54,12 +54,12 @@ QT_BEGIN_NAMESPACE
 
     To read data contained in LE service characteristics, the LE device must be paired and turned on.
     First, connect necessary signals from the class and then connect to service by passing the wanted service
-    to \l connectoToService() function. \l connected() signal will be emitted on success or \l error()
+    to \l connectToService() function. \l connected() signal will be emitted on success or \l error()
     signal in case of failure. It is possible to get error message by calling errorString function
     in QLowEnergyServiceInfo class.
 
     In case of disconnecting from service, pass the wanted service to \l disconnectFromService()
-    function and \l disconnected signal will be emitted.
+    function and \l disconnected() signal will be emitted.
 
     It is enough to use one instance of this class to connect to more service on more devices,
     but it is not possible to create more QLowEnergyController classes and connect to same
@@ -83,44 +83,46 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QLowEnergyController::connected(const QLowEnergyServiceInfo &)
+    \fn void QLowEnergyController::connected(const QLowEnergyServiceInfo &info)
 
-    This signal is emitted when a LE service is connected, passing connected QLowEnergyServiceInfo
-    instance.
+    This signal is emitted when the connection to the Bluetooth Low Energy service
+    \a info was established.
 
-    \sa connectToService(const QLowEnergyServiceInfo &leService)
+    \sa disconnected(), connectToService()
 */
 
 /*!
-    \fn void QLowEnergyController::error(const QLowEnergyServiceInfo &, QLowEnergyController::Error)
+    \fn void QLowEnergyController::error(const QLowEnergyServiceInfo &info, QLowEnergyController::Error error)
 
-    This signal is emitted when the service error occurs.
+    This signal is emitted when the service \a info triggered an \a error.
 
     \sa errorString()
 */
 
 /*!
-    \fn void QLowEnergyController::error(const QLowEnergyCharacteristicInfo &, QLowEnergyController::Error)
+    \fn void QLowEnergyController::error(const QLowEnergyCharacteristicInfo &info, QLowEnergyController::Error error)
 
-    This signal is emitted when the characteristic error occurs.
+    This signal is emitted when the characteristic \a info triggered an \a error.
 
     \sa errorString()
 */
 
 /*!
-    \fn void QLowEnergyController::disconnected(const QLowEnergyServiceInfo &)
+    \fn void QLowEnergyController::disconnected(const QLowEnergyServiceInfo &info)
 
-    Emits disconnected signal with disconnected LE service.
+    This signal is emitted when the connection to the Bluertooth Low Energy service \a info
+    was severed.
+
+    \sa connected(), disconnectFromService()
 */
 
 /*!
-    \fn QLowEnergyController::valueChanged(const QLowEnergyCharacteristicInfo &)
+    \fn QLowEnergyController::valueChanged(const QLowEnergyCharacteristicInfo &info)
 
-    Emits a signal when the characteristic value is changed. This signal is emitted
-    after calling \l enableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
-    function.
+    Emits a signal when the value of \a info has changed. This signal is only emitted
+    once the \l enableNotifications() function was called.
 
-    \sa enableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
+    \sa enableNotifications()
 */
 
 
@@ -155,7 +157,7 @@ QLowEnergyController::~QLowEnergyController()
 }
 
 /*!
-    Returns the list of all Bluetooth LE Services that were added.
+    Returns the list of all Bluetooth Low Energy services managed by this controller instance.
 */
 QList<QLowEnergyServiceInfo> QLowEnergyController::services() const
 {
@@ -176,7 +178,7 @@ void QLowEnergyController::connectToService(const QLowEnergyServiceInfo &leServi
 /*!
     Disconnects the given \a leService. If the given service was not connected, nothing will be done.
 
-    If the \a leService is not passed or it is invalid, all connected services will be disconnected.
+    If \a leService is invalid, all connected services will be disconnected.
 
 */
 void QLowEnergyController::disconnectFromService(const QLowEnergyServiceInfo &leService)
@@ -197,9 +199,7 @@ bool QLowEnergyController::enableNotifications(const QLowEnergyCharacteristicInf
 
 /*!
     Disables receiving notifications from the given \a characteristic. If the service characteristic
-    does not belong to one of the services, nothing wil lbe done.
-
-    \sa addLeService
+    does not belong to one of the services, nothing will be done.
 */
 void QLowEnergyController::disableNotifications(const QLowEnergyCharacteristicInfo &characteristic)
 {
@@ -208,8 +208,6 @@ void QLowEnergyController::disableNotifications(const QLowEnergyCharacteristicIn
 
 /*!
     Returns a human-readable description of the last error that occurred.
-
-    \sa error(const QLowEnergyServiceInfo &), error(const QLowEnergyCharacteristicInfo &)
 */
 QString QLowEnergyController::errorString() const
 {
@@ -226,9 +224,10 @@ void QLowEnergyController::setRandomAddress()
 }
 
 /*!
-    This method writes the wanted \a characteristic taking its value. This value is written directly
-    to the Bluetooth Low Energy device. In case wanted characteristic is not connected or does not
-    have write permission, it will return false with the corresponding error string.
+    This method writes \a characteristic using its current value. The value is directly written
+    to the Bluetooth Low Energy device. If the service associated to \a characteristic is not
+    connected or does not have write permission, the function returns \c false with
+    a corresponding \l errorString() being set.
 
     \sa QLowEnergyCharacteristicInfo::setValue(), errorString(), error()
  */
@@ -238,11 +237,11 @@ bool QLowEnergyController::writeCharacteristic(const QLowEnergyCharacteristicInf
 }
 
 /*!
-    This method writes the wanted \a descriptor taking its value. This value is written directly
-    to the Bluetooth Low Energy device. In case wanted descriptor is not connected it will return
-    false with the corresponding error string.
+    This method writes \a descriptor using its current value. The value is directly written
+    to the Bluetooth Low Energy device. If the service associated to \a descriptor is not
+    connected it returns \c false with a corresponding \l errorString() being set.
 
-    \sa QLowEnergyDescriptorInfo::setValue(), errorString(), error()
+    \sa QLowEnergyDescriptorInfo::setValue(), errorString()
  */
 bool QLowEnergyController::writeDescriptor(const QLowEnergyDescriptorInfo &descriptor)
 {
@@ -250,9 +249,9 @@ bool QLowEnergyController::writeDescriptor(const QLowEnergyDescriptorInfo &descr
 }
 
 /*!
-    This method returns the last error that was emitted.
+    This method returns the last occurred error.
 
-    \sa errorString(), error()
+    \sa errorString()
  */
 QLowEnergyController::Error QLowEnergyController::error() const
 {
