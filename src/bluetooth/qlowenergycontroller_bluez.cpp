@@ -193,16 +193,10 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                              charHandleId <= m_leServices.at(i).d_ptr->endingHandle.toUShort(0,0))
                         {
                             const QBluetoothUuid charUuid(handleDetails.at(10));
-                            QVariantMap map;
 
                             QLowEnergyCharacteristicInfo charInfo(charUuid);
                             charInfo.d_ptr->handle = charHandle;
-                            charInfo.d_ptr->startingHandle = handleDetails.at(1);
                             charInfo.d_ptr->permission = handleDetails.at(4).toUShort(0,0);
-                            map[QStringLiteral("uuid")] = charUuid.toString();
-                            map[QStringLiteral("handle")] = charHandle;
-                            map[QStringLiteral("permission")] = charInfo.d_ptr->permission;
-                            charInfo.d_ptr->properties = map;
                             if (!(charInfo.d_ptr->permission & QLowEnergyCharacteristicInfo::Read))
                                 qCDebug(QT_BT_BLUEZ) << "GATT characteristic: Read not permitted: " << charInfo.d_ptr->uuid;
                             else
@@ -267,7 +261,6 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                             qCDebug(QT_BT_BLUEZ) << handleId << h  << chars.handle() << chars.handle().toUShort(0,0);
 
                             if (h > chars.handle().toUShort(0,0) && h < charsNext.handle().toUShort(0,0)) {
-                                chars.d_ptr->notificationHandle = handleId;
                                 chars.d_ptr->notification = true;
                                 QLowEnergyDescriptorInfo descriptor(
                                             service.d_ptr->characteristicList[j].uuid(),
@@ -281,7 +274,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                                 service.d_ptr->characteristicList[j].d_ptr->descriptorsList.append(descriptor);
                                 qCDebug(QT_BT_BLUEZ) << "Notification characteristic set."
                                                      << chars.d_ptr->handle
-                                                     << chars.d_ptr->notificationHandle;
+                                                     << handleId;
                             }
                         }
                         if (!lastStep) {
@@ -310,7 +303,6 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                                 for (int s = 4 ; s< row.size(); s++)
                                     notificationValue += row.at(s);
                                 m_leServices.at(j).characteristics().at(k).d_ptr->value = notificationValue.toUtf8();
-                                m_leServices.at(j).characteristics().at(k).d_ptr->properties[QStringLiteral("value")] = notificationValue.toUtf8();
                                 emit q_ptr->valueChanged(m_leServices.at(j).characteristics().at(k));
                             }
                         }

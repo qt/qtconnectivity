@@ -41,7 +41,6 @@
 
 #include "qlowenergycharacteristicinfo.h"
 #include "qlowenergycharacteristicinfo_p.h"
-#include "bluez/characteristic_p.h"
 #include "qlowenergyprocess_p.h"
 
 #include <QtDBus/QDBusPendingCallWatcher>
@@ -55,16 +54,12 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
-    :   permission(0), notification (false), handle(QStringLiteral("0x0000")),
-        properties(QVariantMap()), characteristic(0), m_signalConnected(false)
+    :   permission(0), notification (false), handle(QStringLiteral("0x0000"))
 {
-    process = process->instance();
-    t=0;
 }
 
 QLowEnergyCharacteristicInfoPrivate::~QLowEnergyCharacteristicInfoPrivate()
 {
-    delete characteristic;
 }
 
 

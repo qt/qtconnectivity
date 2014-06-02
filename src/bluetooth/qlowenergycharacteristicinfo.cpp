@@ -211,14 +211,6 @@ QBluetoothUuid QLowEnergyCharacteristicInfo::uuid() const
 }
 
 /*!
-    Returns the properties value of the gatt characteristic.
-*/
-QVariantMap QLowEnergyCharacteristicInfo::properties() const
-{
-    return d_ptr->properties;
-}
-
-/*!
     Returns permissions of the gatt characteristic.
 */
 int QLowEnergyCharacteristicInfo::permissions() const

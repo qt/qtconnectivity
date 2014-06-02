@@ -55,7 +55,6 @@
 #include <btapi/btle.h>
 #endif
 #ifdef QT_BLUEZ_BLUETOOTH
-class OrgBluezCharacteristicInterface;
 QT_FORWARD_DECLARE_CLASS(QLowEnergyProcess);
 #endif
 
@@ -76,28 +75,15 @@ public:
     int permission;
     bool notification;
     QString handle;
-    QString notificationHandle;
     int instance;
-    QVariantMap properties;
-    QString errorString;
     QList<QLowEnergyDescriptorInfo> descriptorsList;
 #ifdef QT_QNX_BLUETOOTH
     bt_gatt_characteristic_t characteristic;
     int characteristicMtu;
     bt_gatt_char_prop_mask characteristicProperties;
 #endif
-#ifdef QT_BLUEZ_BLUETOOTH
-    QString path;
-    int t;
-    QString startingHandle;
-#endif
 
 private:
-#ifdef QT_BLUEZ_BLUETOOTH
-    OrgBluezCharacteristicInterface *characteristic;
-    QLowEnergyProcess *process;
-    bool m_signalConnected;
-#endif
 
 };
 QT_END_NAMESPACE

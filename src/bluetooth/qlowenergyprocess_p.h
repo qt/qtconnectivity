@@ -69,8 +69,6 @@ public:
     void addPointer(QLowEnergyControllerPrivate* classPointer);
 #endif
 #ifdef QT_BLUEZ_BLUETOOTH
-    QProcess *getProcess();
-
     void startCommand(const QString &command);
     void executeCommand(const QString &command);
     void endProcess();

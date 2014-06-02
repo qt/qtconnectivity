@@ -66,7 +66,6 @@ public:
 
     QBluetoothUuid uuid() const;
     QString handle() const;
-    QVariantMap properties() const;
     QString name() const;
 
     QBluetoothUuid::CharacteristicDescriptor type() const;

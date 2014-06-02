@@ -85,7 +85,6 @@ public:
     QByteArray value() const;
 
     int permissions() const; //TODO should be of Type QLowEnergyCharacteristicInfo::Property
-    QVariantMap properties() const;
     QString handle() const; //TODO should be int
 
     bool isNotificationCharacteristic() const;

@@ -79,14 +79,6 @@ QLowEnergyProcess *QLowEnergyProcess::instance()
 }
 
 /*!
-    Returns the QProcess that this class is using.
-*/
-QProcess *QLowEnergyProcess::getProcess()
-{
-    return m_process;
-}
-
-/*!
     Slot that emits a signal replySend. This slot is connected with QProcess signal
     and it is called whenever something comes to output.
 */

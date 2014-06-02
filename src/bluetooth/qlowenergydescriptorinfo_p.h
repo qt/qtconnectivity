@@ -55,7 +55,6 @@ public:
     QByteArray m_value;
     QBluetoothUuid m_uuid;
     QString m_handle;
-    QVariantMap m_properties;
     QString m_name;
     QBluetoothUuid::CharacteristicDescriptor m_type;
 #ifdef QT_QNX_BLUETOOTH

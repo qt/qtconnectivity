@@ -186,16 +186,11 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
                 } else {
                     characteristicUuid = QBluetoothUuid(charUuid.toUShort(0,0));
                 }
-                QVariantMap map;
                 QLowEnergyCharacteristicInfo characteristicInfo(characteristicUuid);
                 characteristicInfo.d_ptr->handle = handleUuid;
                 characteristicInfo.d_ptr->instance = instance;
                 characteristicInfo.d_ptr->characteristic = allCharacteristicList[i];
                 characteristicInfo.d_ptr->permission = allCharacteristicList[i].properties;
-                map[QStringLiteral("uuid")] = characteristicUuid.toString();
-                map[QStringLiteral("handle")] = handleUuid;
-                map[QStringLiteral("permission")] = characteristicInfo.d_ptr->permission;
-                characteristicInfo.d_ptr->properties = map;
                 p->readDescriptors(characteristicInfo);
                 p->readValue(characteristicInfo);
                 //Subscribe only once since it is static function
@@ -590,11 +585,6 @@ void QLowEnergyControllerPrivate::readDescriptors(QLowEnergyCharacteristicInfo &
     }
 
     for (int i = 0; i < count; i++) {
-        QVariantMap map;
-
-        map[QStringLiteral("uuid")] = QString::fromLatin1(descriptorList[i].uuid);
-
-        map[QStringLiteral("handle")] = descriptorList[i].handle;
         QString descHanlde;
         descHanlde.setNum(descriptorList[i].handle);
         QString descriptorUuid(descriptorList[i].uuid);
@@ -618,9 +608,6 @@ void QLowEnergyControllerPrivate::readDescriptors(QLowEnergyCharacteristicInfo &
 
         }
         descriptor.d_ptr->instance = characteristic.d_ptr->instance;
-        map[QStringLiteral("value")] = descriptor.d_ptr->m_value;
-        descriptor.d_ptr->m_properties = map;
-        //TODO what are these properties? Bluez doesn't have these atm
         characteristic.d_ptr->descriptorsList.append(descriptor);
     }
 
@@ -660,7 +647,6 @@ void QLowEnergyControllerPrivate::readValue(QLowEnergyCharacteristicInfo &charac
             hexadecimal.setNum(characteristicBuffer[j], 16);
             characteristic.d_ptr->value.append(hexadecimal.toLatin1());
         }
-        characteristic.d_ptr->properties["value"] = characteristic.d_ptr->value;
     }
 }
 

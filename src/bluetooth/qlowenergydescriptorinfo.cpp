@@ -75,8 +75,8 @@ QString parseDescriptorUuid(const QBluetoothUuid &uuid)
     return name;
 }
 
-QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle):
-    m_value(QByteArray()), m_uuid(uuid), m_handle(handle), m_properties(QVariantMap()), m_name(QStringLiteral(""))
+QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle)
+    :   m_uuid(uuid), m_handle(handle)
 {
 #ifdef QT_QNX_BLUETOOTH
     instance = -1;
@@ -153,14 +153,6 @@ QString QLowEnergyDescriptorInfo::handle() const
 QByteArray QLowEnergyDescriptorInfo::value() const
 {
     return d_ptr->m_value;
-}
-
-/*!
-    Returns the properties of the descriptor.
-*/
-QVariantMap QLowEnergyDescriptorInfo::properties() const
-{
-    return d_ptr->m_properties;
 }
 
 /*!
