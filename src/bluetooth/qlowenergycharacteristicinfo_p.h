@@ -72,7 +72,7 @@ public:
     QString name;
     QBluetoothUuid uuid;
     QByteArray value;
-    int permission;
+    QLowEnergyCharacteristicInfo::PropertyType properties;
     bool notification;
     QString handle;
     int instance;

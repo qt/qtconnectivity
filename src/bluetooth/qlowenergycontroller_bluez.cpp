@@ -196,8 +196,10 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
 
                             QLowEnergyCharacteristicInfo charInfo(charUuid);
                             charInfo.d_ptr->handle = charHandle;
-                            charInfo.d_ptr->permission = handleDetails.at(4).toUShort(0,0);
-                            if (!(charInfo.d_ptr->permission & QLowEnergyCharacteristicInfo::Read))
+                            charInfo.d_ptr->properties =
+                                    static_cast<QLowEnergyCharacteristicInfo::PropertyType>(
+                                        handleDetails.at(4).toUShort(0,0));
+                            if (!(charInfo.d_ptr->properties & QLowEnergyCharacteristicInfo::Read))
                                 qCDebug(QT_BT_BLUEZ) << "GATT characteristic: Read not permitted: " << charInfo.d_ptr->uuid;
                             else
                                 m_leServices.at(i).d_ptr->m_readCounter++;
@@ -367,7 +369,7 @@ void QLowEnergyControllerPrivate::readCharacteristicValue(int index)
 
     QLowEnergyServiceInfo info = m_leServices.at(index);
     for (int i = 0; i < info.d_ptr->characteristicList.size(); i++) {
-        if ((info.d_ptr->characteristicList.at(i).d_ptr->permission & QLowEnergyCharacteristicInfo::Read)) {
+        if ((info.d_ptr->characteristicList.at(i).d_ptr->properties & QLowEnergyCharacteristicInfo::Read)) {
             const QString uuidHandle = info.d_ptr->characteristicList.at(i).uuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
             const QString command = QStringLiteral("char-read-uuid ") + uuidHandle;
             process->executeCommand(command);
@@ -442,7 +444,7 @@ void QLowEnergyControllerPrivate::disableNotification(const QLowEnergyCharacteri
 bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &characteristic)
 {
     if (process->isConnected() && characteristic.isValid()) {
-        if (QLowEnergyCharacteristicInfo::Write & characteristic.permissions()) {
+        if (QLowEnergyCharacteristicInfo::Write & characteristic.properties()) {
             writeValue(characteristic.handle(), characteristic.value());
             return true;
         } else {

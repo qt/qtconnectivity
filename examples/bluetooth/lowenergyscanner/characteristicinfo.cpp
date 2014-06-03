@@ -88,7 +88,7 @@ QString CharacteristicInfo::getHandle() const
 QString CharacteristicInfo::getPermission() const
 {
     QString properties = "Properties:";
-    int permission = m_characteristic.permissions();
+    int permission = m_characteristic.properties();
     if (permission & QLowEnergyCharacteristicInfo::Read)
         properties = properties + QStringLiteral(" Read");
     if (permission & QLowEnergyCharacteristicInfo::Write)

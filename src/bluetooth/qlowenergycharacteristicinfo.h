@@ -52,14 +52,15 @@ QT_BEGIN_NAMESPACE
 class QBluetoothUuid;
 class QLowEnergyCharacteristicInfoPrivate;
 
+//TODO rename class to QLowEnergyCharacteristic
 class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristicInfo
 {
     friend class QLowEnergyController;
     friend class QLowEnergyControllerPrivate;
 public:
 
-    //TODO rename enum name
-    enum Property {
+    enum PropertyType {
+        Unknown = 0x00,
         Broadcasting = 0x01,
         Read = 0x02,
         WriteNoResponse = 0x04,
@@ -69,6 +70,7 @@ public:
         WriteSigned = 0x40,
         ExtendedProperty = 0x80
     };
+    Q_DECLARE_FLAGS(PropertyTypes, PropertyType)
 
     QLowEnergyCharacteristicInfo();
     QLowEnergyCharacteristicInfo(const QBluetoothUuid &uuid);
@@ -84,7 +86,7 @@ public:
     void setValue(const QByteArray &value);
     QByteArray value() const;
 
-    int permissions() const; //TODO should be of Type QLowEnergyCharacteristicInfo::Property
+    QLowEnergyCharacteristicInfo::PropertyTypes properties() const;
     QString handle() const; //TODO should be int
 
     bool isNotificationCharacteristic() const;
@@ -95,8 +97,9 @@ public:
 
 protected:
     QSharedPointer<QLowEnergyCharacteristicInfoPrivate> d_ptr;
-
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyCharacteristicInfo::PropertyTypes)
 
 QT_END_NAMESPACE
 

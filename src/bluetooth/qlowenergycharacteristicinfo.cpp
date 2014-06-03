@@ -61,10 +61,11 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \enum QLowEnergyCharacteristicInfo::Property
+    \enum QLowEnergyCharacteristicInfo::PropertyType
 
     This enum describes the properties of a characteristic.
 
+    \value Unknown                  The type is not known.
     \value Broadcasting             Allow for the broadcasting of Generic Attributes (GATT) characteristic values.
     \value Read                     Allow the characteristic values to be read.
     \value WriteNoResponse          Allow characteristic values without responses to be written.
@@ -74,6 +75,8 @@ QT_BEGIN_NAMESPACE
     \value WriteSigned              Permits signed writes of the GATT characteristic values.
     \value ExtendedProperty         Additional characteristic properties are defined in the characteristic
                                     extended properties descriptor.
+
+    \sa properties()
 */
 
 /*!
@@ -132,11 +135,11 @@ QBluetoothUuid QLowEnergyCharacteristicInfo::uuid() const
 }
 
 /*!
-    Returns permissions of the gatt characteristic.
+    Returns the properties of the gatt characteristic.
 */
-int QLowEnergyCharacteristicInfo::permissions() const
+QLowEnergyCharacteristicInfo::PropertyTypes QLowEnergyCharacteristicInfo::properties() const
 {
-    return d_ptr->permission;
+    return d_ptr->properties;
 }
 
 /*!

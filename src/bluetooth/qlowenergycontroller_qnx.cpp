@@ -190,7 +190,9 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
                 characteristicInfo.d_ptr->handle = handleUuid;
                 characteristicInfo.d_ptr->instance = instance;
                 characteristicInfo.d_ptr->characteristic = allCharacteristicList[i];
-                characteristicInfo.d_ptr->permission = allCharacteristicList[i].properties;
+                characteristicInfo.d_ptr->properties =
+                        static_cast<QLowEnergyCharacteristicInfo::PropertyType>(
+                            allCharacteristicList[i].properties);
                 p->readDescriptors(characteristicInfo);
                 p->readValue(characteristicInfo);
                 //Subscribe only once since it is static function
@@ -475,7 +477,7 @@ bool QLowEnergyControllerPrivate::enableNotification(const QLowEnergyCharacteris
         Q_EMIT q->error(characteristic, error);
         return false;
     }
-    if (!(characteristic.d_ptr->permission & QLowEnergyCharacteristicInfo::Notify)) {
+    if (!(characteristic.d_ptr->properties & QLowEnergyCharacteristicInfo::Notify)) {
         qCDebug(QT_BT_QNX) << "Notification changes not allowed";
         error = QLowEnergyController::PermissionError;
         errorString = QStringLiteral("This characteristic does not support notifications.");
@@ -515,7 +517,7 @@ bool QLowEnergyControllerPrivate::write(const QLowEnergyCharacteristicInfo &char
         return false;
     }
 
-    if (characteristic.permissions() & QLowEnergyCharacteristicInfo::Write) {
+    if (characteristic.properties() & QLowEnergyCharacteristicInfo::Write) {
         writeValue(characteristic.d_ptr->instance, characteristic.d_ptr->handle, characteristic.d_ptr->value);
         if (errorString == QString()) {
             return true;
@@ -619,7 +621,7 @@ void QLowEnergyControllerPrivate::readDescriptors(QLowEnergyCharacteristicInfo &
 
 void QLowEnergyControllerPrivate::readValue(QLowEnergyCharacteristicInfo &characteristic)
 {
-    if ((characteristic.d_ptr->permission & QLowEnergyCharacteristicInfo::Read) == 0) {
+    if (!(characteristic.d_ptr->properties & QLowEnergyCharacteristicInfo::Read)) {
         qCDebug(QT_BT_QNX) << "GATT characteristic: Read not permitted";
         return;
     }

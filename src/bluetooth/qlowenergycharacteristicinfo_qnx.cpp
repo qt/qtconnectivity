@@ -55,8 +55,9 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
-QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate():
-    permission(0), notification(false), handle(QStringLiteral("0x0000")), instance(-1)
+QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
+    :   properties(QLowEnergyCharacteristicInfo::Unknown),
+        notification(false), handle(QStringLiteral("0x0000")), instance(-1)
 {
 
 }

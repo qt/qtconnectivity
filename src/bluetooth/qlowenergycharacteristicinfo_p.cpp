@@ -44,6 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
+    :   properties(QLowEnergyCharacteristicInfo::Unknown),
+        notification(false)
 {
 
 }

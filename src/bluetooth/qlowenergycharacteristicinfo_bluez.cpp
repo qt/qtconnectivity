@@ -54,7 +54,8 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
-    :   permission(0), notification (false), handle(QStringLiteral("0x0000"))
+    :   properties(QLowEnergyCharacteristicInfo::Unknown),
+        notification (false), handle(QStringLiteral("0x0000"))
 {
 }
 

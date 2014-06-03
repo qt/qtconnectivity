@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyCharacteristicInfo;
 class QLowEnergyDescriptorInfoPrivate;
 
+//TODO rename to QLowEnergyDescriptor
 class Q_BLUETOOTH_EXPORT QLowEnergyDescriptorInfo
 {
     friend class QLowEnergyControllerPrivate;
