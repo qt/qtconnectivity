@@ -87,7 +87,7 @@ void HeartRate::deviceSearch()
 
 void HeartRate::addDevice(const QBluetoothDeviceInfo &device)
 {
-    if (device.coreConfiguration() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         QBluetoothLocalDevice localDevice;
         QBluetoothLocalDevice::Pairing pairingStatus = localDevice.pairingStatus(device.address());
         if (pairingStatus == QBluetoothLocalDevice::Paired || pairingStatus == QBluetoothLocalDevice::AuthorizedPaired )

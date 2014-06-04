@@ -515,25 +515,25 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
 }
 
 /*!
-    Sets the CoreConfiguration of the device to a \a coreConfig. This will help to make a difference
+    Sets the CoreConfigurations of the device to \a coreConfigs. This will help to make a difference
     between regular and Low Energy devices.
 
-    \sa coreConfiguration()
+    \sa coreConfigurations()
 */
-void QBluetoothDeviceInfo::setCoreConfiguration(const CoreConfiguration &coreConfig)
+void QBluetoothDeviceInfo::setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs)
 {
     Q_D(QBluetoothDeviceInfo);
 
-    d->deviceCoreConfiguration = coreConfig;
+    d->deviceCoreConfiguration = coreConfigs;
 }
 
 /*!
     Returns the configuration of the device. If device configuration is not set,
     basic rate device configuration will be returned.
 
-    \sa setCoreConfiguration()
+    \sa setCoreConfigurations()
 */
-QBluetoothDeviceInfo::CoreConfiguration QBluetoothDeviceInfo::coreConfiguration() const
+QBluetoothDeviceInfo::CoreConfigurations QBluetoothDeviceInfo::coreConfigurations() const
 {
     Q_D(const QBluetoothDeviceInfo);
 

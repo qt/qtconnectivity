@@ -478,7 +478,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
                 *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
 
             QVERIFY(info.isValid());
-            if (info.device().coreConfiguration() == QBluetoothDeviceInfo::LowEnergyCoreConfiguration || info.device().coreConfiguration() == QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration) {
+            if (info.device().coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
                 leDevice = true;
                 leController.connectToService(info);
                 leCounter ++;

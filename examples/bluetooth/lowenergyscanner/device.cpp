@@ -95,7 +95,7 @@ void Device::startDeviceDiscovery()
 
 void Device::addDevice(const QBluetoothDeviceInfo &info)
 {
-    if (info.coreConfiguration() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+    if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         DeviceInfo *d = new DeviceInfo(info);
         devices.append(d);
         setUpdate("Last device added: " + d->getName());

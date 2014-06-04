@@ -278,10 +278,10 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(deviceInfo.serviceClasses(), serviceClasses);
         QCOMPARE(deviceInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(deviceInfo.minorDeviceClass(), minorDeviceClass);
-        QCOMPARE(deviceInfo.coreConfiguration(), QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        QCOMPARE(deviceInfo.coreConfigurations(), QBluetoothDeviceInfo::BaseRateCoreConfiguration);
 
-        deviceInfo.setCoreConfiguration(coreConfiguration);
-        QCOMPARE(deviceInfo.coreConfiguration(), coreConfiguration);
+        deviceInfo.setCoreConfigurations(coreConfiguration);
+        QCOMPARE(deviceInfo.coreConfigurations(), coreConfiguration);
 
         QBluetoothDeviceInfo copyInfo(deviceInfo);
         QVERIFY(copyInfo.isValid());
@@ -291,7 +291,7 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
-        QCOMPARE(copyInfo.coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo.coreConfigurations(), coreConfiguration);
     }
 }
 
@@ -311,7 +311,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
     QFETCH(QBluetoothDeviceInfo::CoreConfiguration, coreConfiguration);
 
     QBluetoothDeviceInfo deviceInfo(address, name, classOfDevice);
-    deviceInfo.setCoreConfiguration(coreConfiguration);
+    deviceInfo.setCoreConfigurations(coreConfiguration);
 
     QVERIFY(deviceInfo.isValid());
 
@@ -325,7 +325,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
-        QCOMPARE(copyInfo.coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo.coreConfigurations(), coreConfiguration);
     }
 
     {
@@ -342,7 +342,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
-        QCOMPARE(copyInfo.coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo.coreConfigurations(), coreConfiguration);
     }
 
     {
@@ -368,8 +368,8 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo2.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo1.minorDeviceClass(), minorDeviceClass);
         QCOMPARE(copyInfo2.minorDeviceClass(), minorDeviceClass);
-        QCOMPARE(copyInfo1.coreConfiguration(), coreConfiguration);
-        QCOMPARE(copyInfo2.coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo1.coreConfigurations(), coreConfiguration);
+        QCOMPARE(copyInfo2.coreConfigurations(), coreConfiguration);
     }
 
     {

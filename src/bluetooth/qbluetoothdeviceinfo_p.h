@@ -69,7 +69,7 @@ public:
 
     QBluetoothDeviceInfo::DataCompleteness serviceUuidsCompleteness;
     QList<QBluetoothUuid> serviceUuids;
-    QBluetoothDeviceInfo::CoreConfiguration deviceCoreConfiguration;
+    QBluetoothDeviceInfo::CoreConfigurations deviceCoreConfiguration;
 };
 
 QT_END_NAMESPACE

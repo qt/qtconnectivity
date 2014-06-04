@@ -314,9 +314,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
      * Low Energy devices do not have property Class.
      */
     if (btClass == 0)
-        device.setCoreConfiguration(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+        device.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
     else
-        device.setCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        device.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == device.address()) {
             if (discoveredDevices[i] == device) {

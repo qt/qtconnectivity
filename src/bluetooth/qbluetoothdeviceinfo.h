@@ -231,8 +231,9 @@ public:
     void setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness);
     QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = 0) const;
     DataCompleteness serviceUuidsCompleteness() const;
-    void setCoreConfiguration(const CoreConfiguration &coreConfig);
-    CoreConfiguration coreConfiguration() const;
+
+    void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);
+    QBluetoothDeviceInfo::CoreConfigurations coreConfigurations() const;
 
 protected:
     QBluetoothDeviceInfoPrivate *d_ptr;
