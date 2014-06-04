@@ -296,6 +296,7 @@ public:
     static QString serviceClassToString(ServiceClassUuid uuid);
     static QString protocolToString(ProtocolUuid uuid);
     static QString characteristicToString(CharacteristicType uuid);
+    static QString descriptorToString(DescriptorType uuid);
 };
 
 #ifndef QT_NO_DEBUG_STREAM

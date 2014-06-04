@@ -58,26 +58,9 @@ QT_BEGIN_NAMESPACE
     about the characteristic (data format, notification activation, etc).
 */
 
-QString parseDescriptorUuid(const QBluetoothUuid &uuid)
-{
-    static QHash<int, QString> uuidnames;
-    if ( uuidnames.isEmpty() ) {
-        uuidnames[0x2905] = QStringLiteral("Characteristic Aggregate Format");
-        uuidnames[0x2900] = QStringLiteral("Characteristic Extended Properties");
-        uuidnames[0x2904] = QStringLiteral("Characteristic Presentation Format");
-        uuidnames[0x2901] = QStringLiteral("Characteristic User Description");
-        uuidnames[0x2902] = QStringLiteral("Client Characteristic Configuration");
-        uuidnames[0x2907] = QStringLiteral("External Report Reference");
-        uuidnames[0x2908] = QStringLiteral("Report Reference");
-        uuidnames[0x2903] = QStringLiteral("Server Characteristic Configuration");
-        uuidnames[0x2906] = QStringLiteral("Valid Range");
-    }
-    QString name = uuidnames.value(uuid.toUInt16(), QStringLiteral("Unknow Descriptor"));
-    return name;
-}
-
 QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle)
-    :   m_uuid(uuid), m_handle(handle)
+    :   m_uuid(uuid), m_handle(handle),
+        m_type(QBluetoothUuid::ClientCharacteristicConfiguration) //by default a notification
 {
 #ifdef QT_QNX_BLUETOOTH
     instance = -1;
@@ -95,7 +78,6 @@ QLowEnergyDescriptorInfoPrivate::~QLowEnergyDescriptorInfoPrivate()
 QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid):
     d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, QStringLiteral("0x0000")))
 {
-
 }
 
 /*!
@@ -109,7 +91,6 @@ QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
     d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, handle))
 {
     d_ptr->m_type = type;
-    d_ptr->m_name = parseDescriptorUuid(uuid);
 }
 
 /*!
@@ -157,11 +138,16 @@ QByteArray QLowEnergyDescriptorInfo::value() const
 }
 
 /*!
-    Returns the name of the descriptor.
+    Returns the name of the descriptor type.
+
+    \sa type()
 */
+//TODO check that we really need this function. The static
+//     QBluetoothUuid::descriptorToString should actually be sufficient.
 QString QLowEnergyDescriptorInfo::name() const
 {
-    return d_ptr->m_name;
+    return QBluetoothUuid::descriptorToString(
+                static_cast<QBluetoothUuid::DescriptorType>(d_ptr->m_type));
 }
 
 /*!

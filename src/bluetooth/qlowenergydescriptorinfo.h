@@ -57,6 +57,8 @@ class Q_BLUETOOTH_EXPORT QLowEnergyDescriptorInfo
 {
     friend class QLowEnergyControllerPrivate;
 public:
+    //TODO  - add QLowEnergyDescriptorInfo() <- for invalid descriptor object
+    //      - remove QLowEnergyDescriptorInfo(QBluetoothUuid) <- not really needed
     explicit QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid);
     ~QLowEnergyDescriptorInfo();
 

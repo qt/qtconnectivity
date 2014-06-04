@@ -118,7 +118,7 @@ QLowEnergyCharacteristicInfo::~QLowEnergyCharacteristicInfo()
 }
 
 /*!
-    Returns the name of the gatt characteristic.
+    Returns the name of the gatt characteristic type.
 */
 QString QLowEnergyCharacteristicInfo::name() const
 {

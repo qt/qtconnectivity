@@ -55,7 +55,6 @@ public:
     QByteArray m_value;
     QBluetoothUuid m_uuid;
     QString m_handle;
-    QString m_name;
     QBluetoothUuid::DescriptorType m_type;
 #ifdef QT_QNX_BLUETOOTH
     int instance;

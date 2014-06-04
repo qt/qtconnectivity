@@ -754,7 +754,7 @@ QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
 }
 
 /*!
-    Returns a human-readable and translated name for the given characteristic
+    Returns a human-readable and translated name for the given characteristic type
     represented by \a uuid.
 
     \sa QBluetoothUuid::CharacteristicType
@@ -865,6 +865,42 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::PositionQuality: return QBluetoothServiceDiscoveryAgent::tr("Position Quality");
     case QBluetoothUuid::LNFeature: return QBluetoothServiceDiscoveryAgent::tr("LN Feature");
     case QBluetoothUuid::LNControlPoint: return QBluetoothServiceDiscoveryAgent::tr("LN Control Point");
+    default:
+        break;
+    }
+
+    return QString();
+}
+
+/*!
+    Returns a human-readable and translated name for the given descriptor type
+    represented by \a uuid.
+
+    \sa QBluetoothUuid::CharacteristicType
+
+    \since 5.4
+*/
+QString QBluetoothUuid::descriptorToString(QBluetoothUuid::DescriptorType uuid)
+{
+    switch (uuid) {
+    case QBluetoothUuid::CharacteristicExtendedProperties:
+        return QBluetoothServiceDiscoveryAgent::tr("Characteristic Extended Properties");
+    case QBluetoothUuid::CharacteristicUserDescription:
+        return QBluetoothServiceDiscoveryAgent::tr("Characteristic User Description");
+    case QBluetoothUuid::ClientCharacteristicConfiguration:
+        return QBluetoothServiceDiscoveryAgent::tr("Client Characteristic Configuration");
+    case QBluetoothUuid::ServerCharacteristicConfiguration:
+        return QBluetoothServiceDiscoveryAgent::tr("Server Characteristic Configuratio");
+    case QBluetoothUuid::CharacteristicPresentationFormat:
+        return QBluetoothServiceDiscoveryAgent::tr("Characteristic Presentation Format");
+    case QBluetoothUuid::CharacteristicAggregateFormat:
+        return QBluetoothServiceDiscoveryAgent::tr("Characteristic Aggregate Format");
+    case QBluetoothUuid::ValidRange:
+        return QBluetoothServiceDiscoveryAgent::tr("Valid Range");
+    case QBluetoothUuid::ExternalReportReference:
+        return QBluetoothServiceDiscoveryAgent::tr("External Report Reference");
+    case QBluetoothUuid::ReportReference:
+        return QBluetoothServiceDiscoveryAgent::tr("Report Reference");
     default:
         break;
     }

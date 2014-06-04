@@ -96,7 +96,10 @@ void tst_QLowEnergyDescriptorInfo::tst_construction()
         QCOMPARE(descriptorInfo.uuid(), QBluetoothUuid());
         QCOMPARE(descriptorInfo.value(), QByteArray());
         QCOMPARE(descriptorInfo.handle(), QString("0x0000"));
-        QCOMPARE(descriptorInfo.name(), QString(""));
+        QCOMPARE(descriptorInfo.name(),
+                 QBluetoothUuid::descriptorToString(descriptorInfo.type()));
+        QCOMPARE(descriptorInfo.type(),
+                 QBluetoothUuid::ClientCharacteristicConfiguration);
     }
 
     {
@@ -106,7 +109,8 @@ void tst_QLowEnergyDescriptorInfo::tst_construction()
 
         QLowEnergyDescriptorInfo copyInfo = descriptorInfo;
         QCOMPARE(copyInfo.uuid().toString(), descriptorUuid.toString());
-        QCOMPARE(copyInfo.name(), QString(""));
+        QCOMPARE(copyInfo.name(),
+                 QBluetoothUuid::descriptorToString(copyInfo.type()));
         copyInfo.setValue(QByteArray("test"));
         QCOMPARE(copyInfo.value(), QByteArray("test"));
 
@@ -121,7 +125,8 @@ void tst_QLowEnergyDescriptorInfo::tst_construction()
         QCOMPARE(copyInfo.uuid(), alternateDescriptorUuid);
         QCOMPARE(copyInfo.value(), QByteArray());
         QCOMPARE(copyInfo.handle(), QString("0x0000"));
-        QCOMPARE(copyInfo.name(), QString(""));
+        QCOMPARE(copyInfo.name(),
+                 QBluetoothUuid::descriptorToString(copyInfo.type()));
     }
 }
 
