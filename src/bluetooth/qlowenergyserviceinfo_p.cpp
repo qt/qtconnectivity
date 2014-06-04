@@ -44,6 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate()
+    : serviceType(QLowEnergyServiceInfo::PrimaryService),
+      connected(false)
 {
 
 }

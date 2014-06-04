@@ -52,7 +52,7 @@
 QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QUuid)
-Q_DECLARE_METATYPE(QBluetoothUuid::DescriptorID)
+Q_DECLARE_METATYPE(QBluetoothUuid::DescriptorType)
 
 class tst_QLowEnergyDescriptorInfo : public QObject
 {
@@ -95,7 +95,6 @@ void tst_QLowEnergyDescriptorInfo::tst_construction()
 
         QCOMPARE(descriptorInfo.uuid(), QBluetoothUuid());
         QCOMPARE(descriptorInfo.value(), QByteArray());
-        QCOMPARE(descriptorInfo.properties(), QVariantMap());
         QCOMPARE(descriptorInfo.handle(), QString("0x0000"));
         QCOMPARE(descriptorInfo.name(), QString(""));
     }
@@ -106,18 +105,23 @@ void tst_QLowEnergyDescriptorInfo::tst_construction()
         QCOMPARE(descriptorInfo.uuid().toString(), descriptorUuid.toString());
 
         QLowEnergyDescriptorInfo copyInfo = descriptorInfo;
-
         QCOMPARE(copyInfo.uuid().toString(), descriptorUuid.toString());
+        QCOMPARE(copyInfo.name(), QString(""));
+        copyInfo.setValue(QByteArray("test"));
+        QCOMPARE(copyInfo.value(), QByteArray("test"));
+
+        //QLowEnergyDescriptorInfos share their internal data
+        //for now enshrine this in the test
+        //TODO do we really need this behavior as it is unusual for value types
+        QCOMPARE(descriptorInfo.value(), QByteArray("test"));
 
         copyInfo = QLowEnergyDescriptorInfo(alternateDescriptorUuid);
         QCOMPARE(copyInfo.uuid().toString(), alternateDescriptorUuid.toString());
 
-        QCOMPARE(copyInfo.uuid(), QBluetoothUuid());
+        QCOMPARE(copyInfo.uuid(), alternateDescriptorUuid);
         QCOMPARE(copyInfo.value(), QByteArray());
-        QCOMPARE(copyInfo.properties(), QVariantMap());
         QCOMPARE(copyInfo.handle(), QString("0x0000"));
         QCOMPARE(copyInfo.name(), QString(""));
-
     }
 }
 

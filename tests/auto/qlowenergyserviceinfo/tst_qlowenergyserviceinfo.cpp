@@ -100,7 +100,7 @@ void tst_QLowEnergyServiceInfo::tst_construction()
         QLowEnergyServiceInfo serviceInfo;
 
         QVERIFY(!serviceInfo.isValid());
-        QCOMPARE(serviceInfo.serviceName(), QString());
+        QCOMPARE(serviceInfo.serviceName(), QStringLiteral("Unknown Service"));
         QCOMPARE(serviceInfo.serviceUuid().toString(), QBluetoothUuid().toString());
         QCOMPARE(serviceInfo.serviceType(), QLowEnergyServiceInfo::PrimaryService);
         QCOMPARE(serviceInfo.isConnected(), false);
@@ -204,8 +204,8 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
     QFETCH(QBluetoothDeviceInfo::CoreConfiguration, coreConfiguration);
 
     QBluetoothDeviceInfo deviceInfo(address, name, classOfDevice);
-    deviceInfo.setCoreConfiguration(coreConfiguration);
-    QCOMPARE(deviceInfo.coreConfiguration(), coreConfiguration);
+    deviceInfo.setCoreConfigurations(coreConfiguration);
+    QCOMPARE(deviceInfo.coreConfigurations(), coreConfiguration);
 
     QLowEnergyServiceInfo serviceInfo(serviceClassUuid);
     serviceInfo.setDevice(deviceInfo);
@@ -220,7 +220,7 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
 
         QCOMPARE(copyInfo.device().address(), address);
         QCOMPARE(copyInfo.serviceUuid(), serviceClassUuid);
-        QCOMPARE(copyInfo.device().coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo.device().coreConfigurations(), coreConfiguration);
         QCOMPARE(copyInfo.serviceType(), serviceType);
         QCOMPARE(copyInfo.isConnected(), false);
         QCOMPARE(copyInfo.characteristics().size(), 0);
@@ -238,7 +238,7 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
 
         QCOMPARE(copyInfo.device().address(), address);
         QCOMPARE(copyInfo.serviceUuid(), serviceClassUuid);
-        QCOMPARE(copyInfo.device().coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo.device().coreConfigurations(), coreConfiguration);
         QCOMPARE(copyInfo.serviceType(), serviceType);
     }
 
@@ -261,8 +261,8 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
         QCOMPARE(copyInfo2.serviceUuid(), serviceClassUuid);
         QCOMPARE(copyInfo1.serviceType(), serviceType);
         QCOMPARE(copyInfo2.serviceType(), serviceType);
-        QCOMPARE(copyInfo1.device().coreConfiguration(), coreConfiguration);
-        QCOMPARE(copyInfo2.device().coreConfiguration(), coreConfiguration);
+        QCOMPARE(copyInfo1.device().coreConfigurations(), coreConfiguration);
+        QCOMPARE(copyInfo2.device().coreConfigurations(), coreConfiguration);
         QCOMPARE(copyInfo1.isConnected(), false);
         QCOMPARE(copyInfo2.isConnected(), false);
         QCOMPARE(copyInfo1.characteristics().size(), 0);

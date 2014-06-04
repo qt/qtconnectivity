@@ -54,7 +54,7 @@ QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QUuid)
 Q_DECLARE_METATYPE(QLowEnergyCharacteristicInfo)
-Q_DECLARE_METATYPE(QBluetoothUuid::CharacteristicId)
+Q_DECLARE_METATYPE(QBluetoothUuid::CharacteristicType)
 
 class tst_QLowEnergyCharacteristicInfo : public QObject
 {
@@ -98,7 +98,7 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         QVERIFY(!characteristicInfo.isValid());
         QCOMPARE(characteristicInfo.uuid().toString(), QBluetoothUuid().toString());
         QCOMPARE(characteristicInfo.value(), QByteArray());
-        QCOMPARE(characteristicInfo.permissions(), 0);
+        QCOMPARE(characteristicInfo.properties(), QLowEnergyCharacteristicInfo::Unknown);
         QCOMPARE(characteristicInfo.handle(), QString("0x0000"));
         QCOMPARE(characteristicInfo.name(), QString(""));
         QCOMPARE(characteristicInfo.isNotificationCharacteristic(), false);
@@ -112,29 +112,40 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
 
         QCOMPARE(characteristicInfo.uuid().toString(), characteristicUuid.toString());
         QCOMPARE(characteristicInfo.value(), QByteArray());
-        QCOMPARE(characteristicInfo.permissions(), 0);
+        QCOMPARE(characteristicInfo.properties(), QLowEnergyCharacteristicInfo::Unknown);
         QCOMPARE(characteristicInfo.handle(), QString("0x0000"));
-        QCOMPARE(characteristicInfo.name(), QString(""));
+        QCOMPARE(characteristicInfo.name(),
+                 QBluetoothUuid::characteristicToString(QBluetoothUuid::HIDControlPoint));
         QCOMPARE(characteristicInfo.isNotificationCharacteristic(), false);
         QCOMPARE(characteristicInfo.descriptors().count(), 0);
 
         QLowEnergyCharacteristicInfo copyInfo(characteristicInfo);
-
         QVERIFY(!copyInfo.isValid());
-
         QCOMPARE(copyInfo.uuid().toString(), characteristicUuid.toString());
+        QCOMPARE(copyInfo.value(), QByteArray());
+        copyInfo.setValue(QByteArray("test"));
+        QCOMPARE(copyInfo.value(), QByteArray("test"));
+
+        //QLowEnergyCharacteristicInfos share their internal data
+        //for now enshrine this in the test
+        //TODO do we really need this behavior as it is unusual for value types
+        QCOMPARE(characteristicInfo.value(), QByteArray("test"));
+
 
         copyInfo = QLowEnergyCharacteristicInfo(alternateCharacteristicUuid);
         QCOMPARE(copyInfo.uuid().toString(), alternateCharacteristicUuid.toString());
 
         QCOMPARE(copyInfo.handle(), QString("0x0000"));
         QCOMPARE(copyInfo.value(), QByteArray());
-        QCOMPARE(copyInfo.permissions(), 0);
+        QCOMPARE(copyInfo.properties(), QLowEnergyCharacteristicInfo::Unknown);
         QCOMPARE(copyInfo.handle(), QString("0x0000"));
-        QCOMPARE(copyInfo.name(), QString(""));
+        QCOMPARE(copyInfo.name(),
+                 QBluetoothUuid::characteristicToString(QBluetoothUuid::TemperatureMeasurement));
         QCOMPARE(copyInfo.isNotificationCharacteristic(), false);
         QCOMPARE(copyInfo.descriptors().count(), 0);
-        copyInfo.writeValue("test");
+        QCOMPARE(copyInfo.value(), QByteArray());
+        copyInfo.setValue(QByteArray("test"));
+        QCOMPARE(copyInfo.value(), QByteArray("test"));
     }
 }
 
