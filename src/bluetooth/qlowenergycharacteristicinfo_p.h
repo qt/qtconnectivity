@@ -74,7 +74,7 @@ public:
     QByteArray value;
     QLowEnergyCharacteristicInfo::PropertyType properties;
     bool notification;
-    QString handle;
+    QLowEnergyHandle handle;
     int instance;
     QList<QLowEnergyDescriptorInfo> descriptorsList;
 #ifdef QT_QNX_BLUETOOTH

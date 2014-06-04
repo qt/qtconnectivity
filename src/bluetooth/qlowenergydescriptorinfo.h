@@ -45,6 +45,7 @@
 
 #include <QtCore/QSharedPointer>
 #include <QtCore/QVariantMap>
+#include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/QBluetoothUuid>
 
 QT_BEGIN_NAMESPACE
@@ -68,7 +69,7 @@ public:
     void setValue(const QByteArray &value);
 
     QBluetoothUuid uuid() const;
-    QString handle() const;
+    QLowEnergyHandle handle() const;
     QString name() const;
 
     QBluetoothUuid::DescriptorType type() const;
@@ -77,7 +78,7 @@ private:
     QSharedPointer<QLowEnergyDescriptorInfoPrivate> d_ptr;
     QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
                              QBluetoothUuid::DescriptorType desc,
-                             const QString &handle);
+                             QLowEnergyHandle handle);
 };
 
 QT_END_NAMESPACE

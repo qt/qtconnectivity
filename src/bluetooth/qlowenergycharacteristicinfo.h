@@ -44,6 +44,7 @@
 #define QLOWENERGYCHARACTERISTICINFO_H
 #include <QtCore/QSharedPointer>
 #include <QtCore/QObject>
+#include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QLowEnergyDescriptorInfo>
 
@@ -87,7 +88,7 @@ public:
     QByteArray value() const;
 
     QLowEnergyCharacteristicInfo::PropertyTypes properties() const;
-    QString handle() const; //TODO should be int
+    QLowEnergyHandle handle() const;
 
     bool isNotificationCharacteristic() const;
 

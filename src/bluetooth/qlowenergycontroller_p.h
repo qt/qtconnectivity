@@ -71,7 +71,7 @@ public:
     static void serviceNotification(int, short unsigned int, const char unsigned *, short unsigned int, void *);
     void readDescriptors(QLowEnergyCharacteristicInfo &characteristic);
     void readValue(QLowEnergyCharacteristicInfo &characteristic);
-    void writeValue(const int &instance, const QString &handle, const QByteArray &value);
+    void writeValue(const int &instance, QLowEnergyHandle handle, const QByteArray &value);
 #endif
 
 #ifdef QT_BLUEZ_BLUETOOTH
@@ -80,7 +80,7 @@ public:
     void setCharacteristics(int);
     void setNotifications();
     void readCharacteristicValue(int);
-    void writeValue(const QString &, const QByteArray &);
+    void writeValue(QLowEnergyHandle, const QByteArray &);
 public slots:
     void _q_replyReceived(const QString &reply);
 #endif

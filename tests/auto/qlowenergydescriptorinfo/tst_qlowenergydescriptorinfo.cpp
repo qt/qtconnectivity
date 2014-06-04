@@ -87,15 +87,15 @@ void tst_QLowEnergyDescriptorInfo::initTestCase()
 
 void tst_QLowEnergyDescriptorInfo::tst_construction()
 {
-    const QBluetoothUuid descriptorUuid(QString("0x2902").toUShort(0,0));
-    const QBluetoothUuid alternateDescriptorUuid(QString("0x2906").toUShort(0,0));
+    const QBluetoothUuid descriptorUuid(0x2902u);
+    const QBluetoothUuid alternateDescriptorUuid(0x2906u);
 
     {
         QLowEnergyDescriptorInfo descriptorInfo = QLowEnergyDescriptorInfo(QBluetoothUuid());
 
         QCOMPARE(descriptorInfo.uuid(), QBluetoothUuid());
         QCOMPARE(descriptorInfo.value(), QByteArray());
-        QCOMPARE(descriptorInfo.handle(), QString("0x0000"));
+        QCOMPARE(descriptorInfo.handle(), 0u);
         QCOMPARE(descriptorInfo.name(),
                  QBluetoothUuid::descriptorToString(descriptorInfo.type()));
         QCOMPARE(descriptorInfo.type(),
@@ -124,7 +124,7 @@ void tst_QLowEnergyDescriptorInfo::tst_construction()
 
         QCOMPARE(copyInfo.uuid(), alternateDescriptorUuid);
         QCOMPARE(copyInfo.value(), QByteArray());
-        QCOMPARE(copyInfo.handle(), QString("0x0000"));
+        QCOMPARE(copyInfo.handle(), 0u);
         QCOMPARE(copyInfo.name(),
                  QBluetoothUuid::descriptorToString(copyInfo.type()));
     }
@@ -134,15 +134,24 @@ void tst_QLowEnergyDescriptorInfo::tst_assignment_data()
 {
     QTest::addColumn<QBluetoothUuid>("descriptorClassUuid");
 
-    QTest::newRow("0x000000 COD") << QBluetoothUuid(QString("0x2901").toUShort(0,0));
-    QTest::newRow("0x001000 COD") << QBluetoothUuid(QString("0x2902").toUShort(0,0));
-    QTest::newRow("0x002000 COD") << QBluetoothUuid(QString("0x2903").toUShort(0,0));
-    QTest::newRow("0x003000 COD") << QBluetoothUuid(QString("0x2904").toUShort(0,0));
-    QTest::newRow("0x004000 COD") << QBluetoothUuid(QString("0x2905").toUShort(0,0));
-    QTest::newRow("0x005000 COD") << QBluetoothUuid(QString("0x2906").toUShort(0,0));
-    QTest::newRow("0x006000 COD") << QBluetoothUuid(QString("0x2907").toUShort(0,0));
-    QTest::newRow("0x007000 COD") << QBluetoothUuid(QString("0x2908").toUShort(0,0));
-    QTest::newRow("0x008000 COD") << QBluetoothUuid(QString("0x2900").toUShort(0,0));
+    QTest::newRow("0x000000 COD")
+            << QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription);
+    QTest::newRow("0x001000 COD")
+            << QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+    QTest::newRow("0x002000 COD")
+            << QBluetoothUuid(QBluetoothUuid::ServerCharacteristicConfiguration);
+    QTest::newRow("0x003000 COD")
+            << QBluetoothUuid(QBluetoothUuid::CharacteristicPresentationFormat);
+    QTest::newRow("0x004000 COD")
+            << QBluetoothUuid(QBluetoothUuid::CharacteristicAggregateFormat);
+    QTest::newRow("0x005000 COD")
+            << QBluetoothUuid(QBluetoothUuid::ValidRange);
+    QTest::newRow("0x006000 COD")
+            << QBluetoothUuid(QBluetoothUuid::ExternalReportReference);
+    QTest::newRow("0x007000 COD")
+            << QBluetoothUuid(QBluetoothUuid::ReportReference);
+    QTest::newRow("0x008000 COD")
+            << QBluetoothUuid(QBluetoothUuid::CharacteristicExtendedProperties);
 }
 
 void tst_QLowEnergyDescriptorInfo::tst_assignment()

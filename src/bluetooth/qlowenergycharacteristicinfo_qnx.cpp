@@ -57,7 +57,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
 QLowEnergyCharacteristicInfoPrivate::QLowEnergyCharacteristicInfoPrivate()
     :   properties(QLowEnergyCharacteristicInfo::Unknown),
-        notification(false), handle(QStringLiteral("0x0000")), instance(-1)
+        notification(false), handle(0), instance(-1)
 {
 
 }

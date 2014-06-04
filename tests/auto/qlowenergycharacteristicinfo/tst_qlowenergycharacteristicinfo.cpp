@@ -99,7 +99,7 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         QCOMPARE(characteristicInfo.uuid().toString(), QBluetoothUuid().toString());
         QCOMPARE(characteristicInfo.value(), QByteArray());
         QCOMPARE(characteristicInfo.properties(), QLowEnergyCharacteristicInfo::Unknown);
-        QCOMPARE(characteristicInfo.handle(), QString("0x0000"));
+        QCOMPARE(characteristicInfo.handle(), 0u);
         QCOMPARE(characteristicInfo.name(), QString(""));
         QCOMPARE(characteristicInfo.isNotificationCharacteristic(), false);
         QCOMPARE(characteristicInfo.descriptors().count(), 0);
@@ -113,7 +113,7 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         QCOMPARE(characteristicInfo.uuid().toString(), characteristicUuid.toString());
         QCOMPARE(characteristicInfo.value(), QByteArray());
         QCOMPARE(characteristicInfo.properties(), QLowEnergyCharacteristicInfo::Unknown);
-        QCOMPARE(characteristicInfo.handle(), QString("0x0000"));
+        QCOMPARE(characteristicInfo.handle(), 0u);
         QCOMPARE(characteristicInfo.name(),
                  QBluetoothUuid::characteristicToString(QBluetoothUuid::HIDControlPoint));
         QCOMPARE(characteristicInfo.isNotificationCharacteristic(), false);
@@ -135,10 +135,10 @@ void tst_QLowEnergyCharacteristicInfo::tst_construction()
         copyInfo = QLowEnergyCharacteristicInfo(alternateCharacteristicUuid);
         QCOMPARE(copyInfo.uuid().toString(), alternateCharacteristicUuid.toString());
 
-        QCOMPARE(copyInfo.handle(), QString("0x0000"));
+        QCOMPARE(copyInfo.handle(), 0u);
         QCOMPARE(copyInfo.value(), QByteArray());
         QCOMPARE(copyInfo.properties(), QLowEnergyCharacteristicInfo::Unknown);
-        QCOMPARE(copyInfo.handle(), QString("0x0000"));
+        QCOMPARE(copyInfo.handle(), 0u);
         QCOMPARE(copyInfo.name(),
                  QBluetoothUuid::characteristicToString(QBluetoothUuid::TemperatureMeasurement));
         QCOMPARE(copyInfo.isNotificationCharacteristic(), false);

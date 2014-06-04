@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     about the characteristic (data format, notification activation, etc).
 */
 
-QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle)
+QLowEnergyDescriptorInfoPrivate::QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, QLowEnergyHandle handle)
     :   m_uuid(uuid), m_handle(handle),
         m_type(QBluetoothUuid::ClientCharacteristicConfiguration) //by default a notification
 {
@@ -76,7 +76,7 @@ QLowEnergyDescriptorInfoPrivate::~QLowEnergyDescriptorInfoPrivate()
     Construct a new QLowEnergyCharacteristicInfo with given \a uuid.
 */
 QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid):
-    d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, QStringLiteral("0x0000")))
+    d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, 0u))
 {
 }
 
@@ -87,7 +87,7 @@ QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid):
 */
 QLowEnergyDescriptorInfo::QLowEnergyDescriptorInfo(const QBluetoothUuid &uuid,
                                                    QBluetoothUuid::DescriptorType type,
-                                                   const QString &handle):
+                                                   QLowEnergyHandle handle):
     d_ptr(new QLowEnergyDescriptorInfoPrivate(uuid, handle))
 {
     d_ptr->m_type = type;
@@ -124,7 +124,7 @@ QBluetoothUuid QLowEnergyDescriptorInfo::uuid() const
 /*!
     Returns the handle of the descriptor.
 */
-QString QLowEnergyDescriptorInfo::handle() const
+QLowEnergyHandle QLowEnergyDescriptorInfo::handle() const
 {
     return d_ptr->m_handle;
 }

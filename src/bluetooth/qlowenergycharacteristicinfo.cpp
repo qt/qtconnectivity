@@ -153,7 +153,7 @@ QByteArray QLowEnergyCharacteristicInfo::value() const
 /*!
     Returns the handle of the gatt characteristic.
 */
-QString QLowEnergyCharacteristicInfo::handle() const
+QLowEnergyHandle QLowEnergyCharacteristicInfo::handle() const
 {
     return d_ptr->handle;
 }
@@ -196,7 +196,7 @@ bool QLowEnergyCharacteristicInfo::isValid() const
 {
     if (d_ptr->uuid == QBluetoothUuid())
         return false;
-    if (d_ptr->handle.toUShort(0,0) == 0)
+    if (!d_ptr->handle)
         return false;
     if (!d_ptr->valid())
         return false;

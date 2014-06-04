@@ -43,6 +43,7 @@
 #ifndef QLOWENERGYDESCRIPTORINFO_P_H
 #define QLOWENERGYDESCRIPTORINFO_P_H
 
+#include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/QBluetoothUuid>
 
 QT_BEGIN_NAMESPACE
@@ -50,11 +51,11 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyDescriptorInfoPrivate
 {
 public:
-    QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, const QString &handle);
+    QLowEnergyDescriptorInfoPrivate(const QBluetoothUuid &uuid, QLowEnergyHandle handle);
     ~QLowEnergyDescriptorInfoPrivate();
     QByteArray m_value;
     QBluetoothUuid m_uuid;
-    QString m_handle;
+    QLowEnergyHandle m_handle;
     QBluetoothUuid::DescriptorType m_type;
 #ifdef QT_QNX_BLUETOOTH
     int instance;

@@ -177,8 +177,6 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
                                    << "," << allCharacteristicList[i].value_handle
                                    << ", " << allCharacteristicList[i].properties;
                 QString charUuid = QString::fromLatin1(allCharacteristicList[i].uuid);
-                QString handleUuid;
-                handleUuid.setNum(allCharacteristicList[i].value_handle);
                 QBluetoothUuid characteristicUuid;
                 if (!charUuid.toUShort(0,0)) {
                     charUuid = charUuid.remove(0,2);
@@ -187,7 +185,7 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
                     characteristicUuid = QBluetoothUuid(charUuid.toUShort(0,0));
                 }
                 QLowEnergyCharacteristicInfo characteristicInfo(characteristicUuid);
-                characteristicInfo.d_ptr->handle = handleUuid;
+                characteristicInfo.d_ptr->handle = allCharacteristicList[i].value_handle;
                 characteristicInfo.d_ptr->instance = instance;
                 characteristicInfo.d_ptr->characteristic = allCharacteristicList[i];
                 characteristicInfo.d_ptr->properties =
@@ -637,7 +635,7 @@ void QLowEnergyControllerPrivate::readValue(QLowEnergyCharacteristicInfo &charac
     uint8_t more = 1;
     for (int offset = 0; more; offset += byteCount) {
         byteCount = bt_gatt_read_value(characteristic.d_ptr->instance,
-                                       characteristic.d_ptr->handle.toUShort(), offset, characteristicBuffer,
+                                       characteristic.d_ptr->handle, offset, characteristicBuffer,
                                        characteristic.d_ptr->characteristicMtu, &more);
         if (byteCount < 0) {
             qCDebug(QT_BT_QNX) << "Unable to read characteristic value: " << errno << qt_error_string(errno);
@@ -652,7 +650,7 @@ void QLowEnergyControllerPrivate::readValue(QLowEnergyCharacteristicInfo &charac
     }
 }
 
-void QLowEnergyControllerPrivate::writeValue(const int &instance, const QString &handle, const QByteArray &value)
+void QLowEnergyControllerPrivate::writeValue(const int &instance, QLowEnergyHandle handle, const QByteArray &value)
 {
     errorString = QString();
     const int characteristicLen = value.size();
@@ -668,7 +666,7 @@ void QLowEnergyControllerPrivate::writeValue(const int &instance, const QString 
 
     if (consumed > 0) {
         int byteCount;
-        byteCount = bt_gatt_write_value(instance, handle.toUShort(), 0, characteristicBuffer, (consumed / 2));
+        byteCount = bt_gatt_write_value(instance, handle, 0, characteristicBuffer, (consumed / 2));
 
         if (byteCount < 0) {
             qCDebug(QT_BT_QNX) << "Unable to write characteristic value: " << errno << qt_error_string(errno);
