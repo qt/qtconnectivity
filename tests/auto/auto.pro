@@ -19,7 +19,8 @@ qtHaveModule(bluetooth) {
         qbluetoothserver \
         qlowenergycharacteristicinfo \
         qlowenergydescriptorinfo \
-        qlowenergyserviceinfo
+        qlowenergyserviceinfo \
+        qlowenergycontroller
 }
 
 qtHaveModule(nfc) {

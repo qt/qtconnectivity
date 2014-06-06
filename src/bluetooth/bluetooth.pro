@@ -27,7 +27,8 @@ PUBLIC_HEADERS += \
     qlowenergycharacteristicinfo.h \
     qlowenergydescriptorinfo.h \
     qbluetoothtransferreply.h \
-    qlowenergycontroller.h
+    qlowenergycontroller.h \
+    qlowenergycontrollernew.h
 
 PRIVATE_HEADERS += \
     qbluetoothaddress_p.h\
@@ -46,7 +47,8 @@ PRIVATE_HEADERS += \
     qlowenergycharacteristicinfo_p.h \
     qlowenergyprocess_p.h \
     qlowenergydescriptorinfo_p.h \
-    qlowenergycontroller_p.h
+    qlowenergycontroller_p.h \
+    qlowenergycontrollernew_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -66,7 +68,8 @@ SOURCES += \
     qlowenergyserviceinfo.cpp \
     qlowenergycharacteristicinfo.cpp \
     qlowenergydescriptorinfo.cpp \
-    qlowenergycontroller.cpp
+    qlowenergycontroller.cpp \
+    qlowenergycontrollernew.cpp
 
 config_bluez:qtHaveModule(dbus) {
     QT *= dbus
@@ -88,7 +91,8 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergyprocess_bluez.cpp \
         qlowenergyserviceinfo_bluez.cpp \
         qlowenergycharacteristicinfo_bluez.cpp \
-        qlowenergycontroller_bluez.cpp
+        qlowenergycontroller_bluez.cpp \
+        qlowenergycontrollernew_bluez.cpp
 
         CONFIG += link_pkgconfig
         PKGCONFIG_PRIVATE += bluez
@@ -116,7 +120,8 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergycharacteristicinfo_qnx.cpp \
         qlowenergyserviceinfo_qnx.cpp \
         qlowenergyprocess_qnx.cpp \
-        qlowenergycontroller_qnx.cpp
+        qlowenergycontroller_qnx.cpp \
+        qlowenergycontrollernew_p.cpp
 
 } else:android:!android-no-sdk {
     include(android/android.pri)
@@ -141,7 +146,8 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergyserviceinfo_p.cpp \
         qlowenergycharacteristicinfo_p.cpp \
         qlowenergyprocess_p.cpp \
-        qlowenergycontroller_p.cpp
+        qlowenergycontroller_p.cpp \
+        qlowenergycontrollernew_p.cpp
 
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
@@ -156,7 +162,8 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergyserviceinfo_p.cpp \
         qlowenergycharacteristicinfo_p.cpp \
         qlowenergyprocess_p.cpp \
-        qlowenergycontroller_p.cpp
+        qlowenergycontroller_p.cpp \
+        qlowenergycontrollernew_p.cpp
 }
 
 OTHER_FILES +=
