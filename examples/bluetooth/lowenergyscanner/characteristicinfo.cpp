@@ -82,7 +82,7 @@ QString CharacteristicInfo::getValue() const
 
 QString CharacteristicInfo::getHandle() const
 {
-    return m_characteristic.handle();
+    return QStringLiteral("0x") + QString::number(m_characteristic.handle(), 16);
 }
 
 QString CharacteristicInfo::getPermission() const
