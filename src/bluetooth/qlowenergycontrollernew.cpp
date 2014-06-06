@@ -44,7 +44,7 @@
 
 #include <QtBluetooth/QBluetoothLocalDevice>
 
-
+QT_BEGIN_NAMESPACE
 
 void QLowEnergyControllerNewPrivate::setError(
         QLowEnergyControllerNew::Error newError)
@@ -53,8 +53,14 @@ void QLowEnergyControllerNewPrivate::setError(
     error = newError;
 
     switch (newError) {
+    case QLowEnergyControllerNew::UnknownRemoteDeviceError:
+        errorString = QLowEnergyControllerNew::tr("Remote device cannot be found");
+        break;
     case QLowEnergyControllerNew::InvalidBluetoothAdapterError:
         errorString = QLowEnergyControllerNew::tr("Cannot find local adapter");
+        break;
+    case QLowEnergyControllerNew::NetworkError:
+        errorString = QLowEnergyControllerNew::tr("Error occurred during connection I/O");
         break;
     case QLowEnergyControllerNew::UnknownError:
     default:
@@ -88,6 +94,17 @@ void QLowEnergyControllerNewPrivate::validateLocalAdapter()
 
     if (localAdapter.isNull() || !adapterFound)
         setError(QLowEnergyControllerNew::InvalidBluetoothAdapterError);
+}
+
+void QLowEnergyControllerNewPrivate::setState(
+        QLowEnergyControllerNew::ControllerState newState)
+{
+    Q_Q(QLowEnergyControllerNew);
+    if (state == newState)
+        return;
+
+    state = newState;
+    emit q->stateChanged(state);
 }
 
 QLowEnergyControllerNew::QLowEnergyControllerNew(
@@ -136,6 +153,26 @@ QLowEnergyControllerNew::ControllerState QLowEnergyControllerNew::state() const
     return d_ptr->state;
 }
 
+void QLowEnergyControllerNew::connectToDevice()
+{
+    Q_D(QLowEnergyControllerNew);
+
+    if (state() != QLowEnergyControllerNew::UnconnectedState)
+        return;
+
+    d->connectToDevice();
+}
+
+void QLowEnergyControllerNew::disconnectFromDevice()
+{
+    Q_D(QLowEnergyControllerNew);
+
+    if (state() == QLowEnergyControllerNew::UnconnectedState)
+        return;
+
+    d->disconnectFromDevice();
+}
+
 QLowEnergyControllerNew::Error QLowEnergyControllerNew::error() const
 {
     return d_ptr->error;
@@ -145,3 +182,5 @@ QString QLowEnergyControllerNew::errorString() const
 {
     return d_ptr->errorString;
 }
+
+QT_END_NAMESPACE

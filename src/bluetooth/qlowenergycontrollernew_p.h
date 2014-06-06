@@ -39,24 +39,39 @@
 **
 ****************************************************************************/
 
-#include <qglobal.h>
-
-#include "qlowenergycontrollernew.h"
-
 #ifndef QLOWENERGYCONTROLLERNEWPRIVATE_P_H
 #define QLOWENERGYCONTROLLERNEWPRIVATE_P_H
 
-class QLowEnergyControllerNewPrivate
+#include <qglobal.h>
+#include "qlowenergycontrollernew.h"
+
+#ifdef QT_BLUEZ_BLUETOOTH
+#include <QtBluetooth/QBluetoothSocket>
+#endif
+
+
+QT_BEGIN_NAMESPACE
+
+class QLowEnergyControllerNewPrivate : QObject
 {
+    Q_OBJECT
     Q_DECLARE_PUBLIC(QLowEnergyControllerNew)
 public:
     QLowEnergyControllerNewPrivate()
-        : state(QLowEnergyControllerNew::UnconnectedState),
+        : QObject(),
+          state(QLowEnergyControllerNew::UnconnectedState),
           error(QLowEnergyControllerNew::NoError)
+#ifdef QT_BLUEZ_BLUETOOTH
+          , l2cpSocket(0)
+#endif
     {}
 
     void setError(QLowEnergyControllerNew::Error newError);
     void validateLocalAdapter();
+    void setState(QLowEnergyControllerNew::ControllerState newState);
+
+    void connectToDevice();
+    void disconnectFromDevice();
 
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
@@ -65,7 +80,20 @@ public:
     QLowEnergyControllerNew::Error error;
     QString errorString;
 
+
+private:
+#ifdef QT_BLUEZ_BLUETOOTH
+    QBluetoothSocket *l2cpSocket;
+
+private slots:
+    void l2cpConnected();
+    void l2cpDisconnected();
+    void l2cpErrorChanged(QBluetoothSocket::SocketError);
+#endif
+private:
     QLowEnergyControllerNew *q_ptr;
 };
+
+QT_END_NAMESPACE
 
 #endif // QLOWENERGYCONTROLLERNEWPRIVATE_P_H

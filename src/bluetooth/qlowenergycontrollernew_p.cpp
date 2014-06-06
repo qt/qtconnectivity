@@ -41,3 +41,16 @@
 
 #include "qlowenergycontrollernew_p.h"
 
+QT_BEGIN_NAMESPACE
+
+void QLowEnergyControllerNewPrivate::connectToDevice()
+{
+
+}
+
+void QLowEnergyControllerNewPrivate::disconnectFromDevice()
+{
+
+}
+
+QT_END_NAMESPACE

@@ -74,7 +74,8 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       readNotifier(0),
       connectWriteNotifier(0),
       connecting(false),
-      discoveryAgent(0)
+      discoveryAgent(0),
+      isLowEnergySocket(false)
 {
 }
 
@@ -161,7 +162,15 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
         memset(&addr, 0, sizeof(addr));
         addr.l2_family = AF_BLUETOOTH;
-        addr.l2_psm = port;
+        // This is an ugly hack but the socket class does what's needed already.
+        // For L2CP GATT we need a channel rather than a socket and the LE address type
+        // We don't want to make this public API offering
+        if (isLowEnergySocket) {
+            addr.l2_cid = port;
+            addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
+        } else {
+            addr.l2_psm = port;
+        }
 
         convertAddress(address.toUInt64(), addr.l2_bdaddr.b);
 

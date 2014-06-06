@@ -40,6 +40,79 @@
 ****************************************************************************/
 
 #include "qlowenergycontrollernew_p.h"
+#include "qbluetoothsocket_p.h"
 
+#include <QtCore/QLoggingCategory>
+#include <QtBluetooth/QBluetoothSocket>
 
+#define ATTRIBUTE_CHANNEL_ID 4
 
+QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
+
+void QLowEnergyControllerNewPrivate::connectToDevice()
+{
+    setState(QLowEnergyControllerNew::ConnectingState);
+    if (l2cpSocket)
+        delete l2cpSocket;
+
+    l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
+    connect(l2cpSocket, SIGNAL(connected()), this, SLOT(l2cpConnected()));
+    connect(l2cpSocket, SIGNAL(disconnected()), this, SLOT(l2cpDisconnected()));
+    connect(l2cpSocket, SIGNAL(error(QBluetoothSocket::SocketError)),
+            this, SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
+
+    l2cpSocket->d_ptr->isLowEnergySocket = true;
+    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID);
+}
+
+void QLowEnergyControllerNewPrivate::l2cpConnected()
+{
+    Q_Q(QLowEnergyControllerNew);
+
+    setState(QLowEnergyControllerNew::ConnectedState);
+    emit q->connected();
+}
+
+void QLowEnergyControllerNewPrivate::disconnectFromDevice()
+{
+    setState(QLowEnergyControllerNew::ClosingState);
+    l2cpSocket->close();
+}
+
+void QLowEnergyControllerNewPrivate::l2cpDisconnected()
+{
+    Q_Q(QLowEnergyControllerNew);
+
+    setState(QLowEnergyControllerNew::UnconnectedState);
+    emit q->disconnected();
+}
+
+void QLowEnergyControllerNewPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError e)
+{
+    switch (e) {
+    case QBluetoothSocket::HostNotFoundError:
+        setError(QLowEnergyControllerNew::UnknownRemoteDeviceError);
+        qCDebug(QT_BT_BLUEZ) << "The passed remote device address cannot be found";
+        break;
+    case QBluetoothSocket::NetworkError:
+        setError(QLowEnergyControllerNew::NetworkError);
+        qCDebug(QT_BT_BLUEZ) << "Network IO error while talking to LE device";
+        break;
+    case QBluetoothSocket::UnknownSocketError:
+    case QBluetoothSocket::UnsupportedProtocolError:
+    case QBluetoothSocket::OperationError:
+    case QBluetoothSocket::ServiceNotFoundError:
+    default:
+        // these errors shouldn't happen -> as it means
+        // the code in this file has bugs
+        qCDebug(QT_BT_BLUEZ) << "Unknown l2cp socket error: " << e << l2cpSocket->errorString();
+        setError(QLowEnergyControllerNew::UnknownError);
+        break;
+    }
+
+    setState(QLowEnergyControllerNew::UnconnectedState);
+}
+
+QT_END_NAMESPACE

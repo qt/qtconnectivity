@@ -45,6 +45,8 @@
 #include <QObject>
 #include <QtBluetooth/QBluetoothAddress>
 
+QT_BEGIN_NAMESPACE
+
 class QLowEnergyControllerNewPrivate;
 class Q_BLUETOOTH_EXPORT QLowEnergyControllerNew : public QObject
 {
@@ -53,7 +55,8 @@ public:
     enum Error {
         NoError,
         UnknownError,
-        ConnectionRefused,
+        UnknownRemoteDeviceError,
+        NetworkError,
         InvalidBluetoothAdapterError
     };
 
@@ -76,11 +79,14 @@ public:
 
     ControllerState state() const;
 
+    void connectToDevice();
+    void disconnectFromDevice();
+
 
     Error error() const;
     QString errorString() const;
 
-signals:
+Q_SIGNALS:
     void connected();
     void disconnected();
     void stateChanged(QLowEnergyControllerNew::ControllerState state);
@@ -90,5 +96,7 @@ private:
     Q_DECLARE_PRIVATE(QLowEnergyControllerNew)
     QLowEnergyControllerNewPrivate *d_ptr;
 };
+
+QT_END_NAMESPACE
 
 #endif // QLOWENERGYCONTROLLERNEW_H

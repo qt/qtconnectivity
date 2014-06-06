@@ -753,12 +753,49 @@ void tst_QLowEnergyController::tst_connectNew()
 
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
     QLowEnergyControllerNew control(remoteDevice);
+    QSignalSpy connectedSpy(&control, SIGNAL(connected()));
+    QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
+
     QCOMPARE(control.localAddress(), localAdapter);
     QVERIFY(!control.localAddress().isNull());
     QCOMPARE(control.remoteAddress(), remoteDevice);
     QCOMPARE(control.state(), QLowEnergyControllerNew::UnconnectedState);
     QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
     QVERIFY(control.errorString().isEmpty());
+    QCOMPARE(disconnectedSpy.count(), 0);
+    QCOMPARE(connectedSpy.count(), 0);
+
+    bool wasError = false;
+    control.connectToDevice();
+    QTRY_IMPL(control.state() != QLowEnergyControllerNew::ConnectingState,
+              10000);
+    QCOMPARE(disconnectedSpy.count(), 0);
+    if (control.error() != QLowEnergyControllerNew::NoError) {
+        //error during connect
+        QCOMPARE(connectedSpy.count(), 0);
+        QCOMPARE(control.state(), QLowEnergyControllerNew::UnconnectedState);
+        wasError = true;
+    } else if (control.state() == QLowEnergyControllerNew::ConnectingState) {
+        //timeout
+        QCOMPARE(connectedSpy.count(), 0);
+        QVERIFY(control.errorString().isEmpty());
+        QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
+        QSKIP("Connection to LE device cannot be established. Skipping test.");
+        return;
+    } else {
+        QCOMPARE(control.state(), QLowEnergyControllerNew::ConnectedState);
+        QCOMPARE(connectedSpy.count(), 1);
+        QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
+        QVERIFY(control.errorString().isEmpty());
+    }
+
+    control.disconnectFromDevice();
+    QTRY_VERIFY_WITH_TIMEOUT(control.state() == QLowEnergyControllerNew::UnconnectedState,
+                             10000);
+    if (wasError)
+        QCOMPARE(disconnectedSpy.count(), 0);
+    else
+        QCOMPARE(disconnectedSpy.count(), 1);
 }
 
 void tst_QLowEnergyController::tst_defaultBehavior()

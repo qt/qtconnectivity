@@ -187,6 +187,11 @@ private slots:
     void controlReply(ppsResult result);
     void controlEvent(ppsResult result);
 #endif
+
+#ifdef QT_BLUEZ_BLUETOOTH
+public:
+    bool isLowEnergySocket;
+#endif
 };
 
 
