@@ -842,9 +842,6 @@ void tst_QLowEnergyController::tst_defaultBehavior()
     QCOMPARE(controlDefaultAdapter.remoteAddress(), randomAddress);
     QCOMPARE(controlDefaultAdapter.state(), QLowEnergyControllerNew::UnconnectedState);
     if (foundAddresses.isEmpty()) {
-        QCOMPARE(controlDefaultAdapter.error(),
-                 QLowEnergyControllerNew::InvalidBluetoothAdapterError);
-        QVERIFY(!controlDefaultAdapter.errorString().isEmpty());
         QVERIFY(controlDefaultAdapter.localAddress().isNull());
     } else {
         QCOMPARE(controlDefaultAdapter.error(), QLowEnergyControllerNew::NoError);

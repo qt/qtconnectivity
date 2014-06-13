@@ -74,7 +74,8 @@ public:
     {}
 
     void setError(QLowEnergyControllerNew::Error newError);
-    void validateLocalAdapter();
+    bool isValidLocalAdapter();
+
     void setState(QLowEnergyControllerNew::ControllerState newState);
 
     void connectToDevice();

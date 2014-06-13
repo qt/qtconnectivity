@@ -71,29 +71,22 @@ void QLowEnergyControllerNewPrivate::setError(
     emit q->error(newError);
 }
 
-void QLowEnergyControllerNewPrivate::validateLocalAdapter()
+bool QLowEnergyControllerNewPrivate::isValidLocalAdapter()
 {
+    if (localAdapter.isNull())
+        return false;
+
     const QList<QBluetoothHostInfo> foundAdapters = QBluetoothLocalDevice::allDevices();
     bool adapterFound = false;
 
-    if (!localAdapter.isNull()) {
-        foreach (const QBluetoothHostInfo &info, foundAdapters) {
-            if (info.address() == localAdapter) {
-                adapterFound = true;
-                break;
-            }
+    foreach (const QBluetoothHostInfo &info, foundAdapters) {
+        if (info.address() == localAdapter) {
+            adapterFound = true;
+            break;
         }
-
-        if (!adapterFound)
-            setError(QLowEnergyControllerNew::InvalidBluetoothAdapterError);
-    } else {
-        adapterFound = true;
-        if (!foundAdapters.isEmpty())
-            localAdapter = foundAdapters[0].address();
     }
 
-    if (localAdapter.isNull() || !adapterFound)
-        setError(QLowEnergyControllerNew::InvalidBluetoothAdapterError);
+    return adapterFound;
 }
 
 void QLowEnergyControllerNewPrivate::setState(
@@ -115,8 +108,7 @@ QLowEnergyControllerNew::QLowEnergyControllerNew(
     Q_D(QLowEnergyControllerNew);
     d->q_ptr = this;
     d->remoteDevice = remoteDevice;
-
-    d->validateLocalAdapter();
+    d->localAdapter = QBluetoothLocalDevice().address();
 }
 
 QLowEnergyControllerNew::QLowEnergyControllerNew(
@@ -129,8 +121,6 @@ QLowEnergyControllerNew::QLowEnergyControllerNew(
     d->q_ptr = this;
     d->remoteDevice = remoteDevice;
     d->localAdapter = localDevice;
-
-    d->validateLocalAdapter();
 }
 
 QLowEnergyControllerNew::~QLowEnergyControllerNew()
@@ -138,6 +128,16 @@ QLowEnergyControllerNew::~QLowEnergyControllerNew()
     delete d_ptr;
 }
 
+/*!
+  Returns the address of the local Bluetooth adapter being used for the
+  communication.
+
+  If this class instance was requested to use the default adapter
+  but there was no default adapter when creating this
+  class instance, the returned \l QBluetoothAddress will be null.
+
+  \sa QBluetoothAddress::isNull()
+ */
 QBluetoothAddress QLowEnergyControllerNew::localAddress() const
 {
     return d_ptr->localAdapter;
@@ -156,6 +156,11 @@ QLowEnergyControllerNew::ControllerState QLowEnergyControllerNew::state() const
 void QLowEnergyControllerNew::connectToDevice()
 {
     Q_D(QLowEnergyControllerNew);
+
+    if (!d->isValidLocalAdapter()) {
+        d->setError(QLowEnergyControllerNew::InvalidBluetoothAdapterError);
+        return;
+    }
 
     if (state() != QLowEnergyControllerNew::UnconnectedState)
         return;
