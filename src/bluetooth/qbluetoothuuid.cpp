@@ -470,6 +470,8 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 
 /*!
     Constructs a new Bluetooth UUID from the 128 bit \a uuid.
+
+    Note that \a uuid must be in big endian order.
 */
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 {

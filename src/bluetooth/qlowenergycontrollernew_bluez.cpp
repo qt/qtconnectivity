@@ -61,20 +61,18 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 static inline QBluetoothUuid convert_uuid128(const uint128_t *p)
 {
-    uint128_t dst;
-    bt_uuid_t uuid;
-    btoh128(p, &dst);
-    bt_uuid128_create(&uuid, dst);
-//    //TODO don't use string conversion but raw ints once QBluetoothUuid ctor is fixed
-//    quint128 qtdst;
-//    memcpy(&qtdst, &dst, sizeof(uint128_t));
+    uint128_t dst_hostOrder, dst_bigEndian;
 
-    char buffer[48];
-    bt_uuid_to_string(&uuid, buffer, 48);
+    // Bluetooth LE data comes as little endian
+    // uuids are constructed using high endian
+    btoh128(p, &dst_hostOrder);
+    hton128(&dst_hostOrder, &dst_bigEndian);
 
-//    qDebug() << buffer << QBluetoothUuid(qtdst);
+    // convert to Qt's own data type
+    quint128 qtdst;
+    memcpy(&qtdst, &dst_bigEndian, sizeof(uint128_t));
 
-    return QBluetoothUuid(QString::fromLocal8Bit(buffer));
+    return QBluetoothUuid(qtdst);
 }
 
 void QLowEnergyControllerNewPrivate::connectToDevice()
