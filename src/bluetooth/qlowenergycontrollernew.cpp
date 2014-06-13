@@ -173,6 +173,22 @@ void QLowEnergyControllerNew::disconnectFromDevice()
     d->disconnectFromDevice();
 }
 
+void QLowEnergyControllerNew::discoverServices()
+{
+    Q_D(QLowEnergyControllerNew);
+
+    if (d->state != QLowEnergyControllerNew::ConnectedState)
+        return;
+
+    d->serviceList.clear();
+    d->discoverServices();
+}
+
+QList<QBluetoothUuid> QLowEnergyControllerNew::services() const
+{
+    return d_ptr->serviceList.keys();
+}
+
 QLowEnergyControllerNew::Error QLowEnergyControllerNew::error() const
 {
     return d_ptr->error;

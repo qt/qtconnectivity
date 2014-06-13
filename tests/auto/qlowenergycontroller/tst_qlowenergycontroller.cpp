@@ -764,11 +764,13 @@ void tst_QLowEnergyController::tst_connectNew()
     QVERIFY(control.errorString().isEmpty());
     QCOMPARE(disconnectedSpy.count(), 0);
     QCOMPARE(connectedSpy.count(), 0);
+    QVERIFY(control.services().isEmpty());
 
     bool wasError = false;
     control.connectToDevice();
     QTRY_IMPL(control.state() != QLowEnergyControllerNew::ConnectingState,
               10000);
+
     QCOMPARE(disconnectedSpy.count(), 0);
     if (control.error() != QLowEnergyControllerNew::NoError) {
         //error during connect
@@ -780,6 +782,7 @@ void tst_QLowEnergyController::tst_connectNew()
         QCOMPARE(connectedSpy.count(), 0);
         QVERIFY(control.errorString().isEmpty());
         QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
+        QVERIFY(control.services().isEmpty());
         QSKIP("Connection to LE device cannot be established. Skipping test.");
         return;
     } else {
@@ -789,9 +792,34 @@ void tst_QLowEnergyController::tst_connectNew()
         QVERIFY(control.errorString().isEmpty());
     }
 
+    QVERIFY(control.services().isEmpty());
+
+    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    QSignalSpy serviceFoundSpy(&control, SIGNAL(serviceDiscovered(QBluetoothUuid)));
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+
+    QCOMPARE(serviceFoundSpy.count(), foundServices.count());
+    QList<QBluetoothUuid> listing;
+    for (int i = 0; i < serviceFoundSpy.count(); i++) {
+        const QVariant v = serviceFoundSpy[i].at(0);
+        listing.append(v.value<QBluetoothUuid>());
+    }
+
+    foreach (const QLowEnergyServiceInfo &info, foundServices) {
+        QVERIFY2(listing.contains(info.serviceUuid()),
+                 info.serviceUuid().toString().toLatin1());
+    }
+
+    foreach (const QBluetoothUuid &uuid, control.services())
+        QVERIFY2(listing.contains(uuid), uuid.toString().toLatin1());
+
+    // Finish off
     control.disconnectFromDevice();
-    QTRY_VERIFY_WITH_TIMEOUT(control.state() == QLowEnergyControllerNew::UnconnectedState,
-                             10000);
+    QTRY_VERIFY_WITH_TIMEOUT(
+                control.state() == QLowEnergyControllerNew::UnconnectedState,
+                10000);
+
     if (wasError)
         QCOMPARE(disconnectedSpy.count(), 0);
     else

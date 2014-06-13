@@ -53,4 +53,9 @@ void QLowEnergyControllerNewPrivate::disconnectFromDevice()
 
 }
 
+void QLowEnergyControllerNewPrivate::discoverServices()
+{
+
+}
+
 QT_END_NAMESPACE

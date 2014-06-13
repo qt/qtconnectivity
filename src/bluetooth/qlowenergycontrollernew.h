@@ -44,6 +44,7 @@
 
 #include <QObject>
 #include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothUuid>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,9 @@ public:
     void connectToDevice();
     void disconnectFromDevice();
 
+    void discoverServices();
+    QList<QBluetoothUuid> services() const;
+
 
     Error error() const;
     QString errorString() const;
@@ -91,6 +95,9 @@ Q_SIGNALS:
     void disconnected();
     void stateChanged(QLowEnergyControllerNew::ControllerState state);
     void error(QLowEnergyControllerNew::Error newError);
+
+    void serviceDiscovered(const QBluetoothUuid &newService);
+    void discoveryFinished();
 
 private:
     Q_DECLARE_PRIVATE(QLowEnergyControllerNew)

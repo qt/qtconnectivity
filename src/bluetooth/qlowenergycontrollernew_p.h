@@ -47,8 +47,10 @@
 
 #ifdef QT_BLUEZ_BLUETOOTH
 #include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/qbluetooth.h>
 #endif
 
+typedef QPair<QLowEnergyHandle,QLowEnergyHandle> HandlePair;
 
 QT_BEGIN_NAMESPACE
 
@@ -73,6 +75,8 @@ public:
     void connectToDevice();
     void disconnectFromDevice();
 
+    void discoverServices();
+
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
@@ -82,13 +86,19 @@ public:
 
 
 private:
+    // list of all found service uuids
+    QMap<QBluetoothUuid, HandlePair> serviceList;
+
 #ifdef QT_BLUEZ_BLUETOOTH
     QBluetoothSocket *l2cpSocket;
+
+    void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
 
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();
     void l2cpErrorChanged(QBluetoothSocket::SocketError);
+    void l2cpReadyRead();
 #endif
 private:
     QLowEnergyControllerNew *q_ptr;
