@@ -94,7 +94,7 @@ Q_SIGNALS:
 private:
     Q_DECLARE_PRIVATE(QLowEnergyController)
     QLowEnergyControllerPrivate *d_ptr;
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     Q_PRIVATE_SLOT(d_func(), void _q_replyReceived(const QString &reply))
 #endif
 };

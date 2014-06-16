@@ -74,7 +74,7 @@ public:
     void writeValue(const int &instance, QLowEnergyHandle handle, const QByteArray &value);
 #endif
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     void connectToTerminal();
     void setHandles();
     void setCharacteristics(int);
@@ -88,7 +88,7 @@ private:
     bool m_randomAddress;
     QLowEnergyProcess *process;
     QBluetoothAddress localAdapter;
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     int m_step;
     bool m_deviceConnected;
     bool m_commandStarted;

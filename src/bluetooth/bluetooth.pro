@@ -88,11 +88,27 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
         qbluetoothtransferreply_bluez.cpp \
-        qlowenergyprocess_bluez.cpp \
-        qlowenergyserviceinfo_bluez.cpp \
-        qlowenergycharacteristicinfo_bluez.cpp \
-        qlowenergycontroller_bluez.cpp \
-        qlowenergycontrollernew_bluez.cpp
+
+
+    # old versions of Bluez do not have the required BTLE symbols
+    config_bluez_le {
+        SOURCES +=  \
+            qlowenergyprocess_bluez.cpp \
+            qlowenergyserviceinfo_bluez.cpp \
+            qlowenergycharacteristicinfo_bluez.cpp \
+            qlowenergycontroller_bluez.cpp \
+            qlowenergycontrollernew_bluez.cpp
+    } else {
+        message("Bluez version is too old to support Bluetooth Low Energy.")
+        message("Only classic Bluetooth will be available.")
+        DEFINES += QT_BLUEZ_NO_BTLE
+        SOURCES += \
+            qlowenergyserviceinfo_p.cpp \
+            qlowenergycharacteristicinfo_p.cpp \
+            qlowenergyprocess_p.cpp \
+            qlowenergycontroller_p.cpp \
+            qlowenergycontrollernew_p.cpp
+    }
 
         CONFIG += link_pkgconfig
         PKGCONFIG_PRIVATE += bluez

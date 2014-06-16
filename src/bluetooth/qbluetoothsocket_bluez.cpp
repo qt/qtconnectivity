@@ -167,12 +167,17 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         // We don't want to make this public API offering for now especially since
         // only Linux (of all platforms supported by this library) supports this type
         // of socket.
+
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
         if (isLowEnergySocket) {
             addr.l2_cid = port;
             addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
         } else {
             addr.l2_psm = port;
         }
+#else
+        addr.l2_psm = port;
+#endif
 
         convertAddress(address.toUInt64(), addr.l2_bdaddr.b);
 

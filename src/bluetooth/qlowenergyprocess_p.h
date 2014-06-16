@@ -68,7 +68,7 @@ public:
     static void handleEvent(const int, const char *, const char *);
     void addPointer(QLowEnergyControllerPrivate* classPointer);
 #endif
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     void startCommand(const QString &command);
     void executeCommand(const QString &command);
     void endProcess();

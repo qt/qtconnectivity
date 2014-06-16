@@ -24,6 +24,7 @@ tmp
 imports/*
 include
 config.tests/bluez/bluez
+config.tests/bluez_le/bluez_le
 examples/bluetooth/btchat/btchat
 examples/bluetooth/btfiletransfer/btfiletransfer
 examples/bluetooth/btscanner/btscanner

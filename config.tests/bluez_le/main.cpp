@@ -1,9 +1,9 @@
-/***************************************************************************
+/****************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited all rights reserved
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtBluetooth module of the Qt Toolkit.
+** This file is part of the QtConnectivity module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,51 +39,14 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYSERVICEINFO_P_H
-#define QLOWENERGYSERVICEINFO_P_H
-#include "qbluetoothuuid.h"
-#include "qlowenergyserviceinfo.h"
-#include "qlowenergycharacteristicinfo.h"
-#include <QPointer>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/l2cap.h>
 
-QT_BEGIN_NAMESPACE
-
-class QBluetoothUuid;
-class QLowEnergyServiceInfo;
-class QLowEnergyCharacteristicInfo;
-class QLowEnergyProcess;
-
-class QLowEnergyServiceInfoPrivate
+int main()
 {
-    friend class QLowEnergyControllerPrivate;
-
-public:
-    QLowEnergyServiceInfoPrivate();
-    ~QLowEnergyServiceInfoPrivate();
-
-    QBluetoothUuid uuid;
-
-    QList<QLowEnergyCharacteristicInfo> characteristicList;
-    QLowEnergyServiceInfo::ServiceType serviceType;
-    bool connected;
-    QBluetoothDeviceInfo deviceInfo;
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-    QString startingHandle;
-    QString endingHandle;
-#endif
-
-#ifdef QT_QNX_BLUETOOTH
-    static void serviceNotification(int, short unsigned int, const char unsigned *, short unsigned int, void *);
-#endif
-
-private:
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-    int m_step;
-    int m_valueCounter;
-    int m_readCounter;
-#endif
-};
-
-QT_END_NAMESPACE
-
-#endif // QLOWENERGYSERVICEINFO_P_H
+    sockaddr_l2 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.l2_family = AF_BLUETOOTH;
+    addr.l2_cid = 4;
+    addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
+}

@@ -43,11 +43,11 @@
 #define QLOWENERGYCONTROLLERNEWPRIVATE_P_H
 
 #include <qglobal.h>
+#include <QtBluetooth/qbluetooth.h>
 #include "qlowenergycontrollernew.h"
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 #include <QtBluetooth/QBluetoothSocket>
-#include <QtBluetooth/qbluetooth.h>
 #endif
 
 typedef QPair<QLowEnergyHandle,QLowEnergyHandle> HandlePair;
@@ -63,7 +63,7 @@ public:
         : QObject(),
           state(QLowEnergyControllerNew::UnconnectedState),
           error(QLowEnergyControllerNew::NoError)
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
           , l2cpSocket(0)
 #endif
     {}
@@ -89,7 +89,7 @@ private:
     // list of all found service uuids
     QMap<QBluetoothUuid, HandlePair> serviceList;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QBluetoothSocket *l2cpSocket;
 
     void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
