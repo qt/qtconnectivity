@@ -811,8 +811,12 @@ void tst_QLowEnergyController::tst_connectNew()
                  info.serviceUuid().toString().toLatin1());
     }
 
-    foreach (const QBluetoothUuid &uuid, control.services())
+    foreach (const QSharedPointer<QLowEnergyService> &entry, control.services()) {
+        const QBluetoothUuid &uuid = entry.data()->serviceUuid();
         QVERIFY2(listing.contains(uuid), uuid.toString().toLatin1());
+        QCOMPARE(entry.data()->type(), QLowEnergyService::PrimaryService);
+        QCOMPARE(entry.data()->state(), QLowEnergyService::DiscoveryRequired);
+    }
 
     // Finish off
     control.disconnectFromDevice();

@@ -45,6 +45,7 @@
 #include <QObject>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QLowEnergyService>
 
 QT_BEGIN_NAMESPACE
 
@@ -84,8 +85,7 @@ public:
     void disconnectFromDevice();
 
     void discoverServices();
-    QList<QBluetoothUuid> services() const;
-
+    QList<QSharedPointer<QLowEnergyService> > services() const;
 
     Error error() const;
     QString errorString() const;

@@ -39,28 +39,86 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontrollernew_p.h"
+#include <QtCore/QCoreApplication>
+#include <QtBluetooth/QLowEnergyService>
+#include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
 QT_BEGIN_NAMESPACE
 
-void QLowEnergyControllerNewPrivate::connectToDevice()
-{
+class QLowEnergyServicePrivate {
+public:
+    QBluetoothUuid uuid;
+    QLowEnergyService::ServiceType type;
+    QLowEnergyService::ServiceState state;
+};
 
+QLowEnergyService::QLowEnergyService(const QBluetoothUuid &uuid,
+                                     QObject *parent)
+    : QObject(parent)
+{
+    d_ptr = new QLowEnergyServicePrivate();
+    d_ptr->uuid = uuid;
+    d_ptr->state = QLowEnergyService::DiscoveryRequired;
+    d_ptr->type = QLowEnergyService::PrimaryService;
 }
 
-void QLowEnergyControllerNewPrivate::disconnectFromDevice()
+QLowEnergyService::~QLowEnergyService()
 {
-
+    delete d_ptr;
 }
 
-void QLowEnergyControllerNewPrivate::discoverServices()
+QList<QSharedPointer<QLowEnergyService> > QLowEnergyService::includedServices() const
 {
-
+    QList<QSharedPointer<QLowEnergyService > > results;
+    //TODO implement secondary service support
+    return results;
 }
 
-void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+QLowEnergyService::ServiceState QLowEnergyService::state() const
 {
-
+    return d_ptr->state;
 }
+
+
+QLowEnergyService::ServiceType QLowEnergyService::type() const
+{
+    return d_ptr->type;
+}
+
+
+QList<QLowEnergyCharacteristicInfo> QLowEnergyService::characteristics() const
+{
+    //TODO implement
+    QList<QLowEnergyCharacteristicInfo> results;
+    return results;
+}
+
+
+QBluetoothUuid QLowEnergyService::serviceUuid() const
+{
+    return d_ptr->uuid;
+}
+
+
+QString QLowEnergyService::serviceName() const
+{
+    bool ok = false;
+    quint16 clsId = d_ptr->uuid.toUInt16(&ok);
+    if (ok) {
+        QBluetoothUuid::ServiceClassUuid id
+                = static_cast<QBluetoothUuid::ServiceClassUuid>(clsId);
+        return QBluetoothUuid::serviceClassToString(id);
+    }
+    return qApp ?
+           qApp->translate("QBluetoothServiceDiscoveryAgent", "Unknown Service") :
+           QStringLiteral("Unknown Service");
+}
+
+
+void QLowEnergyService::discoverDetails()
+{
+    //TODO discoverDetails
+}
+
 
 QT_END_NAMESPACE

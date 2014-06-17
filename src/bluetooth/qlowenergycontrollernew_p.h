@@ -50,9 +50,14 @@
 #include <QtBluetooth/QBluetoothSocket>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 typedef QPair<QLowEnergyHandle,QLowEnergyHandle> HandlePair;
 
-QT_BEGIN_NAMESPACE
+struct ServiceDetails {
+    QLowEnergyHandle startHandle, endHandle;
+    QSharedPointer<QLowEnergyService> service;
+};
 
 class QLowEnergyControllerNewPrivate : QObject
 {
@@ -77,6 +82,8 @@ public:
 
     void discoverServices();
 
+    void discoverServiceDetails(const QBluetoothUuid &);
+
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
@@ -87,7 +94,7 @@ public:
 
 private:
     // list of all found service uuids
-    QMap<QBluetoothUuid, HandlePair> serviceList;
+    QMap<QBluetoothUuid, ServiceDetails> serviceList;
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QBluetoothSocket *l2cpSocket;

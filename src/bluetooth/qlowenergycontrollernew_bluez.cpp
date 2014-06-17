@@ -44,6 +44,7 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/QLowEnergyService>
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/uuid.h>
@@ -177,8 +178,16 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
 
             //qDebug() << "Found uuid:" << uuid << "start handle:" << hex
             //         << start << "end handle:" << end;
-            HandlePair pair(start, end);
-            serviceList.insert(uuid, pair);
+
+            ServiceDetails details;
+            details.startHandle = start;
+            details.endHandle = end;
+
+            QLowEnergyService *service = new QLowEnergyService(uuid);
+            QSharedPointer<QLowEnergyService> pointer(service);
+            details.service = pointer;
+
+            serviceList.insert(uuid, details);
             emit q->serviceDiscovered(uuid);
         }
 
@@ -224,5 +233,11 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
         setError(QLowEnergyControllerNew::NetworkError);
     }
 }
+
+void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+{
+
+}
+
 
 QT_END_NAMESPACE

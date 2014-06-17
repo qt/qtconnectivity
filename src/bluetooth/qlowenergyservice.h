@@ -38,29 +38,62 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QLOWENERGYSERVICE_H
+#define QLOWENERGYSERVICE_H
 
-#include "qlowenergycontrollernew_p.h"
+#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
 QT_BEGIN_NAMESPACE
 
-void QLowEnergyControllerNewPrivate::connectToDevice()
+class QLowEnergyServicePrivate;
+class Q_BLUETOOTH_EXPORT QLowEnergyService : public QObject
 {
+    Q_OBJECT
+public:
+    enum ServiceType {
+        PrimaryService = 0,
+        IncludedService
+    };
 
-}
+    enum ServiceState {
+        InvalidService = 0, // when underlying controller disconnects
+        DiscoveryRequired,  // we know start/end handle but nothing more
+        DiscoveringService, // discoverDetails() called and running
+        ServiceDiscovered,  // all details have been synchronized
+    };
 
-void QLowEnergyControllerNewPrivate::disconnectFromDevice()
-{
+    ~QLowEnergyService();
 
-}
+    QList<QSharedPointer<QLowEnergyService> > includedServices() const;
+    QLowEnergyService::ServiceType type() const;
+    QLowEnergyService::ServiceState state() const;
 
-void QLowEnergyControllerNewPrivate::discoverServices()
-{
 
-}
+    QList<QLowEnergyCharacteristicInfo> characteristics() const;
+    QBluetoothUuid serviceUuid() const;
+    QString serviceName() const;
 
-void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
-{
+    void discoverDetails();
 
-}
+Q_SIGNALS:
+    void stateChanged(QLowEnergyService::ServiceState newState);
+    void characteristicChanged(const QLowEnergyCharacteristicInfo &info,
+                               const QByteArray &value);
+    void descriptorChanged(const QLowEnergyDescriptorInfo &info,
+                           const QByteArray &value);
+
+private:
+    Q_DECLARE_PRIVATE(QLowEnergyService)
+    QLowEnergyServicePrivate *d_ptr;
+
+    //somehow we need to connect this to QLowEnergyControllerNew
+    //which owns the communication
+    QLowEnergyService(const QBluetoothUuid &uuid,
+                      QObject *parent = 0);
+    friend class QLowEnergyControllerNewPrivate;
+};
 
 QT_END_NAMESPACE
+
+#endif // QLOWENERGYSERVICE_H
