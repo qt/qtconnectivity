@@ -107,7 +107,7 @@ void QLowEnergyControllerPrivate::serviceConnected(const char *bdaddr, const cha
     qCDebug(QT_BT_QNX) << "[SERVICE: Connected] Device service: " << service;
     qCDebug(QT_BT_QNX) << "[SERVICE: Connected] Possible error: " << err;
 
-    QString lowEnergyUuid(service);
+    QString lowEnergyUuid = QLatin1String(service);
     QBluetoothUuid leUuid;
 
     //In case of custom UUIDs (e.g. Texas Instruments SenstorTag LE Device)
@@ -247,10 +247,10 @@ void QLowEnergyControllerPrivate::serviceNotification(int instance, short unsign
     for (int i = 0; i < p->m_leServices.size(); i++) {
         for (int j = 0; j < p->m_leServices.at(i).characteristics().size(); j++) {
 
-            QString charHandle;
-            charHandle.setNum(handle);
-            charHandle = charHandle;
-            if (charHandle == p->m_leServices.at(i).d_ptr->characteristicList.at(j).handle() ) {
+//            QString charHandle;
+//            charHandle.setNum(handle);
+//            charHandle = charHandle;
+            if (handle == p->m_leServices.at(i).d_ptr->characteristicList.at(j).handle() ) {
                 chars = QLowEnergyCharacteristicInfo(p->m_leServices.at(i).d_ptr->characteristicList.at(j));
                 QByteArray receivedValue;
 
@@ -291,7 +291,7 @@ void QLowEnergyControllerPrivate::serviceDisconnected(const char *bdaddr, const 
 {
     QSharedPointer<QLowEnergyControllerPrivate> *classPointer = static_cast<QSharedPointer<QLowEnergyControllerPrivate> *>(userData);
     QLowEnergyControllerPrivate *p = classPointer->data();
-    QString lowEnergyUuid(service);
+    QString lowEnergyUuid = QLatin1String(service);
     qCDebug(QT_BT_QNX) << "LE Service: " << lowEnergyUuid << service;
     QBluetoothUuid leUuid;
 
@@ -585,11 +585,9 @@ void QLowEnergyControllerPrivate::readDescriptors(QLowEnergyCharacteristicInfo &
     }
 
     for (int i = 0; i < count; i++) {
-        QString descHanlde;
-        descHanlde.setNum(descriptorList[i].handle);
-        QString descriptorUuid(descriptorList[i].uuid);
+        QString descriptorUuid = QLatin1String(descriptorList[i].uuid);
         QBluetoothUuid descUuid(descriptorUuid);
-        QLowEnergyDescriptorInfo descriptor(descUuid, descHanlde);
+        QLowEnergyDescriptorInfo descriptor(descUuid, QBluetoothUuid::CharacteristicExtendedProperties, descriptorList[i].handle); //TODO set proper descriptor type
 
         uint8_t more = 1;
         int byteCount;

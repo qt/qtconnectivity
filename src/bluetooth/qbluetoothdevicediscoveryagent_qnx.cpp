@@ -216,12 +216,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
          * BT_DEVICE_TYPE_UNKNOWN is 255
          */
         if (dev_type == 0 || dev_type == 1)
-            deviceInfo.setCoreConfiguration(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+            deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
         else{
             if (hasGatt)
-                deviceInfo.setCoreConfiguration(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+                deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
             else
-                deviceInfo.setCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+                deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
         }
         discoveredDevices.append(deviceInfo);
         if (!updated) // We are not allowed to emit a signal with the updated version
