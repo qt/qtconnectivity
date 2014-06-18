@@ -197,15 +197,22 @@ void QLowEnergyControllerNew::discoverServices()
     d->discoverServices();
 }
 
-QList<QSharedPointer<QLowEnergyService> > QLowEnergyControllerNew::services() const
+QList<QBluetoothUuid> QLowEnergyControllerNew::services() const
 {
-    QList<QSharedPointer<QLowEnergyService> > results;
-    foreach (const QSharedPointer<QLowEnergyServicePrivate> p, d_ptr->serviceList.values()) {
-        QLowEnergyService *service = new QLowEnergyService(p);
-        results.append(QSharedPointer<QLowEnergyService>(service));
-    }
+    return d_ptr->serviceList.keys();
+}
 
-    return results;
+QLowEnergyService *QLowEnergyControllerNew::createServiceObject(
+        const QBluetoothUuid &serviceUuid, QObject *parent)
+{
+    Q_D(QLowEnergyControllerNew);
+    if (!d->serviceList.contains(serviceUuid))
+        return 0;
+
+    QLowEnergyService *service = new QLowEnergyService(
+                d->serviceList.value(serviceUuid), parent);
+
+    return service;
 }
 
 QLowEnergyControllerNew::Error QLowEnergyControllerNew::error() const

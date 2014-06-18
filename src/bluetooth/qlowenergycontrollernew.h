@@ -85,7 +85,9 @@ public:
     void disconnectFromDevice();
 
     void discoverServices();
-    QList<QSharedPointer<QLowEnergyService> > services() const;
+    QList<QBluetoothUuid> services() const;
+    QLowEnergyService *createServiceObject(
+            const QBluetoothUuid &service, QObject *parent = 0);
 
     Error error() const;
     QString errorString() const;
