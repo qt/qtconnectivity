@@ -39,76 +39,43 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCONTROLLERNEWPRIVATE_P_H
-#define QLOWENERGYCONTROLLERNEWPRIVATE_P_H
+#ifndef QLOWENERGYSERVICEPRIVATE_P_H
+#define QLOWENERGYSERVICEPRIVATE_P_H
 
-#include <qglobal.h>
+#include <QtCore/QObject>
+#include <QtCore/QPointer>
 #include <QtBluetooth/qbluetooth.h>
-#include "qlowenergycontrollernew.h"
-#include "qlowenergyserviceprivate_p.h"
+#include <QtBluetooth/QLowEnergyService>
 
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-#include <QtBluetooth/QBluetoothSocket>
-#endif
+#include "qlowenergycontrollernew_p.h"
 
-QT_BEGIN_NAMESPACE
-
-typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
-
-class QLowEnergyControllerNewPrivate : public QObject
+class QLowEnergyServicePrivate : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PUBLIC(QLowEnergyControllerNew)
 public:
-    QLowEnergyControllerNewPrivate()
-        : QObject(),
-          state(QLowEnergyControllerNew::UnconnectedState),
-          error(QLowEnergyControllerNew::NoError)
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-          , l2cpSocket(0)
-#endif
-    {}
+    explicit QLowEnergyServicePrivate(QObject *parent = 0);
+    ~QLowEnergyServicePrivate();
 
-    void setError(QLowEnergyControllerNew::Error newError);
-    bool isValidLocalAdapter();
+    void setController(QLowEnergyControllerNewPrivate* control);
+    void setError(QLowEnergyService::ServiceError newError);
+    void setState(QLowEnergyService::ServiceState newState);
 
-    void setState(QLowEnergyControllerNew::ControllerState newState);
+signals:
+    void stateChanged(QLowEnergyService::ServiceState newState);
+    void error(QLowEnergyService::ServiceError error);
 
-    void connectToDevice();
-    void disconnectFromDevice();
+public slots:
 
-    void discoverServices();
-    void invalidateServices();
+public:
+    QLowEnergyHandle startHandle;
+    QLowEnergyHandle endHandle;
 
-    void discoverServiceDetails(const QBluetoothUuid &);
+    QBluetoothUuid uuid;
+    QLowEnergyService::ServiceType type;
+    QLowEnergyService::ServiceState state;
+    QLowEnergyService::ServiceError lastError;
 
-    QBluetoothAddress remoteDevice;
-    QBluetoothAddress localAdapter;
-
-    QLowEnergyControllerNew::ControllerState state;
-    QLowEnergyControllerNew::Error error;
-    QString errorString;
-
-
-private:
-    // list of all found service uuids
-    ServiceDataMap serviceList;
-
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-    QBluetoothSocket *l2cpSocket;
-
-    void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
-
-private slots:
-    void l2cpConnected();
-    void l2cpDisconnected();
-    void l2cpErrorChanged(QBluetoothSocket::SocketError);
-    void l2cpReadyRead();
-#endif
-private:
-    QLowEnergyControllerNew *q_ptr;
+    QPointer<QLowEnergyControllerNewPrivate> controller;
 };
 
-QT_END_NAMESPACE
-
-#endif // QLOWENERGYCONTROLLERNEWPRIVATE_P_H
+#endif // QLOWENERGYSERVICEPRIVATE_P_H

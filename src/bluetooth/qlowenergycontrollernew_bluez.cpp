@@ -180,16 +180,15 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
             //qDebug() << "Found uuid:" << uuid << "start handle:" << hex
             //         << start << "end handle:" << end;
 
-            ServiceDetails details;
-            details.startHandle = start;
-            details.endHandle = end;
+            QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
+            priv->uuid = uuid;
+            priv->startHandle = start;
+            priv->endHandle = end;
+            priv->setController(this);
 
-            QLowEnergyService *service = new QLowEnergyService(uuid);
-            service->setController(this);
-            QSharedPointer<QLowEnergyService> pointer(service);
-            details.service = pointer;
+            QSharedPointer<QLowEnergyServicePrivate> pointer(priv);
 
-            serviceList.insert(uuid, details);
+            serviceList.insert(uuid, pointer);
             emit q->serviceDiscovered(uuid);
         }
 

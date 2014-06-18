@@ -102,10 +102,10 @@ void QLowEnergyControllerNewPrivate::setState(
 
 void QLowEnergyControllerNewPrivate::invalidateServices()
 {
-    foreach (const QBluetoothUuid &service, serviceList.keys()) {
-        ServiceDetails detail = serviceList.take(service);
-        detail.service.data()->setState(QLowEnergyService::InvalidService);
-    }
+    foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values())
+        service->setState(QLowEnergyService::InvalidService);
+
+    serviceList.clear();
 }
 
 QLowEnergyControllerNew::QLowEnergyControllerNew(
@@ -200,8 +200,10 @@ void QLowEnergyControllerNew::discoverServices()
 QList<QSharedPointer<QLowEnergyService> > QLowEnergyControllerNew::services() const
 {
     QList<QSharedPointer<QLowEnergyService> > results;
-    foreach (const ServiceDetails &entry, d_ptr->serviceList)
-        results.append(entry.service);
+    foreach (const QSharedPointer<QLowEnergyServicePrivate> p, d_ptr->serviceList.values()) {
+        QLowEnergyService *service = new QLowEnergyService(p);
+        results.append(QSharedPointer<QLowEnergyService>(service));
+    }
 
     return results;
 }

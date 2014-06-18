@@ -816,10 +816,10 @@ void tst_QLowEnergyController::tst_connectNew()
 
         savedReferences = control.services();
         foreach (const QSharedPointer<QLowEnergyService> &entry, savedReferences) {
-            const QBluetoothUuid &uuid = entry.data()->serviceUuid();
+            const QBluetoothUuid &uuid = entry->serviceUuid();
             QVERIFY2(listing.contains(uuid), uuid.toString().toLatin1());
-            QCOMPARE(entry.data()->type(), QLowEnergyService::PrimaryService);
-            QCOMPARE(entry.data()->state(), QLowEnergyService::DiscoveryRequired);
+            QCOMPARE(entry->type(), QLowEnergyService::PrimaryService);
+            QCOMPARE(entry->state(), QLowEnergyService::DiscoveryRequired);
         }
     }
 
@@ -836,8 +836,8 @@ void tst_QLowEnergyController::tst_connectNew()
 
         // after disconnect all service references must be invalid
         foreach (const QSharedPointer<QLowEnergyService> &entry, savedReferences) {
-            const QBluetoothUuid &uuid = entry.data()->serviceUuid();
-            QVERIFY2(entry.data()->state() == QLowEnergyService::InvalidService,
+            const QBluetoothUuid &uuid = entry->serviceUuid();
+            QVERIFY2(entry->state() == QLowEnergyService::InvalidService,
                      uuid.toString().toLatin1());
         }
     }

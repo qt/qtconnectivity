@@ -45,18 +45,9 @@
 #include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
 #include "qlowenergycontrollernew_p.h"
+#include "qlowenergyserviceprivate_p.h"
 
 QT_BEGIN_NAMESPACE
-
-class QLowEnergyServicePrivate {
-public:
-    QBluetoothUuid uuid;
-    QLowEnergyService::ServiceType type;
-    QLowEnergyService::ServiceState state;
-    QLowEnergyService::ServiceError lastError;
-
-    QPointer<QLowEnergyControllerNewPrivate> controller;
-};
 
 /*!
   \internal
@@ -65,54 +56,20 @@ public:
   The user gets access to class instances via
   \l QLowEnergyControllerNew::services().
  */
-QLowEnergyService::QLowEnergyService(const QBluetoothUuid &uuid,
+QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                                      QObject *parent)
-    : QObject(parent)
+    : QObject(parent),
+      d_ptr(p)
 {
-    d_ptr = new QLowEnergyServicePrivate();
-    d_ptr->uuid = uuid;
-    d_ptr->state = QLowEnergyService::InvalidService;
-    d_ptr->type = QLowEnergyService::PrimaryService;
-    d_ptr->lastError = QLowEnergyService::NoError;
+    connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
+            this, SIGNAL(error(QLowEnergyService::ServiceError)));
+    connect(p.data(), SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
+            this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
 }
 
-/*!
-  \internal
-
-  Called by Controller right after construction.
- */
-void QLowEnergyService::setController(QLowEnergyControllerNewPrivate *control)
-{
-    Q_D(QLowEnergyService);
-    if (!control)
-        return;
-
-    d->state = QLowEnergyService::DiscoveryRequired;
-    d->controller = control;
-}
-
-/*!
- \internal
-
- Called by Controller.
- */
-void QLowEnergyService::setError(QLowEnergyService::ServiceError newError)
-{
-    Q_D(QLowEnergyService);
-    d->lastError = newError;
-    emit error(newError);
-}
-
-void QLowEnergyService::setState(QLowEnergyService::ServiceState newState)
-{
-    Q_D(QLowEnergyService);
-    d->state = newState;
-    emit stateChanged(newState);
-}
 
 QLowEnergyService::~QLowEnergyService()
 {
-    delete d_ptr;
 }
 
 QList<QSharedPointer<QLowEnergyService> > QLowEnergyService::includedServices() const
@@ -170,7 +127,7 @@ void QLowEnergyService::discoverDetails()
         return;
 
     if (!d->controller) {
-        setError(QLowEnergyService::ServiceNotValidError);
+        d->setError(QLowEnergyService::ServiceNotValidError);
         return;
     }
 

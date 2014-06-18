@@ -49,7 +49,8 @@ PRIVATE_HEADERS += \
     qlowenergyprocess_p.h \
     qlowenergydescriptorinfo_p.h \
     qlowenergycontroller_p.h \
-    qlowenergycontrollernew_p.h
+    qlowenergycontrollernew_p.h \
+    qlowenergyserviceprivate_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -71,7 +72,8 @@ SOURCES += \
     qlowenergycharacteristicinfo.cpp \
     qlowenergydescriptorinfo.cpp \
     qlowenergycontroller.cpp \
-    qlowenergycontrollernew.cpp
+    qlowenergycontrollernew.cpp \
+    qlowenergyserviceprivate.cpp
 
 config_bluez:qtHaveModule(dbus) {
     QT *= dbus
@@ -187,3 +189,4 @@ config_bluez:qtHaveModule(dbus) {
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+

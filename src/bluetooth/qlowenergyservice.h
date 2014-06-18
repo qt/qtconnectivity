@@ -95,17 +95,13 @@ Q_SIGNALS:
 
 private:
     Q_DECLARE_PRIVATE(QLowEnergyService)
-    QLowEnergyServicePrivate *d_ptr;
+    QSharedPointer<QLowEnergyServicePrivate> d_ptr;
 
-    // the symbols below are used by QLowEnergyControllerNewPrivate
-    // TODO check whether there are other ways of accessing the internals
-    friend class QLowEnergyControllerNewPrivate;
-
-    QLowEnergyService(const QBluetoothUuid &uuid,
+    // QLowEnergyControllerNewPrivate is the factory for this class
+    friend class QLowEnergyControllerNew;
+    QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                       QObject *parent = 0);
-    void setController(QLowEnergyControllerNewPrivate* control);
-    void setError(QLowEnergyService::ServiceError newError);
-    void setState(QLowEnergyService::ServiceState newState);
+
 };
 
 QT_END_NAMESPACE
