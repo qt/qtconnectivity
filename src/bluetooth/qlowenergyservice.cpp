@@ -40,8 +40,11 @@
 ****************************************************************************/
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/QPointer>
 #include <QtBluetooth/QLowEnergyService>
 #include <QtBluetooth/QLowEnergyCharacteristicInfo>
+
+#include "qlowenergycontrollernew_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -50,16 +53,61 @@ public:
     QBluetoothUuid uuid;
     QLowEnergyService::ServiceType type;
     QLowEnergyService::ServiceState state;
+    QLowEnergyService::ServiceError lastError;
+
+    QPointer<QLowEnergyControllerNewPrivate> controller;
 };
 
+/*!
+  \internal
+
+  QLowEnergyControllerNewPrivate creates instances of this class.
+  The user gets access to class instances via
+  \l QLowEnergyControllerNew::services().
+ */
 QLowEnergyService::QLowEnergyService(const QBluetoothUuid &uuid,
                                      QObject *parent)
     : QObject(parent)
 {
     d_ptr = new QLowEnergyServicePrivate();
     d_ptr->uuid = uuid;
-    d_ptr->state = QLowEnergyService::DiscoveryRequired;
+    d_ptr->state = QLowEnergyService::InvalidService;
     d_ptr->type = QLowEnergyService::PrimaryService;
+    d_ptr->lastError = QLowEnergyService::NoError;
+}
+
+/*!
+  \internal
+
+  Called by Controller right after construction.
+ */
+void QLowEnergyService::setController(QLowEnergyControllerNewPrivate *control)
+{
+    Q_D(QLowEnergyService);
+    if (!control)
+        return;
+
+    d->state = QLowEnergyService::DiscoveryRequired;
+    d->controller = control;
+}
+
+/*!
+ \internal
+
+ Called by Controller.
+ */
+void QLowEnergyService::setError(QLowEnergyService::ServiceError newError)
+{
+    Q_D(QLowEnergyService);
+    d->lastError = newError;
+    emit error(newError);
+}
+
+void QLowEnergyService::setState(QLowEnergyService::ServiceState newState)
+{
+    Q_D(QLowEnergyService);
+    d->state = newState;
+    emit stateChanged(newState);
 }
 
 QLowEnergyService::~QLowEnergyService()
@@ -117,7 +165,21 @@ QString QLowEnergyService::serviceName() const
 
 void QLowEnergyService::discoverDetails()
 {
-    //TODO discoverDetails
+    Q_D(QLowEnergyService);
+    if (d->state != QLowEnergyService::DiscoveryRequired)
+        return;
+
+    if (!d->controller) {
+        setError(QLowEnergyService::ServiceNotValidError);
+        return;
+    }
+
+    d->controller->discoverServiceDetails(d->uuid);
+}
+
+QLowEnergyService::ServiceError QLowEnergyService::error() const
+{
+    return d_ptr->lastError;
 }
 
 

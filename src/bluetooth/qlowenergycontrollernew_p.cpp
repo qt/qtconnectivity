@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 
 void QLowEnergyControllerNewPrivate::connectToDevice()
 {
-
+    setError(QLowEnergyControllerNew::UnknownError);
 }
 
 void QLowEnergyControllerNewPrivate::disconnectFromDevice()

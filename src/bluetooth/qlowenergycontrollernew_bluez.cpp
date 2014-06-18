@@ -138,6 +138,7 @@ void QLowEnergyControllerNewPrivate::l2cpErrorChanged(QBluetoothSocket::SocketEr
         break;
     }
 
+    invalidateServices();
     setState(QLowEnergyControllerNew::UnconnectedState);
 }
 
@@ -184,6 +185,7 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
             details.endHandle = end;
 
             QLowEnergyService *service = new QLowEnergyService(uuid);
+            service->setController(this);
             QSharedPointer<QLowEnergyService> pointer(service);
             details.service = pointer;
 
@@ -236,7 +238,7 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
 
 void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
 {
-
+    //TODO Implement discoverServiceDetails()
 }
 
 

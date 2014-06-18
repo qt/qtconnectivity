@@ -59,7 +59,7 @@ struct ServiceDetails {
     QSharedPointer<QLowEnergyService> service;
 };
 
-class QLowEnergyControllerNewPrivate : QObject
+class QLowEnergyControllerNewPrivate : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PUBLIC(QLowEnergyControllerNew)
@@ -82,6 +82,7 @@ public:
     void disconnectFromDevice();
 
     void discoverServices();
+    void invalidateServices();
 
     void discoverServiceDetails(const QBluetoothUuid &);
 

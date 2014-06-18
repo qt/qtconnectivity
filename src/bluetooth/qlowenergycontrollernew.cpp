@@ -100,6 +100,14 @@ void QLowEnergyControllerNewPrivate::setState(
     emit q->stateChanged(state);
 }
 
+void QLowEnergyControllerNewPrivate::invalidateServices()
+{
+    foreach (const QBluetoothUuid &service, serviceList.keys()) {
+        ServiceDetails detail = serviceList.take(service);
+        detail.service.data()->setState(QLowEnergyService::InvalidService);
+    }
+}
+
 QLowEnergyControllerNew::QLowEnergyControllerNew(
                             const QBluetoothAddress &remoteDevice,
                             QObject *parent)
@@ -175,6 +183,7 @@ void QLowEnergyControllerNew::disconnectFromDevice()
     if (state() == QLowEnergyControllerNew::UnconnectedState)
         return;
 
+    d->invalidateServices();
     d->disconnectFromDevice();
 }
 
@@ -185,7 +194,6 @@ void QLowEnergyControllerNew::discoverServices()
     if (d->state != QLowEnergyControllerNew::ConnectedState)
         return;
 
-    d->serviceList.clear();
     d->discoverServices();
 }
 

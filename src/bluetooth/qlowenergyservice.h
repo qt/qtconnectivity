@@ -47,6 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
+class QLowEnergyControllerNewPrivate;
 class Q_BLUETOOTH_EXPORT QLowEnergyService : public QObject
 {
     Q_OBJECT
@@ -54,6 +55,11 @@ public:
     enum ServiceType {
         PrimaryService = 0,
         IncludedService
+    };
+
+    enum ServiceError {
+        NoError = 0,
+        ServiceNotValidError
     };
 
     enum ServiceState {
@@ -76,22 +82,30 @@ public:
 
     void discoverDetails();
 
+    ServiceError error() const;
+
+
 Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);
     void characteristicChanged(const QLowEnergyCharacteristicInfo &info,
                                const QByteArray &value);
     void descriptorChanged(const QLowEnergyDescriptorInfo &info,
                            const QByteArray &value);
+    void error(QLowEnergyService::ServiceError error);
 
 private:
     Q_DECLARE_PRIVATE(QLowEnergyService)
     QLowEnergyServicePrivate *d_ptr;
 
-    //somehow we need to connect this to QLowEnergyControllerNew
-    //which owns the communication
+    // the symbols below are used by QLowEnergyControllerNewPrivate
+    // TODO check whether there are other ways of accessing the internals
+    friend class QLowEnergyControllerNewPrivate;
+
     QLowEnergyService(const QBluetoothUuid &uuid,
                       QObject *parent = 0);
-    friend class QLowEnergyControllerNewPrivate;
+    void setController(QLowEnergyControllerNewPrivate* control);
+    void setError(QLowEnergyService::ServiceError newError);
+    void setState(QLowEnergyService::ServiceState newState);
 };
 
 QT_END_NAMESPACE
