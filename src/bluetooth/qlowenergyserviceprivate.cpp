@@ -41,6 +41,8 @@
 
 #include "qlowenergyserviceprivate_p.h"
 
+QT_BEGIN_NAMESPACE
+
 QLowEnergyServicePrivate::QLowEnergyServicePrivate(QObject *parent) :
     QObject(parent),
     type(QLowEnergyService::PrimaryService),
@@ -73,3 +75,5 @@ void QLowEnergyServicePrivate::setState(QLowEnergyService::ServiceState newState
     state = newState;
     emit stateChanged(newState);
 }
+
+QT_END_NAMESPACE

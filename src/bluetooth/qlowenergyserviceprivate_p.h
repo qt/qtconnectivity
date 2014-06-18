@@ -49,6 +49,8 @@
 
 #include "qlowenergycontrollernew_p.h"
 
+QT_BEGIN_NAMESPACE
+
 class QLowEnergyServicePrivate : public QObject
 {
     Q_OBJECT
@@ -77,5 +79,7 @@ public:
 
     QPointer<QLowEnergyControllerNewPrivate> controller;
 };
+
+QT_END_NAMESPACE
 
 #endif // QLOWENERGYSERVICEPRIVATE_P_H
