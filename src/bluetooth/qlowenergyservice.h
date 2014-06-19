@@ -65,7 +65,7 @@ public:
     enum ServiceState {
         InvalidService = 0, // when underlying controller disconnects
         DiscoveryRequired,  // we know start/end handle but nothing more
-        DiscoveringService, // discoverDetails() called and running
+        DiscoveringServices,// discoverDetails() called and running
         ServiceDiscovered,  // all details have been synchronized
     };
 

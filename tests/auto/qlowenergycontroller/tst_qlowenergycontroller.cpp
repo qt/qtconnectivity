@@ -803,6 +803,7 @@ void tst_QLowEnergyController::tst_connectNew()
         QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
 
         QCOMPARE(serviceFoundSpy.count(), foundServices.count());
+        QVERIFY(!serviceFoundSpy.isEmpty());
         QList<QBluetoothUuid> listing;
         for (int i = 0; i < serviceFoundSpy.count(); i++) {
             const QVariant v = serviceFoundSpy[i].at(0);
@@ -818,6 +819,26 @@ void tst_QLowEnergyController::tst_connectNew()
             savedReferences.append(service);
             QCOMPARE(service->type(), QLowEnergyService::PrimaryService);
             QCOMPARE(service->state(), QLowEnergyService::DiscoveryRequired);
+        }
+
+        // initiate characteristic discovery
+        foreach (QLowEnergyService *service, savedReferences) {
+            //qDebug() << "Discoverying" << service->serviceUuid();
+            QSignalSpy stateSpy(service,
+                                SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
+            QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
+            service->discoverDetails();
+
+            QTRY_VERIFY_WITH_TIMEOUT(
+                        service->state() == QLowEnergyService::ServiceDiscovered, 10000);
+
+            QCOMPARE(errorSpy.count(), 0); //no error
+            QCOMPARE(stateSpy.count(), 2); //
+
+//            for (int i = 0; i < stateSpy.count(); i++) {
+//                const QVariant v = stateSpy[i].at(0);
+//                //qDebug() << v;
+//            }
         }
     }
 

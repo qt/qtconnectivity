@@ -61,6 +61,9 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
     : QObject(parent),
       d_ptr(p)
 {
+    qRegisterMetaType<QLowEnergyService::ServiceState>("QLowEnergyService::ServiceState");
+    qRegisterMetaType<QLowEnergyService::ServiceError>("QLowEnergyService::ServiceError");
+
     connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
             this, SIGNAL(error(QLowEnergyService::ServiceError)));
     connect(p.data(), SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
@@ -123,13 +126,16 @@ QString QLowEnergyService::serviceName() const
 void QLowEnergyService::discoverDetails()
 {
     Q_D(QLowEnergyService);
-    if (d->state != QLowEnergyService::DiscoveryRequired)
-        return;
 
-    if (!d->controller) {
+    if (!d->controller || d->state == QLowEnergyService::InvalidService) {
         d->setError(QLowEnergyService::ServiceNotValidError);
         return;
     }
+
+    if (d->state != QLowEnergyService::DiscoveryRequired)
+        return;
+
+    d->setState(QLowEnergyService::DiscoveringServices);
 
     d->controller->discoverServiceDetails(d->uuid);
 }

@@ -43,6 +43,7 @@
 #define QLOWENERGYCONTROLLERNEWPRIVATE_P_H
 
 #include <qglobal.h>
+#include <QtCore/QQueue>
 #include <QtBluetooth/qbluetooth.h>
 #include "qlowenergycontrollernew.h"
 #include "qlowenergyserviceprivate_p.h"
@@ -80,7 +81,7 @@ public:
     void discoverServices();
     void invalidateServices();
 
-    void discoverServiceDetails(const QBluetoothUuid &);
+    void discoverServiceDetails(const QBluetoothUuid &service);
 
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
@@ -96,8 +97,20 @@ private:
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QBluetoothSocket *l2cpSocket;
+    struct Request {
+        quint8 command;
+        QByteArray payload;
+        QVariant reference;
+    };
+    QQueue<Request> openRequests;
+    bool requestPending;
+
+    void sendNextPendingRequest();
+    void processReply(const Request &request, const QByteArray &reply);
 
     void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
+    void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
+                               QLowEnergyHandle nextHandle);
 
 private slots:
     void l2cpConnected();

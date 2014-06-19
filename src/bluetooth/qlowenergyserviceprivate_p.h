@@ -80,6 +80,8 @@ public:
     QPointer<QLowEnergyControllerNewPrivate> controller;
 };
 
+Q_DECLARE_METATYPE(QSharedPointer<QLowEnergyServicePrivate>)
+
 QT_END_NAMESPACE
 
 #endif // QLOWENERGYSERVICEPRIVATE_P_H
