@@ -1,6 +1,7 @@
-/****************************************************************************
+/***************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -39,57 +40,65 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYSERVICEPRIVATE_P_H
-#define QLOWENERGYSERVICEPRIVATE_P_H
-
+#ifndef QLOWENERGYCHARACTERISTIC_H
+#define QLOWENERGYCHARACTERISTIC_H
+#include <QtCore/QSharedPointer>
 #include <QtCore/QObject>
-#include <QtCore/QPointer>
 #include <QtBluetooth/qbluetooth.h>
-#include <QtBluetooth/QLowEnergyService>
-#include <QtBluetooth/QLowEnergyCharacteristic>
-
-#include "qlowenergycontrollernew_p.h"
+#include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QLowEnergyDescriptorInfo>
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyServicePrivate : public QObject
+class QBluetoothUuid;
+class QLowEnergyServicePrivate;
+struct QLowEnergyCharacteristicPrivate;
+class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristic
 {
-    Q_OBJECT
 public:
-    explicit QLowEnergyServicePrivate(QObject *parent = 0);
-    ~QLowEnergyServicePrivate();
 
-    struct CharData {
-        QLowEnergyHandle valueHandle;
-        QBluetoothUuid uuid;
-        QLowEnergyCharacteristic::PropertyTypes properties;
-        QByteArray value;
+    enum PropertyType {
+        Unknown = 0x00,
+        Broadcasting = 0x01,
+        Read = 0x02,
+        WriteNoResponse = 0x04,
+        Write = 0x08,
+        Notify = 0x10,
+        Indicate = 0x20,
+        WriteSigned = 0x40,
+        ExtendedProperty = 0x80
     };
+    Q_DECLARE_FLAGS(PropertyTypes, PropertyType)
 
-    void setController(QLowEnergyControllerNewPrivate* control);
-    void setError(QLowEnergyService::ServiceError newError);
-    void setState(QLowEnergyService::ServiceState newState);
+    QLowEnergyCharacteristic();
+    QLowEnergyCharacteristic(const QLowEnergyCharacteristic &other);
+    ~QLowEnergyCharacteristic();
 
-signals:
-    void stateChanged(QLowEnergyService::ServiceState newState);
-    void error(QLowEnergyService::ServiceError error);
+    QLowEnergyCharacteristic &operator=(const QLowEnergyCharacteristic &other);
 
-public:
-    QLowEnergyHandle startHandle;
-    QLowEnergyHandle endHandle;
+    QString name() const;
 
-    QBluetoothUuid uuid;
-    QLowEnergyService::ServiceType type;
-    QLowEnergyService::ServiceState state;
-    QLowEnergyService::ServiceError lastError;
+    QBluetoothUuid uuid() const;
 
-    QHash<QLowEnergyHandle, CharData> characteristicList;
+    void setValue(const QByteArray &value); //TODO shift to QLowEnergyControllerNew
+    QByteArray value() const;
 
-    QPointer<QLowEnergyControllerNewPrivate> controller;
+    QLowEnergyCharacteristic::PropertyTypes properties() const;
+    QLowEnergyHandle handle() const;
+
+    QList<QLowEnergyDescriptorInfo> descriptors() const;
+
+    bool isValid() const;
+
+protected:
+    QSharedPointer<QLowEnergyServicePrivate> d_ptr;
+    QLowEnergyCharacteristicPrivate *data;
+    QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
+                             QLowEnergyHandle handle);
 };
 
-Q_DECLARE_METATYPE(QSharedPointer<QLowEnergyServicePrivate>)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyCharacteristic::PropertyTypes)
 
 QT_END_NAMESPACE
 
-#endif // QLOWENERGYSERVICEPRIVATE_P_H
+#endif // QLOWENERGYCHARACTERISTIC_H

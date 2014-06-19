@@ -358,8 +358,8 @@ void QLowEnergyControllerNewPrivate::processReply(
         const char *data = response.constData();
         for (int i = 0; i < numElements; i++) {
             startHandle = bt_get_le16(&data[offset]);
-            QLowEnergyCharacteristicInfo::PropertyTypes flags =
-                    (QLowEnergyCharacteristicInfo::PropertyTypes)data[offset+2];
+            QLowEnergyCharacteristic::PropertyTypes flags =
+                    (QLowEnergyCharacteristic::PropertyTypes)data[offset+2];
             valueHandle = bt_get_le16(&data[offset+3]);
             QBluetoothUuid uuid;
 
@@ -369,6 +369,14 @@ void QLowEnergyControllerNewPrivate::processReply(
                 uuid = convert_uuid128((uint128_t *)&data[offset+5]);
 
             offset += elementLength;
+
+            QLowEnergyServicePrivate::CharData characteristic;
+            characteristic.properties = flags;
+            characteristic.valueHandle = valueHandle;
+            characteristic.uuid = uuid;
+
+            p->characteristicList[startHandle] = characteristic;
+
 
             qDebug() << "Found handle:" << hex << startHandle
                      << "properties:" << flags
@@ -429,6 +437,7 @@ void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid
     }
 
     QSharedPointer<QLowEnergyServicePrivate> serviceData = serviceList.value(service);
+    serviceData->characteristicList.clear();
     sendReadByTypeRequest(serviceData, serviceData->startHandle);
 }
 
