@@ -54,10 +54,33 @@
 #define GATT_PRIMARY_SERVICE    0x2800
 #define GATT_CHARACTERISTIC     0x2803
 
+// GATT commands
+#define ATT_OP_ERROR_RESPONSE           0x1
 #define ATT_OP_READ_BY_TYPE_REQUEST     0x8
 #define ATT_OP_READ_BY_TYPE_RESPONSE    0x9
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
+
+// GATT error codes
+#define ATT_ERROR_INVALID_HANDLE        0x01
+#define ATT_ERROR_READ_NOT_PERM         0x02
+#define ATT_ERROR_WRITE_NOT_PERM        0x03
+#define ATT_ERROR_INVALID_PDU           0x04
+#define ATT_ERROR_INSUF_AUTHENTICATION  0x05
+#define ATT_ERROR_REQUEST_NOT_SUPPORTED 0x06
+#define ATT_ERROR_INVALID_OFFSET        0x07
+#define ATT_ERROR_INSUF_AUTHORIZATION   0x08
+#define ATT_ERROR_PREPARE_QUEUE_FULL    0x09
+#define ATT_ERROR_ATTRIBUTE_NOT_FOUND   0x0A
+#define ATT_ERROR_ATTRIBUTE_NOT_LONG    0x0B
+#define ATT_ERROR_INSUF_ENCR_KEY_SIZE   0x0C
+#define ATT_ERROR_INVAL_ATTR_VALUE_LEN  0x0D
+#define ATT_ERROR_UNLIKELY              0x0E
+#define ATT_ERROR_INSUF_ENCRYPTION      0x0F
+#define ATT_ERROR_APPLICATION           0x10
+#define ATT_ERROR_INSUF_RESOURCES       0x11
+
+
 
 
 QT_BEGIN_NAMESPACE
@@ -78,6 +101,63 @@ static inline QBluetoothUuid convert_uuid128(const uint128_t *p)
     memcpy(&qtdst, &dst_bigEndian, sizeof(uint128_t));
 
     return QBluetoothUuid(qtdst);
+}
+
+static void dumpErrorInformation(const QByteArray &response)
+{
+    const char *data = response.constData();
+    if (response.size() != 5 || data[0] != ATT_OP_ERROR_RESPONSE) {
+        qCWarning(QT_BT_BLUEZ) << QLatin1String("Not a valid error response");
+        return;
+    }
+
+    quint8 lastCommand = data[1];
+    quint16 handle = bt_get_le16(&data[2]);
+    quint8 errorCode = data[4];
+
+    QString errorString;
+    switch (errorCode) {
+    case ATT_ERROR_INVALID_HANDLE:
+        errorString = QStringLiteral("invalid handle"); break;
+    case ATT_ERROR_READ_NOT_PERM:
+        errorString = QStringLiteral("not readable attribute - permissions"); break;
+    case ATT_ERROR_WRITE_NOT_PERM:
+        errorString = QStringLiteral("not writable attribute - permissions"); break;
+    case ATT_ERROR_INVALID_PDU:
+        errorString = QStringLiteral("PDU invalid"); break;
+    case ATT_ERROR_INSUF_AUTHENTICATION:
+        errorString = QStringLiteral("needs authentication - permissions"); break;
+    case ATT_ERROR_REQUEST_NOT_SUPPORTED:
+        errorString = QStringLiteral("server does not support request"); break;
+    case ATT_ERROR_INVALID_OFFSET:
+        errorString = QStringLiteral("offset past end of attribute"); break;
+    case ATT_ERROR_INSUF_AUTHORIZATION:
+        errorString = QStringLiteral("need authorization - permissions"); break;
+    case ATT_ERROR_PREPARE_QUEUE_FULL:
+        errorString = QStringLiteral("run out of prepare queue space"); break;
+    case ATT_ERROR_ATTRIBUTE_NOT_FOUND:
+        errorString = QStringLiteral("no attribute in given range found"); break;
+    case ATT_ERROR_ATTRIBUTE_NOT_LONG:
+        errorString = QStringLiteral("attribute not read/written using read blob"); break;
+    case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
+        errorString = QStringLiteral("need encryption key size - permissions"); break;
+    case ATT_ERROR_INVAL_ATTR_VALUE_LEN:
+        errorString = QStringLiteral("written value is invalid size"); break;
+    case ATT_ERROR_UNLIKELY:
+        errorString = QStringLiteral("unlikely error"); break;
+    case ATT_ERROR_INSUF_ENCRYPTION:
+        errorString = QStringLiteral("needs encryption - permissions"); break;
+    case ATT_ERROR_APPLICATION:
+        errorString = QStringLiteral("application error"); break;
+    case ATT_ERROR_INSUF_RESOURCES:
+        errorString = QStringLiteral("insufficient resources to complete request"); break;
+    default:
+        errorString = QStringLiteral("unknown error code"); break;
+    }
+
+    qWarning(QT_BT_BLUEZ) << "Error:" << errorString
+             << "last command:" << hex << lastCommand
+             << "handle:" << handle;
 }
 
 void QLowEnergyControllerNewPrivate::connectToDevice()
@@ -168,8 +248,8 @@ void QLowEnergyControllerNewPrivate::sendNextPendingRequest()
         return;
 
     const Request &request = openRequests.head();
-//    qDebug() << "Sending request, type:" << hex << request.command
-//             << request.payload.toHex();
+    qCDebug(QT_BT_BLUEZ) << "Sending request, type:" << hex << request.command
+             << request.payload.toHex();
 
     requestPending = true;
     qint64 result = l2cpSocket->write(request.payload.constData(),
@@ -187,12 +267,27 @@ void QLowEnergyControllerNewPrivate::processReply(
 {
     Q_Q(QLowEnergyControllerNew);
 
-    const quint8 command = response.constData()[0];
+    quint8 command = response.constData()[0];
+
+    bool isErrorResponse = false;
+    // if error occurred 2. byte is previous request type
+    if (command == ATT_OP_ERROR_RESPONSE) {
+        dumpErrorInformation(response);
+        command = response.constData()[1];
+        isErrorResponse = true;
+    }
 
     switch (command) {
+    case ATT_OP_READ_BY_GROUP_REQUEST: // in case of error
     case ATT_OP_READ_BY_GROUP_RESPONSE:
     {
         Q_ASSERT(request.command == ATT_OP_READ_BY_GROUP_REQUEST);
+
+        if (isErrorResponse) {
+            q->discoveryFinished();
+            return;
+        }
+
         QLowEnergyHandle start = 0, end = 0;
         const quint16 elementLength = response.constData()[1];
         const quint16 numElements = (response.size() - 2) / elementLength;
@@ -235,9 +330,20 @@ void QLowEnergyControllerNewPrivate::processReply(
 
     }
         break;
+    case ATT_OP_READ_BY_TYPE_REQUEST: //in case of error
     case ATT_OP_READ_BY_TYPE_RESPONSE:
     {
         Q_ASSERT(request.command == ATT_OP_READ_BY_TYPE_REQUEST);
+
+        QSharedPointer<QLowEnergyServicePrivate> p =
+                request.reference.value<QSharedPointer<QLowEnergyServicePrivate> >();
+
+        if (isErrorResponse) {
+            //we reached end of service handle
+            //just finish up characteristic discovery
+            p->setState(QLowEnergyService::ServiceDiscovered);
+            return;
+        }
 
         /* packet format:
          *  <opcode><elementLength>[<handle><property><charHandle><uuid>]+
@@ -270,8 +376,6 @@ void QLowEnergyControllerNewPrivate::processReply(
                      << "uuid:" << uuid.toString();
         }
 
-        QSharedPointer<QLowEnergyServicePrivate> p =
-                request.reference.value<QSharedPointer<QLowEnergyServicePrivate> >();
         if (startHandle + 1 < p->endHandle) // more chars to discover
             sendReadByTypeRequest(p, startHandle + 1);
         else
