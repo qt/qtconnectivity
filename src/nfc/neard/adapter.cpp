@@ -9,7 +9,7 @@
  * before re-generating it.
  */
 
-#include "adapter.h"
+#include "adapter_p.h" // HAND-EDIT
 
 /*
  * Implementation of interface class OrgNeardAdapterInterface

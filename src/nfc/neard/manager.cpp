@@ -9,7 +9,7 @@
  * before re-generating it.
  */
 
-#include "manager.h"
+#include "manager_p.h" // HAND-EDIT
 
 /*
  * Implementation of interface class OrgNeardManagerInterface
