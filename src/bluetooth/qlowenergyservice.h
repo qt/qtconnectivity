@@ -97,11 +97,10 @@ private:
     Q_DECLARE_PRIVATE(QLowEnergyService)
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
 
-    // QLowEnergyControllerNewPrivate is the factory for this class
+    // QLowEnergyControllerNew is the factory for this class
     friend class QLowEnergyControllerNew;
     QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                       QObject *parent = 0);
-
 };
 
 QT_END_NAMESPACE

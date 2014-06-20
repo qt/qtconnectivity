@@ -180,14 +180,16 @@ QByteArray QLowEnergyCharacteristic::value() const
 }
 
 /*!
-    Returns the handle of the gatt characteristic; otherwise returns \c 0.
+    Returns the handle of the GATT characteristic's value attribute;
+    otherwise returns \c 0.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 {
-    if (!data)
+    if (d_ptr.isNull() || !data
+        || !d_ptr->characteristicList.contains(data->handle))
         return 0;
 
-    return data->handle;
+    return d_ptr->characteristicList[data->handle].valueHandle;
 }
 
 /*!
