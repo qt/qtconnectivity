@@ -92,6 +92,8 @@ public:
 
 protected:
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
+
+    friend class QLowEnergyService;
     QLowEnergyCharacteristicPrivate *data;
     QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle handle);

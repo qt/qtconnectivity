@@ -108,6 +108,24 @@ void QLowEnergyControllerNewPrivate::invalidateServices()
     serviceList.clear();
 }
 
+QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerNewPrivate::serviceForHandle(
+        QLowEnergyHandle handle)
+{
+    foreach (QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values())
+        if (service->startHandle <= handle && handle <= service->endHandle)
+            return service;
+
+    return QSharedPointer<QLowEnergyServicePrivate>();
+}
+
+void QLowEnergyControllerNewPrivate::updateValueOfCharacteristic(
+        QLowEnergyHandle charHandle, const QByteArray &value)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+    if (!service.isNull() && service->characteristicList.contains(charHandle))
+        service->characteristicList[charHandle].value = value;
+}
+
 QLowEnergyControllerNew::QLowEnergyControllerNew(
                             const QBluetoothAddress &remoteDevice,
                             QObject *parent)

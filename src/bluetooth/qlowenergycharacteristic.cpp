@@ -100,17 +100,10 @@ QLowEnergyCharacteristic::QLowEnergyCharacteristic():
     upon write.
 */
 QLowEnergyCharacteristic::QLowEnergyCharacteristic(const QLowEnergyCharacteristic &other):
-    d_ptr(other.d_ptr)
+    d_ptr(other.d_ptr), data(0)
 {
-    if (!other.data) {
-        if (data) {
-            delete data;
-            data = 0;
-        }
-    } else {
-        if (!data)
-            data = new QLowEnergyCharacteristicPrivate();
-
+    if (other.data) {
+        data = new QLowEnergyCharacteristicPrivate();
         data->handle = other.data->handle;
     }
 }

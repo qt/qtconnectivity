@@ -56,9 +56,11 @@
 
 // GATT commands
 #define ATT_OP_ERROR_RESPONSE           0x1
-#define ATT_OP_READ_BY_TYPE_REQUEST     0x8
+#define ATT_OP_READ_BY_TYPE_REQUEST     0x8 //discover characteristics
 #define ATT_OP_READ_BY_TYPE_RESPONSE    0x9
-#define ATT_OP_READ_BY_GROUP_REQUEST    0x10
+#define ATT_OP_READ_REQUEST             0xA //read characteristic value
+#define ATT_OP_READ_RESPONSE            0xB
+#define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
 
 // GATT error codes
@@ -79,9 +81,6 @@
 #define ATT_ERROR_INSUF_ENCRYPTION      0x0F
 #define ATT_ERROR_APPLICATION           0x10
 #define ATT_ERROR_INSUF_RESOURCES       0x11
-
-
-
 
 QT_BEGIN_NAMESPACE
 
@@ -231,7 +230,7 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
 {
     requestPending = false;
     const QByteArray reply = l2cpSocket->readAll();
-    //qDebug() << response.size() << "data:" << response.toHex();
+    qDebug() << reply.size() << "data:" << reply.toHex();
     if (reply.isEmpty())
         return;
 
@@ -248,8 +247,8 @@ void QLowEnergyControllerNewPrivate::sendNextPendingRequest()
         return;
 
     const Request &request = openRequests.head();
-    qCDebug(QT_BT_BLUEZ) << "Sending request, type:" << hex << request.command
-             << request.payload.toHex();
+//    qCDebug(QT_BT_BLUEZ) << "Sending request, type:" << hex << request.command
+//             << request.payload.toHex();
 
     requestPending = true;
     qint64 result = l2cpSocket->write(request.payload.constData(),
@@ -285,7 +284,7 @@ void QLowEnergyControllerNewPrivate::processReply(
 
         if (isErrorResponse) {
             q->discoveryFinished();
-            return;
+            break;
         }
 
         QLowEnergyHandle start = 0, end = 0;
@@ -308,8 +307,8 @@ void QLowEnergyControllerNewPrivate::processReply(
             offset += elementLength;
 
 
-            //qDebug() << "Found uuid:" << uuid << "start handle:" << hex
-            //         << start << "end handle:" << end;
+//            qDebug() << "Found uuid:" << uuid << "start handle:" << hex
+//                     << start << "end handle:" << end;
 
             QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
             priv->uuid = uuid;
@@ -327,7 +326,6 @@ void QLowEnergyControllerNewPrivate::processReply(
             sendReadByGroupRequest(end+1, 0xFFFF);
         else
             emit q->discoveryFinished();
-
     }
         break;
     case ATT_OP_READ_BY_TYPE_REQUEST: //in case of error
@@ -341,8 +339,8 @@ void QLowEnergyControllerNewPrivate::processReply(
         if (isErrorResponse) {
             //we reached end of service handle
             //just finish up characteristic discovery
-            p->setState(QLowEnergyService::ServiceDiscovered);
-            return;
+            readServiceCharacteristicValues(p->uuid);
+            break;
         }
 
         /* packet format:
@@ -378,23 +376,42 @@ void QLowEnergyControllerNewPrivate::processReply(
             p->characteristicList[startHandle] = characteristic;
 
 
-            qDebug() << "Found handle:" << hex << startHandle
-                     << "properties:" << flags
-                     << "value handle:" << valueHandle
-                     << "uuid:" << uuid.toString();
+//            qDebug() << "Found handle:" << hex << startHandle
+//                     << "properties:" << flags
+//                     << "value handle:" << valueHandle
+//                     << "uuid:" << uuid.toString();
         }
 
         if (startHandle + 1 < p->endHandle) // more chars to discover
             sendReadByTypeRequest(p, startHandle + 1);
         else
-            p->setState(QLowEnergyService::ServiceDiscovered);
+            readServiceCharacteristicValues(p->uuid);
+    }
+        break;
+    case ATT_OP_READ_REQUEST: //error case
+    case ATT_OP_READ_RESPONSE:
+    {
+        Q_ASSERT(request.command == ATT_OP_READ_REQUEST);
+
+        if (isErrorResponse) {
+            // we ignore any error and go over to next message
+            break;
+        }
+
+        QLowEnergyHandle charHandle = (QLowEnergyHandle) request.reference.toUInt();
+        QByteArray a = response.mid(1);
+        updateValueOfCharacteristic(charHandle, response.mid(1).toHex());
+        if (request.reference2.toBool()) {
+            QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+            Q_ASSERT(!service.isNull());
+            service->setState(QLowEnergyService::ServiceDiscovered);
+        }
     }
         break;
     default:
         qCDebug(QT_BT_BLUEZ) << "Unknown packet: " << response.toHex();
+        break;
     }
-
-
 }
 
 void QLowEnergyControllerNewPrivate::discoverServices()
@@ -419,6 +436,8 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
 
     QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
+//    qDebug() << "Sending read_by_group_type request, startHandle:" << hex
+//             << start << "endHandle:" << end;
 
     Request request;
     request.payload = data;
@@ -458,15 +477,57 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
 
     QByteArray data(READ_BY_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_BY_TYPE_REQ_SIZE);
-    qDebug() << "Sending read_by_type request, startHandle:" << hex
-             << nextHandle << "endHandle:" << serviceData->endHandle
-             << "packet:" << data.toHex();
+//    qDebug() << "Sending read_by_type request, startHandle:" << hex
+//             << nextHandle << "endHandle:" << serviceData->endHandle
+//             << "packet:" << data.toHex();
 
     Request request;
     request.payload = data;
     request.command = ATT_OP_READ_BY_TYPE_REQUEST;
     request.reference = QVariant::fromValue(serviceData);
     openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
+void QLowEnergyControllerNewPrivate::readServiceCharacteristicValues(
+        const QBluetoothUuid &serviceUuid)
+{
+#define READ_REQUEST_SIZE 3
+    quint8 packet[READ_REQUEST_SIZE];
+    qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
+                         << serviceUuid.toString();
+
+    bool oneReadRequested = false;
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceList.value(serviceUuid);
+    const QList<QLowEnergyHandle> &keys = service->characteristicList.keys();
+    for (int i = 0; i < keys.count(); i++) {
+        QLowEnergyHandle charHandle = keys[i];
+        const QLowEnergyServicePrivate::CharData &charDetails =
+                service->characteristicList[charHandle];
+
+        //Don't try to read readOnly property
+        if (!(charDetails.properties & QLowEnergyCharacteristic::Read))
+            continue;
+
+        packet[0] = ATT_OP_READ_REQUEST;
+        bt_put_unaligned(htobs(charDetails.valueHandle), (quint16 *) &packet[1]);
+
+        QByteArray data(READ_REQUEST_SIZE, Qt::Uninitialized);
+        memcpy(data.data(), packet,  READ_REQUEST_SIZE);
+
+        Request request;
+        request.payload = data;
+        request.command = ATT_OP_READ_REQUEST;
+        request.reference = charHandle;
+        //last entry?
+        request.reference2 = QVariant((bool)(i + 1 == keys.count()));
+        openRequests.enqueue(request);
+        oneReadRequested = true;
+    }
+
+    if (!oneReadRequested)
+        service->setState(QLowEnergyService::ServiceDiscovered);
 
     sendNextPendingRequest();
 }

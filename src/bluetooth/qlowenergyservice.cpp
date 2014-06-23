@@ -44,6 +44,8 @@
 #include <QtBluetooth/QLowEnergyService>
 #include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
+#include <algorithm>
+
 #include "qlowenergycontrollernew_p.h"
 #include "qlowenergyserviceprivate_p.h"
 
@@ -94,10 +96,16 @@ QLowEnergyService::ServiceType QLowEnergyService::type() const
 }
 
 
-QList<QLowEnergyCharacteristicInfo> QLowEnergyService::characteristics() const
+QList<QLowEnergyCharacteristic> QLowEnergyService::characteristics() const
 {
-    //TODO implement
-    QList<QLowEnergyCharacteristicInfo> results;
+    QList<QLowEnergyCharacteristic> results;
+    QList<QLowEnergyHandle> handles = d_ptr->characteristicList.keys();
+    std::sort(handles.begin(), handles.end());
+
+    foreach (const QLowEnergyHandle &handle, handles) {
+        QLowEnergyCharacteristic characteristic(d_ptr, handle);
+        results.append(characteristic);
+    }
     return results;
 }
 

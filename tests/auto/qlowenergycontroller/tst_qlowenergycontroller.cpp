@@ -42,9 +42,11 @@
 #include <QtTest/QtTest>
 #include <QBluetoothLocalDevice>
 #include <QBluetoothServiceDiscoveryAgent>
+#include <QBluetoothUuid>
 #include <QLowEnergyController>
 #include <QLowEnergyControllerNew>
 #include <QLowEnergyServiceInfo>
+#include <QLowEnergyCharacteristic>
 
 #include <QDebug>
 
@@ -74,6 +76,7 @@ private slots:
 
 private:
     void verifyServiceProperties(const QLowEnergyServiceInfo &info);
+    void verifyServiceProperties(const QLowEnergyService *info);
 
     QBluetoothServiceDiscoveryAgent *agent;
     QBluetoothAddress remoteDevice;
@@ -823,7 +826,7 @@ void tst_QLowEnergyController::tst_connectNew()
 
         // initiate characteristic discovery
         foreach (QLowEnergyService *service, savedReferences) {
-            //qDebug() << "Discoverying" << service->serviceUuid();
+            qDebug() << "Discoverying" << service->serviceUuid();
             QSignalSpy stateSpy(service,
                                 SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
             QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
@@ -834,6 +837,8 @@ void tst_QLowEnergyController::tst_connectNew()
 
             QCOMPARE(errorSpy.count(), 0); //no error
             QCOMPARE(stateSpy.count(), 2); //
+
+            verifyServiceProperties(service);
 
 //            for (int i = 0; i < stateSpy.count(); i++) {
 //                const QVariant v = stateSpy[i].at(0);
@@ -859,6 +864,473 @@ void tst_QLowEnergyController::tst_connectNew()
             QVERIFY2(entry->state() == QLowEnergyService::InvalidService,
                      uuid.toString().toLatin1());
         }
+    }
+
+    qDeleteAll(savedReferences);
+    savedReferences.clear();
+}
+
+void tst_QLowEnergyController::verifyServiceProperties(
+        const QLowEnergyService *info)
+{
+    if (info->serviceUuid() ==
+            QBluetoothUuid(QString("00001800-0000-1000-8000-00805f9b34fb"))) {
+        qDebug() << "Verifying GAP Service";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 5);
+
+        // Device Name
+        QString temp("00002a00-0000-1000-8000-00805f9b34fb");
+        qDebug() << chars[0].uuid().toString() << temp;
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x3u);
+        QCOMPARE(chars[0].properties(), QLowEnergyCharacteristic::Read);
+        QCOMPARE(chars[0].value(), QByteArray("544920424c452053656e736f7220546167"));
+        QVERIFY(chars[0].isValid());
+        QCOMPARE(chars[0].descriptors().count(), 0);
+
+        // Appearance
+        temp = QString("00002a01-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x5u);
+        QCOMPARE(chars[1].properties(), QLowEnergyCharacteristic::Read);
+        QCOMPARE(chars[1].value(), QByteArray("0000"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+
+        // Peripheral Privacy Flag
+        temp = QString("00002a02-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[2].handle(), 0x7u);
+        QCOMPARE(chars[2].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[2].value(), QByteArray("00"));
+        QVERIFY(chars[2].isValid());
+        QCOMPARE(chars[2].descriptors().count(), 0);
+
+        // Reconnection Address
+        temp = QString("00002a03-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[3].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[3].handle(), 0x9u);
+        QCOMPARE(chars[3].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[3].value(), QByteArray("000000000000"));
+        QVERIFY(chars[3].isValid());
+        QCOMPARE(chars[3].descriptors().count(), 0);
+
+        // Peripheral Preferred Connection Parameters
+        temp = QString("00002a04-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[4].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[4].handle(), 0xbu);
+        QCOMPARE(chars[4].properties(), QLowEnergyCharacteristic::Read);
+        QCOMPARE(chars[4].value(), QByteArray("5000a0000000e803"));
+        QVERIFY(chars[4].isValid());
+        QCOMPARE(chars[4].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+                QBluetoothUuid(QString("00001801-0000-1000-8000-00805f9b34fb"))) {
+        qDebug() << "Verifying GATT Service";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 1);
+
+        // Service Changed
+        QString temp("00002a05-0000-1000-8000-00805f9b34fb");
+        //this should really be readable according to GATT Service spec
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0xeu);
+        QCOMPARE(chars[0].properties(), QLowEnergyCharacteristic::Indicate);
+        QCOMPARE(chars[0].value(), QByteArray(""));
+        QVERIFY(chars[0].isValid());
+        QCOMPARE(chars[0].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+                QBluetoothUuid(QString("0000180a-0000-1000-8000-00805f9b34fb"))) {
+        qDebug() << "Verifying Device Information";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 9);
+
+        // System ID
+        QString temp("00002a23-0000-1000-8000-00805f9b34fb");
+        //this should really be readable according to GATT Service spec
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x12u);
+        QCOMPARE(chars[0].properties(), QLowEnergyCharacteristic::Read);
+        QCOMPARE(chars[0].value(), QByteArray("6e41ab0000296abc"));
+        QVERIFY(chars[0].isValid());
+        QCOMPARE(chars[0].descriptors().count(), 0);
+
+        // Model Number
+        temp = QString("00002a24-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x14u);
+        QCOMPARE(chars[1].properties(), QLowEnergyCharacteristic::Read);
+        QCOMPARE(chars[1].value(), QByteArray("4e2e412e00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+
+        // Serial Number
+        temp = QString("00002a25-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[2].handle(), 0x16u);
+        QCOMPARE(chars[2].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[2].value(), QByteArray("4e2e412e00"));
+        QVERIFY(chars[2].isValid());
+        QCOMPARE(chars[2].descriptors().count(), 0);
+
+        // Firmware Revision
+        temp = QString("00002a26-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[3].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[3].handle(), 0x18u);
+        QCOMPARE(chars[3].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[3].value(), QByteArray("312e3031202846656220203720323031332900"));
+        QVERIFY(chars[3].isValid());
+        QCOMPARE(chars[3].descriptors().count(), 0);
+
+        // Hardware Revision
+        temp = QString("00002a27-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[4].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[4].handle(), 0x1au);
+        QCOMPARE(chars[4].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[4].value(), QByteArray("4e2e412e00"));
+        QVERIFY(chars[4].isValid());
+        QCOMPARE(chars[4].descriptors().count(), 0);
+
+        // Software Revision
+        temp = QString("00002a28-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[5].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[5].handle(), 0x1cu);
+        QCOMPARE(chars[5].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[5].value(), QByteArray("4e2e412e00"));
+        QVERIFY(chars[5].isValid());
+        QCOMPARE(chars[5].descriptors().count(), 0);
+
+        // Manufacturer Name
+        temp = QString("00002a29-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[6].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[6].handle(), 0x1eu);
+        QCOMPARE(chars[6].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[6].value(), QByteArray("546578617320496e737472756d656e747300"));
+        QVERIFY(chars[6].isValid());
+        QCOMPARE(chars[6].descriptors().count(), 0);
+
+        // IEEE
+        temp = QString("00002a2a-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[7].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[7].handle(), 0x20u);
+        QCOMPARE(chars[7].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[7].value(), QByteArray("fe006578706572696d656e74616c"));
+        QVERIFY(chars[7].isValid());
+        QCOMPARE(chars[7].descriptors().count(), 0);
+
+        // PnP ID
+        temp = QString("00002a50-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[8].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[8].handle(), 0x22u);
+        QCOMPARE(chars[8].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[8].value(), QByteArray("010d0000001001"));
+        QVERIFY(chars[8].isValid());
+        QCOMPARE(chars[8].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa00-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Temperature";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 2);
+
+        // Temp Data
+        QString temp("f000aa01-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x25u);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
+        //QCOMPARE(chars[0].value(), QByteArray("30303030"));
+        QVERIFY(chars[0].isValid());
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+//
+//        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x26u);
+//        QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//        QCOMPARE(QBluetoothUuid(chars[0].descriptors().at(0).type()), QBluetoothUuid(temp));
+
+        // Temp Config
+        temp = QString("f000aa02-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x29u);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("0000ffe0-0000-1000-8000-00805f9b34fb"))) {
+        qDebug() << "Verifying Simple Keys";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 1);
+
+        // Temp Data
+        QString temp("0000ffe1-0000-1000-8000-00805f9b34fb");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x5fu);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Notify));
+        QCOMPARE(chars[0].value(), QByteArray(""));
+        QVERIFY(chars[0].isValid());
+        QCOMPARE(chars[0].descriptors().count(), 0); //TODO should be 1?
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa10-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Accelerometer";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 3);
+
+        // Accel Data
+        QString temp("f000aa11-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x2du);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
+        QCOMPARE(chars[0].value(), QByteArray("000000"));
+        QVERIFY(chars[0].isValid());
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+
+//        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x2eu);
+//        QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//        QCOMPARE(QBluetoothUuid(chars[0].descriptors().at(0).type()), QBluetoothUuid(temp));
+
+        // Accel Config
+        temp = QString("f000aa12-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x31u);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+
+        // Accel Period
+        temp = QString("f000aa13-0451-4000-b000-000000000000");
+        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[2].handle(), 0x34u);
+        QCOMPARE(chars[2].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[2].value(), QByteArray("64"));   // don't change it or set it to 0x64
+        QVERIFY(chars[2].isValid());
+        QCOMPARE(chars[2].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa20-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Humidity";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 2);
+
+        // Humidity Data
+        QString temp("f000aa21-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x38u);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
+        QCOMPARE(chars[0].value(), QByteArray("00000000"));
+        QVERIFY(chars[0].isValid());
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+
+//        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x39u);
+//        QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//        QCOMPARE(QBluetoothUuid(chars[0].descriptors().at(0).type()), QBluetoothUuid(temp));
+
+        // Humidity Config
+        temp = QString("f000aa22-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x3cu);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa30-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Magnetometer";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 3);
+
+        // Magnetometer Data
+        QString temp("f000aa31-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x40u);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
+        QCOMPARE(chars[0].value(), QByteArray("000000000000"));
+        QVERIFY(chars[0].isValid());
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+
+//        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x41u);
+//        QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//        QCOMPARE(QBluetoothUuid(chars[0].descriptors().at(0).type()), QBluetoothUuid(temp));
+
+        // Magnetometer Config
+        temp = QString("f000aa32-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x44u);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+
+        // Magnetometer Period
+        temp = QString("f000aa33-0451-4000-b000-000000000000");
+        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[2].handle(), 0x47u);
+        QCOMPARE(chars[2].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[2].value(), QByteArray("c8"));   // don't change it or set it to 0xc8
+        QVERIFY(chars[2].isValid());
+        QCOMPARE(chars[2].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa40-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Pressure";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 3);
+
+        // Pressure Data
+        QString temp("f000aa41-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x4bu);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
+        QCOMPARE(chars[0].value(), QByteArray("00000000"));
+        QVERIFY(chars[0].isValid());
+        //QEXPECT_FAIL("", "0x4b has at least a notification", Continue);
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+
+//        if (!chars[0].descriptors().isEmpty()) {
+//            temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//            QCOMPARE(chars[0].descriptors().at(0).handle(), 0x41u);
+//            QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//            QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        }
+
+        // Pressure Config
+        temp = QString("f000aa42-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x4fu);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+
+        // Pressure Calibration
+        temp = QString("f000aa43-0451-4000-b000-000000000000");
+        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[2].handle(), 0x52u);
+        QCOMPARE(chars[2].properties(),
+                 (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[2].value(), QByteArray("00000000000000000000000000000000"));   // don't change it
+        QVERIFY(chars[2].isValid());
+        QCOMPARE(chars[2].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa50-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Gyroscope";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 2);
+
+        // Gyroscope Data
+        QString temp("f000aa51-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x57u);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
+        QCOMPARE(chars[0].value(), QByteArray("000000000000"));
+        QVERIFY(chars[0].isValid());
+        //QEXPECT_FAIL("", "there is a notification under 0x0057", Continue);
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+
+//        if (!chars[0].descriptors().isEmpty()) {
+//            temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//            QCOMPARE(chars[0].descriptors().at(0).handle(), 0x39u);
+//            QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//            QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        }
+
+        // Gyroscope Config
+        temp = QString("f000aa52-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x5bu);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000aa60-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Test Service";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 2);
+
+        // Test Data
+        QString temp("f000aa61-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x64u);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Read));
+        QCOMPARE(chars[0].value(), QByteArray("3f00"));
+        QVERIFY(chars[0].isValid());
+        QCOMPARE(chars[0].descriptors().count(), 0);
+
+        // Test Config
+        temp = QString("f000aa62-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x67u);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[1].value(), QByteArray("00"));
+        QVERIFY(chars[1].isValid());
+        QCOMPARE(chars[1].descriptors().count(), 0);
+    } else if (info->serviceUuid() ==
+               QBluetoothUuid(QString("f000ffc0-0451-4000-b000-000000000000"))) {
+        qDebug() << "Verifying Unknown Service";
+        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        QCOMPARE(chars.count(), 2);
+
+        // first characteristic
+        QString temp("f000ffc1-0451-4000-b000-000000000000");
+        QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[0].handle(), 0x6bu);
+        QCOMPARE(chars[0].properties(),
+                (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristicInfo::WriteNoResponse));
+        QCOMPARE(chars[0].value(), QByteArray(""));
+        QVERIFY(chars[0].isValid());
+//        QEXPECT_FAIL("", "there is a notification under 0x006b", Continue);
+//        QCOMPARE(chars[0].descriptors().count(), 1);
+
+//        if (!chars[0].descriptors().isEmpty()) {
+//            temp = QString("00002902-0000-1000-8000-00805f9b34fb");
+//            QCOMPARE(chars[0].descriptors().at(0).handle(), 0x39u);
+//            QCOMPARE(chars[0].descriptors().at(0).uuid(), QBluetoothUuid(temp));
+//            QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+//        }
+
+        // second characteristic
+        temp = QString("f000ffc2-0451-4000-b000-000000000000");
+        QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
+        QCOMPARE(chars[1].handle(), 0x6fu);
+        QCOMPARE(chars[1].properties(),
+                 (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristicInfo::WriteNoResponse));
+        QCOMPARE(chars[1].value(), QByteArray(""));
+        QVERIFY(chars[1].isValid());
+//        QEXPECT_FAIL("", "there is a notification under 0x006f", Continue);
+//        QCOMPARE(chars[1].descriptors().count(), 1);
+    } else {
+        QFAIL(QString("Service not found" + info->serviceUuid().toString()).toUtf8().constData());
     }
 }
 

@@ -42,7 +42,8 @@
 #define QLOWENERGYSERVICE_H
 
 #include <QtBluetooth/QBluetoothAddress>
-#include <QtBluetooth/QLowEnergyCharacteristicInfo>
+#include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QLowEnergyCharacteristic>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,7 +77,7 @@ public:
     QLowEnergyService::ServiceState state() const;
 
 
-    QList<QLowEnergyCharacteristicInfo> characteristics() const;
+    QList<QLowEnergyCharacteristic> characteristics() const;
     QBluetoothUuid serviceUuid() const;
     QString serviceName() const;
 
@@ -87,7 +88,7 @@ public:
 
 Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);
-    void characteristicChanged(const QLowEnergyCharacteristicInfo &info,
+    void characteristicChanged(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
     void descriptorChanged(const QLowEnergyDescriptorInfo &info,
                            const QByteArray &value);

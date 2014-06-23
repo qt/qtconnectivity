@@ -83,6 +83,13 @@ public:
 
     void discoverServiceDetails(const QBluetoothUuid &service);
 
+    // misc lookup helpers
+    QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
+            QLowEnergyHandle  handle);
+    void updateValueOfCharacteristic(QLowEnergyHandle charHandle,
+                                   const QByteArray &value);
+
+
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
@@ -100,7 +107,10 @@ private:
     struct Request {
         quint8 command;
         QByteArray payload;
+        // TODO reference below is ugly but until we know all commands and their
+        // requirements this is WIP
         QVariant reference;
+        QVariant reference2;
     };
     QQueue<Request> openRequests;
     bool requestPending;
@@ -111,6 +121,7 @@ private:
     void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
     void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
                                QLowEnergyHandle nextHandle);
+    void readServiceCharacteristicValues(const QBluetoothUuid &service);
 
 private slots:
     void l2cpConnected();
