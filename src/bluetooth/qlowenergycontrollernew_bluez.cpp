@@ -420,11 +420,6 @@ void QLowEnergyControllerNewPrivate::processReply(
          *  The uuid can be 16 or 128 bit which is indicated by format.
          */
 
-        if (isErrorResponse) {
-            //TODO handle error
-            break;
-        }
-
         QList<QLowEnergyHandle> keys = request.reference.value<QList<QLowEnergyHandle> >();
         if (keys.isEmpty()) {
             qCWarning(QT_BT_BLUEZ) << "Descriptor discovery for unknown characteristic received";
@@ -436,6 +431,10 @@ void QLowEnergyControllerNewPrivate::processReply(
                 serviceForHandle(charHandle);
         Q_ASSERT(!p.isNull());
 
+        if (isErrorResponse) {
+            p->setState(QLowEnergyService::ServiceDiscovered);
+            break;
+        }
 
         const quint8 format = response[1];
         quint16 elementLength;
@@ -479,12 +478,14 @@ void QLowEnergyControllerNewPrivate::processReply(
             if (descriptorHandle == p->characteristicList[charHandle].valueHandle)
                 continue;
 
+            QLowEnergyServicePrivate::DescData data;
+            data.uuid = uuid;
             p->characteristicList[charHandle].descriptorList.insert(
-                        descriptorHandle, uuid);
+                        descriptorHandle, data);
 
             qCDebug(QT_BT_BLUEZ) << "Descriptor found, uuid:"
                                  << uuid.toString()
-                                 << "descriptor handle:" << descriptorHandle;
+                                 << "descriptor handle:" << hex << descriptorHandle;
         }
 
         QLowEnergyHandle nextBorderHandle = 0;

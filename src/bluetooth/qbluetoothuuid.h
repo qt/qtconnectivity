@@ -261,6 +261,7 @@ public:
     };
 
     enum DescriptorType {
+        UnknownDescriptorType = 0x0,
         CharacteristicExtendedProperties = 0x2900,
         CharacteristicUserDescription = 0x2901,
         ClientCharacteristicConfiguration = 0x2902,

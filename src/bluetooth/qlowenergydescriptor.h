@@ -1,7 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Copyright (C) 2013 BlackBerry Limited all rights reserved
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -40,67 +40,52 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCHARACTERISTIC_H
-#define QLOWENERGYCHARACTERISTIC_H
+#ifndef QLOWENERGYDESCRIPTOR_H
+#define QLOWENERGYDESCRIPTOR_H
+
 #include <QtCore/QSharedPointer>
-#include <QtCore/QObject>
+#include <QtCore/QVariantMap>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/QBluetoothUuid>
-#include <QtBluetooth/QLowEnergyDescriptor>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothUuid;
+class QLowEnergyDescriptorPrivate;
 class QLowEnergyServicePrivate;
-struct QLowEnergyCharacteristicPrivate;
-class Q_BLUETOOTH_EXPORT QLowEnergyCharacteristic
+
+//TODO rename to QLowEnergyDescriptor
+class Q_BLUETOOTH_EXPORT QLowEnergyDescriptor
 {
+    friend class QLowEnergyControllerPrivate;
 public:
+    QLowEnergyDescriptor();
+    QLowEnergyDescriptor(const QLowEnergyDescriptor &other);
+    ~QLowEnergyDescriptor();
 
-    enum PropertyType {
-        Unknown = 0x00,
-        Broadcasting = 0x01,
-        Read = 0x02,
-        WriteNoResponse = 0x04,
-        Write = 0x08,
-        Notify = 0x10,
-        Indicate = 0x20,
-        WriteSigned = 0x40,
-        ExtendedProperty = 0x80
-    };
-    Q_DECLARE_FLAGS(PropertyTypes, PropertyType)
-
-    QLowEnergyCharacteristic();
-    QLowEnergyCharacteristic(const QLowEnergyCharacteristic &other);
-    ~QLowEnergyCharacteristic();
-
-    QLowEnergyCharacteristic &operator=(const QLowEnergyCharacteristic &other);
-
-    QString name() const;
-
-    QBluetoothUuid uuid() const;
-
-    void setValue(const QByteArray &value); //TODO shift to QLowEnergyControllerNew
-    QByteArray value() const;
-
-    QLowEnergyCharacteristic::PropertyTypes properties() const;
-    QLowEnergyHandle handle() const;
-
-    QList<QLowEnergyDescriptor> descriptors() const;
+    QLowEnergyDescriptor &operator=(const QLowEnergyDescriptor &other);
 
     bool isValid() const;
+
+    QByteArray value() const;
+    void setValue(const QByteArray &value); //TODO shift to QLowEnergyControllerNew
+
+    QBluetoothUuid uuid() const;
+    QLowEnergyHandle handle() const;
+    QString name() const;
+
+    QBluetoothUuid::DescriptorType type() const;
 
 protected:
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
 
-    friend class QLowEnergyService;
-    QLowEnergyCharacteristicPrivate *data;
-    QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
-                             QLowEnergyHandle handle);
-};
+    friend class QLowEnergyCharacteristic;
+    QLowEnergyDescriptorPrivate *data;
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyCharacteristic::PropertyTypes)
+    QLowEnergyDescriptor(QSharedPointer<QLowEnergyServicePrivate> p,
+                             QLowEnergyHandle charHandle,
+                             QLowEnergyHandle descHandle);
+};
 
 QT_END_NAMESPACE
 
-#endif // QLOWENERGYCHARACTERISTIC_H
+#endif // QLOWENERGYDESCRIPTOR_H

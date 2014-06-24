@@ -219,9 +219,16 @@ QLowEnergyCharacteristic &QLowEnergyCharacteristic::operator=(const QLowEnergyCh
 }
 
 /*!
-    Returns true if the QLowEnergyCharacteristic object is valid, otherwise returns false.
-    If it returns \c false, it means that this instance is not associated to any service
-    or the associated service is no longer valid.
+    Returns \c true if the QLowEnergyCharacteristic object is valid, otherwise returns \c false.
+
+    An invalid characteristic object is not associated to any service
+    or the associated service is no longer valid due to for example a disconnect from
+    the underlying Bluetooth Low Energy device. Once the object is invalid
+    it cannot become valid anymore.
+
+    \note If a QLowEnergyCharacteristic instance turns invalid due to a disconnect
+    from the underlying device, the information encapsulated by the current
+    instance remains as it was at the time of the disconnect.
 */
 bool QLowEnergyCharacteristic::isValid() const
 {
@@ -239,12 +246,25 @@ bool QLowEnergyCharacteristic::isValid() const
 /*!
     Returns the list of characteristic descriptors.
 */
-QList<QLowEnergyDescriptorInfo> QLowEnergyCharacteristic::descriptors() const
+QList<QLowEnergyDescriptor> QLowEnergyCharacteristic::descriptors() const
 {
-    // TODO QLowEnergyCharacteristic::descriptors()
-    QList<QLowEnergyDescriptorInfo> result;
-    return result;
+    QList<QLowEnergyDescriptor> result;
 
+    if (d_ptr.isNull() || !data
+                       || !d_ptr->characteristicList.contains(data->handle))
+        return result;
+
+    QList<QLowEnergyHandle> descriptorKeys = d_ptr->characteristicList[data->handle].
+                                                    descriptorList.keys();
+
+    std::sort(descriptorKeys.begin(), descriptorKeys.end());
+
+    foreach (QLowEnergyHandle descHandle, descriptorKeys) {
+        QLowEnergyDescriptor descriptor(d_ptr, data->handle, descHandle);
+        result.append(descriptor);
+    }
+
+    return result;
 }
 
 QT_END_NAMESPACE

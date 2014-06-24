@@ -28,6 +28,7 @@ PUBLIC_HEADERS += \
     qlowenergycharacteristicinfo.h \
     qlowenergycharacteristic.h \
     qlowenergydescriptorinfo.h \
+    qlowenergydescriptor.h \
     qbluetoothtransferreply.h \
     qlowenergycontroller.h \
     qlowenergycontrollernew.h
@@ -73,6 +74,7 @@ SOURCES += \
     qlowenergycharacteristicinfo.cpp \
     qlowenergycharacteristic.cpp \
     qlowenergydescriptorinfo.cpp \
+    qlowenergydescriptor.cpp \
     qlowenergycontroller.cpp \
     qlowenergycontrollernew.cpp \
     qlowenergyserviceprivate.cpp

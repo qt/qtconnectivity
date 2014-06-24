@@ -90,7 +90,7 @@ Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);
     void characteristicChanged(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
-    void descriptorChanged(const QLowEnergyDescriptorInfo &info,
+    void descriptorChanged(const QLowEnergyDescriptor &info,
                            const QByteArray &value);
     void error(QLowEnergyService::ServiceError error);
 

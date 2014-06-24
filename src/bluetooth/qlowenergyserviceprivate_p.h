@@ -59,12 +59,17 @@ public:
     explicit QLowEnergyServicePrivate(QObject *parent = 0);
     ~QLowEnergyServicePrivate();
 
+    struct DescData {
+        QByteArray value;
+        QBluetoothUuid uuid;
+    };
+
     struct CharData {
         QLowEnergyHandle valueHandle;
         QBluetoothUuid uuid;
         QLowEnergyCharacteristic::PropertyTypes properties;
         QByteArray value;
-        QHash<QLowEnergyHandle, QBluetoothUuid> descriptorList;
+        QHash<QLowEnergyHandle, DescData> descriptorList;
     };
 
     enum GattAttributeTypes {
