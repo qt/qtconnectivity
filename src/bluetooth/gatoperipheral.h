@@ -84,7 +84,7 @@ public:
     void parseEIR(quint8 data[], int len);
     bool advertisesService(const GatoUUID &uuid) const;
 
-public slots:
+public Q_SLOTS:
     void connectPeripheral();
     void disconnectPeripheral();
     void discoverServices();
@@ -98,7 +98,7 @@ public slots:
     void writeValue(const GatoDescriptor &descriptor, const QByteArray &data);
     void setNotification(const GatoCharacteristic &characteristic, bool enabled);
 
-signals:
+Q_SIGNALS:
     void connected();
     void disconnected();
     void nameChanged();

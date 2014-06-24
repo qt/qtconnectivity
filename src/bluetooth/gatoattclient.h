@@ -97,7 +97,7 @@ public:
     void command(int opcode, const QByteArray &data);
     void commandWrite(GatoHandle handle, const QByteArray &value);
 
-signals:
+Q_SIGNALS:
     void connected();
     void disconnected();
 
@@ -122,7 +122,7 @@ private:
     QList<AttributeData> parseAttributeData(const QByteArray &data);
     QList<AttributeGroupData> parseAttributeGroupData(const QByteArray &data);
 
-private slots:
+private Q_SLOTS:
     void handleSocketConnected();
     void handleSocketDisconnected();
     void handleSocketReadyRead();
