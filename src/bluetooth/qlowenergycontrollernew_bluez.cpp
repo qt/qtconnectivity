@@ -56,6 +56,8 @@
 
 // GATT commands
 #define ATT_OP_ERROR_RESPONSE           0x1
+#define ATT_OP_FIND_INFORMATION_REQUEST 0x4 //discover individual attribute info
+#define ATT_OP_FIND_INFORMATION_RESPONSE 0x5
 #define ATT_OP_READ_BY_TYPE_REQUEST     0x8 //discover characteristics
 #define ATT_OP_READ_BY_TYPE_RESPONSE    0x9
 #define ATT_OP_READ_REQUEST             0xA //read characteristic value
@@ -230,7 +232,7 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
 {
     requestPending = false;
     const QByteArray reply = l2cpSocket->readAll();
-    qDebug() << reply.size() << "data:" << reply.toHex();
+    //qDebug() << reply.size() << "data:" << reply.toHex();
     if (reply.isEmpty())
         return;
 
@@ -399,12 +401,110 @@ void QLowEnergyControllerNewPrivate::processReply(
         }
 
         QLowEnergyHandle charHandle = (QLowEnergyHandle) request.reference.toUInt();
-        QByteArray a = response.mid(1);
         updateValueOfCharacteristic(charHandle, response.mid(1).toHex());
         if (request.reference2.toBool()) {
             QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
             Q_ASSERT(!service.isNull());
-            service->setState(QLowEnergyService::ServiceDiscovered);
+            discoverServiceDescriptors(service->uuid);
+        }
+    }
+        break;
+    case ATT_OP_FIND_INFORMATION_REQUEST: //error case
+    case ATT_OP_FIND_INFORMATION_RESPONSE:
+    {
+        Q_ASSERT(request.command == ATT_OP_FIND_INFORMATION_REQUEST);
+
+        /* packet format:
+         *  <opcode><format>[<handle><descriptor_uuid>]+
+         *
+         *  The uuid can be 16 or 128 bit which is indicated by format.
+         */
+
+        if (isErrorResponse) {
+            //TODO handle error
+            break;
+        }
+
+        QList<QLowEnergyHandle> keys = request.reference.value<QList<QLowEnergyHandle> >();
+        if (keys.isEmpty()) {
+            qCWarning(QT_BT_BLUEZ) << "Descriptor discovery for unknown characteristic received";
+            break;
+        }
+        QLowEnergyHandle charHandle = keys.first();
+
+        QSharedPointer<QLowEnergyServicePrivate> p =
+                serviceForHandle(charHandle);
+        Q_ASSERT(!p.isNull());
+
+
+        const quint8 format = response[1];
+        quint16 elementLength;
+        switch (format) {
+        case 0x01:
+            elementLength = 2 + 2; //sizeof(QLowEnergyHandle) + 16bit uuid
+            break;
+        case 0x02:
+            elementLength = 2 + 16; //sizeof(QLowEnergyHandle) + 128bit uuid
+            break;
+        default:
+            qCWarning(QT_BT_BLUEZ) << "Unknown format in FIND_INFORMATION_RESPONSE";
+            return;
+        }
+
+        const quint16 numElements = (response.size() - 2) / elementLength;
+
+        quint16 offset = 2;
+        QLowEnergyHandle descriptorHandle;
+        QBluetoothUuid uuid;
+        const char *data = response.constData();
+        for (int i = 0; i < numElements; i++) {
+            descriptorHandle = bt_get_le16(&data[offset]);
+
+            if (format == 0x01)
+                uuid = QBluetoothUuid(bt_get_le16(&data[offset+2]));
+            else if (format == 0x02)
+                uuid = convert_uuid128((uint128_t *)&data[offset+2]);
+
+            offset += elementLength;
+
+            // ignore all attributes which are not of type descriptor
+            // examples are the characteristics value or
+            bool ok = false;
+            quint16 shortUuid = uuid.toUInt16(&ok);
+            if (ok && shortUuid >= QLowEnergyServicePrivate::PrimaryService
+                   && shortUuid <= QLowEnergyServicePrivate::Characteristic)
+                continue;
+
+            // ignore value handle
+            if (descriptorHandle == p->characteristicList[charHandle].valueHandle)
+                continue;
+
+            p->characteristicList[charHandle].descriptorList.insert(
+                        descriptorHandle, uuid);
+
+            qCDebug(QT_BT_BLUEZ) << "Descriptor found, uuid:"
+                                 << uuid.toString()
+                                 << "descriptor handle:" << descriptorHandle;
+        }
+
+        QLowEnergyHandle nextBorderHandle = 0;
+        if (keys.count() == 1) { // processing last characteristic
+            nextBorderHandle = p->endHandle;
+        } else {
+            nextBorderHandle = keys[1];
+        }
+
+        // have we reached next border?
+        if (descriptorHandle + 1 >= nextBorderHandle)
+            // go to next characteristic
+            keys.removeFirst();
+
+        if (keys.isEmpty()) {
+            // descriptor for last characteristic found
+            p->setState(QLowEnergyService::ServiceDiscovered);
+        } else {
+            // service has more descriptors to be found
+            discoverNextDescriptor(p, keys, descriptorHandle + 1);
         }
     }
         break;
@@ -520,14 +620,73 @@ void QLowEnergyControllerNewPrivate::readServiceCharacteristicValues(
         request.payload = data;
         request.command = ATT_OP_READ_REQUEST;
         request.reference = charHandle;
-        //last entry?
+        // last entry?
         request.reference2 = QVariant((bool)(i + 1 == keys.count()));
         openRequests.enqueue(request);
         oneReadRequested = true;
     }
 
-    if (!oneReadRequested)
+
+    if (!oneReadRequested) {
+        // none of the characteristics is readable
+        // -> continue with descriptor discovery
+        discoverServiceDescriptors(service->uuid);
+        return;
+    }
+
+    sendNextPendingRequest();
+}
+
+void QLowEnergyControllerNewPrivate::discoverServiceDescriptors(
+        const QBluetoothUuid &serviceUuid)
+{
+    qCDebug(QT_BT_BLUEZ) << "Discovering descriptor values for"
+                         << serviceUuid.toString();
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceList.value(serviceUuid);
+    // start handle of all known characteristics
+    QList<QLowEnergyHandle> keys = service->characteristicList.keys();
+
+    if (keys.isEmpty()) { // service has no characteristics -> very unlikely
         service->setState(QLowEnergyService::ServiceDiscovered);
+        return;
+    }
+
+    std::sort(keys.begin(), keys.end());
+
+    discoverNextDescriptor(service, keys, keys[0]);
+}
+
+void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
+        QSharedPointer<QLowEnergyServicePrivate> serviceData,
+        const QList<QLowEnergyHandle> pendingCharHandles,
+        const QLowEnergyHandle startingHandle)
+{
+    Q_ASSERT(!pendingCharHandles.isEmpty());
+    Q_ASSERT(!serviceData.isNull());
+
+#define FIND_INFO_REQUEST_SIZE 5
+    quint8 packet[FIND_INFO_REQUEST_SIZE];
+    packet[0] = ATT_OP_FIND_INFORMATION_REQUEST;
+
+    QLowEnergyHandle charStartHandle = startingHandle;
+    QLowEnergyHandle charEndHandle = 0;
+    if (pendingCharHandles.count() == 1) //single characteristic
+        charEndHandle = serviceData->endHandle;
+    else
+        charEndHandle = pendingCharHandles[1] - 1;
+
+    bt_put_unaligned(htobs(charStartHandle), (quint16 *) &packet[1]);
+    bt_put_unaligned(htobs(charEndHandle), (quint16 *) &packet[3]);
+
+    QByteArray data(FIND_INFO_REQUEST_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  FIND_INFO_REQUEST_SIZE);
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_FIND_INFORMATION_REQUEST;
+    request.reference = QVariant::fromValue<QList<QLowEnergyHandle> >(pendingCharHandles);
+    request.reference2 = startingHandle;
+    openRequests.enqueue(request);
 
     sendNextPendingRequest();
 }

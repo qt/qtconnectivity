@@ -64,6 +64,14 @@ public:
         QBluetoothUuid uuid;
         QLowEnergyCharacteristic::PropertyTypes properties;
         QByteArray value;
+        QHash<QLowEnergyHandle, QBluetoothUuid> descriptorList;
+    };
+
+    enum GattAttributeTypes {
+        PrimaryService = 0x2800,
+        SecondaryService = 0x2801,
+        IncludeAttribute = 0x2802,
+        Characteristic = 0x2803
     };
 
     void setController(QLowEnergyControllerNewPrivate* control);

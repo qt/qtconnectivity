@@ -68,7 +68,11 @@ public:
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
           , l2cpSocket(0)
 #endif
-    {}
+    {
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+        qRegisterMetaType<QList<QLowEnergyHandle> >();
+#endif
+    }
 
     void setError(QLowEnergyControllerNew::Error newError);
     bool isValidLocalAdapter();
@@ -85,7 +89,7 @@ public:
 
     // misc lookup helpers
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
-            QLowEnergyHandle  handle);
+            QLowEnergyHandle handle);
     void updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                    const QByteArray &value);
 
@@ -122,6 +126,11 @@ private:
     void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
                                QLowEnergyHandle nextHandle);
     void readServiceCharacteristicValues(const QBluetoothUuid &service);
+
+    void discoverServiceDescriptors(const QBluetoothUuid &serviceUuid);
+    void discoverNextDescriptor(QSharedPointer<QLowEnergyServicePrivate> serviceData,
+                                const QList<QLowEnergyHandle> pendingCharHandles,
+                                QLowEnergyHandle startingHandle);
 
 private slots:
     void l2cpConnected();
