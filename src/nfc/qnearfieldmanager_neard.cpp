@@ -47,6 +47,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
+
 // TODO We need a constructor that lets us select an adapter
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     : QNearFieldManagerPrivate(), m_adapter(0), m_manager(0)
@@ -54,14 +56,14 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     m_manager = new OrgNeardManagerInterface(QStringLiteral("org.neard"), QStringLiteral("/"),
                                                 QDBusConnection::systemBus(), this);
     if (!m_manager->isValid()) {
-        qDebug() << "Could not connect to manager" << "Neard daemon running?";
+        qCWarning(QT_NFC_NEARD) << "Could not connect to manager" << "Neard daemon running?";
         return;
     }
 
     QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
     reply.waitForFinished();
     if (reply.isError()) {
-        qDebug() << "Error getting manager properties.";
+        qCWarning(QT_NFC_NEARD) << "Error getting manager properties.";
         return;
     }
 
@@ -93,7 +95,7 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
     QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
     reply.waitForFinished();
     if (reply.isError()) {
-        qDebug() << "Error getting manager properties.";
+        qCDebug(QT_NFC_NEARD) << "Error getting manager properties.";
         return false;
     }
 
@@ -204,12 +206,12 @@ void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccess
 
 void QNearFieldManagerPrivateImpl::tagFound(const QDBusObjectPath &path)
 {
-    qDebug() << "Tag found" << path.path();
+    qCDebug(QT_NFC_NEARD) << "Tag found" << path.path();
 }
 
 void QNearFieldManagerPrivateImpl::propertyChanged(QString property, QDBusVariant value)
 {
-    qDebug() << "Property changed" << property;
+    qCDebug(QT_NFC_NEARD) << "Property changed" << property;
     // New device detected
     if (property == QStringLiteral("Devices")) {
         const QDBusArgument &devices = value.variant().value<QDBusArgument>();
@@ -219,7 +221,7 @@ void QNearFieldManagerPrivateImpl::propertyChanged(QString property, QDBusVarian
             QDBusObjectPath path;
             devices >> path;
             devicesList.append(path.path());
-            qDebug() << "New device" << devicesList;
+            qCDebug(QT_NFC_NEARD) << "New device" << devicesList;
         }
         devices.endArray();
         qDebug() << "Devices list changed" << devicesList;
@@ -231,13 +233,13 @@ void QNearFieldManagerPrivateImpl::propertyChanged(QString property, QDBusVarian
             QDBusObjectPath path;
             tags >> path;
             tagList.append(path.path());
-            qDebug() << "New tag" << path.path();
+            qCDebug(QT_NFC_NEARD) << "New tag" << path.path();
             NearFieldTarget<QNearFieldTarget> *nfTag =
                     new NearFieldTarget<QNearFieldTarget>(this, path);
             emit targetDetected(nfTag);
         }
         tags.endArray();
-        qDebug() << "Tag list changed" << tagList;
+        qCDebug(QT_NFC_NEARD) << "Tag list changed" << tagList;
     }
 }
 

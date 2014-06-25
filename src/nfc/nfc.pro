@@ -53,7 +53,8 @@ SOURCES += \
     qqmlndefrecord.cpp \
     qndefnfcsmartposterrecord.cpp \
     qnearfieldsharemanager.cpp \
-    qnearfieldsharetarget.cpp
+    qnearfieldsharetarget.cpp \
+    qnfc.cpp
 
 CONFIG(blackberry) {
     NFC_BACKEND_AVAILABLE = yes

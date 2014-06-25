@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
+
 #define TAG_NAME_BUFFER 64
 
 template <typename T>
@@ -80,7 +82,9 @@ public:
         else if (type == QStringLiteral("Type 4"))
             m_type = QNearFieldTarget::NfcTagType4;
 
-        qDebug() << "Type" << type << m_type;
+        qCDebug(QT_NFC_NEARD) << "Type" << type << m_type;
+
+
     }
 
     ~NearFieldTarget()
