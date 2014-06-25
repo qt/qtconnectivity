@@ -46,7 +46,11 @@
 #include "qnearfieldmanager.h"
 #include "qnearfieldtarget.h"
 
-#include "neard/adapter_p.h"
+#include <QDBusObjectPath>
+#include <QDBusVariant>
+
+class OrgNeardAdapterInterface;
+class OrgNeardManagerInterface;
 
 QT_BEGIN_NAMESPACE
 
@@ -81,6 +85,8 @@ private Q_SLOTS:
 private:
     QString m_adapterPath;
     OrgNeardAdapterInterface *m_adapter;
+    OrgNeardManagerInterface *m_manager;
+
 };
 
 QT_END_NAMESPACE

@@ -39,33 +39,41 @@
 **
 ****************************************************************************/
 
-#include "qnearfieldmanager_neard.h"
-#include "neard/adapter_p.h"
-#include "neard/manager_p.h"
+#include "qnearfieldmanager_neard_p.h"
 #include "qnearfieldtarget_neard_p.h"
+
+#include "neard/manager_p.h"
+#include "neard/adapter_p.h"
 
 QT_BEGIN_NAMESPACE
 
-// TODO We need a constructor that lets us select a adapter
+// TODO We need a constructor that lets us select an adapter
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
-    : m_adapter(0)
+    : QNearFieldManagerPrivate(), m_adapter(0), m_manager(0)
 {
-    // Look for a NFC adapter
-    OrgNeardManagerInterface manager(QStringLiteral("org.neard"), QStringLiteral("/"),
-                                     QDBusConnection::systemBus());
-    QDBusPendingReply<QVariantMap> reply = manager.GetProperties();
-    reply.waitForFinished();
-    if (reply.isError())
-        qDebug() << "Error getting manager properties." << "Neard daemon running?";
+    m_manager = new OrgNeardManagerInterface(QStringLiteral("org.neard"), QStringLiteral("/"),
+                                                QDBusConnection::systemBus(), this);
+    if (!m_manager->isValid()) {
+        qDebug() << "Could not connect to manager" << "Neard daemon running?";
+        return;
+    }
 
+    QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
+    reply.waitForFinished();
+    if (reply.isError()) {
+        qDebug() << "Error getting manager properties.";
+        return;
+    }
+
+    // Now we check if the adapter still exists (it might have been unplugged)
     const QDBusArgument &paths = reply.value().value(QStringLiteral("Adapters")).value<QDBusArgument>();
 
     paths.beginArray();
     while (!paths.atEnd()) {
         QDBusObjectPath path;
         paths >> path;
+        // Select the first adapter
         m_adapterPath = path.path();
-        //qDebug() << "path is" << m_adapterPath;
         break;
     }
     paths.endArray();
@@ -78,23 +86,31 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 
 bool QNearFieldManagerPrivateImpl::isAvailable() const
 {
-    OrgNeardManagerInterface manager(QStringLiteral("org.neard"), QStringLiteral("/"),
-                                     QDBusConnection::systemBus());
-    QDBusPendingReply<QVariantMap> reply = manager.GetProperties();
-    reply.waitForFinished();
-    if (reply.isError())
-        qDebug() << "Error getting manager properties." << "Neard daemon running?";
+    if (!m_manager->isValid() || m_adapterPath.isNull()) {
+        return false;
+    }
 
-    QDBusArgument paths = reply.value().value(QStringLiteral("Adapters")).value<QDBusArgument>();
+    QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
+    reply.waitForFinished();
+    if (reply.isError()) {
+        qDebug() << "Error getting manager properties.";
+        return false;
+    }
+
+    // Now we check if the adapter still exists (it might have been unplugged)
+    const QDBusArgument &paths = reply.value().value(QStringLiteral("Adapters")).value<QDBusArgument>();
 
     paths.beginArray();
     while (!paths.atEnd()) {
         QDBusObjectPath path;
         paths >> path;
-        //Check if the adapter exists
-        if (path.path() == m_adapterPath)
+        // Check if the adapter exists
+        if (path.path() == m_adapterPath) {
+            paths.endArray();
             return true;
+        }
     }
+    paths.endArray();
     return false;
 }
 
@@ -109,7 +125,7 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
 
     //qDebug() << "Constructing interface with path" << m_adapterPath;
     m_adapter = new OrgNeardAdapterInterface(QStringLiteral("org.neard"), m_adapterPath,
-                                     QDBusConnection::systemBus());
+                                     QDBusConnection::systemBus(), this);
 
     {
         QDBusPendingReply<QVariantMap> reply = m_adapter->GetProperties();
@@ -143,7 +159,9 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection()
 {
-    //qDebug() << "Stop target detection";
+    if (!isAvailable())
+        return;
+
     QDBusPendingReply<> reply = m_adapter->StopPollLoop();
     reply.waitForFinished();
     // TODO Should we really power down the adapter?

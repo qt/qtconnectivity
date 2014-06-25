@@ -53,8 +53,7 @@ SOURCES += \
     qqmlndefrecord.cpp \
     qndefnfcsmartposterrecord.cpp \
     qnearfieldsharemanager.cpp \
-    qnearfieldsharetarget.cpp \
-    qnearfieldmanager_neard.cpp
+    qnearfieldsharetarget.cpp
 
 CONFIG(blackberry) {
     NFC_BACKEND_AVAILABLE = yes
@@ -100,23 +99,27 @@ CONFIG(blackberry) {
     }
 }
 
-linux {
+linux:qtHaveModule(dbus) {
     NFC_BACKEND_AVAILABLE = yes
 
     QT += dbus
 
+    DEFINES += NEARD_NFC
+
     PRIVATE_HEADERS += \
         qllcpsocket_p_p.h \
         qllcpserver_p_p.h \
-        qnearfieldmanager_neard.h \
+        qnearfieldmanager_neard_p.h \
         qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h
+        qnearfieldsharetargetimpl_p.h \
+        qnearfieldtarget_neard_p.h
 
     SOURCES += \
         qllcpsocket_p.cpp \
         qllcpserver_p.cpp \
         qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp
+        qnearfieldsharetargetimpl_p.cpp \
+        qnearfieldmanager_neard.cpp
 
     include(neard/neard.pri)
 }
@@ -162,6 +165,4 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
         qnearfieldsharetargetimpl_p.cpp
 }
 
-HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS \
-    qnearfieldmanager_neard.h \
-    qnearfieldtarget_neard_p.h
+HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS

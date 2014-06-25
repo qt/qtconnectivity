@@ -46,6 +46,8 @@
 #include "qnearfieldmanager_simulator_p.h"
 #elif defined(QNX_NFC)
 #include "qnearfieldmanager_qnx_p.h"
+#elif defined(NEARD_NFC)
+#include "qnearfieldmanager_neard_p.h"
 #else
 #include "qnearfieldmanagerimpl_p.h"
 #endif
