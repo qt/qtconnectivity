@@ -42,6 +42,7 @@
 #include "qnearfieldmanager_neard.h"
 #include "neard/adapter_p.h"
 #include "neard/manager_p.h"
+#include "qnearfieldtarget_neard_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -213,6 +214,9 @@ void QNearFieldManagerPrivateImpl::propertyChanged(QString property, QDBusVarian
             tags >> path;
             tagList.append(path.path());
             qDebug() << "New tag" << path.path();
+            NearFieldTarget<QNearFieldTarget> *nfTag =
+                    new NearFieldTarget<QNearFieldTarget>(this, path);
+            emit targetDetected(nfTag);
         }
         tags.endArray();
         qDebug() << "Tag list changed" << tagList;

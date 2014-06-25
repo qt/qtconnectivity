@@ -163,4 +163,5 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS \
-    qnearfieldmanager_neard.h
+    qnearfieldmanager_neard.h \
+    qnearfieldtarget_neard_p.h
