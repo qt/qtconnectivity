@@ -156,7 +156,7 @@ static void dumpErrorInformation(const QByteArray &response)
         errorString = QStringLiteral("unknown error code"); break;
     }
 
-    qWarning(QT_BT_BLUEZ) << "Error:" << errorString
+    qCDebug(QT_BT_BLUEZ) << "Error1:" << errorString
              << "last command:" << hex << lastCommand
              << "handle:" << handle;
 }
@@ -232,7 +232,7 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
 {
     requestPending = false;
     const QByteArray reply = l2cpSocket->readAll();
-    //qDebug() << reply.size() << "data:" << reply.toHex();
+    qCDebug(QT_BT_BLUEZ) << "Received size:" << reply.size() << "data:" << reply.toHex();
     if (reply.isEmpty())
         return;
 
@@ -292,7 +292,6 @@ void QLowEnergyControllerNewPrivate::processReply(
         QLowEnergyHandle start = 0, end = 0;
         const quint16 elementLength = response.constData()[1];
         const quint16 numElements = (response.size() - 2) / elementLength;
-        //qDebug() << numElements << elementLength << response.size() - 2;
         quint16 offset = 2;
         const char *data = response.constData();
         for (int i = 0; i < numElements; i++) {
@@ -309,8 +308,8 @@ void QLowEnergyControllerNewPrivate::processReply(
             offset += elementLength;
 
 
-//            qDebug() << "Found uuid:" << uuid << "start handle:" << hex
-//                     << start << "end handle:" << end;
+            qCDebug(QT_BT_BLUEZ) << "Found uuid:" << uuid << "start handle:" << hex
+                     << start << "end handle:" << end;
 
             QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
             priv->uuid = uuid;
@@ -378,10 +377,10 @@ void QLowEnergyControllerNewPrivate::processReply(
             p->characteristicList[startHandle] = characteristic;
 
 
-//            qDebug() << "Found handle:" << hex << startHandle
-//                     << "properties:" << flags
-//                     << "value handle:" << valueHandle
-//                     << "uuid:" << uuid.toString();
+            qCDebug(QT_BT_BLUEZ) << "Found handle:" << hex << startHandle
+                     << "properties:" << flags
+                     << "value handle:" << valueHandle
+                     << "uuid:" << uuid.toString();
         }
 
         if (startHandle + 1 < p->endHandle) // more chars to discover
@@ -471,12 +470,16 @@ void QLowEnergyControllerNewPrivate::processReply(
             bool ok = false;
             quint16 shortUuid = uuid.toUInt16(&ok);
             if (ok && shortUuid >= QLowEnergyServicePrivate::PrimaryService
-                   && shortUuid <= QLowEnergyServicePrivate::Characteristic)
+                   && shortUuid <= QLowEnergyServicePrivate::Characteristic){
+                qCDebug(QT_BT_BLUEZ) << "Suppressing primary/characteristic" << hex << shortUuid;
                 continue;
+            }
 
             // ignore value handle
-            if (descriptorHandle == p->characteristicList[charHandle].valueHandle)
+            if (descriptorHandle == p->characteristicList[charHandle].valueHandle) {
+                qCDebug(QT_BT_BLUEZ) << "Suppressing char handle" << hex << descriptorHandle;
                 continue;
+            }
 
             QLowEnergyServicePrivate::DescData data;
             data.uuid = uuid;
@@ -490,7 +493,9 @@ void QLowEnergyControllerNewPrivate::processReply(
 
         QLowEnergyHandle nextBorderHandle = 0;
         if (keys.count() == 1) { // processing last characteristic
-            nextBorderHandle = p->endHandle;
+            // endHandle still belongs to current service
+            // -> must be included in current search
+            nextBorderHandle = p->endHandle+1;
         } else {
             nextBorderHandle = keys[1];
         }
@@ -537,8 +542,8 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
 
     QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
-//    qDebug() << "Sending read_by_group_type request, startHandle:" << hex
-//             << start << "endHandle:" << end;
+    qCDebug(QT_BT_BLUEZ) << "Sending read_by_group_type request, startHandle:" << hex
+             << start << "endHandle:" << end;
 
     Request request;
     request.payload = data;
@@ -578,9 +583,9 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
 
     QByteArray data(READ_BY_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_BY_TYPE_REQ_SIZE);
-//    qDebug() << "Sending read_by_type request, startHandle:" << hex
-//             << nextHandle << "endHandle:" << serviceData->endHandle
-//             << "packet:" << data.toHex();
+    qCDebug(QT_BT_BLUEZ) << "Sending read_by_type request, startHandle:" << hex
+             << nextHandle << "endHandle:" << serviceData->endHandle
+             << "packet:" << data.toHex();
 
     Request request;
     request.payload = data;
@@ -664,6 +669,9 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
 {
     Q_ASSERT(!pendingCharHandles.isEmpty());
     Q_ASSERT(!serviceData.isNull());
+
+    qCDebug(QT_BT_BLUEZ) << "Sending find_info request" << hex
+                         << pendingCharHandles << startingHandle;
 
 #define FIND_INFO_REQUEST_SIZE 5
     quint8 packet[FIND_INFO_REQUEST_SIZE];
