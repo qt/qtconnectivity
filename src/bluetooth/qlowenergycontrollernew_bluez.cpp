@@ -65,6 +65,12 @@
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
 
+//GATT command sizes in bytes
+#define FIND_INFO_REQUEST_SIZE 5
+#define GRP_TYPE_REQ_SIZE 7
+#define READ_BY_TYPE_REQ_SIZE 7
+#define READ_REQUEST_SIZE 3
+
 // GATT error codes
 #define ATT_ERROR_INVALID_HANDLE        0x01
 #define ATT_ERROR_READ_NOT_PERM         0x02
@@ -350,7 +356,6 @@ void QLowEnergyControllerNewPrivate::processReply(
          *  The uuid can be 16 or 128 bit.
          */
         QLowEnergyHandle startHandle, valueHandle;
-        //qDebug() << "readByType response received:" << response.toHex();
         const quint16 elementLength = response.constData()[1];
         const quint16 numElements = (response.size() - 2) / elementLength;
         quint16 offset = 2;
@@ -532,7 +537,6 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
     bt_uuid_t primary;
     bt_uuid16_create(&primary, GATT_PRIMARY_SERVICE);
 
-#define GRP_TYPE_REQ_SIZE 7
     quint8 packet[GRP_TYPE_REQ_SIZE];
 
     packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
@@ -573,7 +577,6 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
     bt_uuid_t uuid;
     bt_uuid16_create(&uuid, GATT_CHARACTERISTIC);
 
-#define READ_BY_TYPE_REQ_SIZE 7
     quint8 packet[READ_BY_TYPE_REQ_SIZE];
 
     packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
@@ -599,7 +602,6 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
 void QLowEnergyControllerNewPrivate::readServiceCharacteristicValues(
         const QBluetoothUuid &serviceUuid)
 {
-#define READ_REQUEST_SIZE 3
     quint8 packet[READ_REQUEST_SIZE];
     qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
                          << serviceUuid.toString();
@@ -673,7 +675,6 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
     qCDebug(QT_BT_BLUEZ) << "Sending find_info request" << hex
                          << pendingCharHandles << startingHandle;
 
-#define FIND_INFO_REQUEST_SIZE 5
     quint8 packet[FIND_INFO_REQUEST_SIZE];
     packet[0] = ATT_OP_FIND_INFORMATION_REQUEST;
 
