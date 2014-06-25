@@ -233,14 +233,37 @@ void QNearFieldManagerPrivateImpl::propertyChanged(QString property, QDBusVarian
             QDBusObjectPath path;
             tags >> path;
             tagList.append(path.path());
-            qCDebug(QT_NFC_NEARD) << "New tag" << path.path();
-            NearFieldTarget<QNearFieldTarget> *nfTag =
-                    new NearFieldTarget<QNearFieldTarget>(this, path);
-            emit targetDetected(nfTag);
+
+            // If a tag is not in the tags list we detected a new tag
+            if (!m_activeTags.value(path.path())) {
+                NearFieldTarget<QNearFieldTarget> *nfTag =
+                        new NearFieldTarget<QNearFieldTarget>(this, path);
+                connect(nfTag, SIGNAL(destroyed(QObject*)), this, SLOT(tagDeleted(QObject*)));
+                emit targetDetected(nfTag);
+                m_activeTags.insert(path.path(), nfTag);
+            }
         }
+        //Look if a tag was lost
+        foreach (const QString &target, m_activeTags.keys()) {
+            if (!tagList.contains(target)) {
+                emit targetLost(m_activeTags.value(target));
+                m_activeTags.remove(target);
+            }
+        }
+
         tags.endArray();
         qCDebug(QT_NFC_NEARD) << "Tag list changed" << tagList;
     }
+}
+
+void QNearFieldManagerPrivateImpl::tagDeleted(QObject *obj)
+{
+    if (obj == 0)
+        return;
+
+    const QString key = m_activeTags.key(static_cast<QNearFieldTarget*>(obj));
+    if (!key.isEmpty())
+        m_activeTags.remove(key);
 }
 
 QT_END_NAMESPACE

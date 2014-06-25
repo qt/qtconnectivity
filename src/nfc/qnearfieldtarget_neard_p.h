@@ -42,8 +42,12 @@
 #ifndef QNEARFIELDTARGET_NEARD_P_H
 #define QNEARFIELDTARGET_NEARD_P_H
 
+#include <QDBusObjectPath>
+#include <QDBusVariant>
+
 #include <qnearfieldtarget.h>
 #include <qnearfieldtarget_p.h>
+#include <qndefrecord.h>
 #include <qndefmessage.h>
 
 #include "neard/tag_p.h"
@@ -51,8 +55,6 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
-
-#define TAG_NAME_BUFFER 64
 
 template <typename T>
 class NearFieldTarget : public T
@@ -83,8 +85,6 @@ public:
             m_type = QNearFieldTarget::NfcTagType4;
 
         qCDebug(QT_NFC_NEARD) << "Type" << type << m_type;
-
-
     }
 
     ~NearFieldTarget()
@@ -121,12 +121,35 @@ public:
 
     QNearFieldTarget::RequestId readNdefMessages()
     {
-//        QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-//        QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-//                                  Q_ARG(const QNearFieldTarget::RequestId, requestId));
-//        return requestId;
-        emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
-        return QNearFieldTarget::RequestId();
+        if (isValid()) {
+            QDBusPendingReply<QVariantMap> reply = m_tagInterface->GetProperties();
+            reply.waitForFinished();
+            if (reply.isError()) {
+                emit QNearFieldTarget::error(QNearFieldTarget::UnknownError, QNearFieldTarget::RequestId());
+                return QNearFieldTarget::RequestId();
+            }
+
+            const QDBusArgument &recordPaths = qvariant_cast<QDBusArgument>(reply.value().value(QStringLiteral("Records")));
+
+            QNdefMessage newNdefMessage;
+            recordPaths.beginArray();
+            while (!recordPaths.atEnd()) {
+                QDBusObjectPath path;
+                recordPaths >> path;
+                newNdefMessage.append(readRecord(path));
+            }
+            recordPaths.endArray();
+
+            emit QNearFieldTarget::ndefMessageRead(newNdefMessage);
+
+            QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
+            QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
+                                      Q_ARG(const QNearFieldTarget::RequestId, requestId));
+            return requestId;
+        } else {
+            emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+            return QNearFieldTarget::RequestId();
+        }
     }
 
     QNearFieldTarget::RequestId sendCommand(const QByteArray &command)
@@ -145,8 +168,17 @@ public:
 
     QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages)
     {
+        Q_UNUSED(messages);
         emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
+    }
+
+private:
+    QNdefRecord readRecord(QDBusObjectPath path)
+    {
+        Q_UNUSED(path);
+        // TODO
+        return QNdefRecord();
     }
 
 protected:

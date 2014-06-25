@@ -48,6 +48,7 @@
 
 #include <QDBusObjectPath>
 #include <QDBusVariant>
+#include <QMap>
 
 class OrgNeardAdapterInterface;
 class OrgNeardManagerInterface;
@@ -81,12 +82,13 @@ public:
 private Q_SLOTS:
     void tagFound(const QDBusObjectPath&);
     void propertyChanged(QString,QDBusVariant);
+    void tagDeleted(QObject*);
 
 private:
     QString m_adapterPath;
     OrgNeardAdapterInterface *m_adapter;
     OrgNeardManagerInterface *m_manager;
-
+    QMap<QString, QNearFieldTarget*> m_activeTags;
 };
 
 QT_END_NAMESPACE
