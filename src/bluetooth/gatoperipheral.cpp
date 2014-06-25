@@ -49,6 +49,8 @@
 #include "gatouuid.h"
 #include "helpers.h"
 
+QT_BEGIN_NAMESPACE
+
 enum EIRDataFields {
     EIRFlags = 0x01,
     EIRIncompleteUUID16List = 0x02,
@@ -868,3 +870,5 @@ void GatoPeripheralPrivate::handleDescriptorWrite(uint req, bool ok)
         qWarning() << "Failed to write some characteristic";
     }
 }
+
+QT_END_NAMESPACE

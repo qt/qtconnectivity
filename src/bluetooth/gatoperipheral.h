@@ -47,6 +47,8 @@
 #include "gatouuid.h"
 #include "gatoaddress.h"
 
+QT_BEGIN_NAMESPACE
+
 class GatoService;
 class GatoCharacteristic;
 class GatoDescriptor;
@@ -111,5 +113,7 @@ Q_SIGNALS:
 private:
     GatoPeripheralPrivate *const d_ptr;
 };
+
+QT_END_NAMESPACE
 
 #endif // GATOPERIPHERAL_H

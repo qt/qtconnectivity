@@ -48,6 +48,8 @@
 #include "gatodescriptor.h"
 #include "gatoattclient.h"
 
+QT_BEGIN_NAMESPACE
+
 class GatoPeripheralPrivate : public QObject
 {
     Q_OBJECT
@@ -108,5 +110,7 @@ public slots:
     void handleCharacteristicWrite(uint req, bool ok);
     void handleDescriptorWrite(uint req, bool ok);
 };
+
+QT_END_NAMESPACE
 
 #endif // GATOPERIPHERAL_P_H

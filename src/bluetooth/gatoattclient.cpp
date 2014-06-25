@@ -53,6 +53,8 @@
 #define ATT_DEFAULT_LE_MTU 23
 #define ATT_MAX_LE_MTU 0x200
 
+QT_BEGIN_NAMESPACE
+
 enum AttOpcode {
     AttOpNone = 0,
     AttOpErrorResponse = 0x1,
@@ -611,3 +613,5 @@ void GatoAttClient::handleServerMTU(uint req, quint16 server_mtu)
         }
     }
 }
+
+QT_END_NAMESPACE

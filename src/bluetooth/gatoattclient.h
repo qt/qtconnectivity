@@ -47,6 +47,8 @@
 #include "gatosocket.h"
 #include "gatouuid.h"
 
+QT_BEGIN_NAMESPACE
+
 class GatoAttClient : public QObject
 {
     Q_OBJECT
@@ -135,5 +137,7 @@ private:
     uint next_id;
     QQueue<Request> pending_requests;
 };
+
+QT_END_NAMESPACE
 
 #endif // GATOATTCLIENT_H
