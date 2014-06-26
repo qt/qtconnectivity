@@ -66,7 +66,7 @@ struct QLowEnergyDescriptorPrivate
 };
 
 /*!
-    Destroys the QLowEnergyDescriptor object.
+    Construct a new QLowEnergyDescriptor.
 */
 QLowEnergyDescriptor::QLowEnergyDescriptor():
     d_ptr(0), data(0)
@@ -167,8 +167,9 @@ QBluetoothUuid QLowEnergyDescriptor::uuid() const
     if (d_ptr.isNull() || !data
                        || !d_ptr->characteristicList.contains(data->charHandle)
                        || !d_ptr->characteristicList[data->charHandle].
-                                        descriptorList.contains(data->descHandle))
+                                        descriptorList.contains(data->descHandle)) {
         return QBluetoothUuid::UnknownDescriptorType;
+    }
 
     return d_ptr->characteristicList[data->charHandle].descriptorList[data->descHandle].uuid;
 }
@@ -192,8 +193,9 @@ QByteArray QLowEnergyDescriptor::value() const
     if (d_ptr.isNull() || !data
                        || !d_ptr->characteristicList.contains(data->charHandle)
                        || !d_ptr->characteristicList[data->charHandle].
-                                        descriptorList.contains(data->descHandle))
+                                        descriptorList.contains(data->descHandle)) {
         return QByteArray();
+    }
 
     return d_ptr->characteristicList[data->charHandle].descriptorList[data->descHandle].value;
 }

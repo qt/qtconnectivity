@@ -53,7 +53,6 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyDescriptorPrivate;
 class QLowEnergyServicePrivate;
 
-//TODO rename to QLowEnergyDescriptor
 class Q_BLUETOOTH_EXPORT QLowEnergyDescriptor
 {
     friend class QLowEnergyControllerPrivate;
