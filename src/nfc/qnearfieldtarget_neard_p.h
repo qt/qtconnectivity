@@ -51,6 +51,11 @@
 #include <qndefmessage.h>
 
 #include "neard/tag_p.h"
+#include "neard/record_p.h"
+
+#include <qndefnfctextrecord.h>
+#include <qndefnfcsmartposterrecord.h>
+#include <qndefnfcurirecord.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,13 +71,23 @@ public:
     {
         m_tagInterface = new OrgNeardTagInterface(QStringLiteral("org.neard"),
                                                   interfacePath.path(),
-                                                  QDBusConnection::systemBus());
+                                                  QDBusConnection::systemBus(), this);
 
-        if (!isValid())
+        if (!isValid()) {
+            qCWarning(QT_NFC_NEARD) << "Could not connect to org.neard.Tag dbus interface"
+                       << interfacePath.path();
             return;
+        }
 
-        QVariantMap properties = m_tagInterface->GetProperties();
-        QString type = properties.value(QStringLiteral("Type")).toString();
+        QDBusPendingReply<QVariantMap> reply = m_tagInterface->GetProperties();
+        reply.waitForFinished();
+        if (reply.isError()) {
+            qCWarning(QT_NFC_NEARD) << "Could not get properties of org.neard.Tag dbus interface"
+                       << interfacePath.path();
+            return;
+        }
+
+        const QString &type = reply.value().value(QStringLiteral("Type")).toString();
         m_type = QNearFieldTarget::ProprietaryTag;
 
         if (type == QStringLiteral("Type 1"))
@@ -89,7 +104,6 @@ public:
 
     ~NearFieldTarget()
     {
-        delete m_tagInterface;
     }
 
     bool isValid()
@@ -174,10 +188,65 @@ public:
     }
 
 private:
-    QNdefRecord readRecord(QDBusObjectPath path)
+    QNdefRecord readRecord(const QDBusObjectPath &path)
     {
-        Q_UNUSED(path);
-        // TODO
+        OrgNeardRecordInterface recordInterface(QStringLiteral("org.neard"),
+                                                path.path(),
+                                                QDBusConnection::systemBus());
+        if (!recordInterface.isValid())
+            return QNdefRecord();
+
+        QDBusPendingReply<QVariantMap> reply = recordInterface.GetProperties();
+        reply.waitForFinished();
+        if (reply.isError())
+            return QNdefRecord();
+
+        const QString &value = reply.value().value(QStringLiteral("Representation")).toString();
+        const QString &locale = reply.value().value(QStringLiteral("Language")).toString();
+        const QString &encoding = reply.value().value(QStringLiteral("Encoding")).toString();
+        const QString &uri = reply.value().value(QStringLiteral("URI")).toString();
+//        const QString &mimetype = reply.value().value(QStringLiteral("MIMEType")).toString();
+//        const QString &mime = reply.value().value(QStringLiteral("MIME")).toString();
+//        const QString &arr = reply.value().value(QStringLiteral("ARR")).toString();
+//        const QString &size = reply.value().value(QStringLiteral("Size")).toString();
+
+        const QString type = reply.value().value(QStringLiteral("Type")).toString();
+        if (type == QStringLiteral("Text")) {
+            QNdefNfcTextRecord textRecord;
+            textRecord.setText(value);
+            textRecord.setLocale(locale);
+            textRecord.setEncoding((encoding == QStringLiteral("UTF-8")) ? QNdefNfcTextRecord::Utf8
+                                                                       : QNdefNfcTextRecord::Utf16);
+            return textRecord;
+        } else if (type == QStringLiteral("SmartPoster")) {
+            QNdefNfcSmartPosterRecord spRecord;
+            if (!value.isEmpty()) {
+                spRecord.addTitle(value, locale, (encoding == QStringLiteral("UTF-8"))
+                                                        ? QNdefNfcTextRecord::Utf8
+                                                        : QNdefNfcTextRecord::Utf16);
+            }
+
+            if (!uri.isEmpty())
+                spRecord.setUri(QUrl(uri));
+
+//            const QString &actionString = reply.value().value(QStringLiteral("Action")).toString();
+//            if (!action.isEmpty()) {
+//                QNdefNfcSmartPosterRecord::Action action;
+
+//                spRecord.setAction(acti);
+//            }
+
+            return spRecord;
+        } else if (type == QStringLiteral("URI")) {
+            QNdefNfcUriRecord uriRecord;
+            uriRecord.setUri(QUrl(uri));
+            return uriRecord;
+        } else if (type == QStringLiteral("MIME")) {
+
+        } else if (type == QStringLiteral("AAR")) {
+
+        }
+
         return QNdefRecord();
     }
 
