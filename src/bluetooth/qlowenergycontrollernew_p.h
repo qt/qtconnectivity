@@ -92,7 +92,9 @@ public:
             QLowEnergyHandle handle);
     void updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                    const QByteArray &value);
-
+    void updateValueOfDescriptor(QLowEnergyHandle charHandle,
+                                 QLowEnergyHandle descriptorHandle,
+                                 const QByteArray &value);
 
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
@@ -125,7 +127,8 @@ private:
     void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
     void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
                                QLowEnergyHandle nextHandle);
-    void readServiceCharacteristicValues(const QBluetoothUuid &service);
+    void sendReadValueRequest(QLowEnergyHandle attributeHandle, bool isDescriptor);
+    void readServiceValues(const QBluetoothUuid &service, bool readCharacteristics);
 
     void discoverServiceDescriptors(const QBluetoothUuid &serviceUuid);
     void discoverNextDescriptor(QSharedPointer<QLowEnergyServicePrivate> serviceData,

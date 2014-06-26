@@ -344,9 +344,10 @@ void QLowEnergyControllerNewPrivate::processReply(
                 request.reference.value<QSharedPointer<QLowEnergyServicePrivate> >();
 
         if (isErrorResponse) {
-            //we reached end of service handle
-            //just finish up characteristic discovery
-            readServiceCharacteristicValues(p->uuid);
+            // we reached end of service handle
+            // just finished up characteristic discovery
+            // continue with calues of characteristics
+            readServiceValues(p->uuid, true);
             break;
         }
 
@@ -391,7 +392,7 @@ void QLowEnergyControllerNewPrivate::processReply(
         if (startHandle + 1 < p->endHandle) // more chars to discover
             sendReadByTypeRequest(p, startHandle + 1);
         else
-            readServiceCharacteristicValues(p->uuid);
+            readServiceValues(p->uuid, true);
     }
         break;
     case ATT_OP_READ_REQUEST: //error case
@@ -399,17 +400,26 @@ void QLowEnergyControllerNewPrivate::processReply(
     {
         Q_ASSERT(request.command == ATT_OP_READ_REQUEST);
 
-        if (isErrorResponse) {
-            // we ignore any error and go over to next message
-            break;
+        uint ref = request.reference.toUInt();
+        QLowEnergyHandle charHandle = (ref & 0xffff);
+        QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
+
+        // we ignore error response
+        if (!isErrorResponse) {
+            if (!descriptorHandle)
+                updateValueOfCharacteristic(charHandle, response.mid(1).toHex());
+            else
+                updateValueOfDescriptor(charHandle, descriptorHandle,
+                                        response.mid(1).toHex());
         }
 
-        QLowEnergyHandle charHandle = (QLowEnergyHandle) request.reference.toUInt();
-        updateValueOfCharacteristic(charHandle, response.mid(1).toHex());
         if (request.reference2.toBool()) {
             QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
             Q_ASSERT(!service.isNull());
-            discoverServiceDescriptors(service->uuid);
+            if (!descriptorHandle)
+                discoverServiceDescriptors(service->uuid);
+            else
+                service->setState(QLowEnergyService::ServiceDiscovered);
         }
     }
         break;
@@ -436,7 +446,7 @@ void QLowEnergyControllerNewPrivate::processReply(
         Q_ASSERT(!p.isNull());
 
         if (isErrorResponse) {
-            p->setState(QLowEnergyService::ServiceDiscovered);
+            readServiceValues(p->uuid, false); //read descriptor values
             break;
         }
 
@@ -512,7 +522,8 @@ void QLowEnergyControllerNewPrivate::processReply(
 
         if (keys.isEmpty()) {
             // descriptor for last characteristic found
-            p->setState(QLowEnergyService::ServiceDiscovered);
+            // continue with reading descriptor value
+            readServiceValues(p->uuid, false);
         } else {
             // service has more descriptors to be found
             discoverNextDescriptor(p, keys, descriptorHandle + 1);
@@ -599,27 +610,80 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::readServiceCharacteristicValues(
-        const QBluetoothUuid &serviceUuid)
+/*!
+    \internal
+
+    Reads the value of characteristics and descriptors.
+
+    \a readCharacteristics determines whether we intend to read a characteristic;
+    otherwise we read a descriptor.
+ */
+void QLowEnergyControllerNewPrivate::readServiceValues(
+        const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
     quint8 packet[READ_REQUEST_SIZE];
-    qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
+    if (QT_BT_BLUEZ().isDebugEnabled()) {
+        if (readCharacteristics)
+            qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
                          << serviceUuid.toString();
+        else
+            qCDebug(QT_BT_BLUEZ) << "Reading descriptor values for"
+                         << serviceUuid.toString();
+    }
 
-    bool oneReadRequested = false;
     QSharedPointer<QLowEnergyServicePrivate> service = serviceList.value(serviceUuid);
-    const QList<QLowEnergyHandle> &keys = service->characteristicList.keys();
+
+    // pair.first -> target attribute
+    // pair.second -> context information for read request
+    QPair<QLowEnergyHandle, quint32> pair;
+
+    // Create list of attribute handles which need to be read
+    QList<QPair<QLowEnergyHandle, quint32> > targetHandles;
+    const QList<QLowEnergyHandle> keys = service->characteristicList.keys();
     for (int i = 0; i < keys.count(); i++) {
         QLowEnergyHandle charHandle = keys[i];
         const QLowEnergyServicePrivate::CharData &charDetails =
                 service->characteristicList[charHandle];
 
-        //Don't try to read readOnly property
-        if (!(charDetails.properties & QLowEnergyCharacteristic::Read))
-            continue;
 
+        if (readCharacteristics) {
+            // Collect handles of all characteristic value attributes
+
+            // Don't try to read readOnly characteristic
+            if (!(charDetails.properties & QLowEnergyCharacteristic::Read))
+                continue;
+
+            pair.first = charDetails.valueHandle;
+            pair.second  = charHandle;
+            targetHandles.append(pair);
+
+        } else {
+            // Collect handles of all descriptor attributes
+            foreach (QLowEnergyHandle descriptorHandle, charDetails.descriptorList.keys()) {
+                pair.first = descriptorHandle;
+                pair.second = (charHandle | (descriptorHandle << 16));
+                targetHandles.append(pair);
+            }
+        }
+    }
+
+
+    if (targetHandles.isEmpty()) {
+        if (readCharacteristics) {
+            // none of the characteristics is readable
+            // -> continue with descriptor discovery
+            discoverServiceDescriptors(service->uuid);
+        } else {
+            // characteristic w/o descriptors
+            service->setState(QLowEnergyService::ServiceDiscovered);
+        }
+        return;
+    }
+
+    for (int i = 0; i < targetHandles.count(); i++) {
+        pair = targetHandles.at(i);
         packet[0] = ATT_OP_READ_REQUEST;
-        bt_put_unaligned(htobs(charDetails.valueHandle), (quint16 *) &packet[1]);
+        bt_put_unaligned(htobs(pair.first), (quint16 *) &packet[1]);
 
         QByteArray data(READ_REQUEST_SIZE, Qt::Uninitialized);
         memcpy(data.data(), packet,  READ_REQUEST_SIZE);
@@ -627,19 +691,10 @@ void QLowEnergyControllerNewPrivate::readServiceCharacteristicValues(
         Request request;
         request.payload = data;
         request.command = ATT_OP_READ_REQUEST;
-        request.reference = charHandle;
+        request.reference = pair.second;
         // last entry?
-        request.reference2 = QVariant((bool)(i + 1 == keys.count()));
+        request.reference2 = QVariant((bool)(i + 1 == targetHandles.count()));
         openRequests.enqueue(request);
-        oneReadRequested = true;
-    }
-
-
-    if (!oneReadRequested) {
-        // none of the characteristics is readable
-        // -> continue with descriptor discovery
-        discoverServiceDescriptors(service->uuid);
-        return;
     }
 
     sendNextPendingRequest();
@@ -654,7 +709,8 @@ void QLowEnergyControllerNewPrivate::discoverServiceDescriptors(
     // start handle of all known characteristics
     QList<QLowEnergyHandle> keys = service->characteristicList.keys();
 
-    if (keys.isEmpty()) { // service has no characteristics -> very unlikely
+    if (keys.isEmpty()) { // service has no characteristics
+        // implies that characteristic & descriptor discovery can be skipped
         service->setState(QLowEnergyService::ServiceDiscovered);
         return;
     }
@@ -700,6 +756,4 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
 
     sendNextPendingRequest();
 }
-
-
 QT_END_NAMESPACE

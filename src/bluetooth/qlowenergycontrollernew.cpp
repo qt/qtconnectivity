@@ -126,6 +126,23 @@ void QLowEnergyControllerNewPrivate::updateValueOfCharacteristic(
         service->characteristicList[charHandle].value = value;
 }
 
+void QLowEnergyControllerNewPrivate::updateValueOfDescriptor(
+        QLowEnergyHandle charHandle, QLowEnergyHandle descriptorHandle,
+        const QByteArray &value)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+    if (service.isNull() || !service->characteristicList.contains(charHandle))
+        return;
+
+    QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> descData;
+    descData = service->characteristicList[charHandle].descriptorList;
+
+    if (!service->characteristicList[charHandle].descriptorList.contains(descriptorHandle))
+        return;
+
+    service->characteristicList[charHandle].descriptorList[descriptorHandle].value = value;
+}
+
 QLowEnergyControllerNew::QLowEnergyControllerNew(
                             const QBluetoothAddress &remoteDevice,
                             QObject *parent)
