@@ -79,6 +79,7 @@ public:
                                             QObject *parent = 0);
     ~QBluetoothDeviceDiscoveryAgent();
 
+    // TODO Remove inquiry type in Qt 6 -> not really used anywhere
     QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType() const;
     void setInquiryType(QBluetoothDeviceDiscoveryAgent::InquiryType type);
 

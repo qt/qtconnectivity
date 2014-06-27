@@ -83,6 +83,7 @@ private:
     QFile *m_file;
     QBluetoothLocalDevice *m_localDevice;
     QPointer<pinDisplay> m_pindisplay;
+    bool m_pairingError;
 
     QString addressToName(const QBluetoothAddress &address);
 
@@ -98,6 +99,7 @@ private slots:
     void on_stopButton_clicked();
 
     void pairingFinished(const QBluetoothAddress &address,QBluetoothLocalDevice::Pairing pairing);
+    void pairingError(QBluetoothLocalDevice::Error error);
     void displayPin(const QBluetoothAddress &address, QString pin);
     void displayConfirmation(const QBluetoothAddress &address, QString pin);
     void displayConfReject();
