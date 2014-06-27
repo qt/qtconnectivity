@@ -57,11 +57,12 @@ QLowEnergyServicePrivate::~QLowEnergyServicePrivate()
 
 void QLowEnergyServicePrivate::setController(QLowEnergyControllerNewPrivate *control)
 {
-    if (!control)
-        return;
-
-    state = QLowEnergyService::DiscoveryRequired;
     controller = control;
+
+    if (control)
+        setState(QLowEnergyService::DiscoveryRequired);
+    else
+        setState(QLowEnergyService::InvalidService);
 }
 
 void QLowEnergyServicePrivate::setError(QLowEnergyService::ServiceError newError)

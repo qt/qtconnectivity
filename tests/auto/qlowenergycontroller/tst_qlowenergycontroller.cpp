@@ -72,6 +72,7 @@ private slots:
     void tst_verifyAllServices();
     void tst_connect();
     void tst_connectNew();
+    void tst_concurrentDiscovery();
     void tst_defaultBehavior();
 
 private:
@@ -751,8 +752,8 @@ void tst_QLowEnergyController::tst_connect()
 void tst_QLowEnergyController::tst_connectNew()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.isEmpty())
-        QSKIP("No local Bluetooth device found. Skipping test.");
+    if (localAdapters.isEmpty() || remoteDevice.isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
     QLowEnergyControllerNew control(remoteDevice);
@@ -824,6 +825,12 @@ void tst_QLowEnergyController::tst_connectNew()
             QCOMPARE(service->state(), QLowEnergyService::DiscoveryRequired);
         }
 
+        // unrelated uuids don't return valid service object
+        // invalid service uuid
+        QVERIFY(!control.createServiceObject(QBluetoothUuid()));
+        // some random uuid
+        QVERIFY(!control.createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceName)));
+
         // initiate characteristic discovery
         foreach (QLowEnergyService *service, savedReferences) {
             qDebug() << "Discoverying" << service->serviceUuid();
@@ -840,6 +847,15 @@ void tst_QLowEnergyController::tst_connectNew()
 
             verifyServiceProperties(service);
         }
+
+        // ensure that related service objects share same state
+        foreach (QLowEnergyService* originalService, savedReferences) {
+            QLowEnergyService *newService = control.createServiceObject(
+                        originalService->serviceUuid());
+            QVERIFY(newService);
+            QCOMPARE(newService->state(), QLowEnergyService::ServiceDiscovered);
+            delete newService;
+        }
     }
 
     // Finish off
@@ -852,17 +868,162 @@ void tst_QLowEnergyController::tst_connectNew()
         QCOMPARE(disconnectedSpy.count(), 0);
     } else {
         QCOMPARE(disconnectedSpy.count(), 1);
-
         // after disconnect all service references must be invalid
         foreach (const QLowEnergyService *entry, savedReferences) {
             const QBluetoothUuid &uuid = entry->serviceUuid();
             QVERIFY2(entry->state() == QLowEnergyService::InvalidService,
                      uuid.toString().toLatin1());
+
+            //after disconnect all related characteristics and descriptors are invalid
+            QList<QLowEnergyCharacteristic> chars = entry->characteristics();
+            for (int i = 0; i < chars.count(); i++) {
+                QCOMPARE(chars.at(i).isValid(), false);
+                QList<QLowEnergyDescriptor> descriptors = chars[i].descriptors();
+                for (int j = 0; j < descriptors.count(); j++)
+                    QCOMPARE(descriptors[j].isValid(), false);
+            }
         }
     }
 
     qDeleteAll(savedReferences);
     savedReferences.clear();
+}
+
+void tst_QLowEnergyController::tst_concurrentDiscovery()
+{
+    QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
+    if (localAdapters.isEmpty() || remoteDevice.isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+
+    // quick setup - more elaborate test is done by connectNew()
+    QLowEnergyControllerNew control(remoteDevice);
+    QCOMPARE(control.state(), QLowEnergyControllerNew::UnconnectedState);
+    QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
+
+    control.connectToDevice();
+    {
+        QTRY_IMPL(control.state() != QLowEnergyControllerNew::ConnectingState,
+              30000);
+    }
+
+    if (control.state() == QLowEnergyControllerNew::ConnectingState
+            || control.error() != QLowEnergyControllerNew::NoError) {
+        // default BTLE backend forever hangs in ConnectingState
+        QSKIP("Cannot connect to remote device");
+    }
+
+    QCOMPARE(control.state(), QLowEnergyControllerNew::ConnectedState);
+
+    // 2. new controller to same device fails
+    {
+        QLowEnergyControllerNew control2(remoteDevice);
+        control2.connectToDevice();
+        {
+            QTRY_IMPL(control2.state() != QLowEnergyControllerNew::ConnectingState,
+                      30000);
+        }
+
+        QVERIFY(control2.error() != QLowEnergyControllerNew::NoError);
+    }
+
+    /* We are testing that we can run service discovery on the same device
+     * for multiple services at the same time.
+     * */
+
+    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+
+    // pick MAX_SERVICES_SAME_TIME_ACCESS services
+    // and discover them at the same time
+#define MAX_SERVICES_SAME_TIME_ACCESS 3
+    QLowEnergyService *services[MAX_SERVICES_SAME_TIME_ACCESS];
+
+    QVERIFY(control.services().count() >= MAX_SERVICES_SAME_TIME_ACCESS);
+
+    QList<QBluetoothUuid> uuids = control.services();
+
+    // initialize services
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
+        services[i] = control.createServiceObject(uuids.at(i));
+        QVERIFY(services[i]);
+    }
+
+    // start complete discovery
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++)
+        services[i]->discoverDetails();
+
+    // wait until discovery done
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
+        qWarning() << "Waiting for" << i << services[i]->serviceUuid();
+        QTRY_VERIFY_WITH_TIMEOUT(
+            services[i]->state() == QLowEnergyService::ServiceDiscovered,
+            30000);
+    }
+
+    // verify discovered services
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++)
+        verifyServiceProperties(services[i]);
+
+    control.disconnectFromDevice();
+    QTRY_VERIFY_WITH_TIMEOUT(control.state() == QLowEnergyControllerNew::UnconnectedState,
+                             30000);
+    discoveryFinishedSpy.clear();
+
+    // redo the discovery with same controller
+    QLowEnergyService *services_second[MAX_SERVICES_SAME_TIME_ACCESS];
+    control.connectToDevice();
+    {
+        QTRY_IMPL(control.state() != QLowEnergyControllerNew::ConnectingState,
+              30000);
+    }
+
+    QCOMPARE(control.state(), QLowEnergyControllerNew::ConnectedState);
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+
+    // get all details
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
+        services_second[i] = control.createServiceObject(uuids.at(i));
+        QVERIFY(services[i]);
+        services_second[i]->discoverDetails();
+    }
+
+    // wait until discovery done
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
+        qWarning() << "Waiting for" << i << services_second[i]->serviceUuid();
+        QTRY_VERIFY_WITH_TIMEOUT(
+            services_second[i]->state() == QLowEnergyService::ServiceDiscovered,
+            30000);
+    }
+
+    // verify discovered services (1st and 2nd round)
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
+
+        verifyServiceProperties(services_second[i]);
+        //after disconnect all related characteristics and descriptors are invalid
+        const QList<QLowEnergyCharacteristic> chars = services[i]->characteristics();
+        for (int j = 0; j < chars.count(); j++) {
+            QCOMPARE(chars.at(j).isValid(), false);
+            const QList<QLowEnergyDescriptor> descriptors = chars[j].descriptors();
+            for (int k = 0; k < descriptors.count(); k++)
+                QCOMPARE(descriptors[k].isValid(), false);
+        }
+
+        QCOMPARE(services[i]->serviceUuid(), services_second[i]->serviceUuid());
+        QCOMPARE(services[i]->serviceName(), services_second[i]->serviceName());
+        QCOMPARE(services[i]->type(), services_second[i]->type());
+        QVERIFY(services[i]->state() == QLowEnergyService::InvalidService);
+        QVERIFY(services_second[i]->state() == QLowEnergyService::ServiceDiscovered);
+    }
+
+    // cleanup
+    for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
+        delete services[i];
+        delete services_second[i];
+    }
+
+    control.disconnectFromDevice();
 }
 
 void tst_QLowEnergyController::verifyServiceProperties(
@@ -1580,7 +1741,17 @@ void tst_QLowEnergyController::tst_defaultBehavior()
         QCOMPARE(controlDefaultAdapter.error(), QLowEnergyControllerNew::NoError);
         QVERIFY(controlDefaultAdapter.errorString().isEmpty());
         QVERIFY(foundAddresses.contains(controlDefaultAdapter.localAddress()));
+
+        // unrelated uuids don't return valid service object
+        // invalid service uuid
+        QVERIFY(!controlDefaultAdapter.createServiceObject(
+                    QBluetoothUuid()));
+        // some random uuid
+        QVERIFY(!controlDefaultAdapter.createServiceObject(
+                    QBluetoothUuid(QBluetoothUuid::DeviceName)));
     }
+
+    QCOMPARE(controlDefaultAdapter.services().count(), 0);
 
     // Test explicit local adapter
     if (!foundAddresses.isEmpty()) {
@@ -1590,7 +1761,18 @@ void tst_QLowEnergyController::tst_defaultBehavior()
         QCOMPARE(controlExplicitAdapter.localAddress(), foundAddresses[0]);
         QCOMPARE(controlExplicitAdapter.state(),
                  QLowEnergyControllerNew::UnconnectedState);
+        QCOMPARE(controlExplicitAdapter.services().count(), 0);
+
+        // unrelated uuids don't return valid service object
+        // invalid service uuid
+        QVERIFY(!controlExplicitAdapter.createServiceObject(
+                    QBluetoothUuid()));
+        // some random uuid
+        QVERIFY(!controlExplicitAdapter.createServiceObject(
+                    QBluetoothUuid(QBluetoothUuid::DeviceName)));
     }
+
+
 }
 
 QTEST_MAIN(tst_QLowEnergyController)

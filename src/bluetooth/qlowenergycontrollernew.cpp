@@ -102,8 +102,10 @@ void QLowEnergyControllerNewPrivate::setState(
 
 void QLowEnergyControllerNewPrivate::invalidateServices()
 {
-    foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values())
+    foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values()) {
+        service->setController(0);
         service->setState(QLowEnergyService::InvalidService);
+    }
 
     serviceList.clear();
 }
@@ -168,6 +170,7 @@ QLowEnergyControllerNew::QLowEnergyControllerNew(
 
 QLowEnergyControllerNew::~QLowEnergyControllerNew()
 {
+    disconnectFromDevice(); //in case we were connected
     delete d_ptr;
 }
 

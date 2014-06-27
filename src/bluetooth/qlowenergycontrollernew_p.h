@@ -61,18 +61,8 @@ class QLowEnergyControllerNewPrivate : public QObject
     Q_OBJECT
     Q_DECLARE_PUBLIC(QLowEnergyControllerNew)
 public:
-    QLowEnergyControllerNewPrivate()
-        : QObject(),
-          state(QLowEnergyControllerNew::UnconnectedState),
-          error(QLowEnergyControllerNew::NoError)
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-          , l2cpSocket(0)
-#endif
-    {
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-        qRegisterMetaType<QList<QLowEnergyHandle> >();
-#endif
-    }
+    QLowEnergyControllerNewPrivate();
+    ~QLowEnergyControllerNewPrivate();
 
     void setError(QLowEnergyControllerNew::Error newError);
     bool isValidLocalAdapter();

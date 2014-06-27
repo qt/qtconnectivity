@@ -60,7 +60,7 @@
 #define ATT_OP_FIND_INFORMATION_RESPONSE 0x5
 #define ATT_OP_READ_BY_TYPE_REQUEST     0x8 //discover characteristics
 #define ATT_OP_READ_BY_TYPE_RESPONSE    0x9
-#define ATT_OP_READ_REQUEST             0xA //read characteristic value
+#define ATT_OP_READ_REQUEST             0xA //read characteristic & descriptor values
 #define ATT_OP_READ_RESPONSE            0xB
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
@@ -165,6 +165,19 @@ static void dumpErrorInformation(const QByteArray &response)
     qCDebug(QT_BT_BLUEZ) << "Error1:" << errorString
              << "last command:" << hex << lastCommand
              << "handle:" << handle;
+}
+
+QLowEnergyControllerNewPrivate::QLowEnergyControllerNewPrivate()
+    : QObject(),
+      state(QLowEnergyControllerNew::UnconnectedState),
+      error(QLowEnergyControllerNew::NoError),
+      l2cpSocket(0)
+{
+    qRegisterMetaType<QList<QLowEnergyHandle> >();
+}
+
+QLowEnergyControllerNewPrivate::~QLowEnergyControllerNewPrivate()
+{
 }
 
 void QLowEnergyControllerNewPrivate::connectToDevice()
@@ -288,6 +301,7 @@ void QLowEnergyControllerNewPrivate::processReply(
     case ATT_OP_READ_BY_GROUP_REQUEST: // in case of error
     case ATT_OP_READ_BY_GROUP_RESPONSE:
     {
+        // Discovering services
         Q_ASSERT(request.command == ATT_OP_READ_BY_GROUP_REQUEST);
 
         if (isErrorResponse) {
@@ -338,6 +352,7 @@ void QLowEnergyControllerNewPrivate::processReply(
     case ATT_OP_READ_BY_TYPE_REQUEST: //in case of error
     case ATT_OP_READ_BY_TYPE_RESPONSE:
     {
+        // Discovering characteristics
         Q_ASSERT(request.command == ATT_OP_READ_BY_TYPE_REQUEST);
 
         QSharedPointer<QLowEnergyServicePrivate> p =
@@ -398,6 +413,7 @@ void QLowEnergyControllerNewPrivate::processReply(
     case ATT_OP_READ_REQUEST: //error case
     case ATT_OP_READ_RESPONSE:
     {
+        //Reading characteristics and descriptors
         Q_ASSERT(request.command == ATT_OP_READ_REQUEST);
 
         uint ref = request.reference.toUInt();
@@ -426,6 +442,7 @@ void QLowEnergyControllerNewPrivate::processReply(
     case ATT_OP_FIND_INFORMATION_REQUEST: //error case
     case ATT_OP_FIND_INFORMATION_RESPONSE:
     {
+        //Discovering descriptors
         Q_ASSERT(request.command == ATT_OP_FIND_INFORMATION_REQUEST);
 
         /* packet format:

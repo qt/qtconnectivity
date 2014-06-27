@@ -43,6 +43,17 @@
 
 QT_BEGIN_NAMESPACE
 
+QLowEnergyControllerNewPrivate::QLowEnergyControllerNewPrivate()
+    : QObject(),
+      state(QLowEnergyControllerNew::UnconnectedState),
+      error(QLowEnergyControllerNew::NoError)
+{
+}
+
+QLowEnergyControllerNewPrivate::~QLowEnergyControllerNewPrivate()
+{
+}
+
 void QLowEnergyControllerNewPrivate::connectToDevice()
 {
     setError(QLowEnergyControllerNew::UnknownError);
