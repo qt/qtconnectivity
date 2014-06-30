@@ -63,8 +63,6 @@ public:
 protected slots:
     void discoveryError(QBluetoothServiceDiscoveryAgent::Error error);
     void serviceDiscovered(const QLowEnergyServiceInfo &info);
-    void serviceConnected(const QLowEnergyServiceInfo &info);
-    void serviceDisconnected(const QLowEnergyServiceInfo &info);
 
 private slots:
     void initTestCase();
@@ -115,17 +113,6 @@ void tst_QLowEnergyController::serviceDiscovered(const QLowEnergyServiceInfo &in
 {
     foundServices.append(info);
 }
-
-void tst_QLowEnergyController::serviceConnected(const QLowEnergyServiceInfo &/*info*/)
-{
-
-}
-
-void tst_QLowEnergyController::serviceDisconnected(const QLowEnergyServiceInfo &/*info*/)
-{
-
-}
-
 
 void tst_QLowEnergyController::initTestCase()
 {

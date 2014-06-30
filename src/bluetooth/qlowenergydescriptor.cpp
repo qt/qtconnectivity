@@ -168,7 +168,7 @@ QBluetoothUuid QLowEnergyDescriptor::uuid() const
                        || !d_ptr->characteristicList.contains(data->charHandle)
                        || !d_ptr->characteristicList[data->charHandle].
                                         descriptorList.contains(data->descHandle)) {
-        return QBluetoothUuid::UnknownDescriptorType;
+        return QBluetoothUuid();
     }
 
     return d_ptr->characteristicList[data->charHandle].descriptorList[data->descHandle].uuid;
