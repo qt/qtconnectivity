@@ -138,7 +138,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     int result = -1;
 
     if (socket == -1 && !ensureNativeSocket(socketType)) {
-        errorString = QObject::tr("Unknown socket error");
+        errorString = QBluetoothSocket::tr("Unknown socket error");
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
         return;
     }
