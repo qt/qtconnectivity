@@ -75,6 +75,8 @@ public:
     ~QLowEnergyCharacteristic();
 
     QLowEnergyCharacteristic &operator=(const QLowEnergyCharacteristic &other);
+    bool operator==(const QLowEnergyCharacteristic &other) const;
+    bool operator!=(const QLowEnergyCharacteristic &other) const;
 
     QString name() const;
 

@@ -199,7 +199,18 @@ void tst_QLowEnergyCharacteristic::tst_constructionDefault()
     QCOMPARE(copyConstructed.descriptors().count(), 0);
     QCOMPARE(copyConstructed.properties(), QLowEnergyCharacteristic::Unknown);
 
+    QVERIFY(copyConstructed == characteristic);
+    QVERIFY(characteristic == copyConstructed);
+    QVERIFY(!(copyConstructed != characteristic));
+    QVERIFY(!(characteristic != copyConstructed));
+
     QLowEnergyCharacteristic assigned;
+
+    QVERIFY(assigned == characteristic);
+    QVERIFY(characteristic == assigned);
+    QVERIFY(!(assigned != characteristic));
+    QVERIFY(!(characteristic != assigned));
+
     assigned = characteristic;
     QVERIFY(!assigned.isValid());
     QCOMPARE(assigned.value(), QByteArray());
@@ -208,6 +219,11 @@ void tst_QLowEnergyCharacteristic::tst_constructionDefault()
     QCOMPARE(assigned.name(), QString());
     QCOMPARE(assigned.descriptors().count(), 0);
     QCOMPARE(assigned.properties(), QLowEnergyCharacteristic::Unknown);
+
+    QVERIFY(assigned == characteristic);
+    QVERIFY(characteristic == assigned);
+    QVERIFY(!(assigned != characteristic));
+    QVERIFY(!(characteristic != assigned));
 }
 
 void tst_QLowEnergyCharacteristic::tst_assignCompare()
@@ -253,6 +269,11 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     if (!noDescriptors)
         QVERIFY(target.descriptors().count() > 0);
 
+    QVERIFY(target == chars[indexWithDescriptor]);
+    QVERIFY(chars[indexWithDescriptor] == target);
+    QVERIFY(!(target != chars[indexWithDescriptor]));
+    QVERIFY(!(chars[indexWithDescriptor] != target));
+
     QCOMPARE(target.isValid(), chars[indexWithDescriptor].isValid());
     QCOMPARE(target.name(), chars[indexWithDescriptor].name());
     QCOMPARE(target.handle(), chars[indexWithDescriptor].handle());
@@ -282,6 +303,11 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     QCOMPARE(copyConstructed.descriptors().count(),
              chars[indexWithDescriptor].descriptors().count());
 
+    QVERIFY(copyConstructed == target);
+    QVERIFY(target == copyConstructed);
+    QVERIFY(!(copyConstructed != target));
+    QVERIFY(!(target != copyConstructed));
+
     // test invalidation
     QLowEnergyCharacteristic invalid;
     target = invalid;
@@ -292,6 +318,24 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     QCOMPARE(target.name(), QString());
     QCOMPARE(target.descriptors().count(), 0);
     QCOMPARE(target.properties(), QLowEnergyCharacteristic::Unknown);
+
+    QVERIFY(invalid == target);
+    QVERIFY(target == invalid);
+    QVERIFY(!(invalid != target));
+    QVERIFY(!(target != invalid));
+
+    QVERIFY(!(chars[indexWithDescriptor] == target));
+    QVERIFY(!(target == chars[indexWithDescriptor]));
+    QVERIFY(chars[indexWithDescriptor] != target);
+    QVERIFY(target != chars[indexWithDescriptor]);
+
+    if (chars.count() >= 2) {
+        // at least two characteristics
+        QVERIFY(!(chars[0] == chars[1]));
+        QVERIFY(!(chars[1] == chars[0]));
+        QVERIFY(chars[0] != chars[1]);
+        QVERIFY(chars[1] != chars[0]);
+    }
 }
 
 QTEST_MAIN(tst_QLowEnergyCharacteristic)

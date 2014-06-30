@@ -62,6 +62,8 @@ public:
     ~QLowEnergyDescriptor();
 
     QLowEnergyDescriptor &operator=(const QLowEnergyDescriptor &other);
+    bool operator==(const QLowEnergyDescriptor &other) const;
+    bool operator!=(const QLowEnergyDescriptor &other) const;
 
     bool isValid() const;
 

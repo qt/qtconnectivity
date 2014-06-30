@@ -219,6 +219,41 @@ QLowEnergyCharacteristic &QLowEnergyCharacteristic::operator=(const QLowEnergyCh
 }
 
 /*!
+    Returns \c true if \a other is equal to this QLowEnergyCharacteristic; otherwise \c false.
+
+    Two QLowEnergyCharcteristic instances are considered to be equal if they refer to
+    the same charcteristic on the same remote Bluetooth Low Energy device.
+ */
+bool QLowEnergyCharacteristic::operator==(const QLowEnergyCharacteristic &other) const
+{
+    if (d_ptr != other.d_ptr)
+        return false;
+
+    if ((data && !other.data) || (!data && other.data))
+        return false;
+
+    if (!data)
+        return true;
+
+    if (data->handle != other.data->handle)
+        return false;
+
+    return true;
+}
+
+/*!
+    Returns \c true if \a other is not equal to this QLowEnergyCharacteristic; otherwise \c false.
+
+    Two QLowEnergyCharcteristic instances are considered to be equal if they refer to
+    the same charcteristic on the same remote Bluetooth Low Energy device.
+ */
+
+bool QLowEnergyCharacteristic::operator!=(const QLowEnergyCharacteristic &other) const
+{
+    return !(*this == other);
+}
+
+/*!
     Returns \c true if the QLowEnergyCharacteristic object is valid, otherwise returns \c false.
 
     An invalid characteristic object is not associated to any service
