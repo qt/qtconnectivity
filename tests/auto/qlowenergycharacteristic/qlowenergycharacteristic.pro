@@ -1,5 +1,5 @@
-SOURCES += tst_qlowenergycharacteristicinfo.cpp
-TARGET = tst_qlowenergycharacteristicinfo
+SOURCES += tst_qlowenergycharacteristic.cpp
+TARGET = tst_qlowenergycharacteristic
 CONFIG += testcase
 
 QT = core bluetooth testlib

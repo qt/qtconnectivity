@@ -17,7 +17,7 @@ qtHaveModule(bluetooth) {
         qbluetoothtransferrequest \
         qbluetoothuuid \
         qbluetoothserver \
-        qlowenergycharacteristicinfo \
+        qlowenergycharacteristic \
         qlowenergydescriptor \
         qlowenergyserviceinfo \
         qlowenergycontroller
