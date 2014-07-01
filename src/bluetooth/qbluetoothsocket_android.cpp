@@ -98,6 +98,8 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     Q_Q(QBluetoothSocket);
     Q_UNUSED(openMode);
 
+    qCDebug(QT_BT_ANDROID) << "connectToServiceConc()" << address.toString() << uuid.toString();
+
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         errorString = QBluetoothSocket::tr("Device does not support Bluetooth");
@@ -157,7 +159,7 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     }
 
     socketObject.callMethod<void>("connect");
-    if (env->ExceptionCheck() || socketObject.callMethod<jboolean>("isConnected") == JNI_FALSE) {
+    if (env->ExceptionCheck()) {
         if (env->ExceptionCheck()) {
             env->ExceptionDescribe();
             env->ExceptionClear();
@@ -383,14 +385,11 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
         //cleanup internal objects
         //if it was call to local close()/abort() the objects are cleaned up already
 
-        bool stillConnected = socketObject.callMethod<jboolean>("isConnected");
-        if (stillConnected) {
-            QAndroidJniEnvironment env;
-            socketObject.callMethod<void>("close");
-            if (env->ExceptionCheck()) {
-                env->ExceptionDescribe();
-                env->ExceptionClear();
-            }
+        QAndroidJniEnvironment env;
+        socketObject.callMethod<void>("close");
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
         }
 
         inputStream = outputStream = remoteDevice = socketObject = QAndroidJniObject();
