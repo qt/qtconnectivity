@@ -130,6 +130,25 @@ public:
 
     bool hasNdefMessage()
     {
+        if (isValid()) {
+            QDBusPendingReply<QVariantMap> reply = m_tagInterface->GetProperties();
+            reply.waitForFinished();
+            if (reply.isError())
+                return false;
+
+            const QDBusArgument &recordPaths = qvariant_cast<QDBusArgument>(reply.value().value(QStringLiteral("Records")));
+
+            recordPaths.beginArray();
+            while (!recordPaths.atEnd()) {
+                QDBusObjectPath path;
+                recordPaths >> path;
+                if (!path.path().isEmpty()) {
+                    recordPaths.endArray();
+                    return true;
+                }
+            }
+            recordPaths.endArray();
+        }
         return false;
     }
 
@@ -182,9 +201,62 @@ public:
 
     QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages)
     {
-        Q_UNUSED(messages);
-        emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
-        return QNearFieldTarget::RequestId();
+        if (messages.isEmpty() || messages.first().isEmpty()) {
+            qCWarning(QT_NFC_NEARD) << "No record specified";
+            //TODO
+            emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+            return QNearFieldTarget::RequestId();
+        }
+        if (messages.count() > 1 || messages.first().count() > 1) {
+            // neard only supports one ndef record per tag
+            qCWarning(QT_NFC_NEARD) << "Writing of only one NDEF record and message is supported";
+            emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+            return QNearFieldTarget::RequestId();
+        }
+        QNdefRecord record = messages.first().first();
+
+        QDBusPendingReply<> reply;
+        if (record.typeNameFormat() == QNdefRecord::NfcRtd) {
+            QVariantMap recordProperties;
+            if (record.isRecordType<QNdefNfcUriRecord>()) {
+                recordProperties.insert(QStringLiteral("Type"), QStringLiteral("URI"));
+                QNdefNfcUriRecord uriRecord = static_cast<QNdefNfcUriRecord>(record);
+                recordProperties.insert(QStringLiteral("URI"), uriRecord.uri().path());
+            } else if (record.isRecordType<QNdefNfcSmartPosterRecord>()) {
+                recordProperties.insert(QStringLiteral("Type"), QStringLiteral("SmartPoster"));
+                QNdefNfcSmartPosterRecord spRecord = static_cast<QNdefNfcSmartPosterRecord>(record);
+                recordProperties.insert(QStringLiteral("URI"), spRecord.uri().path());
+                // Currently neard only supports the uri property for writing
+            } else if (record.isRecordType<QNdefNfcTextRecord>()) {
+                recordProperties.insert(QStringLiteral("Type"), QStringLiteral("Text"));
+                QNdefNfcTextRecord textRecord = static_cast<QNdefNfcTextRecord>(record);
+                recordProperties.insert(QStringLiteral("Representation"), textRecord.text());
+                recordProperties.insert(QStringLiteral("Encoding"),
+                                        textRecord.encoding() == QNdefNfcTextRecord::Utf8 ?
+                                              QStringLiteral("UTF-8") : QStringLiteral("UTF-16") );
+                recordProperties.insert(QStringLiteral("Language"), textRecord.locale());
+            } else {
+                qCWarning(QT_NFC_NEARD) << "Record type not supported for writing";
+                emit QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+                return QNearFieldTarget::RequestId();
+            }
+
+            reply = m_tagInterface->Write(recordProperties);
+        }
+
+        reply.waitForFinished();
+        if (reply.isError()) {
+            qCWarning(QT_NFC_NEARD) << "Error writing to NFC tag" << reply.error();
+            emit QNearFieldTarget::error(QNearFieldTarget::UnknownError, QNearFieldTarget::RequestId());
+            return QNearFieldTarget::RequestId();
+        }
+
+        emit QNearFieldTarget::ndefMessagesWritten();
+
+        QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
+        QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
+                                  Q_ARG(const QNearFieldTarget::RequestId, requestId));
+        return requestId;
     }
 
 private:
