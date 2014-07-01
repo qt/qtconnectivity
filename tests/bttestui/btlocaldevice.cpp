@@ -391,6 +391,12 @@ void BtLocalDevice::abortSocket()
         qDebug() << "###### Disconnecting socket";
         socket->abort();
     }
+
+    if (!serverSockets.isEmpty()) {
+        qDebug() << "###### Closing server sockets";
+        foreach (QBluetoothSocket *s, serverSockets)
+            s->abort();
+    }
 }
 
 void BtLocalDevice::socketConnected()
