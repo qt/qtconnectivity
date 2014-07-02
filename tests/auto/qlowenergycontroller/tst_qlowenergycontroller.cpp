@@ -50,6 +50,16 @@
 
 #include <QDebug>
 
+/*!
+  This test requires a TI sensor tag with Firmware version: 1.5 (Oct 23 2013).
+  Since revision updates change user strings and even shift handles around
+  other versions than the above are unlikely to succeed. Please update the
+  sensor tag before continuing.
+
+  The TI sensor can be updated using the related iOS app. The Android version
+  doesn't seem to update at this point in time.
+  */
+
 QT_USE_NAMESPACE
 
 class tst_QLowEnergyController : public QObject
@@ -85,17 +95,16 @@ private:
 
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
+Q_DECLARE_METATYPE(QLowEnergyServiceInfo)
 
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
-    qRegisterMetaType<QLowEnergyServiceInfo>("QLowEnergyServiceInfo");
-    qRegisterMetaType<QLowEnergyController::Error>("QLowEnergyController::Error");
-    //qRegisterMetaType<QLowEnergyService::ServiceError>();
+    qRegisterMetaType<QLowEnergyServiceInfo>();
     qRegisterMetaType<QLowEnergyCharacteristicInfo>("QLowEnergyCharacteristicInfo");
     qRegisterMetaType<QLowEnergyCharacteristic>();
 
-    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString remote = qgetenv("BT_TEST_DEVICE");
     if (!remote.isEmpty()) {
         remoteDevice = QBluetoothAddress(remote);
@@ -799,7 +808,8 @@ void tst_QLowEnergyController::tst_connectNew()
         control.discoverServices();
         QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
 
-        QCOMPARE(serviceFoundSpy.count(), foundServices.count());
+        QVERIFY(!serviceFoundSpy.isEmpty());
+        QVERIFY(serviceFoundSpy.count() >= foundServices.count());
         QVERIFY(!serviceFoundSpy.isEmpty());
         QList<QBluetoothUuid> listing;
         for (int i = 0; i < serviceFoundSpy.count(); i++) {
@@ -1031,7 +1041,6 @@ void tst_QLowEnergyController::verifyServiceProperties(
 
         // Device Name
         QString temp("00002a00-0000-1000-8000-00805f9b34fb");
-        qDebug() << chars[0].uuid().toString() << temp;
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
         QCOMPARE(chars[0].handle(), 0x3u);
         QCOMPARE(chars[0].properties(), QLowEnergyCharacteristic::Read);
@@ -1062,9 +1071,12 @@ void tst_QLowEnergyController::verifyServiceProperties(
         temp = QString("00002a03-0000-1000-8000-00805f9b34fb");
         QCOMPARE(chars[3].uuid(), QBluetoothUuid(temp));
         QCOMPARE(chars[3].handle(), 0x9u);
-        QCOMPARE(chars[3].properties(),
-                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
-        QCOMPARE(chars[3].value(), QByteArray("000000000000"));
+        //Early firmware version had this characteristic as Read|Write and may fail
+        QCOMPARE(chars[3].properties(), QLowEnergyCharacteristic::Write);
+        if (chars[3].properties() & QLowEnergyCharacteristic::Read)
+            QCOMPARE(chars[3].value(), QByteArray("000000000000"));
+        else
+            QCOMPARE(chars[3].value(), QByteArray());
         QVERIFY(chars[3].isValid());
         QCOMPARE(chars[3].descriptors().count(), 0);
 
@@ -1140,7 +1152,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[3].handle(), 0x18u);
         QCOMPARE(chars[3].properties(),
                  (QLowEnergyCharacteristic::Read));
-        QCOMPARE(chars[3].value(), QByteArray("312e3031202846656220203720323031332900"));
+        //FW rev. : 1.5 (Oct 23 2013)
+        // Other revisions will fail here
+        QCOMPARE(chars[3].value(), QByteArray("312e3520284f637420323320323031332900"));
         QVERIFY(chars[3].isValid());
         QCOMPARE(chars[3].descriptors().count(), 0);
 
@@ -1197,7 +1211,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                QBluetoothUuid(QString("f000aa00-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Temperature";
         QList<QLowEnergyCharacteristic> chars = info->characteristics();
-        QCOMPARE(chars.count(), 2);
+        QVERIFY(chars.count() >= 2);
 
         // Temp Data
         QString temp("f000aa01-0451-4000-b000-000000000000");
@@ -1224,8 +1238,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[0].descriptors().at(1).value(),
-                QByteArray("49522054656d702e2044617461"));
+                QByteArray("54656d702e2044617461"));
 
         // Temp Config
         temp = QString("f000aa02-0451-4000-b000-000000000000");
@@ -1244,8 +1259,32 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[1].descriptors().at(0).value(),
-                QByteArray("49522054656d702e20436f6e662e"));
+                QByteArray("54656d702e20436f6e662e"));
+
+
+        //Temp Period (introduced by later firmware versions)
+        if (chars.count() > 2) {
+            temp = QString("f000aa03-0451-4000-b000-000000000000");
+            QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+            QCOMPARE(chars[2].handle(), 0x2cu);
+            QCOMPARE(chars[2].properties(),
+                     (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+            QCOMPARE(chars[2].value(), QByteArray("64"));
+            QVERIFY(chars[2].isValid());
+
+            QCOMPARE(chars[2].descriptors().count(), 1);
+            //descriptor checks
+            QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
+            QCOMPARE(chars[2].descriptors().at(0).handle(), 0x2du);
+            QCOMPARE(chars[2].descriptors().at(0).uuid(),
+                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+            QCOMPARE(chars[2].descriptors().at(0).type(),
+                    QBluetoothUuid::CharacteristicUserDescription);
+            QCOMPARE(chars[2].descriptors().at(0).value(),
+                    QByteArray("54656d702e20506572696f64"));
+        }
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("0000ffe0-0000-1000-8000-00805f9b34fb"))) {
         qDebug() << "Verifying Simple Keys";
@@ -1255,7 +1294,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Temp Data
         QString temp("0000ffe1-0000-1000-8000-00805f9b34fb");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x5fu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x6bu);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Notify));
         QCOMPARE(chars[0].value(), QByteArray(""));
@@ -1264,7 +1304,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
         //descriptor checks
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x60u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x6cu);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1272,7 +1313,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x61u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x6du);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
@@ -1289,7 +1331,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Accel Data
         QString temp("f000aa11-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x2du);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x30u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
         QCOMPARE(chars[0].value(), QByteArray("000000"));
@@ -1298,7 +1341,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
 
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x2eu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x31u);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                  QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1306,7 +1350,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x2fu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x32u);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                  QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
@@ -1317,7 +1362,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Accel Config
         temp = QString("f000aa12-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x31u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].handle(), 0x34u);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[1].value(), QByteArray("00"));
@@ -1325,7 +1371,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().count(), 1);
 
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x32u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x35u);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                  QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
@@ -1336,7 +1383,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Accel Period
         temp = QString("f000aa13-0451-4000-b000-000000000000");
         QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[2].handle(), 0x34u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[2].handle(), 0x37u);
         QCOMPARE(chars[2].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[2].value(), QByteArray("64"));   // don't change it or set it to 0x64
@@ -1345,23 +1393,26 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[2].descriptors().count(), 1);
         //descriptor checks
         QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[2].descriptors().at(0).handle(), 0x35u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[2].descriptors().at(0).handle(), 0x38u);
         QCOMPARE(chars[2].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[2].descriptors().at(0).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[2].descriptors().at(0).value(),
-                QByteArray("4163632e20506572696f64"));
+                QByteArray("416363656c2e20506572696f64"));
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000aa20-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Humidity";
         QList<QLowEnergyCharacteristic> chars = info->characteristics();
-        QCOMPARE(chars.count(), 2);
+        QVERIFY(chars.count() >= 2); //new firmware has more chars
 
         // Humidity Data
         QString temp("f000aa21-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x38u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x3bu);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
         QCOMPARE(chars[0].value(), QByteArray("00000000"));
@@ -1370,7 +1421,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
         //descriptor checks
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x39u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x3cu);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1378,7 +1430,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x3au);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x3du);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
@@ -1389,7 +1442,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Humidity Config
         temp = QString("f000aa22-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x3cu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].handle(), 0x3fu);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[1].value(), QByteArray("00"));
@@ -1398,13 +1452,37 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().count(), 1);
         //descriptor checks
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x3du);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x40u);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray("48756d69642e20436f6e662e"));
+
+        if (chars.count() >= 3) {
+            // New firmware new characteristic
+            // Humidity Period
+            temp = QString("f000aa23-0451-4000-b000-000000000000");
+            QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+            QCOMPARE(chars[2].handle(), 0x42u);
+            QCOMPARE(chars[2].properties(),
+                     (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+            QCOMPARE(chars[2].value(), QByteArray("64"));
+            QVERIFY(chars[2].isValid());
+
+            QCOMPARE(chars[2].descriptors().count(), 1);
+            //descriptor checks
+            QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
+            QCOMPARE(chars[2].descriptors().at(0).handle(), 0x43u);
+            QCOMPARE(chars[2].descriptors().at(0).uuid(),
+                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+            QCOMPARE(chars[2].descriptors().at(0).type(),
+                    QBluetoothUuid::CharacteristicUserDescription);
+            QCOMPARE(chars[2].descriptors().at(0).value(),
+                    QByteArray("48756d69642e20506572696f64"));
+        }
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000aa30-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Magnetometer";
@@ -1414,7 +1492,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Magnetometer Data
         QString temp("f000aa31-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x40u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x46u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
         QCOMPARE(chars[0].value(), QByteArray("000000000000"));
@@ -1423,7 +1502,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
 
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x41u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x47u);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                  QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1431,18 +1511,20 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x42u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x48u);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                  QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
                  QBluetoothUuid::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
-                 QByteArray("4d61672e2044617461"));
+                 QByteArray("4d61676e2e2044617461"));
 
         // Magnetometer Config
         temp = QString("f000aa32-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x44u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].handle(), 0x4au);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[1].value(), QByteArray("00"));
@@ -1450,18 +1532,21 @@ void tst_QLowEnergyController::verifyServiceProperties(
 
         QCOMPARE(chars[1].descriptors().count(), 1);
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x45u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x4bu);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                  QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                  QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[1].descriptors().at(0).value(),
-                 QByteArray("4d61672e20436f6e662e"));
+                 QByteArray("4d61676e2e20436f6e662e"));
 
         // Magnetometer Period
         temp = QString("f000aa33-0451-4000-b000-000000000000");
         QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[2].handle(), 0x47u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[2].handle(), 0x4du);
         QCOMPARE(chars[2].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[2].value(), QByteArray("c8"));   // don't change it or set it to 0xc8
@@ -1469,23 +1554,26 @@ void tst_QLowEnergyController::verifyServiceProperties(
 
         QCOMPARE(chars[2].descriptors().count(), 1);
         QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[2].descriptors().at(0).handle(), 0x48u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[2].descriptors().at(0).handle(), 0x4eu);
         QCOMPARE(chars[2].descriptors().at(0).uuid(),
                  QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[2].descriptors().at(0).type(),
                  QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[2].descriptors().at(0).value(),
-                 QByteArray("4d61672e20506572696f64"));
+                 QByteArray("4d61676e2e20506572696f64"));
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000aa40-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Pressure";
         QList<QLowEnergyCharacteristic> chars = info->characteristics();
-        QCOMPARE(chars.count(), 3);
+        QVERIFY(chars.count() >= 3);
 
         // Pressure Data
         QString temp("f000aa41-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x4bu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x51u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
         QCOMPARE(chars[0].value(), QByteArray("00000000"));
@@ -1494,7 +1582,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
         //descriptor checks
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x4cu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x52u);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1502,18 +1591,21 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x4du);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x53u);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[0].descriptors().at(1).value(),
-                QByteArray("4261726f6d657465722044617461"));
+                QByteArray("4261726f6d2e2044617461"));
 
         // Pressure Config
         temp = QString("f000aa42-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x4fu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].handle(), 0x55u);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[1].value(), QByteArray("00"));
@@ -1521,50 +1613,92 @@ void tst_QLowEnergyController::verifyServiceProperties(
 
         QCOMPARE(chars[1].descriptors().count(), 1);
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x50u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x56u);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
-                QByteArray("4261726f6d6574657220436f6e662e"));
+                QByteArray("4261726f6d2e20436f6e662e"));
 
-        // Pressure Calibration
-        temp = QString("f000aa43-0451-4000-b000-000000000000");
-        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[2].handle(), 0x52u);
-        QCOMPARE(chars[2].properties(),
-                 (QLowEnergyCharacteristic::Read));
-        QCOMPARE(chars[2].value(), QByteArray("00000000000000000000000000000000"));   // don't change it
-        QVERIFY(chars[2].isValid());
+        //calibration and period characteristic are swapped, ensure we don't depend on their order
+        QLowEnergyCharacteristic calibration, period;
+        foreach (const QLowEnergyCharacteristic &ch, chars) {
+            //find calibration characteristic
+            if (ch.uuid() == QBluetoothUuid(QString("f000aa43-0451-4000-b000-000000000000")))
+                calibration = ch;
+            else if (ch.uuid() == QBluetoothUuid(QString("f000aa44-0451-4000-b000-000000000000")))
+                period = ch;
+        }
 
-        QCOMPARE(chars[2].descriptors().count(), 2);
-        //descriptor checks
-        QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[2].descriptors().at(0).handle(), 0x53u);
-        QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
-        QCOMPARE(chars[2].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[2].descriptors().at(0).value(), QByteArray("0000"));
+        if (calibration.isValid()) {
+            // Pressure Calibration
+            temp = QString("f000aa43-0451-4000-b000-000000000000");
+            QCOMPARE(calibration.uuid(), QBluetoothUuid(temp));
+            // value different in other revisions and test may fail
+            QCOMPARE(calibration.handle(), 0x5bu);
+            QCOMPARE(calibration.properties(),
+                     (QLowEnergyCharacteristic::Read));
+            QCOMPARE(calibration.value(), QByteArray("00000000000000000000000000000000"));   // don't change it
+            QVERIFY(calibration.isValid());
 
-        QCOMPARE(chars[2].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[2].descriptors().at(1).handle(), 0x54u);
-        QCOMPARE(chars[2].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
-        QCOMPARE(chars[2].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
-        QCOMPARE(chars[2].descriptors().at(1).value(), QByteArray("4261726f6d657465722043616c692e"));
+            QCOMPARE(calibration.descriptors().count(), 2);
+            //descriptor checks
+            QCOMPARE(calibration.descriptors().at(0).isValid(), true);
+            // value different in other revisions and test may fail
+            QCOMPARE(calibration.descriptors().at(0).handle(), 0x5cu);
+            QCOMPARE(calibration.descriptors().at(0).uuid(),
+                    QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+            QCOMPARE(calibration.descriptors().at(0).type(),
+                    QBluetoothUuid::ClientCharacteristicConfiguration);
+            QCOMPARE(calibration.descriptors().at(0).value(), QByteArray("0000"));
+
+            QCOMPARE(calibration.descriptors().at(1).isValid(), true);
+            // value different in other revisions and test may fail
+            QCOMPARE(calibration.descriptors().at(1).handle(), 0x5du);
+            QCOMPARE(calibration.descriptors().at(1).uuid(),
+                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+            QCOMPARE(calibration.descriptors().at(1).type(),
+                    QBluetoothUuid::CharacteristicUserDescription);
+            QCOMPARE(calibration.descriptors().at(1).value(),
+                     QByteArray("4261726f6d2e2043616c6962722e"));
+        }
+
+        if (period.isValid()) {
+            // Period Calibration
+            temp = QString("f000aa44-0451-4000-b000-000000000000");
+            QCOMPARE(period.uuid(), QBluetoothUuid(temp));
+            // value different in other revisions and test may fail
+            QCOMPARE(period.handle(), 0x58u);
+            QCOMPARE(period.properties(),
+                     (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+            QCOMPARE(period.value(), QByteArray("64"));
+            QVERIFY(period.isValid());
+
+            QCOMPARE(period.descriptors().count(), 1);
+            //descriptor checks
+            QCOMPARE(period.descriptors().at(0).isValid(), true);
+            // value different in other revisions and test may fail
+            QCOMPARE(period.descriptors().at(0).handle(), 0x59u);
+            QCOMPARE(period.descriptors().at(0).uuid(),
+                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+            QCOMPARE(period.descriptors().at(0).type(),
+                    QBluetoothUuid::CharacteristicUserDescription);
+            QCOMPARE(period.descriptors().at(0).value(),
+                     QByteArray("4261726f6d2e20506572696f64"));
+        }
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000aa50-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Gyroscope";
         QList<QLowEnergyCharacteristic> chars = info->characteristics();
-        QCOMPARE(chars.count(), 2);
+        QVERIFY(chars.count() >= 2);
 
         // Gyroscope Data
         QString temp("f000aa51-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x57u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x60u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
         QCOMPARE(chars[0].value(), QByteArray("000000000000"));
@@ -1573,7 +1707,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
         //descriptor checks
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x58u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x61u);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1581,18 +1716,21 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x59u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x62u);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
+        // value different in other revisions and test may fail
         QCOMPARE(chars[0].descriptors().at(1).value(),
-                QByteArray("4779726f2e2044617461"));
+                QByteArray("4779726f2044617461"));
 
         // Gyroscope Config
         temp = QString("f000aa52-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x5bu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].handle(), 0x64u);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[1].value(), QByteArray("00"));
@@ -1601,13 +1739,35 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().count(), 1);
         //descriptor checks
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x5cu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x65u);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                 QBluetoothUuid::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
-                QByteArray("4779726f2e20436f6e662e"));
+                QByteArray("4779726f20436f6e662e"));
+
+        // Gyroscope Period
+        temp = QString("f000aa53-0451-4000-b000-000000000000");
+        QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[2].handle(), 0x67u);
+        QCOMPARE(chars[2].properties(),
+                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QCOMPARE(chars[2].value(), QByteArray("64"));
+        QVERIFY(chars[2].isValid());
+
+        QCOMPARE(chars[2].descriptors().count(), 1);
+        //descriptor checks
+        QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
+        QCOMPARE(chars[2].descriptors().at(0).handle(), 0x68u);
+        QCOMPARE(chars[2].descriptors().at(0).uuid(),
+                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+        QCOMPARE(chars[2].descriptors().at(0).type(),
+                QBluetoothUuid::CharacteristicUserDescription);
+        QCOMPARE(chars[2].descriptors().at(0).value(),
+                QByteArray("4779726f20506572696f64"));
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000aa60-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Test Service";
@@ -1617,7 +1777,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Test Data
         QString temp("f000aa61-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x64u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x70u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read));
         QCOMPARE(chars[0].value(), QByteArray("3f00"));
@@ -1625,7 +1786,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
 
         QCOMPARE(chars[0].descriptors().count(), 1);
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x65u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x71u);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(0).type(),
@@ -1636,7 +1798,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // Test Config
         temp = QString("f000aa62-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x67u);
+        QCOMPARE(chars[1].handle(), 0x73u);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
         QCOMPARE(chars[1].value(), QByteArray("00"));
@@ -1645,7 +1807,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().count(), 1);
         //descriptor checks
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x68u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x74u);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
@@ -1654,14 +1817,15 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QByteArray("5465737420436f6e666967"));
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000ffc0-0451-4000-b000-000000000000"))) {
-        qDebug() << "Verifying Unknown Service";
+        qDebug() << "Verifying OID Service";
         QList<QLowEnergyCharacteristic> chars = info->characteristics();
         QCOMPARE(chars.count(), 2);
 
         // first characteristic
         QString temp("f000ffc1-0451-4000-b000-000000000000");
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[0].handle(), 0x6bu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].handle(), 0x82u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristicInfo::WriteNoResponse));
         QCOMPARE(chars[0].value(), QByteArray(""));
@@ -1670,15 +1834,17 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().count(), 2);
         //descriptor checks
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x6cu);
+        QCOMPARE(chars[0].descriptors().at(0).handle(), 0x83u);
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0000"));
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray("0100"));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x6du);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[0].descriptors().at(1).handle(), 0x84u);
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
@@ -1689,7 +1855,8 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // second characteristic
         temp = QString("f000ffc2-0451-4000-b000-000000000000");
         QCOMPARE(chars[1].uuid(), QBluetoothUuid(temp));
-        QCOMPARE(chars[1].handle(), 0x6fu);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].handle(), 0x86u);
         QCOMPARE(chars[1].properties(),
                  (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristicInfo::WriteNoResponse));
         QCOMPARE(chars[1].value(), QByteArray(""));
@@ -1698,15 +1865,18 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().count(), 2);
         //descriptor checks
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x70u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).handle(), 0x87u);
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[1].descriptors().at(0).value(), QByteArray("0000"));
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(0).value(), QByteArray("0100"));
 
         QCOMPARE(chars[1].descriptors().at(1).isValid(), true);
-        QCOMPARE(chars[1].descriptors().at(1).handle(), 0x71u);
+        // value different in other revisions and test may fail
+        QCOMPARE(chars[1].descriptors().at(1).handle(), 0x88u);
         QCOMPARE(chars[1].descriptors().at(1).uuid(),
                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(1).type(),
