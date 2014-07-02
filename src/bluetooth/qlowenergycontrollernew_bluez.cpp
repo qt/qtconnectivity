@@ -691,7 +691,7 @@ void QLowEnergyControllerNewPrivate::readServiceValues(
         if (readCharacteristics) {
             // Collect handles of all characteristic value attributes
 
-            // Don't try to read readOnly characteristic
+            // Don't try to read writeOnly characteristic
             if (!(charDetails.properties & QLowEnergyCharacteristic::Read))
                 continue;
 
