@@ -60,7 +60,9 @@ public:
 
     enum ServiceError {
         NoError = 0,
-        ServiceNotValidError
+        ServiceNotValidError,
+        OperationError,
+        CharacteristicWriteError   // emitted when writeCharacteristic() failed
     };
 
     enum ServiceState {
@@ -85,6 +87,9 @@ public:
 
     ServiceError error() const;
 
+    bool contains(const QLowEnergyCharacteristic &characteristic);
+    void writeCharacteristic(const QLowEnergyCharacteristic &characteristic,
+                             const QByteArray &newValue);
 
 Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);

@@ -64,12 +64,15 @@
 #define ATT_OP_READ_RESPONSE            0xB
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
+#define ATT_OP_WRITE_REQUEST            0x12 //write characteristic
+#define ATT_OP_WRITE_RESPONSE           0x13
 
 //GATT command sizes in bytes
 #define FIND_INFO_REQUEST_SIZE 5
 #define GRP_TYPE_REQ_SIZE 7
 #define READ_BY_TYPE_REQ_SIZE 7
 #define READ_REQUEST_SIZE 3
+#define WRITE_REQUEST_SIZE 3
 
 // GATT error codes
 #define ATT_ERROR_INVALID_HANDLE        0x01
@@ -547,6 +550,28 @@ void QLowEnergyControllerNewPrivate::processReply(
         }
     }
         break;
+    case ATT_OP_WRITE_REQUEST: //error case
+    case ATT_OP_WRITE_RESPONSE:
+    {
+        //Write command response
+        Q_ASSERT(request.command == ATT_OP_WRITE_REQUEST);
+
+        QLowEnergyHandle charHandle = request.reference.toUInt();
+        QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+        if (service.isNull() || !service->characteristicList.contains(charHandle))
+            break;
+
+        if (isErrorResponse) {
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+            break;
+        }
+
+        const QByteArray newValue = request.reference2.toByteArray();
+        service->characteristicList[charHandle].value = newValue;
+        QLowEnergyCharacteristic ch(service, charHandle);
+        emit service->characteristicChanged(ch, newValue);
+    }
+        break;
     default:
         qCDebug(QT_BT_BLUEZ) << "Unknown packet: " << response.toHex();
         break;
@@ -762,7 +787,7 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
     bt_put_unaligned(htobs(charEndHandle), (quint16 *) &packet[3]);
 
     QByteArray data(FIND_INFO_REQUEST_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet,  FIND_INFO_REQUEST_SIZE);
+    memcpy(data.data(), packet, FIND_INFO_REQUEST_SIZE);
 
     Request request;
     request.payload = data;
@@ -773,4 +798,42 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
 
     sendNextPendingRequest();
 }
+
+void QLowEnergyControllerNewPrivate::writeCharacteristic(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QByteArray &newValue)
+{
+    Q_ASSERT(!service.isNull());
+
+    if (!service->characteristicList.contains(charHandle))
+        return;
+
+    const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
+    const QByteArray rawData = QByteArray::fromHex(newValue);
+    // sizeof(command) + sizeof(handle) + sizeof(newValue)
+    const int size = 1 + 2 + rawData.size();
+
+    quint8 packet[WRITE_REQUEST_SIZE];
+    packet[0] = ATT_OP_WRITE_REQUEST;
+    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
+
+
+    QByteArray data(size, Qt::Uninitialized);
+    memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), rawData.constData(), rawData.size());
+
+    qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
+                         << "(size:" << size << ")";
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_WRITE_REQUEST;
+    request.reference = charHandle;
+    request.reference2 = newValue;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
 QT_END_NAMESPACE

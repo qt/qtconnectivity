@@ -77,7 +77,7 @@ public:
 
     void discoverServiceDetails(const QBluetoothUuid &service);
 
-    // misc lookup helpers
+    // misc helpers
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
             QLowEnergyHandle handle);
     void updateValueOfCharacteristic(QLowEnergyHandle charHandle,
@@ -85,6 +85,10 @@ public:
     void updateValueOfDescriptor(QLowEnergyHandle charHandle,
                                  QLowEnergyHandle descriptorHandle,
                                  const QByteArray &value);
+    void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                             const QLowEnergyHandle charHandle,
+                             const QByteArray &newValue);
+
 
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;

@@ -70,6 +70,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
             this, SIGNAL(error(QLowEnergyService::ServiceError)));
     connect(p.data(), SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
             this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
+    connect(p.data(), SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
+            this, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
 }
 
 
@@ -151,6 +153,58 @@ void QLowEnergyService::discoverDetails()
 QLowEnergyService::ServiceError QLowEnergyService::error() const
 {
     return d_ptr->lastError;
+}
+
+bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
+{
+    if (characteristic.d_ptr.isNull() || !characteristic.data)
+        return false;
+
+    if (d_ptr == characteristic.d_ptr
+        && d_ptr->characteristicList.contains(characteristic.attributeHandle())) {
+        return true;
+    }
+
+    return false;
+}
+
+/*!
+    Writes \a newValue as value for the \a characteristic. If the operation is successful
+    the \l characteristicChanged() signal will be emitted. \a newValue must contain the
+    hexadecimal representation of new value.
+
+    A characteristic can only be written if this service is in the \l ServiceDiscovered state
+    and \a characteristic is writable.
+ */
+void QLowEnergyService::writeCharacteristic(
+        const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
+{
+    //TODO check behavior when writing to WriteNoResponse characteristic
+    //TODO check behavior when writing to WriteSigned characteristic
+    //TODO add support for write long characteristic value (newValue.size() > MTU - 3)
+    Q_D(QLowEnergyService);
+
+    // not a characteristic of this service
+    if (!contains(characteristic))
+        return;
+
+    // don't write if we don't have to
+    if (characteristic.value() == newValue)
+        return;
+
+    // don't write write-protected or undiscovered characteristic
+    if (!(characteristic.properties() & QLowEnergyCharacteristic::Write)
+            || state() != ServiceDiscovered) {
+        d->setError(QLowEnergyService::OperationError);
+        return;
+    }
+
+    if (!d->controller)
+        return;
+
+    d->controller->writeCharacteristic(characteristic.d_ptr,
+                                       characteristic.attributeHandle(),
+                                       newValue);
 }
 
 

@@ -162,6 +162,8 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 
 /*!
     Returns value of the gatt characteristic.
+
+    The returned QByteArray contains the hex representation of the value.
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {
@@ -183,17 +185,6 @@ QLowEnergyHandle QLowEnergyCharacteristic::handle() const
         return 0;
 
     return d_ptr->characteristicList[data->handle].valueHandle;
-}
-
-/*!
-    Sets the value \a value of the characteristic. This only caches the value. To write
-    a value directly to the device QLowEnergyController class must be used.
-
-    \sa QLowEnergyController::writeCharacteristic()
-*/
-void QLowEnergyCharacteristic::setValue(const QByteArray &value)
-{
-    //d_ptr->value = value;
 }
 
 /*!
@@ -276,7 +267,13 @@ bool QLowEnergyCharacteristic::isValid() const
     return true;
 }
 
+QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
+{
+    if (d_ptr.isNull() || !data)
+        return 0;
 
+    return data->handle;
+}
 
 /*!
     Returns the list of characteristic descriptors.

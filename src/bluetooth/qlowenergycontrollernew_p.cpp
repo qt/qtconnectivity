@@ -74,4 +74,12 @@ void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid
 
 }
 
+void QLowEnergyControllerNewPrivate::writeCharacteristic(
+        const QLowEnergyCharacteristic & /*characteristic*/,
+        const QLowEnergyHandle /*charHandle*/,
+        const QByteArray &/*newValue*/)
+{
+
+}
+
 QT_END_NAMESPACE

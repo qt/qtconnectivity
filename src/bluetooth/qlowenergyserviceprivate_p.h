@@ -86,6 +86,8 @@ public:
 signals:
     void stateChanged(QLowEnergyService::ServiceState newState);
     void error(QLowEnergyService::ServiceError error);
+    void characteristicChanged(const QLowEnergyCharacteristic &characteristic,
+                               const QByteArray &newValue);
 
 public:
     QLowEnergyHandle startHandle;

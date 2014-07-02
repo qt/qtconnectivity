@@ -72,6 +72,7 @@ private slots:
     void tst_connectNew();
     void tst_concurrentDiscovery();
     void tst_defaultBehavior();
+    void tst_writeCharacteristic();
 
 private:
     void verifyServiceProperties(const QLowEnergyServiceInfo &info);
@@ -82,12 +83,17 @@ private:
     QList<QLowEnergyServiceInfo> foundServices;
 };
 
+Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
+
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyServiceInfo>("QLowEnergyServiceInfo");
     qRegisterMetaType<QLowEnergyController::Error>("QLowEnergyController::Error");
+    //qRegisterMetaType<QLowEnergyService::ServiceError>();
     qRegisterMetaType<QLowEnergyCharacteristicInfo>("QLowEnergyCharacteristicInfo");
+    qRegisterMetaType<QLowEnergyCharacteristic>();
 
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString remote = qgetenv("BT_TEST_DEVICE");
@@ -932,7 +938,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 
     // initialize services
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
-        services[i] = control.createServiceObject(uuids.at(i));
+        services[i] = control.createServiceObject(uuids.at(i), this);
         QVERIFY(services[i]);
     }
 
@@ -971,8 +977,10 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 
     // get all details
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
-        services_second[i] = control.createServiceObject(uuids.at(i));
+        services_second[i] = control.createServiceObject(uuids.at(i), this);
+        QVERIFY(services_second[i]->parent() == this);
         QVERIFY(services[i]);
+        QVERIFY(services_second[i]->state() == QLowEnergyService::DiscoveryRequired);
         services_second[i]->discoverDetails();
     }
 
@@ -986,7 +994,6 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 
     // verify discovered services (1st and 2nd round)
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
-
         verifyServiceProperties(services_second[i]);
         //after disconnect all related characteristics and descriptors are invalid
         const QList<QLowEnergyCharacteristic> chars = services[i]->characteristics();
@@ -1198,7 +1205,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].handle(), 0x25u);
         QCOMPARE(chars[0].properties(),
                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Notify));
-        //QCOMPARE(chars[0].value(), QByteArray("30303030"));
+        QCOMPARE(chars[0].value(), QByteArray("00000000"));
         QVERIFY(chars[0].isValid());
 
         QCOMPARE(chars[0].descriptors().count(), 2);
@@ -1760,6 +1767,141 @@ void tst_QLowEnergyController::tst_defaultBehavior()
     }
 
 
+}
+
+void tst_QLowEnergyController::tst_writeCharacteristic()
+{
+    QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
+    if (localAdapters.isEmpty() || remoteDevice.isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+
+    // quick setup - more elaborate test is done by connectNew()
+    QLowEnergyControllerNew control(remoteDevice);
+    QCOMPARE(control.state(), QLowEnergyControllerNew::UnconnectedState);
+    QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
+
+    control.connectToDevice();
+    {
+        QTRY_IMPL(control.state() != QLowEnergyControllerNew::ConnectingState,
+              30000);
+    }
+
+    if (control.state() == QLowEnergyControllerNew::ConnectingState
+            || control.error() != QLowEnergyControllerNew::NoError) {
+        // default BTLE backend forever hangs in ConnectingState
+        QSKIP("Cannot connect to remote device");
+    }
+
+    QCOMPARE(control.state(), QLowEnergyControllerNew::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+
+    const QBluetoothUuid testService(QString("f000aa60-0451-4000-b000-000000000000"));
+    QList<QBluetoothUuid> uuids = control.services();
+    QVERIFY(uuids.contains(testService));
+
+    QLowEnergyService *service = control.createServiceObject(testService, this);
+    QVERIFY(service);
+    service->discoverDetails();
+    QTRY_VERIFY_WITH_TIMEOUT(
+        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+
+    //test service described by http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
+    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
+
+    QLowEnergyCharacteristic dataChar;
+    QLowEnergyCharacteristic configChar;
+    for (int i = 0; i < chars.count(); i++) {
+        if (chars[i].uuid() == QBluetoothUuid(QString("f000aa61-0451-4000-b000-000000000000")))
+            dataChar = chars[i];
+        else if (chars[i].uuid() == QBluetoothUuid(QString("f000aa62-0451-4000-b000-000000000000")))
+            configChar = chars[i];
+    }
+
+    QVERIFY(dataChar.isValid());
+    QVERIFY(!(dataChar.properties() & ~QLowEnergyCharacteristic::Read)); // only a read char
+    QVERIFY(configChar.isValid());
+    QVERIFY(configChar.properties() & QLowEnergyCharacteristic::Write);
+
+    QCOMPARE(dataChar.value(), QByteArray("3f00"));
+    QVERIFY(configChar.value() == QByteArray("00") || configChar.value() == QByteArray("81"));
+
+    QSignalSpy writeSpy(service,
+                        SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+
+    // *******************************************
+    // test writing of characteristic
+    // enable Blinking LED if not already enabled
+    if (configChar.value() != QByteArray("81")) {
+        service->writeCharacteristic(configChar, QByteArray("81")); //0x81 blink LED D1
+        QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 10000);
+        QCOMPARE(configChar.value(), QByteArray("81"));
+        QList<QVariant> firstSignalData= writeSpy.first();
+        QLowEnergyCharacteristic signalChar = firstSignalData[0].value<QLowEnergyCharacteristic>();
+        QByteArray signalValue = firstSignalData[1].toByteArray();
+
+        QCOMPARE(signalValue, QByteArray("81"));
+        QVERIFY(signalChar == configChar);
+
+        writeSpy.clear();
+    }
+
+    service->writeCharacteristic(configChar, QByteArray("00")); //0x81 blink LED D1
+    QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 10000);
+    QCOMPARE(configChar.value(), QByteArray("00"));
+    QList<QVariant> firstSignalData = writeSpy.first();
+    QLowEnergyCharacteristic signalChar = firstSignalData[0].value<QLowEnergyCharacteristic>();
+    QByteArray signalValue = firstSignalData[1].toByteArray();
+
+    QCOMPARE(signalValue, QByteArray("00"));
+    QVERIFY(signalChar == configChar);
+
+    // *******************************************
+    // write wrong value -> error response required
+    QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
+    writeSpy.clear();
+    QCOMPARE(errorSpy.count(), 0);
+    QCOMPARE(writeSpy.count(), 0);
+
+    // write 2 byte value to 1 byte characteristic
+    service->writeCharacteristic(configChar, QByteArray("1111"));
+    QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
+    QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::CharacteristicWriteError);
+    QCOMPARE(service->error(), QLowEnergyService::CharacteristicWriteError);
+    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(configChar.value(), QByteArray("00"));
+
+    // *******************************************
+    // write to read-only characteristic -> error
+    errorSpy.clear();
+    QCOMPARE(errorSpy.count(), 0);
+    service->writeCharacteristic(dataChar, QByteArray("ffff"));
+
+    QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
+    QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    QCOMPARE(service->error(), QLowEnergyService::OperationError);
+    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(dataChar.value(), QByteArray("3f00"));
+
+
+    control.disconnectFromDevice();
+
+    // *******************************************
+    // write value while disconnected -> error
+    errorSpy.clear();
+    QCOMPARE(errorSpy.count(), 0);
+    service->writeCharacteristic(configChar, QByteArray("ffff"));
+    QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 2000);
+    QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    QCOMPARE(service->error(), QLowEnergyService::OperationError);
+    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(configChar.value(), QByteArray("00"));
+
+    delete service;
 }
 
 QTEST_MAIN(tst_QLowEnergyController)

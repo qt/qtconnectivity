@@ -82,7 +82,6 @@ public:
 
     QBluetoothUuid uuid() const;
 
-    void setValue(const QByteArray &value); //TODO shift to QLowEnergyControllerNew
     QByteArray value() const;
 
     QLowEnergyCharacteristic::PropertyTypes properties() const;
@@ -93,9 +92,12 @@ public:
     bool isValid() const;
 
 protected:
+    QLowEnergyHandle attributeHandle() const;
+
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
 
     friend class QLowEnergyService;
+    friend class QLowEnergyControllerNewPrivate;
     QLowEnergyCharacteristicPrivate *data;
     QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle handle);
