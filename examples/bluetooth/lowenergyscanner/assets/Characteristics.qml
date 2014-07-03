@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -76,7 +77,6 @@ Rectangle {
                 textContent: modelData.characteristicName
                 anchors.top: parent.top
                 anchors.topMargin: 5
-
             }
 
             Label {
@@ -114,7 +114,6 @@ Rectangle {
                 height: 2
                 color: "#363636"
             }
-
         }
     }
 
@@ -124,6 +123,8 @@ Rectangle {
         menuWidth: parent.width
         menuText: device.update
         menuHeight: (parent.height/6)
-        onButtonClick: {device.disconnectFromService(); pageLoader.source = "Services.qml"}
+        onButtonClick: {
+            pageLoader.source = "Services.qml"
+        }
     }
 }

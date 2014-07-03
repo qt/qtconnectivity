@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
@@ -48,23 +48,22 @@
 #include <QList>
 #include <QBluetoothServiceDiscoveryAgent>
 #include <QBluetoothDeviceDiscoveryAgent>
+#include <QLowEnergyControllerNew>
+#include <QBluetoothServiceInfo>
 #include "deviceinfo.h"
-#include "qlowenergycontroller.h"
-#include "qlowenergyserviceinfo.h"
 #include "serviceinfo.h"
 #include "characteristicinfo.h"
 
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
 QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyCharacteristicInfo)
 QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
 
 class Device: public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant devicesList READ getDevices NOTIFY devicesDone)
-    Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesDone)
-    Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsDone)
+    Q_PROPERTY(QVariant devicesList READ getDevices NOTIFY devicesUpdated)
+    Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
+    Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsUpdated)
     Q_PROPERTY(QString update READ getUpdate NOTIFY updateChanged)
     Q_PROPERTY(bool state READ state NOTIFY stateChanged)
 public:
@@ -77,38 +76,45 @@ public:
     bool state();
 
 public slots:
-    void addDevice(const QBluetoothDeviceInfo&);
     void startDeviceDiscovery();
-    void scanFinished();
-    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
-    void scanServices(QString address);
-    void addLowEnergyService(const QLowEnergyServiceInfo&);
-    void serviceScanDone();
-    void serviceConnected(const QLowEnergyServiceInfo &service);
+    void scanServices(const QString &address);
+
     void connectToService(const QString &uuid);
-    void errorReceived(const QLowEnergyServiceInfo &service, QLowEnergyController::Error);
-    void disconnectFromService();
-    void serviceDisconnected(const QLowEnergyServiceInfo &service);
-    void serviceScanError(QBluetoothServiceDiscoveryAgent::Error);
+    void disconnectFromDevice();
+
+private slots:
+    // QBluetoothDeviceDiscoveryAgent related
+    void addDevice(const QBluetoothDeviceInfo&);
+    void deviceScanFinished();
+    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
+
+    // QLowEnergyControllerNew realted
+    void addLowEnergyService(const QBluetoothUuid &uuid);
+    void deviceConnected();
+    void errorReceived(QLowEnergyControllerNew::Error);
+    void serviceScanDone();
+    void deviceDisconnected();
+
+    // QLowEnergyService related
+    void serviceDetailsDiscovered(QLowEnergyService::ServiceState newState);
 
 Q_SIGNALS:
-    void devicesDone();
-    void servicesDone();
-    void characteristicsDone();
+    void devicesUpdated();
+    void servicesUpdated();
+    void characteristicsUpdated();
     void updateChanged();
     void stateChanged();
 
 private:
     void setUpdate(QString message);
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
-    QBluetoothServiceDiscoveryAgent *serviceDiscoveryAgent;
     DeviceInfo currentDevice;
     QList<QObject*> devices;
     QList<QObject*> m_services;
     QList<QObject*> m_characteristics;
     QString m_message;
     bool connected;
-    QLowEnergyController *info;
+    QLowEnergyControllerNew *controller;
     bool m_deviceScanState;
 };
 

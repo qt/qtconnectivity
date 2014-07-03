@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -56,7 +57,10 @@ Rectangle {
         visible: false
     }
 
-    Component.onCompleted: { info.visible = true; info.dialogText = "Scanning for services...";}
+    Component.onCompleted: {
+        info.visible = true;
+        info.dialogText = "Scanning for services...";
+    }
 
     ListView {
         id: servicesview
@@ -75,8 +79,10 @@ Rectangle {
                 anchors.fill: parent
                 onPressed: { servicebox.height= 135; bottomarea.height = 7}
                 onReleased: { servicebox.height= 140; bottomarea.height = 2}
-                onClicked: { device.connectToService(modelData.serviceUuid); pageLoader.source = "Characteristics.qml";}
-
+                onClicked: {
+                    device.connectToService(modelData.serviceUuid);
+                    pageLoader.source = "Characteristics.qml";
+                }
             }
 
             Label {
@@ -88,6 +94,7 @@ Rectangle {
 
             Label {
                 id: serviceUuid
+                font.pointSize: serviceName1.font.pointSize * 0.5
                 textContent: modelData.serviceUuid
                 anchors.bottom: bottomarea.top
                 anchors.bottomMargin: 5
@@ -100,7 +107,6 @@ Rectangle {
                 height: 2
                 color: "#363636"
             }
-
         }
     }
 
@@ -110,6 +116,9 @@ Rectangle {
         menuWidth: parent.width
         menuText: "Back"
         menuHeight: (parent.height/6)
-        onButtonClick: pageLoader.source = "main.qml"
+        onButtonClick: {
+            device.disconnectFromDevice()
+            pageLoader.source = "main.qml"
+        }
     }
 }

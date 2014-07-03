@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -53,7 +54,7 @@ Rectangle {
     Header {
         id: header
         anchors.top: parent.top
-        headerText: "Start a Device Discovery"
+        headerText: "Start Discovery"
     }
 
     Dialog {
@@ -74,15 +75,19 @@ Rectangle {
             id: box
             height:140
             width: parent.width
-            Component.onCompleted: { info.visible = false;
+            Component.onCompleted: {
+                info.visible = false;
                 header.headerText = "Select a device";
             }
 
             MouseArea {
                 anchors.fill: parent
-                onPressed: { box.height= 135; downpart.height = 7}
-                onReleased: { box.height= 140; downpart.height = 2}
-                onClicked: {device.scanServices(modelData.deviceAddress); pageLoader.source = "Services.qml"}
+                onPressed: { box.height = 135; downpart.height = 7}
+                onReleased: { box.height = 140; downpart.height = 2}
+                onClicked: {
+                    device.scanServices(modelData.deviceAddress);
+                    pageLoader.source = "Services.qml"
+                }
 
             }
 
@@ -107,7 +112,6 @@ Rectangle {
                 height: 2
                 color: "#363636"
             }
-
         }
     }
 
@@ -117,12 +121,14 @@ Rectangle {
         menuWidth: parent.width
         menuHeight: (parent.height/6)
         menuText: device.update
-        onButtonClick: { device.startDeviceDiscovery(); info.dialogText = "Searching..."; info.visible = true;}
+        onButtonClick: {
+            device.startDeviceDiscovery();
+            info.dialogText = "Searching...";
+            info.visible = true;}
     }
 
     Loader {
         id: pageLoader
         anchors.fill: parent
-
     }
 }

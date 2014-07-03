@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -40,9 +41,7 @@
 
 #ifndef SERVICEINFO_H
 #define SERVICEINFO_H
-#include <QObject>
-#include "qlowenergyserviceinfo.h"
-#include "qbluetoothuuid.h"
+#include <QtBluetooth/QLowEnergyService>
 
 class ServiceInfo: public QObject
 {
@@ -51,8 +50,8 @@ class ServiceInfo: public QObject
     Q_PROPERTY(QString serviceUuid READ getUuid NOTIFY serviceChanged)
 public:
     ServiceInfo();
-    ServiceInfo(const QLowEnergyServiceInfo &service);
-    QLowEnergyServiceInfo getLeService() const;
+    ServiceInfo(QLowEnergyService *service);
+    QLowEnergyService *service() const;
     QString getUuid() const;
     QString getName() const;
 
@@ -60,7 +59,7 @@ Q_SIGNALS:
     void serviceChanged();
 
 private:
-    QLowEnergyServiceInfo m_serviceLe;
+    QLowEnergyService *m_service;
 };
 
 #endif // SERVICEINFO_H

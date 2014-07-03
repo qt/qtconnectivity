@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -40,29 +41,43 @@
 
 #include "serviceinfo.h"
 
-ServiceInfo::ServiceInfo():
-    m_serviceLe(QLowEnergyServiceInfo())
+ServiceInfo::ServiceInfo()
 {
-
 }
 
-ServiceInfo::ServiceInfo(const QLowEnergyServiceInfo &service):
-    m_serviceLe(service)
+ServiceInfo::ServiceInfo(QLowEnergyService *service):
+    m_service(service)
 {
-
+    m_service->setParent(this);
 }
 
-QLowEnergyServiceInfo ServiceInfo::getLeService() const
+QLowEnergyService *ServiceInfo::service() const
 {
-    return m_serviceLe;
+    return m_service;
 }
 
 QString ServiceInfo::getName() const
 {
-    return m_serviceLe.serviceName();
+    if (!m_service)
+        return QString();
+
+    return m_service->serviceName();
 }
 
 QString ServiceInfo::getUuid() const
 {
-    return m_serviceLe.serviceUuid().toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+    if (!m_service)
+        return QString();
+
+    const QBluetoothUuid uuid = m_service->serviceUuid();
+    bool success = false;
+    quint16 result16 = uuid.toUInt16(&success);
+    if (success)
+        return QStringLiteral("0x") + QString::number(result16, 16);
+
+    quint32 result32 = uuid.toUInt32(&success);
+    if (success)
+        return QStringLiteral("0x") + QString::number(result32, 16);
+
+    return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
 }

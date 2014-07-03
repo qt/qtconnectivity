@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -42,7 +43,7 @@
 #define CHARACTERISTICINFO_H
 #include <QObject>
 #include <QString>
-#include <qlowenergycharacteristicinfo.h>
+#include <QtBluetooth/QLowEnergyCharacteristic>
 
 class CharacteristicInfo: public QObject
 {
@@ -55,20 +56,20 @@ class CharacteristicInfo: public QObject
 
 public:
     CharacteristicInfo();
-    CharacteristicInfo(const QLowEnergyCharacteristicInfo &characteristic);
-    void setCharacteristic(const QLowEnergyCharacteristicInfo &characteristic);
+    CharacteristicInfo(const QLowEnergyCharacteristic &characteristic);
+    void setCharacteristic(const QLowEnergyCharacteristic &characteristic);
     QString getName() const;
     QString getUuid() const;
     QString getValue() const;
     QString getHandle() const;
     QString getPermission() const;
-    QLowEnergyCharacteristicInfo getCharacteristic() const;
+    QLowEnergyCharacteristic getCharacteristic() const;
 
 Q_SIGNALS:
     void characteristicChanged();
 
 private:
-    QLowEnergyCharacteristicInfo m_characteristic;
+    QLowEnergyCharacteristic m_characteristic;
 };
 
 #endif // CHARACTERISTICINFO_H
