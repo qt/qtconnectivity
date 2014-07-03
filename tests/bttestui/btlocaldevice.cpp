@@ -106,6 +106,8 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
     } else {
         deviceAgent = 0;
         serviceAgent = 0;
+        socket = 0;
+        server = 0;
     }
 }
 

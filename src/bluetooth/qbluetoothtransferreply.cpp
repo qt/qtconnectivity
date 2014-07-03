@@ -63,13 +63,14 @@ QT_BEGIN_NAMESPACE
 
     This enum describes the type of error that occurred
 
-    \value NoError          No error.
-    \value UnknownError     Unknown error, no better enum available
-    \value FileNotFoundError Unable to open the file specified
-    \value HostNotFoundError Unable to connect to the target host
-    \value UserCanceledTransferError User terminated the transfer
-    \value IODeviceNotReadableError File was not open before initiating the sending command
-    \value ResourceBusyError  Unable to access the resource.
+    \value NoError           No error.
+    \value UnknownError      Unknown error, no better enum available.
+    \value FileNotFoundError Unable to open the file specified.
+    \value HostNotFoundError Unable to connect to the target host.
+    \value UserCanceledTransferError User terminated the transfer.
+    \value IODeviceNotReadableError File was not open before initiating the sending command.
+    \value ResourceBusyError Unable to access the resource..
+    \value SessionError      An error occurred during the handling of the session.
 */
 
 

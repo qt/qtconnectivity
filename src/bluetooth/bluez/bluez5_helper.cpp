@@ -457,4 +457,65 @@ QByteArray parseSdpRecord(sdp_record_t *record)
     return xmlOutput;
 }
 
+
+/*!
+    Finds the path for the local adapter with \a wantedAddress or an empty string
+    if no local adapter with the given address can be found.
+    If \a wantedAddress is \c null it returns the first/default adapter or an empty
+    string if none is available.
+
+    If \a ok is false the lookup was aborted due to a dbus error and this function
+    returns an empty string.
+ */
+QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok = 0)
+{
+    OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
+                                                     QStringLiteral("/"),
+                                                     QDBusConnection::systemBus());
+
+    QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
+    reply.waitForFinished();
+    if (reply.isError()) {
+        if (ok)
+            *ok = false;
+
+        return QString();
+    }
+
+    typedef QPair<QString, QBluetoothAddress> AddressForPathType;
+    QList<AddressForPathType> localAdapters;
+
+    foreach (const QDBusObjectPath &path, reply.value().keys()) {
+        const InterfaceList ifaceList = reply.value().value(path);
+        foreach (const QString &iface, ifaceList.keys()) {
+            if (iface == QStringLiteral("org.bluez.Adapter1")) {
+                AddressForPathType pair;
+                pair.first = path.path();
+                pair.second = QBluetoothAddress(ifaceList.value(iface).value(
+                                          QStringLiteral("Address")).toString());
+                if (!pair.second.isNull())
+                    localAdapters.append(pair);
+                break;
+            }
+        }
+    }
+
+    if (ok)
+        *ok = true;
+
+    if (localAdapters.isEmpty())
+        return QString(); // -> no local adapter found
+
+    if (wantedAddress.isNull())
+        return localAdapters.front().first; // -> return first found adapter
+
+    foreach (const AddressForPathType &pair, localAdapters) {
+        if (pair.second == wantedAddress)
+            return pair.first; // -> found local adapter with wanted address
+    }
+
+    return QString(); // nothing matching found
+}
+
+
 QT_END_NAMESPACE

@@ -66,6 +66,7 @@ class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 
 public:
 
+    // TODO Decouple SocketState and SocketError enum values from QAbstractSocket in Qt 6
     enum SocketState {
         UnconnectedState = QAbstractSocket::UnconnectedState,
         ServiceLookupState = QAbstractSocket::HostLookupState,

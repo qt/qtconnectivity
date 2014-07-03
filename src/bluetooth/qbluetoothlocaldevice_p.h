@@ -61,6 +61,7 @@ class OrgFreedesktopDBusObjectManagerInterface;
 class OrgBluezAgentAdaptor;
 class OrgBluezDeviceInterface;
 class OrgBluezDevice1Interface;
+class OrgBluezManagerInterface;
 
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
@@ -137,6 +138,7 @@ public:
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5; //Bluez 5
     QMap<QString, OrgFreedesktopDBusPropertiesInterface *> deviceChangeMonitors; //Bluez 5
     OrgBluezAgentAdaptor *agent;
+    OrgBluezManagerInterface *manager;
 
     QList<QBluetoothAddress> connectedDevices() const;
 
@@ -167,6 +169,7 @@ public slots:
     void _q_deviceRemoved(const QDBusObjectPath &device);
     void _q_devicePropertyChanged(const QString &property, const QDBusVariant &value);
     bool isValid() const;
+    void adapterRemoved(const QDBusObjectPath &device);
 
     void requestPairingBluez5(const QBluetoothAddress &address,
                               QBluetoothLocalDevice::Pairing targetPairing);

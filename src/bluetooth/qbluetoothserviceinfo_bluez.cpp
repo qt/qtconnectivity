@@ -44,13 +44,19 @@
 
 #include "bluez/manager_p.h"
 #include "bluez/service_p.h"
+#include "bluez/bluez5_helper_p.h"
+#include "bluez/profile1_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QXmlStreamWriter>
+#include <QtCore/QAtomicInt>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
+
+static const QLatin1String profilePathTemplate("/qt/profile");
+static QAtomicInt pathCounter;
 
 static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 {
@@ -171,8 +177,14 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 }
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
-:   service(0), serviceRecord(0), registered(false)
+:   service(0), serviceBluez5(0), serviceRecord(0), registered(false)
 {
+    if (isBluez5()) {
+        serviceBluez5  = new OrgBluezProfileManager1Interface(
+                                                QStringLiteral("org.bluez"),
+                                                QStringLiteral("/org/bluez"),
+                                                QDBusConnection::systemBus(), this);
+    }
 }
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
@@ -189,15 +201,30 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     if (!registered)
         return false;
 
-    if (!ensureSdpConnection(currentLocalAdapter))
-        return false;
+    if (serviceBluez5) { // Bluez 5
+        if (profilePath.isEmpty())
+            return false;
 
-    QDBusPendingReply<> reply = service->RemoveRecord(serviceRecord);
-    reply.waitForFinished();
-    if (reply.isError())
-        return false;
+        QDBusPendingReply<> reply = serviceBluez5->UnregisterProfile(
+                    QDBusObjectPath(profilePath));
+        reply.waitForFinished();
+        if (reply.isError()) {
+            qCWarning(QT_BT_BLUEZ) << "Cannot unregister profile:"
+                                   << profilePath << reply.error().message();
+            return false;
+        }
+        profilePath.clear();
+    } else { // Bluez 4
+        if (!ensureSdpConnection(currentLocalAdapter))
+            return false;
 
-    serviceRecord = 0;
+        QDBusPendingReply<> reply = service->RemoveRecord(serviceRecord);
+        reply.waitForFinished();
+        if (reply.isError())
+            return false;
+
+        serviceRecord = 0;
+    }
 
     registered = false;
     return true;
@@ -232,13 +259,18 @@ bool QBluetoothServiceInfoPrivate::ensureSdpConnection(const QBluetoothAddress &
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &localAdapter)
 {
-    //if new adapter unregister previous one first
-    if (registered && localAdapter != currentLocalAdapter)
-        unregisterService();
+    if (serviceBluez5) { // Bluez 5
+        if (registered)
+            return false;
+    } else { // Bluez 4
+        //if new adapter unregister previous one first
+        if (registered && localAdapter != currentLocalAdapter)
+            unregisterService();
 
-    if (!ensureSdpConnection(localAdapter)) {
-        qCWarning(QT_BT_BLUEZ) << "SDP not connected. Cannot register";
-        return false;
+        if (!ensureSdpConnection(localAdapter)) {
+            qCWarning(QT_BT_BLUEZ) << "SDP not connected. Cannot register";
+            return false;
+        }
     }
 
     QString xmlServiceRecord;
@@ -266,21 +298,83 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     stream.writeEndDocument();
 
-    if (!registered) {
-        QDBusPendingReply<uint> reply = service->AddRecord(xmlServiceRecord);
-        reply.waitForFinished();
-        if (reply.isError()) {
-            qCWarning(QT_BT_BLUEZ) << "AddRecord returned error" << reply.error();
-            return false;
+    if (serviceBluez5) { // Bluez 5
+        // create path
+        profilePath = profilePathTemplate;
+        profilePath.append(QString::fromLatin1("/%1%2/%3").
+                           arg(QCoreApplication::applicationName()).
+                           arg(QCoreApplication::applicationPid()).
+                           arg(pathCounter.fetchAndAddOrdered(1)));
+
+        QVariantMap mapping;
+        mapping.insert(QStringLiteral("ServiceRecord"), xmlServiceRecord);
+
+        // Strategy to pick service uuid
+        // 1.) use serviceUuid()
+        // 2.) use first custom uuid if available
+        // 3.) use first service class uuid
+        QBluetoothUuid profileUuid = attributes.value(QBluetoothServiceInfo::ServiceId)
+                                               .value<QBluetoothUuid>();
+        QBluetoothUuid firstCustomUuid;
+        if (profileUuid.isNull()) {
+            const QVariant var = attributes.value(QBluetoothServiceInfo::ServiceClassIds);
+            if (var.isValid()) {
+                const QBluetoothServiceInfo::Sequence seq
+                        = var.value<QBluetoothServiceInfo::Sequence>();
+                QBluetoothUuid tempUuid;
+
+                for (int i = 0; i < seq.count(); i++) {
+                    tempUuid = seq.at(i).value<QBluetoothUuid>();
+                    if (tempUuid.isNull())
+                        continue;
+
+                    int size = tempUuid.minimumSize();
+                    if (size == 2 || size == 4) { // Base UUID derived
+                        if (profileUuid.isNull())
+                            profileUuid = tempUuid;
+                    } else if (firstCustomUuid.isNull()){
+                        firstCustomUuid = tempUuid;
+                    }
+                }
+            }
         }
 
-        serviceRecord = reply.value();
-    } else {
-        QDBusPendingReply<> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
+        if (!firstCustomUuid.isNull())
+            profileUuid = firstCustomUuid;
+
+        QString uuidString = profileUuid.toString();
+        uuidString.chop(1); // remove trailing '}'
+        uuidString.remove(0, 1); // remove beginning '{'
+
+        qCDebug(QT_BT_BLUEZ) << "Registering profile under" << profilePath
+                             << uuidString;
+
+        QDBusPendingReply<> reply = serviceBluez5->RegisterProfile(
+                                       QDBusObjectPath(profilePath),
+                                       uuidString,
+                                       mapping);
         reply.waitForFinished();
         if (reply.isError()) {
-            qCWarning(QT_BT_BLUEZ) << "UpdateRecord returned error" << reply.error();
+            qCWarning(QT_BT_BLUEZ) << "Cannot register profile" << reply.error().message();
             return false;
+        }
+    } else { // Bluez 4
+        if (!registered) {
+            QDBusPendingReply<uint> reply = service->AddRecord(xmlServiceRecord);
+            reply.waitForFinished();
+            if (reply.isError()) {
+                qCWarning(QT_BT_BLUEZ) << "AddRecord returned error" << reply.error();
+                return false;
+            }
+
+            serviceRecord = reply.value();
+        } else {
+            QDBusPendingReply<> reply = service->UpdateRecord(serviceRecord, xmlServiceRecord);
+            reply.waitForFinished();
+            if (reply.isError()) {
+                qCWarning(QT_BT_BLUEZ) << "UpdateRecord returned error" << reply.error();
+                return false;
+            }
         }
     }
 

@@ -51,6 +51,7 @@
 #include <QVariant>
 
 class OrgBluezServiceInterface;
+class OrgBluezProfileManager1Interface;
 
 QT_BEGIN_NAMESPACE
 
@@ -80,8 +81,10 @@ private:
     bool ensureSdpConnection(const QBluetoothAddress &localAdapter = QBluetoothAddress());
 
     OrgBluezServiceInterface *service;
+    OrgBluezProfileManager1Interface *serviceBluez5;
     quint32 serviceRecord;
     QBluetoothAddress currentLocalAdapter;
+    QString profilePath;
 #endif
 
     mutable bool registered;
