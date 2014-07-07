@@ -68,17 +68,20 @@ Rectangle {
         anchors.top: header.bottom
         anchors.bottom: menu.top
         model: device.servicesList
+        clip: true
 
         delegate: Rectangle {
             id: servicebox
-            height:140
+            height:100
+            color: "lightsteelblue"
+            border.width: 2
+            border.color: "black"
+            radius: 5
             width: parent.width
             Component.onCompleted: info.visible = false
 
             MouseArea {
                 anchors.fill: parent
-                onPressed: { servicebox.height= 135; bottomarea.height = 7}
-                onReleased: { servicebox.height= 140; bottomarea.height = 2}
                 onClicked: {
                     device.connectToService(modelData.serviceUuid);
                     pageLoader.source = "Characteristics.qml";
@@ -86,7 +89,7 @@ Rectangle {
             }
 
             Label {
-                id: serviceName1
+                id: serviceName
                 textContent: modelData.serviceName
                 anchors.top: parent.top
                 anchors.topMargin: 5
@@ -94,18 +97,10 @@ Rectangle {
 
             Label {
                 id: serviceUuid
-                font.pointSize: serviceName1.font.pointSize * 0.5
+                font.pointSize: serviceName.font.pointSize * 0.5
                 textContent: modelData.serviceUuid
-                anchors.bottom: bottomarea.top
-                anchors.bottomMargin: 5
-            }
-
-            Rectangle {
-                id: bottomarea
                 anchors.bottom: servicebox.bottom
-                width: parent.width
-                height: 2
-                color: "#363636"
+                anchors.bottomMargin: 5
             }
         }
     }

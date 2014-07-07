@@ -66,6 +66,7 @@ Rectangle {
     ListView {
         id: theListView
         width: parent.width
+        clip: true
 
         anchors.top: header.bottom
         anchors.bottom: menu.top
@@ -73,8 +74,13 @@ Rectangle {
 
         delegate: Rectangle {
             id: box
-            height:140
+            height:100
             width: parent.width
+            color: "lightsteelblue"
+            border.width: 2
+            border.color: "black"
+            radius: 5
+
             Component.onCompleted: {
                 info.visible = false;
                 header.headerText = "Select a device";
@@ -82,35 +88,25 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                onPressed: { box.height = 135; downpart.height = 7}
-                onReleased: { box.height = 140; downpart.height = 2}
                 onClicked: {
                     device.scanServices(modelData.deviceAddress);
                     pageLoader.source = "Services.qml"
                 }
-
             }
 
             Label {
-                id: deviceName1
+                id: deviceName
                 textContent: modelData.deviceName
                 anchors.top: parent.top
                 anchors.topMargin: 5
             }
 
             Label {
-                id: deviceAddress1
+                id: deviceAddress
                 textContent: modelData.deviceAddress
-                anchors.bottom: downpart.top
-                anchors.bottomMargin: 5
-            }
-
-            Rectangle {
-                id: downpart
+                font.pointSize: deviceName.font.pointSize*0.7
                 anchors.bottom: box.bottom
-                width: parent.width
-                height: 2
-                color: "#363636"
+                anchors.bottomMargin: 5
             }
         }
     }

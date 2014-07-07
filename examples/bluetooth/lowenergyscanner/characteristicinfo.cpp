@@ -99,8 +99,15 @@ QString CharacteristicInfo::getValue() const
     // Show human string first and hex value below
     QByteArray a = m_characteristic.value();
     QString result;
-    result += QByteArray::fromHex(a) + QLatin1Char('\n');
+    if (a.isEmpty()) {
+        result = QStringLiteral("<none>");
+        return result;
+    }
+
+    result = QByteArray::fromHex(a);
+    result += QLatin1Char('\n');
     result += a;
+
     return result;
 }
 
@@ -111,7 +118,7 @@ QString CharacteristicInfo::getHandle() const
 
 QString CharacteristicInfo::getPermission() const
 {
-    QString properties = "Properties:";
+    QString properties = "( ";
     int permission = m_characteristic.properties();
     if (permission & QLowEnergyCharacteristic::Read)
         properties += QStringLiteral(" Read");
@@ -129,6 +136,7 @@ QString CharacteristicInfo::getPermission() const
         properties += QStringLiteral(" WriteNoResp");
     if (permission & QLowEnergyCharacteristic::WriteSigned)
         properties += QStringLiteral(" WriteSigned");
+    properties += " )";
     return properties;
 }
 

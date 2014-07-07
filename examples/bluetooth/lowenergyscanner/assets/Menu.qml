@@ -60,7 +60,7 @@ Rectangle {
         color: "#363636"
         border.width: 1
         border.color: "#E3E3E3"
-        radius: 10
+        radius: 5
         Text {
             id: searchText
             horizontalAlignment: Text.AlignHCenter

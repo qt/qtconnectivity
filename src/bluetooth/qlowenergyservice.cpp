@@ -125,7 +125,9 @@ QString QLowEnergyService::serviceName() const
     if (ok) {
         QBluetoothUuid::ServiceClassUuid id
                 = static_cast<QBluetoothUuid::ServiceClassUuid>(clsId);
-        return QBluetoothUuid::serviceClassToString(id);
+        const QString name = QBluetoothUuid::serviceClassToString(id);
+        if (!name.isEmpty())
+            return name;
     }
     return qApp ?
            qApp->translate("QBluetoothServiceDiscoveryAgent", "Unknown Service") :

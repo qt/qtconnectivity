@@ -57,9 +57,15 @@ Rectangle {
         visible: false
     }
 
+    Component.onCompleted: {
+        info.visible = true;
+        info.dialogText = "Scanning for characteristics...";
+    }
+
     ListView {
         id: characteristicview
         width: parent.width
+        clip: true
 
         anchors.top: header.bottom
         anchors.bottom: menu.top
@@ -67,26 +73,36 @@ Rectangle {
 
         delegate: Rectangle {
             id: characteristicbox
-            height:350
+            height:300
             width: parent.width
+            color: "lightsteelblue"
+            border.width: 2
+            border.color: "black"
+            radius: 5
 
-            Component.onCompleted: menu.menuText = "Back"
+            Component.onCompleted: {
+                menu.menuText = "Back"
+                info.visible = false
+            }
 
             Label {
-                id: characteristicName1
+                id: characteristicName
                 textContent: modelData.characteristicName
                 anchors.top: parent.top
                 anchors.topMargin: 5
             }
 
             Label {
-                id: characteristicUuid1
+                id: characteristicUuid
+                font.pointSize: characteristicName.font.pointSize*0.7
                 textContent: modelData.characteristicUuid
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.top: characteristicName.bottom
+                anchors.topMargin: 5
             }
 
             Label {
                 id: characteristicValue
+                font.pointSize: characteristicName.font.pointSize*0.7
                 textContent: ("Value: " + modelData.characteristicValue)
                 anchors.bottom: characteristicHandle.top
                 horizontalAlignment: Text.AlignHCenter
@@ -95,6 +111,7 @@ Rectangle {
 
             Label {
                 id: characteristicHandle
+                font.pointSize: characteristicName.font.pointSize*0.7
                 textContent: ("Handlers: " + modelData.characteristicHandle)
                 anchors.bottom: characteristicPermission.top
                 anchors.topMargin: 5
@@ -102,17 +119,11 @@ Rectangle {
 
             Label {
                 id: characteristicPermission
+                font.pointSize: characteristicName.font.pointSize*0.7
                 textContent: modelData.characteristicPermission
                 anchors.bottom: parent.bottom
-                anchors.topMargin: 10
-            }
-
-            Rectangle {
-                id: bottomarea
-                anchors.bottom: characteristicbox.bottom
-                width: parent.width
-                height: 2
-                color: "#363636"
+                anchors.topMargin: 5
+                anchors.bottomMargin: 5
             }
         }
     }

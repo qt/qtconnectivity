@@ -45,6 +45,9 @@ Text {
     font.pixelSize: 30
     anchors.horizontalCenter: parent.horizontalCenter
     color: "#363636"
+    horizontalAlignment: Text.AlignHCenter
     elide: Text.ElideMiddle
+    width: parent.width
+    wrapMode: Text.Wrap
     text: textContent
 }

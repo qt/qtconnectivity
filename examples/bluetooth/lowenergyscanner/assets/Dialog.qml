@@ -56,5 +56,6 @@ Rectangle {
         elide: Text.ElideMiddle
         text: dialogText
         color: "#363636"
+        wrapMode: Text.Wrap
     }
 }
