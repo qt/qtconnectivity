@@ -87,9 +87,11 @@ public:
 
     ServiceError error() const;
 
-    bool contains(const QLowEnergyCharacteristic &characteristic);
+    bool contains(const QLowEnergyCharacteristic &characteristic) const;
     void writeCharacteristic(const QLowEnergyCharacteristic &characteristic,
                              const QByteArray &newValue);
+
+    bool contains(const QLowEnergyDescriptor &descriptor) const;
 
 Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);

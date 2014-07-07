@@ -157,7 +157,14 @@ QLowEnergyService::ServiceError QLowEnergyService::error() const
     return d_ptr->lastError;
 }
 
-bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
+
+/*!
+    Returns \c true if \a characteristic belongs to this service; otherwise \c false.
+
+    A characteristic belongs to a service if \l {QLowEnergyService::characteristics()}
+    contains the \a characteristic.
+ */
+bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic) const
 {
     if (characteristic.d_ptr.isNull() || !characteristic.data)
         return false;
@@ -209,5 +216,26 @@ void QLowEnergyService::writeCharacteristic(
                                        newValue);
 }
 
+/*!
+    Returns \c true if \a descriptor belongs to this service; otherwise \c false.
+ */
+bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
+{
+    if (descriptor.d_ptr.isNull() || !descriptor.data)
+        return false;
+
+    const QLowEnergyHandle charHandle = descriptor.characteristicHandle();
+    if (!charHandle)
+        return false;
+
+    if (d_ptr == descriptor.d_ptr
+        && d_ptr->characteristicList.contains(charHandle)
+        && d_ptr->characteristicList[charHandle].descriptorList.contains(descriptor.handle()))
+    {
+        return true;
+    }
+
+    return false;
+}
 
 QT_END_NAMESPACE

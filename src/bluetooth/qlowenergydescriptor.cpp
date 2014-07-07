@@ -278,6 +278,19 @@ QBluetoothUuid::DescriptorType QLowEnergyDescriptor::type() const
 }
 
 /*!
+    \internal
+
+    Returns the handle of the characteristic to which this descriptor belongs
+ */
+QLowEnergyHandle QLowEnergyDescriptor::characteristicHandle() const
+{
+    if (d_ptr.isNull() || !data)
+        return 0;
+
+    return data->charHandle;
+}
+
+/*!
     Sets the value \a value of the descriptor. This only caches the value. To write
     a value directly to the device QLowEnergyController class must be used.
 
