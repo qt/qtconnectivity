@@ -256,10 +256,30 @@ void BtLocalDevice::stopDiscovery()
 void BtLocalDevice::startServiceDiscovery(bool isMinimalDiscovery)
 {
     if (serviceAgent) {
+        serviceAgent->setRemoteAddress(QBluetoothAddress());
+
         qDebug() << "###### Starting service discovery process";
         serviceAgent->start(isMinimalDiscovery
                             ? QBluetoothServiceDiscoveryAgent::MinimalDiscovery
                             : QBluetoothServiceDiscoveryAgent::FullDiscovery);
+    }
+}
+
+void BtLocalDevice::startTargettedServiceDiscovery()
+{
+    if (serviceAgent) {
+        const QBluetoothAddress baddr(BTCHAT_DEVICE_ADDR);
+        qDebug() << "###### Starting service discovery on"
+                 << baddr.toString();
+        if (baddr.isNull())
+            return;
+
+        if (!serviceAgent->setRemoteAddress(baddr)) {
+            qWarning() << "###### Cannot set remote address. Aborting";
+            return;
+        }
+
+        serviceAgent->start();
     }
 }
 

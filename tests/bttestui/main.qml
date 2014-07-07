@@ -168,6 +168,11 @@ Rectangle {
                 onClicked: device.startServiceDiscovery(false)
             }
             Button {
+                id: startRemoteSDiscBtn
+                buttonText: "StartRemSDisc"
+                onClicked: device.startTargettedServiceDiscovery()
+            }
+            Button {
                 buttonText: "StopSDisc"
                 onClicked: device.stopServiceDiscovery();
             }
