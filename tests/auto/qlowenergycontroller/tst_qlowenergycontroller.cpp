@@ -81,6 +81,7 @@ private slots:
     void tst_concurrentDiscovery();
     void tst_defaultBehavior();
     void tst_writeCharacteristic();
+    void tst_writeDescriptor();
 
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
@@ -91,6 +92,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
+Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
 Q_DECLARE_METATYPE(QLowEnergyServiceInfo)
 
@@ -99,6 +101,7 @@ tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyServiceInfo>();
     qRegisterMetaType<QLowEnergyCharacteristic>();
+    qRegisterMetaType<QLowEnergyDescriptor>();
 
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString remote = qgetenv("BT_TEST_DEVICE");
@@ -1462,8 +1465,6 @@ void tst_QLowEnergyController::tst_defaultBehavior()
         QVERIFY(!controlExplicitAdapter.createServiceObject(
                     QBluetoothUuid(QBluetoothUuid::DeviceName)));
     }
-
-
 }
 
 void tst_QLowEnergyController::tst_writeCharacteristic()
@@ -1472,9 +1473,8 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     if (localAdapters.isEmpty() || remoteDevice.isNull())
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
-    // quick setup - more elaborate test is done by connectNew()
+    // quick setup - more elaborate test is done by connect()
     QLowEnergyControllerNew control(remoteDevice);
-    QCOMPARE(control.state(), QLowEnergyControllerNew::UnconnectedState);
     QCOMPARE(control.error(), QLowEnergyControllerNew::NoError);
 
     control.connectToDevice();
@@ -1536,7 +1536,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
         service->writeCharacteristic(configChar, QByteArray("81")); //0x81 blink LED D1
         QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 10000);
         QCOMPARE(configChar.value(), QByteArray("81"));
-        QList<QVariant> firstSignalData= writeSpy.first();
+        QList<QVariant> firstSignalData = writeSpy.first();
         QLowEnergyCharacteristic signalChar = firstSignalData[0].value<QLowEnergyCharacteristic>();
         QByteArray signalValue = firstSignalData[1].toByteArray();
 
@@ -1605,6 +1605,139 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QVERIFY(service->contains(dataChar));
 
     QVERIFY(!service->contains(QLowEnergyCharacteristic()));
+
+    delete service;
+}
+
+void tst_QLowEnergyController::tst_writeDescriptor()
+{
+    QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
+    if (localAdapters.isEmpty() || remoteDevice.isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+
+    // quick setup - more elaborate test is done by connect()
+    QLowEnergyControllerNew control(remoteDevice);
+    control.connectToDevice();
+    {
+        QTRY_IMPL(control.state() != QLowEnergyControllerNew::ConnectingState,
+              30000);
+    }
+
+    if (control.state() == QLowEnergyControllerNew::ConnectingState
+            || control.error() != QLowEnergyControllerNew::NoError) {
+        // default BTLE backend forever hangs in ConnectingState
+        QSKIP("Cannot connect to remote device");
+    }
+
+    QCOMPARE(control.state(), QLowEnergyControllerNew::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+
+    const QBluetoothUuid testService(QString("f000aa00-0451-4000-b000-000000000000"));
+    QList<QBluetoothUuid> uuids = control.services();
+    QVERIFY(uuids.contains(testService));
+
+    QLowEnergyService *service = control.createServiceObject(testService, this);
+    QVERIFY(service);
+    service->discoverDetails();
+    QTRY_VERIFY_WITH_TIMEOUT(
+        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+
+    // Temperature service described by
+    // http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
+
+    // 1. Find temperature data characteristic
+    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
+    QLowEnergyCharacteristic tempData;
+    foreach (const QLowEnergyCharacteristic &c, chars) {
+        if (c.uuid() ==
+                QBluetoothUuid(QStringLiteral("f000aa01-0451-4000-b000-000000000000"))) {
+            tempData = c;
+            break;
+        }
+    }
+
+    if (!tempData.isValid()) {
+        delete service;
+        control.disconnectFromDevice();
+        QSKIP("Cannot find temperature data characteristic of TI Sensor");
+    }
+
+    // 2. Find temperature data notification descriptor
+    const QList<QLowEnergyDescriptor> descs = tempData.descriptors();
+    QLowEnergyDescriptor notification;
+    foreach (const QLowEnergyDescriptor &d, descs) {
+        if (d.type() == QBluetoothUuid::ClientCharacteristicConfiguration) {
+            notification = d;
+            break;
+        }
+    }
+
+    if (!notification.isValid()) {
+        delete service;
+        control.disconnectFromDevice();
+        QSKIP("Cannot find temperature data notification of TI Sensor");
+    }
+
+    QCOMPARE(notification.value(), QByteArray("0000"));
+    service->contains(notification);
+    service->contains(tempData);
+
+    // 3. Test writing to descriptor -> activate notifications
+    QSignalSpy writeSpy(service,
+                        SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)));
+    service->writeDescriptor(notification, QByteArray("0100"));
+    // verify
+    QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 3000);
+    QCOMPARE(notification.value(), QByteArray("0100"));
+    QList<QVariant> firstSignalData = writeSpy.first();
+    QLowEnergyDescriptor signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
+    QByteArray signalValue = firstSignalData[1].toByteArray();
+    QCOMPARE(signalValue, QByteArray("0100"));
+    QVERIFY(notification == signalDesc);
+    writeSpy.clear();
+
+    // 4. Test writing to descriptor -> deactivate notifications
+    service->writeDescriptor(notification, QByteArray("0000"));
+    // verify
+    QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 3000);
+    QCOMPARE(notification.value(), QByteArray("0000"));
+    firstSignalData = writeSpy.first();
+    signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
+    signalValue = firstSignalData[1].toByteArray();
+    QCOMPARE(signalValue, QByteArray("0000"));
+    QVERIFY(notification == signalDesc);
+    writeSpy.clear();
+
+    // *******************************************
+    // write wrong value -> error response required
+    QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
+    writeSpy.clear();
+    QCOMPARE(errorSpy.count(), 0);
+    QCOMPARE(writeSpy.count(), 0);
+
+    // write 4 byte value to 2 byte characteristic
+    service->writeDescriptor(notification, QByteArray("11112222"));
+    QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 30000);
+    QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::DescriptorWriteError);
+    QCOMPARE(service->error(), QLowEnergyService::DescriptorWriteError);
+    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(notification.value(), QByteArray("0000"));
+
+    control.disconnectFromDevice();
+
+    // *******************************************
+    // write value while disconnected -> error
+    errorSpy.clear();
+    service->writeDescriptor(notification, QByteArray("0100"));
+    QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 2000);
+    QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    QCOMPARE(service->error(), QLowEnergyService::OperationError);
+    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(notification.value(), QByteArray("0000"));
 
     delete service;
 }
