@@ -136,9 +136,6 @@ void QLowEnergyControllerNewPrivate::updateValueOfDescriptor(
     if (service.isNull() || !service->characteristicList.contains(charHandle))
         return;
 
-    QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> descData;
-    descData = service->characteristicList[charHandle].descriptorList;
-
     if (!service->characteristicList[charHandle].descriptorList.contains(descriptorHandle))
         return;
 

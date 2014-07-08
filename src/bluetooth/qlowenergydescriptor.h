@@ -55,7 +55,6 @@ class QLowEnergyServicePrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyDescriptor
 {
-    friend class QLowEnergyControllerPrivate;
 public:
     QLowEnergyDescriptor();
     QLowEnergyDescriptor(const QLowEnergyDescriptor &other);
@@ -68,7 +67,6 @@ public:
     bool isValid() const;
 
     QByteArray value() const;
-    void setValue(const QByteArray &value); //TODO shift to QLowEnergyControllerNew
 
     QBluetoothUuid uuid() const;
     QLowEnergyHandle handle() const;
@@ -82,6 +80,7 @@ protected:
 
     friend class QLowEnergyCharacteristic;
     friend class QLowEnergyService;
+    friend class QLowEnergyControllerNewPrivate;
     QLowEnergyDescriptorPrivate *data;
 
     QLowEnergyDescriptor(QSharedPointer<QLowEnergyServicePrivate> p,

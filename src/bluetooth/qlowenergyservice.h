@@ -62,7 +62,8 @@ public:
         NoError = 0,
         ServiceNotValidError,
         OperationError,
-        CharacteristicWriteError   // emitted when writeCharacteristic() failed
+        CharacteristicWriteError,   // emitted when writeCharacteristic() failed
+        DescriptorWriteError        // emitted when writeDescriptor() failed
     };
 
     enum ServiceState {
@@ -92,6 +93,8 @@ public:
                              const QByteArray &newValue);
 
     bool contains(const QLowEnergyDescriptor &descriptor) const;
+    void writeDescriptor(const QLowEnergyDescriptor &descriptor,
+                         const QByteArray &newValue);
 
 Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);

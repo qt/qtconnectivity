@@ -72,6 +72,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
             this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
     connect(p.data(), SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
             this, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+    connect(p.data(), SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)),
+            this, SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)));
 }
 
 
@@ -237,5 +239,38 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 
     return false;
 }
+
+/*!
+    Writes \a newValue as value for \a descriptor. If the operation is successful
+    the \l descriptorChanged() signal is emitted. \a newValue must contain the
+    hexadecimal representation of new value.
+
+    A descriptor can only be written if this service is in the \l ServiceDiscovered state
+    and \a characteristic is writable.
+ */
+void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
+                                        const QByteArray &newValue)
+{
+    //TODO not all descriptors are writable (how to deal with write errors)
+    Q_D(QLowEnergyService);
+
+    if (!contains(descriptor))
+        return;
+
+    if (descriptor.value() == newValue)
+        return;
+
+    if (state() != ServiceDiscovered || !d->controller) {
+        d->setError(QLowEnergyService::OperationError);
+        return;
+    }
+
+    d->controller->writeDescriptor(descriptor.d_ptr,
+                                   descriptor.characteristicHandle(),
+                                   descriptor.handle(),
+                                   newValue);
+}
+
+
 
 QT_END_NAMESPACE

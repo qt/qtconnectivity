@@ -556,20 +556,32 @@ void QLowEnergyControllerNewPrivate::processReply(
         //Write command response
         Q_ASSERT(request.command == ATT_OP_WRITE_REQUEST);
 
-        QLowEnergyHandle charHandle = request.reference.toUInt();
+        uint ref = request.reference.toUInt();
+        QLowEnergyHandle charHandle = (ref & 0xffff);
+        QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
+
         QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
         if (service.isNull() || !service->characteristicList.contains(charHandle))
             break;
 
         if (isErrorResponse) {
-            service->setError(QLowEnergyService::CharacteristicWriteError);
+            if (!descriptorHandle)
+                service->setError(QLowEnergyService::CharacteristicWriteError);
+            else
+                service->setError(QLowEnergyService::DescriptorWriteError);
             break;
         }
 
         const QByteArray newValue = request.reference2.toByteArray();
-        service->characteristicList[charHandle].value = newValue;
-        QLowEnergyCharacteristic ch(service, charHandle);
-        emit service->characteristicChanged(ch, newValue);
+        if (!descriptorHandle) {
+            service->characteristicList[charHandle].value = newValue;
+            QLowEnergyCharacteristic ch(service, charHandle);
+            emit service->characteristicChanged(ch, newValue);
+        } else {
+            service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
+            QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
+            emit service->descriptorChanged(descriptor, newValue);
+        }
     }
         break;
     default:
@@ -812,7 +824,7 @@ void QLowEnergyControllerNewPrivate::writeCharacteristic(
 
     const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
     const QByteArray rawData = QByteArray::fromHex(newValue);
-    // sizeof(command) + sizeof(handle) + sizeof(newValue)
+    // sizeof(command) + sizeof(handle) + sizeof(rawData)
     const int size = 1 + 2 + rawData.size();
 
     quint8 packet[WRITE_REQUEST_SIZE];
@@ -831,6 +843,39 @@ void QLowEnergyControllerNewPrivate::writeCharacteristic(
     request.payload = data;
     request.command = ATT_OP_WRITE_REQUEST;
     request.reference = charHandle;
+    request.reference2 = newValue;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
+void QLowEnergyControllerNewPrivate::writeDescriptor(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle,
+        const QByteArray &newValue)
+{
+    Q_ASSERT(!service.isNull());
+
+    const QByteArray rawData = QByteArray::fromHex(newValue);
+    // sizeof(command) + sizeof(handle) + sizeof(rawData)
+    const int size = 1 + 2 + rawData.size();
+
+    quint8 packet[WRITE_REQUEST_SIZE];
+    packet[0] = ATT_OP_WRITE_REQUEST;
+    bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
+
+    QByteArray data(size, Qt::Uninitialized);
+    memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), rawData.constData(), rawData.size());
+
+    qCDebug(QT_BT_BLUEZ) << "Writing descritpro" << hex << descriptorHandle
+                         << "(size:" << size << ")";
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_WRITE_REQUEST;
+    request.reference = (charHandle | (descriptorHandle << 16));
     request.reference2 = newValue;
     openRequests.enqueue(request);
 

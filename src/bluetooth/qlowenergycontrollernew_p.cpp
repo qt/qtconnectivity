@@ -82,4 +82,13 @@ void QLowEnergyControllerNewPrivate::writeCharacteristic(
 
 }
 
+void QLowEnergyControllerNewPrivate::writeDescriptor(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle,
+        const QByteArray &newValue)
+{
+
+}
+
 QT_END_NAMESPACE

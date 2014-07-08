@@ -290,16 +290,4 @@ QLowEnergyHandle QLowEnergyDescriptor::characteristicHandle() const
     return data->charHandle;
 }
 
-/*!
-    Sets the value \a value of the descriptor. This only caches the value. To write
-    a value directly to the device QLowEnergyController class must be used.
-
-    \sa QLowEnergyController::writeDescriptor()
-*/
-void QLowEnergyDescriptor::setValue(const QByteArray &value)
-{
-    //TODO
-    //d_ptr->m_value = value;
-}
-
 QT_END_NAMESPACE
