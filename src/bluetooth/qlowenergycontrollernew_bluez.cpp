@@ -66,6 +66,9 @@
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
 #define ATT_OP_WRITE_REQUEST            0x12 //write characteristic
 #define ATT_OP_WRITE_RESPONSE           0x13
+#define ATT_OP_HANDLE_VAL_NOTIFICATION  0x1b //informs about value change
+#define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
+#define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
 
 //GATT command sizes in bytes
 #define FIND_INFO_REQUEST_SIZE 5
@@ -252,17 +255,51 @@ void QLowEnergyControllerNewPrivate::l2cpErrorChanged(QBluetoothSocket::SocketEr
 
 void QLowEnergyControllerNewPrivate::l2cpReadyRead()
 {
-    requestPending = false;
     const QByteArray reply = l2cpSocket->readAll();
     qCDebug(QT_BT_BLUEZ) << "Received size:" << reply.size() << "data:" << reply.toHex();
     if (reply.isEmpty())
         return;
+
+    const quint8 command = reply.constData()[0];
+    switch (command) {
+    case ATT_OP_HANDLE_VAL_NOTIFICATION:
+    {
+        processUnsolicitedReply(reply);
+        return;
+    }
+    case ATT_OP_HANDLE_VAL_INDICATION:
+    {
+        //send confirmation
+        QByteArray packet;
+        packet.append(static_cast<char>(ATT_OP_HANDLE_VAL_CONFIRMATION));
+        sendCommand(packet);
+
+        processUnsolicitedReply(reply);
+        return;
+    }
+    default:
+        //only solicited replies finish pending requests
+        requestPending = false;
+        break;
+    }
 
     Q_ASSERT(!openRequests.isEmpty());
     const Request request = openRequests.dequeue();
     processReply(request, reply);
 
     sendNextPendingRequest();
+}
+
+void QLowEnergyControllerNewPrivate::sendCommand(const QByteArray &packet)
+{
+    qint64 result = l2cpSocket->write(packet.constData(),
+                                      packet.size());
+    if (result == -1) {
+        qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP command:" << hex
+                             << packet.toHex()
+                             << l2cpSocket->errorString();
+        setError(QLowEnergyControllerNew::NetworkError);
+    }
 }
 
 void QLowEnergyControllerNewPrivate::sendNextPendingRequest()
@@ -275,14 +312,7 @@ void QLowEnergyControllerNewPrivate::sendNextPendingRequest()
 //             << request.payload.toHex();
 
     requestPending = true;
-    qint64 result = l2cpSocket->write(request.payload.constData(),
-                                      request.payload.size());
-    if (result == -1) {
-        qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP command:" << hex
-                             << request.payload.toHex()
-                             << l2cpSocket->errorString();
-        setError(QLowEnergyControllerNew::NetworkError);
-    }
+    sendCommand(request.payload);
 }
 
 void QLowEnergyControllerNewPrivate::processReply(
@@ -775,6 +805,30 @@ void QLowEnergyControllerNewPrivate::discoverServiceDescriptors(
     discoverNextDescriptor(service, keys, keys[0]);
 }
 
+void QLowEnergyControllerNewPrivate::processUnsolicitedReply(const QByteArray &payload)
+{
+    const char *data = payload.constData();
+    bool isNotification = (data[0] == ATT_OP_HANDLE_VAL_NOTIFICATION);
+    QLowEnergyHandle changedHandle = bt_get_le16(&data[1]);
+
+    if (QT_BT_BLUEZ().isDebugEnabled()) {
+        if (isNotification)
+            qCDebug(QT_BT_BLUEZ) << "Change notification for handle" << hex << changedHandle;
+        else
+            qCDebug(QT_BT_BLUEZ) << "Change indication for handle" << hex << changedHandle;
+    }
+
+    QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
+    if (ch.isValid() && ch.handle() == changedHandle) {
+        const QByteArray newValue = payload.mid(3).toHex();
+        updateValueOfCharacteristic(ch.attributeHandle(), newValue);
+        emit ch.d_ptr->characteristicChanged(ch, newValue);
+    } else {
+        qCWarning(QT_BT_BLUEZ) << "Cannot find matching characteristic for "
+                                  "notification/indication";
+    }
+}
+
 void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         const QList<QLowEnergyHandle> pendingCharHandles,
@@ -869,7 +923,7 @@ void QLowEnergyControllerNewPrivate::writeDescriptor(
     memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
     memcpy(&(data.data()[WRITE_REQUEST_SIZE]), rawData.constData(), rawData.size());
 
-    qCDebug(QT_BT_BLUEZ) << "Writing descritpro" << hex << descriptorHandle
+    qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
                          << "(size:" << size << ")";
 
     Request request;

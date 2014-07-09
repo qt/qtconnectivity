@@ -44,6 +44,8 @@
 
 #include <QtBluetooth/QBluetoothLocalDevice>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 void QLowEnergyControllerNewPrivate::setError(
@@ -118,6 +120,58 @@ QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerNewPrivate::service
             return service;
 
     return QSharedPointer<QLowEnergyServicePrivate>();
+}
+
+/*!
+    Returns a valid characteristic if the given handle is the
+    handle of the characteristic itself or one of its descriptors
+ */
+QLowEnergyCharacteristic QLowEnergyControllerNewPrivate::characteristicForHandle(
+        QLowEnergyHandle handle)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(handle);
+    if (service.isNull())
+        return QLowEnergyCharacteristic();
+
+    QList<QLowEnergyHandle> charHandles = service->characteristicList.keys();
+    if (charHandles.isEmpty())
+        return QLowEnergyCharacteristic();
+
+    // check whether it is the handle of a characteristic header
+    if (service->characteristicList.contains(handle))
+        return QLowEnergyCharacteristic(service, handle);
+
+    // check whether it is the handle of the characteristic value or its descriptors
+    std::sort(charHandles.begin(), charHandles.end());
+    for (int i = charHandles.size() - 1; i >= 0; i--) {
+        if (charHandles.at(i) > handle)
+            continue;
+
+        return QLowEnergyCharacteristic(service, charHandles.at(i));
+    }
+
+    return QLowEnergyCharacteristic();
+}
+
+/*!
+    Returns a valid descriptor if \a handle blongs to a descriptor;
+    otherwise an invalid one.
+ */
+QLowEnergyDescriptor QLowEnergyControllerNewPrivate::descriptorForHandle(
+        QLowEnergyHandle handle)
+{
+    const QLowEnergyCharacteristic matchingChar = characteristicForHandle(handle);
+    if (!matchingChar.isValid())
+        return QLowEnergyDescriptor();
+
+    const QLowEnergyServicePrivate::CharData charData = matchingChar.
+            d_ptr->characteristicList[matchingChar.attributeHandle()];
+
+    if (charData.descriptorList.contains(handle))
+        return QLowEnergyDescriptor(matchingChar.d_ptr, matchingChar.attributeHandle(),
+                                    handle);
+
+    return QLowEnergyDescriptor();
 }
 
 void QLowEnergyControllerNewPrivate::updateValueOfCharacteristic(

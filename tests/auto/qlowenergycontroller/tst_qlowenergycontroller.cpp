@@ -1649,12 +1649,14 @@ void tst_QLowEnergyController::tst_writeDescriptor()
 
     // 1. Find temperature data characteristic
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    QLowEnergyCharacteristic tempData;
+    QLowEnergyCharacteristic tempData, tempConfig;
     foreach (const QLowEnergyCharacteristic &c, chars) {
         if (c.uuid() ==
                 QBluetoothUuid(QStringLiteral("f000aa01-0451-4000-b000-000000000000"))) {
             tempData = c;
-            break;
+        } else if (c.uuid() ==
+                   QBluetoothUuid(QStringLiteral("f000aa02-0451-4000-b000-000000000000"))) {
+            tempConfig = c;
         }
     }
 
@@ -1683,39 +1685,70 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QCOMPARE(notification.value(), QByteArray("0000"));
     service->contains(notification);
     service->contains(tempData);
+    if (tempConfig.isValid()) {
+        service->contains(tempConfig);
+        QCOMPARE(tempConfig.value(), QByteArray("00"));
+    }
 
     // 3. Test writing to descriptor -> activate notifications
-    QSignalSpy writeSpy(service,
+    QSignalSpy descChangedSpy(service,
                         SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)));
+    QSignalSpy charChangedSpy(service,
+                        SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
     service->writeDescriptor(notification, QByteArray("0100"));
     // verify
-    QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(!descChangedSpy.isEmpty(), 3000);
     QCOMPARE(notification.value(), QByteArray("0100"));
-    QList<QVariant> firstSignalData = writeSpy.first();
+    QList<QVariant> firstSignalData = descChangedSpy.first();
     QLowEnergyDescriptor signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
     QByteArray signalValue = firstSignalData[1].toByteArray();
     QCOMPARE(signalValue, QByteArray("0100"));
     QVERIFY(notification == signalDesc);
-    writeSpy.clear();
+    descChangedSpy.clear();
 
-    // 4. Test writing to descriptor -> deactivate notifications
+    // 4. Test reception of notifications
+    // activate the temperature sensor if available
+    if (tempConfig.isValid()) {
+        service->writeCharacteristic(tempConfig, QByteArray("01"));
+
+        // first signal is confirmation of tempConfig write
+        // subsequent signals are temp data updates
+        QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() >= 5, 10000);
+        QList<QVariant> entry;
+        for (int i = 0; i < charChangedSpy.count(); i++) {
+            entry = charChangedSpy[i];
+            const QLowEnergyCharacteristic ch = entry[0].value<QLowEnergyCharacteristic>();
+            const QByteArray val = entry[1].toByteArray();
+
+            if (i == 0) {
+                QCOMPARE(tempConfig, ch);
+            } else {
+                qDebug() << "Temp update: " << hex << ch.handle() << val;
+                QCOMPARE(tempData, ch);
+            }
+        }
+
+        service->writeCharacteristic(tempConfig, QByteArray("00"));
+    }
+
+    // 5. Test writing to descriptor -> deactivate notifications
     service->writeDescriptor(notification, QByteArray("0000"));
     // verify
-    QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(!descChangedSpy.isEmpty(), 3000);
     QCOMPARE(notification.value(), QByteArray("0000"));
-    firstSignalData = writeSpy.first();
+    firstSignalData = descChangedSpy.first();
     signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
     signalValue = firstSignalData[1].toByteArray();
     QCOMPARE(signalValue, QByteArray("0000"));
     QVERIFY(notification == signalDesc);
-    writeSpy.clear();
+    descChangedSpy.clear();
 
     // *******************************************
     // write wrong value -> error response required
     QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
-    writeSpy.clear();
+    descChangedSpy.clear();
     QCOMPARE(errorSpy.count(), 0);
-    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(descChangedSpy.count(), 0);
 
     // write 4 byte value to 2 byte characteristic
     service->writeDescriptor(notification, QByteArray("11112222"));
@@ -1723,7 +1756,7 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
              QLowEnergyService::DescriptorWriteError);
     QCOMPARE(service->error(), QLowEnergyService::DescriptorWriteError);
-    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(descChangedSpy.count(), 0);
     QCOMPARE(notification.value(), QByteArray("0000"));
 
     control.disconnectFromDevice();
@@ -1736,7 +1769,7 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
              QLowEnergyService::OperationError);
     QCOMPARE(service->error(), QLowEnergyService::OperationError);
-    QCOMPARE(writeSpy.count(), 0);
+    QCOMPARE(descChangedSpy.count(), 0);
     QCOMPARE(notification.value(), QByteArray("0000"));
 
     delete service;

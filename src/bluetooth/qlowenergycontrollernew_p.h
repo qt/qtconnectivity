@@ -80,11 +80,19 @@ public:
     // misc helpers
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
             QLowEnergyHandle handle);
+    QLowEnergyCharacteristic characteristicForHandle(
+            QLowEnergyHandle handle);
+    QLowEnergyDescriptor descriptorForHandle(
+            QLowEnergyHandle handle);
+
     void updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                    const QByteArray &value);
     void updateValueOfDescriptor(QLowEnergyHandle charHandle,
                                  QLowEnergyHandle descriptorHandle,
                                  const QByteArray &value);
+
+
+    // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                              const QLowEnergyHandle charHandle,
                              const QByteArray &newValue);
@@ -119,6 +127,7 @@ private:
     QQueue<Request> openRequests;
     bool requestPending;
 
+    void sendCommand(const QByteArray &packet);
     void sendNextPendingRequest();
     void processReply(const Request &request, const QByteArray &reply);
 
@@ -132,6 +141,8 @@ private:
     void discoverNextDescriptor(QSharedPointer<QLowEnergyServicePrivate> serviceData,
                                 const QList<QLowEnergyHandle> pendingCharHandles,
                                 QLowEnergyHandle startingHandle);
+    void processUnsolicitedReply(const QByteArray &msg);
+
 
 private slots:
     void l2cpConnected();
