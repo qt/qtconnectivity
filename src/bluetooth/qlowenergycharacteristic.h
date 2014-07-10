@@ -87,7 +87,7 @@ public:
     QLowEnergyCharacteristic::PropertyTypes properties() const;
     QLowEnergyHandle handle() const;
 
-    // TODO: Simplify obtaining descriptor (e.g. via uuid)
+    QLowEnergyDescriptor descriptor(const QBluetoothUuid &uuid) const;
     QList<QLowEnergyDescriptor> descriptors() const;
 
     bool isValid() const;

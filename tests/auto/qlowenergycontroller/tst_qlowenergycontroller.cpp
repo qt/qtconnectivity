@@ -1648,17 +1648,10 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     // http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
 
     // 1. Find temperature data characteristic
-    const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    QLowEnergyCharacteristic tempData, tempConfig;
-    foreach (const QLowEnergyCharacteristic &c, chars) {
-        if (c.uuid() ==
-                QBluetoothUuid(QStringLiteral("f000aa01-0451-4000-b000-000000000000"))) {
-            tempData = c;
-        } else if (c.uuid() ==
-                   QBluetoothUuid(QStringLiteral("f000aa02-0451-4000-b000-000000000000"))) {
-            tempConfig = c;
-        }
-    }
+    const QLowEnergyCharacteristic tempData = service->characteristic(
+                QBluetoothUuid(QStringLiteral("f000aa01-0451-4000-b000-000000000000")));
+    const QLowEnergyCharacteristic tempConfig = service->characteristic(
+                QBluetoothUuid(QStringLiteral("f000aa02-0451-4000-b000-000000000000")));
 
     if (!tempData.isValid()) {
         delete service;
@@ -1667,14 +1660,8 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     }
 
     // 2. Find temperature data notification descriptor
-    const QList<QLowEnergyDescriptor> descs = tempData.descriptors();
-    QLowEnergyDescriptor notification;
-    foreach (const QLowEnergyDescriptor &d, descs) {
-        if (d.type() == QBluetoothUuid::ClientCharacteristicConfiguration) {
-            notification = d;
-            break;
-        }
-    }
+    const QLowEnergyDescriptor notification = tempData.descriptor(
+                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
 
     if (!notification.isValid()) {
         delete service;

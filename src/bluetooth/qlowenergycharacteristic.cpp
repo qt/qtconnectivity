@@ -275,8 +275,33 @@ QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
     return data->handle;
 }
 
+
 /*!
-    Returns the list of characteristic descriptors.
+    Returns the descriptor with \a uuid; otherwise an invalid \c QLowEnergyDescriptor
+    instance.
+
+    \sa descriptors()
+*/
+QLowEnergyDescriptor QLowEnergyCharacteristic::descriptor(const QBluetoothUuid &uuid) const
+{
+    if (d_ptr.isNull() || !data)
+        return QLowEnergyDescriptor();
+
+    QList<QLowEnergyHandle> descriptorKeys = d_ptr->characteristicList[data->handle].
+                                                    descriptorList.keys();
+    foreach (const QLowEnergyHandle descHandle, descriptorKeys) {
+        if (uuid == d_ptr->characteristicList[data->handle].descriptorList[descHandle].uuid)
+            return QLowEnergyDescriptor(d_ptr, data->handle, descHandle);
+    }
+
+    return QLowEnergyDescriptor();
+}
+
+/*!
+    Returns the list of descriptors belonging to this characteristic; otherwise
+    an empty list.
+
+    \sa descriptor()
 */
 QList<QLowEnergyDescriptor> QLowEnergyCharacteristic::descriptors() const
 {
@@ -291,7 +316,7 @@ QList<QLowEnergyDescriptor> QLowEnergyCharacteristic::descriptors() const
 
     std::sort(descriptorKeys.begin(), descriptorKeys.end());
 
-    foreach (QLowEnergyHandle descHandle, descriptorKeys) {
+    foreach (const QLowEnergyHandle descHandle, descriptorKeys) {
         QLowEnergyDescriptor descriptor(d_ptr, data->handle, descHandle);
         result.append(descriptor);
     }

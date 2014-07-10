@@ -245,25 +245,21 @@ void HeartRate::serviceStateChanged(QLowEnergyService::ServiceState s)
     switch (s) {
     case QLowEnergyService::ServiceDiscovered:
     {
-        const QList<QLowEnergyCharacteristic> chars = m_service->characteristics();
-        for (int i = 0; i < chars.count(); i++) {
-            const QLowEnergyCharacteristic c = chars[i];
-            if (c.uuid() == QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement)) {
-                const QList<QLowEnergyDescriptor> descriptors = c.descriptors();
-                //enable notification
-                for (int j = 0; j < descriptors.count(); j++) {
-                    const QLowEnergyDescriptor desc = descriptors[j];
-                    if (desc.type() == QBluetoothUuid::ClientCharacteristicConfiguration) {
-                        m_service->writeDescriptor(desc, QByteArray("0100"));
-                        setMessage("Measuring");
-                        m_notificationDesc = desc;
-                        m_start = QDateTime::currentDateTime();
-                        break;
-                    }
-                }
-                break;
-            }
+        const QLowEnergyCharacteristic hrChar = m_service->characteristic(
+                    QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement));
+        if (!hrChar.isValid()) {
+            setMessage("HR Data not found.");
+            break;
         }
+
+        const QLowEnergyDescriptor m_notificationDesc = hrChar.descriptor(
+                    QBluetoothUuid::ClientCharacteristicConfiguration);
+        if (m_notificationDesc.isValid()) {
+            m_service->writeDescriptor(m_notificationDesc, QByteArray("0100"));
+            setMessage("Measuring");
+            m_start = QDateTime::currentDateTime();
+        }
+
         break;
     }
     default:

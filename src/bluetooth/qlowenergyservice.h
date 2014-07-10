@@ -79,7 +79,7 @@ public:
     QLowEnergyService::ServiceType type() const;
     QLowEnergyService::ServiceState state() const;
 
-    // TODO: Simplify obtaining characteristic (e.g. via uuid)
+    QLowEnergyCharacteristic characteristic(const QBluetoothUuid &uuid) const;
     QList<QLowEnergyCharacteristic> characteristics() const;
     QBluetoothUuid serviceUuid() const;
     QString serviceName() const;

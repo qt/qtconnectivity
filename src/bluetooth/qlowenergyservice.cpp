@@ -93,12 +93,35 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
     return d_ptr->state;
 }
 
-
 QLowEnergyService::ServiceType QLowEnergyService::type() const
 {
     return d_ptr->type;
 }
 
+/*!
+    Returns the matching characteristic for \a uuid; otherwise an invalid
+    characteristic.
+
+    \sa characteristics()
+*/
+QLowEnergyCharacteristic QLowEnergyService::characteristic(const QBluetoothUuid &uuid) const
+{
+    foreach (const QLowEnergyHandle handle, d_ptr->characteristicList.keys()) {
+        if (d_ptr->characteristicList[handle].uuid == uuid)
+            return QLowEnergyCharacteristic(d_ptr, handle);
+    }
+
+    return QLowEnergyCharacteristic();
+}
+
+/*!
+    Returns all characteristics associated with this \c QLowEnergyService instance.
+
+    The returned list will be empty if this service instance is invalid,
+    \l discoverDetails() was not yet called or there are no known characteristics.
+
+    \sa characteristic(), state(), discoverDetails
+*/
 
 QList<QLowEnergyCharacteristic> QLowEnergyService::characteristics() const
 {
