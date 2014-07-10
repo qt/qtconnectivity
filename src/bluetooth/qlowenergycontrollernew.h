@@ -84,6 +84,7 @@ public:
     void connectToDevice();
     void disconnectFromDevice();
 
+    // TODO add a way of detecting whether discoverDetails() as already called
     void discoverServices();
     QList<QBluetoothUuid> services() const;
     QLowEnergyService *createServiceObject(

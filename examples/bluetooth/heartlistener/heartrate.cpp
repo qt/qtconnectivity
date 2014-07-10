@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -40,20 +41,12 @@
 
 #include "heartrate.h"
 
-#include <qbluetoothaddress.h>
-#include <qbluetoothservicediscoveryagent.h>
-#include <qbluetoothserviceinfo.h>
-#include <qbluetoothlocaldevice.h>
-#include <qlowenergyserviceinfo.h>
-#include <qlowenergycharacteristicinfo.h>
-#include <qbluetoothuuid.h>
-#include <QTimer>
-
 HeartRate::HeartRate():
-    m_currentDevice(QBluetoothDeviceInfo()), foundHeartRateService(false), foundHeartRateCharacteristic(false), m_HRMeasurement(0), m_max(0), m_min(0), calories(0), m_leInfo(0), timer(0)
+    m_currentDevice(QBluetoothDeviceInfo()), foundHeartRateService(false),
+    m_max(0), m_min(0), calories(0), m_control(0), timer(0),
+    m_service(0)
 {
-    m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent();
-    m_serviceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress());
+    m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
 
     connect(m_deviceDiscoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
             this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
@@ -61,25 +54,19 @@ HeartRate::HeartRate():
             this, SLOT(deviceScanError(QBluetoothDeviceDiscoveryAgent::Error)));
     connect(m_deviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(scanFinished()));
 
-    connect(m_serviceDiscoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
-            this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
-    connect(m_serviceDiscoveryAgent, SIGNAL(finished()), this, SLOT(serviceScanDone()));
-    connect(m_serviceDiscoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
-            this, SLOT(serviceScanError(QBluetoothServiceDiscoveryAgent::Error)));
+    // initialize random seed for demo mode
+    qsrand(QTime::currentTime().msec());
 }
 
 HeartRate::~HeartRate()
 {
-    delete m_deviceDiscoveryAgent;
-    delete m_serviceDiscoveryAgent;
-    delete m_leInfo;
-    delete timer;
     qDeleteAll(m_devices);
     m_devices.clear();
 }
 
 void HeartRate::deviceSearch()
 {
+    qDeleteAll(m_devices);
     m_devices.clear();
     m_deviceDiscoveryAgent->start();
     setMessage("Scanning for devices...");
@@ -88,12 +75,9 @@ void HeartRate::deviceSearch()
 void HeartRate::addDevice(const QBluetoothDeviceInfo &device)
 {
     if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
-        QBluetoothLocalDevice localDevice;
-        QBluetoothLocalDevice::Pairing pairingStatus = localDevice.pairingStatus(device.address());
-        if (pairingStatus == QBluetoothLocalDevice::Paired || pairingStatus == QBluetoothLocalDevice::AuthorizedPaired )
-            qWarning() << "Discovered LE Device name: " << device.name() << " Address: " << device.address().toString() << " Paired";
-        else
-            qWarning() << "Discovered LE Device name: " << device.name() << " Address: " << device.address().toString() << " not Paired";
+        qWarning() << "Discovered LE Device name: " << device.name() << " Address: "
+                   << device.address().toString();
+
         DeviceInfo *dev = new DeviceInfo(device);
         m_devices.append(dev);
         setMessage("Low Energy device found. Scanning for more...");
@@ -106,6 +90,17 @@ void HeartRate::scanFinished()
         setMessage("No Low Energy devices found");
     Q_EMIT nameChanged();
 }
+
+void HeartRate::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
+{
+    if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError)
+        setMessage("The Bluetooth adaptor is powered off, power it on before doing discovery.");
+    else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
+        setMessage("Writing or reading from the device resulted in an error.");
+    else
+        setMessage("An unknown error has occurred.");
+}
+
 
 void HeartRate::setMessage(QString message)
 {
@@ -125,165 +120,218 @@ QVariant HeartRate::name()
 
 void HeartRate::connectToService(const QString &address)
 {
-    bool deviceHere = false;
-    for (int i = 0; i<m_devices.size(); i++) {
+    m_measurements.clear();
+
+    bool deviceFound = false;
+    for (int i = 0; i < m_devices.size(); i++) {
         if (((DeviceInfo*)m_devices.at(i))->getAddress() == address ) {
             m_currentDevice.setDevice(((DeviceInfo*)m_devices.at(i))->getDevice());
-            setMessage("Device selected.");
-            deviceHere = true;
+            setMessage("Connecting to device...");
+            deviceFound = true;
+            break;
         }
     }
-    // This in case we are running demo mode
-    if (!deviceHere)
+    // we are running demo mode
+    if (!deviceFound) {
         startDemo();
-    else {
-        QBluetoothDeviceInfo device = m_currentDevice.getDevice();
-        //! [Connect signals]
-        m_serviceDiscoveryAgent->setRemoteAddress(device.address());
-        m_serviceDiscoveryAgent->start();
-        if (!m_leInfo) {
-            m_leInfo = new QLowEnergyController();
-            connect(m_leInfo, SIGNAL(connected(QLowEnergyServiceInfo)), this, SLOT(serviceConnected(QLowEnergyServiceInfo)));
-            connect(m_leInfo, SIGNAL(disconnected(QLowEnergyServiceInfo)), this, SLOT(serviceDisconnected(QLowEnergyServiceInfo)));
-            connect(m_leInfo, SIGNAL(error(QLowEnergyServiceInfo,QLowEnergyController::Error)),
-                    this, SLOT(errorReceived(QLowEnergyServiceInfo,QLowEnergyController::Error)));
-            connect(m_leInfo, SIGNAL(error(QLowEnergyCharacteristicInfo,QLowEnergyController::Error)),
-                    this, SLOT(errorReceivedCharacteristic(QLowEnergyCharacteristicInfo,QLowEnergyController::Error)));
-            connect(m_leInfo, SIGNAL(valueChanged(QLowEnergyCharacteristicInfo)), this, SLOT(receiveMeasurement(QLowEnergyCharacteristicInfo)));
-        }
-        //! [Connect signals]
+        return;
     }
+
+    if (m_control) {
+        m_control->disconnectFromDevice();
+        delete m_control;
+        m_control = 0;
+
+    }
+    //! [Connect signals]
+    m_control = new QLowEnergyControllerNew(m_currentDevice.getDevice().address(),
+                                            this);
+    connect(m_control, SIGNAL(serviceDiscovered(QBluetoothUuid)),
+            this, SLOT(serviceDiscovered(QBluetoothUuid)));
+    connect(m_control, SIGNAL(discoveryFinished()),
+            this, SLOT(serviceScanDone()));
+    connect(m_control, SIGNAL(error(QLowEnergyControllerNew::Error)),
+            this, SLOT(controllerError(QLowEnergyControllerNew::Error)));
+    connect(m_control, SIGNAL(connected()),
+            this, SLOT(serviceConnected()));
+
+    m_control->connectToDevice();
+    //! [Connect signals]
 }
 
-void HeartRate::addLowEnergyService(const QLowEnergyServiceInfo &gatt)
+// TODO fix the qdoc tag below
+//! [Connecting to service]
+
+void HeartRate::serviceConnected()
 {
-    if (gatt.serviceUuid() == QBluetoothUuid::HeartRate) {
+    m_control->discoverServices();
+}
+
+void HeartRate::deviceDisconnected()
+{
+    setMessage("Heart Rate service disconnected");
+    qWarning() << "Remote device disconnected";
+}
+
+
+void HeartRate::serviceDiscovered(const QBluetoothUuid &gatt)
+{
+    if (gatt == QBluetoothUuid(QBluetoothUuid::HeartRate)) {
         setMessage("Heart Rate service discovered. Waiting for service scan to be done...");
-        m_heartRateService = QLowEnergyServiceInfo(gatt);
         foundHeartRateService = true;
     }
 }
 
-//! [Connecting to service]
 void HeartRate::serviceScanDone()
 {
-    //If HeartBelt is not connected (installed on the body) this message will stay.
-    setMessage("Connecting to service... Be patient...");
-    //It is not advisable to connect to BLE device right after scanning.
-    if (foundHeartRateService)
-        QTimer::singleShot(3000, this, SLOT(startConnection()));
-    else
-        setMessage("Heart Rate Service not found. Make sure your device is paired.");
-}
+    delete m_service;
+    m_service = 0;
 
-void HeartRate::startConnection()
-{
-    // HeartRate belt that this application was using had a random device address. This is only needed
-    // for Linux platform.
-    // m_heartRateService.setRandomAddress();
-    m_leInfo->connectToService(m_heartRateService);
-}
-
-void HeartRate::serviceConnected(const QLowEnergyServiceInfo &leService)
-{
-    setMessage("Connected to service. Waiting for updates");
-    if (leService.serviceUuid() == QBluetoothUuid::HeartRate) {
-        for ( int i = 0; i<leService.characteristics().size(); i++) {
-            if (leService.characteristics().at(i).uuid() == QBluetoothUuid::HeartRateMeasurement) {
-                m_start = QDateTime::currentDateTime();
-                m_heartRateCharacteristic = QLowEnergyCharacteristicInfo(leService.characteristics().at(i));
-                m_leInfo->enableNotifications(m_heartRateCharacteristic);
-                foundHeartRateCharacteristic = true;
-            }
-        }
+    if (foundHeartRateService) {
+        setMessage("Connecting to service...");
+        m_service = m_control->createServiceObject(
+                    QBluetoothUuid(QBluetoothUuid::HeartRate), this);
     }
+
+    if (!m_service) {
+        setMessage("Heart Rate Service not found.");
+        return;
+    }
+
+    connect(m_service, SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
+            this, SLOT(serviceStateChanged(QLowEnergyService::ServiceState)));
+    connect(m_service, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
+            this, SLOT(updateHeartRateValue(QLowEnergyCharacteristic,QByteArray)));
+    connect(m_service, SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)),
+            this, SLOT(confirmedDescriptorWrite(QLowEnergyDescriptor,QByteArray)));
+
+    m_service->discoverDetails();
 }
+
 //! [Connecting to service]
 
-void HeartRate::receiveMeasurement(const QLowEnergyCharacteristicInfo &characteristic)
+void HeartRate::disconnectService()
 {
-    m_heartRateCharacteristic = QLowEnergyCharacteristicInfo(characteristic);
-    //! [Reading value]
-    QString val;
-    qint16 energy_expended = 0;
-    int flags = 0;
-    int index = 0;
+    foundHeartRateService = false;
+    m_stop = QDateTime::currentDateTime();
 
-    //8 bit flags
-    val[0] = m_heartRateCharacteristic.value().at(index++);
-    val[1] = m_heartRateCharacteristic.value().at(index++);
-    flags = val.toUInt(0, 16);
-
-    // Each Heart Belt has its own settings and features, besides heart rate measurement
-    // By checking the flags we can determine whether it has energy feature. We will go through the array
-    // of the characters in the characteristic value.
-    // The following flags are used to determine what kind of value is being sent from the device.
-    // see https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-    quint8 heartRateValueIs16BitFlag = 0x1; //8 bit or 16 bit
-    quint8 energyExpendedFeatureFlag = 0x8;
-
-    val.clear();
-    val[0] = m_heartRateCharacteristic.value().at(index++); //1st 4 bit
-    val[1] = m_heartRateCharacteristic.value().at(index++); //2nd 4 bit
-    if (flags & heartRateValueIs16BitFlag) { //16 bit value
-        val[2] = m_heartRateCharacteristic.value().at(index++);
-        val[3] = m_heartRateCharacteristic.value().at(index++);
+    if (m_devices.isEmpty()) {
+        if (timer)
+            timer->stop();
+        return;
     }
 
-    m_HRMeasurement = val.toUInt(0, 16);
-    //! [Reading value]
-    m_measurements.append(m_HRMeasurement);
+    //disable notifications
+    if (m_notificationDesc.isValid() && m_service) {
+        m_service->writeDescriptor(m_notificationDesc, QByteArray("0000"));
+    } else {
+        m_control->disconnectFromDevice();
+        delete m_service;
+        m_service = 0;
+    }
+}
 
-    if (flags & energyExpendedFeatureFlag) {
-        QString energy;
-        int counter1 = 0;
-        for (int i = index; i < (m_heartRateCharacteristic.value().size() - 1); i++) {
-            if (counter1 > 3)
+//! [Error handling]
+void HeartRate::controllerError(QLowEnergyControllerNew::Error error)
+{
+    setMessage("Cannot connect to remote device.");
+    qWarning() << "Controller Error:" << error;
+}
+//! [Error handling]
+
+
+void HeartRate::serviceStateChanged(QLowEnergyService::ServiceState s)
+{
+    switch (s) {
+    case QLowEnergyService::ServiceDiscovered:
+    {
+        const QList<QLowEnergyCharacteristic> chars = m_service->characteristics();
+        for (int i = 0; i < chars.count(); i++) {
+            const QLowEnergyCharacteristic c = chars[i];
+            if (c.uuid() == QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement)) {
+                const QList<QLowEnergyDescriptor> descriptors = c.descriptors();
+                //enable notification
+                for (int j = 0; j < descriptors.count(); j++) {
+                    const QLowEnergyDescriptor desc = descriptors[j];
+                    if (desc.type() == QBluetoothUuid::ClientCharacteristicConfiguration) {
+                        m_service->writeDescriptor(desc, QByteArray("0100"));
+                        setMessage("Measuring");
+                        m_notificationDesc = desc;
+                        m_start = QDateTime::currentDateTime();
+                        break;
+                    }
+                }
                 break;
-            energy[i] = m_heartRateCharacteristic.value().at(i);
-            counter1 ++;
+            }
         }
-        energy_expended = energy.toUInt(0, 16);
+        break;
     }
-    qWarning() << "Used energy: " << energy_expended;
+    default:
+        //nothing for now
+        break;
+    }
+}
+
+void HeartRate::serviceError(QLowEnergyService::ServiceError e)
+{
+    switch (e) {
+    case QLowEnergyService::DescriptorWriteError:
+        setMessage("Cannot obtain HR notifications");
+        break;
+    default:
+        qWarning() << "HR service error:" << e;
+    }
+}
+
+void HeartRate::updateHeartRateValue(const QLowEnergyCharacteristic &c,
+                                     const QByteArray &value)
+{
+    // ignore any other characteristic change -> shouldn't really happen though
+    if (c.uuid() != QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement))
+        return;
+
+    //! [Reading value]
+    const char *data = QByteArray::fromHex(value).constData();
+    quint8 flags = data[0];
+
+    //Heart Rate
+    if (flags & 0x1) { // HR 16 bit? otherwise 8 bit
+        quint16 *heartRate = (quint16 *) &data[1];
+        //qDebug() << "16 bit HR value:" << *heartRate;
+        m_measurements.append(*heartRate);
+    } else {
+        quint8 *heartRate = (quint8 *) &data[1];
+        m_measurements.append(*heartRate);
+        //qDebug() << "8 bit HR value:" << *heartRate;
+    }
+
+    //Energy Expended
+    if (flags & 0x8) {
+        int index = (flags & 0x1) ? 5 : 3;
+        quint16 *energy = (quint16 *) &data[index];
+        qDebug() << "Used Energy:" << *energy;
+    }
+    //! [Reading value]
+
     Q_EMIT hrChanged();
+}
+
+void HeartRate::confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
+                                         const QByteArray &value)
+{
+    if (d.isValid() && d == m_notificationDesc && value == QByteArray("0000")) {
+        //disabled notifications -> assume disconnect intent
+        m_control->disconnectFromDevice();
+        delete m_service;
+        m_service = 0;
+    }
 }
 
 int HeartRate::hR() const
 {
-    return m_HRMeasurement;
-}
-
-//! [Error handling]
-void HeartRate::errorReceived(const QLowEnergyServiceInfo &leService, QLowEnergyController::Error error)
-{
-    qWarning() << "Error: " << leService.serviceUuid() << m_leInfo->errorString() << error;
-    setMessage(QStringLiteral("Error: ") + m_leInfo->errorString());
-}
-
-void HeartRate::errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &leCharacteristic, QLowEnergyController::Error error)
-{
-    qWarning() << "Error: " << leCharacteristic.uuid() << m_leInfo->errorString() << error;
-    setMessage(QStringLiteral("Error: ") + m_leInfo->errorString());
-}
-//! [Error handling]
-
-void HeartRate::disconnectService()
-{
-    if (foundHeartRateCharacteristic) {
-        m_stop = QDateTime::currentDateTime();
-        //! [Disconnecting from service]
-        m_leInfo->disableNotifications(m_heartRateCharacteristic);
-        m_leInfo->disconnectFromService();
-        //! [Disconnecting from service]
-    }
-    else if (m_devices.size() == 0) {
-        m_stop = QDateTime::currentDateTime();
-        timer->stop();
-        timer = 0;
-    }
-    foundHeartRateCharacteristic = false;
-    foundHeartRateService = false;
+    if (m_measurements.isEmpty())
+        return 0;
+    return m_measurements.last();
 }
 
 void HeartRate::obtainResults()
@@ -310,13 +358,13 @@ int HeartRate::minHR() const
 
 float HeartRate::average()
 {
-    if (m_measurements.size() == 0)
+    if (m_measurements.size() == 0) {
         return 0;
-    else {
+    } else {
         m_max = 0;
         m_min = 1000;
         int sum = 0;
-        for (int i=0; i< m_measurements.size(); i++) {
+        for (int i = 0; i < m_measurements.size(); i++) {
             sum += (int) m_measurements.value(i);
             if (((int)m_measurements.value(i)) > m_max)
                 m_max = (int)m_measurements.value(i);
@@ -327,7 +375,7 @@ float HeartRate::average()
     }
 }
 
-int HeartRate::measurements(int index)
+int HeartRate::measurements(int index) const
 {
     if (index > m_measurements.size())
         return 0;
@@ -335,26 +383,20 @@ int HeartRate::measurements(int index)
         return (int)m_measurements.value(index);
 }
 
-int HeartRate::measurementsSize()
+int HeartRate::measurementsSize() const
 {
     return m_measurements.size();
 }
 
-QString HeartRate::deviceAddress()
+QString HeartRate::deviceAddress() const
 {
-    return m_currentDevice.getDevice().address().toString();
+    return m_currentDevice.getAddress();
 }
 
 float HeartRate::caloriesCalculation()
 {
     calories = ((-55.0969 + (0.6309 * average()) + (0.1988 * 94) + (0.2017 * 24)) / 4.184) * 60 * time()/3600 ;
     return calories;
-}
-
-void HeartRate::serviceDisconnected(const QLowEnergyServiceInfo &service)
-{
-    setMessage("Heart Rate service disconnected");
-    qWarning() << "Service disconnected: " << service.serviceUuid();
 }
 
 int HeartRate::numDevices() const
@@ -365,35 +407,22 @@ int HeartRate::numDevices() const
 void HeartRate::startDemo()
 {
     m_start = QDateTime::currentDateTime();
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(receiveDemo()));
+    if (!timer) {
+        timer = new QTimer(this);
+        connect(timer, SIGNAL(timeout()), this, SLOT(receiveDemo()));
+    }
     timer->start(1000);
     setMessage("This is Demo mode");
 }
 
 void HeartRate::receiveDemo()
 {
-    m_HRMeasurement = 60;
-    m_measurements.append(m_HRMeasurement);
+    m_measurements.append(randomPulse());
     Q_EMIT hrChanged();
 }
 
-void HeartRate::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)
+int HeartRate::randomPulse() const
 {
-    if (error == QBluetoothServiceDiscoveryAgent::PoweredOffError)
-        setMessage("The Bluetooth adaptor is powered off, power it on before doing discovery.");
-    else if (error == QBluetoothServiceDiscoveryAgent::InputOutputError)
-        setMessage("Writing or reading from the device resulted in an error.");
-    else
-        setMessage("An unknown error has occurred.");
-}
-
-void HeartRate::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
-{
-    if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError)
-        setMessage("The Bluetooth adaptor is powered off, power it on before doing discovery.");
-    else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
-        setMessage("Writing or reading from the device resulted in an error.");
-    else
-        setMessage("An unknown error has occurred.");
+    // random number between 50 and 70
+    return qrand() % (70 - 50) + 50;
 }

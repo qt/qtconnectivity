@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -38,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/QLoggingCategory>
 #include <QQmlContext>
 #include <QGuiApplication>
 #include <QQuickView>
@@ -45,6 +47,7 @@
 
 int main(int argc, char *argv[])
 {
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication app(argc, argv);
 
     HeartRate heartRate;

@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -51,7 +52,7 @@ Rectangle {
         var t = heartRate.time;
         var min = Math.floor(t/60);
         var sec = t%60;
-        var r = min + " min " + sec + " sec "
+        var r = min + " min " + sec + " sec ";
         return r;
     }
 
@@ -198,7 +199,7 @@ Rectangle {
                     font.pixelSize: 40; font.bold: true
                     anchors.top: averageHR.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 20
+                    anchors.topMargin: 10
                     color: "#3870BA"
                     text: heartRate.average
                 }
@@ -208,9 +209,9 @@ Rectangle {
                     font.pixelSize: 30;
                     anchors.top: averageHRt.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 20
+                    anchors.topMargin: 10
                     color: "#3870BA"
-                    text: "Seconds measured "
+                    text: "Seconds measured:"
                 }
 
                 Text {
@@ -218,7 +219,7 @@ Rectangle {
                     font.pixelSize:  40; font.bold: true
                     anchors.top: time.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 20
+                    anchors.topMargin: 10
                     color: "#3870BA"
                     text: getTime()
                 }
@@ -237,7 +238,7 @@ Rectangle {
                     font.pixelSize:  40; font.bold: true
                     anchors.top:maxi.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 20
+                    anchors.topMargin: 10
                     color: "#3870BA"
                     text: " " + heartRate.maxHR + " || " + heartRate.minHR
                 }
@@ -247,7 +248,7 @@ Rectangle {
                     font.pixelSize:  30;
                     anchors.top: mini.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 20
+                    anchors.topMargin: 10
                     color: "#3870BA"
                     text: "  Calories "
                 }
@@ -257,9 +258,9 @@ Rectangle {
                     font.pixelSize:  40; font.bold: true
                     anchors.top:calories.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: 20
+                    anchors.topMargin: 10
                     color: "#3870BA"
-                    text: Math.floor(heartRate.calories)
+                    text: heartRate.calories.toFixed(3)
                 }
             }
         }

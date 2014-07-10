@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -40,13 +41,12 @@
 
 #include "deviceinfo.h"
 
-DeviceInfo::DeviceInfo(const QBluetoothDeviceInfo &device):
-    m_device(device)
+DeviceInfo::DeviceInfo(const QBluetoothDeviceInfo &info):
+    QObject(), m_device(info)
 {
-    Q_EMIT deviceChanged();
 }
 
-QBluetoothDeviceInfo DeviceInfo::getDevice()
+QBluetoothDeviceInfo DeviceInfo::getDevice() const
 {
     return m_device;
 }
@@ -54,4 +54,5 @@ QBluetoothDeviceInfo DeviceInfo::getDevice()
 void DeviceInfo::setDevice(const QBluetoothDeviceInfo &device)
 {
     m_device = device;
+    emit deviceChanged();
 }

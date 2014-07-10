@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -41,24 +42,18 @@
 #ifndef HEARTRATE_H
 #define HEARTRATE_H
 
+#include "deviceinfo.h"
+
 #include <QString>
-#include <QObject>
-#include <QList>
-#include <QtCore/QDebug>
+#include <QDebug>
 #include <QDateTime>
 #include <QVector>
 #include <QTimer>
-#include "deviceinfo.h"
-#include <qbluetoothglobal.h>
-#include <qbluetoothlocaldevice.h>
-#include <qbluetoothdeviceinfo.h>
-#include "qlowenergyserviceinfo.h"
-#include "qlowenergycontroller.h"
-#include <QBluetoothServiceDiscoveryAgent>
 #include <QBluetoothDeviceDiscoveryAgent>
+#include <QBluetoothDeviceInfo>
+#include <QLowEnergyControllerNew>
+#include <QLowEnergyService>
 
-QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyCharacteristicInfo)
 
 QT_USE_NAMESPACE
 class HeartRate: public QObject
@@ -88,26 +83,39 @@ public:
 
 public slots:
     void deviceSearch();
-    void addDevice(const QBluetoothDeviceInfo&);
-    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
-    void scanFinished();
     void connectToService(const QString &address);
-    void addLowEnergyService(const QLowEnergyServiceInfo&);
-    void serviceScanDone();
-    void serviceScanError(QBluetoothServiceDiscoveryAgent::Error);
-    void serviceConnected(const QLowEnergyServiceInfo &);
-    void receiveMeasurement(const QLowEnergyCharacteristicInfo &);
-    void errorReceived(const QLowEnergyServiceInfo &, QLowEnergyController::Error);
-    void errorReceivedCharacteristic(const QLowEnergyCharacteristicInfo &, QLowEnergyController::Error);
-    void serviceDisconnected(const QLowEnergyServiceInfo &);
     void disconnectService();
-    void obtainResults();
-    void startConnection();
-    int measurements(int index);
-    int measurementsSize();
-    QString deviceAddress();
-    int numDevices() const;
     void startDemo();
+
+    void obtainResults();
+    int measurements(int index) const;
+    int measurementsSize() const;
+    QString deviceAddress() const;
+    int numDevices() const;
+
+private slots:
+    //QBluetothDeviceDiscoveryAgent
+    void addDevice(const QBluetoothDeviceInfo&);
+    void scanFinished();
+    void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
+
+    //QLowEnergyControllerNew
+    void serviceDiscovered(const QBluetoothUuid &);
+    void serviceScanDone();
+    void controllerError(QLowEnergyControllerNew::Error);
+    void serviceConnected();
+    void deviceDisconnected();
+
+
+    //QLowEnergyService
+    void serviceStateChanged(QLowEnergyService::ServiceState s);
+    void updateHeartRateValue(const QLowEnergyCharacteristic &c,
+                              const QByteArray &value);
+    void confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
+                              const QByteArray &value);
+    void serviceError(QLowEnergyService::ServiceError e);
+
+    //DemoMode
     void receiveDemo();
 
 Q_SIGNALS:
@@ -119,25 +127,23 @@ Q_SIGNALS:
     void caloriesChanged();
 
 private:
+    int randomPulse() const;
+
     DeviceInfo m_currentDevice;
-    QBluetoothServiceDiscoveryAgent *m_serviceDiscoveryAgent;
     QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
-    QLowEnergyCharacteristicInfo m_heartRateCharacteristic;
+    QLowEnergyDescriptor m_notificationDesc;
     QList<QObject*> m_devices;
     QString m_info;
-    QLowEnergyServiceInfo m_heartRateService;
     bool foundHeartRateService;
-    bool foundHeartRateCharacteristic;
-    int m_HRMeasurement;
-    QVector<quint8> m_measurements;
+    QVector<quint16> m_measurements;
     QDateTime m_start;
     QDateTime m_stop;
     int m_max;
     int m_min;
-    QVector<QDateTime> m_timestamps;
     float calories;
-    QLowEnergyController *m_leInfo;
+    QLowEnergyControllerNew *m_control;
     QTimer *timer; // for demo application
+    QLowEnergyService *m_service;
 };
 
 #endif // HEARTRATE_H

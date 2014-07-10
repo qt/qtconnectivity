@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -54,9 +55,9 @@ class DeviceInfo: public QObject
 public:
     DeviceInfo(const QBluetoothDeviceInfo &device);
     void setDevice(const QBluetoothDeviceInfo &device);
-    QString getName() { return m_device.name(); }
-    QString getAddress() { return m_device.address().toString(); }
-    QBluetoothDeviceInfo getDevice();
+    QString getName() const { return m_device.name(); }
+    QString getAddress() const { return m_device.address().toString(); }
+    QBluetoothDeviceInfo getDevice() const;
 
 signals:
     void deviceChanged();

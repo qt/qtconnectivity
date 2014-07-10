@@ -87,7 +87,7 @@ Rectangle {
         Text {
             id: logi
             text: heartRate.message
-            anchors.centerIn: parent
+            anchors.centerIn: updatei
             color: "#3870BA"
         }
     }
