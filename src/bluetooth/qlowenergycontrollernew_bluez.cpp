@@ -556,27 +556,29 @@ void QLowEnergyControllerNewPrivate::processReply(
                                  << "descriptor handle:" << hex << descriptorHandle;
         }
 
-        QLowEnergyHandle nextBorderHandle = 0;
-        if (keys.count() == 1) { // processing last characteristic
-            // endHandle still belongs to current service
-            // -> must be included in current search
-            nextBorderHandle = p->endHandle+1;
-        } else {
-            nextBorderHandle = keys[1];
-        }
+        const QLowEnergyHandle nextPotentialHandle = descriptorHandle + 1;
+        if (keys.count() == 1) {
+            // Reached last characteristic of service
 
-        // have we reached next border?
-        if (descriptorHandle + 1 >= nextBorderHandle)
-            // go to next characteristic
-            keys.removeFirst();
+            // The endhandle of a service is always the last handle of
+            // the current service. We must either continue until we have reached
+            // the starting handle of the next service (endHandle+1) or
+            // the last physical handle address (0xffff). Note that
+            // the endHandle of the last service on the device is 0xffff.
 
-        if (keys.isEmpty()) {
-            // descriptor for last characteristic found
-            // continue with reading descriptor value
-            readServiceValues(p->uuid, false);
+            if ((p->endHandle != 0xffff && nextPotentialHandle >= p->endHandle + 1)
+                    || (descriptorHandle == 0xffff)) {
+                keys.removeFirst();
+                // last descriptor of last characteristic found
+                // continue with reading descriptor values
+                readServiceValues(p->uuid, false);
+            } else {
+                discoverNextDescriptor(p, keys, nextPotentialHandle);
+            }
         } else {
-            // service has more descriptors to be found
-            discoverNextDescriptor(p, keys, descriptorHandle + 1);
+            if (nextPotentialHandle >= keys[1]) //reached next char
+                keys.removeFirst();
+            discoverNextDescriptor(p, keys, nextPotentialHandle);
         }
     }
         break;

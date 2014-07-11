@@ -187,10 +187,10 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                                                                    QString::SkipEmptyParts);
                     Q_ASSERT(handleDetails.count() == 11);
                     const QString charHandle = handleDetails.at(8);
-                    uint charHandleId = charHandle.toUInt(0, 0);
+                    QLowEnergyHandle charHandleId = charHandle.toUShort(0, 0);
                     for (int i = 0; i < m_leServices.size(); i++) {
-                        if ( charHandleId >= m_leServices.at(i).d_ptr->startingHandle.toUInt(0,0) &&
-                             charHandleId <= m_leServices.at(i).d_ptr->endingHandle.toUInt(0,0))
+                        if ( charHandleId >= m_leServices.at(i).d_ptr->startingHandle.toUShort(0,0) &&
+                             charHandleId <= m_leServices.at(i).d_ptr->endingHandle.toUShort(0,0))
                         {
                             const QBluetoothUuid charUuid(handleDetails.at(10));
 
@@ -236,7 +236,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                         if (!m_leServices.at(index).d_ptr->characteristicList.isEmpty()) {
                             for (int j = 0; j < m_leServices.at(index).d_ptr->characteristicList.size(); j++) {
                                 const QLowEnergyCharacteristicInfo chars = m_leServices.at(index).d_ptr->characteristicList.at(j);
-                                const QLowEnergyHandle handleId = handleDetails.at(1).toUInt(0, 0);
+                                const QLowEnergyHandle handleId = handleDetails.at(1).toUShort(0, 0);
                                 qCDebug(QT_BT_BLUEZ) << QString::number(handleId, 16) << handleId
                                                      << chars.handle() << QString::number(chars.handle(), 16);
                                 if (handleId == chars.handle()) {
@@ -260,7 +260,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                         for (int j = 0; j < service.d_ptr->characteristicList.size()-1; j++) {
                             QLowEnergyCharacteristicInfo chars = service.d_ptr->characteristicList.at(j);
                             QLowEnergyCharacteristicInfo charsNext = service.d_ptr->characteristicList.at(j+1);
-                            const QLowEnergyHandle handleId = handleDetails.at(1).toUInt(0, 0);
+                            const QLowEnergyHandle handleId = handleDetails.at(1).toUShort(0, 0);
                             qCDebug(QT_BT_BLUEZ) << hex << handleId << hex << chars.handle();
 
                             if (handleId > chars.handle() && handleId < charsNext.handle()) {
@@ -300,7 +300,7 @@ void QLowEnergyControllerPrivate::_q_replyReceived(const QString &reply)
                     row = update.at(i).split(QRegularExpression(QStringLiteral("\\W+")), QString::SkipEmptyParts);
                     for (int j = 0; j < m_leServices.size(); j++) {
                         for (int k = 0; k < m_leServices.at(j).characteristics().size(); k++) {
-                            if (m_leServices.at(j).characteristics().at(k).handle() == row.at(2).toUInt(0, 0)) {
+                            if (m_leServices.at(j).characteristics().at(k).handle() == row.at(2).toUShort(0, 0)) {
 
                                 QString notificationValue = QStringLiteral("");
                                 for (int s = 4 ; s< row.size(); s++)

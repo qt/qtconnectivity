@@ -235,7 +235,7 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QVERIFY(!target.isValid());
     QCOMPARE(target.type(), QBluetoothUuid::UnknownDescriptorType);
     QCOMPARE(target.name(), QString());
-    QCOMPARE(target.handle(), 0u);
+    QCOMPARE(target.handle(), QLowEnergyHandle(0));
     QCOMPARE(target.uuid(), QBluetoothUuid());
     QCOMPARE(target.value(), QByteArray());
 

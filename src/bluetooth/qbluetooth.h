@@ -59,7 +59,7 @@ Q_DECLARE_FLAGS(SecurityFlags, Security)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
 }
 
-typedef quint32 QLowEnergyHandle;
+typedef quint16 QLowEnergyHandle;
 
 QT_END_NAMESPACE
 
