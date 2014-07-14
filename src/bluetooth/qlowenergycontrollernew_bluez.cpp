@@ -430,8 +430,14 @@ void QLowEnergyControllerNewPrivate::processReply(
         if (isErrorResponse) {
             // we reached end of service handle
             // just finished up characteristic discovery
-            // continue with calues of characteristics
-            readServiceValues(p->uuid, true);
+            // continue with values of characteristics
+            if (!p->characteristicList.isEmpty()) {
+                readServiceValues(p->uuid, true);
+            } else {
+                // discovery finished since the service doesn't have any
+                // characteristics
+                p->setState(QLowEnergyService::ServiceDiscovered);
+            }
             break;
         }
 
