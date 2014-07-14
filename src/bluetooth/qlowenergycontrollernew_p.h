@@ -126,6 +126,7 @@ private:
     };
     QQueue<Request> openRequests;
     bool requestPending;
+    quint16 mtuSize;
 
     void sendCommand(const QByteArray &packet);
     void sendNextPendingRequest();
@@ -142,6 +143,7 @@ private:
                                 const QList<QLowEnergyHandle> pendingCharHandles,
                                 QLowEnergyHandle startingHandle);
     void processUnsolicitedReply(const QByteArray &msg);
+    void exchangeMTU();
 
 
 private slots:

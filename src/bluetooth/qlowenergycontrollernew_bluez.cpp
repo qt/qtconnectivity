@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -51,11 +52,16 @@
 
 #define ATTRIBUTE_CHANNEL_ID 4
 
+#define ATT_DEFAULT_LE_MTU 23
+#define ATT_MAX_LE_MTU 0x200
+
 #define GATT_PRIMARY_SERVICE    0x2800
 #define GATT_CHARACTERISTIC     0x2803
 
 // GATT commands
 #define ATT_OP_ERROR_RESPONSE           0x1
+#define ATT_OP_EXCHANGE_MTU_REQUEST     0x2 //send own mtu
+#define ATT_OP_EXCHANGE_MTU_RESPONSE    0x3 //receive server MTU
 #define ATT_OP_FIND_INFORMATION_REQUEST 0x4 //discover individual attribute info
 #define ATT_OP_FIND_INFORMATION_RESPONSE 0x5
 #define ATT_OP_READ_BY_TYPE_REQUEST     0x8 //discover characteristics
@@ -76,6 +82,7 @@
 #define READ_BY_TYPE_REQ_SIZE 7
 #define READ_REQUEST_SIZE 3
 #define WRITE_REQUEST_SIZE 3
+#define MTU_EXCHANGE_SIZE 3
 
 // GATT error codes
 #define ATT_ERROR_INVALID_HANDLE        0x01
@@ -177,7 +184,8 @@ QLowEnergyControllerNewPrivate::QLowEnergyControllerNewPrivate()
     : QObject(),
       state(QLowEnergyControllerNew::UnconnectedState),
       error(QLowEnergyControllerNew::NoError),
-      l2cpSocket(0)
+      l2cpSocket(0), requestPending(false),
+      mtuSize(ATT_DEFAULT_LE_MTU)
 {
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 }
@@ -207,8 +215,9 @@ void QLowEnergyControllerNewPrivate::l2cpConnected()
 {
     Q_Q(QLowEnergyControllerNew);
 
+    exchangeMTU();
+
     setState(QLowEnergyControllerNew::ConnectedState);
-    requestPending = false;
     emit q->connected();
 }
 
@@ -331,6 +340,24 @@ void QLowEnergyControllerNewPrivate::processReply(
     }
 
     switch (command) {
+    case ATT_OP_EXCHANGE_MTU_REQUEST: // in case of error
+    case ATT_OP_EXCHANGE_MTU_RESPONSE:
+    {
+        Q_ASSERT(request.command == ATT_OP_EXCHANGE_MTU_REQUEST);
+        if (isErrorResponse) {
+            mtuSize = ATT_DEFAULT_LE_MTU;
+            break;
+        }
+
+        const char *data = response.constData();
+        quint16 mtu = bt_get_le16(&data[1]);
+        mtuSize = mtu;
+        if (mtuSize < ATT_DEFAULT_LE_MTU)
+            mtuSize = ATT_DEFAULT_LE_MTU;
+
+        qCDebug(QT_BT_BLUEZ) << "Server MTU:" << mtu << "resulting mtu:" << mtuSize;
+    }
+        break;
     case ATT_OP_READ_BY_GROUP_REQUEST: // in case of error
     case ATT_OP_READ_BY_GROUP_RESPONSE:
     {
@@ -829,6 +856,25 @@ void QLowEnergyControllerNewPrivate::processUnsolicitedReply(const QByteArray &p
         qCWarning(QT_BT_BLUEZ) << "Cannot find matching characteristic for "
                                   "notification/indication";
     }
+}
+
+void QLowEnergyControllerNewPrivate::exchangeMTU()
+{
+    qCDebug(QT_BT_BLUEZ) << "Exchanging MTU";
+
+    quint8 packet[MTU_EXCHANGE_SIZE];
+    packet[0] = ATT_OP_EXCHANGE_MTU_REQUEST;
+    bt_put_unaligned(htobs(ATT_MAX_LE_MTU), (quint16 *) &packet[1]);
+
+    QByteArray data(MTU_EXCHANGE_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, MTU_EXCHANGE_SIZE);
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_EXCHANGE_MTU_REQUEST;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
 }
 
 void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
