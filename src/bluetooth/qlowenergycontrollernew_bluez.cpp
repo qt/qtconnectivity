@@ -286,6 +286,15 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
         processUnsolicitedReply(reply);
         return;
     }
+    case ATT_OP_EXCHANGE_MTU_REQUEST:
+    case ATT_OP_READ_BY_GROUP_REQUEST:
+    case ATT_OP_READ_BY_TYPE_REQUEST:
+    case ATT_OP_READ_REQUEST:
+    case ATT_OP_FIND_INFORMATION_REQUEST:
+    case ATT_OP_WRITE_REQUEST:
+        qCWarning(QT_BT_BLUEZ) << "Unexpected message type" << hex << command
+                               << "will be ignored"   ;
+        return;
     default:
         //only solicited replies finish pending requests
         requestPending = false;
