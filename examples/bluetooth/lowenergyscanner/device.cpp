@@ -47,6 +47,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <QDebug>
 #include <QList>
+#include <QTimer>
 
 Device::Device():
     connected(false), controller(0), m_deviceScanState(false)
@@ -77,6 +78,8 @@ void Device::startDeviceDiscovery()
 {
     qDeleteAll(devices);
     devices.clear();
+    emit devicesUpdated();
+
     setUpdate("Scanning for devices ...");
     discoveryAgent->start();
     m_deviceScanState = true;
@@ -138,9 +141,10 @@ void Device::scanServices(const QString &address)
 
     qDeleteAll(m_characteristics);
     m_characteristics.clear();
+    emit characteristicsUpdated();
     qDeleteAll(m_services);
     m_services.clear();
-
+    emit servicesUpdated();
 
     setUpdate("Connecting to device...");
 
@@ -202,6 +206,7 @@ void Device::connectToService(const QString &uuid)
 
     qDeleteAll(m_characteristics);
     m_characteristics.clear();
+    emit characteristicsUpdated();
 
     if (service->state() == QLowEnergyService::DiscoveryRequired) {
         connect(service, SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
@@ -217,12 +222,11 @@ void Device::connectToService(const QString &uuid)
         m_characteristics.append(cInfo);
     }
 
-    emit characteristicsUpdated();
+    QTimer::singleShot(0, this, SIGNAL(characteristicsUpdated()));
 }
 
 void Device::deviceConnected()
 {
-
     setUpdate("Discovering services!");
     connected = true;
     controller->discoverServices();
@@ -248,7 +252,8 @@ void Device::disconnectFromDevice()
 
 void Device::deviceDisconnected()
 {
-    //setUpdate("Device disconnected " + currentDevice.getName());
+    qWarning() << "Disconnect from device";
+    emit disconnected();
 }
 
 void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)

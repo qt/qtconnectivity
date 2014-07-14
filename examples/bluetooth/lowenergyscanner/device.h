@@ -104,6 +104,7 @@ Q_SIGNALS:
     void characteristicsUpdated();
     void updateChanged();
     void stateChanged();
+    void disconnected();
 
 private:
     void setUpdate(QString message);

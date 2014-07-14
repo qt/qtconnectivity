@@ -54,12 +54,23 @@ Rectangle {
     Dialog {
         id: info
         anchors.centerIn: parent
-        visible: false
+        visible: true
+        dialogText: "Scanning for characteristics...";
     }
 
-    Component.onCompleted: {
-        info.visible = true;
-        info.dialogText = "Scanning for characteristics...";
+    Connections {
+        target: device
+        onCharacteristicsUpdated: {
+            menu.menuText = "Back"
+            if (characteristicview.count === 0)
+                info.dialogText = "No characteristic found"
+            else
+                info.visible = false;
+        }
+
+        onDisconnected: {
+            pageLoader.source = "main.qml"
+        }
     }
 
     ListView {
@@ -79,11 +90,6 @@ Rectangle {
             border.width: 2
             border.color: "black"
             radius: 5
-
-            Component.onCompleted: {
-                menu.menuText = "Back"
-                info.visible = false
-            }
 
             Label {
                 id: characteristicName
@@ -132,7 +138,7 @@ Rectangle {
         id: menu
         anchors.bottom: parent.bottom
         menuWidth: parent.width
-        menuText: device.update
+        menuText: "Scanning"
         menuHeight: (parent.height/6)
         onButtonClick: {
             pageLoader.source = "Services.qml"

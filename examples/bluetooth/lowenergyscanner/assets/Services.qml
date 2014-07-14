@@ -54,12 +54,22 @@ Rectangle {
     Dialog {
         id: info
         anchors.centerIn: parent
-        visible: false
+        visible: true
+        dialogText: "Scanning for services...";
     }
 
-    Component.onCompleted: {
-        info.visible = true;
-        info.dialogText = "Scanning for services...";
+    Connections {
+        target: device
+        onServicesUpdated: {
+            if (servicesview.count === 0)
+                info.dialogText = "No services found"
+            else
+                info.visible = false;
+        }
+
+        onDisconnected: {
+            pageLoader.source = "main.qml"
+        }
     }
 
     ListView {
@@ -78,7 +88,9 @@ Rectangle {
             border.color: "black"
             radius: 5
             width: parent.width
-            Component.onCompleted: info.visible = false
+            Component.onCompleted: {
+                info.visible = false
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -113,7 +125,6 @@ Rectangle {
         menuHeight: (parent.height/6)
         onButtonClick: {
             device.disconnectFromDevice()
-            pageLoader.source = "main.qml"
         }
     }
 }
