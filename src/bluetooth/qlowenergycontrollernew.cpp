@@ -133,8 +133,7 @@ QLowEnergyCharacteristic QLowEnergyControllerNewPrivate::characteristicForHandle
     if (service.isNull())
         return QLowEnergyCharacteristic();
 
-    QList<QLowEnergyHandle> charHandles = service->characteristicList.keys();
-    if (charHandles.isEmpty())
+    if (service->characteristicList.isEmpty())
         return QLowEnergyCharacteristic();
 
     // check whether it is the handle of a characteristic header
@@ -142,6 +141,7 @@ QLowEnergyCharacteristic QLowEnergyControllerNewPrivate::characteristicForHandle
         return QLowEnergyCharacteristic(service, handle);
 
     // check whether it is the handle of the characteristic value or its descriptors
+    QList<QLowEnergyHandle> charHandles = service->characteristicList.keys();
     std::sort(charHandles.begin(), charHandles.end());
     for (int i = charHandles.size() - 1; i >= 0; i--) {
         if (charHandles.at(i) > handle)

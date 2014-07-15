@@ -491,8 +491,8 @@ void QLowEnergyControllerNewPrivate::processReply(
         Q_ASSERT(request.command == ATT_OP_READ_REQUEST);
 
         uint ref = request.reference.toUInt();
-        QLowEnergyHandle charHandle = (ref & 0xffff);
-        QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
+        const QLowEnergyHandle charHandle = (ref & 0xffff);
+        const QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
 
         // we ignore error response
         if (!isErrorResponse) {
@@ -630,8 +630,8 @@ void QLowEnergyControllerNewPrivate::processReply(
         Q_ASSERT(request.command == ATT_OP_WRITE_REQUEST);
 
         uint ref = request.reference.toUInt();
-        QLowEnergyHandle charHandle = (ref & 0xffff);
-        QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
+        const QLowEnergyHandle charHandle = (ref & 0xffff);
+        const QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
 
         QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
         if (service.isNull() || !service->characteristicList.contains(charHandle))
@@ -763,7 +763,7 @@ void QLowEnergyControllerNewPrivate::readServiceValues(
     QList<QPair<QLowEnergyHandle, quint32> > targetHandles;
     const QList<QLowEnergyHandle> keys = service->characteristicList.keys();
     for (int i = 0; i < keys.count(); i++) {
-        QLowEnergyHandle charHandle = keys[i];
+        const QLowEnergyHandle charHandle = keys[i];
         const QLowEnergyServicePrivate::CharData &charDetails =
                 service->characteristicList[charHandle];
 
@@ -846,7 +846,7 @@ void QLowEnergyControllerNewPrivate::processUnsolicitedReply(const QByteArray &p
 {
     const char *data = payload.constData();
     bool isNotification = (data[0] == ATT_OP_HANDLE_VAL_NOTIFICATION);
-    QLowEnergyHandle changedHandle = bt_get_le16(&data[1]);
+    const QLowEnergyHandle changedHandle = bt_get_le16(&data[1]);
 
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (isNotification)
@@ -855,7 +855,7 @@ void QLowEnergyControllerNewPrivate::processUnsolicitedReply(const QByteArray &p
             qCDebug(QT_BT_BLUEZ) << "Change indication for handle" << hex << changedHandle;
     }
 
-    QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
+    const QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
     if (ch.isValid() && ch.handle() == changedHandle) {
         const QByteArray newValue = payload.mid(3).toHex();
         updateValueOfCharacteristic(ch.attributeHandle(), newValue);
@@ -899,7 +899,7 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
     quint8 packet[FIND_INFO_REQUEST_SIZE];
     packet[0] = ATT_OP_FIND_INFORMATION_REQUEST;
 
-    QLowEnergyHandle charStartHandle = startingHandle;
+    const QLowEnergyHandle charStartHandle = startingHandle;
     QLowEnergyHandle charEndHandle = 0;
     if (pendingCharHandles.count() == 1) //single characteristic
         charEndHandle = serviceData->endHandle;
