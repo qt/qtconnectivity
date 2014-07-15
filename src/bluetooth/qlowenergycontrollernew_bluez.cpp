@@ -48,7 +48,6 @@
 #include <QtBluetooth/QLowEnergyService>
 
 #include <bluetooth/bluetooth.h>
-#include <bluetooth/uuid.h>
 
 #define ATTRIBUTE_CHANNEL_ID 4
 
@@ -673,15 +672,12 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
                     QLowEnergyHandle start, QLowEnergyHandle end)
 {
     //call for primary services
-    bt_uuid_t primary;
-    bt_uuid16_create(&primary, GATT_PRIMARY_SERVICE);
-
     quint8 packet[GRP_TYPE_REQ_SIZE];
 
     packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
     bt_put_unaligned(htobs(start), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(end), (quint16 *) &packet[3]);
-    bt_put_unaligned(htobs(primary.value.u16), (quint16 *) &packet[5]);
+    bt_put_unaligned(htobs(GATT_PRIMARY_SERVICE), (quint16 *) &packet[5]);
 
     QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
@@ -713,15 +709,12 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         QLowEnergyHandle nextHandle)
 {
-    bt_uuid_t uuid;
-    bt_uuid16_create(&uuid, GATT_CHARACTERISTIC);
-
     quint8 packet[READ_BY_TYPE_REQ_SIZE];
 
     packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
     bt_put_unaligned(htobs(nextHandle), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(serviceData->endHandle), (quint16 *) &packet[3]);
-    bt_put_unaligned(htobs(uuid.value.u16), (quint16 *) &packet[5]);
+    bt_put_unaligned(htobs(GATT_CHARACTERISTIC), (quint16 *) &packet[5]);
 
     QByteArray data(READ_BY_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_BY_TYPE_REQ_SIZE);
