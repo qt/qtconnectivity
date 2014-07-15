@@ -663,6 +663,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
     }
 
     if (uuidStrings.isEmpty() || discoveredDevices.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "No uuids found for" << deviceAddress.toString();
          // nothing found -> go to next uuid
         _q_serviceDiscoveryFinished();
         return;

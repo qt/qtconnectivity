@@ -337,7 +337,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << btAddress.toString() << btName
                          << "Num UUIDs" << device.uUIDs().count()
                          << "total device" << discoveredDevices.count() << "cached"
-                         << "RSSI" << device.rSSI();
+                         << "RSSI" << device.rSSI() << "Class" << btClass;
 
     OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
@@ -348,6 +348,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
 
     // read information
     QBluetoothDeviceInfo deviceInfo(btAddress, btName, btClass);
+
+    if (!btClass)
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    else
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+
     deviceInfo.setRssi(device.rSSI());
     QList<QBluetoothUuid> uuids;
     foreach (const QString &u, device.uUIDs())
