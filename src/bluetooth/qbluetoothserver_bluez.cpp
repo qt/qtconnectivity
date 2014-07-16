@@ -43,13 +43,10 @@
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
 #include "qbluetoothlocaldevice.h"
+#include "bluez/bluez_data_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QSocketNotifier>
-
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/rfcomm.h>
-#include <bluetooth/l2cap.h>
 
 #include <errno.h>
 

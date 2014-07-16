@@ -20,7 +20,8 @@ HEADERS += bluez/manager_p.h \
            bluez/obex_client_p.h \
            bluez/obex_agent_p.h \
            bluez/obex_transfer_p.h \
-           bluez/obex_manager_p.h
+           bluez/obex_manager_p.h \
+           bluez_data_p.h
 
 
 SOURCES += bluez/manager.cpp \
