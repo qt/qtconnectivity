@@ -95,13 +95,15 @@ public:
     ~QBluetoothSocketPrivate();
 
 //On QNX and Android we connect using the uuid not the port
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_QNX_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
+#elif defined(QT_ANDROID_BLUETOOTH)
+    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
 #else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
-    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
+    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
 #endif
 
 

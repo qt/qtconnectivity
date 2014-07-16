@@ -84,16 +84,17 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
                                                const QBluetoothUuid &uuid,
-                                               QIODevice::OpenMode openMode)
+                                               QIODevice::OpenMode openMode,
+                                               int fallbackServiceChannel)
 {
     Q_Q(QBluetoothSocket);
 
     q->setSocketState(QBluetoothSocket::ConnectingState);
-    QtConcurrent::run(this, &QBluetoothSocketPrivate::connectToServiceConc, address, uuid, openMode);
+    QtConcurrent::run(this, &QBluetoothSocketPrivate::connectToServiceConc, address, uuid, openMode, fallbackServiceChannel);
 }
 
 void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &address,
-                                                   const QBluetoothUuid &uuid, QIODevice::OpenMode openMode)
+                                                   const QBluetoothUuid &uuid, QIODevice::OpenMode openMode, int fallbackServiceChannel)
 {
     Q_Q(QBluetoothSocket);
     Q_UNUSED(openMode);
@@ -165,11 +166,128 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
             env->ExceptionClear();
         }
 
-        socketObject = remoteDevice = QAndroidJniObject();
-        errorString = QBluetoothSocket::tr("Connection to service failed");
-        q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
-        return;
+        qCWarning(QT_BT_ANDROID) << "Falling back to workaround.";
+
+        jclass remoteDeviceClazz = env->GetObjectClass(remoteDevice.object());
+        jmethodID getClassMethod = env->GetMethodID(remoteDeviceClazz, "getClass", "()Ljava/lang/Class;");
+        if (!getClassMethod) {
+            qCWarning(QT_BT_ANDROID) << "getClass method could not found.";
+
+            errorString = QBluetoothSocket::tr("Connection to service failed");
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        QAndroidJniObject remoteDeviceClass = QAndroidJniObject(env->CallObjectMethod(remoteDevice.object(), getClassMethod));
+        if (!remoteDeviceClass.isValid()) {
+            qCWarning(QT_BT_ANDROID) << "Could not invoke getClass from BluetoothDevice.";
+
+            errorString = QBluetoothSocket::tr("Connection to service failed");
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        jclass classClass = env->FindClass("java/lang/Class");
+        jclass integerClass = env->FindClass("java/lang/Integer");
+        jfieldID integerType = env->GetStaticFieldID(integerClass, "TYPE", "Ljava/lang/Class;");
+        jobject integerObject = env->GetStaticObjectField(integerClass, integerType);
+        if (!integerObject) {
+            qCWarning(QT_BT_ANDROID) << "Could not get Integer.TYPE";
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        jobjectArray paramTypes = env->NewObjectArray(1, classClass, integerObject);
+        if (!paramTypes) {
+            qCWarning(QT_BT_ANDROID) << "Could not create new Class[]{Integer.TYPE}";
+
+            errorString = QBluetoothSocket::tr("Connection to service failed");
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        QAndroidJniObject method = remoteDeviceClass.callObjectMethod(
+                    "getMethod",
+                    "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;",
+                    QAndroidJniObject::fromString(QLatin1String("createRfcommSocket")).object<jstring>(),
+                    paramTypes);
+        if (!method.isValid() || env->ExceptionCheck()) {
+            qCWarning(QT_BT_ANDROID) << "Could not invoke getMethod";
+            if (env->ExceptionCheck())
+            {
+                env->ExceptionDescribe();
+                env->ExceptionClear();
+            }
+
+            errorString = QBluetoothSocket::tr("Connection to service failed");
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        jclass methodClass = env->GetObjectClass(method.object());
+        jmethodID invokeMethodId = env->GetMethodID(methodClass, "invoke", "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+        if (!invokeMethodId)
+        {
+            qCWarning(QT_BT_ANDROID) << "Could not invoke method.";
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        jmethodID valueOfMethodId = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
+        jclass objectClass = env->FindClass("java/lang/Object");
+        jobjectArray invokeParams = env->NewObjectArray(1, objectClass, env->CallStaticObjectMethod(integerClass, valueOfMethodId, fallbackServiceChannel));
+
+        jobject invokeResult = env->CallObjectMethod(method.object(), invokeMethodId, remoteDevice.object(), invokeParams);
+        if (!invokeResult)
+        {
+            qCWarning(QT_BT_ANDROID) << "Invoke Resulted with error.";
+            if (env->ExceptionCheck())
+            {
+                env->ExceptionDescribe();
+                env->ExceptionClear();
+            }
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
+
+        socketObject = QAndroidJniObject(invokeResult);
+        socketObject.callMethod<void>("connect");
+        if (env->ExceptionCheck() || socketObject.callMethod<jboolean>("isConnected") == JNI_FALSE)
+        {
+            if (env->ExceptionCheck())
+            {
+                env->ExceptionDescribe();
+                env->ExceptionClear();
+            }
+
+            errorString = QBluetoothSocket::tr("Connection to service failed");
+
+            socketObject = remoteDevice = QAndroidJniObject();
+            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            return;
+        }
     }
 
     if (inputThread) {
