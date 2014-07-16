@@ -75,20 +75,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
 }
-#ifdef QT_BLUEZ_BLUETOOTH
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &address,
-                                                           const QVariantMap &dict)
-{
-    Q_UNUSED(address);
-    Q_UNUSED(dict);
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &name,
-                                                               const QDBusVariant &value)
-{
-    Q_UNUSED(name);
-    Q_UNUSED(value);
-}
-#endif
 
 QT_END_NAMESPACE
