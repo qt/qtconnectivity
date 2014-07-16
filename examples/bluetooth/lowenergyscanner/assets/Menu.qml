@@ -55,8 +55,7 @@ Rectangle {
         id: search
         width: parent.width
         height: parent.height
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter;
+        anchors.centerIn: parent
         color: "#363636"
         border.width: 1
         border.color: "#E3E3E3"
