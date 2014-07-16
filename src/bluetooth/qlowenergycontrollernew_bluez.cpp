@@ -48,6 +48,7 @@
 #include <QtBluetooth/QLowEnergyService>
 
 #include <bluetooth/bluetooth.h>
+#include <bluetooth/l2cap.h>
 
 #define ATTRIBUTE_CHANNEL_ID 4
 
@@ -207,6 +208,29 @@ void QLowEnergyControllerNewPrivate::connectToDevice()
     connect(l2cpSocket, SIGNAL(readyRead()), this, SLOT(l2cpReadyRead()));
 
     l2cpSocket->d_ptr->isLowEnergySocket = true;
+
+    // bind the socket to the local device
+    int sockfd = l2cpSocket->socketDescriptor();
+    if (sockfd < 0) {
+        qCWarning(QT_BT_BLUEZ) << "l2cp socket not initialised";
+        setError(QLowEnergyControllerNew::UnknownError);
+        return;
+    }
+
+    struct sockaddr_l2 addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.l2_family = AF_BLUETOOTH;
+    addr.l2_cid = htobs(ATTRIBUTE_CHANNEL_ID);
+    addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
+    convertAddress(localAdapter.toUInt64(), addr.l2_bdaddr.b);
+
+    if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        qCWarning(QT_BT_BLUEZ) << qt_error_string(errno);
+        setError(QLowEnergyControllerNew::UnknownError);
+        return;
+    }
+
+    // connect
     l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID);
 }
 

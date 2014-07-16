@@ -170,7 +170,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
         if (isLowEnergySocket) {
-            addr.l2_cid = port;
+            addr.l2_cid = htobs(port);
             addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
         } else {
             addr.l2_psm = port;
