@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -76,6 +77,10 @@ QT_END_NAMESPACE
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 #include <QtAndroidExtras/QAndroidJniObject>
 #include <QtCore/QPair>
+#endif
+
+#ifdef Q_OS_WIN32
+#include <qt_windows.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -234,6 +239,28 @@ private:
     bool isValidDevice;
     QList<QBluetoothAddress> connectedDevicesSet;
 };
+
+#elif defined(Q_OS_WIN32)
+
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_OBJECT
+    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
+public:
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, const QBluetoothAddress &address);
+    ~QBluetoothLocalDevicePrivate();
+
+    void initialize(const QBluetoothAddress &address);
+
+    bool isValid() const;
+
+private:
+    QBluetoothLocalDevice *q_ptr;
+    HANDLE deviceHandle;
+    QString deviceName;
+    QBluetoothAddress deviceAddress;
+};
+
 #else
 class QBluetoothLocalDevicePrivate : public QObject
 {

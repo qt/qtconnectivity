@@ -43,31 +43,38 @@
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
 
-#include <qt_windows.h>
+#include "qbluetoothlocaldevice_p.h"
+
+#include <QtCore/QLoggingCategory>
+
 #include <bluetoothapis.h>
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
+
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
-    d_ptr(0)
+    d_ptr(new QBluetoothLocalDevicePrivate(this, QBluetoothAddress()))
 {
 }
 
-QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &, QObject *parent) :
+QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent) :
     QObject(parent),
-    d_ptr(0)
+    d_ptr(new QBluetoothLocalDevicePrivate(this, address))
 {
 }
 
 QString QBluetoothLocalDevice::name() const
 {
-    return QString();
+    Q_D(const QBluetoothLocalDevice);
+    return d->deviceName;
 }
 
 QBluetoothAddress QBluetoothLocalDevice::address() const
 {
-    return QBluetoothAddress();
+    Q_D(const QBluetoothLocalDevice);
+    return d->deviceAddress;
 }
 
 void QBluetoothLocalDevice::powerOn()
@@ -143,6 +150,73 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 {
     Q_UNUSED(confirmation);
+}
+
+QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
+                                                           const QBluetoothAddress &address)
+    : q_ptr(q)
+    , deviceHandle(NULL)
+{
+    initialize(address);
+}
+
+
+QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
+{
+    if (isValid())
+        ::CloseHandle(deviceHandle);
+}
+
+void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
+{
+    BLUETOOTH_FIND_RADIO_PARAMS findRadioParams;
+    ::ZeroMemory(&findRadioParams, sizeof(findRadioParams));
+    findRadioParams.dwSize = sizeof(findRadioParams);
+
+    HANDLE radioHandle = NULL;
+    const HBLUETOOTH_RADIO_FIND radioFindHandle = ::BluetoothFindFirstRadio(&findRadioParams,
+                                                                            &radioHandle);
+    if (!radioFindHandle) {
+        qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
+        return;
+    }
+
+    forever {
+        BLUETOOTH_RADIO_INFO radioInfo;
+        ::ZeroMemory(&radioInfo, sizeof(radioInfo));
+        radioInfo.dwSize = sizeof(radioInfo);
+
+        const DWORD retval = ::BluetoothGetRadioInfo(radioHandle, &radioInfo);
+        if (retval != ERROR_SUCCESS) {
+            ::CloseHandle(radioHandle);
+            qCWarning(QT_BT_WINDOWS) << qt_error_string(retval);
+            break;
+        }
+
+        if (address.isNull() || (address == QBluetoothAddress(radioInfo.address.ullLong))) {
+            deviceAddress = QBluetoothAddress(radioInfo.address.ullLong);
+            deviceName = QString::fromWCharArray(radioInfo.szName);
+            deviceHandle = radioHandle;
+            break;
+        }
+
+        ::CloseHandle(radioHandle);
+
+        if (!::BluetoothFindNextRadio(radioFindHandle, &radioHandle)) {
+            const DWORD nativeError = ::GetLastError();
+            if (nativeError != ERROR_NO_MORE_ITEMS)
+                qCWarning(QT_BT_WINDOWS) << qt_error_string(nativeError);
+            break;
+        }
+    }
+
+    if (!::BluetoothFindRadioClose(radioFindHandle))
+        qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
+}
+
+bool QBluetoothLocalDevicePrivate::isValid() const
+{
+    return deviceHandle && (deviceHandle != INVALID_HANDLE_VALUE);
 }
 
 QT_END_NAMESPACE

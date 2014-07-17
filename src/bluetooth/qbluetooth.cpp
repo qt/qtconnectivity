@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -80,5 +81,6 @@ Q_LOGGING_CATEGORY(QT_BT, "qt.bluetooth")
 Q_LOGGING_CATEGORY(QT_BT_ANDROID, "qt.bluetooth.android")
 Q_LOGGING_CATEGORY(QT_BT_BLUEZ, "qt.bluetooth.bluez")
 Q_LOGGING_CATEGORY(QT_BT_QNX, "qt.bluetooth.qnx")
+Q_LOGGING_CATEGORY(QT_BT_WINDOWS, "qt.bluetooth.windows")
 
 QT_END_NAMESPACE
