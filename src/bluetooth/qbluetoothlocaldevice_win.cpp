@@ -79,15 +79,83 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 
 void QBluetoothLocalDevice::powerOn()
 {
+    if (hostMode() != HostPoweredOff)
+        return;
+
+    setHostMode(HostConnectable);
 }
 
-void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
+void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requestedMode)
 {
-    Q_UNUSED(mode);
+    Q_D(QBluetoothLocalDevice);
+
+    if (!isValid()) {
+        qCWarning(QT_BT_WINDOWS) << "The local device is not initialized correctly";
+        return;
+    }
+
+    if (requestedMode == HostDiscoverableLimitedInquiry)
+        requestedMode = HostDiscoverable;
+
+    if (requestedMode == hostMode())
+        return;
+
+    if (requestedMode == QBluetoothLocalDevice::HostPoweredOff) {
+        if (::BluetoothIsDiscoverable(d->deviceHandle)
+                && !::BluetoothEnableDiscovery(d->deviceHandle, FALSE)) {
+            qCWarning(QT_BT_WINDOWS) << "Unable to disable the discoverable mode";
+            emit error(QBluetoothLocalDevice::UnknownError);
+            return;
+        }
+        if (::BluetoothIsConnectable(d->deviceHandle)
+                && !::BluetoothEnableIncomingConnections(d->deviceHandle, FALSE)) {
+            qCWarning(QT_BT_WINDOWS) << "Unable to disable the connectable mode";
+            emit error(QBluetoothLocalDevice::UnknownError);
+            return;
+        }
+    } else if (requestedMode == QBluetoothLocalDevice::HostConnectable) {
+        if (::BluetoothIsDiscoverable(d->deviceHandle)) {
+            if (!::BluetoothEnableDiscovery(d->deviceHandle, FALSE)) {
+                qCWarning(QT_BT_WINDOWS) << "Unable to disable the discoverable mode";
+                emit error(QBluetoothLocalDevice::UnknownError);
+                return;
+            }
+        } else if (!::BluetoothEnableIncomingConnections(d->deviceHandle, TRUE)) {
+            qCWarning(QT_BT_WINDOWS) << "Unable to enable the connectable mode";
+            emit error(QBluetoothLocalDevice::UnknownError);
+            return;
+        }
+    } else if (requestedMode == QBluetoothLocalDevice::HostDiscoverable
+               || requestedMode == QBluetoothLocalDevice::HostDiscoverableLimitedInquiry) {
+        if (!::BluetoothIsConnectable(d->deviceHandle)
+                && !::BluetoothEnableIncomingConnections(d->deviceHandle, TRUE)) {
+            qCWarning(QT_BT_WINDOWS) << "Unable to enable the connectable mode";
+            emit error(QBluetoothLocalDevice::UnknownError);
+            return;
+        }
+        if (!::BluetoothEnableDiscovery(d->deviceHandle, TRUE)) {
+            qCWarning(QT_BT_WINDOWS) << "Unable to enable the discoverable mode";
+            emit error(QBluetoothLocalDevice::UnknownError);
+            return;
+        }
+    }
+
+    emit hostModeStateChanged(requestedMode);
 }
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 {
+    Q_D(const QBluetoothLocalDevice);
+
+    if (!isValid()) {
+        qCWarning(QT_BT_WINDOWS) << "The local device is not initialized correctly";
+        return HostPoweredOff;
+    }
+
+    if (::BluetoothIsDiscoverable(d->deviceHandle))
+        return HostDiscoverable;
+    if (::BluetoothIsConnectable(d->deviceHandle))
+        return HostConnectable;
     return HostPoweredOff;
 }
 
