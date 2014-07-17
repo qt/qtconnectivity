@@ -29,8 +29,8 @@ HEADERS += bluez/manager_p.h \
            bluez/profile1_p.h \
            bluez/obex_client1_bluez5_p.h \
            bluez/obex_objectpush1_bluez5_p.h \
-           bluez/obex_transfer1_bluez5_p.h
-
+           bluez/obex_transfer1_bluez5_p.h \
+           bluez/bluez_data_p.h
 
 SOURCES += bluez/manager.cpp \
            bluez/adapter.cpp \

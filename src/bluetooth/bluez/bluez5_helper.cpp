@@ -46,6 +46,7 @@
 #include "objectmanager_p.h"
 #include "properties_p.h"
 #include "adapter1_bluez5_p.h"
+#include <bluetooth/sdp.h>
 #include <bluetooth/sdp_lib.h>
 
 QT_BEGIN_NAMESPACE
