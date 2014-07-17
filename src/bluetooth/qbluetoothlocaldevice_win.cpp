@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -41,6 +42,9 @@
 
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
+
+#include <qt_windows.h>
+#include <bluetoothapis.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,7 +91,39 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
 
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
+    BLUETOOTH_FIND_RADIO_PARAMS findRadioParams;
+    ::ZeroMemory(&findRadioParams, sizeof(findRadioParams));
+    findRadioParams.dwSize = sizeof(findRadioParams);
+
+    HANDLE radioHandle = NULL;
+    const HBLUETOOTH_RADIO_FIND radioFindHandle = ::BluetoothFindFirstRadio(&findRadioParams,
+                                                                            &radioHandle);
+    if (!radioFindHandle)
+        return QList<QBluetoothHostInfo>();
+
     QList<QBluetoothHostInfo> localDevices;
+
+    forever {
+        BLUETOOTH_RADIO_INFO radioInfo;
+        ::ZeroMemory(&radioInfo, sizeof(radioInfo));
+        radioInfo.dwSize = sizeof(radioInfo);
+
+        const DWORD retval = ::BluetoothGetRadioInfo(radioHandle, &radioInfo);
+        ::CloseHandle(radioHandle);
+
+        if (retval != ERROR_SUCCESS)
+            break;
+
+        QBluetoothHostInfo localDevice;
+        localDevice.setAddress(QBluetoothAddress(radioInfo.address.ullLong));
+        localDevice.setName(QString::fromWCharArray(radioInfo.szName));
+        localDevices.append(localDevice);
+
+        if (!::BluetoothFindNextRadio(radioFindHandle, &radioHandle))
+            break;
+    }
+
+    ::BluetoothFindRadioClose(radioFindHandle);
     return localDevices;
 }
 
