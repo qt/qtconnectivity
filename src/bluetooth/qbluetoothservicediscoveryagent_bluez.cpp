@@ -49,11 +49,10 @@
 #include "bluez/objectmanager_p.h"
 #include "bluez/adapter1_bluez5_p.h"
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/sdp.h>
-#include <bluetooth/sdp_lib.h>
-
+#include <QtCore/QFile>
+#include <QtCore/QLibraryInfo>
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QProcess>
 #include <QtDBus/QDBusPendingCallWatcher>
 #include <QtConcurrent/QtConcurrentRun>
 
@@ -195,35 +194,50 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
 /*
  * This function runs in a different thread. We need to be very careful what we
  * access from here. That's why invokeMethod is used below.
+ *
+ * src/tools/sdpscanner performs an SDP scan. This is
+ * done out-of-process to avoid license issues. At this stage Bluez uses GPLv2.
  */
 void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
         const QBluetoothAddress &remoteAddress, const QBluetoothAddress localAddress)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
-    // connect to SDP server
-    bdaddr_t local, remote;
-    convertAddress(localAddress.toUInt64(), local.b);
-    convertAddress(remoteAddress.toUInt64(), remote.b);
+    const QString binPath = QLibraryInfo::location(QLibraryInfo::BinariesPath);
 
-    /* We use singleshot timer below because this function runs in a different
-     * thread than the rest of this class.
-     */
+    QFileInfo fileInfo(binPath, QStringLiteral("sdpscanner"));
+    if (!fileInfo.exists() || !fileInfo.isExecutable()) {
+        QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
+                                  Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
+                                        QBluetoothServiceDiscoveryAgent::InputOutputError),
+                                  Q_ARG(QString,
+                                        QBluetoothServiceDiscoveryAgent::tr("Unable to find sdpscanner")),
+                                  Q_ARG(QStringList, QStringList()));
+        qCWarning(QT_BT_BLUEZ) << "Cannot find sdpscanner:"
+                               << fileInfo.canonicalFilePath();
+        return;
+    }
 
-    sdp_session_t *session = sdp_connect( &local, &remote, SDP_RETRY_IF_BUSY);
-    // try one more time if first attempt fails
-    if (!session)
-        session = sdp_connect( &local, &remote, SDP_RETRY_IF_BUSY);
+    QStringList arguments;
+    arguments << remoteAddress.toString() << localAddress.toString();
 
-    qCDebug(QT_BT_BLUEZ) << "SDP for" << remoteAddress.toString() << session << qt_error_string(errno);
-    if (!session) {
+    QProcess process;
+    process.setProcessChannelMode(QProcess::ForwardedErrorChannel);
+    process.setReadChannel(QProcess::StandardOutput);
+    process.start(fileInfo.canonicalFilePath(), arguments);
+    process.waitForFinished();
+
+    if (process.exitStatus() != QProcess::NormalExit
+            || process.exitCode() != 0) {
+        qCWarning(QT_BT_BLUEZ) << "SDP scan failure"
+                               << process.exitStatus() << process.exitCode()
+                               << remoteAddress;
         if (singleDevice) {
-            // was sole device without result -> error
             QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
                                         QBluetoothServiceDiscoveryAgent::InputOutputError),
                                   Q_ARG(QString,
-                                        QBluetoothServiceDiscoveryAgent::tr("Unable to access device")),
+                                        QBluetoothServiceDiscoveryAgent::tr("Unable to perform SDP scan")),
                                   Q_ARG(QStringList, QStringList()));
         } else {
             // go to next device
@@ -233,63 +247,22 @@ void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
                                       Q_ARG(QString, QString()),
                                       Q_ARG(QStringList, QStringList()));
         }
-
         return;
     }
 
-
-    // set the filter for service matches
-    uuid_t publicBrowseGroupUuid;
-    sdp_uuid16_create(&publicBrowseGroupUuid, QBluetoothUuid::PublicBrowseGroup);
-    sdp_list_t *serviceFilter;
-    serviceFilter = sdp_list_append(0, &publicBrowseGroupUuid);
-
-    uint32_t attributeRange = 0x0000ffff; //all attributes
-    sdp_list_t *attributes;
-    attributes = sdp_list_append(0, &attributeRange);
-
-    sdp_list_t* sdpResults;
-    int result = sdp_service_search_attr_req(session, serviceFilter, SDP_ATTR_REQ_RANGE,
-                                             attributes, &sdpResults);
-    sdp_list_free(attributes, 0);
-    sdp_list_free(serviceFilter, 0);
-
-    if (result != 0) {
-        qCDebug(QT_BT_BLUEZ) << "SDP search failed" << qt_error_string(errno);
-        sdp_close(session);
-        if (singleDevice) {
-            QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
-                                        QBluetoothServiceDiscoveryAgent::InputOutputError),
-                                  Q_ARG(QString,
-                                        QBluetoothServiceDiscoveryAgent::tr("Unable to access device")),
-                                  Q_ARG(QStringList, QStringList()));
-        } else {
-            QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
-                                      Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
-                                            QBluetoothServiceDiscoveryAgent::NoError),
-                                      Q_ARG(QString, QString()),
-                                      Q_ARG(QStringList, QStringList()));
-        }
-        return;
-    }
-
-    qCDebug(QT_BT_BLUEZ) << "SDP search a success. Iterating results" << sdpResults;
     QStringList xmlRecords;
 
-    // process the results
-    for ( ; sdpResults; sdpResults = sdpResults->next) {
-        sdp_record_t *record = (sdp_record_t *) sdpResults->data;
+    int size, index = 0;
+    const QByteArray output = QByteArray::fromBase64(process.readAll());
+    const char *data = output.constData();
 
-        QByteArray xml = parseSdpRecord(record);
-        if (xml.isEmpty())
-            continue;
-
-        //qDebug() << xml;
-        xmlRecords.append(QString::fromUtf8(xml));
+    // separate the individial SDP records
+    // each record starts with 4 byte size indicator
+    while (index < output.size()) {
+        memcpy(&size, &data[index], sizeof(int));
+        xmlRecords.append(QString::fromUtf8(output.mid(index+sizeof(int), size)));
+        index += sizeof(int) + size;
     }
-
-    sdp_close(session);
 
     QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
                               Q_ARG(QBluetoothServiceDiscoveryAgent::Error,

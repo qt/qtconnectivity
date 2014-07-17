@@ -72,8 +72,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothlocaldevice_bluez.cpp \
         qbluetoothtransferreply_bluez.cpp
 
-        CONFIG += link_pkgconfig
-        PKGCONFIG_PRIVATE += bluez
 } else:CONFIG(blackberry) {
     DEFINES += QT_QNX_BLUETOOTH
 

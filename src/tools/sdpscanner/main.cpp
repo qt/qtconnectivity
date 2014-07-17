@@ -254,7 +254,7 @@ int main(int argc, char **argv)
         return RETURN_USAGE;
     }
 
-    printf("SDP for %s %s\n", argv[1], argv[2]);
+    fprintf(stderr, "SDP for %s %s\n", argv[1], argv[2]);
 
     bdaddr_t remote;
     bdaddr_t local;
@@ -304,7 +304,7 @@ int main(int argc, char **argv)
         return RETURN_SDP_ERROR;
     }
 
-    QStringList xmlRecords;
+    char sizeField[sizeof(int)];
     while (sdpResults) {
         sdp_record_t *record = (sdp_record_t *) sdpResults->data;
 
@@ -312,8 +312,12 @@ int main(int argc, char **argv)
         if (xml.isEmpty())
             continue;
 
-        qDebug() << xml;
-        xmlRecords.append(QString::fromUtf8(xml));
+        //endianness doesn't matter since same machine
+        int sz = xml.size();
+        memcpy(&sizeField, &sz, sizeof(int));
+        xml.prepend(QByteArray(sizeField, sizeof(int)));
+
+        printf("%s", xml.toBase64().constData());
 
         previous = sdpResults;
         sdpResults = sdpResults->next;
