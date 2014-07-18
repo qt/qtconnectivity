@@ -46,7 +46,6 @@
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothlocaldevice.h>
 #include <qlowenergyserviceinfo.h>
-#include <qlowenergycharacteristicinfo.h>
 #include <qbluetoothuuid.h>
 
 

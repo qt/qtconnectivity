@@ -45,7 +45,6 @@
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothdevicediscoveryagent.h"
 
-#include "qlowenergycharacteristicinfo_p.h"
 #include "qlowenergyserviceinfo_p.h"
 
 #include <QStringList>

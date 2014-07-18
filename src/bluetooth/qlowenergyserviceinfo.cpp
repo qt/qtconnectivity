@@ -120,15 +120,6 @@ QBluetoothUuid QLowEnergyServiceInfo::serviceUuid() const
 }
 
 /*!
-    Returns the list of service characteristics. If service was not connected, an empty
-    list will be returned.
-*/
-QList<QLowEnergyCharacteristicInfo> QLowEnergyServiceInfo::characteristics() const
-{
-    return d_ptr->characteristicList;
-}
-
-/*!
     Returns the service name.
 */
 QString QLowEnergyServiceInfo::serviceName() const

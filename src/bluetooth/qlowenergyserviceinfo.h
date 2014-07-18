@@ -45,7 +45,6 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothUuid>
-#include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
 QT_BEGIN_NAMESPACE
 
@@ -73,8 +72,6 @@ public:
     QBluetoothDeviceInfo device() const;
 
     QBluetoothUuid serviceUuid() const;
-
-    QList<QLowEnergyCharacteristicInfo> characteristics() const;
 
     QString serviceName() const;
 

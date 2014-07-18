@@ -55,7 +55,6 @@
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
-class OrgBluezCharacteristicInterface;
 class OrgFreedesktopDBusObjectManagerInterface;
 
 QT_BEGIN_NAMESPACE
@@ -194,11 +193,6 @@ private:
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
-    // variables below are used for discovering Bluetooth Low Energy devices
-    OrgBluezCharacteristicInterface *characteristic;
-    QStringList gattServices;
-    QStringList gattCharacteristics;
-    QLowEnergyCharacteristicInfo gattCharacteristic;
 #endif
 
 #ifdef QT_ANDROID_BLUETOOTH

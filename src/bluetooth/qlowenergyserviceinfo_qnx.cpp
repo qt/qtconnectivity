@@ -1,4 +1,3 @@
-
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
@@ -40,22 +39,11 @@
 **
 ****************************************************************************/
 
-#include <QtCore/QLoggingCategory>
 #include "qlowenergyserviceinfo_p.h"
-#include "qlowenergycharacteristicinfo.h"
-#include "qlowenergycharacteristicinfo_p.h"
-#include "qlowenergyprocess_p.h"
-#include <btapi/btdevice.h>
-#include <btapi/btgatt.h>
-#include <btapi/btspp.h>
-#include <btapi/btle.h>
-#include <errno.h>
-#include <QPointer>
-#include "qnx/ppshelpers_p.h"
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX);
 
 QLowEnergyServiceInfoPrivate::QLowEnergyServiceInfoPrivate()
 {

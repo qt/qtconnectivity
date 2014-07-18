@@ -42,7 +42,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
 #include <QtBluetooth/QLowEnergyService>
-#include <QtBluetooth/QLowEnergyCharacteristicInfo>
 
 #include <algorithm>
 

@@ -191,7 +191,6 @@ void tst_QLowEnergyController::tst_verifyAllServices()
                      info.serviceUuid().toString().toLatin1());
         }
 
-        QVERIFY(info.characteristics().isEmpty());
         QCOMPARE(remoteDevice, info.device().address());
     }
 }
@@ -1351,7 +1350,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         QCOMPARE(chars[0].handle(), QLowEnergyHandle(0x82));
         QCOMPARE(chars[0].properties(),
-                (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristicInfo::WriteNoResponse));
+                (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristic::WriteNoResponse));
         QCOMPARE(chars[0].value(), QByteArray(""));
         QVERIFY(chars[0].isValid());
         QVERIFY(info->contains(chars[0]));
@@ -1385,7 +1384,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         QCOMPARE(chars[1].handle(), QLowEnergyHandle(0x86));
         QCOMPARE(chars[1].properties(),
-                 (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristicInfo::WriteNoResponse));
+                 (QLowEnergyCharacteristic::Notify|QLowEnergyCharacteristic::Write|QLowEnergyCharacteristic::WriteNoResponse));
         QCOMPARE(chars[1].value(), QByteArray(""));
         QVERIFY(chars[1].isValid());
         QVERIFY(info->contains(chars[1]));

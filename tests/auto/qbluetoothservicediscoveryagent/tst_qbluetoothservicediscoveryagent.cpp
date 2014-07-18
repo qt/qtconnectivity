@@ -52,8 +52,6 @@
 #include <qbluetoothserver.h>
 #include <qbluetoothserviceinfo.h>
 #include <qlowenergyserviceinfo.h>
-#include <qlowenergycontroller.h>
-#include <qlowenergycharacteristicinfo.h>
 
 QT_USE_NAMESPACE
 
@@ -376,8 +374,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     QFETCH(QBluetoothDeviceInfo, deviceInfo);
     QFETCH(QList<QBluetoothUuid>, uuidFilter);
     QFETCH(QBluetoothServiceDiscoveryAgent::Error, serviceDiscoveryError);
-    QLowEnergyController leController;
-    bool leDevice = false;
+
     QBluetoothLocalDevice localDevice;
     qDebug() << "Scanning address" << deviceInfo.address().toString();
     QBluetoothServiceDiscoveryAgent discoveryAgent(localDevice.address());
@@ -405,8 +402,6 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 //                this, SLOT(leServiceDiscoveryDebug(QLowEnergyServiceInfo)));
     connect(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
             this, SLOT(serviceError(QBluetoothServiceDiscoveryAgent::Error)));
-
-    QSignalSpy leConnectedSpy(&leController, SIGNAL(connected(QLowEnergyServiceInfo)));
 
     discoveryAgent.start();
 
@@ -469,7 +464,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
         }
 
     }
-    int leCounter = 0;
+
     while (!leDiscoveredSpy.isEmpty()) {
         const QVariant v = leDiscoveredSpy.takeFirst().at(0);
         if (v.userType() == qMetaTypeId<QLowEnergyServiceInfo>())
@@ -478,70 +473,11 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
                 *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
 
             QVERIFY(info.isValid());
-            if (info.device().coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
-                leDevice = true;
-                leController.connectToService(info);
-                leCounter ++;
-            }
-
+            QVERIFY(info.device().coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
         } else {
             QFAIL("Unknown type returned by service discovery");
         }
 
-    }
-
-    // In case it is not LE device next steps will be skipped.
-    // In case of regular Bluetooth devices there is no need to go in to the loop below.
-    if (leDevice) {
-        scanTime = MaxScanTime;
-        while (leConnectedSpy.count() != leCounter && scanTime > 0) {
-            QTest::qWait(1000);
-            scanTime -= 1000;
-        }
-        int leTestCounter = 0;
-        QSignalSpy leDisonnectedSpy(&leController, SIGNAL(disconnected(QLowEnergyServiceInfo)));
-        while (!leConnectedSpy.isEmpty()) {
-            const QVariant v = leConnectedSpy.takeFirst().at(0);
-            if (v.userType() == qMetaTypeId<QLowEnergyServiceInfo>())
-            {
-                const QLowEnergyServiceInfo info =
-                    *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
-
-                QVERIFY(info.isValid());
-                QCOMPARE(leController.errorString(), QString());
-                QCOMPARE(leController.error(), QLowEnergyController::NoError);
-                QVERIFY((info.characteristics().size() > 0));
-                qDebug() << "LE Service Connected: " << info.serviceName() << info.serviceUuid();
-                leTestCounter++;
-                for (int i = 0; i < info.characteristics().size(); i++)
-                    QVERIFY(info.characteristics().at(i).isValid());
-                leController.disconnectFromService(info);
-            } else {
-                QFAIL("Unknown type returned by service discovery");
-            }
-
-        }
-        QCOMPARE(leCounter, leTestCounter);
-        scanTime = MaxScanTime;
-        while (leDisonnectedSpy.count() != leTestCounter && scanTime > 0) {
-            QTest::qWait(1000);
-            scanTime -= 1000;
-        }
-
-        while (!leDisonnectedSpy.isEmpty()) {
-            const QVariant v = leDisonnectedSpy.takeFirst().at(0);
-            if (v.userType() == qMetaTypeId<QLowEnergyServiceInfo>())
-            {
-                const QLowEnergyServiceInfo info =
-                    *reinterpret_cast<const QLowEnergyServiceInfo*>(v.constData());
-
-                QVERIFY(info.isValid());
-                qDebug() << "LE Service Disconnected: " << info.serviceName() << info.serviceUuid();
-            } else {
-                QFAIL("Unknown type returned by service discovery");
-            }
-
-        }
     }
 
     QVERIFY(discoveryAgent.discoveredServices().count() != 0);

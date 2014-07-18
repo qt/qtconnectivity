@@ -104,7 +104,6 @@ void tst_QLowEnergyServiceInfo::tst_construction()
         QCOMPARE(serviceInfo.serviceUuid().toString(), QBluetoothUuid().toString());
         QCOMPARE(serviceInfo.serviceType(), QLowEnergyServiceInfo::PrimaryService);
         QCOMPARE(serviceInfo.isConnected(), false);
-        QCOMPARE(serviceInfo.characteristics().size(), 0);
         QCOMPARE(serviceInfo.device(), QBluetoothDeviceInfo());
     }
 
@@ -223,7 +222,6 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
         QCOMPARE(copyInfo.device().coreConfigurations(), coreConfiguration);
         QCOMPARE(copyInfo.serviceType(), serviceType);
         QCOMPARE(copyInfo.isConnected(), false);
-        QCOMPARE(copyInfo.characteristics().size(), 0);
         QCOMPARE(copyInfo.device(), deviceInfo);
     }
 
@@ -265,8 +263,6 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
         QCOMPARE(copyInfo2.device().coreConfigurations(), coreConfiguration);
         QCOMPARE(copyInfo1.isConnected(), false);
         QCOMPARE(copyInfo2.isConnected(), false);
-        QCOMPARE(copyInfo1.characteristics().size(), 0);
-        QCOMPARE(copyInfo2.characteristics().size(), 0);
         QCOMPARE(copyInfo1.device(), deviceInfo);
         QCOMPARE(copyInfo2.device(), deviceInfo);
     }

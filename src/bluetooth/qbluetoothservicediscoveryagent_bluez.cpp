@@ -41,7 +41,6 @@
 
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
-#include "qlowenergycharacteristicinfo_p.h"
 #include "qlowenergyserviceinfo_p.h"
 
 #include "bluez/manager_p.h"
@@ -709,130 +708,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
 
     _q_serviceDiscoveryFinished();
 }
-
-/*
- * Following three methods are implemented in this way to avoid blocking the main thread.
- * We first go through list of services path and then through services characteristics paths.
- *
- * Bluez v4.x does not have support for LE devices through org.bluez interfaces. Because of that
- * these functions will not be used now. I propose to leave them commented because in Bluez v5.x
- * we have support for LE devices and we can use these functions.
- */
-/*
-void QBluetoothServiceDiscoveryAgentPrivate::_g_discoveredGattService()
-{
-
-    if (!gattServices.empty()) {
-        qDebug() << gattServices.at(0) << gattServices.size();
-        gattService = QLowEnergyServiceInfo(gattServices.at(0));
-        gattService.getProperties();
-        QObject::connect(gattService.d_ptr.data(), SIGNAL(finished()), this, SLOT(_g_discoveredGattService()));
-        characteristic = new OrgBluezCharacteristicInterface(QLatin1String("org.bluez"), gattServices.at(0), QDBusConnection::systemBus());
-        QDBusPendingReply<QList<QDBusObjectPath> > characterictisReply = characteristic->DiscoverCharacteristics();
-        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(characterictisReply, this);
-        QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                         this, SLOT(_q_discoverGattCharacteristics(QDBusPendingCallWatcher*)));
-
-        gattServices.removeFirst();
-        q_ptr->lowEnergyServiceDiscovered(gattService);
-        emit gattService.d_ptr->finished();
-    }
-    else
-        q_ptr->finished();
-
-}
-
-void QBluetoothServiceDiscoveryAgentPrivate::_q_discoverGattCharacteristics(QDBusPendingCallWatcher *watcher)
-{
-
-    QDBusPendingReply<QList<QDBusObjectPath> > characterictisReply = *watcher;
-    if (characterictisReply.isError()){
-        qDebug()<< "Discovering service characteristic error" << characterictisReply.error().message();
-        Q_Q(QBluetoothServiceDiscoveryAgent);
-        error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = characterictisReply.error().message();
-        emit q->error(error);
-        _q_serviceDiscoveryFinished();
-        return;
-    }
-
-    foreach (const QDBusObjectPath &characteristicPath, characterictisReply.value())
-        gattCharacteristics.append(characteristicPath.path());
-    characteristic = new OrgBluezCharacteristicInterface(QLatin1String("org.bluez"), gattCharacteristics.at(0), QDBusConnection::systemBus());
-    QDBusPendingReply<QVariantMap> characteristicProperty = characteristic->GetProperties();
-    watcher = new QDBusPendingCallWatcher(characteristicProperty, this);
-    _q_discoveredGattCharacteristic(watcher);
-
-}
-
-void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredGattCharacteristic(QDBusPendingCallWatcher *watcher)
-{
-
-    QDBusPendingReply<QVariantMap> characteristicProperty = *watcher;
-    //qDebug()<<characteristicProperty.value();
-    if (characteristicProperty.isError()){
-        qDebug() << "Characteristic properties error" << characteristicProperty.error().message();
-        Q_Q(QBluetoothServiceDiscoveryAgent);
-        error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = characteristicProperty.error().message();
-        emit q->error(error);
-        _q_serviceDiscoveryFinished();
-        return;
-    }
-    QStringList serviceName;
-
-    if (characteristicProperty.isError())
-        qDebug()<<characteristicProperty.error().message();
-
-    QVariantMap properties = characteristicProperty.value();
-    QString name = properties.value(QLatin1String("Name")).toString();
-    QString description = properties.value(QLatin1String("Description")).toString();
-    serviceName = description.split(QStringLiteral(" "));
-    QString charUuid = properties.value(QLatin1String("UUID")).toString();
-    QBluetoothUuid characteristicUuid(charUuid);
-
-    QVariant value = properties.value(QLatin1String("Value"));
-    QByteArray byteValue = QByteArray();
-    if (value.type() == QVariant::ByteArray)
-        byteValue = value.toByteArray();
-
-    //qDebug() << name << description << characteristicUuid.toString()<< byteValue.size();
-    gattCharacteristic = QLowEnergyCharacteristicInfo(name, description, characteristicUuid, byteValue);
-    gattCharacteristic.setPath(gattCharacteristics.at(0));
-    qDebug() << gattCharacteristics.at(0);
-    gattService.addCharacteristic(gattCharacteristic);
-
-
-    //Testing part for setting the property
-    QString b = "f000aa02-0451-4000-b000-000000000000";
-    QBluetoothUuid u(b);
-    if (gattCharacteristic.uuid() == u){
-        for (int j = 0; j< byteValue.size(); j++){
-            qDebug() << (int) byteValue.at(j);
-            byteValue[j]=1;
-            qDebug() << (int) byteValue.at(j);
-        }
-        bool s = gattCharacteristic.setPropertyValue(QStringLiteral("Value"), byteValue);
-        qDebug() <<s;
-    }
-
-    QString serName = serviceName.at(0) + " Service";
-
-    gattCharacteristics.removeFirst();
-    if (gattCharacteristics.isEmpty()){
-        q_ptr->lowEnergyServiceDiscovered(gattService);
-        emit gattService.d_ptr->finished();
-    }
-    else{
-        OrgBluezCharacteristicInterface *characteristicProperties = new OrgBluezCharacteristicInterface(QLatin1String("org.bluez"), gattCharacteristics.at(0), QDBusConnection::systemBus());
-        QDBusPendingReply<QVariantMap> characteristicProperty = characteristicProperties->GetProperties();
-        watcher = new QDBusPendingCallWatcher(characteristicProperty, this);
-                QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                                 this, SLOT(_q_discoveredGattCharacteristic(QDBusPendingCallWatcher*)));
-    }
-
-}
-*/
 
 QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamReader &xml)
 {

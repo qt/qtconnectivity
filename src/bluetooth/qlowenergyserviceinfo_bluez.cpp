@@ -41,11 +41,6 @@
 
 #include "qlowenergyserviceinfo_p.h"
 #include "qlowenergyserviceinfo.h"
-#include "qlowenergycharacteristicinfo.h"
-#include "qlowenergycharacteristicinfo_p.h"
-#include "qlowenergyprocess_p.h"
-#include "qlowenergydescriptorinfo.h"
-#include "qlowenergydescriptorinfo_p.h"
 
 #ifdef QT_LOWENERGYSERVICE_DEBUG
 #include <QtCore/QDebug>

@@ -25,12 +25,9 @@ PUBLIC_HEADERS += \
     qbluetoothtransferrequest.h \
     qlowenergyserviceinfo.h \
     qlowenergyservice.h \
-    qlowenergycharacteristicinfo.h \
     qlowenergycharacteristic.h \
-    qlowenergydescriptorinfo.h \
     qlowenergydescriptor.h \
     qbluetoothtransferreply.h \
-    qlowenergycontroller.h \
     qlowenergycontrollernew.h
 
 PRIVATE_HEADERS += \
@@ -47,10 +44,6 @@ PRIVATE_HEADERS += \
     qprivatelinearbuffer_p.h \
     qbluetoothlocaldevice_p.h \
     qlowenergyserviceinfo_p.h \
-    qlowenergycharacteristicinfo_p.h \
-    qlowenergyprocess_p.h \
-    qlowenergydescriptorinfo_p.h \
-    qlowenergycontroller_p.h \
     qlowenergycontrollernew_p.h \
     qlowenergyserviceprivate_p.h
 
@@ -71,11 +64,8 @@ SOURCES += \
     qbluetoothtransferreply.cpp \
     qlowenergyserviceinfo.cpp \
     qlowenergyservice.cpp \
-    qlowenergycharacteristicinfo.cpp \
     qlowenergycharacteristic.cpp \
-    qlowenergydescriptorinfo.cpp \
     qlowenergydescriptor.cpp \
-    qlowenergycontroller.cpp \
     qlowenergycontrollernew.cpp \
     qlowenergyserviceprivate.cpp
 
@@ -101,10 +91,7 @@ config_bluez:qtHaveModule(dbus) {
     # old versions of Bluez do not have the required BTLE symbols
     config_bluez_le {
         SOURCES +=  \
-            qlowenergyprocess_bluez.cpp \
             qlowenergyserviceinfo_bluez.cpp \
-            qlowenergycharacteristicinfo_bluez.cpp \
-            qlowenergycontroller_bluez.cpp \
             qlowenergycontrollernew_bluez.cpp
     } else {
         message("Bluez version is too old to support Bluetooth Low Energy.")
@@ -112,9 +99,6 @@ config_bluez:qtHaveModule(dbus) {
         DEFINES += QT_BLUEZ_NO_BTLE
         SOURCES += \
             qlowenergyserviceinfo_p.cpp \
-            qlowenergycharacteristicinfo_p.cpp \
-            qlowenergyprocess_p.cpp \
-            qlowenergycontroller_p.cpp \
             qlowenergycontrollernew_p.cpp
     }
 
@@ -141,10 +125,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_qnx.cpp \
         qbluetoothserver_qnx.cpp \
         qbluetoothtransferreply_qnx.cpp \
-        qlowenergycharacteristicinfo_qnx.cpp \
         qlowenergyserviceinfo_qnx.cpp \
-        qlowenergyprocess_qnx.cpp \
-        qlowenergycontroller_qnx.cpp \
         qlowenergycontrollernew_p.cpp
 
 } else:android:!android-no-sdk {
@@ -168,9 +149,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_android.cpp \
         qbluetoothserver_android.cpp \
         qlowenergyserviceinfo_p.cpp \
-        qlowenergycharacteristicinfo_p.cpp \
-        qlowenergyprocess_p.cpp \
-        qlowenergycontroller_p.cpp \
         qlowenergycontrollernew_p.cpp
 
 } else {
@@ -184,9 +162,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
         qlowenergyserviceinfo_p.cpp \
-        qlowenergycharacteristicinfo_p.cpp \
-        qlowenergyprocess_p.cpp \
-        qlowenergycontroller_p.cpp \
         qlowenergycontrollernew_p.cpp
 }
 

@@ -43,15 +43,12 @@
 #define QLOWENERGYSERVICEINFO_P_H
 #include "qbluetoothuuid.h"
 #include "qlowenergyserviceinfo.h"
-#include "qlowenergycharacteristicinfo.h"
 #include <QPointer>
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothUuid;
 class QLowEnergyServiceInfo;
-class QLowEnergyCharacteristicInfo;
-class QLowEnergyProcess;
 
 class QLowEnergyServiceInfoPrivate
 {
@@ -63,17 +60,12 @@ public:
 
     QBluetoothUuid uuid;
 
-    QList<QLowEnergyCharacteristicInfo> characteristicList;
     QLowEnergyServiceInfo::ServiceType serviceType;
     bool connected;
     QBluetoothDeviceInfo deviceInfo;
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QString startingHandle;
     QString endingHandle;
-#endif
-
-#ifdef QT_QNX_BLUETOOTH
-    static void serviceNotification(int, short unsigned int, const char unsigned *, short unsigned int, void *);
 #endif
 
 private:
