@@ -39,13 +39,13 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCONTROLLERNEWPRIVATE_P_H
-#define QLOWENERGYCONTROLLERNEWPRIVATE_P_H
+#ifndef QLOWENERGYCONTROLLERPRIVATE_P_H
+#define QLOWENERGYCONTROLLERPRIVATE_P_H
 
 #include <qglobal.h>
 #include <QtCore/QQueue>
 #include <QtBluetooth/qbluetooth.h>
-#include "qlowenergycontrollernew.h"
+#include "qlowenergycontroller.h"
 #include "qlowenergyserviceprivate_p.h"
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
@@ -56,18 +56,18 @@ QT_BEGIN_NAMESPACE
 
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 
-class QLowEnergyControllerNewPrivate : public QObject
+class QLowEnergyControllerPrivate : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PUBLIC(QLowEnergyControllerNew)
+    Q_DECLARE_PUBLIC(QLowEnergyController)
 public:
-    QLowEnergyControllerNewPrivate();
-    ~QLowEnergyControllerNewPrivate();
+    QLowEnergyControllerPrivate();
+    ~QLowEnergyControllerPrivate();
 
-    void setError(QLowEnergyControllerNew::Error newError);
+    void setError(QLowEnergyController::Error newError);
     bool isValidLocalAdapter();
 
-    void setState(QLowEnergyControllerNew::ControllerState newState);
+    void setState(QLowEnergyController::ControllerState newState);
 
     void connectToDevice();
     void disconnectFromDevice();
@@ -105,8 +105,8 @@ public:
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
-    QLowEnergyControllerNew::ControllerState state;
-    QLowEnergyControllerNew::Error error;
+    QLowEnergyController::ControllerState state;
+    QLowEnergyController::Error error;
     QString errorString;
 
 
@@ -153,9 +153,9 @@ private slots:
     void l2cpReadyRead();
 #endif
 private:
-    QLowEnergyControllerNew *q_ptr;
+    QLowEnergyController *q_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QLOWENERGYCONTROLLERNEWPRIVATE_P_H
+#endif // QLOWENERGYCONTROLLERPRIVATE_P_H

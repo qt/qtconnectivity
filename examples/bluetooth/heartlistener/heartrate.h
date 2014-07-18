@@ -51,7 +51,7 @@
 #include <QTimer>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothDeviceInfo>
-#include <QLowEnergyControllerNew>
+#include <QLowEnergyController>
 #include <QLowEnergyService>
 
 
@@ -99,10 +99,10 @@ private slots:
     void scanFinished();
     void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
 
-    //QLowEnergyControllerNew
+    //QLowEnergyController
     void serviceDiscovered(const QBluetoothUuid &);
     void serviceScanDone();
-    void controllerError(QLowEnergyControllerNew::Error);
+    void controllerError(QLowEnergyController::Error);
     void serviceConnected();
     void deviceDisconnected();
 
@@ -141,7 +141,7 @@ private:
     int m_max;
     int m_min;
     float calories;
-    QLowEnergyControllerNew *m_control;
+    QLowEnergyController *m_control;
     QTimer *timer; // for demo application
     QLowEnergyService *m_service;
 };

@@ -80,7 +80,7 @@ protected:
 
     friend class QLowEnergyCharacteristic;
     friend class QLowEnergyService;
-    friend class QLowEnergyControllerNewPrivate;
+    friend class QLowEnergyControllerPrivate;
     QLowEnergyDescriptorPrivate *data;
 
     QLowEnergyDescriptor(QSharedPointer<QLowEnergyServicePrivate> p,

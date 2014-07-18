@@ -45,7 +45,7 @@
 
 #include <algorithm>
 
-#include "qlowenergycontrollernew_p.h"
+#include "qlowenergycontroller_p.h"
 #include "qlowenergyserviceprivate_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -53,9 +53,9 @@ QT_BEGIN_NAMESPACE
 /*!
   \internal
 
-  QLowEnergyControllerNewPrivate creates instances of this class.
+  QLowEnergyControllerPrivate creates instances of this class.
   The user gets access to class instances via
-  \l QLowEnergyControllerNew::services().
+  \l QLowEnergyController::services().
  */
 QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                                      QObject *parent)

@@ -47,7 +47,7 @@
 
 #include <QBluetoothServiceDiscoveryAgent>
 #include <QLowEnergyDescriptor>
-#include <QLowEnergyControllerNew>
+#include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
 QT_USE_NAMESPACE
@@ -72,7 +72,7 @@ private slots:
 private:
     QBluetoothServiceDiscoveryAgent *agent;
     QSet<QString> remoteLeDevices;
-    QLowEnergyControllerNew *globalControl;
+    QLowEnergyController *globalControl;
     QLowEnergyService *globalService;
 };
 
@@ -114,14 +114,14 @@ void tst_QLowEnergyDescriptor::initTestCase()
     QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 50000);
 
     // find first service with descriptor
-    QLowEnergyControllerNew *controller = 0;
+    QLowEnergyController *controller = 0;
     foreach (const QString &remoteDevice, remoteLeDevices.toList()) {
-        controller = new QLowEnergyControllerNew(QBluetoothAddress(remoteDevice), this);
+        controller = new QLowEnergyController(QBluetoothAddress(remoteDevice), this);
         qDebug() << "Connecting to" << remoteDevice;
         controller->connectToDevice();
-        QTRY_IMPL(controller->state() != QLowEnergyControllerNew::ConnectingState,
+        QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
                   10000);
-        if (controller->state() != QLowEnergyControllerNew::ConnectedState) {
+        if (controller->state() != QLowEnergyController::ConnectedState) {
             // any error and we skip
             delete controller;
             qDebug() << "Skipping device";

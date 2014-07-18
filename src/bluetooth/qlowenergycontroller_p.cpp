@@ -39,42 +39,42 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontrollernew_p.h"
+#include "qlowenergycontroller_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QLowEnergyControllerNewPrivate::QLowEnergyControllerNewPrivate()
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
-      state(QLowEnergyControllerNew::UnconnectedState),
-      error(QLowEnergyControllerNew::NoError)
+      state(QLowEnergyController::UnconnectedState),
+      error(QLowEnergyController::NoError)
 {
 }
 
-QLowEnergyControllerNewPrivate::~QLowEnergyControllerNewPrivate()
+QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
 }
 
-void QLowEnergyControllerNewPrivate::connectToDevice()
+void QLowEnergyControllerPrivate::connectToDevice()
 {
-    setError(QLowEnergyControllerNew::UnknownError);
+    setError(QLowEnergyController::UnknownError);
 }
 
-void QLowEnergyControllerNewPrivate::disconnectFromDevice()
-{
-
-}
-
-void QLowEnergyControllerNewPrivate::discoverServices()
+void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
 
 }
 
-void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+void QLowEnergyControllerPrivate::discoverServices()
 {
 
 }
 
-void QLowEnergyControllerNewPrivate::writeCharacteristic(
+void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+{
+
+}
+
+void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
         const QLowEnergyHandle /*charHandle*/,
         const QByteArray &/*newValue*/)
@@ -82,7 +82,7 @@ void QLowEnergyControllerNewPrivate::writeCharacteristic(
 
 }
 
-void QLowEnergyControllerNewPrivate::writeDescriptor(
+void QLowEnergyControllerPrivate::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle,

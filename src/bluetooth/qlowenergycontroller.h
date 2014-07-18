@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCONTROLLERNEW_H
-#define QLOWENERGYCONTROLLERNEW_H
+#ifndef QLOWENERGYCONTROLLER_H
+#define QLOWENERGYCONTROLLER_H
 
 #include <QObject>
 #include <QtBluetooth/QBluetoothAddress>
@@ -49,8 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyControllerNewPrivate;
-class Q_BLUETOOTH_EXPORT QLowEnergyControllerNew : public QObject
+class QLowEnergyControllerPrivate;
+class Q_BLUETOOTH_EXPORT QLowEnergyController : public QObject
 {
     Q_OBJECT
 public:
@@ -69,12 +69,12 @@ public:
         ClosingState,
     };
 
-    explicit QLowEnergyControllerNew(const QBluetoothAddress &remoteDevice,
+    explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      QObject *parent = 0);
-    explicit QLowEnergyControllerNew(const QBluetoothAddress &remoteDevice,
+    explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      const QBluetoothAddress &localDevice,
                                      QObject *parent = 0);
-    ~QLowEnergyControllerNew();
+    ~QLowEnergyController();
 
     QBluetoothAddress localAddress() const;
     QBluetoothAddress remoteAddress() const;
@@ -96,17 +96,17 @@ public:
 Q_SIGNALS:
     void connected();
     void disconnected();
-    void stateChanged(QLowEnergyControllerNew::ControllerState state);
-    void error(QLowEnergyControllerNew::Error newError);
+    void stateChanged(QLowEnergyController::ControllerState state);
+    void error(QLowEnergyController::Error newError);
 
     void serviceDiscovered(const QBluetoothUuid &newService);
     void discoveryFinished();
 
 private:
-    Q_DECLARE_PRIVATE(QLowEnergyControllerNew)
-    QLowEnergyControllerNewPrivate *d_ptr;
+    Q_DECLARE_PRIVATE(QLowEnergyController)
+    QLowEnergyControllerPrivate *d_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QLOWENERGYCONTROLLERNEW_H
+#endif // QLOWENERGYCONTROLLER_H

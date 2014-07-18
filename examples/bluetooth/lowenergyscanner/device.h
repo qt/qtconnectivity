@@ -48,7 +48,7 @@
 #include <QList>
 #include <QBluetoothServiceDiscoveryAgent>
 #include <QBluetoothDeviceDiscoveryAgent>
-#include <QLowEnergyControllerNew>
+#include <QLowEnergyController>
 #include <QBluetoothServiceInfo>
 #include "deviceinfo.h"
 #include "serviceinfo.h"
@@ -88,10 +88,10 @@ private slots:
     void deviceScanFinished();
     void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error);
 
-    // QLowEnergyControllerNew realted
+    // QLowEnergyController realted
     void addLowEnergyService(const QBluetoothUuid &uuid);
     void deviceConnected();
-    void errorReceived(QLowEnergyControllerNew::Error);
+    void errorReceived(QLowEnergyController::Error);
     void serviceScanDone();
     void deviceDisconnected();
 
@@ -115,7 +115,7 @@ private:
     QList<QObject*> m_characteristics;
     QString m_message;
     bool connected;
-    QLowEnergyControllerNew *controller;
+    QLowEnergyController *controller;
     bool m_deviceScanState;
 };
 

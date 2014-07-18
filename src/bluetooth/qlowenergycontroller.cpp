@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontrollernew.h"
-#include "qlowenergycontrollernew_p.h"
+#include "qlowenergycontroller.h"
+#include "qlowenergycontroller_p.h"
 
 #include <QtBluetooth/QBluetoothLocalDevice>
 
@@ -48,32 +48,32 @@
 
 QT_BEGIN_NAMESPACE
 
-void QLowEnergyControllerNewPrivate::setError(
-        QLowEnergyControllerNew::Error newError)
+void QLowEnergyControllerPrivate::setError(
+        QLowEnergyController::Error newError)
 {
-    Q_Q(QLowEnergyControllerNew);
+    Q_Q(QLowEnergyController);
     error = newError;
 
     switch (newError) {
-    case QLowEnergyControllerNew::UnknownRemoteDeviceError:
-        errorString = QLowEnergyControllerNew::tr("Remote device cannot be found");
+    case QLowEnergyController::UnknownRemoteDeviceError:
+        errorString = QLowEnergyController::tr("Remote device cannot be found");
         break;
-    case QLowEnergyControllerNew::InvalidBluetoothAdapterError:
-        errorString = QLowEnergyControllerNew::tr("Cannot find local adapter");
+    case QLowEnergyController::InvalidBluetoothAdapterError:
+        errorString = QLowEnergyController::tr("Cannot find local adapter");
         break;
-    case QLowEnergyControllerNew::NetworkError:
-        errorString = QLowEnergyControllerNew::tr("Error occurred during connection I/O");
+    case QLowEnergyController::NetworkError:
+        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
         break;
-    case QLowEnergyControllerNew::UnknownError:
+    case QLowEnergyController::UnknownError:
     default:
-        errorString = QLowEnergyControllerNew::tr("Unknown Error");
+        errorString = QLowEnergyController::tr("Unknown Error");
         break;
     }
 
     emit q->error(newError);
 }
 
-bool QLowEnergyControllerNewPrivate::isValidLocalAdapter()
+bool QLowEnergyControllerPrivate::isValidLocalAdapter()
 {
     if (localAdapter.isNull())
         return false;
@@ -91,10 +91,10 @@ bool QLowEnergyControllerNewPrivate::isValidLocalAdapter()
     return adapterFound;
 }
 
-void QLowEnergyControllerNewPrivate::setState(
-        QLowEnergyControllerNew::ControllerState newState)
+void QLowEnergyControllerPrivate::setState(
+        QLowEnergyController::ControllerState newState)
 {
-    Q_Q(QLowEnergyControllerNew);
+    Q_Q(QLowEnergyController);
     if (state == newState)
         return;
 
@@ -102,7 +102,7 @@ void QLowEnergyControllerNewPrivate::setState(
     emit q->stateChanged(state);
 }
 
-void QLowEnergyControllerNewPrivate::invalidateServices()
+void QLowEnergyControllerPrivate::invalidateServices()
 {
     foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values()) {
         service->setController(0);
@@ -112,7 +112,7 @@ void QLowEnergyControllerNewPrivate::invalidateServices()
     serviceList.clear();
 }
 
-QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerNewPrivate::serviceForHandle(
+QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivate::serviceForHandle(
         QLowEnergyHandle handle)
 {
     foreach (QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values())
@@ -126,7 +126,7 @@ QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerNewPrivate::service
     Returns a valid characteristic if the given handle is the
     handle of the characteristic itself or one of its descriptors
  */
-QLowEnergyCharacteristic QLowEnergyControllerNewPrivate::characteristicForHandle(
+QLowEnergyCharacteristic QLowEnergyControllerPrivate::characteristicForHandle(
         QLowEnergyHandle handle)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(handle);
@@ -157,7 +157,7 @@ QLowEnergyCharacteristic QLowEnergyControllerNewPrivate::characteristicForHandle
     Returns a valid descriptor if \a handle blongs to a descriptor;
     otherwise an invalid one.
  */
-QLowEnergyDescriptor QLowEnergyControllerNewPrivate::descriptorForHandle(
+QLowEnergyDescriptor QLowEnergyControllerPrivate::descriptorForHandle(
         QLowEnergyHandle handle)
 {
     const QLowEnergyCharacteristic matchingChar = characteristicForHandle(handle);
@@ -174,7 +174,7 @@ QLowEnergyDescriptor QLowEnergyControllerNewPrivate::descriptorForHandle(
     return QLowEnergyDescriptor();
 }
 
-void QLowEnergyControllerNewPrivate::updateValueOfCharacteristic(
+void QLowEnergyControllerPrivate::updateValueOfCharacteristic(
         QLowEnergyHandle charHandle, const QByteArray &value)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
@@ -182,7 +182,7 @@ void QLowEnergyControllerNewPrivate::updateValueOfCharacteristic(
         service->characteristicList[charHandle].value = value;
 }
 
-void QLowEnergyControllerNewPrivate::updateValueOfDescriptor(
+void QLowEnergyControllerPrivate::updateValueOfDescriptor(
         QLowEnergyHandle charHandle, QLowEnergyHandle descriptorHandle,
         const QByteArray &value)
 {
@@ -196,30 +196,30 @@ void QLowEnergyControllerNewPrivate::updateValueOfDescriptor(
     service->characteristicList[charHandle].descriptorList[descriptorHandle].value = value;
 }
 
-QLowEnergyControllerNew::QLowEnergyControllerNew(
+QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
                             QObject *parent)
-    : QObject(parent), d_ptr(new QLowEnergyControllerNewPrivate())
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
 {
-    Q_D(QLowEnergyControllerNew);
+    Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->remoteDevice = remoteDevice;
     d->localAdapter = QBluetoothLocalDevice().address();
 }
 
-QLowEnergyControllerNew::QLowEnergyControllerNew(
+QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
                             const QBluetoothAddress &localDevice,
                             QObject *parent)
-    : QObject(parent), d_ptr(new QLowEnergyControllerNewPrivate())
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
 {
-    Q_D(QLowEnergyControllerNew);
+    Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->remoteDevice = remoteDevice;
     d->localAdapter = localDevice;
 }
 
-QLowEnergyControllerNew::~QLowEnergyControllerNew()
+QLowEnergyController::~QLowEnergyController()
 {
     disconnectFromDevice(); //in case we were connected
     delete d_ptr;
@@ -235,66 +235,66 @@ QLowEnergyControllerNew::~QLowEnergyControllerNew()
 
   \sa QBluetoothAddress::isNull()
  */
-QBluetoothAddress QLowEnergyControllerNew::localAddress() const
+QBluetoothAddress QLowEnergyController::localAddress() const
 {
     return d_ptr->localAdapter;
 }
 
-QBluetoothAddress QLowEnergyControllerNew::remoteAddress() const
+QBluetoothAddress QLowEnergyController::remoteAddress() const
 {
     return d_ptr->remoteDevice;
 }
 
-QLowEnergyControllerNew::ControllerState QLowEnergyControllerNew::state() const
+QLowEnergyController::ControllerState QLowEnergyController::state() const
 {
     return d_ptr->state;
 }
 
-void QLowEnergyControllerNew::connectToDevice()
+void QLowEnergyController::connectToDevice()
 {
-    Q_D(QLowEnergyControllerNew);
+    Q_D(QLowEnergyController);
 
     if (!d->isValidLocalAdapter()) {
-        d->setError(QLowEnergyControllerNew::InvalidBluetoothAdapterError);
+        d->setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
     }
 
-    if (state() != QLowEnergyControllerNew::UnconnectedState)
+    if (state() != QLowEnergyController::UnconnectedState)
         return;
 
     d->connectToDevice();
 }
 
-void QLowEnergyControllerNew::disconnectFromDevice()
+void QLowEnergyController::disconnectFromDevice()
 {
-    Q_D(QLowEnergyControllerNew);
+    Q_D(QLowEnergyController);
 
-    if (state() == QLowEnergyControllerNew::UnconnectedState)
+    if (state() == QLowEnergyController::UnconnectedState)
         return;
 
     d->invalidateServices();
     d->disconnectFromDevice();
 }
 
-void QLowEnergyControllerNew::discoverServices()
+void QLowEnergyController::discoverServices()
 {
-    Q_D(QLowEnergyControllerNew);
+    Q_D(QLowEnergyController);
 
-    if (d->state != QLowEnergyControllerNew::ConnectedState)
+    if (d->state != QLowEnergyController::ConnectedState)
         return;
 
     d->discoverServices();
 }
 
-QList<QBluetoothUuid> QLowEnergyControllerNew::services() const
+QList<QBluetoothUuid> QLowEnergyController::services() const
 {
     return d_ptr->serviceList.keys();
 }
 
-QLowEnergyService *QLowEnergyControllerNew::createServiceObject(
+QLowEnergyService *QLowEnergyController::createServiceObject(
         const QBluetoothUuid &serviceUuid, QObject *parent)
 {
-    Q_D(QLowEnergyControllerNew);
+    Q_D(QLowEnergyController);
     if (!d->serviceList.contains(serviceUuid))
         return 0;
 
@@ -304,12 +304,12 @@ QLowEnergyService *QLowEnergyControllerNew::createServiceObject(
     return service;
 }
 
-QLowEnergyControllerNew::Error QLowEnergyControllerNew::error() const
+QLowEnergyController::Error QLowEnergyController::error() const
 {
     return d_ptr->error;
 }
 
-QString QLowEnergyControllerNew::errorString() const
+QString QLowEnergyController::errorString() const
 {
     return d_ptr->errorString;
 }

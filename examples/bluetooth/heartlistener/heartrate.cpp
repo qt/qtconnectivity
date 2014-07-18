@@ -144,14 +144,14 @@ void HeartRate::connectToService(const QString &address)
 
     }
     //! [Connect signals]
-    m_control = new QLowEnergyControllerNew(m_currentDevice.getDevice().address(),
+    m_control = new QLowEnergyController(m_currentDevice.getDevice().address(),
                                             this);
     connect(m_control, SIGNAL(serviceDiscovered(QBluetoothUuid)),
             this, SLOT(serviceDiscovered(QBluetoothUuid)));
     connect(m_control, SIGNAL(discoveryFinished()),
             this, SLOT(serviceScanDone()));
-    connect(m_control, SIGNAL(error(QLowEnergyControllerNew::Error)),
-            this, SLOT(controllerError(QLowEnergyControllerNew::Error)));
+    connect(m_control, SIGNAL(error(QLowEnergyController::Error)),
+            this, SLOT(controllerError(QLowEnergyController::Error)));
     connect(m_control, SIGNAL(connected()),
             this, SLOT(serviceConnected()));
 
@@ -232,7 +232,7 @@ void HeartRate::disconnectService()
 }
 
 //! [Error handling]
-void HeartRate::controllerError(QLowEnergyControllerNew::Error error)
+void HeartRate::controllerError(QLowEnergyController::Error error)
 {
     setMessage("Cannot connect to remote device.");
     qWarning() << "Controller Error:" << error;

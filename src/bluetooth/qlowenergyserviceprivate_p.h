@@ -48,7 +48,7 @@
 #include <QtBluetooth/QLowEnergyService>
 #include <QtBluetooth/QLowEnergyCharacteristic>
 
-#include "qlowenergycontrollernew_p.h"
+#include "qlowenergycontroller_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -79,7 +79,7 @@ public:
         Characteristic = 0x2803
     };
 
-    void setController(QLowEnergyControllerNewPrivate* control);
+    void setController(QLowEnergyControllerPrivate* control);
     void setError(QLowEnergyService::ServiceError newError);
     void setState(QLowEnergyService::ServiceState newState);
 
@@ -102,7 +102,7 @@ public:
 
     QHash<QLowEnergyHandle, CharData> characteristicList;
 
-    QPointer<QLowEnergyControllerNewPrivate> controller;
+    QPointer<QLowEnergyControllerPrivate> controller;
 };
 
 QT_END_NAMESPACE

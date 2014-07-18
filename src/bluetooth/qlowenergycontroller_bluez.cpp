@@ -40,7 +40,7 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontrollernew_p.h"
+#include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
 
 #include <QtCore/QLoggingCategory>
@@ -180,23 +180,23 @@ static void dumpErrorInformation(const QByteArray &response)
              << "handle:" << handle;
 }
 
-QLowEnergyControllerNewPrivate::QLowEnergyControllerNewPrivate()
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
-      state(QLowEnergyControllerNew::UnconnectedState),
-      error(QLowEnergyControllerNew::NoError),
+      state(QLowEnergyController::UnconnectedState),
+      error(QLowEnergyController::NoError),
       l2cpSocket(0), requestPending(false),
       mtuSize(ATT_DEFAULT_LE_MTU)
 {
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 }
 
-QLowEnergyControllerNewPrivate::~QLowEnergyControllerNewPrivate()
+QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
 }
 
-void QLowEnergyControllerNewPrivate::connectToDevice()
+void QLowEnergyControllerPrivate::connectToDevice()
 {
-    setState(QLowEnergyControllerNew::ConnectingState);
+    setState(QLowEnergyController::ConnectingState);
     if (l2cpSocket)
         delete l2cpSocket;
 
@@ -213,7 +213,7 @@ void QLowEnergyControllerNewPrivate::connectToDevice()
     int sockfd = l2cpSocket->socketDescriptor();
     if (sockfd < 0) {
         qCWarning(QT_BT_BLUEZ) << "l2cp socket not initialised";
-        setError(QLowEnergyControllerNew::UnknownError);
+        setError(QLowEnergyController::UnknownError);
         return;
     }
 
@@ -226,7 +226,7 @@ void QLowEnergyControllerNewPrivate::connectToDevice()
 
     if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         qCWarning(QT_BT_BLUEZ) << qt_error_string(errno);
-        setError(QLowEnergyControllerNew::UnknownError);
+        setError(QLowEnergyController::UnknownError);
         return;
     }
 
@@ -234,39 +234,39 @@ void QLowEnergyControllerNewPrivate::connectToDevice()
     l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID);
 }
 
-void QLowEnergyControllerNewPrivate::l2cpConnected()
+void QLowEnergyControllerPrivate::l2cpConnected()
 {
-    Q_Q(QLowEnergyControllerNew);
+    Q_Q(QLowEnergyController);
 
     exchangeMTU();
 
-    setState(QLowEnergyControllerNew::ConnectedState);
+    setState(QLowEnergyController::ConnectedState);
     emit q->connected();
 }
 
-void QLowEnergyControllerNewPrivate::disconnectFromDevice()
+void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
-    setState(QLowEnergyControllerNew::ClosingState);
+    setState(QLowEnergyController::ClosingState);
     l2cpSocket->close();
 }
 
-void QLowEnergyControllerNewPrivate::l2cpDisconnected()
+void QLowEnergyControllerPrivate::l2cpDisconnected()
 {
-    Q_Q(QLowEnergyControllerNew);
+    Q_Q(QLowEnergyController);
 
-    setState(QLowEnergyControllerNew::UnconnectedState);
+    setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
 }
 
-void QLowEnergyControllerNewPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError e)
+void QLowEnergyControllerPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError e)
 {
     switch (e) {
     case QBluetoothSocket::HostNotFoundError:
-        setError(QLowEnergyControllerNew::UnknownRemoteDeviceError);
+        setError(QLowEnergyController::UnknownRemoteDeviceError);
         qCDebug(QT_BT_BLUEZ) << "The passed remote device address cannot be found";
         break;
     case QBluetoothSocket::NetworkError:
-        setError(QLowEnergyControllerNew::NetworkError);
+        setError(QLowEnergyController::NetworkError);
         qCDebug(QT_BT_BLUEZ) << "Network IO error while talking to LE device";
         break;
     case QBluetoothSocket::UnknownSocketError:
@@ -277,15 +277,15 @@ void QLowEnergyControllerNewPrivate::l2cpErrorChanged(QBluetoothSocket::SocketEr
         // these errors shouldn't happen -> as it means
         // the code in this file has bugs
         qCDebug(QT_BT_BLUEZ) << "Unknown l2cp socket error: " << e << l2cpSocket->errorString();
-        setError(QLowEnergyControllerNew::UnknownError);
+        setError(QLowEnergyController::UnknownError);
         break;
     }
 
     invalidateServices();
-    setState(QLowEnergyControllerNew::UnconnectedState);
+    setState(QLowEnergyController::UnconnectedState);
 }
 
-void QLowEnergyControllerNewPrivate::l2cpReadyRead()
+void QLowEnergyControllerPrivate::l2cpReadyRead()
 {
     const QByteArray reply = l2cpSocket->readAll();
     qCDebug(QT_BT_BLUEZ) << "Received size:" << reply.size() << "data:" << reply.toHex();
@@ -331,7 +331,7 @@ void QLowEnergyControllerNewPrivate::l2cpReadyRead()
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::sendCommand(const QByteArray &packet)
+void QLowEnergyControllerPrivate::sendCommand(const QByteArray &packet)
 {
     qint64 result = l2cpSocket->write(packet.constData(),
                                       packet.size());
@@ -339,11 +339,11 @@ void QLowEnergyControllerNewPrivate::sendCommand(const QByteArray &packet)
         qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP command:" << hex
                              << packet.toHex()
                              << l2cpSocket->errorString();
-        setError(QLowEnergyControllerNew::NetworkError);
+        setError(QLowEnergyController::NetworkError);
     }
 }
 
-void QLowEnergyControllerNewPrivate::sendNextPendingRequest()
+void QLowEnergyControllerPrivate::sendNextPendingRequest()
 {
     if (openRequests.isEmpty() || requestPending)
         return;
@@ -356,10 +356,10 @@ void QLowEnergyControllerNewPrivate::sendNextPendingRequest()
     sendCommand(request.payload);
 }
 
-void QLowEnergyControllerNewPrivate::processReply(
+void QLowEnergyControllerPrivate::processReply(
         const Request &request, const QByteArray &response)
 {
-    Q_Q(QLowEnergyControllerNew);
+    Q_Q(QLowEnergyController);
 
     quint8 command = response.constData()[0];
 
@@ -687,12 +687,12 @@ void QLowEnergyControllerNewPrivate::processReply(
     }
 }
 
-void QLowEnergyControllerNewPrivate::discoverServices()
+void QLowEnergyControllerPrivate::discoverServices()
 {
     sendReadByGroupRequest(0x0001, 0xFFFF);
 }
 
-void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
+void QLowEnergyControllerPrivate::sendReadByGroupRequest(
                     QLowEnergyHandle start, QLowEnergyHandle end)
 {
     //call for primary services
@@ -716,7 +716,7 @@ void QLowEnergyControllerNewPrivate::sendReadByGroupRequest(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid &service)
+void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &service)
 {
     if (!serviceList.contains(service)) {
         qCWarning(QT_BT_BLUEZ) << "Discovery of unknown service" << service.toString()
@@ -729,7 +729,7 @@ void QLowEnergyControllerNewPrivate::discoverServiceDetails(const QBluetoothUuid
     sendReadByTypeRequest(serviceData, serviceData->startHandle);
 }
 
-void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
+void QLowEnergyControllerPrivate::sendReadByTypeRequest(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         QLowEnergyHandle nextHandle)
 {
@@ -763,7 +763,7 @@ void QLowEnergyControllerNewPrivate::sendReadByTypeRequest(
     \a readCharacteristics determines whether we intend to read a characteristic;
     otherwise we read a descriptor.
  */
-void QLowEnergyControllerNewPrivate::readServiceValues(
+void QLowEnergyControllerPrivate::readServiceValues(
         const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
     // TODO Long charactertistic value reads not yet supported (larger than MTU)
@@ -846,7 +846,7 @@ void QLowEnergyControllerNewPrivate::readServiceValues(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::discoverServiceDescriptors(
+void QLowEnergyControllerPrivate::discoverServiceDescriptors(
         const QBluetoothUuid &serviceUuid)
 {
     qCDebug(QT_BT_BLUEZ) << "Discovering descriptor values for"
@@ -866,7 +866,7 @@ void QLowEnergyControllerNewPrivate::discoverServiceDescriptors(
     discoverNextDescriptor(service, keys, keys[0]);
 }
 
-void QLowEnergyControllerNewPrivate::processUnsolicitedReply(const QByteArray &payload)
+void QLowEnergyControllerPrivate::processUnsolicitedReply(const QByteArray &payload)
 {
     const char *data = payload.constData();
     bool isNotification = (data[0] == ATT_OP_HANDLE_VAL_NOTIFICATION);
@@ -890,7 +890,7 @@ void QLowEnergyControllerNewPrivate::processUnsolicitedReply(const QByteArray &p
     }
 }
 
-void QLowEnergyControllerNewPrivate::exchangeMTU()
+void QLowEnergyControllerPrivate::exchangeMTU()
 {
     qCDebug(QT_BT_BLUEZ) << "Exchanging MTU";
 
@@ -909,7 +909,7 @@ void QLowEnergyControllerNewPrivate::exchangeMTU()
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
+void QLowEnergyControllerPrivate::discoverNextDescriptor(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         const QList<QLowEnergyHandle> pendingCharHandles,
         const QLowEnergyHandle startingHandle)
@@ -946,7 +946,7 @@ void QLowEnergyControllerNewPrivate::discoverNextDescriptor(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::writeCharacteristic(
+void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue)
@@ -983,7 +983,7 @@ void QLowEnergyControllerNewPrivate::writeCharacteristic(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerNewPrivate::writeDescriptor(
+void QLowEnergyControllerPrivate::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle,

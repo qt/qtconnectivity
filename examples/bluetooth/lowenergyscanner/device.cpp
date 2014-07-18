@@ -156,11 +156,11 @@ void Device::scanServices(const QString &address)
 
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
-        controller = new QLowEnergyControllerNew(currentDevice.getDevice().address());
+        controller = new QLowEnergyController(currentDevice.getDevice().address());
         connect(controller, SIGNAL(connected()),
                 this, SLOT(deviceConnected()));
-        connect(controller, SIGNAL(error(QLowEnergyControllerNew::Error)),
-                this, SLOT(errorReceived(QLowEnergyControllerNew::Error)));
+        connect(controller, SIGNAL(error(QLowEnergyController::Error)),
+                this, SLOT(errorReceived(QLowEnergyController::Error)));
         connect(controller, SIGNAL(disconnected()),
                 this, SLOT(deviceDisconnected()));
         connect(controller, SIGNAL(serviceDiscovered(QBluetoothUuid)),
@@ -232,7 +232,7 @@ void Device::deviceConnected()
     controller->discoverServices();
 }
 
-void Device::errorReceived(QLowEnergyControllerNew::Error /*error*/)
+void Device::errorReceived(QLowEnergyController::Error /*error*/)
 {
     qWarning() << "Error: " << controller->errorString();
     setUpdate(controller->errorString());

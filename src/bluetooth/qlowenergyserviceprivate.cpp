@@ -55,7 +55,7 @@ QLowEnergyServicePrivate::~QLowEnergyServicePrivate()
 {
 }
 
-void QLowEnergyServicePrivate::setController(QLowEnergyControllerNewPrivate *control)
+void QLowEnergyServicePrivate::setController(QLowEnergyControllerPrivate *control)
 {
     controller = control;
 
