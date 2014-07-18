@@ -222,12 +222,10 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
                                                            const QBluetoothAddress &address)
-    : q_ptr(q)
-    , deviceHandle(NULL)
+    : QBluetoothLocalDevicePrivateData(address)
+    , q_ptr(q)
 {
-    initialize(address);
 }
-
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
@@ -235,7 +233,9 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
         ::CloseHandle(deviceHandle);
 }
 
-void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
+QBluetoothLocalDevicePrivateData::QBluetoothLocalDevicePrivateData(
+        const QBluetoothAddress &address)
+    : deviceHandle(INVALID_HANDLE_VALUE)
 {
     BLUETOOTH_FIND_RADIO_PARAMS findRadioParams;
     ::ZeroMemory(&findRadioParams, sizeof(findRadioParams));
@@ -282,9 +282,10 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
         qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
 }
 
-bool QBluetoothLocalDevicePrivate::isValid() const
+bool QBluetoothLocalDevicePrivateData::isValid() const
 {
     return deviceHandle && (deviceHandle != INVALID_HANDLE_VALUE);
 }
+
 
 QT_END_NAMESPACE

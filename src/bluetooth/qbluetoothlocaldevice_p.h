@@ -242,23 +242,26 @@ private:
 
 #elif defined(Q_OS_WIN32)
 
-class QBluetoothLocalDevicePrivate : public QObject
+class QBluetoothLocalDevicePrivateData
 {
-    Q_OBJECT
+public:
+    QBluetoothLocalDevicePrivateData(const QBluetoothAddress &address);
+    bool isValid() const;
+
+    HANDLE deviceHandle;
+    QString deviceName;
+    QBluetoothAddress deviceAddress;
+};
+
+class QBluetoothLocalDevicePrivate : public QBluetoothLocalDevicePrivateData
+{
     Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
 public:
     QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, const QBluetoothAddress &address);
     ~QBluetoothLocalDevicePrivate();
 
-    void initialize(const QBluetoothAddress &address);
-
-    bool isValid() const;
-
 private:
     QBluetoothLocalDevice *q_ptr;
-    HANDLE deviceHandle;
-    QString deviceName;
-    QBluetoothAddress deviceAddress;
 };
 
 #else
