@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -41,39 +42,15 @@
 
 #ifndef QLOWENERGYSERVICEINFO_P_H
 #define QLOWENERGYSERVICEINFO_P_H
-#include "qbluetoothuuid.h"
 #include "qlowenergyserviceinfo.h"
-#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothUuid;
-class QLowEnergyServiceInfo;
-
 class QLowEnergyServiceInfoPrivate
 {
-    friend class QLowEnergyControllerPrivate;
-
 public:
-    QLowEnergyServiceInfoPrivate();
-    ~QLowEnergyServiceInfoPrivate();
-
     QBluetoothUuid uuid;
-
-    QLowEnergyServiceInfo::ServiceType serviceType;
-    bool connected;
     QBluetoothDeviceInfo deviceInfo;
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-    QString startingHandle;
-    QString endingHandle;
-#endif
-
-private:
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-    int m_step;
-    int m_valueCounter;
-    int m_readCounter;
-#endif
 };
 
 QT_END_NAMESPACE

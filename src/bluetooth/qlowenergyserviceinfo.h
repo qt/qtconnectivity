@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -49,17 +50,10 @@
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServiceInfoPrivate;
-class QBluetoothAddress;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyServiceInfo
 {
-    friend class QLowEnergyControllerPrivate;
 public:
-    enum ServiceType {
-        PrimaryService = 0x00000001,
-        IncludedService = 0x00000002
-    };
-
     QLowEnergyServiceInfo();
     QLowEnergyServiceInfo(const QBluetoothUuid &uuid);
     QLowEnergyServiceInfo(const QLowEnergyServiceInfo &other);
@@ -74,11 +68,6 @@ public:
     QBluetoothUuid serviceUuid() const;
 
     QString serviceName() const;
-
-    void setServiceType(QLowEnergyServiceInfo::ServiceType type);
-    QLowEnergyServiceInfo::ServiceType serviceType() const;
-
-    bool isConnected() const;
 
     bool isValid() const;
 

@@ -179,7 +179,6 @@ void tst_QLowEnergyController::tst_verifyAllServices()
         QVERIFY(uuids.contains(info.serviceUuid()));
         //QVERIFY(!info.isConnected());
         QVERIFY(info.isValid());
-        QCOMPARE(QLowEnergyServiceInfo::PrimaryService, info.serviceType());
         QBluetoothUuid u = info.serviceUuid();
         bool ok = false;
         quint16 clsId = u.toUInt16(&ok);

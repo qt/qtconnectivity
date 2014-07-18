@@ -91,14 +91,12 @@ config_bluez:qtHaveModule(dbus) {
     # old versions of Bluez do not have the required BTLE symbols
     config_bluez_le {
         SOURCES +=  \
-            qlowenergyserviceinfo_bluez.cpp \
             qlowenergycontrollernew_bluez.cpp
     } else {
         message("Bluez version is too old to support Bluetooth Low Energy.")
         message("Only classic Bluetooth will be available.")
         DEFINES += QT_BLUEZ_NO_BTLE
         SOURCES += \
-            qlowenergyserviceinfo_p.cpp \
             qlowenergycontrollernew_p.cpp
     }
 
@@ -125,7 +123,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_qnx.cpp \
         qbluetoothserver_qnx.cpp \
         qbluetoothtransferreply_qnx.cpp \
-        qlowenergyserviceinfo_qnx.cpp \
         qlowenergycontrollernew_p.cpp
 
 } else:android:!android-no-sdk {
@@ -148,7 +145,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_android.cpp \
         qbluetoothsocket_android.cpp \
         qbluetoothserver_android.cpp \
-        qlowenergyserviceinfo_p.cpp \
         qlowenergycontrollernew_p.cpp
 
 } else {
@@ -161,7 +157,6 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
-        qlowenergyserviceinfo_p.cpp \
         qlowenergycontrollernew_p.cpp
 }
 

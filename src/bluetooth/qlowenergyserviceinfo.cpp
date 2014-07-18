@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -137,23 +138,6 @@ QString QLowEnergyServiceInfo::serviceName() const
 }
 
 /*!
-    Sets service type with \a type.
-*/
-void QLowEnergyServiceInfo::setServiceType(QLowEnergyServiceInfo::ServiceType type)
-{
-    d_ptr->serviceType = type;
-}
-
-/*!
-    Returns the service type. If setServiceType is not called default service type
-    (PrimaryService) is returned.
-*/
-QLowEnergyServiceInfo::ServiceType QLowEnergyServiceInfo::serviceType() const
-{
-    return d_ptr->serviceType;
-}
-
-/*!
     Returns a copy of \a other and assigns it to this QLowEnergyServiceInfo object.
     The two copies continue to share the same service and registration details.
 */
@@ -161,14 +145,6 @@ QLowEnergyServiceInfo &QLowEnergyServiceInfo::operator=(const QLowEnergyServiceI
 {
     d_ptr = other.d_ptr;
     return *this;
-}
-
-/*!
-    Returns \c true if this service is connected; otherwise returns \c false.
- */
-bool QLowEnergyServiceInfo::isConnected() const
-{
-    return d_ptr->connected;
 }
 
 /*!

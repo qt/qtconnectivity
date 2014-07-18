@@ -53,7 +53,6 @@
 QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QUuid)
-Q_DECLARE_METATYPE(QLowEnergyServiceInfo::ServiceType)
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo::CoreConfiguration)
 Q_DECLARE_METATYPE(QLowEnergyServiceInfo)
 Q_DECLARE_METATYPE(QBluetoothUuid::ServiceClassUuid)
@@ -102,8 +101,6 @@ void tst_QLowEnergyServiceInfo::tst_construction()
         QVERIFY(!serviceInfo.isValid());
         QCOMPARE(serviceInfo.serviceName(), QStringLiteral("Unknown Service"));
         QCOMPARE(serviceInfo.serviceUuid().toString(), QBluetoothUuid().toString());
-        QCOMPARE(serviceInfo.serviceType(), QLowEnergyServiceInfo::PrimaryService);
-        QCOMPARE(serviceInfo.isConnected(), false);
         QCOMPARE(serviceInfo.device(), QBluetoothDeviceInfo());
     }
 
@@ -139,7 +136,6 @@ void tst_QLowEnergyServiceInfo::tst_assignment_data()
     QTest::addColumn<QString>("name");
     QTest::addColumn<quint32>("classOfDevice");
     QTest::addColumn<QBluetoothUuid>("serviceClassUuid");
-    QTest::addColumn<QLowEnergyServiceInfo::ServiceType>("serviceType");
     QTest::addColumn<QBluetoothDeviceInfo::CoreConfiguration>("coreConfiguration");
 
     // bits 12-8 Major
@@ -149,47 +145,38 @@ void tst_QLowEnergyServiceInfo::tst_assignment_data()
     QTest::newRow("0x000000 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000000)
         << QBluetoothUuid(QBluetoothUuid::GenericAccess)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000100 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000100)
         << QBluetoothUuid(QBluetoothUuid::GenericAttribute)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000104 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000104)
         << QBluetoothUuid(QBluetoothUuid::HeartRate)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000118 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000118)
         << QBluetoothUuid(QBluetoothUuid::CyclingSpeedAndCadence)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000200 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000200)
         << QBluetoothUuid(QBluetoothUuid::CyclingPower)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000204 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000204)
         << QBluetoothUuid(QBluetoothUuid::ScanParameters)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000214 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000214)
         << QBluetoothUuid(QBluetoothUuid::DeviceInformation)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000300 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000300)
         << QBluetoothUuid(QBluetoothUuid::CurrentTimeService)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000320 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000320)
         << QBluetoothUuid(QBluetoothUuid::LocationAndNavigation)
-        << QLowEnergyServiceInfo::ServiceType(QLowEnergyServiceInfo::PrimaryService)
         << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
 }
 
@@ -199,7 +186,6 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
     QFETCH(QString, name);
     QFETCH(quint32, classOfDevice);
     QFETCH(QBluetoothUuid, serviceClassUuid);
-    QFETCH(QLowEnergyServiceInfo::ServiceType, serviceType);
     QFETCH(QBluetoothDeviceInfo::CoreConfiguration, coreConfiguration);
 
     QBluetoothDeviceInfo deviceInfo(address, name, classOfDevice);
@@ -220,8 +206,6 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
         QCOMPARE(copyInfo.device().address(), address);
         QCOMPARE(copyInfo.serviceUuid(), serviceClassUuid);
         QCOMPARE(copyInfo.device().coreConfigurations(), coreConfiguration);
-        QCOMPARE(copyInfo.serviceType(), serviceType);
-        QCOMPARE(copyInfo.isConnected(), false);
         QCOMPARE(copyInfo.device(), deviceInfo);
     }
 
@@ -237,7 +221,6 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
         QCOMPARE(copyInfo.device().address(), address);
         QCOMPARE(copyInfo.serviceUuid(), serviceClassUuid);
         QCOMPARE(copyInfo.device().coreConfigurations(), coreConfiguration);
-        QCOMPARE(copyInfo.serviceType(), serviceType);
     }
 
     {
@@ -251,18 +234,13 @@ void tst_QLowEnergyServiceInfo::tst_assignment()
 
         QVERIFY(copyInfo1.isValid());
         QVERIFY(copyInfo2.isValid());
-        //QVERIFY(QLowEnergyServiceInfo() != copyInfo1);
 
         QCOMPARE(copyInfo1.device().address(), address);
         QCOMPARE(copyInfo2.device().address(), address);
         QCOMPARE(copyInfo1.serviceUuid(), serviceClassUuid);
         QCOMPARE(copyInfo2.serviceUuid(), serviceClassUuid);
-        QCOMPARE(copyInfo1.serviceType(), serviceType);
-        QCOMPARE(copyInfo2.serviceType(), serviceType);
         QCOMPARE(copyInfo1.device().coreConfigurations(), coreConfiguration);
         QCOMPARE(copyInfo2.device().coreConfigurations(), coreConfiguration);
-        QCOMPARE(copyInfo1.isConnected(), false);
-        QCOMPARE(copyInfo2.isConnected(), false);
         QCOMPARE(copyInfo1.device(), deviceInfo);
         QCOMPARE(copyInfo2.device(), deviceInfo);
     }
