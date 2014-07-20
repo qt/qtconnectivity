@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -112,6 +113,10 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_discoveryInterrupted(const QString &path))
     Q_PRIVATE_SLOT(d_func(), void _q_PropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties))
     Q_PRIVATE_SLOT(d_func(), void _q_extendedDeviceDiscoveryTimeout())
+#endif
+
+#ifdef Q_OS_WIN32
+    Q_PRIVATE_SLOT(d_func(), void _q_handleFindResult())
 #endif
 };
 

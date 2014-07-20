@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -71,6 +72,12 @@ QT_END_NAMESPACE
 #include <QTimer>
 #endif
 
+#ifdef Q_OS_WIN32
+#include <QtConcurrent>
+#include "qbluetoothlocaldevice_p.h"
+#include <bluetoothapis.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
@@ -78,6 +85,9 @@ class QBluetoothDeviceDiscoveryAgentPrivate
     : public QObject
 {
     Q_OBJECT
+#elif defined(Q_OS_WIN32)
+    : public QBluetoothLocalDevicePrivateData
+{
 #else
 {
 #endif
@@ -103,6 +113,10 @@ public:
                               const QVariantMap &changed_properties,
                               const QStringList &invalidated_properties);
     void _q_extendedDeviceDiscoveryTimeout();
+#endif
+
+#ifdef Q_OS_WIN32
+    void _q_handleFindResult();
 #endif
 
 private:
@@ -164,6 +178,20 @@ private:
     Ops m_currentOp;
     void processNextOp();
     bool isFinished;
+#endif
+
+#ifdef Q_OS_WIN32
+    void processDiscoveredDevices(const BLUETOOTH_DEVICE_INFO &info);
+    void handleErrors(DWORD errorCode);
+    bool isRunning() const;
+
+    static QVariant findFirstDevice(HANDLE radioHandle);
+    static QVariant findNextDevice(HBLUETOOTH_DEVICE_FIND findHandle);
+    static void findClose(HBLUETOOTH_DEVICE_FIND findHandle);
+
+    QFutureWatcher<QVariant> *findWatcher;
+    bool pendingCancel;
+    bool pendingStart;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;
