@@ -45,7 +45,7 @@
 
 #include <QDebug>
 
-#include <QBluetoothServiceDiscoveryAgent>
+#include <QBluetoothDeviceDiscoveryAgent>
 #include <QLowEnergyDescriptor>
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
@@ -61,7 +61,7 @@ public:
     ~tst_QLowEnergyDescriptor();
 
 protected slots:
-    void serviceDiscovered(const QLowEnergyServiceInfo &info);
+    void deviceDiscovered(const QBluetoothDeviceInfo &info);
 
 private slots:
     void initTestCase();
@@ -70,7 +70,6 @@ private slots:
     void tst_assignCompare();
 
 private:
-    QBluetoothServiceDiscoveryAgent *agent;
     QSet<QString> remoteLeDevices;
     QLowEnergyController *globalControl;
     QLowEnergyService *globalService;
@@ -101,16 +100,20 @@ void tst_QLowEnergyDescriptor::initTestCase()
     // find an arbitrary low energy device in vincinity
     // find an arbitrary service with descriptor
 
-    QBluetoothServiceDiscoveryAgent * agent = new QBluetoothServiceDiscoveryAgent(this);
-    connect(agent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)),
-            SLOT(serviceDiscovered(QLowEnergyServiceInfo)));
+    QBluetoothDeviceDiscoveryAgent *devAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    connect(devAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+            this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
 
-    QSignalSpy spy(agent, SIGNAL(finished()));
+    QSignalSpy errorSpy(devAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QVERIFY(errorSpy.isValid());
+    QVERIFY(errorSpy.isEmpty());
+
+    QSignalSpy spy(devAgent, SIGNAL(finished()));
     // there should be no changes yet
     QVERIFY(spy.isValid());
     QVERIFY(spy.isEmpty());
 
-    agent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+    devAgent->start();
     QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 50000);
 
     // find first service with descriptor
@@ -175,9 +178,10 @@ void tst_QLowEnergyDescriptor::cleanupTestCase()
         globalControl->disconnectFromDevice();
 }
 
-void tst_QLowEnergyDescriptor::serviceDiscovered(const QLowEnergyServiceInfo &info)
+void tst_QLowEnergyDescriptor::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
-    remoteLeDevices.insert(info.device().address().toString());
+    if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
+        remoteLeDevices.insert(info.address().toString());
 }
 
 void tst_QLowEnergyDescriptor::tst_constructionDefault()

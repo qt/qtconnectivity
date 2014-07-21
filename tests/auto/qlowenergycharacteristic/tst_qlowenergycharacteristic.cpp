@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited all rights reserved
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -44,9 +45,8 @@
 
 #include <QDebug>
 
-#include <QBluetoothServiceDiscoveryAgent>
+#include <QBluetoothDeviceDiscoveryAgent>
 #include <QLowEnergyCharacteristic>
-#include <QLowEnergyServiceInfo>
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
@@ -61,7 +61,7 @@ public:
     ~tst_QLowEnergyCharacteristic();
 
 protected slots:
-    void serviceDiscovered(const QLowEnergyServiceInfo &info);
+    void deviceDiscovered(const QBluetoothDeviceInfo &info);
 
 private slots:
     void initTestCase();
@@ -70,7 +70,6 @@ private slots:
     void tst_assignCompare();
 
 private:
-    QBluetoothServiceDiscoveryAgent *agent;
     QSet<QString> remoteLeDevices;
     QLowEnergyController *globalControl;
     QLowEnergyService *globalService;
@@ -99,17 +98,19 @@ void tst_QLowEnergyCharacteristic::initTestCase()
 
     // find an arbitrary low energy device in vincinity
     // find an arbitrary service with characteristic
+    QBluetoothDeviceDiscoveryAgent *devAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    connect(devAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+            this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
 
-    QBluetoothServiceDiscoveryAgent * agent = new QBluetoothServiceDiscoveryAgent(this);
-    connect(agent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)),
-            SLOT(serviceDiscovered(QLowEnergyServiceInfo)));
+    QSignalSpy errorSpy(devAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QVERIFY(errorSpy.isValid());
+    QVERIFY(errorSpy.isEmpty());
 
-    QSignalSpy spy(agent, SIGNAL(finished()));
-    // there should be no changes yet
+    QSignalSpy spy(devAgent, SIGNAL(finished()));
     QVERIFY(spy.isValid());
     QVERIFY(spy.isEmpty());
 
-    agent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+    devAgent->start();
     QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 50000);
 
     // find first service with descriptor
@@ -174,9 +175,10 @@ void tst_QLowEnergyCharacteristic::cleanupTestCase()
         globalControl->disconnectFromDevice();
 }
 
-void tst_QLowEnergyCharacteristic::serviceDiscovered(const QLowEnergyServiceInfo &info)
+void tst_QLowEnergyCharacteristic::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
-    remoteLeDevices.insert(info.device().address().toString());
+    if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
+        remoteLeDevices.insert(info.address().toString());
 }
 
 void tst_QLowEnergyCharacteristic::tst_constructionDefault()
