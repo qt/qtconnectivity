@@ -67,7 +67,7 @@ QString CharacteristicInfo::getName() const
     // find descriptor with CharacteristicUserDescription
     foreach (const QLowEnergyDescriptor &descriptor, m_characteristic.descriptors()) {
         if (descriptor.type() == QBluetoothUuid::CharacteristicUserDescription) {
-            name = QByteArray::fromHex(descriptor.value());
+            name = descriptor.value();
             break;
         }
     }
@@ -95,8 +95,7 @@ QString CharacteristicInfo::getUuid() const
 
 QString CharacteristicInfo::getValue() const
 {
-    // All characteristics values are in hexadecimal format.
-    // Show human string first and hex value below
+    // Show raw string first and hex value below
     QByteArray a = m_characteristic.value();
     QString result;
     if (a.isEmpty()) {
@@ -104,9 +103,9 @@ QString CharacteristicInfo::getValue() const
         return result;
     }
 
-    result = QByteArray::fromHex(a);
+    result = a;
     result += QLatin1Char('\n');
-    result += a;
+    result += a.toHex();
 
     return result;
 }

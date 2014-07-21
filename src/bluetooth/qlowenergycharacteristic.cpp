@@ -161,9 +161,7 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 }
 
 /*!
-    Returns value of the gatt characteristic.
-
-    The returned QByteArray contains the hex representation of the value.
+    Returns value of the GATT characteristic.
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {

@@ -223,7 +223,7 @@ void HeartRate::disconnectService()
 
     //disable notifications
     if (m_notificationDesc.isValid() && m_service) {
-        m_service->writeDescriptor(m_notificationDesc, QByteArray("0000"));
+        m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0000"));
     } else {
         m_control->disconnectFromDevice();
         delete m_service;
@@ -255,7 +255,7 @@ void HeartRate::serviceStateChanged(QLowEnergyService::ServiceState s)
         const QLowEnergyDescriptor m_notificationDesc = hrChar.descriptor(
                     QBluetoothUuid::ClientCharacteristicConfiguration);
         if (m_notificationDesc.isValid()) {
-            m_service->writeDescriptor(m_notificationDesc, QByteArray("0100"));
+            m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0100"));
             setMessage("Measuring");
             m_start = QDateTime::currentDateTime();
         }
@@ -287,7 +287,7 @@ void HeartRate::updateHeartRateValue(const QLowEnergyCharacteristic &c,
         return;
 
     //! [Reading value]
-    const char *data = QByteArray::fromHex(value).constData();
+    const char *data = value.constData();
     quint8 flags = data[0];
 
     //Heart Rate

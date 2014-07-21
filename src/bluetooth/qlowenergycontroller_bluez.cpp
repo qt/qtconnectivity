@@ -521,10 +521,10 @@ void QLowEnergyControllerPrivate::processReply(
         // we ignore error response
         if (!isErrorResponse) {
             if (!descriptorHandle)
-                updateValueOfCharacteristic(charHandle, response.mid(1).toHex());
+                updateValueOfCharacteristic(charHandle, response.mid(1));
             else
                 updateValueOfDescriptor(charHandle, descriptorHandle,
-                                        response.mid(1).toHex());
+                                        response.mid(1));
         }
 
         if (request.reference2.toBool()) {
@@ -881,9 +881,8 @@ void QLowEnergyControllerPrivate::processUnsolicitedReply(const QByteArray &payl
 
     const QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
     if (ch.isValid() && ch.handle() == changedHandle) {
-        const QByteArray newValue = payload.mid(3).toHex();
-        updateValueOfCharacteristic(ch.attributeHandle(), newValue);
-        emit ch.d_ptr->characteristicChanged(ch, newValue);
+        updateValueOfCharacteristic(ch.attributeHandle(), payload.mid(3));
+        emit ch.d_ptr->characteristicChanged(ch, payload.mid(3));
     } else {
         qCWarning(QT_BT_BLUEZ) << "Cannot find matching characteristic for "
                                   "notification/indication";
@@ -957,9 +956,8 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         return;
 
     const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
-    const QByteArray rawData = QByteArray::fromHex(newValue);
-    // sizeof(command) + sizeof(handle) + sizeof(rawData)
-    const int size = 1 + 2 + rawData.size();
+    // sizeof(command) + sizeof(handle) + sizeof(newValue)
+    const int size = 1 + 2 + newValue.size();
 
     quint8 packet[WRITE_REQUEST_SIZE];
     packet[0] = ATT_OP_WRITE_REQUEST;
@@ -968,7 +966,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 
     QByteArray data(size, Qt::Uninitialized);
     memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), rawData.constData(), rawData.size());
+    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
                          << "(size:" << size << ")";
@@ -991,9 +989,8 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 {
     Q_ASSERT(!service.isNull());
 
-    const QByteArray rawData = QByteArray::fromHex(newValue);
-    // sizeof(command) + sizeof(handle) + sizeof(rawData)
-    const int size = 1 + 2 + rawData.size();
+    // sizeof(command) + sizeof(handle) + sizeof(newValue)
+    const int size = 1 + 2 + newValue.size();
 
     quint8 packet[WRITE_REQUEST_SIZE];
     packet[0] = ATT_OP_WRITE_REQUEST;
@@ -1001,7 +998,7 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 
     QByteArray data(size, Qt::Uninitialized);
     memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), rawData.constData(), rawData.size());
+    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
                          << "(size:" << size << ")";
