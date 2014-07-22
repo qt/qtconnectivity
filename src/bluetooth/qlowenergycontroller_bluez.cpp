@@ -57,6 +57,7 @@
 
 #define GATT_PRIMARY_SERVICE    0x2800
 #define GATT_SECONDARY_SERVICE  0x2801
+#define GATT_INCLUDED_SERVICE   0x2802
 #define GATT_CHARACTERISTIC     0x2803
 
 // GATT commands
@@ -357,6 +358,57 @@ void QLowEnergyControllerPrivate::sendNextPendingRequest()
     sendCommand(request.payload);
 }
 
+QLowEnergyHandle parseReadByTypeCharDiscovery(
+        QLowEnergyServicePrivate::CharData *charData,
+        const char *data, quint16 elementLength)
+{
+    Q_ASSERT(charData);
+    Q_ASSERT(data);
+
+    QLowEnergyHandle attributeHandle = bt_get_le16(&data[0]);
+    charData->properties =
+            (QLowEnergyCharacteristic::PropertyTypes)data[2];
+    charData->valueHandle = bt_get_le16(&data[3]);
+
+    if (elementLength == 7) // 16 bit uuid
+        charData->uuid = QBluetoothUuid(bt_get_le16(&data[5]));
+    else
+        charData->uuid = convert_uuid128((uint128_t *)&data[5]);
+
+    qCDebug(QT_BT_BLUEZ) << "Found handle:" << hex << attributeHandle
+             << "properties:" << charData->properties
+             << "value handle:" << charData->valueHandle
+             << "uuid:" << charData->uuid.toString();
+
+    return attributeHandle;
+}
+
+QLowEnergyHandle parseReadByTypeIncludeDiscovery(
+        QList<QBluetoothUuid> *foundServices,
+        const char *data, quint16 elementLength)
+{
+    Q_ASSERT(foundServices);
+    Q_ASSERT(data);
+
+    QLowEnergyHandle attributeHandle = bt_get_le16(&data[0]);
+
+    // the next 2 elements are not required as we have discovered
+    // all (primary/secondary) services already. Now we are only
+    // interested in their relationship to each other
+    // data[2] -> included service start handle
+    // data[4] -> included service end handle
+
+    if (elementLength == 8) //16 bit uuid
+        foundServices->append(QBluetoothUuid(bt_get_le16(&data[6])));
+    else
+        foundServices->append(convert_uuid128((uint128_t *) &data[6]));
+
+    qCDebug(QT_BT_BLUEZ) << "Found included service: " << hex
+                         << attributeHandle << "uuid:" << *foundServices;
+
+    return attributeHandle;
+}
+
 void QLowEnergyControllerPrivate::processReply(
         const Request &request, const QByteArray &response)
 {
@@ -461,63 +513,70 @@ void QLowEnergyControllerPrivate::processReply(
 
         QSharedPointer<QLowEnergyServicePrivate> p =
                 request.reference.value<QSharedPointer<QLowEnergyServicePrivate> >();
+        const quint16 attributeType = request.reference2.toUInt();
 
         if (isErrorResponse) {
-            // we reached end of service handle
-            // just finished up characteristic discovery
-            // continue with values of characteristics
-            if (!p->characteristicList.isEmpty()) {
-                readServiceValues(p->uuid, true);
-            } else {
-                // discovery finished since the service doesn't have any
-                // characteristics
-                p->setState(QLowEnergyService::ServiceDiscovered);
+            if (attributeType == GATT_CHARACTERISTIC) {
+                // we reached end of service handle
+                // just finished up characteristic discovery
+                // continue with values of characteristics
+                if (!p->characteristicList.isEmpty()) {
+                    readServiceValues(p->uuid, true);
+                } else {
+                    // discovery finished since the service doesn't have any
+                    // characteristics
+                    p->setState(QLowEnergyService::ServiceDiscovered);
+                }
+            } else if (attributeType == GATT_INCLUDED_SERVICE) {
+                // finished up include discovery
+                // continue with characteristic discovery
+                sendReadByTypeRequest(p, p->startHandle, GATT_CHARACTERISTIC);
             }
             break;
         }
 
         /* packet format:
-         *  <opcode><elementLength>[<handle><property><charHandle><uuid>]+
+         * if GATT_CHARACTERISTIC discovery
+         *      <opcode><elementLength>
+         *          [<handle><property><charHandle><uuid>]+
+         *
+         * if GATT_INCLUDE discovery
+         *      <opcode><elementLength>
+         *          [<handle><startHandle_included><endHandle_included><uuid>]+
          *
          *  The uuid can be 16 or 128 bit.
          */
-        QLowEnergyHandle startHandle, valueHandle;
+        QLowEnergyHandle lastHandle;
         const quint16 elementLength = response.constData()[1];
         const quint16 numElements = (response.size() - 2) / elementLength;
         quint16 offset = 2;
         const char *data = response.constData();
         for (int i = 0; i < numElements; i++) {
-            startHandle = bt_get_le16(&data[offset]);
-            QLowEnergyCharacteristic::PropertyTypes flags =
-                    (QLowEnergyCharacteristic::PropertyTypes)data[offset+2];
-            valueHandle = bt_get_le16(&data[offset+3]);
-            QBluetoothUuid uuid;
-
-            if (elementLength == 7) // 16 bit uuid
-                uuid = QBluetoothUuid(bt_get_le16(&data[offset+5]));
-            else
-                uuid = convert_uuid128((uint128_t *)&data[offset+5]);
-
-            offset += elementLength;
-
-            QLowEnergyServicePrivate::CharData characteristic;
-            characteristic.properties = flags;
-            characteristic.valueHandle = valueHandle;
-            characteristic.uuid = uuid;
-
-            p->characteristicList[startHandle] = characteristic;
-
-
-            qCDebug(QT_BT_BLUEZ) << "Found handle:" << hex << startHandle
-                     << "properties:" << flags
-                     << "value handle:" << valueHandle
-                     << "uuid:" << uuid.toString();
+            if (attributeType == GATT_CHARACTERISTIC) {
+                QLowEnergyServicePrivate::CharData characteristic;
+                lastHandle = parseReadByTypeCharDiscovery(
+                            &characteristic, &data[offset], elementLength);
+                p->characteristicList[lastHandle] = characteristic;
+            } else if (attributeType == GATT_INCLUDED_SERVICE) {
+                QList<QBluetoothUuid> includedServices;
+                lastHandle = parseReadByTypeIncludeDiscovery(
+                            &includedServices, &data[offset], elementLength);
+                p->includedServices = includedServices;
+                foreach (const QBluetoothUuid &uuid, includedServices) {
+                    if (serviceList.contains(uuid))
+                        serviceList[uuid]->type |= QLowEnergyService::IncludedService;
+                }
+            }
         }
 
-        if (startHandle + 1 < p->endHandle) // more chars to discover
-            sendReadByTypeRequest(p, startHandle + 1);
-        else
-            readServiceValues(p->uuid, true);
+        if (lastHandle + 1 < p->endHandle) { // more chars to discover
+            sendReadByTypeRequest(p, lastHandle + 1, attributeType);
+        } else {
+            if (attributeType == GATT_INCLUDED_SERVICE)
+                sendReadByTypeRequest(p, p->startHandle, GATT_CHARACTERISTIC);
+            else
+                readServiceValues(p->uuid, true);
+        }
     }
         break;
     case ATT_OP_READ_REQUEST: //error case
@@ -718,7 +777,7 @@ void QLowEnergyControllerPrivate::sendReadByGroupRequest(
     QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
     qCDebug(QT_BT_BLUEZ) << "Sending read_by_group_type request, startHandle:" << hex
-             << start << "endHandle:" << end;
+             << start << "endHandle:" << end << type;
 
     Request request;
     request.payload = data;
@@ -739,30 +798,31 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
 
     QSharedPointer<QLowEnergyServicePrivate> serviceData = serviceList.value(service);
     serviceData->characteristicList.clear();
-    sendReadByTypeRequest(serviceData, serviceData->startHandle);
+    sendReadByTypeRequest(serviceData, serviceData->startHandle, GATT_INCLUDED_SERVICE);
 }
 
 void QLowEnergyControllerPrivate::sendReadByTypeRequest(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
-        QLowEnergyHandle nextHandle)
+        QLowEnergyHandle nextHandle, quint16 attributeType)
 {
     quint8 packet[READ_BY_TYPE_REQ_SIZE];
 
     packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
     bt_put_unaligned(htobs(nextHandle), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(serviceData->endHandle), (quint16 *) &packet[3]);
-    bt_put_unaligned(htobs(GATT_CHARACTERISTIC), (quint16 *) &packet[5]);
+    bt_put_unaligned(htobs(attributeType), (quint16 *) &packet[5]);
 
     QByteArray data(READ_BY_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_BY_TYPE_REQ_SIZE);
     qCDebug(QT_BT_BLUEZ) << "Sending read_by_type request, startHandle:" << hex
              << nextHandle << "endHandle:" << serviceData->endHandle
-             << "packet:" << data.toHex();
+             << "type:" << attributeType << "packet:" << data.toHex();
 
     Request request;
     request.payload = data;
     request.command = ATT_OP_READ_BY_TYPE_REQUEST;
     request.reference = QVariant::fromValue(serviceData);
+    request.reference2 = attributeType;
     openRequests.enqueue(request);
 
     sendNextPendingRequest();

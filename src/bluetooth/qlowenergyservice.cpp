@@ -92,11 +92,23 @@ QLowEnergyService::~QLowEnergyService()
 {
 }
 
-QList<QSharedPointer<QLowEnergyService> > QLowEnergyService::includedServices() const
+/*!
+    Returns the uuids of all services which are included by the
+    current service.
+
+    It is possible that an included service contains yet another service. Such
+    second level includes have to be obtained via their relevant first level
+    QLowEnergyService instance. Technically it is possible that this can create
+    a circular dependency.
+
+    \l {QLowEnergyController::createServiceObject} should be used to obtain
+    service instances for each of the uuids.
+
+    \sa createServiceObject()
+ */
+QList<QBluetoothUuid> QLowEnergyService::includedServices() const
 {
-    QList<QSharedPointer<QLowEnergyService > > results;
-    //TODO implement secondary service support
-    return results;
+    return d_ptr->includedServices;
 }
 
 QLowEnergyService::ServiceState QLowEnergyService::state() const

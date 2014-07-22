@@ -286,11 +286,35 @@ void QLowEnergyController::discoverServices()
     d->discoverServices();
 }
 
+/*!
+    Returns the list of services offered by the remote device.
+
+    The list contains all primary and secondary services.
+
+    \sa createServiceObject()
+ */
 QList<QBluetoothUuid> QLowEnergyController::services() const
 {
     return d_ptr->serviceList.keys();
 }
 
+/*!
+    Creates an instance of the service represented by \a serviceUuid.
+    The \a serviceUuid parameter must have been obtained via
+    \l services().
+
+    The caller takes ownership of the returned pointer and may pass
+    a \a parent parameter as default owner.
+
+    This function returns a null pointer if no service with
+    \a serviceUUid can be found on the remote device.
+
+    This function can return instances for secondary services
+    too. The include relationships between services can be expressed
+    via \l QLowEnergyService::includedServices().
+
+    \sa services()
+ */
 QLowEnergyService *QLowEnergyController::createServiceObject(
         const QBluetoothUuid &serviceUuid, QObject *parent)
 {

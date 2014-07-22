@@ -109,11 +109,10 @@ public:
     QLowEnergyController::Error error;
     QString errorString;
 
-
-private:
     // list of all found service uuids
     ServiceDataMap serviceList;
 
+private:
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QBluetoothSocket *l2cpSocket;
     struct Request {
@@ -135,7 +134,7 @@ private:
     void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end,
                                 quint16 type);
     void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
-                               QLowEnergyHandle nextHandle);
+                               QLowEnergyHandle nextHandle, quint16 attributeType);
     void sendReadValueRequest(QLowEnergyHandle attributeHandle, bool isDescriptor);
     void readServiceValues(const QBluetoothUuid &service, bool readCharacteristics);
 

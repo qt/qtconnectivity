@@ -96,6 +96,7 @@ public:
     QLowEnergyHandle endHandle;
 
     QBluetoothUuid uuid;
+    QList<QBluetoothUuid> includedServices;
     QLowEnergyService::ServiceTypes type;
     QLowEnergyService::ServiceState state;
     QLowEnergyService::ServiceError lastError;

@@ -76,7 +76,8 @@ public:
 
     ~QLowEnergyService();
 
-    QList<QSharedPointer<QLowEnergyService> > includedServices() const;
+    QList<QBluetoothUuid> includedServices() const;
+
     QLowEnergyService::ServiceTypes type() const;
     QLowEnergyService::ServiceState state() const;
 
