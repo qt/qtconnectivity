@@ -108,6 +108,12 @@ Rectangle {
             }
 
             Label {
+                textContent: modelData.serviceType
+                font.pointSize: serviceName.font.pointSize * 0.5
+                anchors.top: serviceName.bottom
+            }
+
+            Label {
                 id: serviceUuid
                 font.pointSize: serviceName.font.pointSize * 0.5
                 textContent: modelData.serviceUuid

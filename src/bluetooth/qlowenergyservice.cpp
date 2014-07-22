@@ -51,6 +51,18 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \enum QBluetoothDeviceInfo::ServiceType
+
+    This enum describes the type of the service.
+
+    \value PrimaryService       The service is a top-level/primary service.
+                                If this type flag is not set the service is considered
+                                to be a secondary service. Each service may be included
+                                by another service which is indicated by \l IncludedService.
+    \value IncludedService      The service is included by another service.
+*/
+
+/*!
   \internal
 
   QLowEnergyControllerPrivate creates instances of this class.
@@ -92,7 +104,7 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
     return d_ptr->state;
 }
 
-QLowEnergyService::ServiceType QLowEnergyService::type() const
+QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
     return d_ptr->type;
 }

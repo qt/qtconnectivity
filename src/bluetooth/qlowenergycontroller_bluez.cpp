@@ -56,6 +56,7 @@
 #define ATT_MAX_LE_MTU 0x200
 
 #define GATT_PRIMARY_SERVICE    0x2800
+#define GATT_SECONDARY_SERVICE  0x2801
 #define GATT_CHARACTERISTIC     0x2803
 
 // GATT commands
@@ -396,8 +397,13 @@ void QLowEnergyControllerPrivate::processReply(
         // Discovering services
         Q_ASSERT(request.command == ATT_OP_READ_BY_GROUP_REQUEST);
 
+        const quint16 type = request.reference.toUInt();
+
         if (isErrorResponse) {
-            q->discoveryFinished();
+            if (type == GATT_SECONDARY_SERVICE)
+                q->discoveryFinished();
+            else // search for secondary services
+                sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
             break;
         }
 
@@ -427,6 +433,8 @@ void QLowEnergyControllerPrivate::processReply(
             priv->uuid = uuid;
             priv->startHandle = start;
             priv->endHandle = end;
+            if (type != GATT_PRIMARY_SERVICE) //unset PrimaryService bit
+                priv->type &= ~QLowEnergyService::PrimaryService;
             priv->setController(this);
 
             QSharedPointer<QLowEnergyServicePrivate> pointer(priv);
@@ -435,10 +443,14 @@ void QLowEnergyControllerPrivate::processReply(
             emit q->serviceDiscovered(uuid);
         }
 
-        if (end != 0xFFFF)
-            sendReadByGroupRequest(end+1, 0xFFFF);
-        else
-            emit q->discoveryFinished();
+        if (end != 0xFFFF) {
+            sendReadByGroupRequest(end+1, 0xFFFF, type);
+        } else {
+            if (type == GATT_SECONDARY_SERVICE)
+                emit q->discoveryFinished();
+            else // search for secondary services
+                sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
+        }
     }
         break;
     case ATT_OP_READ_BY_TYPE_REQUEST: //in case of error
@@ -689,19 +701,19 @@ void QLowEnergyControllerPrivate::processReply(
 
 void QLowEnergyControllerPrivate::discoverServices()
 {
-    sendReadByGroupRequest(0x0001, 0xFFFF);
+    sendReadByGroupRequest(0x0001, 0xFFFF, GATT_PRIMARY_SERVICE);
 }
 
 void QLowEnergyControllerPrivate::sendReadByGroupRequest(
-                    QLowEnergyHandle start, QLowEnergyHandle end)
+        QLowEnergyHandle start, QLowEnergyHandle end, quint16 type)
 {
-    //call for primary services
+    //call for primary and secondary services
     quint8 packet[GRP_TYPE_REQ_SIZE];
 
     packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
     bt_put_unaligned(htobs(start), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(end), (quint16 *) &packet[3]);
-    bt_put_unaligned(htobs(GATT_PRIMARY_SERVICE), (quint16 *) &packet[5]);
+    bt_put_unaligned(htobs(type), (quint16 *) &packet[5]);
 
     QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
@@ -711,6 +723,7 @@ void QLowEnergyControllerPrivate::sendReadByGroupRequest(
     Request request;
     request.payload = data;
     request.command = ATT_OP_READ_BY_GROUP_REQUEST;
+    request.reference = type;
     openRequests.enqueue(request);
 
     sendNextPendingRequest();

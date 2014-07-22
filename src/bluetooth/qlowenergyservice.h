@@ -54,9 +54,10 @@ class Q_BLUETOOTH_EXPORT QLowEnergyService : public QObject
     Q_OBJECT
 public:
     enum ServiceType {
-        PrimaryService = 0,
-        IncludedService
+        PrimaryService = 0x0001,
+        IncludedService = 0x0002
     };
+    Q_DECLARE_FLAGS(ServiceTypes, ServiceType)
 
     enum ServiceError {
         NoError = 0,
@@ -76,7 +77,7 @@ public:
     ~QLowEnergyService();
 
     QList<QSharedPointer<QLowEnergyService> > includedServices() const;
-    QLowEnergyService::ServiceType type() const;
+    QLowEnergyService::ServiceTypes type() const;
     QLowEnergyService::ServiceState state() const;
 
     QLowEnergyCharacteristic characteristic(const QBluetoothUuid &uuid) const;

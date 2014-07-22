@@ -132,7 +132,8 @@ private:
     void sendNextPendingRequest();
     void processReply(const Request &request, const QByteArray &reply);
 
-    void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end);
+    void sendReadByGroupRequest(QLowEnergyHandle start, QLowEnergyHandle end,
+                                quint16 type);
     void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
                                QLowEnergyHandle nextHandle);
     void sendReadValueRequest(QLowEnergyHandle attributeHandle, bool isDescriptor);
