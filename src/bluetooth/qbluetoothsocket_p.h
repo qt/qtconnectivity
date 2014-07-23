@@ -98,12 +98,15 @@ public:
 #if defined(QT_QNX_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
 #elif defined(QT_ANDROID_BLUETOOTH)
-    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
+    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+                          QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
+    bool fallBackConnect(QAndroidJniObject uuid, int channel);
 #else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
-    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
+    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+                              QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
 #endif
 
 
