@@ -85,11 +85,13 @@ public:
     QLowEnergyDescriptor descriptorForHandle(
             QLowEnergyHandle handle);
 
-    void updateValueOfCharacteristic(QLowEnergyHandle charHandle,
-                                   const QByteArray &value);
-    void updateValueOfDescriptor(QLowEnergyHandle charHandle,
+    quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
+                                     const QByteArray &value,
+                                     bool appendValue);
+    quint16 updateValueOfDescriptor(QLowEnergyHandle charHandle,
                                  QLowEnergyHandle descriptorHandle,
-                                 const QByteArray &value);
+                                 const QByteArray &value,
+                                 bool appendValue);
 
 
     // write data
@@ -136,7 +138,10 @@ private:
     void sendReadByTypeRequest(QSharedPointer<QLowEnergyServicePrivate> serviceData,
                                QLowEnergyHandle nextHandle, quint16 attributeType);
     void sendReadValueRequest(QLowEnergyHandle attributeHandle, bool isDescriptor);
-    void readServiceValues(const QBluetoothUuid &service, bool readCharacteristics);
+    void readServiceValues(const QBluetoothUuid &service,
+                           bool readCharacteristics);
+    void readServiceValuesByOffset(quint16 handleData, quint16 offset,
+                                   bool isLastValue);
 
     void discoverServiceDescriptors(const QBluetoothUuid &serviceUuid);
     void discoverNextDescriptor(QSharedPointer<QLowEnergyServicePrivate> serviceData,

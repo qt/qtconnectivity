@@ -174,26 +174,45 @@ QLowEnergyDescriptor QLowEnergyControllerPrivate::descriptorForHandle(
     return QLowEnergyDescriptor();
 }
 
-void QLowEnergyControllerPrivate::updateValueOfCharacteristic(
-        QLowEnergyHandle charHandle, const QByteArray &value)
+/*!
+    Returns the length of the updated characteristic value.
+ */
+quint16 QLowEnergyControllerPrivate::updateValueOfCharacteristic(
+        QLowEnergyHandle charHandle,const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (!service.isNull() && service->characteristicList.contains(charHandle))
-        service->characteristicList[charHandle].value = value;
+    if (!service.isNull() && service->characteristicList.contains(charHandle)) {
+        if (appendValue)
+            service->characteristicList[charHandle].value += value;
+        else
+            service->characteristicList[charHandle].value = value;
+
+        return service->characteristicList[charHandle].value.size();
+    }
+
+    return 0;
 }
 
-void QLowEnergyControllerPrivate::updateValueOfDescriptor(
+/*!
+    Returns the length of the updated descriptor value.
+ */
+quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
         QLowEnergyHandle charHandle, QLowEnergyHandle descriptorHandle,
-        const QByteArray &value)
+        const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
     if (service.isNull() || !service->characteristicList.contains(charHandle))
-        return;
+        return 0;
 
     if (!service->characteristicList[charHandle].descriptorList.contains(descriptorHandle))
-        return;
+        return 0;
 
-    service->characteristicList[charHandle].descriptorList[descriptorHandle].value = value;
+    if (appendValue)
+        service->characteristicList[charHandle].descriptorList[descriptorHandle].value += value;
+    else
+        service->characteristicList[charHandle].descriptorList[descriptorHandle].value = value;
+
+    return service->characteristicList[charHandle].descriptorList[descriptorHandle].value.size();
 }
 
 QLowEnergyController::QLowEnergyController(
