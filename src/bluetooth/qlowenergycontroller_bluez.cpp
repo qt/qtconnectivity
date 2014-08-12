@@ -42,13 +42,11 @@
 
 #include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
+#include "bluez/bluez_data_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QLowEnergyService>
-
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/l2cap.h>
 
 #define ATTRIBUTE_CHANNEL_ID 4
 
@@ -115,9 +113,9 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-static inline QBluetoothUuid convert_uuid128(const uint128_t *p)
+static inline QBluetoothUuid convert_uuid128(const quint128 *p)
 {
-    uint128_t dst_hostOrder, dst_bigEndian;
+    quint128 dst_hostOrder, dst_bigEndian;
 
     // Bluetooth LE data comes as little endian
     // uuids are constructed using high endian
@@ -126,7 +124,7 @@ static inline QBluetoothUuid convert_uuid128(const uint128_t *p)
 
     // convert to Qt's own data type
     quint128 qtdst;
-    memcpy(&qtdst, &dst_bigEndian, sizeof(uint128_t));
+    memcpy(&qtdst, &dst_bigEndian, sizeof(quint128));
 
     return QBluetoothUuid(qtdst);
 }
@@ -379,7 +377,7 @@ QLowEnergyHandle parseReadByTypeCharDiscovery(
     if (elementLength == 7) // 16 bit uuid
         charData->uuid = QBluetoothUuid(bt_get_le16(&data[5]));
     else
-        charData->uuid = convert_uuid128((uint128_t *)&data[5]);
+        charData->uuid = convert_uuid128((quint128 *)&data[5]);
 
     qCDebug(QT_BT_BLUEZ) << "Found handle:" << hex << attributeHandle
              << "properties:" << charData->properties
@@ -407,7 +405,7 @@ QLowEnergyHandle parseReadByTypeIncludeDiscovery(
     if (elementLength == 8) //16 bit uuid
         foundServices->append(QBluetoothUuid(bt_get_le16(&data[6])));
     else
-        foundServices->append(convert_uuid128((uint128_t *) &data[6]));
+        foundServices->append(convert_uuid128((quint128 *) &data[6]));
 
     qCDebug(QT_BT_BLUEZ) << "Found included service: " << hex
                          << attributeHandle << "uuid:" << *foundServices;
@@ -478,7 +476,7 @@ void QLowEnergyControllerPrivate::processReply(
             if (elementLength == 6) //16 bit uuid
                 uuid = QBluetoothUuid(bt_get_le16(&data[offset+4]));
             else if (elementLength == 20) //128 bit uuid
-                uuid = convert_uuid128((uint128_t *)&data[offset+4]);
+                uuid = convert_uuid128((quint128 *)&data[offset+4]);
             //else -> do nothing
 
             offset += elementLength;
@@ -715,7 +713,7 @@ void QLowEnergyControllerPrivate::processReply(
             if (format == 0x01)
                 uuid = QBluetoothUuid(bt_get_le16(&data[offset+2]));
             else if (format == 0x02)
-                uuid = convert_uuid128((uint128_t *)&data[offset+2]);
+                uuid = convert_uuid128((quint128 *)&data[offset+2]);
 
             offset += elementLength;
 
