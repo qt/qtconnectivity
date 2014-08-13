@@ -45,16 +45,13 @@
 #include "bluez/manager_p.h"
 #include "bluez/adapter_p.h"
 #include "bluez/device_p.h"
-#include "bluez/bluez5_helper_p.h"
 #include "bluez/objectmanager_p.h"
 #include <QtBluetooth/QBluetoothLocalDevice>
+#include "bluez/bluez_data_p.h"
 
 #include <qplatformdefs.h>
 
 #include <QtCore/QLoggingCategory>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/rfcomm.h>
-#include <bluetooth/l2cap.h>
 
 #include <errno.h>
 #include <unistd.h>

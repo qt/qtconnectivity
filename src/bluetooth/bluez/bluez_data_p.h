@@ -39,55 +39,49 @@
 **
 ****************************************************************************/
 
-#ifndef BLUEZ5_HELPER_H
-#define BLUEZ5_HELPER_H
+#ifndef BLUEZ_DATA_P_H
+#define BLUEZ_DATA_P_H
 
-#include <QtCore/QObject>
-#include <QtDBus/QtDBus>
-#include <QtBluetooth/QBluetoothAddress>
+#include <QtCore/qglobal.h>
+#include <sys/socket.h>
 
-typedef QMap<QString, QVariantMap> InterfaceList;
-typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
+#define BTPROTO_L2CAP   0
+#define BTPROTO_RFCOMM  3
 
-Q_DECLARE_METATYPE(InterfaceList)
-Q_DECLARE_METATYPE(ManagedObjectList)
+#define SOL_L2CAP   6
+#define SOL_RFCOMM  18
 
-QT_BEGIN_NAMESPACE
+#define RFCOMM_LM   0x03
 
-bool isBluez5();
+#define RFCOMM_LM_AUTH      0x0002
+#define RFCOMM_LM_ENCRYPT   0x0004
+#define RFCOMM_LM_TRUSTED   0x0008
+#define RFCOMM_LM_SECURE    0x0020
 
-QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok);
+#define L2CAP_LM            0x03
+#define L2CAP_LM_AUTH       0x0002
+#define L2CAP_LM_ENCRYPT    0x0004
+#define L2CAP_LM_TRUSTED    0x0008
+#define L2CAP_LM_SECURE     0x0020
 
-class QtBluezDiscoveryManagerPrivate;
-class QtBluezDiscoveryManager : public QObject
-{
-    Q_OBJECT
-public:
-    QtBluezDiscoveryManager(QObject* parent = 0);
-    ~QtBluezDiscoveryManager();
-    static QtBluezDiscoveryManager *instance();
+// Bluetooth address
+typedef struct {
+    quint8 b[6];
+} __attribute__((packed)) bdaddr_t;
 
-    bool registerDiscoveryInterest(const QString &adapterPath);
-    void unregisterDiscoveryInterest(const QString &adapterPath);
-
-    //void dumpState() const;
-
-signals:
-    void discoveryInterrupted(const QString &adapterPath);
-
-private slots:
-    void InterfacesRemoved(const QDBusObjectPath &object_path,
-                           const QStringList &interfaces);
-    void PropertiesChanged(const QString &interface,
-                           const QVariantMap &changed_properties,
-                           const QStringList &invalidated_properties);
-
-private:
-    void removeAdapterFromMonitoring(const QString &dbusPath);
-
-    QtBluezDiscoveryManagerPrivate *d;
+// L2CP socket
+struct sockaddr_l2 {
+    sa_family_t     l2_family;
+    unsigned short  l2_psm;
+    bdaddr_t        l2_bdaddr;
+    unsigned short  l2_cid;
 };
 
-QT_END_NAMESPACE
+// RFCOMM socket
+struct sockaddr_rc {
+    sa_family_t rc_family;
+    bdaddr_t    rc_bdaddr;
+    quint8      rc_channel;
+};
 
-#endif
+#endif // BLUEZ_DATA_P_H

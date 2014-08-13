@@ -100,8 +100,6 @@ config_bluez:qtHaveModule(dbus) {
             qlowenergycontroller_p.cpp
     }
 
-        CONFIG += link_pkgconfig
-        PKGCONFIG_PRIVATE += bluez
 } else:CONFIG(blackberry) {
     DEFINES += QT_QNX_BLUETOOTH
 

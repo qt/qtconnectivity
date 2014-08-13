@@ -1,16 +1,3 @@
-linux-*: {
-    # bluetooth.h is not standards compliant
-    contains(QMAKE_CXXFLAGS, -std=c++0x) {
-        QMAKE_CXXFLAGS -= -std=c++0x
-        QMAKE_CXXFLAGS += -std=gnu++0x
-        CONFIG -= c++11
-    }
-    c++11 {
-        CONFIG -= c++11
-        QMAKE_CXXFLAGS += -std=gnu++0x
-    }
-}
-
 HEADERS += bluez/manager_p.h \
            bluez/adapter_p.h \
            bluez/device_p.h \
@@ -29,8 +16,8 @@ HEADERS += bluez/manager_p.h \
            bluez/profile1_p.h \
            bluez/obex_client1_bluez5_p.h \
            bluez/obex_objectpush1_bluez5_p.h \
-           bluez/obex_transfer1_bluez5_p.h
-
+           bluez/obex_transfer1_bluez5_p.h \
+           bluez/bluez_data_p.h
 
 SOURCES += bluez/manager.cpp \
            bluez/adapter.cpp \

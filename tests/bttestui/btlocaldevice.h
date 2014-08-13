@@ -87,6 +87,7 @@ public slots:
 
     //QBluetoothServiceDiscoveryAgent
     void startServiceDiscovery(bool isMinimalDiscovery);
+    void startTargettedServiceDiscovery();
     void stopServiceDiscovery();
     void serviceDiscovered(const QBluetoothServiceInfo &info);
     void leServiceDiscovered(const QLowEnergyServiceInfo &leInfo);
