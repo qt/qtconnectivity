@@ -69,10 +69,11 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     managerBluez5(0),
     adapterBluez5(0),
     discoveryTimer(0),
+    useExtendedDiscovery(false),
     q_ptr(parent)
 {
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (isBluez5()) {
-        Q_Q(QBluetoothDeviceDiscoveryAgent);
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
                                            QStringLiteral("org.bluez"),
                                            QStringLiteral("/"),
@@ -84,6 +85,11 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     } else {
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus(), parent);
+        QObject::connect(&extendedDiscoveryTimer,
+                         SIGNAL(timeout()),
+                         q, SLOT(_q_extendedDeviceDiscoveryTimeout()));
+        extendedDiscoveryTimer.setInterval(10000);
+        extendedDiscoveryTimer.setSingleShot(true);
     }
     inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
 }
@@ -167,6 +173,26 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         adapter = 0;
         emit q->error(lastError);
         return;
+    }
+
+    if (propertiesReply.value().value(QStringLiteral("Discovering")).toBool()) {
+        /*  The discovery session is already ongoing. BTLE devices are advertised
+            immediately after the start of the device discovery session. Hence if the
+            session is already ongoing, we have just missed the BTLE device
+            advertisement.
+
+            This always happens during the second device discovery run in
+            the current process. The first discovery doesn't have this issue.
+            As to why the discovery session remains active despite the previous one
+            being terminated is not known. This may be a bug in Bluez4.
+
+            To workaround this issue we have to wait for two discovery
+            sessions cycles.
+        */
+        qCDebug(QT_BT_BLUEZ) << "Using BTLE device discovery workaround.";
+        useExtendedDiscovery = true;
+    } else {
+        useExtendedDiscovery = false;
     }
 
     QDBusPendingReply<> discoveryReply = adapter->StartDiscovery();
@@ -283,6 +309,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
         uuids.append(QBluetoothUuid(u));
     device.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
     device.setCached(dict.value(QStringLiteral("Cached")).toBool());
+
+
+    /*
+     * Bluez v4.1 does not have extra bit which gives information if device is Bluetooth
+     * Low Energy device and the way to discover it is with Class property of the Bluetooth device.
+     * Low Energy devices do not have property Class.
+     */
+    if (btClass == 0)
+        device.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    else
+        device.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == device.address()) {
             if (discoveredDevices[i] == device) {
@@ -326,7 +363,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << btAddress.toString() << btName
                          << "Num UUIDs" << device.uUIDs().count()
                          << "total device" << discoveredDevices.count() << "cached"
-                         << "RSSI" << device.rSSI();
+                         << "RSSI" << device.rSSI() << "Class" << btClass;
 
     OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
@@ -337,6 +374,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
 
     // read information
     QBluetoothDeviceInfo deviceInfo(btAddress, btName, btClass);
+
+    if (!btClass)
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    else
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+
     deviceInfo.setRssi(device.rSSI());
     QList<QBluetoothUuid> uuids;
     foreach (const QString &u, device.uUIDs())
@@ -365,20 +408,53 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
 {
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << name << value.variant();
 
-    if (name == QLatin1String("Discovering") && !value.variant().toBool()) {
-        Q_Q(QBluetoothDeviceDiscoveryAgent);
+    if (name == QLatin1String("Discovering")) {
+      if (!value.variant().toBool()) {
+            Q_Q(QBluetoothDeviceDiscoveryAgent);
+            if (pendingCancel && !pendingStart) {
+                adapter->deleteLater();
+                adapter = 0;
+
+                emit q->canceled();
+                pendingCancel = false;
+            } else if (pendingStart) {
+                adapter->deleteLater();
+                adapter = 0;
+
+                pendingStart = false;
+                pendingCancel = false;
+                start();
+            } else {
+                if (useExtendedDiscovery) {
+                    useExtendedDiscovery = false;
+                    /* We don't use the Start/StopDiscovery combo here
+                       Using this combo surppresses the BTLE device.
+                    */
+                    extendedDiscoveryTimer.start();
+                    return;
+                }
+
+                adapter->deleteLater();
+                adapter = 0;
+                emit q->finished();
+            }
+        } else {
+            if (extendedDiscoveryTimer.isActive())
+                extendedDiscoveryTimer.stop();
+        }
+    }
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::_q_extendedDeviceDiscoveryTimeout()
+{
+
+    if (adapter) {
         adapter->deleteLater();
         adapter = 0;
-        if (pendingCancel && !pendingStart) {
-            emit q->canceled();
-            pendingCancel = false;
-        } else if (pendingStart) {
-            pendingStart = false;
-            pendingCancel = false;
-            start();
-        } else {
-            emit q->finished();
-        }
+    }
+    if (isActive()) {
+        Q_Q(QBluetoothDeviceDiscoveryAgent);
+        emit q->finished();
     }
 }
 

@@ -76,6 +76,13 @@ namespace QBluetooth {
 */
 }
 
+/*!
+    \typedef QLowEnergyHandle
+    \relates QBluetooth
+
+    Typedef for Bluetooth Low Energy ATT attribute handles.
+*/
+
 Q_LOGGING_CATEGORY(QT_BT, "qt.bluetooth")
 Q_LOGGING_CATEGORY(QT_BT_ANDROID, "qt.bluetooth.android")
 Q_LOGGING_CATEGORY(QT_BT_BLUEZ, "qt.bluetooth.bluez")

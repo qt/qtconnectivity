@@ -69,6 +69,13 @@
         \row
             \li \l{picturetransfer}{QML Picture Push Example}
             \li A QML application that transfers pictures between Bluetooth devices.
+        \row
+            \li \l{lowenergyscanner}{QML Bluetooth Low Energy Scanner}
+            \li Scan for Bluetooth Low Energy devices, services and characteristics.
+        \row
+            \li \l{heartlistener}{QML Bluetooth Low Energy Heart Listener}
+            \li Connect to the Bluetooth Low Energy heart belt and receive
+            measurements.
     \endtable
 
 */

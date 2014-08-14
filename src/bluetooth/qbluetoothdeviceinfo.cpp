@@ -246,6 +246,16 @@ QT_BEGIN_NAMESPACE
     \value DataUnavailable  No data is available.
 */
 
+/*!
+    \enum QBluetoothDeviceInfo::CoreConfiguration
+
+    This enum describes the configuration of the device.
+
+    \value BaseRateCoreConfiguration            The device is a standard Bluetooth device.
+    \value BaseRateAndLowEnergyCoreConfiguration    The device is a Bluetooth Smart device with support
+                                                for standard and Low Energy device.
+    \value LowEnergyCoreConfiguration           The device is a Bluetooth Low Energy device.
+*/
 QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     valid(false),
     cached(false),
@@ -253,7 +263,8 @@ QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     serviceClasses(QBluetoothDeviceInfo::NoService),
     majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
     minorDeviceClass(0),
-    serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable)
+    serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
+    deviceCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration)
 {
 }
 
@@ -362,6 +373,7 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
     d->serviceUuidsCompleteness = other.d_func()->serviceUuidsCompleteness;
     d->serviceUuids = other.d_func()->serviceUuids;
     d->rssi = other.d_func()->rssi;
+    d->deviceCoreConfiguration = other.d_func()->deviceCoreConfiguration;
 
     return *this;
 }
@@ -392,6 +404,8 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
     if (d->serviceUuids.count() != other.d_func()->serviceUuids.count())
         return false;
     if (d->serviceUuids != other.d_func()->serviceUuids)
+        return false;
+    if (d->deviceCoreConfiguration != other.d_func()->deviceCoreConfiguration)
         return false;
 
     return true;
@@ -498,6 +512,32 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
     Q_D(const QBluetoothDeviceInfo);
 
     return d->serviceUuidsCompleteness;
+}
+
+/*!
+    Sets the CoreConfigurations of the device to \a coreConfigs. This will help to make a difference
+    between regular and Low Energy devices.
+
+    \sa coreConfigurations()
+*/
+void QBluetoothDeviceInfo::setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs)
+{
+    Q_D(QBluetoothDeviceInfo);
+
+    d->deviceCoreConfiguration = coreConfigs;
+}
+
+/*!
+    Returns the configuration of the device. If device configuration is not set,
+    basic rate device configuration will be returned.
+
+    \sa setCoreConfigurations()
+*/
+QBluetoothDeviceInfo::CoreConfigurations QBluetoothDeviceInfo::coreConfigurations() const
+{
+    Q_D(const QBluetoothDeviceInfo);
+
+    return d->deviceCoreConfiguration;
 }
 
 /*!

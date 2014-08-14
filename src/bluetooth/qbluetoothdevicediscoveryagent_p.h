@@ -102,6 +102,7 @@ public:
     void _q_PropertiesChanged(const QString &interface,
                               const QVariantMap &changed_properties,
                               const QStringList &invalidated_properties);
+    void _q_extendedDeviceDiscoveryTimeout();
 #endif
 
 private:
@@ -136,6 +137,10 @@ private:
 
     void deviceFoundBluez5(const QString& devicePath);
     void startBluez5();
+
+    bool useExtendedDiscovery;
+    QTimer extendedDiscoveryTimer;
+
 #elif defined(QT_QNX_BLUETOOTH)
 private slots:
     void finished();

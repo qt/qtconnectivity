@@ -44,6 +44,7 @@
 
 #include <QtCore/qglobal.h>
 #include <sys/socket.h>
+#include <QtBluetooth/QBluetoothUuid>
 
 #define BTPROTO_L2CAP   0
 #define BTPROTO_RFCOMM  3
@@ -64,6 +65,27 @@
 #define L2CAP_LM_TRUSTED    0x0008
 #define L2CAP_LM_SECURE     0x0020
 
+#define BDADDR_LE_PUBLIC    0x01
+
+/* Byte order conversions */
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define htobs(d)  (d)
+#define htobl(d)  (d)
+#define htobll(d) (d)
+#define btohs(d)  (d)
+#define btohl(d)  (d)
+#define btohll(d) (d)
+#elif __BYTE_ORDER == __BIG_ENDIAN
+#define htobs(d)  bswap_16(d)
+#define htobl(d)  bswap_32(d)
+#define htobll(d) bswap_64(d)
+#define btohs(d)  bswap_16(d)
+#define btohl(d)  bswap_32(d)
+#define btohll(d) bswap_64(d)
+#else
+#error "Unknown byte order"
+#endif
+
 // Bluetooth address
 typedef struct {
     quint8 b[6];
@@ -75,6 +97,9 @@ struct sockaddr_l2 {
     unsigned short  l2_psm;
     bdaddr_t        l2_bdaddr;
     unsigned short  l2_cid;
+#if !defined(QT_BLUEZ_NO_BTLE)
+    quint8          l2_bdaddr_type;
+#endif
 };
 
 // RFCOMM socket
@@ -83,5 +108,66 @@ struct sockaddr_rc {
     bdaddr_t    rc_bdaddr;
     quint8      rc_channel;
 };
+
+// Bt Low Energy related
+
+#define bt_get_unaligned(ptr)           \
+({                                      \
+    struct __attribute__((packed)) {    \
+        __typeof__(*(ptr)) __v;         \
+    } *__p = (__typeof__(__p)) (ptr);   \
+    __p->__v;                           \
+})
+
+#define bt_put_unaligned(val, ptr)      \
+do {                                    \
+    struct __attribute__((packed)) {    \
+        __typeof__(*(ptr)) __v;         \
+    } *__p = (__typeof__(__p)) (ptr);   \
+    __p->__v = (val);                   \
+} while (0)
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+
+static inline void btoh128(const quint128 *src, quint128 *dst)
+{
+    memcpy(dst, src, sizeof(quint128));
+}
+
+static inline void ntoh128(const quint128 *src, quint128 *dst)
+{
+    int i;
+
+    for (i = 0; i < 16; i++)
+        dst->data[15 - i] = src->data[i];
+}
+
+static inline uint16_t bt_get_le16(const void *ptr)
+{
+    return bt_get_unaligned((const uint16_t *) ptr);
+}
+#elif __BYTE_ORDER == __BIG_ENDIAN
+static inline uint16_t bt_get_le16(const void *ptr)
+{
+    return bswap_16(bt_get_unaligned((const uint16_t *) ptr));
+}
+
+static inline void btoh128(const quint128 *src, quint128 *dst)
+{
+    int i;
+
+    for (i = 0; i < 16; i++)
+        dst->data[15 - i] = src->data[i];
+}
+
+static inline void ntoh128(const quint128 *src, quint128 *dst)
+{
+    memcpy(dst, src, sizeof(quint128));
+}
+#else
+#error "Unknown byte order"
+#endif
+
+#define hton128(x, y) ntoh128(x, y)
 
 #endif // BLUEZ_DATA_P_H
