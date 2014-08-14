@@ -90,6 +90,7 @@ public slots:
     void startTargettedServiceDiscovery();
     void stopServiceDiscovery();
     void serviceDiscovered(const QBluetoothServiceInfo &info);
+    void leServiceDiscovered(const QLowEnergyServiceInfo &leInfo);
     void serviceDiscoveryFinished();
     void serviceDiscoveryCanceled();
     void serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error error);

@@ -5,4 +5,8 @@ qtHaveModule(widgets) {
                btfiletransfer
 }
 
-qtHaveModule(quick): SUBDIRS += scanner picturetransfer pingpong
+qtHaveModule(quick): SUBDIRS += scanner \
+                                picturetransfer \
+                                pingpong \
+                                lowenergyscanner \
+                                heartlistener

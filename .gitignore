@@ -24,10 +24,13 @@ tmp
 imports/*
 include
 config.tests/bluez/bluez
+config.tests/bluez_le/bluez_le
 examples/bluetooth/btchat/btchat
 examples/bluetooth/btfiletransfer/btfiletransfer
 examples/bluetooth/btscanner/btscanner
-examples/bluetooth/bttennis/bttennis
+examples/bluetooth/heartlistener/heartlistener
+examples/bluetooth/lowenergyscanner/lowenergyscanner
+examples/bluetooth/pingpong/pingpong
 examples/bluetooth/picturetransfer/qml_picturetransfer
 examples/bluetooth/scanner/qml_scanner
 examples/nfc/annotatedurl/annotatedurl
@@ -49,6 +52,10 @@ tests/auto/qbluetoothsocket/tst_qbluetoothsocket
 tests/auto/qbluetoothtransfermanager/tst_qbluetoothtransfermanager
 tests/auto/qbluetoothtransferrequest/tst_qbluetoothtransferrequest
 tests/auto/qbluetoothuuid/tst_qbluetoothuuid
+tests/auto/qlowenergycharacteristic/tst_qlowenergycharacteristic
+tests/auto/qlowenergycontroller/tst_qlowenergycontroller
+tests/auto/qlowenergydescriptor/tst_qlowenergydescriptor
+tests/auto/qlowenergyserviceinfo/tst_qlowenergyserviceinfo
 tests/auto/qndefmessage/tst_qndefmessage
 tests/auto/qndefnfcsmartposterrecord/tst_qndefnfcsmartposterrecord
 tests/auto/qndefrecord/tst_qndefrecord

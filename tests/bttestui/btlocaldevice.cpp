@@ -80,6 +80,8 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
         serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
         connect(serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
                 this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
+        connect(serviceAgent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)),
+                this, SLOT(leServiceDiscovered(QLowEnergyServiceInfo)));
         connect(serviceAgent, SIGNAL(finished()),
                 this, SLOT(serviceDiscoveryFinished()));
         connect(serviceAgent, SIGNAL(canceled()),
@@ -303,11 +305,11 @@ void BtLocalDevice::stopServiceDiscovery()
 
 void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
-    QString classIds;
-    foreach (const QBluetoothUuid uuid, info.serviceClassUuids())
-        classIds += uuid.toString() + QLatin1Char(' ');
+    QStringList classIds;
+    foreach (const QBluetoothUuid &uuid, info.serviceClassUuids())
+        classIds.append(uuid.toString());
     qDebug() << "$$ Found new service" << info.device().address().toString()
-             << info.serviceUuid() << info.serviceName() << classIds;
+             << info.serviceUuid() << info.serviceName() << info.serviceDescription() << classIds;
 
     if (info.serviceUuid() == QBluetoothUuid(QString(TEST_SERVICE_UUID))
             || info.serviceClassUuids().contains(QBluetoothUuid(QString(TEST_SERVICE_UUID))))
@@ -326,6 +328,12 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
             qDebug() << "@@@@@@@@ Adding:" << info.device().address().toString();
         }
     }
+}
+
+void BtLocalDevice::leServiceDiscovered(const QLowEnergyServiceInfo &info)
+{
+    qDebug() << "$$ Found new BTLE service" << info.device().address().toString()
+             << info.serviceUuid() << info.serviceName();
 }
 
 void BtLocalDevice::serviceDiscoveryFinished()

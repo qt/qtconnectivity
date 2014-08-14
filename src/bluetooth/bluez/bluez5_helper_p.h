@@ -46,10 +46,6 @@
 #include <QtDBus/QtDBus>
 #include <QtBluetooth/QBluetoothAddress>
 
-#ifndef NO_BLUEZ_INCLUDES
-#include <bluetooth/sdp.h>
-#endif
-
 typedef QMap<QString, QVariantMap> InterfaceList;
 typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
 
@@ -59,10 +55,6 @@ Q_DECLARE_METATYPE(ManagedObjectList)
 QT_BEGIN_NAMESPACE
 
 bool isBluez5();
-
-#ifndef NO_BLUEZ_INCLUDES
-QByteArray parseSdpRecord(sdp_record_t *record);
-#endif
 
 QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok);
 

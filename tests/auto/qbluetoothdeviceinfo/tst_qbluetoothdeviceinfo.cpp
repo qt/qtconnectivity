@@ -52,6 +52,7 @@ QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo::ServiceClasses)
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo::MajorDeviceClass)
+Q_DECLARE_METATYPE(QBluetoothDeviceInfo::CoreConfiguration)
 
 class tst_QBluetoothDeviceInfo : public QObject
 {
@@ -101,6 +102,7 @@ void tst_QBluetoothDeviceInfo::tst_construction_data()
     QTest::addColumn<QBluetoothDeviceInfo::ServiceClasses>("serviceClasses");
     QTest::addColumn<QBluetoothDeviceInfo::MajorDeviceClass>("majorDeviceClass");
     QTest::addColumn<quint8>("minorDeviceClass");
+    QTest::addColumn<QBluetoothDeviceInfo::CoreConfiguration>("coreConfiguration");
 
     // bits 12-8 Major
     // bits 7-2 Minor
@@ -110,120 +112,144 @@ void tst_QBluetoothDeviceInfo::tst_construction_data()
         << quint32(0x000000)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::MiscellaneousDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous);
+        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous)
+        << QBluetoothDeviceInfo::BaseRateCoreConfiguration;
     QTest::newRow("0x000100 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000100)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ComputerDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedComputer);
+        << quint8(QBluetoothDeviceInfo::UncategorizedComputer)
+        << QBluetoothDeviceInfo::BaseRateCoreConfiguration;
     QTest::newRow("0x000104 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000104)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ComputerDevice
-        << quint8(QBluetoothDeviceInfo::DesktopComputer);
+        << quint8(QBluetoothDeviceInfo::DesktopComputer)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000118 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000118)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ComputerDevice
-        << quint8(QBluetoothDeviceInfo::WearableComputer);
+        << quint8(QBluetoothDeviceInfo::WearableComputer)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000200 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device" << quint32(0x000200)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::PhoneDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedPhone);
+        << quint8(QBluetoothDeviceInfo::UncategorizedPhone)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000204 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000204)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::PhoneDevice
-        << quint8(QBluetoothDeviceInfo::CellularPhone);
+        << quint8(QBluetoothDeviceInfo::CellularPhone)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000214 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device" << quint32(0x000214)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::PhoneDevice
-        << quint8(QBluetoothDeviceInfo::CommonIsdnAccessPhone);
+        << quint8(QBluetoothDeviceInfo::CommonIsdnAccessPhone)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000300 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000300)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::LANAccessDevice
-        << quint8(QBluetoothDeviceInfo::NetworkFullService);
+        << quint8(QBluetoothDeviceInfo::NetworkFullService)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000320 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000320)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::LANAccessDevice
-        << quint8(QBluetoothDeviceInfo::NetworkLoadFactorOne);
+        << quint8(QBluetoothDeviceInfo::NetworkLoadFactorOne)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x0003E0 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x0003E0)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::LANAccessDevice
-        << quint8(QBluetoothDeviceInfo::NetworkNoService);
+        << quint8(QBluetoothDeviceInfo::NetworkNoService)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000400 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000400)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::AudioVideoDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedAudioVideoDevice);
+        << quint8(QBluetoothDeviceInfo::UncategorizedAudioVideoDevice)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000448 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000448)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::AudioVideoDevice
-        << quint8(QBluetoothDeviceInfo::GamingDevice);
+        << quint8(QBluetoothDeviceInfo::GamingDevice)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000500 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000500)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::PeripheralDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedPeripheral);
+        << quint8(QBluetoothDeviceInfo::UncategorizedPeripheral)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x0005D8 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x0005D8)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::PeripheralDevice
-        << quint8(QBluetoothDeviceInfo::KeyboardWithPointingDevicePeripheral | QBluetoothDeviceInfo::CardReaderPeripheral);
+        << quint8(QBluetoothDeviceInfo::KeyboardWithPointingDevicePeripheral | QBluetoothDeviceInfo::CardReaderPeripheral)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000600 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000600)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ImagingDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedImagingDevice);
+        << quint8(QBluetoothDeviceInfo::UncategorizedImagingDevice)
+        << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
     QTest::newRow("0x000680 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000680)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ImagingDevice
-        << quint8(QBluetoothDeviceInfo::ImagePrinter);
+        << quint8(QBluetoothDeviceInfo::ImagePrinter)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000700 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000700)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::WearableDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedWearableDevice);
+        << quint8(QBluetoothDeviceInfo::UncategorizedWearableDevice)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000714 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000714)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::WearableDevice
-        << quint8(QBluetoothDeviceInfo::WearableGlasses);
+        << quint8(QBluetoothDeviceInfo::WearableGlasses)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000800 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000800)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ToyDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedToy);
+        << quint8(QBluetoothDeviceInfo::UncategorizedToy)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x000814 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000814)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::ToyDevice
-        << quint8(QBluetoothDeviceInfo::ToyGame);
+        << quint8(QBluetoothDeviceInfo::ToyGame)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x001f00 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x001f00)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
         << QBluetoothDeviceInfo::UncategorizedDevice
-        << quint8(0);
+        << quint8(0)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x002000 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x002000)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::PositioningService)
         << QBluetoothDeviceInfo::MiscellaneousDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous);
+        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0x100000 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x100000)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::InformationService)
         << QBluetoothDeviceInfo::MiscellaneousDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous);
+        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
     QTest::newRow("0xFFE000 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0xFFE000)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::AllServices)
         << QBluetoothDeviceInfo::MiscellaneousDevice
-        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous);
+        << quint8(QBluetoothDeviceInfo::UncategorizedMiscellaneous)
+        << QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
 }
 
 void tst_QBluetoothDeviceInfo::tst_construction()
@@ -241,6 +267,7 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QFETCH(QBluetoothDeviceInfo::ServiceClasses, serviceClasses);
         QFETCH(QBluetoothDeviceInfo::MajorDeviceClass, majorDeviceClass);
         QFETCH(quint8, minorDeviceClass);
+        QFETCH(QBluetoothDeviceInfo::CoreConfiguration, coreConfiguration);
 
         QBluetoothDeviceInfo deviceInfo(address, name, classOfDevice);
 
@@ -251,9 +278,12 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(deviceInfo.serviceClasses(), serviceClasses);
         QCOMPARE(deviceInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(deviceInfo.minorDeviceClass(), minorDeviceClass);
+        QCOMPARE(deviceInfo.coreConfigurations(), QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+
+        deviceInfo.setCoreConfigurations(coreConfiguration);
+        QCOMPARE(deviceInfo.coreConfigurations(), coreConfiguration);
 
         QBluetoothDeviceInfo copyInfo(deviceInfo);
-
         QVERIFY(copyInfo.isValid());
 
         QCOMPARE(copyInfo.address(), address);
@@ -261,6 +291,7 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
+        QCOMPARE(copyInfo.coreConfigurations(), coreConfiguration);
     }
 }
 
@@ -277,8 +308,10 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
     QFETCH(QBluetoothDeviceInfo::ServiceClasses, serviceClasses);
     QFETCH(QBluetoothDeviceInfo::MajorDeviceClass, majorDeviceClass);
     QFETCH(quint8, minorDeviceClass);
+    QFETCH(QBluetoothDeviceInfo::CoreConfiguration, coreConfiguration);
 
     QBluetoothDeviceInfo deviceInfo(address, name, classOfDevice);
+    deviceInfo.setCoreConfigurations(coreConfiguration);
 
     QVERIFY(deviceInfo.isValid());
 
@@ -292,6 +325,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
+        QCOMPARE(copyInfo.coreConfigurations(), coreConfiguration);
     }
 
     {
@@ -308,6 +342,7 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo.serviceClasses(), serviceClasses);
         QCOMPARE(copyInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo.minorDeviceClass(), minorDeviceClass);
+        QCOMPARE(copyInfo.coreConfigurations(), coreConfiguration);
     }
 
     {
@@ -333,6 +368,8 @@ void tst_QBluetoothDeviceInfo::tst_assignment()
         QCOMPARE(copyInfo2.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(copyInfo1.minorDeviceClass(), minorDeviceClass);
         QCOMPARE(copyInfo2.minorDeviceClass(), minorDeviceClass);
+        QCOMPARE(copyInfo1.coreConfigurations(), coreConfiguration);
+        QCOMPARE(copyInfo2.coreConfigurations(), coreConfiguration);
     }
 
     {
