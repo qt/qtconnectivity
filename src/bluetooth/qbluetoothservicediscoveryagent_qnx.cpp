@@ -45,16 +45,21 @@
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothdevicediscoveryagent.h"
 
+#include "qlowenergyserviceinfo_p.h"
+
 #include <QStringList>
 #include "qbluetoothuuid.h"
-
+#include <stdio.h>
+#include <unistd.h>
 #include <sys/pps.h>
 #ifdef QT_QNX_BT_BLUETOOTH
 #include <errno.h>
 #include <QPointer>
 #endif
-
 #include <QFile>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <QtCore/private/qcore_unix_p.h>
 
@@ -196,33 +201,45 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 #else
     qCDebug(QT_BT_QNX) << "Starting Service discovery for" << address.toString();
     const QString filePath = QStringLiteral("/pps/services/bluetooth/remote_devices/").append(address.toString());
+    bool hasError = false;
     if ((m_rdfd = qt_safe_open(filePath.toLocal8Bit().constData(), O_RDONLY)) == -1) {
         if (QFile::exists(filePath + QStringLiteral("-00")) ||
-            QFile::exists(filePath + QStringLiteral("-01"))) {
+            QFile::exists(filePath + QStringLiteral("-01")))
+        {
             qCDebug(QT_BT_QNX) << "LE device discovered...skipping";
+            QString lePath = filePath + QStringLiteral("-00");
+            if ((m_rdfd = qt_safe_open(lePath.toLocal8Bit().constData(), O_RDONLY)) == -1) {
+                lePath = filePath + QStringLiteral("-01");
+                if ((m_rdfd = qt_safe_open(lePath.toLocal8Bit().constData(), O_RDONLY)) == -1)
+                    hasError = true;
+            }
         } else {
-            qCWarning(QT_BT_QNX) << "Failed to open " << filePath;
-            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to open remote device file");
-            q->error(error);
-        }
-        _q_serviceDiscoveryFinished();
-        return;
-    } else {
-        if (rdNotifier)
-            delete rdNotifier;
-        rdNotifier = new QSocketNotifier(m_rdfd, QSocketNotifier::Read, this);
-        if (rdNotifier) {
-            connect(rdNotifier, SIGNAL(activated(int)), this, SLOT(remoteDevicesChanged(int)));
-        } else {
-            qCWarning(QT_BT_QNX) << "Service Discovery: Failed to connect to rdNotifier";
-            error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to connect to notifier");
-            q->error(error);
-            _q_serviceDiscoveryFinished();
-            return;
+            hasError = true;
         }
     }
+    if (hasError) {
+        qCWarning(QT_BT_QNX) << "Failed to open " << filePath;
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Failed to open remote device file");
+        q->error(error);
+        _q_serviceDiscoveryFinished();
+        return;
+    }
+
+    if (rdNotifier)
+        delete rdNotifier;
+    rdNotifier = new QSocketNotifier(m_rdfd, QSocketNotifier::Read, this);
+    if (rdNotifier) {
+        connect(rdNotifier, SIGNAL(activated(int)), this, SLOT(remoteDevicesChanged(int)));
+    } else {
+        qWarning() << "Service Discovery: Failed to connect to rdNotifier";
+        error = QBluetoothServiceDiscoveryAgent::InputOutputError;
+        errorString = QStringLiteral("Failed to connect to rdNotifier");
+        q->error(error);
+        _q_serviceDiscoveryFinished();
+        return;
+    }
+
     m_queryTimer.start(10000);
     ppsSendControlMessage("service_query", QStringLiteral("{\"addr\":\"%1\"}").arg(address.toString()), this);
 #endif
@@ -258,14 +275,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         pps_decoder_cleanup(&ppsDecoder);
         return;
     }
-
+    // Checking for standard Bluetooth services
     pps_decoder_push(&ppsDecoder, "available_services");
-
+    bool standardService = false;
     const char *next_service = 0;
     for (int service_count=0; pps_decoder_get_string(&ppsDecoder, 0, &next_service ) == PPS_DECODER_OK; service_count++) {
         if (next_service == 0)
             break;
-
+        standardService = true;
         qCDebug(QT_BT_QNX) << Q_FUNC_INFO << "Service" << next_service;
 
         QBluetoothServiceInfo serviceInfo;
@@ -314,7 +331,38 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         }
     }
 
+    if (standardService) // we need to pop back for the LE service scan
+        pps_decoder_pop(&ppsDecoder);
+    //Checking for Bluetooth Low Energy services
+    pps_decoder_push(&ppsDecoder, "gatt_available_services");
+
+    for (int service_count=0; pps_decoder_get_string(&ppsDecoder, 0, &next_service ) == PPS_DECODER_OK; service_count++) {
+        if (next_service == 0)
+            break;
+
+        QString lowEnergyUuid(next_service);
+        qCDebug(QT_BT_QNX) << "LE Service: " << lowEnergyUuid << next_service;
+        QBluetoothUuid leUuid;
+
+        //In case of custom UUIDs (e.g. Texas Instruments SenstorTag LE Device)
+        if ( lowEnergyUuid.length() > 4 ) {
+            leUuid = QBluetoothUuid(lowEnergyUuid);
+        }
+        else {// Official UUIDs are presented in 4 characters (for instance 180A)
+            lowEnergyUuid = QStringLiteral("0x") + lowEnergyUuid;
+            leUuid = QBluetoothUuid(lowEnergyUuid.toUShort(0,0));
+        }
+
+        QLowEnergyServiceInfo lowEnergyService(leUuid);
+        lowEnergyService.setDevice(discoveredDevices.at(0));
+        qCDebug(QT_BT_QNX) << "Adding Low Energy service" << lowEnergyService.serviceUuid();
+        q_ptr->serviceDiscovered(lowEnergyService);
+    }
+
     pps_decoder_cleanup(&ppsDecoder);
+    //Deleting notifier since services will not change.
+    delete rdNotifier;
+    rdNotifier = 0;
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
@@ -327,6 +375,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
     if (!result.errorMsg.isEmpty()) {
         qCWarning(QT_BT_QNX) << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
+        if (errorString == QObject::tr("Operation canceled"))
+            _q_serviceDiscoveryFinished();
         error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         q->error(error);
     } else {

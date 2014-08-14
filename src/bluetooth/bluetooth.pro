@@ -2,6 +2,7 @@ TARGET = QtBluetooth
 QT = core
 QT_PRIVATE = concurrent
 
+
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
@@ -22,7 +23,12 @@ PUBLIC_HEADERS += \
     qbluetoothlocaldevice.h \
     qbluetoothtransfermanager.h \
     qbluetoothtransferrequest.h \
-    qbluetoothtransferreply.h
+    qlowenergyserviceinfo.h \
+    qlowenergyservice.h \
+    qlowenergycharacteristic.h \
+    qlowenergydescriptor.h \
+    qbluetoothtransferreply.h \
+    qlowenergycontroller.h
 
 PRIVATE_HEADERS += \
     qbluetoothaddress_p.h\
@@ -36,7 +42,10 @@ PRIVATE_HEADERS += \
     qbluetoothtransferreply_p.h \
     qbluetoothtransferrequest_p.h \
     qprivatelinearbuffer_p.h \
-    qbluetoothlocaldevice_p.h
+    qbluetoothlocaldevice_p.h \
+    qlowenergyserviceinfo_p.h \
+    qlowenergycontroller_p.h \
+    qlowenergyserviceprivate_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -52,7 +61,13 @@ SOURCES += \
     qbluetooth.cpp \
     qbluetoothtransfermanager.cpp \
     qbluetoothtransferrequest.cpp \
-    qbluetoothtransferreply.cpp
+    qbluetoothtransferreply.cpp \
+    qlowenergyserviceinfo.cpp \
+    qlowenergyservice.cpp \
+    qlowenergycharacteristic.cpp \
+    qlowenergydescriptor.cpp \
+    qlowenergycontroller.cpp \
+    qlowenergyserviceprivate.cpp
 
 config_bluez:qtHaveModule(dbus) {
     QT *= dbus
@@ -70,18 +85,29 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_bluez.cpp \
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
-        qbluetoothtransferreply_bluez.cpp
+        qbluetoothtransferreply_bluez.cpp \
 
-        CONFIG += link_pkgconfig
-        PKGCONFIG_PRIVATE += bluez
+
+    # old versions of Bluez do not have the required BTLE symbols
+    config_bluez_le {
+        SOURCES +=  \
+            qlowenergycontroller_bluez.cpp
+    } else {
+        message("Bluez version is too old to support Bluetooth Low Energy.")
+        message("Only classic Bluetooth will be available.")
+        DEFINES += QT_BLUEZ_NO_BTLE
+        SOURCES += \
+            qlowenergycontroller_p.cpp
+    }
+
 } else:CONFIG(blackberry) {
     DEFINES += QT_QNX_BLUETOOTH
 
     include(qnx/qnx.pri)
 
+    LIBS += -lbtapi
     config_btapi10_2_1 {
          DEFINES += QT_QNX_BT_BLUETOOTH
-         LIBS += -lbtapi
     }
 
     PRIVATE_HEADERS += \
@@ -94,7 +120,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_qnx.cpp \
         qbluetoothsocket_qnx.cpp \
         qbluetoothserver_qnx.cpp \
-        qbluetoothtransferreply_qnx.cpp
+        qbluetoothtransferreply_qnx.cpp \
+        qlowenergycontroller_p.cpp
 
 } else:android:!android-no-sdk {
     include(android/android.pri)
@@ -115,7 +142,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_android.cpp \
         qbluetoothservicediscoveryagent_android.cpp \
         qbluetoothsocket_android.cpp \
-        qbluetoothserver_android.cpp
+        qbluetoothserver_android.cpp \
+        qlowenergycontroller_p.cpp
 
 } else:win32:!winrt:!wince {
 
@@ -125,7 +153,8 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_win.cpp \
         qbluetoothservicediscoveryagent_win.cpp \
         qbluetoothsocket_win.cpp \
-        qbluetoothserver_win.cpp
+        qbluetoothserver_win.cpp \
+        qlowenergycontroller_p.cpp
 
     LIBS += -lbthprops
 
@@ -138,12 +167,11 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
-        qbluetoothserver_p.cpp
-
+        qbluetoothserver_p.cpp \
+        qlowenergycontroller_p.cpp
 }
 
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
-
 

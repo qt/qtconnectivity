@@ -26,5 +26,5 @@ OTHER_FILES += \
 RESOURCES += \
     btfiletransfer.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/scanner
+target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/btfiletransfer
 INSTALLS += target

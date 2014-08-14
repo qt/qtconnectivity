@@ -17,3 +17,7 @@ qtHaveModule(quick) {
     imports.depends += bluetooth nfc
     SUBDIRS += imports
 }
+
+config_bluez:qtHaveModule(dbus) {
+    SUBDIRS += tools/sdpscanner
+}
