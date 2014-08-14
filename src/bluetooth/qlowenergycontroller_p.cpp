@@ -83,10 +83,10 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate> service,
-        const QLowEnergyHandle charHandle,
-        const QLowEnergyHandle descriptorHandle,
-        const QByteArray &newValue)
+        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QLowEnergyHandle /*charHandle*/,
+        const QLowEnergyHandle /*descriptorHandle*/,
+        const QByteArray &/*newValue*/)
 {
 
 }
