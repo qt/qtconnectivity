@@ -51,6 +51,10 @@
 #include <QtBluetooth/QBluetoothTransferRequest>
 #include <QtBluetooth/QBluetoothTransferReply>
 
+#include <QtBluetooth/QLowEnergyController>
+#include <QtBluetooth/QLowEnergyService>
+#include <QtBluetooth/QLowEnergyCharacteristic>
+
 //! [namespace]
 QT_USE_NAMESPACE
 //! [namespace]
@@ -64,6 +68,7 @@ public:
     void startDeviceDiscovery();
     void startServiceDiscovery();
     void objectPush();
+    void btleSharedData();
 
 public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);
@@ -164,6 +169,29 @@ QObject::connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
 
 void MyClass::transferFinished(QBluetoothTransferReply* /*reply*/)
 {
+}
+
+void MyClass::btleSharedData()
+{
+    QBluetoothAddress remoteDevice;
+
+//! [data_share_qlowenergyservice]
+    QLowEnergyService *first, *second;
+    QLowEnergyController control(remoteDevice);
+    control.connectToDevice();
+
+    // waiting for connection
+
+    first = control.createServiceObject(QBluetoothUuid::BatteryService);
+    second = control.createServiceObject(QBluetoothUuid::BatteryService);
+    Q_ASSERT(first->state() == QLowEnergyService::DiscoveryRequired);
+    Q_ASSERT(first->state() == second->state());
+
+    first->discoverDetails();
+
+    Q_ASSERT(first->state() == QLowEnergyService::DiscoveringServices);
+    Q_ASSERT(first->state() == second->state());
+//! [data_share_qlowenergyservice]
 }
 
 int main(int argc, char** argv)

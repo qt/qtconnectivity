@@ -61,15 +61,16 @@ public:
 
     enum ServiceError {
         NoError = 0,
-        ServiceNotValidError,
-        OperationError,
-        CharacteristicWriteError,   // emitted when writeCharacteristic() failed
-        DescriptorWriteError        // emitted when writeDescriptor() failed
+        ServiceNotValidError,       //TODO check correct usage
+        OperationError,             //TODO check correct usage
+        CharacteristicWriteError,
+        DescriptorWriteError
     };
 
     enum ServiceState {
-        InvalidService = 0, // when underlying controller disconnects
+        InvalidService = 0,
         DiscoveryRequired,  // we know start/end handle but nothing more
+        //TODO Rename DiscoveringServices -> DiscoveringDetails or DiscoveringService
         DiscoveringServices,// discoverDetails() called and running
         ServiceDiscovered,  // all details have been synchronized
     };

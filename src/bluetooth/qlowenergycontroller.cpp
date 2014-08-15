@@ -523,11 +523,18 @@ QList<QBluetoothUuid> QLowEnergyController::services() const
     a \a parent parameter as default owner.
 
     This function returns a null pointer if no service with
-    \a serviceUuid can be found on the remote device.
+    \a serviceUuid can be found on the remote device or the controller
+    is disconnected.
 
     This function can return instances for secondary services
     too. The include relationships between services can be expressed
     via \l QLowEnergyService::includedServices().
+
+    If this function is called multiple times using the same service UUID,
+    the returned \l QLowEnergyService instances share their internal
+    data. Therefore if one of the instances initiates the discovery
+    of the service details, the other instances automatically
+    transition into the discovery state too.
 
     \sa services()
  */
