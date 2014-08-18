@@ -54,10 +54,25 @@ QT_BEGIN_NAMESPACE
     \since 5.4
 
     QLowEnergyCharacteristic provides information about a Bluetooth Low Energy
-    service characteristic's name, UUID, value, permissions, handle and descriptors.
-    To get the full characteristic specification and information it is necessary to
-    connect to the service using QLowEnergyServiceInfo and QLowEnergyController classes.
-    Some characteristics can contain none, one or more descriptors.
+    service characteristic's \l name(), \l uuid(), \l value(), \l properties(),
+    \l handle() and \l descriptors(). To obtain the characteristic's specification
+    and information, it is necessary to connect to the device using the
+    \l QLowEnergyService and \l QLowEnergyController classes.
+
+    The characteristic value may be written via the \l QLowEnergyService instance
+    that manages the service to which this characteristic belongs. The
+    \l {QLowEnergyService::writeCharacteristic()} function writes the new value.
+    The \l {QLowEnergyService::characteristicChanged()} signal is emitted upon success.
+    The \l value() of this object is automatically updated accordingly.
+
+    Characteristics may contain none, one or more descriptors. They can be individually
+    retrieved using the \l descriptor() function. The \l descriptors() function returns
+    all descriptors as a list. The general purpose of a descriptor is to add contextual
+    information to the characteristic. For example, the descriptor might provide
+    format or range information specifying how the characteristic's value is to be\
+    interpreted.
+
+    \sa QLowEnergyService, QLowEnergyDescriptor
 */
 
 /*!
@@ -85,7 +100,10 @@ struct QLowEnergyCharacteristicPrivate
 };
 
 /*!
-    Construct a new QLowEnergyCharacteristic.
+    Construct a new QLowEnergyCharacteristic. A default-constructed instance of
+    this class is always invalid.
+
+    \sa isValid()
 */
 QLowEnergyCharacteristic::QLowEnergyCharacteristic():
     d_ptr(0), data(0)
@@ -128,7 +146,15 @@ QLowEnergyCharacteristic::~QLowEnergyCharacteristic()
 }
 
 /*!
-    Returns the name of the gatt characteristic type.
+    Returns the human-readable name of the characteristic.
+
+    The name is based on the characteristic's \l uuid() which must have been
+    standardized. The complete list of characteristic types can be found
+    under \l {https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx}{Bluetooth.org Characteristics}.
+
+    The returned string is empty if the \l uuid() is unknown.
+
+    \sa QBluetoothUuid::characteristicToString()
 */
 QString QLowEnergyCharacteristic::name() const
 {
@@ -137,7 +163,8 @@ QString QLowEnergyCharacteristic::name() const
 }
 
 /*!
-    Returns the UUID of the gatt characteristic.
+    Returns the UUID of the characteristic if \l isValid() returns \c true; otherwise a
+    \l {QUuid::isNull()}{null} UUID.
 */
 QBluetoothUuid QLowEnergyCharacteristic::uuid() const
 {
@@ -149,7 +176,9 @@ QBluetoothUuid QLowEnergyCharacteristic::uuid() const
 }
 
 /*!
-    Returns the properties of the gatt characteristic.
+    Returns the properties of the characteristic.
+
+    The properties define the access permissions for the characteristic.
 */
 QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() const
 {
@@ -161,7 +190,10 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 }
 
 /*!
-    Returns value of the GATT characteristic.
+    Returns the value of the characteristic.
+
+    If the characteristic's \l properties() permit writing of new values,
+    the value can be updated using \l QLowEnergyService::writeCharacteristic().
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {
@@ -173,8 +205,8 @@ QByteArray QLowEnergyCharacteristic::value() const
 }
 
 /*!
-    Returns the handle of the GATT characteristic's value attribute;
-    otherwise returns \c 0.
+    Returns the handle of the characteristic's value attribute;
+    or \c 0 if the handle cannot be accessed on the platform.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 {
@@ -186,8 +218,8 @@ QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 }
 
 /*!
-    Makes a copy of \a other and assigns it to this QLowEnergyCharacteristic object.
-    The two copies continue to share the same service and registration details.
+    Makes a copy of \a other and assigns it to this \l QLowEnergyCharacteristic object.
+    The two copies continue to share the same service and controller details.
 */
 QLowEnergyCharacteristic &QLowEnergyCharacteristic::operator=(const QLowEnergyCharacteristic &other)
 {
@@ -210,8 +242,9 @@ QLowEnergyCharacteristic &QLowEnergyCharacteristic::operator=(const QLowEnergyCh
 /*!
     Returns \c true if \a other is equal to this QLowEnergyCharacteristic; otherwise \c false.
 
-    Two QLowEnergyCharcteristic instances are considered to be equal if they refer to
-    the same charcteristic on the same remote Bluetooth Low Energy device.
+    Two \l QLowEnergyCharacteristic instances are considered to be equal if they refer to
+    the same characteristic on the same remote Bluetooth Low Energy device or both instances
+    have been default-constructed.
  */
 bool QLowEnergyCharacteristic::operator==(const QLowEnergyCharacteristic &other) const
 {
@@ -234,7 +267,8 @@ bool QLowEnergyCharacteristic::operator==(const QLowEnergyCharacteristic &other)
     Returns \c true if \a other is not equal to this QLowEnergyCharacteristic; otherwise \c false.
 
     Two QLowEnergyCharcteristic instances are considered to be equal if they refer to
-    the same charcteristic on the same remote Bluetooth Low Energy device.
+    the same characteristic on the same remote Bluetooth Low Energy device or both instances
+    have been default-constructed.
  */
 
 bool QLowEnergyCharacteristic::operator!=(const QLowEnergyCharacteristic &other) const
@@ -245,14 +279,15 @@ bool QLowEnergyCharacteristic::operator!=(const QLowEnergyCharacteristic &other)
 /*!
     Returns \c true if the QLowEnergyCharacteristic object is valid, otherwise returns \c false.
 
-    An invalid characteristic object is not associated to any service
-    or the associated service is no longer valid due to for example a disconnect from
-    the underlying Bluetooth Low Energy device. Once the object is invalid
+    An invalid characteristic object is not associated with any service (default-constructed)
+    or the associated service is no longer valid due to a disconnect from
+    the underlying Bluetooth Low Energy device, for example. Once the object is invalid
     it cannot become valid anymore.
 
-    \note If a QLowEnergyCharacteristic instance turns invalid due to a disconnect
+    \note If a \l QLowEnergyCharacteristic instance turns invalid due to a disconnect
     from the underlying device, the information encapsulated by the current
-    instance remains as it was at the time of the disconnect.
+    instance remains as it was at the time of the disconnect. Therefore it can be
+    retrieved after the disconnect event.
 */
 bool QLowEnergyCharacteristic::isValid() const
 {
@@ -265,6 +300,12 @@ bool QLowEnergyCharacteristic::isValid() const
     return true;
 }
 
+/*!
+    \internal
+
+    Returns the handle of the characteristic or
+    \c 0 if the handle cannot be accessed on the platform.
+ */
 QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
 {
     if (d_ptr.isNull() || !data)
@@ -275,8 +316,7 @@ QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
 
 
 /*!
-    Returns the descriptor with \a uuid; otherwise an invalid \c QLowEnergyDescriptor
-    instance.
+    Returns the descriptor for \a uuid or an invalid \c QLowEnergyDescriptor instance.
 
     \sa descriptors()
 */

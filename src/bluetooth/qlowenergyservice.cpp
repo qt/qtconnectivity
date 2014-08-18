@@ -77,7 +77,8 @@ QT_BEGIN_NAMESPACE
     \image peripheral-structure.png Structure of a generic peripheral
 
     A characteristic is the principle information carrier. It has a
-    \l {QLowEnergyCharacteristic::value()}{value()} and \l properties()
+    \l {QLowEnergyCharacteristic::value()}{value()} and
+    \l {QLowEnergyCharacteristic::value()}{properties()}
     describing the access permissions for the value. The general purpose
     of the contained descriptor is to further define the nature of the
     characteristic. For example, it might specify how the value is meant to be
