@@ -397,6 +397,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value ReportReference                   Mapping information in the form of a Report ID and Report Type which maps the
                                              current parent characteristic to the Report ID(s) and Report Type (s) defined
                                              within the Report Map characteristic.
+    \value UnknownDescriptorType             The descriptor type is unknown.
 */
 
 /*!
