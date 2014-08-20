@@ -223,10 +223,18 @@ void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
     QStringList arguments;
     arguments << remoteAddress.toString() << localAddress.toString();
 
+    QByteArray output;
+
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     process.setReadChannel(QProcess::StandardOutput);
     process.start(fileInfo.canonicalFilePath(), arguments);
+
+    if (process.waitForStarted(-1)) {
+        while (process.waitForReadyRead(-1))
+            output += process.readAllStandardOutput();
+    }
+
     process.waitForFinished();
 
     if (process.exitStatus() != QProcess::NormalExit
@@ -253,17 +261,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
     }
 
     QStringList xmlRecords;
+    const QString decodedData = QString::fromUtf8(QByteArray::fromBase64(output));
 
-    int size, index = 0;
-    const QByteArray output = QByteArray::fromBase64(process.readAll());
-    const char *data = output.constData();
-
-    // separate the individial SDP records
-    // each record starts with 4 byte size indicator
-    while (index < output.size()) {
-        memcpy(&size, &data[index], sizeof(int));
-        xmlRecords.append(QString::fromUtf8(output.mid(index+sizeof(int), size)));
-        index += sizeof(int) + size;
+    // split the various xml docs up
+    int next;
+    int start = decodedData.indexOf(QStringLiteral("<?xml"), 0);
+    if (start != -1) {
+        do {
+            next = decodedData.indexOf(QStringLiteral("<?xml"), start + 1);
+            if (next != -1)
+                xmlRecords.append(decodedData.mid(start, next-start));
+            else
+                xmlRecords.append(decodedData.mid(start, decodedData.size() - start));
+            start = next;
+        } while ( start != -1);
     }
 
     QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,

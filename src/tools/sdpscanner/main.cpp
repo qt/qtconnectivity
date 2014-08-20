@@ -296,26 +296,21 @@ int main(int argc, char **argv)
         return RETURN_SDP_ERROR;
     }
 
-    char sizeField[sizeof(int)];
+    QByteArray total;
     while (sdpResults) {
         sdp_record_t *record = (sdp_record_t *) sdpResults->data;
 
-        QByteArray xml = parseSdpRecord(record);
-        if (xml.isEmpty())
-            continue;
-
-        //endianness doesn't matter since same machine
-        int sz = xml.size();
-        memcpy(&sizeField, &sz, sizeof(int));
-        xml.prepend(QByteArray(sizeField, sizeof(int)));
-
-        printf("%s", xml.toBase64().constData());
+        const QByteArray xml = parseSdpRecord(record);
+        total += xml;
 
         previous = sdpResults;
         sdpResults = sdpResults->next;
         free(previous);
         sdp_record_free(record);
+    }
 
+    if (!total.isEmpty()) {
+        printf("%s", total.toBase64().constData());
     }
 
     sdp_close(session);
