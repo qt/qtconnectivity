@@ -52,12 +52,14 @@
 Device::Device():
     connected(false), controller(0), m_deviceScanState(false)
 {
+    //! [les-devicediscovery-1]
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
     connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
             this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
     connect(discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
             this, SLOT(deviceScanError(QBluetoothDeviceDiscoveryAgent::Error)));
     connect(discoveryAgent, SIGNAL(finished()), this, SLOT(deviceScanFinished()));
+    //! [les-devicediscovery-1]
 
     setUpdate("Search");
 }
@@ -81,11 +83,14 @@ void Device::startDeviceDiscovery()
     emit devicesUpdated();
 
     setUpdate("Scanning for devices ...");
+    //! [les-devicediscovery-2]
     discoveryAgent->start();
+    //! [les-devicediscovery-2]
     m_deviceScanState = true;
     Q_EMIT stateChanged();
 }
 
+//! [les-devicediscovery-3]
 void Device::addDevice(const QBluetoothDeviceInfo &info)
 {
     if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
@@ -94,6 +99,7 @@ void Device::addDevice(const QBluetoothDeviceInfo &info)
         setUpdate("Last device added: " + d->getName());
     }
 }
+//! [les-devicediscovery-3]
 
 void Device::deviceScanFinished()
 {
@@ -154,6 +160,7 @@ void Device::scanServices(const QString &address)
         controller = 0;
     }
 
+    //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
         controller = new QLowEnergyController(currentDevice.getDevice().address());
@@ -170,20 +177,24 @@ void Device::scanServices(const QString &address)
     }
 
     controller->connectToDevice();
+    //! [les-controller-1]
 }
 
 void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)
 {
+    //! [les-service-1]
     QLowEnergyService *service = controller->createServiceObject(serviceUuid);
     if (!service) {
         qWarning() << "Cannot create service for uuid";
         return;
     }
+    //! [les-service-1]
     ServiceInfo *serv = new ServiceInfo(service);
     m_services.append(serv);
 
     emit servicesUpdated();
 }
+//! [les-service-1]
 
 void Device::serviceScanDone()
 {
@@ -209,9 +220,11 @@ void Device::connectToService(const QString &uuid)
     emit characteristicsUpdated();
 
     if (service->state() == QLowEnergyService::DiscoveryRequired) {
+        //! [les-service-3]
         connect(service, SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
                 this, SLOT(serviceDetailsDiscovered(QLowEnergyService::ServiceState)));
         service->discoverDetails();
+        //! [les-service-3]
         return;
     }
 
@@ -229,7 +242,9 @@ void Device::deviceConnected()
 {
     setUpdate("Discovering services!");
     connected = true;
+    //! [les-service-2]
     controller->discoverServices();
+    //! [les-service-2]
 }
 
 void Device::errorReceived(QLowEnergyController::Error /*error*/)
@@ -265,11 +280,13 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
     if (!service)
         return;
 
+    //! [les-chars]
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
     foreach (const QLowEnergyCharacteristic &ch, chars) {
         CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }
+    //! [les-chars]
 
     emit characteristicsUpdated();
 }
