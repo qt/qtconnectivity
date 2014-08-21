@@ -53,8 +53,7 @@ public:
 
     enum ServiceError {
         NoError = 0,
-        ServiceNotValidError,       //TODO check correct usage
-        OperationError,             //TODO check correct usage
+        OperationError,
         CharacteristicWriteError,
         DescriptorWriteError
     };

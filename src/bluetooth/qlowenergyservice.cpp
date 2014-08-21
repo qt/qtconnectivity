@@ -135,12 +135,11 @@ QT_BEGIN_NAMESPACE
     existence. The \l error() function returns the last occurred error.
 
     \value NoError                  No error has occurred.
-    \value ServiceNotValidError     The service object is invalid and has lost
-                                    its connection to the peripheral device.
     \value OperationError           An operation was attempted while the service was not ready.
                                     An example might be the attempt to write to
                                     the service while it was not yet in the
-                                    \l ServiceDiscovered \l state().
+                                    \l ServiceDiscovered \l state() or the service is invalid
+                                    due to a loss of connection to the peripheral device.
     \value CharacteristicWriteError An attempt to write a new value to a characteristic
                                     failed. For example, it might be triggered when attempting
                                     to write to a read-only characteristic.
@@ -376,7 +375,7 @@ void QLowEnergyService::discoverDetails()
     Q_D(QLowEnergyService);
 
     if (!d->controller || d->state == QLowEnergyService::InvalidService) {
-        d->setError(QLowEnergyService::ServiceNotValidError);
+        d->setError(QLowEnergyService::OperationError);
         return;
     }
 

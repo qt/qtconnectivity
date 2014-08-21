@@ -882,7 +882,6 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
 void QLowEnergyControllerPrivate::readServiceValues(
         const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
-    // TODO Long charactertistic value reads not yet supported (larger than MTU)
     quint8 packet[READ_REQUEST_SIZE];
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (readCharacteristics)
