@@ -75,8 +75,6 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
         serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
         connect(serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
                 this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-        connect(serviceAgent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)),
-                this, SLOT(leServiceDiscovered(QLowEnergyServiceInfo)));
         connect(serviceAgent, SIGNAL(finished()),
                 this, SLOT(serviceDiscoveryFinished()));
         connect(serviceAgent, SIGNAL(canceled()),
@@ -323,12 +321,6 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
             qDebug() << "@@@@@@@@ Adding:" << info.device().address().toString();
         }
     }
-}
-
-void BtLocalDevice::leServiceDiscovered(const QLowEnergyServiceInfo &info)
-{
-    qDebug() << "$$ Found new BTLE service" << info.device().address().toString()
-             << info.serviceUuid() << info.serviceName();
 }
 
 void BtLocalDevice::serviceDiscoveryFinished()

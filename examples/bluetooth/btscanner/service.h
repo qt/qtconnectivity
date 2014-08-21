@@ -49,8 +49,6 @@
 QT_FORWARD_DECLARE_CLASS(QBluetoothAddress)
 QT_FORWARD_DECLARE_CLASS(QBluetoothServiceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothServiceDiscoveryAgent)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyCharacteristicInfo)
 
 QT_USE_NAMESPACE
 
@@ -64,7 +62,6 @@ public:
 
 public slots:
     void addService(const QBluetoothServiceInfo&);
-    void addLowEnergyService(const QLowEnergyServiceInfo&);
 
 private:
     QBluetoothServiceDiscoveryAgent *discoveryAgent;

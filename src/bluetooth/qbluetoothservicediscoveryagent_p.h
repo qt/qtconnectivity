@@ -49,7 +49,6 @@
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothservicediscoveryagent.h"
-#include "qlowenergyserviceinfo.h"
 
 #include <QStack>
 #include <QStringList>
@@ -151,7 +150,7 @@ private:
     void runSdpScan(const QBluetoothAddress &remoteAddress,
                     const QBluetoothAddress localAddress);
     QVariant readAttributeValue(QXmlStreamReader &xml);
-    QBluetoothServiceInfo parseServiceXml(const QString& xml, bool *isBtleService);
+    QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
 #endif
 

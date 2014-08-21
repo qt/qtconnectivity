@@ -55,7 +55,6 @@
 #include "characteristicinfo.h"
 
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
 QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
 
 class Device: public QObject
