@@ -221,14 +221,6 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
     emit q->connected();
 }
 
-void QBluetoothSocketPrivate::_q_writeNotify()
-{
-}
-
-void QBluetoothSocketPrivate::_q_readNotify()
-{
-}
-
 void QBluetoothSocketPrivate::abort()
 {
     if (state == QBluetoothSocket::UnconnectedState)

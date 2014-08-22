@@ -61,14 +61,6 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     Q_UNUSED(port);
 }
 
-void QBluetoothSocketPrivate::_q_writeNotify()
-{
-}
-
-void QBluetoothSocketPrivate::_q_readNotify()
-{
-}
-
 void QBluetoothSocketPrivate::abort()
 {
 }

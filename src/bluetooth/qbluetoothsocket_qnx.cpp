@@ -114,9 +114,9 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     delete connectWriteNotifier;
 
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
     connecting = true;
     q->setOpenMode(openMode);
@@ -280,7 +280,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 
         if (txBuffer.size() == 0) {
             connectWriteNotifier->setEnabled(true);
-            QMetaObject::invokeMethod(q, "_q_writeNotify", Qt::QueuedConnection);
+            QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
         }
 
         char *txbuf = txBuffer.reserve(maxSize);
@@ -325,9 +325,9 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     socketType = socketType_;
 
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
     q->setSocketState(socketState);
     q->setOpenMode(openMode);
@@ -390,9 +390,9 @@ void QBluetoothSocketPrivate::controlReply(ppsResult result)
 
             Q_Q(QBluetoothSocket);
             readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-            QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+            QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
             connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-            QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+            QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
             connectWriteNotifier->setEnabled(true);
             readNotifier->setEnabled(true);

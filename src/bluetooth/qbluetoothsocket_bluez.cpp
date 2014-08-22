@@ -110,9 +110,9 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 
     Q_Q(QBluetoothSocket);
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
     connectWriteNotifier->setEnabled(false);
     readNotifier->setEnabled(false);
@@ -231,8 +231,6 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         }
     }
 }
-
-// TODO: move to private backend?
 
 void QBluetoothSocketPrivate::_q_readNotify()
 {
@@ -483,7 +481,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 
         if(txBuffer.size() == 0) {
             connectWriteNotifier->setEnabled(true);
-            QMetaObject::invokeMethod(q, "_q_writeNotify", Qt::QueuedConnection);
+            QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
         }
 
         char *txbuf = txBuffer.reserve(maxSize);
@@ -547,9 +545,9 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
 
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
     q->setSocketState(socketState);
     q->setOpenMode(openMode);

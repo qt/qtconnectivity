@@ -70,14 +70,9 @@ public:
 class QBluetoothSocket;
 class QBluetoothServiceDiscoveryAgent;
 
-class QBluetoothSocketPrivate
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
-: public QObject
+class QBluetoothSocketPrivate : public QObject
 {
     Q_OBJECT
-#else
-{
-#endif
     Q_DECLARE_PUBLIC(QBluetoothSocket)
     friend class QBluetoothServerPrivate;
 
@@ -147,12 +142,6 @@ public:
 //    qint64 rxOffset;
     QString errorString;
 
-    // private slots
-    void _q_readNotify();
-    void _q_writeNotify();
-    void _q_serviceDiscovered(const QBluetoothServiceInfo &service);
-    void _q_discoveryFinished();
-
 #ifdef QT_ANDROID_BLUETOOTH
     QAndroidJniObject adapter;
     QAndroidJniObject socketObject;
@@ -164,6 +153,12 @@ public:
 private slots:
     void inputThreadError(int errorCode);
 
+#endif
+
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_BLUEZ_BLUETOOTH)
+private slots:
+    void _q_readNotify();
+    void _q_writeNotify();
 #endif
 
 protected:
