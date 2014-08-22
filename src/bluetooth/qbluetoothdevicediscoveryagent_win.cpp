@@ -57,7 +57,6 @@ struct NativeFindResult
     HBLUETOOTH_DEVICE_FIND findHandle;
     DWORD errorCode;
 };
-Q_DECLARE_METATYPE(NativeFindResult)
 
 NativeFindResult::NativeFindResult()
     : findHandle(NULL)
@@ -108,6 +107,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
     }
 
     discoveredDevices.clear();
+
+    if (isValid() == false) {
+        lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
+        errorString = qt_error_string(ERROR_INVALID_HANDLE);
+        emit q->error(lastError);
+        return;
+    }
 
     if (!findWatcher) {
         findWatcher = new QFutureWatcher<QVariant>(q);
@@ -241,3 +247,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::findClose(HBLUETOOTH_DEVICE_FIND fin
 }
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(NativeFindResult))
