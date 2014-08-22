@@ -451,10 +451,12 @@ void QLowEnergyControllerPrivate::processReply(
         const quint16 type = request.reference.toUInt();
 
         if (isErrorResponse) {
-            if (type == GATT_SECONDARY_SERVICE)
+            if (type == GATT_SECONDARY_SERVICE) {
+                setState(QLowEnergyController::DiscoveredState);
                 q->discoveryFinished();
-            else // search for secondary services
+            } else { // search for secondary services
                 sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
+            }
             break;
         }
 
@@ -497,10 +499,12 @@ void QLowEnergyControllerPrivate::processReply(
         if (end != 0xFFFF) {
             sendReadByGroupRequest(end+1, 0xFFFF, type);
         } else {
-            if (type == GATT_SECONDARY_SERVICE)
+            if (type == GATT_SECONDARY_SERVICE) {
+                setState(QLowEnergyController::DiscoveredState);
                 emit q->discoveryFinished();
-            else // search for secondary services
+            } else { // search for secondary services
                 sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
+            }
         }
     }
         break;

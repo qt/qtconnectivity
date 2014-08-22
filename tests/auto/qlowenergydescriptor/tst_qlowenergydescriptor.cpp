@@ -67,10 +67,14 @@ private:
     QLowEnergyService *globalService;
 };
 
+Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
+
 tst_QLowEnergyDescriptor::tst_QLowEnergyDescriptor() :
     globalControl(0), globalService(0)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+
+    qRegisterMetaType<QLowEnergyController::ControllerState>();
 }
 
 tst_QLowEnergyDescriptor::~tst_QLowEnergyDescriptor()
@@ -124,8 +128,15 @@ void tst_QLowEnergyDescriptor::initTestCase()
         }
 
         QSignalSpy discoveryFinishedSpy(controller, SIGNAL(discoveryFinished()));
+        QSignalSpy stateSpy(controller, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         controller->discoverServices();
         QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+        QCOMPARE(stateSpy.count(), 2);
+        QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+                 QLowEnergyController::DiscoveringState);
+        QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+                 QLowEnergyController::DiscoveredState);
+
         foreach (const QBluetoothUuid &leServiceUuid, controller->services()) {
             QLowEnergyService *leService = controller->createServiceObject(leServiceUuid, this);
             if (!leService)

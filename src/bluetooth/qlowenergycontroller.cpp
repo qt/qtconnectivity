@@ -120,6 +120,10 @@ QT_BEGIN_NAMESPACE
     \value UnconnectedState   The controller is not connected to a remote device.
     \value ConnectingState    The controller is attempting to connect to a remote device.
     \value ConnectedState     The controller is connected to a remote device.
+    \value DiscoveringState   The controller is retrieving the list of services offered
+                              by the remote device.
+    \value DiscoveredState    The controller has discovered all services offered by the
+                              remote device.
     \value ClosingState       The controller is about to be disconnected from the remote device.
 */
 
@@ -525,6 +529,7 @@ void QLowEnergyController::discoverServices()
     if (d->state != QLowEnergyController::ConnectedState)
         return;
 
+    d->setState(QLowEnergyController::DiscoveringState);
     d->discoverServices();
 }
 

@@ -80,11 +80,13 @@ private:
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
+Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyCharacteristic>();
     qRegisterMetaType<QLowEnergyDescriptor>();
+    qRegisterMetaType<QLowEnergyController::ControllerState>();
 
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString remote = qgetenv("BT_TEST_DEVICE");
@@ -203,8 +205,14 @@ void tst_QLowEnergyController::tst_connect()
     if (!wasError) {
         QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
         QSignalSpy serviceFoundSpy(&control, SIGNAL(serviceDiscovered(QBluetoothUuid)));
+        QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         control.discoverServices();
         QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+        QCOMPARE(stateSpy.count(), 2);
+        QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+                 QLowEnergyController::DiscoveringState);
+        QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+                 QLowEnergyController::DiscoveredState);
 
         QVERIFY(!serviceFoundSpy.isEmpty());
         QVERIFY(serviceFoundSpy.count() >= foundServices.count());
@@ -332,8 +340,14 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
      * */
 
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveringState);
+    QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveredState);
 
     // pick MAX_SERVICES_SAME_TIME_ACCESS services
     // and discover them at the same time
@@ -384,8 +398,14 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
     }
 
     QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+    stateSpy.clear();
     control.discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveringState);
+    QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveredState);
 
     // get all details
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
@@ -1522,8 +1542,14 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
     QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveringState);
+    QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveredState);
 
     const QBluetoothUuid testService(QString("f000aa60-0451-4000-b000-000000000000"));
     QList<QBluetoothUuid> uuids = control.services();
@@ -1663,8 +1689,14 @@ void tst_QLowEnergyController::tst_writeDescriptor()
 
     QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveringState);
+    QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveredState);
 
     const QBluetoothUuid testService(QString("f000aa00-0451-4000-b000-000000000000"));
     QList<QBluetoothUuid> uuids = control.services();
