@@ -572,10 +572,12 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
 {
     Q_D(QBluetoothSocket);
     qCDebug(QT_BT) << "FOUND SERVICE!" << service;
-    if(service.protocolServiceMultiplexer() != 0 || service.serverChannel() != 0) {
+    if (service.protocolServiceMultiplexer() > 0 || service.serverChannel() > 0) {
         connectToService(service, d->openMode);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = 0;
+    } else {
+        qCDebug(QT_BT) << "Could not find port/psm for potential remote service";
     }
 }
 
