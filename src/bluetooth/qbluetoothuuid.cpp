@@ -468,17 +468,9 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 */
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 {
-    // TODO: look at the memcpy(), should not be needed
-    quint32 tmp32;
-    memcpy(&tmp32, &uuid.data[0], 4);
-    data1 = qFromBigEndian<quint32>(tmp32);
-
-    quint16 tmp16;
-    memcpy(&tmp16, &uuid.data[4], 2);
-    data2 = qFromBigEndian<quint16>(tmp16);
-
-    memcpy(&tmp16, &uuid.data[6], 2);
-    data3 = qFromBigEndian<quint16>(tmp16);
+    data1 = qFromBigEndian<quint32>(*reinterpret_cast<quint32 *>(&uuid.data[0]));
+    data2 = qFromBigEndian<quint16>(*reinterpret_cast<quint16 *>(&uuid.data[4]));
+    data3 = qFromBigEndian<quint16>(*reinterpret_cast<quint16 *>(&uuid.data[6]));
 
     memcpy(data4, &uuid.data[8], 8);
 }
