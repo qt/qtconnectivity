@@ -799,7 +799,7 @@ void QLowEnergyControllerPrivate::processReply(
         } else {
             service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
             QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
-            emit service->descriptorChanged(descriptor, newValue);
+            emit service->descriptorWritten(descriptor, newValue);
         }
     }
         break;

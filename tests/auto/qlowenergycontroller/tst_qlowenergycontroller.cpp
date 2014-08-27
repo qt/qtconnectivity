@@ -1754,7 +1754,7 @@ void tst_QLowEnergyController::tst_writeDescriptor()
 
     // 3. Test writing to descriptor -> activate notifications
     QSignalSpy descChangedSpy(service,
-                        SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)));
+                        SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
     QSignalSpy charChangedSpy(service,
                         SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
 
@@ -1962,7 +1962,7 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
 
     // 3. Enable notifications
     QSignalSpy descChangedSpy(service,
-                        SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)));
+                        SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
     QSignalSpy charChangedSpy(service,
                         SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
     if (notification.value() != QByteArray::fromHex("0100")) {

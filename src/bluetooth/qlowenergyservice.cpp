@@ -224,7 +224,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::descriptorChanged(const QLowEnergyDescriptor &descriptor, const QByteArray &newValue)
+    \fn void QLowEnergyService::descriptorWritten(const QLowEnergyDescriptor &descriptor, const QByteArray &newValue)
 
     This signal is emitted when the value of \a descriptor
     is successfully changed to \a newValue. The change may have been caused
@@ -255,8 +255,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
             this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
     connect(p.data(), SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
             this, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
-    connect(p.data(), SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)),
-            this, SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)));
+    connect(p.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)),
+            this, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
 }
 
 /*!
@@ -448,7 +448,8 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
 
 /*!
     Writes \a newValue as value for the \a characteristic. If the operation is successful,
-    the \l characteristicChanged() signal is emitted.
+    the \l characteristicChanged() signal is emitted; otherwise the \l CharacteristicWriteError
+    is emitted.
 
     The \a mode parameter determines whether the remote device should send a write
     confirmation. The to-be-written \a characteristic must support the relevant
@@ -522,7 +523,8 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 
 /*!
     Writes \a newValue as value for \a descriptor. If the operation is successful,
-    the \l descriptorChanged() signal is emitted.
+    the \l descriptorWritten() signal is emitted; otherwise the \l DescriptorWriteError
+    is emitted.
 
     A descriptor can only be written if this service is in the \l ServiceDiscovered state,
     belongs to the service and is writable.
