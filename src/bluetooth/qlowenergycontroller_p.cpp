@@ -66,10 +66,10 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &/
 
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
         const QLowEnergyHandle /*charHandle*/,
-        const QByteArray &/*newValue*/)
+        const QByteArray &/*newValue*/,
+        bool /*writeWithResponse*/)
 {
 
 }

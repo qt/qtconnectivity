@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -166,6 +167,32 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+  \enum QLowEnergyService::WriteMode
+
+  This enum describes the mode to be used when writing a characteristic value.
+  The characteristic advertises its supported write modes via its
+  \l {QLowEnergyCharacteristic::properties()}{properties}.
+
+  \value WriteWithResponse      If a characteristic is written using this mode, the peripheral
+                                shall send a write confirmation. If the operation is
+                                successful, the confirmation is emitted via the
+                                \l characteristicChanged() signal. Otherwise the
+                                \l CharacteristicWriteError is emitted.
+                                A characteristic must have set the
+                                \l QLowEnergyCharacteristic::Write property to support this
+                                write mode.
+
+  \value WriteWithoutResponse   If a characteristic is written using this mode, the remote peripheral
+                                shall not send a write confirmation. The operation's success
+                                cannot be determined and the payload must not be longer than 20 bytes.
+                                A characteristic must have set the
+                                \l QLowEnergyCharacteristic::WriteNoResponse property to support this
+                                write mode. Its adavantage is a quicker
+                                write operation as it may happen in between other
+                                device interactions.
+ */
+
+/*!
     \fn void QLowEnergyService::stateChanged(QLowEnergyService::ServiceState newState)
 
     This signal is emitted when the service's state changes. The \a newState can also be
@@ -188,6 +215,10 @@ QT_BEGIN_NAMESPACE
     is successfully changed to \a newValue. The change may have been caused
     by calling \l writeCharacteristic() or otherwise triggering a change
     notification on the peripheral device.
+
+    \note Change notifications must first be activated via the characteristic's
+    \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
+    descriptor.
 
     \sa writeCharacteristic()
  */
@@ -419,13 +450,21 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     Writes \a newValue as value for the \a characteristic. If the operation is successful,
     the \l characteristicChanged() signal is emitted.
 
+    The \a mode parameter determines whether the remote device should send a write
+    confirmation. The to-be-written \a characteristic must support the relevant
+    write mode. The characteristic's supported write modes are indicated by its
+    \l QLowEnergyCharacteristic::Write and \l QLowEnergyCharacteristic::WriteNoResponse
+    properties.
+
     A characteristic can only be written if this service is in the \l ServiceDiscovered state,
     belongs to the service and is writable.
+
+    \sa QLowEnergyCharacteristic::properties()
  */
 void QLowEnergyService::writeCharacteristic(
-        const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
+        const QLowEnergyCharacteristic &characteristic,
+        const QByteArray &newValue, QLowEnergyService::WriteMode mode)
 {
-    //TODO check behavior when writing to WriteNoResponse characteristic
     //TODO check behavior when writing to WriteSigned characteristic
     //TODO add support for write long characteristic value (newValue.size() > MTU - 3)
     Q_D(QLowEnergyService);
@@ -434,23 +473,29 @@ void QLowEnergyService::writeCharacteristic(
     if (!contains(characteristic))
         return;
 
-    // don't write if we don't have to
-    if (characteristic.value() == newValue)
-        return;
-
-    // don't write write-protected or undiscovered characteristic
-    if (!(characteristic.properties() & QLowEnergyCharacteristic::Write)
-            || state() != ServiceDiscovered) {
+    if (state() != ServiceDiscovered)
         d->setError(QLowEnergyService::OperationError);
-        return;
-    }
 
     if (!d->controller)
         return;
 
-    d->controller->writeCharacteristic(characteristic.d_ptr,
+    // don't write if properties don't permit it
+    if (mode == WriteWithResponse
+            && (characteristic.properties() & QLowEnergyCharacteristic::Write))
+    {
+        d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
-                                       newValue);
+                                       newValue,
+                                       true);
+    } else if (mode == WriteWithoutResponse
+               && (characteristic.properties() & QLowEnergyCharacteristic::WriteNoResponse)) {
+        d->controller->writeCharacteristic(characteristic.d_ptr,
+                                       characteristic.attributeHandle(),
+                                       newValue,
+                                       false);
+    } else {
+        d->setError(QLowEnergyService::OperationError);
+    }
 }
 
 /*!

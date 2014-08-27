@@ -89,7 +89,7 @@ public:
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                              const QLowEnergyHandle charHandle,
-                             const QByteArray &newValue);
+                             const QByteArray &newValue, bool writeWithResponse = true);
     void writeDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
                          const QLowEnergyHandle charHandle,
                          const QLowEnergyHandle descriptorHandle,

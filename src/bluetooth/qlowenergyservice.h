@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -66,6 +67,11 @@ public:
         ServiceDiscovered,  // all details have been synchronized
     };
 
+    enum WriteMode {
+        WriteWithResponse = 0,
+        WriteWithoutResponse
+    };
+
     ~QLowEnergyService();
 
     QList<QBluetoothUuid> includedServices() const;
@@ -84,7 +90,8 @@ public:
 
     bool contains(const QLowEnergyCharacteristic &characteristic) const;
     void writeCharacteristic(const QLowEnergyCharacteristic &characteristic,
-                             const QByteArray &newValue);
+                             const QByteArray &newValue,
+                             WriteMode mode = WriteWithResponse);
 
     bool contains(const QLowEnergyDescriptor &descriptor) const;
     void writeDescriptor(const QLowEnergyDescriptor &descriptor,

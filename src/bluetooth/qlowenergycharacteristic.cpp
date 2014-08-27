@@ -182,10 +182,19 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 }
 
 /*!
-    Returns the value of the characteristic.
+    Returns the cached value of the characteristic.
 
     If the characteristic's \l properties() permit writing of new values,
     the value can be updated using \l QLowEnergyService::writeCharacteristic().
+
+    The cache is updated during the associated service's
+    \l {QLowEnergyService::discoverDetails()} {detail discovery}, a successful
+    \l {QLowEnergyService::writeCharacteristic()}{write operation} or when an update
+    notification is received.
+
+    The returned \l QByteArray is empty if the characteristic does not have the
+    \l {QLowEnergyCharacteristic::Read}{read permission}. However, a non-readable
+    characteristic may obtain a non-empty value via a related notification or write operation.
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {

@@ -64,11 +64,12 @@
 #define ATT_OP_READ_BLOB_RESPONSE       0xD
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
-#define ATT_OP_WRITE_REQUEST            0x12 //write characteristic
+#define ATT_OP_WRITE_REQUEST            0x12 //write characteristic with response
 #define ATT_OP_WRITE_RESPONSE           0x13
 #define ATT_OP_HANDLE_VAL_NOTIFICATION  0x1b //informs about value change
 #define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
 #define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
+#define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
 
 //GATT command sizes in bytes
 #define FIND_INFO_REQUEST_SIZE 5
@@ -76,7 +77,7 @@
 #define READ_BY_TYPE_REQ_SIZE 7
 #define READ_REQUEST_SIZE 3
 #define READ_BLOB_REQUEST_SIZE 5
-#define WRITE_REQUEST_SIZE 3
+#define WRITE_REQUEST_SIZE 3    // same size for WRITE_COMMAND
 #define MTU_EXCHANGE_SIZE 3
 
 // GATT error codes
@@ -1122,7 +1123,8 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
 void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
-        const QByteArray &newValue)
+        const QByteArray &newValue,
+        bool writeWithResponse)
 {
     Q_ASSERT(!service.isNull());
 
@@ -1134,16 +1136,27 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     const int size = 1 + 2 + newValue.size();
 
     quint8 packet[WRITE_REQUEST_SIZE];
-    packet[0] = ATT_OP_WRITE_REQUEST;
-    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
+    if (writeWithResponse)
+        packet[0] = ATT_OP_WRITE_REQUEST;
+    else
+        packet[0] = ATT_OP_WRITE_COMMAND;
 
+    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
 
     QByteArray data(size, Qt::Uninitialized);
     memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
     memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
-                         << "(size:" << size << ")";
+                         << "(size:" << size << "response:" << writeWithResponse << ")";
+
+    // Advantage of write without response is the quick turnaround.
+    // It can be send at any time and does not produce responses.
+    // Therefore we will not put them into the openRequest queue at all.
+    if (!writeWithResponse) {
+        sendCommand(data);
+        return;
+    }
 
     Request request;
     request.payload = data;
