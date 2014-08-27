@@ -278,8 +278,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(discoveredDevices.at(0));
 
-        QBluetoothServiceInfo::Sequence  protocolDescriptorList;
-        protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        QBluetoothServiceInfo::Sequence protocolDescriptorList;
+        QBluetoothServiceInfo::Sequence l2cpProtocol;
+        l2cpProtocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        protocolDescriptorList.append(QVariant::fromValue(l2cpProtocol));
 
         bool ok;
         QBluetoothUuid suuid(QByteArray(next_service).toUInt(&ok,16));
@@ -361,7 +363,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
         lowEnergyService.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
-        protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
         service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
         qCDebug(QT_BT_QNX) << "Adding Low Energy service" << leUuid;
