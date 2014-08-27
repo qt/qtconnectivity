@@ -100,6 +100,23 @@ QT_BEGIN_NAMESPACE
     signal is emitted. A failure to write triggers the \l CharacteristicWriteError.
     Writing a descriptor follows the same pattern.
 
+    \target notifications
+
+    In some cases the peripheral generates value updates which
+    the central is interested in receiving. In order for a characteristic to support
+    such notifications it must have the \l QLowEnergyCharacteristic::Notify or
+    \l QLowEnergyCharacteristic::Indicate property and a descriptor of type
+    \l QBluetoothUuid::ClientCharacteristicConfiguration. Provided those conditions
+    are fulfilled notifications can be enabled as shown in the following code segment:
+
+    \snippet doc_src_qtbluetooth.cpp enable_btle_notifications
+
+    The example shows a battery level characteristic which updates the central
+    on every value change. The notifications are provided via
+    the \l characteristicChanged() signal. More details about this mechanism
+    are provided by the
+    \l {https://developer.bluetooth.org/gatt/descriptors/Pages/DescriptorViewer.aspx?u=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml}{Bluetooth Specification}.
+
     \section1 Service Data Sharing
 
     Each QLowEnergyService instance shares its internal states and information
@@ -232,7 +249,8 @@ QT_BEGIN_NAMESPACE
     The signal emission implies that change notifications must
     have been activated via the characteristic's
     \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
-    descriptor prior to the change event on the peripheral.
+    descriptor prior to the change event on the peripheral. More details on how this might be
+    done can be found further \l{notifications}{above}.
  */
 
 /*!

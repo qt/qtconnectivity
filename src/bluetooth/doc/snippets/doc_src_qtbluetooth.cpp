@@ -69,11 +69,13 @@ public:
     void startServiceDiscovery();
     void objectPush();
     void btleSharedData();
+    void enableCharNotifications();
 
 public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);
     void serviceDiscovered(const QBluetoothServiceInfo &service);
     void transferFinished(QBluetoothTransferReply* reply);
+    void characteristicChanged(const QLowEnergyCharacteristic& ,const QByteArray&);
 };
 
 void MyClass::localDevice() {
@@ -171,6 +173,10 @@ void MyClass::transferFinished(QBluetoothTransferReply* /*reply*/)
 {
 }
 
+void MyClass::characteristicChanged(const QLowEnergyCharacteristic &, const QByteArray &)
+{
+}
+
 void MyClass::btleSharedData()
 {
     QBluetoothAddress remoteDevice;
@@ -193,6 +199,51 @@ void MyClass::btleSharedData()
     Q_ASSERT(first->state() == second->state());
 //! [data_share_qlowenergyservice]
 }
+
+void MyClass::enableCharNotifications()
+{
+    QBluetoothAddress remoteDevice;
+    QLowEnergyService *service;
+    QLowEnergyController *control = new QLowEnergyController(remoteDevice, this);
+    control->connectToDevice();
+
+
+    service = control->createServiceObject(QBluetoothUuid::BatteryService, this);
+    if (!service)
+        return;
+
+    service->discoverDetails();
+
+    //... wait until discovered
+
+//! [enable_btle_notifications]
+    //PreCondition: service details already discovered
+    QLowEnergyCharacteristic batteryLevel = service->characteristic(
+                QBluetoothUuid::BatteryLevel);
+    if (!batteryLevel.isValid())
+        return;
+
+    QLowEnergyDescriptor notification = batteryLevel.descriptor(
+                QBluetoothUuid::ClientCharacteristicConfiguration);
+    if (!notification.isValid())
+        return;
+
+    // establish hook into notifications
+    connect(service, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
+            this, SLOT(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+
+    // enable notification
+    service->writeDescriptor(notification, QByteArray::fromHex("0100"));
+
+    // disable notification
+    //service->writeDescriptor(notification, QByteArray::fromHex("0000"));
+
+    // wait until descriptorWritten() signal is emitted
+    // to confirm successful write
+//! [enable_btle_notifications]
+}
+
+
 
 int main(int argc, char** argv)
 {
