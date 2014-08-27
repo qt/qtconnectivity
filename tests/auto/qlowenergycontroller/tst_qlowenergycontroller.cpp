@@ -73,13 +73,6 @@ private slots:
 
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
-    QString checkIodResults(const QLowEnergyCharacteristic &original,
-                            const QLowEnergyCharacteristic &first,
-                            const QLowEnergyCharacteristic &second,
-                            const QByteArray &writeValue,
-                            const QByteArray &firstValue,
-                            const QByteArray & secondValue,
-                            bool* success = 0);
 
     QBluetoothDeviceDiscoveryAgent *devAgent;
     QBluetoothAddress remoteDevice;
@@ -1596,7 +1589,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
             || configChar.value() == QByteArray::fromHex("81"));
 
     QSignalSpy writeSpy(service,
-                        SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+                        SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
 
     // *******************************************
     // test writing of characteristic
@@ -1753,8 +1746,10 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     }
 
     // 3. Test writing to descriptor -> activate notifications
-    QSignalSpy descChangedSpy(service,
+    QSignalSpy descWrittenSpy(service,
                         SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
+    QSignalSpy charWrittenSpy(service,
+                        SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
     QSignalSpy charChangedSpy(service,
                         SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
 
@@ -1765,14 +1760,14 @@ void tst_QLowEnergyController::tst_writeDescriptor()
         // enable notifications if not already done
         service->writeDescriptor(notification, QByteArray::fromHex("0100"));
 
-        QTRY_VERIFY_WITH_TIMEOUT(!descChangedSpy.isEmpty(), 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(!descWrittenSpy.isEmpty(), 3000);
         QCOMPARE(notification.value(), QByteArray::fromHex("0100"));
-        firstSignalData = descChangedSpy.first();
+        firstSignalData = descWrittenSpy.first();
         signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
         signalValue = firstSignalData[1].toByteArray();
         QCOMPARE(signalValue, QByteArray::fromHex("0100"));
         QVERIFY(notification == signalDesc);
-        descChangedSpy.clear();
+        descWrittenSpy.clear();
     }
 
     // 4. Test reception of notifications
@@ -1782,18 +1777,23 @@ void tst_QLowEnergyController::tst_writeDescriptor()
 
         // first signal is confirmation of tempConfig write
         // subsequent signals are temp data updates
-        QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() >= 5, 10000);
+        QTRY_VERIFY_WITH_TIMEOUT(charWrittenSpy.count() == 1, 10000);
+        QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() >= 4, 10000);
+
+        QCOMPARE(charWrittenSpy.count(), 1);
+        QLowEnergyCharacteristic writtenChar = charWrittenSpy[0].at(0).value<QLowEnergyCharacteristic>();
+        QByteArray writtenValue = charWrittenSpy[0].at(1).toByteArray();
+        QCOMPARE(tempConfig, writtenChar);
+        QCOMPARE(tempConfig.value(), writtenValue);
+        QCOMPARE(writtenChar.value(), writtenValue);
+        QCOMPARE(writtenValue, QByteArray::fromHex("01"));
+
         QList<QVariant> entry;
         for (int i = 0; i < charChangedSpy.count(); i++) {
             entry = charChangedSpy[i];
             const QLowEnergyCharacteristic ch = entry[0].value<QLowEnergyCharacteristic>();
-            const QByteArray val = entry[1].toByteArray();
 
-            if (i == 0) {
-                QCOMPARE(tempConfig, ch);
-            } else {
-                QCOMPARE(tempData, ch);
-            }
+            QCOMPARE(tempData, ch);
         }
 
         service->writeCharacteristic(tempConfig, QByteArray::fromHex("00"));
@@ -1802,21 +1802,21 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     // 5. Test writing to descriptor -> deactivate notifications
     service->writeDescriptor(notification, QByteArray::fromHex("0000"));
     // verify
-    QTRY_VERIFY_WITH_TIMEOUT(!descChangedSpy.isEmpty(), 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(!descWrittenSpy.isEmpty(), 3000);
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
-    firstSignalData = descChangedSpy.first();
+    firstSignalData = descWrittenSpy.first();
     signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
     signalValue = firstSignalData[1].toByteArray();
     QCOMPARE(signalValue, QByteArray::fromHex("0000"));
     QVERIFY(notification == signalDesc);
-    descChangedSpy.clear();
+    descWrittenSpy.clear();
 
     // *******************************************
     // write wrong value -> error response required
     QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
-    descChangedSpy.clear();
+    descWrittenSpy.clear();
     QCOMPARE(errorSpy.count(), 0);
-    QCOMPARE(descChangedSpy.count(), 0);
+    QCOMPARE(descWrittenSpy.count(), 0);
 
     // write 4 byte value to 2 byte characteristic
     service->writeDescriptor(notification, QByteArray::fromHex("11112222"));
@@ -1824,7 +1824,7 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
              QLowEnergyService::DescriptorWriteError);
     QCOMPARE(service->error(), QLowEnergyService::DescriptorWriteError);
-    QCOMPARE(descChangedSpy.count(), 0);
+    QCOMPARE(descWrittenSpy.count(), 0);
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
 
     control.disconnectFromDevice();
@@ -1837,63 +1837,11 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
              QLowEnergyService::OperationError);
     QCOMPARE(service->error(), QLowEnergyService::OperationError);
-    QCOMPARE(descChangedSpy.count(), 0);
+    QCOMPARE(descWrittenSpy.count(), 0);
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
 
     delete service;
 }
-
-
-// this logic can be simplified but requires API change
-// TODO find way to distinguish characteristicChanged() due to notification and write request
-QString tst_QLowEnergyController::checkIodResults(
-        const QLowEnergyCharacteristic &original,
-        const QLowEnergyCharacteristic &first,
-        const QLowEnergyCharacteristic &second,
-        const QByteArray &writeValue,
-        const QByteArray &firstValue,
-        const QByteArray &secondValue, bool *success)
-{
-
-    if (original == first && first == second) {
-        //verify write confirmation
-        if ((firstValue.size() == 1 && (firstValue == writeValue))
-                || (secondValue.size() == 1 && (secondValue == writeValue))) {
-            *success = true;
-        } else {
-            *success = false;
-            return QString("Could not find write request command confirmation");
-        }
-
-        // image ident info is 8 bytes long
-        if ((firstValue.size() == 8) || secondValue.size() == 8) {
-            *success = true;
-        } else {
-            *success = false;
-            return QString("Could not identify image ident info");
-        }
-        return QString();
-    } else if (first != second) {
-        // If the image doesn't exist, the notification doesn't come.
-        // In such cases the OAD Image block seems to send a notification
-        //expect at least write confirmation
-        if (firstValue.size() == 1 && (firstValue == writeValue)) {
-            *success = true;
-            return QString("Two chars don't match. Unknown char: %1 (%2)").
-                    arg(second.handle()).arg(QString(secondValue.toHex()));
-        } else if (secondValue.size() == 1 && (secondValue == writeValue)) {
-            *success = true;
-            return QString("Two chars don't match. Unknown char: %1(%2)").
-                    arg(first.handle()).arg(QString(firstValue.toHex()));
-        } else {
-            *success = false;
-            return QString("Could not find write request command confirmation");
-        }
-    }
-
-    return QString("Unexpected condition");
-}
-
 
 /*
     Tests write without responses. We utilize the Over-The-Air image update
@@ -1943,12 +1891,15 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
     QTRY_VERIFY_WITH_TIMEOUT(
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
-    // 1. Get "Image Identity" characteristic
+    // 1. Get "Image Identity" and "Image Block" characteristic
     const QLowEnergyCharacteristic imageIdentityChar = service->characteristic(
                 QBluetoothUuid(QString("f000ffc1-0451-4000-b000-000000000000")));
+    const QLowEnergyCharacteristic imageBlockChar = service->characteristic(
+                QBluetoothUuid(QString("f000ffc2-0451-4000-b000-000000000000")));
     QVERIFY(imageIdentityChar.isValid());
     QVERIFY(imageIdentityChar.properties() & QLowEnergyCharacteristic::Write);
     QVERIFY(imageIdentityChar.properties() & QLowEnergyCharacteristic::WriteNoResponse);
+    QVERIFY(imageBlockChar.isValid());
 
     // 2. Get "Image Identity" notification descriptor
     const QLowEnergyDescriptor notification = imageIdentityChar.descriptor(
@@ -1961,20 +1912,23 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
     }
 
     // 3. Enable notifications
-    QSignalSpy descChangedSpy(service,
+    QSignalSpy descWrittenSpy(service,
                         SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
     QSignalSpy charChangedSpy(service,
                         SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy charWrittenSpy(service,
+                        SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
+
     if (notification.value() != QByteArray::fromHex("0100")) {
         service->writeDescriptor(notification, QByteArray::fromHex("0100"));
-        QTRY_VERIFY_WITH_TIMEOUT(!descChangedSpy.isEmpty(), 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(!descWrittenSpy.isEmpty(), 3000);
         QCOMPARE(notification.value(), QByteArray::fromHex("0100"));
-        QList<QVariant> firstSignalData = descChangedSpy.first();
+        QList<QVariant> firstSignalData = descWrittenSpy.first();
         QLowEnergyDescriptor signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
         QByteArray signalValue = firstSignalData[1].toByteArray();
         QCOMPARE(signalValue, QByteArray::fromHex("0100"));
         QVERIFY(notification == signalDesc);
-        descChangedSpy.clear();
+        descWrittenSpy.clear();
     }
 
     // 4. Trigger image identity announcement (using traditional write)
@@ -1987,64 +1941,62 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
     // Write triggers a notification and write confirmation
     service->writeCharacteristic(imageIdentityChar, QByteArray::fromHex("0"));
     QTest::qWait(1000);
-    QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() == 2, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() == 1, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(charWrittenSpy.count() == 1, 5000);
+
+    // This is very SensorTag specific logic.
+    // If the image block is empty the current firmware
+    // does not even send a notification for imageIdentityChar
+    // but for imageBlockChar
 
     entry = charChangedSpy[0];
     QLowEnergyCharacteristic first = entry[0].value<QLowEnergyCharacteristic>();
     QByteArray val1 = entry[1].toByteArray();
-
-    entry = charChangedSpy[1];
-    QLowEnergyCharacteristic second = entry[0].value<QLowEnergyCharacteristic>();
-    QByteArray val2 = entry[1].toByteArray();
-
-    // This is very SensorTag specific logic.
-    // We don't know which of the two signals above is the write confirmation
-    // and which is the notification. If the image is not set the current firmware
-    // does not even send a notification for cimageIdentity
-    // checkIodResults() confirms the various cases
-
-    bool isSuccess = false;
-    QString errorString = checkIodResults(imageIdentityChar, first, second,
-                                          QByteArray::fromHex("0"),
-                                          val1, val2, &isSuccess);
-    QVERIFY2(isSuccess, errorString.toLatin1().constData());
-    if (!errorString.isEmpty()) {
-        // success but still some error hint provided - print it out.
-        qWarning() << "Warn1:" << errorString;
-    } else {
+    if (val1.size() == 8) {
+        QCOMPARE(imageIdentityChar, first);
         foundOneImage = true;
+    } else {
+        QCOMPARE(imageBlockChar, first);
+        qWarning() << "Invalid image A ident info";
     }
 
+    entry = charWrittenSpy[0];
+    QLowEnergyCharacteristic second = entry[0].value<QLowEnergyCharacteristic>();
+    QByteArray val2 = entry[1].toByteArray();
+    QCOMPARE(imageIdentityChar, second);
+    QCOMPARE(val2, QByteArray::fromHex("0"));
+
     charChangedSpy.clear();
+    charWrittenSpy.clear();
 
     // Image B
     service->writeCharacteristic(imageIdentityChar, QByteArray::fromHex("1"));
     QTest::qWait(1000);
-    QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() == 2, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() == 1, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(charWrittenSpy.count() == 1, 5000);
 
     entry = charChangedSpy[0];
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
-
-    entry = charChangedSpy[1];
-    second = entry[0].value<QLowEnergyCharacteristic>();
-    val2 = entry[1].toByteArray();
-
-    errorString = checkIodResults(imageIdentityChar, first, second,
-                                              QByteArray::fromHex("1"),
-                                              val1, val2, &isSuccess);
-    QVERIFY2(isSuccess, errorString.toLatin1().constData());
-    if (!errorString.isEmpty()) {
-        // success but still some error hint provided - print it out.
-        qWarning() << "Warn2:" << errorString;
-    } else {
+    if (val1.size() == 8) {
+        QCOMPARE(imageIdentityChar, first);
         foundOneImage = true;
+    } else {
+        QCOMPARE(imageBlockChar, first);
+        qWarning() << "Invalid image B ident info";
     }
 
+    entry = charWrittenSpy[0];
+    second = entry[0].value<QLowEnergyCharacteristic>();
+    val2 = entry[1].toByteArray();
+    QCOMPARE(imageIdentityChar, second);
+    QCOMPARE(val2, QByteArray::fromHex("1"));
+
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (1)");
-    charChangedSpy.clear();
 
     // 5. Trigger image identity announcement (without response)
+    charChangedSpy.clear();
+    charWrittenSpy.clear();
     foundOneImage = false;
 
     // Image A
@@ -2061,10 +2013,15 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
 
-    if (val1.size() == 8)
+    QVERIFY(charWrittenSpy.isEmpty());
+    if (val1.size() == 8) {
+        QCOMPARE(first, imageIdentityChar);
         foundOneImage = true;
+    } else {
+        QCOMPARE(imageBlockChar, first);
+        qWarning() << "Image A not set?";
+    }
 
-    qDebug() << "IOD write command image A:" << hex << first.handle() << val1.toHex();
     charChangedSpy.clear();
 
     // Image B
@@ -2081,16 +2038,19 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
 
-    if (val1.size() == 8)
+    QVERIFY(charWrittenSpy.isEmpty());
+    if (val1.size() == 8) {
+        QCOMPARE(first, imageIdentityChar);
         foundOneImage = true;
+    } else {
+        QCOMPARE(imageBlockChar, first);
+        qWarning() << "Image B not set?";
+    }
 
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (2)");
 
-    qDebug() << "IOD write command image B:" << hex << first.handle() << val1.toHex();
-
     delete service;
     control.disconnectFromDevice();
-
 }
 
 QTEST_MAIN(tst_QLowEnergyController)

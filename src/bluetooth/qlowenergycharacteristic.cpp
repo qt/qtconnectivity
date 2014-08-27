@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     The characteristic value may be written via the \l QLowEnergyService instance
     that manages the service to which this characteristic belongs. The
     \l {QLowEnergyService::writeCharacteristic()} function writes the new value.
-    The \l {QLowEnergyService::characteristicChanged()} signal is emitted upon success.
+    The \l {QLowEnergyService::characteristicWritten()} signal is emitted upon success.
     The \l value() of this object is automatically updated accordingly.
 
     Characteristics may contain none, one or more descriptors. They can be individually

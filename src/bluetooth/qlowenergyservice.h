@@ -101,6 +101,8 @@ Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);
     void characteristicChanged(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
+    void characteristicWritten(const QLowEnergyCharacteristic &info,
+                               const QByteArray &value);
     void descriptorWritten(const QLowEnergyDescriptor &info,
                            const QByteArray &value);
     void error(QLowEnergyService::ServiceError error);

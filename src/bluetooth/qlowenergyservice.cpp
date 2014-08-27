@@ -96,7 +96,7 @@ QT_BEGIN_NAMESPACE
     \l QLowEnergyCharacteristic and \l QLowEnergyDescriptor, respectively.
     However writing those attributes requires the service object. The
     \l writeCharacteristic() function attempts to write a new value to the given
-    characteristic. If the write attempt is successful, the \l characteristicChanged()
+    characteristic. If the write attempt is successful, the \l characteristicWritten()
     signal is emitted. A failure to write triggers the \l CharacteristicWriteError.
     Writing a descriptor follows the same pattern.
 
@@ -176,7 +176,7 @@ QT_BEGIN_NAMESPACE
   \value WriteWithResponse      If a characteristic is written using this mode, the peripheral
                                 shall send a write confirmation. If the operation is
                                 successful, the confirmation is emitted via the
-                                \l characteristicChanged() signal. Otherwise the
+                                \l characteristicWritten() signal. Otherwise the
                                 \l CharacteristicWriteError is emitted.
                                 A characteristic must have set the
                                 \l QLowEnergyCharacteristic::Write property to support this
@@ -209,27 +209,38 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
+    \fn void QLowEnergyService::characteristicWritten(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
 
     This signal is emitted when the value of \a characteristic
-    is successfully changed to \a newValue. The change may have been caused
-    by calling \l writeCharacteristic() or otherwise triggering a change
-    notification on the peripheral device.
+    is successfully changed to \a newValue. The change must have been triggered
+    by calling \l writeCharacteristic(). If the write operation is not successful,
+    the \l error() signal is emitted using the \l CharacteristicWriteError flag.
 
-    \note Change notifications must first be activated via the characteristic's
-    \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
-    descriptor.
+    \note If \l writeCharacteristic() is called using the \l WriteWithoutResponse mode,
+    this signal and the \l error() are never emitted.
 
     \sa writeCharacteristic()
+ */
+
+/*!
+    \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
+
+    This signal is emitted when the value of \a characteristic is changed
+    by an event on the peripheral. The \a newValue parameter contains the
+    updated value of the \a characteristic.
+
+    The signal emission implies that change notifications must
+    have been activated via the characteristic's
+    \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
+    descriptor prior to the change event on the peripheral.
  */
 
 /*!
     \fn void QLowEnergyService::descriptorWritten(const QLowEnergyDescriptor &descriptor, const QByteArray &newValue)
 
     This signal is emitted when the value of \a descriptor
-    is successfully changed to \a newValue. The change may have been caused
-    by calling \l writeDescriptor() or otherwise triggering a change
-    notification on the peripheral device.
+    is successfully changed to \a newValue. The change must have been caused
+    by calling \l writeDescriptor().
 
     \sa writeDescriptor()
  */
@@ -255,6 +266,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
             this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
     connect(p.data(), SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
             this, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+    connect(p.data(), SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)),
+            this, SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
     connect(p.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)),
             this, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
 }
@@ -448,8 +461,8 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
 
 /*!
     Writes \a newValue as value for the \a characteristic. If the operation is successful,
-    the \l characteristicChanged() signal is emitted; otherwise the \l CharacteristicWriteError
-    is emitted.
+    the \l characteristicWritten() signal is emitted; otherwise the \l CharacteristicWriteError
+    is set.
 
     The \a mode parameter determines whether the remote device should send a write
     confirmation. The to-be-written \a characteristic must support the relevant
