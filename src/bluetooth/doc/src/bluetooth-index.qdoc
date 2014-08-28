@@ -35,7 +35,9 @@ The Bluetooth API provides connectivity between Bluetooth enabled devices.
 
 Currently the API is supported on \l{Qt for Android}{Android},
 \l{Qt for BlackBerry}{BlackBerry 10} and
-\l{Qt for Linux/X11}{Linux} (\l{http://www.bluez.org}{Bluez 4.x}).
+\l{Qt for Linux/X11}{Linux} (\l{http://www.bluez.org}{BlueZ 4.x/5.x}).
+
+
 
 \section1 Overview
 
@@ -44,6 +46,12 @@ has a reasonably high data transfer rate of 2.1 Mbit/s, which makes it ideal
 for transferring data between devices. Bluetooth connectivity is based on
 basic device management, such as scanning for devices, gathering information
 about them, and exchanging data between them.
+
+This Qt release contains a Technology Preview of the new Qt Bluetooth
+Low Energy API. Further details can be found in the
+\l {Bluetooth Low Energy Overview}{Bluetooth Low Energy Overview} section.
+The Tech Preview supports BlueZ 4 & 5 based Linux systems. Support for
+further platforms is being planned.
 
 \section1 Getting started
 
@@ -61,7 +69,8 @@ import statement in your \c .qml file:
 
 \section2 Guides
 \list
-    \li \l {Qt Bluetooth Overview}
+    \li \l {Qt Bluetooth Overview}{Classic Bluetooth Overview}
+    \li \l {Bluetooth Low Energy Overview} (Tech Preview)
 \endlist
 
 \section2 Reference
@@ -77,8 +86,8 @@ import statement in your \c .qml file:
         \li \l {scanner}{QML Bluetooth Scanner}
         \li \l {picturetransfer}{QML Bluetooth Picture Push}
         \li \l {pingpong}{QML Bluetooth PingPong}
+        \li \l {heartlistener}{Bluetooth Low Energy Heart Listener}
         \li \l {lowenergyscanner}{Bluetooth Low Energy Scanner}
-        \li \l {heartlistener}{Heart Listener}
     \endlist
     \li C++
     \list

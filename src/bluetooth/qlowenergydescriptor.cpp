@@ -6,35 +6,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -54,9 +46,18 @@ QT_BEGIN_NAMESPACE
     \since 5.4
 
     QLowEnergyDescriptor provides information about a Bluetooth Low Energy
-    descriptor's name, UUID, value and handle. Descriptors are contained in the
-    Bluetooth Low Energy characteristic and they provide additional information
-    about the characteristic (data format, notification activation, etc).
+    descriptor's \l name(), \l uuid(), \l value() and \l handle(). Descriptors are
+    encapsulated by Bluetooth Low Energy characteristics and provide additional
+    centextual information about the characteristic (data format, notification activation
+    and so on).
+
+    The descriptor value may be written via the \l QLowEnergyService instance
+    that manages the service to which this descriptor belongs. the
+    \l {QLowEnergyService::writeDescriptor()} function writes the new value.
+    The \l {QLowEnergyService::descriptorChanged()} signal
+    is emitted upon success. The \l value() of this object is automatically updated accordingly.
+
+    \sa QLowEnergyService, QLowEnergyCharacteristic
 */
 
 struct QLowEnergyDescriptorPrivate
@@ -66,7 +67,8 @@ struct QLowEnergyDescriptorPrivate
 };
 
 /*!
-    Construct a new QLowEnergyDescriptor.
+    Construct a new QLowEnergyDescriptor. A default-constructed instance
+    of this class is always invalid.
 */
 QLowEnergyDescriptor::QLowEnergyDescriptor():
     d_ptr(0), data(0)
@@ -74,7 +76,7 @@ QLowEnergyDescriptor::QLowEnergyDescriptor():
 }
 
 /*!
-    Construct a new QLowEnergyDesxcriptor that is a copy of \a other.
+    Construct a new QLowEnergyDescriptor that is a copy of \a other.
 
     The two copies continue to share the same underlying data which does not detach
     upon write.
@@ -114,7 +116,7 @@ QLowEnergyDescriptor::~QLowEnergyDescriptor()
 
 /*!
     Makes a copy of \a other and assigns it to this QLowEnergyDescriptor object.
-    The two copies continue to share the same service and registration details.
+    The two copies continue to share the same service and controller details.
 */
 QLowEnergyDescriptor &QLowEnergyDescriptor::operator=(const QLowEnergyDescriptor &other)
 {
@@ -140,7 +142,8 @@ QLowEnergyDescriptor &QLowEnergyDescriptor::operator=(const QLowEnergyDescriptor
     Returns \c true if \a other is equal to this QLowEnergyCharacteristic; otherwise \c false.
 
     Two QLowEnergyDescriptor instances are considered to be equal if they refer to
-    the same descriptor on the same remote Bluetooth Low Energy device.
+    the same descriptor on the same remote Bluetooth Low Energy device or both
+    instances have been default-constructed.
  */
 bool QLowEnergyDescriptor::operator==(const QLowEnergyDescriptor &other) const
 {
@@ -165,7 +168,8 @@ bool QLowEnergyDescriptor::operator==(const QLowEnergyDescriptor &other) const
     Returns \c true if \a other is not equal to this QLowEnergyCharacteristic; otherwise \c false.
 
     Two QLowEnergyDescriptor instances are considered to be equal if they refer to
-    the same descriptor on the same remote Bluetooth Low Energy device.
+    the same descriptor on the same remote Bluetooth Low Energy device  or both
+    instances have been default-constructed.
  */
 bool QLowEnergyDescriptor::operator!=(const QLowEnergyDescriptor &other) const
 {
@@ -175,14 +179,15 @@ bool QLowEnergyDescriptor::operator!=(const QLowEnergyDescriptor &other) const
 /*!
     Returns \c true if the QLowEnergyDescriptor object is valid, otherwise returns \c false.
 
-    An invalid descriptor instance is not associated to any service
-    or the associated service is no longer valid due to for example a disconnect from
-    the underlying Bluetooth Low Energy device. Once the object is invalid
+    An invalid descriptor instance is not associated with any service (default-constructed)
+    or the associated service is no longer valid due to a disconnect from
+    the underlying Bluetooth Low Energy device, for example. Once the object is invalid
     it cannot become valid anymore.
 
     \note If a QLowEnergyDescriptor instance turns invalid due to a disconnect
     from the underlying device, the information encapsulated by the current
-    instance remains as it was at the time of the disconnect.
+    instance remains as it was at the time of the disconnect. Therefore it can be
+    retrieved after the disconnect event.
 */
 bool QLowEnergyDescriptor::isValid() const
 {
@@ -196,7 +201,8 @@ bool QLowEnergyDescriptor::isValid() const
 }
 
 /*!
-    Returns the UUID of this descriptor.
+    Returns the UUID of this descriptor if \l isValid() returns \c true; otherwise a
+    \l {QUuid::isNull()}{null} UUID.
 */
 QBluetoothUuid QLowEnergyDescriptor::uuid() const
 {
@@ -211,7 +217,8 @@ QBluetoothUuid QLowEnergyDescriptor::uuid() const
 }
 
 /*!
-    Returns the handle of the descriptor.
+    Returns the handle of the descriptor or \c 0 if the handle
+    cannot be accessed on the platform.
 */
 QLowEnergyHandle QLowEnergyDescriptor::handle() const
 {
@@ -223,6 +230,9 @@ QLowEnergyHandle QLowEnergyDescriptor::handle() const
 
 /*!
     Returns the value of the descriptor.
+
+    A descriptor value may be updated using
+    \l QLowEnergyService::writeDescriptor().
 */
 QByteArray QLowEnergyDescriptor::value() const
 {
@@ -237,9 +247,15 @@ QByteArray QLowEnergyDescriptor::value() const
 }
 
 /*!
-    Returns the name of the descriptor type.
+    Returns the human-readable name of the descriptor.
 
-    \sa type()
+    The name is based on the descriptor's \l type(). The complete list
+    of descriptor types can be found under
+    \l {https://developer.bluetooth.org/gatt/descriptors/Pages/DescriptorsHomePage.aspx}{Bluetooth.org Descriptors}.
+
+    The returned string is empty if the \l type() is unknown.
+
+    \sa type(), QBluetoothUuid::descriptorToString()
 */
 
 QString QLowEnergyDescriptor::name() const
@@ -248,7 +264,9 @@ QString QLowEnergyDescriptor::name() const
 }
 
 /*!
-    Returns the type of descriptor.
+    Returns the type of the descriptor.
+
+    \sa name()
  */
 QBluetoothUuid::DescriptorType QLowEnergyDescriptor::type() const
 {
