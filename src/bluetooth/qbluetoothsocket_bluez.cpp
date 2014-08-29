@@ -162,10 +162,10 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
             addr.l2_cid = htobs(port);
             addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
         } else {
-            addr.l2_psm = port;
+            addr.l2_psm = htobs(port);
         }
 #else
-        addr.l2_psm = port;
+        addr.l2_psm = htobs(port);
 #endif
 
         convertAddress(address.toUInt64(), addr.l2_bdaddr.b);
