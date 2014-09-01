@@ -8,3 +8,4 @@ blackberry {
 }
 
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+osx:CONFIG += insignificant_test
