@@ -193,7 +193,7 @@ private slots:
 
 #ifdef QT_BLUEZ_BLUETOOTH
 public:
-    bool isLowEnergySocket;
+    quint8 lowEnergySocketType;
 #endif
 };
 

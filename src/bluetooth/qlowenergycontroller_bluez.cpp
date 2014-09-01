@@ -205,7 +205,10 @@ void QLowEnergyControllerPrivate::connectToDevice()
             this, SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
     connect(l2cpSocket, SIGNAL(readyRead()), this, SLOT(l2cpReadyRead()));
 
-    l2cpSocket->d_ptr->isLowEnergySocket = true;
+    if (addressType == QLowEnergyController::PublicAddress)
+        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_PUBLIC;
+    else if (addressType == QLowEnergyController::RandomAddress)
+        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_RANDOM;
 
     // bind the socket to the local device
     int sockfd = l2cpSocket->socketDescriptor();

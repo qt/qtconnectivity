@@ -69,6 +69,7 @@
 #define L2CAP_LM_SECURE     0x0020
 
 #define BDADDR_LE_PUBLIC    0x01
+#define BDADDR_LE_RANDOM    0x02
 
 /* Byte order conversions */
 #if __BYTE_ORDER == __LITTLE_ENDIAN

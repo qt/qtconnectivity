@@ -61,6 +61,11 @@ public:
         ClosingState,
     };
 
+    enum RemoteAddressType {
+        PublicAddress = 0,
+        RandomAddress
+    };
+
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      QObject *parent = 0);
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
@@ -72,6 +77,9 @@ public:
     QBluetoothAddress remoteAddress() const;
 
     ControllerState state() const;
+
+    RemoteAddressType remoteAddressType() const;
+    void setRemoteAddressType(RemoteAddressType type);
 
     void connectToDevice();
     void disconnectFromDevice();

@@ -106,6 +106,8 @@ public:
     // list of all found service uuids
     ServiceDataMap serviceList;
 
+    QLowEnergyController::RemoteAddressType addressType;
+
 private:
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QBluetoothSocket *l2cpSocket;
