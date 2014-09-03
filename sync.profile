@@ -17,6 +17,3 @@
     "qtxmlpatterns" => "",
     "qtandroidextras" => "",
 );
-
-my @gato_headers = ("gatoattclient.h", "gatoperipheral.h");
-@ignore_for_master_contents = ( @gato_headers );

@@ -45,7 +45,6 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothlocaldevice.h>
-#include <qlowenergyserviceinfo.h>
 #include <qbluetoothuuid.h>
 
 
@@ -77,8 +76,6 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
     connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
             this, SLOT(addService(QBluetoothServiceInfo)));
     connect(discoveryAgent, SIGNAL(finished()), ui->status, SLOT(hide()));
-    connect(discoveryAgent, SIGNAL(serviceDiscovered(const QLowEnergyServiceInfo&)),
-            this, SLOT(addLowEnergyService(const QLowEnergyServiceInfo&)));
 
     discoveryAgent->start();
 }
@@ -102,11 +99,3 @@ void ServiceDiscoveryDialog::addService(const QBluetoothServiceInfo &info)
 
     ui->list->addItem(line);
 }
-
-void ServiceDiscoveryDialog::addLowEnergyService(const QLowEnergyServiceInfo &gatt)
-{
-    QString line = gatt.serviceName();
-
-    ui->list->addItem(line);
-}
-

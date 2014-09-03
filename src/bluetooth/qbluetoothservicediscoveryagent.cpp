@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -54,7 +46,10 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothServiceDiscoveryAgent class enables you to query for
     Bluetooth services.
 
-    To query the services provided by all contactable Bluetooth devices:
+    The discovery process relies on the Bluetooth Service Discovery Process (SDP).
+    The following steps are required to query the services provided by all contactable
+    Bluetooth devices:
+
     \list
     \li create an instance of QBluetoothServiceDiscoveryAgent,
     \li connect to either the serviceDiscovered() or finished() signals,
@@ -63,16 +58,22 @@ QT_BEGIN_NAMESPACE
 
     \snippet doc_src_qtbluetooth.cpp service_discovery
 
-    By default a minimal service discovery is performed. In this mode, the QBluetotohServiceInfo
-    objects returned are guaranteed to contain only device and service UUID information. Depending
+    By default a minimal service discovery is performed. In this mode, the returned \l QBluetoothServiceInfo
+    objects are guaranteed to contain only device and service UUID information. Depending
     on platform and device capabilities, other service information may also be available. For most
     use cases this is adequate as QBluetoothSocket::connectToService() will perform additional
-    discovery if required.  If full service information is required, pass \l FullDiscovery as the
+    discovery if required.  If the full service information is required, pass \l FullDiscovery as the
     discoveryMode parameter to start().
 
     This class may internally utilize \l QBluetoothDeviceDiscoveryAgent to find unknown devices.
 
-    \sa QBluetoothDeviceDiscoveryAgent
+    The service discovery may find Bluetooth Low Energy services too if the target device
+    is a combination of a classic and Low Energy device. Those devices are required to advertise
+    their Low Energy services via SDP. If the target device only supports Bluetooth Low
+    Energy services, it is likely to not advertise them via SDP. The \l QLowEnergyController class
+    should be utilized to perform the service discovery on Low Energy devices.
+
+    \sa QBluetoothDeviceDiscoveryAgent, QLowEnergyController
 */
 
 /*!
@@ -102,12 +103,12 @@ QT_BEGIN_NAMESPACE
     \fn QBluetoothServiceDiscoveryAgent::serviceDiscovered(const QBluetoothServiceInfo &info)
 
     This signal is emitted when the Bluetooth service described by \a info is discovered.
-*/
 
-/*!
-    \fn QBluetoothServiceDiscoveryAgent::serviceDiscovered(const QLowEnergyServiceInfo &info)
+    \note The passed \l QBluetoothServiceInfo parameter may contain a Bluetooth Low Energy
+    service if the target device advertises the service via SDP. This is required from device
+    which support both, classic Bluetooth (BaseRate) and Low Energy services.
 
-    This signal is emitted when the Bluetooth Low Energy service described by \a info is discovered.
+    \sa QBluetoothDeviceInfo::coreConfigurations()
 */
 
 /*!
