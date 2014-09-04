@@ -60,6 +60,8 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
 
+#ifndef QT_OSX_BLUETOOTH
+
 class QBluetoothServiceInfoPrivate
     : public QObject
 {
@@ -92,6 +94,8 @@ private:
 
     mutable bool registered;
 };
+
+#endif
 
 QT_END_NAMESPACE
 

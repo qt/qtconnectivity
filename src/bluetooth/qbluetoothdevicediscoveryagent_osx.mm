@@ -42,6 +42,7 @@
 #include "qbluetoothdevicediscoveryagent.h"
 #include "osx/osxbtdeviceinquiry_p.h"
 #include "qbluetoothlocaldevice.h"
+#include "osx/osxbtsdpinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osx/osxbtutility_p.h"
 #include "qbluetoothhostinfo.h"
@@ -256,7 +257,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(IOBluetoothDeviceInquiry
     QT_BT_MAC_AUTORELEASEPOOL;
 
     // Let's collect some info about this device:
-    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_bt_address([device getAddress]));
+    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull()) {
         qCWarning(QT_BT_OSX) << "QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(), "
                                 "invalid Bluetooth address";
@@ -274,10 +275,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(IOBluetoothDeviceInquiry
                                                      QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
     deviceInfo.setRssi(device.RSSI);
 
-    // TODO: check if I can extract services' uuids from device.services
-    // and use them.
-    deviceInfo.setServiceUuids(QList<QBluetoothUuid>(),
-                               QBluetoothDeviceInfo::DataIncomplete);
+    const QList<QBluetoothUuid> uuids =OSXBluetooth::extract_services_uuids(device);
+    deviceInfo.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
 
     for (int i = 0, e = discoveredDevices.size(); i < e; ++i) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {

@@ -49,7 +49,11 @@
 #include <Foundation/Foundation.h>
 #include <IOBluetooth/Bluetooth.h>
 
+@class IOBluetoothSDPUUID;
+
 QT_BEGIN_NAMESPACE
+
+class QBluetoothUuid;
 
 namespace OSXBluetooth {
 
@@ -67,7 +71,17 @@ public:
     explicit ObjCScopedPointer(T *ptr = Q_NULLPTR) : QScopedPointer(ptr){}
     operator T*() const
     {
-        return static_cast<T *>(this->data());
+        return data();
+    }
+
+    T *data()const
+    {
+        return static_cast<T *>(QScopedPointer::data());
+    }
+
+    T *take()
+    {
+        return static_cast<T *>(QScopedPointer::take());
     }
 };
 
@@ -135,9 +149,12 @@ private:
     T *m_ptr;
 };
 
-QString qt_bt_address(NSString *address);
-class QBluetoothAddress qt_bt_address(const BluetoothDeviceAddress *address);
+QString qt_address(NSString *address);
+class QBluetoothAddress qt_address(const BluetoothDeviceAddress *address);
 BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
+
+ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);
+QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid);
 
 } // namespace OSXBluetooth
 

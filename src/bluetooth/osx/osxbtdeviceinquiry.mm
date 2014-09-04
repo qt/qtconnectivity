@@ -71,8 +71,7 @@ using namespace QT_NAMESPACE;
 - (id)initWithDelegate:(OSXBluetooth::DeviceInquiryDelegate *)delegate
 {
     if (self = [super init]) {
-        Q_ASSERT_X(delegate != Q_NULLPTR, "-initWithDelegate:",
-                   "invalid device inquiry delegate (null)");
+        Q_ASSERT_X(delegate, "-initWithDelegate:", "invalid device inquiry delegate (null)");
 
         m_inquiry = [[IOBluetoothDeviceInquiry inquiryWithDelegate:self] retain];
 
@@ -127,8 +126,7 @@ using namespace QT_NAMESPACE;
 - (IOReturn)stop
 {
     if (m_active) {
-        Q_ASSERT_X(m_inquiry != nil, "-stop",
-                   "active but nil inquiry");
+        Q_ASSERT_X(m_inquiry, "-stop", "active but nil inquiry");
 
         m_active = false;
         const IOReturn res = [m_inquiry stop];
@@ -151,7 +149,7 @@ using namespace QT_NAMESPACE;
 
     m_active = false;
 
-    Q_ASSERT_X(m_delegate != Q_NULLPTR, "-deviceInquiryComplete:error:aborted",
+    Q_ASSERT_X(m_delegate, "-deviceInquiryComplete:error:aborted",
                "invalid device inquiry delegate (null)");
 
     if (error != kIOReturnSuccess)
@@ -166,7 +164,7 @@ using namespace QT_NAMESPACE;
     if (sender != m_inquiry) // Can never happen in the current version.
         return;
 
-    Q_ASSERT_X(m_delegate != Q_NULLPTR, "-deviceInquiryDeviceFound:device:",
+    Q_ASSERT_X(m_delegate, "-deviceInquiryDeviceFound:device:",
                "invalid device inquiry delegate (null)");
 
     m_delegate->deviceFound(sender, device);

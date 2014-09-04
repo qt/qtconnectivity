@@ -82,9 +82,9 @@ using namespace QT_NAMESPACE;
       delegate:(OSXBluetooth::PairingDelegate *)object
 {
     if (self = [super init]) {
-        Q_ASSERT_X(address.isNull() == false, "-initWithTarget:delegate",
+        Q_ASSERT_X(!address.isNull(), "-initWithTarget:delegate",
                    "invalid target address");
-        Q_ASSERT_X(object != Q_NULLPTR, "-initWithTarget:delegate:",
+        Q_ASSERT_X(object, "-initWithTarget:delegate:",
                    "invalid delegate (null)");
 
         m_targetAddress = address;
@@ -108,8 +108,7 @@ using namespace QT_NAMESPACE;
     if (m_active)
         return kIOReturnBusy;
 
-    Q_ASSERT_X(m_targetAddress.isNull() == false, "-start",
-               "invalid target address");
+    Q_ASSERT_X(!m_targetAddress.isNull(), "-start", "invalid target address");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -196,7 +195,7 @@ using namespace QT_NAMESPACE;
     if (sender != m_pairing) // Can never happen.
         return;
 
-    Q_ASSERT_X(m_object != Q_NULLPTR, "-devicePairingUserConfirmationRequest:numericValue:",
+    Q_ASSERT_X(m_object, "-devicePairingUserConfirmationRequest:numericValue:",
                "invalid delegate (null)");
 
     m_object->requestUserConfirmation(self, numericValue);
@@ -213,7 +212,7 @@ using namespace QT_NAMESPACE;
 
 - (void)devicePairingFinished:(id)sender error:(IOReturn)error
 {
-    Q_ASSERT_X(m_object != Q_NULLPTR, "-devicePairingFinished:",
+    Q_ASSERT_X(m_object, "-devicePairingFinished:",
                "invalid delegate (null)");
 
     if (sender != m_pairing) // Can never happen though.

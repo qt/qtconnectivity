@@ -107,7 +107,7 @@ using namespace QT_NAMESPACE;
 
     // All Obj-C objects are autoreleased.
 
-    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_bt_address([device getAddress]));
+    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull())
         return;
 
@@ -128,11 +128,9 @@ using namespace QT_NAMESPACE;
     QT_BT_MAC_AUTORELEASEPOOL;
 
     [notification unregister];//?
-
-    // Does IOBluetoothUserNotification override isEqual?
     [foundConnections removeObject:notification];
 
-    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_bt_address([device getAddress]));
+    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull())
         return;
 

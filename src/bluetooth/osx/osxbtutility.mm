@@ -41,8 +41,14 @@
 
 #include "qbluetoothaddress.h"
 #include "osxbtutility_p.h"
+#include "qbluetoothuuid.h"
 
 #include <QtCore/qstring.h>
+
+#import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
+
+#include <algorithm>
+#include <limits>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,7 +56,7 @@ Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.osx")
 
 namespace OSXBluetooth {
 
-QString qt_bt_address(NSString *address)
+QString qt_address(NSString *address)
 {
     if (address && address.length) {
         NSString *const fixed = [address stringByReplacingOccurrencesOfString:@"-" withString:@":"];
@@ -60,7 +66,7 @@ QString qt_bt_address(NSString *address)
     return QString();
 }
 
-QBluetoothAddress qt_bt_address(const BluetoothDeviceAddress *a)
+QBluetoothAddress qt_address(const BluetoothDeviceAddress *a)
 {
     if (a) {
         // TODO: can a byte order be different in BluetoothDeviceAddress?
@@ -90,6 +96,29 @@ BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &qAddress)
     }
 
     return a;
+}
+
+ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid)
+{
+    const unsigned nBytes = 128 / std::numeric_limits<unsigned char>::digits;
+    const quint128 intVal(uuid.toUInt128());
+
+    const ObjCStrongReference<IOBluetoothSDPUUID> iobtUUID([IOBluetoothSDPUUID uuidWithBytes:intVal.data
+                                                           length:nBytes], true);
+    return iobtUUID;
+}
+
+QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid)
+{
+    QBluetoothUuid qtUuid;
+    if (!uuid || [uuid length] != 16) // TODO: issue any diagnostic?
+        return qtUuid;
+
+    // TODO: insure the correct byte-order!!!
+    quint128 uuidVal = {};
+    const quint8 *const source = static_cast<const quint8 *>([uuid bytes]);
+    std::copy(source, source + 16, uuidVal.data);
+    return QBluetoothUuid(uuidVal);
 }
 
 }

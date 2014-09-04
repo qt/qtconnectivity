@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTPAIRINGDELEGATE_P_H
-#define OSXBTPAIRINGDELEGATE_P_H
+#ifndef OSXBTDEVICEPAIR_P_H
+#define OSXBTDEVICEPAIR_P_H
 
 #include "qbluetoothaddress.h"
 #include "osxbtutility_p.h"

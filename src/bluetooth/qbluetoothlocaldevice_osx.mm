@@ -381,7 +381,7 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 
     if (isValid()) {
         if (NSString *const nsa = [d_ptr->hostController addressAsString])
-            return QBluetoothAddress(OSXBluetooth::qt_bt_address(nsa));
+            return QBluetoothAddress(OSXBluetooth::qt_address(nsa));
 
         qCCritical(QT_BT_OSX) << "QBluetoothLocalDevice::address(), "
                                  "failed to obtain an address";
@@ -429,7 +429,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
     NSArray *const pairedDevices = [IOBluetoothDevice pairedDevices];
     for (IOBluetoothDevice *device in pairedDevices) {
         if ([device isConnected]) {
-            const QBluetoothAddress address(OSXBluetooth::qt_bt_address([device getAddress]));
+            const QBluetoothAddress address(OSXBluetooth::qt_address([device getAddress]));
             if (!address.isNull())
                 connectedDevices.append(address);
         }
