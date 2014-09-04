@@ -375,6 +375,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     will be implicitly converted into a QBluetoothUuid when necessary.
 
     \value CharacteristicExtendedProperties  Descriptor defines additional Characteristic Properties.
+                                             The existence of this descriptor is indicated by the
+                                             \l QLowEnergyCharacteristic::ExtendedProperty flag.
     \value CharacteristicUserDescription     Descriptor provides a textual user description for a characteristic value.
     \value ClientCharacteristicConfiguration Descriptor defines how the characteristic may be configured by a specific client.
     \value ServerCharacteristicConfiguration Descriptor defines how the characteristic descriptor is associated with may be

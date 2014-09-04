@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     \value Notify                   Permits notification of characteristic values.
     \value Indicate                 Permits indications of characteristic values.
     \value WriteSigned              Permits signed writes of the GATT characteristic values.
-    \value ExtendedProperty         Additional characteristic properties are defined in the characteristic
+    \value ExtendedProperty         Additional characteristic properties are defined in the characteristic's
                                     extended properties descriptor.
 
     \sa properties()

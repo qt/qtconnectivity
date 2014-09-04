@@ -451,7 +451,7 @@ QLowEnergyController::ControllerState QLowEnergyController::state() const
     Returns the type of \l remoteAddress(). By default, this value is initialized
     to \l PublicAddress.
 
-    \sa setRemoteAddressType
+    \sa setRemoteAddressType()
  */
 QLowEnergyController::RemoteAddressType QLowEnergyController::remoteAddressType() const
 {
