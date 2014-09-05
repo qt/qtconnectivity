@@ -76,15 +76,15 @@
 #define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
 
 //GATT command sizes in bytes
-#define FIND_INFO_REQUEST_SIZE 5
-#define GRP_TYPE_REQ_SIZE 7
-#define READ_BY_TYPE_REQ_SIZE 7
-#define READ_REQUEST_SIZE 3
-#define READ_BLOB_REQUEST_SIZE 5
-#define WRITE_REQUEST_SIZE 3    // same size for WRITE_COMMAND
-#define PREPARE_WRITE_SIZE 5
-#define EXECUTE_WRITE_SIZE 2
-#define MTU_EXCHANGE_SIZE 3
+#define FIND_INFO_REQUEST_HEADER_SIZE 5
+#define GRP_TYPE_REQ_HEADER_SIZE 7
+#define READ_BY_TYPE_REQ_HEADER_SIZE 7
+#define READ_REQUEST_HEADER_SIZE 3
+#define READ_BLOB_REQUEST_HEADER_SIZE 5
+#define WRITE_REQUEST_HEADER_SIZE 3    // same size for WRITE_COMMAND header
+#define PREPARE_WRITE_HEADER_SIZE 5
+#define EXECUTE_WRITE_HEADER_SIZE 2
+#define MTU_EXCHANGE_HEADER_SIZE 3
 
 // GATT error codes
 #define ATT_ERROR_INVALID_HANDLE        0x01
@@ -873,15 +873,15 @@ void QLowEnergyControllerPrivate::sendReadByGroupRequest(
         QLowEnergyHandle start, QLowEnergyHandle end, quint16 type)
 {
     //call for primary and secondary services
-    quint8 packet[GRP_TYPE_REQ_SIZE];
+    quint8 packet[GRP_TYPE_REQ_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
     bt_put_unaligned(htobs(start), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(end), (quint16 *) &packet[3]);
     bt_put_unaligned(htobs(type), (quint16 *) &packet[5]);
 
-    QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
+    QByteArray data(GRP_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  GRP_TYPE_REQ_HEADER_SIZE);
     qCDebug(QT_BT_BLUEZ) << "Sending read_by_group_type request, startHandle:" << hex
              << start << "endHandle:" << end << type;
 
@@ -911,15 +911,15 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         QLowEnergyHandle nextHandle, quint16 attributeType)
 {
-    quint8 packet[READ_BY_TYPE_REQ_SIZE];
+    quint8 packet[READ_BY_TYPE_REQ_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
     bt_put_unaligned(htobs(nextHandle), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(serviceData->endHandle), (quint16 *) &packet[3]);
     bt_put_unaligned(htobs(attributeType), (quint16 *) &packet[5]);
 
-    QByteArray data(READ_BY_TYPE_REQ_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet,  READ_BY_TYPE_REQ_SIZE);
+    QByteArray data(READ_BY_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  READ_BY_TYPE_REQ_HEADER_SIZE);
     qCDebug(QT_BT_BLUEZ) << "Sending read_by_type request, startHandle:" << hex
              << nextHandle << "endHandle:" << serviceData->endHandle
              << "type:" << attributeType << "packet:" << data.toHex();
@@ -945,7 +945,7 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
 void QLowEnergyControllerPrivate::readServiceValues(
         const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
-    quint8 packet[READ_REQUEST_SIZE];
+    quint8 packet[READ_REQUEST_HEADER_SIZE];
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (readCharacteristics)
             qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
@@ -1009,8 +1009,8 @@ void QLowEnergyControllerPrivate::readServiceValues(
         packet[0] = ATT_OP_READ_REQUEST;
         bt_put_unaligned(htobs(pair.first), (quint16 *) &packet[1]);
 
-        QByteArray data(READ_REQUEST_SIZE, Qt::Uninitialized);
-        memcpy(data.data(), packet,  READ_REQUEST_SIZE);
+        QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+        memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
 
         Request request;
         request.payload = data;
@@ -1039,7 +1039,7 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
-    quint8 packet[READ_REQUEST_SIZE];
+    quint8 packet[READ_REQUEST_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BLOB_REQUEST;
 
@@ -1065,8 +1065,8 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
     bt_put_unaligned(htobs(handleToRead), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]);
 
-    QByteArray data(READ_BLOB_REQUEST_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, READ_BLOB_REQUEST_SIZE);
+    QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, READ_BLOB_REQUEST_HEADER_SIZE);
 
     Request request;
     request.payload = data;
@@ -1123,12 +1123,12 @@ void QLowEnergyControllerPrivate::exchangeMTU()
 {
     qCDebug(QT_BT_BLUEZ) << "Exchanging MTU";
 
-    quint8 packet[MTU_EXCHANGE_SIZE];
+    quint8 packet[MTU_EXCHANGE_HEADER_SIZE];
     packet[0] = ATT_OP_EXCHANGE_MTU_REQUEST;
     bt_put_unaligned(htobs(ATT_MAX_LE_MTU), (quint16 *) &packet[1]);
 
-    QByteArray data(MTU_EXCHANGE_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, MTU_EXCHANGE_SIZE);
+    QByteArray data(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, MTU_EXCHANGE_HEADER_SIZE);
 
     Request request;
     request.payload = data;
@@ -1149,7 +1149,7 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     qCDebug(QT_BT_BLUEZ) << "Sending find_info request" << hex
                          << pendingCharHandles << startingHandle;
 
-    quint8 packet[FIND_INFO_REQUEST_SIZE];
+    quint8 packet[FIND_INFO_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_FIND_INFORMATION_REQUEST;
 
     const QLowEnergyHandle charStartHandle = startingHandle;
@@ -1162,8 +1162,8 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     bt_put_unaligned(htobs(charStartHandle), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(charEndHandle), (quint16 *) &packet[3]);
 
-    QByteArray data(FIND_INFO_REQUEST_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, FIND_INFO_REQUEST_SIZE);
+    QByteArray data(FIND_INFO_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, FIND_INFO_REQUEST_HEADER_SIZE);
 
     Request request;
     request.payload = data;
@@ -1183,7 +1183,7 @@ void QLowEnergyControllerPrivate::sendNextPrepareWriteRequest(
     Q_ASSERT(service);
     const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
 
-    quint8 packet[PREPARE_WRITE_SIZE];
+    quint8 packet[PREPARE_WRITE_HEADER_SIZE];
     packet[0] = ATT_OP_PREPARE_WRITE_REQUEST;
     bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]); // attribute handle
     bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]); // offset into newValue
@@ -1192,16 +1192,16 @@ void QLowEnergyControllerPrivate::sendNextPrepareWriteRequest(
                          << hex << charHandle;
 
 
-    const int maxAvailablePayload = mtuSize - PREPARE_WRITE_SIZE;
+    const int maxAvailablePayload = mtuSize - PREPARE_WRITE_HEADER_SIZE;
     const int requiredPayload = qMin(newValue.size() - offset, maxAvailablePayload);
-    const int dataSize = PREPARE_WRITE_SIZE + requiredPayload;
+    const int dataSize = PREPARE_WRITE_HEADER_SIZE + requiredPayload;
 
     Q_ASSERT((offset + requiredPayload) <= newValue.size());
     Q_ASSERT(dataSize <= mtuSize);
 
     QByteArray data(dataSize, Qt::Uninitialized);
-    memcpy(data.data(), packet, PREPARE_WRITE_SIZE);
-    memcpy(&(data.data()[PREPARE_WRITE_SIZE]), &(newValue.constData()[offset]),
+    memcpy(data.data(), packet, PREPARE_WRITE_HEADER_SIZE);
+    memcpy(&(data.data()[PREPARE_WRITE_HEADER_SIZE]), &(newValue.constData()[offset]),
                                                requiredPayload);
 
     Request request;
@@ -1225,15 +1225,15 @@ void QLowEnergyControllerPrivate::sendExecuteWriteRequest(
         const QLowEnergyHandle charHandle, const QByteArray &newValue,
         bool isCancelation)
 {
-    quint8 packet[EXECUTE_WRITE_SIZE];
+    quint8 packet[EXECUTE_WRITE_HEADER_SIZE];
     packet[0] = ATT_OP_EXECUTE_WRITE_REQUEST;
     if (isCancelation)
         packet[1] = 0x00; // cancel pending write prepare requests
     else
         packet[1] = 0x01; // execute pending write prepare requests
 
-    QByteArray data(EXECUTE_WRITE_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, EXECUTE_WRITE_SIZE);
+    QByteArray data(EXECUTE_WRITE_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, EXECUTE_WRITE_HEADER_SIZE);
 
     qCDebug(QT_BT_BLUEZ) << "Sending Execute Write Request for long characteristic value"
                          << hex << charHandle;
@@ -1265,11 +1265,11 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         return;
 
     const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
-    const int size = WRITE_REQUEST_SIZE + newValue.size();
+    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
 
-    quint8 packet[WRITE_REQUEST_SIZE];
+    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
     if (writeWithResponse) {
-        if (newValue.size() > (mtuSize - WRITE_REQUEST_SIZE)) {
+        if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
             sendNextPrepareWriteRequest(charHandle, newValue, 0);
             sendNextPendingRequest();
             return;
@@ -1285,8 +1285,8 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
 
     QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
+    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
                          << "(size:" << size << "with response:" << writeWithResponse << ")";
@@ -1321,13 +1321,13 @@ void QLowEnergyControllerPrivate::writeDescriptor(
     // sizeof(command) + sizeof(handle) + sizeof(newValue)
     const int size = 1 + 2 + newValue.size();
 
-    quint8 packet[WRITE_REQUEST_SIZE];
+    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_WRITE_REQUEST;
     bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
 
     QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
+    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
                          << "(size:" << size << ")";
