@@ -143,7 +143,11 @@ private:
                                 QLowEnergyHandle startingHandle);
     void processUnsolicitedReply(const QByteArray &msg);
     void exchangeMTU();
-
+    void sendExecuteWriteRequest(const QLowEnergyHandle charHandle,
+                                 const QByteArray &newValue,
+                                 bool isCancelation);
+    void sendNextPrepareWriteRequest(const QLowEnergyHandle charHandle,
+                                     const QByteArray &newValue, quint16 offset);
 
 private slots:
     void l2cpConnected();

@@ -66,6 +66,10 @@
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
 #define ATT_OP_WRITE_REQUEST            0x12 //write characteristic with response
 #define ATT_OP_WRITE_RESPONSE           0x13
+#define ATT_OP_PREPARE_WRITE_REQUEST    0x16 //write values longer than MTU-3 -> queueing
+#define ATT_OP_PREPARE_WRITE_RESPONSE   0x17
+#define ATT_OP_EXECUTE_WRITE_REQUEST    0x18 //write values longer than MTU-3 -> execute queue
+#define ATT_OP_EXECUTE_WRITE_RESPONSE   0x19
 #define ATT_OP_HANDLE_VAL_NOTIFICATION  0x1b //informs about value change
 #define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
 #define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
@@ -78,6 +82,8 @@
 #define READ_REQUEST_SIZE 3
 #define READ_BLOB_REQUEST_SIZE 5
 #define WRITE_REQUEST_SIZE 3    // same size for WRITE_COMMAND
+#define PREPARE_WRITE_SIZE 5
+#define EXECUTE_WRITE_SIZE 2
 #define MTU_EXCHANGE_SIZE 3
 
 // GATT error codes
@@ -793,13 +799,62 @@ void QLowEnergyControllerPrivate::processReply(
 
         const QByteArray newValue = request.reference2.toByteArray();
         if (!descriptorHandle) {
+            //TODO use updateValueOfCharacteristic()
             service->characteristicList[charHandle].value = newValue;
             QLowEnergyCharacteristic ch(service, charHandle);
             emit service->characteristicWritten(ch, newValue);
         } else {
+            //TODO use updateValueOfDescriptor()
             service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
             QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
             emit service->descriptorWritten(descriptor, newValue);
+        }
+    }
+        break;
+    case ATT_OP_PREPARE_WRITE_REQUEST: //error case
+    case ATT_OP_PREPARE_WRITE_RESPONSE:
+    {
+        //Prepare write command response
+        Q_ASSERT(request.command == ATT_OP_PREPARE_WRITE_REQUEST);
+
+        uint handleData = request.reference.toUInt();
+        const QLowEnergyHandle charHandle = (handleData & 0xffff);
+        const QByteArray newValue = request.reference2.toByteArray();
+        const int writtenPayload = ((handleData >> 16) & 0xffff);
+
+        if (isErrorResponse) {
+            //emits error on cancellation and aborts existing prepare reuqests
+            sendExecuteWriteRequest(charHandle, newValue, true);
+        } else {
+            if (writtenPayload < newValue.size()) {
+                sendNextPrepareWriteRequest(charHandle, newValue, writtenPayload);
+            } else {
+                sendExecuteWriteRequest(charHandle, newValue, false);
+            }
+        }
+    }
+        break;
+    case ATT_OP_EXECUTE_WRITE_REQUEST: //error case
+    case ATT_OP_EXECUTE_WRITE_RESPONSE:
+    {
+        //right now used in connection with long characteristic value writes
+        Q_ASSERT(request.command == ATT_OP_EXECUTE_WRITE_REQUEST);
+
+        uint handleData = request.reference.toUInt();
+        const QLowEnergyHandle charHandle = handleData & 0xffff;
+        bool wasCancellation = !((handleData >> 16) & 0xffff);
+        const QByteArray newValue = request.reference2.toByteArray();
+
+        QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+        Q_ASSERT(!service.isNull());
+
+        if (isErrorResponse || wasCancellation) {
+            // charHandle == 0 -> cancellation
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+        } else {
+            service->characteristicList[charHandle].value = newValue;
+            QLowEnergyCharacteristic ch(service, charHandle);
+            emit service->characteristicWritten(ch, newValue);
         }
     }
         break;
@@ -1120,6 +1175,84 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     sendNextPendingRequest();
 }
 
+void QLowEnergyControllerPrivate::sendNextPrepareWriteRequest(
+        const QLowEnergyHandle charHandle, const QByteArray &newValue,
+        quint16 offset)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+    Q_ASSERT(service);
+    const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
+
+    quint8 packet[PREPARE_WRITE_SIZE];
+    packet[0] = ATT_OP_PREPARE_WRITE_REQUEST;
+    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]); // attribute handle
+    bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]); // offset into newValue
+
+    qCDebug(QT_BT_BLUEZ) << "Writing long characteristic (prepare):"
+                         << hex << charHandle;
+
+
+    const int maxAvailablePayload = mtuSize - PREPARE_WRITE_SIZE;
+    const int requiredPayload = qMin(newValue.size() - offset, maxAvailablePayload);
+    const int dataSize = PREPARE_WRITE_SIZE + requiredPayload;
+
+    Q_ASSERT((offset + requiredPayload) <= newValue.size());
+    Q_ASSERT(dataSize <= mtuSize);
+
+    QByteArray data(dataSize, Qt::Uninitialized);
+    memcpy(data.data(), packet, PREPARE_WRITE_SIZE);
+    memcpy(&(data.data()[PREPARE_WRITE_SIZE]), &(newValue.constData()[offset]),
+                                               requiredPayload);
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_PREPARE_WRITE_REQUEST;
+    request.reference = (charHandle | ((offset + requiredPayload) << 16));
+    request.reference2 = newValue;
+    openRequests.enqueue(request);
+}
+
+/*!
+    Sends an "Execute Write Request" for a long characteristic write.
+    This cannot be used for executes in relation to long descriptor writes or
+    reliable write requests.
+
+    A cancellation removes all pending prepare write request on the GATT server.
+    Otherwise this function sends an execute request for all pending prepare
+    write requests.
+ */
+void QLowEnergyControllerPrivate::sendExecuteWriteRequest(
+        const QLowEnergyHandle charHandle, const QByteArray &newValue,
+        bool isCancelation)
+{
+    quint8 packet[EXECUTE_WRITE_SIZE];
+    packet[0] = ATT_OP_EXECUTE_WRITE_REQUEST;
+    if (isCancelation)
+        packet[1] = 0x00; // cancel pending write prepare requests
+    else
+        packet[1] = 0x01; // execute pending write prepare requests
+
+    QByteArray data(EXECUTE_WRITE_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, EXECUTE_WRITE_SIZE);
+
+    qCDebug(QT_BT_BLUEZ) << "Sending Execute Write Request for long characteristic value"
+                         << hex << charHandle;
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_EXECUTE_WRITE_REQUEST;
+    request.reference  = (charHandle | ((isCancelation ? 0x00 : 0x01) << 16));
+    request.reference2 = newValue;
+    openRequests.prepend(request);
+}
+
+
+/*!
+    Writes long (prepare write request), short (write request)
+    and writeWithoutResponse characteristic values.
+
+    TODO Reliable/prepare write across multiple characteristics is not supported
+ */
 void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
@@ -1132,14 +1265,22 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         return;
 
     const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
-    // sizeof(command) + sizeof(handle) + sizeof(newValue)
-    const int size = 1 + 2 + newValue.size();
+    const int size = WRITE_REQUEST_SIZE + newValue.size();
 
     quint8 packet[WRITE_REQUEST_SIZE];
-    if (writeWithResponse)
-        packet[0] = ATT_OP_WRITE_REQUEST;
-    else
+    if (writeWithResponse) {
+        if (newValue.size() > (mtuSize - WRITE_REQUEST_SIZE)) {
+            sendNextPrepareWriteRequest(charHandle, newValue, 0);
+            sendNextPendingRequest();
+            return;
+        } else {
+            // write value fits into single package
+            packet[0] = ATT_OP_WRITE_REQUEST;
+        }
+    } else {
+        // write without response
         packet[0] = ATT_OP_WRITE_COMMAND;
+    }
 
     bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
 
@@ -1148,7 +1289,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
-                         << "(size:" << size << "response:" << writeWithResponse << ")";
+                         << "(size:" << size << "with response:" << writeWithResponse << ")";
 
     // Advantage of write without response is the quick turnaround.
     // It can be send at any time and does not produce responses.
@@ -1174,6 +1315,7 @@ void QLowEnergyControllerPrivate::writeDescriptor(
         const QLowEnergyHandle descriptorHandle,
         const QByteArray &newValue)
 {
+    //TODO Support for long descriptor writes missing
     Q_ASSERT(!service.isNull());
 
     // sizeof(command) + sizeof(handle) + sizeof(newValue)

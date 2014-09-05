@@ -67,9 +67,8 @@ private slots:
     void tst_concurrentDiscovery();
     void tst_defaultBehavior();
     void tst_writeCharacteristic();
+    void tst_writeCharacteristicNoResponse();
     void tst_writeDescriptor();
-    void tst_writeDescriptorNoResponse();
-
 
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
@@ -112,6 +111,7 @@ void tst_QLowEnergyController::initTestCase()
         qWarning("No remote device or local adapter found.");
         return;
     }
+
 
     devAgent = new QBluetoothDeviceDiscoveryAgent(this);
 
@@ -1847,7 +1847,7 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     Tests write without responses. We utilize the Over-The-Air image update
     service of the SensorTag.
  */
-void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
+void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty() || remoteDevice.isNull())
@@ -1932,8 +1932,6 @@ void tst_QLowEnergyController::tst_writeDescriptorNoResponse()
     }
 
     // 4. Trigger image identity announcement (using traditional write)
-
-    QByteArray imageAValue, imageBValue;
     QList<QVariant> entry;
     bool foundOneImage = false;
 
