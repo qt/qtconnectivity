@@ -799,13 +799,11 @@ void QLowEnergyControllerPrivate::processReply(
 
         const QByteArray newValue = request.reference2.toByteArray();
         if (!descriptorHandle) {
-            //TODO use updateValueOfCharacteristic()
-            service->characteristicList[charHandle].value = newValue;
+            updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             QLowEnergyCharacteristic ch(service, charHandle);
             emit service->characteristicWritten(ch, newValue);
         } else {
-            //TODO use updateValueOfDescriptor()
-            service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
+            updateValueOfDescriptor(charHandle, descriptorHandle, newValue, NEW_VALUE);
             QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
             emit service->descriptorWritten(descriptor, newValue);
         }
@@ -852,7 +850,7 @@ void QLowEnergyControllerPrivate::processReply(
             // charHandle == 0 -> cancellation
             service->setError(QLowEnergyService::CharacteristicWriteError);
         } else {
-            service->characteristicList[charHandle].value = newValue;
+            updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             QLowEnergyCharacteristic ch(service, charHandle);
             emit service->characteristicWritten(ch, newValue);
         }

@@ -498,7 +498,6 @@ void QLowEnergyService::writeCharacteristic(
         const QByteArray &newValue, QLowEnergyService::WriteMode mode)
 {
     //TODO check behavior when writing to WriteSigned characteristic
-    //TODO add support for write long characteristic value (newValue.size() > MTU - 3)
     Q_D(QLowEnergyService);
 
     // not a characteristic of this service
