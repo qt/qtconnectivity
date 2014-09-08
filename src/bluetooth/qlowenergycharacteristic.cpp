@@ -207,7 +207,8 @@ QByteArray QLowEnergyCharacteristic::value() const
 
 /*!
     Returns the handle of the characteristic's value attribute;
-    or \c 0 if the handle cannot be accessed on the platform.
+    or \c 0 if the handle cannot be accessed on the platform or
+    if the characteristic is invalid.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 {
@@ -305,7 +306,10 @@ bool QLowEnergyCharacteristic::isValid() const
     \internal
 
     Returns the handle of the characteristic or
-    \c 0 if the handle cannot be accessed on the platform.
+    \c 0 if the handle cannot be accessed on the platform or if the
+    characteristic is invalid.
+
+    \sa isValid()
  */
 QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
 {

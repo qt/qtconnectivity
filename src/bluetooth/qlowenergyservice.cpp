@@ -562,13 +562,9 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
-    //TODO not all descriptors are writable (how to deal with write errors)
     Q_D(QLowEnergyService);
 
     if (!contains(descriptor))
-        return;
-
-    if (descriptor.value() == newValue)
         return;
 
     if (state() != ServiceDiscovered || !d->controller) {

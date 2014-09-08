@@ -218,7 +218,7 @@ QBluetoothUuid QLowEnergyDescriptor::uuid() const
 
 /*!
     Returns the handle of the descriptor or \c 0 if the handle
-    cannot be accessed on the platform.
+    cannot be accessed on the platform or the descriptor is invalid.
 */
 QLowEnergyHandle QLowEnergyDescriptor::handle() const
 {

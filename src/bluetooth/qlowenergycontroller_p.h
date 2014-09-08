@@ -143,10 +143,10 @@ private:
                                 QLowEnergyHandle startingHandle);
     void processUnsolicitedReply(const QByteArray &msg);
     void exchangeMTU();
-    void sendExecuteWriteRequest(const QLowEnergyHandle charHandle,
+    void sendExecuteWriteRequest(const QLowEnergyHandle attrHandle,
                                  const QByteArray &newValue,
                                  bool isCancelation);
-    void sendNextPrepareWriteRequest(const QLowEnergyHandle charHandle,
+    void sendNextPrepareWriteRequest(const QLowEnergyHandle handle,
                                      const QByteArray &newValue, quint16 offset);
 
 private slots:
