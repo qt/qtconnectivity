@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -41,7 +33,6 @@
 
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
-#include "qlowenergyserviceinfo_p.h"
 
 #include "bluez/manager_p.h"
 #include "bluez/adapter_p.h"
@@ -231,10 +222,18 @@ void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
     QStringList arguments;
     arguments << remoteAddress.toString() << localAddress.toString();
 
+    QByteArray output;
+
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedErrorChannel);
     process.setReadChannel(QProcess::StandardOutput);
     process.start(fileInfo.canonicalFilePath(), arguments);
+
+    if (process.waitForStarted(-1)) {
+        while (process.waitForReadyRead(-1))
+            output += process.readAllStandardOutput();
+    }
+
     process.waitForFinished();
 
     if (process.exitStatus() != QProcess::NormalExit
@@ -261,17 +260,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
     }
 
     QStringList xmlRecords;
+    const QString decodedData = QString::fromUtf8(QByteArray::fromBase64(output));
 
-    int size, index = 0;
-    const QByteArray output = QByteArray::fromBase64(process.readAll());
-    const char *data = output.constData();
-
-    // separate the individial SDP records
-    // each record starts with 4 byte size indicator
-    while (index < output.size()) {
-        memcpy(&size, &data[index], sizeof(int));
-        xmlRecords.append(QString::fromUtf8(output.mid(index+sizeof(int), size)));
-        index += sizeof(int) + size;
+    // split the various xml docs up
+    int next;
+    int start = decodedData.indexOf(QStringLiteral("<?xml"), 0);
+    if (start != -1) {
+        do {
+            next = decodedData.indexOf(QStringLiteral("<?xml"), start + 1);
+            if (next != -1)
+                xmlRecords.append(decodedData.mid(start, next-start));
+            else
+                xmlRecords.append(decodedData.mid(start, decodedData.size() - start));
+            start = next;
+        } while ( start != -1);
     }
 
     QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
@@ -297,8 +299,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
         emit q->error(error);
     } else if (!xmlRecords.isEmpty() && discoveryState() != Inactive) {
         foreach (const QString &record, xmlRecords) {
-            bool isBtleService = false;
-            const QBluetoothServiceInfo serviceInfo = parseServiceXml(record, &isBtleService);
+            const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
             //apply uuidFilter
             if (!uuidFilter.isEmpty()) {
@@ -433,19 +434,40 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
             b = b.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
             const QBluetoothUuid uuid(b);
 
-            qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << uuid << uuidFilter.size();
-            QLowEnergyServiceInfo lowEnergyService(uuid);
-            lowEnergyService.setDevice(discoveredDevices.at(0));
+            qCDebug(QT_BT_BLUEZ) << "Discovered service" << uuid << uuidFilter.size();
+            QBluetoothServiceInfo service;
+            service.setDevice(discoveredDevices.at(0));
+            bool ok = false;
+            quint16 serviceClass = uuid.toUInt16(&ok);
+            if (ok)
+                service.setServiceName(QBluetoothUuid::serviceClassToString(
+                                           static_cast<QBluetoothUuid::ServiceClassUuid>(serviceClass)));
+
+            QBluetoothServiceInfo::Sequence classId;
+            classId << QVariant::fromValue(uuid);
+            service.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
+
+            QBluetoothServiceInfo::Sequence protocolDescriptorList;
+            {
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+            {
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+            service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+
             if (uuidFilter.isEmpty())
-                emit q->serviceDiscovered(lowEnergyService);
+                emit q->serviceDiscovered(service);
             else {
                 for (int j = 0; j < uuidFilter.size(); j++) {
                     if (uuidFilter.at(j) == uuid)
-                        emit q->serviceDiscovered(lowEnergyService);
-
+                        emit q->serviceDiscovered(service);
                 }
             }
-
         }
 
         if (singleDevice && deviceReply.isError()) {
@@ -500,14 +522,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
 
     foreach (const QString &record, reply.value()) {
-        bool isBtleService = false;
-        QBluetoothServiceInfo serviceInfo = parseServiceXml(record, &isBtleService);
-
-        if (isBtleService) {
-            qCDebug(QT_BT_BLUEZ) << "Discovered BLE services" << discoveredDevices.at(0).address().toString()
-                                 << serviceInfo.serviceName() << serviceInfo.serviceUuid() << serviceInfo.serviceClassUuids();
-            continue;
-        }
+        QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
         if (!serviceInfo.isValid())
             continue;
@@ -551,7 +566,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 }
 
 QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
-                            const QString& xmlRecord, bool *isBtleService)
+                            const QString& xmlRecord)
 {
     QXmlStreamReader xml(xmlRecord);
 
@@ -567,25 +582,7 @@ QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
                 xml.attributes().value(QLatin1String("id")).toString().toUShort(0, 0);
 
             if (xml.readNextStartElement()) {
-                QVariant value = readAttributeValue(xml);
-                if (isBtleService) {
-                    if (attributeId == 1) {// Attribute with id 1 contains UUID of the service
-                        const QBluetoothServiceInfo::Sequence seq =
-                                value.value<QBluetoothServiceInfo::Sequence>();
-                        for (int i = 0; i < seq.count(); i++) {
-                            const QBluetoothUuid uuid = seq.at(i).value<QBluetoothUuid>();
-                            if ((uuid.data1 & 0x1800) == 0x1800) {// We are taking into consideration that LE services starts at 0x1800
-                                //TODO don't emit in the middle of nowhere
-                                Q_Q(QBluetoothServiceDiscoveryAgent);
-                                QLowEnergyServiceInfo leService(uuid);
-                                leService.setDevice(discoveredDevices.at(0));
-                                *isBtleService = true;
-                                emit q->serviceDiscovered(leService);
-                                break;
-                            }
-                        }
-                    }
-                }
+                const QVariant value = readAttributeValue(xml);
                 serviceInfo.setAttribute(attributeId, value);
             }
         }
@@ -652,7 +649,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         if (!uuidFilter.isEmpty() && !uuidFilter.contains(uuid))
             continue;
 
-        // TODO deal with BTLE services under Bluez 5 -> right now they are normal services
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(discoveredDevices.at(0));
 
@@ -668,6 +664,19 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
                     = static_cast<QBluetoothUuid::ServiceClassUuid>(uuid.data1 & 0xffff);
             serviceInfo.setServiceName(QBluetoothUuid::serviceClassToString(clsId));
         }
+
+        QBluetoothServiceInfo::Sequence protocolDescriptorList;
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
         //don't include the service if we already discovered it before
         if (!isDuplicatedService(serviceInfo)) {

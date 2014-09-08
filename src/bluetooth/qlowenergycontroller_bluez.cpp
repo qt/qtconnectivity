@@ -6,35 +6,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -72,11 +64,12 @@
 #define ATT_OP_READ_BLOB_RESPONSE       0xD
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
-#define ATT_OP_WRITE_REQUEST            0x12 //write characteristic
+#define ATT_OP_WRITE_REQUEST            0x12 //write characteristic with response
 #define ATT_OP_WRITE_RESPONSE           0x13
 #define ATT_OP_HANDLE_VAL_NOTIFICATION  0x1b //informs about value change
 #define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
 #define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
+#define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
 
 //GATT command sizes in bytes
 #define FIND_INFO_REQUEST_SIZE 5
@@ -84,7 +77,7 @@
 #define READ_BY_TYPE_REQ_SIZE 7
 #define READ_REQUEST_SIZE 3
 #define READ_BLOB_REQUEST_SIZE 5
-#define WRITE_REQUEST_SIZE 3
+#define WRITE_REQUEST_SIZE 3    // same size for WRITE_COMMAND
 #define MTU_EXCHANGE_SIZE 3
 
 // GATT error codes
@@ -213,7 +206,10 @@ void QLowEnergyControllerPrivate::connectToDevice()
             this, SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
     connect(l2cpSocket, SIGNAL(readyRead()), this, SLOT(l2cpReadyRead()));
 
-    l2cpSocket->d_ptr->isLowEnergySocket = true;
+    if (addressType == QLowEnergyController::PublicAddress)
+        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_PUBLIC;
+    else if (addressType == QLowEnergyController::RandomAddress)
+        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_RANDOM;
 
     // bind the socket to the local device
     int sockfd = l2cpSocket->socketDescriptor();
@@ -456,10 +452,12 @@ void QLowEnergyControllerPrivate::processReply(
         const quint16 type = request.reference.toUInt();
 
         if (isErrorResponse) {
-            if (type == GATT_SECONDARY_SERVICE)
+            if (type == GATT_SECONDARY_SERVICE) {
+                setState(QLowEnergyController::DiscoveredState);
                 q->discoveryFinished();
-            else // search for secondary services
+            } else { // search for secondary services
                 sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
+            }
             break;
         }
 
@@ -502,10 +500,12 @@ void QLowEnergyControllerPrivate::processReply(
         if (end != 0xFFFF) {
             sendReadByGroupRequest(end+1, 0xFFFF, type);
         } else {
-            if (type == GATT_SECONDARY_SERVICE)
+            if (type == GATT_SECONDARY_SERVICE) {
+                setState(QLowEnergyController::DiscoveredState);
                 emit q->discoveryFinished();
-            else // search for secondary services
+            } else { // search for secondary services
                 sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
+            }
         }
     }
         break;
@@ -795,11 +795,11 @@ void QLowEnergyControllerPrivate::processReply(
         if (!descriptorHandle) {
             service->characteristicList[charHandle].value = newValue;
             QLowEnergyCharacteristic ch(service, charHandle);
-            emit service->characteristicChanged(ch, newValue);
+            emit service->characteristicWritten(ch, newValue);
         } else {
             service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
             QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
-            emit service->descriptorChanged(descriptor, newValue);
+            emit service->descriptorWritten(descriptor, newValue);
         }
     }
         break;
@@ -890,7 +890,6 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
 void QLowEnergyControllerPrivate::readServiceValues(
         const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
-    // TODO Long charactertistic value reads not yet supported (larger than MTU)
     quint8 packet[READ_REQUEST_SIZE];
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (readCharacteristics)
@@ -1124,7 +1123,8 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
 void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
-        const QByteArray &newValue)
+        const QByteArray &newValue,
+        bool writeWithResponse)
 {
     Q_ASSERT(!service.isNull());
 
@@ -1136,16 +1136,27 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     const int size = 1 + 2 + newValue.size();
 
     quint8 packet[WRITE_REQUEST_SIZE];
-    packet[0] = ATT_OP_WRITE_REQUEST;
-    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
+    if (writeWithResponse)
+        packet[0] = ATT_OP_WRITE_REQUEST;
+    else
+        packet[0] = ATT_OP_WRITE_COMMAND;
 
+    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
 
     QByteArray data(size, Qt::Uninitialized);
     memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
     memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
-                         << "(size:" << size << ")";
+                         << "(size:" << size << "response:" << writeWithResponse << ")";
+
+    // Advantage of write without response is the quick turnaround.
+    // It can be send at any time and does not produce responses.
+    // Therefore we will not put them into the openRequest queue at all.
+    if (!writeWithResponse) {
+        sendCommand(data);
+        return;
+    }
 
     Request request;
     request.payload = data;

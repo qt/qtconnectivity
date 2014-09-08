@@ -55,7 +55,6 @@
 #include "characteristicinfo.h"
 
 QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS (QLowEnergyServiceInfo)
 QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
 
 class Device: public QObject
@@ -65,6 +64,7 @@ class Device: public QObject
     Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
     Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsUpdated)
     Q_PROPERTY(QString update READ getUpdate NOTIFY updateChanged)
+    Q_PROPERTY(bool useRandomAddress READ isRandomAddress WRITE setRandomAddress NOTIFY randomAddressChanged)
     Q_PROPERTY(bool state READ state NOTIFY stateChanged)
 public:
     Device();
@@ -74,6 +74,9 @@ public:
     QVariant getCharacteristics();
     QString getUpdate();
     bool state();
+
+    bool isRandomAddress() const;
+    void setRandomAddress(bool newValue);
 
 public slots:
     void startDeviceDiscovery();
@@ -105,6 +108,7 @@ Q_SIGNALS:
     void updateChanged();
     void stateChanged();
     void disconnected();
+    void randomAddressChanged();
 
 private:
     void setUpdate(QString message);
@@ -117,6 +121,7 @@ private:
     bool connected;
     QLowEnergyController *controller;
     bool m_deviceScanState;
+    bool randomAddress;
 };
 
 #endif // DEVICE_H

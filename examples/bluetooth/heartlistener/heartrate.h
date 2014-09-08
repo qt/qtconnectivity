@@ -103,7 +103,7 @@ private slots:
     void serviceDiscovered(const QBluetoothUuid &);
     void serviceScanDone();
     void controllerError(QLowEnergyController::Error);
-    void serviceConnected();
+    void deviceConnected();
     void deviceDisconnected();
 
 

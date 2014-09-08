@@ -62,10 +62,13 @@ Rectangle {
         target: device
         onCharacteristicsUpdated: {
             menu.menuText = "Back"
-            if (characteristicview.count === 0)
+            if (characteristicview.count === 0) {
                 info.dialogText = "No characteristic found"
-            else
-                info.visible = false;
+                info.busyImage = false
+            } else {
+                info.visible = false
+                info.busyImage = true
+            }
         }
 
         onDisconnected: {

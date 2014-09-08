@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -27,56 +27,57 @@
 
 /*!
     \example heartlistener
-    \title Bluetooth Low Energy Heart Listener example
+    \title Bluetooth Low Energy Heart Listener Example
+    \brief An example demonstrating the interaction with a Bluetooth Low Energy Heart Rate
+    device/service. The example demonstrates the use of all Qt Bluetooth
+    Low Energy classes.
 
-    The Bluetooth Low Energy (BLE) Heart Listener Example shows how to develop a Bluetooth
-    Low Energy applications using the Qt Bluetooth API. The application covers
-    the scanning for BLE devices, connecting to the BLE Heart Rate service and
-    receiving updates from the BLE heart belt. The BLE heart belt is required
-    for this application to work.
+    The Bluetooth Low Energy Heart Listener Example shows how to develop a Bluetooth
+    Low Energy application using the Qt Bluetooth API. The application covers
+    the scanning for Bluetooth Low Energy devices, connecting to a Heart Rate service
+    on the device, writing characteristics and descriptors and receiving updates from device
+    once the heart rate has changed.
 
-    \image heartrateintro.png
+    \image heartratemonitor.png
 
-    The best and the safest approach is to do a service discovery for BLE device first and
-    then pick the heart rate service. Before that it is necessary to connect signals from
-    the QLowEnergyController class, which is responsible for the communication with the
-    BLE device.
+    The example introduces the following Qt classes:
 
-    \snippet heartlistener/heartrate.cpp Connect signals
+    \list
+        \li \l QLowEnergyController
+        \li \l QLowEnergyService
+        \li \l QLowEnergyCharacteristic
+        \li \l QLowEnergyDescriptor
+    \endlist
 
-    After service scan is done and heart rate service found, the heart rate measurement
-    characteristic needs to be found and enabled for the notifications (advertisements).
+    A Bluetooth Low Energy device with a Heart Rate
+    service is required for this application to work. An alternative might be a programmable
+    Bluetooth Low Energy device which might simulate the service. If no such device can be
+    found, the example uses a demo mode which creates and displays random values.
 
-    \snippet heartlistener/heartrate.cpp Connecting to service
+    The \l {lowenergyscanner}{Bluetooth Low Energy Scanner} example might be more suitable
+    if a heart rate device is not available. The scanner example works with any type of Bluetooth
+    Low Energy peripheral device.
 
-    The enableNotifications(m_heartRateCharacteristic) method is the one that
-    will enable advertisement from the BLE device. Every time, when new update gets from
-    the BLE device (in our case heart rate belt) QLowEnergyController will emit
-    valueChanged(QLowEnergyCharacteristicInfo) method, which will invoke
-    receiveMeasurement(const QLowEnergyCharacteristicInfo &) slot.
+    \include examples-run.qdocinc
 
-    \snippet heartlistener/heartrate.cpp Reading value
+    \section1 Visual Tour
 
-    Every BLE device has its own structure of data that is advertising. In the code above,
-    the approach for checking the value structure is presented. The heart rate service contains
-    that information in the first 8 bits of the advertised value. For instance, first bit tells
-    the format of the value (is it 8 or 16 bit value), fourth tells does the heart belt provide
-    energy spenditure information, etc.
+    The application searches for all Bluetooth Low Energy peripheral devices in the vicinity.
+    It is assumed that the remote devices advertise their presence. The found devices are
+    presented in a list. Note that it shows all Bluetooth Low Energy devices even those which
+    do not offer a Heart Rate service.
 
-    \snippet heartlistener/heartrate.cpp Error handling
+    \image heartratefound.png
 
-    In case an error occurs, QLowEnergyController will emit error, which can be read with
-    errorString() method. An error for BLE service can occur in the process of connecting to
-    the service. For BLE characteristics, an error can occur when trying to subscribe for the
-    notifications.
+    After the user has selected a target device, the example connects to its Heart Rate service
+    if one is available. It automatically enables notification updates for the Heart Rate value
+    and presents the current value on the screen.
 
-    In the end, it is required to disconnect from the service.
+    \image heartratemonitor.png
 
-    \snippet heartlistener/heartrate.cpp Disconnecting from service
+    Once the monitoring process is canceled, a small graph presents a summary of the received
+    values.
 
-    \image hearratemonitor.png
-    \image hearrateresults.png
-    \image hearrateresults1.png
-
+    \image heartrateresults.png
 */
 

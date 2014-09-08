@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt local connectivty modules.
@@ -109,64 +109,7 @@
 
     \section1 Bluetooth Low Energy
 
-    Bluetooth Low Energy (in later text BLE), also known as Bluetooth Smart is a wireless computer
-    network technology, which was officially introduced in 2011. It works at the same,
-    2,4HGz frequency, as ”classic” Bluetooth. The main difference is, as stated by its technology name,
-    low energy consumption. It provides an opportunity for BLE devices to operate for months,
-    even years, on coin-cell batteries. This technology was introduced with Bluetooth v 4.0
-    and devices which support this technology are called Bluetooth Smart Ready Devices.
-    The key features of technology are:
-    \list
-    \li Ultra-low peak, average and idle mode power consumption
-    \li Ability to run for years on standard, coin-cell batteries
-    \li Low cost
-    \li Multi-vendor interoperability
-    \li Enhanced range
-    \endlist
-
-    BLE uses a client-server architecture. The server (BLE device) offers services (temperature,
-    heart rate or any other measurements) and advertises them. The client (PC, smartphone
-    or any other Bluetooth Smart Ready device) connects to the server and reads the values
-    advertised by the server. The BLE API is based on GATT (Generic Attribute Profile) concepts.
-    GATT commands are initiated by the client, and the server processes them. Each command is
-    usually answered by a reply.
-
-    Each BLE service may consist of one or more characteristics. A characteristic
-    contains data  and can be further described by descriptors, which provide additional
-    information or means of manipulating the characteristic. All services, characteristics and
-    descriptors are recognized by their 128bits UUIDs. Further details on known uuids can be found
-    in \l QBluetoothUuid.
-
-    To be able to read and write characteristics, it is necessary to connect to the LE service.
-
-    \snippet heartlistener/heartrate.cpp Connect signals
-
-    We start a service discovery with a \l QBluetoothServiceDiscoveryAgent class and connect its
-    \l {QBluetoothServiceDiscoveryAgent::}{serviceDiscovered()} signal. Within the receiving slot we connect to the desired service.
-    \l QLowEnergyController is used to connect or disconnect to services, emits service-related value changes
-    and propagates errors in relation to the service management.
-
-    Even though it is possible to connect to an LE service before the service scan is done,
-    it is advisable to delay until after the service search has finished.
-
-    \snippet heartlistener/heartrate.cpp Connecting to service
-
-    In the code example above, the desired characteristics is of type
-    \l {QBluetoothUuid::HeartRateMeasurement}{HeartRateMeasurement}. Since the application measures
-    the heart rate changes, it must enable change notifications for the characteristic.
-    Note that not all characteristics provide change notifications. Since the HeartRate characteristic
-    has been standardized it is possible to assume that notifications can be received. Ultimately
-    \l QLowEnergyCharacteristicInfo::isNotificationCharacteristic() must return \c true to
-    verify the availability of notifications.
-
-    Finally, we process the value of the HeartRate characteristic, as per Bluetooth Low Energy standard:
-
-    \snippet heartlistener/heartrate.cpp Reading value
-
-    In general a characterisitic value is a series of hexadecimal numbers. The precise interpretation of
-    those hexadecimal numbers depends on the characteristic type and its value structure.
-    A significant number has been standardized by the
-    \l {https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}{Bluetooth SIG} whereas others
-    may follow a custom protocol. The above code snippet demonstrates how to the read the standardized
-    HeartRate value.
+    Bluetooth Low Energy, also known as Bluetooth Smart, is a new technology enabling
+    devices with low energy consumption to communicate with each other. More details about
+    this technology and the related Qt APIs can be found in the \l {Bluetooth Low Energy Overview}.
 */
