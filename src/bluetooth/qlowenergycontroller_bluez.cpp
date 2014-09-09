@@ -246,6 +246,7 @@ void QLowEnergyControllerPrivate::l2cpConnected()
 {
     Q_Q(QLowEnergyController);
 
+    securityLevel();
     exchangeMTU();
 
     setState(QLowEnergyController::ConnectedState);
@@ -1146,6 +1147,94 @@ void QLowEnergyControllerPrivate::exchangeMTU()
     openRequests.enqueue(request);
 
     sendNextPendingRequest();
+}
+
+int QLowEnergyControllerPrivate::securityLevel() const
+{
+    qCDebug(QT_BT_BLUEZ) << "Getting security level";
+
+    int socket = l2cpSocket->socketDescriptor();
+    if (socket < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid l2cp socket, aborting getting of sec level";
+        return -1;
+    }
+
+    struct bt_security secData;
+    socklen_t length = sizeof(secData);
+    memset(&secData, 0, length);
+
+    if (getsockopt(socket, SOL_BLUETOOTH, BT_SECURITY, &secData, &length) == 0) {
+        qCDebug(QT_BT_BLUEZ) << "Current l2cp sec level:" << secData.level;
+        return secData.level;
+    }
+
+    if (errno != ENOPROTOOPT) //older kernel, fall back to L2CAP_LM option
+        return -1;
+
+    // cater for older kernels
+    int optval;
+    length = sizeof(optval);
+    if (getsockopt(socket, SOL_L2CAP, L2CAP_LM, &optval, &length) == 0) {
+        int level = BT_SECURITY_SDP;
+        if (optval & L2CAP_LM_AUTH)
+            level = BT_SECURITY_LOW;
+        if (optval & L2CAP_LM_ENCRYPT)
+            level = BT_SECURITY_MEDIUM;
+        if (optval & L2CAP_LM_SECURE)
+            level = BT_SECURITY_HIGH;
+
+        qDebug() << "Current l2cp sec level (old):" << level;
+        return level;
+    }
+
+    return -1;
+}
+
+bool QLowEnergyControllerPrivate::setSecurityLevel(int level)
+{
+    qCDebug(QT_BT_BLUEZ) << "Setting security level:" << level;
+
+    if (level > BT_SECURITY_HIGH || level < BT_SECURITY_LOW)
+        return false;
+
+    int socket = l2cpSocket->socketDescriptor();
+    if (socket < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid l2cp socket, aborting setting of sec level";
+        return false;
+    }
+
+    struct bt_security secData;
+    socklen_t length = sizeof(secData);
+    memset(&secData, 0, length);
+    secData.level = level;
+
+    if (setsockopt(socket, SOL_BLUETOOTH, BT_SECURITY, &secData, length) == 0) {
+        qCDebug(QT_BT_BLUEZ) << "Setting new l2cp sec level:" << secData.level;
+        return true;
+    }
+
+    if (errno != ENOPROTOOPT) //older kernel
+        return false;
+
+    int optval = 0;
+    switch (level) { // fall through intendeds
+        case BT_SECURITY_HIGH:
+            optval |= L2CAP_LM_SECURE;
+        case BT_SECURITY_MEDIUM:
+            optval |= L2CAP_LM_ENCRYPT;
+        case BT_SECURITY_LOW:
+            optval |= L2CAP_LM_AUTH;
+            break;
+        default:
+            return false;
+    }
+
+    if (setsockopt(socket, SOL_L2CAP, L2CAP_LM, &optval, sizeof(optval)) == 0) {
+        qDebug(QT_BT_BLUEZ) << "Old l2cp sec level:" << optval;
+        return true;
+    }
+
+    return false;
 }
 
 void QLowEnergyControllerPrivate::discoverNextDescriptor(

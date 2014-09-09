@@ -54,6 +54,9 @@
 
 #define SOL_L2CAP   6
 #define SOL_RFCOMM  18
+#ifndef SOL_BLUETOOTH
+#define SOL_BLUETOOTH   274
+#endif
 
 #define RFCOMM_LM   0x03
 
@@ -67,6 +70,16 @@
 #define L2CAP_LM_ENCRYPT    0x0004
 #define L2CAP_LM_TRUSTED    0x0008
 #define L2CAP_LM_SECURE     0x0020
+
+#define BT_SECURITY 4
+struct bt_security {
+    uint8_t level;
+    uint8_t key_size;
+};
+#define BT_SECURITY_SDP     0
+#define BT_SECURITY_LOW     1
+#define BT_SECURITY_MEDIUM  2
+#define BT_SECURITY_HIGH    3
 
 #define BDADDR_LE_PUBLIC    0x01
 #define BDADDR_LE_RANDOM    0x02

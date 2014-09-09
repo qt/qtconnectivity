@@ -143,6 +143,8 @@ private:
                                 QLowEnergyHandle startingHandle);
     void processUnsolicitedReply(const QByteArray &msg);
     void exchangeMTU();
+    bool setSecurityLevel(int level);
+    int securityLevel() const;
     void sendExecuteWriteRequest(const QLowEnergyHandle attrHandle,
                                  const QByteArray &newValue,
                                  bool isCancelation);
@@ -157,6 +159,7 @@ private slots:
 #endif
 private:
     QLowEnergyController *q_ptr;
+
 };
 
 QT_END_NAMESPACE
