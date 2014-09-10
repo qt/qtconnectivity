@@ -35,6 +35,7 @@
 #include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
 #include "bluez/bluez_data_p.h"
+#include "bluez/hcimanager_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothSocket>
@@ -190,9 +191,20 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       state(QLowEnergyController::UnconnectedState),
       error(QLowEnergyController::NoError),
       l2cpSocket(0), requestPending(false),
-      mtuSize(ATT_DEFAULT_LE_MTU)
+      mtuSize(ATT_DEFAULT_LE_MTU),
+      securityLevelValue(-1),
+      encryptionChangePending(false),
+      hciManager(0)
 {
     qRegisterMetaType<QList<QLowEnergyHandle> >();
+
+    hciManager = new HciManager(localAdapter, this);
+    if (!hciManager->isValid())
+        return;
+
+    hciManager->monitorEvent(HciManager::EncryptChangeEvent);
+    connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
+            this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
@@ -246,7 +258,7 @@ void QLowEnergyControllerPrivate::l2cpConnected()
 {
     Q_Q(QLowEnergyController);
 
-    securityLevel();
+    securityLevelValue = securityLevel();
     exchangeMTU();
 
     setState(QLowEnergyController::ConnectedState);
@@ -263,6 +275,7 @@ void QLowEnergyControllerPrivate::l2cpDisconnected()
 {
     Q_Q(QLowEnergyController);
 
+    securityLevelValue = -1;
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
 }
@@ -340,6 +353,26 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
     sendNextPendingRequest();
 }
 
+void QLowEnergyControllerPrivate::encryptionChangedEvent(
+        const QBluetoothAddress &address, bool wasSuccess)
+{
+    if (remoteDevice != address)
+        return;
+
+    encryptionChangePending = false;
+    securityLevelValue = securityLevel();
+
+    if (!wasSuccess) {
+        // We could not increase the security of the link
+        // The next request was requeued due to security error
+        // skip it to avoid endless loop of security negotiations
+        Q_ASSERT(!openRequests.isEmpty());
+        openRequests.removeFirst();
+    }
+
+    sendNextPendingRequest();
+}
+
 void QLowEnergyControllerPrivate::sendCommand(const QByteArray &packet)
 {
     qint64 result = l2cpSocket->write(packet.constData(),
@@ -354,7 +387,7 @@ void QLowEnergyControllerPrivate::sendCommand(const QByteArray &packet)
 
 void QLowEnergyControllerPrivate::sendNextPendingRequest()
 {
-    if (openRequests.isEmpty() || requestPending)
+    if (openRequests.isEmpty() || requestPending || encryptionChangePending)
         return;
 
     const Request &request = openRequests.head();
@@ -600,6 +633,26 @@ void QLowEnergyControllerPrivate::processReply(
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
+        if (isErrorResponse) {
+            switch (response.constData()[4]) {
+            case ATT_ERROR_INSUF_AUTHORIZATION:
+            case ATT_ERROR_INSUF_ENCRYPTION:
+            case ATT_ERROR_INSUF_AUTHENTICATION:
+                if (!hciManager->isValid())
+                    break;
+                if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))
+                    break;
+                if (securityLevelValue != BT_SECURITY_HIGH) {
+                    qCDebug(QT_BT_BLUEZ) << "Requesting encrypted link";
+                    if (setSecurityLevel(BT_SECURITY_HIGH))
+                        encryptionChangePending = true;
+                }
+                break;
+            default:
+                break;
+            }
+        }
+
         // we ignore error response
         if (!isErrorResponse) {
             if (!descriptorHandle)
@@ -612,6 +665,13 @@ void QLowEnergyControllerPrivate::processReply(
                 // Potentially more data -> switch to blob reads
                 readServiceValuesByOffset(handleData, mtuSize-1,
                                           request.reference2.toBool());
+                break;
+            }
+        } else {
+            if (encryptionChangePending) {
+                // Just requested a security level change.
+                // Retry the same command again once the change has happened
+                openRequests.prepend(request);
                 break;
             }
         }
@@ -1151,8 +1211,6 @@ void QLowEnergyControllerPrivate::exchangeMTU()
 
 int QLowEnergyControllerPrivate::securityLevel() const
 {
-    qCDebug(QT_BT_BLUEZ) << "Getting security level";
-
     int socket = l2cpSocket->socketDescriptor();
     if (socket < 0) {
         qCWarning(QT_BT_BLUEZ) << "Invalid l2cp socket, aborting getting of sec level";
@@ -1192,8 +1250,6 @@ int QLowEnergyControllerPrivate::securityLevel() const
 
 bool QLowEnergyControllerPrivate::setSecurityLevel(int level)
 {
-    qCDebug(QT_BT_BLUEZ) << "Setting security level:" << level;
-
     if (level > BT_SECURITY_HIGH || level < BT_SECURITY_LOW)
         return false;
 

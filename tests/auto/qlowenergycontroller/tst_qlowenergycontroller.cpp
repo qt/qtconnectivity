@@ -69,7 +69,7 @@ private slots:
     void tst_writeCharacteristic();
     void tst_writeCharacteristicNoResponse();
     void tst_writeDescriptor();
-
+    void tst_encryption();
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
 
@@ -1841,6 +1841,70 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
 
     delete service;
+}
+
+/*
+ * Tests encrypted read/write.
+ * This test is semi manual as the test device environment is very specific.
+ * Adjust the various uuids and addresses at the top to cater for the current
+ * situation. By default this test is skipped.
+ */
+void tst_QLowEnergyController::tst_encryption()
+{
+    QSKIP("Skipping encryption");
+
+    //Adjust the uuids and device address as see fit to match
+    //values that match the current test environment
+    //The target characteristic must be readble and writable
+    //under encryption to test dynamic switching of security level
+    QBluetoothAddress encryptedDevice(QString("00:02:5B:00:15:10"));
+    QBluetoothUuid serviceUuid(QBluetoothUuid::GenericAccess);
+    QBluetoothUuid characterristicUuid(QBluetoothUuid::DeviceName);
+
+    QLowEnergyController control(encryptedDevice);
+    QCOMPARE(control.error(), QLowEnergyController::NoError);
+
+    control.connectToDevice();
+    {
+        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
+              30000);
+    }
+
+    if (control.state() == QLowEnergyController::ConnectingState
+            || control.error() != QLowEnergyController::NoError) {
+        // default BTLE backend forever hangs in ConnectingState
+        QSKIP("Cannot connect to remote device");
+    }
+
+    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveringState);
+    QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveredState);
+
+    QList<QBluetoothUuid> uuids = control.services();
+    QVERIFY(uuids.contains(serviceUuid));
+
+    QLowEnergyService *service = control.createServiceObject(serviceUuid, this);
+    QVERIFY(service);
+    service->discoverDetails();
+    QTRY_VERIFY_WITH_TIMEOUT(
+        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+
+    QLowEnergyCharacteristic characteristic = service->characteristic(
+                                                    characterristicUuid);
+
+    QVERIFY(characteristic.isValid());
+    qDebug() << "Encrypted char value:" << characteristic.value().toHex() << characteristic.value();
+    QVERIFY(!characteristic.value().isEmpty());
+
+    delete service;
+    control.disconnectFromDevice();
 }
 
 /*

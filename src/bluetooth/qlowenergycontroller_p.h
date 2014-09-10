@@ -46,6 +46,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+class HciManager;
+#endif
+
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 
 class QLowEnergyControllerPrivate : public QObject
@@ -122,6 +126,10 @@ private:
     QQueue<Request> openRequests;
     bool requestPending;
     quint16 mtuSize;
+    int securityLevelValue;
+    bool encryptionChangePending;
+
+    HciManager *hciManager;
 
     void sendCommand(const QByteArray &packet);
     void sendNextPendingRequest();
@@ -156,6 +164,7 @@ private slots:
     void l2cpDisconnected();
     void l2cpErrorChanged(QBluetoothSocket::SocketError);
     void l2cpReadyRead();
+    void encryptionChangedEvent(const QBluetoothAddress&, bool);
 #endif
 private:
     QLowEnergyController *q_ptr;

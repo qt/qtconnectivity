@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
