@@ -151,16 +151,19 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothlocaldevice_osx.mm \
         qbluetoothdevicediscoveryagent_osx.mm \
         qbluetoothserviceinfo_osx.mm \
-        qbluetoothservicediscoveryagent_osx.mm
+        qbluetoothservicediscoveryagent_osx.mm \
+        qbluetoothsocket_osx.mm
 
     SOURCES += \
-        qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
+
+    PRIVATE_HEADERS += qbluetoothsocket_osx_p.h
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
+    SOURCES -= qbluetoothsocket.cpp
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers.")

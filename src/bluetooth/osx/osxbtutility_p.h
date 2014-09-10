@@ -48,6 +48,7 @@
 
 #include <Foundation/Foundation.h>
 #include <IOBluetooth/Bluetooth.h>
+#include <IOKit/IOReturn.h>
 
 @class IOBluetoothSDPUUID;
 
@@ -68,6 +69,10 @@ template<class T>
 class ObjCScopedPointer : public QScopedPointer<NSObject, NSObjectDeleter>
 {
 public:
+    // TODO: remove default argument, add 'retain' parameter,
+    // add a default ctor??? This will make the semantics more
+    // transparent + will simplify the future transition to ARC
+    // (if it will ever happen).
     explicit ObjCScopedPointer(T *ptr = Q_NULLPTR) : QScopedPointer(ptr){}
     operator T*() const
     {
@@ -91,7 +96,11 @@ typedef ObjCScopedPointer<NSAutoreleasePool> AutoreleasePool;
 template<class T>
 class ObjCStrongReference {
 public:
-    explicit ObjCStrongReference(T *obj, bool retain)
+    ObjCStrongReference()
+        : m_ptr(nil)
+    {
+    }
+    ObjCStrongReference(T *obj, bool retain)
     {
         if (retain)
             m_ptr = [obj retain];
@@ -155,6 +164,8 @@ BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
 
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);
 QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid);
+
+QString qt_error_string(IOReturn errorCode);
 
 } // namespace OSXBluetooth
 

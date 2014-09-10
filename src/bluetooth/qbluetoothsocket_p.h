@@ -81,6 +81,7 @@ public:
 class QBluetoothSocket;
 class QBluetoothServiceDiscoveryAgent;
 
+#ifndef QT_OSX_BLUETOOTH
 class QBluetoothSocketPrivate : public QObject
 {
     Q_OBJECT
@@ -197,6 +198,7 @@ public:
 #endif
 };
 
+#endif //QT_OSX_BLUETOOTH
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
 {
@@ -219,5 +221,6 @@ static inline void convertAddress(quint8 (&from)[6], quint64 &to)
 }
 
 QT_END_NAMESPACE
+
 
 #endif

@@ -114,11 +114,32 @@ QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid)
     if (!uuid || [uuid length] != 16) // TODO: issue any diagnostic?
         return qtUuid;
 
-    // TODO: insure the correct byte-order!!!
+    // TODO: ensure the correct byte-order!!!
     quint128 uuidVal = {};
     const quint8 *const source = static_cast<const quint8 *>([uuid bytes]);
     std::copy(source, source + 16, uuidVal.data);
     return QBluetoothUuid(uuidVal);
+}
+
+QString qt_error_string(IOReturn errorCode)
+{
+    switch (errorCode) {
+    case kIOReturnSuccess:
+        // NoError in many classes == an empty string description.
+        return QString();
+    case kIOReturnNoMemory:
+        return QString::fromLatin1("memory allocation failed");
+    case kIOReturnNoResources:
+        return QString::fromLatin1("failed to obtain a resource");
+    case kIOReturnBusy:
+        return QString::fromLatin1("device is busy");
+    case kIOReturnStillOpen:
+        return QString::fromLatin1("device(s) still open");
+    // Others later ...
+    case kIOReturnError: // "general error" (IOReturn.h)
+    default:
+        return QString::fromLatin1("unknown error");
+    }
 }
 
 }

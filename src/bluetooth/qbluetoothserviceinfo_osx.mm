@@ -39,19 +39,26 @@
 **
 ****************************************************************************/
 
+#include "osx/osxbtservicerecord_p.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothdeviceinfo.h"
+#include "osx/osxbtutility_p.h"
 
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qvariant.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qmap.h>
 #include <QtCore/qurl.h>
+
+// Import, it's Objective-C header (no inclusion guards).
+#import <IOBluetooth/objc/IOBluetoothSDPServiceRecord.h>
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfoPrivate
 {
 public:
-    QBluetoothServiceInfoPrivate();
+    QBluetoothServiceInfoPrivate(QBluetoothServiceInfo *q);
     ~QBluetoothServiceInfoPrivate();
 
     bool registerService(const QBluetoothAddress &localAdapter = QBluetoothAddress());
@@ -65,29 +72,118 @@ public:
 
     QBluetoothServiceInfo::Sequence protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const;
     int serverChannel() const;
+
+private:
+    QBluetoothServiceInfo *q_ptr;
+    bool registered;
+
+    typedef OSXBluetooth::ObjCScopedPointer<IOBluetoothSDPServiceRecord> SDPRecord;
+    SDPRecord serviceRecord;
 };
 
-QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
+QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate(QBluetoothServiceInfo *q)
+                                 : q_ptr(q),
+                                   registered(false)
 {
+    Q_ASSERT_X(q, "QBluetoothServiceInfoPrivate()", "invalid q_ptr (null)");
 }
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
 {
+    // TODO: should it unregister?
 }
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &localAdapter)
 {
     Q_UNUSED(localAdapter)
-    return false;
+
+    if (registered)
+        return false;
+
+    Q_ASSERT_X(!serviceRecord, "QBluetoothServiceInfoPrivate::registerService()",
+               "not registered, but serviceRecord is not nil");
+
+    // TODO: create a service description (as NSDictionary) and add to the
+    // local SDP server via IOBluetoothSDPServiceRecord and its methods.
+    using namespace OSXBluetooth;
+
+    ObjCStrongReference<NSMutableDictionary>
+        serviceDict(iobluetooth_service_dictionary(*q_ptr));
+
+    if (!serviceDict) {
+        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
+                                "failed to create a service dictionary";
+        return false;
+    }
+
+    serviceRecord.reset([[IOBluetoothSDPServiceRecord
+                         publishedServiceRecordWithDictionary:serviceDict] retain]);
+
+    if (!serviceRecord) {
+        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
+                                "failed to create register a service record";
+        return false;
+    }
+
+    QBluetoothServiceInfo::Sequence protocolDescriptorList;
+    bool updatePDL = false;
+
+    if (q_ptr->socketProtocol() == QBluetoothServiceInfo::L2capProtocol) {
+        //
+        BluetoothL2CAPPSM psm = 0;
+        if ([serviceRecord getL2CAPPSM:&psm] == kIOReturnSuccess) {
+            if (psm != q_ptr->protocolServiceMultiplexer()) {
+                // Update with a real PSM assigned by IOBluetooth!
+                updatePDL = true;
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+                protocol << QVariant::fromValue(qint16(psm));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+        }
+    } else if (q_ptr->socketProtocol() == QBluetoothServiceInfo::RfcommProtocol) {
+        //
+        BluetoothRFCOMMChannelID channelID = 0;
+        if ([serviceRecord getRFCOMMChannelID:&channelID] == kIOReturnSuccess) {
+            if (channelID != q_ptr->serverChannel()) {
+                updatePDL = true;
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+                protocol.clear();
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                         << QVariant::fromValue(quint8(channelID));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+        }
+    }
+
+    if (updatePDL)
+        q_ptr->setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+
+    // TODO - check ServiceRecordHandle + error handling - if we failed to obtain a port.
+
+    registered = true;
+
+    return true;
 }
 
 bool QBluetoothServiceInfoPrivate::isRegistered() const
 {
-    return false;
+    return registered;
 }
 
 bool QBluetoothServiceInfoPrivate::unregisterService()
 {
+    if (!registered)
+        return false;
+
+    Q_ASSERT_X(serviceRecord, "QBluetoothServiceInfoPrivate::unregisterService()",
+               "service registered, but serviceRecord is nil");
+
+    [serviceRecord removeServiceRecord];
+    serviceRecord.reset(nil);
+
     return false;
 }
 
@@ -107,7 +203,7 @@ bool QBluetoothServiceInfo::unregisterService()
 }
 
 QBluetoothServiceInfo::QBluetoothServiceInfo()
-    : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>(new QBluetoothServiceInfoPrivate))
+    : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>(new QBluetoothServiceInfoPrivate(this)))
 {
 }
 

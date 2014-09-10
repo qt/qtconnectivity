@@ -161,7 +161,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
 
 void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
 {
-    Q_ASSERT_X(state == Inactive, "startServiceDiscovery()", "invalid state");
+    // Any of 'Inactive'/'DeviceDiscovery'/'ServiceDiscovery' states
+    // are possible.
+
     Q_ASSERT_X(q_ptr, "startServiceDiscovery()", "invalid q_ptr (null)");
     Q_ASSERT_X(error != QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError,
                "startServiceDiscovery()", "invalid bluetooth adapter");

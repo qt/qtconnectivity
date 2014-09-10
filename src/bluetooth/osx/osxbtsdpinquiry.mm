@@ -268,6 +268,8 @@ using namespace OSXBluetooth;
     Q_ASSERT_X(delegate, "-sdpQueryComplete:status:",
                "invalid delegate (null)");
 
+    isActive = false;
+
     if (status != kIOReturnSuccess)
         delegate->SDPInquiryError(aDevice, status);
     else
