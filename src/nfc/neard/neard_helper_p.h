@@ -1,6 +1,6 @@
-/***************************************************************************
+/****************************************************************************
 **
-** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Copyright (C) 2014 BasysKom GmbH.
 ** Contact: http://www.qt-project.org/legal
 **
@@ -40,62 +40,45 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDMANAGER_NEARD_H
-#define QNEARFIELDMANAGER_NEARD_H
+#ifndef NEARD_HELPER_P_H
+#define NEARD_HELPER_P_H
 
-#include "qnearfieldmanager_p.h"
-#include "qnearfieldmanager.h"
-#include "qnearfieldtarget.h"
-#include "neard/neard_helper_p.h"
-
+#include <QMetaType>
 #include <QDBusObjectPath>
-#include <QDBusVariant>
-#include <QMap>
 
-class OrgNeardAdapterInterface;
-class OrgNeardManagerInterface;
-class OrgFreedesktopDBusPropertiesInterface;
+typedef QMap<QString, QVariantMap> InterfaceList;
+typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
+
+Q_DECLARE_METATYPE(InterfaceList)
+Q_DECLARE_METATYPE(ManagedObjectList)
+
+class OrgFreedesktopDBusObjectManagerInterface;
 
 QT_BEGIN_NAMESPACE
 
-class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
+class NeardHelper : public QObject
 {
     Q_OBJECT
-
 public:
-    QNearFieldManagerPrivateImpl();
-    ~QNearFieldManagerPrivateImpl();
+    NeardHelper(QObject* parent = 0);
+    static NeardHelper *instance();
 
-    bool isAvailable() const;
+    OrgFreedesktopDBusObjectManagerInterface *dbusObjectManager();
 
-    bool startTargetDetection();
+signals:
+    void tagFound(const QDBusObjectPath&);
+    void tagRemoved(const QDBusObjectPath&);
+    void recordFound(const QDBusObjectPath&);
+    void recordRemoved(const QDBusObjectPath&);
 
-    void stopTargetDetection();
-
-    // not implemented
-    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);
-
-    int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method);
-
-    bool unregisterNdefMessageHandler(int handlerId);
-
-    void requestAccess(QNearFieldManager::TargetAccessModes accessModes);
-
-    void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
-
-private Q_SLOTS:
-    void handleTagFound(const QDBusObjectPath&);
-    void handleTagRemoved(const QDBusObjectPath&);
+private slots:
+    void interfacesAdded(const QDBusObjectPath&, InterfaceList);
+    void interfacesRemoved(const QDBusObjectPath&, const QStringList&);
 
 private:
-    QString m_adapterPath;
-    OrgNeardAdapterInterface *m_adapter;
-    OrgFreedesktopDBusPropertiesInterface *m_dbusProperties;
-    QMap<QString, QNearFieldTarget*> m_activeTags;
-    NeardHelper *m_neardHelper;
+    OrgFreedesktopDBusObjectManagerInterface *m_dbusObjectManager;
 };
 
 QT_END_NAMESPACE
 
-
-#endif // QNEARFIELDMANAGER_NEARD_H
+#endif // NEARD_HELPER_P_H

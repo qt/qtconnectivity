@@ -1,6 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
+** Copyright (C) 2014 BasysKom GmbH.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -42,8 +43,9 @@
 #include "qnearfieldmanager_neard_p.h"
 #include "qnearfieldtarget_neard_p.h"
 
-#include "neard/manager_p.h"
 #include "neard/adapter_p.h"
+#include "neard/dbusproperties_p.h"
+#include "neard/dbusobjectmanager_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -51,34 +53,42 @@ Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
 
 // TODO We need a constructor that lets us select an adapter
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
-    : QNearFieldManagerPrivate(), m_adapter(0), m_manager(0)
+    : QNearFieldManagerPrivate(),
+      m_adapter(0),
+      m_dbusProperties(0),
+      m_neardHelper(NeardHelper::instance())
 {
-    m_manager = new OrgNeardManagerInterface(QStringLiteral("org.neard"), QStringLiteral("/"),
-                                                QDBusConnection::systemBus(), this);
-    if (!m_manager->isValid()) {
-        qCWarning(QT_NFC_NEARD) << "Could not connect to manager" << "Neard daemon running?";
-        return;
-    }
-
-    QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
+    QDBusPendingReply<ManagedObjectList> reply = m_neardHelper->dbusObjectManager()->GetManagedObjects();
     reply.waitForFinished();
     if (reply.isError()) {
-        qCWarning(QT_NFC_NEARD) << "Error getting manager properties.";
+        qCWarning(QT_NFC_NEARD) << "Error getting managed objects";
         return;
     }
 
-    // Now we check if the adapter still exists (it might have been unplugged)
-    const QDBusArgument &paths = reply.value().value(QStringLiteral("Adapters")).value<QDBusArgument>();
+    bool found = false;
+    foreach (const QDBusObjectPath &path, reply.value().keys()) {
+        const InterfaceList ifaceList = reply.value().value(path);
+        foreach (const QString &iface, ifaceList.keys()) {
+            if (iface == QStringLiteral("org.neard.Adapter")) {
+                found = true;
+                m_adapterPath = path.path();
+                qCDebug(QT_NFC_NEARD) << "org.neard.Adapter found for path" << m_adapterPath;
+                break;
+            }
+        }
 
-    paths.beginArray();
-    while (!paths.atEnd()) {
-        QDBusObjectPath path;
-        paths >> path;
-        // Select the first adapter
-        m_adapterPath = path.path();
-        break;
+        if (found)
+            break;
     }
-    paths.endArray();
+
+    if (!found) {
+        qCWarning(QT_NFC_NEARD) << "no adapter found, neard daemon running?";
+    } else {
+        connect(m_neardHelper, SIGNAL(tagFound(QDBusObjectPath)),
+                this,          SLOT(handleTagFound(QDBusObjectPath)));
+        connect(m_neardHelper, SIGNAL(tagRemoved(QDBusObjectPath)),
+                this,          SLOT(handleTagRemoved(QDBusObjectPath)));
+    }
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
@@ -88,89 +98,124 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 
 bool QNearFieldManagerPrivateImpl::isAvailable() const
 {
-    if (!m_manager->isValid() || m_adapterPath.isNull()) {
+    if (!m_neardHelper->dbusObjectManager()->isValid() || m_adapterPath.isNull()) {
+        qCWarning(QT_NFC_NEARD) << "dbus object manager invalid or adapter path invalid";
         return false;
     }
 
-    QDBusPendingReply<QVariantMap> reply = m_manager->GetProperties();
+    QDBusPendingReply<ManagedObjectList> reply = m_neardHelper->dbusObjectManager()->GetManagedObjects();
     reply.waitForFinished();
     if (reply.isError()) {
-        qCDebug(QT_NFC_NEARD) << "Error getting manager properties.";
+        qCWarning(QT_NFC_NEARD) << "error getting managed objects";
         return false;
     }
 
-    // Now we check if the adapter still exists (it might have been unplugged)
-    const QDBusArgument &paths = reply.value().value(QStringLiteral("Adapters")).value<QDBusArgument>();
-
-    paths.beginArray();
-    while (!paths.atEnd()) {
-        QDBusObjectPath path;
-        paths >> path;
-        // Check if the adapter exists
-        if (path.path() == m_adapterPath) {
-            paths.endArray();
+    foreach (const QDBusObjectPath &path, reply.value().keys()) {
+        if (m_adapterPath == path.path())
             return true;
-        }
     }
-    paths.endArray();
+
     return false;
 }
 
 bool QNearFieldManagerPrivateImpl::startTargetDetection()
 {
+    qCDebug(QT_NFC_NEARD) << "starting target detection";
     if (!isAvailable())
         return false;
 
-    // TODO define behavior when target detection is started again
-    if (m_adapter)
-        return false;
-
-    //qDebug() << "Constructing interface with path" << m_adapterPath;
-    m_adapter = new OrgNeardAdapterInterface(QStringLiteral("org.neard"), m_adapterPath,
-                                     QDBusConnection::systemBus(), this);
-
-    {
-        QDBusPendingReply<QVariantMap> reply = m_adapter->GetProperties();
-        reply.waitForFinished();
-        if (!reply.isError()) {
-            if (reply.value().value(QStringLiteral("Polling")) == true) {
-                //qDebug() << "Adapter" << m_adapterPath << "is busy";
-                return false; // Should we return false or true?
-            }
-        }
+    if (!m_dbusProperties) {
+        m_dbusProperties = new OrgFreedesktopDBusPropertiesInterface(QStringLiteral("org.neard"),
+                                                                     m_adapterPath,
+                                                                     QDBusConnection::systemBus(),
+                                                                     this);
     }
 
-    // Switch on the NFC adapter if it is not already
-    QDBusPendingReply<> reply = m_adapter->SetProperty(QStringLiteral("Powered"), QDBusVariant(true));
-    reply.waitForFinished();
+    if (!m_dbusProperties->isValid()) {
+        qCWarning(QT_NFC_NEARD) << "dbus property interface invalid";
+        return false;
+    }
 
-    //qDebug() << (reply.isError() ? "Error setting up adapter" : "Adapter powered on");
-    reply = m_adapter->StartPollLoop(QStringLiteral("Dual"));
-    reply.waitForFinished();
-    //qDebug() << (reply.isError() ? "Error when starting polling" : "Successfully started to poll");
+    // check if the adapter is currently polling
+    QDBusPendingReply<QDBusVariant> replyPolling = m_dbusProperties->Get(QStringLiteral("org.neard.Adapter"),
+                                                                         QStringLiteral("Polling"));
+    replyPolling.waitForFinished();
+    if (!replyPolling.isError()) {
+        if (replyPolling.value().variant().toBool()) {
+            qCDebug(QT_NFC_NEARD) << "adapter is already polling";
+            return true;
+        }
+    } else {
+        qCWarning(QT_NFC_NEARD) << "error getting 'Polling' state from property interface";
+        return false;
+    }
 
-    // TagFound and TagLost DBus signals don't work
-//    connect(m_adapter, SIGNAL(TagFound(const QDBusObjectPath&)),
-//                            this, SLOT(tagFound(const QDBusObjectPath&)));
-//    connect(m_adapter, SIGNAL(TagLost(const QDBusObjectPath&)),
-//                            this, SLOT(tagFound(const QDBusObjectPath&)));
-    connect(m_adapter, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-                            this, SLOT(propertyChanged(QString,QDBusVariant)));
+    // check if the adapter it powered
+    QDBusPendingReply<QDBusVariant> replyPowered = m_dbusProperties->Get(QStringLiteral("org.neard.Adapter"),
+                                                                         QStringLiteral("Powered"));
+    replyPowered.waitForFinished();
+    if (!replyPowered.isError()) {
+        if (replyPowered.value().variant().toBool()) {
+            qCDebug(QT_NFC_NEARD) << "adapter is already powered";
+        } else {
+            QDBusPendingReply<QDBusVariant> replyTryPowering = m_dbusProperties->Set(QStringLiteral("org.neard.Adapter"),
+                                                                                     QStringLiteral("Powered"),
+                                                                                     QDBusVariant(true));
+            replyTryPowering.waitForFinished();
+            if (!replyTryPowering.isError()) {
+                qCDebug(QT_NFC_NEARD) << "powering adapter";
+            }
+        }
+    } else {
+        qCWarning(QT_NFC_NEARD) << "error getting 'Powered' state from property interface";
+        return false;
+    }
+
+    // create adapter and start poll loop
+    if (!m_adapter) {
+        m_adapter = new OrgNeardAdapterInterface(QStringLiteral("org.neard"),
+                                                 m_adapterPath,
+                                                 QDBusConnection::systemBus(),
+                                                 this);
+    }
+
+    // possible modes: "Target", "Initiator", "Dual"
+    QDBusPendingReply<> replyPollLoop = m_adapter->StartPollLoop(QStringLiteral("Dual"));
+    replyPollLoop.waitForFinished();
+    if (replyPollLoop.isError()) {
+        qCWarning(QT_NFC_NEARD) << "error when starting polling";
+        return false;
+    } else {
+        qCDebug(QT_NFC_NEARD) << "successfully started polling";
+    }
+
     return true;
 }
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection()
 {
+    qCDebug(QT_NFC_NEARD) << "stopping target detection";
     if (!isAvailable())
         return;
 
-    QDBusPendingReply<> reply = m_adapter->StopPollLoop();
-    reply.waitForFinished();
-    // TODO Should we really power down the adapter?
-    reply = m_adapter->SetProperty(QStringLiteral("Powered"), QDBusVariant(false));
-    reply.waitForFinished();
-    delete m_adapter;
-    m_adapter = 0;
+    // check if the adapter is currently polling
+    QDBusPendingReply<QDBusVariant> replyPolling = m_dbusProperties->Get(QStringLiteral("org.neard.Adapter"),
+                                                                         QStringLiteral("Polling"));
+    replyPolling.waitForFinished();
+    if (!replyPolling.isError()) {
+        if (replyPolling.value().variant().toBool()) {
+            QDBusPendingReply<> replyStopPolling = m_adapter->StopPollLoop();
+            replyStopPolling.waitForFinished();
+            if (replyStopPolling.isError())
+                qCWarning(QT_NFC_NEARD) << "error when stopping polling";
+            else
+                qCDebug(QT_NFC_NEARD) << "successfully stopped polling";
+        } else {
+            qCDebug(QT_NFC_NEARD) << "already stopped polling";
+        }
+    } else {
+        qCWarning(QT_NFC_NEARD) << "error getting 'Polling' state from property interface";
+    }
 }
 
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(QObject *object, const QMetaMethod &method)
@@ -204,66 +249,21 @@ void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccess
     Q_UNUSED(accessModes);
 }
 
-void QNearFieldManagerPrivateImpl::tagFound(const QDBusObjectPath &path)
+void QNearFieldManagerPrivateImpl::handleTagFound(const QDBusObjectPath &path)
 {
-    qCDebug(QT_NFC_NEARD) << "Tag found" << path.path();
+    NearFieldTarget<QNearFieldTarget> *nfTag = new NearFieldTarget<QNearFieldTarget>(this, path);
+    m_activeTags.insert(path.path(), nfTag);
+    emit targetDetected(nfTag);
 }
 
-void QNearFieldManagerPrivateImpl::propertyChanged(QString property, QDBusVariant value)
+void QNearFieldManagerPrivateImpl::handleTagRemoved(const QDBusObjectPath &path)
 {
-    qCDebug(QT_NFC_NEARD) << "Property changed" << property;
-    // New device detected
-    if (property == QStringLiteral("Devices")) {
-        const QDBusArgument &devices = value.variant().value<QDBusArgument>();
-        QStringList devicesList;
-        devices.beginArray();
-        while (!devices.atEnd()) {
-            QDBusObjectPath path;
-            devices >> path;
-            devicesList.append(path.path());
-            qCDebug(QT_NFC_NEARD) << "New device" << devicesList;
-        }
-        devices.endArray();
-        qDebug() << "Devices list changed" << devicesList;
-    } else if (property == QStringLiteral("Tags")) {
-        const QDBusArgument &tags = value.variant().value<QDBusArgument>();
-        QStringList tagList;
-        tags.beginArray();
-        while (!tags.atEnd()) {
-            QDBusObjectPath path;
-            tags >> path;
-            tagList.append(path.path());
-
-            // If a tag is not in the tags list we detected a new tag
-            if (!m_activeTags.value(path.path())) {
-                NearFieldTarget<QNearFieldTarget> *nfTag =
-                        new NearFieldTarget<QNearFieldTarget>(this, path);
-                connect(nfTag, SIGNAL(destroyed(QObject*)), this, SLOT(tagDeleted(QObject*)));
-                emit targetDetected(nfTag);
-                m_activeTags.insert(path.path(), nfTag);
-            }
-        }
-        //Look if a tag was lost
-        foreach (const QString &target, m_activeTags.keys()) {
-            if (!tagList.contains(target)) {
-                emit targetLost(m_activeTags.value(target));
-                m_activeTags.remove(target);
-            }
-        }
-
-        tags.endArray();
-        qCDebug(QT_NFC_NEARD) << "Tag list changed" << tagList;
+    const QString adapterPath = path.path();
+    if (m_activeTags.contains(adapterPath)) {
+        QNearFieldTarget *nfTag = m_activeTags.value(adapterPath);
+        m_activeTags.remove(adapterPath);
+        emit targetLost(nfTag);
     }
-}
-
-void QNearFieldManagerPrivateImpl::tagDeleted(QObject *obj)
-{
-    if (obj == 0)
-        return;
-
-    const QString key = m_activeTags.key(static_cast<QNearFieldTarget*>(obj));
-    if (!key.isEmpty())
-        m_activeTags.remove(key);
 }
 
 QT_END_NAMESPACE
