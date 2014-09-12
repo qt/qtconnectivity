@@ -158,6 +158,7 @@ private:
                                  bool isCancelation);
     void sendNextPrepareWriteRequest(const QLowEnergyHandle handle,
                                      const QByteArray &newValue, quint16 offset);
+    bool increaseEncryptLevelfRequired(quint8 errorCode);
 
 private slots:
     void l2cpConnected();

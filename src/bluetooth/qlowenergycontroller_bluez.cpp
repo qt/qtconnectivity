@@ -353,23 +353,59 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
     sendNextPendingRequest();
 }
 
+/*!
+ * Called when the request for socket encryption has been
+ * processed by the kernel. Such requests take time as the kernel
+ * has to renegotiate the link parameters with the remote device.
+ *
+ * Therefore any such request delays the pending ATT commands until this
+ * callback is called. The first pending request in the queue is the request
+ * that triggered the encryption request.
+ */
 void QLowEnergyControllerPrivate::encryptionChangedEvent(
         const QBluetoothAddress &address, bool wasSuccess)
 {
     if (remoteDevice != address)
         return;
 
-    encryptionChangePending = false;
+    Q_ASSERT(encryptionChangePending);
     securityLevelValue = securityLevel();
 
+    // On success continue to process ATT command queue
     if (!wasSuccess) {
         // We could not increase the security of the link
         // The next request was requeued due to security error
         // skip it to avoid endless loop of security negotiations
         Q_ASSERT(!openRequests.isEmpty());
-        openRequests.removeFirst();
+        Request failedRequest = openRequests.takeFirst();
+
+        if (failedRequest.command == ATT_OP_WRITE_REQUEST) {
+             // Failing write requests trigger some sort of response
+            uint ref = failedRequest.reference.toUInt();
+            const QLowEnergyHandle charHandle = (ref & 0xffff);
+            const QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
+
+            QSharedPointer<QLowEnergyServicePrivate> service
+                                                = serviceForHandle(charHandle);
+            if (!service.isNull() && service->characteristicList.contains(charHandle)) {
+                if (!descriptorHandle)
+                    service->setError(QLowEnergyService::CharacteristicWriteError);
+                else
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+            }
+        } else if (failedRequest.command == ATT_OP_PREPARE_WRITE_REQUEST) {
+            uint handleData = failedRequest.reference.toUInt();
+            const QLowEnergyHandle attrHandle = (handleData & 0xffff);
+            const QByteArray newValue = failedRequest.reference2.toByteArray();
+
+            // Prepare command failed, cancel pending prepare queue on
+            // the device. The appropriate (Descriptor|Characteristic)WriteError
+            // is emitted too once the execute write request comes through
+            sendExecuteWriteRequest(attrHandle, newValue, true);
+        }
     }
 
+    encryptionChangePending = false;
     sendNextPendingRequest();
 }
 
@@ -634,27 +670,15 @@ void QLowEnergyControllerPrivate::processReply(
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
         if (isErrorResponse) {
-            switch (response.constData()[4]) {
-            case ATT_ERROR_INSUF_AUTHORIZATION:
-            case ATT_ERROR_INSUF_ENCRYPTION:
-            case ATT_ERROR_INSUF_AUTHENTICATION:
-                if (!hciManager->isValid())
-                    break;
-                if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))
-                    break;
-                if (securityLevelValue != BT_SECURITY_HIGH) {
-                    qCDebug(QT_BT_BLUEZ) << "Requesting encrypted link";
-                    if (setSecurityLevel(BT_SECURITY_HIGH))
-                        encryptionChangePending = true;
-                }
-                break;
-            default:
+            Q_ASSERT(!encryptionChangePending);
+            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            if (encryptionChangePending) {
+                // Just requested a security level change.
+                // Retry the same command again once the change has happened
+                openRequests.prepend(request);
                 break;
             }
-        }
-
-        // we ignore error response
-        if (!isErrorResponse) {
+        } else {
             if (!descriptorHandle)
                 updateValueOfCharacteristic(charHandle, response.mid(1), NEW_VALUE);
             else
@@ -665,13 +689,6 @@ void QLowEnergyControllerPrivate::processReply(
                 // Potentially more data -> switch to blob reads
                 readServiceValuesByOffset(handleData, mtuSize-1,
                                           request.reference2.toBool());
-                break;
-            }
-        } else {
-            if (encryptionChangePending) {
-                // Just requested a security level change.
-                // Retry the same command again once the change has happened
-                openRequests.prepend(request);
                 break;
             }
         }
@@ -698,7 +715,12 @@ void QLowEnergyControllerPrivate::processReply(
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
-        //ignore errors
+        /*
+         * READ_BLOB does not require encryption setup code. BLOB commands
+         * are only issued after read request if the read request is too long
+         * for single MTU. The preceding read request would have triggered
+         * the setup of the encryption already.
+         */
         if (!isErrorResponse) {
             quint16 length = 0;
             if (!descriptorHandle)
@@ -851,6 +873,13 @@ void QLowEnergyControllerPrivate::processReply(
             break;
 
         if (isErrorResponse) {
+            Q_ASSERT(!encryptionChangePending);
+            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            if (encryptionChangePending) {
+                openRequests.prepend(request);
+                break;
+            }
+
             if (!descriptorHandle)
                 service->setError(QLowEnergyService::CharacteristicWriteError);
             else
@@ -882,6 +911,12 @@ void QLowEnergyControllerPrivate::processReply(
         const int writtenPayload = ((handleData >> 16) & 0xffff);
 
         if (isErrorResponse) {
+            Q_ASSERT(!encryptionChangePending);
+            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            if (encryptionChangePending) {
+                openRequests.prepend(request);
+                break;
+            }
             //emits error on cancellation and aborts existing prepare reuqests
             sendExecuteWriteRequest(attrHandle, newValue, true);
         } else {
@@ -1507,6 +1542,36 @@ void QLowEnergyControllerPrivate::writeDescriptor(
     openRequests.enqueue(request);
 
     sendNextPendingRequest();
+}
+
+/*!
+ * Returns true if the encryption change was successfully requested.
+ * The request is triggered if we got a related ATT error.
+ */
+bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode)
+{
+    if (securityLevelValue == BT_SECURITY_HIGH)
+        return false;
+
+    switch (errorCode) {
+    case ATT_ERROR_INSUF_AUTHORIZATION:
+    case ATT_ERROR_INSUF_ENCRYPTION:
+    case ATT_ERROR_INSUF_AUTHENTICATION:
+        if (!hciManager->isValid())
+            return false;
+        if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))
+            return false;
+        if (securityLevelValue != BT_SECURITY_HIGH) {
+            qCDebug(QT_BT_BLUEZ) << "Requesting encrypted link";
+            if (setSecurityLevel(BT_SECURITY_HIGH))
+                return true;
+        }
+        break;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 QT_END_NAMESPACE
