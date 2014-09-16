@@ -121,7 +121,7 @@ bool QBluetoothTransferReplyBluez::start()
             m_running = false;
 
             emit QBluetoothTransferReply::error(m_error);
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
             return false;
         }
 
@@ -139,7 +139,7 @@ bool QBluetoothTransferReplyBluez::start()
             m_running = false;
 
             emit QBluetoothTransferReply::error(m_error);
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
             return false;
         }
         if (request().address().isNull()) {
@@ -149,7 +149,7 @@ bool QBluetoothTransferReplyBluez::start()
             m_running = false;
 
             emit QBluetoothTransferReply::error(m_error);
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
             return false;
         }
         m_size = file->size();
@@ -207,8 +207,7 @@ void QBluetoothTransferReplyBluez::sessionCreated(QDBusPendingCallWatcher *watch
         m_running = false;
 
         emit QBluetoothTransferReply::error(m_error);
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothTransferReply*, this));
+        emit finished(this);
 
         watcher->deleteLater();
         return;
@@ -239,8 +238,7 @@ void QBluetoothTransferReplyBluez::sessionStarted(QDBusPendingCallWatcher *watch
         cleanupSession();
 
         emit QBluetoothTransferReply::error(m_error);
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothTransferReply *, this));
+        emit finished(this);
 
         watcher->deleteLater();
         return;
@@ -292,8 +290,7 @@ void QBluetoothTransferReplyBluez::sessionChanged(const QString &interface,
 
             cleanupSession();
 
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                      Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
         } // ignore "active", "queued" & "suspended" status
     }
     qCDebug(QT_BT_BLUEZ) << "Transfer update:" << interface << changed_properties;
@@ -346,8 +343,7 @@ void QBluetoothTransferReplyBluez::sendReturned(QDBusPendingCallWatcher *watcher
         }
 
         emit QBluetoothTransferReply::error(m_error);
-        // allow time for the developer to connect to the signal
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+        emit finished(this);
     }
 }
 

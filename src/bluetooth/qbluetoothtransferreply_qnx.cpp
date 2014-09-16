@@ -137,7 +137,7 @@ bool QBluetoothTransferReplyQnx::start()
             m_finished = true;
             m_running = false;
             emit QBluetoothTransferReply::error(m_error);
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
             return false;
         }
         if (request().address().isNull()) {
@@ -146,7 +146,7 @@ bool QBluetoothTransferReplyQnx::start()
             m_finished = true;
             m_running = false;
             emit QBluetoothTransferReply::error(m_error);
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
             return false;
         }
         startOPP(file->fileName());
