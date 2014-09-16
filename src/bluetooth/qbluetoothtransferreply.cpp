@@ -90,12 +90,23 @@ void QBluetoothTransferReply::abort()
 */
 
 /*!
+    \fn void QBluetoothTransferReply::error(QBluetoothTransferReply::TransferError errorType)
+    \since 5.4
+
+    This signal is emitted whenever an error has occurred. The \a errorType
+    parameter indicates the type of error.
+
+    \sa error(), errorString()
+*/
+
+/*!
     Constructs a new QBluetoothTransferReply with \a parent.
 */
 QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate())
 {
-    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply");
+    qRegisterMetaType<QBluetoothTransferReply*>();
+    qRegisterMetaType<QBluetoothTransferReply::TransferError>();
 }
 
 /*!
@@ -165,12 +176,16 @@ void QBluetoothTransferReply::setRequest(const QBluetoothTransferRequest &reques
   \fn TransferError QBluetoothTransferReply::error() const
 
   The error code of the error that occurred.
+
+  \sa errorString()
 */
 
 /*!
   \fn QString QBluetoothTransferReply::errorString() const
 
   String describing the error. Can be displayed to the user.
+
+  \sa error()
 */
 
 QBluetoothTransferReplyPrivate::QBluetoothTransferReplyPrivate()
