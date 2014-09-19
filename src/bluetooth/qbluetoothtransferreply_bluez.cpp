@@ -69,8 +69,6 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
     setRequest(request);
     setManager(parent);
 
-    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
-
     if (isBluez5()) {
         m_clientBluez = new OrgBluezObexClient1Interface(QStringLiteral("org.bluez.obex"),
                                                         QStringLiteral("/org/bluez/obex"),
@@ -121,7 +119,9 @@ bool QBluetoothTransferReplyBluez::start()
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
 
@@ -137,7 +137,9 @@ bool QBluetoothTransferReplyBluez::start()
             m_error = QBluetoothTransferReply::FileNotFoundError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
         if (request().address().isNull()) {
@@ -145,7 +147,9 @@ bool QBluetoothTransferReplyBluez::start()
             m_error = QBluetoothTransferReply::HostNotFoundError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
         m_size = file->size();
@@ -201,8 +205,9 @@ void QBluetoothTransferReplyBluez::sessionCreated(QDBusPendingCallWatcher *watch
         m_error = QBluetoothTransferReply::HostNotFoundError;
         m_finished = true;
         m_running = false;
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothTransferReply*, this));
+
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
 
         watcher->deleteLater();
         return;
@@ -232,8 +237,8 @@ void QBluetoothTransferReplyBluez::sessionStarted(QDBusPendingCallWatcher *watch
 
         cleanupSession();
 
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothTransferReply *, this));
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
 
         watcher->deleteLater();
         return;
@@ -276,6 +281,8 @@ void QBluetoothTransferReplyBluez::sessionChanged(const QString &interface,
             if (s == QStringLiteral("error")) {
                 m_error = QBluetoothTransferReply::UnknownError;
                 m_errorStr = tr("Unknown Error");
+
+                emit QBluetoothTransferReply::error(m_error);
             } else { // complete
                 // allow progress bar to complete
                 emit transferProgress(m_size, m_size);
@@ -283,8 +290,7 @@ void QBluetoothTransferReplyBluez::sessionChanged(const QString &interface,
 
             cleanupSession();
 
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                      Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
         } // ignore "active", "queued" & "suspended" status
     }
     qCDebug(QT_BT_BLUEZ) << "Transfer update:" << interface << changed_properties;
@@ -336,8 +342,8 @@ void QBluetoothTransferReplyBluez::sendReturned(QDBusPendingCallWatcher *watcher
             m_error = QBluetoothTransferReply::UnknownError;
         }
 
-        // allow time for the developer to connect to the signal
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
     }
 }
 
@@ -376,6 +382,7 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
         m_error = QBluetoothTransferReply::UnknownError;
     }
 
+    emit QBluetoothTransferReply::error(m_error);
     emit finished(this);
 }
 
@@ -444,6 +451,7 @@ void QBluetoothTransferReplyBluez::abort()
 
         cleanupSession();
 
+        emit QBluetoothTransferReply::error(m_error);
         emit finished(this);
     }
 }

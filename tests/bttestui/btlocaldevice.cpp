@@ -41,6 +41,9 @@
 //same uuid as examples/bluetooth/btchat
 #define TEST_SERVICE_UUID "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
 
+#define SOCKET_PROTOCOL QBluetoothServiceInfo::RfcommProtocol
+//#define SOCKET_PROTOCOL QBluetoothServiceInfo::L2capProtocol
+
 BtLocalDevice::BtLocalDevice(QObject *parent) :
     QObject(parent)
 {
@@ -72,8 +75,6 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
         serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
         connect(serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
                 this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-        connect(serviceAgent, SIGNAL(serviceDiscovered(QLowEnergyServiceInfo)),
-                this, SLOT(leServiceDiscovered(QLowEnergyServiceInfo)));
         connect(serviceAgent, SIGNAL(finished()),
                 this, SLOT(serviceDiscoveryFinished()));
         connect(serviceAgent, SIGNAL(canceled()),
@@ -81,7 +82,7 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
         connect(serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
                 this, SLOT(serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error)));
 
-        socket = new QBluetoothSocket(this);
+        socket = new QBluetoothSocket(SOCKET_PROTOCOL, this);
         connect(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)),
                 this, SLOT(socketStateChanged(QBluetoothSocket::SocketState)));
         connect(socket, SIGNAL(error(QBluetoothSocket::SocketError)),
@@ -90,7 +91,7 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
         connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
         connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
 
-        server = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
+        server = new QBluetoothServer(SOCKET_PROTOCOL, this);
         server->setSecurityFlags(QBluetooth::NoSecurity);
         connect(server, SIGNAL(newConnection()), this, SLOT(serverNewConnection()));
         connect(server, SIGNAL(error(QBluetoothServer::Error)),
@@ -322,12 +323,6 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
     }
 }
 
-void BtLocalDevice::leServiceDiscovered(const QLowEnergyServiceInfo &info)
-{
-    qDebug() << "$$ Found new BTLE service" << info.device().address().toString()
-             << info.serviceUuid() << info.serviceName();
-}
-
 void BtLocalDevice::serviceDiscoveryFinished()
 {
     qDebug() << "###### Service Discovery Finished";
@@ -550,16 +545,21 @@ void BtLocalDevice::serverListenPort()
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         QBluetoothServiceInfo::Sequence protocol;
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        if (server->serverType() == QBluetoothServiceInfo::L2capProtocol)
+            protocol << QVariant::fromValue(server->serverPort());
         protocolDescriptorList.append(QVariant::fromValue(protocol));
-        protocol.clear();
-        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
-                 << QVariant::fromValue(quint8(server->serverPort()));
-        protocolDescriptorList.append(QVariant::fromValue(protocol));
+
+        if (server->serverType() == QBluetoothServiceInfo::RfcommProtocol) {
+            protocol.clear();
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                     << QVariant::fromValue(quint8(server->serverPort()));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                                  protocolDescriptorList);
 
         //Register service
-        qDebug() << "###### Registering service on" << localDevice->address().toString();
+        qDebug() << "###### Registering service on" << localDevice->address().toString() << server->serverPort();
         bool result = serviceInfo.registerService(localDevice->address());
         if (!result) {
             server->close();

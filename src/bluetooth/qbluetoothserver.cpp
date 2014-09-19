@@ -218,6 +218,8 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
     QBluetoothServiceInfo::Sequence protocol;
     protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+    if (d->serverType == QBluetoothServiceInfo::L2capProtocol)
+        protocol << QVariant::fromValue(serverPort());
     protocolDescriptorList.append(QVariant::fromValue(protocol));
     protocol.clear();
 //! [listen]
@@ -225,10 +227,10 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
 //! [listen2]
     protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
              << QVariant::fromValue(quint8(serverPort()));
+    protocolDescriptorList.append(QVariant::fromValue(protocol));
 //! [listen2]
     }
 //! [listen3]
-    protocolDescriptorList.append(QVariant::fromValue(protocol));
     serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                              protocolDescriptorList);
     bool result = serviceInfo.registerService();

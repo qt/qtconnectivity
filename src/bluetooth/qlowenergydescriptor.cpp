@@ -52,10 +52,10 @@ QT_BEGIN_NAMESPACE
     and so on).
 
     The descriptor value may be written via the \l QLowEnergyService instance
-    that manages the service to which this descriptor belongs. the
+    that manages the service to which this descriptor belongs. The
     \l {QLowEnergyService::writeDescriptor()} function writes the new value.
-    The \l {QLowEnergyService::descriptorChanged()} signal
-    is emitted upon success. The \l value() of this object is automatically updated accordingly.
+    The \l {QLowEnergyService::descriptorWritten()} signal
+    is emitted upon success. The cahced \l value() of this object is updated accordingly.
 
     \sa QLowEnergyService, QLowEnergyCharacteristic
 */
@@ -218,7 +218,7 @@ QBluetoothUuid QLowEnergyDescriptor::uuid() const
 
 /*!
     Returns the handle of the descriptor or \c 0 if the handle
-    cannot be accessed on the platform.
+    cannot be accessed on the platform or the descriptor is invalid.
 */
 QLowEnergyHandle QLowEnergyDescriptor::handle() const
 {
@@ -229,7 +229,7 @@ QLowEnergyHandle QLowEnergyDescriptor::handle() const
 }
 
 /*!
-    Returns the value of the descriptor.
+    Returns the cached value of the descriptor.
 
     A descriptor value may be updated using
     \l QLowEnergyService::writeDescriptor().

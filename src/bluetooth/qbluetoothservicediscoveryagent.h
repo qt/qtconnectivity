@@ -41,7 +41,6 @@
 #include <QtBluetooth/QBluetoothServiceInfo>
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
-#include <QtBluetooth/QLowEnergyServiceInfo>
 
 QT_BEGIN_NAMESPACE
 
@@ -93,7 +92,6 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void serviceDiscovered(const QBluetoothServiceInfo &info);
-    void serviceDiscovered(const QLowEnergyServiceInfo &info);
     void finished();
     void canceled();
     void error(QBluetoothServiceDiscoveryAgent::Error error);

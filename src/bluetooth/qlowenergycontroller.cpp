@@ -120,8 +120,25 @@ QT_BEGIN_NAMESPACE
     \value UnconnectedState   The controller is not connected to a remote device.
     \value ConnectingState    The controller is attempting to connect to a remote device.
     \value ConnectedState     The controller is connected to a remote device.
+    \value DiscoveringState   The controller is retrieving the list of services offered
+                              by the remote device.
+    \value DiscoveredState    The controller has discovered all services offered by the
+                              remote device.
     \value ClosingState       The controller is about to be disconnected from the remote device.
 */
+
+/*!
+    \enum QLowEnergyController::RemoteAddressType
+
+    Indicates what type of Bluetooth address the remote device uses.
+
+    \value PublicAddress The peripheral uses a public Bluetooth address.
+    \value RandomAddress A random address is a Bluetooth Low Energy security feature.
+                         Peripherals using such addresses may frequently change their
+                         Bluetooth address. This information is needed when trying to
+                         connect to a peripheral.
+ */
+
 
 /*!
     \fn void QLowEnergyController::connected()
@@ -280,7 +297,7 @@ QLowEnergyCharacteristic QLowEnergyControllerPrivate::characteristicForHandle(
 }
 
 /*!
-    Returns a valid descriptor if \a handle blongs to a descriptor;
+    Returns a valid descriptor if \a handle belongs to a descriptor;
     otherwise an invalid one.
  */
 QLowEnergyDescriptor QLowEnergyControllerPrivate::descriptorForHandle(
@@ -360,6 +377,7 @@ QLowEnergyController::QLowEnergyController(
     d->q_ptr = this;
     d->remoteDevice = remoteDevice;
     d->localAdapter = QBluetoothLocalDevice().address();
+    d->addressType = QLowEnergyController::PublicAddress;
 }
 
 /*!
@@ -429,6 +447,26 @@ QLowEnergyController::ControllerState QLowEnergyController::state() const
     return d_ptr->state;
 }
 
+/*!
+    Returns the type of \l remoteAddress(). By default, this value is initialized
+    to \l PublicAddress.
+
+    \sa setRemoteAddressType()
+ */
+QLowEnergyController::RemoteAddressType QLowEnergyController::remoteAddressType() const
+{
+    return d_ptr->addressType;
+}
+
+/*!
+    Sets the remote address \a type. The type is required to connect
+    to the remote Bluetooth Low Energy device.
+ */
+void QLowEnergyController::setRemoteAddressType(
+                    QLowEnergyController::RemoteAddressType type)
+{
+    d_ptr->addressType = type;
+}
 
 /*!
     Connects to the remote Bluetooth Low Energy device.
@@ -491,6 +529,7 @@ void QLowEnergyController::discoverServices()
     if (d->state != QLowEnergyController::ConnectedState)
         return;
 
+    d->setState(QLowEnergyController::DiscoveringState);
     d->discoverServices();
 }
 

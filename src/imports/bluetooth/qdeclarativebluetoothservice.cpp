@@ -310,6 +310,12 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap))
                  << QVariant::fromValue(quint16(d->m_server->serverPort()));
     } else if (d->m_protocol == RfcommProtocol) {
+        //rfcomm implies l2cp protocol
+        {
+            QBluetoothServiceInfo::Sequence l2cpProtocol;
+            l2cpProtocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocolDescriptorList.append(QVariant::fromValue(l2cpProtocol));
+        }
         protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
                  << QVariant::fromValue(quint8(d->m_server->serverPort()));
     }

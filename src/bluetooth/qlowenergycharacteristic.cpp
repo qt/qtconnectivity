@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     The characteristic value may be written via the \l QLowEnergyService instance
     that manages the service to which this characteristic belongs. The
     \l {QLowEnergyService::writeCharacteristic()} function writes the new value.
-    The \l {QLowEnergyService::characteristicChanged()} signal is emitted upon success.
+    The \l {QLowEnergyService::characteristicWritten()} signal is emitted upon success.
     The \l value() of this object is automatically updated accordingly.
 
     Characteristics may contain none, one or more descriptors. They can be individually
@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     \value Notify                   Permits notification of characteristic values.
     \value Indicate                 Permits indications of characteristic values.
     \value WriteSigned              Permits signed writes of the GATT characteristic values.
-    \value ExtendedProperty         Additional characteristic properties are defined in the characteristic
+    \value ExtendedProperty         Additional characteristic properties are defined in the characteristic's
                                     extended properties descriptor.
 
     \sa properties()
@@ -182,10 +182,19 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 }
 
 /*!
-    Returns the value of the characteristic.
+    Returns the cached value of the characteristic.
 
     If the characteristic's \l properties() permit writing of new values,
     the value can be updated using \l QLowEnergyService::writeCharacteristic().
+
+    The cache is updated during the associated service's
+    \l {QLowEnergyService::discoverDetails()} {detail discovery}, a successful
+    \l {QLowEnergyService::writeCharacteristic()}{write operation} or when an update
+    notification is received.
+
+    The returned \l QByteArray is empty if the characteristic does not have the
+    \l {QLowEnergyCharacteristic::Read}{read permission}. However, a non-readable
+    characteristic may obtain a non-empty value via a related notification or write operation.
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {
@@ -198,7 +207,8 @@ QByteArray QLowEnergyCharacteristic::value() const
 
 /*!
     Returns the handle of the characteristic's value attribute;
-    or \c 0 if the handle cannot be accessed on the platform.
+    or \c 0 if the handle cannot be accessed on the platform or
+    if the characteristic is invalid.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 {
@@ -296,7 +306,10 @@ bool QLowEnergyCharacteristic::isValid() const
     \internal
 
     Returns the handle of the characteristic or
-    \c 0 if the handle cannot be accessed on the platform.
+    \c 0 if the handle cannot be accessed on the platform or if the
+    characteristic is invalid.
+
+    \sa isValid()
  */
 QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
 {

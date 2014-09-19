@@ -67,10 +67,14 @@ private:
     QLowEnergyService *globalService;
 };
 
+Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
+
 tst_QLowEnergyCharacteristic::tst_QLowEnergyCharacteristic() :
     globalControl(0), globalService(0)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+
+    qRegisterMetaType<QLowEnergyController::ControllerState>();
 }
 
 tst_QLowEnergyCharacteristic::~tst_QLowEnergyCharacteristic()
@@ -112,7 +116,7 @@ void tst_QLowEnergyCharacteristic::initTestCase()
         qDebug() << "Connecting to" << remoteDevice;
         controller->connectToDevice();
         QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
-                  10000);
+                  20000);
         if (controller->state() != QLowEnergyController::ConnectedState) {
             // any error and we skip
             delete controller;
@@ -121,8 +125,15 @@ void tst_QLowEnergyCharacteristic::initTestCase()
         }
 
         QSignalSpy discoveryFinishedSpy(controller, SIGNAL(discoveryFinished()));
+        QSignalSpy stateSpy(controller, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         controller->discoverServices();
         QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+        QCOMPARE(stateSpy.count(), 2);
+        QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+                 QLowEnergyController::DiscoveringState);
+        QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+                 QLowEnergyController::DiscoveredState);
+
         foreach (const QBluetoothUuid &leServiceUuid, controller->services()) {
             QLowEnergyService *leService = controller->createServiceObject(leServiceUuid, this);
             if (!leService)

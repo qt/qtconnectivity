@@ -33,7 +33,6 @@
 
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
-#include "qlowenergyserviceinfo_p.h"
 
 #include "bluez/manager_p.h"
 #include "bluez/adapter_p.h"
@@ -300,8 +299,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
         emit q->error(error);
     } else if (!xmlRecords.isEmpty() && discoveryState() != Inactive) {
         foreach (const QString &record, xmlRecords) {
-            bool isBtleService = false;
-            const QBluetoothServiceInfo serviceInfo = parseServiceXml(record, &isBtleService);
+            const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
             //apply uuidFilter
             if (!uuidFilter.isEmpty()) {
@@ -436,19 +434,40 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
             b = b.remove(QLatin1Char('{')).remove(QLatin1Char('}'));
             const QBluetoothUuid uuid(b);
 
-            qCDebug(QT_BT_BLUEZ) << "Discovered BLE service" << uuid << uuidFilter.size();
-            QLowEnergyServiceInfo lowEnergyService(uuid);
-            lowEnergyService.setDevice(discoveredDevices.at(0));
+            qCDebug(QT_BT_BLUEZ) << "Discovered service" << uuid << uuidFilter.size();
+            QBluetoothServiceInfo service;
+            service.setDevice(discoveredDevices.at(0));
+            bool ok = false;
+            quint16 serviceClass = uuid.toUInt16(&ok);
+            if (ok)
+                service.setServiceName(QBluetoothUuid::serviceClassToString(
+                                           static_cast<QBluetoothUuid::ServiceClassUuid>(serviceClass)));
+
+            QBluetoothServiceInfo::Sequence classId;
+            classId << QVariant::fromValue(uuid);
+            service.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
+
+            QBluetoothServiceInfo::Sequence protocolDescriptorList;
+            {
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+            {
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+            service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+
             if (uuidFilter.isEmpty())
-                emit q->serviceDiscovered(lowEnergyService);
+                emit q->serviceDiscovered(service);
             else {
                 for (int j = 0; j < uuidFilter.size(); j++) {
                     if (uuidFilter.at(j) == uuid)
-                        emit q->serviceDiscovered(lowEnergyService);
-
+                        emit q->serviceDiscovered(service);
                 }
             }
-
         }
 
         if (singleDevice && deviceReply.isError()) {
@@ -503,14 +522,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
 
     foreach (const QString &record, reply.value()) {
-        bool isBtleService = false;
-        QBluetoothServiceInfo serviceInfo = parseServiceXml(record, &isBtleService);
-
-        if (isBtleService) {
-            qCDebug(QT_BT_BLUEZ) << "Discovered BLE services" << discoveredDevices.at(0).address().toString()
-                                 << serviceInfo.serviceName() << serviceInfo.serviceUuid() << serviceInfo.serviceClassUuids();
-            continue;
-        }
+        QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
         if (!serviceInfo.isValid())
             continue;
@@ -554,7 +566,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 }
 
 QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
-                            const QString& xmlRecord, bool *isBtleService)
+                            const QString& xmlRecord)
 {
     QXmlStreamReader xml(xmlRecord);
 
@@ -570,25 +582,7 @@ QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
                 xml.attributes().value(QLatin1String("id")).toString().toUShort(0, 0);
 
             if (xml.readNextStartElement()) {
-                QVariant value = readAttributeValue(xml);
-                if (isBtleService) {
-                    if (attributeId == 1) {// Attribute with id 1 contains UUID of the service
-                        const QBluetoothServiceInfo::Sequence seq =
-                                value.value<QBluetoothServiceInfo::Sequence>();
-                        for (int i = 0; i < seq.count(); i++) {
-                            const QBluetoothUuid uuid = seq.at(i).value<QBluetoothUuid>();
-                            if ((uuid.data1 & 0x1800) == 0x1800) {// We are taking into consideration that LE services starts at 0x1800
-                                //TODO don't emit in the middle of nowhere
-                                Q_Q(QBluetoothServiceDiscoveryAgent);
-                                QLowEnergyServiceInfo leService(uuid);
-                                leService.setDevice(discoveredDevices.at(0));
-                                *isBtleService = true;
-                                emit q->serviceDiscovered(leService);
-                                break;
-                            }
-                        }
-                    }
-                }
+                const QVariant value = readAttributeValue(xml);
                 serviceInfo.setAttribute(attributeId, value);
             }
         }
@@ -655,7 +649,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         if (!uuidFilter.isEmpty() && !uuidFilter.contains(uuid))
             continue;
 
-        // TODO deal with BTLE services under Bluez 5 -> right now they are normal services
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(discoveredDevices.at(0));
 
@@ -671,6 +664,19 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
                     = static_cast<QBluetoothUuid::ServiceClassUuid>(uuid.data1 & 0xffff);
             serviceInfo.setServiceName(QBluetoothUuid::serviceClassToString(clsId));
         }
+
+        QBluetoothServiceInfo::Sequence protocolDescriptorList;
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
+        serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
         //don't include the service if we already discovered it before
         if (!isDuplicatedService(serviceInfo)) {

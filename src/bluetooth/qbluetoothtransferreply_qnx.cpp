@@ -106,6 +106,7 @@ bool QBluetoothTransferReplyQnx::start()
             m_error = QBluetoothTransferReply::ResourceBusyError;
             m_finished = true;
             m_running = false;
+            emit QBluetoothTransferReply::error(m_error);
             emit finished(this);
             return false;
         }
@@ -115,6 +116,7 @@ bool QBluetoothTransferReplyQnx::start()
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;
             m_running = false;
+            emit QBluetoothTransferReply::error(m_error);
             emit finished(this);
             return false;
         }
@@ -134,7 +136,8 @@ bool QBluetoothTransferReplyQnx::start()
             m_error = QBluetoothTransferReply::FileNotFoundError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
         if (request().address().isNull()) {
@@ -142,7 +145,8 @@ bool QBluetoothTransferReplyQnx::start()
             m_error = QBluetoothTransferReply::HostNotFoundError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
         startOPP(file->fileName());
@@ -192,6 +196,8 @@ void QBluetoothTransferReplyQnx::controlReply(ppsResult result)
     if (!result.errorMsg.isEmpty()) {
         m_errorStr = result.errorMsg;
         m_error = QBluetoothTransferReply::UnknownError;
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
     }
 }
 
@@ -214,6 +220,7 @@ void QBluetoothTransferReplyQnx::controlEvent(ppsResult result)
 //        } else {
         m_errorStr = result.errorMsg;
         m_error = QBluetoothTransferReply::UnknownError;
+        emit QBluetoothTransferReply::error(m_error);
 //      }
         emit finished(this);
     } else if (result.msg == QStringLiteral("opp_update")) {

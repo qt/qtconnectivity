@@ -215,7 +215,7 @@ void HeartRate::serviceScanDone()
             this, SLOT(serviceStateChanged(QLowEnergyService::ServiceState)));
     connect(m_service, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
             this, SLOT(updateHeartRateValue(QLowEnergyCharacteristic,QByteArray)));
-    connect(m_service, SIGNAL(descriptorChanged(QLowEnergyDescriptor,QByteArray)),
+    connect(m_service, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)),
             this, SLOT(confirmedDescriptorWrite(QLowEnergyDescriptor,QByteArray)));
 
     m_service->discoverDetails();

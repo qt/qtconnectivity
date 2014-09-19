@@ -41,21 +41,39 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: parent.width/2
+    width: parent.width/3*2
     height: 62
     z: 50
     property string dialogText: ""
+    property bool busyImage: true
     border.width: 1
     border.color: "#363636"
     radius: 10
 
     Text {
+        id: dialogTextId
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        anchors.fill: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top;
+        anchors.topMargin: 10
+
         elide: Text.ElideMiddle
         text: dialogText
         color: "#363636"
         wrapMode: Text.Wrap
+    }
+
+    Image {
+        id: background
+
+        width:20
+        height:20
+        anchors.top: dialogTextId.bottom
+        anchors.horizontalCenter: dialogTextId.horizontalCenter
+        visible: parent.busyImage
+        source: "busy_dark.png"
+        fillMode: Image.PreserveAspectFit
+        NumberAnimation on rotation { duration: 3000; from:0; to: 360; loops: Animation.Infinite}
     }
 }

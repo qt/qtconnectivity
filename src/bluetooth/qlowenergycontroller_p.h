@@ -46,6 +46,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+class HciManager;
+#endif
+
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 
 class QLowEnergyControllerPrivate : public QObject
@@ -89,7 +93,7 @@ public:
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                              const QLowEnergyHandle charHandle,
-                             const QByteArray &newValue);
+                             const QByteArray &newValue, bool writeWithResponse = true);
     void writeDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
                          const QLowEnergyHandle charHandle,
                          const QLowEnergyHandle descriptorHandle,
@@ -106,6 +110,8 @@ public:
     // list of all found service uuids
     ServiceDataMap serviceList;
 
+    QLowEnergyController::RemoteAddressType addressType;
+
 private:
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
     QBluetoothSocket *l2cpSocket;
@@ -120,6 +126,10 @@ private:
     QQueue<Request> openRequests;
     bool requestPending;
     quint16 mtuSize;
+    int securityLevelValue;
+    bool encryptionChangePending;
+
+    HciManager *hciManager;
 
     void sendCommand(const QByteArray &packet);
     void sendNextPendingRequest();
@@ -141,16 +151,25 @@ private:
                                 QLowEnergyHandle startingHandle);
     void processUnsolicitedReply(const QByteArray &msg);
     void exchangeMTU();
-
+    bool setSecurityLevel(int level);
+    int securityLevel() const;
+    void sendExecuteWriteRequest(const QLowEnergyHandle attrHandle,
+                                 const QByteArray &newValue,
+                                 bool isCancelation);
+    void sendNextPrepareWriteRequest(const QLowEnergyHandle handle,
+                                     const QByteArray &newValue, quint16 offset);
+    bool increaseEncryptLevelfRequired(quint8 errorCode);
 
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();
     void l2cpErrorChanged(QBluetoothSocket::SocketError);
     void l2cpReadyRead();
+    void encryptionChangedEvent(const QBluetoothAddress&, bool);
 #endif
 private:
     QLowEnergyController *q_ptr;
+
 };
 
 QT_END_NAMESPACE

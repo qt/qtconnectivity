@@ -34,11 +34,21 @@
 #ifndef QBLUETOOTHSERVICEDISCOVERYAGENT_P_H
 #define QBLUETOOTHSERVICEDISCOVERYAGENT_P_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include "qbluetoothaddress.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothservicediscoveryagent.h"
-#include "qlowenergyserviceinfo.h"
 
 #include <QStack>
 #include <QStringList>
@@ -140,7 +150,7 @@ private:
     void runSdpScan(const QBluetoothAddress &remoteAddress,
                     const QBluetoothAddress localAddress);
     QVariant readAttributeValue(QXmlStreamReader &xml);
-    QBluetoothServiceInfo parseServiceXml(const QString& xml, bool *isBtleService);
+    QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
 #endif
 

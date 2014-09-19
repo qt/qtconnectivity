@@ -80,6 +80,9 @@ void QBluetoothTransferReply::abort()
     \fn void QBluetoothTransferReply::finished(QBluetoothTransferReply *reply)
 
     This signal is emitted when the transfer is complete for \a reply.
+
+    To avoid the loss of signal emissions it is recommend to immidiately connect
+    to this signal once a \c QBluetoothTransferReply instance has been created.
 */
 
 /*!
@@ -87,6 +90,23 @@ void QBluetoothTransferReply::abort()
 
     This signal is emitted whenever data is transferred. The \a bytesTransferred parameter contains the total
     number of bytes transferred so far out of \a bytesTotal.
+
+
+    To avoid the loss of signal emissions it is recommend to immidiately connect
+    to this signal once a QBluetoothTransferReply instance has been created.
+*/
+
+/*!
+    \fn void QBluetoothTransferReply::error(QBluetoothTransferReply::TransferError errorType)
+    \since 5.4
+
+    This signal is emitted whenever an error has occurred. The \a errorType
+    parameter indicates the type of error.
+
+    To avoid the loss of signal emissions it is recommend to immidiately connect
+    to this signal once a QBluetoothTransferReply instance has been created.
+
+    \sa error(), errorString()
 */
 
 /*!
@@ -95,7 +115,8 @@ void QBluetoothTransferReply::abort()
 QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate())
 {
-    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply");
+    qRegisterMetaType<QBluetoothTransferReply*>();
+    qRegisterMetaType<QBluetoothTransferReply::TransferError>();
 }
 
 /*!
@@ -165,12 +186,16 @@ void QBluetoothTransferReply::setRequest(const QBluetoothTransferRequest &reques
   \fn TransferError QBluetoothTransferReply::error() const
 
   The error code of the error that occurred.
+
+  \sa errorString()
 */
 
 /*!
   \fn QString QBluetoothTransferReply::errorString() const
 
   String describing the error. Can be displayed to the user.
+
+  \sa error()
 */
 
 QBluetoothTransferReplyPrivate::QBluetoothTransferReplyPrivate()

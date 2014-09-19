@@ -58,7 +58,14 @@ public:
         UnconnectedState = 0,
         ConnectingState,
         ConnectedState,
+        DiscoveringState,
+        DiscoveredState,
         ClosingState,
+    };
+
+    enum RemoteAddressType {
+        PublicAddress = 0,
+        RandomAddress
     };
 
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
@@ -73,10 +80,12 @@ public:
 
     ControllerState state() const;
 
+    RemoteAddressType remoteAddressType() const;
+    void setRemoteAddressType(RemoteAddressType type);
+
     void connectToDevice();
     void disconnectFromDevice();
 
-    // TODO add a way of detecting whether discoverDetails() as already called
     void discoverServices();
     QList<QBluetoothUuid> services() const;
     QLowEnergyService *createServiceObject(

@@ -1,6 +1,5 @@
-/***************************************************************************
+/****************************************************************************
 **
-** Copyright (C) 2013 BlackBerry Limited all rights reserved
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
@@ -32,19 +31,60 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYSERVICEINFO_P_H
-#define QLOWENERGYSERVICEINFO_P_H
-#include "qlowenergyserviceinfo.h"
+#ifndef HCIMANAGER_P_H
+#define HCIMANAGER_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QObject>
+#include <QtCore/QSet>
+#include <QtCore/QSocketNotifier>
+#include <QtBluetooth/QBluetoothAddress>
+#include "bluez/bluez_data_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyServiceInfoPrivate
+class HciManager : public QObject
 {
+    Q_OBJECT
 public:
-    QBluetoothUuid uuid;
-    QBluetoothDeviceInfo deviceInfo;
+    enum HciEvent {
+        EncryptChangeEvent = EVT_ENCRYPT_CHANGE,
+    };
+
+    explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
+    ~HciManager();
+
+    bool isValid() const;
+    bool monitorEvent(HciManager::HciEvent event);
+    void stopEvents();
+    QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
+
+
+signals:
+    void encryptionChangedEvent(const QBluetoothAddress &address, bool wasSuccess);
+
+private slots:
+    void _q_readNotify();
+
+private:
+    int hciForAddress(const QBluetoothAddress &deviceAdapter);
+
+    int hciSocket;
+    int hciDev;
+    QSocketNotifier *notifier;
+    QSet<HciManager::HciEvent> runningEvents;
 };
 
 QT_END_NAMESPACE
 
-#endif // QLOWENERGYSERVICEINFO_P_H
+#endif // HCIMANAGER_P_H

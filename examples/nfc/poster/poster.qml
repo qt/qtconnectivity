@@ -50,8 +50,8 @@ Rectangle {
         id: nearfield
 
         filter: [
-            NdefFilter { type: "U"; typeNameFormat: NearFiledRecord.NfcRtd; minimum: 1; maximum: 1 },
-            NdefFilter { type: "T"; typeNameFormat: NearFiledRecord.NfcRtd; minimum: 1 }
+            NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 },
+            NdefFilter { type: "T"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1 }
         ]
 
         onMessageRecordsChanged: {

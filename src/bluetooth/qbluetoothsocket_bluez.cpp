@@ -64,7 +64,7 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       connectWriteNotifier(0),
       connecting(false),
       discoveryAgent(0),
-      isLowEnergySocket(false)
+      lowEnergySocketType(0)
 {
 }
 
@@ -158,14 +158,14 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         // of socket.
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
-        if (isLowEnergySocket) {
+        if (lowEnergySocketType) {
             addr.l2_cid = htobs(port);
-            addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
+            addr.l2_bdaddr_type = lowEnergySocketType;
         } else {
-            addr.l2_psm = port;
+            addr.l2_psm = htobs(port);
         }
 #else
-        addr.l2_psm = port;
+        addr.l2_psm = htobs(port);
 #endif
 
         convertAddress(address.toUInt64(), addr.l2_bdaddr.b);

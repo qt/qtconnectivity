@@ -34,6 +34,17 @@
 #ifndef QBLUETOOTHSOCKET_P_H
 #define QBLUETOOTHSOCKET_P_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include "qbluetoothsocket.h"
 
 #ifdef QT_QNX_BLUETOOTH
@@ -82,13 +93,18 @@ public:
     ~QBluetoothSocketPrivate();
 
 //On QNX and Android we connect using the uuid not the port
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_QNX_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
+#elif defined(QT_ANDROID_BLUETOOTH)
+    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+                          QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
+    bool fallBackConnect(QAndroidJniObject uuid, int channel);
 #else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
-    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
+    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+                              QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
 #endif
 
 
@@ -177,7 +193,7 @@ private slots:
 
 #ifdef QT_BLUEZ_BLUETOOTH
 public:
-    bool isLowEnergySocket;
+    quint8 lowEnergySocketType;
 #endif
 };
 

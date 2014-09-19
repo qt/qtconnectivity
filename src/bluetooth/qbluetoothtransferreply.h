@@ -79,6 +79,7 @@ Q_SIGNALS:
     //TODO Remove QBluetoothTransferReply* parameter in Qt 6
     void finished(QBluetoothTransferReply *);
     void transferProgress(qint64 bytesTransferred, qint64 bytesTotal);
+    void error(QBluetoothTransferReply::TransferError lastError);
 
 protected:
     explicit QBluetoothTransferReply(QObject *parent = 0);
@@ -94,5 +95,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QBluetoothTransferReply::TransferError)
 
 #endif // QBLUETOOTHTRANSFERREPLY_H
