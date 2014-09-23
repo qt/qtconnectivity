@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "osx/osxbtservicerecord_p.h"
+#include "qbluetoothserver_osx_p.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osx/osxbtutility_p.h"
@@ -47,6 +48,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qmutex.h>
 #include <QtCore/qmap.h>
 #include <QtCore/qurl.h>
 
@@ -58,6 +60,7 @@ QT_BEGIN_NAMESPACE
 class QBluetoothServiceInfoPrivate
 {
 public:
+    typedef QBluetoothServiceInfo QSInfo;
     QBluetoothServiceInfoPrivate(QBluetoothServiceInfo *q);
     ~QBluetoothServiceInfoPrivate();
 
@@ -116,54 +119,45 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         return false;
     }
 
-    serviceRecord.reset([[IOBluetoothSDPServiceRecord
+    SDPRecord newRecord([[IOBluetoothSDPServiceRecord
                          publishedServiceRecordWithDictionary:serviceDict] retain]);
 
-    if (!serviceRecord) {
+    if (!newRecord) {
         qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
                                 "failed to create register a service record";
         return false;
     }
 
-    QBluetoothServiceInfo::Sequence protocolDescriptorList;
-    bool updatePDL = false;
+    const QSInfo::Protocol type = q_ptr->socketProtocol();
+    quint16 realPort = 0;
+    QBluetoothServerPrivate *server = Q_NULLPTR;
 
-    if (q_ptr->socketProtocol() == QBluetoothServiceInfo::L2capProtocol) {
-        //
+    if (type == QBluetoothServiceInfo::L2capProtocol) {
         BluetoothL2CAPPSM psm = 0;
-        if ([serviceRecord getL2CAPPSM:&psm] == kIOReturnSuccess) {
-            if (psm != q_ptr->protocolServiceMultiplexer()) {
-                // Update with a real PSM assigned by IOBluetooth!
-                updatePDL = true;
-                QBluetoothServiceInfo::Sequence protocol;
-                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
-                protocol << QVariant::fromValue(qint16(psm));
-                protocolDescriptorList.append(QVariant::fromValue(protocol));
-            }
+        server = QBluetoothServerPrivate::registeredServer(q_ptr->protocolServiceMultiplexer(), type);
+        if ([newRecord getL2CAPPSM:&psm] != kIOReturnSuccess) {
+            [newRecord removeServiceRecord];
+            return false;
         }
-    } else if (q_ptr->socketProtocol() == QBluetoothServiceInfo::RfcommProtocol) {
-        //
+        realPort = psm;
+    } else if (type == QBluetoothServiceInfo::RfcommProtocol) {
         BluetoothRFCOMMChannelID channelID = 0;
-        if ([serviceRecord getRFCOMMChannelID:&channelID] == kIOReturnSuccess) {
-            if (channelID != q_ptr->serverChannel()) {
-                updatePDL = true;
-                QBluetoothServiceInfo::Sequence protocol;
-                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
-                protocolDescriptorList.append(QVariant::fromValue(protocol));
-                protocol.clear();
-                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
-                         << QVariant::fromValue(quint8(channelID));
-                protocolDescriptorList.append(QVariant::fromValue(protocol));
-            }
+        server = QBluetoothServerPrivate::registeredServer(q_ptr->serverChannel(), type);
+        if ([newRecord getRFCOMMChannelID:&channelID] != kIOReturnSuccess) {
+            [newRecord removeServiceRecord];
+            return false;
         }
+        realPort = channelID;
     }
 
-    if (updatePDL)
-        q_ptr->setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
-
-    // TODO - check ServiceRecordHandle + error handling - if we failed to obtain a port.
+    if (!server) {
+        [newRecord removeServiceRecord];
+        return false;
+    }
 
     registered = true;
+    serviceRecord.reset(newRecord.take());
+    server->startListener(realPort);
 
     return true;
 }
@@ -184,7 +178,19 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     [serviceRecord removeServiceRecord];
     serviceRecord.reset(nil);
 
-    return false;
+    const QSInfo::Protocol type = q_ptr->socketProtocol();
+    QBluetoothServerPrivate *server = Q_NULLPTR;
+
+    const QMutexLocker lock(&QBluetoothServerPrivate::channelMapMutex());
+    if (type == QSInfo::RfcommProtocol)
+        server = QBluetoothServerPrivate::registeredServer(q_ptr->serverChannel(), type);
+    else if (type == QSInfo::L2capProtocol)
+        server = QBluetoothServerPrivate::registeredServer(q_ptr->protocolServiceMultiplexer(), type);
+
+    if (server)
+        server->stopListener();
+
+    return true;
 }
 
 bool QBluetoothServiceInfo::isRegistered() const

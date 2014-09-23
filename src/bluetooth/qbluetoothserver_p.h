@@ -74,6 +74,8 @@ class QBluetoothSocket;
 
 class QBluetoothServer;
 
+#ifndef QT_OSX_BLUETOOTH
+
 class QBluetoothServerPrivate
 #ifdef QT_QNX_BLUETOOTH
 : public QObject
@@ -136,6 +138,8 @@ public:
 
 #endif
 };
+
+#endif //QT_OSX_BLUETOOTH
 
 QT_END_NAMESPACE
 
