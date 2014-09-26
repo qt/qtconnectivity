@@ -100,6 +100,8 @@ QT_BEGIN_NAMESPACE
     signal is emitted. A failure to write triggers the \l CharacteristicWriteError.
     Writing a descriptor follows the same pattern.
 
+    \note Currently, it is not possible to send signed write or reliable write requests.
+
     \target notifications
 
     In some cases the peripheral generates value updates which
@@ -488,6 +490,9 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     \l QLowEnergyCharacteristic::Write and \l QLowEnergyCharacteristic::WriteNoResponse
     properties.
 
+    \note Currently, it is not possible to use signed or reliable writes as defined by the
+    Bluetooth specification.
+
     A characteristic can only be written if this service is in the \l ServiceDiscovered state,
     belongs to the service and is writable.
 
@@ -498,7 +503,6 @@ void QLowEnergyService::writeCharacteristic(
         const QByteArray &newValue, QLowEnergyService::WriteMode mode)
 {
     //TODO check behavior when writing to WriteSigned characteristic
-    //TODO add support for write long characteristic value (newValue.size() > MTU - 3)
     Q_D(QLowEnergyService);
 
     // not a characteristic of this service
@@ -563,13 +567,9 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
-    //TODO not all descriptors are writable (how to deal with write errors)
     Q_D(QLowEnergyService);
 
     if (!contains(descriptor))
-        return;
-
-    if (descriptor.value() == newValue)
         return;
 
     if (state() != ServiceDiscovered || !d->controller) {

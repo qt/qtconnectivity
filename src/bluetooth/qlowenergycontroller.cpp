@@ -297,7 +297,7 @@ QLowEnergyCharacteristic QLowEnergyControllerPrivate::characteristicForHandle(
 }
 
 /*!
-    Returns a valid descriptor if \a handle blongs to a descriptor;
+    Returns a valid descriptor if \a handle belongs to a descriptor;
     otherwise an invalid one.
  */
 QLowEnergyDescriptor QLowEnergyControllerPrivate::descriptorForHandle(

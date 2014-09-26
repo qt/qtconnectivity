@@ -31,71 +31,60 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHTRANSFERREPLY_H
-#define QBLUETOOTHTRANSFERREPLY_H
+#ifndef HCIMANAGER_P_H
+#define HCIMANAGER_P_H
 
-#include <QtCore/QIODevice>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include <QtBluetooth/QBluetoothTransferRequest>
-#include <QtBluetooth/QBluetoothTransferManager>
+#include <QObject>
+#include <QtCore/QSet>
+#include <QtCore/QSocketNotifier>
+#include <QtBluetooth/QBluetoothAddress>
+#include "bluez/bluez_data_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothTransferReplyPrivate;
-
-class Q_BLUETOOTH_EXPORT QBluetoothTransferReply : public QObject
+class HciManager : public QObject
 {
     Q_OBJECT
-
 public:
-    enum TransferError {
-        NoError = 0,
-        UnknownError,
-        FileNotFoundError,
-        HostNotFoundError,
-        UserCanceledTransferError,
-        IODeviceNotReadableError,
-        ResourceBusyError,
-        SessionError
+    enum HciEvent {
+        EncryptChangeEvent = EVT_ENCRYPT_CHANGE,
     };
 
+    explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
+    ~HciManager();
 
-    ~QBluetoothTransferReply();
+    bool isValid() const;
+    bool monitorEvent(HciManager::HciEvent event);
+    void stopEvents();
+    QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
 
-    virtual bool isFinished() const = 0;
-    virtual bool isRunning() const = 0;
 
-    QBluetoothTransferManager *manager() const;
+signals:
+    void encryptionChangedEvent(const QBluetoothAddress &address, bool wasSuccess);
 
-    virtual TransferError error() const = 0;
-    virtual QString errorString() const = 0;
-
-    QBluetoothTransferRequest request() const;
-
-public Q_SLOTS:
-    void abort();
-
-Q_SIGNALS:
-    //TODO Remove QBluetoothTransferReply* parameter in Qt 6
-    void finished(QBluetoothTransferReply *);
-    void transferProgress(qint64 bytesTransferred, qint64 bytesTotal);
-    void error(QBluetoothTransferReply::TransferError lastError);
-
-protected:
-    explicit QBluetoothTransferReply(QObject *parent = 0);
-    void setManager(QBluetoothTransferManager *manager);
-    void setRequest(const QBluetoothTransferRequest &request);
-
-protected:
-    QBluetoothTransferReplyPrivate *d_ptr;
+private slots:
+    void _q_readNotify();
 
 private:
-    Q_DECLARE_PRIVATE(QBluetoothTransferReply)
+    int hciForAddress(const QBluetoothAddress &deviceAdapter);
 
+    int hciSocket;
+    int hciDev;
+    QSocketNotifier *notifier;
+    QSet<HciManager::HciEvent> runningEvents;
 };
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothTransferReply::TransferError)
-
-#endif // QBLUETOOTHTRANSFERREPLY_H
+#endif // HCIMANAGER_P_H

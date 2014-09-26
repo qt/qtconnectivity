@@ -373,7 +373,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
             protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }
-        service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+        lowEnergyService.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
         qCDebug(QT_BT_QNX) << "Adding Low Energy service" << leUuid;
 
