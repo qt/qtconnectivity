@@ -71,18 +71,6 @@ Rectangle {
         }
     }
 
-    property double leftBlockUpdate: pingPong.leftBlockY
-    onLeftBlockUpdateChanged: leftblock.y = pingPong.leftBlockY
-
-    property double rightBlockUpdate: pingPong.rightBlockY
-    onRightBlockUpdateChanged: rightblock.y = pingPong.rightBlockY
-
-    property double leftBlockY: leftblock.y
-    onLeftBlockYChanged: pingPong.updateLeftBlock(leftblock.y)
-
-    property double rightBlockY: rightblock.y
-    onRightBlockYChanged: pingPong.updateRightBlock(rightblock.y)
-
     // Left pedal - server role
     Rectangle {
         id: leftblock
@@ -124,6 +112,18 @@ Rectangle {
             drag.maximumY: (board.height - rightblock.height)
         }
     }
+
+    property double leftBlockY: leftblock.y
+    onLeftBlockYChanged: pingPong.updateLeftBlock(leftblock.y)
+
+    property double leftBlockUpdate: pingPong.leftBlockY
+    onLeftBlockUpdateChanged: leftblock.y = pingPong.leftBlockY
+
+    property double rightBlockY: rightblock.y
+    onRightBlockYChanged: pingPong.updateRightBlock(rightblock.y)
+
+    property double rightBlockUpdate: pingPong.rightBlockY
+    onRightBlockUpdateChanged: rightblock.y = pingPong.rightBlockY
 
     Rectangle {
         id: splitter
