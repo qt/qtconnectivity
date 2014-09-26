@@ -64,6 +64,9 @@ QT_BEGIN_NAMESPACE
     format or range information specifying how the characteristic's value is to be\
     interpreted.
 
+    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
+    Some API elements may change until the final release of the feature.
+
     \sa QLowEnergyService, QLowEnergyDescriptor
 */
 
