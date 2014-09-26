@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.2
 
     QNearFieldTarget provides a generic interface for communicating with an NFC target device.
     Both NFC Forum devices and NFC Forum Tag targets are supported by this class.  All target

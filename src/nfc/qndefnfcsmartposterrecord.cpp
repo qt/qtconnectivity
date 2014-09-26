@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since Qt 5.2
 
     RTD-SmartPoster encapsulates a Smart Poster.
  */
