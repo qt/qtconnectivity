@@ -35,6 +35,7 @@
 #include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
 #include "bluez/bluez_data_p.h"
+#include "bluez/hcimanager_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothSocket>
@@ -66,19 +67,25 @@
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
 #define ATT_OP_WRITE_REQUEST            0x12 //write characteristic with response
 #define ATT_OP_WRITE_RESPONSE           0x13
+#define ATT_OP_PREPARE_WRITE_REQUEST    0x16 //write values longer than MTU-3 -> queueing
+#define ATT_OP_PREPARE_WRITE_RESPONSE   0x17
+#define ATT_OP_EXECUTE_WRITE_REQUEST    0x18 //write values longer than MTU-3 -> execute queue
+#define ATT_OP_EXECUTE_WRITE_RESPONSE   0x19
 #define ATT_OP_HANDLE_VAL_NOTIFICATION  0x1b //informs about value change
 #define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
 #define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
 #define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
 
 //GATT command sizes in bytes
-#define FIND_INFO_REQUEST_SIZE 5
-#define GRP_TYPE_REQ_SIZE 7
-#define READ_BY_TYPE_REQ_SIZE 7
-#define READ_REQUEST_SIZE 3
-#define READ_BLOB_REQUEST_SIZE 5
-#define WRITE_REQUEST_SIZE 3    // same size for WRITE_COMMAND
-#define MTU_EXCHANGE_SIZE 3
+#define FIND_INFO_REQUEST_HEADER_SIZE 5
+#define GRP_TYPE_REQ_HEADER_SIZE 7
+#define READ_BY_TYPE_REQ_HEADER_SIZE 7
+#define READ_REQUEST_HEADER_SIZE 3
+#define READ_BLOB_REQUEST_HEADER_SIZE 5
+#define WRITE_REQUEST_HEADER_SIZE 3    // same size for WRITE_COMMAND header
+#define PREPARE_WRITE_HEADER_SIZE 5
+#define EXECUTE_WRITE_HEADER_SIZE 2
+#define MTU_EXCHANGE_HEADER_SIZE 3
 
 // GATT error codes
 #define ATT_ERROR_INVALID_HANDLE        0x01
@@ -184,9 +191,20 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       state(QLowEnergyController::UnconnectedState),
       error(QLowEnergyController::NoError),
       l2cpSocket(0), requestPending(false),
-      mtuSize(ATT_DEFAULT_LE_MTU)
+      mtuSize(ATT_DEFAULT_LE_MTU),
+      securityLevelValue(-1),
+      encryptionChangePending(false),
+      hciManager(0)
 {
     qRegisterMetaType<QList<QLowEnergyHandle> >();
+
+    hciManager = new HciManager(localAdapter, this);
+    if (!hciManager->isValid())
+        return;
+
+    hciManager->monitorEvent(HciManager::EncryptChangeEvent);
+    connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
+            this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
@@ -240,6 +258,7 @@ void QLowEnergyControllerPrivate::l2cpConnected()
 {
     Q_Q(QLowEnergyController);
 
+    securityLevelValue = securityLevel();
     exchangeMTU();
 
     setState(QLowEnergyController::ConnectedState);
@@ -256,6 +275,7 @@ void QLowEnergyControllerPrivate::l2cpDisconnected()
 {
     Q_Q(QLowEnergyController);
 
+    securityLevelValue = -1;
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
 }
@@ -333,6 +353,62 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
     sendNextPendingRequest();
 }
 
+/*!
+ * Called when the request for socket encryption has been
+ * processed by the kernel. Such requests take time as the kernel
+ * has to renegotiate the link parameters with the remote device.
+ *
+ * Therefore any such request delays the pending ATT commands until this
+ * callback is called. The first pending request in the queue is the request
+ * that triggered the encryption request.
+ */
+void QLowEnergyControllerPrivate::encryptionChangedEvent(
+        const QBluetoothAddress &address, bool wasSuccess)
+{
+    if (remoteDevice != address)
+        return;
+
+    Q_ASSERT(encryptionChangePending);
+    securityLevelValue = securityLevel();
+
+    // On success continue to process ATT command queue
+    if (!wasSuccess) {
+        // We could not increase the security of the link
+        // The next request was requeued due to security error
+        // skip it to avoid endless loop of security negotiations
+        Q_ASSERT(!openRequests.isEmpty());
+        Request failedRequest = openRequests.takeFirst();
+
+        if (failedRequest.command == ATT_OP_WRITE_REQUEST) {
+             // Failing write requests trigger some sort of response
+            uint ref = failedRequest.reference.toUInt();
+            const QLowEnergyHandle charHandle = (ref & 0xffff);
+            const QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
+
+            QSharedPointer<QLowEnergyServicePrivate> service
+                                                = serviceForHandle(charHandle);
+            if (!service.isNull() && service->characteristicList.contains(charHandle)) {
+                if (!descriptorHandle)
+                    service->setError(QLowEnergyService::CharacteristicWriteError);
+                else
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+            }
+        } else if (failedRequest.command == ATT_OP_PREPARE_WRITE_REQUEST) {
+            uint handleData = failedRequest.reference.toUInt();
+            const QLowEnergyHandle attrHandle = (handleData & 0xffff);
+            const QByteArray newValue = failedRequest.reference2.toByteArray();
+
+            // Prepare command failed, cancel pending prepare queue on
+            // the device. The appropriate (Descriptor|Characteristic)WriteError
+            // is emitted too once the execute write request comes through
+            sendExecuteWriteRequest(attrHandle, newValue, true);
+        }
+    }
+
+    encryptionChangePending = false;
+    sendNextPendingRequest();
+}
+
 void QLowEnergyControllerPrivate::sendCommand(const QByteArray &packet)
 {
     qint64 result = l2cpSocket->write(packet.constData(),
@@ -347,7 +423,7 @@ void QLowEnergyControllerPrivate::sendCommand(const QByteArray &packet)
 
 void QLowEnergyControllerPrivate::sendNextPendingRequest()
 {
-    if (openRequests.isEmpty() || requestPending)
+    if (openRequests.isEmpty() || requestPending || encryptionChangePending)
         return;
 
     const Request &request = openRequests.head();
@@ -593,8 +669,16 @@ void QLowEnergyControllerPrivate::processReply(
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
-        // we ignore error response
-        if (!isErrorResponse) {
+        if (isErrorResponse) {
+            Q_ASSERT(!encryptionChangePending);
+            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            if (encryptionChangePending) {
+                // Just requested a security level change.
+                // Retry the same command again once the change has happened
+                openRequests.prepend(request);
+                break;
+            }
+        } else {
             if (!descriptorHandle)
                 updateValueOfCharacteristic(charHandle, response.mid(1), NEW_VALUE);
             else
@@ -631,7 +715,12 @@ void QLowEnergyControllerPrivate::processReply(
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
-        //ignore errors
+        /*
+         * READ_BLOB does not require encryption setup code. BLOB commands
+         * are only issued after read request if the read request is too long
+         * for single MTU. The preceding read request would have triggered
+         * the setup of the encryption already.
+         */
         if (!isErrorResponse) {
             quint16 length = 0;
             if (!descriptorHandle)
@@ -784,6 +873,13 @@ void QLowEnergyControllerPrivate::processReply(
             break;
 
         if (isErrorResponse) {
+            Q_ASSERT(!encryptionChangePending);
+            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            if (encryptionChangePending) {
+                openRequests.prepend(request);
+                break;
+            }
+
             if (!descriptorHandle)
                 service->setError(QLowEnergyService::CharacteristicWriteError);
             else
@@ -793,13 +889,78 @@ void QLowEnergyControllerPrivate::processReply(
 
         const QByteArray newValue = request.reference2.toByteArray();
         if (!descriptorHandle) {
-            service->characteristicList[charHandle].value = newValue;
+            updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             QLowEnergyCharacteristic ch(service, charHandle);
             emit service->characteristicWritten(ch, newValue);
         } else {
-            service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
+            updateValueOfDescriptor(charHandle, descriptorHandle, newValue, NEW_VALUE);
             QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
             emit service->descriptorWritten(descriptor, newValue);
+        }
+    }
+        break;
+    case ATT_OP_PREPARE_WRITE_REQUEST: //error case
+    case ATT_OP_PREPARE_WRITE_RESPONSE:
+    {
+        //Prepare write command response
+        Q_ASSERT(request.command == ATT_OP_PREPARE_WRITE_REQUEST);
+
+        uint handleData = request.reference.toUInt();
+        const QLowEnergyHandle attrHandle = (handleData & 0xffff);
+        const QByteArray newValue = request.reference2.toByteArray();
+        const int writtenPayload = ((handleData >> 16) & 0xffff);
+
+        if (isErrorResponse) {
+            Q_ASSERT(!encryptionChangePending);
+            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            if (encryptionChangePending) {
+                openRequests.prepend(request);
+                break;
+            }
+            //emits error on cancellation and aborts existing prepare reuqests
+            sendExecuteWriteRequest(attrHandle, newValue, true);
+        } else {
+            if (writtenPayload < newValue.size()) {
+                sendNextPrepareWriteRequest(attrHandle, newValue, writtenPayload);
+            } else {
+                sendExecuteWriteRequest(attrHandle, newValue, false);
+            }
+        }
+    }
+        break;
+    case ATT_OP_EXECUTE_WRITE_REQUEST: //error case
+    case ATT_OP_EXECUTE_WRITE_RESPONSE:
+    {
+        // right now used in connection with long characteristic/descriptor value writes
+        // not catering for reliable writes
+        Q_ASSERT(request.command == ATT_OP_EXECUTE_WRITE_REQUEST);
+
+        uint handleData = request.reference.toUInt();
+        const QLowEnergyHandle attrHandle = handleData & 0xffff;
+        bool wasCancellation = !((handleData >> 16) & 0xffff);
+        const QByteArray newValue = request.reference2.toByteArray();
+
+        // is it a descriptor or characteristic?
+        const QLowEnergyDescriptor descriptor = descriptorForHandle(attrHandle);
+        QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(attrHandle);
+        Q_ASSERT(!service.isNull());
+
+        if (isErrorResponse || wasCancellation) {
+            // charHandle == 0 -> cancellation
+            if (descriptor.isValid())
+                service->setError(QLowEnergyService::DescriptorWriteError);
+            else
+                service->setError(QLowEnergyService::CharacteristicWriteError);
+        } else {
+            if (descriptor.isValid()) {
+                updateValueOfDescriptor(descriptor.characteristicHandle(),
+                                        attrHandle, newValue, NEW_VALUE);
+                emit service->descriptorWritten(descriptor, newValue);
+            } else {
+                updateValueOfCharacteristic(attrHandle, newValue, NEW_VALUE);
+                QLowEnergyCharacteristic ch(service, attrHandle);
+                emit service->characteristicWritten(ch, newValue);
+            }
         }
     }
         break;
@@ -818,15 +979,15 @@ void QLowEnergyControllerPrivate::sendReadByGroupRequest(
         QLowEnergyHandle start, QLowEnergyHandle end, quint16 type)
 {
     //call for primary and secondary services
-    quint8 packet[GRP_TYPE_REQ_SIZE];
+    quint8 packet[GRP_TYPE_REQ_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
     bt_put_unaligned(htobs(start), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(end), (quint16 *) &packet[3]);
     bt_put_unaligned(htobs(type), (quint16 *) &packet[5]);
 
-    QByteArray data(GRP_TYPE_REQ_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet,  GRP_TYPE_REQ_SIZE);
+    QByteArray data(GRP_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  GRP_TYPE_REQ_HEADER_SIZE);
     qCDebug(QT_BT_BLUEZ) << "Sending read_by_group_type request, startHandle:" << hex
              << start << "endHandle:" << end << type;
 
@@ -856,15 +1017,15 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         QLowEnergyHandle nextHandle, quint16 attributeType)
 {
-    quint8 packet[READ_BY_TYPE_REQ_SIZE];
+    quint8 packet[READ_BY_TYPE_REQ_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
     bt_put_unaligned(htobs(nextHandle), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(serviceData->endHandle), (quint16 *) &packet[3]);
     bt_put_unaligned(htobs(attributeType), (quint16 *) &packet[5]);
 
-    QByteArray data(READ_BY_TYPE_REQ_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet,  READ_BY_TYPE_REQ_SIZE);
+    QByteArray data(READ_BY_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  READ_BY_TYPE_REQ_HEADER_SIZE);
     qCDebug(QT_BT_BLUEZ) << "Sending read_by_type request, startHandle:" << hex
              << nextHandle << "endHandle:" << serviceData->endHandle
              << "type:" << attributeType << "packet:" << data.toHex();
@@ -890,7 +1051,7 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
 void QLowEnergyControllerPrivate::readServiceValues(
         const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
-    quint8 packet[READ_REQUEST_SIZE];
+    quint8 packet[READ_REQUEST_HEADER_SIZE];
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (readCharacteristics)
             qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
@@ -954,8 +1115,8 @@ void QLowEnergyControllerPrivate::readServiceValues(
         packet[0] = ATT_OP_READ_REQUEST;
         bt_put_unaligned(htobs(pair.first), (quint16 *) &packet[1]);
 
-        QByteArray data(READ_REQUEST_SIZE, Qt::Uninitialized);
-        memcpy(data.data(), packet,  READ_REQUEST_SIZE);
+        QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+        memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
 
         Request request;
         request.payload = data;
@@ -984,7 +1145,7 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
-    quint8 packet[READ_REQUEST_SIZE];
+    quint8 packet[READ_REQUEST_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BLOB_REQUEST;
 
@@ -1010,8 +1171,8 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
     bt_put_unaligned(htobs(handleToRead), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]);
 
-    QByteArray data(READ_BLOB_REQUEST_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, READ_BLOB_REQUEST_SIZE);
+    QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, READ_BLOB_REQUEST_HEADER_SIZE);
 
     Request request;
     request.payload = data;
@@ -1068,12 +1229,12 @@ void QLowEnergyControllerPrivate::exchangeMTU()
 {
     qCDebug(QT_BT_BLUEZ) << "Exchanging MTU";
 
-    quint8 packet[MTU_EXCHANGE_SIZE];
+    quint8 packet[MTU_EXCHANGE_HEADER_SIZE];
     packet[0] = ATT_OP_EXCHANGE_MTU_REQUEST;
     bt_put_unaligned(htobs(ATT_MAX_LE_MTU), (quint16 *) &packet[1]);
 
-    QByteArray data(MTU_EXCHANGE_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, MTU_EXCHANGE_SIZE);
+    QByteArray data(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, MTU_EXCHANGE_HEADER_SIZE);
 
     Request request;
     request.payload = data;
@@ -1081,6 +1242,90 @@ void QLowEnergyControllerPrivate::exchangeMTU()
     openRequests.enqueue(request);
 
     sendNextPendingRequest();
+}
+
+int QLowEnergyControllerPrivate::securityLevel() const
+{
+    int socket = l2cpSocket->socketDescriptor();
+    if (socket < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid l2cp socket, aborting getting of sec level";
+        return -1;
+    }
+
+    struct bt_security secData;
+    socklen_t length = sizeof(secData);
+    memset(&secData, 0, length);
+
+    if (getsockopt(socket, SOL_BLUETOOTH, BT_SECURITY, &secData, &length) == 0) {
+        qCDebug(QT_BT_BLUEZ) << "Current l2cp sec level:" << secData.level;
+        return secData.level;
+    }
+
+    if (errno != ENOPROTOOPT) //older kernel, fall back to L2CAP_LM option
+        return -1;
+
+    // cater for older kernels
+    int optval;
+    length = sizeof(optval);
+    if (getsockopt(socket, SOL_L2CAP, L2CAP_LM, &optval, &length) == 0) {
+        int level = BT_SECURITY_SDP;
+        if (optval & L2CAP_LM_AUTH)
+            level = BT_SECURITY_LOW;
+        if (optval & L2CAP_LM_ENCRYPT)
+            level = BT_SECURITY_MEDIUM;
+        if (optval & L2CAP_LM_SECURE)
+            level = BT_SECURITY_HIGH;
+
+        qDebug() << "Current l2cp sec level (old):" << level;
+        return level;
+    }
+
+    return -1;
+}
+
+bool QLowEnergyControllerPrivate::setSecurityLevel(int level)
+{
+    if (level > BT_SECURITY_HIGH || level < BT_SECURITY_LOW)
+        return false;
+
+    int socket = l2cpSocket->socketDescriptor();
+    if (socket < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid l2cp socket, aborting setting of sec level";
+        return false;
+    }
+
+    struct bt_security secData;
+    socklen_t length = sizeof(secData);
+    memset(&secData, 0, length);
+    secData.level = level;
+
+    if (setsockopt(socket, SOL_BLUETOOTH, BT_SECURITY, &secData, length) == 0) {
+        qCDebug(QT_BT_BLUEZ) << "Setting new l2cp sec level:" << secData.level;
+        return true;
+    }
+
+    if (errno != ENOPROTOOPT) //older kernel
+        return false;
+
+    int optval = 0;
+    switch (level) { // fall through intendeds
+        case BT_SECURITY_HIGH:
+            optval |= L2CAP_LM_SECURE;
+        case BT_SECURITY_MEDIUM:
+            optval |= L2CAP_LM_ENCRYPT;
+        case BT_SECURITY_LOW:
+            optval |= L2CAP_LM_AUTH;
+            break;
+        default:
+            return false;
+    }
+
+    if (setsockopt(socket, SOL_L2CAP, L2CAP_LM, &optval, sizeof(optval)) == 0) {
+        qDebug(QT_BT_BLUEZ) << "Old l2cp sec level:" << optval;
+        return true;
+    }
+
+    return false;
 }
 
 void QLowEnergyControllerPrivate::discoverNextDescriptor(
@@ -1094,7 +1339,7 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     qCDebug(QT_BT_BLUEZ) << "Sending find_info request" << hex
                          << pendingCharHandles << startingHandle;
 
-    quint8 packet[FIND_INFO_REQUEST_SIZE];
+    quint8 packet[FIND_INFO_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_FIND_INFORMATION_REQUEST;
 
     const QLowEnergyHandle charStartHandle = startingHandle;
@@ -1107,8 +1352,8 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     bt_put_unaligned(htobs(charStartHandle), (quint16 *) &packet[1]);
     bt_put_unaligned(htobs(charEndHandle), (quint16 *) &packet[3]);
 
-    QByteArray data(FIND_INFO_REQUEST_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, FIND_INFO_REQUEST_SIZE);
+    QByteArray data(FIND_INFO_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, FIND_INFO_REQUEST_HEADER_SIZE);
 
     Request request;
     request.payload = data;
@@ -1120,6 +1365,93 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     sendNextPendingRequest();
 }
 
+void QLowEnergyControllerPrivate::sendNextPrepareWriteRequest(
+        const QLowEnergyHandle handle, const QByteArray &newValue,
+        quint16 offset)
+{
+    // is it a descriptor or characteristic?
+    QLowEnergyHandle targetHandle = 0;
+    const QLowEnergyDescriptor descriptor = descriptorForHandle(handle);
+    if (descriptor.isValid())
+        targetHandle = descriptor.handle();
+    else
+        targetHandle = characteristicForHandle(handle).handle();
+
+    if (!targetHandle) {
+        qCWarning(QT_BT_BLUEZ) << "sendNextPrepareWriteRequest cancelled due to invalid handle"
+                               << handle;
+        return;
+    }
+
+    quint8 packet[PREPARE_WRITE_HEADER_SIZE];
+    packet[0] = ATT_OP_PREPARE_WRITE_REQUEST;
+    bt_put_unaligned(htobs(targetHandle), (quint16 *) &packet[1]); // attribute handle
+    bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]); // offset into newValue
+
+    qCDebug(QT_BT_BLUEZ) << "Writing long characteristic (prepare):"
+                         << hex << handle;
+
+
+    const int maxAvailablePayload = mtuSize - PREPARE_WRITE_HEADER_SIZE;
+    const int requiredPayload = qMin(newValue.size() - offset, maxAvailablePayload);
+    const int dataSize = PREPARE_WRITE_HEADER_SIZE + requiredPayload;
+
+    Q_ASSERT((offset + requiredPayload) <= newValue.size());
+    Q_ASSERT(dataSize <= mtuSize);
+
+    QByteArray data(dataSize, Qt::Uninitialized);
+    memcpy(data.data(), packet, PREPARE_WRITE_HEADER_SIZE);
+    memcpy(&(data.data()[PREPARE_WRITE_HEADER_SIZE]), &(newValue.constData()[offset]),
+                                               requiredPayload);
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_PREPARE_WRITE_REQUEST;
+    request.reference = (handle | ((offset + requiredPayload) << 16));
+    request.reference2 = newValue;
+    openRequests.enqueue(request);
+}
+
+/*!
+    Sends an "Execute Write Request" for a long characteristic or descriptor write.
+    This cannot be used for executes in relation to reliable write requests.
+
+    A cancellation removes all pending prepare write request on the GATT server.
+    Otherwise this function sends an execute request for all pending prepare
+    write requests.
+ */
+void QLowEnergyControllerPrivate::sendExecuteWriteRequest(
+        const QLowEnergyHandle attrHandle, const QByteArray &newValue,
+        bool isCancelation)
+{
+    quint8 packet[EXECUTE_WRITE_HEADER_SIZE];
+    packet[0] = ATT_OP_EXECUTE_WRITE_REQUEST;
+    if (isCancelation)
+        packet[1] = 0x00; // cancel pending write prepare requests
+    else
+        packet[1] = 0x01; // execute pending write prepare requests
+
+    QByteArray data(EXECUTE_WRITE_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet, EXECUTE_WRITE_HEADER_SIZE);
+
+    qCDebug(QT_BT_BLUEZ) << "Sending Execute Write Request for long characteristic value"
+                         << hex << attrHandle;
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_EXECUTE_WRITE_REQUEST;
+    request.reference  = (attrHandle | ((isCancelation ? 0x00 : 0x01) << 16));
+    request.reference2 = newValue;
+    openRequests.prepend(request);
+}
+
+
+/*!
+    Writes long (prepare write request), short (write request)
+    and writeWithoutResponse characteristic values.
+
+    TODO Reliable/prepare write across multiple characteristics is not supported
+ */
 void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
@@ -1132,23 +1464,31 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         return;
 
     const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
-    // sizeof(command) + sizeof(handle) + sizeof(newValue)
-    const int size = 1 + 2 + newValue.size();
+    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
 
-    quint8 packet[WRITE_REQUEST_SIZE];
-    if (writeWithResponse)
-        packet[0] = ATT_OP_WRITE_REQUEST;
-    else
+    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
+    if (writeWithResponse) {
+        if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
+            sendNextPrepareWriteRequest(charHandle, newValue, 0);
+            sendNextPendingRequest();
+            return;
+        } else {
+            // write value fits into single package
+            packet[0] = ATT_OP_WRITE_REQUEST;
+        }
+    } else {
+        // write without response
         packet[0] = ATT_OP_WRITE_COMMAND;
+    }
 
     bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
 
     QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
+    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
-                         << "(size:" << size << "response:" << writeWithResponse << ")";
+                         << "(size:" << size << "with response:" << writeWithResponse << ")";
 
     // Advantage of write without response is the quick turnaround.
     // It can be send at any time and does not produce responses.
@@ -1176,16 +1516,20 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 {
     Q_ASSERT(!service.isNull());
 
-    // sizeof(command) + sizeof(handle) + sizeof(newValue)
-    const int size = 1 + 2 + newValue.size();
+    if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
+        sendNextPrepareWriteRequest(descriptorHandle, newValue, 0);
+        sendNextPendingRequest();
+        return;
+    }
 
-    quint8 packet[WRITE_REQUEST_SIZE];
+    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_WRITE_REQUEST;
     bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
 
+    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
     QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_SIZE]), newValue.constData(), newValue.size());
+    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
 
     qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
                          << "(size:" << size << ")";
@@ -1198,6 +1542,36 @@ void QLowEnergyControllerPrivate::writeDescriptor(
     openRequests.enqueue(request);
 
     sendNextPendingRequest();
+}
+
+/*!
+ * Returns true if the encryption change was successfully requested.
+ * The request is triggered if we got a related ATT error.
+ */
+bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode)
+{
+    if (securityLevelValue == BT_SECURITY_HIGH)
+        return false;
+
+    switch (errorCode) {
+    case ATT_ERROR_INSUF_AUTHORIZATION:
+    case ATT_ERROR_INSUF_ENCRYPTION:
+    case ATT_ERROR_INSUF_AUTHENTICATION:
+        if (!hciManager->isValid())
+            return false;
+        if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))
+            return false;
+        if (securityLevelValue != BT_SECURITY_HIGH) {
+            qCDebug(QT_BT_BLUEZ) << "Requesting encrypted link";
+            if (setSecurityLevel(BT_SECURITY_HIGH))
+                return true;
+        }
+        break;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 QT_END_NAMESPACE

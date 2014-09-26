@@ -55,12 +55,8 @@ public:
     QBluetoothTransferReplyPrivate();
 
     QBluetoothTransferManager *m_manager;
-    qint64 m_buffersize;
 
     QBluetoothTransferRequest m_request;
-
-    QBluetoothTransferReply *q_ptr;
-
 };
 
 QT_END_NAMESPACE

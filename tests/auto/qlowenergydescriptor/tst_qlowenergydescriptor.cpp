@@ -119,7 +119,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
         qDebug() << "Connecting to" << remoteDevice;
         controller->connectToDevice();
         QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
-                  10000);
+                  20000);
         if (controller->state() != QLowEnergyController::ConnectedState) {
             // any error and we skip
             delete controller;

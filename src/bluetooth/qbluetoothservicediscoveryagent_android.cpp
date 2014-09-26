@@ -337,8 +337,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(remoteDevice);
 
-        QBluetoothServiceInfo::Sequence  protocolDescriptorList;
-        protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        QBluetoothServiceInfo::Sequence protocolDescriptorList;
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
 
         if (customUuids.contains(i) && sppIndex > -1) {
             //we have a custom uuid of service class type SPP

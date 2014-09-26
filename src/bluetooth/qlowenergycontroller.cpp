@@ -297,7 +297,7 @@ QLowEnergyCharacteristic QLowEnergyControllerPrivate::characteristicForHandle(
 }
 
 /*!
-    Returns a valid descriptor if \a handle blongs to a descriptor;
+    Returns a valid descriptor if \a handle belongs to a descriptor;
     otherwise an invalid one.
  */
 QLowEnergyDescriptor QLowEnergyControllerPrivate::descriptorForHandle(
@@ -451,7 +451,7 @@ QLowEnergyController::ControllerState QLowEnergyController::state() const
     Returns the type of \l remoteAddress(). By default, this value is initialized
     to \l PublicAddress.
 
-    \sa setRemoteAddressType
+    \sa setRemoteAddressType()
  */
 QLowEnergyController::RemoteAddressType QLowEnergyController::remoteAddressType() const
 {

@@ -448,7 +448,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
             service.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             QBluetoothServiceInfo::Sequence protocolDescriptorList;
-            protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            {
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+            {
+                QBluetoothServiceInfo::Sequence protocol;
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
             service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
             if (uuidFilter.isEmpty())
@@ -657,7 +666,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         }
 
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
-        protocolDescriptorList << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
+        {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+        }
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
         //don't include the service if we already discovered it before

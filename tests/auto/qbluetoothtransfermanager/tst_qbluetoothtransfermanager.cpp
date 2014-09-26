@@ -235,6 +235,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
     QBluetoothTransferReply* reply = manager.put(request, &f);
     QSignalSpy finishedSpy(reply, SIGNAL(finished(QBluetoothTransferReply*)));
     QSignalSpy progressSpy(reply, SIGNAL(transferProgress(qint64,qint64)));
+    QSignalSpy errorSpy(reply, SIGNAL(error(QBluetoothTransferReply::TransferError)));
 
     QCOMPARE(reply->request(), request);
     QVERIFY(reply->manager() == &manager);
@@ -253,6 +254,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
         QVERIFY(progressSpy.count()>0);
         QCOMPARE(reply->error(), QBluetoothTransferReply::NoError);
         QCOMPARE(reply->errorString(), QString());
+        QVERIFY(errorSpy.isEmpty());
     } else {
         QVERIFY(progressSpy.count() == 0);
         if (isInvalidFile)
@@ -260,6 +262,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
         else
             QVERIFY(reply->error() != QBluetoothTransferReply::NoError);
         QVERIFY(!reply->errorString().isEmpty());
+        QCOMPARE(errorSpy.count(), 1);
     }
 
     QVERIFY(reply->isFinished());
@@ -274,7 +277,7 @@ void tst_QBluetoothTransferManager::tst_sendBuffer_data()
     QTest::addColumn<QByteArray>("data");
 
     QTest::newRow("Push to remote test device") << remoteAddress << true <<
-                        QByteArray("This is a very long byte arry which we are going to access via a QBuffer");                                                       ;
+                        QByteArray("This is a very long byte array which we are going to access via a QBuffer");                                                       ;
     QTest::newRow("Push to invalid address") << QBluetoothAddress() << false << QByteArray("test");
     QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false << QByteArray("test");
 }
@@ -310,6 +313,7 @@ void tst_QBluetoothTransferManager::tst_sendBuffer()
     QBluetoothTransferReply* reply = manager.put(request, &buffer);
     QSignalSpy finishedSpy(reply, SIGNAL(finished(QBluetoothTransferReply*)));
     QSignalSpy progressSpy(reply, SIGNAL(transferProgress(qint64,qint64)));
+    QSignalSpy errorSpy(reply, SIGNAL(error(QBluetoothTransferReply::TransferError)));
 
     QCOMPARE(reply->request(), request);
     QVERIFY(reply->manager() == &manager);
@@ -326,12 +330,14 @@ void tst_QBluetoothTransferManager::tst_sendBuffer()
     QVERIFY(finishedSpy.count()>0);
     if (expectSuccess) {
         QVERIFY(progressSpy.count()>0);
+        QVERIFY(errorSpy.isEmpty());
         QCOMPARE(reply->error(), QBluetoothTransferReply::NoError);
         QCOMPARE(reply->errorString(), QString());
     } else {
         QVERIFY(progressSpy.count() == 0);
         QVERIFY(reply->error() != QBluetoothTransferReply::NoError);
         QVERIFY(!reply->errorString().isEmpty());
+        QCOMPARE(errorSpy.count(), 1);
     }
 
     QVERIFY(reply->isFinished());

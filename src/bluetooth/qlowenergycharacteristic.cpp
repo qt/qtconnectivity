@@ -80,7 +80,7 @@ QT_BEGIN_NAMESPACE
     \value Notify                   Permits notification of characteristic values.
     \value Indicate                 Permits indications of characteristic values.
     \value WriteSigned              Permits signed writes of the GATT characteristic values.
-    \value ExtendedProperty         Additional characteristic properties are defined in the characteristic
+    \value ExtendedProperty         Additional characteristic properties are defined in the characteristic's
                                     extended properties descriptor.
 
     \sa properties()
@@ -207,7 +207,8 @@ QByteArray QLowEnergyCharacteristic::value() const
 
 /*!
     Returns the handle of the characteristic's value attribute;
-    or \c 0 if the handle cannot be accessed on the platform.
+    or \c 0 if the handle cannot be accessed on the platform or
+    if the characteristic is invalid.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 {
@@ -305,7 +306,10 @@ bool QLowEnergyCharacteristic::isValid() const
     \internal
 
     Returns the handle of the characteristic or
-    \c 0 if the handle cannot be accessed on the platform.
+    \c 0 if the handle cannot be accessed on the platform or if the
+    characteristic is invalid.
+
+    \sa isValid()
  */
 QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
 {
