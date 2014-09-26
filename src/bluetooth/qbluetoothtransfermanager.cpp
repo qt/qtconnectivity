@@ -49,6 +49,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothTransferManager class transfers data to another device
     using Object Push Profile (OPP).
 
+    \since 5.2
+
     QBluetoothTransferManager uses OBEX to send put commands to remote devices.
 
     Note that this API is not currently supported on Android.

@@ -46,6 +46,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothServiceDiscoveryAgent class enables you to query for
     Bluetooth services.
 
+    \since 5.2
+
     The discovery process relies on the Bluetooth Service Discovery Process (SDP).
     The following steps are required to query the services provided by all contactable
     Bluetooth devices:

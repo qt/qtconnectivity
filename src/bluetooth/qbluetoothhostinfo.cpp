@@ -42,6 +42,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothHostInfo class encapsulates the details of a local
     QBluetooth device.
 
+    \since 5.2
+
     This class holds the name and address of a local Bluetooth device.
 */
 

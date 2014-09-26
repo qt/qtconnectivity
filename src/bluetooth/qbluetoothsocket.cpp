@@ -54,6 +54,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \brief The QBluetoothSocket class enables connection to a Bluetooth device
     running a bluetooth server.
 
+    \since 5.2
+
     QBluetoothSocket supports two socket types, \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} and
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}.
 

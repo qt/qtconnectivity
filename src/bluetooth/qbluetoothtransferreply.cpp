@@ -43,6 +43,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothTransferReply class stores the response for a data
     transfer request.
 
+    \since 5.2
+
     In additional to a copy of the QBluetoothTransferRequest object used to create the request,
     QBluetoothTransferReply contains the contents of the reply itself.
 
