@@ -48,16 +48,19 @@ Item {
     property string remoteDeviceName: ""
     property bool serviceFound: false
 
+    //! [BtDiscoveryModel-1]
     BluetoothDiscoveryModel {
         id: btModel
         running: true
         discoveryMode: BluetoothDiscoveryModel.MinimalServiceDiscovery
+    //! [BtDiscoveryModel-1]
         onRunningChanged : {
             if (!btModel.running && top.state == "begin" && !serviceFound) {
                 searchBox.appendText("\nNo service found. \n\nPlease start server\nand restart app.")
             }
         }
 
+    //! [BtDiscoveryModel-2]
         onServiceDiscovered: {
             if (serviceFound)
                 return
@@ -67,26 +70,36 @@ Item {
             remoteDeviceName = service.deviceName
             socket.setService(service)
         }
+    //! [BtDiscoveryModel-2]
+    //! [BtDiscoveryModel-3]
         uuidFilter: "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
     }
+    //! [BtDiscoveryModel-3]
 
+    //! [BluetoothSocket-1]
     BluetoothSocket {
         id: socket
         connected: true
 
-        onSocketStateChanged : {
+        onSocketStateChanged: {
             console.log("Connected to server")
             top.state = "chatActive"
         }
-
-        onStringDataChanged : {
+    //! [BluetoothSocket-1]
+    //! [BluetoothSocket-3]
+        onStringDataChanged: {
             console.log("Received data: " )
             var data = remoteDeviceName + ": " + socket.stringData;
             data = data.substring(0, data.indexOf('\n'))
             chatContent.append({content: data})
+    //! [BluetoothSocket-3]
             console.log(data);
+    //! [BluetoothSocket-4]
         }
+    //! [BluetoothSocket-4]
+    //! [BluetoothSocket-2]
     }
+    //! [BluetoothSocket-2]
 
     ListModel {
         id: chatContent
@@ -128,7 +141,9 @@ Item {
             var data = input.text
             input.clear()
             chatContent.append({content: "Me: " + data})
+            //! [BluetoothSocket-5]
             socket.stringData = data
+            //! [BluetoothSocket-5]
             chatView.positionViewAtEnd()
         }
 

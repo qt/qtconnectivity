@@ -86,6 +86,7 @@ import statement in your \c .qml file:
         \li \l {scanner}{QML Bluetooth Scanner}
         \li \l {picturetransfer}{QML Bluetooth Picture Push}
         \li \l {pingpong}{QML Bluetooth PingPong}
+        \li \l {chat}{QML Bluetooth Chat}
         \li \l {heartlistener}{Bluetooth Low Energy Heart Listener}
         \li \l {lowenergyscanner}{Bluetooth Low Energy Scanner}
     \endlist
