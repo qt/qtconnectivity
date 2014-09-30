@@ -62,10 +62,14 @@ QT_BEGIN_NAMESPACE
 
     By default a minimal service discovery is performed. In this mode, the returned \l QBluetoothServiceInfo
     objects are guaranteed to contain only device and service UUID information. Depending
-    on platform and device capabilities, other service information may also be available. For most
-    use cases this is adequate as QBluetoothSocket::connectToService() will perform additional
-    discovery if required.  If the full service information is required, pass \l FullDiscovery as the
-    discoveryMode parameter to start().
+    on platform and device capabilities, other service information may also be available.
+    The minimal service discovery mode relies on cached SDP data of the platform. Therefore it
+    is possible that this discovery does not find a device although it is physically available.
+    In such cases a full discovery must be performed to force an update of the platform cache.
+    However for most use cases a minimal discovery is adequate as it is much quicker and other
+    classes which require up-to-date information such as QBluetoothSocket::connectToService()
+    will perform additional discovery if required.  If the full service information is required,
+    pass \l FullDiscovery as the discoveryMode parameter to start().
 
     This class may internally utilize \l QBluetoothDeviceDiscoveryAgent to find unknown devices.
 
@@ -98,6 +102,8 @@ QT_BEGIN_NAMESPACE
 
     \value MinimalDiscovery     Performs a minimal service discovery. The QBluetoothServiceInfo
     objects returned may be incomplete and are only guaranteed to contain device and service UUID information.
+    Since a minimal discovery relies on cached SDP data it may not find a physically existing
+    device until a \c FullDiscovery is performed.
     \value FullDiscovery        Performs a full service discovery.
 */
 
