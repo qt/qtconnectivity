@@ -154,6 +154,11 @@ public:
     {
         return m_ptr;
     }
+
+    T *data() const
+    {
+        return m_ptr;
+    }
 private:
     T *m_ptr;
 };

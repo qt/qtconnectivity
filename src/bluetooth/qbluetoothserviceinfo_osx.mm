@@ -57,6 +57,29 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace {
+
+// This is not in osxbtutility_p, since it's not required
+// in general and just fixes the problem with SDK < 10.9,
+// where we have to care about about IOBluetoothSDPServiceRecordRef.
+class ServiceRecordDeleter
+{
+public:
+    ServiceRecordDeleter(IOBluetoothSDPServiceRecordRef r)
+        : recordRef(r)
+    {
+    }
+    ~ServiceRecordDeleter()
+    {
+        if (recordRef) // Requires non-NULL pointers.
+            CFRelease(recordRef);
+    }
+
+    IOBluetoothSDPServiceRecordRef recordRef;
+};
+
+}
+
 class QBluetoothServiceInfoPrivate
 {
 public:
@@ -119,8 +142,26 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         return false;
     }
 
-    SDPRecord newRecord([[IOBluetoothSDPServiceRecord
-                         publishedServiceRecordWithDictionary:serviceDict] retain]);
+    SDPRecord newRecord;
+
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
+    newRecord.reset([[IOBluetoothSDPServiceRecord
+                      publishedServiceRecordWithDictionary:serviceDict] retain]);
+
+#else
+    IOBluetoothSDPServiceRecordRef recordRef = Q_NULLPTR;
+    // With ARC this will require a different cast?
+    const IOReturn status = IOBluetoothAddServiceDict((CFDictionaryRef)serviceDict.data(), &recordRef);
+    if (status != kIOReturnSuccess) {
+        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
+                                "failed to create register a service record";
+        return false;
+    }
+
+    const ServiceRecordDeleter refGuard(recordRef);
+    newRecord.reset([[IOBluetoothSDPServiceRecord withSDPServiceRecordRef:recordRef] retain]);
+    // It's weird, but ... it's not possible to release a record ref yet!
+#endif
 
     if (!newRecord) {
         qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "

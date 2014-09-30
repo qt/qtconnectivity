@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
 class QBluetoothServiceDiscoveryAgent;
 class QBluetoothAddress;
 
-class QBluetoothSocketPrivate : public QObject, public OSXBluetooth::ChannelDelegate
+class QBluetoothSocketPrivate : public QBluetoothSocketPrivateBase, public OSXBluetooth::ChannelDelegate
 {
     friend class QBluetoothSocket;
     friend class QBluetoothServer;
