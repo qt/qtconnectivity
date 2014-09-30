@@ -178,6 +178,10 @@ using namespace QT_NAMESPACE;
 - (void)rfcommChannelClosed:(IOBluetoothRFCOMMChannel*)rfcommChannel
 {
     Q_UNUSED(rfcommChannel)
+
+    Q_ASSERT_X(delegate, "rfcommChannelClosed:", "invalid delegate (null)");
+    delegate->channelClosed();
+    connected = false;
 }
 
 - (void)rfcommChannelControlSignalsChanged:(IOBluetoothRFCOMMChannel*)rfcommChannel

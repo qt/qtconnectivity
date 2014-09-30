@@ -57,6 +57,7 @@ public:
 
     virtual void setChannelError(IOReturn errorCode) = 0;
     virtual void channelOpenComplete() = 0;
+    virtual void channelClosed() = 0;
 
     virtual void readChannelData(void *data, std::size_t size) = 0;
     virtual void writeComplete() = 0;

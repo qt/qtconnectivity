@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHSOCKET_P_H
-#define QBLUETOOTHSOCKET_P_H
+#ifndef QBLUETOOTHSOCKET_OSX_P_H
+#define QBLUETOOTHSOCKET_OSX_P_H
 
 #ifdef QT_OSX_BLUETOOTH
 
@@ -105,6 +105,7 @@ private:
     // L2CAP and RFCOMM delegate
     void setChannelError(IOReturn errorCode) Q_DECL_OVERRIDE;
     void channelOpenComplete() Q_DECL_OVERRIDE;
+    void channelClosed() Q_DECL_OVERRIDE;
     void readChannelData(void *data, std::size_t size) Q_DECL_OVERRIDE;
     void writeComplete() Q_DECL_OVERRIDE;
 

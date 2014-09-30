@@ -179,6 +179,8 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
+    Q_ASSERT_X(delegate, "-l2capChannelClosed:", "invalid delegate (null)");
+    delegate->channelClosed();
     connected = false;
 }
 

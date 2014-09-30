@@ -41,7 +41,13 @@
 
 #include "osx/osxbtsocketlistener_p.h"
 #include "qbluetoothserver_osx_p.h"
+
+// The order is important: a workround for
+// a private header included by private header
+// (incorrectly handled dependencies).
+#include "qbluetoothsocket_p.h"
 #include "qbluetoothsocket_osx_p.h"
+
 #include "qbluetoothlocaldevice.h"
 #include "osx/osxbtutility_p.h"
 #include "qbluetoothserver.h"
@@ -289,6 +295,7 @@ void QBluetoothServer::close()
     // Needs a lock :(
     const QMutexLocker lock(&d_ptr->channelMapMutex());
     d_ptr->unregisterServer(d_ptr);
+    d_ptr->port = 0;
 }
 
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)

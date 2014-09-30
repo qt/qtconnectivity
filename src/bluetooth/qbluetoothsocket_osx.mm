@@ -40,6 +40,12 @@
 ****************************************************************************/
 
 #include "qbluetoothservicediscoveryagent.h"
+// The order is important (the first header contains
+// the base class for a private socket) - workaround for
+// dependencies problem.
+#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_osx_p.h"
+//
 #include "qbluetoothsocket_osx_p.h"
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothdeviceinfo.h"
@@ -123,17 +129,26 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         return;
     }
 
-    if (state == QBluetoothSocket::ConnectedState
-        && socketError == QBluetoothSocket::NoSocketError) {
-        //We got it before switched into connecting state!
-        state = oldState;
-        q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
-        emit q_ptr->connected();
-        // TODO: check if we ... already have some data to read
-        // and emit a signal!
-    } else if (socketError == QBluetoothSocket::NoSocketError) {
-        state = oldState;
-        q_ptr->setSocketState(QBluetoothSocket::ConnectingState);
+    if (socketError == QBluetoothSocket::NoSocketError) {
+        if (state == QBluetoothSocket::ConnectedState) {
+            // Callback 'channelOpenComplete' fired before
+            // connectToService finished:
+            state = oldState;
+            q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
+            emit q_ptr->connected();
+            if (buffer.size()) // We also have some data already ...
+                emit q_ptr->readyRead();
+        } else if (state == QBluetoothSocket::UnconnectedState) {
+            // Even if we have some data, we can not read it if
+            // state != ConnectedState.
+            buffer.clear();
+            state = oldState;
+            q_ptr->setSocketError(QBluetoothSocket::UnknownSocketError);
+        } else {
+            // No error and we're connecting ...
+            state = oldState;
+            q_ptr->setSocketState(QBluetoothSocket::ConnectingState);
+        }
     } else {
         state = oldState;
         q_ptr->setSocketError(QBluetoothSocket::UnknownSocketError);
@@ -330,6 +345,23 @@ void QBluetoothSocketPrivate::channelOpenComplete()
     }
 }
 
+void QBluetoothSocketPrivate::channelClosed()
+{
+    Q_ASSERT_X(q_ptr, "channelClosed()", "invalid q_ptr (null)");
+
+    // Channel was closed by IOBluetooth and we can not write any data
+    // (thus close/abort probably will not work).
+
+    if (!isConnecting) {
+        q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
+        emit q_ptr->disconnected();
+    } else {
+        state = QBluetoothSocket::UnconnectedState;
+        // We are still in connectToService and do not want
+        // to emit any signals yet.
+    }
+}
+
 void QBluetoothSocketPrivate::readChannelData(void *data, std::size_t size)
 {
     Q_ASSERT_X(data, "readChannelData()", "invalid data (null)");
@@ -365,15 +397,11 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     // We do not have a real socket API under the hood,
     // IOBluetoothL2CAPChannel buffered (writeAsync).
 
-    const bool isEmpty = !txBuffer.size();
-    if (!txBuffer.size())// TODO: find a workaround for this.
-        ;//QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
+    if (!txBuffer.size())
+        QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
 
     char *dst = txBuffer.reserve(maxSize);
     std::copy(data, data + maxSize, dst);
-
-    if (isEmpty)
-        _q_writeNotify();
 
     return maxSize;
 }
