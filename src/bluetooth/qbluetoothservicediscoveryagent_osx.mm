@@ -169,6 +169,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
                "startServiceDiscovery()", "invalid bluetooth adapter");
 
     if (discoveredDevices.isEmpty()) {
+        state = Inactive;
         emit q_ptr->finished();
         return;
     }
@@ -357,6 +358,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
             OSXBluetooth::extract_service_record(record, serviceInfo);
 
             if (!serviceInfo.isValid())
+                continue;
+
+            if (!uuidFilter.isEmpty() && !uuidFilter.contains(serviceInfo.serviceUuid()))
                 continue;
 
             if (!isDuplicatedService(serviceInfo)) {
