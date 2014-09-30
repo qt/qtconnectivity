@@ -182,12 +182,16 @@ void tst_QBluetoothServer::tst_receive()
     bool localDeviceAvailable = localDev.isValid();
 
     if (localDeviceAvailable) {
+        // setHostMode is noop on OS X.
         setHostMode(address, hostmode);
 
-        if (hostmode == QBluetoothLocalDevice::HostPoweredOff)
+        if (hostmode == QBluetoothLocalDevice::HostPoweredOff) {
+#ifndef Q_OS_OSX
             QCOMPARE(localDevice.hostMode(), hostmode);
-        else
+#endif
+        } else {
             QVERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+        }
     }
     QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
     QSignalSpy errorSpy(&server, SIGNAL(error(QBluetoothServer::Error)));
