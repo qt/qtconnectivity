@@ -57,13 +57,6 @@ FocusScope {
         border { left: 4; top: 4; right: 4; bottom: 4 }
     }
 
-    BorderImage {
-        source: "images/lineedit-bg-focus.png"
-        width: parent.width; height: parent.height
-        border { left: 4; top: 4; right: 4; bottom: 4 }
-        visible: parent.activeFocus ? true : false
-    }
-
     Text {
         id: typeSomething
         anchors.fill: parent; anchors.leftMargin: 8
@@ -71,6 +64,7 @@ FocusScope {
         text: "Type something..."
         color: "gray"
         font.italic: true
+        font.pointSize: 14
     }
 
     MouseArea {
@@ -83,6 +77,7 @@ FocusScope {
         anchors { left: parent.left; leftMargin: 8; right: clear.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
         focus: true
         selectByMouse: true
+        font.pointSize: 14
     }
 
     Image {
@@ -92,13 +87,22 @@ FocusScope {
         opacity: 0
 
         MouseArea {
-            anchors.fill: parent
-            onClicked: { textInput.text = ''; focusScope.focus = true; }
+            // allow area to grow beyond image size
+            // easier to hit the area on high DPI devices
+            anchors.centerIn: parent
+            height:focusScope.height
+            width: focusScope.height
+            onClicked: {
+                //toogle focus to be able to jump out of input method composer
+                focusScope.focus = false;
+                textInput.text = '';
+                focusScope.focus = true;
+            }
         }
     }
 
     states: State {
-        name: "hasText"; when: textInput.text != ''
+        name: "hasText"; when: (textInput.text != '' || textInput.inputMethodComposing)
         PropertyChanges { target: typeSomething; opacity: 0 }
         PropertyChanges { target: clear; opacity: 1 }
     }
