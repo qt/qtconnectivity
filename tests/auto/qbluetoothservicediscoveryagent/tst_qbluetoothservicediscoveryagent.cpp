@@ -380,7 +380,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     connect(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
             this, SLOT(serviceError(QBluetoothServiceDiscoveryAgent::Error)));
 
-    discoveryAgent.start();
+    discoveryAgent.start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 
     /*
      * Either we wait for discovery agent to run its course (e.g. Bluez 4) or
