@@ -50,6 +50,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qmap.h>
 
+#include <IOBluetooth/IOBluetoothUtilities.h>
 // We have to import, not include. Obj-C headers are not protected
 // against a multiple inclusion.
 #import <IOBluetooth/objc/IOBluetoothHostController.h>
@@ -133,7 +134,14 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
             return;
         }
 
-        if (address.toString() != QString::fromNSString(hciAddress)) {
+        BluetoothDeviceAddress iobtAddress = {};
+        if (IOBluetoothNSStringToDeviceAddress(hciAddress, &iobtAddress) != kIOReturnSuccess) {
+            qCCritical(QT_BT_OSX) << "QBluetoothLocalDevicePrivate(), "
+                                     "invalid local device's address";
+            return;
+        }
+
+        if (address != OSXBluetooth::qt_address(&iobtAddress)) {
             qCCritical(QT_BT_OSX) << "QBluetoothLocalDevicePrivate(), "
                                      "invalid local device's address";
             return;
