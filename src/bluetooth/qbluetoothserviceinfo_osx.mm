@@ -150,14 +150,10 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         realPort = channelID;
     }
 
-    if (!server) {
-        [newRecord removeServiceRecord];
-        return false;
-    }
-
     registered = true;
     serviceRecord.reset(newRecord.take());
-    server->startListener(realPort);
+    if (server)
+        server->startListener(realPort);
 
     return true;
 }
@@ -189,6 +185,8 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 
     if (server)
         server->stopListener();
+
+    registered = false;
 
     return true;
 }
