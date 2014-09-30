@@ -97,7 +97,13 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-    [m_pairing stop]; // Stop also sets a delegate to nil (Apple's docs).
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
+    // Stop also sets a delegate to nil (Apple's docs).
+    // 10.9 only.
+    [m_pairing stop];
+#else
+    [m_pairing setDelegate:nil];
+#endif
     [m_pairing release];
 
     [super dealloc];
@@ -171,22 +177,16 @@ using namespace QT_NAMESPACE;
 - (void)devicePairingStarted:(id)sender
 {
     Q_UNUSED(sender)
-    //
-    NSLog(@"pairing started ... to be implemented");
 }
 
 - (void)devicePairingConnecting:(id)sender
 {
     Q_UNUSED(sender)
-
-    NSLog(@"connecting ... to be implemented");
 }
 
 - (void)deviceParingPINCodeRequest:(id)sender
 {
     Q_UNUSED(sender)
-
-    NSLog(@"pin code request ... to be implemented");
 }
 
 - (void)devicePairingUserConfirmationRequest:(id)sender
@@ -206,8 +206,6 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(sender)
     Q_UNUSED(passkey)
-
-    NSLog(@"pass key notification ...  to be implemented");
 }
 
 - (void)devicePairingFinished:(id)sender error:(IOReturn)error

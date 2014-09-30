@@ -314,7 +314,10 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(errorSpy.isEmpty());
     // should only have 1 cancel
     QVERIFY(finishedSpy.count() == 1);
-    QVERIFY(cancelSpy.isEmpty());
+
+    // On OS X, stop is synchronous (signal will be emitted immediately).
+    if (!immediateSignal)
+        QVERIFY(cancelSpy.isEmpty());
 }
 
 void tst_QBluetoothDeviceDiscoveryAgent::finished()
