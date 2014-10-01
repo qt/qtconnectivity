@@ -43,6 +43,7 @@ namespace QBluetooth {
     \brief The QBluetooth namespace provides classes and functions related to
     Bluetooth.
 
+    \since 5.2
 */
 
 /*!

@@ -44,6 +44,8 @@ QT_BEGIN_NAMESPACE
     \brief The Sequence class stores attributes of a Bluetooth Data Element
     Sequence.
 
+    \since 5.2
+
 */
 
 /*!
@@ -64,6 +66,7 @@ QT_BEGIN_NAMESPACE
     \brief The Alternative class stores attributes of a Bluetooth Data Element
     Alternative.
 
+    \since 5.2
 */
 
 /*!
@@ -83,6 +86,8 @@ QT_BEGIN_NAMESPACE
     \inmodule QtBluetooth
     \brief The QBluetoothServiceInfo class enables access to the attributes of a
     Bluetooth service.
+
+    \since 5.2
 
     QBluetoothServiceInfo provides information about a service offered by a Bluetooth device.
     In addition it can be used to register new services on the local device. Note that such

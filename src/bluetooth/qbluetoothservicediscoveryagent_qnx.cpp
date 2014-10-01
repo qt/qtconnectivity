@@ -396,7 +396,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
     if (!result.errorMsg.isEmpty()) {
         qCWarning(QT_BT_QNX) << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
-        if (errorString == QObject::tr("Operation canceled"))
+        if (errorString == QBluetoothServiceDiscoveryAgent::tr("Operation canceled"))
             _q_serviceDiscoveryFinished();
         error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         q->error(error);

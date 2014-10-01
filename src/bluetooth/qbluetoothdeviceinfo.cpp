@@ -42,6 +42,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothDeviceInfo class stores information about the Bluetooth
     device.
 
+    \since 5.2
+
     QBluetoothDeviceInfo provides information about a Bluetooth device's name, address and class of device.
 */
 

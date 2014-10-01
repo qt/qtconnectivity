@@ -43,6 +43,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothDeviceDiscoveryAgent class discovers the Bluetooth
     devices nearby.
 
+    \since 5.2
+
     To discover the nearby Bluetooth devices:
     \list
     \li create an instance of QBluetoothDeviceDiscoveryAgent,

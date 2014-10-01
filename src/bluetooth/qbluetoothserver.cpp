@@ -45,6 +45,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothServer class uses the RFCOMM or L2cap protocol to communicate with
     a Bluetooth device.
 
+    \since 5.2
+
     QBluetoothServer is used to implement Bluetooth services over RFCOMM or L2cap.
 
     Start listening for incoming connections with listen(). Wait till the newConnection() signal

@@ -45,6 +45,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothLocalDevice class enables access to the local Bluetooth
     device.
 
+    \since 5.2
+
     QBluetoothLocalDevice provides functions for getting and setting the state of local Bluetooth
     devices.
 */

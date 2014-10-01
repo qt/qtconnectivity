@@ -133,6 +133,9 @@ QT_BEGIN_NAMESPACE
     related \l QLowEnergyController disconnecting from the device are shared
     the same way.
 
+    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
+    Some API elements may change until the final release of the feature.
+
     \sa QLowEnergyController, QLowEnergyCharacteristic, QLowEnergyDescriptor
  */
 
