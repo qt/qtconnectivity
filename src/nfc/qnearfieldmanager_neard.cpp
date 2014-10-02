@@ -222,7 +222,7 @@ int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(QObject *object, co
 {
     Q_UNUSED(object);
     Q_UNUSED(method);
-    return 0;
+    return -1;
 }
 
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method)
