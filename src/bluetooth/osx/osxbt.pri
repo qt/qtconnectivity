@@ -7,7 +7,8 @@ PRIVATE_HEADERS += osx/osxbtutility_p.h \
                    osx/osxbtl2capchannel_p.h \
                    osx/osxbtchanneldelegate_p.h \
                    osx/osxbtservicerecord_p.h \
-                   osx/osxbtsocketlistener_p.h
+                   osx/osxbtsocketlistener_p.h \
+                   osx/osxbtobexsession_p.h
 
 OBJECTIVE_SOURCES += osx/osxbtutility.mm \
                      osx/osxbtdevicepair.mm \
@@ -18,4 +19,5 @@ OBJECTIVE_SOURCES += osx/osxbtutility.mm \
                      osx/osxbtl2capchannel.mm \
                      osx/osxbtchanneldelegate.mm \
                      osx/osxbtservicerecord.mm \
-                     osx/osxbtsocketlistener.mm
+                     osx/osxbtsocketlistener.mm \
+                     osx/osxbtobexsession.mm

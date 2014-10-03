@@ -309,6 +309,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevic
         if (!isDuplicatedService(serviceInfo)) {
             discoveredServices.append(serviceInfo);
             emit q_ptr->serviceDiscovered(serviceInfo);
+            // Here a user code can ... interrupt us by calling
+            // stop. Check this.
+            if (state == Inactive)
+                break;
         }
     }
 

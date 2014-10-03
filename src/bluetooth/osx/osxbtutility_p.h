@@ -159,6 +159,13 @@ public:
     {
         return m_ptr;
     }
+
+    T *take()
+    {
+        T * p = m_ptr;
+        m_ptr = nil;
+        return p;
+    }
 private:
     T *m_ptr;
 };

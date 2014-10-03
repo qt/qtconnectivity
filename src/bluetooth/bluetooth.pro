@@ -153,13 +153,15 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserviceinfo_osx.mm \
         qbluetoothservicediscoveryagent_osx.mm \
         qbluetoothsocket_osx.mm \
-        qbluetoothserver_osx.mm
+        qbluetoothserver_osx.mm \
+        qbluetoothtransferreply_osx.mm
 
     SOURCES += \
         qlowenergycontroller_p.cpp
 
     PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
-        qbluetoothserver_osx_p.h
+                       qbluetoothserver_osx_p.h \
+                       qbluetoothtransferreply_osx_p.h
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
