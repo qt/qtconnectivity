@@ -54,8 +54,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
 // TODO We need a constructor that lets us select an adapter
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     : QNearFieldManagerPrivate(),
-      m_adapter(0),
-      m_dbusProperties(0),
       m_neardHelper(NeardHelper::instance())
 {
     QDBusPendingReply<ManagedObjectList> reply = m_neardHelper->dbusObjectManager()->GetManagedObjects();
@@ -124,21 +122,18 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
     if (!isAvailable())
         return false;
 
-    if (!m_dbusProperties) {
-        m_dbusProperties = new OrgFreedesktopDBusPropertiesInterface(QStringLiteral("org.neard"),
-                                                                     m_adapterPath,
-                                                                     QDBusConnection::systemBus(),
-                                                                     this);
-    }
+    OrgFreedesktopDBusPropertiesInterface dbusProperties(QStringLiteral("org.neard"),
+                                                         m_adapterPath,
+                                                         QDBusConnection::systemBus());
 
-    if (!m_dbusProperties->isValid()) {
+    if (!dbusProperties.isValid()) {
         qCWarning(QT_NFC_NEARD) << "dbus property interface invalid";
         return false;
     }
 
     // check if the adapter is currently polling
-    QDBusPendingReply<QDBusVariant> replyPolling = m_dbusProperties->Get(QStringLiteral("org.neard.Adapter"),
-                                                                         QStringLiteral("Polling"));
+    QDBusPendingReply<QDBusVariant> replyPolling = dbusProperties.Get(QStringLiteral("org.neard.Adapter"),
+                                                                      QStringLiteral("Polling"));
     replyPolling.waitForFinished();
     if (!replyPolling.isError()) {
         if (replyPolling.value().variant().toBool()) {
@@ -151,16 +146,16 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
     }
 
     // check if the adapter it powered
-    QDBusPendingReply<QDBusVariant> replyPowered = m_dbusProperties->Get(QStringLiteral("org.neard.Adapter"),
-                                                                         QStringLiteral("Powered"));
+    QDBusPendingReply<QDBusVariant> replyPowered = dbusProperties.Get(QStringLiteral("org.neard.Adapter"),
+                                                                      QStringLiteral("Powered"));
     replyPowered.waitForFinished();
     if (!replyPowered.isError()) {
         if (replyPowered.value().variant().toBool()) {
             qCDebug(QT_NFC_NEARD) << "adapter is already powered";
         } else {
-            QDBusPendingReply<QDBusVariant> replyTryPowering = m_dbusProperties->Set(QStringLiteral("org.neard.Adapter"),
-                                                                                     QStringLiteral("Powered"),
-                                                                                     QDBusVariant(true));
+            QDBusPendingReply<QDBusVariant> replyTryPowering = dbusProperties.Set(QStringLiteral("org.neard.Adapter"),
+                                                                                  QStringLiteral("Powered"),
+                                                                                  QDBusVariant(true));
             replyTryPowering.waitForFinished();
             if (!replyTryPowering.isError()) {
                 qCDebug(QT_NFC_NEARD) << "powering adapter";
@@ -172,15 +167,12 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
     }
 
     // create adapter and start poll loop
-    if (!m_adapter) {
-        m_adapter = new OrgNeardAdapterInterface(QStringLiteral("org.neard"),
-                                                 m_adapterPath,
-                                                 QDBusConnection::systemBus(),
-                                                 this);
-    }
+    OrgNeardAdapterInterface neardAdapter(QStringLiteral("org.neard"),
+                                          m_adapterPath,
+                                          QDBusConnection::systemBus());
 
     // possible modes: "Target", "Initiator", "Dual"
-    QDBusPendingReply<> replyPollLoop = m_adapter->StartPollLoop(QStringLiteral("Dual"));
+    QDBusPendingReply<> replyPollLoop = neardAdapter.StartPollLoop(QStringLiteral("Dual"));
     replyPollLoop.waitForFinished();
     if (replyPollLoop.isError()) {
         qCWarning(QT_NFC_NEARD) << "error when starting polling";
@@ -198,13 +190,27 @@ void QNearFieldManagerPrivateImpl::stopTargetDetection()
     if (!isAvailable())
         return;
 
+    OrgFreedesktopDBusPropertiesInterface dbusProperties(QStringLiteral("org.neard"),
+                                                         m_adapterPath,
+                                                         QDBusConnection::systemBus());
+
+    if (!dbusProperties.isValid()) {
+        qCWarning(QT_NFC_NEARD) << "dbus property interface invalid";
+        return;
+    }
+
     // check if the adapter is currently polling
-    QDBusPendingReply<QDBusVariant> replyPolling = m_dbusProperties->Get(QStringLiteral("org.neard.Adapter"),
-                                                                         QStringLiteral("Polling"));
+    QDBusPendingReply<QDBusVariant> replyPolling = dbusProperties.Get(QStringLiteral("org.neard.Adapter"),
+                                                                      QStringLiteral("Polling"));
     replyPolling.waitForFinished();
     if (!replyPolling.isError()) {
         if (replyPolling.value().variant().toBool()) {
-            QDBusPendingReply<> replyStopPolling = m_adapter->StopPollLoop();
+            // create adapter and stop poll loop
+            OrgNeardAdapterInterface neardAdapter(QStringLiteral("org.neard"),
+                                                  m_adapterPath,
+                                                  QDBusConnection::systemBus());
+
+            QDBusPendingReply<> replyStopPolling = neardAdapter.StopPollLoop();
             replyStopPolling.waitForFinished();
             if (replyStopPolling.isError())
                 qCWarning(QT_NFC_NEARD) << "error when stopping polling";

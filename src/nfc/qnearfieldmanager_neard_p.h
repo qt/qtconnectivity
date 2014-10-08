@@ -52,9 +52,7 @@
 #include <QDBusVariant>
 #include <QMap>
 
-class OrgNeardAdapterInterface;
 class OrgNeardManagerInterface;
-class OrgFreedesktopDBusPropertiesInterface;
 
 QT_BEGIN_NAMESPACE
 
@@ -89,8 +87,6 @@ private Q_SLOTS:
 
 private:
     QString m_adapterPath;
-    OrgNeardAdapterInterface *m_adapter;
-    OrgFreedesktopDBusPropertiesInterface *m_dbusProperties;
     QMap<QString, QNearFieldTarget*> m_activeTags;
     NeardHelper *m_neardHelper;
 };
