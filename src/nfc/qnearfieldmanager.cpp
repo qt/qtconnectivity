@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.2
 
     NFC Forum devices support two modes of communications.  The first mode, peer-to-peer
     communications, is used to communicate between two NFC Forum devices.  The second mode,

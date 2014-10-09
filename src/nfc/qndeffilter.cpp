@@ -43,6 +43,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.2
 
     The QNdefFilter encapsulates the structure of an NDEF message and is used by
     QNearFieldManager::registerNdefMessageHandler() to match NDEF message that have a particular

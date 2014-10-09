@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.2
 
     QNdefRecord and derived classes are used to parse the contents of
     \l {QNdefMessage}{NDEF messages} and create new NDEF messages.
@@ -66,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet nfc.cpp Record conversion
 
-    \section1 Creating specialized NDEF record classes
+    \section1 Creating Specialized NDEF Record Classes
 
     Specialized NDEF record classes can be easily created with the Q_DECLARE_NDEF_RECORD() and
     Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD() macros.  The following example shows the class

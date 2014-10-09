@@ -77,7 +77,7 @@ Rectangle {
             font.bold: true
             text: "Start PingPong server"
             color: "#E3E3E3"
-            elide: Text.ElideMiddle
+            wrapMode: Text.WordWrap
         }
 
         MouseArea {
@@ -105,7 +105,7 @@ Rectangle {
             font.bold: true
             text: "Start PingPong client"
             color: "#E3E3E3"
-            elide: Text.ElideMiddle
+            wrapMode: Text.WordWrap
         }
 
         MouseArea {

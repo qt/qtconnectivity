@@ -373,7 +373,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
             protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }
-        service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+        lowEnergyService.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
 
         qCDebug(QT_BT_QNX) << "Adding Low Energy service" << leUuid;
 
@@ -396,7 +396,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::controlReply(ppsResult result)
     if (!result.errorMsg.isEmpty()) {
         qCWarning(QT_BT_QNX) << Q_FUNC_INFO << result.errorMsg;
         errorString = result.errorMsg;
-        if (errorString == QObject::tr("Operation canceled"))
+        if (errorString == QBluetoothServiceDiscoveryAgent::tr("Operation canceled"))
             _q_serviceDiscoveryFinished();
         error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         q->error(error);
