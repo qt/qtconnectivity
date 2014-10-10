@@ -44,6 +44,7 @@
 
 #include "qnx/ppshelpers_p.h"
 #include <QSocketNotifier>
+#include <QtCore/QVector>
 
 #include <QtCore/private/qcore_unix_p.h>
 
@@ -156,15 +157,14 @@ bool QBluetoothTransferReplyQnx::start()
 
 bool QBluetoothTransferReplyQnx::copyToTempFile(QIODevice *to, QIODevice *from)
 {
-    char *block = new char[4096];
+    QVector<char> block(4096);
     int size;
 
-    while ((size = from->read(block, 4096)) > 0) {
-        if (size != to->write(block, size))
+    while ((size = from->read(block.data(), block.size())) > 0) {
+        if (size != to->write(block.data(), size))
             return false;
     }
 
-    delete[] block;
     return true;
 }
 
