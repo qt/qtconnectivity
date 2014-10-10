@@ -384,10 +384,14 @@ void tst_QBluetoothSocket::tst_clientCommunication()
             QSignalSpy readyReadSpy(&socket, SIGNAL(readyRead()));
             QSignalSpy bytesWrittenSpy(&socket, SIGNAL(bytesWritten(qint64)));
 
-            socket.write(line.toUtf8());
+            qint64 dataWritten = socket.write(line.toUtf8());
 
-//            QEXPECT_FAIL("", "TODO: need to implement write buffering", Continue);
-            QCOMPARE(socket.bytesToWrite(), qint64(line.length()));
+            if (socket.openMode() & QIODevice::Unbuffered)
+                QCOMPARE(socket.bytesToWrite(), qint64(0));
+            else
+                QCOMPARE(socket.bytesToWrite(), qint64(line.length()));
+
+            QCOMPARE(dataWritten, qint64(line.length()));
 
             int readWriteTime = MaxReadWriteTime;
             while ((bytesWrittenSpy.count() == 0 || readyReadSpy.count() == 0) && readWriteTime > 0) {
@@ -406,7 +410,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
 
             QCOMPARE(readyReadSpy.count(), 1);
 
-            QCOMPARE(socket.bytesAvailable(), qint64(line.length()));
+            if (socket.openMode() & QIODevice::Unbuffered)
+                QVERIFY(socket.bytesAvailable() <= qint64(line.length()));
+            else
+                QCOMPARE(socket.bytesAvailable(), qint64(line.length()));
 
             QVERIFY(socket.canReadLine());
 
@@ -426,10 +433,14 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         QSignalSpy bytesWrittenSpy(&socket, SIGNAL(bytesWritten(qint64)));
 
         QString joined = data.join(QString());
-        socket.write(joined.toUtf8());
+        qint64 dataWritten = socket.write(joined.toUtf8());
 
-//        QEXPECT_FAIL("", "TODO: need to implement write buffering", Continue);
-        QCOMPARE(socket.bytesToWrite(), qint64(joined.length()));
+        if (socket.openMode() & QIODevice::Unbuffered)
+            QCOMPARE(socket.bytesToWrite(), qint64(0));
+        else
+            QCOMPARE(socket.bytesToWrite(), qint64(joined.length()));
+
+        QCOMPARE(dataWritten, qint64(joined.length()));
 
         int readWriteTime = MaxReadWriteTime;
         while ((bytesWrittenSpy.count() == 0 || readyReadSpy.count() == 0) && readWriteTime > 0) {
@@ -441,7 +452,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         QCOMPARE(bytesWrittenSpy.at(0).at(0).toLongLong(), qint64(joined.length()));
         QVERIFY(readyReadSpy.count() > 0);
 
-        QCOMPARE(socket.bytesAvailable(), qint64(joined.length()));
+        if (socket.openMode() & QIODevice::Unbuffered)
+            QVERIFY(socket.bytesAvailable() <= qint64(joined.length()));
+        else
+            QCOMPARE(socket.bytesAvailable(), qint64(joined.length()));
 
         QVERIFY(socket.canReadLine());
 
