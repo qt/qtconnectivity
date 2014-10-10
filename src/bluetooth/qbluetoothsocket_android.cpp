@@ -331,6 +331,9 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
         return;
     }
 
+    // only unbuffered behavior supported at this stage
+    q->setOpenMode(QIODevice::ReadWrite|QIODevice::Unbuffered);
+
     q->setSocketState(QBluetoothSocket::ConnectedState);
     emit q->connected();
 }
@@ -494,6 +497,7 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
     }
 
     q->setSocketState(QBluetoothSocket::UnconnectedState);
+    q->setOpenMode(QIODevice::NotOpen);
     emit q->disconnected();
 }
 
@@ -569,7 +573,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socke
 
 
     q->setSocketState(socketState);
-    q->setOpenMode(openMode);
+    q->setOpenMode(openMode | QIODevice::Unbuffered);
 
     if (openMode == QBluetoothSocket::ConnectedState)
         emit q->connected();

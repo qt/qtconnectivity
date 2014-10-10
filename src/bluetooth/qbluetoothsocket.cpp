@@ -244,7 +244,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
     Q_D(QBluetoothSocket);
     d->ensureNativeSocket(socketType);
 
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -254,7 +254,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent), d_ptr(new QBluetoothSocketPrivate)
 {
     d_ptr->q_ptr = this;
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -322,9 +322,6 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         setSocketError(QBluetoothSocket::OperationError);
         return;
     }
-
-    setOpenMode(openMode);
-
 #if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
     if (!d->ensureNativeSocket(service.socketProtocol())) {
         d->errorString = tr("Socket type not supported");
@@ -604,6 +601,8 @@ void QBluetoothSocket::abort()
         return;
 
     Q_D(QBluetoothSocket);
+    setOpenMode(QIODevice::NotOpen);
+    setSocketState(ClosingState);
     d->abort();
 
 #ifndef QT_ANDROID_BLUETOOTH
@@ -679,6 +678,7 @@ void QBluetoothSocket::close()
         return;
 
     Q_D(QBluetoothSocket);
+    setOpenMode(QIODevice::NotOpen);
     setSocketState(ClosingState);
 
     d->close();

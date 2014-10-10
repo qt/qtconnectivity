@@ -213,24 +213,17 @@ void tst_QBluetoothSocket::tst_construction()
         QCOMPARE(socket.atEnd(), true);
         QCOMPARE(socket.pos(), 0);
         QCOMPARE(socket.size(), 0);
-
-        QSignalSpy spy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(socket.isOpen(), false);
+        QCOMPARE(socket.isReadable(), false);
+        QCOMPARE(socket.isWritable(), false);
+        QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
         QByteArray array = socket.readAll();
         QVERIFY(array.isEmpty());
-        QCOMPARE(socket.error(), QBluetoothSocket::OperationError);
-        QCOMPARE(spy.count(), 1);
 
         char buffer[10];
         int returnValue = socket.read((char*)&buffer, 10);
         QCOMPARE(returnValue, -1);
-        QCOMPARE(socket.error(), QBluetoothSocket::OperationError);
-        QVERIFY(spy.count() >= 2);
-        while (spy.count()) {
-            QBluetoothSocket::SocketError er = spy.takeFirst().at(0).value<QBluetoothSocket::SocketError>();
-            QVERIFY(er == QBluetoothSocket::OperationError);
-        }
     }
 
     {
@@ -256,6 +249,11 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     QSignalSpy connectedSpy(&socket, SIGNAL(connected()));
     QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
 
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+
     socket.connectToService(remoteServiceInfo);
 
     QCOMPARE(stateSpy.count(), 1);
@@ -279,6 +277,10 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::ConnectedState);
     QCOMPARE(socket.state(), QBluetoothSocket::ConnectedState);
 
+    QCOMPARE(socket.isWritable(), true);
+    QCOMPARE(socket.isReadable(), true);
+    QCOMPARE(socket.isOpen(), true);
+
     stateSpy.clear();
 
     //check the peer & local info
@@ -290,7 +292,11 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     /* Disconnection */
     QSignalSpy disconnectedSpy(&socket, SIGNAL(disconnected()));
 
-    socket.disconnectFromService();
+    socket.abort(); // close() tested by other functions
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
     QVERIFY(stateSpy.count() >= 1);
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::ClosingState);
@@ -339,6 +345,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     /* Connection */
     QSignalSpy connectedSpy(&socket, SIGNAL(connected()));
 
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
     socket.connectToService(remoteServiceInfo);
 
     QCOMPARE(stateSpy.count(), 1);
@@ -352,6 +362,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         QTest::qWait(1000);
         connectTime -= 1000;
     }
+
+    QCOMPARE(socket.isWritable(), true);
+    QCOMPARE(socket.isReadable(), true);
+    QCOMPARE(socket.isOpen(), true);
 
     QCOMPARE(connectedSpy.count(), 1);
     QCOMPARE(stateSpy.count(), 1);
@@ -402,6 +416,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         }
     }
 
+    QCOMPARE(socket.isWritable(), true);
+    QCOMPARE(socket.isReadable(), true);
+    QCOMPARE(socket.isOpen(), true);
+
     {
         /* Send all at once */
         QSignalSpy readyReadSpy(&socket, SIGNAL(readyRead()));
@@ -436,6 +454,11 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     QSignalSpy disconnectedSpy(&socket, SIGNAL(disconnected()));
 
     socket.disconnectFromService();
+
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
     int disconnectTime = MaxConnectTime;
     while (disconnectedSpy.count() == 0 && disconnectTime > 0) {
