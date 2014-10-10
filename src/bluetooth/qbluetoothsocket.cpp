@@ -144,6 +144,10 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Aborts the current connection and resets the socket. Unlike disconnectFromService(), this
     function immediately closes the socket, discarding any pending data in the write buffer.
 
+    \note On Android, aborting the socket requires asynchronous interaction with Android threads.
+    Therefore the associated \l disconnected() and \l stateChanged() signals are delayed
+    until the threads have finished the closure.
+
     \sa disconnectFromService(), close()
 */
 
@@ -151,6 +155,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn void QBluetoothSocket::close()
 
     Disconnects the socket's connection with the device.
+
+    \note On Android, closing the socket requires asynchronous interaction with Android threads.
+    Therefore the associated \l disconnected() and \l stateChanged() signals are delayed
+    until the threads have finished the closure.
+
 */
 
 /*!
