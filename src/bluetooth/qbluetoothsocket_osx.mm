@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
   : q_ptr(Q_NULLPTR),
     writeChunk(std::numeric_limits<UInt16>::max()),
-    openMode(QIODevice::ReadWrite), // That's what is set in public class' ctors.
+    openMode(QIODevice::NotOpen), // That's what is set in public class' ctors.
     state(QBluetoothSocket::UnconnectedState),
     socketType(QBluetoothServiceInfo::UnknownProtocol),
     socketError(QBluetoothSocket::NoSocketError),
@@ -78,7 +78,7 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 }
 
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port,
-                                               QIODevice::OpenMode openMode)
+                                               QIODevice::OpenMode mode)
 {
     // We have readwrite channels with IOBluetooth's channels.
     Q_UNUSED(openMode)
@@ -102,6 +102,9 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     // We're still inside this function:
     isConnecting = true;
 
+    // We'll later (or now) have to set an open mode on QBluetoothSocket.
+    openMode = mode;
+
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         rfcommChannel.reset([[ObjCRFCOMMChannel alloc] initWithDelegate:this]);
         if (rfcommChannel)
@@ -121,19 +124,13 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
     // QBluetoothSocket will change the state and also emit
     // a signal later if required.
-
-    if (status != kIOReturnSuccess) {// That's a simple case.
-        state = oldState;
-        errorString = OSXBluetooth::qt_error_string(status);
-        q_ptr->setSocketError(QBluetoothSocket::UnknownSocketError);
-        return;
-    }
-
-    if (socketError == QBluetoothSocket::NoSocketError) {
+    if (status == kIOReturnSuccess && socketError == QBluetoothSocket::NoSocketError) {
         if (state == QBluetoothSocket::ConnectedState) {
             // Callback 'channelOpenComplete' fired before
             // connectToService finished:
             state = oldState;
+            // Connected, setOpenMode on a QBluetoothSocket.
+            q_ptr->setOpenMode(openMode);
             q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
             emit q_ptr->connected();
             if (buffer.size()) // We also have some data already ...
@@ -151,6 +148,8 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         }
     } else {
         state = oldState;
+        if (status != kIOReturnSuccess)
+            errorString = OSXBluetooth::qt_error_string(status);
         q_ptr->setSocketError(QBluetoothSocket::UnknownSocketError);
     }
 }
@@ -286,6 +285,7 @@ bool QBluetoothSocketPrivate::setChannel(IOBluetoothRFCOMMChannel *channel)
 
     rfcommChannel.reset([[ObjCRFCOMMChannel alloc] initWithDelegate:this channel:channel]);
     if (rfcommChannel) {// We do not handle errors, up to an external user.
+        q_ptr->setOpenMode(QIODevice::ReadWrite);
         state = QBluetoothSocket::ConnectedState;
         socketType = QBluetoothServiceInfo::RfcommProtocol;
     }
@@ -308,6 +308,7 @@ bool QBluetoothSocketPrivate::setChannel(IOBluetoothL2CAPChannel *channel)
 
     l2capChannel.reset([[ObjCL2CAPChannel alloc] initWithDelegate:this channel:channel]);
     if (l2capChannel) {// We do not handle errors, up to an external user.
+        q_ptr->setOpenMode(QIODevice::ReadWrite);
         state = QBluetoothSocket::ConnectedState;
         socketType = QBluetoothServiceInfo::L2capProtocol;
     }
@@ -337,6 +338,7 @@ void QBluetoothSocketPrivate::channelOpenComplete()
 
     if (!isConnecting) {
         q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
+        q_ptr->setOpenMode(openMode);
         emit q_ptr->connected();
     } else {
         state = QBluetoothSocket::ConnectedState;
@@ -354,6 +356,7 @@ void QBluetoothSocketPrivate::channelClosed()
 
     if (!isConnecting) {
         q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
+        q_ptr->setOpenMode(QIODevice::NotOpen);
         emit q_ptr->disconnected();
     } else {
         state = QBluetoothSocket::UnconnectedState;
@@ -413,7 +416,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
     d_ptr->q_ptr = this;
     d_ptr->socketType = socketType;
 
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(NotOpen);
 }
 
 QBluetoothSocket::QBluetoothSocket(QObject *parent)
@@ -421,7 +424,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
     d_ptr(new QBluetoothSocketPrivate)
 {
     d_ptr->q_ptr = this;
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(NotOpen);
 }
 
 QBluetoothSocket::~QBluetoothSocket()
@@ -452,8 +455,6 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         setSocketError(OperationError);
         return;
     }
-
-    setOpenMode(openMode);
 
     if (service.protocolServiceMultiplexer() > 0) {
         d_ptr->connectToService(service.device().address(),
@@ -602,6 +603,7 @@ void QBluetoothSocket::abort()
 
     d_ptr->abort();
 
+    setOpenMode(NotOpen);
     setSocketState(QBluetoothSocket::UnconnectedState);
     emit disconnected();
 }
@@ -678,6 +680,7 @@ void QBluetoothSocket::close()
     if (state() == UnconnectedState)
         return;
 
+    setOpenMode(NotOpen);
     setSocketState(ClosingState);
 
     d_ptr->close();
