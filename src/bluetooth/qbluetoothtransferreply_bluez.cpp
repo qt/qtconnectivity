@@ -70,6 +70,14 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
     setRequest(request);
     setManager(parent);
 
+    if (!input) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid input device (null)";
+        m_errorStr = QBluetoothTransferReply::tr("Invalid input device (null)");
+        m_error = QBluetoothTransferReply::FileNotFoundError;
+        m_finished = true;
+        return;
+    }
+
     if (isBluez5()) {
         m_clientBluez = new OrgBluezObexClient1Interface(QStringLiteral("org.bluez.obex"),
                                                         QStringLiteral("/org/bluez/obex"),

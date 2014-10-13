@@ -65,6 +65,15 @@ QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const Q
 {
     setRequest(request);
     setManager(parent);
+
+    if (!input) {
+        qCWarning(QT_BT_QNX) << "Invalid input device (null)";
+        m_errorStr = QBluetoothTransferReply::tr("Invalid input device (null)");
+        m_error = QBluetoothTransferReply::FileNotFoundError;
+        m_finished = true;
+        return;
+    }
+
     ppsRegisterControl();
     //qsrand(QTime::currentTime().msec());
     //m_agent_path = agentPath;
