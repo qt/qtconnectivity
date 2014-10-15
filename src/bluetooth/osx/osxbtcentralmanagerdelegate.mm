@@ -39,61 +39,30 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTDEVICEINQUIRY_P_H
-#define OSXBTDEVICEINQUIRY_P_H
+#include "osxbtcentralmanagerdelegate_p.h"
 
-#include <QtCore/qglobal.h>
+@implementation QT_MANGLE_NAMESPACE(OSXBTCentralManagerTransientDelegate)
 
-// We have to import objc code (it does not have inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothDeviceInquiry.h>
-
-#include <Foundation/Foundation.h>
-#include <IOKit/IOReturn.h>
-
-@class QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry);
-
-QT_BEGIN_NAMESPACE
-
-namespace OSXBluetooth {
-
-class DeviceInquiryDelegate {
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) DeviceInquiryObjC;
-
-    virtual ~DeviceInquiryDelegate();
-
-    virtual void inquiryFinished(IOBluetoothDeviceInquiry *inq) = 0;
-    virtual void error(IOBluetoothDeviceInquiry *inq, IOReturn error) = 0;
-    virtual void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) = 0;
-};
-
-}
-
-QT_END_NAMESPACE
-
-@interface QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) : NSObject<IOBluetoothDeviceInquiryDelegate>
+- (id)initWithManager:(CBCentralManager *)aManager
 {
-    IOBluetoothDeviceInquiry *m_inquiry;
-    bool m_active;
-    QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *m_delegate;//C++ "delegate"
+    if (self = [super init])
+        manager = aManager;
+
+    return self;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *)delegate;
-- (void)dealloc;
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central
+{
+    Q_UNUSED(central)
 
-- (bool)isActive;
-- (IOReturn)start;
-- (IOReturn)stop;
+    [self performSelectorOnMainThread:@selector(cleanup) withObject:nil waitUntilDone:NO];
+}
 
-//Obj-C delegate:
-- (void)deviceInquiryComplete:(IOBluetoothDeviceInquiry *)sender
-        error:(IOReturn)error aborted:(BOOL)aborted;
-
-- (void)deviceInquiryDeviceFound:(IOBluetoothDeviceInquiry *)sender
-        device:(IOBluetoothDevice *)device;
-
-- (void)deviceInquiryStarted:(IOBluetoothDeviceInquiry *)sender;
+- (void)cleanup
+{
+    [manager setDelegate:nil];
+    [manager release];
+    [self release];
+}
 
 @end
-
-#endif

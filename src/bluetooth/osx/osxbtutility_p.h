@@ -47,10 +47,19 @@
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
+
+#ifndef QT_IOS_BLUETOOTH
+
 #include <IOBluetooth/Bluetooth.h>
 #include <IOKit/IOReturn.h>
 
 @class IOBluetoothSDPUUID;
+
+#else
+
+#include <CoreBluetooth/CoreBluetooth.h>
+
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -171,16 +180,21 @@ private:
 };
 
 QString qt_address(NSString *address);
+
+#ifndef QT_IOS_BLUETOOTH
+
 class QBluetoothAddress qt_address(const BluetoothDeviceAddress *address);
 BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
 
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);
 QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid);
-
 QString qt_error_string(IOReturn errorCode);
+
+#endif
 
 } // namespace OSXBluetooth
 
+// Logging category for both OS X and iOS.
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_OSX)
 
 QT_END_NAMESPACE

@@ -39,60 +39,74 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTDEVICEINQUIRY_P_H
-#define OSXBTDEVICEINQUIRY_P_H
+#ifndef OSXBTLEDEVICEINQUIRY_P_H
+#define OSXBTLEDEVICEINQUIRY_P_H
+
+#include "qbluetoothdevicediscoveryagent.h"
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qlist.h>
 
-// We have to import objc code (it does not have inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothDeviceInquiry.h>
+#import <Foundation/Foundation.h>
 
-#include <Foundation/Foundation.h>
-#include <IOKit/IOReturn.h>
+@class QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
 
-@class QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry);
+@class CBCentralManager;
+@class CBPeripheral;
 
 QT_BEGIN_NAMESPACE
 
+class QBluetoothDeviceInfo;
+class QBluetoothUuid;
+
 namespace OSXBluetooth {
 
-class DeviceInquiryDelegate {
+class LEDeviceInquiryDelegate
+{
 public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) DeviceInquiryObjC;
+    typedef QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) LEDeviceInquiryObjC;
 
-    virtual ~DeviceInquiryDelegate();
+    virtual ~LEDeviceInquiryDelegate();
 
-    virtual void inquiryFinished(IOBluetoothDeviceInquiry *inq) = 0;
-    virtual void error(IOBluetoothDeviceInquiry *inq, IOReturn error) = 0;
-    virtual void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) = 0;
+    // At the moment the only error we're reporting is PoweredOffError!
+    virtual void LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::Error error) = 0;
+
+    virtual void LEnotSupported() = 0;
+    virtual void LEdeviceFound(CBPeripheral *peripheral, const QBluetoothUuid &uuid,
+                               NSDictionary *advertisementData, NSNumber *RSSI) = 0;
+    virtual void LEdeviceInquiryFinished() = 0;
 };
 
 }
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) : NSObject<IOBluetoothDeviceInquiryDelegate>
-{
-    IOBluetoothDeviceInquiry *m_inquiry;
-    bool m_active;
-    QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *m_delegate;//C++ "delegate"
+// Bluetooth Low Energy scan for iOS and OS X.
+
+@interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
+{// Protocols are adopted in the mm file.
+    QT_PREPEND_NAMESPACE(OSXBluetooth::LEDeviceInquiryDelegate) *delegate;
+
+    // TODO: scoped pointers/shared pointers?
+    NSMutableDictionary *peripherals; // Found devices.
+    CBCentralManager *manager;
+
+    // pending - waiting for a status update first.
+    bool pendingStart;
+    bool cancelled;
+    // scan actually started.
+    bool isActive;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *)delegate;
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::LEDeviceInquiryDelegate) *)aDelegate;
 - (void)dealloc;
 
+// Actual scan can be delayed - we have to wait for a status update first.
+- (bool)start;
+// Stop can be delayed - if we're waiting for a status update.
+- (void)stop;
+
 - (bool)isActive;
-- (IOReturn)start;
-- (IOReturn)stop;
-
-//Obj-C delegate:
-- (void)deviceInquiryComplete:(IOBluetoothDeviceInquiry *)sender
-        error:(IOReturn)error aborted:(BOOL)aborted;
-
-- (void)deviceInquiryDeviceFound:(IOBluetoothDeviceInquiry *)sender
-        device:(IOBluetoothDevice *)device;
-
-- (void)deviceInquiryStarted:(IOBluetoothDeviceInquiry *)sender;
 
 @end
 

@@ -77,7 +77,8 @@ using namespace QT_NAMESPACE;
 
         if (m_inquiry) {
             // TODO: something more reasonable required!
-            m_inquiry.inquiryLength = 20;
+            [m_inquiry setInquiryLength:20];
+            [m_inquiry setUpdateNewDeviceNames:NO];//Useless, disable!
             m_delegate = delegate;
         } else {
             qCCritical(QT_BT_OSX) << "-initWithDelegate:, failed to create "
@@ -189,28 +190,9 @@ using namespace QT_NAMESPACE;
     m_delegate->deviceFound(sender, device);
 }
 
-- (void)deviceInquiryDeviceNameUpdated:(IOBluetoothDeviceInquiry *)sender
-        device:(IOBluetoothDevice*)device devicesRemaining:(uint32_t)devicesRemaining
-{
-    Q_UNUSED(sender)
-    Q_UNUSED(device)
-    Q_UNUSED(devicesRemaining)
-    // TODO: add names update into DeviceInquiryDelegate.
-}
-
 - (void)deviceInquiryStarted:(IOBluetoothDeviceInquiry *)sender
 {
     Q_UNUSED(sender)
 }
-
-- (void)deviceInquiryUpdatingDeviceNamesStarted:(IOBluetoothDeviceInquiry *)sender
-        devicesRemaining:(uint32_t)devicesRemaining
-{
-    Q_UNUSED(sender)
-    Q_UNUSED(devicesRemaining)
-
-    // TODO: add names update into DeviceInquiryDelegate.
-}
-
 
 @end

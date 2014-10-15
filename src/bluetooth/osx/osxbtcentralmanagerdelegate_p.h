@@ -39,61 +39,26 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTDEVICEINQUIRY_P_H
-#define OSXBTDEVICEINQUIRY_P_H
-
 #include <QtCore/qglobal.h>
 
-// We have to import objc code (it does not have inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothDeviceInquiry.h>
+#import <Foundation/Foundation.h>
 
-#include <Foundation/Foundation.h>
-#include <IOKit/IOReturn.h>
+#include "corebluetoothwrapper_p.h"
 
-@class QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry);
+// CBCentralManager is quite special: before -centralManagerDidUpdateState: call
+// (which is a callback) - we can not delete it.
+// We usually release a manager in the -dealloc method. If the state was not updated yet,
+// we create a temporary delegate (which also is becoming the owner of this manger),
+// and later in the delegate's -centralManagerDidUpdateState: we are trying to finally release
+// a manager. Otherwise, this thing dies even with ARC.
 
-QT_BEGIN_NAMESPACE
-
-namespace OSXBluetooth {
-
-class DeviceInquiryDelegate {
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) DeviceInquiryObjC;
-
-    virtual ~DeviceInquiryDelegate();
-
-    virtual void inquiryFinished(IOBluetoothDeviceInquiry *inq) = 0;
-    virtual void error(IOBluetoothDeviceInquiry *inq, IOReturn error) = 0;
-    virtual void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) = 0;
-};
-
-}
-
-QT_END_NAMESPACE
-
-@interface QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) : NSObject<IOBluetoothDeviceInquiryDelegate>
+@interface QT_MANGLE_NAMESPACE(OSXBTCentralManagerTransientDelegate) : NSObject<CBCentralManagerDelegate>
 {
-    IOBluetoothDeviceInquiry *m_inquiry;
-    bool m_active;
-    QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *m_delegate;//C++ "delegate"
+    CBCentralManager *manager;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *)delegate;
-- (void)dealloc;
-
-- (bool)isActive;
-- (IOReturn)start;
-- (IOReturn)stop;
-
-//Obj-C delegate:
-- (void)deviceInquiryComplete:(IOBluetoothDeviceInquiry *)sender
-        error:(IOReturn)error aborted:(BOOL)aborted;
-
-- (void)deviceInquiryDeviceFound:(IOBluetoothDeviceInquiry *)sender
-        device:(IOBluetoothDevice *)device;
-
-- (void)deviceInquiryStarted:(IOBluetoothDeviceInquiry *)sender;
+- (id)initWithManager:(CBCentralManager *)aManager;
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central;
+- (void)cleanup;
 
 @end
-
-#endif

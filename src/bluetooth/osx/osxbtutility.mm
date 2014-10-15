@@ -45,14 +45,26 @@
 
 #include <QtCore/qstring.h>
 
+#ifndef QT_IOS_BLUETOOTH
+
 #import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
+
+#endif
 
 #include <algorithm>
 #include <limits>
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_IOS_BLUETOOTH
+
 Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.osx")
+
+#else
+
+Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.ios")
+
+#endif
 
 namespace OSXBluetooth {
 
@@ -65,6 +77,9 @@ QString qt_address(NSString *address)
 
     return QString();
 }
+
+#ifndef QT_IOS_BLUETOOTH
+
 
 QBluetoothAddress qt_address(const BluetoothDeviceAddress *a)
 {
@@ -141,6 +156,8 @@ QString qt_error_string(IOReturn errorCode)
         return QString::fromLatin1("unknown error");
     }
 }
+
+#endif
 
 }
 

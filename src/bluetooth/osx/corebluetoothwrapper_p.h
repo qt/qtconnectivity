@@ -39,61 +39,40 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTDEVICEINQUIRY_P_H
-#define OSXBTDEVICEINQUIRY_P_H
+#ifndef COREBLUETOOTHWRAPPER_P_H
+#define COREBLUETOOTHWRAPPER_P_H
+
+#ifndef QT_OSX_BLUETOOTH
+
+#import <CoreBluetooth/CoreBluetooth.h>
+
+#else
 
 #include <QtCore/qglobal.h>
 
-// We have to import objc code (it does not have inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothDeviceInquiry.h>
+// CoreBluetooth with SDK 10.9 seems to be broken: the class CBPeripheralManager is enabled on OS X 10.9,
+// but some of its declarations are using a disabled enum CBPeripheralAuthorizationStatus
+// (disabled using __attribute__ syntax and NS_ENUM_AVAILABLE macro).
+// This + -std=c++11 ends with a compilation error. For the SDK 10.9 we can:
+// either undefine NS_ENUM_AVAILABLE macro (it works somehow) and redefine it as an empty sequence of pp-tokens or
+// define __attribute__ as an empty sequence. Both solutions look quite ugly.
 
-#include <Foundation/Foundation.h>
-#include <IOKit/IOReturn.h>
-
-@class QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry);
-
-QT_BEGIN_NAMESPACE
-
-namespace OSXBluetooth {
-
-class DeviceInquiryDelegate {
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) DeviceInquiryObjC;
-
-    virtual ~DeviceInquiryDelegate();
-
-    virtual void inquiryFinished(IOBluetoothDeviceInquiry *inq) = 0;
-    virtual void error(IOBluetoothDeviceInquiry *inq, IOReturn error) = 0;
-    virtual void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) = 0;
-};
-
-}
-
-QT_END_NAMESPACE
-
-@interface QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) : NSObject<IOBluetoothDeviceInquiryDelegate>
-{
-    IOBluetoothDeviceInquiry *m_inquiry;
-    bool m_active;
-    QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *m_delegate;//C++ "delegate"
-}
-
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::DeviceInquiryDelegate) *)delegate;
-- (void)dealloc;
-
-- (bool)isActive;
-- (IOReturn)start;
-- (IOReturn)stop;
-
-//Obj-C delegate:
-- (void)deviceInquiryComplete:(IOBluetoothDeviceInquiry *)sender
-        error:(IOReturn)error aborted:(BOOL)aborted;
-
-- (void)deviceInquiryDeviceFound:(IOBluetoothDeviceInquiry *)sender
-        device:(IOBluetoothDevice *)device;
-
-- (void)deviceInquiryStarted:(IOBluetoothDeviceInquiry *)sender;
-
-@end
-
+#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9) && !QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_10)
+#define CB_ERROR_WORKAROUND_REQUIRED
 #endif
+
+#ifdef CB_ERROR_WORKAROUND_REQUIRED
+#undef NS_ENUM_AVAILABLE
+#define NS_ENUM_AVAILABLE(_mac, _ios)
+#endif
+
+#import <IOBluetooth/IOBluetooth.h>
+
+#ifdef CB_ERROR_WORKAROUND_REQUIRED
+#undef __attribute__
+#undef CB_ERROR_WORKAROUND_REQUIRED
+#endif
+
+#endif // QT_OSX_BLUETOOTH
+
+#endif // COREBLUETOOTHWRAPPER_P_H
