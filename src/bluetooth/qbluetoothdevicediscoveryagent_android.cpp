@@ -198,6 +198,21 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
 
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
+    for (int i = 0; i < discoveredDevices.size(); i++) {
+        if (discoveredDevices[i].address() == info.address()) {
+            if (discoveredDevices[i] == info) {
+                qCDebug(QT_BT_ANDROID) << "Duplicate: " << info.address();
+                return;
+            }
+
+            // same device found -> avoid duplicates and update info in place
+            discoveredDevices.replace(i, info);
+
+            emit q->deviceDiscovered(info);
+            return;
+        }
+    }
+
     discoveredDevices.append(info);
     qCDebug(QT_BT_ANDROID) << "Device found: " << info.name() << info.address().toString();
     emit q->deviceDiscovered(info);
