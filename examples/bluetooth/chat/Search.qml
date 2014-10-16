@@ -49,7 +49,7 @@ Rectangle {
 
     width: searchText.width + 40;
     height: searchText.height + bluetoothImage.height + 40;
-    color: "white"
+    color: "#d7d6d5"
     border.color: "black"
     border.width: 1
     radius: 5

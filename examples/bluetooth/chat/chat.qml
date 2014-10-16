@@ -45,6 +45,7 @@ Item {
     id: top
 
     Component.onCompleted: state = "begin"
+
     property string remoteDeviceName: ""
     property bool serviceFound: false
 
@@ -109,12 +110,11 @@ Item {
     }
 
 
-    Image {
+    Rectangle {
         id: background
         z: 0
         anchors.fill: parent
-        source: "images/background.jpg"
-        fillMode: Image.PreserveAspectCrop
+        color: "#5d5b59"
     }
 
     Search {
@@ -126,18 +126,20 @@ Item {
     Rectangle {
         id: chatBox
         opacity: 0
-
         anchors.centerIn: top
 
-        width: top.width - 25
-        height: 300
-        color: "white"
+        color: "#5d5b59"
         border.color: "black"
         border.width: 1
         radius: 5
+        anchors.fill: parent
 
         function sendMessage()
         {
+            // toogle focus to force end of input method composer
+            var hasFocus = input.focus;
+            input.focus = false;
+
             var data = input.text
             input.clear()
             chatContent.append({content: "Me: " + data})
@@ -145,6 +147,8 @@ Item {
             socket.stringData = data
             //! [BluetoothSocket-5]
             chatView.positionViewAtEnd()
+
+            input.focus = hasFocus;
         }
 
         Item {
@@ -170,7 +174,7 @@ Item {
             Rectangle {
                 height: parent.height - input.height - 15
                 width: parent.width;
-                color: "white"
+                color: "#d7d6d5"
                 anchors.bottom: parent.bottom
                 border.color: "black"
                 border.width: 1
@@ -185,7 +189,7 @@ Item {
                     clip: true
                     delegate: Component {
                         Text {
-                            font.pixelSize: 18
+                            font.pointSize: 14
                             text: modelData
                         }
                     }

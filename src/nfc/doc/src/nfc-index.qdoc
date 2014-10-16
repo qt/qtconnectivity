@@ -47,7 +47,7 @@ target detection and loss, registering NDEF message handlers, reading and writin
 on NFC Forum Tags and sending tag specific commands.
 
 
-\section1 Getting started
+\section1 Getting Started
 
 To use the C++ library in your application, add the following configuration
 option to your \c .pro file:
@@ -59,7 +59,7 @@ import statement in your \c .qml file:
 
 \snippet doc_src_qtnfc.qml import
 
-\section1 Related information
+\section1 Related Information
 
 \section2 Guides
 \list

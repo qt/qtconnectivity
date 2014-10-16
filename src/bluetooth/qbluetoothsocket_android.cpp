@@ -331,6 +331,9 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
         return;
     }
 
+    // only unbuffered behavior supported at this stage
+    q->setOpenMode(QIODevice::ReadWrite|QIODevice::Unbuffered);
+
     q->setSocketState(QBluetoothSocket::ConnectedState);
     emit q->connected();
 }
@@ -438,6 +441,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     env->SetByteArrayRegion(nativeData, 0, (qint32)maxSize, reinterpret_cast<const jbyte*>(data));
     outputStream.callMethod<void>("write", "([BII)V", nativeData, 0, (qint32)maxSize);
     env->DeleteLocalRef(nativeData);
+    emit q->bytesWritten(maxSize);
 
     if (env->ExceptionCheck()) {
         qCWarning(QT_BT_ANDROID) << "Error while writing";
@@ -494,6 +498,7 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
     }
 
     q->setSocketState(QBluetoothSocket::UnconnectedState);
+    q->setOpenMode(QIODevice::NotOpen);
     emit q->disconnected();
 }
 
@@ -569,7 +574,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socke
 
 
     q->setSocketState(socketState);
-    q->setOpenMode(openMode);
+    q->setOpenMode(openMode | QIODevice::Unbuffered);
 
     if (openMode == QBluetoothSocket::ConnectedState)
         emit q->connected();

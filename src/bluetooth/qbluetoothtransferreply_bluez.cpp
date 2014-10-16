@@ -47,6 +47,7 @@
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QVector>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrentRun>
@@ -68,6 +69,14 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 {
     setRequest(request);
     setManager(parent);
+
+    if (!input) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid input device (null)";
+        m_errorStr = QBluetoothTransferReply::tr("Invalid input device (null)");
+        m_error = QBluetoothTransferReply::FileNotFoundError;
+        m_finished = true;
+        return;
+    }
 
     if (isBluez5()) {
         m_clientBluez = new OrgBluezObexClient1Interface(QStringLiteral("org.bluez.obex"),
@@ -160,16 +169,15 @@ bool QBluetoothTransferReplyBluez::start()
 
 bool QBluetoothTransferReplyBluez::copyToTempFile(QIODevice *to, QIODevice *from)
 {
-    char *block = new char[4096];
+    QVector<char> block(4096);
     int size;
 
-    while ((size = from->read(block, 4096)) > 0) {
-        if(size != to->write(block, size)){
+    while ((size = from->read(block.data(), block.size())) > 0) {
+        if (size != to->write(block.data(), size)) {
             return false;
         }
     }
 
-    delete[] block;
     return true;
 }
 

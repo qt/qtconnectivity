@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet nfc.cpp Record conversion
 
-    \section1 Creating specialized NDEF record classes
+    \section1 Creating Specialized NDEF Record Classes
 
     Specialized NDEF record classes can be easily created with the Q_DECLARE_NDEF_RECORD() and
     Q_DECLARE_ISRECORDTYPE_FOR_NDEF_RECORD() macros.  The following example shows the class

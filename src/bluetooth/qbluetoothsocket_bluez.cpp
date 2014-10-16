@@ -124,7 +124,6 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
-    Q_UNUSED(openMode);
     int result = -1;
 
     if (socket == -1 && !ensureNativeSocket(socketType)) {
@@ -179,6 +178,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     if (result >= 0 || (result == -1 && errno == EINPROGRESS)) {
         connecting = true;
         q->setSocketState(QBluetoothSocket::ConnectingState);
+        q->setOpenMode(openMode);
     } else {
         errorString = qt_error_string(errno);
         q->setSocketError(QBluetoothSocket::UnknownSocketError);

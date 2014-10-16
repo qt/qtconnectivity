@@ -41,6 +41,7 @@
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothuuid.h>
+#include <QtBluetooth/QBluetoothServer>
 
 QT_USE_NAMESPACE
 
@@ -182,10 +183,20 @@ void tst_QBluetoothServiceInfo::tst_assignment_data()
     QTest::addColumn<QUuid>("uuid");
     QTest::addColumn<QBluetoothUuid::ProtocolUuid>("protocolUuid");
     QTest::addColumn<QBluetoothServiceInfo::Protocol>("serviceInfoProtocol");
+    QTest::addColumn<bool>("protocolSupported");
 
-    QTest::newRow("assignment_data")
+    bool l2cpSupported = true;
+    //some platforms don't support L2CP
+#ifdef QT_ANDROID_BLUETOOTH
+    l2cpSupported = false;
+#endif
+    QTest::newRow("assignment_data_l2cp")
         << QUuid(0x67c8770b, 0x44f1, 0x410a, 0xab, 0x9a, 0xf9, 0xb5, 0x44, 0x6f, 0x13, 0xee)
-        << QBluetoothUuid::L2cap << QBluetoothServiceInfo::L2capProtocol;
+        << QBluetoothUuid::L2cap << QBluetoothServiceInfo::L2capProtocol << l2cpSupported;
+    QTest::newRow("assignment_data_rfcomm")
+        << QUuid(0x67c8770b, 0x44f1, 0x410a, 0xab, 0x9a, 0xf9, 0xb5, 0x44, 0x6f, 0x13, 0xee)
+        << QBluetoothUuid::Rfcomm << QBluetoothServiceInfo::RfcommProtocol << true;
+
 }
 
 void tst_QBluetoothServiceInfo::tst_assignment()
@@ -193,6 +204,7 @@ void tst_QBluetoothServiceInfo::tst_assignment()
     QFETCH(QUuid, uuid);
     QFETCH(QBluetoothUuid::ProtocolUuid, protocolUuid);
     QFETCH(QBluetoothServiceInfo::Protocol, serviceInfoProtocol);
+    QFETCH(bool, protocolSupported);
 
     const QString serviceName("My Service");
     const QBluetoothDeviceInfo deviceInfo(QBluetoothAddress("001122334455"), "Test Device", 0);
@@ -294,20 +306,51 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         protocolDescriptorList.append(QVariant::fromValue(protocol));
         copyInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                                  protocolDescriptorList);
-        QVERIFY(copyInfo.serverChannel() == -1);
-        QVERIFY(copyInfo.protocolServiceMultiplexer() != -1);
+        if (serviceInfoProtocol == QBluetoothServiceInfo::L2capProtocol) {
+            QVERIFY(copyInfo.serverChannel() == -1);
+            QVERIFY(copyInfo.protocolServiceMultiplexer() != -1);
+        } else if (serviceInfoProtocol == QBluetoothServiceInfo::RfcommProtocol) {
+            QVERIFY(copyInfo.serverChannel() != -1);
+            QVERIFY(copyInfo.protocolServiceMultiplexer() == -1);
+        }
+
         QVERIFY(copyInfo.socketProtocol() == serviceInfoProtocol);
     }
 
     {
         QBluetoothServiceInfo copyInfo;
+
         QVERIFY(!copyInfo.isValid());
         copyInfo = serviceInfo;
+        copyInfo.setServiceUuid(QBluetoothUuid::SerialPort);
         QVERIFY(!copyInfo.isRegistered());
 
         if (!QBluetoothLocalDevice::allDevices().count()) {
             QSKIP("Skipping test due to missing Bluetooth device");
-        } else {
+        } else if (protocolSupported) {
+            QBluetoothServer server(serviceInfoProtocol);
+            QVERIFY(server.listen());
+            QTRY_VERIFY_WITH_TIMEOUT(server.isListening(), 5000);
+            QVERIFY(server.serverPort() > 0);
+
+            QBluetoothServiceInfo::Sequence protocolDescriptorList;
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+
+            if (serviceInfoProtocol == QBluetoothServiceInfo::L2capProtocol) {
+                protocol << QVariant::fromValue(server.serverPort());
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            } else if (serviceInfoProtocol == QBluetoothServiceInfo::RfcommProtocol) {
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+                protocol.clear();
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                         << QVariant::fromValue(quint8(server.serverPort()));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+
+            serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
+                                     protocolDescriptorList);
+
             QVERIFY(copyInfo.registerService());
             QVERIFY(copyInfo.isRegistered());
             QVERIFY(serviceInfo.isRegistered());
@@ -319,6 +362,9 @@ void tst_QBluetoothServiceInfo::tst_assignment()
             QVERIFY(!copyInfo.isRegistered());
             QVERIFY(!secondCopy.isRegistered());
             QVERIFY(!serviceInfo.isRegistered());
+            QVERIFY(server.isListening());
+            server.close();
+            QVERIFY(!server.isListening());
         }
     }
 }
