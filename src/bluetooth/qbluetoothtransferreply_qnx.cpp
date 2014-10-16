@@ -44,6 +44,7 @@
 
 #include "qnx/ppshelpers_p.h"
 #include <QSocketNotifier>
+#include <QtCore/QVector>
 
 #include <QtCore/private/qcore_unix_p.h>
 
@@ -64,6 +65,15 @@ QBluetoothTransferReplyQnx::QBluetoothTransferReplyQnx(QIODevice *input, const Q
 {
     setRequest(request);
     setManager(parent);
+
+    if (!input) {
+        qCWarning(QT_BT_QNX) << "Invalid input device (null)";
+        m_errorStr = QBluetoothTransferReply::tr("Invalid input device (null)");
+        m_error = QBluetoothTransferReply::FileNotFoundError;
+        m_finished = true;
+        return;
+    }
+
     ppsRegisterControl();
     //qsrand(QTime::currentTime().msec());
     //m_agent_path = agentPath;
@@ -156,15 +166,14 @@ bool QBluetoothTransferReplyQnx::start()
 
 bool QBluetoothTransferReplyQnx::copyToTempFile(QIODevice *to, QIODevice *from)
 {
-    char *block = new char[4096];
+    QVector<char> block(4096);
     int size;
 
-    while ((size = from->read(block, 4096)) > 0) {
-        if (size != to->write(block, size))
+    while ((size = from->read(block.data(), block.size())) > 0) {
+        if (size != to->write(block.data(), size))
             return false;
     }
 
-    delete[] block;
     return true;
 }
 

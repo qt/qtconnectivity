@@ -144,6 +144,10 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Aborts the current connection and resets the socket. Unlike disconnectFromService(), this
     function immediately closes the socket, discarding any pending data in the write buffer.
 
+    \note On Android, aborting the socket requires asynchronous interaction with Android threads.
+    Therefore the associated \l disconnected() and \l stateChanged() signals are delayed
+    until the threads have finished the closure.
+
     \sa disconnectFromService(), close()
 */
 
@@ -151,6 +155,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn void QBluetoothSocket::close()
 
     Disconnects the socket's connection with the device.
+
+    \note On Android, closing the socket requires asynchronous interaction with Android threads.
+    Therefore the associated \l disconnected() and \l stateChanged() signals are delayed
+    until the threads have finished the closure.
+
 */
 
 /*!
@@ -235,7 +244,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
     Q_D(QBluetoothSocket);
     d->ensureNativeSocket(socketType);
 
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -245,7 +254,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent), d_ptr(new QBluetoothSocketPrivate)
 {
     d_ptr->q_ptr = this;
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -313,9 +322,6 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         setSocketError(QBluetoothSocket::OperationError);
         return;
     }
-
-    setOpenMode(openMode);
-
 #if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
     if (!d->ensureNativeSocket(service.socketProtocol())) {
         d->errorString = tr("Socket type not supported");
@@ -595,6 +601,8 @@ void QBluetoothSocket::abort()
         return;
 
     Q_D(QBluetoothSocket);
+    setOpenMode(QIODevice::NotOpen);
+    setSocketState(ClosingState);
     d->abort();
 
 #ifndef QT_ANDROID_BLUETOOTH
@@ -670,6 +678,7 @@ void QBluetoothSocket::close()
         return;
 
     Q_D(QBluetoothSocket);
+    setOpenMode(QIODevice::NotOpen);
     setSocketState(ClosingState);
 
     d->close();
