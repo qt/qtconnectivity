@@ -44,6 +44,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since 5.2
 
     RTD-Text encapsulates a user displayable text record.
 */

@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
 
     \ingroup connectivity-nfc
     \inmodule QtNfc
+    \since Qt 5.2
 
     A QNdefMessage is a collection of 0 or more QNdefRecords. QNdefMessage inherits from
     QList<QNdefRecord> and therefore the standard QList functions can be used to manipulate the

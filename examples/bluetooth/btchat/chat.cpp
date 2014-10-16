@@ -217,5 +217,6 @@ void Chat::sendClicked()
 void Chat::showMessage(const QString &sender, const QString &message)
 {
     ui->chat->insertPlainText(QString::fromLatin1("%1: %2\n").arg(sender, message));
+    ui->chat->ensureCursorVisible();
 }
 //! [showMessage]

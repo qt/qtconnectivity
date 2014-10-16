@@ -84,6 +84,8 @@ private slots:
 
     void tst_sendBuffer_data();
     void tst_sendBuffer();
+
+    void tst_sendNullPointer();
 private:
     QBluetoothAddress remoteAddress;
 };
@@ -342,6 +344,20 @@ void tst_QBluetoothTransferManager::tst_sendBuffer()
 
     QVERIFY(reply->isFinished());
     QVERIFY(!reply->isRunning());
+}
+
+void tst_QBluetoothTransferManager::tst_sendNullPointer()
+{
+    QBluetoothTransferRequest request(remoteAddress);
+    QBluetoothTransferManager manager;
+    QBluetoothTransferReply *reply = manager.put(request, 0);
+
+    QVERIFY(reply);
+    QCOMPARE(reply->isFinished(), true);
+    QCOMPARE(reply->isRunning(), false);
+    QCOMPARE(reply->manager(), &manager);
+    QCOMPARE(reply->request(), request);
+    QCOMPARE(reply->error(), QBluetoothTransferReply::FileNotFoundError);
 }
 
 QTEST_MAIN(tst_QBluetoothTransferManager)

@@ -53,7 +53,7 @@ Low Energy API. Further details can be found in the
 The Tech Preview supports BlueZ 4 & 5 based Linux systems. Support for
 further platforms is being planned.
 
-\section1 Getting started
+\section1 Getting Started
 
 To use the C++ library in your application, add the following configuration
 option to your \c .pro file:
@@ -65,7 +65,7 @@ import statement in your \c .qml file:
 
 \snippet doc_src_qtbluetooth.qml import
 
-\section1 Related information
+\section1 Related Information
 
 \section2 Guides
 \list
@@ -86,6 +86,7 @@ import statement in your \c .qml file:
         \li \l {scanner}{QML Bluetooth Scanner}
         \li \l {picturetransfer}{QML Bluetooth Picture Push}
         \li \l {pingpong}{QML Bluetooth PingPong}
+        \li \l {chat}{QML Bluetooth Chat}
         \li \l {heartlistener}{Bluetooth Low Energy Heart Listener}
         \li \l {lowenergyscanner}{Bluetooth Low Energy Scanner}
     \endlist

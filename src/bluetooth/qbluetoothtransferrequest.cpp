@@ -44,6 +44,8 @@ QT_BEGIN_NAMESPACE
     \brief The QBluetoothTransferRequest class stores information about a
     data transfer request.
 
+    \since 5.2
+
     QBluetoothTransferRequest is part of the Bluetooth Transfer API and is the class holding the
     information necessary to initiate a transfer over Bluetooth.
 

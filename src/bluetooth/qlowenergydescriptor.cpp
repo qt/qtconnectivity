@@ -57,6 +57,9 @@ QT_BEGIN_NAMESPACE
     The \l {QLowEnergyService::descriptorWritten()} signal
     is emitted upon success. The cahced \l value() of this object is updated accordingly.
 
+    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
+    Some API elements may change until the final release of the feature.
+
     \sa QLowEnergyService, QLowEnergyCharacteristic
 */
 
