@@ -386,6 +386,28 @@ QLowEnergyController::QLowEnergyController(
 /*!
     Constructs a new instance of this class with \a parent.
 
+    The \a remoteDeviceInfo must contain the details of the
+    remote Bluetooth Low Energy device to which this object
+    should attempt to connect later on.
+
+    The controller uses the local default Bluetooth adapter for
+    the connection management.
+ */
+QLowEnergyController::QLowEnergyController(
+                            const QBluetoothDeviceInfo &remoteDeviceInfo,
+                            QObject *parent)
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+{
+    Q_D(QLowEnergyController);
+    d->q_ptr = this;
+    d->remoteDevice = remoteDeviceInfo.address();
+    d->localAdapter = QBluetoothLocalDevice().address();
+    d->addressType = QLowEnergyController::PublicAddress;
+}
+
+/*!
+    Constructs a new instance of this class with \a parent.
+
     The \a remoteDevice must contain the address of the
     remote Bluetooth Low Energy device to which this object
     should attempt to connect later on.

@@ -213,6 +213,12 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 
 void QLowEnergyControllerPrivate::connectToDevice()
 {
+    if (remoteDevice.isNull()) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid/null remote device address";
+        setError(QLowEnergyController::UnknownRemoteDeviceError);
+        return;
+    }
+
     setState(QLowEnergyController::ConnectingState);
     if (l2cpSocket)
         delete l2cpSocket;

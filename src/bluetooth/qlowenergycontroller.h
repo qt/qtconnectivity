@@ -36,6 +36,7 @@
 
 #include <QObject>
 #include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QLowEnergyService>
 
@@ -69,6 +70,8 @@ public:
     };
 
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
+                                     QObject *parent = 0);
+    explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
                                      QObject *parent = 0);
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      const QBluetoothAddress &localDevice,

@@ -62,7 +62,7 @@ private slots:
     void tst_assignCompare();
 
 private:
-    QSet<QString> remoteLeDevices;
+    QList<QBluetoothDeviceInfo> remoteLeDeviceInfos;
     QLowEnergyController *globalControl;
     QLowEnergyService *globalService;
 };
@@ -114,9 +114,9 @@ void tst_QLowEnergyDescriptor::initTestCase()
 
     // find first service with descriptor
     QLowEnergyController *controller = 0;
-    foreach (const QString &remoteDevice, remoteLeDevices.toList()) {
-        controller = new QLowEnergyController(QBluetoothAddress(remoteDevice), this);
-        qDebug() << "Connecting to" << remoteDevice;
+    foreach (const QBluetoothDeviceInfo& remoteDeviceInfo, remoteLeDeviceInfos) {
+        controller = new QLowEnergyController(remoteDeviceInfo, this);
+        qDebug() << "Connecting to" << remoteDeviceInfo.address();
         controller->connectToDevice();
         QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
                   20000);
@@ -151,7 +151,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
                 if (!ch.descriptors().isEmpty()) {
                     globalService = leService;
                     globalControl = controller;
-                    qWarning() << "Found service with descriptor" << remoteDevice
+                    qWarning() << "Found service with descriptor" << remoteDeviceInfo.address()
                                << globalService->serviceName() << globalService->serviceUuid();
                     break;
                 }
@@ -184,7 +184,7 @@ void tst_QLowEnergyDescriptor::cleanupTestCase()
 void tst_QLowEnergyDescriptor::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
     if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-        remoteLeDevices.insert(info.address().toString());
+        remoteLeDeviceInfos.append(info);
 }
 
 void tst_QLowEnergyDescriptor::tst_constructionDefault()
