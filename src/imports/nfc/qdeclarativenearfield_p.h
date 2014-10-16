@@ -60,6 +60,7 @@ class QDeclarativeNearField : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQmlListProperty<QQmlNdefRecord> messageRecords READ messageRecords NOTIFY messageRecordsChanged)
     Q_PROPERTY(QQmlListProperty<QDeclarativeNdefFilter> filter READ filter NOTIFY filterChanged)
     Q_PROPERTY(bool orderMatch READ orderMatch WRITE setOrderMatch NOTIFY orderMatchChanged)
+    Q_PROPERTY(bool polling READ polling WRITE setPolling NOTIFY pollingChanged)
 
     Q_INTERFACES(QQmlParserStatus)
 
@@ -77,13 +78,22 @@ public:
     void classBegin() { }
     void componentComplete();
 
+    bool polling() const;
+    void setPolling(bool on);
+
 signals:
     void messageRecordsChanged();
     void filterChanged();
     void orderMatchChanged();
+    void pollingChanged();
+
+    void tagFound();
+    void tagRemoved();
 
 private slots:
     void _q_handleNdefMessage(const QNdefMessage &message);
+    void _q_handleTargetLost(QNearFieldTarget*);
+    void _q_handleTargetDetected(QNearFieldTarget*);
 
 private:
     QList<QQmlNdefRecord *> m_message;
@@ -94,6 +104,7 @@ private:
 
     QNearFieldManager *m_manager;
     int m_messageHandlerId;
+    bool m_polling;
 
     void registerMessageHandler();
 
