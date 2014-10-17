@@ -189,6 +189,7 @@ public:
     };
 
     enum CoreConfiguration {
+        UnknownCoreConfiguration = 0x0,
         LowEnergyCoreConfiguration = 0x01,
         BaseRateCoreConfiguration = 0x02,
         BaseRateAndLowEnergyCoreConfiguration = 0x03
