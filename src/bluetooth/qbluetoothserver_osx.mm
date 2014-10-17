@@ -429,7 +429,11 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
 
 bool QBluetoothServer::isListening() const
 {
-    return d_ptr->listener;
+    if (d_ptr->serverType == QSInfo::UnknownProtocol)
+        return false;
+
+    const QMutexLocker lock(&QBluetoothServerPrivate::channelMapMutex());
+    return QBluetoothServerPrivate::registeredServer(serverPort(), d_ptr->serverType);
 }
 
 void QBluetoothServer::setMaxPendingConnections(int numConnections)
