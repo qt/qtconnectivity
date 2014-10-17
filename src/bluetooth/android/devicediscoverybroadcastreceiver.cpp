@@ -37,10 +37,57 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include "android/jni_android_p.h"
+#include <QtCore/private/qjnihelpers_p.h>
+#include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
+
+typedef QHash<jint, QBluetoothDeviceInfo::CoreConfigurations> JCachedBtTypes;
+Q_GLOBAL_STATIC(JCachedBtTypes, cachedBtTypes)
+
+// class name
+static const char * const javaBluetoothDeviceClassName = "android/bluetooth/BluetoothDevice";
+static const char * const javaDeviceTypeClassic = "DEVICE_TYPE_CLASSIC";
+static const char * const javaDeviceTypeDual = "DEVICE_TYPE_DUAL";
+static const char * const javaDeviceTypeLE = "DEVICE_TYPE_LE";
+static const char * const javaDeviceTypeUnknown = "DEVICE_TYPE_UNKNOWN";
+
+QBluetoothDeviceInfo::CoreConfigurations qtBtTypeForJavaBtType(jint javaType)
+{
+    const JCachedBtTypes::iterator it = cachedBtTypes()->find(javaType);
+    if (it == cachedBtTypes()->end()) {
+        QAndroidJniEnvironment env;
+
+        if (javaType == QAndroidJniObject::getStaticField<jint>(
+                            javaBluetoothDeviceClassName, javaDeviceTypeClassic)) {
+            cachedBtTypes()->insert(javaType,
+                                    QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+            return QBluetoothDeviceInfo::BaseRateCoreConfiguration;
+        } else if (javaType == QAndroidJniObject::getStaticField<jint>(
+                        javaBluetoothDeviceClassName, javaDeviceTypeLE)) {
+            cachedBtTypes()->insert(javaType,
+                                    QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+            return QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
+        } else if (javaType == QAndroidJniObject::getStaticField<jint>(
+                            javaBluetoothDeviceClassName, javaDeviceTypeDual)) {
+            cachedBtTypes()->insert(javaType,
+                                    QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+            return QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
+        } else if (javaType == QAndroidJniObject::getStaticField<jint>(
+                                javaBluetoothDeviceClassName, javaDeviceTypeUnknown)) {
+            cachedBtTypes()->insert(javaType,
+                                QBluetoothDeviceInfo::UnknownCoreConfiguration);
+        } else {
+            qCWarning(QT_BT_ANDROID) << "Unknown Bluetooth device type value";
+        }
+
+        return QBluetoothDeviceInfo::UnknownCoreConfiguration;
+    } else {
+        return it.value();
+    }
+}
 
 DeviceDiscoveryBroadcastReceiver::DeviceDiscoveryBroadcastReceiver(QObject* parent): AndroidBroadcastReceiver(parent)
 {
@@ -120,6 +167,17 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
 
         QBluetoothDeviceInfo info(deviceAddress, deviceName, classType);
         info.setRssi(rssi);
+
+        if (QtAndroidPrivate::androidSdkVersion() >= 18) {
+            jint javaBtType = bluetoothDevice.callMethod<jint>("getType");
+
+            if (env->ExceptionCheck()) {
+                env->ExceptionDescribe();
+                env->ExceptionClear();
+            } else {
+                info.setCoreConfigurations(qtBtTypeForJavaBtType(javaBtType));
+            }
+        }
 
         emit deviceDiscovered(info);
     }
