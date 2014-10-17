@@ -102,7 +102,7 @@ bool QBluetoothServerPrivate::deactivateActiveListening()
 
 bool QBluetoothServerPrivate::isListening() const
 {
-    return thread->isRunning();
+    return __fakeServerPorts.contains(const_cast<QBluetoothServerPrivate *>(this));
 }
 
 void QBluetoothServer::close()

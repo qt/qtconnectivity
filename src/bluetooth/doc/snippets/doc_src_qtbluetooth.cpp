@@ -75,6 +75,7 @@ public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);
     void serviceDiscovered(const QBluetoothServiceInfo &service);
     void transferFinished(QBluetoothTransferReply* reply);
+    void error(QBluetoothTransferReply::TransferError errorType);
     void characteristicChanged(const QLowEnergyCharacteristic& ,const QByteArray&);
 };
 
@@ -162,14 +163,24 @@ QFile *file = new QFile("testfile.txt");
 
 // Ask the transfer manager to send it
 QBluetoothTransferReply *reply = transferManager->put(request, file);
+if (reply->error() == QBluetoothTransferReply::NoError) {
 
-// Connect to the reply's signals to be informed about the status and do cleanups when done
-QObject::connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
-                 this, SLOT(transferFinished(QBluetoothTransferReply*)));
+    // Connect to the reply's signals to be informed about the status and do cleanups when done
+    QObject::connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
+                     this, SLOT(transferFinished(QBluetoothTransferReply*)));
+    QObject::connect(reply, SIGNAL(error(QBluetoothTransferReply::TransferError)),
+                     this, SLOT(error(QBluetoothTransferReply::TransferError)));
+} else {
+    qWarning() << "Cannot push testfile.txt:" << reply->errorString();
+}
 //! [sendfile]
 }
 
 void MyClass::transferFinished(QBluetoothTransferReply* /*reply*/)
+{
+}
+
+void MyClass::error(QBluetoothTransferReply::TransferError /*errorType*/)
 {
 }
 
