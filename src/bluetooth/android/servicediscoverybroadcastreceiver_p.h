@@ -60,6 +60,7 @@ class ServiceDiscoveryBroadcastReceiver : public AndroidBroadcastReceiver
 public:
     ServiceDiscoveryBroadcastReceiver(QObject* parent = 0);
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
+    virtual void onReceiveLeScan(JNIEnv *, jobject, jint) {}
 
     static QList<QBluetoothUuid> convertParcelableArray(const QAndroidJniObject &obj);
 

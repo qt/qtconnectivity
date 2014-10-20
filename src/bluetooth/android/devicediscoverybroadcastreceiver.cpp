@@ -96,6 +96,7 @@ DeviceDiscoveryBroadcastReceiver::DeviceDiscoveryBroadcastReceiver(QObject* pare
     addAction(valueForStaticField(JavaNames::BluetoothAdapter, JavaNames::ActionDiscoveryFinished));
 }
 
+// Runs in Java thread
 void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobject intent)
 {
     Q_UNUSED(context);
@@ -125,62 +126,84 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
         if (!bluetoothDevice.isValid())
             return;
 
-        const QString deviceName = bluetoothDevice.callObjectMethod<jstring>("getName").toString();
-        const QBluetoothAddress deviceAddress(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
         keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                        JavaNames::ExtraRssi);
-
         int rssi = intentObject.callMethod<jshort>("getShortExtra",
                                                 "(Ljava/lang/String;S)S",
                                                 keyExtra.object<jstring>(),
                                                 0);
-        const QAndroidJniObject bluetoothClass = bluetoothDevice.callObjectMethod("getBluetoothClass",
-                                                                            "()Landroid/bluetooth/BluetoothClass;");
-        if (!bluetoothClass.isValid())
-            return;
-        int classType = bluetoothClass.callMethod<jint>("getDeviceClass");
 
-
-        static QList<qint32> services;
-        if (services.count() == 0)
-            services << QBluetoothDeviceInfo::PositioningService
-                     << QBluetoothDeviceInfo::NetworkingService
-                     << QBluetoothDeviceInfo::RenderingService
-                     << QBluetoothDeviceInfo::CapturingService
-                     << QBluetoothDeviceInfo::ObjectTransferService
-                     << QBluetoothDeviceInfo::AudioService
-                     << QBluetoothDeviceInfo::TelephonyService
-                     << QBluetoothDeviceInfo::InformationService;
-
-        //Matching BluetoothClass.Service values
-        qint32 result = 0;
-        qint32 current = 0;
-        for (int i = 0; i < services.count(); i++) {
-            current = services.at(i);
-            int id = (current << 16);
-            if (bluetoothClass.callMethod<jboolean>("hasService", "(I)Z", id))
-                result |= current;
-        }
-
-        result = result << 13;
-        classType |= result;
-
-        QBluetoothDeviceInfo info(deviceAddress, deviceName, classType);
-        info.setRssi(rssi);
-
-        if (QtAndroidPrivate::androidSdkVersion() >= 18) {
-            jint javaBtType = bluetoothDevice.callMethod<jint>("getType");
-
-            if (env->ExceptionCheck()) {
-                env->ExceptionDescribe();
-                env->ExceptionClear();
-            } else {
-                info.setCoreConfigurations(qtBtTypeForJavaBtType(javaBtType));
-            }
-        }
-
-        emit deviceDiscovered(info);
+        const QBluetoothDeviceInfo info = retrieveDeviceInfo(env, bluetoothDevice, rssi);
+        if (info.isValid())
+            emit deviceDiscovered(info, false);
     }
+}
+
+// Runs in Java thread
+void DeviceDiscoveryBroadcastReceiver::onReceiveLeScan(
+        JNIEnv *env, jobject jBluetoothDevice, jint rssi)
+{
+    qCDebug(QT_BT_ANDROID) << "DeviceDiscoveryBroadcastReceiver::onReceiveLeScan()";
+    const QAndroidJniObject bluetoothDevice(jBluetoothDevice);
+    if (!bluetoothDevice.isValid())
+        return;
+
+    const QBluetoothDeviceInfo info = retrieveDeviceInfo(env, bluetoothDevice, rssi);
+    if (info.isValid())
+        emit deviceDiscovered(info, true);
+}
+
+QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv *env, const QAndroidJniObject &bluetoothDevice, int rssi)
+{
+    const QString deviceName = bluetoothDevice.callObjectMethod<jstring>("getName").toString();
+    const QBluetoothAddress deviceAddress(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
+
+    const QAndroidJniObject bluetoothClass = bluetoothDevice.callObjectMethod("getBluetoothClass",
+                                                                        "()Landroid/bluetooth/BluetoothClass;");
+    if (!bluetoothClass.isValid())
+        return QBluetoothDeviceInfo();
+    int classType = bluetoothClass.callMethod<jint>("getDeviceClass");
+
+
+    static QList<qint32> services;
+    if (services.count() == 0)
+        services << QBluetoothDeviceInfo::PositioningService
+                 << QBluetoothDeviceInfo::NetworkingService
+                 << QBluetoothDeviceInfo::RenderingService
+                 << QBluetoothDeviceInfo::CapturingService
+                 << QBluetoothDeviceInfo::ObjectTransferService
+                 << QBluetoothDeviceInfo::AudioService
+                 << QBluetoothDeviceInfo::TelephonyService
+                 << QBluetoothDeviceInfo::InformationService;
+
+    //Matching BluetoothClass.Service values
+    qint32 result = 0;
+    qint32 current = 0;
+    for (int i = 0; i < services.count(); i++) {
+        current = services.at(i);
+        int id = (current << 16);
+        if (bluetoothClass.callMethod<jboolean>("hasService", "(I)Z", id))
+            result |= current;
+    }
+
+    result = result << 13;
+    classType |= result;
+
+    QBluetoothDeviceInfo info(deviceAddress, deviceName, classType);
+    info.setRssi(rssi);
+
+    if (QtAndroidPrivate::androidSdkVersion() >= 18) {
+        jint javaBtType = bluetoothDevice.callMethod<jint>("getType");
+
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        } else {
+            info.setCoreConfigurations(qtBtTypeForJavaBtType(javaBtType));
+        }
+    }
+
+    return info;
 }
 
 QT_END_NAMESPACE
