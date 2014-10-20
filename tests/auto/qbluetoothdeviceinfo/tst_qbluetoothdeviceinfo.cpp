@@ -250,6 +250,8 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QBluetoothDeviceInfo deviceInfo;
 
         QVERIFY(!deviceInfo.isValid());
+        QVERIFY(deviceInfo.coreConfigurations()
+                    == QBluetoothDeviceInfo::UnknownCoreConfiguration);
     }
 
     {
@@ -270,7 +272,7 @@ void tst_QBluetoothDeviceInfo::tst_construction()
         QCOMPARE(deviceInfo.serviceClasses(), serviceClasses);
         QCOMPARE(deviceInfo.majorDeviceClass(), majorDeviceClass);
         QCOMPARE(deviceInfo.minorDeviceClass(), minorDeviceClass);
-        QCOMPARE(deviceInfo.coreConfigurations(), QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        QCOMPARE(deviceInfo.coreConfigurations(), QBluetoothDeviceInfo::UnknownCoreConfiguration);
 
         deviceInfo.setCoreConfigurations(coreConfiguration);
         QCOMPARE(deviceInfo.coreConfigurations(), coreConfiguration);

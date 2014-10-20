@@ -242,9 +242,11 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \enum QBluetoothDeviceInfo::CoreConfiguration
+    \since 5.4
 
     This enum describes the configuration of the device.
 
+    \value UnknownCoreConfiguration             The type of the Bluetooth device cannot be determined.
     \value BaseRateCoreConfiguration            The device is a standard Bluetooth device.
     \value BaseRateAndLowEnergyCoreConfiguration    The device is a Bluetooth Smart device with support
                                                 for standard and Low Energy device.
@@ -258,7 +260,7 @@ QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
     minorDeviceClass(0),
     serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
-    deviceCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration)
+    deviceCoreConfiguration(QBluetoothDeviceInfo::UnknownCoreConfiguration)
 {
 }
 
@@ -513,6 +515,7 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
     between regular and Low Energy devices.
 
     \sa coreConfigurations()
+    \since 5.4
 */
 void QBluetoothDeviceInfo::setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs)
 {
@@ -522,10 +525,12 @@ void QBluetoothDeviceInfo::setCoreConfigurations(QBluetoothDeviceInfo::CoreConfi
 }
 
 /*!
+
     Returns the configuration of the device. If device configuration is not set,
     basic rate device configuration will be returned.
 
     \sa setCoreConfigurations()
+    \since 5.4
 */
 QBluetoothDeviceInfo::CoreConfigurations QBluetoothDeviceInfo::coreConfigurations() const
 {
