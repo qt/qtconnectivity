@@ -283,6 +283,7 @@ bool QBluetoothSocketPrivate::setChannel(IOBluetoothRFCOMMChannel *channel)
                && state == QBluetoothSocket::UnconnectedState && !rfcommChannel && !l2capChannel,
                "QBluetoothSocketPrivate::setChannel()", "unexpected socket state");
 
+    openMode = QIODevice::ReadWrite;
     rfcommChannel.reset([[ObjCRFCOMMChannel alloc] initWithDelegate:this channel:channel]);
     if (rfcommChannel) {// We do not handle errors, up to an external user.
         q_ptr->setOpenMode(QIODevice::ReadWrite);
@@ -306,6 +307,7 @@ bool QBluetoothSocketPrivate::setChannel(IOBluetoothL2CAPChannel *channel)
                && state == QBluetoothSocket::UnconnectedState && !l2capChannel && !rfcommChannel,
                "QBluetoothSocketPrivate::setChannel()", "unexpected socket state");
 
+    openMode = QIODevice::ReadWrite;
     l2capChannel.reset([[ObjCL2CAPChannel alloc] initWithDelegate:this channel:channel]);
     if (l2capChannel) {// We do not handle errors, up to an external user.
         q_ptr->setOpenMode(QIODevice::ReadWrite);
