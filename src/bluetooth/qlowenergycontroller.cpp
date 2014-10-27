@@ -392,7 +392,9 @@ QLowEnergyController::QLowEnergyController(
 
     The controller uses the local default Bluetooth adapter for
     the connection management.
- */
+
+    \since 5.5
+*/
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothDeviceInfo &remoteDeviceInfo,
                             QObject *parent)
