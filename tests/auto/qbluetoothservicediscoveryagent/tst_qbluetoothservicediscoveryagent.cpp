@@ -414,6 +414,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     }
 
     // All returned QBluetoothServiceInfo should be valid.
+    bool servicesFound = !discoveredSpy.isEmpty();
     while (!discoveredSpy.isEmpty()) {
         const QVariant v = discoveredSpy.takeFirst().at(0);
         // Work around limitation in QMetaType and moc.
@@ -442,7 +443,8 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     }
 
-    QVERIFY(discoveryAgent.discoveredServices().count() != 0);
+    if (servicesFound)
+        QVERIFY(discoveryAgent.discoveredServices().count() != 0);
     discoveryAgent.clear();
     QVERIFY(discoveryAgent.discoveredServices().count() == 0);
 
