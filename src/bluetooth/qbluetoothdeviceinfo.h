@@ -199,6 +199,8 @@ public:
     QBluetoothDeviceInfo();
     QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name,
                          quint32 classOfDevice);
+    QBluetoothDeviceInfo(const QBluetoothUuid &uuid, const QString &name,
+                         quint32 classOfDevice);
     QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other);
     ~QBluetoothDeviceInfo();
 
@@ -227,6 +229,9 @@ public:
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);
     QBluetoothDeviceInfo::CoreConfigurations coreConfigurations() const;
+
+    void setDeviceUuid(const QBluetoothUuid &uuid);
+    QBluetoothUuid deviceUuid() const;
 
 protected:
     QBluetoothDeviceInfoPrivate *d_ptr;
