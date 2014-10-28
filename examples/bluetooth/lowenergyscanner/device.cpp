@@ -86,8 +86,11 @@ void Device::startDeviceDiscovery()
     //! [les-devicediscovery-2]
     discoveryAgent->start();
     //! [les-devicediscovery-2]
-    m_deviceScanState = true;
-    Q_EMIT stateChanged();
+
+    if (discoveryAgent->isActive()) {
+        m_deviceScanState = true;
+        Q_EMIT stateChanged();
+    }
 }
 
 //! [les-devicediscovery-3]
@@ -302,6 +305,10 @@ void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
         setUpdate("Writing or reading from the device resulted in an error.");
     else
         setUpdate("An unknown error has occurred.");
+
+    m_deviceScanState = false;
+    emit devicesUpdated();
+    emit stateChanged();
 }
 
 bool Device::state()

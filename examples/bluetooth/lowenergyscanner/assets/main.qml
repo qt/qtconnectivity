@@ -137,8 +137,12 @@ Rectangle {
         menuText: device.update
         onButtonClick: {
             device.startDeviceDiscovery();
-            info.dialogText = "Searching...";
-            info.visible = true;}
+            // if startDeviceDiscovery() failed device.state is not set
+            if (device.state) {
+                info.dialogText = "Searching...";
+                info.visible = true;
+            }
+        }
     }
 
     Loader {
