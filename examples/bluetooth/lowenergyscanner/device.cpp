@@ -268,7 +268,15 @@ void Device::setUpdate(QString message)
 
 void Device::disconnectFromDevice()
 {
-    controller->disconnectFromDevice();
+    // UI always expects disconnect() signal when calling this signal
+    // TODO what is really needed is to extend state() to a multi value
+    // and thus allowing UI to keep track of controller progress in addition to
+    // device scan progress
+
+    if (controller->state() != QLowEnergyController::UnconnectedState)
+        controller->disconnectFromDevice();
+    else
+        deviceDisconnected();
 }
 
 void Device::deviceDisconnected()
@@ -314,6 +322,13 @@ void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 bool Device::state()
 {
     return m_deviceScanState;
+}
+
+bool Device::hasControllerError() const
+{
+    if (controller && controller->error() != QLowEnergyController::NoError)
+        return true;
+    return false;
 }
 
 bool Device::isRandomAddress() const
