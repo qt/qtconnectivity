@@ -52,7 +52,8 @@ public:
         UnknownError,
         UnknownRemoteDeviceError,
         NetworkError,
-        InvalidBluetoothAdapterError
+        InvalidBluetoothAdapterError,
+        ConnectionError
     };
 
     enum ControllerState {

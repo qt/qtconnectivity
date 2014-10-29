@@ -70,14 +70,14 @@ void QLowEnergyControllerPrivate::connectToDevice()
 
     if (!hub->javaObject().isValid()) {
         qCWarning(QT_BT_ANDROID) << "Cannot initiate QtBluetoothLE";
-        setError(QLowEnergyController::UnknownError);
+        setError(QLowEnergyController::ConnectionError);
         setState(QLowEnergyController::UnconnectedState);
         return;
     }
 
     bool result = hub->javaObject().callMethod<jboolean>("connect");
     if (!result) {
-        setError(QLowEnergyController::UnknownError);
+        setError(QLowEnergyController::ConnectionError);
         setState(QLowEnergyController::UnconnectedState);
         return;
     }
@@ -123,14 +123,21 @@ void QLowEnergyControllerPrivate::connectionUpdated(
 {
     Q_Q(QLowEnergyController);
 
-    qCDebug(QT_BT_ANDROID) << "Connection updated" << errorCode << newState;
-    if (errorCode != QLowEnergyController::NoError)
-        setError(errorCode);
+    const QLowEnergyController::ControllerState oldState = state;
+    qCDebug(QT_BT_ANDROID) << "Connection updated" << errorCode << oldState << newState;
 
-    QLowEnergyController::ControllerState oldState = state;
+    if (errorCode != QLowEnergyController::NoError) {
+        // ConnectionError if transition from Connecting to Connected
+        if (oldState == QLowEnergyController::ConnectingState)
+            setError(QLowEnergyController::ConnectionError);
+        else
+            setError(errorCode);
+    }
+
     setState(newState);
     if (newState == QLowEnergyController::UnconnectedState
-            && oldState != QLowEnergyController::UnconnectedState) {
+            && !(oldState == QLowEnergyController::UnconnectedState
+                || oldState == QLowEnergyController::ConnectingState)) {
         emit q->disconnected();
     } else if (newState == QLowEnergyController::ConnectedState
                && oldState != QLowEnergyController::ConnectedState ) {

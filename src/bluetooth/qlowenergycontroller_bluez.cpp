@@ -239,7 +239,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
     int sockfd = l2cpSocket->socketDescriptor();
     if (sockfd < 0) {
         qCWarning(QT_BT_BLUEZ) << "l2cp socket not initialised";
-        setError(QLowEnergyController::UnknownError);
+        setError(QLowEnergyController::ConnectionError);
         return;
     }
 
@@ -252,7 +252,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
 
     if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         qCWarning(QT_BT_BLUEZ) << qt_error_string(errno);
-        setError(QLowEnergyController::UnknownError);
+        setError(QLowEnergyController::ConnectionError);
         return;
     }
 

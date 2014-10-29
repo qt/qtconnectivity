@@ -113,6 +113,8 @@ QT_BEGIN_NAMESPACE
     \value InvalidBluetoothAdapterError The local Bluetooth device with the address passed to
                                         the constructor of this class cannot be found or
                                         there is no local Bluetooth device.
+    \value ConnectionError              The attempt to connect to the remote device failed.
+                                        This value was introduced by Qt 5.5.
 */
 
 /*!
