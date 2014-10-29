@@ -206,6 +206,9 @@ void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)
 void Device::serviceScanDone()
 {
     setUpdate("Service scan done!");
+    // force UI in case we didn't find anything
+    if (m_services.isEmpty())
+        emit servicesUpdated();
 }
 
 void Device::connectToService(const QString &uuid)
