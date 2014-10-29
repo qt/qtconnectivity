@@ -47,7 +47,10 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qlist.h>
 
-#import <Foundation/Foundation.h>
+// The Foundation header must be included before
+// corebluetoothwrapper_p.h - a workaround for a broken
+// 10.9 SDK.
+#include <Foundation/Foundation.h>
 
 @class QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
 

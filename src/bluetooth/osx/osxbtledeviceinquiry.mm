@@ -48,6 +48,8 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
+// Foundation header is already included by this point
+// (a workaround for a broken 10.9 SDK).
 #include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE

@@ -427,7 +427,13 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
                 }
             }
         }
-        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry
+#ifdef Q_OS_IOS
+        //On iOS, we do not have access to the local device/adapter, numberOfAdapters is 0,
+        //so we skip this test at all.
+        QSKIP("iOS: no local Bluetooth device available. Skipping remaining part of test.");
+#endif
+
+        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry.
         if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
             QVERIFY((numberOfAdapters-1) == counter);
     }

@@ -47,19 +47,10 @@
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
+// Only after Foundation.h!
+#include "corebluetoothwrapper_p.h"
 
-#ifndef QT_IOS_BLUETOOTH
-
-#include <IOBluetooth/Bluetooth.h>
-#include <IOKit/IOReturn.h>
-
-@class IOBluetoothSDPUUID;
-
-#else
-
-#include <CoreBluetooth/CoreBluetooth.h>
-
-#endif
+@class CBUUID;
 
 QT_BEGIN_NAMESPACE
 
@@ -179,6 +170,97 @@ private:
     T *m_ptr;
 };
 
+// The type 'T' is some XXXRef from CoreFoundation and co.
+// In principle, we can do a trick removing a pointer from a type
+// when template is instantiated, but it's quite a lot of ugly pp-tokens
+// like OSXBluetooth::CFStrongReference<OSXBluetooth::remove_pointer<CFUUIDRref> > strongReference;
+// so instead we use 'T' everywhere, not 'T *' as can expected
+// from a smart pointer.
+template<class T>
+class CFStrongReference {
+public:
+    CFStrongReference()
+        : m_ptr(Q_NULLPTR)
+    {
+    }
+
+    CFStrongReference(T obj, bool retain)
+        : m_ptr(obj)
+    {
+        if (m_ptr && retain)
+            CFRetain(m_ptr);
+    }
+
+    CFStrongReference(const CFStrongReference &rhs)
+    {
+        if ((m_ptr = rhs.m_ptr))
+            CFRetain(m_ptr);
+    }
+
+    CFStrongReference &operator = (const CFStrongReference &rhs)
+    {
+        // "Old-style" implementation:
+        if (this != &rhs && m_ptr != rhs.m_ptr) {
+            if (m_ptr)
+                CFRelease(m_ptr);
+            if ((m_ptr = rhs.m_ptr))
+                CFRetain(m_ptr);
+        }
+
+        return *this;
+    }
+
+#ifdef Q_COMPILER_RVALUE_REFS
+    CFStrongReference(CFStrongReference &&xval)
+    {
+        m_ptr = xval.m_ptr;
+        xval.m_ptr = Q_NULLPTR;
+    }
+
+    CFStrongReference &operator = (CFStrongReference &&xval)
+    {
+        m_ptr = xval.m_ptr;
+        xval.m_ptr = Q_NULLPTR;
+        return *this;
+    }
+#endif
+
+    ~CFStrongReference()
+    {
+        if (m_ptr)
+            CFRelease(m_ptr);
+    }
+
+    void reset(T newVal)
+    {
+        if (m_ptr != newVal) {
+            if (m_ptr)
+                CFRelease(m_ptr);
+            if ((m_ptr = newVal))
+                CFRetain(m_ptr);
+        }
+    }
+
+    operator T() const
+    {
+        return m_ptr;
+    }
+
+    T data() const
+    {
+        return m_ptr;
+    }
+
+    T take()
+    {
+        T p = m_ptr;
+        m_ptr = Q_NULLPTR;
+        return p;
+    }
+private:
+    T m_ptr;
+};
+
 QString qt_address(NSString *address);
 
 #ifndef QT_IOS_BLUETOOTH
@@ -191,6 +273,10 @@ QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid);
 QString qt_error_string(IOReturn errorCode);
 
 #endif
+
+QBluetoothUuid qt_uuid(CBUUID *uuid);
+CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid);
+ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid);
 
 } // namespace OSXBluetooth
 

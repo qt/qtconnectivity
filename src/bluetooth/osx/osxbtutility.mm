@@ -159,6 +159,51 @@ QString qt_error_string(IOReturn errorCode)
 
 #endif
 
+
+// Apple has: CBUUID, NSUUID, CFUUID, IOBluetoothSDPUUID
+// and it's handy to have several converters:
+
+QBluetoothUuid qt_uuid(CBUUID *uuid)
+{
+    if (!uuid)
+        return QBluetoothUuid();
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if (uuid.data.length != 16) // TODO: warning?
+        return QBluetoothUuid();
+
+    quint128 qtUuidData = {};
+    const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
+    std::copy(source, source + 16, qtUuidData.data);
+
+    return QBluetoothUuid(qtUuidData);
+}
+
+CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
+{
+    const quint128 qtUuidData = qtUuid.toUInt128();
+    const quint8 *const data = qtUuidData.data;
+
+    CFUUIDBytes bytes = {data[0],  data[1],  data[2],  data[3],
+                         data[4],  data[5],  data[6],  data[7],
+                         data[8],  data[9],  data[10], data[11],
+                         data[12], data[13], data[14], data[15]};
+
+    CFUUIDRef cfUuid = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, bytes);
+    return CFStrongReference<CFUUIDRef>(cfUuid, false);// false == already retained.
+}
+
+ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
+{
+    CFStrongReference<CFUUIDRef> cfUuid(cf_uuid(qtUuid));
+    if (!cfUuid)
+        return ObjCStrongReference<CBUUID>();
+
+    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], true); //true == retain.
+    return cbUuid;
+}
+
 }
 
 QT_END_NAMESPACE

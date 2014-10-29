@@ -41,7 +41,9 @@
 
 #include <QtCore/qglobal.h>
 
-#import <Foundation/Foundation.h>
+// Foundation _MUST_ be included before 'wrapper' -
+// SDK 10.9 is broken and requires this trick.
+#include <Foundation/Foundation.h>
 
 #include "corebluetoothwrapper_p.h"
 
