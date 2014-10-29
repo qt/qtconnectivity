@@ -33,19 +33,36 @@
 
 package org.qtproject.qt5.android.bluetooth;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothProfile;
+import android.util.Log;
 
 public class QtBluetoothLE {
-
+    private static final String TAG = "QtBluetoothGatt";
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mLeScanRunning = false;
 
+    private BluetoothGatt mBluetoothGatt = null;
+    private String mRemoteGattAddress;
+    private BluetoothDevice mRemoteGattDevice = null;
+
+
     /* Pointer to the Qt object that "owns" the Java object */
     long qtObject = 0;
+    Activity qtactivity = null;
 
     public QtBluetoothLE() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    }
+
+    public QtBluetoothLE(final String remoteAddress, Activity activity) {
+        this();
+        qtactivity = activity;
+        mRemoteGattAddress = remoteAddress;
     }
 
     /*
@@ -79,5 +96,59 @@ public class QtBluetoothLE {
             };
 
     public native void leScanResult(long qtObject, BluetoothDevice device, int rssi);
+
+
+    private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (qtObject == 0)
+                return;
+
+            int qLowEnergyController_State = 0;
+            //This must be in sync with QLowEnergyController::ControllerState
+            switch (newState) {
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    qLowEnergyController_State = 0; break;
+                case BluetoothProfile.STATE_CONNECTED:
+                    qLowEnergyController_State = 2;
+            }
+
+            //This must be in sync with QLowEnergyController::Error
+            int errorCode = 0;
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    errorCode = 0; break; //QLowEnergyController::NoError
+                default:
+                    Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status);
+                    errorCode = status; break; //TODO deal with all errors
+            }
+            leConnectionStateChange(qtObject, errorCode, qLowEnergyController_State);
+        }
+    };
+
+    public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
+
+    public boolean connect() {
+        if (mBluetoothGatt != null)
+            return mBluetoothGatt.connect();
+
+        mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);
+        if (mRemoteGattDevice == null)
+            return false;
+
+        mBluetoothGatt = mRemoteGattDevice.connectGatt(qtactivity, false, gattCallback);
+        if (mBluetoothGatt == null)
+            return false;
+
+        return true;
+    }
+
+    public void disconnect() {
+        if (mBluetoothGatt == null)
+            return;
+
+        mBluetoothGatt.disconnect();
+    }
+
 }
 

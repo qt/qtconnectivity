@@ -194,6 +194,18 @@ QT_BEGIN_NAMESPACE
     \sa discoverServices(), error()
 */
 
+namespace {
+class QLowEnergyControllerMetaTypes
+{
+public:
+    QLowEnergyControllerMetaTypes()
+    {
+        qRegisterMetaType<QLowEnergyController::ControllerState>();
+        qRegisterMetaType<QLowEnergyController::Error>();
+    }
+} qLowEnergyControllerMetaTypes;
+}
+
 void QLowEnergyControllerPrivate::setError(
         QLowEnergyController::Error newError)
 {

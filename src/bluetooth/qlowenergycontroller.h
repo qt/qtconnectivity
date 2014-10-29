@@ -113,4 +113,7 @@ private:
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
+Q_DECLARE_METATYPE(QLowEnergyController::Error)
+
 #endif // QLOWENERGYCONTROLLER_H

@@ -140,7 +140,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_android.cpp \
         qbluetoothsocket_android.cpp \
         qbluetoothserver_android.cpp \
-        qlowenergycontroller_p.cpp
+        qlowenergycontroller_android.cpp
 
 } else:osx {
     DEFINES += QT_OSX_BLUETOOTH

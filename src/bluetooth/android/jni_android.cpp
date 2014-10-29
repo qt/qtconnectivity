@@ -40,6 +40,7 @@
 #include "android/androidbroadcastreceiver_p.h"
 #include "android/serveracceptancethread_p.h"
 #include "android/inputstreamthread_p.h"
+#include "android/lowenergynotificationhub_p.h"
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
@@ -198,6 +199,8 @@ static JNINativeMethod methods[] = {
 static JNINativeMethod methods_le[] = {
     {"leScanResult", "(JLandroid/bluetooth/BluetoothDevice;I)V",
                 (void *) QtBluetoothLE_leScanResult},
+    {"leConnectionStateChange", "(JII)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
 };
 
 static JNINativeMethod methods_server[] = {

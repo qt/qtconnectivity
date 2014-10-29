@@ -5,7 +5,8 @@ PRIVATE_HEADERS +=  \
         android/androidbroadcastreceiver_p.h \
         android/localdevicebroadcastreceiver_p.h \
         android/serveracceptancethread_p.h \
-        android/jni_android_p.h
+        android/jni_android_p.h \
+        android/lowenergynotificationhub_p.h
 
 
 SOURCES += \
@@ -15,4 +16,5 @@ SOURCES += \
         android/jni_android.cpp \
         android/androidbroadcastreceiver.cpp \
         android/localdevicebroadcastreceiver.cpp \
-        android/serveracceptancethread.cpp
+        android/serveracceptancethread.cpp \
+        android/lowenergynotificationhub.cpp
