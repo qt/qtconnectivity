@@ -177,6 +177,9 @@ private slots:
 private slots:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
                            QLowEnergyController::Error errorCode);
+    void servicesDiscovered(QLowEnergyController::Error errorCode,
+                            const QString &foundServices);
+
 #endif
 private:
     QLowEnergyController *q_ptr;

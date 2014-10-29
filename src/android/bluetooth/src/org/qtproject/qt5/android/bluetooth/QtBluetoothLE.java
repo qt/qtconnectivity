@@ -38,8 +38,12 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class QtBluetoothLE {
     private static final String TAG = "QtBluetoothGatt";
@@ -97,7 +101,6 @@ public class QtBluetoothLE {
 
     public native void leScanResult(long qtObject, BluetoothDevice device, int rssi);
 
-
     private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
 
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -114,7 +117,7 @@ public class QtBluetoothLE {
             }
 
             //This must be in sync with QLowEnergyController::Error
-            int errorCode = 0;
+            int errorCode;
             switch (status) {
                 case BluetoothGatt.GATT_SUCCESS:
                     errorCode = 0; break; //QLowEnergyController::NoError
@@ -124,9 +127,29 @@ public class QtBluetoothLE {
             }
             leConnectionStateChange(qtObject, errorCode, qLowEnergyController_State);
         }
+
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            //This must be in sync with QLowEnergyController::Error
+            int errorCode;
+            StringBuilder builder = new StringBuilder();
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    errorCode = 0; //QLowEnergyController::NoError
+                    final List<BluetoothGattService> services = mBluetoothGatt.getServices();
+                    for (BluetoothGattService service: services) {
+                        builder.append(service.getUuid().toString() + " "); //space is separator
+                    }
+                    break;
+                default:
+                    Log.w(TAG, "Unhandled error code on onServicesDiscovered: " + status);
+                    errorCode = status; break; //TODO deal with all errors
+            }
+            leServicesDiscovered(qtObject, errorCode, builder.toString());
+        }
     };
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
+    public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
 
     public boolean connect() {
         if (mBluetoothGatt != null)
@@ -148,6 +171,14 @@ public class QtBluetoothLE {
             return;
 
         mBluetoothGatt.disconnect();
+    }
+
+    public boolean discoverServices()
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        return mBluetoothGatt.discoverServices();
     }
 
 }

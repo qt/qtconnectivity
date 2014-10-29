@@ -66,6 +66,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
         hub = new LowEnergyNotificationHub(remoteDevice, this);
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
                 this, &QLowEnergyControllerPrivate::connectionUpdated);
+        connect(hub, &LowEnergyNotificationHub::servicesDiscovered,
+                this, &QLowEnergyControllerPrivate::servicesDiscovered);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -86,13 +88,19 @@ void QLowEnergyControllerPrivate::connectToDevice()
 void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
     setState(QLowEnergyController::ClosingState);
-
-    hub->javaObject().callMethod<void>("disconnect");
+    if (hub)
+        hub->javaObject().callMethod<void>("disconnect");
 }
 
 void QLowEnergyControllerPrivate::discoverServices()
 {
-
+    if (hub && hub->javaObject().callMethod<jboolean>("discoverServices")) {
+        qCDebug(QT_BT_ANDROID) << "Service discovery initiated";
+    } else {
+        //revert to connected state
+        setError(QLowEnergyController::NetworkError);
+        setState(QLowEnergyController::ConnectedState);
+    }
 }
 
 void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
@@ -142,6 +150,26 @@ void QLowEnergyControllerPrivate::connectionUpdated(
     } else if (newState == QLowEnergyController::ConnectedState
                && oldState != QLowEnergyController::ConnectedState ) {
         emit q->connected();
+    }
+}
+
+void QLowEnergyControllerPrivate::servicesDiscovered(
+        QLowEnergyController::Error errorCode, const QString &foundServices)
+{
+    Q_Q(QLowEnergyController);
+
+    if (errorCode == QLowEnergyController::NoError) {
+        //Android delivers all services in one go
+        const QStringList list = foundServices.split(QStringLiteral(" "), QString::SkipEmptyParts);
+        foreach (const QString &entry, list) {
+            emit q->serviceDiscovered(QBluetoothUuid(entry));
+        }
+
+        setState(QLowEnergyController::DiscoveredState);
+        emit q->discoveryFinished();
+    } else {
+        setError(errorCode);
+        setState(QLowEnergyController::ConnectedState);
     }
 }
 

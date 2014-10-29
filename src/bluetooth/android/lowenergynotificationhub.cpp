@@ -91,8 +91,7 @@ LowEnergyNotificationHub::~LowEnergyNotificationHub()
 }
 
 // runs in Java thread
-void LowEnergyNotificationHub::lowEnergy_connectionChange(
-        JNIEnv *, jobject, jlong qtObject, jint errorCode, jint newState)
+void LowEnergyNotificationHub::lowEnergy_connectionChange(JNIEnv *, jobject, jlong qtObject, jint errorCode, jint newState)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
@@ -105,6 +104,22 @@ void LowEnergyNotificationHub::lowEnergy_connectionChange(
                                     (QLowEnergyController::ControllerState)newState),
                               Q_ARG(QLowEnergyController::Error,
                                     (QLowEnergyController::Error)errorCode));
+}
+
+void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
+        JNIEnv *, jobject, jlong qtObject, jint errorCode, jobject uuidList)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    const QString uuids = QAndroidJniObject(uuidList).toString();
+    QMetaObject::invokeMethod(hub, "servicesDiscovered", Qt::QueuedConnection,
+                              Q_ARG(QLowEnergyController::Error,
+                                    (QLowEnergyController::Error)errorCode),
+                              Q_ARG(QString, uuids));
 }
 
 QT_END_NAMESPACE

@@ -55,6 +55,8 @@ public:
 
     static void lowEnergy_connectionChange(JNIEnv*, jobject, jlong qtObject,
                                            jint errorCode, jint newState);
+    static void lowEnergy_servicesDiscovered(JNIEnv*, jobject, jlong qtObject,
+                                             jint errorCode, jobject uuidList);
 
     QAndroidJniObject javaObject()
     {
@@ -64,6 +66,7 @@ public:
 signals:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
                            QLowEnergyController::Error errorCode);
+    void servicesDiscovered(QLowEnergyController::Error errorCode, const QString &uuids);
 
 public slots:
 private:
