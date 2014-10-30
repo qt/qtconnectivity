@@ -83,15 +83,11 @@ private:
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
-Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
-Q_DECLARE_METATYPE(QLowEnergyController::Error)
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyCharacteristic>();
     qRegisterMetaType<QLowEnergyDescriptor>();
-    qRegisterMetaType<QLowEnergyController::ControllerState>();
-    qRegisterMetaType<QLowEnergyController::Error>();
 
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString remote = qgetenv("BT_TEST_DEVICE");
