@@ -595,8 +595,10 @@ void QBluetoothDeviceInfo::setCached(bool cached)
 }
 
 /*!
-   Unique identifier for Bluetooth devices, that do not have addresses. This can happen on OS X and iOS,
-   where CoreBluetooth API hides addresses, but provides UUIDs to identify devices/peripherals.
+   Sets the unique identifier \a uuid for Bluetooth devices, that do not have addresses.
+   This happens on OS X and iOS, where the CoreBluetooth API hides addresses, but provides
+   UUIDs to identify devices/peripherals.
+
    This uuid is invalid on any other platform.
 
    \sa deviceUuid()
@@ -610,7 +612,7 @@ void QBluetoothDeviceInfo::setDeviceUuid(const QBluetoothUuid &uuid)
 }
 
 /*!
-   Unique identifier for a Bluetooth device without an address.
+   Returns a unique identifier for a Bluetooth device without an address.
 
    \sa setDeviceUuid()
    \since 5.5

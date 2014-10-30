@@ -450,7 +450,7 @@ QList<QBluetoothServiceInfo> QBluetoothServiceDiscoveryAgent::discoveredServices
     return d_ptr->discoveredServices;
 }
 
-/*!
+/*
     Sets the UUID filter to \a uuids.  Only services matching the UUIDs in \a uuids will be
     returned.
 
@@ -463,7 +463,7 @@ void QBluetoothServiceDiscoveryAgent::setUuidFilter(const QList<QBluetoothUuid> 
     d_ptr->uuidFilter = uuids;
 }
 
-/*!
+/*
     This is an overloaded member function, provided for convenience.
 
     Sets the UUID filter to a list containing the single element \a uuid.
@@ -476,7 +476,7 @@ void QBluetoothServiceDiscoveryAgent::setUuidFilter(const QBluetoothUuid &uuid)
     d_ptr->uuidFilter.append(uuid);
 }
 
-/*!
+/*
     Returns the UUID filter.
 
     \sa setUuidFilter()
@@ -486,7 +486,7 @@ QList<QBluetoothUuid> QBluetoothServiceDiscoveryAgent::uuidFilter() const
     return d_ptr->uuidFilter;
 }
 
-/*!
+/*
     Sets the remote device address to \a address. If \a address is default constructed,
     services will be discovered on all contactable Bluetooth devices. A new remote
     address can only be set while there is no service discovery in progress; otherwise
