@@ -43,11 +43,11 @@ QT_BEGIN_NAMESPACE
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 const QBluetoothAddress &deviceAdapter,
                 QBluetoothDeviceDiscoveryAgent *parent)
-    :   q_ptr(parent)
+    :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
+        lastError(QBluetoothDeviceDiscoveryAgent::NoError),
+        q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
-    inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
-    lastError = QBluetoothDeviceDiscoveryAgent::NoError;
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -62,9 +62,10 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
-    lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-    errorString = QBluetoothDeviceDiscoveryAgent::tr("No Bluetooth device available");
-    emit q->error(QBluetoothDeviceDiscoveryAgent::InputOutputError);
+    lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError;
+    errorString = QBluetoothDeviceDiscoveryAgent::tr("Device discovery on this platform not support");
+
+    emit q->error(lastError);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
