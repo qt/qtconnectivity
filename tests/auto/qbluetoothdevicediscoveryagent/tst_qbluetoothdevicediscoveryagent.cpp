@@ -36,6 +36,7 @@
 #include <QDebug>
 #include <QVariant>
 #include <QList>
+#include <QLoggingCategory>
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothdevicediscoveryagent.h>
@@ -90,6 +91,7 @@ private:
 
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
 {
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>("QBluetoothDeviceDiscoveryAgent::Error");
 }
 

@@ -108,17 +108,27 @@ using namespace QT_NAMESPACE;
 
 - (IOReturn)start
 {
-    if (!m_inquiry)
+    if (!m_inquiry) {
+        qCWarning(QT_BT_OSX) << "-start, m_inquiry is nil ...";
         return kIOReturnNoPower;
+    }
 
-    if (m_active)
+    if (m_active) {
+        qCWarning(QT_BT_OSX) << "-start, already active ...";
         return kIOReturnBusy;
+    }
 
     m_active = true;
     [m_inquiry clearFoundDevices];// TODO: implement update?
     const IOReturn result = [m_inquiry start];
-    if (result != kIOReturnSuccess)
+    if (result != kIOReturnSuccess) {
+        // QtBluetooth will probably convert an error in UnknownError,
+        // not really interesting.
+        qCWarning(QT_BT_OSX) << "-start, failed with "
+                                "IOKit error code: " << result;
         m_active = false;
+    } else
+        qCDebug(QT_BT_OSX) << "-start, device inquiry started";
 
     return result;
 }
@@ -127,6 +137,8 @@ using namespace QT_NAMESPACE;
 {
     if (m_active) {
         Q_ASSERT_X(m_inquiry, "-stop", "active but nil inquiry");
+
+        qCDebug(QT_BT_OSX) << "-stop, trying to stop device inquiry";
 
         m_active = false;
         const IOReturn res = [m_inquiry stop];
@@ -152,10 +164,17 @@ using namespace QT_NAMESPACE;
     Q_ASSERT_X(m_delegate, "-deviceInquiryComplete:error:aborted",
                "invalid device inquiry delegate (null)");
 
-    if (error != kIOReturnSuccess)
+    if (error != kIOReturnSuccess) {
+        // QtBluetooth has not too many errors, 'UnknownError' is not really
+        // useful, report error code here:
+        qCWarning(QT_BT_OSX) << "-deviceInquiryComplete:error:aborted:, "
+                                "IOKit error code: " << error;
         m_delegate->error(sender, error);
-    else
+    } else {
+        qCDebug(QT_BT_OSX) << "-deviceInquiryComplete:error:aborted:, "
+                              "device inquiry complete";
         m_delegate->inquiryFinished(sender);
+    }
 }
 
 - (void)deviceInquiryDeviceFound:(IOBluetoothDeviceInquiry *)sender

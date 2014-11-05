@@ -123,9 +123,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
                "invalid q_ptr (null)");
 
     HostController controller([[IOBluetoothHostController defaultController] retain]);
-    if (!controller) {
+    if (!controller || [controller powerState] != kBluetoothHCIPowerStateON) {
         qCCritical(QT_BT_OSX) << "QBluetoothDeviceDiscoveryAgentPrivate() "
-                                 "no default host controller";
+                                 "no default host controller or adapter is off";
         return;
     }
 
@@ -150,7 +150,11 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isValid() const
     // can fail to initialize some important data-members
     // (and the error is probably not even related to Bluetooth at all)
     // - say, allocation error - this is what meant here by valid/invalid.
-    return hostController && inquiry;
+
+    if (hostController && [hostController powerState] != kBluetoothHCIPowerStateON)
+        qCWarning(QT_BT_OSX) << "adapter is powered off (was on)";
+
+    return hostController && [hostController powerState] == kBluetoothHCIPowerStateON && inquiry;
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -180,6 +184,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     const IOReturn res = [inquiry start];
     if (res != kIOReturnSuccess) {
+        qCDebug(QT_BT_OSX) << "private agent, failed to start";
         setError(res, QObject::tr("device discovery agent: failed to start"));
         emit q_ptr->error(lastError);
     }
@@ -208,7 +213,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
             setError(res, QObject::tr("device discovery agent: failed to stop"));
             emit q_ptr->error(lastError);
         }
-    }
+    } else
+        qCDebug(QT_BT_OSX) << "private agent, failed to stop, not active";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::inquiryFinished(IOBluetoothDeviceInquiry *inq)
@@ -383,16 +389,20 @@ void QBluetoothDeviceDiscoveryAgent::start()
             // We previously failed to initialize d_ptr correctly:
             // either some memory allocation problem or
             // no BT adapter found.
+            qCDebug(QT_BT_OSX) << "start failed, invalid d_ptr";
             d_ptr->setError(InvalidBluetoothAdapterError);
             emit error(InvalidBluetoothAdapterError);
         }
-    }
+    } else
+        qCDebug(QT_BT_OSX) << "start failed, invalid adapter";
 }
 
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
     if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
         d_ptr->stop();
+    else
+        qCDebug(QT_BT_OSX) << "stop failed, not active or invalid adapter";
 }
 
 bool QBluetoothDeviceDiscoveryAgent::isActive() const
