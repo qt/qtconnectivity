@@ -34,6 +34,7 @@
 #include <QtTest/QtTest>
 
 #include <QDebug>
+#include <QLoggingCategory>
 #include <QVariant>
 #include <QList>
 
@@ -80,6 +81,8 @@ private:
 
 tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
 {
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     localDeviceAvailable = device->isValid();

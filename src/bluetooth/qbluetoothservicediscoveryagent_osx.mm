@@ -195,8 +195,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
     if (DiscoveryMode() == QBluetoothServiceDiscoveryAgent::MinimalDiscovery) {
         performMinimalServiceDiscovery(address);
     } else {
-        uuidFilter.size() ? [serviceInquiry performSDPQueryWithDevice:address filters:uuidFilter]
-                          : [serviceInquiry performSDPQueryWithDevice:address];
+        IOReturn result = kIOReturnSuccess;
+        if (uuidFilter.size())
+            result = [serviceInquiry performSDPQueryWithDevice:address filters:uuidFilter];
+        else
+            result = [serviceInquiry performSDPQueryWithDevice:address];
+
+        if (result != kIOReturnSuccess) {
+            // Failed immediately to perform an SDP inquiry on IOBluetoothDevice:
+            SDPInquiryError(nil, result);
+        }
     }
 }
 
@@ -322,7 +330,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevic
 void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *device, IOReturn errorCode)
 {
     Q_UNUSED(device)
-    Q_UNUSED(errorCode)
+
+    qCWarning(QT_BT_OSX) << "QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(), "
+                            "inquiry failed with IOKit code: " << int(errorCode);
 
     discoveredDevices.clear();
     // TODO: find a better mapping from IOReturn to QBluetoothServiceDiscoveryAgent::Error.
