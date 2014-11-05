@@ -235,11 +235,11 @@ void QLowEnergyControllerPrivate::connectToDevice()
     else if (addressType == QLowEnergyController::RandomAddress)
         l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_RANDOM;
 
-    // bind the socket to the local device
     int sockfd = l2cpSocket->socketDescriptor();
     if (sockfd < 0) {
         qCWarning(QT_BT_BLUEZ) << "l2cp socket not initialised";
         setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
         return;
     }
 
@@ -250,9 +250,11 @@ void QLowEnergyControllerPrivate::connectToDevice()
     addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
     convertAddress(localAdapter.toUInt64(), addr.l2_bdaddr.b);
 
+    // bind the socket to the local device
     if (::bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         qCWarning(QT_BT_BLUEZ) << qt_error_string(errno);
         setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
         return;
     }
 

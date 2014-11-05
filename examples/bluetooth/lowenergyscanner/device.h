@@ -66,6 +66,7 @@ class Device: public QObject
     Q_PROPERTY(QString update READ getUpdate NOTIFY updateChanged)
     Q_PROPERTY(bool useRandomAddress READ isRandomAddress WRITE setRandomAddress NOTIFY randomAddressChanged)
     Q_PROPERTY(bool state READ state NOTIFY stateChanged)
+    Q_PROPERTY(bool controllerError READ hasControllerError)
 public:
     Device();
     ~Device();
@@ -74,6 +75,7 @@ public:
     QVariant getCharacteristics();
     QString getUpdate();
     bool state();
+    bool hasControllerError() const;
 
     bool isRandomAddress() const;
     void setRandomAddress(bool newValue);

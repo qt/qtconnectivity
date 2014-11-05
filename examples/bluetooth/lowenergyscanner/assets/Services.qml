@@ -45,6 +45,16 @@ Rectangle {
     width: 300
     height: 600
 
+    Component.onCompleted: {
+        // Loading this page may take longer than QLEController
+        // stopping with an error, go back and readjust this view
+        // based on controller errors
+        if (device.controllerError) {
+            info.visible = false;
+            menu.menuText = device.update
+        }
+    }
+
     Header {
         id: header
         anchors.top: parent.top
