@@ -65,6 +65,9 @@ void QLowEnergyServicePrivate::setError(QLowEnergyService::ServiceError newError
 
 void QLowEnergyServicePrivate::setState(QLowEnergyService::ServiceState newState)
 {
+    if (state == newState)
+        return;
+
     state = newState;
     emit stateChanged(newState);
 }

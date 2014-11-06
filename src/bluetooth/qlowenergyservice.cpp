@@ -169,6 +169,8 @@ QT_BEGIN_NAMESPACE
     \value DescriptorWriteError     An attempt to write a new value to a descriptor
                                     failed. For example, it might be triggered when attempting
                                     to write to a read-only descriptor.
+    \value UnknownError             An unknown error occurred when interacting with the service.
+                                    This value was introduced by Qt 5.5.
  */
 
 /*!

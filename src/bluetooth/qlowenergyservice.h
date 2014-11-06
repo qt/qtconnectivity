@@ -56,7 +56,8 @@ public:
         NoError = 0,
         OperationError,
         CharacteristicWriteError,
-        DescriptorWriteError
+        DescriptorWriteError,
+        UnknownError
     };
 
     enum ServiceState {

@@ -122,4 +122,19 @@ void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
                               Q_ARG(QString, uuids));
 }
 
+void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
+        JNIEnv *, jobject, jlong qtObject, jobject uuid)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    const QString serviceUuid = QAndroidJniObject(uuid).toString();
+    QMetaObject::invokeMethod(hub, "serviceDetailsDiscoveryFinished",
+                              Qt::QueuedConnection,
+                              Q_ARG(QString, serviceUuid));
+}
+
 QT_END_NAMESPACE

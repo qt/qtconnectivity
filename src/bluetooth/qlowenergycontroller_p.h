@@ -179,6 +179,7 @@ private slots:
                            QLowEnergyController::Error errorCode);
     void servicesDiscovered(QLowEnergyController::Error errorCode,
                             const QString &foundServices);
+    void serviceDetailsDiscoveryFinished(const QString& serviceUuid);
 
 #endif
 private:

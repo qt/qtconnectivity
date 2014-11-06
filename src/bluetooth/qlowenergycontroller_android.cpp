@@ -68,6 +68,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::connectionUpdated);
         connect(hub, &LowEnergyNotificationHub::servicesDiscovered,
                 this, &QLowEnergyControllerPrivate::servicesDiscovered);
+        connect(hub, &LowEnergyNotificationHub::serviceDetailsDiscoveryFinished,
+                this, &QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -103,9 +105,39 @@ void QLowEnergyControllerPrivate::discoverServices()
     }
 }
 
-void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &service)
 {
+    if (!serviceList.contains(service)) {
+        qCWarning(QT_BT_ANDROID) << "Discovery of unknown service" << service.toString()
+                                 << "not possible";
+        return;
+    }
 
+    if (!hub)
+        return;
+
+    //cut leading { and trailing } {xxx-xxx}
+    QString tempUuid = service.toString();
+    tempUuid.chop(1); //remove trailing '}'
+    tempUuid.remove(0, 1); //remove first '{'
+
+    QAndroidJniEnvironment env;
+    QAndroidJniObject uuid = QAndroidJniObject::fromString(tempUuid);
+    bool result = hub->javaObject().callMethod<jboolean>("discoverServiceDetails",
+                                                         "(Ljava/lang/String;)Z",
+                                                         uuid.object<jstring>());
+    if (!result || true) {
+        QSharedPointer<QLowEnergyServicePrivate> servicePrivate =
+                serviceList.value(service);
+        if (!servicePrivate.isNull()) {
+            servicePrivate->setError(QLowEnergyService::UnknownError);
+            servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+        }
+        qCWarning(QT_BT_ANDROID) << "Cannot discover details for" << service.toString();
+        return;
+    }
+
+    qCDebug(QT_BT_ANDROID) << "Discovery of" << service << "started";
 }
 
 void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
@@ -113,7 +145,6 @@ void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowE
         const QByteArray &/*newValue*/,
         bool /*writeWithResponse*/)
 {
-
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
@@ -162,6 +193,17 @@ void QLowEnergyControllerPrivate::servicesDiscovered(
         //Android delivers all services in one go
         const QStringList list = foundServices.split(QStringLiteral(" "), QString::SkipEmptyParts);
         foreach (const QString &entry, list) {
+            const QBluetoothUuid service(entry);
+            if (service.isNull())
+                return;
+
+            QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
+            priv->uuid = service;
+            priv->setController(this);
+
+            QSharedPointer<QLowEnergyServicePrivate> pointer(priv);
+            serviceList.insert(service, pointer);
+
             emit q->serviceDiscovered(QBluetoothUuid(entry));
         }
 
@@ -171,6 +213,21 @@ void QLowEnergyControllerPrivate::servicesDiscovered(
         setError(errorCode);
         setState(QLowEnergyController::ConnectedState);
     }
+}
+
+void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
+        const QString &serviceUuid)
+{
+    const QBluetoothUuid service(serviceUuid);
+    if (!serviceList.contains(service)) {
+        qCWarning(QT_BT_ANDROID) << "Discovery done of unknown service:"
+                                 << service.toString();
+        return;
+    }
+
+    QSharedPointer<QLowEnergyServicePrivate> pointer =
+            serviceList.value(service);
+    pointer->setState(QLowEnergyService::ServiceDiscovered);
 }
 
 QT_END_NAMESPACE
