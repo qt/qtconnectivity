@@ -183,9 +183,6 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isValid() const
     // (and the error is probably not even related to Bluetooth at all)
     // - say, allocation error - this is what meant here by valid/invalid.
 
-    const bool valid = hostController && [hostController powerState] == kBluetoothHCIPowerStateON && inquiry;
-    qCDebug(QT_BT_OSX) << "private agent is valid state? "<<valid;
-
     if (hostController && [hostController powerState] != kBluetoothHCIPowerStateON)
         qCWarning(QT_BT_OSX) << "adapter is powered off (was on)";
 
@@ -194,16 +191,11 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isValid() const
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 {
-    if (startPending) {
-        qCDebug(QT_BT_OSX) << "start is pending, isActive == true";
+    if (startPending)
         return true;
-    }
-    if (stopPending) {
-        qCDebug(QT_BT_OSX) << "stop is pending, isActive == false";
-        return false;
-    }
 
-    qCDebug(QT_BT_OSX)<<"isActive? "<< (agentState != NonActive);
+    if (stopPending)
+        return false;
 
     return agentState != NonActive;
 }
@@ -216,7 +208,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
                "start()", "called with an invalid Bluetooth adapter");
 
     if (stopPending) {
-        qCDebug(QT_BT_OSX) << "START: stop is pending, set start pending and return";
+        qCDebug(QT_BT_OSX) << "start: stop is pending, set startPending and return";
         startPending = true;
         return;
     }
@@ -228,12 +220,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     const IOReturn res = [inquiry start];
     if (res != kIOReturnSuccess) {
-        qCDebug(QT_BT_OSX) << "START: private agent, failed to start";
         setError(res, QObject::tr("device discovery agent: failed to start"));
         agentState = NonActive;
         emit q_ptr->error(lastError);
-    } else {
-        qCDebug(QT_BT_OSX) << "START: device inquiry started ...";
     }
 }
 
@@ -248,15 +237,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
     if (![inquiryLE start]) {
         // We can be here only if we have some kind of resource allocation error, so we
         // do not emit finished, we emit error.
-        qCDebug(QT_BT_OSX) << "STARTLE: failed to start LE scan ...";
-
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
                  QObject::tr("device discovery agent, LE mode: "
                              "resource allocation error"));
         agentState = NonActive;
         emit q_ptr->error(lastError);
     } else {
-        qCDebug(QT_BT_OSX) << "STARTLE: scan started.";
+        qCDebug(QT_BT_OSX) << "startLE: scan started.";
     }
 }
 
@@ -282,13 +269,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
             stopPending = false;
             setError(res, QObject::tr("device discovery agent: failed to stop"));
             emit q_ptr->error(lastError);
-        } else {
-            qCDebug(QT_BT_OSX) << "stop success on a classic device inquiry";
         }
     } else {
         // Can be asynchronous (depending on a status update of CBCentralManager).
         // The call itself is always 'success'.
-        qCDebug(QT_BT_OSX) << "trying to stop LE scan ...";
         [inquiryLE stop];
     }
 }
@@ -318,7 +302,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::inquiryFinished(IOBluetoothDeviceInq
         // finished in a normal way (not cancelled).
         // startLE() will take care of old devices
         // not supporting Bluetooth 4.0.
-        qCDebug(QT_BT_OSX)<<"CLASSIC inquiryFinished, NO stop pending, starting LE";
+        qCDebug(QT_BT_OSX)<<"Classic inquiryFinished, no stop pending, starting LE scan";
         startLE();
     }
 }
@@ -329,7 +313,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::error(IOBluetoothDeviceInquiry *inq,
 
     Q_ASSERT_X(isValid(), "error", "invalid device discovery agent");
 
-    qCDebug(QT_BT_OSX)<<"ERROR: got a native error code: "<<int(error);
+    qCDebug(QT_BT_OSX)<<"Error: got a native error code: "<<int(error);
 
     startPending = false;
     stopPending = false;
@@ -413,7 +397,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
         }
     }
 
-    qCDebug(QT_BT_OSX) << "error set: "<<errorString;
+    qCDebug(QT_BT_OSX) << "setError: "<<errorString;
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -437,8 +421,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported()
     // After we call startLE and before receive NotSupported,
     // the user can call stop (setting a pending stop).
     // So the same rule apply:
-
-    qCDebug(QT_BT_OSX) << "LE not supported.";
 
     LEdeviceInquiryFinished();
 }
@@ -473,11 +455,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryFinished()
     agentState = NonActive;
 
     if (stopPending && !startPending) {
-        qCDebug(QT_BT_OSX) << "LE scan finished, stop pending, NO start pending, emit canceled";
+        qCDebug(QT_BT_OSX) << "LE scan finished, stop pending, no start pending, emit canceled";
         stopPending = false;
         emit q_ptr->canceled();
     } else if (startPending) {
-        qCDebug(QT_BT_OSX) << "LE scan finished, start pending, NO stop pending, re-start";
+        qCDebug(QT_BT_OSX) << "LE scan finished, start pending, no stop pending, re-start";
         startPending = false;
         stopPending = false;
         start(); //Start from a classic scan again.
@@ -557,11 +539,10 @@ void QBluetoothDeviceDiscoveryAgent::start()
 {
     if (d_ptr->lastError != InvalidBluetoothAdapterError) {
         if (d_ptr->isValid()) {
-            qCDebug(QT_BT_OSX) << "DDA::start?";
-            if (!isActive()) {
-                qCDebug(QT_BT_OSX) << "DDA::start!";
+            if (!isActive())
                 d_ptr->start();
-            }
+            else
+                qCDebug(QT_BT_OSX) << "already active, can not start";
         } else {
             // We previously failed to initialize d_ptr correctly:
             // either some memory allocation problem or
@@ -577,24 +558,20 @@ void QBluetoothDeviceDiscoveryAgent::start()
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
     if (d_ptr->isValid()) {
-        qCDebug(QT_BT_OSX) << "DDA::stop, is valid";
-        if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError) {
-            qCDebug(QT_BT_OSX) << "DDA::stop, is active and no error...";
+        if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
             d_ptr->stop();
-        }
+        else
+            qCDebug(QT_BT_OSX) << "can not stop, not active or an invalid adapter";
     } else {
-        qCDebug(QT_BT_OSX) << "DDA::stop, d_ptr is not in valid state, can not stop";
+        qCDebug(QT_BT_OSX) << "can not stop, d_ptr is not in a valid state";
     }
 }
 
 bool QBluetoothDeviceDiscoveryAgent::isActive() const
 {
-    qCDebug(QT_BT_OSX) << "DDA::isActive";
-    if (d_ptr->isValid()) {
+    if (d_ptr->isValid())
         return d_ptr->isActive();
-    } else {
-        qCDebug(QT_BT_OSX) << "DDA::isActive, d_ptr is invalid";
-    }
+
     return false;
 }
 

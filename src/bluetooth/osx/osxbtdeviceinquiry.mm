@@ -109,15 +109,11 @@ using namespace QT_NAMESPACE;
 
 - (IOReturn)start
 {
-    if (!m_inquiry) {
-        qCWarning(QT_BT_OSX) << "-start, m_inquiry is nil ...";
+    if (!m_inquiry)
         return kIOReturnNoPower;
-    }
 
-    if (m_active) {
-        qCWarning(QT_BT_OSX) << "-start, already active ...";
+    if (m_active)
         return kIOReturnBusy;
-    }
 
     m_active = true;
     [m_inquiry clearFoundDevices];// TODO: implement update?
@@ -139,12 +135,12 @@ using namespace QT_NAMESPACE;
     if (m_active) {
         Q_ASSERT_X(m_inquiry, "-stop", "active but nil inquiry");
 
-        qCDebug(QT_BT_OSX) << "-stop, trying to stop device inquiry";
-
         m_active = false;
         const IOReturn res = [m_inquiry stop];
         if (res != kIOReturnSuccess)
             m_active = true;
+        else
+            qCDebug(QT_BT_OSX) << "-stop, success (waiting for 'inquiryComplete')";
 
         return res;
     }
