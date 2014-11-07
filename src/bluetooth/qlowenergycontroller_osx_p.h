@@ -34,6 +34,7 @@
 #ifndef QLOWENERGYCONTROLLER_OSX_P_H
 #define QLOWENERGYCONTROLLER_OSX_P_H
 
+#include "osx/osxbtcentralmanager_p.h"
 #include "qlowenergycontroller_p.h"
 #include "qlowenergycontroller.h"
 #include "osx/osxbtutility_p.h"
@@ -47,7 +48,8 @@
 QT_BEGIN_NAMESPACE
 
 // The suffix OSX is not the very right, it's also iOS.
-class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate,
+                                       public OSXBluetooth::CentralManagerDelegate
 {
     friend class QLowEnergyController;
 public:
@@ -59,12 +61,32 @@ public:
     bool isValid() const;
 
 private:
+    // CentralManagerDelegate:
+    void LEnotSupported() Q_DECL_OVERRIDE;
+    void connectSuccess() Q_DECL_OVERRIDE;
+
+    void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
+    void includedServicesDiscoveryFinished(const QBluetoothUuid &serviceUuid,
+                                           LEServices services) Q_DECL_OVERRIDE;
+    void characteristicsDiscoveryFinished(const QBluetoothUuid &serviceUuid,
+                                          LECharacteristics characteristics) Q_DECL_OVERRIDE;
+    void disconnected() Q_DECL_OVERRIDE;
+    void error(QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
+    void error(const QBluetoothUuid &serviceUuid,
+               QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
+
     void connectToDevice();
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
 
     QLowEnergyController *q_ptr;
     QBluetoothUuid deviceUuid;
+    // To be sure we set controller's state correctly
+    // (Connecting or Connected) we have to know if we're
+    // still inside connectToDevice - this is important,
+    // if a peripheral is _already_ connected from Core Bluetooth's
+    // point of view.
+    bool isConnecting;
 
     QString errorString;
     QLowEnergyController::Error lastError;
@@ -74,6 +96,9 @@ private:
 
     QLowEnergyController::ControllerState controllerState;
     QLowEnergyController::RemoteAddressType addressType;
+
+    typedef OSXBluetooth::ObjCScopedPointer<ObjCCentralManager> CentralManager;
+    CentralManager centralManager;
 
     typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceMap;
     typedef ServiceMap::const_iterator ConstServiceIterator;

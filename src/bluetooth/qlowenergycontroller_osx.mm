@@ -53,23 +53,39 @@ QT_BEGIN_NAMESPACE
 
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q)
     : q_ptr(q),
+      isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
 {
-    Q_ASSERT_X(q, "QLowEnergyControllerPrivate", "invalid q_ptr (null)");
     // This is the "wrong" constructor - no valid device UUID to connect later.
+    Q_ASSERT_X(q, "QLowEnergyControllerPrivate", "invalid q_ptr (null)");
+    // We still create a manager, to simplify error handling later.
+    centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
+    if (!centralManager) {
+        qCWarning(QT_BT_OSX) << "QBluetoothLowEnergyControllerPrivateOSX::"
+                                "QBluetoothLowEnergyControllerPrivateOSX(), "
+                                "failed to initialize central manager";
+    }
+
 }
 
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
                                                                const QBluetoothDeviceInfo &deviceInfo)
     : q_ptr(q),
       deviceUuid(deviceInfo.deviceUuid()),
+      isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
 {
     Q_ASSERT_X(q, "QLowEnergyControllerPrivateOSX", "invalid q_ptr (null)");
+    centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
+    if (!centralManager) {
+        qCWarning(QT_BT_OSX) << "QBluetoothLowEnergyControllerPrivateOSX::"
+                                "QBluetoothLowEnergyControllerPrivateOSX(), "
+                                "failed to initialize central manager";
+    }
 }
 
 QLowEnergyControllerPrivateOSX::~QLowEnergyControllerPrivateOSX()
@@ -78,11 +94,136 @@ QLowEnergyControllerPrivateOSX::~QLowEnergyControllerPrivateOSX()
 
 bool QLowEnergyControllerPrivateOSX::isValid() const
 {
-    return false;
+    // isValid means only "was able to allocate all resources",
+    // nothing more.
+    return centralManager;
+}
+
+void QLowEnergyControllerPrivateOSX::LEnotSupported()
+{
+    // Report as an error. But this should not be possible
+    // actually: before connecting to any device, we have
+    // to discover it, if it was discovered ... LE _must_
+    // be supported.
+}
+
+void QLowEnergyControllerPrivateOSX::connectSuccess()
+{
+    Q_ASSERT_X(controllerState == QLowEnergyController::ConnectingState,
+               "connectSuccess", "invalid state");
+
+    controllerState = QLowEnergyController::ConnectedState;
+
+    if (!isConnecting) {
+        emit q_ptr->stateChanged(QLowEnergyController::ConnectedState);
+        emit q_ptr->connected();
+    }
+}
+
+void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices services)
+{
+    Q_UNUSED(services)
+}
+
+void QLowEnergyControllerPrivateOSX::includedServicesDiscoveryFinished(const QBluetoothUuid &serviceUuid,
+                                                                       LEServices services)
+{
+    Q_UNUSED(serviceUuid)
+    Q_UNUSED(services)
+}
+
+void QLowEnergyControllerPrivateOSX::characteristicsDiscoveryFinished(const QBluetoothUuid &serviceUuid,
+                                                                      LECharacteristics characteristics)
+{
+    Q_UNUSED(serviceUuid)
+    Q_UNUSED(characteristics)
+}
+
+
+void QLowEnergyControllerPrivateOSX::disconnected()
+{
+    controllerState = QLowEnergyController::UnconnectedState;
+
+    if (!isConnecting) {
+        emit q_ptr->stateChanged(QLowEnergyController::UnconnectedState);
+        emit q_ptr->disconnected();
+    }
+}
+
+void QLowEnergyControllerPrivateOSX::error(QLowEnergyController::Error errorCode)
+{
+    // Errors reported during connect and general errors.
+    lastError = errorCode;
+
+    // We're still in connectToDevice,
+    // some error was reported synchronously.
+    // Return, the error will be correctly set later
+    // by connectToDevice.
+    if (isConnecting)
+        return;
+
+    switch (lastError) {
+    case QLowEnergyController::UnknownRemoteDeviceError:
+        errorString = QLowEnergyController::tr("Remote device cannot be found");
+        break;
+    case QLowEnergyController::InvalidBluetoothAdapterError:
+        errorString = QLowEnergyController::tr("Cannot find local adapter");
+        break;
+    case QLowEnergyController::NetworkError:
+        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
+        break;
+    case QLowEnergyController::UnknownError:
+    default:
+        errorString = QLowEnergyController::tr("Unknown Error");
+        break;
+    }
+
+    emit q_ptr->error(lastError);
+}
+
+void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
+                                           QLowEnergyController::Error errorCode)
+{
+    // Service/characteristics-related errors.
+    Q_UNUSED(serviceUuid)
+    Q_UNUSED(errorCode)
 }
 
 void QLowEnergyControllerPrivateOSX::connectToDevice()
 {
+    Q_ASSERT_X(isValid(), "connectToDevice", "invalid private controller");
+    Q_ASSERT_X(controllerState == QLowEnergyController::UnconnectedState,
+               "connectToDevice", "invalid state");
+    Q_ASSERT_X(!deviceUuid.isNull(), "connectToDevice",
+               "invalid private controller (no device uuid)");
+    Q_ASSERT_X(!isConnecting, "connectToDevice",
+               "recursive connectToDevice call");
+
+    lastError = QLowEnergyController::NoError;
+    errorString.clear();
+
+    isConnecting = true;// Do not emit signals if some callback is executed synchronously.
+    controllerState = QLowEnergyController::ConnectingState;
+    const QLowEnergyController::Error status = [centralManager connectToDevice:deviceUuid];
+    isConnecting = false;
+
+    if (status == QLowEnergyController::NoError && lastError == QLowEnergyController::NoError) {
+        emit q_ptr->stateChanged(controllerState);
+        if (controllerState == QLowEnergyController::ConnectedState) {
+            // If a peripheral is connected already from the Core Bluetooth's
+            // POV:
+            emit q_ptr->connected();
+        } else if (controllerState == QLowEnergyController::UnconnectedState) {
+            // Ooops, tried to connect, got peripheral disconnect instead -
+            // this happens with Core Bluetooth.
+            emit q_ptr->disconnected();
+        }
+    } else if (status != QLowEnergyController::NoError) {
+        error(status);
+    } else {
+        // Re-set the error/description and emit.
+        error(lastError);
+    }
 }
 
 void QLowEnergyControllerPrivateOSX::discoverServices()
@@ -100,6 +241,9 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
       d_ptr(new QLowEnergyControllerPrivateOSX(this))
 {
     Q_UNUSED(remoteAddress)
+
+    qCWarning(QT_BT_OSX) << "QLowEnergyController::QLowEnergyController(), "
+                            "construction with remote address is not supported!";
 }
 
 QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
@@ -107,7 +251,8 @@ QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDev
     : QObject(parent),
       d_ptr(new QLowEnergyControllerPrivateOSX(this, remoteDevice))
 {
-    Q_UNUSED(remoteDevice)
+    // That's the only "real" ctor - with Core Bluetooth we need a _valid_ deviceUuid
+    // from 'remoteDevice'.
 }
 
 QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddress,
@@ -122,12 +267,12 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
     osx_d_ptr->localAddress = localAddress;
 
     qCWarning(QT_BT_OSX) << "QLowEnergyController::QLowEnergyController(), "
-                            "construction with remote address is not supported";
+                            "construction with remote/local addresses is not supported!";
 }
 
 QLowEnergyController::~QLowEnergyController()
 {
-    // TODO: disconnect, but this can be quite problematic - it's async. operation!
+    // Deleting a peripheral will also disconnect.
     delete d_ptr;
 }
 
@@ -170,10 +315,34 @@ void QLowEnergyController::setRemoteAddressType(RemoteAddressType type)
 
 void QLowEnergyController::connectToDevice()
 {
+    OSX_D_PTR;
+
+    // A memory allocation problem.
+    if (!osx_d_ptr->isValid())
+        return osx_d_ptr->error(UnknownError);
+
+    // No QBluetoothDeviceInfo provided during construction.
+    if (!osx_d_ptr->deviceUuid.isNull())
+        return osx_d_ptr->error(UnknownRemoteDeviceError);
+
+    if (osx_d_ptr->controllerState != UnconnectedState)
+        return;
+
+    osx_d_ptr->connectToDevice();
 }
 
 void QLowEnergyController::disconnectFromDevice()
 {
+    if (state() == UnconnectedState || state() == ClosingState)
+        return;
+
+    OSX_D_PTR;
+
+    if (osx_d_ptr->isValid()) {
+        osx_d_ptr->controllerState = ClosingState;
+        emit stateChanged(ClosingState);
+        [osx_d_ptr->centralManager disconnectFromDevice];
+    }
 }
 
 void QLowEnergyController::discoverServices()
