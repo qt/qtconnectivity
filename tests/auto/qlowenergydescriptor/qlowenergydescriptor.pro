@@ -6,3 +6,6 @@ QT = core bluetooth testlib
 blackberry {
     LIBS += -lbtapi
 }
+
+osx:CONFIG += insignificant_test
+

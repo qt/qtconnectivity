@@ -48,6 +48,14 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 
 void QLowEnergyControllerPrivate::connectToDevice()
 {
+    // required to pass unit test on default backend
+    if (remoteDevice.isNull()) {
+        qWarning() << "Invalid/null remote device address";
+        setError(QLowEnergyController::UnknownRemoteDeviceError);
+        return;
+    }
+
+    qWarning() << "QLowEnergyControllerPrivate::connectToDevice(): Not implemented";
     setError(QLowEnergyController::UnknownError);
 }
 

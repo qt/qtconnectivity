@@ -67,14 +67,10 @@ private:
     QLowEnergyService *globalService;
 };
 
-Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
-
 tst_QLowEnergyCharacteristic::tst_QLowEnergyCharacteristic() :
     globalControl(0), globalService(0)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-
-    qRegisterMetaType<QLowEnergyController::ControllerState>();
 }
 
 tst_QLowEnergyCharacteristic::~tst_QLowEnergyCharacteristic()

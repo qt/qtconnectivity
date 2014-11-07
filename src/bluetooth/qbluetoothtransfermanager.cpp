@@ -38,7 +38,8 @@
 #include "qbluetoothtransferreply_bluez_p.h"
 #elif QT_QNX_BLUETOOTH
 #include "qbluetoothtransferreply_qnx_p.h"
-#else
+#elif QT_OSX_BLUETOOTH
+#include "qbluetoothtransferreply_osx_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -107,6 +108,10 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
     return rep;
 #elif QT_QNX_BLUETOOTH
     QBluetoothTransferReplyQnx *reply = new QBluetoothTransferReplyQnx(data, request, this);
+    connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
+    return reply;
+#elif QT_OSX_BLUETOOTH
+    QBluetoothTransferReply *reply = new QBluetoothTransferReplyOSX(data, request, this);
     connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
     return reply;
 #else

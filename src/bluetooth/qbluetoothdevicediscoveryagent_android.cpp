@@ -36,20 +36,28 @@
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
+#include <QtCore/private/qjnihelpers_p.h>
 #include "android/devicediscoverybroadcastreceiver_p.h"
+#include <QtAndroidExtras/QAndroidJniEnvironment>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
+enum {
+    NoScanActive = 0,
+    SDPScanActive = 1,
+    BtleScanActive = 2
+};
+
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
     inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-    errorString(QStringLiteral()),
     receiver(0),
     m_adapterAddress(deviceAdapter),
-    m_active(false),
+    m_active(NoScanActive),
+    leScanTimeout(0),
     pendingCancel(false),
     pendingStart(false),
     q_ptr(parent)
@@ -61,7 +69,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
-    if (m_active)
+    if (m_active != NoScanActive)
         stop();
 
     if (receiver) {
@@ -76,7 +84,7 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
         return true;
     if (pendingCancel)
         return false;
-    return m_active;
+    return m_active != NoScanActive;
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
@@ -116,11 +124,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     // install Java BroadcastReceiver
     if (!receiver) {
+        // SDP based device discovery
         receiver = new DeviceDiscoveryBroadcastReceiver();
         qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
-        QObject::connect(receiver, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
-                         this, SLOT(processDiscoveredDevices(QBluetoothDeviceInfo)));
-        QObject::connect(receiver, SIGNAL(finished()), this, SLOT(processDiscoveryFinished()));
+        QObject::connect(receiver, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo,bool)),
+                         this, SLOT(processDiscoveredDevices(QBluetoothDeviceInfo,bool)));
+        QObject::connect(receiver, SIGNAL(finished()), this, SLOT(processSdpDiscoveryFinished()));
     }
 
     discoveredDevices.clear();
@@ -133,7 +142,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         return;
     }
 
-    m_active = true;
+    m_active = SDPScanActive;
 
     qCDebug(QT_BT_ANDROID)
         << "QBluetoothDeviceDiscoveryAgentPrivate::start() - successfully executed.";
@@ -143,35 +152,38 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
-    if (!m_active)
+    if (m_active == NoScanActive)
         return;
 
-    pendingCancel = true;
-    pendingStart = false;
-    bool success = adapter.callMethod<jboolean>("cancelDiscovery");
-    if (!success) {
-        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be stopped");
-        emit q->error(lastError);
-        return;
+    if (m_active == SDPScanActive) {
+        pendingCancel = true;
+        pendingStart = false;
+        bool success = adapter.callMethod<jboolean>("cancelDiscovery");
+        if (!success) {
+            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be stopped");
+            emit q->error(lastError);
+            return;
+        }
+    } else if (m_active == BtleScanActive) {
+        stopLowEnergyScan();
     }
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveryFinished()
+void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
 {
     // We need to guard because Android sends two DISCOVERY_FINISHED when cancelling
     // Also if we have two active agents both receive the same signal.
     // If this one is not active ignore the device information
-    if (!m_active)
+    if (m_active != SDPScanActive)
         return;
-
-    m_active = false;
 
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
     if (pendingCancel && !pendingStart) {
-        emit q->canceled();
+        m_active = NoScanActive;
         pendingCancel = false;
+        emit q->canceled();
     } else if (pendingStart) {
         pendingStart = pendingCancel = false;
         start();
@@ -179,28 +191,111 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveryFinished()
         // check that it didn't finish due to turned off Bluetooth Device
         const int state = adapter.callMethod<jint>("getState");
         if (state != 12) {  // BluetoothAdapter.STATE_ON
+            m_active = NoScanActive;
             lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
             emit q->error(lastError);
             return;
         }
-        emit q->finished();
+
+        // start LE scan if supported
+        if (QtAndroidPrivate::androidSdkVersion() < 18) {
+            qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan";
+            emit q->finished();
+        } else {
+            startLowEnergyScan();
+        }
     }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
-    const QBluetoothDeviceInfo &info)
+    const QBluetoothDeviceInfo &info, bool isLeResult)
 {
     // If we have two active agents both receive the same signal.
     // If this one is not active ignore the device information
-    if (!m_active)
+    if (m_active != SDPScanActive && !isLeResult)
+        return;
+    if (m_active != BtleScanActive && isLeResult)
         return;
 
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
+    for (int i = 0; i < discoveredDevices.size(); i++) {
+        if (discoveredDevices[i].address() == info.address()) {
+            if (discoveredDevices[i] == info) {
+                qCDebug(QT_BT_ANDROID) << "Duplicate: " << info.address()
+                                       << "isLeScanResult:" << isLeResult;
+                return;
+            }
+
+            // same device found -> avoid duplicates and update info in place
+            discoveredDevices.replace(i, info);
+
+            emit q->deviceDiscovered(info);
+            return;
+        }
+    }
+
     discoveredDevices.append(info);
-    qCDebug(QT_BT_ANDROID) << "Device found: " << info.name() << info.address().toString();
+    qCDebug(QT_BT_ANDROID) << "Device found: " << info.name() << info.address().toString()
+                           << "isLeScanResult:" << isLeResult;
     emit q->deviceDiscovered(info);
 }
 
+void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+
+    m_active = BtleScanActive;
+
+    QAndroidJniEnvironment env;
+    if (!leScanner.isValid()) {
+        leScanner = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLE");
+        if (env->ExceptionCheck() || !leScanner.isValid()) {
+            qCWarning(QT_BT_ANDROID) << "Cannot load BTLE device scan class";
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+            m_active = NoScanActive;
+            emit q->finished();
+        }
+
+        leScanner.setField<jlong>("qtObject", reinterpret_cast<long>(receiver));
+    }
+
+    jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", "(Z)Z", true);
+    if (!result) {
+        qCWarning(QT_BT_ANDROID) << "Cannot start BTLE device scanner";
+        m_active = NoScanActive;
+        emit q->finished();
+    }
+
+    if (!leScanTimeout) {
+        leScanTimeout = new QTimer(this);
+        leScanTimeout->setSingleShot(true);
+        leScanTimeout->setInterval(10000);
+        connect(leScanTimeout, &QTimer::timeout,
+                this, &QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan);
+    }
+
+    leScanTimeout->start();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()
+{
+    jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", "(Z)Z", false);
+    if (!result)
+        qCWarning(QT_BT_ANDROID) << "Cannot stop BTLE device scanner";
+
+    m_active = NoScanActive;
+
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    if (leScanTimeout->isActive()) {
+        // still active if this function was called from stop()
+        leScanTimeout->stop();
+        emit q->canceled();
+    } else {
+        // timeout -> regular stop
+        emit q->finished();
+    }
+}
 QT_END_NAMESPACE

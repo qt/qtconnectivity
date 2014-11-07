@@ -49,6 +49,7 @@
 #ifdef QT_ANDROID_BLUETOOTH
 #include <QtAndroidExtras/QAndroidJniObject>
 #include "android/devicediscoverybroadcastreceiver_p.h"
+#include <QtCore/QTimer>
 #endif
 
 #include <QtCore/QVariantMap>
@@ -117,14 +118,20 @@ private:
 
 #ifdef QT_ANDROID_BLUETOOTH
 private slots:
-    void processDiscoveryFinished();
-    void processDiscoveredDevices(const QBluetoothDeviceInfo &info);
+    void processSdpDiscoveryFinished();
+    void processDiscoveredDevices(const QBluetoothDeviceInfo &info, bool isLeResult);
+    friend void QtBluetoothLE_leScanResult(JNIEnv *, jobject, jlong, jobject);
+    void stopLowEnergyScan();
 
 private:
+    void startLowEnergyScan();
+
     DeviceDiscoveryBroadcastReceiver *receiver;
     QBluetoothAddress m_adapterAddress;
-    bool m_active;
+    short m_active;
     QAndroidJniObject adapter;
+    QAndroidJniObject leScanner;
+    QTimer *leScanTimeout;
 
     bool pendingCancel, pendingStart;
 #elif defined(QT_BLUEZ_BLUETOOTH)

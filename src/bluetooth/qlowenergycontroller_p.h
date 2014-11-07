@@ -42,12 +42,17 @@
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 #include <QtBluetooth/QBluetoothSocket>
+#elif defined(QT_ANDROID_BLUETOOTH)
+#include <QtAndroidExtras/QAndroidJniObject>
+#include "android/lowenergynotificationhub_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
+#elif defined(QT_ANDROID_BLUETOOTH)
+class LowEnergyNotificationHub;
 #endif
 
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
@@ -166,6 +171,15 @@ private slots:
     void l2cpErrorChanged(QBluetoothSocket::SocketError);
     void l2cpReadyRead();
     void encryptionChangedEvent(const QBluetoothAddress&, bool);
+#elif defined(QT_ANDROID_BLUETOOTH)
+    LowEnergyNotificationHub *hub;
+
+private slots:
+    void connectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
+    void servicesDiscovered(QLowEnergyController::Error errorCode,
+                            const QString &foundServices);
+
 #endif
 private:
     QLowEnergyController *q_ptr;

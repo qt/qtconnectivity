@@ -111,6 +111,10 @@ void tst_QBluetoothLocalDevice::initTestCase()
 
 void tst_QBluetoothLocalDevice::tst_powerOn()
 {
+#ifdef Q_OS_OSX
+    QSKIP("Not possible on OS X");
+#endif
+
     QBluetoothLocalDevice localDevice;
 
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
@@ -132,6 +136,10 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
 
 void tst_QBluetoothLocalDevice::tst_powerOff()
 {
+#ifdef Q_OS_OSX
+    QSKIP("Not possible on OS X");
+#endif
+
     if (!QBluetoothLocalDevice::allDevices().count())
         QSKIP("Skipping test due to missing Bluetooth device");
 
@@ -176,6 +184,10 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
 
 void tst_QBluetoothLocalDevice::tst_hostModes()
 {
+#ifdef Q_OS_OSX
+    QSKIP("Not possible on OS X");
+#endif
+
     QFETCH(QBluetoothLocalDevice::HostMode, hostModeExpected);
     QFETCH(bool, expectSignal);
 

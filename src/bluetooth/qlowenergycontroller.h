@@ -36,6 +36,7 @@
 
 #include <QObject>
 #include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QLowEnergyService>
 
@@ -51,7 +52,8 @@ public:
         UnknownError,
         UnknownRemoteDeviceError,
         NetworkError,
-        InvalidBluetoothAdapterError
+        InvalidBluetoothAdapterError,
+        ConnectionError
     };
 
     enum ControllerState {
@@ -69,6 +71,8 @@ public:
     };
 
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
+                                     QObject *parent = 0);
+    explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
                                      QObject *parent = 0);
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      const QBluetoothAddress &localDevice,
@@ -109,5 +113,8 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
+Q_DECLARE_METATYPE(QLowEnergyController::Error)
 
 #endif // QLOWENERGYCONTROLLER_H

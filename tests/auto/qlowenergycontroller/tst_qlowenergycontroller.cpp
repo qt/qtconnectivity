@@ -32,6 +32,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
+#include <QBluetoothAddress>
 #include <QBluetoothLocalDevice>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothUuid>
@@ -63,6 +64,7 @@ public:
 private slots:
     void initTestCase();
     void cleanupTestCase();
+    void tst_emptyCtor();
     void tst_connect();
     void tst_concurrentDiscovery();
     void tst_defaultBehavior();
@@ -81,13 +83,11 @@ private:
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
-Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyCharacteristic>();
     qRegisterMetaType<QLowEnergyDescriptor>();
-    qRegisterMetaType<QLowEnergyController::ControllerState>();
 
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString remote = qgetenv("BT_TEST_DEVICE");
@@ -150,6 +150,48 @@ void tst_QLowEnergyController::initTestCase()
 
 void tst_QLowEnergyController::cleanupTestCase()
 {
+
+}
+
+void tst_QLowEnergyController::tst_emptyCtor()
+{
+    {
+        QBluetoothAddress remoteAddress;
+        QLowEnergyController control(remoteAddress);
+        QSignalSpy connectedSpy(&control, SIGNAL(connected()));
+        QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+        QSignalSpy errorSpy(&control, SIGNAL(error(QLowEnergyController::Error)));
+        QCOMPARE(control.error(), QLowEnergyController::NoError);
+        control.connectToDevice();
+
+        QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
+
+        QVERIFY(connectedSpy.isEmpty());
+        QVERIFY(stateSpy.isEmpty());
+
+        QLowEnergyController::Error lastError = errorSpy[0].at(0).value<QLowEnergyController::Error>();
+        QVERIFY(lastError == QLowEnergyController::UnknownRemoteDeviceError
+                || lastError == QLowEnergyController::InvalidBluetoothAdapterError);
+    }
+
+    {
+        QBluetoothDeviceInfo deviceInfo;
+        QLowEnergyController control(deviceInfo);
+        QSignalSpy connectedSpy(&control, SIGNAL(connected()));
+        QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+        QSignalSpy errorSpy(&control, SIGNAL(error(QLowEnergyController::Error)));
+        QCOMPARE(control.error(), QLowEnergyController::NoError);
+        control.connectToDevice();
+
+        QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
+
+        QVERIFY(connectedSpy.isEmpty());
+        QVERIFY(stateSpy.isEmpty());
+
+        QLowEnergyController::Error lastError = errorSpy[0].at(0).value<QLowEnergyController::Error>();
+        QVERIFY(lastError == QLowEnergyController::UnknownRemoteDeviceError  // if local device on platform found
+                || lastError == QLowEnergyController::InvalidBluetoothAdapterError); // otherwise, e.g. fallback backend
+    }
 
 }
 

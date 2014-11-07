@@ -237,7 +237,7 @@ private:
     bool isValidDevice;
     QList<QBluetoothAddress> connectedDevicesSet;
 };
-#else
+#elif !defined(QT_OSX_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject
 {
 public:
