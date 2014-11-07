@@ -252,6 +252,20 @@ using namespace QT_NAMESPACE;
 
 - (void)discoverServices
 {
+    Q_ASSERT_X(peripheral, "-discoverServices", "invalid peripheral (nil)");
+    Q_ASSERT_X(managerState == OSXBluetooth::CentralManagerIdle,
+               "-discoverServices", "invalid state");
+
+    // From Apple's docs:
+    //
+    //"If the servicesUUIDs parameter is nil, all the available
+    //services of the peripheral are returned; setting the
+    //parameter to nil is considerably slower and is not recommended."
+    //
+    // ... but we'd like to have them all:
+    [peripheral setDelegate:self];
+    managerState = OSXBluetooth::CentralManagerDiscovering;
+    [peripheral discoverServices:nil];
 }
 
 - (bool)discoverServiceDetails:(const QBluetoothUuid &)serviceUuid
@@ -425,7 +439,26 @@ using namespace QT_NAMESPACE;
 - (void)peripheral:(CBPeripheral *)aPeripheral didDiscoverServices:(NSError *)error
 {
     Q_UNUSED(aPeripheral)
-    Q_UNUSED(error)
+
+
+    if (managerState != OSXBluetooth::CentralManagerDiscovering) {
+        // Canceled by -disconnectFromDevice.
+        return;
+    }
+
+    managerState = OSXBluetooth::CentralManagerIdle;
+
+    if (error) {
+        // NSLog, not qCDebug/Warning - to print the error.
+        NSLog(@"-peripheral:didDiscoverServices:, failed with error %@", error);
+        // TODO: better error mapping required.
+        delegate->error(QLowEnergyController::UnknownError);
+    } else {
+        QT_BT_MAC_AUTORELEASEPOOL;
+
+        OSXBluetooth::ObjCStrongReference<NSArray> services(peripheral.services, true);
+        delegate->serviceDiscoveryFinished(services);
+    }
 }
 
 

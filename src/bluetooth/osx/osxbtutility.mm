@@ -165,19 +165,38 @@ QString qt_error_string(IOReturn errorCode)
 
 QBluetoothUuid qt_uuid(CBUUID *uuid)
 {
+    // Apples' docs say "128 bit" and "16-bit UUIDs are implicitly
+    // pre-filled with the Bluetooth Base UUID."
+    // But Core Bluetooth can return CBUUID objects of length 2
+    // (16-bit, so they are not pre-filled?).
+
     if (!uuid)
         return QBluetoothUuid();
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
+    if (uuid.data.length == 2) {
+        // TODO: this is .. UGLY :)
+        quint16 qtUuidData = 0;
+        const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
+        std::copy(source, source + 2, &qtUuidData);
+
+        return QBluetoothUuid(qtUuidData);
+    } else if (uuid.data.length == 16) {
+        quint128 qtUuidData = {};
+        const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
+        std::copy(source, source + 16, qtUuidData.data);
+
+        return QBluetoothUuid(qtUuidData);
+    } else {
+        qCDebug(QT_BT_OSX) << "qt_uuid, invalid CBUUID, 2 or 16 bytes expected, but got "
+                           << uuid.data.length << " bytes length";
+        return QBluetoothUuid();
+    }
+
     if (uuid.data.length != 16) // TODO: warning?
         return QBluetoothUuid();
 
-    quint128 qtUuidData = {};
-    const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
-    std::copy(source, source + 16, qtUuidData.data);
-
-    return QBluetoothUuid(qtUuidData);
 }
 
 CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
