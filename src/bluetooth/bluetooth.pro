@@ -154,20 +154,28 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_osx.mm \
         qbluetoothsocket_osx.mm \
         qbluetoothserver_osx.mm \
-        qbluetoothtransferreply_osx.mm
+        qbluetoothtransferreply_osx.mm \
+        qlowenergycontroller_osx.mm \
+        qlowenergyservice_osx.mm
 
     SOURCES += \
         qlowenergycontroller_p.cpp
 
     PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
                        qbluetoothserver_osx_p.h \
-                       qbluetoothtransferreply_osx_p.h
+                       qbluetoothtransferreply_osx_p.h \
+                       qbluetoothtransferreply_osx_p.h \
+                       qlowenergycontroller_osx_p.h
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
     SOURCES -= qbluetoothsocket.cpp
     SOURCES -= qbluetoothserver.cpp
+    SOURCES -= qlowenergyservice_p.cpp
+    SOURCES -= qlowenergyservice.cpp
+    SOURCES -= qlowenergycontroller.cpp
+    SOURCES -= qlowenergycontroller_p.cpp
 } else:ios {
     message("iOS is currently an unsupported Bluetooth platform, WIP.")
 
@@ -186,6 +194,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
+
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
