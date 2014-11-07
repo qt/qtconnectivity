@@ -59,11 +59,15 @@ public:
     static void lowEnergy_servicesDiscovered(JNIEnv*, jobject, jlong qtObject,
                                              jint errorCode, jobject uuidList);
     static void lowEnergy_serviceDetailsDiscovered(JNIEnv *, jobject,
-                                                   jlong qtObject, jobject uuid);
+                                                   jlong qtObject, jobject uuid,
+                                                   jint startHandle, jint endHandle);
     static void lowEnergy_characteristicRead(JNIEnv*env, jobject, jlong qtObject,
                                              jobject serviceUuid,
                                              jint handle, jobject charUuid,
                                              jint properties, jbyteArray data);
+    static void lowEnergy_descriptorRead(JNIEnv *env, jobject, jlong qtObject,
+                                         jobject sUuid, jobject cUuid,
+                                         jint handle, jobject dUuid, jbyteArray data);
 
     QAndroidJniObject javaObject()
     {
@@ -74,10 +78,13 @@ signals:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
             QLowEnergyController::Error errorCode);
     void servicesDiscovered(QLowEnergyController::Error errorCode, const QString &uuids);
-    void serviceDetailsDiscoveryFinished(const QString& serviceUuid);
+    void serviceDetailsDiscoveryFinished(const QString& serviceUuid,
+            int startHandle, int endHandle);
     void characteristicRead(const QBluetoothUuid &serviceUuid,
             int handle, const QBluetoothUuid &charUuid,
-            int properties, const QByteArray& data);
+            int properties, const QByteArray &data);
+    void descriptorRead(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
+            int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
 
 public slots:
 private:

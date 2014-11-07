@@ -72,7 +72,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished);
         connect(hub, &LowEnergyNotificationHub::characteristicRead,
                 this, &QLowEnergyControllerPrivate::characteristicRead);
-
+        connect(hub, &LowEnergyNotificationHub::descriptorRead,
+                this, &QLowEnergyControllerPrivate::descriptorRead);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -129,7 +130,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
     bool result = hub->javaObject().callMethod<jboolean>("discoverServiceDetails",
                                                          "(Ljava/lang/String;)Z",
                                                          uuid.object<jstring>());
-    if (!result || true) {
+    if (!result) {
         QSharedPointer<QLowEnergyServicePrivate> servicePrivate =
                 serviceList.value(service);
         if (!servicePrivate.isNull()) {
@@ -219,7 +220,7 @@ void QLowEnergyControllerPrivate::servicesDiscovered(
 }
 
 void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
-        const QString &serviceUuid)
+        const QString &serviceUuid, int startHandle, int endHandle)
 {
     const QBluetoothUuid service(serviceUuid);
     if (!serviceList.contains(service)) {
@@ -228,13 +229,20 @@ void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
         return;
     }
 
+    //update service data
     QSharedPointer<QLowEnergyServicePrivate> pointer =
             serviceList.value(service);
+    pointer->startHandle = startHandle;
+    pointer->endHandle = endHandle;
+
+    qCDebug(QT_BT_ANDROID) << "Service" << serviceUuid << "discovered (start:"
+              << startHandle << "end:" << endHandle << ")";
+
     pointer->setState(QLowEnergyService::ServiceDiscovered);
 }
 
 void QLowEnergyControllerPrivate::characteristicRead(
-        const QBluetoothUuid& serviceUuid, int handle,
+        const QBluetoothUuid &serviceUuid, int handle,
         const QBluetoothUuid &charUuid, int properties, const QByteArray &data)
 {
     if (!serviceList.contains(serviceUuid))
@@ -247,14 +255,44 @@ void QLowEnergyControllerPrivate::characteristicRead(
     QLowEnergyServicePrivate::CharData &charDetails =
             service->characteristicList[charHandle];
 
-    //Android uses same properties value as Qt which is the Bluetooth LE standard
+    //Android uses same property value as Qt which is the Bluetooth LE standard
     charDetails.properties = QLowEnergyCharacteristic::PropertyType(properties);
     charDetails.uuid = charUuid;
     charDetails.value = data;
     //value handle always one larger than characteristics value handle
     charDetails.valueHandle = charHandle + 1;
+}
 
-    //service->characteristicList[charHandle] = charDetails;
+void QLowEnergyControllerPrivate::descriptorRead(
+        const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
+        int descHandle, const QBluetoothUuid &descUuid, const QByteArray &data)
+{
+    if (!serviceList.contains(serviceUuid))
+        return;
+
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceList.value(serviceUuid);
+
+    bool entryUpdated = false;
+    foreach (QLowEnergyHandle charHandle, service->characteristicList.keys()) {
+        QLowEnergyServicePrivate::CharData &charDetails =
+                service->characteristicList[charHandle];
+        if (charDetails.uuid != charUuid)
+            continue;
+
+        // new entry created if it doesn't exist
+        QLowEnergyServicePrivate::DescData &descDetails =
+                charDetails.descriptorList[descHandle];
+        descDetails.uuid = descUuid;
+        descDetails.value = data;
+        entryUpdated = true;
+        break;
+    }
+
+    if (!entryUpdated) {
+        qCWarning(QT_BT_ANDROID) << "Cannot find/update descriptor"
+                                 << descUuid << charUuid << serviceUuid;
+    }
 }
 
 QT_END_NAMESPACE

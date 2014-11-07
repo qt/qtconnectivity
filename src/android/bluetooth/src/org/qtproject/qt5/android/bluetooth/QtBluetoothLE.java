@@ -45,7 +45,6 @@ import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
@@ -165,18 +164,66 @@ public class QtBluetoothLE {
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
         {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.w(TAG, "onCharacteristicRead error: " + status);
+                return;
+            }
+
+            //runningHandle is only used during serviceDetailsDiscovery
+            //If it is -1 we got an update outside of the details discovery process
+            if (runningHandle == -1) {
+                List<Integer> handles = uuidToEntry.get(characteristic.getService().getUuid());
+                if (handles == null || handles.isEmpty()) {
+                    Log.w(TAG, "Received Characteristic read update for unknown characteristic");
+                    return;
+                }
+                int serviceHandle = handles.get(0);
+                GattEntry entry;
+                int foundHandle = -1;
+                try {
+                    for (int i = 1; serviceHandle + i < entries.size() && foundHandle == -1; i++) {
+                        entry = entries.get(serviceHandle + i);
+                        if (entry == null)
+                            continue;
+
+                        if (entry.type == GattEntryType.Service) {
+                            Log.w(TAG, "Out-of-detail-discovery: found unknown characteristic for known service");
+                            break; //reached next service -> unknown characteristic in service
+                        }
+
+                        if (entry.type != GattEntryType.Characteristic)
+                            continue;
+
+                        if (entry.characteristic == characteristic)
+                            foundHandle = serviceHandle + i;
+                    }
+                } catch (IndexOutOfBoundsException ex) {
+                    Log.w(TAG, "Out-of-detail-discovery: cannot find handle for characteristic");
+                    return;
+                }
+
+                if (foundHandle == -1) {
+                    Log.w(TAG, "Out-of-detail-discovery: char update failed");
+                    return;
+                }
+
+                leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
+                        foundHandle+1, characteristic.getUuid().toString(),
+                        characteristic.getProperties(), characteristic.getValue());
+
+                return;
+            }
+
             GattEntry entry = entries.get(runningHandle);
             entry.valueKnown = true;
             entries.set(runningHandle, entry);
-            String data = new String(characteristic.getValue());
-            // Qt manages handles starting at 1, in Java we use a system starting with 0
-            characteristic.getService().getUuid().toString();
 
+            // Qt manages handles starting at 1, in Java we use a system starting with 0
             //TODO avoid sending service uuid -> service handle should be sufficient
             leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
-                    runningHandle+1, characteristic.getUuid().toString(),
+                    runningHandle + 1, characteristic.getUuid().toString(),
                     characteristic.getProperties(), characteristic.getValue());
-            performServiceDiscoveryForHandle(runningHandle+1, false);
+            performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
         }
 
         public void onCharacteristicWrite(android.bluetooth.BluetoothGatt gatt,
@@ -196,10 +243,63 @@ public class QtBluetoothLE {
                                      android.bluetooth.BluetoothGattDescriptor descriptor,
                                      int status)
         {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.w(TAG, "onDescriptorRead error: " + status);
+                return;
+            }
+
+            //runningHandle is only used during serviceDetailsDiscovery
+            //If it is -1 we got an update outside of the details discovery process
+            if (runningHandle == -1) {
+                List<Integer> handles = uuidToEntry.get(descriptor.getCharacteristic().getService().getUuid());
+                if (handles == null || handles.isEmpty()) {
+                    Log.w(TAG, "Received Descriptor read update for unknown descriptor");
+                    return;
+                }
+
+                int serviceHandle = handles.get(0);
+                GattEntry entry;
+                int foundHandle = -1;
+                try {
+                    for (int i = 1; serviceHandle + i < entries.size() && foundHandle == -1; i++) {
+                        entry = entries.get(serviceHandle + i);
+                        if (entry == null)
+                            continue;
+
+                        if (entry.type == GattEntryType.Service) {
+                            Log.w(TAG, "Out-of-detail-discovery: found unknown descriptor for known service");
+                            break; //reached next service -> unknown descriptor in service
+                        }
+
+                        if (entry.type != GattEntryType.Descriptor)
+                            continue;
+
+                        if (entry.descriptor == descriptor)
+                            foundHandle = serviceHandle + i;
+                    }
+                } catch (IndexOutOfBoundsException ex) {
+                    Log.w(TAG, "Out-of-detail-discovery: cannot find handle for descriptor");
+                    return;
+                }
+
+                if (foundHandle == -1)
+                    Log.w(TAG, "Out-of-detail-discovery: char update failed");
+
+                leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
+                        descriptor.getCharacteristic().getUuid().toString(), foundHandle+1,
+                        descriptor.getUuid().toString(), descriptor.getValue());
+                return;
+            }
+
+
             GattEntry entry = entries.get(runningHandle);
             entry.valueKnown = true;
             entries.set(runningHandle, entry);
-            performServiceDiscoveryForHandle(runningHandle+1, false);
+            //TODO avoid sending service and characteristic uuid -> handles should be sufficient
+            leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
+                    descriptor.getCharacteristic().getUuid().toString(), runningHandle+1,
+                    descriptor.getUuid().toString(), descriptor.getValue());
+            performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
         }
 
         public void onDescriptorWrite(android.bluetooth.BluetoothGatt gatt,
@@ -263,6 +363,7 @@ public class QtBluetoothLE {
         public BluetoothGattService service = null;
         public BluetoothGattCharacteristic characteristic = null;
         public BluetoothGattDescriptor descriptor = null;
+        public int endHandle;
     }
     Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
     ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
@@ -275,10 +376,13 @@ public class QtBluetoothLE {
         GattEntry entry = null;
         List<BluetoothGattService> services = mBluetoothGatt.getServices();
         for (BluetoothGattService service: services) {
-            entry = new GattEntry();
-            entry.type = GattEntryType.Service;
-            entry.service = service;
+            GattEntry serviceEntry = new GattEntry();
+            serviceEntry.type = GattEntryType.Service;
+            serviceEntry.service = service;
             entries.add(entry);
+
+            // remember handle for the service for later update
+            int serviceHandle = entries.size() - 1;
 
             //some devices may have more than one service with the same uuid
             List<Integer> old = uuidToEntry.get(service.getUuid());
@@ -287,29 +391,32 @@ public class QtBluetoothLE {
             old.add(entries.size()-1);
             uuidToEntry.put(service.getUuid(), old);
 
+            // add all characteristics
             List<BluetoothGattCharacteristic> charList = service.getCharacteristics();
             for (BluetoothGattCharacteristic characteristic: charList) {
                 entry = new GattEntry();
                 entry.type = GattEntryType.Characteristic;
                 entry.characteristic = characteristic;
                 entries.add(entry);
-                //uuidToEntry.put(characteristic.getUuid(), entries.size()-1);
 
                 // this emulates GATT value attributes
                 entry = new GattEntry();
                 entry.type = GattEntryType.CharacteristicValue;
                 entries.add(entry);
-                //uuidToEntry.put(characteristic.getUuid(), entry);
 
+                // add all descriptors
                 List<BluetoothGattDescriptor> descList = characteristic.getDescriptors();
                 for (BluetoothGattDescriptor desc: descList) {
                     entry = new GattEntry();
                     entry.type = GattEntryType.Descriptor;
                     entry.descriptor = desc;
                     entries.add(entry);
-                    //uuidToEntry.put(desc.getUuid(), entries.size()-1);
                 }
             }
+
+            // update endHandle of current service
+            serviceEntry.endHandle = entries.size() - 1;
+            entries.set(serviceHandle, serviceEntry);
         }
 
         entries.trimToSize();
@@ -364,7 +471,7 @@ public class QtBluetoothLE {
             }
 
             if (!entry.valueKnown) {
-                performServiceDiscoveryForHandle(serviceHandle, true);
+                performServiceDetailDiscoveryForHandle(serviceHandle, true);
             } else {
                 Log.w(TAG, "Service already discovered");
             }
@@ -379,15 +486,19 @@ public class QtBluetoothLE {
 
     private void finishCurrentServiceDiscovery()
     {
+        int currentEntry = currentServiceInDiscovery;
         GattEntry discoveredService = entries.get(currentServiceInDiscovery);
         discoveredService.valueKnown = true;
         entries.set(currentServiceInDiscovery, discoveredService);
+
         runningHandle = -1;
         currentServiceInDiscovery = -1;
-        leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString());
+
+        leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString(),
+                currentEntry + 1, discoveredService.endHandle + 1);
     }
 
-    private synchronized void performServiceDiscoveryForHandle(int nextHandle, boolean searchStarted)
+    private synchronized void performServiceDetailDiscoveryForHandle(int nextHandle, boolean searchStarted)
     {
         try {
             if (searchStarted) {
@@ -411,17 +522,40 @@ public class QtBluetoothLE {
             switch (entry.type) {
                 case Characteristic:
                     result = mBluetoothGatt.readCharacteristic(entry.characteristic);
-                    if (!result)
-                        performServiceDiscoveryForHandle(runningHandle+1, false);
+                    try {
+                        if (!result) {
+                            // add characteristic now since we won't get a read update later one
+                            // this is possible when the characteristic is not readable
+                            Log.d(TAG, "Non-readable characteristic " + entry.characteristic.getUuid() +
+                                    " for service " + entry.characteristic.getService().getUuid());
+                            leCharacteristicRead(qtObject, entry.characteristic.getService().getUuid().toString(),
+                                    nextHandle + 1, entry.characteristic.getUuid().toString(),
+                                    entry.characteristic.getProperties(), entry.characteristic.getValue());
+                            performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+                        }
+                    } catch (Exception ex)
+                    {
+                        ex.printStackTrace();
+                    }
                     break;
                 case CharacteristicValue:
                     // ignore -> nothing to do for this artificial type
-                    performServiceDiscoveryForHandle(runningHandle+1, false);
+                    performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
                     break;
                 case Descriptor:
                     result = mBluetoothGatt.readDescriptor(entry.descriptor);
-                    if (!result)
-                        performServiceDiscoveryForHandle(runningHandle+1, false);
+                    if (!result) {
+                        // atm all descriptor types are readable
+                        Log.d(TAG, "Non-readable descriptor " + entry.descriptor.getUuid() +
+                                   " for service/char" + entry.descriptor.getCharacteristic().getService().getUuid() +
+                                   "/" + entry.descriptor.getCharacteristic().getUuid());
+                        leDescriptorRead(qtObject,
+                                entry.descriptor.getCharacteristic().getService().getUuid().toString(),
+                                entry.descriptor.getCharacteristic().getUuid().toString(),
+                                nextHandle+1, entry.descriptor.getUuid().toString(),
+                                entry.descriptor.getValue());
+                        performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+                    }
                     break;
                 case Service:
                     finishCurrentServiceDiscovery();
@@ -438,9 +572,13 @@ public class QtBluetoothLE {
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
     public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
-    public native void leServiceDetailDiscoveryFinished(long qtObject, final String serviceUuid);
+    public native void leServiceDetailDiscoveryFinished(long qtObject, final String serviceUuid,
+                                                        int startHandle, int endHandle);
     public native void leCharacteristicRead(long qtObject, String serviceUuid,
                                             int charHandle, String charUuid,
                                             int properties, byte[] data);
+    public native void leDescriptorRead(long qtObject, String serviceUuid, String charUuid,
+                                        int descHandle, String descUuid, byte[] data);
+
 }
 

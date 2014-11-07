@@ -123,7 +123,8 @@ void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
 }
 
 void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
-        JNIEnv *, jobject, jlong qtObject, jobject uuid)
+        JNIEnv *, jobject, jlong qtObject, jobject uuid, jint startHandle,
+        jint endHandle)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
@@ -134,7 +135,9 @@ void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
     const QString serviceUuid = QAndroidJniObject(uuid).toString();
     QMetaObject::invokeMethod(hub, "serviceDetailsDiscoveryFinished",
                               Qt::QueuedConnection,
-                              Q_ARG(QString, serviceUuid));
+                              Q_ARG(QString, serviceUuid),
+                              Q_ARG(int, startHandle),
+                              Q_ARG(int, endHandle));
 }
 
 void LowEnergyNotificationHub::lowEnergy_characteristicRead(
@@ -147,29 +150,74 @@ void LowEnergyNotificationHub::lowEnergy_characteristicRead(
     if (!hub)
         return;
 
-
     const QBluetoothUuid serviceUuid(QAndroidJniObject(sUuid).toString());
     if (serviceUuid.isNull())
         return;
 
     const QBluetoothUuid charUuid(QAndroidJniObject(cUuid).toString());
-
-    jsize length = env->GetArrayLength(data);
-    jbyte* nativeData = (jbyte*) malloc(length * sizeof(jbyte));
-    if (!nativeData)
+    if (charUuid.isNull())
         return;
 
-    env->GetByteArrayRegion(data, 0, length, nativeData);
-    const QByteArray qtArray(reinterpret_cast<const char*>(nativeData),
-                             length); //takes ownership of data
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        jbyte* nativeData = (jbyte*) malloc(length * sizeof(jbyte));
+        if (!nativeData)
+            return;
+
+        env->GetByteArrayRegion(data, 0, length, nativeData);
+        payload = QByteArray(reinterpret_cast<const char*>(nativeData),
+                                 length); //takes deep copy of data
+        free(nativeData);
+    }
 
     QMetaObject::invokeMethod(hub, "characteristicRead", Qt::QueuedConnection,
                               Q_ARG(QBluetoothUuid, serviceUuid),
                               Q_ARG(int, handle),
                               Q_ARG(QBluetoothUuid, charUuid),
                               Q_ARG(int, properties),
-                              Q_ARG(QByteArray, qtArray));
-    free(nativeData);
+                              Q_ARG(QByteArray, payload));
+
+}
+
+void LowEnergyNotificationHub::lowEnergy_descriptorRead(
+        JNIEnv *env, jobject, jlong qtObject, jobject sUuid, jobject cUuid,
+        jint handle, jobject dUuid, jbyteArray data)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    const QBluetoothUuid serviceUuid(QAndroidJniObject(sUuid).toString());
+    if (serviceUuid.isNull())
+        return;
+
+    const QBluetoothUuid charUuid(QAndroidJniObject(cUuid).toString());
+    const QBluetoothUuid descUuid(QAndroidJniObject(dUuid).toString());
+    if (charUuid.isNull() || descUuid.isNull())
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        jbyte* nativeData = (jbyte*) malloc(length * sizeof(jbyte));
+        if (!nativeData)
+            return;
+
+        env->GetByteArrayRegion(data, 0, length, nativeData);
+        payload = QByteArray(reinterpret_cast<const char*>(nativeData),
+                                 length); //takes deep copy of data
+        free(nativeData);
+    }
+
+    QMetaObject::invokeMethod(hub, "descriptorRead", Qt::QueuedConnection,
+                              Q_ARG(QBluetoothUuid, serviceUuid),
+                              Q_ARG(QBluetoothUuid, charUuid),
+                              Q_ARG(int, handle),
+                              Q_ARG(QBluetoothUuid, descUuid),
+                              Q_ARG(QByteArray, payload));
 }
 
 QT_END_NAMESPACE
