@@ -137,4 +137,39 @@ void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
                               Q_ARG(QString, serviceUuid));
 }
 
+void LowEnergyNotificationHub::lowEnergy_characteristicRead(
+        JNIEnv *env, jobject, jlong qtObject, jobject sUuid, jint handle,
+        jobject cUuid, jint properties, jbyteArray data)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+
+    const QBluetoothUuid serviceUuid(QAndroidJniObject(sUuid).toString());
+    if (serviceUuid.isNull())
+        return;
+
+    const QBluetoothUuid charUuid(QAndroidJniObject(cUuid).toString());
+
+    jsize length = env->GetArrayLength(data);
+    jbyte* nativeData = (jbyte*) malloc(length * sizeof(jbyte));
+    if (!nativeData)
+        return;
+
+    env->GetByteArrayRegion(data, 0, length, nativeData);
+    const QByteArray qtArray(reinterpret_cast<const char*>(nativeData),
+                             length); //takes ownership of data
+
+    QMetaObject::invokeMethod(hub, "characteristicRead", Qt::QueuedConnection,
+                              Q_ARG(QBluetoothUuid, serviceUuid),
+                              Q_ARG(int, handle),
+                              Q_ARG(QBluetoothUuid, charUuid),
+                              Q_ARG(int, properties),
+                              Q_ARG(QByteArray, qtArray));
+    free(nativeData);
+}
+
 QT_END_NAMESPACE

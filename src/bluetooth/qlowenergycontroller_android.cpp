@@ -70,6 +70,9 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::servicesDiscovered);
         connect(hub, &LowEnergyNotificationHub::serviceDetailsDiscoveryFinished,
                 this, &QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished);
+        connect(hub, &LowEnergyNotificationHub::characteristicRead,
+                this, &QLowEnergyControllerPrivate::characteristicRead);
+
     }
 
     if (!hub->javaObject().isValid()) {
@@ -228,6 +231,30 @@ void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
     QSharedPointer<QLowEnergyServicePrivate> pointer =
             serviceList.value(service);
     pointer->setState(QLowEnergyService::ServiceDiscovered);
+}
+
+void QLowEnergyControllerPrivate::characteristicRead(
+        const QBluetoothUuid& serviceUuid, int handle,
+        const QBluetoothUuid &charUuid, int properties, const QByteArray &data)
+{
+    if (!serviceList.contains(serviceUuid))
+        return;
+
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceList.value(serviceUuid);
+    QLowEnergyHandle charHandle = handle;
+
+    QLowEnergyServicePrivate::CharData &charDetails =
+            service->characteristicList[charHandle];
+
+    //Android uses same properties value as Qt which is the Bluetooth LE standard
+    charDetails.properties = QLowEnergyCharacteristic::PropertyType(properties);
+    charDetails.uuid = charUuid;
+    charDetails.value = data;
+    //value handle always one larger than characteristics value handle
+    charDetails.valueHandle = charHandle + 1;
+
+    //service->characteristicList[charHandle] = charDetails;
 }
 
 QT_END_NAMESPACE

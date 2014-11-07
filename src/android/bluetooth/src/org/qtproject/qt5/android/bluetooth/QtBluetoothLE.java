@@ -168,6 +168,14 @@ public class QtBluetoothLE {
             GattEntry entry = entries.get(runningHandle);
             entry.valueKnown = true;
             entries.set(runningHandle, entry);
+            String data = new String(characteristic.getValue());
+            // Qt manages handles starting at 1, in Java we use a system starting with 0
+            characteristic.getService().getUuid().toString();
+
+            //TODO avoid sending service uuid -> service handle should be sufficient
+            leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
+                    runningHandle+1, characteristic.getUuid().toString(),
+                    characteristic.getProperties(), characteristic.getValue());
             performServiceDiscoveryForHandle(runningHandle+1, false);
         }
 
@@ -431,5 +439,8 @@ public class QtBluetoothLE {
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
     public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
     public native void leServiceDetailDiscoveryFinished(long qtObject, final String serviceUuid);
+    public native void leCharacteristicRead(long qtObject, String serviceUuid,
+                                            int charHandle, String charUuid,
+                                            int properties, byte[] data);
 }
 

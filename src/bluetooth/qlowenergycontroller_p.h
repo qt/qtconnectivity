@@ -180,6 +180,9 @@ private slots:
     void servicesDiscovered(QLowEnergyController::Error errorCode,
                             const QString &foundServices);
     void serviceDetailsDiscoveryFinished(const QString& serviceUuid);
+    void characteristicRead(const QBluetoothUuid &serviceUuid, int handle,
+                            const QBluetoothUuid &charUuid, int properties,
+                            const QByteArray& data);
 
 #endif
 private:

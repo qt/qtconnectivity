@@ -205,6 +205,8 @@ static JNINativeMethod methods_le[] = {
                 (void *) LowEnergyNotificationHub::lowEnergy_servicesDiscovered},
     {"leServiceDetailDiscoveryFinished", "(JLjava/lang/String;)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered},
+    {"leCharacteristicRead", "(JLjava/lang/String;ILjava/lang/String;I[B)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_characteristicRead},
 };
 
 static JNINativeMethod methods_server[] = {

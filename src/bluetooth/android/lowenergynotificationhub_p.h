@@ -41,6 +41,7 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <jni.h>
 
+#include <QtBluetooth/QLowEnergyCharacteristic>
 #include "qlowenergycontroller_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -59,6 +60,10 @@ public:
                                              jint errorCode, jobject uuidList);
     static void lowEnergy_serviceDetailsDiscovered(JNIEnv *, jobject,
                                                    jlong qtObject, jobject uuid);
+    static void lowEnergy_characteristicRead(JNIEnv*env, jobject, jlong qtObject,
+                                             jobject serviceUuid,
+                                             jint handle, jobject charUuid,
+                                             jint properties, jbyteArray data);
 
     QAndroidJniObject javaObject()
     {
@@ -67,9 +72,12 @@ public:
 
 signals:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
-                           QLowEnergyController::Error errorCode);
+            QLowEnergyController::Error errorCode);
     void servicesDiscovered(QLowEnergyController::Error errorCode, const QString &uuids);
     void serviceDetailsDiscoveryFinished(const QString& serviceUuid);
+    void characteristicRead(const QBluetoothUuid &serviceUuid,
+            int handle, const QBluetoothUuid &charUuid,
+            int properties, const QByteArray& data);
 
 public slots:
 private:
