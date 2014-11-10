@@ -475,7 +475,7 @@ void QLowEnergyController::setRemoteAddressType(
     Connects to the remote Bluetooth Low Energy device.
 
     This function does nothing if the controller's \l state()
-    is \l UnconnectedState. The \l connected() signal is emitted
+    is not equal to \l UnconnectedState. The \l connected() signal is emitted
     once the connection is successfully established.
 
     \sa disconnectFromDevice()
@@ -502,6 +502,8 @@ void QLowEnergyController::connectToDevice()
     instance that resulted from the current connection is automatically invalidated.
     Once any of those objects become invalid they remain invalid even if this
     controller object reconnects.
+
+    This function does nothing if the controller is in the \l UnconnectedState.
 
     \sa connectToDevice()
  */
