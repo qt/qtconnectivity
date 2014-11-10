@@ -512,7 +512,7 @@ public class QtBluetoothLE {
             try {
                 entry = entries.get(nextHandle);
             } catch (IndexOutOfBoundsException ex) {
-                ex.printStackTrace();
+                //ex.printStackTrace();
                 Log.w(TAG, "Last entry of last service read");
                 finishCurrentServiceDiscovery();
                 return;
