@@ -161,14 +161,9 @@ void LowEnergyNotificationHub::lowEnergy_characteristicRead(
     QByteArray payload;
     if (data) { //empty Java byte array is 0x0
         jsize length = env->GetArrayLength(data);
-        jbyte* nativeData = (jbyte*) malloc(length * sizeof(jbyte));
-        if (!nativeData)
-            return;
-
-        env->GetByteArrayRegion(data, 0, length, nativeData);
-        payload = QByteArray(reinterpret_cast<const char*>(nativeData),
-                                 length); //takes deep copy of data
-        free(nativeData);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
     }
 
     QMetaObject::invokeMethod(hub, "characteristicRead", Qt::QueuedConnection,
@@ -202,14 +197,9 @@ void LowEnergyNotificationHub::lowEnergy_descriptorRead(
     QByteArray payload;
     if (data) { //empty Java byte array is 0x0
         jsize length = env->GetArrayLength(data);
-        jbyte* nativeData = (jbyte*) malloc(length * sizeof(jbyte));
-        if (!nativeData)
-            return;
-
-        env->GetByteArrayRegion(data, 0, length, nativeData);
-        payload = QByteArray(reinterpret_cast<const char*>(nativeData),
-                                 length); //takes deep copy of data
-        free(nativeData);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
     }
 
     QMetaObject::invokeMethod(hub, "descriptorRead", Qt::QueuedConnection,
