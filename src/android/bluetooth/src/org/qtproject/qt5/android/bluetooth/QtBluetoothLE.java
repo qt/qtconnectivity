@@ -46,6 +46,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,7 +125,13 @@ public class QtBluetoothLE {
             //This must be in sync with QLowEnergyController::ControllerState
             switch (newState) {
                 case BluetoothProfile.STATE_DISCONNECTED:
-                    qLowEnergyController_State = 0; break;
+                    qLowEnergyController_State = 0;
+                    // we disconnected -> get rid of data from previous run
+                    resetServiceDetailData();
+                    // reset mBluetoothGatt, reusing same object is not very reliable
+                    // sometimes it reconnects and sometimes it does not.
+                    mBluetoothGatt = null;
+                    break;
                 case BluetoothProfile.STATE_CONNECTED:
                     qLowEnergyController_State = 2;
             }
@@ -167,6 +174,11 @@ public class QtBluetoothLE {
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "onCharacteristicRead error: " + status);
                 return;
+            }
+
+            synchronized (this) {
+                if (uuidToEntry.isEmpty()) // ignore data if internal setup is not ready;
+                    return;
             }
 
             //runningHandle is only used during serviceDetailsDiscovery
@@ -248,6 +260,11 @@ public class QtBluetoothLE {
                 return;
             }
 
+            synchronized (this) {
+                if (uuidToEntry.isEmpty()) // ignore data if internal setup is not ready;
+                    return;
+            }
+
             //runningHandle is only used during serviceDetailsDiscovery
             //If it is -1 we got an update outside of the details discovery process
             if (runningHandle == -1) {
@@ -323,9 +340,6 @@ public class QtBluetoothLE {
 
 
     public boolean connect() {
-        if (mBluetoothGatt != null)
-            return mBluetoothGatt.connect();
-
         mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);
         if (mRemoteGattDevice == null)
             return false;
@@ -367,6 +381,7 @@ public class QtBluetoothLE {
     }
     Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
     ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
+    private LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
 
     private void populateHandles()
     {
@@ -424,6 +439,16 @@ public class QtBluetoothLE {
 
     private int currentServiceInDiscovery = -1;
     private int runningHandle = -1;
+
+    private synchronized void resetServiceDetailData()
+    {
+        runningHandle = -1;
+        currentServiceInDiscovery = -1;
+        uuidToEntry.clear();
+        entries.clear();
+        servicesToBeDiscovered.clear();
+    }
+
     public synchronized boolean discoverServiceDetails(String serviceUuid)
     {
         try {
@@ -466,8 +491,16 @@ public class QtBluetoothLE {
                 return true;
 
             if (currentServiceInDiscovery != -1) {
-                Log.w(TAG, "Service discovery already running on another service");
-                return false;
+                // we are currently discovering another service
+                // we queue the new one up until we finish the previous one
+                if (!entry.valueKnown) {
+                    servicesToBeDiscovered.add(serviceHandle);
+                    Log.w(TAG, "Service discovery already running on another service, " +
+                               "queueing request for " + serviceUuid);
+                } else {
+                    Log.w(TAG, "Service already known");
+                }
+                return true;
             }
 
             if (!entry.valueKnown) {
@@ -496,6 +529,16 @@ public class QtBluetoothLE {
 
         leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString(),
                 currentEntry + 1, discoveredService.endHandle + 1);
+
+        if (!servicesToBeDiscovered.isEmpty()) {
+            try {
+                int nextService = servicesToBeDiscovered.remove();
+                performServiceDetailDiscoveryForHandle(nextService, true);
+            } catch (IndexOutOfBoundsException ex) {
+                Log.w(TAG, "Expected queued service but didn't find any");
+                return;
+            }
+        }
     }
 
     private synchronized void performServiceDetailDiscoveryForHandle(int nextHandle, boolean searchStarted)

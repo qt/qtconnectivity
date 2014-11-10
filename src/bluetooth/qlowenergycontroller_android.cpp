@@ -167,7 +167,10 @@ void QLowEnergyControllerPrivate::connectionUpdated(
     Q_Q(QLowEnergyController);
 
     const QLowEnergyController::ControllerState oldState = state;
-    qCDebug(QT_BT_ANDROID) << "Connection updated" << errorCode << oldState << newState;
+    qCDebug(QT_BT_ANDROID) << "Connection updated:"
+                           << "error:" << errorCode
+                           << "oldState:" << oldState
+                           << "newState:" << newState;
 
     if (errorCode != QLowEnergyController::NoError) {
         // ConnectionError if transition from Connecting to Connected
