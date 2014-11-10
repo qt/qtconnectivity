@@ -290,12 +290,23 @@ void Device::deviceDisconnected()
 
 void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
 {
-    if (newState != QLowEnergyService::ServiceDiscovered)
+    if (newState != QLowEnergyService::ServiceDiscovered) {
+        // do not hang in "Scanning for characteristics" mode forever
+        // in case the service discovery failed
+        // We have to queue the signal up to give UI time to even enter
+        // the above mode
+        if (newState != QLowEnergyService::DiscoveringServices) {
+            QMetaObject::invokeMethod(this, "characteristicsUpdated",
+                                      Qt::QueuedConnection);
+        }
         return;
+    }
 
     QLowEnergyService *service = qobject_cast<QLowEnergyService *>(sender());
     if (!service)
         return;
+
+
 
     //! [les-chars]
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
