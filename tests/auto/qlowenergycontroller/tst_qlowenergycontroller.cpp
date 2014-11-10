@@ -376,7 +376,18 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
                       30000);
         }
 
+#ifdef Q_OS_ANDROID
+        QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+        QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
+        control2.disconnectFromDevice();
+        QTest::qWait(3000);
+        QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+        QCOMPARE(control2.state(), QLowEnergyController::UnconnectedState);
+#else
+        // see QTBUG-42519
+        // Linux cannot maintain two controller connections at the same time
         QVERIFY(control2.error() != QLowEnergyController::NoError);
+#endif
     }
 
     /* We are testing that we can run service discovery on the same device
