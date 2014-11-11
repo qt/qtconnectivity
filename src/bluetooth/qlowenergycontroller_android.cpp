@@ -166,6 +166,8 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 
     bool result = false;
     if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Write characteristic with handle " << charHandle
+                 << newValue.toHex() << "(service:" << service->uuid << ")";
         result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[B)Z",
                                                         charHandle, payload);
     }
@@ -271,7 +273,7 @@ void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
     pointer->endHandle = endHandle;
 
     qCDebug(QT_BT_ANDROID) << "Service" << serviceUuid << "discovered (start:"
-              << startHandle << "end:" << endHandle << ")";
+              << startHandle << "end:" << endHandle << ")" << pointer.data();
 
     pointer->setState(QLowEnergyService::ServiceDiscovered);
 }
@@ -337,6 +339,10 @@ void QLowEnergyControllerPrivate::characteristicWritten(
             serviceForHandle(charHandle);
     if (service.isNull())
         return;
+
+
+    qCDebug(QT_BT_ANDROID) << "Characteristic write confirmation" << service->uuid
+                           << charHandle << data.toHex() << errorCode;
 
     if (errorCode != QLowEnergyService::NoError) {
         service->setError(errorCode);
