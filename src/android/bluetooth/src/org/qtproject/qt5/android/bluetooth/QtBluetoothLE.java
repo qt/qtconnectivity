@@ -242,7 +242,26 @@ public class QtBluetoothLE {
                                           android.bluetooth.BluetoothGattCharacteristic characteristic,
                                           int status)
         {
-            System.out.println("onCharacteristicWrite");
+            if (status != BluetoothGatt.GATT_SUCCESS)
+                Log.w(TAG, "onCharacteristicWrite: error " + status);
+
+            int handle = handleForCharacteristic(characteristic);
+            if (handle == -1) {
+                Log.w(TAG,"onCharacteristicWrite: cannot find handle");
+                return;
+            }
+
+            int errorCode = 0;
+            //This must be in sync with QLowEnergyService::ServiceError
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    errorCode = 0; break; // NoError
+                default:
+                    errorCode = 2; break; // CharacteristicWriteError
+
+            }
+
+            leCharacteristicWritten(qtObject, handle+1, characteristic.getValue(), errorCode);
         }
 
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
@@ -382,6 +401,82 @@ public class QtBluetoothLE {
     Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
     ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
     private LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
+
+    /*
+        Internal helper function
+        Returns the handle id for the given characteristic; otherwise returns -1.
+
+        Note that this is the Java handle. The Qt handle is the Java handle +1.
+     */
+    private int handleForCharacteristic(BluetoothGattCharacteristic characteristic)
+    {
+        if (characteristic == null)
+            return -1;
+
+        List<Integer> handles = uuidToEntry.get(characteristic.getService().getUuid());
+        if (handles == null || handles.isEmpty())
+            return -1;
+
+        //TODO for now we assume we always want the first service in case of uuid collision
+        int serviceHandle = handles.get(0);
+
+        try {
+            GattEntry entry = null;
+            for (int i = serviceHandle+1; i < entries.size(); i++) {
+                entry = entries.get(i);
+                switch (entry.type) {
+                    case Descriptor:
+                    case CharacteristicValue:
+                        continue;
+                    case Service:
+                        break;
+                    case Characteristic:
+                        if (entry.characteristic == characteristic)
+                            return i;
+                        break;
+                }
+            }
+        } catch (IndexOutOfBoundsException ex) { /*nothing*/ }
+        return -1;
+    }
+
+    /*
+        Internal helper function
+        Returns the handle id for the given descriptor; otherwise returns -1.
+
+        Note that this is the Java handle. The Qt handle is the Java handle +1.
+     */
+    private int handleForDescriptor(BluetoothGattDescriptor descriptor)
+    {
+        if (descriptor == null)
+            return -1;
+
+        List<Integer> handles = uuidToEntry.get(descriptor.getCharacteristic().getService().getUuid());
+        if (handles == null || handles.isEmpty())
+            return -1;
+
+        //TODO for now we assume we always want the first service in case of uuid collision
+        int serviceHandle = handles.get(0);
+
+        try {
+            GattEntry entry = null;
+            for (int i = serviceHandle+1; i < entries.size(); i++) {
+                entry = entries.get(i);
+                switch (entry.type) {
+                    case Characteristic:
+                    case CharacteristicValue:
+                        continue;
+                    case Service:
+                        break;
+                    case Descriptor:
+                        if (entry.descriptor == descriptor)
+                            return i;
+                        break;
+                }
+            }
+        } catch (IndexOutOfBoundsException ex) { }
+        return -1;
+    }
 
     private void populateHandles()
     {
@@ -613,6 +708,27 @@ public class QtBluetoothLE {
         }
     }
 
+    /*************************************************************/
+    /* Write Characteristics                                     */
+    /*************************************************************/
+
+    public boolean writeCharacteristic(int charHandle, byte[] newValue)
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        GattEntry entry = null;
+        try {
+            entry = entries.get(charHandle-1); //Qt always uses handles+1
+        } catch (IndexOutOfBoundsException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        entry.characteristic.setValue(newValue);
+        return mBluetoothGatt.writeCharacteristic(entry.characteristic);
+    }
+
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
     public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
     public native void leServiceDetailDiscoveryFinished(long qtObject, final String serviceUuid,
@@ -622,6 +738,8 @@ public class QtBluetoothLE {
                                             int properties, byte[] data);
     public native void leDescriptorRead(long qtObject, String serviceUuid, String charUuid,
                                         int descHandle, String descUuid, byte[] data);
+    public native void leCharacteristicWritten(long qtObject, int charHandle, byte[] newData,
+                                               int errorCode);
 
 }
 

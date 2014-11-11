@@ -204,6 +204,9 @@ private slots:
                             const QByteArray& data);
     void descriptorRead(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
                         int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
+    void characteristicWritten(int charHandle, const QByteArray &data,
+                               QLowEnergyService::ServiceError errorCode);
+
 
 #endif
 private:

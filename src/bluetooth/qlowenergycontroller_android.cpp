@@ -74,6 +74,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::characteristicRead);
         connect(hub, &LowEnergyNotificationHub::descriptorRead,
                 this, &QLowEnergyControllerPrivate::descriptorRead);
+        connect(hub, &LowEnergyNotificationHub::characteristicWritten,
+                this, &QLowEnergyControllerPrivate::characteristicWritten);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -144,11 +146,41 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
     qCDebug(QT_BT_ANDROID) << "Discovery of" << service << "started";
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-        const QLowEnergyHandle /*charHandle*/,
-        const QByteArray &/*newValue*/,
+void QLowEnergyControllerPrivate::writeCharacteristic(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QByteArray &newValue,
         bool /*writeWithResponse*/)
 {
+    //TODO don't ignore WriteWithResponse, right now we assume responses
+    Q_ASSERT(!service.isNull());
+
+    if (!service->characteristicList.contains(charHandle))
+        return;
+
+    QAndroidJniEnvironment env;
+    jbyteArray payload;
+    payload = env->NewByteArray(newValue.size());
+    env->SetByteArrayRegion(payload, 0, newValue.size(),
+                            (jbyte *)newValue.constData());
+
+    bool result = false;
+    if (hub) {
+        result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[B)Z",
+                                                        charHandle, payload);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    env->DeleteLocalRef(payload);
+
+    if (!result)
+        QMetaObject::invokeMethod(service.data(), "error", Qt::QueuedConnection,
+                              Q_ARG(QLowEnergyHandle, charHandle));
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
@@ -296,6 +328,29 @@ void QLowEnergyControllerPrivate::descriptorRead(
         qCWarning(QT_BT_ANDROID) << "Cannot find/update descriptor"
                                  << descUuid << charUuid << serviceUuid;
     }
+}
+
+void QLowEnergyControllerPrivate::characteristicWritten(
+        int charHandle, const QByteArray &data, QLowEnergyService::ServiceError errorCode)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(charHandle);
+    if (service.isNull())
+        return;
+
+    if (errorCode != QLowEnergyService::NoError) {
+        service->setError(errorCode);
+        return;
+    }
+
+    QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_ANDROID) << "characteristicWritten: Cannot find characteristic";
+        return;
+    }
+
+    updateValueOfCharacteristic(charHandle, data, false);
+    emit service->characteristicWritten(characteristic, data);
 }
 
 QT_END_NAMESPACE
