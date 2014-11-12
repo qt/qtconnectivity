@@ -183,8 +183,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     env->DeleteLocalRef(payload);
 
     if (!result)
-        QMetaObject::invokeMethod(service.data(), "error", Qt::QueuedConnection,
-                              Q_ARG(QLowEnergyHandle, charHandle));
+        service->setError(QLowEnergyService::CharacteristicWriteError);
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
