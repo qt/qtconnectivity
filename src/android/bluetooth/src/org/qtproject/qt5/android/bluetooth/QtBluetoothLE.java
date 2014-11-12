@@ -128,7 +128,7 @@ public class QtBluetoothLE {
                 case BluetoothProfile.STATE_DISCONNECTED:
                     qLowEnergyController_State = 0;
                     // we disconnected -> get rid of data from previous run
-                    resetServiceDetailData();
+                    resetData();
                     // reset mBluetoothGatt, reusing same object is not very reliable
                     // sometimes it reconnects and sometimes it does not.
                     mBluetoothGatt = null;
@@ -261,7 +261,11 @@ public class QtBluetoothLE {
                     errorCode = 2; break; // CharacteristicWriteError
             }
 
+            synchronized (writeQueue) {
+                writeJobPending = false;
+            }
             leCharacteristicWritten(qtObject, handle+1, characteristic.getValue(), errorCode);
+            performNextWrite();
         }
 
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
@@ -356,7 +360,12 @@ public class QtBluetoothLE {
                     errorCode = 3; break; // DescriptorWriteError
             }
 
+            synchronized (writeQueue) {
+                writeJobPending = false;
+            }
+
             leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
+            performNextWrite();
         }
         //TODO Requires Android API 21 which is not available on CI yet.
 //        public void onReliableWriteCompleted(android.bluetooth.BluetoothGatt gatt,
@@ -411,9 +420,19 @@ public class QtBluetoothLE {
         public BluetoothGattDescriptor descriptor = null;
         public int endHandle;
     }
+    private class WriteJob
+    {
+        public GattEntry entry;
+        public byte[] newValue;
+    }
+
     private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
     private final ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
     private final LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
+
+
+    private final LinkedList<WriteJob> writeQueue = new LinkedList<WriteJob>();
+    private boolean writeJobPending;
 
     /*
         Internal helper function
@@ -548,13 +567,18 @@ public class QtBluetoothLE {
     private int currentServiceInDiscovery = -1;
     private int runningHandle = -1;
 
-    private synchronized void resetServiceDetailData()
+    private void resetData()
     {
-        runningHandle = -1;
-        currentServiceInDiscovery = -1;
-        uuidToEntry.clear();
-        entries.clear();
-        servicesToBeDiscovered.clear();
+        synchronized (this) {
+            runningHandle = -1;
+            currentServiceInDiscovery = -1;
+            uuidToEntry.clear();
+            entries.clear();
+            servicesToBeDiscovered.clear();
+        }
+        synchronized (writeQueue) {
+            writeQueue.clear();
+        }
     }
 
     public synchronized boolean discoverServiceDetails(String serviceUuid)
@@ -737,13 +761,22 @@ public class QtBluetoothLE {
             return false;
         }
 
-        boolean result = entry.characteristic.setValue(newValue);
+        WriteJob newJob = new WriteJob();
+        newJob.newValue = newValue;
+        newJob.entry = entry;
+
+        boolean result;
+        synchronized (writeQueue) {
+            result = writeQueue.add(newJob);
+        }
+
         if (!result) {
-            Log.w(TAG, "BluetoothGattCharacteristic.setValue failed");
+            Log.w(TAG, "Cannot add characteristic write request for " + charHandle + " to queue" );
             return false;
         }
 
-        return mBluetoothGatt.writeCharacteristic(entry.characteristic);
+        performNextWrite();
+        return true;
     }
 
     /*************************************************************/
@@ -763,13 +796,68 @@ public class QtBluetoothLE {
             return false;
         }
 
-        boolean result = entry.descriptor.setValue(newValue);
+        WriteJob newJob = new WriteJob();
+        newJob.newValue = newValue;
+        newJob.entry = entry;
+
+        boolean result;
+        synchronized (writeQueue) {
+            result = writeQueue.add(newJob);
+        }
+
         if (!result) {
-            Log.w(TAG, "BluetoothGattDescriptor.setValue failed");
+            Log.w(TAG, "Cannot add descriptor write request for " + descHandle + " to queue" );
             return false;
         }
 
-        return mBluetoothGatt.writeDescriptor(entry.descriptor);
+        performNextWrite();
+        return true;
+    }
+
+    /*
+        The queuing is required because two writeCharacteristic/writeDescriptor calls
+        cannot execute at the same time. The second write must happen after the
+        previous write has finished with on(Characteristic|Descriptor)Write().
+     */
+    private void performNextWrite()
+    {
+        if (mBluetoothGatt == null)
+            return;
+
+        boolean skip = false;
+        final WriteJob nextJob;
+        synchronized (writeQueue) {
+            if (writeQueue.isEmpty() || writeJobPending)
+                return;
+
+            nextJob = writeQueue.remove();
+            boolean result;
+            switch (nextJob.entry.type) {
+                case Characteristic:
+                    result = nextJob.entry.characteristic.setValue(nextJob.newValue);
+                    if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
+                        skip = true;
+                    break;
+                case Descriptor:
+                    result = nextJob.entry.descriptor.setValue(nextJob.newValue);
+                    if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
+                        skip = true;
+                    break;
+                case Service:
+                case CharacteristicValue:
+                    skip = true;
+                    break;
+
+            }
+
+            if (!skip)
+                writeJobPending = true;
+        }
+
+        if (skip) {
+            Log.w(TAG, "Skipping write: " + nextJob.entry.type);
+            performNextWrite();
+        }
     }
 
 
