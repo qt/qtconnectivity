@@ -1875,6 +1875,28 @@ void tst_QLowEnergyController::tst_writeDescriptor()
     QVERIFY(notification == signalDesc);
     descWrittenSpy.clear();
 
+    // test concurrent writeRequests
+    // they need to be queued up
+    service->writeDescriptor(notification,QByteArray::fromHex("0100"));
+    service->writeDescriptor(notification, QByteArray::fromHex("0000"));
+    service->writeDescriptor(notification, QByteArray::fromHex("0100"));
+    service->writeDescriptor(notification, QByteArray::fromHex("0000"));
+    QTRY_VERIFY_WITH_TIMEOUT(descWrittenSpy.count() == 4, 10000);
+
+    QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
+    for (int i = 0; i < descWrittenSpy.count(); i++) {
+        firstSignalData = descWrittenSpy.at(i);
+        signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
+        signalValue = firstSignalData[1].toByteArray();
+        if (i & 0x1) // odd
+            QCOMPARE(signalValue, QByteArray::fromHex("0000"));
+        else // even
+            QCOMPARE(signalValue, QByteArray::fromHex("0100"));
+        QVERIFY(notification == signalDesc);
+
+    }
+    descWrittenSpy.clear();
+
     // *******************************************
     // write wrong value -> error response required
     QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
