@@ -71,6 +71,9 @@ public:
     static void lowEnergy_characteristicWritten(JNIEnv *, jobject, jlong qtObject,
                                                 jint charHandle, jbyteArray data,
                                                 jint errorCode);
+    static void lowEnergy_descriptorWritten(JNIEnv *, jobject, jlong qtObject,
+                                            jint descHandle, jbyteArray data,
+                                            jint errorCode);
 
     QAndroidJniObject javaObject()
     {
@@ -90,6 +93,8 @@ signals:
             int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
     void characteristicWritten(int charHandle, const QByteArray &data,
                                QLowEnergyService::ServiceError errorCode);
+    void descriptorWritten(int descHandle, const QByteArray &data,
+                           QLowEnergyService::ServiceError errorCode);
 
 public slots:
 private:

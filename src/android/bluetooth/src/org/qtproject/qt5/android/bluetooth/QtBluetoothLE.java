@@ -258,7 +258,6 @@ public class QtBluetoothLE {
                     errorCode = 0; break; // NoError
                 default:
                     errorCode = 2; break; // CharacteristicWriteError
-
             }
 
             leCharacteristicWritten(qtObject, handle+1, characteristic.getValue(), errorCode);
@@ -342,7 +341,21 @@ public class QtBluetoothLE {
                                       android.bluetooth.BluetoothGattDescriptor descriptor,
                                       int status)
         {
-            System.out.println("onDescriptorWrite");
+            if (status != BluetoothGatt.GATT_SUCCESS)
+                Log.w(TAG, "onDescriptorWrite: error " + status);
+
+            int handle = handleForDescriptor(descriptor);
+
+            int errorCode = 0;
+            //This must be in sync with QLowEnergyService::ServiceError
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    errorCode = 0; break; // NoError
+                default:
+                    errorCode = 3; break; // DescriptorWriteError
+            }
+
+            leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
         }
         //TODO Requires Android API 21 which is not available on CI yet.
 //        public void onReliableWriteCompleted(android.bluetooth.BluetoothGatt gatt,
@@ -725,9 +738,41 @@ public class QtBluetoothLE {
             return false;
         }
 
-        entry.characteristic.setValue(newValue);
+        boolean result = entry.characteristic.setValue(newValue);
+        if (!result) {
+            Log.w(TAG, "BluetoothGattCharacteristic.setValue failed");
+            return false;
+        }
+
         return mBluetoothGatt.writeCharacteristic(entry.characteristic);
     }
+
+    /*************************************************************/
+    /* Write Descriptors                                         */
+    /*************************************************************/
+
+    public boolean writeDescriptor(int descHandle, byte[] newValue)
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        GattEntry entry = null;
+        try {
+            entry = entries.get(descHandle-1); //Qt always uses handles+1
+        } catch (IndexOutOfBoundsException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        boolean result = entry.descriptor.setValue(newValue);
+        if (!result) {
+            Log.w(TAG, "BluetoothGattDescriptor.setValue failed");
+            return false;
+        }
+
+        return mBluetoothGatt.writeDescriptor(entry.descriptor);
+    }
+
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
     public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
@@ -740,6 +785,8 @@ public class QtBluetoothLE {
                                         int descHandle, String descUuid, byte[] data);
     public native void leCharacteristicWritten(long qtObject, int charHandle, byte[] newData,
                                                int errorCode);
+    public native void leDescriptorWritten(long qtObject, int charHandle, byte[] newData,
+                                           int errorCode);
 
 }
 

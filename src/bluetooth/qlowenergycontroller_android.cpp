@@ -76,6 +76,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::descriptorRead);
         connect(hub, &LowEnergyNotificationHub::characteristicWritten,
                 this, &QLowEnergyControllerPrivate::characteristicWritten);
+        connect(hub, &LowEnergyNotificationHub::descriptorWritten,
+                this, &QLowEnergyControllerPrivate::descriptorWritten);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -186,12 +188,37 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle /*charHandle*/,
-        const QLowEnergyHandle /*descriptorHandle*/,
-        const QByteArray &/*newValue*/)
+        const QLowEnergyHandle descHandle,
+        const QByteArray &newValue)
 {
+    Q_ASSERT(!service.isNull());
 
+    QAndroidJniEnvironment env;
+    jbyteArray payload;
+    payload = env->NewByteArray(newValue.size());
+    env->SetByteArrayRegion(payload, 0, newValue.size(),
+                            (jbyte *)newValue.constData());
+
+    bool result = false;
+    if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Write descriptor with handle " << descHandle
+                 << newValue.toHex() << "(service:" << service->uuid << ")";
+        result = hub->javaObject().callMethod<jboolean>("writeDescriptor", "(I[B)Z",
+                                                        descHandle, payload);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    env->DeleteLocalRef(payload);
+
+    if (!result)
+        service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
 void QLowEnergyControllerPrivate::connectionUpdated(
@@ -340,7 +367,6 @@ void QLowEnergyControllerPrivate::characteristicWritten(
     if (service.isNull())
         return;
 
-
     qCDebug(QT_BT_ANDROID) << "Characteristic write confirmation" << service->uuid
                            << charHandle << data.toHex() << errorCode;
 
@@ -357,6 +383,33 @@ void QLowEnergyControllerPrivate::characteristicWritten(
 
     updateValueOfCharacteristic(charHandle, data, false);
     emit service->characteristicWritten(characteristic, data);
+}
+
+void QLowEnergyControllerPrivate::descriptorWritten(
+        int descHandle, const QByteArray &data, QLowEnergyService::ServiceError errorCode)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(descHandle);
+    if (service.isNull())
+        return;
+
+    qCDebug(QT_BT_ANDROID) << "Descriptor write confirmation" << service->uuid
+                           << descHandle << data.toHex() << errorCode;
+
+    if (errorCode != QLowEnergyService::NoError) {
+        service->setError(errorCode);
+        return;
+    }
+
+    QLowEnergyDescriptor descriptor = descriptorForHandle(descHandle);
+    if (!descriptor.isValid()) {
+        qCWarning(QT_BT_ANDROID) << "descriptorWritten: Cannot find descriptor";
+        return;
+    }
+
+    updateValueOfDescriptor(descriptor.characteristicHandle(),
+                            descHandle, data, false);
+    emit service->descriptorWritten(descriptor, data);
 }
 
 QT_END_NAMESPACE
