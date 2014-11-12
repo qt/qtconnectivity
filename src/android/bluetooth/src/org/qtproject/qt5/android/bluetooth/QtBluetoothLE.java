@@ -52,16 +52,17 @@ import java.util.UUID;
 
 public class QtBluetoothLE {
     private static final String TAG = "QtBluetoothGatt";
-    private BluetoothAdapter mBluetoothAdapter;
+    private final BluetoothAdapter mBluetoothAdapter;
     private boolean mLeScanRunning = false;
 
     private BluetoothGatt mBluetoothGatt = null;
     private String mRemoteGattAddress;
-    private BluetoothDevice mRemoteGattDevice = null;
 
 
     /* Pointer to the Qt object that "owns" the Java object */
+    @SuppressWarnings({"CanBeFinal", "WeakerAccess"})
     long qtObject = 0;
+    @SuppressWarnings("WeakerAccess")
     Activity qtactivity = null;
 
     public QtBluetoothLE() {
@@ -97,7 +98,7 @@ public class QtBluetoothLE {
     }
 
     // Device scan callback
-    private BluetoothAdapter.LeScanCallback leScanCallback =
+    private final BluetoothAdapter.LeScanCallback leScanCallback =
             new BluetoothAdapter.LeScanCallback() {
 
                 @Override
@@ -115,7 +116,7 @@ public class QtBluetoothLE {
     /* Service Discovery                                         */
     /*************************************************************/
 
-    private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
 
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (qtObject == 0)
@@ -157,7 +158,7 @@ public class QtBluetoothLE {
                     errorCode = 0; //QLowEnergyController::NoError
                     final List<BluetoothGattService> services = mBluetoothGatt.getServices();
                     for (BluetoothGattService service: services) {
-                        builder.append(service.getUuid().toString() + " "); //space is separator
+                        builder.append(service.getUuid().toString()).append(" "); //space is separator
                     }
                     break;
                 default:
@@ -251,7 +252,7 @@ public class QtBluetoothLE {
                 return;
             }
 
-            int errorCode = 0;
+            int errorCode;
             //This must be in sync with QLowEnergyService::ServiceError
             switch (status) {
                 case BluetoothGatt.GATT_SUCCESS:
@@ -346,7 +347,7 @@ public class QtBluetoothLE {
 
             int handle = handleForDescriptor(descriptor);
 
-            int errorCode = 0;
+            int errorCode;
             //This must be in sync with QLowEnergyService::ServiceError
             switch (status) {
                 case BluetoothGatt.GATT_SUCCESS:
@@ -372,15 +373,17 @@ public class QtBluetoothLE {
 
 
     public boolean connect() {
-        mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);
-        if (mRemoteGattDevice == null)
+        BluetoothDevice mRemoteGattDevice;
+
+        try {
+            mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);
+        } catch (IllegalArgumentException ex) {
+            Log.w(TAG, "Remote address is not valid: " + mRemoteGattAddress);
             return false;
+        }
 
         mBluetoothGatt = mRemoteGattDevice.connectGatt(qtactivity, false, gattCallback);
-        if (mBluetoothGatt == null)
-            return false;
-
-        return true;
+        return mBluetoothGatt != null;
     }
 
     public void disconnect() {
@@ -392,10 +395,7 @@ public class QtBluetoothLE {
 
     public boolean discoverServices()
     {
-        if (mBluetoothGatt == null)
-            return false;
-
-        return mBluetoothGatt.discoverServices();
+        return mBluetoothGatt != null && mBluetoothGatt.discoverServices();
     }
 
     private enum GattEntryType
@@ -411,9 +411,9 @@ public class QtBluetoothLE {
         public BluetoothGattDescriptor descriptor = null;
         public int endHandle;
     }
-    Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
-    ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
-    private LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
+    private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
+    private final ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
+    private final LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
 
     /*
         Internal helper function
@@ -434,7 +434,7 @@ public class QtBluetoothLE {
         int serviceHandle = handles.get(0);
 
         try {
-            GattEntry entry = null;
+            GattEntry entry;
             for (int i = serviceHandle+1; i < entries.size(); i++) {
                 entry = entries.get(i);
                 switch (entry.type) {
@@ -472,7 +472,7 @@ public class QtBluetoothLE {
         int serviceHandle = handles.get(0);
 
         try {
-            GattEntry entry = null;
+            GattEntry entry;
             for (int i = serviceHandle+1; i < entries.size(); i++) {
                 entry = entries.get(i);
                 switch (entry.type) {
@@ -487,7 +487,7 @@ public class QtBluetoothLE {
                         break;
                 }
             }
-        } catch (IndexOutOfBoundsException ex) { }
+        } catch (IndexOutOfBoundsException ignored) { }
         return -1;
     }
 
@@ -644,7 +644,6 @@ public class QtBluetoothLE {
                 performServiceDetailDiscoveryForHandle(nextService, true);
             } catch (IndexOutOfBoundsException ex) {
                 Log.w(TAG, "Expected queued service but didn't find any");
-                return;
             }
         }
     }
@@ -659,7 +658,7 @@ public class QtBluetoothLE {
                 runningHandle = nextHandle;
             }
 
-            GattEntry entry = null;
+            GattEntry entry;
             try {
                 entry = entries.get(nextHandle);
             } catch (IndexOutOfBoundsException ex) {
@@ -669,7 +668,7 @@ public class QtBluetoothLE {
                 return;
             }
 
-            boolean result = false;
+            boolean result;
             switch (entry.type) {
                 case Characteristic:
                     result = mBluetoothGatt.readCharacteristic(entry.characteristic);
@@ -730,7 +729,7 @@ public class QtBluetoothLE {
         if (mBluetoothGatt == null)
             return false;
 
-        GattEntry entry = null;
+        GattEntry entry;
         try {
             entry = entries.get(charHandle-1); //Qt always uses handles+1
         } catch (IndexOutOfBoundsException ex) {
@@ -756,7 +755,7 @@ public class QtBluetoothLE {
         if (mBluetoothGatt == null)
             return false;
 
-        GattEntry entry = null;
+        GattEntry entry;
         try {
             entry = entries.get(descHandle-1); //Qt always uses handles+1
         } catch (IndexOutOfBoundsException ex) {
