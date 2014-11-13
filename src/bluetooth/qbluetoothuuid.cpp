@@ -99,7 +99,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     it can be used as a value for either of the above service attributes. Such a dual use has historical reasons
     but is no longer permissible for newer UUIDs.
 
-    The list below explicitly states as what type each UUID shall be used.
+    The list below explicitly states as what type each UUID shall be used. Bluetooth Low Energy related values
+    starting with 0x18 were introduced by Qt 5.4
 
     \value ServiceDiscoveryServer     Service discovery server UUID (service)
     \value BrowseGroupDescriptor      Browser group descriptor (service)
@@ -214,6 +215,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 
 /*!
     \enum QBluetoothUuid::CharacteristicType
+    \since 5.4
 
     This enum is a convienience type for Bluetooth low energy service characteristics class UUIDs. Values of this type
     will be implicitly converted into a QBluetoothUuid when necessary.
@@ -369,6 +371,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
 
 /*!
     \enum QBluetoothUuid::DescriptorType
+    \since 5.4
 
     Descriptors are attributes that describe Bluetooth Low Energy characteristic values.
 
@@ -425,6 +428,7 @@ QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
 
 /*!
     Constructs a new Bluetooth UUID from the characteristic type \a uuid.
+    \since 5.4
 */
 QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
 :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
@@ -435,6 +439,7 @@ QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
 
 /*!
     Constructs a new Bluetooth UUID from the descriptor type \a uuid.
+    \since 5.4
 */
 QBluetoothUuid::QBluetoothUuid(DescriptorType uuid)
     :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],

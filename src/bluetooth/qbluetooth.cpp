@@ -72,6 +72,7 @@ namespace QBluetooth {
 /*!
     \typedef QLowEnergyHandle
     \relates QBluetooth
+    \since 5.4
 
     Typedef for Bluetooth Low Energy ATT attribute handles.
 */

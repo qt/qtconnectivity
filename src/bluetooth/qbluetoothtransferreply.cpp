@@ -64,7 +64,8 @@ QT_BEGIN_NAMESPACE
     \value UserCanceledTransferError User terminated the transfer.
     \value IODeviceNotReadableError File was not open before initiating the sending command.
     \value ResourceBusyError Unable to access the resource..
-    \value SessionError      An error occurred during the handling of the session.
+    \value SessionError      An error occurred during the handling of the session. This enum was
+                             introduced by Qt 5.4.
 */
 
 
