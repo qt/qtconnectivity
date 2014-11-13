@@ -42,6 +42,8 @@
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
+Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
+
 QT_USE_NAMESPACE
 
 // This define must be set if the platform provides access to GATT handles
@@ -82,6 +84,7 @@ tst_QLowEnergyCharacteristic::tst_QLowEnergyCharacteristic() :
     globalControl(0), globalService(0)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
 }
 
 tst_QLowEnergyCharacteristic::~tst_QLowEnergyCharacteristic()
