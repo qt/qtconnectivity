@@ -172,8 +172,7 @@ Low Energy devices.
     \l {heartlistener}{Heart Listener} example.
 
     \note As of Qt 5.4 the Qt Bluetooth Low Energy API is in tech preview mode and supports Linux
-    with BlueZ 4 & 5. Only the last versions of Bluez 4.x (v 4.101 confirmed to work) and Linux kernels
-    from version 3.5 onwards support this feature.
+    with BlueZ 4.101 & 5.x. The minimal Linux kernel version is 3.5.
 
     \section2 Establishing a Connection
 
