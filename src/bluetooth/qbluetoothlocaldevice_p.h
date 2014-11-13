@@ -267,7 +267,7 @@ private:
     QBluetoothLocalDevice *q_ptr;
 };
 
-#else
+#elif !defined(QT_OSX_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject
 {
 public:

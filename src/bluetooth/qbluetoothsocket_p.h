@@ -81,6 +81,7 @@ public:
 class QBluetoothSocket;
 class QBluetoothServiceDiscoveryAgent;
 
+#ifndef QT_OSX_BLUETOOTH
 class QBluetoothSocketPrivate : public QObject
 {
     Q_OBJECT
@@ -197,6 +198,21 @@ public:
 #endif
 };
 
+#else // QT_OSX_BLUETOOTH
+
+// QBluetoothSocketPrivate on OS X can not contain
+// Q_OBJECT (moc does not parse Objective-C syntax).
+// But QBluetoothSocket still requires QMetaObject::invokeMethod
+// to work. Here's the trick:
+class QBluetoothSocketPrivateBase : public QObject
+{
+// The most important part of it:
+    Q_OBJECT
+public slots:
+    virtual void _q_writeNotify() = 0;
+};
+
+#endif // QT_OSX_BLUETOOTH
 
 static inline void convertAddress(quint64 from, quint8 (&to)[6])
 {
@@ -219,5 +235,6 @@ static inline void convertAddress(quint8 (&from)[6], quint64 &to)
 }
 
 QT_END_NAMESPACE
+
 
 #endif

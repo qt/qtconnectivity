@@ -99,10 +99,12 @@ Q_SIGNALS:
 private:
     QBluetoothServiceDiscoveryAgentPrivate *d_ptr;
 
+
     Q_PRIVATE_SLOT(d_func(), void _q_deviceDiscovered(const QBluetoothDeviceInfo &info))
     Q_PRIVATE_SLOT(d_func(), void _q_deviceDiscoveryFinished())
     Q_PRIVATE_SLOT(d_func(), void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error))
     Q_PRIVATE_SLOT(d_func(), void _q_serviceDiscoveryFinished())
+
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_discoveredServices(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_createdDevice(QDBusPendingCallWatcher*))

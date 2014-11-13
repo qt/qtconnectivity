@@ -189,6 +189,7 @@ public:
     };
 
     enum CoreConfiguration {
+        UnknownCoreConfiguration = 0x0,
         LowEnergyCoreConfiguration = 0x01,
         BaseRateCoreConfiguration = 0x02,
         BaseRateAndLowEnergyCoreConfiguration = 0x03
@@ -197,6 +198,8 @@ public:
 
     QBluetoothDeviceInfo();
     QBluetoothDeviceInfo(const QBluetoothAddress &address, const QString &name,
+                         quint32 classOfDevice);
+    QBluetoothDeviceInfo(const QBluetoothUuid &uuid, const QString &name,
                          quint32 classOfDevice);
     QBluetoothDeviceInfo(const QBluetoothDeviceInfo &other);
     ~QBluetoothDeviceInfo();
@@ -226,6 +229,9 @@ public:
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);
     QBluetoothDeviceInfo::CoreConfigurations coreConfigurations() const;
+
+    void setDeviceUuid(const QBluetoothUuid &uuid);
+    QBluetoothUuid deviceUuid() const;
 
 protected:
     QBluetoothDeviceInfoPrivate *d_ptr;

@@ -140,8 +140,62 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_android.cpp \
         qbluetoothsocket_android.cpp \
         qbluetoothserver_android.cpp \
+        qlowenergycontroller_android.cpp
+
+} else:osx {
+    DEFINES += QT_OSX_BLUETOOTH
+    LIBS += -framework Foundation -framework IOBluetooth
+
+    include(osx/osxbt.pri)
+    OBJECTIVE_SOURCES += \
+        qbluetoothlocaldevice_osx.mm \
+        qbluetoothdevicediscoveryagent_osx.mm \
+        qbluetoothserviceinfo_osx.mm \
+        qbluetoothservicediscoveryagent_osx.mm \
+        qbluetoothsocket_osx.mm \
+        qbluetoothserver_osx.mm \
+        qbluetoothtransferreply_osx.mm \
+        qlowenergycontroller_osx.mm \
+        qlowenergyservice_osx.mm
+
+    SOURCES += \
         qlowenergycontroller_p.cpp
 
+    PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
+                       qbluetoothserver_osx_p.h \
+                       qbluetoothtransferreply_osx_p.h \
+                       qbluetoothtransferreply_osx_p.h \
+                       qlowenergycontroller_osx_p.h
+
+    SOURCES -= qbluetoothdevicediscoveryagent.cpp
+    SOURCES -= qbluetoothserviceinfo.cpp
+    SOURCES -= qbluetoothservicediscoveryagent.cpp
+    SOURCES -= qbluetoothsocket.cpp
+    SOURCES -= qbluetoothserver.cpp
+    SOURCES -= qlowenergyservice_p.cpp
+    SOURCES -= qlowenergyservice.cpp
+    SOURCES -= qlowenergycontroller.cpp
+    SOURCES -= qlowenergycontroller_p.cpp
+} else:ios {
+    message("iOS is currently an unsupported Bluetooth platform, WIP.")
+
+    DEFINES += QT_IOS_BLUETOOTH
+    LIBS += -framework Foundation -framework CoreBluetooth
+
+    OBJECTIVE_SOURCES += \
+        qbluetoothdevicediscoveryagent_ios.mm
+
+    include(osx/osxbt.pri)
+    SOURCES += \
+        qbluetoothdevicediscoveryagent_p.cpp \
+        qbluetoothlocaldevice_p.cpp \
+        qbluetoothserviceinfo_p.cpp \
+        qbluetoothservicediscoveryagent_p.cpp \
+        qbluetoothsocket_p.cpp \
+        qbluetoothserver_p.cpp \
+        qlowenergycontroller_p.cpp
+
+    SOURCES -= qbluetoothdevicediscoveryagent.cpp
 } else:win32:!winrt:!wince {
 
     SOURCES += \

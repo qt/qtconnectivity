@@ -34,6 +34,24 @@
 #ifndef QLOWENERGYCONTROLLERPRIVATE_P_H
 #define QLOWENERGYCONTROLLERPRIVATE_P_H
 
+#if defined(QT_OSX_BLUETOOTH) || defined(QT_IOS_BLUETOOTH)
+
+#include <QtCore/qglobal.h>
+#include <QtCore/qobject.h>
+
+QT_BEGIN_NAMESPACE
+
+class QLowEnergyControllerPrivate : public QObject
+{
+public:
+    // This class is required to make shared pointer machinery and
+    // moc (== Obj-C syntax) happy on both OS X and iOS.
+};
+
+QT_END_NAMESPACE
+
+#else
+
 #include <qglobal.h>
 #include <QtCore/QQueue>
 #include <QtBluetooth/qbluetooth.h>
@@ -42,12 +60,17 @@
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 #include <QtBluetooth/QBluetoothSocket>
+#elif defined(QT_ANDROID_BLUETOOTH)
+#include <QtAndroidExtras/QAndroidJniObject>
+#include "android/lowenergynotificationhub_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
+#elif defined(QT_ANDROID_BLUETOOTH)
+class LowEnergyNotificationHub;
 #endif
 
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
@@ -166,6 +189,25 @@ private slots:
     void l2cpErrorChanged(QBluetoothSocket::SocketError);
     void l2cpReadyRead();
     void encryptionChangedEvent(const QBluetoothAddress&, bool);
+#elif defined(QT_ANDROID_BLUETOOTH)
+    LowEnergyNotificationHub *hub;
+
+private slots:
+    void connectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
+    void servicesDiscovered(QLowEnergyController::Error errorCode,
+                            const QString &foundServices);
+    void serviceDetailsDiscoveryFinished(const QString& serviceUuid,
+                                         int startHandle, int endHandle);
+    void characteristicRead(const QBluetoothUuid &serviceUuid, int handle,
+                            const QBluetoothUuid &charUuid, int properties,
+                            const QByteArray& data);
+    void descriptorRead(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
+                        int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
+    void characteristicWritten(int charHandle, const QByteArray &data,
+                               QLowEnergyService::ServiceError errorCode);
+
+
 #endif
 private:
     QLowEnergyController *q_ptr;
@@ -173,5 +215,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+#endif // QT_OSX_BLUETOOTH || QT_IOS_BLUETOOTH
 
 #endif // QLOWENERGYCONTROLLERPRIVATE_P_H

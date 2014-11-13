@@ -199,7 +199,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On BlackBerry and Android, this feature is not supported and returns 0.
+    On BlackBerry, Android and OS X, this feature is not supported and returns 0.
 */
 
 /*!

@@ -70,10 +70,11 @@ QT_BEGIN_NAMESPACE
     The first step is to establish a connection via \l connectToDevice().
     Once the connection has been established, the controller's \l state()
     changes to \l QLowEnergyController::ConnectedState and the \l connected()
-    signal is emitted. It is important to mention that the remote device can
-    usually only be connected to a single device. Therefore it is not
-    possible to have multiple instances of this class being connected to the
-    same remote device. The \l disconnectFromDevice() function is used to break
+    signal is emitted. It is important to mention that some platforms such as
+    a BlueZ based Linux cannot maintain two connected instances of
+    \l QLowEnergyController to the same remote device. In such cases the second
+    call to \l connectToDevice() may fail. This limitation may disappear at some
+    stage in the future. The \l disconnectFromDevice() function is used to break
     the existing connection.
 
     The second step after establishing the connection is to discover the services
@@ -113,6 +114,8 @@ QT_BEGIN_NAMESPACE
     \value InvalidBluetoothAdapterError The local Bluetooth device with the address passed to
                                         the constructor of this class cannot be found or
                                         there is no local Bluetooth device.
+    \value ConnectionError              The attempt to connect to the remote device failed.
+                                        This value was introduced by Qt 5.5.
 */
 
 /*!
@@ -193,6 +196,18 @@ QT_BEGIN_NAMESPACE
 
     \sa discoverServices(), error()
 */
+
+namespace {
+class QLowEnergyControllerMetaTypes
+{
+public:
+    QLowEnergyControllerMetaTypes()
+    {
+        qRegisterMetaType<QLowEnergyController::ControllerState>();
+        qRegisterMetaType<QLowEnergyController::Error>();
+    }
+} qLowEnergyControllerMetaTypes;
+}
 
 void QLowEnergyControllerPrivate::setError(
         QLowEnergyController::Error newError)
@@ -386,6 +401,30 @@ QLowEnergyController::QLowEnergyController(
 /*!
     Constructs a new instance of this class with \a parent.
 
+    The \a remoteDeviceInfo must contain the details of the
+    remote Bluetooth Low Energy device to which this object
+    should attempt to connect later on.
+
+    The controller uses the local default Bluetooth adapter for
+    the connection management.
+
+    \since 5.5
+*/
+QLowEnergyController::QLowEnergyController(
+                            const QBluetoothDeviceInfo &remoteDeviceInfo,
+                            QObject *parent)
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+{
+    Q_D(QLowEnergyController);
+    d->q_ptr = this;
+    d->remoteDevice = remoteDeviceInfo.address();
+    d->localAdapter = QBluetoothLocalDevice().address();
+    d->addressType = QLowEnergyController::PublicAddress;
+}
+
+/*!
+    Constructs a new instance of this class with \a parent.
+
     The \a remoteDevice must contain the address of the
     remote Bluetooth Low Energy device to which this object
     should attempt to connect later on.
@@ -477,6 +516,11 @@ void QLowEnergyController::setRemoteAddressType(
     This function does nothing if the controller's \l state()
     is \l UnconnectedState. The \l connected() signal is emitted
     once the connection is successfully established.
+
+    On Linux/BlueZ systems, it is not possible to connect to the same
+    remote device using two instances of this class. The second call
+    to this function may fail with an error. This limitation may
+    be removed in future releases.
 
     \sa disconnectFromDevice()
  */

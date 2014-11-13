@@ -38,7 +38,8 @@
 #include "qbluetoothtransferreply_bluez_p.h"
 #elif QT_QNX_BLUETOOTH
 #include "qbluetoothtransferreply_qnx_p.h"
-#else
+#elif QT_OSX_BLUETOOTH
+#include "qbluetoothtransferreply_osx_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -51,7 +52,10 @@ QT_BEGIN_NAMESPACE
 
     \since 5.2
 
-    QBluetoothTransferManager uses OBEX to send put commands to remote devices.
+    QBluetoothTransferManager uses OBEX to send put commands to remote devices. A typical
+    OBEX transfer is initialized as follows:
+
+    \snippet doc_src_qtbluetooth.cpp sendfile
 
     Note that this API is not currently supported on Android.
 */
@@ -60,7 +64,14 @@ QT_BEGIN_NAMESPACE
     \fn QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request, QIODevice *data)
 
     Sends the contents of \a data to the remote device identified by \a request, and returns a new
-    QBluetoothTransferReply that can be used to track the request's progress.
+    QBluetoothTransferReply that can be used to track the request's progress. \a data must remain valid
+    until the \l finished() signal is emitted.
+
+    The returned \l QBluetoothTransferReply object must be immediately checked for its
+    \l {QBluetoothTransferReply::error()}{error()} state. This is required in case
+    this function detects an error during the initialization of the
+    \l QBluetoothTransferReply. In such cases \l {QBluetoothTransferReply::isFinished()} returns
+    \c true as well.
 
     If the platform does not support the Object Push profile, this function will return \c 0.
 */
@@ -97,6 +108,10 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
     return rep;
 #elif QT_QNX_BLUETOOTH
     QBluetoothTransferReplyQnx *reply = new QBluetoothTransferReplyQnx(data, request, this);
+    connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
+    return reply;
+#elif QT_OSX_BLUETOOTH
+    QBluetoothTransferReply *reply = new QBluetoothTransferReplyOSX(data, request, this);
     connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
     return reply;
 #else

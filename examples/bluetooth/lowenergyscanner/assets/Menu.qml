@@ -68,6 +68,7 @@ Rectangle {
             text: menuText
             elide: Text.ElideMiddle
             color: "#E3E3E3"
+            wrapMode: Text.WordWrap
         }
 
         MouseArea {

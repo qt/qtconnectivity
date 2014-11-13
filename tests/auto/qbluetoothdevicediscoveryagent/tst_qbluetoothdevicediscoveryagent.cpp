@@ -36,6 +36,7 @@
 #include <QDebug>
 #include <QVariant>
 #include <QList>
+#include <QLoggingCategory>
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothdevicediscoveryagent.h>
@@ -90,6 +91,7 @@ private:
 
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
 {
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>("QBluetoothDeviceDiscoveryAgent::Error");
 }
 
@@ -314,7 +316,10 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(errorSpy.isEmpty());
     // should only have 1 cancel
     QVERIFY(finishedSpy.count() == 1);
-    QVERIFY(cancelSpy.isEmpty());
+
+    // On OS X, stop is synchronous (signal will be emitted immediately).
+    if (!immediateSignal)
+        QVERIFY(cancelSpy.isEmpty());
 }
 
 void tst_QBluetoothDeviceDiscoveryAgent::finished()
@@ -422,7 +427,13 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
                 }
             }
         }
-        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry
+#ifdef Q_OS_IOS
+        //On iOS, we do not have access to the local device/adapter, numberOfAdapters is 0,
+        //so we skip this test at all.
+        QSKIP("iOS: no local Bluetooth device available. Skipping remaining part of test.");
+#endif
+
+        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry.
         if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
             QVERIFY((numberOfAdapters-1) == counter);
     }

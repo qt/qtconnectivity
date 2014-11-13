@@ -56,6 +56,14 @@ QT_BEGIN_NAMESPACE
 
     To retrieve results asynchronously, connect to the deviceDiscovered() signal. To get a list of
     all discovered devices, call discoveredDevices() after the finished() signal.
+
+    This class can be used to discover Classic and Low Energy Bluetooth devices.
+    The individual device type can be determined via the
+    \l QBluetoothDeviceInfo::coreConfigurations() attribute.
+    In most cases the list returned by \l discoveredDevices() contains both types
+    of devices. However not every platform can detect both types of devices.
+    On platforms with this limitation (for example iOS only suports Low Energy discovery),
+    the discovery process will limit the search to the type which is supported.
 */
 
 /*!
@@ -68,6 +76,10 @@ QT_BEGIN_NAMESPACE
     \value InputOutputError    Writing or reading from the device resulted in an error.
     \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
                                         adapter address of any local Bluetooth device.
+    \value UnsupportedPlatformError Device discovery is not possible or implemented on the current
+                                    platform. The error is set in response to a call to \l start().
+                                    An example for such cases are iOS versions below 5.0 which do not support
+                                    Bluetooth device search at all. This value was introduced by Qt 5.5.
     \value UnknownError     An unknown error has occurred.
 */
 

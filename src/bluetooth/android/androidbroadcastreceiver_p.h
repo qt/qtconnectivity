@@ -69,6 +69,8 @@ public:
 protected:
     friend void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, jobject, jobject);
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent) = 0;
+    friend void QtBluetoothLE_leScanResult(JNIEnv *, jobject, jlong, jobject, jint);
+    virtual void onReceiveLeScan(JNIEnv *env, jobject jBluetoothDevice, jint rssi) = 0;
 
 
     QAndroidJniObject activityObject;

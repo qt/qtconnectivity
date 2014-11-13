@@ -42,7 +42,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyDescriptorPrivate;
+struct QLowEnergyDescriptorPrivate;
 class QLowEnergyServicePrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyDescriptor

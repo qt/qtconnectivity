@@ -37,6 +37,8 @@ QT_BEGIN_NAMESPACE
 
 QLowEnergyServicePrivate::QLowEnergyServicePrivate(QObject *parent) :
     QObject(parent),
+    startHandle(0),
+    endHandle(0),
     type(QLowEnergyService::PrimaryService),
     state(QLowEnergyService::InvalidService),
     lastError(QLowEnergyService::NoError)
@@ -65,6 +67,9 @@ void QLowEnergyServicePrivate::setError(QLowEnergyService::ServiceError newError
 
 void QLowEnergyServicePrivate::setState(QLowEnergyService::ServiceState newState)
 {
+    if (state == newState)
+        return;
+
     state = newState;
     emit stateChanged(newState);
 }

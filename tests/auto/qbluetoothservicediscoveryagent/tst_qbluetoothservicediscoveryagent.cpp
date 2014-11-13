@@ -34,6 +34,7 @@
 #include <QtTest/QtTest>
 
 #include <QDebug>
+#include <QLoggingCategory>
 #include <QVariant>
 #include <QList>
 
@@ -80,6 +81,8 @@ private:
 
 tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
 {
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     localDeviceAvailable = device->isValid();
@@ -380,7 +383,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     connect(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
             this, SLOT(serviceError(QBluetoothServiceDiscoveryAgent::Error)));
 
-    discoveryAgent.start();
+    discoveryAgent.start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 
     /*
      * Either we wait for discovery agent to run its course (e.g. Bluez 4) or
@@ -414,6 +417,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     }
 
     // All returned QBluetoothServiceInfo should be valid.
+    bool servicesFound = !discoveredSpy.isEmpty();
     while (!discoveredSpy.isEmpty()) {
         const QVariant v = discoveredSpy.takeFirst().at(0);
         // Work around limitation in QMetaType and moc.
@@ -442,7 +446,8 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     }
 
-    QVERIFY(discoveryAgent.discoveredServices().count() != 0);
+    if (servicesFound)
+        QVERIFY(discoveryAgent.discoveredServices().count() != 0);
     discoveryAgent.clear();
     QVERIFY(discoveryAgent.discoveredServices().count() == 0);
 

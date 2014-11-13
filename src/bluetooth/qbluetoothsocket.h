@@ -46,7 +46,6 @@
 QT_BEGIN_NAMESPACE
 
 class QBluetoothSocketPrivate;
-class QBluetoothServiceInfo;
 
 class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 {

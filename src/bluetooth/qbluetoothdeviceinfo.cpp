@@ -242,9 +242,11 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \enum QBluetoothDeviceInfo::CoreConfiguration
+    \since 5.4
 
     This enum describes the configuration of the device.
 
+    \value UnknownCoreConfiguration             The type of the Bluetooth device cannot be determined.
     \value BaseRateCoreConfiguration            The device is a standard Bluetooth device.
     \value BaseRateAndLowEnergyCoreConfiguration    The device is a Bluetooth Smart device with support
                                                 for standard and Low Energy device.
@@ -258,7 +260,7 @@ QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
     minorDeviceClass(0),
     serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
-    deviceCoreConfiguration(QBluetoothDeviceInfo::BaseRateCoreConfiguration)
+    deviceCoreConfiguration(QBluetoothDeviceInfo::UnknownCoreConfiguration)
 {
 }
 
@@ -292,6 +294,37 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, con
 
     d->address = address;
     d->name = name;
+
+    d->minorDeviceClass = static_cast<quint8>((classOfDevice >> 2) & 0x3f);
+    d->majorDeviceClass = static_cast<MajorDeviceClass>((classOfDevice >> 8) & 0x1f);
+    d->serviceClasses = static_cast<ServiceClasses>((classOfDevice >> 13) & 0x7ff);
+
+    d->serviceUuidsCompleteness = DataUnavailable;
+
+    d->valid = true;
+    d->cached = false;
+    d->rssi = 0;
+}
+
+/*!
+    Constructs a QBluetoothDeviceInfo object with unique \a uuid, device name
+    \a name and the encoded class of device \a classOfDevice.
+
+    This constructor is required for Low Energy devices on OS X and iOS. CoreBluetooth
+    API hides addresses and provides unique UUIDs to identify a device. This UUID is
+    not the same thing as a service UUID and is required to work later with CoreBluetooth API
+    and discovered devices.
+
+    \since 5.5
+*/
+QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothUuid &uuid, const QString &name,
+                                           quint32 classOfDevice) :
+    d_ptr(new QBluetoothDeviceInfoPrivate)
+{
+    Q_D(QBluetoothDeviceInfo);
+
+    d->name = name;
+    d->deviceUuid = uuid;
 
     d->minorDeviceClass = static_cast<quint8>((classOfDevice >> 2) & 0x3f);
     d->majorDeviceClass = static_cast<MajorDeviceClass>((classOfDevice >> 8) & 0x1f);
@@ -368,6 +401,7 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
     d->serviceUuids = other.d_func()->serviceUuids;
     d->rssi = other.d_func()->rssi;
     d->deviceCoreConfiguration = other.d_func()->deviceCoreConfiguration;
+    d->deviceUuid = other.d_func()->deviceUuid;
 
     return *this;
 }
@@ -400,6 +434,8 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
     if (d->serviceUuids != other.d_func()->serviceUuids)
         return false;
     if (d->deviceCoreConfiguration != other.d_func()->deviceCoreConfiguration)
+        return false;
+    if (d->deviceUuid != other.d_func()->deviceUuid)
         return false;
 
     return true;
@@ -513,6 +549,7 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
     between regular and Low Energy devices.
 
     \sa coreConfigurations()
+    \since 5.4
 */
 void QBluetoothDeviceInfo::setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs)
 {
@@ -522,10 +559,12 @@ void QBluetoothDeviceInfo::setCoreConfigurations(QBluetoothDeviceInfo::CoreConfi
 }
 
 /*!
+
     Returns the configuration of the device. If device configuration is not set,
     basic rate device configuration will be returned.
 
     \sa setCoreConfigurations()
+    \since 5.4
 */
 QBluetoothDeviceInfo::CoreConfigurations QBluetoothDeviceInfo::coreConfigurations() const
 {
@@ -553,6 +592,36 @@ void QBluetoothDeviceInfo::setCached(bool cached)
     Q_D(QBluetoothDeviceInfo);
 
     d->cached = cached;
+}
+
+/*!
+   Sets the unique identifier \a uuid for Bluetooth devices, that do not have addresses.
+   This happens on OS X and iOS, where the CoreBluetooth API hides addresses, but provides
+   UUIDs to identify devices/peripherals.
+
+   This uuid is invalid on any other platform.
+
+   \sa deviceUuid()
+   \since 5.5
+  */
+void QBluetoothDeviceInfo::setDeviceUuid(const QBluetoothUuid &uuid)
+{
+    Q_D(QBluetoothDeviceInfo);
+
+    d->deviceUuid = uuid;
+}
+
+/*!
+   Returns a unique identifier for a Bluetooth device without an address.
+
+   \sa setDeviceUuid()
+   \since 5.5
+  */
+QBluetoothUuid QBluetoothDeviceInfo::deviceUuid() const
+{
+    Q_D(const QBluetoothDeviceInfo);
+
+    return d->deviceUuid;
 }
 
 QT_END_NAMESPACE

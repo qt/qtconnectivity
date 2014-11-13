@@ -59,10 +59,15 @@ class DeviceDiscoveryBroadcastReceiver : public AndroidBroadcastReceiver
 public:
     DeviceDiscoveryBroadcastReceiver(QObject* parent = 0);
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
+    virtual void onReceiveLeScan(JNIEnv *env, jobject jBluetoothDevice, jint rssi);
 
 signals:
-    void deviceDiscovered(const QBluetoothDeviceInfo &info);
+    void deviceDiscovered(const QBluetoothDeviceInfo &info, bool isLeScanResult);
     void finished();
+
+private:
+    QBluetoothDeviceInfo retrieveDeviceInfo(JNIEnv *env, const QAndroidJniObject& bluetoothDevice,
+                                            int rssi);
 };
 
 QT_END_NAMESPACE
