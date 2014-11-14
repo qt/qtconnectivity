@@ -209,7 +209,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothserver_win.cpp \
         qlowenergycontroller_p.cpp
 
-    LIBS += -lbthprops
+    LIBS += -lbthprops -lsetupapi
 
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")

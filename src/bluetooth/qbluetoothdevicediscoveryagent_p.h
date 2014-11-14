@@ -79,6 +79,7 @@ QT_END_NAMESPACE
 #ifdef Q_OS_WIN32
 #include <QtConcurrent>
 #include "windows/qwinclassicbluetooth_p.h"
+#include "windows/qwinlowenergybluetooth_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -185,6 +186,7 @@ private:
 #ifdef Q_OS_WIN32
 private slots:
     void classicDeviceDiscovered();
+    void lowEnergyDeviceDiscovered();
 
 private:
     void initialize(const QBluetoothAddress &deviceAdapter);
@@ -195,13 +197,34 @@ private:
     void completeClassicDiscovery(HBLUETOOTH_DEVICE_FIND hSearch);
     void acceptDiscoveredClassicDevice(const BLUETOOTH_DEVICE_INFO &device);
 
+    bool isLowEnergyAdapterValid(const QBluetoothAddress &deviceAdapter);
+    void startDiscoveryForLowEnergyDevices();
+    void completeLowEnergyDiscovery();
+    void acceptDiscoveredLowEnergyDevice(const WinLowEnergyBluetooth::DeviceInfo &device);
+
+    void processDuplicates(const QBluetoothDeviceInfo &foundDevice);
+
     void setError(DWORD error, const QString &str = QString());
 
+    bool isDiscoveredSuccessfully(int systemError) const;
+
+    bool canBeCanceled() const;
+    void cancel();
+
+    bool canBePendingStarted() const;
+    void prepareToPendingStart();
+
+    void finalize();
+    void drop(int systemError);
+
     QFutureWatcher<WinClassicBluetooth::RemoteDeviceDiscoveryResult> *classicDiscoveryWatcher;
+    QFutureWatcher<WinLowEnergyBluetooth::DeviceDiscoveryResult> *lowEnergyDiscoveryWatcher;
     bool pendingCancel;
     bool pendingStart;
     bool isClassicActive;
     bool isClassicValid;
+    bool isLowEnergyActive;
+    bool isLowEnergyValid;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

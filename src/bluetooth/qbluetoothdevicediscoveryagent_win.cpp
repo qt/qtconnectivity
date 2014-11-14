@@ -55,10 +55,13 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     : inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry)
     , lastError(QBluetoothDeviceDiscoveryAgent::NoError)
     , classicDiscoveryWatcher(0)
+    , lowEnergyDiscoveryWatcher(0)
     , pendingCancel(false)
     , pendingStart(false)
     , isClassicActive(false)
     , isClassicValid(false)
+    , isLowEnergyActive(false)
+    , isLowEnergyValid(false)
     , q_ptr(parent)
 {
     initialize(deviceAdapter);
@@ -66,10 +69,14 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
-    if (isClassicActive) {
+    if (isClassicActive || isLowEnergyActive)
         stop();
+
+    if (classicDiscoveryWatcher)
         classicDiscoveryWatcher->waitForFinished();
-    }
+
+    if (lowEnergyDiscoveryWatcher)
+        lowEnergyDiscoveryWatcher->waitForFinished();
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -79,12 +86,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     if (pendingCancel)
         return false;
 
-    return isClassicActive;
+    return isClassicActive || isLowEnergyActive;
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
-    if (!isClassicValid) {
+    if (!isClassicValid && !isLowEnergyValid) {
         setError(ERROR_INVALID_HANDLE,
                  QBluetoothDeviceDiscoveryAgent::tr("Passed address is not a local device."));
         return;
@@ -97,12 +104,16 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     discoveredDevices.clear();
 
-    startDiscoveryForFirstClassicDevice();
+    if (isClassicValid)
+        startDiscoveryForFirstClassicDevice();
+
+    if (isLowEnergyValid)
+        startDiscoveryForLowEnergyDevices();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
-    if (!isClassicActive)
+    if (!isClassicActive && !isLowEnergyActive)
         return;
 
     pendingCancel = true;
@@ -111,21 +122,15 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceDiscovered()
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
-
     const WinClassicBluetooth::RemoteDeviceDiscoveryResult result =
             classicDiscoveryWatcher->result();
 
-    if (result.error == ERROR_SUCCESS
-            || result.error == ERROR_NO_MORE_ITEMS) {
+    if (isDiscoveredSuccessfully(result.error)) {
 
-        if (pendingCancel && !pendingStart) {
-            emit q->canceled();
-            pendingCancel = false;
-        } else if (pendingStart) {
-            pendingCancel = false;
-            pendingStart = false;
-            start();
+        if (canBeCanceled()) {
+            cancel();
+        } else if (canBePendingStarted()) {
+            prepareToPendingStart();
         } else {
             if (result.error != ERROR_NO_MORE_ITEMS) {
                 acceptDiscoveredClassicDevice(result.device);
@@ -135,18 +140,40 @@ void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceDiscovered()
         }
 
     } else {
-        setError(result.error);
-        pendingCancel = false;
-        pendingStart = false;
+        drop(result.error);
     }
 
     completeClassicDiscovery(result.hSearch);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::lowEnergyDeviceDiscovered()
+{
+    const WinLowEnergyBluetooth::DeviceDiscoveryResult result =
+            lowEnergyDiscoveryWatcher->result();
+
+    if (isDiscoveredSuccessfully(result.error)) {
+
+        if (canBeCanceled()) {
+            cancel();
+        } else if (canBePendingStarted()) {
+            prepareToPendingStart();
+        } else {
+            foreach (const WinLowEnergyBluetooth::DeviceInfo &deviceInfo, result.devices)
+                acceptDiscoveredLowEnergyDevice(deviceInfo);
+        }
+
+    } else {
+        drop(result.error);
+    }
+
+    completeLowEnergyDiscovery();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::initialize(
         const QBluetoothAddress &deviceAdapter)
 {
     isClassicValid = isClassicAdapterValid(deviceAdapter);
+    isLowEnergyValid = isLowEnergyAdapterValid(deviceAdapter);
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isClassicAdapterValid(
@@ -155,8 +182,7 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isClassicAdapterValid(
     const WinClassicBluetooth::LocalRadiosDiscoveryResult result =
             WinClassicBluetooth::enumerateLocalRadios();
 
-    if (result.error != NO_ERROR
-            && result.error != ERROR_NO_MORE_ITEMS) {
+    if (!isDiscoveredSuccessfully(result.error)) {
         qCWarning(QT_BT_WINDOWS) << "Occurred error during search of classic local radios";
         return false;
     } else if (result.radios.isEmpty()) {
@@ -166,7 +192,7 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isClassicAdapterValid(
 
     foreach (const BLUETOOTH_RADIO_INFO &radio, result.radios) {
         if (deviceAdapter == QBluetoothAddress()
-             || deviceAdapter == QBluetoothAddress(radio.address.ullLong)) {
+                || deviceAdapter == QBluetoothAddress(radio.address.ullLong)) {
             return true;
         }
     }
@@ -204,18 +230,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startDiscoveryForNextClassicDevice(
 void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDiscovery(
         HBLUETOOTH_DEVICE_FIND hSearch)
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
-
     WinClassicBluetooth::cancelRemoteDevicesDiscovery(hSearch);
     isClassicActive = false;
-    emit q->finished();
+    finalize();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::acceptDiscoveredClassicDevice(
         const BLUETOOTH_DEVICE_INFO &device)
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
-
     QBluetoothDeviceInfo deviceInfo(
                 QBluetoothAddress(device.Address.ullLong),
                 QString::fromWCharArray(device.szName),
@@ -224,8 +246,89 @@ void QBluetoothDeviceDiscoveryAgentPrivate::acceptDiscoveredClassicDevice(
     if (device.fRemembered)
         deviceInfo.setCached(true);
 
-    discoveredDevices.append(deviceInfo);
-    emit q->deviceDiscovered(deviceInfo);
+    processDuplicates(deviceInfo);
+}
+
+bool QBluetoothDeviceDiscoveryAgentPrivate::isLowEnergyAdapterValid(
+        const QBluetoothAddress &deviceAdapter)
+{
+    Q_UNUSED(deviceAdapter);
+
+    // We can not detect an address of local BLE adapter,
+    // but we can detect that some BLE adapter is present.
+    return WinLowEnergyBluetooth::hasLocalRadio();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::startDiscoveryForLowEnergyDevices()
+{
+    isLowEnergyActive = true;
+
+    if (!lowEnergyDiscoveryWatcher) {
+        lowEnergyDiscoveryWatcher = new QFutureWatcher<
+                WinLowEnergyBluetooth::DeviceDiscoveryResult>(this);
+        QObject::connect(lowEnergyDiscoveryWatcher, SIGNAL(finished()),
+                         this, SLOT(lowEnergyDeviceDiscovered()));
+    }
+
+    const QFuture<WinLowEnergyBluetooth::DeviceDiscoveryResult> future =
+            QtConcurrent::run(WinLowEnergyBluetooth::startDiscoveryOfRemoteDevices);
+    lowEnergyDiscoveryWatcher->setFuture(future);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::completeLowEnergyDiscovery()
+{
+    isLowEnergyActive = false;
+    finalize();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::acceptDiscoveredLowEnergyDevice(
+        const WinLowEnergyBluetooth::DeviceInfo &device)
+{
+    QBluetoothDeviceInfo deviceInfo(device.address, device.name, 0);
+    deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    deviceInfo.setCached(true);
+
+    processDuplicates(deviceInfo);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::processDuplicates(
+        const QBluetoothDeviceInfo &foundDevice)
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+
+    for (int i = 0; i < discoveredDevices.size(); i++) {
+        QBluetoothDeviceInfo mergedDevice = discoveredDevices[i];
+        if (mergedDevice.address() == foundDevice.address()) {
+            if (mergedDevice == foundDevice
+                    || mergedDevice.coreConfigurations() == foundDevice.coreConfigurations()) {
+                qCDebug(QT_BT_WINDOWS) << "Duplicate: " << foundDevice.address();
+                return;
+            }
+
+            // We assume that if the existing device it is low energy, it means that
+            // the found device should be as classic, because it is impossible to get
+            // same low energy device.
+            if (mergedDevice.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
+                mergedDevice = foundDevice;
+
+            // We assume that it is impossible to have multiple devices with same core
+            // configurations, which have one address. This possible only in case a device
+            // provided both low energy and classic features at the same time.
+            mergedDevice.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+            mergedDevice.setCached(foundDevice.isCached());
+
+            discoveredDevices.replace(i, mergedDevice);
+            Q_Q(QBluetoothDeviceDiscoveryAgent);
+            qCDebug(QT_BT_WINDOWS) << "Updated: " << mergedDevice.address();
+
+            emit q->deviceDiscovered(mergedDevice);
+            return;
+        }
+    }
+
+    qCDebug(QT_BT_WINDOWS) << "Emit: " << foundDevice.address();
+    discoveredDevices.append(foundDevice);
+    emit q->deviceDiscovered(foundDevice);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::setError(DWORD error, const QString &str)
@@ -237,6 +340,58 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(DWORD error, const QString 
               : QBluetoothDeviceDiscoveryAgent::InputOutputError;
     errorString = str.isEmpty() ? qt_error_string(error) : str;
     emit q->error(lastError);
+}
+
+bool QBluetoothDeviceDiscoveryAgentPrivate::isDiscoveredSuccessfully(
+        int systemError) const
+{
+    return systemError == NO_ERROR || systemError == ERROR_NO_MORE_ITEMS;
+}
+
+bool QBluetoothDeviceDiscoveryAgentPrivate::canBeCanceled() const
+{
+    if (isClassicActive || isLowEnergyActive)
+        return false;
+    return pendingCancel && !pendingStart;
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::cancel()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+
+    emit q->canceled();
+    pendingCancel = false;
+}
+
+bool QBluetoothDeviceDiscoveryAgentPrivate::canBePendingStarted() const
+{
+    if (isClassicActive || isLowEnergyActive)
+        return false;
+    return pendingStart;
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::prepareToPendingStart()
+{
+    pendingCancel = false;
+    pendingStart = false;
+    start();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::finalize()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+
+    if (isClassicActive || isLowEnergyActive)
+        return;
+
+    emit q->finished();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::drop(int systemError)
+{
+    setError(systemError);
+    pendingCancel = false;
+    pendingStart = false;
 }
 
 QT_END_NAMESPACE
