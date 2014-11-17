@@ -50,7 +50,7 @@ QtBluetooth
 
  - QBLuetoothSocket:
    * [QTBUG-32704] Fixed behavior of isReadable()/isOpen()/isWritable().
-     So fat, these functions returned wrong values.
+     So far, these functions returned wrong values.
 
  - QBluetoothTransferReply:
    * QBluetoothTransferReply::error() signal added.
