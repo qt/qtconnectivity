@@ -78,6 +78,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::characteristicWritten);
         connect(hub, &LowEnergyNotificationHub::descriptorWritten,
                 this, &QLowEnergyControllerPrivate::descriptorWritten);
+        connect(hub, &LowEnergyNotificationHub::characteristicChanged,
+                this, &QLowEnergyControllerPrivate::characteristicChanged);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -430,6 +432,26 @@ void QLowEnergyControllerPrivate::descriptorWritten(
     updateValueOfDescriptor(descriptor.characteristicHandle(),
                             descHandle, data, false);
     emit service->descriptorWritten(descriptor, data);
+}
+
+void QLowEnergyControllerPrivate::characteristicChanged(
+        int charHandle, const QByteArray &data)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(charHandle);
+    if (service.isNull())
+        return;
+
+    qCDebug(QT_BT_ANDROID) << "Characteristic change notification" << service->uuid
+                           << charHandle << data.toHex();
+
+    QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_ANDROID) << "characteristicChanged: Cannot find characteristic";
+        return;
+    }
+
+    emit service->characteristicChanged(characteristic, data);
 }
 
 QT_END_NAMESPACE

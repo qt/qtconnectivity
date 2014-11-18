@@ -208,6 +208,7 @@ private slots:
                                QLowEnergyService::ServiceError errorCode);
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
+    void characteristicChanged(int charHandle, const QByteArray &data);
 #endif
 private:
     QLowEnergyController *q_ptr;
