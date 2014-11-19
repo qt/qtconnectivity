@@ -107,10 +107,6 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_PropertiesChanged(const QString &interface, const QVariantMap &changed_properties, const QStringList &invalidated_properties))
     Q_PRIVATE_SLOT(d_func(), void _q_extendedDeviceDiscoveryTimeout())
 #endif
-
-#ifdef Q_OS_WIN32
-    Q_PRIVATE_SLOT(d_func(), void _q_handleFindResult())
-#endif
 };
 
 QT_END_NAMESPACE

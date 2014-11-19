@@ -78,20 +78,16 @@ QT_END_NAMESPACE
 
 #ifdef Q_OS_WIN32
 #include <QtConcurrent>
-#include "qbluetoothlocaldevice_p.h"
-#include <bluetoothapis.h>
+#include "windows/qwinclassicbluetooth_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH) || defined(Q_OS_WIN32)
     : public QObject
 {
     Q_OBJECT
-#elif defined(Q_OS_WIN32)
-    : public QBluetoothLocalDevicePrivateData
-{
 #else
 {
 #endif
@@ -117,10 +113,6 @@ public:
                               const QVariantMap &changed_properties,
                               const QStringList &invalidated_properties);
     void _q_extendedDeviceDiscoveryTimeout();
-#endif
-
-#ifdef Q_OS_WIN32
-    void _q_handleFindResult();
 #endif
 
 private:
@@ -191,17 +183,25 @@ private:
 #endif
 
 #ifdef Q_OS_WIN32
-    void processDiscoveredDevices(const BLUETOOTH_DEVICE_INFO &info);
-    void handleErrors(DWORD errorCode);
-    bool isRunning() const;
+private slots:
+    void classicDeviceDiscovered();
 
-    static QVariant findFirstDevice(HANDLE radioHandle);
-    static QVariant findNextDevice(HBLUETOOTH_DEVICE_FIND findHandle);
-    static void findClose(HBLUETOOTH_DEVICE_FIND findHandle);
+private:
+    void initialize(const QBluetoothAddress &deviceAdapter);
 
-    QFutureWatcher<QVariant> *findWatcher;
+    bool isClassicAdapterValid(const QBluetoothAddress &deviceAdapter);
+    void startDiscoveryForFirstClassicDevice();
+    void startDiscoveryForNextClassicDevice(HBLUETOOTH_DEVICE_FIND hSearch);
+    void completeClassicDiscovery(HBLUETOOTH_DEVICE_FIND hSearch);
+    void acceptDiscoveredClassicDevice(const BLUETOOTH_DEVICE_INFO &device);
+
+    void setError(DWORD error, const QString &str = QString());
+
+    QFutureWatcher<WinClassicBluetooth::RemoteDeviceDiscoveryResult> *classicDiscoveryWatcher;
     bool pendingCancel;
     bool pendingStart;
+    bool isClassicActive;
+    bool isClassicValid;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

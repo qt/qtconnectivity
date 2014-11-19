@@ -45,45 +45,30 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
 
-#define QT_DEVICEDISCOVERY_DEBUG
-
 QT_BEGIN_NAMESPACE
 
-struct NativeFindResult
-{
-    NativeFindResult();
-
-    BLUETOOTH_DEVICE_INFO deviceInfo;
-    HBLUETOOTH_DEVICE_FIND findHandle;
-    DWORD errorCode;
-};
-
-NativeFindResult::NativeFindResult()
-    : findHandle(NULL)
-    , errorCode(ERROR_SUCCESS)
-{
-    ::ZeroMemory(&deviceInfo, sizeof(deviceInfo));
-    deviceInfo.dwSize = sizeof(deviceInfo);
-}
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         const QBluetoothAddress &deviceAdapter,
         QBluetoothDeviceDiscoveryAgent *parent)
-    : QBluetoothLocalDevicePrivateData(deviceAdapter)
-    , inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry)
+    : inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry)
     , lastError(QBluetoothDeviceDiscoveryAgent::NoError)
-    , findWatcher(0)
+    , classicDiscoveryWatcher(0)
     , pendingCancel(false)
     , pendingStart(false)
+    , isClassicActive(false)
+    , isClassicValid(false)
     , q_ptr(parent)
 {
+    initialize(deviceAdapter);
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
-    if (isRunning()) {
+    if (isClassicActive) {
         stop();
-        findWatcher->waitForFinished();
+        classicDiscoveryWatcher->waitForFinished();
     }
 }
 
@@ -94,12 +79,16 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     if (pendingCancel)
         return false;
 
-    return isRunning();
+    return isClassicActive;
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    if (!isClassicValid) {
+        setError(ERROR_INVALID_HANDLE,
+                 QBluetoothDeviceDiscoveryAgent::tr("Passed address is not a local device."));
+        return;
+    }
 
     if (pendingCancel == true) {
         pendingStart = true;
@@ -108,40 +97,27 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     discoveredDevices.clear();
 
-    if (isValid() == false) {
-        lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
-        errorString = qt_error_string(ERROR_INVALID_HANDLE);
-        emit q->error(lastError);
-        return;
-    }
-
-    if (!findWatcher) {
-        findWatcher = new QFutureWatcher<QVariant>(q);
-        QObject::connect(findWatcher, SIGNAL(finished()), q, SLOT(_q_handleFindResult()));
-    }
-
-    const QFuture<QVariant> future = QtConcurrent::run(findFirstDevice, deviceHandle);
-    findWatcher->setFuture(future);
+    startDiscoveryForFirstClassicDevice();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
-    if (!isRunning())
+    if (!isClassicActive)
         return;
 
     pendingCancel = true;
     pendingStart = false;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::_q_handleFindResult()
+void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceDiscovered()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
-    const QVariant result = findWatcher->result();
-    const NativeFindResult nativeFindResult = result.value<NativeFindResult>();
+    const WinClassicBluetooth::RemoteDeviceDiscoveryResult result =
+            classicDiscoveryWatcher->result();
 
-    if (nativeFindResult.errorCode == ERROR_SUCCESS
-            || nativeFindResult.errorCode == ERROR_NO_MORE_ITEMS) {
+    if (result.error == ERROR_SUCCESS
+            || result.error == ERROR_NO_MORE_ITEMS) {
 
         if (pendingCancel && !pendingStart) {
             emit q->canceled();
@@ -151,101 +127,116 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_handleFindResult()
             pendingStart = false;
             start();
         } else {
-            if (nativeFindResult.errorCode == ERROR_NO_MORE_ITEMS) {
-                emit q->finished();
-            } else {
-                processDiscoveredDevices(nativeFindResult.deviceInfo);
-                const QFuture<QVariant> future =
-                        QtConcurrent::run(findNextDevice, nativeFindResult.findHandle);
-                findWatcher->setFuture(future);
+            if (result.error != ERROR_NO_MORE_ITEMS) {
+                acceptDiscoveredClassicDevice(result.device);
+                startDiscoveryForNextClassicDevice(result.hSearch);
                 return;
             }
         }
 
     } else {
-        handleErrors(nativeFindResult.errorCode);
+        setError(result.error);
         pendingCancel = false;
         pendingStart = false;
     }
 
-    findClose(nativeFindResult.findHandle);
+    completeClassicDiscovery(result.hSearch);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
-        const BLUETOOTH_DEVICE_INFO &info)
+void QBluetoothDeviceDiscoveryAgentPrivate::initialize(
+        const QBluetoothAddress &deviceAdapter)
+{
+    isClassicValid = isClassicAdapterValid(deviceAdapter);
+}
+
+bool QBluetoothDeviceDiscoveryAgentPrivate::isClassicAdapterValid(
+        const QBluetoothAddress &deviceAdapter)
+{
+    const WinClassicBluetooth::LocalRadiosDiscoveryResult result =
+            WinClassicBluetooth::enumerateLocalRadios();
+
+    if (result.error != NO_ERROR
+            && result.error != ERROR_NO_MORE_ITEMS) {
+        qCWarning(QT_BT_WINDOWS) << "Occurred error during search of classic local radios";
+        return false;
+    } else if (result.radios.isEmpty()) {
+        qCWarning(QT_BT_WINDOWS) << "No any classic local radio found";
+        return false;
+    }
+
+    foreach (const BLUETOOTH_RADIO_INFO &radio, result.radios) {
+        if (deviceAdapter == QBluetoothAddress()
+             || deviceAdapter == QBluetoothAddress(radio.address.ullLong)) {
+            return true;
+        }
+    }
+
+    qCWarning(QT_BT_WINDOWS) << "No matching for classic local radio:" << deviceAdapter;
+    return false;
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::startDiscoveryForFirstClassicDevice()
+{
+    isClassicActive = true;
+
+    if (!classicDiscoveryWatcher) {
+        classicDiscoveryWatcher = new QFutureWatcher<
+                WinClassicBluetooth::RemoteDeviceDiscoveryResult>(this);
+        QObject::connect(classicDiscoveryWatcher, SIGNAL(finished()),
+                         this, SLOT(classicDeviceDiscovered()));
+    }
+
+    const QFuture<WinClassicBluetooth::RemoteDeviceDiscoveryResult> future =
+            QtConcurrent::run(WinClassicBluetooth::startDiscoveryOfFirstRemoteDevice);
+    classicDiscoveryWatcher->setFuture(future);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::startDiscoveryForNextClassicDevice(
+        HBLUETOOTH_DEVICE_FIND hSearch)
+{
+    Q_ASSERT(classicDiscoveryWatcher);
+
+    const QFuture<WinClassicBluetooth::RemoteDeviceDiscoveryResult> future =
+            QtConcurrent::run(WinClassicBluetooth::startDiscoveryOfNextRemoteDevice, hSearch);
+    classicDiscoveryWatcher->setFuture(future);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDiscovery(
+        HBLUETOOTH_DEVICE_FIND hSearch)
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+
+    WinClassicBluetooth::cancelRemoteDevicesDiscovery(hSearch);
+    isClassicActive = false;
+    emit q->finished();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::acceptDiscoveredClassicDevice(
+        const BLUETOOTH_DEVICE_INFO &device)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
     QBluetoothDeviceInfo deviceInfo(
-                QBluetoothAddress(info.Address.ullLong),
-                QString::fromWCharArray(info.szName),
-                info.ulClassofDevice);
+                QBluetoothAddress(device.Address.ullLong),
+                QString::fromWCharArray(device.szName),
+                device.ulClassofDevice);
 
-    if (info.fRemembered)
+    if (device.fRemembered)
         deviceInfo.setCached(true);
 
     discoveredDevices.append(deviceInfo);
     emit q->deviceDiscovered(deviceInfo);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::handleErrors(DWORD errorCode)
+void QBluetoothDeviceDiscoveryAgentPrivate::setError(DWORD error, const QString &str)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
-    lastError = (errorCode == ERROR_INVALID_HANDLE) ?
+    lastError = (error == ERROR_INVALID_HANDLE) ?
                 QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError
               : QBluetoothDeviceDiscoveryAgent::InputOutputError;
-    errorString = qt_error_string(errorCode);
+    errorString = str.isEmpty() ? qt_error_string(error) : str;
     emit q->error(lastError);
 }
 
-bool QBluetoothDeviceDiscoveryAgentPrivate::isRunning() const
-{
-    return findWatcher && findWatcher->isRunning();
-}
-
-QVariant QBluetoothDeviceDiscoveryAgentPrivate::findFirstDevice(HANDLE radioHandle)
-{
-    BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams;
-    ::ZeroMemory(&searchParams, sizeof(searchParams));
-    searchParams.dwSize = sizeof(searchParams);
-    searchParams.cTimeoutMultiplier = 10; // 12.8 sec
-    searchParams.fIssueInquiry = TRUE;
-    searchParams.fReturnAuthenticated = TRUE;
-    searchParams.fReturnConnected = TRUE;
-    searchParams.fReturnRemembered = TRUE;
-    searchParams.fReturnUnknown = TRUE;
-    searchParams.hRadio = radioHandle;
-
-    NativeFindResult nativeFindResult;
-    nativeFindResult.findHandle = ::BluetoothFindFirstDevice(
-                &searchParams, &nativeFindResult.deviceInfo);
-    if (!nativeFindResult.findHandle)
-        nativeFindResult.errorCode = ::GetLastError();
-
-    QVariant result;
-    result.setValue(nativeFindResult);
-    return result;
-}
-
-QVariant QBluetoothDeviceDiscoveryAgentPrivate::findNextDevice(HBLUETOOTH_DEVICE_FIND findHandle)
-{
-    NativeFindResult nativeFindResult;
-    nativeFindResult.findHandle = findHandle;
-    if (!::BluetoothFindNextDevice(findHandle, &nativeFindResult.deviceInfo))
-        nativeFindResult.errorCode = ::GetLastError();
-
-    QVariant result;
-    result.setValue(nativeFindResult);
-    return result;
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::findClose(HBLUETOOTH_DEVICE_FIND findHandle)
-{
-    if (findHandle)
-        ::BluetoothFindDeviceClose(findHandle);
-}
-
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(NativeFindResult))

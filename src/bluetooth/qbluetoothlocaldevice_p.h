@@ -83,7 +83,7 @@ QT_END_NAMESPACE
 #endif
 
 #ifdef Q_OS_WIN32
-#include <qt_windows.h>
+#include "windows/qwinclassicbluetooth_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -245,23 +245,21 @@ private:
 
 #elif defined(Q_OS_WIN32)
 
-class QBluetoothLocalDevicePrivateData
+class QBluetoothLocalDevicePrivate : public QObject
 {
-public:
-    QBluetoothLocalDevicePrivateData(const QBluetoothAddress &address);
-    bool isValid() const;
-
-    HANDLE deviceHandle;
-    QString deviceName;
-    QBluetoothAddress deviceAddress;
-};
-
-class QBluetoothLocalDevicePrivate : public QBluetoothLocalDevicePrivateData
-{
+    Q_OBJECT
     Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
 public:
-    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, const QBluetoothAddress &address);
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
+                                 const QBluetoothAddress &address = QBluetoothAddress());
+
     ~QBluetoothLocalDevicePrivate();
+    bool isValid() const;
+    void initialize(const QBluetoothAddress &address);
+
+    QBluetoothAddress deviceAddress;
+    QString deviceName;
+    bool deviceValid;
 
 private:
     QBluetoothLocalDevice *q_ptr;

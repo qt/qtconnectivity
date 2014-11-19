@@ -198,6 +198,8 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
 } else:win32:!winrt:!wince {
 
+    include(windows/windows.pri)
+
     SOURCES += \
         qbluetoothdevicediscoveryagent_win.cpp \
         qbluetoothlocaldevice_win.cpp \
