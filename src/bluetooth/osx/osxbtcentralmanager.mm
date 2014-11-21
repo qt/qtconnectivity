@@ -68,9 +68,18 @@ using namespace QT_NAMESPACE;
 - (QLowEnergyController::Error)connectToDevice; // "Device" is in Qt's world ...
 - (void)connectToPeripheral; // "Peripheral" is in Core Bluetooth.
 - (void)discoverIncludedServices;
+- (void)readCharacteristics:(CBService *)service;
+- (void)serviceDetailsDiscoveryFinished:(CBService *)service;
 
 // Aux. functions.
-- (bool)connected;
+- (CBService *)serviceForUUID:(const QBluetoothUuid &)qtUuid;
+- (CBCharacteristic *)nextCharacteristicForService:(CBService*)service
+                      startingFrom:(CBCharacteristic *)from;
+- (CBCharacteristic *)nextCharacteristicForService:(CBService*)service
+                      startingFrom:(CBCharacteristic *)from
+                      withProperties:(CBCharacteristicProperties)properties;
+- (CBDescriptor *)nextDescriptorForCharacteristic:(CBCharacteristic *)characteristic
+                  startingFrom:(CBDescriptor *)descriptor;
 
 @end
 
@@ -233,6 +242,8 @@ using namespace QT_NAMESPACE;
 
 - (void)disconnectFromDevice
 {
+    servicesToDiscoverDetails.clear();
+
     if (managerState == OSXBluetooth::CentralManagerUpdating) {
         disconnectPending = true;
     } else {
@@ -298,6 +309,291 @@ using namespace QT_NAMESPACE;
         managerState = CentralManagerDiscovering;
         [peripheral discoverIncludedServices:nil forService:s];
     }
+}
+
+- (bool)discoverServiceDetails:(const QBluetoothUuid &)serviceUuid
+{
+    // This function does not change 'managerState', since it
+    // can be called concurrently (not waiting for the previous
+    // discovery to finish).
+
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(managerState != CentralManagerUpdating, "-discoverServiceDetails:",
+               "invalid state");
+    Q_ASSERT_X(!serviceUuid.isNull(), "-discoverServiceDetails:",
+               "invalid service UUID");
+    Q_ASSERT_X(peripheral, "-discoverServiceDetailsl:",
+               "invalid peripheral (nil)");
+
+    if (servicesToDiscoverDetails.contains(serviceUuid)) {
+        qCWarning(QT_BT_OSX) << "-discoverServiceDetails: "
+                                "already discovering for " << serviceUuid;
+        return true;
+    }
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if (CBService *const service = [self serviceForUUID:serviceUuid]) {
+        servicesToDiscoverDetails.append(serviceUuid);
+        [peripheral discoverCharacteristics:nil forService:service];
+        return true;
+    }
+
+    qCWarning(QT_BT_OSX) << "-discoverServiceDetails:, invalid service - "
+                            "unknown uuid " << serviceUuid;
+
+    return false;
+}
+
+- (void)readCharacteristics:(CBService *)service
+{
+    // This method does not change 'managerState', we can
+    // have several 'detail discoveries' active.
+    Q_ASSERT_X(service, "-readCharacteristics:", "invalid service (nil)");
+
+    using namespace OSXBluetooth;
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    Q_ASSERT_X(managerState != CentralManagerUpdating, "-readCharacteristics:",
+               "invalid state");
+    Q_ASSERT_X(manager, "-readCharacteristics:", "invalid manager (nil)");
+    Q_ASSERT_X(peripheral, "-readCharacteristics:", "invalid peripheral (nil)");
+    Q_ASSERT_X(delegate, "-readCharacteristics:", "invalid delegate (null)");
+
+    if (!service.characteristics || !service.characteristics.count)
+        return [self serviceDetailsDiscoveryFinished:service];
+
+    NSArray *const cs = service.characteristics;
+    for (CBCharacteristic *c in cs) {
+        if (c.properties & CBCharacteristicPropertyRead)
+            return [peripheral readValueForCharacteristic:c];
+    }
+
+    // No readable properties? Discover descriptors then:
+    [self discoverDescriptors:service];
+}
+
+- (void)discoverDescriptors:(CBService *)service
+{
+    // This method does not change 'managerState', we can have
+    // several discoveries active.
+    Q_ASSERT_X(service, "-discoverDescriptors:", "invalid service (nil)");
+
+    using namespace OSXBluetooth;
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    Q_ASSERT_X(managerState != CentralManagerUpdating, "-discoverDescriptors",
+               "invalid state");
+    Q_ASSERT_X(manager, "-discoverDescriptors:", "invalid manager (nil)");
+    Q_ASSERT_X(peripheral, "-discoverDescriptors:", "invalid peripheral (nil)");
+
+    if (!service.characteristics || !service.characteristics.count) {
+        [self serviceDetailsDiscoveryFinished:service];
+    } else {
+        // Start from 0 and continue in the callback.
+        [peripheral discoverDescriptorsForCharacteristic:[service.characteristics objectAtIndex:0]];
+    }
+}
+
+- (void)readDescriptors:(CBService *)service
+{
+    Q_ASSERT_X(service, "-readDescriptors:",
+               "invalid service (nil)");
+    Q_ASSERT_X(managerState != OSXBluetooth::CentralManagerUpdating,
+               "-readDescriptors:",
+               "invalid state");
+    Q_ASSERT_X(peripheral, "-readDescriptors:",
+               "invalid peripheral (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    NSArray *const cs = service.characteristics;
+    // We can never be here if we have no characteristics.
+    Q_ASSERT_X(cs && cs.count, "-readDescriptors:",
+               "invalid service");
+    for (CBCharacteristic *c in cs) {
+        if (c.descriptors && c.descriptors.count)
+            return [peripheral readValueForDescriptor:[c.descriptors objectAtIndex:0]];
+    }
+
+    // No descriptors to read, done.
+    [self serviceDetailsDiscoveryFinished:service];
+}
+
+- (void)serviceDetailsDiscoveryFinished:(CBService *)service
+{
+    //
+    Q_ASSERT_X(service, "-serviceDetailsDiscoveryFinished:",
+               "invalid service (nil)");
+    Q_ASSERT_X(delegate, "-serviceDetailsDiscoveryFinished:",
+               "invalid delegate (null)");
+
+    using namespace OSXBluetooth;
+
+    servicesToDiscoverDetails.removeAll(qt_uuid(service.UUID));
+    delegate->serviceDetailsDiscoveryFinished(ObjCStrongReference<CBService>(service, true));
+}
+
+// Aux. methods:
+
+- (CBService *)serviceForUUID:(const QBluetoothUuid &)qtUuid
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(!qtUuid.isNull(), "-serviceForUUID:",
+               "invalid uuid");
+    Q_ASSERT_X(peripheral, "-serviceForUUID:",
+               "invalid peripherla (nil)");
+
+    ObjCStrongReference<NSMutableArray> toVisit([NSMutableArray arrayWithArray:peripheral.services], true);
+    ObjCStrongReference<NSMutableArray> toVisitNext([[NSMutableArray alloc] init], false);
+    ObjCStrongReference<NSMutableSet> visitedNodes([[NSMutableSet alloc] init], false);
+
+    while (true) {
+        for (NSUInteger i = 0, e = [toVisit count]; i < e; ++i) {
+            CBService *const s = [toVisit objectAtIndex:i];
+            if (equal_uuids(s.UUID, qtUuid))
+                return s;
+            if ([visitedNodes containsObject:s] && s.includedServices && s.includedServices.count) {
+                [visitedNodes addObject:s];
+                [toVisitNext addObjectsFromArray:s.includedServices];
+            }
+        }
+
+        if (![toVisitNext count])
+            return nil;
+
+        toVisit.resetWithoutRetain(toVisitNext.take());
+        toVisitNext.resetWithoutRetain([[NSMutableArray alloc] init]);
+    }
+
+    return nil;
+}
+
+- (CBCharacteristic *)nextCharacteristicForService:(CBService*)service
+                      startingFrom:(CBCharacteristic *)characteristic
+{
+    Q_ASSERT_X(service, "-nextCharacteristicForService:startingFrom:",
+               "invalid service (nil)");
+    Q_ASSERT_X(characteristic, "-nextCharacteristicForService:startingFrom:",
+               "invalid characteristic (nil)");
+    Q_ASSERT_X(service.characteristics, "-nextCharacteristicForService:startingFrom:",
+               "invalid service");
+    Q_ASSERT_X(service.characteristics.count, "-nextCharacteristicForService:startingFrom:",
+               "invalid service");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    // TODO: test that we NEVER have the same characteristic twice in array!
+    // At the moment I just protect against this by iterating in a reverse
+    // order (at least avoiding a potential inifite loop with '-indexOfObject:').
+    NSArray *const cs = service.characteristics;
+    if (cs.count == 1)
+        return nil;
+
+    for (NSUInteger index = cs.count - 1; index != 0; --index) {
+        if ([cs objectAtIndex:index] == characteristic) {
+            if (index + 1 == cs.count)
+                return nil;
+            else
+                return [cs objectAtIndex:index + 1];
+        }
+    }
+
+    Q_ASSERT_X([cs objectAtIndex:0] == characteristic,
+               "-nextCharacteristicForService:startingFrom:",
+               "characteristic was not found in service.characteristics");
+
+    return [cs objectAtIndex:1];
+}
+
+- (CBCharacteristic *)nextCharacteristicForService:(CBService*)service
+                      startingFrom:(CBCharacteristic *)characteristic
+                      properties:(CBCharacteristicProperties)properties
+{
+    Q_ASSERT_X(service, "-nextCharacteristicForService:startingFrom:properties:",
+               "invalid service (nil)");
+    Q_ASSERT_X(characteristic, "-nextCharacteristicForService:startingFrom:properties:",
+               "invalid characteristic (nil)");
+    Q_ASSERT_X(service.characteristics, "-nextCharacteristicForService:startingFrom:properties:",
+               "invalid service");
+    Q_ASSERT_X(service.characteristics.count, "-nextCharacteristicForService:startingFrom:properties:",
+               "invalid service");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    // TODO: test that we NEVER have the same characteristic twice in array!
+    // At the moment I just protect against this by iterating in a reverse
+    // order (at least avoiding a potential inifite loop with '-indexOfObject:').
+    NSArray *const cs = service.characteristics;
+    if (cs.count == 1)
+        return nil;
+
+    NSUInteger index = cs.count - 1;
+    for (; index != 0; --index) {
+        if ([cs objectAtIndex:index] == characteristic) {
+            if (index + 1 == cs.count) {
+                return nil;
+            } else {
+                index += 1;
+                break;
+            }
+        }
+    }
+
+    if (!index) {
+        Q_ASSERT_X([cs objectAtIndex:0] == characteristic,
+                   "-nextCharacteristicForService:startingFrom:properties:",
+                   "characteristic not found in service.characteristics");
+        index = 1;
+    }
+
+    for (const NSUInteger e = cs.count; index < e; ++index) {
+        CBCharacteristic *const c = [cs objectAtIndex:index];
+        if (c.properties & properties)
+            return c;
+    }
+
+    return nil;
+}
+
+- (CBDescriptor *)nextDescriptorForCharacteristic:(CBCharacteristic *)characteristic
+                  startingFrom:(CBDescriptor *)descriptor
+{
+    Q_ASSERT_X(characteristic, "-nextDescriptorForCharacteristic:startingFrom:",
+               "invalid characteristic (nil)");
+    Q_ASSERT_X(descriptor, "-nextDescriptorForCharacteristic:startingFrom:",
+               "invalid descriptor (nil)");
+    Q_ASSERT_X(characteristic.descriptors,
+               "-nextDescriptorForCharacteristic:startingFrom:",
+               "invalid characteristic");
+    Q_ASSERT_X(characteristic.descriptors.count,
+               "-nextDescriptorForCharacteristic:startingFrom:",
+               "invalid characteristic");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    NSArray *const ds = characteristic.descriptors;
+    if (ds.count == 1)
+        return nil;
+
+    for (NSUInteger index = ds.count - 1; index != 0; --index) {
+        if ([ds objectAtIndex:index] == descriptor) {
+            if (index + 1 == ds.count)
+                return nil;
+            else
+                return [ds objectAtIndex:index + 1];
+        }
+    }
+
+    Q_ASSERT_X([ds objectAtIndex:0] == descriptor,
+               "-nextDescriptorForCharacteristic:startingFrom:",
+               "descriptor was not found in characteristic.descriptors");
+
+    return [ds objectAtIndex:1];
 }
 
 // CBCentralManagerDelegate (the real one).
@@ -555,9 +851,156 @@ using namespace QT_NAMESPACE;
 - (void)peripheral:(CBPeripheral *)aPeripheral didDiscoverCharacteristicsForService:(CBService *)service
         error:(NSError *)error
 {
+    // This method does not change 'managerState', we can have several
+    // discoveries active.
     Q_UNUSED(aPeripheral)
-    Q_UNUSED(service)
-    Q_UNUSED(error)
+
+    // TODO: check that this can never be called after cancelPeripheralConnection was executed.
+
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(managerState != CentralManagerUpdating,
+               "-peripheral:didDiscoverCharacteristicsForService:",
+               "invalid state");
+    Q_ASSERT_X(delegate, "-peripheral:didDiscoverCharacteristicsForService:",
+               "invalid delegate (null)");
+
+    if (error) {
+        // NSLog to show the actual NSError (can contain something interesting).
+        NSLog(@"-peripheral:didDiscoverCharacteristicsForService:error, failed with error: %@",
+              error);
+        // We did not discover any characteristics and can not discover descriptors,
+        // inform our delegate (it will set a service state also).
+        delegate->error(qt_uuid(service.UUID), QLowEnergyController::UnknownError);
+    } else {
+        [self readCharacteristics:service];
+    }
+}
+
+- (void)peripheral:(CBPeripheral *)aPeripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic
+        error:(NSError *)error
+{
+    Q_UNUSED(aPeripheral)
+
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(managerState != CentralManagerUpdating,
+               "-peripheral:didUpdateValueForCharacteristic:error:",
+               "invalid state");
+    Q_ASSERT_X(peripheral, "-peripheral:didUpdateValueForCharacteristic:error:",
+               "invalid peripheral (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+    // First, let's check if we're discovering a service details now.
+    CBService *const service = characteristic.service;
+    const QBluetoothUuid qtUuid(qt_uuid(service.UUID));
+    const bool isDetailsDiscovery = servicesToDiscoverDetails.contains(qtUuid);
+
+    if (error) {
+        // Use NSLog, not qCDebug/qCWarning to log the actual error.
+        NSLog(@"-peripheral:didUpdateValueForCharacteristic:error:, failed with error %@",
+              error);
+
+        if (!isDetailsDiscovery) {
+            // TODO: this can be something else in a future (if needed at all).
+            return;
+        }
+    }
+
+    if (isDetailsDiscovery) {
+        // Test if we have any other characteristic to read yet.
+        CBCharacteristic *const next = [self nextCharacteristicForService:characteristic.service
+                                             startingFrom:characteristic properties:CBCharacteristicPropertyRead];
+        if (next)
+            [peripheral readValueForCharacteristic:next];
+        else
+            [self discoverDescriptors:characteristic.service];
+    } else {
+        // TODO: this can be something else in a future (if needed at all).
+    }
+}
+
+- (void)peripheral:(CBPeripheral *)aPeripheral
+        didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic
+        error:(NSError *)error
+{
+    // This method does not change 'managerState', we can
+    // have several discoveries active at the same time.
+    Q_UNUSED(aPeripheral)
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    using namespace OSXBluetooth;
+
+    if (error) {
+        // Log the error using NSLog:
+        NSLog(@"-peripheral:didDiscoverDescriptorsForCharacteristic:error:, failed with error %@",
+              error);
+        // Probably, we can continue though ...
+    }
+
+    // Do we have more characteristics on this service to discover descriptors?
+    CBCharacteristic *const next = [self nextCharacteristicForService:characteristic.service
+                                         startingFrom:characteristic];
+    if (next)
+        [peripheral discoverDescriptorsForCharacteristic:next];
+    else
+        [self readDescriptors:characteristic.service];
+}
+
+- (void)peripheral:(CBPeripheral *)aPeripheral
+        didUpdateValueForDescriptor:(CBDescriptor *)descriptor
+        error:(NSError *)error
+{
+    Q_UNUSED(aPeripheral)
+
+    Q_ASSERT_X(peripheral, "-peripheral:didUpdateValueForDescriptor:error:",
+               "invalid peripheral (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    using namespace OSXBluetooth;
+
+    CBService *const service = descriptor.characteristic.service;
+    const QBluetoothUuid qtUuid(qt_uuid(service.UUID));
+    const bool isDetailsDiscovery = servicesToDiscoverDetails.contains(qtUuid);
+
+    if (error) {
+        // NSLog to log the actual error ...
+        NSLog(@"-peripheral:didUpdateValueForDescriptor:error:, failed with error %@",
+              error);
+        if (!isDetailsDiscovery) {
+            // TODO: probably will be required in a future.
+            return;
+        }
+    }
+
+    if (isDetailsDiscovery) {
+        // Test if we have any other characteristic to read yet.
+        CBDescriptor *const next = [self nextDescriptorForCharacteristic:descriptor.characteristic
+                                         startingFrom:descriptor];
+        if (next) {
+            [peripheral readValueForDescriptor:next];
+        } else {
+            // We either have to read a value for a next descriptor
+            // on a given characteristic, or continue with the
+            // next characteristic in a given service (if any).
+            CBCharacteristic *const ch = descriptor.characteristic;
+            CBCharacteristic *nextCh = [self nextCharacteristicForService:ch.service
+                                             startingFrom:ch];
+            while (nextCh) {
+                if (nextCh.descriptors && nextCh.descriptors.count)
+                    return [peripheral readValueForDescriptor:[nextCh.descriptors objectAtIndex:0]];
+
+                nextCh = [self nextCharacteristicForService:ch.service
+                               startingFrom:nextCh];
+            }
+
+            [self serviceDetailsDiscoveryFinished:service];
+        }
+    } else {
+        // TODO: this can be something else in a future (if needed at all).
+    }
 }
 
 @end

@@ -285,6 +285,9 @@ QString qt_error_string(IOReturn errorCode);
 QBluetoothUuid qt_uuid(CBUUID *uuid);
 CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid);
 ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid);
+bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid);
+bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid);
+QByteArray qt_bytearray(NSData *data);
 
 } // namespace OSXBluetooth
 

@@ -43,6 +43,7 @@
 #include "osxbtutility_p.h"
 #include "qbluetoothuuid.h"
 
+#include <QtCore/qendian.h>
 #include <QtCore/qstring.h>
 
 #ifndef QT_IOS_BLUETOOTH
@@ -176,12 +177,10 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
     QT_BT_MAC_AUTORELEASEPOOL;
 
     if (uuid.data.length == 2) {
-        // TODO: this is .. UGLY :)
-        quint16 qtUuidData = 0;
-        const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
-        std::copy(source, source + 2, &qtUuidData);
-
-        return QBluetoothUuid(qtUuidData);
+        // CBUUID's docs say nothing about byte-order.
+        // Seems to be in big-endian.
+        const uchar *const src = static_cast<const uchar *>(uuid.data.bytes);
+        return QBluetoothUuid(qFromBigEndian<quint16>(src));
     } else if (uuid.data.length == 16) {
         quint128 qtUuidData = {};
         const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
@@ -221,6 +220,30 @@ ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
 
     ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], true); //true == retain.
     return cbUuid;
+}
+
+bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid)
+{
+    const QBluetoothUuid qtUuid2(qt_uuid(cbUuid));
+    return qtUuid == qtUuid2;
+}
+
+bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid)
+{
+    return equal_uuids(qtUuid, cbUuid);
+}
+
+QByteArray qt_bytearray(NSData *data)
+{
+    QByteArray value;
+    if (!data || !data.length)
+        return value;
+
+    value.resize(data.length);
+    const char *const src = static_cast<const char *>(data.bytes);
+    std::copy(src, src + data.length, value.data());
+
+    return value;
 }
 
 }

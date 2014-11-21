@@ -65,13 +65,14 @@ class CentralManagerDelegate
 public:
     typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
     typedef ObjCStrongReference<NSArray> LEServices;
-    typedef LEServices LECharacteristics;
+    typedef ObjCStrongReference<CBService> LEService;
 
     virtual ~CentralManagerDelegate();
 
     virtual void LEnotSupported() = 0;
     virtual void connectSuccess() = 0;
     virtual void serviceDiscoveryFinished(LEServices services) = 0;
+    virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
     virtual void disconnected() = 0;
 
     // General errors.
@@ -117,6 +118,8 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableArray> servicesToVisitNext;
     // We'd like to avoid loops in a services' topology:
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableSet> visitedServices;
+
+    QT_PREPEND_NAMESPACE(QList)<QT_PREPEND_NAMESPACE(QBluetoothUuid)> servicesToDiscoverDetails;
 }
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
@@ -128,6 +131,7 @@ QT_END_NAMESPACE
 - (void)disconnectFromDevice;
 
 - (void)discoverServices;
+- (bool)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
 @end
 

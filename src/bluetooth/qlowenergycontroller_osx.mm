@@ -91,6 +91,7 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
     if (included)
         newService->type |= QLowEnergyService::IncludedService;
 
+    // TODO: isPrimary is ... always 'NO' - to be investigated.
     /*
     #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
     if (!cbService.isPrimary) {
@@ -128,7 +129,8 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
       isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
-      addressType(QLowEnergyController::PublicAddress)
+      addressType(QLowEnergyController::PublicAddress),
+      lastValidHandle(0) // 0 == invalid.
 {
     // This is the "wrong" constructor - no valid device UUID to connect later.
     Q_ASSERT_X(q, "QLowEnergyControllerPrivate", "invalid q_ptr (null)");
@@ -149,7 +151,8 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
       isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
-      addressType(QLowEnergyController::PublicAddress)
+      addressType(QLowEnergyController::PublicAddress),
+      lastValidHandle(0) // 0 == invalid.
 {
     Q_ASSERT_X(q, "QLowEnergyControllerPrivateOSX", "invalid q_ptr (null)");
     centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
@@ -284,6 +287,64 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
     QMetaObject::invokeMethod(q_ptr, "discoveryFinished", Qt::QueuedConnection);
 }
 
+void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService service)
+{
+    if (!service) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(), "
+                              "invalid service (nil)";
+        return;
+    }
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    const QBluetoothUuid qtUuid(OSXBluetooth::qt_uuid(service.data().UUID));
+    if (!discoveredServices.contains(qtUuid)) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(), "
+                              "unknown service uuid: " << qtUuid;
+        return;
+    }
+
+    ServicePrivate qtService(discoveredServices.value(qtUuid));
+    qtService->startHandle = ++lastValidHandle;
+    // Now we iterate on characteristics and descriptors (if any).
+    NSArray *const cs = service.data().characteristics;
+    if (cs && cs.count) {
+        QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList;
+        // That's not a real handle - just a key into a hash map.
+        for (CBCharacteristic *c in cs) {
+            QLowEnergyServicePrivate::CharData newChar = {};
+            newChar.uuid = OSXBluetooth::qt_uuid(c.UUID);
+            // CBCharacteristicProperty enum has the same values as Qt +
+            // a couple of values above 'extended' we do not support yet - mask them out.
+            // All other possible enumerators are the same:
+            const int cbProps = c.properties & 0xff;
+            newChar.properties = static_cast<QLowEnergyCharacteristic::PropertyTypes>(cbProps);
+            newChar.value = OSXBluetooth::qt_bytearray(c.value);
+            newChar.valueHandle = ++lastValidHandle;
+
+            NSArray *const ds = c.descriptors;
+            if (ds && ds.count) {
+                QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> descList;
+                for (CBDescriptor *d in ds) {
+                    QLowEnergyServicePrivate::DescData newDesc = {};
+                    newDesc.uuid = OSXBluetooth::qt_uuid(d.UUID);
+                    newDesc.value = OSXBluetooth::qt_bytearray(d.value);
+                    descList[++lastValidHandle] = newDesc;
+                }
+
+                newChar.descriptorList = descList;
+            }
+
+            charList[newChar.valueHandle] = newChar;
+        }
+
+        qtService->characteristicList = charList;
+    }
+
+    qtService->endHandle = lastValidHandle;
+    qtService->stateChanged(QLowEnergyService::ServiceDiscovered);
+}
+
 void QLowEnergyControllerPrivateOSX::disconnected()
 {
     controllerState = QLowEnergyController::UnconnectedState;
@@ -324,8 +385,16 @@ void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
                                            QLowEnergyController::Error errorCode)
 {
     // Errors reported while discovering service details etc.
-    Q_UNUSED(serviceUuid)
-    Q_UNUSED(errorCode)
+    Q_UNUSED(errorCode) // TODO: setError?
+
+    // We failed to discover any characteristics/descriptors.
+    if (discoveredServices.contains(serviceUuid)) {
+        ServicePrivate qtService(discoveredServices.value(serviceUuid));
+        qtService->stateChanged(QLowEnergyService::InvalidService);
+    } else {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::error(), "
+                              "error reported for unknown service "<<serviceUuid;
+    }
 }
 
 void QLowEnergyControllerPrivateOSX::connectToDevice()
@@ -377,7 +446,29 @@ void QLowEnergyControllerPrivateOSX::discoverServices()
 
 void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid &serviceUuid)
 {
-    Q_UNUSED(serviceUuid);
+    Q_ASSERT_X(isValid(), "discoverServiceDetails", "invalid private controller");
+
+    if (controllerState != QLowEnergyController::DiscoveredState) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::discoverServiceDetails(), "
+                                "can not discover service details in the current state, "
+                                "QLowEnergyController::DiscoveredState is expected";
+        return;
+    }
+
+    if (!discoveredServices.contains(serviceUuid)) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::discoverServiceDetails(), "
+                                "unknown service: " << serviceUuid;
+        return;
+    }
+
+    ServicePrivate qtService(discoveredServices.value(serviceUuid));
+    if ([centralManager discoverServiceDetails:serviceUuid]) {
+        qtService->stateChanged(QLowEnergyService::DiscoveringServices);
+    } else {
+        // The error is returned by CentralManager - no
+        // service with a given UUID found on a peripheral.
+        qtService->stateChanged(QLowEnergyService::InvalidService);
+    }
 }
 
 void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::Error errorCode)
@@ -413,6 +504,7 @@ void QLowEnergyControllerPrivateOSX::invalidateServices()
         service->setState(QLowEnergyService::InvalidService);
     }
 
+    lastValidHandle = 0;
     discoveredServices.clear();
 }
 
