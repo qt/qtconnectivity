@@ -97,9 +97,20 @@ void QLowEnergyControllerPrivate::connectToDevice()
 
 void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
+    /* Catch an Android timeout bug. If the device is connecting but cannot
+     * physically connect it seems to ignore the disconnect call below.
+     * At least BluetoothGattCallback.onConnectionStateChange never
+     * arrives. The next BluetoothGatt.connect() works just fine though.
+     * */
+
+    QLowEnergyController::ControllerState oldState = state;
     setState(QLowEnergyController::ClosingState);
+
     if (hub)
         hub->javaObject().callMethod<void>("disconnect");
+
+    if (oldState == QLowEnergyController::ConnectingState)
+        setState(QLowEnergyController::UnconnectedState);
 }
 
 void QLowEnergyControllerPrivate::discoverServices()
@@ -234,8 +245,18 @@ void QLowEnergyControllerPrivate::connectionUpdated(
 
     if (errorCode != QLowEnergyController::NoError) {
         // ConnectionError if transition from Connecting to Connected
-        if (oldState == QLowEnergyController::ConnectingState)
+        if (oldState == QLowEnergyController::ConnectingState) {
             setError(QLowEnergyController::ConnectionError);
+            /* There is a bug in Android, when connecting to an unconnectable
+             * device. The connection times out and Android sends error code
+             * 133 (doesn't exist) and STATE_CONNECTED. A subsequent disconnect()
+             * call never sends a STATE_DISCONNECTED either.
+             * As workaround we will trigger disconnect when we encounter
+             * error during connect attempt. This leaves the controller
+             * in a cleaner state.
+             * */
+            newState = QLowEnergyController::UnconnectedState;
+        }
         else
             setError(errorCode);
     }
