@@ -271,6 +271,7 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
     setState(QLowEnergyController::ClosingState);
     l2cpSocket->close();
+    resetController();
 }
 
 void QLowEnergyControllerPrivate::l2cpDisconnected()
@@ -306,7 +307,17 @@ void QLowEnergyControllerPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError
     }
 
     invalidateServices();
+    resetController();
     setState(QLowEnergyController::UnconnectedState);
+}
+
+
+void QLowEnergyControllerPrivate::resetController()
+{
+    openRequests.clear();
+    requestPending = false;
+    encryptionChangePending = false;
+    securityLevelValue = -1;
 }
 
 void QLowEnergyControllerPrivate::l2cpReadyRead()
