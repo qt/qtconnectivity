@@ -72,10 +72,6 @@ public:
     virtual void LEnotSupported() = 0;
     virtual void connectSuccess() = 0;
     virtual void serviceDiscoveryFinished(LEServices services) = 0;
-    virtual void includedServicesDiscoveryFinished(const QBluetoothUuid &serviceUuid,
-                                                   LEServices services) = 0;
-    virtual void characteristicsDiscoveryFinished(const QBluetoothUuid &serviceUuid,
-                                                  LECharacteristics characteristics) = 0;
     virtual void disconnected() = 0;
 
     // General errors.
@@ -107,21 +103,31 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerState managerState;
     bool disconnectPending;
 
-    QBluetoothUuid deviceUuid;
+    QT_PREPEND_NAMESPACE(QBluetoothUuid) deviceUuid;
     CBPeripheral *peripheral;
 
     QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *delegate;
+
+    // Quite a verbose service discovery machinery
+    // (a "graph traversal").
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableArray> servicesToVisit;
+    // The service we're discovering now (included services discovery):
+    NSUInteger currentService;
+    // Included services, we'll iterate through at the end of 'servicesToVisit':
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableArray> servicesToVisitNext;
+    // We'd like to avoid loops in a services' topology:
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableSet> visitedServices;
 }
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
 - (void)dealloc;
 
-- (QLowEnergyController::Error)connectToDevice:(const QBluetoothUuid &)aDeviceUuid;
+- (QT_PREPEND_NAMESPACE(QLowEnergyController)::Error)
+    connectToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)aDeviceUuid;
+
 - (void)disconnectFromDevice;
 
 - (void)discoverServices;
-- (bool)discoverServiceDetails:(const QBluetoothUuid &)serviceUuid;
-- (bool)discoverCharacteristics:(const QBluetoothUuid &)serviceUuid;
 
 @end
 

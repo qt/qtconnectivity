@@ -150,6 +150,14 @@ public:
         }
     }
 
+    void resetWithoutRetain(T *newVal)
+    {
+        if (m_ptr != newVal) {
+            [m_ptr release];
+            m_ptr = newVal;
+        }
+    }
+
     operator T *() const
     {
         return m_ptr;

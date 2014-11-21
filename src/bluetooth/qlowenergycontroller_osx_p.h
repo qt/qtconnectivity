@@ -66,10 +66,6 @@ private:
     void connectSuccess() Q_DECL_OVERRIDE;
 
     void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
-    void includedServicesDiscoveryFinished(const QBluetoothUuid &serviceUuid,
-                                           LEServices services) Q_DECL_OVERRIDE;
-    void characteristicsDiscoveryFinished(const QBluetoothUuid &serviceUuid,
-                                          LECharacteristics characteristics) Q_DECL_OVERRIDE;
     void disconnected() Q_DECL_OVERRIDE;
     void error(QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
     void error(const QBluetoothUuid &serviceUuid,
@@ -78,6 +74,9 @@ private:
     void connectToDevice();
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
+
+    void setErrorDescription(QLowEnergyController::Error errorCode);
+    void invalidateServices();
 
     QLowEnergyController *q_ptr;
     QBluetoothUuid deviceUuid;

@@ -51,6 +51,76 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace {
+
+
+class QLowEnergyControllerMetaTypes
+{
+public:
+    QLowEnergyControllerMetaTypes()
+    {
+        qRegisterMetaType<QLowEnergyController::ControllerState>();
+        qRegisterMetaType<QLowEnergyController::Error>();
+    }
+} qLowEnergyControllerMetaTypes;
+
+
+typedef QSharedPointer<QLowEnergyServicePrivate> ServicePrivate;
+
+// Convenience function, can return a smart pointer that 'isNull'.
+ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CBService *cbService, bool included)
+{
+    Q_ASSERT_X(controller, "createLEService()", "invalid controller (null)");
+    Q_ASSERT_X(cbService, "createLEService()", "invalid service (nil)");
+
+    CBUUID *const cbUuid = cbService.UUID;
+    if (!cbUuid) {
+        qCDebug(QT_BT_OSX) << "createLEService(), invalid service, "
+                              "UUID is nil";
+        return ServicePrivate();
+    }
+
+    const QBluetoothUuid qtUuid(OSXBluetooth::qt_uuid(cbUuid));
+    if (qtUuid.isNull()) // Conversion error is reported by qt_uuid.
+        return ServicePrivate();
+
+    ServicePrivate newService(new QLowEnergyServicePrivate);
+    newService->uuid = qtUuid;
+    newService->setController(controller);
+
+    if (included)
+        newService->type |= QLowEnergyService::IncludedService;
+
+    #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
+    if (!cbService.isPrimary) {
+        // Our guess included/not was probably wrong.
+        newService->type &= ~QLowEnergyService::PrimaryService;
+        newService->type |= QLowEnergyService::IncludedService;
+    }
+    #endif
+    // No such property before 10_9/6_0.
+    return newService;
+}
+
+typedef QList<QBluetoothUuid> UUIDList;
+
+UUIDList qt_servicesUuids(NSArray *services)
+{
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if (!services || !services.count)
+        return UUIDList();
+
+    UUIDList uuids;
+
+    for (CBService *s in services)
+        uuids.append(OSXBluetooth::qt_uuid(s.UUID));
+
+    return uuids;
+}
+
+}
+
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q)
     : q_ptr(q),
       isConnecting(false),
@@ -125,50 +195,92 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
     Q_ASSERT_X(controllerState == QLowEnergyController::DiscoveringState,
                "serviceDiscoveryFinished", "invalid state");
 
+    using namespace OSXBluetooth;
+
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    for (CBService *service in services.data()) {
-        if (CBUUID *const uuid = service.UUID) {
-            const QBluetoothUuid qtUuid(OSXBluetooth::qt_uuid(uuid));
-            if (discoveredServices.find(qtUuid) != discoveredServices.end()) {
-                qCDebug(QT_BT_OSX) << "QBluetoothLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(), "
-                                      "a duplicate service UUID found: " << qtUuid;
+    // Now we have to traverse the discovered services tree.
+    // Essentially it's an iterative version of more complicated code from the
+    // OSXBTCentralManager's code.
+    // All Obj-C entities either auto-release, or guarded by ObjCScopedReferences.
+    if (services && [services count]) {
+        QMap<QBluetoothUuid, CBService *> discoveredCBServices;
+        //1. The first pass - none of this services is 'included' yet (we'll discover 'included'
+        //   during the pass 2); we also ignore duplicates (== services with the same UUID)
+        // - since we do not have a way to distinguish them later
+        //   (our API is using uuids when creating QLowEnergyServices).
+        for (CBService *cbService in services.data()) {
+            const ServicePrivate newService(qt_createLEService(this, cbService, false));
+            if (!newService.data())
+                continue;
+            if (discoveredServices.contains(newService->uuid)) {
+                // It's a bit stupid we first created it ...
+                qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(), "
+                                   << "discovered service with a duplicated UUID "<<newService->uuid;
                 continue;
             }
-
-            QSharedPointer<QLowEnergyServicePrivate> newService(new QLowEnergyServicePrivate);
-            newService->uuid = qtUuid;
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-            if (!service.isPrimary) {
-                newService->type &= ~QLowEnergyService::PrimaryService;
-                newService->type |= QLowEnergyService::IncludedService;
-            }
-#endif
-            newService->setController(this);
-            discoveredServices.insert(qtUuid, newService);
-            emit q_ptr->serviceDiscovered(qtUuid);
+            discoveredServices.insert(newService->uuid, newService);
+            discoveredCBServices.insert(newService->uuid, cbService);
         }
+
+        ObjCStrongReference<NSMutableArray> toVisit([[NSMutableArray alloc] initWithArray:services], false);
+        ObjCStrongReference<NSMutableArray> toVisitNext([[NSMutableArray alloc] init], false);
+        ObjCStrongReference<NSMutableSet> visited([[NSMutableSet alloc] init], false);
+
+        while (true) {
+            for (NSUInteger i = 0, e = [toVisit count]; i < e; ++i) {
+                CBService *const s = [toVisit objectAtIndex:i];
+                if (![visited containsObject:s]) {
+                    [visited addObject:s];
+                    if (s.includedServices && s.includedServices.count)
+                        [toVisitNext addObjectsFromArray:s.includedServices];
+                }
+
+                const QBluetoothUuid uuid(qt_uuid(s.UUID));
+                if (discoveredServices.contains(uuid) && discoveredCBServices.value(uuid) == s) {
+                    ServicePrivate qtService(discoveredServices.value(uuid));
+                    // Add included UUIDs:
+                    qtService->includedServices.append(qt_servicesUuids(s.includedServices));
+                }// Else - we ignored this CBService object.
+            }
+
+            if (![toVisitNext count])
+                break;
+
+            for (NSUInteger i = 0, e = [toVisitNext count]; i < e; ++i) {
+                CBService *const s = [toVisitNext objectAtIndex:i];
+                const QBluetoothUuid uuid(qt_uuid(s.UUID));
+                if (discoveredServices.contains(uuid)) {
+                    if (discoveredCBServices.value(uuid) == s) {
+                        ServicePrivate qtService(discoveredServices.value(uuid));
+                        qtService->type |= QLowEnergyService::IncludedService;
+                    } // Else this is the duplicate we ignored already.
+                } else {
+                    // Oh, we do not even have it yet???
+                    ServicePrivate newService(qt_createLEService(this, s, true));
+                    discoveredServices.insert(newService->uuid, newService);
+                    discoveredCBServices.insert(newService->uuid, s);
+                }
+            }
+
+            toVisit.resetWithoutRetain(toVisitNext.take());
+            toVisitNext.resetWithoutRetain([[NSMutableArray alloc] init]);
+        }
+    } else {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(), "
+                              "no services found";
+    }
+
+    foreach (const QBluetoothUuid &uuid, discoveredServices.keys()) {
+        QMetaObject::invokeMethod(q_ptr, "serviceDiscovered", Qt::QueuedConnection,
+                                 Q_ARG(QBluetoothUuid, uuid));
     }
 
     controllerState = QLowEnergyController::DiscoveredState;
-    emit q_ptr->stateChanged(QLowEnergyController::DiscoveredState);
-    emit q_ptr->discoveryFinished();
+    QMetaObject::invokeMethod(q_ptr, "stateChanged", Qt::QueuedConnection,
+                              Q_ARG(QLowEnergyController::ControllerState, controllerState));
+    QMetaObject::invokeMethod(q_ptr, "discoveryFinished", Qt::QueuedConnection);
 }
-
-void QLowEnergyControllerPrivateOSX::includedServicesDiscoveryFinished(const QBluetoothUuid &serviceUuid,
-                                                                       LEServices services)
-{
-    Q_UNUSED(serviceUuid)
-    Q_UNUSED(services)
-}
-
-void QLowEnergyControllerPrivateOSX::characteristicsDiscoveryFinished(const QBluetoothUuid &serviceUuid,
-                                                                      LECharacteristics characteristics)
-{
-    Q_UNUSED(serviceUuid)
-    Q_UNUSED(characteristics)
-}
-
 
 void QLowEnergyControllerPrivateOSX::disconnected()
 {
@@ -183,32 +295,27 @@ void QLowEnergyControllerPrivateOSX::disconnected()
 void QLowEnergyControllerPrivateOSX::error(QLowEnergyController::Error errorCode)
 {
     // Errors reported during connect and general errors.
-    lastError = errorCode;
 
     // We're still in connectToDevice,
     // some error was reported synchronously.
     // Return, the error will be correctly set later
     // by connectToDevice.
-    if (isConnecting)
+    if (isConnecting) {
+        lastError = errorCode;
         return;
-
-    switch (lastError) {
-    case QLowEnergyController::UnknownRemoteDeviceError:
-        errorString = QLowEnergyController::tr("Remote device cannot be found");
-        break;
-    case QLowEnergyController::InvalidBluetoothAdapterError:
-        errorString = QLowEnergyController::tr("Cannot find local adapter");
-        break;
-    case QLowEnergyController::NetworkError:
-        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
-        break;
-    case QLowEnergyController::UnknownError:
-    default:
-        errorString = QLowEnergyController::tr("Unknown Error");
-        break;
     }
 
+    setErrorDescription(errorCode);
     emit q_ptr->error(lastError);
+
+    if (controllerState == QLowEnergyController::ConnectingState) {
+        controllerState = QLowEnergyController::UnconnectedState;
+        emit q_ptr->stateChanged(controllerState);
+    } else if (controllerState == QLowEnergyController::DiscoveringState) {
+        controllerState = QLowEnergyController::ConnectedState;
+        emit q_ptr->stateChanged(controllerState);
+    } // In any other case we stay in Discovered, it's
+      // a service/characteristic - related error.
 }
 
 void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
@@ -229,8 +336,7 @@ void QLowEnergyControllerPrivateOSX::connectToDevice()
     Q_ASSERT_X(!isConnecting, "connectToDevice",
                "recursive connectToDevice call");
 
-    lastError = QLowEnergyController::NoError;
-    errorString.clear();
+    setErrorDescription(QLowEnergyController::NoError);
 
     isConnecting = true;// Do not emit signals if some callback is executed synchronously.
     controllerState = QLowEnergyController::ConnectingState;
@@ -270,6 +376,42 @@ void QLowEnergyControllerPrivateOSX::discoverServices()
 void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid &serviceUuid)
 {
     Q_UNUSED(serviceUuid);
+}
+
+void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::Error errorCode)
+{
+    // This function does not emit!
+
+    lastError = errorCode;
+
+    switch (lastError) {
+    case QLowEnergyController::NoError:
+        errorString.clear();
+        break;
+    case QLowEnergyController::UnknownRemoteDeviceError:
+        errorString = QLowEnergyController::tr("Remote device cannot be found");
+        break;
+    case QLowEnergyController::InvalidBluetoothAdapterError:
+        errorString = QLowEnergyController::tr("Cannot find local adapter");
+        break;
+    case QLowEnergyController::NetworkError:
+        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
+        break;
+    case QLowEnergyController::UnknownError:
+    default:
+        errorString = QLowEnergyController::tr("Unknown Error");
+        break;
+    }
+}
+
+void QLowEnergyControllerPrivateOSX::invalidateServices()
+{
+    foreach (const QSharedPointer<QLowEnergyServicePrivate> service, discoveredServices.values()) {
+        service->setController(Q_NULLPTR);
+        service->setState(QLowEnergyService::InvalidService);
+    }
+
+    discoveredServices.clear();
 }
 
 QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddress,
@@ -380,6 +522,7 @@ void QLowEnergyController::disconnectFromDevice()
 
         osx_d_ptr->controllerState = ClosingState;
         emit stateChanged(ClosingState);
+        osx_d_ptr->invalidateServices();
         [osx_d_ptr->centralManager disconnectFromDevice];
 
         if (oldState == ConnectingState) {

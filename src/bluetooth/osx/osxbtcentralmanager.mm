@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-#include "osxbtcentralmanagerdelegate_p.h"
 #include "osxbtcentralmanager_p.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -68,6 +67,9 @@ using namespace QT_NAMESPACE;
 
 - (QLowEnergyController::Error)connectToDevice; // "Device" is in Qt's world ...
 - (void)connectToPeripheral; // "Peripheral" is in Core Bluetooth.
+- (void)discoverIncludedServices;
+
+// Aux. functions.
 - (bool)connected;
 
 @end
@@ -84,6 +86,7 @@ using namespace QT_NAMESPACE;
         disconnectPending = false;
         peripheral = nil;
         delegate = aDelegate;
+        currentService = 0;
     }
 
     return self;
@@ -91,20 +94,17 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManagerTransientDelegate) TransientDelegate;
+    // In the past I had a 'transient delegate': I've seen some crashes
+    // while deleting a manager _before_ its state updated.
+    // Strangely enough, I can not reproduce this anymore, so this
+    // part is simplified now. To be investigated though.
 
-    if (managerState == OSXBluetooth::CentralManagerUpdating) {
-        // Here we have to trick with a transient delegate not to
-        // delete the manager too early - or Core Bluetooth will crash.
-                    // State was not updated yet, too early to release.
-        TransientDelegate *const transient = [[TransientDelegate alloc] initWithManager:manager];
-        // On ARC the lifetime of a transient delegate will become a problem, since delegate itself
-        // is a weak reference in a manager.
-        [manager setDelegate:transient];
-    } else {
-        [manager setDelegate:nil];
-        [manager release];
-    }
+    visitedServices.reset(nil);
+    servicesToVisit.reset(nil);
+    servicesToVisitNext.reset(nil);
+
+    [manager setDelegate:nil];
+    [manager release];
 
     [peripheral setDelegate:nil];
     [peripheral release];
@@ -269,16 +269,35 @@ using namespace QT_NAMESPACE;
     [peripheral discoverServices:nil];
 }
 
-- (bool)discoverServiceDetails:(const QBluetoothUuid &)serviceUuid
+- (void)discoverIncludedServices
 {
-    Q_UNUSED(serviceUuid)
-    return false;
-}
+    using namespace OSXBluetooth;
 
-- (bool)discoverCharacteristics:(const QBluetoothUuid &)serviceUuid
-{
-    Q_UNUSED(serviceUuid)
-    return false;
+    Q_ASSERT_X(managerState == CentralManagerIdle, "-discoverIncludedServices",
+               "invalid state");
+    Q_ASSERT_X(manager, "-discoverIncludedServices", "invalid manager (nil)");
+    Q_ASSERT_X(peripheral, "-discoverIncludedServices", "invalid peripheral (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    NSArray *const services = peripheral.services;
+    if (!services || !services.count) { // Actually, !services.count works in both cases, but ...
+        // A peripheral without any services at all.
+        Q_ASSERT_X(delegate, "-discoverIncludedServices",
+                   "invalid delegate (null)");
+        delegate->serviceDiscoveryFinished(ObjCStrongReference<NSArray>());
+    } else {
+        // 'reset' also calls retain on a parameter.
+        servicesToVisitNext.reset(nil);
+        servicesToVisit.reset([NSMutableArray arrayWithArray:services]);
+        currentService = 0;
+        visitedServices.reset([NSMutableSet setWithCapacity:peripheral.services.count]);
+
+        CBService *const s = [services objectAtIndex:currentService];
+        [visitedServices addObject:s];
+        managerState = CentralManagerDiscovering;
+        [peripheral discoverIncludedServices:nil forService:s];
+    }
 }
 
 // CBCentralManagerDelegate (the real one).
@@ -441,7 +460,6 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(aPeripheral)
 
-
     if (managerState != OSXBluetooth::CentralManagerDiscovering) {
         // Canceled by -disconnectFromDevice.
         return;
@@ -455,10 +473,7 @@ using namespace QT_NAMESPACE;
         // TODO: better error mapping required.
         delegate->error(QLowEnergyController::UnknownError);
     } else {
-        QT_BT_MAC_AUTORELEASEPOOL;
-
-        OSXBluetooth::ObjCStrongReference<NSArray> services(peripheral.services, true);
-        delegate->serviceDiscoveryFinished(services);
+        [self discoverIncludedServices];
     }
 }
 
@@ -467,8 +482,74 @@ using namespace QT_NAMESPACE;
         error:(NSError *)error
 {
     Q_UNUSED(aPeripheral)
-    Q_UNUSED(service)
-    Q_UNUSED(error)
+
+    using namespace OSXBluetooth;
+
+    if (managerState != CentralManagerDiscovering) {
+        // Canceled by disconnectFromDevice or -peripheralDidDisconnect...
+        return;
+    }
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    Q_ASSERT_X(delegate, "-peripheral:didDiscoverIncludedServicesForService:",
+               "invalid delegate (null)");
+    Q_ASSERT_X(peripheral, "-peripheral:didDiscoverIncludedServicesForService:",
+               "invalid peripheral (nil)");
+    // TODO: asserts on other "pointers" ...
+
+    managerState = CentralManagerIdle;
+
+    if (error) {
+        // NSLog, not qCWarning/Critical - to log the actual NSError and service UUID.
+        NSLog(@"-peripheral:didDiscoverIncludedServicesForService:, finished with error %@ for service %@",
+              error, service.UUID);
+    } else if (service.includedServices && service.includedServices.count) {
+        // Now we have even more services to do included services discovery ...
+        if (!servicesToVisitNext)
+            servicesToVisitNext.reset([NSMutableArray arrayWithArray:service.includedServices]);
+        else
+            [servicesToVisitNext addObjectsFromArray:service.includedServices];
+    }
+
+    // Do we have something else to discover on this 'level'?
+    ++currentService;
+
+    for (const NSUInteger e = [servicesToVisit count]; currentService < e; ++currentService) {
+        CBService *const s = [servicesToVisit objectAtIndex:currentService];
+        if (![visitedServices containsObject:s]) {
+            // Continue with discovery ...
+            [visitedServices addObject:s];
+            managerState = CentralManagerDiscovering;
+            return [peripheral discoverIncludedServices:nil forService:s];
+        }
+    }
+
+    // No services to visit more on this 'level'.
+
+    if (servicesToVisitNext && [servicesToVisitNext count]) {
+        servicesToVisit.resetWithoutRetain(servicesToVisitNext.take());
+
+        currentService = 0;
+        for (const NSUInteger e = [servicesToVisit count]; currentService < e; ++currentService) {
+            CBService *const s = [servicesToVisit objectAtIndex:currentService];
+            if (![visitedServices containsObject:s]) {
+                [visitedServices addObject:s];
+                managerState = CentralManagerDiscovering;
+                return [peripheral discoverIncludedServices:nil forService:s];
+            }
+        }
+    }
+
+    // Finally, if we're here, the service discovery is done!
+
+    // Release all these things now, no need to prolong their lifetime.
+    visitedServices.reset(nil);
+    servicesToVisit.reset(nil);
+    servicesToVisitNext.reset(nil);
+
+    const ObjCStrongReference<NSArray> services(peripheral.services, true); // true == retain.
+    delegate->serviceDiscoveryFinished(services);
 }
 
 - (void)peripheral:(CBPeripheral *)aPeripheral didDiscoverCharacteristicsForService:(CBService *)service
