@@ -43,6 +43,7 @@
 #define OSXBTCENTRALMANAGER_P_H
 
 #include "qlowenergycontroller.h"
+#include "qlowenergyservice.h"
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 
@@ -66,6 +67,7 @@ public:
     typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
     typedef ObjCStrongReference<NSArray> LEServices;
     typedef ObjCStrongReference<CBService> LEService;
+    typedef ObjCStrongReference<CBCharacteristic> LECharacteristic;
 
     virtual ~CentralManagerDelegate();
 
@@ -73,6 +75,7 @@ public:
     virtual void connectSuccess() = 0;
     virtual void serviceDiscoveryFinished(LEServices services) = 0;
     virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
+    virtual void characteristicWriteNotification(LECharacteristic ch) = 0;
     virtual void disconnected() = 0;
 
     // General errors.
@@ -80,6 +83,10 @@ public:
     // Service related errors.
     virtual void error(const QBluetoothUuid &serviceUuid,
                        QLowEnergyController::Error error) = 0;
+    // Characteristics related errors.
+    virtual void error(const QBluetoothUuid &serviceUuid,
+                       QLowEnergyHandle charHandle,
+                       QLowEnergyService::ServiceError error) = 0;
 };
 
 enum CentralManagerState
@@ -132,6 +139,14 @@ QT_END_NAMESPACE
 
 - (void)discoverServices;
 - (bool)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+
+// Characteristic's handle here is a 'relative' == valueHandle - service->startHandle
+// to simplify mapping between Qt's handles and Core Bluetooth's data structures.
+- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        characteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        serviceUuid:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
+        serviceHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))serviceHandle
+        withResponse:(bool)writeWithResponse;
 
 @end
 

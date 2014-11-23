@@ -246,6 +246,15 @@ QByteArray qt_bytearray(NSData *data)
     return value;
 }
 
+ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
+{
+    if (!qtData.size())
+        return ObjCStrongReference<NSData>([[NSData alloc] init], false);
+
+    ObjCStrongReference<NSData> result([NSData dataWithBytes:qtData.constData() length:qtData.size()], true);
+    return result;
+}
+
 }
 
 QT_END_NAMESPACE

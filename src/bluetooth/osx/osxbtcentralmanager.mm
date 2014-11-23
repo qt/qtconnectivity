@@ -78,6 +78,8 @@ using namespace QT_NAMESPACE;
 - (CBCharacteristic *)nextCharacteristicForService:(CBService*)service
                       startingFrom:(CBCharacteristic *)from
                       withProperties:(CBCharacteristicProperties)properties;
+- (CBCharacteristic *)characteristicForService:(CBService *)service
+                      withIndex:(NSUInteger)index;
 - (CBDescriptor *)nextDescriptorForCharacteristic:(CBCharacteristic *)characteristic
                   startingFrom:(CBDescriptor *)descriptor;
 
@@ -437,6 +439,60 @@ using namespace QT_NAMESPACE;
     delegate->serviceDetailsDiscoveryFinished(ObjCStrongReference<CBService>(service, true));
 }
 
+- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        characteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        serviceUuid:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
+        serviceHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))serviceHandle
+        withResponse:(bool)withResponse
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(!serviceUuid.isNull(), "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
+               "invalid service uuid");
+    Q_ASSERT_X(serviceHandle, "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
+               "invalid service handle (0)");
+    Q_ASSERT_X(serviceHandle < charHandle, "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
+               "invalid characteristic handle (<= serviceHandle)");
+
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    CBService *const service = [self serviceForUUID:serviceUuid];
+    if (!service) {
+        qCWarning(QT_BT_OSX) << "-write:characteristic:serviceUuid:serviceHandle:withResponse:, "
+                                "service with uuid: " << serviceUuid << " not found";
+        return false;
+    }
+
+    // 'Convert' charHandle into the 'index' and find a characteristic.
+    CBCharacteristic *const ch = [self characteristicForService:service
+                                  withIndex:charHandle - serviceHandle - 1];
+
+    if (!ch) {
+        qCWarning(QT_BT_OSX) << "-write:characteristic:serviceUuid:serviceHandle:withResponse:, "
+                                "characteristic with handle: " << charHandle << " not "
+                                "found on service: " << serviceUuid;
+        return false;
+    }
+
+    Q_ASSERT_X(peripheral, "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
+               "invalid peripheral (nil)");
+
+    ObjCStrongReference<NSData> data(data_from_bytearray(value));
+    if (!data) {
+        // Even if qtData.size() == 0, we still need NSData object.
+        qCWarning(QT_BT_OSX) << "-write:characteristic:serviceUuid:serviceHandle:withResponse:, "
+                                "failed to allocate NSData object";
+        return false;
+    }
+
+    // TODO: check what happens if I'm using NSData with length 0.
+    [peripheral writeValue:data.data() forCharacteristic:ch
+                type: withResponse? CBCharacteristicWriteWithResponse : CBCharacteristicWriteWithoutResponse];
+
+    return true;
+}
+
 // Aux. methods:
 
 - (CBService *)serviceForUUID:(const QBluetoothUuid &)qtUuid
@@ -555,6 +611,30 @@ using namespace QT_NAMESPACE;
         CBCharacteristic *const c = [cs objectAtIndex:index];
         if (c.properties & properties)
             return c;
+    }
+
+    return nil;
+}
+
+- (CBCharacteristic *)characteristicForService:(CBService *)service
+                      withIndex:(NSUInteger)index
+{
+    Q_ASSERT_X(service, "-characteristicForService:withIndex:",
+               "invalid service (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    NSArray *const chars = service.characteristics;
+
+    if (!chars || !chars.count)
+        return nil;
+
+    for (NSUInteger i = 0, j = 0, e = chars.count; i < e; ++i) {
+        CBCharacteristic *const ch = [chars objectAtIndex:i];
+        if (j == index)
+            return ch;
+        if (ch.descriptors)
+            j += ch.descriptors.count + 1; // + 1 for characteristic itself.
     }
 
     return nil;
@@ -1000,6 +1080,40 @@ using namespace QT_NAMESPACE;
         }
     } else {
         // TODO: this can be something else in a future (if needed at all).
+    }
+}
+
+- (void)peripheral:(CBPeripheral *)aPeripheral
+        didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
+        error:(NSError *)error
+{
+    // From docs:
+    //
+    // "This method is invoked only when your app calls the writeValue:forCharacteristic:type:
+    //  method with the CBCharacteristicWriteWithResponse constant specified as the write type.
+    //  If successful, the error parameter is nil. If unsuccessful,
+    //  the error parameter returns the cause of the failure."
+
+    using namespace OSXBluetooth;
+
+    Q_UNUSED(aPeripheral)
+    Q_UNUSED(characteristic)
+    Q_UNUSED(error)
+
+    Q_ASSERT_X(delegate, "-peripheral:didWriteValueForCharacteristic:error",
+               "invalid delegate (null)");
+
+    if (error) {
+        // Use NSLog to log the actual error:
+        NSLog(@"-peripheral:didWriteValueForCharacteristic:error:, failed with error: %@",
+              error);
+        // TODO: no char handle at the moment, have to change to char index instead
+        // and calculate the right handle in the LE controller.
+        delegate->error(qt_uuid(characteristic.service.UUID), 0,
+                        QLowEnergyService::CharacteristicWriteError);
+    } else {
+        ObjCStrongReference<CBCharacteristic> ch(characteristic, true);
+        delegate->characteristicWriteNotification(ch);
     }
 }
 

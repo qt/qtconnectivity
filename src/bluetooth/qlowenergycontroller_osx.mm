@@ -122,6 +122,36 @@ UUIDList qt_servicesUuids(NSArray *services)
     return uuids;
 }
 
+QLowEnergyHandle qt_findCharacteristicHandle(QLowEnergyHandle serviceHandle,
+                                             CBService *service, CBCharacteristic *ch)
+{
+    // This mapping from CB -> Qt Qt -> CB is quite verbose and annoying,
+    // but duplicating data structures (CB char-tree, Qt char-tree, etc.)
+    // is even more annoying.
+
+    Q_ASSERT_X(serviceHandle, "qt_findCharacteristicHandle",
+               "invalid service handle (0)");
+    Q_ASSERT_X(service, "qt_findCharacteristicHandle",
+               "invalid service (nil)");
+    Q_ASSERT_X(ch, "qt_findCharacteristicHandle",
+               "invalid characteristic (nil)");
+
+    NSArray *const chars = service.characteristics;
+    if (!chars || !chars.count)
+        return 0; // Invalid handle, to be .. handled by the caller.
+
+    QLowEnergyHandle handle = serviceHandle + 1;
+    for (CBCharacteristic *candidate in chars) {
+        if (candidate == ch)
+            return handle;
+        NSArray *const ds = candidate.descriptors;
+        if (ds && ds.count)
+            handle += ds.count + 1; // + 1 is for char itself.
+    }
+
+    return 0;
+}
+
 }
 
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q)
@@ -345,6 +375,46 @@ void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService s
     qtService->stateChanged(QLowEnergyService::ServiceDiscovered);
 }
 
+void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(LECharacteristic ch)
+{
+    Q_ASSERT_X(ch, "characteristicWriteNotification", "invalid characteristic (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    CBService *const cbService = [ch service];
+    const QBluetoothUuid serviceUuid(OSXBluetooth::qt_uuid(cbService.UUID));
+    if (!discoveredServices.contains(serviceUuid)) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicWriteNotification(), "
+                              "unknown service uuid: " << serviceUuid;
+        return;
+    }
+
+    ServicePrivate service(discoveredServices.value(serviceUuid));
+    Q_ASSERT_X(service->startHandle, "characteristicWriteNotification",
+               "invalid service handle (0)");
+
+    const QLowEnergyHandle charHandle =
+        qt_findCharacteristicHandle(service->startHandle, cbService, ch);
+
+    if (!charHandle) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicWriteNotification(), "
+                              "unknown characteristic";
+        return;
+    }
+
+    QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicWriteNotification(), "
+                                "unknown characteristic";
+        return;
+    }
+
+    // TODO: check that this 'value' is what we need!
+    const QByteArray data(OSXBluetooth::qt_bytearray([ch value]));
+    updateValueOfCharacteristic(charHandle, data, false);
+    emit service->characteristicWritten(characteristic, data);
+}
+
 void QLowEnergyControllerPrivateOSX::disconnected()
 {
     controllerState = QLowEnergyController::UnconnectedState;
@@ -395,6 +465,22 @@ void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
         qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::error(), "
                               "error reported for unknown service "<<serviceUuid;
     }
+}
+
+void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
+                                           QLowEnergyHandle charHandle,
+                                           QLowEnergyService::ServiceError errorCode)
+{
+    Q_UNUSED(charHandle)
+
+    if (!discoveredServices.contains(serviceUuid)) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::error(), "
+                              "unknown service uuid: " << serviceUuid;
+        return;
+    }
+
+    ServicePrivate service(discoveredServices.value(serviceUuid));
+    service->setError(errorCode);
 }
 
 void QLowEnergyControllerPrivateOSX::connectToDevice()
@@ -469,6 +555,106 @@ void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid
         // service with a given UUID found on a peripheral.
         qtService->stateChanged(QLowEnergyService::InvalidService);
     }
+}
+
+void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
+                                                         QLowEnergyHandle charHandle, const QByteArray &newValue,
+                                                         bool writeWithResponse)
+{
+    Q_ASSERT_X(!service.isNull(), "writeCharacteristic", "invalid service (null)");
+
+    if (!isValid()) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeCharacteristic(), "
+                                "invalid controller";
+        return;
+    }
+
+    // We can work only with services, found on a given peripheral
+    // (== created by the given LE controller),
+    // otherwise we can not write anything at all.
+    if (!discoveredServices.contains(service->uuid)) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeCharacteristic(), "
+                                "no service with uuid: " << service << "found";
+        return;
+    }
+
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeCharacteristic(), "
+                              "no characteristic with handle: " << charHandle << "found";
+        return;
+    }
+
+    const bool result = [centralManager write:newValue
+                                        characteristic:charHandle
+                                        serviceUuid:service->uuid
+                                        serviceHandle:service->startHandle
+                                        withResponse:writeWithResponse];
+    if (!result)
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+}
+
+quint16 QLowEnergyControllerPrivateOSX::updateValueOfCharacteristic(QLowEnergyHandle charHandle,
+                                                                    const QByteArray &value,
+                                                                    bool appendValue)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+    if (!service.isNull() && service->characteristicList.contains(charHandle)) {
+        if (appendValue)
+            service->characteristicList[charHandle].value += value;
+        else
+            service->characteristicList[charHandle].value = value;
+
+        return service->characteristicList[charHandle].value.size();
+    }
+
+    return 0;
+}
+
+void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
+                                                     QLowEnergyHandle charHandle, const QLowEnergyHandle descriptorHandle,
+                                                     const QByteArray &newValue)
+{
+    Q_UNUSED(service)
+    Q_UNUSED(charHandle)
+    Q_UNUSED(descriptorHandle)
+    Q_UNUSED(newValue)
+}
+
+QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivateOSX::serviceForHandle(QLowEnergyHandle handle)
+{
+    foreach (QSharedPointer<QLowEnergyServicePrivate> service, discoveredServices.values()) {
+        if (service->startHandle <= handle && handle <= service->endHandle)
+            return service;
+    }
+
+    return QSharedPointer<QLowEnergyServicePrivate>();
+}
+
+QLowEnergyCharacteristic QLowEnergyControllerPrivateOSX::characteristicForHandle(QLowEnergyHandle charHandle)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service(serviceForHandle(charHandle));
+    if (service.isNull())
+        return QLowEnergyCharacteristic();
+
+    if (service->characteristicList.isEmpty())
+        return QLowEnergyCharacteristic();
+
+    // Check whether it is the handle of a characteristic header
+    if (service->characteristicList.contains(charHandle))
+        return QLowEnergyCharacteristic(service, charHandle);
+
+    // Check whether it is the handle of the characteristic value or its descriptors
+    QList<QLowEnergyHandle> charHandles(service->characteristicList.keys());
+    std::sort(charHandles.begin(), charHandles.end());
+
+    for (int i = charHandles.size() - 1; i >= 0; --i) {
+        if (charHandles.at(i) > charHandle)
+            continue;
+
+        return QLowEnergyCharacteristic(service, charHandles.at(i));
+    }
+
+    return QLowEnergyCharacteristic();
 }
 
 void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::Error errorCode)

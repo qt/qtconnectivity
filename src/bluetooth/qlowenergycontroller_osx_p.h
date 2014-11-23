@@ -34,6 +34,7 @@
 #ifndef QLOWENERGYCONTROLLER_OSX_P_H
 #define QLOWENERGYCONTROLLER_OSX_P_H
 
+#include "qlowenergyserviceprivate_p.h"
 #include "osx/osxbtcentralmanager_p.h"
 #include "qlowenergycontroller_p.h"
 #include "qlowenergycontroller.h"
@@ -41,6 +42,7 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
 
+#include <QtCore/qsharedpointer.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qmap.h>
@@ -52,6 +54,7 @@ class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate,
                                        public OSXBluetooth::CentralManagerDelegate
 {
     friend class QLowEnergyController;
+    friend class QLowEnergyService;
 public:
     QLowEnergyControllerPrivateOSX(QLowEnergyController *q);
     QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
@@ -67,14 +70,35 @@ private:
 
     void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
     void serviceDetailsDiscoveryFinished(LEService service) Q_DECL_OVERRIDE;
+    void characteristicWriteNotification(LECharacteristic ch) Q_DECL_OVERRIDE;
     void disconnected() Q_DECL_OVERRIDE;
     void error(QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
     void error(const QBluetoothUuid &serviceUuid,
                QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
+    void error(const QBluetoothUuid &serviceUuid,
+               QLowEnergyHandle charHandle,
+               QLowEnergyService::ServiceError error) Q_DECL_OVERRIDE;
 
     void connectToDevice();
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
+
+    void writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
+                             QLowEnergyHandle charHandle, const QByteArray &newValue,
+                             bool writeWithResponse);
+
+    quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
+                                        const QByteArray &value,
+                                        bool appendValue);
+
+    void writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
+                         QLowEnergyHandle charHandle, const QLowEnergyHandle descriptorHandle,
+                         const QByteArray &newValue);
+
+
+    // 'Lookup' functions:
+    QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(QLowEnergyHandle serviceHandle);
+    QLowEnergyCharacteristic characteristicForHandle(QLowEnergyHandle charHandle);
 
     void setErrorDescription(QLowEnergyController::Error errorCode);
     void invalidateServices();
