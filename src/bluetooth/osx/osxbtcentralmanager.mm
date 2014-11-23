@@ -238,15 +238,16 @@ using namespace QT_NAMESPACE;
     } else {
         disconnectPending = false;
 
-        if ([self isConnected]) {
-            Q_ASSERT_X(peripheral, "-disconnectFromDevice", "invalid peripheral (nil)");
-            Q_ASSERT_X(manager, "-disconnectFromDevice", "invalid central manager (nil)");
+        if ([self isConnected])
             managerState = OSXBluetooth::CentralManagerDisconnecting;
-            [manager cancelPeripheralConnection:peripheral];
-        } else {
+        else
             managerState = OSXBluetooth::CentralManagerIdle;
-            delegate->disconnected();
-        }
+
+        // We have to call -cancelPeripheralConnection: even
+        // if not connected (to cancel a pending connect attempt).
+        // Unfortunately, didDisconnect callback is not always called
+        // (despite of Apple's docs saying it _must_).
+        [manager cancelPeripheralConnection:peripheral];
     }
 }
 

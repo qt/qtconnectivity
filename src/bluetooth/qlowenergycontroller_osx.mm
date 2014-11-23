@@ -359,7 +359,7 @@ void QLowEnergyController::connectToDevice()
         return osx_d_ptr->error(UnknownError);
 
     // No QBluetoothDeviceInfo provided during construction.
-    if (!osx_d_ptr->deviceUuid.isNull())
+    if (osx_d_ptr->deviceUuid.isNull())
         return osx_d_ptr->error(UnknownRemoteDeviceError);
 
     if (osx_d_ptr->controllerState != UnconnectedState)
@@ -376,9 +376,20 @@ void QLowEnergyController::disconnectFromDevice()
     OSX_D_PTR;
 
     if (osx_d_ptr->isValid()) {
+        const ControllerState oldState = osx_d_ptr->controllerState;
+
         osx_d_ptr->controllerState = ClosingState;
         emit stateChanged(ClosingState);
         [osx_d_ptr->centralManager disconnectFromDevice];
+
+        if (oldState == ConnectingState) {
+            // With a pending connect attempt there is no
+            // guarantee we'll ever have didDisconnect callback,
+            // set the state here and now to make sure we still
+            // can connect.
+            osx_d_ptr->controllerState = UnconnectedState;
+            emit stateChanged(UnconnectedState);
+        }
     }
 }
 
