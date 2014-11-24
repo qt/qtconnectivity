@@ -91,6 +91,7 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
     if (included)
         newService->type |= QLowEnergyService::IncludedService;
 
+    /*
     #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
     if (!cbService.isPrimary) {
         // Our guess included/not was probably wrong.
@@ -98,6 +99,7 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
         newService->type |= QLowEnergyService::IncludedService;
     }
     #endif
+    */
     // No such property before 10_9/6_0.
     return newService;
 }
