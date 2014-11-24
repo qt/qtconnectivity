@@ -166,7 +166,11 @@ void Device::scanServices(const QString &address)
     //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
+#ifdef Q_OS_MAC
+        controller = new QLowEnergyController(currentDevice.getDevice());
+#else
         controller = new QLowEnergyController(currentDevice.getDevice().address());
+#endif
         connect(controller, SIGNAL(connected()),
                 this, SLOT(deviceConnected()));
         connect(controller, SIGNAL(error(QLowEnergyController::Error)),
