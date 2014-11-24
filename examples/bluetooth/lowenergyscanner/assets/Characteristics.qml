@@ -141,10 +141,11 @@ Rectangle {
         id: menu
         anchors.bottom: parent.bottom
         menuWidth: parent.width
-        menuText: "Scanning"
+        menuText: device.update
         menuHeight: (parent.height/6)
         onButtonClick: {
             pageLoader.source = "Services.qml"
+            device.update = "Back"
         }
     }
 }
