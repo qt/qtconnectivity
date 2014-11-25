@@ -451,6 +451,8 @@ void QLowEnergyControllerPrivate::characteristicChanged(
         return;
     }
 
+    updateValueOfCharacteristic(characteristic.attributeHandle(),
+                                data, false);
     emit service->characteristicChanged(characteristic, data);
 }
 

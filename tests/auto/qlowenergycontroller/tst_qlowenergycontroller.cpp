@@ -1858,6 +1858,13 @@ void tst_QLowEnergyController::tst_writeDescriptor()
             const QLowEnergyCharacteristic ch = entry[0].value<QLowEnergyCharacteristic>();
 
             QCOMPARE(tempData, ch);
+
+            //check last characteristic changed value matches the characteristics current value
+            if (i == (charChangedSpy.count() - 1)) {
+                writtenValue = entry[1].toByteArray();
+                QCOMPARE(ch.value(), writtenValue);
+                QCOMPARE(tempData.value(), writtenValue);
+            }
         }
 
         service->writeCharacteristic(tempConfig, QByteArray::fromHex("00"));
