@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -175,11 +167,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
     int cod = 0;
     int dev_type = 0;
     int rssi = 0;
-
+    bool hasGatt = false;
     pps_decoder_get_bool(&ppsDecoder, "paired", &paired);
     pps_decoder_get_int(&ppsDecoder, "cod", &cod);
     pps_decoder_get_int(&ppsDecoder, "dev_type", &dev_type);
     pps_decoder_get_int(&ppsDecoder, "rssi", &rssi);
+    pps_decoder_push(&ppsDecoder, "gatt_available_services");
+    const char *next_service = 0;
+
+    for (int service_count=0; pps_decoder_get_string(&ppsDecoder, 0, &next_service ) == PPS_DECODER_OK; service_count++) {
+        hasGatt = true;
+        //qBluetoothDebug() << next_service;
+    }
     pps_decoder_cleanup(&ppsDecoder);
 
     QBluetoothDeviceInfo deviceInfo(deviceAddr, deviceName, cod);
@@ -202,6 +201,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::remoteDevicesChanged(int fd)
     m_finishedTimer.start(7000);
     if (!deviceAddr.isNull()) {
         qCDebug(QT_BT_QNX) << "Device discovered: " << deviceName << deviceAddr.toString();
+        /* Looking for device type. Only Low energy devices will be added
+         * BT_DEVICE_TYPE_LE_PUBLIC is 0 --->LE device
+         * BT_DEVICE_TYPE_LE_PRIVATE is 1 ---> LE device
+         * BT_DEVICE_TYPE_REGULAR is 32
+         * BT_DEVICE_TYPE_UNKNOWN is 255
+         */
+        if (dev_type == 0 || dev_type == 1)
+            deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+        else{
+            if (hasGatt)
+                deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+            else
+                deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        }
         discoveredDevices.append(deviceInfo);
         if (!updated) // We are not allowed to emit a signal with the updated version
             emit q_ptr->deviceDiscovered(discoveredDevices.last());

@@ -6,35 +6,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -61,6 +53,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \inmodule QtBluetooth
     \brief The QBluetoothSocket class enables connection to a Bluetooth device
     running a bluetooth server.
+
+    \since 5.2
 
     QBluetoothSocket supports two socket types, \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} and
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}.
@@ -150,6 +144,10 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Aborts the current connection and resets the socket. Unlike disconnectFromService(), this
     function immediately closes the socket, discarding any pending data in the write buffer.
 
+    \note On Android, aborting the socket requires asynchronous interaction with Android threads.
+    Therefore the associated \l disconnected() and \l stateChanged() signals are delayed
+    until the threads have finished the closure.
+
     \sa disconnectFromService(), close()
 */
 
@@ -157,6 +155,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn void QBluetoothSocket::close()
 
     Disconnects the socket's connection with the device.
+
+    \note On Android, closing the socket requires asynchronous interaction with Android threads.
+    Therefore the associated \l disconnected() and \l stateChanged() signals are delayed
+    until the threads have finished the closure.
+
 */
 
 /*!
@@ -196,7 +199,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On BlackBerry and Android, this feature is not supported and returns 0.
+    On BlackBerry, Android and OS X, this feature is not supported and returns 0.
 */
 
 /*!
@@ -241,7 +244,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
     Q_D(QBluetoothSocket);
     d->ensureNativeSocket(socketType);
 
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -251,7 +254,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent), d_ptr(new QBluetoothSocketPrivate)
 {
     d_ptr->q_ptr = this;
-    setOpenMode(QIODevice::ReadWrite);
+    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -319,9 +322,6 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         setSocketError(QBluetoothSocket::OperationError);
         return;
     }
-
-    setOpenMode(openMode);
-
 #if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
     if (!d->ensureNativeSocket(service.socketProtocol())) {
         d->errorString = tr("Socket type not supported");
@@ -572,10 +572,12 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
 {
     Q_D(QBluetoothSocket);
     qCDebug(QT_BT) << "FOUND SERVICE!" << service;
-    if(service.protocolServiceMultiplexer() != 0 || service.serverChannel() != 0) {
+    if (service.protocolServiceMultiplexer() > 0 || service.serverChannel() > 0) {
         connectToService(service, d->openMode);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = 0;
+    } else {
+        qCDebug(QT_BT) << "Could not find port/psm for potential remote service";
     }
 }
 
@@ -599,6 +601,8 @@ void QBluetoothSocket::abort()
         return;
 
     Q_D(QBluetoothSocket);
+    setOpenMode(QIODevice::NotOpen);
+    setSocketState(ClosingState);
     d->abort();
 
 #ifndef QT_ANDROID_BLUETOOTH
@@ -652,6 +656,13 @@ quint16 QBluetoothSocket::peerPort() const
 qint64 QBluetoothSocket::writeData(const char *data, qint64 maxSize)
 {
     Q_D(QBluetoothSocket);
+
+    if (!data || maxSize <= 0) {
+        d_ptr->errorString = tr("Invalid data/data size");
+        setSocketError(QBluetoothSocket::OperationError);
+        return -1;
+    }
+
     return d->writeData(data, maxSize);
 }
 
@@ -667,6 +678,7 @@ void QBluetoothSocket::close()
         return;
 
     Q_D(QBluetoothSocket);
+    setOpenMode(QIODevice::NotOpen);
     setSocketState(ClosingState);
 
     d->close();

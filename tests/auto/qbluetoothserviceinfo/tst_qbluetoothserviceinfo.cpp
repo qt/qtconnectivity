@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -49,6 +41,7 @@
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothuuid.h>
+#include <QtBluetooth/QBluetoothServer>
 
 QT_USE_NAMESPACE
 
@@ -190,10 +183,20 @@ void tst_QBluetoothServiceInfo::tst_assignment_data()
     QTest::addColumn<QUuid>("uuid");
     QTest::addColumn<QBluetoothUuid::ProtocolUuid>("protocolUuid");
     QTest::addColumn<QBluetoothServiceInfo::Protocol>("serviceInfoProtocol");
+    QTest::addColumn<bool>("protocolSupported");
 
-    QTest::newRow("assignment_data")
+    bool l2cpSupported = true;
+    //some platforms don't support L2CP
+#ifdef QT_ANDROID_BLUETOOTH
+    l2cpSupported = false;
+#endif
+    QTest::newRow("assignment_data_l2cp")
         << QUuid(0x67c8770b, 0x44f1, 0x410a, 0xab, 0x9a, 0xf9, 0xb5, 0x44, 0x6f, 0x13, 0xee)
-        << QBluetoothUuid::L2cap << QBluetoothServiceInfo::L2capProtocol;
+        << QBluetoothUuid::L2cap << QBluetoothServiceInfo::L2capProtocol << l2cpSupported;
+    QTest::newRow("assignment_data_rfcomm")
+        << QUuid(0x67c8770b, 0x44f1, 0x410a, 0xab, 0x9a, 0xf9, 0xb5, 0x44, 0x6f, 0x13, 0xee)
+        << QBluetoothUuid::Rfcomm << QBluetoothServiceInfo::RfcommProtocol << true;
+
 }
 
 void tst_QBluetoothServiceInfo::tst_assignment()
@@ -201,6 +204,7 @@ void tst_QBluetoothServiceInfo::tst_assignment()
     QFETCH(QUuid, uuid);
     QFETCH(QBluetoothUuid::ProtocolUuid, protocolUuid);
     QFETCH(QBluetoothServiceInfo::Protocol, serviceInfoProtocol);
+    QFETCH(bool, protocolSupported);
 
     const QString serviceName("My Service");
     const QBluetoothDeviceInfo deviceInfo(QBluetoothAddress("001122334455"), "Test Device", 0);
@@ -302,20 +306,51 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         protocolDescriptorList.append(QVariant::fromValue(protocol));
         copyInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                                  protocolDescriptorList);
-        QVERIFY(copyInfo.serverChannel() == -1);
-        QVERIFY(copyInfo.protocolServiceMultiplexer() != -1);
+        if (serviceInfoProtocol == QBluetoothServiceInfo::L2capProtocol) {
+            QVERIFY(copyInfo.serverChannel() == -1);
+            QVERIFY(copyInfo.protocolServiceMultiplexer() != -1);
+        } else if (serviceInfoProtocol == QBluetoothServiceInfo::RfcommProtocol) {
+            QVERIFY(copyInfo.serverChannel() != -1);
+            QVERIFY(copyInfo.protocolServiceMultiplexer() == -1);
+        }
+
         QVERIFY(copyInfo.socketProtocol() == serviceInfoProtocol);
     }
 
     {
         QBluetoothServiceInfo copyInfo;
+
         QVERIFY(!copyInfo.isValid());
         copyInfo = serviceInfo;
+        copyInfo.setServiceUuid(QBluetoothUuid::SerialPort);
         QVERIFY(!copyInfo.isRegistered());
 
         if (!QBluetoothLocalDevice::allDevices().count()) {
             QSKIP("Skipping test due to missing Bluetooth device");
-        } else {
+        } else if (protocolSupported) {
+            QBluetoothServer server(serviceInfoProtocol);
+            QVERIFY(server.listen());
+            QTRY_VERIFY_WITH_TIMEOUT(server.isListening(), 5000);
+            QVERIFY(server.serverPort() > 0);
+
+            QBluetoothServiceInfo::Sequence protocolDescriptorList;
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+
+            if (serviceInfoProtocol == QBluetoothServiceInfo::L2capProtocol) {
+                protocol << QVariant::fromValue(server.serverPort());
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            } else if (serviceInfoProtocol == QBluetoothServiceInfo::RfcommProtocol) {
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+                protocol.clear();
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                         << QVariant::fromValue(quint8(server.serverPort()));
+                protocolDescriptorList.append(QVariant::fromValue(protocol));
+            }
+
+            serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
+                                     protocolDescriptorList);
+
             QVERIFY(copyInfo.registerService());
             QVERIFY(copyInfo.isRegistered());
             QVERIFY(serviceInfo.isRegistered());
@@ -327,6 +362,9 @@ void tst_QBluetoothServiceInfo::tst_assignment()
             QVERIFY(!copyInfo.isRegistered());
             QVERIFY(!secondCopy.isRegistered());
             QVERIFY(!serviceInfo.isRegistered());
+            QVERIFY(server.isListening());
+            server.close();
+            QVERIFY(!server.isListening());
         }
     }
 }

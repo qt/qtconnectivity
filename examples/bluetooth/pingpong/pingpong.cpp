@@ -320,7 +320,7 @@ void PingPong::addService(const QBluetoothServiceInfo &service)
 {
     setMessage("Service found. Setting parameters...");
     //! [Connecting the socket]
-    socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     socket->connectToService(service);
 
     connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));

@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -44,6 +45,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothlocaldevice.h>
+#include <qbluetoothuuid.h>
 
 
 ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
@@ -97,4 +99,3 @@ void ServiceDiscoveryDialog::addService(const QBluetoothServiceInfo &info)
 
     ui->list->addItem(line);
 }
-

@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -45,16 +37,13 @@
 #include "bluez/manager_p.h"
 #include "bluez/adapter_p.h"
 #include "bluez/device_p.h"
-#include "bluez/bluez5_helper_p.h"
 #include "bluez/objectmanager_p.h"
 #include <QtBluetooth/QBluetoothLocalDevice>
+#include "bluez/bluez_data_p.h"
 
 #include <qplatformdefs.h>
 
 #include <QtCore/QLoggingCategory>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/rfcomm.h>
-#include <bluetooth/l2cap.h>
 
 #include <errno.h>
 #include <unistd.h>
@@ -74,7 +63,8 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       readNotifier(0),
       connectWriteNotifier(0),
       connecting(false),
-      discoveryAgent(0)
+      discoveryAgent(0),
+      lowEnergySocketType(0)
 {
 }
 
@@ -120,9 +110,9 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 
     Q_Q(QBluetoothSocket);
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
     connectWriteNotifier->setEnabled(false);
     readNotifier->setEnabled(false);
@@ -134,11 +124,10 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
-    Q_UNUSED(openMode);
     int result = -1;
 
     if (socket == -1 && !ensureNativeSocket(socketType)) {
-        errorString = QObject::tr("Unknown socket error");
+        errorString = QBluetoothSocket::tr("Unknown socket error");
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
         return;
     }
@@ -161,7 +150,22 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
         memset(&addr, 0, sizeof(addr));
         addr.l2_family = AF_BLUETOOTH;
-        addr.l2_psm = port;
+        // This is an ugly hack but the socket class does what's needed already.
+        // For L2CP GATT we need a channel rather than a socket and the LE address type
+        // We don't want to make this public API offering for now especially since
+        // only Linux (of all platforms supported by this library) supports this type
+        // of socket.
+
+#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+        if (lowEnergySocketType) {
+            addr.l2_cid = htobs(port);
+            addr.l2_bdaddr_type = lowEnergySocketType;
+        } else {
+            addr.l2_psm = htobs(port);
+        }
+#else
+        addr.l2_psm = htobs(port);
+#endif
 
         convertAddress(address.toUInt64(), addr.l2_bdaddr.b);
 
@@ -174,6 +178,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     if (result >= 0 || (result == -1 && errno == EINPROGRESS)) {
         connecting = true;
         q->setSocketState(QBluetoothSocket::ConnectingState);
+        q->setOpenMode(openMode);
     } else {
         errorString = qt_error_string(errno);
         q->setSocketError(QBluetoothSocket::UnknownSocketError);
@@ -226,8 +231,6 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         }
     }
 }
-
-// TODO: move to private backend?
 
 void QBluetoothSocketPrivate::_q_readNotify()
 {
@@ -478,7 +481,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 
         if(txBuffer.size() == 0) {
             connectWriteNotifier->setEnabled(true);
-            QMetaObject::invokeMethod(q, "_q_writeNotify", Qt::QueuedConnection);
+            QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
         }
 
         char *txbuf = txBuffer.reserve(maxSize);
@@ -542,9 +545,9 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
 
     readNotifier = new QSocketNotifier(socket, QSocketNotifier::Read);
-    QObject::connect(readNotifier, SIGNAL(activated(int)), q, SLOT(_q_readNotify()));
+    QObject::connect(readNotifier, SIGNAL(activated(int)), this, SLOT(_q_readNotify()));
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
-    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), q, SLOT(_q_writeNotify()));
+    QObject::connect(connectWriteNotifier, SIGNAL(activated(int)), this, SLOT(_q_writeNotify()));
 
     q->setSocketState(socketState);
     q->setOpenMode(openMode);

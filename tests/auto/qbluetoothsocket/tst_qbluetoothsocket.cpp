@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -221,24 +213,17 @@ void tst_QBluetoothSocket::tst_construction()
         QCOMPARE(socket.atEnd(), true);
         QCOMPARE(socket.pos(), 0);
         QCOMPARE(socket.size(), 0);
-
-        QSignalSpy spy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
-        QCOMPARE(spy.count(), 0);
+        QCOMPARE(socket.isOpen(), false);
+        QCOMPARE(socket.isReadable(), false);
+        QCOMPARE(socket.isWritable(), false);
+        QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
         QByteArray array = socket.readAll();
         QVERIFY(array.isEmpty());
-        QCOMPARE(socket.error(), QBluetoothSocket::OperationError);
-        QCOMPARE(spy.count(), 1);
 
         char buffer[10];
         int returnValue = socket.read((char*)&buffer, 10);
         QCOMPARE(returnValue, -1);
-        QCOMPARE(socket.error(), QBluetoothSocket::OperationError);
-        QVERIFY(spy.count() >= 2);
-        while (spy.count()) {
-            QBluetoothSocket::SocketError er = spy.takeFirst().at(0).value<QBluetoothSocket::SocketError>();
-            QVERIFY(er == QBluetoothSocket::OperationError);
-        }
     }
 
     {
@@ -264,6 +249,11 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     QSignalSpy connectedSpy(&socket, SIGNAL(connected()));
     QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
 
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+
     socket.connectToService(remoteServiceInfo);
 
     QCOMPARE(stateSpy.count(), 1);
@@ -287,6 +277,10 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::ConnectedState);
     QCOMPARE(socket.state(), QBluetoothSocket::ConnectedState);
 
+    QCOMPARE(socket.isWritable(), true);
+    QCOMPARE(socket.isReadable(), true);
+    QCOMPARE(socket.isOpen(), true);
+
     stateSpy.clear();
 
     //check the peer & local info
@@ -298,7 +292,11 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     /* Disconnection */
     QSignalSpy disconnectedSpy(&socket, SIGNAL(disconnected()));
 
-    socket.disconnectFromService();
+    socket.abort(); // close() tested by other functions
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
     QVERIFY(stateSpy.count() >= 1);
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::ClosingState);
@@ -347,6 +345,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     /* Connection */
     QSignalSpy connectedSpy(&socket, SIGNAL(connected()));
 
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
     socket.connectToService(remoteServiceInfo);
 
     QCOMPARE(stateSpy.count(), 1);
@@ -360,6 +362,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         QTest::qWait(1000);
         connectTime -= 1000;
     }
+
+    QCOMPARE(socket.isWritable(), true);
+    QCOMPARE(socket.isReadable(), true);
+    QCOMPARE(socket.isOpen(), true);
 
     QCOMPARE(connectedSpy.count(), 1);
     QCOMPARE(stateSpy.count(), 1);
@@ -378,10 +384,14 @@ void tst_QBluetoothSocket::tst_clientCommunication()
             QSignalSpy readyReadSpy(&socket, SIGNAL(readyRead()));
             QSignalSpy bytesWrittenSpy(&socket, SIGNAL(bytesWritten(qint64)));
 
-            socket.write(line.toUtf8());
+            qint64 dataWritten = socket.write(line.toUtf8());
 
-//            QEXPECT_FAIL("", "TODO: need to implement write buffering", Continue);
-            QCOMPARE(socket.bytesToWrite(), qint64(line.length()));
+            if (socket.openMode() & QIODevice::Unbuffered)
+                QCOMPARE(socket.bytesToWrite(), qint64(0));
+            else
+                QCOMPARE(socket.bytesToWrite(), qint64(line.length()));
+
+            QCOMPARE(dataWritten, qint64(line.length()));
 
             int readWriteTime = MaxReadWriteTime;
             while ((bytesWrittenSpy.count() == 0 || readyReadSpy.count() == 0) && readWriteTime > 0) {
@@ -400,7 +410,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
 
             QCOMPARE(readyReadSpy.count(), 1);
 
-            QCOMPARE(socket.bytesAvailable(), qint64(line.length()));
+            if (socket.openMode() & QIODevice::Unbuffered)
+                QVERIFY(socket.bytesAvailable() <= qint64(line.length()));
+            else
+                QCOMPARE(socket.bytesAvailable(), qint64(line.length()));
 
             QVERIFY(socket.canReadLine());
 
@@ -410,16 +423,24 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         }
     }
 
+    QCOMPARE(socket.isWritable(), true);
+    QCOMPARE(socket.isReadable(), true);
+    QCOMPARE(socket.isOpen(), true);
+
     {
         /* Send all at once */
         QSignalSpy readyReadSpy(&socket, SIGNAL(readyRead()));
         QSignalSpy bytesWrittenSpy(&socket, SIGNAL(bytesWritten(qint64)));
 
         QString joined = data.join(QString());
-        socket.write(joined.toUtf8());
+        qint64 dataWritten = socket.write(joined.toUtf8());
 
-//        QEXPECT_FAIL("", "TODO: need to implement write buffering", Continue);
-        QCOMPARE(socket.bytesToWrite(), qint64(joined.length()));
+        if (socket.openMode() & QIODevice::Unbuffered)
+            QCOMPARE(socket.bytesToWrite(), qint64(0));
+        else
+            QCOMPARE(socket.bytesToWrite(), qint64(joined.length()));
+
+        QCOMPARE(dataWritten, qint64(joined.length()));
 
         int readWriteTime = MaxReadWriteTime;
         while ((bytesWrittenSpy.count() == 0 || readyReadSpy.count() == 0) && readWriteTime > 0) {
@@ -431,7 +452,10 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         QCOMPARE(bytesWrittenSpy.at(0).at(0).toLongLong(), qint64(joined.length()));
         QVERIFY(readyReadSpy.count() > 0);
 
-        QCOMPARE(socket.bytesAvailable(), qint64(joined.length()));
+        if (socket.openMode() & QIODevice::Unbuffered)
+            QVERIFY(socket.bytesAvailable() <= qint64(joined.length()));
+        else
+            QCOMPARE(socket.bytesAvailable(), qint64(joined.length()));
 
         QVERIFY(socket.canReadLine());
 
@@ -444,6 +468,11 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     QSignalSpy disconnectedSpy(&socket, SIGNAL(disconnected()));
 
     socket.disconnectFromService();
+
+    QCOMPARE(socket.isWritable(), false);
+    QCOMPARE(socket.isReadable(), false);
+    QCOMPARE(socket.isOpen(), false);
+    QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
     int disconnectTime = MaxConnectTime;
     while (disconnectedSpy.count() == 0 && disconnectTime > 0) {

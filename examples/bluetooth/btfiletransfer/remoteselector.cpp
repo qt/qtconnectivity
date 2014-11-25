@@ -59,7 +59,8 @@ QT_USE_NAMESPACE
 
 RemoteSelector::RemoteSelector(QWidget *parent)
 :   QDialog(parent), ui(new Ui::RemoteSelector),
-    m_localDevice(new QBluetoothLocalDevice), m_pindisplay(0)
+    m_localDevice(new QBluetoothLocalDevice), m_pindisplay(0),
+    m_pairingError(false)
 {
     ui->setupUi(this);
 
@@ -85,9 +86,14 @@ RemoteSelector::RemoteSelector(QWidget *parent)
     ui->remoteDevices->setColumnWidth(3, 75);
     ui->remoteDevices->setColumnWidth(4, 100);
 
-    connect(m_localDevice, SIGNAL(pairingDisplayPinCode(QBluetoothAddress,QString)), this, SLOT(displayPin(QBluetoothAddress,QString)));
-    connect(m_localDevice, SIGNAL(pairingDisplayConfirmation(QBluetoothAddress,QString)), this, SLOT(displayConfirmation(QBluetoothAddress,QString)));
-    connect(m_localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)), this, SLOT(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
+    connect(m_localDevice, SIGNAL(pairingDisplayPinCode(QBluetoothAddress,QString)),
+            this, SLOT(displayPin(QBluetoothAddress,QString)));
+    connect(m_localDevice, SIGNAL(pairingDisplayConfirmation(QBluetoothAddress,QString)),
+            this, SLOT(displayConfirmation(QBluetoothAddress,QString)));
+    connect(m_localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)),
+            this, SLOT(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
+    connect(m_localDevice, SIGNAL(error(QBluetoothLocalDevice::Error)),
+            this, SLOT(pairingError(QBluetoothLocalDevice::Error)));
 
     ui->busyWidget->setMovie(new QMovie(":/icons/busy.gif"));
     ui->busyWidget->movie()->start();
@@ -97,8 +103,6 @@ RemoteSelector::RemoteSelector(QWidget *parent)
 
     ui->remoteDevices->clearContents();
     ui->remoteDevices->setRowCount(0);
-
-
 }
 
 RemoteSelector::~RemoteSelector()
@@ -324,12 +328,13 @@ void RemoteSelector::pairingFinished(const QBluetoothAddress &address, QBluetoot
         delete m_pindisplay;
 
     QMessageBox msgBox;
-    if (status == QBluetoothLocalDevice::Paired ||
-       status == QBluetoothLocalDevice::AuthorizedPaired){
-        msgBox.setText("Paired successfully with" + address.toString());
-    }
-    else {
+    if (m_pairingError) {
         msgBox.setText("Pairing failed with " + address.toString());
+    } else if (status == QBluetoothLocalDevice::Paired
+               || status == QBluetoothLocalDevice::AuthorizedPaired) {
+        msgBox.setText("Paired successfully with " + address.toString());
+    } else {
+        msgBox.setText("Pairing released with " + address.toString());
     }
 
     if (service.isValid()){
@@ -347,11 +352,19 @@ void RemoteSelector::pairingFinished(const QBluetoothAddress &address, QBluetoot
         }
     }
 
+    m_pairingError = false;
     msgBox.exec();
 
     ui->remoteDevices->blockSignals(false);
+}
 
+void RemoteSelector::pairingError(QBluetoothLocalDevice::Error error)
+{
+    if (error != QBluetoothLocalDevice::PairingError)
+        return;
 
+    m_pairingError = true;
+    pairingFinished(m_service.device().address(), QBluetoothLocalDevice::Unpaired);
 }
 
 void RemoteSelector::on_remoteDevices_cellClicked(int row, int column)

@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -50,6 +42,8 @@ QT_BEGIN_NAMESPACE
     \inmodule QtBluetooth
     \brief The QBluetoothTransferReply class stores the response for a data
     transfer request.
+
+    \since 5.2
 
     In additional to a copy of the QBluetoothTransferRequest object used to create the request,
     QBluetoothTransferReply contains the contents of the reply itself.
@@ -88,6 +82,9 @@ void QBluetoothTransferReply::abort()
     \fn void QBluetoothTransferReply::finished(QBluetoothTransferReply *reply)
 
     This signal is emitted when the transfer is complete for \a reply.
+
+    To avoid the loss of signal emissions it is recommend to immidiately connect
+    to this signal once a \c QBluetoothTransferReply instance has been created.
 */
 
 /*!
@@ -95,6 +92,23 @@ void QBluetoothTransferReply::abort()
 
     This signal is emitted whenever data is transferred. The \a bytesTransferred parameter contains the total
     number of bytes transferred so far out of \a bytesTotal.
+
+
+    To avoid the loss of signal emissions it is recommend to immidiately connect
+    to this signal once a QBluetoothTransferReply instance has been created.
+*/
+
+/*!
+    \fn void QBluetoothTransferReply::error(QBluetoothTransferReply::TransferError errorType)
+    \since 5.4
+
+    This signal is emitted whenever an error has occurred. The \a errorType
+    parameter indicates the type of error.
+
+    To avoid the loss of signal emissions it is recommend to immidiately connect
+    to this signal once a QBluetoothTransferReply instance has been created.
+
+    \sa error(), errorString()
 */
 
 /*!
@@ -103,7 +117,8 @@ void QBluetoothTransferReply::abort()
 QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate())
 {
-    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply");
+    qRegisterMetaType<QBluetoothTransferReply*>();
+    qRegisterMetaType<QBluetoothTransferReply::TransferError>();
 }
 
 /*!
@@ -173,12 +188,16 @@ void QBluetoothTransferReply::setRequest(const QBluetoothTransferRequest &reques
   \fn TransferError QBluetoothTransferReply::error() const
 
   The error code of the error that occurred.
+
+  \sa errorString()
 */
 
 /*!
   \fn QString QBluetoothTransferReply::errorString() const
 
   String describing the error. Can be displayed to the user.
+
+  \sa error()
 */
 
 QBluetoothTransferReplyPrivate::QBluetoothTransferReplyPrivate()

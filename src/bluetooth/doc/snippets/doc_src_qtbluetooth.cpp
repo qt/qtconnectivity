@@ -51,6 +51,10 @@
 #include <QtBluetooth/QBluetoothTransferRequest>
 #include <QtBluetooth/QBluetoothTransferReply>
 
+#include <QtBluetooth/QLowEnergyController>
+#include <QtBluetooth/QLowEnergyService>
+#include <QtBluetooth/QLowEnergyCharacteristic>
+
 //! [namespace]
 QT_USE_NAMESPACE
 //! [namespace]
@@ -64,11 +68,15 @@ public:
     void startDeviceDiscovery();
     void startServiceDiscovery();
     void objectPush();
+    void btleSharedData();
+    void enableCharNotifications();
 
 public slots:
     void deviceDiscovered(const QBluetoothDeviceInfo &device);
     void serviceDiscovered(const QBluetoothServiceInfo &service);
     void transferFinished(QBluetoothTransferReply* reply);
+    void error(QBluetoothTransferReply::TransferError errorType);
+    void characteristicChanged(const QLowEnergyCharacteristic& ,const QByteArray&);
 };
 
 void MyClass::localDevice() {
@@ -155,16 +163,98 @@ QFile *file = new QFile("testfile.txt");
 
 // Ask the transfer manager to send it
 QBluetoothTransferReply *reply = transferManager->put(request, file);
+if (reply->error() == QBluetoothTransferReply::NoError) {
 
-// Connect to the reply's signals to be informed about the status and do cleanups when done
-QObject::connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
-                 this, SLOT(transferFinished(QBluetoothTransferReply*)));
+    // Connect to the reply's signals to be informed about the status and do cleanups when done
+    QObject::connect(reply, SIGNAL(finished(QBluetoothTransferReply*)),
+                     this, SLOT(transferFinished(QBluetoothTransferReply*)));
+    QObject::connect(reply, SIGNAL(error(QBluetoothTransferReply::TransferError)),
+                     this, SLOT(error(QBluetoothTransferReply::TransferError)));
+} else {
+    qWarning() << "Cannot push testfile.txt:" << reply->errorString();
+}
 //! [sendfile]
 }
 
 void MyClass::transferFinished(QBluetoothTransferReply* /*reply*/)
 {
 }
+
+void MyClass::error(QBluetoothTransferReply::TransferError /*errorType*/)
+{
+}
+
+void MyClass::characteristicChanged(const QLowEnergyCharacteristic &, const QByteArray &)
+{
+}
+
+void MyClass::btleSharedData()
+{
+    QBluetoothAddress remoteDevice;
+
+//! [data_share_qlowenergyservice]
+    QLowEnergyService *first, *second;
+    QLowEnergyController control(remoteDevice);
+    control.connectToDevice();
+
+    // waiting for connection
+
+    first = control.createServiceObject(QBluetoothUuid::BatteryService);
+    second = control.createServiceObject(QBluetoothUuid::BatteryService);
+    Q_ASSERT(first->state() == QLowEnergyService::DiscoveryRequired);
+    Q_ASSERT(first->state() == second->state());
+
+    first->discoverDetails();
+
+    Q_ASSERT(first->state() == QLowEnergyService::DiscoveringServices);
+    Q_ASSERT(first->state() == second->state());
+//! [data_share_qlowenergyservice]
+}
+
+void MyClass::enableCharNotifications()
+{
+    QBluetoothAddress remoteDevice;
+    QLowEnergyService *service;
+    QLowEnergyController *control = new QLowEnergyController(remoteDevice, this);
+    control->connectToDevice();
+
+
+    service = control->createServiceObject(QBluetoothUuid::BatteryService, this);
+    if (!service)
+        return;
+
+    service->discoverDetails();
+
+    //... wait until discovered
+
+//! [enable_btle_notifications]
+    //PreCondition: service details already discovered
+    QLowEnergyCharacteristic batteryLevel = service->characteristic(
+                QBluetoothUuid::BatteryLevel);
+    if (!batteryLevel.isValid())
+        return;
+
+    QLowEnergyDescriptor notification = batteryLevel.descriptor(
+                QBluetoothUuid::ClientCharacteristicConfiguration);
+    if (!notification.isValid())
+        return;
+
+    // establish hook into notifications
+    connect(service, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
+            this, SLOT(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
+
+    // enable notification
+    service->writeDescriptor(notification, QByteArray::fromHex("0100"));
+
+    // disable notification
+    //service->writeDescriptor(notification, QByteArray::fromHex("0000"));
+
+    // wait until descriptorWritten() signal is emitted
+    // to confirm successful write
+//! [enable_btle_notifications]
+}
+
+
 
 int main(int argc, char** argv)
 {

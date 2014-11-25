@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt local connectivty modules.
@@ -29,7 +29,8 @@
 \ingroup technology-apis
 \title Qt Bluetooth Overview
 \page qtbluetooth-overview.html
-\brief The Qt Bluetooth API enables connectivity with other Bluetooth enabled devices.
+\brief The Qt Bluetooth API enables connectivity with other regular Bluetooth
+       and Bluetooth Low Energy enabled devices.
 
 \tableofcontents
 
@@ -41,6 +42,9 @@
         \li Push files to remote devices using the OBEX Object Push Profile (OPP)
         \li Connect to remote devices through a RFCOMM channel using the Serial Port Profile (SPP).
         \li Create a RFCOMM server that allows incoming connections using SPP.
+        \li Retrieve specification about Bluetooth Low Energy device.
+        \li Connect to Bluetooth Low Energy device.
+        \li Receive advertisement from Bluetooth Low Energy device.
         \endlist
 
     Note that the Object Push Profile is not supported on Android.
@@ -71,8 +75,8 @@
 
     Once the desired device was found, there are two main use cases provided by Qt Bluetooth. The
     simpler one is to send files via the Obex Object Push Profile (OPP). As the name describes, this
-    profile can only push files from one device to another, but not pull files or browse the remote
-    file system. Because of this limitation, this profile does not require the two devices to be
+    profile can push files from one device to another. Currently it is not possible to pull files
+    or browse the remote file system. The profile does not require the two devices to be
     paired before exchanging data. To push files to remote devices, create a
     QBluetoothTransferRequest and ask the QBluetoothTransferManager to push the file contained in
     the request by calling its \l {QBluetoothTransferManager::put()}{put()} function.
@@ -103,4 +107,9 @@
     \l QBluetoothSocket classes. A good example to start with SPP is the \l{btchat}{Bluetooth Chat}
     example.
 
+    \section1 Bluetooth Low Energy
+
+    Bluetooth Low Energy, also known as Bluetooth Smart, is a new technology enabling
+    devices with low energy consumption to communicate with each other. More details about
+    this technology and the related Qt APIs can be found in the \l {Bluetooth Low Energy Overview}.
 */

@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -286,7 +278,7 @@ static inline OrgBluezDeviceInterface *getDevice(const QBluetoothAddress &addres
 
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
-    if (address.isNull() || !isValid()) {
+    if (!isValid() || address.isNull()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));
@@ -636,6 +628,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
         adapterProperties(0),
         managerBluez5(0),
         agent(0),
+        manager(0),
         localAddress(address),
         pairingTarget(0),
         pairingDiscoveryTimer(0),
@@ -700,6 +693,8 @@ QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
     delete managerBluez5;
     delete agent;
     delete pairingTarget;
+    delete manager;
+
     qDeleteAll(devices);
     qDeleteAll(deviceChangeMonitors);
 }
@@ -709,11 +704,12 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
     if (adapter)
         return;
 
-    OrgBluezManagerInterface manager(QStringLiteral("org.bluez"), QStringLiteral("/"),
-                                     QDBusConnection::systemBus());
+    QScopedPointer<OrgBluezManagerInterface> man(new OrgBluezManagerInterface(
+                            QStringLiteral("org.bluez"), QStringLiteral("/"),
+                            QDBusConnection::systemBus()));
 
     if (localAddress == QBluetoothAddress()) {
-        QDBusPendingReply<QDBusObjectPath> reply = manager.DefaultAdapter();
+        QDBusPendingReply<QDBusObjectPath> reply = man->DefaultAdapter();
         reply.waitForFinished();
         if (reply.isError())
             return;
@@ -721,7 +717,7 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
         adapter = new OrgBluezAdapterInterface(QStringLiteral("org.bluez"),
                                                reply.value().path(), QDBusConnection::systemBus());
     } else {
-        QDBusPendingReply<QList<QDBusObjectPath> > reply = manager.ListAdapters();
+        QDBusPendingReply<QList<QDBusObjectPath> > reply = man->ListAdapters();
         reply.waitForFinished();
         if (reply.isError())
             return;
@@ -733,8 +729,10 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
 
             QDBusPendingReply<QVariantMap> reply = tmpAdapter->GetProperties();
             reply.waitForFinished();
-            if (reply.isError())
+            if (reply.isError()) {
+                delete tmpAdapter;
                 continue;
+            }
 
             QBluetoothAddress path_address(reply.value().value(QStringLiteral("Address")).toString());
 
@@ -746,6 +744,11 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
             }
         }
     }
+
+    // monitor case when local adapter is removed
+    manager = man.take();
+    connect(manager, SIGNAL(AdapterRemoved(QDBusObjectPath)),
+            this, SLOT(adapterRemoved(QDBusObjectPath)));
 
     currentMode = static_cast<QBluetoothLocalDevice::HostMode>(-1);
     if (adapter) {
@@ -934,6 +937,39 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
 bool QBluetoothLocalDevicePrivate::isValid() const
 {
     return adapter || adapterBluez5;
+}
+
+// Bluez 4
+void QBluetoothLocalDevicePrivate::adapterRemoved(const QDBusObjectPath &devicePath)
+{
+    if (!adapter )
+        return;
+
+    if (adapter->path() != devicePath.path())
+        return;
+
+    qCDebug(QT_BT_BLUEZ) << "Adapter" << devicePath.path()
+                         << "was removed. Invalidating object.";
+    // the current adapter was removed
+    delete adapter;
+    adapter = 0;
+    manager->deleteLater();
+    manager = 0;
+
+    // stop all pairing related activities
+    if (agent) {
+        QDBusConnection::systemBus().unregisterObject(agent_path);
+        delete agent;
+        agent = 0;
+    }
+
+    delete msgConnection;
+    msgConnection = 0;
+
+    // stop all connectivity monitoring
+    qDeleteAll(devices);
+    devices.clear();
+    connectedDevicesSet.clear();
 }
 
 void QBluetoothLocalDevicePrivate::RequestConfirmation(const QDBusObjectPath &in0, uint in1)

@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -151,12 +143,133 @@ public:
         VideoDistribution = 0x1305,
         HDP = 0x1400,
         HDPSource = 0x1401,
-        HDPSink = 0x1402
+        HDPSink = 0x1402,
+        GenericAccess = 0x1800,
+        GenericAttribute = 0x1801,
+        ImmediateAlert = 0x1802,
+        LinkLoss = 0x1803,
+        TxPower = 0x1804,
+        CurrentTimeService = 0x1805,
+        ReferenceTimeUpdateService = 0x1806,
+        NextDSTChangeService = 0x1807,
+        Glucose = 0x1808,
+        HealthThermometer = 0x1809,
+        DeviceInformation = 0x180a,
+        HeartRate = 0x180d,
+        PhoneAlertStatusService = 0x180e,
+        BatteryService = 0x180f,
+        BloodPressure = 0x1810,
+        AlertNotificationService = 0x1811,
+        HumanInterfaceDevice = 0x1812,
+        ScanParameters = 0x1813,
+        RunningSpeedAndCadence = 0x1814,
+        CyclingSpeedAndCadence = 0x1816,
+        CyclingPower = 0x1818,
+        LocationAndNavigation = 0x1819,
+    };
+
+    enum CharacteristicType {
+        DeviceName = 0x2a00,
+        Appearance = 0x2a01,
+        PeripheralPrivacyFlag = 0x2a02,
+        ReconnectionAddress = 0x2a03,
+        PeripheralPreferredConnectionParameters = 0x2a04,
+        ServiceChanged = 0x2a05,
+        AlertLevel = 0x2a06,
+        TxPowerLevel = 0x2a07,
+        DateTime = 0x2a08,
+        DayOfWeek = 0x2a09,
+        DayDateTime = 0x2a0a,
+        ExactTime256 = 0x2a0c,
+        DSTOffset = 0x2a0d,
+        TimeZone = 0x2a0e,
+        LocalTimeInformation = 0x2a0f,
+        TimeWithDST = 0x2a11,
+        TimeAccuracy = 0x2a12,
+        TimeSource = 0x2a13,
+        ReferenceTimeInformation = 0x2a14,
+        TimeUpdateControlPoint = 0x2a16,
+        TimeUpdateState = 0x2a17,
+        GlucoseMeasurement = 0x2a18,
+        BatteryLevel = 0x2a19,
+        TemperatureMeasurement = 0x2a1c,
+        TemperatureType = 0x2a1d,
+        IntermediateTemperature = 0x2a1e,
+        MeasurementInterval = 0x2a21,
+        BootKeyboardInputReport = 0x2a22,
+        SystemID = 0x2a23,
+        ModelNumberString = 0x2a24,
+        SerialNumberString = 0x2a25,
+        FirmwareRevisionString = 0x2a26,
+        HardwareRevisionString = 0x2a27,
+        SoftwareRevisionString = 0x2a28,
+        ManufacturerNameString = 0x2a29,
+        IEEE1107320601RegulatoryCertificationDataList = 0x2a2a,
+        CurrentTime = 0x2a2b,
+        ScanRefresh = 0x2a31,
+        BootKeyboardOutputReport = 0x2a32,
+        BootMouseInputReport = 0x2a33,
+        GlucoseMeasurementContext = 0x2a34,
+        BloodPressureMeasurement = 0x2a35,
+        IntermediateCuffPressure = 0x2a36,
+        HeartRateMeasurement = 0x2a37,
+        BodySensorLocation = 0x2a38,
+        HeartRateControlPoint = 0x2a39,
+        AlertStatus = 0x2a3f,
+        RingerControlPoint = 0x2a40,
+        RingerSetting = 0x2a41,
+        AlertCategoryIDBitMask = 0x2a42,
+        AlertCategoryID = 0x2a43,
+        AlertNotificationControlPoint = 0x2a44,
+        UnreadAlertStatus = 0x2a45,
+        NewAlert = 0x2a46,
+        SupportedNewAlertCategory = 0x2a47,
+        SupportedUnreadAlertCategory = 0x2a48,
+        BloodPressureFeature = 0x2a49,
+        HIDInformation = 0x2a4a,
+        ReportMap = 0x2a4b,
+        HIDControlPoint = 0x2a4c,
+        Report = 0x2a4d,
+        ProtocolMode = 0x2a4e,
+        ScanIntervalWindow = 0x2a4f,
+        PnPID = 0x2a50,
+        GlucoseFeature = 0x2a51,
+        RecordAccessControlPoint = 0x2a52,
+        RSCMeasurement = 0x2a53,
+        RSCFeature = 0x2a54,
+        SCControlPoint = 0x2a55,
+        CSCMeasurement = 0x2a5b,
+        CSCFeature = 0x2a5c,
+        SensorLocation = 0x2a5d,
+        CyclingPowerMeasurement = 0x2a63,
+        CyclingPowerVector = 0x2a64,
+        CyclingPowerFeature = 0x2a65,
+        CyclingPowerControlPoint = 0x2a66,
+        LocationAndSpeed = 0x2a67,
+        Navigation = 0x2a68,
+        PositionQuality = 0x2a69,
+        LNFeature = 0x2a6a,
+        LNControlPoint = 0x2a6b,
+    };
+
+    enum DescriptorType {
+        UnknownDescriptorType = 0x0,
+        CharacteristicExtendedProperties = 0x2900,
+        CharacteristicUserDescription = 0x2901,
+        ClientCharacteristicConfiguration = 0x2902,
+        ServerCharacteristicConfiguration = 0x2903,
+        CharacteristicPresentationFormat = 0x2904,
+        CharacteristicAggregateFormat = 0x2905,
+        ValidRange = 0x2906,
+        ExternalReportReference = 0x2907,
+        ReportReference = 0x2908
     };
 
     QBluetoothUuid();
     QBluetoothUuid(ProtocolUuid uuid);
     QBluetoothUuid(ServiceClassUuid uuid);
+    QBluetoothUuid(CharacteristicType uuid);
+    QBluetoothUuid(DescriptorType uuid);
     explicit QBluetoothUuid(quint16 uuid);
     explicit QBluetoothUuid(quint32 uuid);
     explicit QBluetoothUuid(quint128 uuid);
@@ -175,6 +288,8 @@ public:
 
     static QString serviceClassToString(ServiceClassUuid uuid);
     static QString protocolToString(ProtocolUuid uuid);
+    static QString characteristicToString(CharacteristicType uuid);
+    static QString descriptorToString(DescriptorType uuid);
 };
 
 #ifndef QT_NO_DEBUG_STREAM

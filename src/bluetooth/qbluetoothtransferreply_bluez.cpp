@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -55,6 +47,7 @@
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QVector>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrentRun>
@@ -77,7 +70,13 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
     setRequest(request);
     setManager(parent);
 
-    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
+    if (!input) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid input device (null)";
+        m_errorStr = QBluetoothTransferReply::tr("Invalid input device (null)");
+        m_error = QBluetoothTransferReply::FileNotFoundError;
+        m_finished = true;
+        return;
+    }
 
     if (isBluez5()) {
         m_clientBluez = new OrgBluezObexClient1Interface(QStringLiteral("org.bluez.obex"),
@@ -129,7 +128,9 @@ bool QBluetoothTransferReplyBluez::start()
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
 
@@ -145,7 +146,9 @@ bool QBluetoothTransferReplyBluez::start()
             m_error = QBluetoothTransferReply::FileNotFoundError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
         if (request().address().isNull()) {
@@ -153,7 +156,9 @@ bool QBluetoothTransferReplyBluez::start()
             m_error = QBluetoothTransferReply::HostNotFoundError;
             m_finished = true;
             m_running = false;
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+
+            emit QBluetoothTransferReply::error(m_error);
+            emit finished(this);
             return false;
         }
         m_size = file->size();
@@ -164,16 +169,15 @@ bool QBluetoothTransferReplyBluez::start()
 
 bool QBluetoothTransferReplyBluez::copyToTempFile(QIODevice *to, QIODevice *from)
 {
-    char *block = new char[4096];
+    QVector<char> block(4096);
     int size;
 
-    while ((size = from->read(block, 4096)) > 0) {
-        if(size != to->write(block, size)){
+    while ((size = from->read(block.data(), block.size())) > 0) {
+        if (size != to->write(block.data(), size)) {
             return false;
         }
     }
 
-    delete[] block;
     return true;
 }
 
@@ -209,8 +213,9 @@ void QBluetoothTransferReplyBluez::sessionCreated(QDBusPendingCallWatcher *watch
         m_error = QBluetoothTransferReply::HostNotFoundError;
         m_finished = true;
         m_running = false;
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothTransferReply*, this));
+
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
 
         watcher->deleteLater();
         return;
@@ -240,8 +245,8 @@ void QBluetoothTransferReplyBluez::sessionStarted(QDBusPendingCallWatcher *watch
 
         cleanupSession();
 
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothTransferReply *, this));
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
 
         watcher->deleteLater();
         return;
@@ -284,6 +289,8 @@ void QBluetoothTransferReplyBluez::sessionChanged(const QString &interface,
             if (s == QStringLiteral("error")) {
                 m_error = QBluetoothTransferReply::UnknownError;
                 m_errorStr = tr("Unknown Error");
+
+                emit QBluetoothTransferReply::error(m_error);
             } else { // complete
                 // allow progress bar to complete
                 emit transferProgress(m_size, m_size);
@@ -291,8 +298,7 @@ void QBluetoothTransferReplyBluez::sessionChanged(const QString &interface,
 
             cleanupSession();
 
-            QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection,
-                                      Q_ARG(QBluetoothTransferReply*, this));
+            emit finished(this);
         } // ignore "active", "queued" & "suspended" status
     }
     qCDebug(QT_BT_BLUEZ) << "Transfer update:" << interface << changed_properties;
@@ -344,8 +350,8 @@ void QBluetoothTransferReplyBluez::sendReturned(QDBusPendingCallWatcher *watcher
             m_error = QBluetoothTransferReply::UnknownError;
         }
 
-        // allow time for the developer to connect to the signal
-        QMetaObject::invokeMethod(this, "finished", Qt::QueuedConnection, Q_ARG(QBluetoothTransferReply*, this));
+        emit QBluetoothTransferReply::error(m_error);
+        emit finished(this);
     }
 }
 
@@ -384,6 +390,7 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
         m_error = QBluetoothTransferReply::UnknownError;
     }
 
+    emit QBluetoothTransferReply::error(m_error);
     emit finished(this);
 }
 
@@ -452,6 +459,7 @@ void QBluetoothTransferReplyBluez::abort()
 
         cleanupSession();
 
+        emit QBluetoothTransferReply::error(m_error);
         emit finished(this);
     }
 }

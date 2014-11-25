@@ -16,7 +16,10 @@ qtHaveModule(bluetooth) {
         qbluetoothtransfermanager \
         qbluetoothtransferrequest \
         qbluetoothuuid \
-        qbluetoothserver
+        qbluetoothserver \
+        qlowenergycharacteristic \
+        qlowenergydescriptor \
+        qlowenergycontroller
 }
 
 qtHaveModule(nfc) {

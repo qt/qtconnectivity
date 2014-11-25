@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -92,6 +84,8 @@ private slots:
 
     void tst_sendBuffer_data();
     void tst_sendBuffer();
+
+    void tst_sendNullPointer();
 private:
     QBluetoothAddress remoteAddress;
 };
@@ -243,6 +237,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
     QBluetoothTransferReply* reply = manager.put(request, &f);
     QSignalSpy finishedSpy(reply, SIGNAL(finished(QBluetoothTransferReply*)));
     QSignalSpy progressSpy(reply, SIGNAL(transferProgress(qint64,qint64)));
+    QSignalSpy errorSpy(reply, SIGNAL(error(QBluetoothTransferReply::TransferError)));
 
     QCOMPARE(reply->request(), request);
     QVERIFY(reply->manager() == &manager);
@@ -261,6 +256,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
         QVERIFY(progressSpy.count()>0);
         QCOMPARE(reply->error(), QBluetoothTransferReply::NoError);
         QCOMPARE(reply->errorString(), QString());
+        QVERIFY(errorSpy.isEmpty());
     } else {
         QVERIFY(progressSpy.count() == 0);
         if (isInvalidFile)
@@ -268,6 +264,7 @@ void tst_QBluetoothTransferManager::tst_sendFile()
         else
             QVERIFY(reply->error() != QBluetoothTransferReply::NoError);
         QVERIFY(!reply->errorString().isEmpty());
+        QCOMPARE(errorSpy.count(), 1);
     }
 
     QVERIFY(reply->isFinished());
@@ -282,7 +279,7 @@ void tst_QBluetoothTransferManager::tst_sendBuffer_data()
     QTest::addColumn<QByteArray>("data");
 
     QTest::newRow("Push to remote test device") << remoteAddress << true <<
-                        QByteArray("This is a very long byte arry which we are going to access via a QBuffer");                                                       ;
+                        QByteArray("This is a very long byte array which we are going to access via a QBuffer");                                                       ;
     QTest::newRow("Push to invalid address") << QBluetoothAddress() << false << QByteArray("test");
     QTest::newRow("Push to non-existend device") << QBluetoothAddress("11:22:33:44:55:66") << false << QByteArray("test");
 }
@@ -318,6 +315,7 @@ void tst_QBluetoothTransferManager::tst_sendBuffer()
     QBluetoothTransferReply* reply = manager.put(request, &buffer);
     QSignalSpy finishedSpy(reply, SIGNAL(finished(QBluetoothTransferReply*)));
     QSignalSpy progressSpy(reply, SIGNAL(transferProgress(qint64,qint64)));
+    QSignalSpy errorSpy(reply, SIGNAL(error(QBluetoothTransferReply::TransferError)));
 
     QCOMPARE(reply->request(), request);
     QVERIFY(reply->manager() == &manager);
@@ -334,16 +332,32 @@ void tst_QBluetoothTransferManager::tst_sendBuffer()
     QVERIFY(finishedSpy.count()>0);
     if (expectSuccess) {
         QVERIFY(progressSpy.count()>0);
+        QVERIFY(errorSpy.isEmpty());
         QCOMPARE(reply->error(), QBluetoothTransferReply::NoError);
         QCOMPARE(reply->errorString(), QString());
     } else {
         QVERIFY(progressSpy.count() == 0);
         QVERIFY(reply->error() != QBluetoothTransferReply::NoError);
         QVERIFY(!reply->errorString().isEmpty());
+        QCOMPARE(errorSpy.count(), 1);
     }
 
     QVERIFY(reply->isFinished());
     QVERIFY(!reply->isRunning());
+}
+
+void tst_QBluetoothTransferManager::tst_sendNullPointer()
+{
+    QBluetoothTransferRequest request(remoteAddress);
+    QBluetoothTransferManager manager;
+    QBluetoothTransferReply *reply = manager.put(request, 0);
+
+    QVERIFY(reply);
+    QCOMPARE(reply->isFinished(), true);
+    QCOMPARE(reply->isRunning(), false);
+    QCOMPARE(reply->manager(), &manager);
+    QCOMPARE(reply->request(), request);
+    QCOMPARE(reply->error(), QBluetoothTransferReply::FileNotFoundError);
 }
 
 QTEST_MAIN(tst_QBluetoothTransferManager)

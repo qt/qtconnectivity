@@ -61,14 +61,24 @@
             \li Example
             \li Description
         \row
+            \li \l{chat}{QML Bluetooth Chat Example}
+            \li Simple chat client via Bluetooth.
+        \row
+            \li \l{picturetransfer}{QML Bluetooth Picture Push Example}
+            \li Transfer pictures between Bluetooth devices.
+        \row
             \li \l{pingpong}{QML Bluetooth PingPong}
-            \li A QML ping pong game demonstrating Bluetooth socket communication between two devices.
+            \li Ping pong game demonstrating Bluetooth socket communication between two devices.
         \row
             \li \l{scanner}{QML Bluetooth Scanner}
-            \li A QML implementation of the Bluetooth device scanner.
+            \li Scan for Bluetooth devices and services.
         \row
-            \li \l{picturetransfer}{QML Picture Push Example}
-            \li A QML application that transfers pictures between Bluetooth devices.
+            \li \l{heartlistener}{QML Bluetooth Low Energy Heart Listener}
+            \li Connect to Bluetooth Low Energy heart rate belts and receive
+            measurements such as the current pulse.
+        \row
+            \li \l{lowenergyscanner}{QML Bluetooth Low Energy Scanner}
+            \li Scan for Bluetooth Low Energy devices and show their services and characteristics.
     \endtable
 
 */
