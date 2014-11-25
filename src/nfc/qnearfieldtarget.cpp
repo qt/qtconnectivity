@@ -274,6 +274,7 @@ QNearFieldTarget::QNearFieldTarget(QObject *parent)
 {
     qRegisterMetaType<RequestId>("QNearFieldTarget::RequestId");
     qRegisterMetaType<Error>("QNearFieldTarget::Error");
+    qRegisterMetaType<QNdefMessage>("QNdefMessage::QNdefMessage");
 }
 
 /*!
