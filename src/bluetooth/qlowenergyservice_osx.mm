@@ -221,8 +221,30 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
-    Q_UNUSED(descriptor)
-    Q_UNUSED(newValue)
+    if (!contains(descriptor))
+        return;
+
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (!controller)
+        return;
+
+    if (state() != ServiceDiscovered) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    if (descriptor.uuid() == QBluetoothUuid::ClientCharacteristicConfiguration) {
+        // Core Bluetooth:
+        //
+        // "You cannot use this method to write the value of a client configuration descriptor
+        // (represented by the CBUUIDClientCharacteristicConfigurationString constant),
+        // which describes how notification or indications are configured for a
+        // characteristic’s value with respect to a client. If you want to manage
+        // notifications or indications for a characteristic’s value, you must
+        // use the setNotifyValue:forCharacteristic: method instead."
+    } else {
+        controller->writeDescriptor(descriptor.d_ptr, descriptor.handle(), newValue);
+    }
 }
 
 QT_END_NAMESPACE

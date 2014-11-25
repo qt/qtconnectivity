@@ -47,7 +47,9 @@
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 
+#include <QtCore/qbytearray.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qqueue.h>
 #include <QtCore/qhash.h>
 
 // Foundation.h must be included before corebluetoothwrapper_p.h -
@@ -61,7 +63,6 @@
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
-class QByteArray;
 
 namespace OSXBluetooth {
 
@@ -80,6 +81,8 @@ public:
     virtual void serviceDiscoveryFinished(LEServices services) = 0;
     virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
     virtual void characteristicWriteNotification(LECharacteristic ch) = 0;
+    virtual void descriptorWriteNotification(QLowEnergyHandle descHandle,
+                                             const QByteArray &value) = 0;
     virtual void disconnected() = 0;
 
     // General errors.
@@ -114,6 +117,19 @@ typedef QHash<QLowEnergyHandle, CBService *> ServiceHash;
 typedef QHash<QLowEnergyHandle, CBCharacteristic *> CharHash;
 typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
 
+// Descriptor write request - we have to serialize 'concurrent' write requests.
+struct LEWriteRequest
+{
+    LEWriteRequest() : isDescriptor(false), handle(0)
+    {}
+
+    bool isDescriptor;
+    QLowEnergyHandle handle;
+    QByteArray value;
+};
+
+typedef QQueue<LEWriteRequest> WriteQueue;
+
 }
 
 QT_END_NAMESPACE
@@ -145,7 +161,10 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(OSXBluetooth)::CharHash charMap;
     QT_PREPEND_NAMESPACE(OSXBluetooth)::DescHash descMap;
 
-    QLowEnergyHandle lastValidHandle;
+    QT_PREPEND_NAMESPACE(QLowEnergyHandle) lastValidHandle;
+
+    bool writePending;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::WriteQueue writeQueue;
 }
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
@@ -159,12 +178,12 @@ QT_END_NAMESPACE
 - (void)discoverServices;
 - (bool)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-// Characteristic's handle here is a 'relative' == valueHandle - service->startHandle
-// to simplify mapping between Qt's handles and Core Bluetooth's data structures.
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
         withResponse:(bool)writeWithResponse;
 
+- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        descHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
 @end
 
 #endif

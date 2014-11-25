@@ -99,6 +99,7 @@ using namespace QT_NAMESPACE;
 - (void)discoverIncludedServices;
 - (void)readCharacteristics:(CBService *)service;
 - (void)serviceDetailsDiscoveryFinished:(CBService *)service;
+- (void)performNextWriteRequest;
 
 // Aux. functions.
 - (CBService *)serviceForUUID:(const QBluetoothUuid &)qtUuid;
@@ -109,6 +110,9 @@ using namespace QT_NAMESPACE;
                       withProperties:(CBCharacteristicProperties)properties;
 - (CBDescriptor *)nextDescriptorForCharacteristic:(CBCharacteristic *)characteristic
                   startingFrom:(CBDescriptor *)descriptor;
+
+// TODO: check _what_ exactly I have to reset ...
+- (void)reset;
 
 @end
 
@@ -126,6 +130,7 @@ using namespace QT_NAMESPACE;
         delegate = aDelegate;
         currentService = 0;
         lastValidHandle = 0;
+        writePending = false;
     }
 
     return self;
@@ -272,7 +277,7 @@ using namespace QT_NAMESPACE;
 
 - (void)disconnectFromDevice
 {
-    servicesToDiscoverDetails.clear();
+    [self reset];
 
     if (managerState == OSXBluetooth::CentralManagerUpdating) {
         disconnectPending = true;
@@ -305,11 +310,6 @@ using namespace QT_NAMESPACE;
     //parameter to nil is considerably slower and is not recommended."
     //
     // ... but we'd like to have them all:
-
-    lastValidHandle = 0;
-    serviceMap.clear();
-    charMap.clear();
-    descMap.clear();
 
     [peripheral setDelegate:self];
     managerState = OSXBluetooth::CentralManagerDiscovering;
@@ -546,6 +546,41 @@ using namespace QT_NAMESPACE;
     delegate->serviceDetailsDiscoveryFinished(qtService);
 }
 
+- (void)performNextWriteRequest
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(peripheral, "-performNextWriteRequest",
+               "invalid peripheral (nil)");
+
+    if (writePending || !writeQueue.size())
+        return;
+
+    LEWriteRequest request(writeQueue.dequeue());
+
+    if (request.isDescriptor) {
+        if (!descMap.contains(request.handle)) {
+            qCWarning(QT_BT_OSX) << "-performNextWriteRequest, descriptor with "
+                                    "handle: " << request.handle << " not found";
+            [self performNextWriteRequest];
+        }
+
+        CBDescriptor *const d = descMap[request.handle];
+        ObjCStrongReference<NSData> data(data_from_bytearray(request.value));
+        if (!data) {
+            // Even if qtData.size() == 0, we still need NSData object.
+            qCWarning(QT_BT_OSX) << "-write:descHandle:, failed "
+                                    "to allocate an NSData object";
+            [self performNextWriteRequest];
+        }
+
+        writePending = true;
+        return [peripheral writeValue:data.data() forDescriptor:d];
+    } else {
+        // TODO: characteristics write requests.
+    }
+}
+
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
         withResponse:(bool)withResponse
@@ -562,7 +597,7 @@ using namespace QT_NAMESPACE;
         return false;
     }
 
-    CBCharacteristic *const ch = charMap.value(charHandle);
+    CBCharacteristic *const ch = charMap[charHandle];
     Q_ASSERT_X(ch, "-write:charHandle:withResponse:", "invalid characteristic (nil) for a give handle");
     Q_ASSERT_X(peripheral, "-write:charHandle:withResponse:", "invalid peripheral (nil)");
 
@@ -578,6 +613,32 @@ using namespace QT_NAMESPACE;
     [peripheral writeValue:data.data() forCharacteristic:ch
                 type: withResponse? CBCharacteristicWriteWithResponse : CBCharacteristicWriteWithoutResponse];
 
+    return true;
+}
+
+- (bool)write:(const QByteArray &)value descHandle:(QLowEnergyHandle)descHandle
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(descHandle, "-write:descHandle:",
+               "invalid descriptor handle (0)");
+
+    if (!descMap.contains(descHandle)) {
+        qCWarning(QT_BT_OSX) << "-write:descHandle:, descriptor with "
+                                "handle: " << descHandle << " not found";
+        return false;
+    }
+
+    LEWriteRequest request;
+    request.isDescriptor = true;
+    request.handle = descHandle;
+    request.value = value;
+
+    writeQueue.enqueue(request);
+    [self performNextWriteRequest];
+    // TODO: this is quite ugly: true value can be returned after
+    // write actually. If I have any problems with the order later,
+    // I'll use performSelector afterDelay with some delay.
     return true;
 }
 
@@ -738,6 +799,17 @@ using namespace QT_NAMESPACE;
                "descriptor was not found in characteristic.descriptors");
 
     return [ds objectAtIndex:1];
+}
+
+- (void)reset
+{
+    writePending = false;
+    writeQueue.clear();
+    servicesToDiscoverDetails.clear();
+    lastValidHandle = 0;
+    serviceMap.clear();
+    charMap.clear();
+    descMap.clear();
 }
 
 // CBCentralManagerDelegate (the real one).
@@ -1162,7 +1234,6 @@ using namespace QT_NAMESPACE;
 
     Q_UNUSED(aPeripheral)
     Q_UNUSED(characteristic)
-    Q_UNUSED(error)
 
     Q_ASSERT_X(delegate, "-peripheral:didWriteValueForCharacteristic:error",
                "invalid delegate (null)");
@@ -1179,6 +1250,36 @@ using namespace QT_NAMESPACE;
         ObjCStrongReference<CBCharacteristic> ch(characteristic, true);
         delegate->characteristicWriteNotification(ch);
     }
+}
+
+- (void)peripheral:(CBPeripheral *)aPeripheral
+        didWriteValueForDescriptor:(CBDescriptor *)descriptor
+        error:(NSError *)error
+{
+    Q_UNUSED(aPeripheral)
+
+    using namespace OSXBluetooth;
+
+    writePending = false;
+
+    if (error) {
+        // NSLog to log the actual NSError:
+        NSLog(@"-peripheral:didWriteValueForDescriptor:error:, failed with error %@",
+              error);
+        // TODO: this error function is not good at all - it takes charHandle,
+        // which is noop at the moment and ... we actually work with a descriptor handle
+        // here.
+        delegate->error(qt_uuid(descriptor.characteristic.service.UUID), 0,
+                        QLowEnergyService::DescriptorWriteError);
+    } else {
+        // We know that keys are unique, so can find a key for a given descriptor.
+        const QLowEnergyHandle dHandle = descMap.key(descriptor);
+        Q_ASSERT_X(dHandle, "-peripheral:didWriteValueForDescriptor:error:",
+                   "invalid descriptor, not found in a descMap");
+        delegate->descriptorWriteNotification(dHandle, qt_bytearray(descriptor.value));
+    }
+
+    [self performNextWriteRequest];
 }
 
 @end

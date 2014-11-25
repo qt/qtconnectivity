@@ -73,6 +73,8 @@ private:
     void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
     void serviceDetailsDiscoveryFinished(LEService service) Q_DECL_OVERRIDE;
     void characteristicWriteNotification(LECharacteristic ch) Q_DECL_OVERRIDE;
+    void descriptorWriteNotification(QLowEnergyHandle descHandle,
+                                     const QByteArray &newValue) Q_DECL_OVERRIDE;
     void disconnected() Q_DECL_OVERRIDE;
     void error(QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
     void error(const QBluetoothUuid &serviceUuid,
@@ -97,13 +99,19 @@ private:
                                         bool appendValue);
 
     void writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
-                         QLowEnergyHandle charHandle, const QLowEnergyHandle descriptorHandle,
+                         QLowEnergyHandle descriptorHandle,
                          const QByteArray &newValue);
 
+
+    quint16 updateValueOfDescriptor(QLowEnergyHandle charHandle,
+                                    QLowEnergyHandle descHandle,
+                                    const QByteArray &value,
+                                    bool appendValue);
 
     // 'Lookup' functions:
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(QLowEnergyHandle serviceHandle);
     QLowEnergyCharacteristic characteristicForHandle(QLowEnergyHandle charHandle);
+    QLowEnergyDescriptor descriptorForHandle(QLowEnergyHandle descriptorHandle);
 
     void setErrorDescription(QLowEnergyController::Error errorCode);
     void invalidateServices();
