@@ -657,6 +657,37 @@ public class QtBluetoothLE {
         return true;
     }
 
+    /*
+        Returns the uuids of the services included by the given service. Otherwise returns null.
+        Directly called from Qt.
+     */
+    public String includedServices(String serviceUuid)
+    {
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(serviceUuid);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+
+        //TODO Breaks in case of two services with same uuid
+        BluetoothGattService service = mBluetoothGatt.getService(uuid);
+        if (service == null)
+            return null;
+
+        final List<BluetoothGattService> includes = service.getIncludedServices();
+        if (includes.isEmpty())
+            return null;
+
+        StringBuilder builder = new StringBuilder();
+        for (BluetoothGattService includedService: includes) {
+            builder.append(includedService.getUuid().toString()).append(" "); //space is separator
+        }
+
+        return builder.toString();
+    }
+
     private void finishCurrentServiceDiscovery()
     {
         int currentEntry = currentServiceInDiscovery;
