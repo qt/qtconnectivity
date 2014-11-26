@@ -357,6 +357,10 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
 
 /*!
     Returns the type of the service.
+
+    \note On Android, it is not possible to determine whether a service
+    is a primary or secondary service. Therefore all services
+    have the \l PrimaryService flag set.
  */
 QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
