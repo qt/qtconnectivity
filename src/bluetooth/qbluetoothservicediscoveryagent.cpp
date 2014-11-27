@@ -91,7 +91,8 @@ QT_BEGIN_NAMESPACE
     \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
     \value InputOutputError    Writing or reading from the device resulted in an error.
     \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
-                                        adapter address of any local Bluetooth device.
+                                        adapter address of any local Bluetooth device. This value
+                                        was introduced by Qt 5.3.
     \value UnknownError     An unknown error has occurred.
 */
 
