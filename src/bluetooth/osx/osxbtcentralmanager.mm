@@ -577,7 +577,27 @@ using namespace QT_NAMESPACE;
         writePending = true;
         return [peripheral writeValue:data.data() forDescriptor:d];
     } else {
-        // TODO: characteristics write requests.
+        CBCharacteristic *const ch = charMap[request.handle];
+        Q_ASSERT_X(ch, "-performNextWriteRequest", "invalid characteristic (nil)");
+
+        ObjCStrongReference<NSData> data(data_from_bytearray(request.value));
+        if (!data) {
+            // Even if qtData.size() == 0, we still need NSData object.
+            qCWarning(QT_BT_OSX) << "-performNextWriteRequest, "
+                                    "failed to allocate NSData object";
+            [self performNextWriteRequest];
+        }
+
+        // TODO: check what happens if I'm using NSData with length 0.
+        if (request.withResponse) {
+            writePending = true;
+            [peripheral writeValue:data.data() forCharacteristic:ch
+                        type:CBCharacteristicWriteWithResponse];
+        } else {
+            [peripheral writeValue:data.data() forCharacteristic:ch
+                        type:CBCharacteristicWriteWithoutResponse];
+            [self performNextWriteRequest];
+        }
     }
 }
 
@@ -597,6 +617,22 @@ using namespace QT_NAMESPACE;
         return false;
     }
 
+    LEWriteRequest request;
+    request.isDescriptor = false;
+    request.withResponse = withResponse;
+    request.handle = charHandle;
+    request.value = value;
+
+    writeQueue.enqueue(request);
+    [self performNextWriteRequest];
+    // TODO: this is quite ugly: true value can be returned after
+    // write actually. If I have any problems with the order later,
+    // I'll use performSelector afterDelay with some delay.
+    return true;
+/*
+    // Write without responce is not serialized - no way I can
+    // know about the write operation success/failure - and
+    // I will never perform the next write.
     CBCharacteristic *const ch = charMap[charHandle];
     Q_ASSERT_X(ch, "-write:charHandle:withResponse:", "invalid characteristic (nil) for a give handle");
     Q_ASSERT_X(peripheral, "-write:charHandle:withResponse:", "invalid peripheral (nil)");
@@ -611,9 +647,9 @@ using namespace QT_NAMESPACE;
 
     // TODO: check what happens if I'm using NSData with length 0.
     [peripheral writeValue:data.data() forCharacteristic:ch
-                type: withResponse? CBCharacteristicWriteWithResponse : CBCharacteristicWriteWithoutResponse];
+                type:CBCharacteristicWriteWithoutResponse];
 
-    return true;
+    return true;*/
 }
 
 - (bool)write:(const QByteArray &)value descHandle:(QLowEnergyHandle)descHandle
@@ -1223,6 +1259,9 @@ using namespace QT_NAMESPACE;
         didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
         error:(NSError *)error
 {
+    Q_UNUSED(aPeripheral)
+    Q_UNUSED(characteristic)
+
     // From docs:
     //
     // "This method is invoked only when your app calls the writeValue:forCharacteristic:type:
@@ -1232,8 +1271,7 @@ using namespace QT_NAMESPACE;
 
     using namespace OSXBluetooth;
 
-    Q_UNUSED(aPeripheral)
-    Q_UNUSED(characteristic)
+    writePending = false;
 
     Q_ASSERT_X(delegate, "-peripheral:didWriteValueForCharacteristic:error",
                "invalid delegate (null)");
@@ -1247,9 +1285,14 @@ using namespace QT_NAMESPACE;
         delegate->error(qt_uuid(characteristic.service.UUID), 0,
                         QLowEnergyService::CharacteristicWriteError);
     } else {
-        ObjCStrongReference<CBCharacteristic> ch(characteristic, true);
-        delegate->characteristicWriteNotification(ch);
+        // Keys are unique.
+        const QLowEnergyHandle cHandle = charMap.key(characteristic);
+        Q_ASSERT_X(cHandle, "-peripheral:didWriteValueForCharacteristic:error",
+                   "invalid handle, not found in the characteristics map");
+        delegate->characteristicWriteNotification(cHandle, qt_bytearray(characteristic.value));
     }
+
+    [self performNextWriteRequest];
 }
 
 - (void)peripheral:(CBPeripheral *)aPeripheral
@@ -1272,10 +1315,10 @@ using namespace QT_NAMESPACE;
         delegate->error(qt_uuid(descriptor.characteristic.service.UUID), 0,
                         QLowEnergyService::DescriptorWriteError);
     } else {
-        // We know that keys are unique, so can find a key for a given descriptor.
+        // We know that keys are unique, so we can find a key for a given descriptor.
         const QLowEnergyHandle dHandle = descMap.key(descriptor);
         Q_ASSERT_X(dHandle, "-peripheral:didWriteValueForDescriptor:error:",
-                   "invalid descriptor, not found in a descMap");
+                   "invalid descriptor, not found in the descriptors map");
         delegate->descriptorWriteNotification(dHandle, qt_bytearray(descriptor.value));
     }
 

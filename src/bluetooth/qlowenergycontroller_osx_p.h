@@ -72,7 +72,8 @@ private:
 
     void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
     void serviceDetailsDiscoveryFinished(LEService service) Q_DECL_OVERRIDE;
-    void characteristicWriteNotification(LECharacteristic ch) Q_DECL_OVERRIDE;
+    void characteristicWriteNotification(QLowEnergyHandle charHandle,
+                                         const QByteArray &newValue) Q_DECL_OVERRIDE;
     void descriptorWriteNotification(QLowEnergyHandle descHandle,
                                      const QByteArray &newValue) Q_DECL_OVERRIDE;
     void disconnected() Q_DECL_OVERRIDE;
@@ -141,13 +142,6 @@ private:
     typedef ServiceMap::const_iterator ConstServiceIterator;
     typedef ServiceMap::iterator ServiceIterator;
     ServiceMap discoveredServices;
-
-    // While Core Bluetooth has _startHandle/_endHandle for
-    // CBServices, this information is not a part of a public
-    // API and can not be used. Instead we have to 'emulate'
-    // these handles using something that looks like/works like
-    // handles:
-    QLowEnergyHandle lastValidHandle;
 };
 
 QT_END_NAMESPACE

@@ -184,8 +184,10 @@ void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, 
     if (!contains(ch))
         return;
 
-    if (state() != ServiceDiscovered)
+    if (state() != ServiceDiscovered) {
         d_ptr->setError(QLowEnergyService::OperationError);
+        return;
+    }
 
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
     if (!controller)

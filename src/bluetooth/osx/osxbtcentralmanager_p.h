@@ -80,7 +80,8 @@ public:
     virtual void connectSuccess() = 0;
     virtual void serviceDiscoveryFinished(LEServices services) = 0;
     virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
-    virtual void characteristicWriteNotification(LECharacteristic ch) = 0;
+    virtual void characteristicWriteNotification(QLowEnergyHandle charHandle,
+                                                 const QByteArray &value) = 0;
     virtual void descriptorWriteNotification(QLowEnergyHandle descHandle,
                                              const QByteArray &value) = 0;
     virtual void disconnected() = 0;
@@ -120,10 +121,13 @@ typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
 // Descriptor write request - we have to serialize 'concurrent' write requests.
 struct LEWriteRequest
 {
-    LEWriteRequest() : isDescriptor(false), handle(0)
+    LEWriteRequest() : isDescriptor(false),
+                       withResponse(false),
+                       handle(0)
     {}
 
     bool isDescriptor;
+    bool withResponse;
     QLowEnergyHandle handle;
     QByteArray value;
 };
