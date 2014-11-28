@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QByteArray;
+
 // The suffix OSX is not the very right, it's also iOS.
 class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate,
                                        public OSXBluetooth::CentralManagerDelegate
@@ -82,6 +84,9 @@ private:
     void connectToDevice();
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
+
+    void setNotifyValue(QSharedPointer<QLowEnergyServicePrivate> service,
+                        QLowEnergyHandle charHandle, const QByteArray &newValue);
 
     void writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
                              QLowEnergyHandle charHandle, const QByteArray &newValue,

@@ -48,6 +48,7 @@
 #include "osxbtutility_p.h"
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qhash.h>
 
 // Foundation.h must be included before corebluetoothwrapper_p.h -
 // a workaround for a broken 10.9 SDK.
@@ -59,6 +60,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QLowEnergyServicePrivate;
+class QByteArray;
+
 namespace OSXBluetooth {
 
 class CentralManagerDelegate
@@ -66,7 +70,7 @@ class CentralManagerDelegate
 public:
     typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
     typedef ObjCStrongReference<NSArray> LEServices;
-    typedef ObjCStrongReference<CBService> LEService;
+    typedef QSharedPointer<QLowEnergyServicePrivate> LEService;
     typedef ObjCStrongReference<CBCharacteristic> LECharacteristic;
 
     virtual ~CentralManagerDelegate();
@@ -101,6 +105,15 @@ enum CentralManagerState
     CentralManagerDisconnecting
 };
 
+// In Qt we work with handles and UUIDs. Core Bluetooth
+// has NSArrays (and nested NSArrays inside servces/characteristics).
+// To simplify a navigation, I need a simple way to map from a handle
+// to a Core Bluetooth object. These are weak pointers,
+// will probably require '__weak' with ARC.
+typedef QHash<QLowEnergyHandle, CBService *> ServiceHash;
+typedef QHash<QLowEnergyHandle, CBCharacteristic *> CharHash;
+typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
+
 }
 
 QT_END_NAMESPACE
@@ -127,6 +140,12 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableSet> visitedServices;
 
     QT_PREPEND_NAMESPACE(QList)<QT_PREPEND_NAMESPACE(QBluetoothUuid)> servicesToDiscoverDetails;
+
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ServiceHash serviceMap;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::CharHash charMap;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::DescHash descMap;
+
+    QLowEnergyHandle lastValidHandle;
 }
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
@@ -143,9 +162,7 @@ QT_END_NAMESPACE
 // Characteristic's handle here is a 'relative' == valueHandle - service->startHandle
 // to simplify mapping between Qt's handles and Core Bluetooth's data structures.
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
-        characteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
-        serviceUuid:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
-        serviceHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))serviceHandle
+        charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
         withResponse:(bool)writeWithResponse;
 
 @end

@@ -39,12 +39,16 @@
 **
 ****************************************************************************/
 
+#include "qlowenergyserviceprivate_p.h"
+#include "qlowenergycharacteristic.h"
 #include "osxbtcentralmanager_p.h"
+
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
 #include <algorithm>
+#include <limits>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,6 +56,31 @@ namespace OSXBluetooth {
 
 CentralManagerDelegate::~CentralManagerDelegate()
 {
+}
+
+NSUInteger qt_countGATTEntries(CBService *service)
+{
+    // Identify, how many characteristics/descriptors we have on a given service,
+    // +1 for the service itself.
+    // No checks if NSUInteger is big enough :)
+    // Let's assume such number of entries is not possible :)
+
+    Q_ASSERT_X(service, "qt_countGATTEntries", "invalid service (nil)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    NSArray *const cs = service.characteristics;
+    if (!cs || !cs.count)
+        return 1;
+
+    NSUInteger n = 1 + cs.count;
+    for (CBCharacteristic *c in cs) {
+        NSArray *const ds = c.descriptors;
+        if (ds)
+            n += ds.count;
+    }
+
+    return n;
 }
 
 }
@@ -78,8 +107,6 @@ using namespace QT_NAMESPACE;
 - (CBCharacteristic *)nextCharacteristicForService:(CBService*)service
                       startingFrom:(CBCharacteristic *)from
                       withProperties:(CBCharacteristicProperties)properties;
-- (CBCharacteristic *)characteristicForService:(CBService *)service
-                      withIndex:(NSUInteger)index;
 - (CBDescriptor *)nextDescriptorForCharacteristic:(CBCharacteristic *)characteristic
                   startingFrom:(CBDescriptor *)descriptor;
 
@@ -98,6 +125,7 @@ using namespace QT_NAMESPACE;
         peripheral = nil;
         delegate = aDelegate;
         currentService = 0;
+        lastValidHandle = 0;
     }
 
     return self;
@@ -277,6 +305,12 @@ using namespace QT_NAMESPACE;
     //parameter to nil is considerably slower and is not recommended."
     //
     // ... but we'd like to have them all:
+
+    lastValidHandle = 0;
+    serviceMap.clear();
+    charMap.clear();
+    descMap.clear();
+
     [peripheral setDelegate:self];
     managerState = OSXBluetooth::CentralManagerDiscovering;
     [peripheral discoverServices:nil];
@@ -435,53 +469,107 @@ using namespace QT_NAMESPACE;
 
     using namespace OSXBluetooth;
 
-    servicesToDiscoverDetails.removeAll(qt_uuid(service.UUID));
-    delegate->serviceDetailsDiscoveryFinished(ObjCStrongReference<CBService>(service, true));
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    const QBluetoothUuid serviceUuid(qt_uuid(service.UUID));
+    servicesToDiscoverDetails.removeAll(serviceUuid);
+
+    const NSUInteger nHandles = qt_countGATTEntries(service);
+    Q_ASSERT_X(nHandles, "-serviceDetailsDiscoveryFinished:",
+               "unexpected number of GATT entires");
+
+    const QLowEnergyHandle maxHandle = std::numeric_limits<QLowEnergyHandle>::max();
+    if (nHandles >= maxHandle || lastValidHandle > maxHandle - nHandles) {
+        // Well, that's unlikely :) But we must be sure.
+        qCWarning(QT_BT_OSX) << "-serviceDetailsDiscoveryFinished:",
+                                "can not allocate more handles";
+        // TODO: add more 'error' functions not to use fake handles (0)?
+        delegate->error(serviceUuid, 0, QLowEnergyService::OperationError);
+        return;
+    }
+
+    // A temporary service object to pass the details.
+    // Set only uuid, characteristics and descriptors (and probably values),
+    // nothing else is needed.
+    QSharedPointer<QLowEnergyServicePrivate> qtService(new QLowEnergyServicePrivate);
+    qtService->uuid = serviceUuid;
+    // We 'register' handles/'CBentities' even if qlowenergycontroller (delegate)
+    // later fails to do this with some error. Otherwise, if we try to implement
+    // rollback/transaction logic interface is getting too ugly/complicated.
+    ++lastValidHandle;
+    serviceMap[lastValidHandle] = service;
+    qtService->startHandle = lastValidHandle;
+
+    NSArray *const cs = service.characteristics;
+    // Now map chars/descriptors and handles.
+    if (cs && cs.count) {
+        QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList;
+
+        for (CBCharacteristic *c in cs) {
+            ++lastValidHandle;
+            // Register this characteristic:
+            charMap[lastValidHandle] = c;
+            // Create a Qt's internal characteristic:
+            QLowEnergyServicePrivate::CharData newChar = {};
+            newChar.uuid = qt_uuid(c.UUID);
+            const int cbProps = c.properties & 0xff;
+            newChar.properties = static_cast<QLowEnergyCharacteristic::PropertyTypes>(cbProps);
+            newChar.value = qt_bytearray(c.value);
+            newChar.valueHandle = lastValidHandle;
+
+            NSArray *const ds = c.descriptors;
+            if (ds && ds.count) {
+                QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> descList;
+                for (CBDescriptor *d in ds) {
+                    // Register this descriptor:
+                    ++lastValidHandle;
+                    descMap[lastValidHandle] = d;
+                    // Create a Qt's internal descriptor:
+                    QLowEnergyServicePrivate::DescData newDesc = {};
+                    newDesc.uuid = qt_uuid(d.UUID);
+                    newDesc.value = qt_bytearray(d.value);
+                    descList[lastValidHandle] = newDesc;
+                }
+
+                newChar.descriptorList = descList;
+            }
+
+            charList[newChar.valueHandle] = newChar;
+        }
+
+        qtService->characteristicList = charList;
+    }
+
+    qtService->endHandle = lastValidHandle;
+
+    ObjCStrongReference<CBService> leService(service, true);
+    delegate->serviceDetailsDiscoveryFinished(qtService);
 }
 
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
-        characteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
-        serviceUuid:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
-        serviceHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))serviceHandle
+        charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
         withResponse:(bool)withResponse
 {
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(!serviceUuid.isNull(), "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
-               "invalid service uuid");
-    Q_ASSERT_X(serviceHandle, "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
-               "invalid service handle (0)");
-    Q_ASSERT_X(serviceHandle < charHandle, "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
-               "invalid characteristic handle (<= serviceHandle)");
-
+    Q_ASSERT_X(charHandle, "-write:charHandle:withResponse:", "invalid characteristic handle (0)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    CBService *const service = [self serviceForUUID:serviceUuid];
-    if (!service) {
-        qCWarning(QT_BT_OSX) << "-write:characteristic:serviceUuid:serviceHandle:withResponse:, "
-                                "service with uuid: " << serviceUuid << " not found";
+    if (!charMap.contains(charHandle)) {
+        qCWarning(QT_BT_OSX) << "-write:charHandle:withResponse:, "
+                                "characteristic: " << charHandle << " not found";
         return false;
     }
 
-    // 'Convert' charHandle into the 'index' and find a characteristic.
-    CBCharacteristic *const ch = [self characteristicForService:service
-                                  withIndex:charHandle - serviceHandle - 1];
-
-    if (!ch) {
-        qCWarning(QT_BT_OSX) << "-write:characteristic:serviceUuid:serviceHandle:withResponse:, "
-                                "characteristic with handle: " << charHandle << " not "
-                                "found on service: " << serviceUuid;
-        return false;
-    }
-
-    Q_ASSERT_X(peripheral, "-write:characteristic:serviceUuid:serviceHandle:withResponse:",
-               "invalid peripheral (nil)");
+    CBCharacteristic *const ch = charMap.value(charHandle);
+    Q_ASSERT_X(ch, "-write:charHandle:withResponse:", "invalid characteristic (nil) for a give handle");
+    Q_ASSERT_X(peripheral, "-write:charHandle:withResponse:", "invalid peripheral (nil)");
 
     ObjCStrongReference<NSData> data(data_from_bytearray(value));
     if (!data) {
         // Even if qtData.size() == 0, we still need NSData object.
-        qCWarning(QT_BT_OSX) << "-write:characteristic:serviceUuid:serviceHandle:withResponse:, "
+        qCWarning(QT_BT_OSX) << "-write:charHandle:withResponse:, "
                                 "failed to allocate NSData object";
         return false;
     }
@@ -611,30 +699,6 @@ using namespace QT_NAMESPACE;
         CBCharacteristic *const c = [cs objectAtIndex:index];
         if (c.properties & properties)
             return c;
-    }
-
-    return nil;
-}
-
-- (CBCharacteristic *)characteristicForService:(CBService *)service
-                      withIndex:(NSUInteger)index
-{
-    Q_ASSERT_X(service, "-characteristicForService:withIndex:",
-               "invalid service (nil)");
-
-    QT_BT_MAC_AUTORELEASEPOOL;
-
-    NSArray *const chars = service.characteristics;
-
-    if (!chars || !chars.count)
-        return nil;
-
-    for (NSUInteger i = 0, j = 0, e = chars.count; i < e; ++i) {
-        CBCharacteristic *const ch = [chars objectAtIndex:i];
-        if (j == index)
-            return ch;
-        if (ch.descriptors)
-            j += ch.descriptors.count + 1; // + 1 for characteristic itself.
     }
 
     return nil;
