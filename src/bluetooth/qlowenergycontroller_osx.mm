@@ -332,6 +332,32 @@ void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyH
     emit service->characteristicWritten(characteristic, value);
 }
 
+void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergyHandle charHandle,
+                                                                     const QByteArray &value)
+{
+    // TODO: write/update notifications are quite similar (except asserts/warnings messages
+    // and different signals emitted). Merge them into one function?
+    Q_ASSERT_X(charHandle, "characteristicUpdateNotification",
+               "invalid characteristic handle(0)");
+
+    ServicePrivate service(serviceForHandle(charHandle));
+    if (service.isNull()) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(), "
+                                "can not find service for characteristic handle " << charHandle;
+        return;
+    }
+
+    QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(), "
+                                "unknown characteristic";
+        return;
+    }
+
+    updateValueOfCharacteristic(charHandle, value, false);
+    emit service->characteristicChanged(characteristic, value);
+}
+
 void QLowEnergyControllerPrivateOSX::descriptorWriteNotification(QLowEnergyHandle dHandle, const QByteArray &value)
 {
     Q_ASSERT_X(dHandle, "descriptorWriteNotification", "invalid descriptor handle (0)");
@@ -492,11 +518,26 @@ void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid
 }
 
 void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergyServicePrivate> service,
-                                                    QLowEnergyHandle charHandle, const QByteArray &newValue)
+                                                    QLowEnergyHandle charHandle,
+                                                    const QByteArray &newValue)
 {
-    Q_UNUSED(service)
-    Q_UNUSED(charHandle)
-    Q_UNUSED(newValue)
+    Q_ASSERT_X(!service.isNull(), "setNotifyValue", "invalid service (null)");
+    Q_ASSERT_X(isValid(), "setNotifyValue", "invalid controller");
+
+    if (!discoveredServices.contains(service->uuid)) {
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::setNotifyValue(), "
+                                "no service with uuid: " << service->uuid << " found";
+        return;
+    }
+
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::setNotifyValue(), "
+                              "no characteristic with handle: " << charHandle << " found";
+        return;
+    }
+
+    if (![centralManager setNotifyValue:newValue forCharacteristic:charHandle])
+        service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
 void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
@@ -504,12 +545,7 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
                                                          bool writeWithResponse)
 {
     Q_ASSERT_X(!service.isNull(), "writeCharacteristic", "invalid service (null)");
-
-    if (!isValid()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeCharacteristic(), "
-                                "invalid controller";
-        return;
-    }
+    Q_ASSERT_X(isValid(), "writeCharacteristic", "invalid controller");
 
     // We can work only with services, found on a given peripheral
     // (== created by the given LE controller),
@@ -555,12 +591,7 @@ void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergySe
                                                      const QByteArray &newValue)
 {
     Q_ASSERT_X(!service.isNull(), "writeDescriptor", "invalid service (null)");
-
-    if (!isValid()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeDescriptor(), "
-                                "invalid controller";
-        return;
-    }
+    Q_ASSERT_X(isValid(), "writeDescriptor", "invalid controller");
 
     // We can work only with services found on a given peripheral
     // (== created by the given LE controller),

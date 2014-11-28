@@ -74,6 +74,8 @@ private:
     void serviceDetailsDiscoveryFinished(LEService service) Q_DECL_OVERRIDE;
     void characteristicWriteNotification(QLowEnergyHandle charHandle,
                                          const QByteArray &newValue) Q_DECL_OVERRIDE;
+    void characteristicUpdateNotification(QLowEnergyHandle charHandle,
+                                          const QByteArray &value) Q_DECL_OVERRIDE;
     void descriptorWriteNotification(QLowEnergyHandle descHandle,
                                      const QByteArray &newValue) Q_DECL_OVERRIDE;
     void disconnected() Q_DECL_OVERRIDE;

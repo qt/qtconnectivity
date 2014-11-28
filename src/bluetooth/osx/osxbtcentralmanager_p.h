@@ -82,6 +82,8 @@ public:
     virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
     virtual void characteristicWriteNotification(QLowEnergyHandle charHandle,
                                                  const QByteArray &value) = 0;
+    virtual void characteristicUpdateNotification(QLowEnergyHandle charHandle,
+                                                  const QByteArray &value) = 0;
     virtual void descriptorWriteNotification(QLowEnergyHandle descHandle,
                                              const QByteArray &value) = 0;
     virtual void disconnected() = 0;
@@ -122,17 +124,29 @@ typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
 struct LEWriteRequest
 {
     LEWriteRequest() : isDescriptor(false),
+                       isClientConfiguration(false),
                        withResponse(false),
                        handle(0)
     {}
 
     bool isDescriptor;
+    bool isClientConfiguration;
     bool withResponse;
     QLowEnergyHandle handle;
     QByteArray value;
 };
 
 typedef QQueue<LEWriteRequest> WriteQueue;
+
+// It can happen that Qt's API wants to write something
+// and expects the confirmation about this value written,
+// but under the hood (Core Bluetooth) we have something like
+// a special method without any values at all.
+// To report our user a successful write, we have this map:
+// handle -> value for a write operation.
+// Since write operations are serialized, the key is guaranteed
+// to be unique.
+typedef QHash<QLowEnergyHandle, QByteArray> ValueHash;
 
 }
 
@@ -169,6 +183,8 @@ QT_END_NAMESPACE
 
     bool writePending;
     QT_PREPEND_NAMESPACE(OSXBluetooth)::WriteQueue writeQueue;
+
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ValueHash valuesToWrite;
 }
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
@@ -181,6 +197,9 @@ QT_END_NAMESPACE
 
 - (void)discoverServices;
 - (bool)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+
+- (bool)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
 
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle

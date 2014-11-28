@@ -236,7 +236,8 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
     }
 
     if (descriptor.uuid() == QBluetoothUuid::ClientCharacteristicConfiguration) {
-        // Core Bluetooth:
+        // We have to identify a special case - ClientCharacteristicConfiguration
+        // since with Core Bluetooth:
         //
         // "You cannot use this method to write the value of a client configuration descriptor
         // (represented by the CBUUIDClientCharacteristicConfigurationString constant),
@@ -244,6 +245,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
         // characteristic’s value with respect to a client. If you want to manage
         // notifications or indications for a characteristic’s value, you must
         // use the setNotifyValue:forCharacteristic: method instead."
+        controller->setNotifyValue(descriptor.d_ptr, descriptor.characteristicHandle(), newValue);
     } else {
         controller->writeDescriptor(descriptor.d_ptr, descriptor.handle(), newValue);
     }
