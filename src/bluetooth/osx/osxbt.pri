@@ -33,9 +33,11 @@ CONFIG(osx) {
     PRIVATE_HEADERS += osx/osxbtutility_p.h \
                        osx/osxbtledeviceinquiry_p.h \
                        osx/corebluetoothwrapper_p.h \
-                       osx/osxbtcentralmanagerdelegate_p.h
+                       osx/osxbtcentralmanagerdelegate_p.h \
+                       osx/osxbtcentralmanager_p.h
 
     OBJECTIVE_SOURCES += osx/osxbtutility.mm \
                          osx/osxbtledeviceinquiry.mm \
-                         osx/osxbtcentralmanagerdelegate.mm
+                         osx/osxbtcentralmanagerdelegate.mm \
+                         osx/osxbtcentralmanager.mm
 }
