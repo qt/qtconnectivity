@@ -305,7 +305,7 @@ void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService s
     qtService->endHandle = service->endHandle;
     qtService->characteristicList = service->characteristicList;
 
-    qtService->stateChanged(QLowEnergyService::ServiceDiscovered);
+    qtService->setState(QLowEnergyService::ServiceDiscovered);
 }
 
 void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyHandle charHandle,
@@ -394,7 +394,7 @@ void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
     // We failed to discover any characteristics/descriptors.
     if (discoveredServices.contains(serviceUuid)) {
         ServicePrivate qtService(discoveredServices.value(serviceUuid));
-        qtService->stateChanged(QLowEnergyService::InvalidService);
+        qtService->setState(QLowEnergyService::InvalidService);
     } else {
         qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::error(), "
                               "error reported for unknown service "<<serviceUuid;
@@ -483,11 +483,11 @@ void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid
 
     ServicePrivate qtService(discoveredServices.value(serviceUuid));
     if ([centralManager discoverServiceDetails:serviceUuid]) {
-        qtService->stateChanged(QLowEnergyService::DiscoveringServices);
+        qtService->setState(QLowEnergyService::DiscoveringServices);
     } else {
         // The error is returned by CentralManager - no
         // service with a given UUID found on a peripheral.
-        qtService->stateChanged(QLowEnergyService::InvalidService);
+        qtService->setState(QLowEnergyService::InvalidService);
     }
 }
 
