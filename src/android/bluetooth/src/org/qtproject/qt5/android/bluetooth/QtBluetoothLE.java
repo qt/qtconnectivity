@@ -347,6 +347,24 @@ public class QtBluetoothLE {
             leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
                     descriptor.getCharacteristic().getUuid().toString(), runningHandle+1,
                     descriptor.getUuid().toString(), descriptor.getValue());
+
+            /* Some devices preset ClientCharacteristicConfiguration descriptors
+             * to enable notifications out of the box. However the additional
+             * BluetoothGatt.setCharacteristicNotification call prevents
+             * automatic notifications from coming through. Hence we manually set them
+             * up here.
+             */
+
+            if (descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
+                final int value = descriptor.getValue()[0];
+                // notification or indication bit set?
+                if ((value & 0x03) > 0) {
+                    Log.d(TAG, "Found descriptor with automatic notifications.");
+                    mBluetoothGatt.setCharacteristicNotification(
+                            descriptor.getCharacteristic(), true);
+                }
+            }
+
             performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
         }
 
