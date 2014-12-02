@@ -450,6 +450,7 @@ public class QtBluetoothLE {
     {
         public GattEntry entry;
         public byte[] newValue;
+        public int requestedWriteType;
     }
 
     private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
@@ -805,7 +806,8 @@ public class QtBluetoothLE {
     /* Write Characteristics                                     */
     /*************************************************************/
 
-    public boolean writeCharacteristic(int charHandle, byte[] newValue)
+    public boolean writeCharacteristic(int charHandle, byte[] newValue,
+                                       int writeMode)
     {
         if (mBluetoothGatt == null)
             return false;
@@ -821,6 +823,17 @@ public class QtBluetoothLE {
         WriteJob newJob = new WriteJob();
         newJob.newValue = newValue;
         newJob.entry = entry;
+
+        // writeMode must be in sync with QLowEnergyService::WriteMode
+        // For now we ignore SignedWriteType as Qt doesn't support it yet.
+        switch (writeMode) {
+            case 1: //WriteWithoutResponse
+                newJob.requestedWriteType = BluetoothGattCharacteristic. WRITE_TYPE_NO_RESPONSE;
+                break;
+            default:
+                newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+                break;
+        }
 
         boolean result;
         synchronized (writeQueue) {
@@ -856,6 +869,7 @@ public class QtBluetoothLE {
         WriteJob newJob = new WriteJob();
         newJob.newValue = newValue;
         newJob.entry = entry;
+        newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 
         boolean result;
         synchronized (writeQueue) {
@@ -891,6 +905,9 @@ public class QtBluetoothLE {
             boolean result;
             switch (nextJob.entry.type) {
                 case Characteristic:
+                    if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
+                        nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+                    }
                     result = nextJob.entry.characteristic.setValue(nextJob.newValue);
                     if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
                         skip = true;
