@@ -74,6 +74,7 @@ public:
 
 private slots:
     void initTestCase();
+    void init();
     void cleanupTestCase();
     void tst_emptyCtor();
     void tst_connect();
@@ -157,6 +158,20 @@ void tst_QLowEnergyController::initTestCase()
     foundServices << QBluetoothUuid(QString("f000aa60-0451-4000-b000-000000000000"));
     foundServices << QBluetoothUuid(QString("f000ccc0-0451-4000-b000-000000000000"));
     foundServices << QBluetoothUuid(QString("f000ffc0-0451-4000-b000-000000000000"));
+}
+
+/*
+ * Executed in between each test function call.
+ */
+void tst_QLowEnergyController::init()
+{
+#ifdef Q_OS_ANDROID
+    /*
+     * Add a delay to give Android stack time to catch up in between
+     * the multiple connect/disconnects within each test function.
+     */
+    QTest::qWait(2000);
+#endif
 }
 
 void tst_QLowEnergyController::cleanupTestCase()
@@ -2119,7 +2134,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QLowEnergyCharacteristic second = entry[0].value<QLowEnergyCharacteristic>();
     QByteArray val2 = entry[1].toByteArray();
     QCOMPARE(imageIdentityChar, second);
-    QCOMPARE(val2, QByteArray::fromHex("0"));
+    QVERIFY(val2 == QByteArray::fromHex("0") || val2 == val1);
 
     charChangedSpy.clear();
     charWrittenSpy.clear();
@@ -2145,7 +2160,12 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     second = entry[0].value<QLowEnergyCharacteristic>();
     val2 = entry[1].toByteArray();
     QCOMPARE(imageIdentityChar, second);
-    QCOMPARE(val2, QByteArray::fromHex("1"));
+
+    /* Bluez resends the last confirmed write value, other platforms
+     * send the value received by the change notification value.
+     */
+    qDebug() << "Image B(1):" << val1.toHex() << val2.toHex();
+    QVERIFY(val2 == QByteArray::fromHex("1") || val2 == val1);
 
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (1)");
 
@@ -2168,6 +2188,10 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
 
+#ifdef Q_OS_ANDROID
+    QEXPECT_FAIL("", "Android sends write confirmation when using WriteWithoutResponse",
+                 Continue);
+#endif
     QVERIFY(charWrittenSpy.isEmpty());
     if (val1.size() == 8) {
         QCOMPARE(first, imageIdentityChar);
@@ -2193,6 +2217,10 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
 
+#ifdef Q_OS_ANDROID
+    QEXPECT_FAIL("", "Android sends write confirmation when using WriteWithoutResponse",
+                 Continue);
+#endif
     QVERIFY(charWrittenSpy.isEmpty());
     if (val1.size() == 8) {
         QCOMPARE(first, imageIdentityChar);
