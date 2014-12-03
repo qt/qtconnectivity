@@ -321,6 +321,32 @@ void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
     pointer->startHandle = startHandle;
     pointer->endHandle = endHandle;
 
+    if (hub && hub->javaObject().isValid()) {
+        QAndroidJniObject uuid = QAndroidJniObject::fromString(serviceUuid);
+        QAndroidJniObject javaIncludes = hub->javaObject().callObjectMethod(
+                                        "includedServices",
+                                        "(Ljava/lang/String;)Ljava/lang/String;",
+                                        uuid.object<jstring>());
+        if (javaIncludes.isValid()) {
+            const QStringList list = javaIncludes.toString()
+                                                 .split(QStringLiteral(" "),
+                                                        QString::SkipEmptyParts);
+            foreach (const QString &entry, list) {
+                const QBluetoothUuid service(entry);
+                if (service.isNull())
+                    return;
+
+                pointer->includedServices.append(service);
+
+                // update the type of the included service
+                QSharedPointer<QLowEnergyServicePrivate> otherService =
+                        serviceList.value(service);
+                if (!otherService.isNull())
+                    otherService->type |= QLowEnergyService::IncludedService;
+            }
+        }
+    }
+
     qCDebug(QT_BT_ANDROID) << "Service" << serviceUuid << "discovered (start:"
               << startHandle << "end:" << endHandle << ")" << pointer.data();
 
@@ -451,6 +477,8 @@ void QLowEnergyControllerPrivate::characteristicChanged(
         return;
     }
 
+    updateValueOfCharacteristic(characteristic.attributeHandle(),
+                                data, false);
     emit service->characteristicChanged(characteristic, data);
 }
 

@@ -657,6 +657,37 @@ public class QtBluetoothLE {
         return true;
     }
 
+    /*
+        Returns the uuids of the services included by the given service. Otherwise returns null.
+        Directly called from Qt.
+     */
+    public String includedServices(String serviceUuid)
+    {
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(serviceUuid);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+
+        //TODO Breaks in case of two services with same uuid
+        BluetoothGattService service = mBluetoothGatt.getService(uuid);
+        if (service == null)
+            return null;
+
+        final List<BluetoothGattService> includes = service.getIncludedServices();
+        if (includes.isEmpty())
+            return null;
+
+        StringBuilder builder = new StringBuilder();
+        for (BluetoothGattService includedService: includes) {
+            builder.append(includedService.getUuid().toString()).append(" "); //space is separator
+        }
+
+        return builder.toString();
+    }
+
     private void finishCurrentServiceDiscovery()
     {
         int currentEntry = currentServiceInDiscovery;
@@ -856,10 +887,21 @@ public class QtBluetoothLE {
                             must be written to the peripheral
                          */
 
-                        boolean enableNotifications = true;
-                        if (Arrays.equals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE,
-                                          nextJob.newValue))
-                            enableNotifications = false;
+
+                        /*  There is no documentation on indication behavior. The assumption is
+                            that when indication or notification are requested we call
+                            BluetoothGatt.setCharacteristicNotification. Furthermore it is assumed
+                            indications are send via onCharacteristicChanged too and Android itself
+                            will do the confirmation required for an indication as per
+                            Bluetooth spec Vol 3, Part G, 4.11 . If neither of the two bits are set
+                            we disable the signals.
+                         */
+                        boolean enableNotifications = false;
+                        int value = (nextJob.newValue[0] & 0xff);
+                        // first or second bit must be set
+                        if (((value & 0x1) == 1) || (((value >> 1) & 0x1) == 1)) {
+                            enableNotifications = true;
+                        }
 
                         result = mBluetoothGatt.setCharacteristicNotification(
                                 nextJob.entry.descriptor.getCharacteristic(), enableNotifications);

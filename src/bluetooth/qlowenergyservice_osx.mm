@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -31,18 +32,50 @@
 **
 ****************************************************************************/
 
+#include "qlowenergycontroller_osx_p.h"
+#include "qlowenergyserviceprivate_p.h"
 #include "qlowenergycharacteristic.h"
 #include "qlowenergydescriptor.h"
 #include "qlowenergyservice.h"
 #include "qbluetoothuuid.h"
 
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
+
+#include <algorithm>
+
+QT_BEGIN_NAMESPACE
+
+namespace {
+
+QLowEnergyControllerPrivateOSX *qt_mac_le_controller(QSharedPointer<QLowEnergyServicePrivate> d_ptr)
+{
+    if (d_ptr.isNull())
+        return Q_NULLPTR;
+
+    return static_cast<QLowEnergyControllerPrivateOSX *>(d_ptr->controller.data());
+}
+
+}
 
 QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> d, QObject *parent)
     : QObject(parent),
       d_ptr(d)
 {
+    qRegisterMetaType<QLowEnergyService::ServiceState>("QLowEnergyService::ServiceState");
+    qRegisterMetaType<QLowEnergyService::ServiceError>("QLowEnergyService::ServiceError");
+
+    connect(d.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
+            this, SIGNAL(error(QLowEnergyService::ServiceError)));
+    connect(d.data(), SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
+            this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
+    connect(d.data(), SIGNAL(characteristicChanged(QLowEnergyCharacteristic, QByteArray)),
+            this, SIGNAL(characteristicChanged(QLowEnergyCharacteristic, QByteArray)));
+    connect(d.data(), SIGNAL(characteristicWritten(QLowEnergyCharacteristic, QByteArray)),
+            this, SIGNAL(characteristicWritten(QLowEnergyCharacteristic, QByteArray)));
+    connect(d.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor, QByteArray)),
+            this, SIGNAL(descriptorWritten(QLowEnergyDescriptor, QByteArray)));
 }
 
 QLowEnergyService::~QLowEnergyService()
@@ -51,75 +84,171 @@ QLowEnergyService::~QLowEnergyService()
 
 QList<QBluetoothUuid> QLowEnergyService::includedServices() const
 {
-    return QList<QBluetoothUuid>();
+    return d_ptr->includedServices;
 }
 
 QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
-    return PrimaryService;
+    return d_ptr->type;
 }
 
 QLowEnergyService::ServiceState QLowEnergyService::state() const
 {
-    return InvalidService;
+    return d_ptr->state;
 }
 
 QLowEnergyCharacteristic QLowEnergyService::characteristic(const QBluetoothUuid &uuid) const
 {
-    Q_UNUSED(uuid)
+    foreach (const QLowEnergyHandle handle, d_ptr->characteristicList.keys()) {
+        if (d_ptr->characteristicList[handle].uuid == uuid)
+            return QLowEnergyCharacteristic(d_ptr, handle);
+    }
 
     return QLowEnergyCharacteristic();
 }
 
 QList<QLowEnergyCharacteristic> QLowEnergyService::characteristics() const
 {
-    return QList<QLowEnergyCharacteristic>();
+    QList<QLowEnergyCharacteristic> result;
+    QList<QLowEnergyHandle> handles(d_ptr->characteristicList.keys());
+
+    std::sort(handles.begin(), handles.end());
+
+    foreach (const QLowEnergyHandle &handle, handles) {
+        QLowEnergyCharacteristic characteristic(d_ptr, handle);
+        result.append(characteristic);
+    }
+
+    return result;
 }
 
 QBluetoothUuid QLowEnergyService::serviceUuid() const
 {
-    return QBluetoothUuid();
+    return d_ptr->uuid;
 }
 
 QString QLowEnergyService::serviceName() const
 {
-    return QString();
+    bool ok = false;
+    const quint16 clsId = d_ptr->uuid.toUInt16(&ok);
+    if (ok) {
+        QBluetoothUuid::ServiceClassUuid uuid
+                = static_cast<QBluetoothUuid::ServiceClassUuid>(clsId);
+        const QString name = QBluetoothUuid::serviceClassToString(uuid);
+        if (!name.isEmpty())
+            return name;
+    }
+
+    return qApp ? qApp->translate("QBluetoothServiceDiscoveryAgent", "Unknown Service") :
+                  QStringLiteral("Unknown Service");
 }
 
 void QLowEnergyService::discoverDetails()
 {
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+
+    if (!controller || d_ptr->state == InvalidService) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    if (d_ptr->state != DiscoveryRequired)
+        return;
+
+    d_ptr->setState(QLowEnergyService::DiscoveringServices);
+    controller->discoverServiceDetails(d_ptr->uuid);
 }
 
 QLowEnergyService::ServiceError QLowEnergyService::error() const
 {
-    return NoError;
+    return d_ptr->lastError;
 }
 
 bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic) const
 {
-    Q_UNUSED(characteristic)
+    if (characteristic.d_ptr.isNull() || !characteristic.data)
+        return false;
+
+    if (d_ptr == characteristic.d_ptr
+        && d_ptr->characteristicList.contains(characteristic.attributeHandle())) {
+        return true;
+    }
 
     return false;
 }
 
-void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &characteristic,
-                                            const QByteArray &newValue,
+void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, const QByteArray &newValue,
                                             WriteMode mode)
 {
-    Q_UNUSED(characteristic)
-    Q_UNUSED(newValue)
-    Q_UNUSED(mode)
+    // Not a characteristic of this service
+    if (!contains(ch))
+        return;
+
+    if (state() != ServiceDiscovered) {
+        d_ptr->setError(QLowEnergyService::OperationError);
+        return;
+    }
+
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (!controller)
+        return;
+
+    // Don't write if properties don't permit it
+    if (mode == WriteWithResponse && (ch.properties() & QLowEnergyCharacteristic::Write))
+        controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, true);
+    else if (mode == WriteWithoutResponse && (ch.properties() & QLowEnergyCharacteristic::WriteNoResponse))
+        controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, false);
+    else
+        d_ptr->setError(QLowEnergyService::OperationError);
 }
 
 bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 {
-    Q_UNUSED(descriptor)
+    if (descriptor.d_ptr.isNull() || !descriptor.data)
+        return false;
+
+    const QLowEnergyHandle charHandle = descriptor.characteristicHandle();
+    if (!charHandle)
+        return false;
+
+    if (d_ptr == descriptor.d_ptr && d_ptr->characteristicList.contains(charHandle)
+        && d_ptr->characteristicList[charHandle].descriptorList.contains(descriptor.handle()))
+    {
+        return true;
+    }
+
     return false;
 }
 
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
-    Q_UNUSED(descriptor)
-    Q_UNUSED(newValue)
+    if (!contains(descriptor))
+        return;
+
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (!controller)
+        return;
+
+    if (state() != ServiceDiscovered) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    if (descriptor.uuid() == QBluetoothUuid::ClientCharacteristicConfiguration) {
+        // We have to identify a special case - ClientCharacteristicConfiguration
+        // since with Core Bluetooth:
+        //
+        // "You cannot use this method to write the value of a client configuration descriptor
+        // (represented by the CBUUIDClientCharacteristicConfigurationString constant),
+        // which describes how notification or indications are configured for a
+        // characteristic’s value with respect to a client. If you want to manage
+        // notifications or indications for a characteristic’s value, you must
+        // use the setNotifyValue:forCharacteristic: method instead."
+        controller->setNotifyValue(descriptor.d_ptr, descriptor.characteristicHandle(), newValue);
+    } else {
+        controller->writeDescriptor(descriptor.d_ptr, descriptor.handle(), newValue);
+    }
 }
+
+QT_END_NAMESPACE

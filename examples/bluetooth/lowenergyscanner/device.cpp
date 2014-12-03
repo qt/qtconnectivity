@@ -155,7 +155,7 @@ void Device::scanServices(const QString &address)
     m_services.clear();
     emit servicesUpdated();
 
-    setUpdate("Connecting to device...");
+    setUpdate("Back\n(Connecting to device...)");
 
     if (controller && controller->remoteAddress() != currentDevice.getDevice().address()) {
         controller->disconnectFromDevice();
@@ -166,7 +166,11 @@ void Device::scanServices(const QString &address)
     //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
+#ifdef Q_OS_MAC
+        controller = new QLowEnergyController(currentDevice.getDevice());
+#else
         controller = new QLowEnergyController(currentDevice.getDevice().address());
+#endif
         connect(controller, SIGNAL(connected()),
                 this, SLOT(deviceConnected()));
         connect(controller, SIGNAL(error(QLowEnergyController::Error)),
@@ -205,7 +209,7 @@ void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)
 
 void Device::serviceScanDone()
 {
-    setUpdate("Service scan done!");
+    setUpdate("Back\n(Service scan done!)");
     // force UI in case we didn't find anything
     if (m_services.isEmpty())
         emit servicesUpdated();
@@ -234,6 +238,7 @@ void Device::connectToService(const QString &uuid)
         connect(service, SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
                 this, SLOT(serviceDetailsDiscovered(QLowEnergyService::ServiceState)));
         service->discoverDetails();
+        setUpdate("Back\n(Discovering details...)");
         //! [les-service-3]
         return;
     }
@@ -250,7 +255,7 @@ void Device::connectToService(const QString &uuid)
 
 void Device::deviceConnected()
 {
-    setUpdate("Discovering services!");
+    setUpdate("Back\n(Discovering services...)");
     connected = true;
     //! [les-service-2]
     controller->discoverServices();

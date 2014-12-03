@@ -183,6 +183,8 @@ private:
                                      const QByteArray &newValue, quint16 offset);
     bool increaseEncryptLevelfRequired(quint8 errorCode);
 
+    void resetController();
+
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();

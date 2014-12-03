@@ -570,6 +570,13 @@ void QLowEnergyController::disconnectFromDevice()
 
     If the controller instance is not connected or the controller has performed
     the service discovery already this function will do nothing.
+
+    \note Some platforms internally cache the service list of a device
+    which was discovered in the past. This can be problematic if the remote device
+    changed its list of services or their inclusion tree. If this behavior is a
+    problem, the best workaround is to temporarily turn Bluetooth off. This
+    causes a reset of the cache data. Currently Android exhibits such a
+    cache behavior.
  */
 void QLowEnergyController::discoverServices()
 {
