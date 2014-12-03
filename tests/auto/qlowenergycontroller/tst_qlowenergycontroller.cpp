@@ -2091,6 +2091,9 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QSignalSpy charWrittenSpy(service,
                         SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
 
+    // by default the defvice enables the notificatioin bit already
+    // no need to enable it. If notifications fail to arrive the
+    // platform must check default enabled notifications.
     if (notification.value() != QByteArray::fromHex("0100")) {
         service->writeDescriptor(notification, QByteArray::fromHex("0100"));
         QTRY_VERIFY_WITH_TIMEOUT(!descWrittenSpy.isEmpty(), 3000);
@@ -2126,6 +2129,8 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QCOMPARE(imageIdentityChar, first);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Invalid image A ident info";
     }
@@ -2135,6 +2140,10 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QByteArray val2 = entry[1].toByteArray();
     QCOMPARE(imageIdentityChar, second);
     QVERIFY(val2 == QByteArray::fromHex("0") || val2 == val1);
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
 
     charChangedSpy.clear();
     charWrittenSpy.clear();
@@ -2152,6 +2161,8 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QCOMPARE(imageIdentityChar, first);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Invalid image B ident info";
     }
@@ -2160,6 +2171,10 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     second = entry[0].value<QLowEnergyCharacteristic>();
     val2 = entry[1].toByteArray();
     QCOMPARE(imageIdentityChar, second);
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
 
     /* Bluez resends the last confirmed write value, other platforms
      * send the value received by the change notification value.
@@ -2197,9 +2212,15 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QCOMPARE(first, imageIdentityChar);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Image A not set?";
     }
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
 
     charChangedSpy.clear();
 
@@ -2226,9 +2247,16 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QCOMPARE(first, imageIdentityChar);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Image B not set?";
     }
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
+
 
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (2)");
 
