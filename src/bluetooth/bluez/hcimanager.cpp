@@ -150,6 +150,7 @@ bool HciManager::monitorEvent(HciManager::HciEvent event)
         return false;
 
     // this event is already enabled
+    // TODO runningEvents does not seem to be used
     if (runningEvents.contains(event))
         return true;
 
