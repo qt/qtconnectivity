@@ -84,6 +84,7 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
 
     // start Bluetooth if not started
+#ifndef Q_OS_OSX
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     localDeviceAvailable = device->isValid();
     if (localDeviceAvailable) {
@@ -92,6 +93,10 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
         QTest::qWait(1000);
     }
     delete device;
+#else
+    QBluetoothLocalDevice device;
+    localDeviceAvailable = QBluetoothLocalDevice().hostMode() != QBluetoothLocalDevice::HostPoweredOff;
+#endif
 
     qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
     qRegisterMetaType<QBluetoothServiceInfo>("QBluetoothServiceInfo");
@@ -147,6 +152,10 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 
 void tst_QBluetoothServiceDiscoveryAgent::tst_invalidBtAddress()
 {
+#ifdef Q_OS_OSX
+    if (!localDeviceAvailable)
+        QSKIP("On OS X this test requires Bluetooth adapter in powered ON state");
+#endif
     QBluetoothServiceDiscoveryAgent *discoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress("11:11:11:11:11:11"));
 
     QCOMPARE(discoveryAgent->error(), QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError);
