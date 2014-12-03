@@ -120,11 +120,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     QT_BT_MAC_AUTORELEASEPOOL;
 
     HostController defaultController([[IOBluetoothHostController defaultController] retain]);
-    if (!defaultController || [defaultController powerState] != kBluetoothHCIPowerStateON) {
-        // IOBluetooth can return non-null host controller without working adapter.
-        // Unfortunately, a local device in such a state is totally useless:
-        // you can not access any information like address/name or change the device
-        // state to powered on. So it's not valid.
+    if (!defaultController) {
         qCCritical(QT_BT_OSX) << "QBluetoothLocalDevicePrivate(), failed to "
                                  "init a host controller object";
         return;
