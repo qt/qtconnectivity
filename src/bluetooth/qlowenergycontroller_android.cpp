@@ -431,7 +431,10 @@ void QLowEnergyControllerPrivate::characteristicWritten(
         return;
     }
 
-    updateValueOfCharacteristic(charHandle, data, false);
+    // only update cache when property is readable. Otherwise it remains
+    // empty.
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, data, false);
     emit service->characteristicWritten(characteristic, data);
 }
 
@@ -479,7 +482,10 @@ void QLowEnergyControllerPrivate::characteristicChanged(
         return;
     }
 
-    updateValueOfCharacteristic(characteristic.attributeHandle(),
+    // only update cache when property is readable. Otherwise it remains
+    // empty.
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(characteristic.attributeHandle(),
                                 data, false);
     emit service->characteristicChanged(characteristic, data);
 }

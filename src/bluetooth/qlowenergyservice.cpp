@@ -242,6 +242,15 @@ QT_BEGIN_NAMESPACE
     by calling \l writeCharacteristic(). If the write operation is not successful,
     the \l error() signal is emitted using the \l CharacteristicWriteError flag.
 
+    Since this signal is an indication of a successful write operation \a newValue
+    generally matches the value that was passed to the associated
+    \l writeCharacteristic() call. However, it may happen that the two values differ
+    from each other. This can occur in cases when the written value is
+    used by the remote device to trigger an operation and it returns some other value via
+    the written and/or change notification. Such cases are very specific to the
+    target device. In any case, the reception of the written signal can still be considered
+    as a sign that the target device received the to-be-written value.
+
     \note If \l writeCharacteristic() is called using the \l WriteWithoutResponse mode,
     this signal and the \l error() are never emitted.
 

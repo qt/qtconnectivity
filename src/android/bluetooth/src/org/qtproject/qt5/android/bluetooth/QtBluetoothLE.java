@@ -919,7 +919,7 @@ public class QtBluetoothLE {
                             into two operations. BluetoothGatt.enableCharacteristicNotification
                             ensures the local Blueooth stack forwards the notifications. In addition,
                             BluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-                            must be written to the peripheral
+                            must be written to the peripheral.
                          */
 
 

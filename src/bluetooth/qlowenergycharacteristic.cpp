@@ -195,9 +195,11 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
     \l {QLowEnergyService::writeCharacteristic()}{write operation} or when an update
     notification is received.
 
-    The returned \l QByteArray is empty if the characteristic does not have the
-    \l {QLowEnergyCharacteristic::Read}{read permission}. However, a non-readable
-    characteristic may obtain a non-empty value via a related notification or write operation.
+    The returned \l QByteArray always remains empty if the characteristic does not
+    have the \l {QLowEnergyCharacteristic::Read}{read permission}. In such cases only
+    the \l QLowEnergyService::characteristicChanged() or
+    \l QLowEnergyService::characteristicWritten() may provice information about the
+    value of this characteristic.
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {
