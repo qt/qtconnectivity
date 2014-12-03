@@ -150,6 +150,14 @@ public:
         }
     }
 
+    void resetWithoutRetain(T *newVal)
+    {
+        if (m_ptr != newVal) {
+            [m_ptr release];
+            m_ptr = newVal;
+        }
+    }
+
     operator T *() const
     {
         return m_ptr;
@@ -277,6 +285,10 @@ QString qt_error_string(IOReturn errorCode);
 QBluetoothUuid qt_uuid(CBUUID *uuid);
 CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid);
 ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid);
+bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid);
+bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid);
+QByteArray qt_bytearray(NSData *data);
+ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData);
 
 } // namespace OSXBluetooth
 

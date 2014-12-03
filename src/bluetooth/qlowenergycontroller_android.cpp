@@ -76,6 +76,10 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::descriptorRead);
         connect(hub, &LowEnergyNotificationHub::characteristicWritten,
                 this, &QLowEnergyControllerPrivate::characteristicWritten);
+        connect(hub, &LowEnergyNotificationHub::descriptorWritten,
+                this, &QLowEnergyControllerPrivate::descriptorWritten);
+        connect(hub, &LowEnergyNotificationHub::characteristicChanged,
+                this, &QLowEnergyControllerPrivate::characteristicChanged);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -95,9 +99,20 @@ void QLowEnergyControllerPrivate::connectToDevice()
 
 void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
+    /* Catch an Android timeout bug. If the device is connecting but cannot
+     * physically connect it seems to ignore the disconnect call below.
+     * At least BluetoothGattCallback.onConnectionStateChange never
+     * arrives. The next BluetoothGatt.connect() works just fine though.
+     * */
+
+    QLowEnergyController::ControllerState oldState = state;
     setState(QLowEnergyController::ClosingState);
+
     if (hub)
         hub->javaObject().callMethod<void>("disconnect");
+
+    if (oldState == QLowEnergyController::ConnectingState)
+        setState(QLowEnergyController::UnconnectedState);
 }
 
 void QLowEnergyControllerPrivate::discoverServices()
@@ -181,17 +196,41 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     env->DeleteLocalRef(payload);
 
     if (!result)
-        QMetaObject::invokeMethod(service.data(), "error", Qt::QueuedConnection,
-                              Q_ARG(QLowEnergyHandle, charHandle));
+        service->setError(QLowEnergyService::CharacteristicWriteError);
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle /*charHandle*/,
-        const QLowEnergyHandle /*descriptorHandle*/,
-        const QByteArray &/*newValue*/)
+        const QLowEnergyHandle descHandle,
+        const QByteArray &newValue)
 {
+    Q_ASSERT(!service.isNull());
 
+    QAndroidJniEnvironment env;
+    jbyteArray payload;
+    payload = env->NewByteArray(newValue.size());
+    env->SetByteArrayRegion(payload, 0, newValue.size(),
+                            (jbyte *)newValue.constData());
+
+    bool result = false;
+    if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Write descriptor with handle " << descHandle
+                 << newValue.toHex() << "(service:" << service->uuid << ")";
+        result = hub->javaObject().callMethod<jboolean>("writeDescriptor", "(I[B)Z",
+                                                        descHandle, payload);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    env->DeleteLocalRef(payload);
+
+    if (!result)
+        service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
 void QLowEnergyControllerPrivate::connectionUpdated(
@@ -208,8 +247,18 @@ void QLowEnergyControllerPrivate::connectionUpdated(
 
     if (errorCode != QLowEnergyController::NoError) {
         // ConnectionError if transition from Connecting to Connected
-        if (oldState == QLowEnergyController::ConnectingState)
+        if (oldState == QLowEnergyController::ConnectingState) {
             setError(QLowEnergyController::ConnectionError);
+            /* There is a bug in Android, when connecting to an unconnectable
+             * device. The connection times out and Android sends error code
+             * 133 (doesn't exist) and STATE_CONNECTED. A subsequent disconnect()
+             * call never sends a STATE_DISCONNECTED either.
+             * As workaround we will trigger disconnect when we encounter
+             * error during connect attempt. This leaves the controller
+             * in a cleaner state.
+             * */
+            newState = QLowEnergyController::UnconnectedState;
+        }
         else
             setError(errorCode);
     }
@@ -271,6 +320,32 @@ void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
             serviceList.value(service);
     pointer->startHandle = startHandle;
     pointer->endHandle = endHandle;
+
+    if (hub && hub->javaObject().isValid()) {
+        QAndroidJniObject uuid = QAndroidJniObject::fromString(serviceUuid);
+        QAndroidJniObject javaIncludes = hub->javaObject().callObjectMethod(
+                                        "includedServices",
+                                        "(Ljava/lang/String;)Ljava/lang/String;",
+                                        uuid.object<jstring>());
+        if (javaIncludes.isValid()) {
+            const QStringList list = javaIncludes.toString()
+                                                 .split(QStringLiteral(" "),
+                                                        QString::SkipEmptyParts);
+            foreach (const QString &entry, list) {
+                const QBluetoothUuid service(entry);
+                if (service.isNull())
+                    return;
+
+                pointer->includedServices.append(service);
+
+                // update the type of the included service
+                QSharedPointer<QLowEnergyServicePrivate> otherService =
+                        serviceList.value(service);
+                if (!otherService.isNull())
+                    otherService->type |= QLowEnergyService::IncludedService;
+            }
+        }
+    }
 
     qCDebug(QT_BT_ANDROID) << "Service" << serviceUuid << "discovered (start:"
               << startHandle << "end:" << endHandle << ")" << pointer.data();
@@ -340,7 +415,6 @@ void QLowEnergyControllerPrivate::characteristicWritten(
     if (service.isNull())
         return;
 
-
     qCDebug(QT_BT_ANDROID) << "Characteristic write confirmation" << service->uuid
                            << charHandle << data.toHex() << errorCode;
 
@@ -357,6 +431,55 @@ void QLowEnergyControllerPrivate::characteristicWritten(
 
     updateValueOfCharacteristic(charHandle, data, false);
     emit service->characteristicWritten(characteristic, data);
+}
+
+void QLowEnergyControllerPrivate::descriptorWritten(
+        int descHandle, const QByteArray &data, QLowEnergyService::ServiceError errorCode)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(descHandle);
+    if (service.isNull())
+        return;
+
+    qCDebug(QT_BT_ANDROID) << "Descriptor write confirmation" << service->uuid
+                           << descHandle << data.toHex() << errorCode;
+
+    if (errorCode != QLowEnergyService::NoError) {
+        service->setError(errorCode);
+        return;
+    }
+
+    QLowEnergyDescriptor descriptor = descriptorForHandle(descHandle);
+    if (!descriptor.isValid()) {
+        qCWarning(QT_BT_ANDROID) << "descriptorWritten: Cannot find descriptor";
+        return;
+    }
+
+    updateValueOfDescriptor(descriptor.characteristicHandle(),
+                            descHandle, data, false);
+    emit service->descriptorWritten(descriptor, data);
+}
+
+void QLowEnergyControllerPrivate::characteristicChanged(
+        int charHandle, const QByteArray &data)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(charHandle);
+    if (service.isNull())
+        return;
+
+    qCDebug(QT_BT_ANDROID) << "Characteristic change notification" << service->uuid
+                           << charHandle << data.toHex();
+
+    QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_ANDROID) << "characteristicChanged: Cannot find characteristic";
+        return;
+    }
+
+    updateValueOfCharacteristic(characteristic.attributeHandle(),
+                                data, false);
+    emit service->characteristicChanged(characteristic, data);
 }
 
 QT_END_NAMESPACE

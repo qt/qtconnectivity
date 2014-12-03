@@ -76,10 +76,6 @@ Rectangle {
             else
                 info.visible = false;
         }
-
-        onDisconnected: {
-            pageLoader.source = "main.qml"
-        }
     }
 
     ListView {
@@ -137,10 +133,12 @@ Rectangle {
         id: menu
         anchors.bottom: parent.bottom
         menuWidth: parent.width
-        menuText: "Back"
+        menuText: device.update
         menuHeight: (parent.height/6)
         onButtonClick: {
             device.disconnectFromDevice()
+            pageLoader.source = "main.qml"
+            device.update = "Search"
         }
     }
 }

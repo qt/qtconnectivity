@@ -63,7 +63,7 @@ class Device: public QObject
     Q_PROPERTY(QVariant devicesList READ getDevices NOTIFY devicesUpdated)
     Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
     Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsUpdated)
-    Q_PROPERTY(QString update READ getUpdate NOTIFY updateChanged)
+    Q_PROPERTY(QString update READ getUpdate WRITE setUpdate NOTIFY updateChanged)
     Q_PROPERTY(bool useRandomAddress READ isRandomAddress WRITE setRandomAddress NOTIFY randomAddressChanged)
     Q_PROPERTY(bool state READ state NOTIFY stateChanged)
     Q_PROPERTY(bool controllerError READ hasControllerError)

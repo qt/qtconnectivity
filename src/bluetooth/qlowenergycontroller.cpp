@@ -514,7 +514,7 @@ void QLowEnergyController::setRemoteAddressType(
     Connects to the remote Bluetooth Low Energy device.
 
     This function does nothing if the controller's \l state()
-    is \l UnconnectedState. The \l connected() signal is emitted
+    is not equal to \l UnconnectedState. The \l connected() signal is emitted
     once the connection is successfully established.
 
     On Linux/BlueZ systems, it is not possible to connect to the same
@@ -547,6 +547,8 @@ void QLowEnergyController::connectToDevice()
     Once any of those objects become invalid they remain invalid even if this
     controller object reconnects.
 
+    This function does nothing if the controller is in the \l UnconnectedState.
+
     \sa connectToDevice()
  */
 void QLowEnergyController::disconnectFromDevice()
@@ -568,6 +570,13 @@ void QLowEnergyController::disconnectFromDevice()
 
     If the controller instance is not connected or the controller has performed
     the service discovery already this function will do nothing.
+
+    \note Some platforms internally cache the service list of a device
+    which was discovered in the past. This can be problematic if the remote device
+    changed its list of services or their inclusion tree. If this behavior is a
+    problem, the best workaround is to temporarily turn Bluetooth off. This
+    causes a reset of the cache data. Currently Android exhibits such a
+    cache behavior.
  */
 void QLowEnergyController::discoverServices()
 {

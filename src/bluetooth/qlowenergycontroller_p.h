@@ -183,6 +183,8 @@ private:
                                      const QByteArray &newValue, quint16 offset);
     bool increaseEncryptLevelfRequired(quint8 errorCode);
 
+    void resetController();
+
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();
@@ -206,8 +208,9 @@ private slots:
                         int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
     void characteristicWritten(int charHandle, const QByteArray &data,
                                QLowEnergyService::ServiceError errorCode);
-
-
+    void descriptorWritten(int descHandle, const QByteArray &data,
+                           QLowEnergyService::ServiceError errorCode);
+    void characteristicChanged(int charHandle, const QByteArray &data);
 #endif
 private:
     QLowEnergyController *q_ptr;

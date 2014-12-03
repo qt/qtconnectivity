@@ -45,6 +45,7 @@ import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,16 +53,18 @@ import java.util.UUID;
 
 public class QtBluetoothLE {
     private static final String TAG = "QtBluetoothGatt";
-    private BluetoothAdapter mBluetoothAdapter;
+    private final BluetoothAdapter mBluetoothAdapter;
     private boolean mLeScanRunning = false;
 
     private BluetoothGatt mBluetoothGatt = null;
     private String mRemoteGattAddress;
-    private BluetoothDevice mRemoteGattDevice = null;
+    final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 
     /* Pointer to the Qt object that "owns" the Java object */
+    @SuppressWarnings({"CanBeFinal", "WeakerAccess"})
     long qtObject = 0;
+    @SuppressWarnings("WeakerAccess")
     Activity qtactivity = null;
 
     public QtBluetoothLE() {
@@ -97,7 +100,7 @@ public class QtBluetoothLE {
     }
 
     // Device scan callback
-    private BluetoothAdapter.LeScanCallback leScanCallback =
+    private final BluetoothAdapter.LeScanCallback leScanCallback =
             new BluetoothAdapter.LeScanCallback() {
 
                 @Override
@@ -115,7 +118,7 @@ public class QtBluetoothLE {
     /* Service Discovery                                         */
     /*************************************************************/
 
-    private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
 
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (qtObject == 0)
@@ -127,7 +130,7 @@ public class QtBluetoothLE {
                 case BluetoothProfile.STATE_DISCONNECTED:
                     qLowEnergyController_State = 0;
                     // we disconnected -> get rid of data from previous run
-                    resetServiceDetailData();
+                    resetData();
                     // reset mBluetoothGatt, reusing same object is not very reliable
                     // sometimes it reconnects and sometimes it does not.
                     mBluetoothGatt = null;
@@ -157,7 +160,7 @@ public class QtBluetoothLE {
                     errorCode = 0; //QLowEnergyController::NoError
                     final List<BluetoothGattService> services = mBluetoothGatt.getServices();
                     for (BluetoothGattService service: services) {
-                        builder.append(service.getUuid().toString() + " "); //space is separator
+                        builder.append(service.getUuid().toString()).append(" "); //space is separator
                     }
                     break;
                 default:
@@ -251,23 +254,32 @@ public class QtBluetoothLE {
                 return;
             }
 
-            int errorCode = 0;
+            int errorCode;
             //This must be in sync with QLowEnergyService::ServiceError
             switch (status) {
                 case BluetoothGatt.GATT_SUCCESS:
                     errorCode = 0; break; // NoError
                 default:
                     errorCode = 2; break; // CharacteristicWriteError
-
             }
 
+            synchronized (writeQueue) {
+                writeJobPending = false;
+            }
             leCharacteristicWritten(qtObject, handle+1, characteristic.getValue(), errorCode);
+            performNextWrite();
         }
 
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
                                             android.bluetooth.BluetoothGattCharacteristic characteristic)
         {
-            System.out.println("onCharacteristicChanged");
+            int handle = handleForCharacteristic(characteristic);
+            if (handle == -1) {
+                Log.w(TAG,"onCharacteristicChanged: cannot find handle");
+                return;
+            }
+
+            leCharacteristicChanged(qtObject, handle+1, characteristic.getValue());
         }
 
         public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
@@ -342,7 +354,26 @@ public class QtBluetoothLE {
                                       android.bluetooth.BluetoothGattDescriptor descriptor,
                                       int status)
         {
-            System.out.println("onDescriptorWrite");
+            if (status != BluetoothGatt.GATT_SUCCESS)
+                Log.w(TAG, "onDescriptorWrite: error " + status);
+
+            int handle = handleForDescriptor(descriptor);
+
+            int errorCode;
+            //This must be in sync with QLowEnergyService::ServiceError
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    errorCode = 0; break; // NoError
+                default:
+                    errorCode = 3; break; // DescriptorWriteError
+            }
+
+            synchronized (writeQueue) {
+                writeJobPending = false;
+            }
+
+            leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
+            performNextWrite();
         }
         //TODO Requires Android API 21 which is not available on CI yet.
 //        public void onReliableWriteCompleted(android.bluetooth.BluetoothGatt gatt,
@@ -359,15 +390,17 @@ public class QtBluetoothLE {
 
 
     public boolean connect() {
-        mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);
-        if (mRemoteGattDevice == null)
+        BluetoothDevice mRemoteGattDevice;
+
+        try {
+            mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);
+        } catch (IllegalArgumentException ex) {
+            Log.w(TAG, "Remote address is not valid: " + mRemoteGattAddress);
             return false;
+        }
 
         mBluetoothGatt = mRemoteGattDevice.connectGatt(qtactivity, false, gattCallback);
-        if (mBluetoothGatt == null)
-            return false;
-
-        return true;
+        return mBluetoothGatt != null;
     }
 
     public void disconnect() {
@@ -379,10 +412,7 @@ public class QtBluetoothLE {
 
     public boolean discoverServices()
     {
-        if (mBluetoothGatt == null)
-            return false;
-
-        return mBluetoothGatt.discoverServices();
+        return mBluetoothGatt != null && mBluetoothGatt.discoverServices();
     }
 
     private enum GattEntryType
@@ -398,9 +428,19 @@ public class QtBluetoothLE {
         public BluetoothGattDescriptor descriptor = null;
         public int endHandle;
     }
-    Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
-    ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
-    private LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
+    private class WriteJob
+    {
+        public GattEntry entry;
+        public byte[] newValue;
+    }
+
+    private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
+    private final ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
+    private final LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
+
+
+    private final LinkedList<WriteJob> writeQueue = new LinkedList<WriteJob>();
+    private boolean writeJobPending;
 
     /*
         Internal helper function
@@ -421,7 +461,7 @@ public class QtBluetoothLE {
         int serviceHandle = handles.get(0);
 
         try {
-            GattEntry entry = null;
+            GattEntry entry;
             for (int i = serviceHandle+1; i < entries.size(); i++) {
                 entry = entries.get(i);
                 switch (entry.type) {
@@ -459,7 +499,7 @@ public class QtBluetoothLE {
         int serviceHandle = handles.get(0);
 
         try {
-            GattEntry entry = null;
+            GattEntry entry;
             for (int i = serviceHandle+1; i < entries.size(); i++) {
                 entry = entries.get(i);
                 switch (entry.type) {
@@ -474,7 +514,7 @@ public class QtBluetoothLE {
                         break;
                 }
             }
-        } catch (IndexOutOfBoundsException ex) { }
+        } catch (IndexOutOfBoundsException ignored) { }
         return -1;
     }
 
@@ -535,13 +575,18 @@ public class QtBluetoothLE {
     private int currentServiceInDiscovery = -1;
     private int runningHandle = -1;
 
-    private synchronized void resetServiceDetailData()
+    private void resetData()
     {
-        runningHandle = -1;
-        currentServiceInDiscovery = -1;
-        uuidToEntry.clear();
-        entries.clear();
-        servicesToBeDiscovered.clear();
+        synchronized (this) {
+            runningHandle = -1;
+            currentServiceInDiscovery = -1;
+            uuidToEntry.clear();
+            entries.clear();
+            servicesToBeDiscovered.clear();
+        }
+        synchronized (writeQueue) {
+            writeQueue.clear();
+        }
     }
 
     public synchronized boolean discoverServiceDetails(String serviceUuid)
@@ -612,6 +657,37 @@ public class QtBluetoothLE {
         return true;
     }
 
+    /*
+        Returns the uuids of the services included by the given service. Otherwise returns null.
+        Directly called from Qt.
+     */
+    public String includedServices(String serviceUuid)
+    {
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(serviceUuid);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+
+        //TODO Breaks in case of two services with same uuid
+        BluetoothGattService service = mBluetoothGatt.getService(uuid);
+        if (service == null)
+            return null;
+
+        final List<BluetoothGattService> includes = service.getIncludedServices();
+        if (includes.isEmpty())
+            return null;
+
+        StringBuilder builder = new StringBuilder();
+        for (BluetoothGattService includedService: includes) {
+            builder.append(includedService.getUuid().toString()).append(" "); //space is separator
+        }
+
+        return builder.toString();
+    }
+
     private void finishCurrentServiceDiscovery()
     {
         int currentEntry = currentServiceInDiscovery;
@@ -631,7 +707,6 @@ public class QtBluetoothLE {
                 performServiceDetailDiscoveryForHandle(nextService, true);
             } catch (IndexOutOfBoundsException ex) {
                 Log.w(TAG, "Expected queued service but didn't find any");
-                return;
             }
         }
     }
@@ -646,7 +721,7 @@ public class QtBluetoothLE {
                 runningHandle = nextHandle;
             }
 
-            GattEntry entry = null;
+            GattEntry entry;
             try {
                 entry = entries.get(nextHandle);
             } catch (IndexOutOfBoundsException ex) {
@@ -656,7 +731,7 @@ public class QtBluetoothLE {
                 return;
             }
 
-            boolean result = false;
+            boolean result;
             switch (entry.type) {
                 case Characteristic:
                     result = mBluetoothGatt.readCharacteristic(entry.characteristic);
@@ -717,7 +792,7 @@ public class QtBluetoothLE {
         if (mBluetoothGatt == null)
             return false;
 
-        GattEntry entry = null;
+        GattEntry entry;
         try {
             entry = entries.get(charHandle-1); //Qt always uses handles+1
         } catch (IndexOutOfBoundsException ex) {
@@ -725,8 +800,138 @@ public class QtBluetoothLE {
             return false;
         }
 
-        entry.characteristic.setValue(newValue);
-        return mBluetoothGatt.writeCharacteristic(entry.characteristic);
+        WriteJob newJob = new WriteJob();
+        newJob.newValue = newValue;
+        newJob.entry = entry;
+
+        boolean result;
+        synchronized (writeQueue) {
+            result = writeQueue.add(newJob);
+        }
+
+        if (!result) {
+            Log.w(TAG, "Cannot add characteristic write request for " + charHandle + " to queue" );
+            return false;
+        }
+
+        performNextWrite();
+        return true;
+    }
+
+    /*************************************************************/
+    /* Write Descriptors                                         */
+    /*************************************************************/
+
+    public boolean writeDescriptor(int descHandle, byte[] newValue)
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        GattEntry entry;
+        try {
+            entry = entries.get(descHandle-1); //Qt always uses handles+1
+        } catch (IndexOutOfBoundsException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        WriteJob newJob = new WriteJob();
+        newJob.newValue = newValue;
+        newJob.entry = entry;
+
+        boolean result;
+        synchronized (writeQueue) {
+            result = writeQueue.add(newJob);
+        }
+
+        if (!result) {
+            Log.w(TAG, "Cannot add descriptor write request for " + descHandle + " to queue" );
+            return false;
+        }
+
+        performNextWrite();
+        return true;
+    }
+
+    /*
+        The queuing is required because two writeCharacteristic/writeDescriptor calls
+        cannot execute at the same time. The second write must happen after the
+        previous write has finished with on(Characteristic|Descriptor)Write().
+     */
+    private void performNextWrite()
+    {
+        if (mBluetoothGatt == null)
+            return;
+
+        boolean skip = false;
+        final WriteJob nextJob;
+        synchronized (writeQueue) {
+            if (writeQueue.isEmpty() || writeJobPending)
+                return;
+
+            nextJob = writeQueue.remove();
+            boolean result;
+            switch (nextJob.entry.type) {
+                case Characteristic:
+                    result = nextJob.entry.characteristic.setValue(nextJob.newValue);
+                    if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
+                        skip = true;
+                    break;
+                case Descriptor:
+                    if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
+                        /*
+                            For some reason, Android splits characteristic notifications
+                            into two operations. BluetoothGatt.enableCharacteristicNotification
+                            ensures the local Blueooth stack forwards the notifications. In addition,
+                            BluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                            must be written to the peripheral
+                         */
+
+
+                        /*  There is no documentation on indication behavior. The assumption is
+                            that when indication or notification are requested we call
+                            BluetoothGatt.setCharacteristicNotification. Furthermore it is assumed
+                            indications are send via onCharacteristicChanged too and Android itself
+                            will do the confirmation required for an indication as per
+                            Bluetooth spec Vol 3, Part G, 4.11 . If neither of the two bits are set
+                            we disable the signals.
+                         */
+                        boolean enableNotifications = false;
+                        int value = (nextJob.newValue[0] & 0xff);
+                        // first or second bit must be set
+                        if (((value & 0x1) == 1) || (((value >> 1) & 0x1) == 1)) {
+                            enableNotifications = true;
+                        }
+
+                        result = mBluetoothGatt.setCharacteristicNotification(
+                                nextJob.entry.descriptor.getCharacteristic(), enableNotifications);
+                        if (!result) {
+                            Log.w(TAG, "Cannot set characteristic notification");
+                            //we continue anyway to ensure that we write the requested value
+                            //to the device
+                        }
+
+                        Log.d(TAG, "Enable notifications: " + enableNotifications);
+                    }
+
+                    result = nextJob.entry.descriptor.setValue(nextJob.newValue);
+                    if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
+                        skip = true;
+                    break;
+                case Service:
+                case CharacteristicValue:
+                    skip = true;
+                    break;
+            }
+
+            if (!skip)
+                writeJobPending = true;
+        }
+
+        if (skip) {
+            Log.w(TAG, "Skipping write: " + nextJob.entry.type);
+            performNextWrite();
+        }
     }
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
@@ -740,6 +945,8 @@ public class QtBluetoothLE {
                                         int descHandle, String descUuid, byte[] data);
     public native void leCharacteristicWritten(long qtObject, int charHandle, byte[] newData,
                                                int errorCode);
-
+    public native void leDescriptorWritten(long qtObject, int charHandle, byte[] newData,
+                                           int errorCode);
+    public native void leCharacteristicChanged(long qtObject, int charHandle, byte[] newData);
 }
 

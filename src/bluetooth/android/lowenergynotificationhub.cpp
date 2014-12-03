@@ -235,4 +235,50 @@ void LowEnergyNotificationHub::lowEnergy_characteristicWritten(
                                     (QLowEnergyService::ServiceError)errorCode));
 }
 
+void LowEnergyNotificationHub::lowEnergy_descriptorWritten(
+        JNIEnv *env, jobject, jlong qtObject, jint descHandle,
+        jbyteArray data, jint errorCode)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "descriptorWritten", Qt::QueuedConnection,
+                              Q_ARG(int, descHandle),
+                              Q_ARG(QByteArray, payload),
+                              Q_ARG(QLowEnergyService::ServiceError,
+                                    (QLowEnergyService::ServiceError)errorCode));
+}
+
+void LowEnergyNotificationHub::lowEnergy_characteristicChanged(
+        JNIEnv *env, jobject, jlong qtObject, jint charHandle, jbyteArray data)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "characteristicChanged", Qt::QueuedConnection,
+                              Q_ARG(int, charHandle), Q_ARG(QByteArray, payload));
+}
+
 QT_END_NAMESPACE

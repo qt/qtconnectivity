@@ -54,6 +54,8 @@
 // and later in the delegate's -centralManagerDidUpdateState: we are trying to finally release
 // a manager. Otherwise, this thing dies even with ARC.
 
+// TODO: can not reproduce this crash anymore ... probably, this class will be removed soon.
+
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManagerTransientDelegate) : NSObject<CBCentralManagerDelegate>
 {
     CBCentralManager *manager;

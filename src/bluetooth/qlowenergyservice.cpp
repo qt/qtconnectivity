@@ -98,7 +98,9 @@ QT_BEGIN_NAMESPACE
     \l writeCharacteristic() function attempts to write a new value to the given
     characteristic. If the write attempt is successful, the \l characteristicWritten()
     signal is emitted. A failure to write triggers the \l CharacteristicWriteError.
-    Writing a descriptor follows the same pattern.
+    Writing a descriptor follows the same pattern. Write requests are serialised.
+    Issuing a second write request before the previous request has finished
+    is delayed until the first write request has finished.
 
     \note Currently, it is not possible to send signed write or reliable write requests.
 
@@ -355,6 +357,10 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
 
 /*!
     Returns the type of the service.
+
+    \note On Android, it is not possible to determine whether a service
+    is a primary or secondary service. Therefore all services
+    have the \l PrimaryService flag set.
  */
 QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
@@ -495,6 +501,12 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     \l QLowEnergyCharacteristic::Write and \l QLowEnergyCharacteristic::WriteNoResponse
     properties.
 
+    All descriptor and characteristic write requests towards the same remote device are
+    serialised. A queue is employed when issuing multiple write requests at the same time.
+    The queue does not eliminate duplicated write requests for the same characteristic.
+    For example, if the same descriptor is set to the value A and immediately afterwards
+    to B, the two write request are executed in the given order.
+
     \note Currently, it is not possible to use signed or reliable writes as defined by the
     Bluetooth specification.
 
@@ -565,6 +577,12 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     Writes \a newValue as value for \a descriptor. If the operation is successful,
     the \l descriptorWritten() signal is emitted; otherwise the \l DescriptorWriteError
     is emitted.
+
+    All descriptor and characteristic write requests towards the same remote device are
+    serialised. A queue is employed when issuing multiple write requests at the same time.
+    The queue does not eliminate duplicated write requests for the same descriptor.
+    For example, if the same descriptor is set to the value A and immediately afterwards
+    to B, the two write request are executed in the given order.
 
     A descriptor can only be written if this service is in the \l ServiceDiscovered state,
     belongs to the service and is writable.

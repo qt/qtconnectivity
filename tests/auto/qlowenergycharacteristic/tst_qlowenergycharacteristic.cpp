@@ -42,7 +42,20 @@
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
+Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
+
 QT_USE_NAMESPACE
+
+// This define must be set if the platform provides access to GATT handles
+// otherwise it must not be defined. As of now the two supported platforms
+// (Android and Bluez/Linux) provide access or some notion of it.
+#define HANDLES_PROVIDED_BY_PLATFORM
+
+#ifdef HANDLES_PROVIDED_BY_PLATFORM
+#define HANDLE_VERIFY(stmt) QVERIFY(stmt)
+#else
+#define HANDLE_VERIFY(stmt)
+#endif
 
 class tst_QLowEnergyCharacteristic : public QObject
 {
@@ -71,6 +84,7 @@ tst_QLowEnergyCharacteristic::tst_QLowEnergyCharacteristic() :
     globalControl(0), globalService(0)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
 }
 
 tst_QLowEnergyCharacteristic::~tst_QLowEnergyCharacteristic()
@@ -272,7 +286,7 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     target = chars[indexWithDescriptor];
     QVERIFY(target.isValid());
     QVERIFY(!target.name().isEmpty());
-    QVERIFY(target.handle() > 0);
+    HANDLE_VERIFY(target.handle() > 0);
     QVERIFY(!target.uuid().isNull());
     QVERIFY(target.properties() != QLowEnergyCharacteristic::Unknown);
     if (target.properties() & QLowEnergyCharacteristic::Read)
