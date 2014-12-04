@@ -530,6 +530,11 @@ using namespace QT_NAMESPACE;
                     newDesc.uuid = qt_uuid(d.UUID);
                     newDesc.value = qt_bytearray(static_cast<NSObject *>(d.value));
                     descList[lastValidHandle] = newDesc;
+                    // Check, if it's client characteristic configuration descriptor:
+                    if (newDesc.uuid == QBluetoothUuid::ClientCharacteristicConfiguration) {
+                        if (newDesc.value.size() && (newDesc.value[0] & 3))
+                            [peripheral setNotifyValue:YES forCharacteristic:c];
+                    }
                 }
 
                 newChar.descriptorList = descList;

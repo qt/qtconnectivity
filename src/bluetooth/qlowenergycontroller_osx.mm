@@ -344,8 +344,11 @@ void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergy
 
     ServicePrivate service(serviceForHandle(charHandle));
     if (service.isNull()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(), "
-                                "can not find service for characteristic handle " << charHandle;
+        // This can be an error (no characteristic found for this handle),
+        // it can also be that we set notify value before the service
+        // was reported (serviceDetailsDiscoveryFinished) - this happens,
+        // if we read a descriptor (characteristic client configuration),
+        // and it's (pre)set.
         return;
     }
 
