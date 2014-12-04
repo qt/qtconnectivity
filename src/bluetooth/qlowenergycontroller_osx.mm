@@ -328,7 +328,9 @@ void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyH
         return;
     }
 
-    updateValueOfCharacteristic(charHandle, value, false);
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, value, false);
+
     emit service->characteristicWritten(characteristic, value);
 }
 
@@ -354,7 +356,9 @@ void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergy
         return;
     }
 
-    updateValueOfCharacteristic(charHandle, value, false);
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, value, false);
+
     emit service->characteristicChanged(characteristic, value);
 }
 
