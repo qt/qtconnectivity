@@ -36,15 +36,10 @@ Low Energy devices.
 
     \section1 Technology Preview
 
-    The Qt Bluetooth Low Energy API has been introduced in Qt 5.4.
-    The API is considered to be a preview of the technology and currently only works
-    on BlueZ 4 & 5 based Linux systems. Support for further platforms, for example Android,
-    is currently being worked on and will be added by later Qt releases. In addition,
-    Qt only supports the central role. For more details on this limitation see below.
-
-    While the API is not yet frozen it is close to its final stage.
-    We would like to encourage you to send us feedback and bug reports related to
-    this new feature.
+    The Qt Bluetooth Low Energy API was introduced by Qt 5.4. Since Qt 5.5 the API
+    is frozen and a compatibility guarantee is given for future releases.
+    At the moment, Qt only supports the Bluetooth Low Energy central role.
+    For more details on this limitation see below.
 
     \section1 What Is Bluetooth Low Energy
 

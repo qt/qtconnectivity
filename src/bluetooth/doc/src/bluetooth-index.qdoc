@@ -33,11 +33,9 @@
 
 The Bluetooth API provides connectivity between Bluetooth enabled devices.
 
-Currently the API is supported on \l{Qt for Android}{Android},
-\l{Qt for BlackBerry}{BlackBerry 10} and
-\l{Qt for Linux/X11}{Linux} (\l{http://www.bluez.org}{BlueZ 4.x/5.x}).
-
-
+Currently, the API is supported on the following platforms: \l{Qt for Android}{Android},
+\l{Qt for BlackBerry}{BlackBerry 10}, \l{Qt for iOS}{iOS}, \l{Qt for Linux/X11}{Linux}
+(\l{http://www.bluez.org}{BlueZ 4.x/5.x}) and \l{Qt for OS X}{OS X}.
 
 \section1 Overview
 
@@ -47,11 +45,9 @@ for transferring data between devices. Bluetooth connectivity is based on
 basic device management, such as scanning for devices, gathering information
 about them, and exchanging data between them.
 
-This Qt release contains a Technology Preview of the new Qt Bluetooth
+Qt 5.5 contains the first full release of the new Qt Bluetooth
 Low Energy API. Further details can be found in the
 \l {Bluetooth Low Energy Overview}{Bluetooth Low Energy Overview} section.
-The Tech Preview supports BlueZ 4 & 5 based Linux systems. Support for
-further platforms is being planned.
 
 \section1 Getting Started
 
