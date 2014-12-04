@@ -211,6 +211,18 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
                                       sensor intended for sports and fitness applications.
     \value LocationAndNavigation      Location Navigation UUID (service). The service exposes location and navigation-related
                                       data from a Location and Navigation sensor intended for outdoor activity applications.
+    \value EnvironmentalSensing       Environmental sensor UUID (service). The service exposes data from an environmental sensor
+                                      for sports and fitness applications.
+    \value BodyComposition            Body composition UUID (service). The service exposes data about the body composition intended
+                                      for consumer healthcare applications.
+    \value UserData                   User Data UUID (service). The User Data service provides user-related data such as name,
+                                      gender or weight in sports and fitness environments.
+    \value WeightScale                Weight Scale UUID (service). The Weight Scale service exposes weight-related data from
+                                      a scale for consumer healthcare, sports and fitness applications.
+    \value BondManagement             Bond Management UUID (service). The Bond Management service enables user to manage the
+                                      storage of bond information on Bluetooth devices.
+    \value ContinuousGlucoseMonitoring Continuous Glucose Monitoring UUID (service). The Continuous Glucose Monitoring service
+                                      exposes glucose data from a monitoring sensor for use in healthcare applications.
 */
 
 /*!
@@ -218,8 +230,20 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \since 5.4
 
     This enum is a convienience type for Bluetooth low energy service characteristics class UUIDs. Values of this type
-    will be implicitly converted into a QBluetoothUuid when necessary.
+    will be implicitly converted into a QBluetoothUuid when necessary. The detailed type descriptions can be found
+    on \l{https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx}{bluetooth.org}.
 
+    \value AerobicHeartRateLowerLimit    The lower limit of the heart rate where the user improves his endurance while
+                                         exercising.
+    \value AerobicHeartRateUpperLimit    The upper limit of the heart rate where the user improves his endurance while
+                                         exercising.
+    \value AerobicThreshold              This characteristic states the first metabolic threshold.
+    \value Age                           This characteristic states the age of the user.
+    \value AnaerobicHeartRateLowerLimit  The lower limit of the heart rate where the user enhances his anaerobic
+                                         tolerance while exercising.
+    \value AnaerobicHeartRateUpperLimit  The upper limit of the heart rate where the user enhances his anaerobic
+                                         tolerance while exercising.
+    \value AnaerobicThreshold            This characteristic states the second metabolic threshold.
     \value AlertCategoryID               Categories of alerts/messages.
     \value AlertCategoryIDBitMask        Categories of alerts/messages.
     \value AlertLevel                    The level of an alert a device is to sound.
@@ -229,8 +253,14 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
                                          Client can write the command here to request the several
                                          functions toward the server.
     \value AlertStatus                   The Alert Status characteristic defines the Status of alert.
+    \value ApparentWindDirection         The characteristic exposes the apparent wind direction. The apparent wind is
+                                         experienced by an observer in motion. This characteristic states the direction
+                                         of the wind with an angle measured clockwise relative to the observers heading.
+    \value ApparentWindSpeed             The characteristic exposes the apparent wind speed in meters per second.
+                                         The apparent wind is experienced by an observer in motion.
     \value Appearance                    The external appearance of this device. The values are composed
                                          of a category (10-bits) and sub-categories (6-bits).
+    \value BarometricPressureTrend       This characteristic exposes the trend the barometric pressure is taking.
     \value BatteryLevel                  The current charge level of a battery. 100% represents fully charged
                                          while 0% represents fully discharged.
     \value BloodPressureFeature          The Blood Pressure Feature characteristic is used to describe the supported
@@ -239,7 +269,12 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
                                          containing a Flags field, a Blood Pressure Measurement Compound Value field,
                                          and contains additional fields such as Time Stamp, Pulse Rate and User ID
                                          as determined by the contents of the Flags field.
-    \value BodySensorLocation
+    \value BodyCompositionFeature        This characteristic describes the available features in the \l BodyCompositionMeasurement
+                                         characteristic.
+    \value BodyCompositionMeasurement    This characteristic describes the body composition such as muscle percentage
+                                         or the body water mass.
+    \value BodySensorLocation            The Body Sensor Location characteristic describes the location of a sensor on
+                                         the body (e.g.: chest, finger or hand).
     \value BootKeyboardInputReport       The Boot Keyboard Input Report characteristic is used to transfer fixed format
                                          and length Input Report data between a HID Host operating in Boot Protocol Mode
                                          and a HID Service corresponding to a boot keyboard.
@@ -255,7 +290,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
                                          is a variable length structure containing a Flags field and, based on the contents
                                          of the Flags field, may contain one or more additional fields as shown in the tables
                                          below.
-    \value CurrentTime
+    \value CurrentTime                   The Current Time characteristic shows the same information as the \l ExactTime256
+                                         characteristic and information on timezone, DST and the method of update employed.
     \value CyclingPowerControlPoint      The Cycling Power Control Point characteristic is used to request a specific function
                                          to be executed on the receiving device.
     \value CyclingPowerFeature           The CP Feature characteristic is used to report a list of features supported by
@@ -266,14 +302,28 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value CyclingPowerVector            The Cycling Power Vector characteristic is a variable length structure containing
                                          a Flags fieldand based on the contents of the Flags field, may contain one or more
                                          additional fields as shown in the table below.
+    \value DatabaseChangeIncrement
+    \value DateOfBirth                   This characteristic states the user's date of birth.
+    \value DateOfThresholdAssessment
     \value DateTime                      The Date Time characteristic is used to represent time.
-    \value DayDateTime
-    \value DayOfWeek
-    \value DeviceName
-    \value DSTOffset
-    \value ExactTime256
+    \value DayDateTime                   The Day Date Time characteristic presents the date, time and day of the week.
+    \value DayOfWeek                     The Day of Week characteristic describes the day of the week (Monday - Sunday).
+    \value DescriptorValueChanged        This characteristic is related to the Environmental Sensing Service.
+    \value DeviceName                    The Device Name characteristic contains the name of the device.
+    \value DewPoint                      This characteristic states the dew point in degree Celsius.
+    \value DSTOffset                     The DST Offset characteristic describes the offset employed by the daylight saving time.
+    \value Elevation                     The Elevation characteristic states the elevation above/below sea level.
+    \value EmailAddress                  This characteristic states the email of the user.
+    \value ExactTime256                  The Exact Time 256 characteristic describes the data, day and time
+                                         with an accuracy of 1/256th of a second.
+    \value FatBurnHeartRateLowerLimit    The lower limit of the heart rate where the user maximizes the fat burn while exercising.
+    \value FatBurnHeartRateUpperLimit    The upper limit of the heart rate where the user maximizes the fat burn while exercising.
     \value FirmwareRevisionString        The value of this characteristic is a UTF-8 string representing the firmware revision
                                          for the firmware within the device.
+    \value FirstName                     This characteristic exposes the user's first name.
+    \value FiveZoneHeartRateLimits       This characteristic contains the limits between the heart rate zones for the
+                                         5-zone heart rate definition.
+    \value Gender                        This characteristic states the user's gender.
     \value GlucoseFeature                The Glucose Feature characteristic is used to describe the supported features
                                          of the Server. When read, the Glucose Feature characteristic returns a value
                                          that is used by a Client to determine the supported features of the Server.
@@ -282,20 +332,31 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
                                          of the Flags field, may contain a Time Offset field, Glucose Concentration field,
                                          Type-Sample Location field and a Sensor Status Annunciation field.
     \value GlucoseMeasurementContext
+    \value GustFactor                    The characteristic states a factor of wind speed increase between average wind speed in
+                                         maximum gust speed.
     \value HardwareRevisionString        The value of this characteristic is a UTF-8 string representing the hardware revision
                                          for the hardware within the device.
+    \value MaximumRecommendedHeartRate   This characteristic exposes the maximum recommended heart rate that limits exertion.
     \value HeartRateControlPoint
+    \value HeartRateMax                  This characteristic states the maximum heart rate a user can reach in beats per minute.
     \value HeartRateMeasurement
+    \value HeatIndex                     This characteristic provides a heat index in degree Celsius.
+    \value Height                        This characteristic states the user's height.
     \value HIDControlPoint               The HID Control Point characteristic is a control-point attribute that defines the
                                          HID Commands when written.
     \value HIDInformation                The HID Information Characteristic returns the HID attributes when read.
+    \value HipCircumference              This characteristic states the user's hip circumference in meters.
+    \value Humidity                      The characteristic states the humidity in percent.
     \value IEEE1107320601RegulatoryCertificationDataList The value of the characteristic is an opaque structure listing
                                          various regulatory and/or certification compliance items to which the device
                                          claims adherence.
     \value IntermediateCuffPressure      This characteristic has the same format as the Blood Pressure Measurement
                                          characteristic.
     \value IntermediateTemperature       The Intermediate Temperature characteristic has the same format as the
-                                         Temperature Measurement characteristic
+                                         Temperature Measurement characteristic.
+    \value Irradiance                    This characteristic states the power of electromagnetic radiation in watt per square meter.
+    \value Language                      This characteristic contains the language definition based on ISO639-1.
+    \value LastName                      This characteristic states the user's last name.
     \value LNControlPoint                The LN Control Point characteristic is used to request a specific function
                                          to be executed on the receiving device.
     \value LNFeature                     The LN Feature characteristic is used to report a list of features supported
@@ -304,6 +365,11 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value LocationAndSpeed              The Location and Speed characteristic is a variable length structure containing
                                          a Flags field and, based on the contents of the Flags field, may contain a combination
                                          of data fields.
+    \value MagneticDeclination           The characteristic contains the angle on the horizontal plane between the direction of
+                                         the (Geographic) True North and the Magnetic North, measured clockwise from True North
+                                         to Magnetic North.
+    \value MagneticFluxDensity2D         This characteristic states the magnetic flux density on an x and y axis.
+    \value MagneticFluxDensity3D         This characteristic states the magnetic flux density on an x, y and z axis.
     \value ManufacturerNameString        The value of this characteristic is a UTF-8 string representing the name of the
                                          manufacturer of the device.
     \value MeasurementInterval           The Measurement Interval characteristic defines the time between measurements.
@@ -317,11 +383,14 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value PeripheralPrivacyFlag
     \value PnPID                         The PnP_ID characteristic returns its value when read using the GATT Characteristic
                                          Value Read procedure.
+    \value PollenConcentration           The characteristic exposes the pollen concentration count per cubic meter.
     \value PositionQuality               The Position Quality characteristic is a variable length structure containing a
-                                         Flags field and at least one of the optional data
+                                         Flags field and at least one of the optional data.
+    \value Pressure                      The Pressure characteristic states the value of a pressure sensor.
     \value ProtocolMode                  The Protocol Mode characteristic is used to expose the current protocol mode of
                                          the HID Service with which it is associated, or to set the desired protocol
                                          mode of the HID Service.
+    \value Rainfall                      This characteristic exposes the rainfall in meters.
     \value ReconnectionAddress           The Information included in this page is informative. The normative descriptions
                                          are contained in the applicable specification.
     \value RecordAccessControlPoint      This control point is used with a service to provide basic management functionality
@@ -329,6 +398,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value ReferenceTimeInformation
     \value Report                        The Report characteristic is used to exchange data between a HID Device and a HID Host.
     \value ReportMap                     Only a single instance of this characteristic exists as part of a HID Service.
+    \value RestingHeartRate              This characteristic exposes the lowest heart rate a user can reach.
     \value RingerControlPoint            The Ringer Control Point characteristic defines the Control Point of Ringer.
     \value RingerSetting                 The Ringer Setting characteristic defines the Setting of the Ringer.
     \value RSCFeature                    The RSC (Running Speed and Cadence) Feature characteristic is used to describe the
@@ -347,26 +417,46 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value ServiceChanged
     \value SoftwareRevisionString        The value of this characteristic is a UTF-8 string representing the software
                                          revision for the software within the device.
+    \value SportTypeForAerobicAnaerobicThresholds This characteristic is used to preset the various Aerobic and Anaerobic
+                                         threshold characteristics based on the to-be-performed sport type.
     \value SupportedNewAlertCategory     Category that the server supports for new alert.
     \value SupportedUnreadAlertCategory  Category that the server supports for unread alert.
     \value SystemID                      If the system ID is based of a Bluetooth Device Address with a Company Identifier
                                          (OUI) is 0x123456 and the Company Assigned Identifier is 0x9ABCDE, then the System
                                          Identifier is required to be 0x123456FFFE9ABCDE.
+    \value Temperature                   The value of this characteristic states the temperature in degree Celsius.
     \value TemperatureMeasurement        The Temperature Measurement characteristic is a variable length structure containing
                                          a Flags field, a Temperature Measurement Value field and, based upon the contents of
                                          the Flags field, optionally a Time Stamp field and/or a Temperature Type field.
     \value TemperatureType               The Temperature Type characteristic is an enumeration that indicates where the
                                          temperature was measured.
+    \value ThreeZoneHeartRateLimits      This characteristic contains the limits between the heart rate zones for the
+                                         3-zone heart rate definition.
     \value TimeAccuracy
     \value TimeSource
     \value TimeUpdateControlPoint
     \value TimeUpdateState
     \value TimeWithDST
     \value TimeZone
+    \value TrueWindDirection             The characteristic states the direction of the wind with an angle measured clockwise
+                                         relative to (Geographic) True North. A wind coming from the east is given as 90 degrees.
+    \value TrueWindSpeed                 The characteristic states the wind speed in meters per seconds.
+    \value TwoZoneHeartRateLimits        This characteristic contains the limits between the heart rate zones for the
+                                         2-zone heart rate definition.
     \value TxPowerLevel                  The value of the characteristic is a signed 8 bit integer that has a fixed point
                                          exponent of 0.
     \value UnreadAlertStatus             This characteristic shows how many numbers of unread alerts exist in the specific
                                          category in the device.
+    \value UserControlPoint
+    \value UserIndex                     This characteristic states the index of the user.
+    \value UVIndex                       This characteristic exposes the UV index.
+    \value VO2Max                        This characteristic exposes the maximum Oxygen uptake of a user.
+    \value WaistCircumference            This characteristic states the user's waist circumference in meters.
+    \value Weight                        This characteristic exposes the user's weight in kilograms.
+    \value WeightMeasurement             This characteristic provides weight related data such as BMI or the user's weight.
+    \value WeightScaleFeature            This characteristic describes the available data in the \l WeightMeasurement
+                                         characteristic.
+    \value WindChill                     This characteristic states the wind chill in degree Celsius
 */
 
 /*!
