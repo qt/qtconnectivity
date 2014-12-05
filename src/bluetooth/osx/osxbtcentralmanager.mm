@@ -612,8 +612,6 @@ using namespace QT_NAMESPACE;
 
             // TODO: check what happens if I'm using NSData with length 0.
             if (request.withResponse) {
-                NSLog(@"trying to write %@", data.data());
-                NSLog(@"initial value: %@", ch.value);
                 writePending = true;
                 [peripheral writeValue:data.data() forCharacteristic:ch
                             type:CBCharacteristicWriteWithResponse];
@@ -1386,7 +1384,6 @@ using namespace QT_NAMESPACE;
         const QLowEnergyHandle cHandle = charMap.key(characteristic);
         Q_ASSERT_X(cHandle, "-peripheral:didWriteValueForCharacteristic:error",
                    "invalid handle, not found in the characteristics map");
-        NSLog(@"characteristic written, the value is %@", characteristic.value);
         delegate->characteristicWriteNotification(cHandle, qt_bytearray(characteristic.value));
     }
 
