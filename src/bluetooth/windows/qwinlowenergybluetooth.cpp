@@ -35,10 +35,72 @@
 #include "qwinlowenergybluetooth_p.h"
 
 #include <QtCore/quuid.h>
+#include <QtCore/qlibrary.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace WinLowEnergyBluetooth {
+
+#define DEFINEFUNC(ret, func, ...) \
+    typedef ret (WINAPI *fp_##func)(__VA_ARGS__); \
+    static fp_##func func;
+
+#define RESOLVEFUNC(func) \
+    func = (fp_##func)resolveFunction(library, #func); \
+    if (!func) \
+        return false;
+
+DEFINEFUNC(HRESULT, BluetoothGATTGetServices, HANDLE, USHORT, PBTH_LE_GATT_SERVICE, PUSHORT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTGetIncludedServices, HANDLE, PBTH_LE_GATT_SERVICE, USHORT, PBTH_LE_GATT_SERVICE, PUSHORT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTGetCharacteristics, HANDLE, PBTH_LE_GATT_SERVICE, USHORT, PBTH_LE_GATT_CHARACTERISTIC, PUSHORT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTGetDescriptors, HANDLE, PBTH_LE_GATT_CHARACTERISTIC, USHORT, PBTH_LE_GATT_DESCRIPTOR, PUSHORT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTGetCharacteristicValue, HANDLE, PBTH_LE_GATT_CHARACTERISTIC, ULONG, PBTH_LE_GATT_CHARACTERISTIC_VALUE, PUSHORT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTGetDescriptorValue, HANDLE, PBTH_LE_GATT_DESCRIPTOR, ULONG, PBTH_LE_GATT_DESCRIPTOR_VALUE, PUSHORT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTBeginReliableWrite, HANDLE, PBTH_LE_GATT_RELIABLE_WRITE_CONTEXT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTEndReliableWrite, HANDLE, BTH_LE_GATT_RELIABLE_WRITE_CONTEXT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTAbortReliableWrite, HANDLE, BTH_LE_GATT_RELIABLE_WRITE_CONTEXT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTSetCharacteristicValue, HANDLE, PBTH_LE_GATT_CHARACTERISTIC, PBTH_LE_GATT_CHARACTERISTIC_VALUE, BTH_LE_GATT_RELIABLE_WRITE_CONTEXT, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTSetDescriptorValue, HANDLE, PBTH_LE_GATT_DESCRIPTOR, PBTH_LE_GATT_DESCRIPTOR_VALUE, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTRegisterEvent, HANDLE, BTH_LE_GATT_EVENT_TYPE, PVOID, PFNBLUETOOTH_GATT_EVENT_CALLBACK, PVOID, PHANDLE, ULONG)
+DEFINEFUNC(HRESULT, BluetoothGATTUnregisterEvent, HANDLE, ULONG)
+
+static inline QFunctionPointer resolveFunction(QLibrary *library, const char *func)
+{
+    QFunctionPointer symbolFunctionPointer = library->resolve(func);
+    if (!symbolFunctionPointer)
+        qWarning("Cannot resolve '%s' in '%s'.", func, qPrintable(library->fileName()));
+    return symbolFunctionPointer;
+}
+
+static inline bool resolveFunctions(QLibrary *library)
+{
+    if (!library->isLoaded()) {
+        library->setFileName(QStringLiteral("bluetoothapis"));
+        if (!library->load()) {
+            qWarning("Unable to load '%s' library.", qPrintable(library->fileName()));
+            return false;
+        }
+    }
+
+    RESOLVEFUNC(BluetoothGATTGetServices)
+    RESOLVEFUNC(BluetoothGATTGetIncludedServices)
+    RESOLVEFUNC(BluetoothGATTGetCharacteristics)
+    RESOLVEFUNC(BluetoothGATTGetDescriptors)
+    RESOLVEFUNC(BluetoothGATTGetCharacteristicValue)
+    RESOLVEFUNC(BluetoothGATTGetDescriptorValue)
+    RESOLVEFUNC(BluetoothGATTBeginReliableWrite)
+    RESOLVEFUNC(BluetoothGATTEndReliableWrite)
+    RESOLVEFUNC(BluetoothGATTAbortReliableWrite)
+    RESOLVEFUNC(BluetoothGATTSetCharacteristicValue)
+    RESOLVEFUNC(BluetoothGATTSetDescriptorValue)
+    RESOLVEFUNC(BluetoothGATTRegisterEvent)
+    RESOLVEFUNC(BluetoothGATTUnregisterEvent)
+
+    return true;
+}
+
+Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 
 static QString deviceRegistryProperty(
         HDEVINFO deviceInfoHandle,
@@ -248,6 +310,12 @@ DeviceDiscoveryResult startDiscoveryOfRemoteDevices()
 {
     return availableSystemInterfaces(
                 QUuid("781aee18-7733-4ce4-add0-91f41c67b592"));
+}
+
+bool isSupported()
+{
+    static bool resolved = resolveFunctions(bluetoothapis());
+    return resolved;
 }
 
 bool hasLocalRadio()
