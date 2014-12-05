@@ -77,7 +77,7 @@ using namespace QT_NAMESPACE;
 
         if (m_inquiry) {
             // TODO: something more reasonable required!
-            [m_inquiry setInquiryLength:20];
+            [m_inquiry setInquiryLength:15];
             [m_inquiry setUpdateNewDeviceNames:NO];//Useless, disable!
             m_delegate = delegate;
         } else {
