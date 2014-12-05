@@ -141,7 +141,6 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
                                 "QBluetoothLowEnergyControllerPrivateOSX(), "
                                 "failed to initialize central manager";
     }
-
 }
 
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
@@ -723,7 +722,10 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
     : QObject(parent),
       d_ptr(new QLowEnergyControllerPrivateOSX(this))
 {
-    Q_UNUSED(remoteAddress)
+    OSX_D_PTR;
+
+    osx_d_ptr->remoteAddress = remoteAddress;
+    osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
 
     qCWarning(QT_BT_OSX) << "QLowEnergyController::QLowEnergyController(), "
                             "construction with remote address is not supported!";
@@ -734,6 +736,9 @@ QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDev
     : QObject(parent),
       d_ptr(new QLowEnergyControllerPrivateOSX(this, remoteDevice))
 {
+    OSX_D_PTR;
+
+    osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
     // That's the only "real" ctor - with Core Bluetooth we need a _valid_ deviceUuid
     // from 'remoteDevice'.
 }
