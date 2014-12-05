@@ -40,7 +40,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -49,7 +49,9 @@ import java.util.List;
 public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 {
     /* Pointer to the Qt object that "owns" the Java object */
+    @SuppressWarnings("WeakerAccess")
     long qtObject = 0;
+    @SuppressWarnings("WeakerAccess")
     static Activity qtactivity = null;
 
     private static final int TURN_BT_ON = 3330;
@@ -158,11 +160,11 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 
             //process found remote connections but avoid duplications
             HashSet<String> set = new HashSet<String>();
-            for (int i = 0; i < gattConnections.size(); i++)
-                set.add(gattConnections.get(i).toString());
+            for (Object gattConnection : gattConnections)
+                set.add(gattConnection.toString());
 
-            for (int i = 0; i < gattServerConnections.size(); i++)
-                set.add(gattServerConnections.get(i).toString());
+            for (Object gattServerConnection : gattServerConnections)
+                set.add(gattServerConnection.toString());
 
             return set.toArray(new String[set.size()]);
         } catch (Exception ex) {

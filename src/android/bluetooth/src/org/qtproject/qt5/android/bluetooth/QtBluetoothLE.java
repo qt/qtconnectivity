@@ -45,7 +45,6 @@ import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +57,7 @@ public class QtBluetoothLE {
 
     private BluetoothGatt mBluetoothGatt = null;
     private String mRemoteGattAddress;
-    final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 
     /* Pointer to the Qt object that "owns" the Java object */
@@ -67,6 +66,7 @@ public class QtBluetoothLE {
     @SuppressWarnings("WeakerAccess")
     Activity qtactivity = null;
 
+    @SuppressWarnings("WeakerAccess")
     public QtBluetoothLE() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -917,7 +917,7 @@ public class QtBluetoothLE {
                         /*
                             For some reason, Android splits characteristic notifications
                             into two operations. BluetoothGatt.enableCharacteristicNotification
-                            ensures the local Blueooth stack forwards the notifications. In addition,
+                            ensures the local Bluetooth stack forwards the notifications. In addition,
                             BluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
                             must be written to the peripheral.
                          */
