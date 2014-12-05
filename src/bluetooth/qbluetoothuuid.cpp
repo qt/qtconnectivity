@@ -466,7 +466,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     Descriptors are attributes that describe Bluetooth Low Energy characteristic values.
 
     This enum is a convienience type for descriptor class UUIDs. Values of this type
-    will be implicitly converted into a QBluetoothUuid when necessary.
+    will be implicitly converted into a QBluetoothUuid when necessary. The detailed type specifications
+    can be found on \l{https://developer.bluetooth.org/gatt/descriptors/Pages/DescriptorsHomePage.aspx}{bluetooth.org}.
 
     \value CharacteristicExtendedProperties  Descriptor defines additional Characteristic Properties.
                                              The existence of this descriptor is indicated by the
@@ -485,6 +486,14 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value ReportReference                   Mapping information in the form of a Report ID and Report Type which maps the
                                              current parent characteristic to the Report ID(s) and Report Type (s) defined
                                              within the Report Map characteristic.
+    \value EnvironmentalSensingConfiguration Descriptor defines how multiple trigger settings descriptors are combined. Therefore
+                                             this descriptor works together with the \l EnvironmentalSensingTriggerSetting descriptor
+                                             to define the conditions under which the associated characteristic value can be notified.
+    \value EnvironmentalSensingMeasurement   Descriptor defines the additional information for the environmental sensing server
+                                             such as the intended application, sampling functions or measurement period and uncertainty.
+    \value EnvironmentalSensingTriggerSetting Descriptor defines under which conditions an environmental sensing server (ESS) should
+                                             trigger notifications. Examples of such conditions are certain thresholds being reached
+                                             or timers having expired. This implies that the ESS characteristic supports notifications.
     \value UnknownDescriptorType             The descriptor type is unknown.
 */
 

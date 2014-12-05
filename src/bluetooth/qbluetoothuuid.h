@@ -352,7 +352,12 @@ public:
         CharacteristicAggregateFormat = 0x2905,
         ValidRange = 0x2906,
         ExternalReportReference = 0x2907,
-        ReportReference = 0x2908
+        ReportReference = 0x2908,
+        /* 0x2909 not defined */
+        /* 0x290a not defined */
+        EnvironmentalSensingConfiguration = 0x290b,
+        EnvironmentalSensingMeasurement = 0x290c,
+        EnvironmentalSensingTriggerSetting = 0x290d
     };
 
     QBluetoothUuid();
