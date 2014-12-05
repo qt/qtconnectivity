@@ -587,7 +587,14 @@ using namespace QT_NAMESPACE;
         Q_ASSERT_X(ch, "-performNextWriteRequest", "invalid characteristic (nil)");
 
         if (request.isClientConfiguration) {
-            if (valuesToWrite.remove(request.handle)) {
+            const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+            CBDescriptor *const descriptor = [self descriptor:qtUuid forCharacteristic:ch];
+            Q_ASSERT_X(descriptor, "-performNextWriteRequest:, ",
+                       "notification on a characteristic without "
+                       "client characteristic configuration descriptor");
+            const QLowEnergyHandle dHandle = descMap.key(descriptor);// 0 if descriptor is nil or unknown.
+
+            if (valuesToWrite.remove(dHandle)) {
                 // It can happen if something went wrong - we
                 // tried to set notification value and never received
                 // a callback.
@@ -597,7 +604,8 @@ using namespace QT_NAMESPACE;
                                       "descriptor, replacing it";
             }
             // We save the original value to report it later ...
-            valuesToWrite[request.handle] = request.value;
+
+            valuesToWrite[dHandle] = request.value;
             const bool enable = request.value[0] & 3;
             writePending = true;
             [peripheral setNotifyValue:enable forCharacteristic:ch];
@@ -612,6 +620,16 @@ using namespace QT_NAMESPACE;
 
             // TODO: check what happens if I'm using NSData with length 0.
             if (request.withResponse) {
+                if (valuesToWrite.remove(request.handle)) {
+                    qCDebug(QT_BT_OSX) << "-performNextWriteRequest:, "
+                                      "valuesToWrite already contains "
+                                      "a value for a characteristic "
+                                   << request.handle
+                                   << ", replacing it";
+                }
+
+                valuesToWrite[request.handle] = request.value;
+
                 writePending = true;
                 [peripheral writeValue:data.data() forCharacteristic:ch
                             type:CBCharacteristicWriteWithResponse];
@@ -629,10 +647,22 @@ using namespace QT_NAMESPACE;
 {
     Q_ASSERT_X(charHandle, "-setNotifyValue:forCharacteristic:",
                "invalid characteristic handle (0)");
+    Q_ASSERT_X(delegate, "-setNotifyValue:forCharacteristic:",
+               "invalid delegate (null)");
 
     if (!charMap.contains(charHandle)) {
         qCWarning(QT_BT_OSX) << "-setNotifyValue:forCharacteristic:, "
                                 "unknown characteristic handle " << charHandle;
+        return false;
+    }
+
+    // At the moment we call setNotifyValue _only_ from 'writeDescriptor';
+    // from Qt's API POV it's a descriptor write oprtation and we must report
+    // it back, so check _now_ that we really have this descriptor.
+    const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+    if (![self descriptor:qtUuid forCharacteristic:charMap[charHandle]]) {
+        qCWarning(QT_BT_OSX) << "-setNotifyValue:forCharacteristic:, "
+                                "no client characteristic configuration found";
         return false;
     }
 
@@ -1382,9 +1412,19 @@ using namespace QT_NAMESPACE;
     } else {
         // Keys are unique.
         const QLowEnergyHandle cHandle = charMap.key(characteristic);
+        const QByteArray valueToReport(valuesToWrite.value(cHandle, QByteArray()));
+        if (!valuesToWrite.remove(cHandle)) {
+            qCWarning(QT_BT_OSX) << "-peripheral:didWriteValueForCharacteristic:error:, "
+                                    "no characteristic value found";
+        }
+
         Q_ASSERT_X(cHandle, "-peripheral:didWriteValueForCharacteristic:error",
                    "invalid handle, not found in the characteristics map");
-        delegate->characteristicWriteNotification(cHandle, qt_bytearray(characteristic.value));
+
+        if (!valueToReport.isNull())
+            delegate->characteristicWriteNotification(cHandle, valueToReport);
+        else
+            delegate->characteristicWriteNotification(cHandle, qt_bytearray(characteristic.value));
     }
 
     [self performNextWriteRequest];
@@ -1444,14 +1484,7 @@ using namespace QT_NAMESPACE;
     const QLowEnergyHandle dHandle = descMap.key(descriptor);// 0 if descriptor is nil or unknown.
     const QByteArray valueToReport(valuesToWrite.value(dHandle, QByteArray()));
 
-    if (!valuesToWrite.remove(dHandle)) {
-        // In future it can be a special case: we can, in principle,
-        // set notify value on a characteristic without 'writeDescriptor'.
-        // It can also be some error. Right now we report it as error, can change.
-        qCWarning(QT_BT_OSX) << "-peripheral:didUpdateNotificationStateForCharacteristic:, "
-                                "setNotifyValue called, but no client characteristic descriptor "
-                                "found or no writeDescriptor call";
-    }
+    valuesToWrite.remove(dHandle);
 
     if (error) {
         // NSLog to log the actual NSError:
@@ -1464,11 +1497,12 @@ using namespace QT_NAMESPACE;
         if (!valueToReport.isNull()) {
             delegate->descriptorWriteNotification(dHandle, valueToReport);
         } else {
-            // TODO: can we in future have another way to set notify value without writeDescriptor?
+            /*
             qCWarning(QT_BT_OSX) << "-peripheral:didUpdateNotificationStateForCharacteristic:, "
                                     "notification value set to " << int(characteristic.isNotifying)
                                  << " but no client characteristic configuration descriptor found"
                                     "or no previous writeDescriptor request found";
+            */
         }
     }
 

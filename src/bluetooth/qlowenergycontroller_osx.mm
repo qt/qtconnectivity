@@ -530,6 +530,18 @@ void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergySer
     Q_ASSERT_X(!service.isNull(), "setNotifyValue", "invalid service (null)");
     Q_ASSERT_X(isValid(), "setNotifyValue", "invalid controller");
 
+    if (newValue.size() > 2) {
+        // Qt's API requires an error on such write.
+        // With Core Bluetooth we do not write any descriptor,
+        // but instead call a special method. So it's better to
+        // intercept wrong data size here:
+        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::setNotifyValue(), "
+                                "client characteristic configuration descriptor "
+                                "is 2 octets, but value size is: " << newValue.size();
+        service->setError(QLowEnergyService::DescriptorWriteError);
+        return;
+    }
+
     if (!discoveredServices.contains(service->uuid)) {
         qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::setNotifyValue(), "
                                 "no service with uuid: " << service->uuid << " found";
