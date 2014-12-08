@@ -182,6 +182,11 @@ DeviceDiscoveryResult::DeviceDiscoveryResult()
 {
 }
 
+ServicesDiscoveryResult::ServicesDiscoveryResult()
+    : error(NO_ERROR)
+{
+}
+
 static DeviceDiscoveryResult availableSystemInterfaces(
         const GUID &deviceInterface)
 {
@@ -310,6 +315,32 @@ DeviceDiscoveryResult startDiscoveryOfRemoteDevices()
 {
     return availableSystemInterfaces(
                 QUuid("781aee18-7733-4ce4-add0-91f41c67b592"));
+}
+
+ServicesDiscoveryResult startDiscoveryOfPrimaryServices(
+        HANDLE hDevice)
+{
+    ServicesDiscoveryResult result;
+    USHORT servicesCount = 0;
+    forever {
+        const HRESULT hr = BluetoothGATTGetServices(
+                    hDevice,
+                    result.services.count(),
+                    result.services.isEmpty() ? NULL : &result.services[0],
+                    &servicesCount,
+                    BLUETOOTH_GATT_FLAG_NONE);
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
+            result.services.resize(servicesCount);
+        } else if (hr == S_OK) {
+            break;
+        } else {
+            result.error = ::GetLastError();
+            result.services.clear();
+            break;
+        }
+    }
+    return result;
 }
 
 bool isSupported()

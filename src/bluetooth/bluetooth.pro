@@ -207,7 +207,7 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_win.cpp \
         qbluetoothsocket_win.cpp \
         qbluetoothserver_win.cpp \
-        qlowenergycontroller_p.cpp
+        qlowenergycontroller_win.cpp
 
     LIBS += -lbthprops -lsetupapi
 

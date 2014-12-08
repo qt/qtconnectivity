@@ -36,6 +36,7 @@
 #define QWINLOWENERGYBLUETOOTH_P_H
 
 #include <QtCore/qstringlist.h>
+#include <QtCore/qvector.h>
 
 #include <QtBluetooth/qbluetoothaddress.h>
 
@@ -173,10 +174,18 @@ struct DeviceDiscoveryResult
     DWORD error;
 };
 
+struct ServicesDiscoveryResult
+{
+    ServicesDiscoveryResult();
+    QVector<BTH_LE_GATT_SERVICE> services;
+    DWORD error;
+};
+
 bool isSupported();
 bool hasLocalRadio();
 
 DeviceDiscoveryResult startDiscoveryOfRemoteDevices();
+ServicesDiscoveryResult startDiscoveryOfPrimaryServices(HANDLE hDevice);
 
 } // namespace WinLowEnergyBluetooth
 
