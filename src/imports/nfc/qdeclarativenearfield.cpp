@@ -96,6 +96,7 @@
 
 /*!
     \qmlproperty bool NearField::polling
+    \since 5.5
 
     This property indicates if the underlying adapter is currently in polling state. If set to \c true
     the adapter will start polling and stop polling if set to \c false.
@@ -106,12 +107,14 @@
 
 /*!
     \qmlsignal NearField::tagFound()
+    \since 5.5
 
     This signal will be emitted when a tag has been detected.
 */
 
 /*!
     \qmlsignal NearField::tagRemoved()
+    \since 5.5
 
     This signal will be emitted when a tag has been removed.
 */
