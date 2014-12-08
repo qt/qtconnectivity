@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.3
 import QtNfc 5.2
 
 Rectangle {
@@ -47,10 +47,26 @@ Rectangle {
     color: "black"
 
     NearField {
+        property bool requiresManualPolling: false
         orderMatch: false
 
         onMessageRecordsChanged: {
             list.get(listView.currentIndex).notes.append({"noteText":messageRecords[0].text})
+        }
+
+        onPollingChanged: {
+            if (!polling && requiresManualPolling)
+                polling = true; //restart polling
+        }
+
+        Component.onCompleted: {
+            // Polling should be true if
+            // QNearFieldManager::registerNdefMessageHandler() was successful;
+            // otherwise the platform requires manual polling mode.
+            if (!polling) {
+                requiresManualPolling = true;
+                polling = true;
+            }
         }
     }
 
@@ -60,7 +76,6 @@ Rectangle {
         ListElement {
             name: "Personal"
             notes: [
-                ListElement { noteText: "https://developer.blackberry.com" },
                 ListElement { noteText: "Near Field Communication" },
                 ListElement { noteText: "Touch a tag and its contents will appear as a new note" }
             ]

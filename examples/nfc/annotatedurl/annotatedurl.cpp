@@ -40,6 +40,7 @@
 
 #include "annotatedurl.h"
 
+#include <qnearfieldmanager.h>
 #include <qnearfieldtarget.h>
 #include <qndefmessage.h>
 #include <qndefrecord.h>
@@ -53,14 +54,61 @@
 #include <QLabel>
 #include <QMouseEvent>
 #include <QDesktopServices>
+#include <QDebug>
 
 AnnotatedUrl::AnnotatedUrl(QObject *parent)
 :   QObject(parent)
 {
+    //! [QNearFieldManager register handler]
+    manager = new QNearFieldManager(this);
+    if (!manager->isAvailable()) {
+        qWarning() << "NFC not available";
+        return;
+    }
+
+    QNdefFilter filter;
+    filter.setOrderMatch(false);
+    filter.appendRecord<QNdefNfcTextRecord>(1, UINT_MAX);
+    filter.appendRecord<QNdefNfcUriRecord>();
+    int result = manager->registerNdefMessageHandler(filter, this,
+                                       SLOT(handleMessage(QNdefMessage,QNearFieldTarget*)));
+    //! [QNearFieldManager register handler]
+
+    if (result != -1)
+        return;
+
+    manager->startTargetDetection();
+    connect(manager, SIGNAL(targetDetected(QNearFieldTarget*)),
+            this, SLOT(targetDetected(QNearFieldTarget*)));
+    connect(manager, SIGNAL(targetLost(QNearFieldTarget*)),
+            this, SLOT(targetLost(QNearFieldTarget*)));
 }
 
 AnnotatedUrl::~AnnotatedUrl()
 {
+
+}
+
+void AnnotatedUrl::targetDetected(QNearFieldTarget *target)
+{
+    if (!target)
+        return;
+
+    connect(target, SIGNAL(ndefMessageRead(QNdefMessage)),
+            this, SLOT(handlePolledNdefMessage(QNdefMessage)));
+    target->readNdefMessages();
+}
+
+void AnnotatedUrl::targetLost(QNearFieldTarget *target)
+{
+    if (target)
+        target->deleteLater();
+}
+
+void AnnotatedUrl::handlePolledNdefMessage(QNdefMessage message)
+{
+    QNearFieldTarget *target = qobject_cast<QNearFieldTarget *>(sender());
+    handleMessage(message, target);
 }
 
 //! [handleMessage 1]
