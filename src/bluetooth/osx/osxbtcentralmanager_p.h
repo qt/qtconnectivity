@@ -138,15 +138,13 @@ struct LEWriteRequest
 
 typedef QQueue<LEWriteRequest> WriteQueue;
 
-// It can happen that Qt's API wants to write something
-// and expects the confirmation about this value written,
-// but under the hood (Core Bluetooth) we have something like
-// a special method without any values at all.
-// To report our user a successful write, we have this map:
-// handle -> value for a write operation.
-// Since write operations are serialized, the key is guaranteed
-// to be unique.
-typedef QHash<QLowEnergyHandle, QByteArray> ValueHash;
+// Core Bluetooth's write confirmation does not provide
+// the updated value (characteristic or descriptor).
+// But the Qt's Bluetooth API ('write with response')
+// expects this updated value as a response, so we have
+// to cache this write value and report it back.
+// 'NSObject *' will require '__weak' with ARC.
+typedef QHash<NSObject *, QByteArray> ValueHash;
 
 }
 
