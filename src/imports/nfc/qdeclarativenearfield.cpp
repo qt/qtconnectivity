@@ -257,6 +257,8 @@ void QDeclarativeNearField::_q_handleTargetDetected(QNearFieldTarget *target)
                 this, SLOT(_q_handleNdefMessage(QNdefMessage)));
         target->readNdefMessages();
     }
+
+    emit tagFound();
 }
 
 void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,
