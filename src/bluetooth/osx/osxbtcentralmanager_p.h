@@ -93,9 +93,8 @@ public:
     // Service related errors.
     virtual void error(const QBluetoothUuid &serviceUuid,
                        QLowEnergyController::Error error) = 0;
-    // Characteristics related errors.
+    // Characteristics/descriptors related errors.
     virtual void error(const QBluetoothUuid &serviceUuid,
-                       QLowEnergyHandle charHandle,
                        QLowEnergyService::ServiceError error) = 0;
 };
 
