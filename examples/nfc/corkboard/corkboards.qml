@@ -44,14 +44,30 @@ import QtNfc 5.2
 
 Rectangle {
     width: 800; height: 480
-    color: "black"
+    color: "darkred"
 
     NearField {
         property bool requiresManualPolling: false
         orderMatch: false
 
         onMessageRecordsChanged: {
-            list.get(listView.currentIndex).notes.append({"noteText":messageRecords[0].text})
+            var i;
+            for (i = 0; i < messageRecords.length; ++i) {
+                var data = "";
+                if (messageRecords[i].typeNameFormat === NdefRecord.NfcRtd) {
+                    if (messageRecords[i].type === "T") {
+                        data = messageRecords[i].text;
+                    } else if (messageRecords[i].type === "U") {
+                        data = messageRecords[i].uri;
+                    }
+                }
+                if (!data)
+                    data = "Unknown content";
+
+                list.get(listView.currentIndex).notes.append( {
+                        "noteText":data
+                })
+            }
         }
 
         onPollingChanged: {
