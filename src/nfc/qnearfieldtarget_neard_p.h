@@ -268,10 +268,9 @@ private:
         const QString &locale = reply.value().value(QStringLiteral("Language")).toString();
         const QString &encoding = reply.value().value(QStringLiteral("Encoding")).toString();
         const QString &uri = reply.value().value(QStringLiteral("URI")).toString();
-//        const QString &mimetype = reply.value().value(QStringLiteral("MIMEType")).toString();
+
 //        const QString &mime = reply.value().value(QStringLiteral("MIME")).toString();
 //        const QString &arr = reply.value().value(QStringLiteral("ARR")).toString();
-//        const QString &size = reply.value().value(QStringLiteral("Size")).toString();
 
         const QString type = reply.value().value(QStringLiteral("Type")).toString();
         if (type == QStringLiteral("Text")) {
@@ -292,12 +291,26 @@ private:
             if (!uri.isEmpty())
                 spRecord.setUri(QUrl(uri));
 
-//            const QString &actionString = reply.value().value(QStringLiteral("Action")).toString();
-//            if (!action.isEmpty()) {
-//                QNdefNfcSmartPosterRecord::Action action;
+            const QString &action = reply.value().value(QStringLiteral("Action")).toString();
+            if (!action.isEmpty()) {
+                if (action == QStringLiteral("Do"))
+                    spRecord.setAction(QNdefNfcSmartPosterRecord::DoAction);
+                else if (action == QStringLiteral("Save"))
+                    spRecord.setAction(QNdefNfcSmartPosterRecord::SaveAction);
+                else if (action == QStringLiteral("Edit"))
+                    spRecord.setAction(QNdefNfcSmartPosterRecord::EditAction);
+            }
 
-//                spRecord.setAction(acti);
-//            }
+            if (reply.value().contains(QStringLiteral("Size"))) {
+                uint size = reply.value().value(QStringLiteral("Size")).toUInt();
+                spRecord.setSize(size);
+            }
+
+            const QString &mimeType = reply.value().value(QStringLiteral("MIMEType")).toString();
+            if (!mimeType.isEmpty()) {
+                spRecord.setTypeInfo(mimeType.toUtf8());
+            }
+
 
             return spRecord;
         } else if (type == QStringLiteral("URI")) {
