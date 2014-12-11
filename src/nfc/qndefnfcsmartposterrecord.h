@@ -124,6 +124,7 @@ public:
     quint32 size() const;
     void setSize(quint32 size);
 
+    //TODO Qt 6 the mimetype should be QString as it is UTF-8
     QByteArray typeInfo() const;
     void setTypeInfo(const QByteArray &type);
 

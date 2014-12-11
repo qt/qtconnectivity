@@ -602,7 +602,10 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
 }
 
 /*!
-    Adds the icon record list \a icons to the smart poster. Any existing records are overwritten.
+    Adds the icon record list \a icons to the smart poster.
+    Any existing records are overwritten.
+
+    \sa hasIcon(), icon()
  */
 void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
 {
@@ -617,7 +620,13 @@ void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
 }
 
 /*!
-    Returns the size from the size record if available. Otherwise returns 0.
+    Returns the size from the size record if available; otherwise returns 0.
+
+    The value is optional and contains the size in bytes of the object
+    that the URI refers to. It may be used by the device to determine
+    whether it can accommodate the object.
+
+    \sa setSize()
  */
 quint32 QNdefNfcSmartPosterRecord::size() const
 {
@@ -628,7 +637,10 @@ quint32 QNdefNfcSmartPosterRecord::size() const
 }
 
 /*!
-    Sets the size record to \a size
+    Sets the record \a size. The value contains the size in bytes of
+    the object that the URI refers to.
+
+    \sa size(), hasSize()
  */
 void QNdefNfcSmartPosterRecord::setSize(quint32 size)
 {
@@ -642,7 +654,12 @@ void QNdefNfcSmartPosterRecord::setSize(quint32 size)
 }
 
 /*!
-    Returns the type from the type record if available. Otherwise returns an empty byte array.
+    Returns the UTF-8 encoded MIME type that describes the type of the objects
+    that can be reached via uri().
+
+    If the type is not known the return QByteArray is empty.
+
+    \sa setTypeInfo(), hasTypeInfo()
  */
 QByteArray QNdefNfcSmartPosterRecord::typeInfo() const
 {
@@ -653,7 +670,10 @@ QByteArray QNdefNfcSmartPosterRecord::typeInfo() const
 }
 
 /*!
-    Sets the type record to \a type
+    Sets the type record to \a type. \a type must be UTF-8 encoded
+    and describes the type of the object referenced by uri()
+
+    \sa typeInfo()
  */
 void QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray &type)
 {
