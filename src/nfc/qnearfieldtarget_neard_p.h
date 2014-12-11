@@ -204,11 +204,11 @@ public:
             if (record.isRecordType<QNdefNfcUriRecord>()) {
                 recordProperties.insert(QStringLiteral("Type"), QStringLiteral("URI"));
                 QNdefNfcUriRecord uriRecord = static_cast<QNdefNfcUriRecord>(record);
-                recordProperties.insert(QStringLiteral("URI"), uriRecord.uri().path());
+                recordProperties.insert(QStringLiteral("URI"), uriRecord.uri().toString());
             } else if (record.isRecordType<QNdefNfcSmartPosterRecord>()) {
                 recordProperties.insert(QStringLiteral("Type"), QStringLiteral("SmartPoster"));
                 QNdefNfcSmartPosterRecord spRecord = static_cast<QNdefNfcSmartPosterRecord>(record);
-                recordProperties.insert(QStringLiteral("URI"), spRecord.uri().path());
+                recordProperties.insert(QStringLiteral("URI"), spRecord.uri().toString());
                 // Currently neard only supports the uri property for writing
             } else if (record.isRecordType<QNdefNfcTextRecord>()) {
                 recordProperties.insert(QStringLiteral("Type"), QStringLiteral("Text"));
