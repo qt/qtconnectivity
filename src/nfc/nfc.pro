@@ -197,5 +197,4 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
         qnearfieldsharetargetimpl_p.cpp
 }
 
-HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS \
-    android/androidglobal.h
+HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS

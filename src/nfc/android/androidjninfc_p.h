@@ -42,10 +42,13 @@
 #ifndef ANDROIDJNINFC_H
 #define ANDROIDJNINFC_H
 
-#include "androidglobal.h"
 #include "qglobal.h"
 
 #include <jni.h>
+
+#define QT_USE_ANDROIDNFC_NAMESPACE using namespace ::AndroidNfc;
+#define QT_BEGIN_ANDROIDNFC_NAMESPACE namespace AndroidNfc {
+#define QT_END_ANDROIDNFC_NAMESPACE }
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
