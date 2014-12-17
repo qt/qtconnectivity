@@ -120,7 +120,7 @@ QBluetoothTransferReplyOSXPrivate::QBluetoothTransferReplyOSXPrivate(QBluetoothT
       minimalScan(true),
       requestComplete(false)
 {
-    Q_ASSERT_X(q, "QBluetoothTransferReplyOSXPrivate", "invalid q_ptr (null)");
+    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 }
 
 QBluetoothTransferReplyOSXPrivate::~QBluetoothTransferReplyOSXPrivate()
@@ -140,8 +140,8 @@ bool QBluetoothTransferReplyOSXPrivate::isActive() const
 
 bool QBluetoothTransferReplyOSXPrivate::startOPP(const QBluetoothAddress &device)
 {
-    Q_ASSERT_X(!isActive(), "startOPP", "already started");
-    Q_ASSERT_X(!device.isNull(), "startOPP", "invalid device address");
+    Q_ASSERT_X(!isActive(), Q_FUNC_INFO, "already started");
+    Q_ASSERT_X(!device.isNull(), Q_FUNC_INFO, "invalid device address");
 
     errorString.clear();
     error = QBluetoothTransferReply::NoError;
@@ -164,15 +164,13 @@ bool QBluetoothTransferReplyOSXPrivate::startOPP(const QBluetoothAddress &device
 
 void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &device, quint16 channelID)
 {
-    Q_ASSERT_X(!session, "sendConnect", "session is already active");
+    Q_ASSERT_X(!session, Q_FUNC_INFO, "session is already active");
 
     error = QBluetoothTransferReply::NoError;
     errorString.clear();
 
     if (device.isNull() || !channelID) {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSXPrivate::sendConnect(), "
-                                "invalid device address or port";
-
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid device address or port";
         setReplyError(QBluetoothTransferReply::HostNotFoundError,
                       QObject::tr("Invalid target address"));
         return;
@@ -181,8 +179,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     OBEXSession newSession([[ObjCOBEXSession alloc] initWithDelegate:this
                             remoteDevice:device channelID:channelID]);
     if (!newSession) {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSXPrivate::sendConnect(), "
-                                "failed to allocate OSXBTOBEXSession object";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate OSXBTOBEXSession object";
 
         setReplyError(QBluetoothTransferReply::UnknownError,
                       QObject::tr("Failed to create an OBEX session"));
@@ -197,8 +194,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
         if ([session isConnected])
             sendPut();// Connected, send a PUT request.
     } else {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSXPrivate::sendConnect(), "
-                                "OBEXConnect failed";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "OBEXConnect failed";
 
         if (error == QBluetoothTransferReply::NoError) {
             // The error is not set yet.
@@ -214,10 +210,10 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
 
 void QBluetoothTransferReplyOSXPrivate::sendPut()
 {
-    Q_ASSERT_X(inputStream, "sendPut", "invalid input stream (null)");
-    Q_ASSERT_X(session, "sendPut", "invalid OBEX session (nil)");
-    Q_ASSERT_X([session isConnected], "sendPut", "not connected");
-    Q_ASSERT_X(![session hasActiveRequest], "sendPut",
+    Q_ASSERT_X(inputStream, Q_FUNC_INFO, "invalid input stream (null)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
+    Q_ASSERT_X([session isConnected], Q_FUNC_INFO, "not connected");
+    Q_ASSERT_X(![session hasActiveRequest], Q_FUNC_INFO,
                "session already has an active request");
 
     QString fileName;
@@ -354,9 +350,7 @@ QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(QIODevice *input,
     if (input) {
         QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
     } else {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(), "
-                                "invalid input stream (null)";
-
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid input stream (null)";
         osx_d_ptr->requestComplete = true;
         osx_d_ptr->errorString = tr("Invalid input file (null)");
         osx_d_ptr->error = FileNotFoundError;
@@ -417,8 +411,7 @@ bool QBluetoothTransferReplyOSX::start()
     if (!osx_d_ptr->isActive()) {
         // Step 0: find a channelID.
         if (request().address().isNull()) {
-            qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSX::start(), "
-                                    "invalid device address";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid device address";
             osx_d_ptr->setReplyError(HostNotFoundError, tr("Invalid target address"));
             return false;
         }
@@ -432,7 +425,7 @@ bool QBluetoothTransferReplyOSX::start()
 
 void QBluetoothTransferReplyOSX::serviceDiscoveryFinished()
 {
-    Q_ASSERT_X(osx_d_ptr->agent.data(), "serviceDiscoveryFinished",
+    Q_ASSERT_X(osx_d_ptr->agent.data(), Q_FUNC_INFO,
                "invalid service discovery agent (null)");
 
     const QList<QBluetoothServiceInfo> services = osx_d_ptr->agent->discoveredServices();
@@ -454,7 +447,7 @@ void QBluetoothTransferReplyOSX::serviceDiscoveryFinished()
 
 void QBluetoothTransferReplyOSX::serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error errorCode)
 {
-    Q_ASSERT_X(osx_d_ptr->agent.data(), "serviceDiscoveryError", "invalid service discovery agent (null)");
+    Q_ASSERT_X(osx_d_ptr->agent.data(), Q_FUNC_INFO, "invalid service discovery agent (null)");
 
     if (errorCode == QBluetoothServiceDiscoveryAgent::PoweredOffError) {
         // There's nothing else we can do.
