@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 
-#include "osxbtcentralmanagerdelegate_p.h"
 #include "osxbtledeviceinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothuuid.h"
@@ -48,8 +47,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
-// Foundation header is already included by this point
-// (a workaround for a broken 10.9 SDK).
 #include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -130,14 +127,14 @@ using namespace QT_NAMESPACE;
 
 + (NSTimeInterval)inquiryLength
 {
-    // 10 seconds at the moment. There is no default 'time-out',
-    // CBCentralManager startScan does not stop if not asked.
+    // There is no default timeout,
+    // scan does not stop if not asked.
     return 10;
 }
 
 - (id)initWithDelegate:(OSXBluetooth::LEDeviceInquiryDelegate *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithWithDelegate:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -153,24 +150,13 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManagerTransientDelegate) TransientDelegate;
-
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
 
     if (manager) {
-        // -start was called.
-        if (pendingStart) {
-            // State was not updated yet, too early to release.
-            TransientDelegate *const transient = [[TransientDelegate alloc] initWithManager:manager];
-            // On ARC the lifetime of a transient delegate will become a problem, since delegate itself
-            // is a weak reference in a manager.
-            [manager setDelegate:transient];
-        } else {
-            [manager setDelegate:nil];
-            if (isActive)
-                [manager stopScan];
-            [manager release];
-        }
+        [manager setDelegate:nil];
+        if (isActive)
+            [manager stopScan];
+        [manager release];
     }
 
     [peripherals release];
@@ -180,11 +166,11 @@ using namespace QT_NAMESPACE;
 - (void)stopScan
 {
     // Scan's timeout.
-    Q_ASSERT_X(delegate, "-stopScan", "invalid delegate (null)");
-    Q_ASSERT_X(manager, "-stopScan", "invalid central (nil)");
-    Q_ASSERT_X(!pendingStart, "-stopScan", "invalid state");
-    Q_ASSERT_X(!cancelled, "-stopScan", "invalid state");
-    Q_ASSERT_X(isActive, "-stopScan", "invalid state");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid central (nil)");
+    Q_ASSERT_X(!pendingStart, Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(!cancelled, Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(isActive, Q_FUNC_INFO, "invalid state");
 
     [manager setDelegate:nil];
     [manager stopScan];
@@ -195,11 +181,11 @@ using namespace QT_NAMESPACE;
 
 - (bool)start
 {
-    Q_ASSERT_X(![self isActive], "-start", "LE device scan is already active");
-    Q_ASSERT_X(delegate, "-start", "invalid delegate (null)");
+    Q_ASSERT_X(![self isActive], Q_FUNC_INFO, "LE device scan is already active");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (!peripherals) {
-        qCCritical(QT_BT_OSX) << "-start, internal error (allocation problem)";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "internal error";
         return false;
     }
 
@@ -216,7 +202,7 @@ using namespace QT_NAMESPACE;
     manager = [CBCentralManager alloc];
     manager = [manager initWithDelegate:self queue:nil];
     if (!manager) {
-        qCCritical(QT_BT_OSX) << "-start, failed to create a central manager";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a central manager";
         return false;
     }
 
@@ -225,10 +211,10 @@ using namespace QT_NAMESPACE;
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
-    Q_ASSERT_X(delegate, "-centralManagerDidUpdateState:", "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (cancelled) {
-        Q_ASSERT_X(!isActive, "-centralManagerDidUpdateState:", "isActive is true");
+        Q_ASSERT_X(!isActive, Q_FUNC_INFO, "isActive is true");
         pendingStart = false;
         delegate->LEdeviceInquiryFinished();
         return;
@@ -309,18 +295,14 @@ using namespace QT_NAMESPACE;
 
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(delegate, "-centralManager:didDiscoverPeripheral:advertisementData:RSSI:",
-               "invalid delegate (null)");
-    Q_ASSERT_X(isActive, "-centralManager:didDiscoverPeripheral:advertisementData:RSSI:",
-               "called while there is no active scan");
-    Q_ASSERT_X(!pendingStart, "-centralManager:didDiscoverPeripheral:advertisementData:RSSI:",
-               "both pendingStart and isActive are true");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(isActive,Q_FUNC_INFO, "called while there is no active scan");
+    Q_ASSERT_X(!pendingStart, Q_FUNC_INFO, "both pendingStart and isActive are true");
 
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
     if (!peripheral.identifier) {
-        qCWarning(QT_BT_OSX) << "-centramManager:didDiscoverPeripheral:advertisementData:RSSI:, "
-                                "peripheral without NSUUID";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
         return;
     }
 
@@ -331,8 +313,7 @@ using namespace QT_NAMESPACE;
     }
 #else
     if (!peripheral.UUID) {
-        qCWarning(QT_BT_OSX) << "-centramManager:didDiscoverPeripheral:advertisementData:RSSI:, "
-                                "peripheral without UUID";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without UUID";
         return;
     }
 
