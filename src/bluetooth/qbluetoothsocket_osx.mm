@@ -85,7 +85,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
     Q_ASSERT_X(state == QBluetoothSocket::ServiceLookupState
                || state == QBluetoothSocket::UnconnectedState,
-               "connectToService()", "invalid state");
+               Q_FUNC_INFO, "invalid state");
 
     socketError = QBluetoothSocket::NoSocketError;
     errorString.clear();
@@ -157,7 +157,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 void QBluetoothSocketPrivate::close()
 {
     // Can never be called while we're in connectToService:
-    Q_ASSERT_X(!isConnecting, "close()", "internal inconsistency - "
+    Q_ASSERT_X(!isConnecting, Q_FUNC_INFO, "internal inconsistency - "
                "still in connectToService()");
 
     // Only go through closing if the socket was fully opened
@@ -171,7 +171,7 @@ void QBluetoothSocketPrivate::close()
 void QBluetoothSocketPrivate::abort()
 {
     // Can never be called while we're in connectToService:
-    Q_ASSERT_X(!isConnecting, "abort()", "internal inconsistency - "
+    Q_ASSERT_X(!isConnecting, Q_FUNC_INFO, "internal inconsistency - "
                "still in connectToService()");
 
     if (socketType == QBluetoothServiceInfo::RfcommProtocol)
@@ -240,10 +240,10 @@ void QBluetoothSocketPrivate::_q_writeNotify()
 {
     Q_ASSERT_X(socketType == QBluetoothServiceInfo::L2capProtocol
                || socketType == QBluetoothServiceInfo::RfcommProtocol,
-               "_q_writeNotify()", "invalid socket type");
-    Q_ASSERT_X(l2capChannel || rfcommChannel, "_q_writeNotify()",
+               Q_FUNC_INFO, "invalid socket type");
+    Q_ASSERT_X(l2capChannel || rfcommChannel, Q_FUNC_INFO,
                "invalid socket (no open channel)");
-    Q_ASSERT_X(q_ptr, "_q_writeNotify()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     if (txBuffer.size()) {
         const bool isL2CAP = socketType == QBluetoothServiceInfo::L2capProtocol;
@@ -281,7 +281,7 @@ bool QBluetoothSocketPrivate::setChannel(IOBluetoothRFCOMMChannel *channel)
     // It must be a newborn socket!
     Q_ASSERT_X(socketError == QBluetoothSocket::NoSocketError
                && state == QBluetoothSocket::UnconnectedState && !rfcommChannel && !l2capChannel,
-               "QBluetoothSocketPrivate::setChannel()", "unexpected socket state");
+               Q_FUNC_INFO, "unexpected socket state");
 
     openMode = QIODevice::ReadWrite;
     rfcommChannel.reset([[ObjCRFCOMMChannel alloc] initWithDelegate:this channel:channel]);
@@ -305,7 +305,7 @@ bool QBluetoothSocketPrivate::setChannel(IOBluetoothL2CAPChannel *channel)
     // It must be a newborn socket!
     Q_ASSERT_X(socketError == QBluetoothSocket::NoSocketError
                && state == QBluetoothSocket::UnconnectedState && !l2capChannel && !rfcommChannel,
-               "QBluetoothSocketPrivate::setChannel()", "unexpected socket state");
+               Q_FUNC_INFO, "unexpected socket state");
 
     openMode = QIODevice::ReadWrite;
     l2capChannel.reset([[ObjCL2CAPChannel alloc] initWithDelegate:this channel:channel]);
@@ -323,7 +323,7 @@ void QBluetoothSocketPrivate::setChannelError(IOReturn errorCode)
 {
     Q_UNUSED(errorCode)
 
-    Q_ASSERT_X(q_ptr, "setChannelError()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     if (isConnecting) {
         // The delegate's method was called while we are still in
@@ -336,7 +336,7 @@ void QBluetoothSocketPrivate::setChannelError(IOReturn errorCode)
 
 void QBluetoothSocketPrivate::channelOpenComplete()
 {
-    Q_ASSERT_X(q_ptr, "channelOpenComplete()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     if (!isConnecting) {
         q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
@@ -351,7 +351,7 @@ void QBluetoothSocketPrivate::channelOpenComplete()
 
 void QBluetoothSocketPrivate::channelClosed()
 {
-    Q_ASSERT_X(q_ptr, "channelClosed()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     // Channel was closed by IOBluetooth and we can not write any data
     // (thus close/abort probably will not work).
@@ -369,9 +369,9 @@ void QBluetoothSocketPrivate::channelClosed()
 
 void QBluetoothSocketPrivate::readChannelData(void *data, std::size_t size)
 {
-    Q_ASSERT_X(data, "readChannelData()", "invalid data (null)");
-    Q_ASSERT_X(size, "readChannelData()", "invalid data size (0)");
-    Q_ASSERT_X(q_ptr, "readChannelData()", "invalid q_ptr (null)");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(size, Q_FUNC_INFO, "invalid data size (0)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     const char *src = static_cast<char *>(data);
     char *dst = buffer.reserve(size);
@@ -390,8 +390,8 @@ void QBluetoothSocketPrivate::writeComplete()
 
 qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
 {
-    Q_ASSERT_X(data, "writeData()", "invalid data (null)");
-    Q_ASSERT_X(maxSize > 0, "writeData()", "invalid data size");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(maxSize > 0, Q_FUNC_INFO, "invalid data size");
 
     if (state != QBluetoothSocket::ConnectedState) {
         errorString = tr("Cannot write while not connected");
@@ -403,7 +403,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     // IOBluetoothL2CAPChannel buffered (writeAsync).
 
     if (!txBuffer.size())
-        QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, Q_FUNC_INFO, Qt::QueuedConnection);
 
     char *dst = txBuffer.reserve(maxSize);
     std::copy(data, data + maxSize, dst);
@@ -452,7 +452,7 @@ qint64 QBluetoothSocket::bytesToWrite() const
 void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
     if (state() != UnconnectedState && state() != ServiceLookupState) {
-        qCWarning(QT_BT_OSX)  << "QBluetoothSocket::connectToService() called on a busy socket";
+        qCWarning(QT_BT_OSX)  << Q_FUNC_INFO << "called on a busy socket";
         d_ptr->errorString = tr("Trying to connect while connection is in progress");
         setSocketError(OperationError);
         return;
@@ -468,7 +468,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     } else {
         // Try service discovery.
         if (service.serviceUuid().isNull()) {
-            qCWarning(QT_BT_OSX) << "No port, no PSM, and no UUID provided, unable to connect";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "No port, "
+                                    "no PSM, and no UUID provided, unable to connect";
             return;
         }
 
@@ -480,7 +481,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
                                         OpenMode openMode)
 {
     if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << "QBluetoothSocket::connectToService() called on a busy socket";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
         d_ptr->errorString = tr("Trying to connect while connection is in progress");
         setSocketError(QBluetoothSocket::OperationError);
         return;
@@ -497,7 +498,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
                                         OpenMode openMode)
 {
     if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX)  << "QBluetoothSocket::connectToService() called on a busy socket";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
         d_ptr->errorString = tr("Trying to connect while connection is in progress");
         setSocketError(OperationError);
         return;
@@ -538,8 +539,7 @@ void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
         // We can register for L2CAP/RFCOMM open notifications,
         // that's different from 'listen' and is implemented
         // in QBluetoothServer.
-        qCWarning(QT_BT_OSX) << "QBluetoothSocket::setSocketState(), "
-                                "listening sockets are not supported";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "listening sockets are not supported";
     }
 }
 
@@ -577,7 +577,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     if (!service.serviceClassUuids().isEmpty())
         d_ptr->discoveryAgent->setUuidFilter(service.serviceClassUuids());
 
-    Q_ASSERT_X(!d_ptr->discoveryAgent->uuidFilter().isEmpty(), "doDeviceDiscovery()",
+    Q_ASSERT_X(!d_ptr->discoveryAgent->uuidFilter().isEmpty(), Q_FUNC_INFO,
                "invalid service info");
 
     d_ptr->discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);

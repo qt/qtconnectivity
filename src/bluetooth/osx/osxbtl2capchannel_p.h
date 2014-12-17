@@ -44,10 +44,9 @@
 
 #include <QtCore/qglobal.h>
 
-// Must be imported (Obj-C header, no inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothL2CAPChannel.h>
-
 #include <Foundation/Foundation.h>
+// Only after Foundation.h:
+#include "corebluetoothwrapper_p.h"
 
 #include <cstddef>
 
@@ -67,20 +66,20 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel) : NSObject<IOBluetoothL2CAPChannelDelegate>
 {
-    QT_PREPEND_NAMESPACE(OSXBluetooth::ChannelDelegate) *delegate;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *delegate;
     IOBluetoothDevice *device;
     IOBluetoothL2CAPChannel *channel;
     bool connected;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::ChannelDelegate) *)aDelegate;
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::ChannelDelegate) *)aDelegate
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *)aDelegate;
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *)aDelegate
       channel:(IOBluetoothL2CAPChannel *)aChannel;
 
 - (void)dealloc;
 
-// A single async connection (connect can be called only once).
-- (IOReturn)connectAsyncToDevice:(const QBluetoothAddress &)address
+// Async. connection (connect can be called only once).
+- (IOReturn)connectAsyncToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothAddress) &)address
             withPSM:(BluetoothL2CAPChannelID)psm;
 
 // IOBluetoothL2CAPChannelDelegate:
@@ -102,12 +101,12 @@ QT_END_NAMESPACE
 
 // Writes the given data synchronously over the target L2CAP channel to the remote
 // device.
-// The length of the data may not exceed the L2CAP channel's ougoing MTU.
+// The length of the data may not exceed the L2CAP channel's outgoing MTU.
 // This method will block until the data has been successfully sent to the
 // hardware for transmission (or an error occurs).
 - (IOReturn) writeSync:(void*)data length:(UInt16)length;
 
-// The length of the data may not exceed the L2CAP channel's ougoing MTU.
+// The length of the data may not exceed the L2CAP channel's outgoing MTU.
 // When the data has been successfully passed to the hardware to be transmitted,
 // the delegate method -l2capChannelWriteComplete:refcon:status: will be called.
 // Returns kIOReturnSuccess if the data was buffered successfully.
