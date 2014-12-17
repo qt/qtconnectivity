@@ -43,10 +43,8 @@
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
-
-// Import to avoid problems with multiple inclusion (objc headers are not guarded against).
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,10 +80,8 @@ using namespace QT_NAMESPACE;
       delegate:(OSXBluetooth::PairingDelegate *)object
 {
     if (self = [super init]) {
-        Q_ASSERT_X(!address.isNull(), "-initWithTarget:delegate",
-                   "invalid target address");
-        Q_ASSERT_X(object, "-initWithTarget:delegate:",
-                   "invalid delegate (null)");
+        Q_ASSERT_X(!address.isNull(), Q_FUNC_INFO, "invalid target address");
+        Q_ASSERT_X(object, Q_FUNC_INFO, "invalid delegate (null)");
 
         m_targetAddress = address;
         m_object = object;
@@ -114,7 +110,7 @@ using namespace QT_NAMESPACE;
     if (m_active)
         return kIOReturnBusy;
 
-    Q_ASSERT_X(!m_targetAddress.isNull(), "-start", "invalid target address");
+    Q_ASSERT_X(!m_targetAddress.isNull(), Q_FUNC_INFO, "invalid target address");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -122,15 +118,15 @@ using namespace QT_NAMESPACE;
     // Device is autoreleased.
     IOBluetoothDevice *const device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {
-        qCCritical(QT_BT_OSX) << "-start:, failed to create a device "
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device "
                                  "to pair with";
-        return kIOReturnInternalError; // TODO: Find something more appropriate.
+        return kIOReturnError;
     }
 
     m_pairing = [[IOBluetoothDevicePair pairWithDevice:device] retain];
     if (!m_pairing) {
-        qCCritical(QT_BT_OSX) << "-start, failed to create pair";
-        return kIOReturnInternalError;
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create pair";
+        return kIOReturnError;
     }
 
     [m_pairing setDelegate:self];
@@ -169,7 +165,7 @@ using namespace QT_NAMESPACE;
 
 - (IOBluetoothDevice *)targetDevice
 {
-    return [m_pairing device];//It's retained/autoreleased by pair (?).
+    return [m_pairing device];//It's retained/autoreleased by pair.
 }
 
 // IOBluetoothDevicePairDelegate:
@@ -195,8 +191,7 @@ using namespace QT_NAMESPACE;
     if (sender != m_pairing) // Can never happen.
         return;
 
-    Q_ASSERT_X(m_object, "-devicePairingUserConfirmationRequest:numericValue:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(m_object, Q_FUNC_INFO, "invalid delegate (null)");
 
     m_object->requestUserConfirmation(self, numericValue);
 }
@@ -210,8 +205,7 @@ using namespace QT_NAMESPACE;
 
 - (void)devicePairingFinished:(id)sender error:(IOReturn)error
 {
-    Q_ASSERT_X(m_object, "-devicePairingFinished:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(m_object, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (sender != m_pairing) // Can never happen though.
         return;
