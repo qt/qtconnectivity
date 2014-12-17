@@ -151,6 +151,9 @@ QT_BEGIN_NAMESPACE
                                 to be a secondary service. Each service may be included
                                 by another service which is indicated by IncludedService.
     \value IncludedService      The service is included by another service.
+                                On some platforms, this flag cannot be determined until
+                                the service that includes the current service was
+                                discovered.
 */
 
 /*!
@@ -319,6 +322,9 @@ QLowEnergyService::~QLowEnergyService()
     Returns the UUIDs of all services which are included by the
     current service.
 
+    The returned list is empty if this service instance's \l discoverDetails()
+    was not yet called or there are no known characteristics.
+
     It is possible that an included service contains yet another service. Such
     second level includes have to be obtained via their relevant first level
     QLowEnergyService instance. Technically, this could create
@@ -344,7 +350,6 @@ QList<QBluetoothUuid> QLowEnergyService::includedServices() const
     Therefore any service object instance created after
     the first one has a state equal to already existing instances.
 
-
     A service becomes invalid if the \l QLowEnergyController disconnects
     from the remote device. An invalid service retains its internal state
     at the time of the disconnect event. This implies that once the service
@@ -367,9 +372,14 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
 /*!
     Returns the type of the service.
 
+    \note The type attribute cannot be relied upon until the service has
+    reached the \l ServiceDiscovered state. This field is initialised
+    with \l PrimaryService.
+
     \note On Android, it is not possible to determine whether a service
     is a primary or secondary service. Therefore all services
     have the \l PrimaryService flag set.
+
  */
 QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
@@ -379,6 +389,9 @@ QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 /*!
     Returns the matching characteristic for \a uuid; otherwise an invalid
     characteristic.
+
+    The returned characteristic is invalid if this service instance's \l discoverDetails()
+    was not yet called or there are no characteristics with a matching \a uuid.
 
     \sa characteristics()
 */
