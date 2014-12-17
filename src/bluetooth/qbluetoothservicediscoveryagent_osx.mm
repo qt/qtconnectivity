@@ -49,13 +49,13 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlist.h>
 
-// We have to import obj-C headers, they are not guarded against a multiple inclusion.
-#import <IOBluetooth/objc/IOBluetoothSDPServiceRecord.h>
-#import <IOBluetooth/objc/IOBluetoothHostController.h>
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
+#include <Foundation/Foundation.h>
+// Only after Foundation.h
+#include "osx/corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -130,10 +130,10 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
 
 void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 {
-    Q_ASSERT_X(q_ptr, "startDeviceDiscovery()", "invalid q_ptr (null)");
-    Q_ASSERT_X(state == Inactive, "startDeviceDiscovery()", "invalid state");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
+    Q_ASSERT_X(state == Inactive, Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(error != QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError,
-               "startDeviceDiscovery()", "invalid bluetooth adapter");
+               Q_FUNC_INFO, "invalid bluetooth adapter");
 
     Q_ASSERT_X(deviceDiscoveryAgent.isNull(), "startDeviceDiscovery()",
                "discovery agent already exists");
@@ -146,11 +146,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 
 void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
 {
-    Q_ASSERT_X(q_ptr, "stopDeviceDiscovery()", "invalid q_ptr (null)");
-    Q_ASSERT_X(!deviceDiscoveryAgent.isNull(), "stopDeviceDiscovery()",
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
+    Q_ASSERT_X(!deviceDiscoveryAgent.isNull(), Q_FUNC_INFO,
                "invalid device discovery agent (null)");
-    Q_ASSERT_X(state == DeviceDiscovery, "stopDeviceDiscovery()",
-               "invalid state");
+    Q_ASSERT_X(state == DeviceDiscovery, Q_FUNC_INFO, "invalid state");
 
     deviceDiscoveryAgent->stop();
     deviceDiscoveryAgent.reset(Q_NULLPTR);
@@ -164,9 +163,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
     // Any of 'Inactive'/'DeviceDiscovery'/'ServiceDiscovery' states
     // are possible.
 
-    Q_ASSERT_X(q_ptr, "startServiceDiscovery()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
     Q_ASSERT_X(error != QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError,
-               "startServiceDiscovery()", "invalid bluetooth adapter");
+               Q_FUNC_INFO, "invalid bluetooth adapter");
 
     if (discoveredDevices.isEmpty()) {
         state = Inactive;
@@ -210,8 +209,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
 
 void QBluetoothServiceDiscoveryAgentPrivate::stopServiceDiscovery()
 {
-    Q_ASSERT_X(state != Inactive, "stopServiceDiscovery()", "invalid state");
-    Q_ASSERT_X(q_ptr, "stopServiceDiscovery()", "invalid q_ptr (null)");
+    Q_ASSERT_X(state != Inactive, Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     discoveredDevices.clear();
     state = Inactive;
@@ -256,7 +255,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered(const QBluetoot
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error)
 {
-    Q_ASSERT_X(q_ptr, "_q_deviceDiscoveryError()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     error = QBluetoothServiceDiscoveryAgent::UnknownError;
     errorString = tr("Unknown error while scanning for devices");
@@ -271,8 +270,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
 {
-    Q_ASSERT_X(q_ptr, "_q_deviceDiscoveryFinished()",
-               "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     if (deviceDiscoveryAgent->error() != QBluetoothDeviceDiscoveryAgent::NoError) {
         //Forward the device discovery error
@@ -295,7 +293,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
 
 void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevice *device)
 {
-    Q_ASSERT_X(device, "SDPInquiryFinished()", "invalid IOBluetoothDevice (nil)");
+    Q_ASSERT_X(device, Q_FUNC_INFO, "invalid IOBluetoothDevice (nil)");
 
     if (state == Inactive)
         return;
@@ -305,8 +303,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevic
     NSArray *const records = device.services;
     for (IOBluetoothSDPServiceRecord *record in records) {
         QBluetoothServiceInfo serviceInfo;
-        Q_ASSERT_X(discoveredDevices.size() >= 1, "SDPInquiryFinished()",
-                   "invalid number of devices");
+        Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO, "invalid number of devices");
 
         serviceInfo.setDevice(discoveredDevices.at(0));
         OSXBluetooth::extract_service_record(record, serviceInfo);
@@ -331,8 +328,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *
 {
     Q_UNUSED(device)
 
-    qCWarning(QT_BT_OSX) << "QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(), "
-                            "inquiry failed with IOKit code: " << int(errorCode);
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "inquiry failed with IOKit code: " << int(errorCode);
 
     discoveredDevices.clear();
     // TODO: find a better mapping from IOReturn to QBluetoothServiceDiscoveryAgent::Error.
@@ -347,8 +343,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *
 
 void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress)
 {
-    Q_ASSERT_X(!deviceAddress.isNull(), "performMinimalServiceDiscovery()",
-               "invalid device address");
+    Q_ASSERT_X(!deviceAddress.isNull(), Q_FUNC_INFO, "invalid device address");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -365,7 +360,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         NSArray *const records = device.services;
         for (IOBluetoothSDPServiceRecord *record in records) {
             QBluetoothServiceInfo serviceInfo;
-            Q_ASSERT_X(discoveredDevices.size() >= 1, "SDPInquiryFinished()",
+            Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO,
                        "invalid number of devices");
 
             serviceInfo.setDevice(discoveredDevices.at(0));
@@ -389,11 +384,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
 
 void QBluetoothServiceDiscoveryAgentPrivate::setupDeviceDiscoveryAgent()
 {
-    Q_ASSERT_X(q_ptr, "setupDeviceDiscoveryAgent()",
-               "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
     Q_ASSERT_X(deviceDiscoveryAgent.isNull() || !deviceDiscoveryAgent->isActive(),
-               "setupDeviceDiscoveryAgent()",
-               "device discovery agent is active");
+               Q_FUNC_INFO, "device discovery agent is active");
 
     deviceDiscoveryAgent.reset(new QBluetoothDeviceDiscoveryAgent(localAdapterAddress, q_ptr));
 

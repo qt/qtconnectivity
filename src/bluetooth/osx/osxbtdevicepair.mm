@@ -43,7 +43,6 @@
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
