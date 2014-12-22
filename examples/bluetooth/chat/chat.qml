@@ -57,7 +57,15 @@ Item {
     //! [BtDiscoveryModel-1]
         onRunningChanged : {
             if (!btModel.running && top.state == "begin" && !serviceFound) {
+                searchBox.animationRunning = false;
                 searchBox.appendText("\nNo service found. \n\nPlease start server\nand restart app.")
+            }
+        }
+
+        onErrorChanged: {
+            if (error != BluetoothDiscoveryModel.NoError && !btModel.running) {
+                searchBox.animationRunning = false
+                searchBox.appendText("\n\nDiscovery failed.\nPlease ensure Bluetooth is available.")
             }
         }
 

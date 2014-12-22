@@ -41,7 +41,7 @@
 import QtQuick 2.2
 
 Rectangle {
-    property bool animationRunning: ranimation.running
+    property bool animationRunning: true
 
     function appendText(newText) {
         searchText.text += newText
@@ -75,6 +75,7 @@ Rectangle {
             duration: 2000
             loops: Animation.Infinite
             alwaysRunToEnd: true
+            running: animationRunning
         }
     }
 
