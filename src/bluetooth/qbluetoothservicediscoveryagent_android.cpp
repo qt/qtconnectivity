@@ -48,19 +48,20 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
-        const QBluetoothAddress &deviceAdapter)
+        const QBluetoothAddress &/*deviceAdapter*/)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
       state(Inactive), deviceDiscoveryAgent(0),
       mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
       singleDevice(false), receiver(0), localDeviceReceiver(0)
 {
     QList<QBluetoothHostInfo> devices = QBluetoothLocalDevice::allDevices();
-    Q_ASSERT(devices.count() == 1); //Android only supports one device at the moment
+    Q_ASSERT(devices.count() <= 1); //Android only supports one device at the moment
 
-    if (deviceAdapter.isNull() && devices.count() > 0 )
-        m_deviceAdapterAddress = devices.at(0).address();
-    else
-        m_deviceAdapterAddress = deviceAdapter;
+    if (devices.isEmpty()) {
+        error = QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Invalid Bluetooth adapter address");
+        return;
+    }
 
     if (QtAndroidPrivate::androidSdkVersion() < 15)
         qCWarning(QT_BT_ANDROID)
@@ -69,13 +70,10 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
             << "Service discovery will return empty list.";
 
 
-        /*  We assume that the current local adapter has been passed.
-            Android only supports one adapter at the moment. If m_deviceAdapterAddress
-            doesn't match the local adapter then we won't get to this point since
-            we have an InvalidBluetoothAdapter error.
-
-            The logic below must change once there is more than one adapter.
-        */
+    /*
+      We assume that the current local adapter has been passed.
+      The logic below must change once there is more than one adapter.
+    */
 
     btAdapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                            "getDefaultAdapter",
