@@ -64,7 +64,7 @@ public:
     ~QNearFieldManagerPrivateImpl();
 
     virtual bool isAvailable() const;
-    virtual bool startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes);
+    virtual bool startTargetDetection();
     virtual void stopTargetDetection();
     virtual int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);
     virtual int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method);
@@ -83,7 +83,6 @@ protected:
 
 private:
     bool m_detecting;
-    QList<QNearFieldTarget::Type> m_detectTargetTypes;
     QHash<QByteArray, NearFieldTarget*> m_detectedTargets;
 
     /*

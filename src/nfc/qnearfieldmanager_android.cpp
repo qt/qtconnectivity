@@ -71,12 +71,11 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
     return AndroidNfc::isAvailable();
 }
 
-bool QNearFieldManagerPrivateImpl::startTargetDetection(const QList<QNearFieldTarget::Type> &targetTypes)
+bool QNearFieldManagerPrivateImpl::startTargetDetection()
 {
     if (m_detecting)
         return false;   // Already detecting targets
 
-    m_detectTargetTypes = targetTypes;
     AndroidNfc::registerListener(this);
     AndroidNfc::startDiscovery();
     m_detecting = true;
@@ -218,9 +217,7 @@ void QNearFieldManagerPrivateImpl::onTargetDiscovered(jobject intent)
         connect(target, SIGNAL(targetDestroyed(QByteArray)), this, SLOT(onTargetDestroyed(QByteArray)));
         connect(target, SIGNAL(targetLost(QNearFieldTarget*)), this, SIGNAL(targetLost(QNearFieldTarget*)));
     }
-    if (m_detectTargetTypes.isEmpty() ||
-            m_detectTargetTypes.contains(target->type()))
-        emit targetDetected(target);
+    emit targetDetected(target);
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)
