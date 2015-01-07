@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
 qtHaveModule(bluetooth): SUBDIRS += bluetooth
-SUBDIRS += jar
+qtHaveModule(nfc): SUBDIRS += nfc

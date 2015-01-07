@@ -152,11 +152,13 @@ simulator {
 0 {
 android {
     NFC_BACKEND_AVAILABLE = yes
+    ANDROID_PERMISSIONS = \
+        android.permission.NFC
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
         jar/QtNfc-bundled.jar:org.qtproject.qt5.android.nfc.QtNfc
     ANDROID_JAR_DEPENDENCIES = \
         jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
-    DEFINES += ANDROID_NFC #QQNXNFC_DEBUG
+    DEFINES += ANDROID_NFC
 
     PRIVATE_HEADERS += \
         qllcpserver_android_p.h \

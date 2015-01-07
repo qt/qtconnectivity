@@ -1,10 +1,10 @@
-load(qt_build_paths)
-
 CONFIG += java
-DESTDIR = $$MODULE_BASE_OUTDIR/jar
+DESTDIR = $$[QT_INSTALL_PREFIX/get]/jar
+API_VERSION = android-10
 
-JAVACLASSPATH += $$PWD/src
+PATHPREFIX = $$PWD/src/org/qtproject/qt5/android/nfc
 
+JAVACLASSPATH += $$PWD/src/
 JAVASOURCES += \
     $$PWD/src/org/qtproject/qt5/android/nfc/QtNfc.java
 
