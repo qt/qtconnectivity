@@ -43,9 +43,9 @@
 
 #include <android/log.h>
 
+#include "androidmainnewintentlistener_p.h"
+
 #include "qglobal.h"
-#include "qlist.h"
-#include "qreadwritelock.h"
 #include "qbytearray.h"
 #include "qdebug.h"
 
@@ -56,8 +56,7 @@ static jmethodID startDiscoveryId;
 static jmethodID stopDiscoveryId;
 static jmethodID isAvailableId;
 
-static QList<AndroidNfc::AndroidNfcListenerInterface*> listeners;
-QReadWriteLock listenersLock;
+static AndroidNfc::MainNfcNewIntentListener mainListener;
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
@@ -114,18 +113,12 @@ bool stopDiscovery()
 
 bool registerListener(AndroidNfcListenerInterface *listener)
 {
-    listenersLock.lockForWrite();
-    listeners.push_back(listener);
-    listenersLock.unlock();
-    return true;
+    return mainListener.registerListener(listener);
 }
 
 bool unregisterListener(AndroidNfcListenerInterface *listener)
 {
-    listenersLock.lockForWrite();
-    listeners.removeOne(listener);
-    listenersLock.unlock();
-    return true;
+    return mainListener.unregisterListener(listener);
 }
 
 jobject getTag(JNIEnv *env, jobject intent)
@@ -159,23 +152,6 @@ static const char logTag[] = "Qt";
 static const char classErrorMsg[] = "Can't find class \"%s\"";
 static const char methodErrorMsg[] = "Can't find method \"%s%s\"";
 
-static void newIntent(JNIEnv *env, jobject obj, jobject intent)
-{
-    Q_UNUSED(obj);
-    listenersLock.lockForRead();
-    foreach (AndroidNfc::AndroidNfcListenerInterface *listener, listeners) {
-        // Making new global reference for each listener.
-        // Listeners must release reference when it is not used anymore.
-        jobject newIntentRef = env->NewGlobalRef(intent);
-        listener->newIntent(newIntentRef);
-    }
-    listenersLock.unlock();
-}
-
-static JNINativeMethod methods[] = {
-    {"newIntent", "(Landroid/content/Intent;)V", (void*)newIntent}
-};
-
 #define FIND_AND_CHECK_CLASS(CLASS_NAME) \
     clazz = env->FindClass(CLASS_NAME); \
     if (!clazz) { \
@@ -199,11 +175,6 @@ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
     jclass clazz;
     FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/nfc/QtNfc");
     nfcClass = static_cast<jclass>(env->NewGlobalRef(clazz));
-
-    if (env->RegisterNatives(nfcClass, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives failed");
-        return JNI_FALSE;
-    }
 
     GET_AND_CHECK_STATIC_METHOD(startDiscoveryId, nfcClass, "start", "()V");
     GET_AND_CHECK_STATIC_METHOD(stopDiscoveryId, nfcClass, "stop", "()V");

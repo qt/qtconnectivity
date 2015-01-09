@@ -159,6 +159,7 @@ android {
     ANDROID_JAR_DEPENDENCIES = \
         jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
     DEFINES += ANDROID_NFC
+    QT += core-private
 
     PRIVATE_HEADERS += \
         qllcpserver_android_p.h \
@@ -167,7 +168,8 @@ android {
         qnearfieldmanager_android_p.h \
         qnearfieldtarget_android_p.h \
         qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h
+        qnearfieldsharetargetimpl_p.h \
+        android/androidmainnewintentlistener_p.h
 
 
     SOURCES += \
@@ -177,7 +179,8 @@ android {
         qnearfieldmanager_android.cpp \
         qnearfieldtarget_android.cpp \
         qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp
+        qnearfieldsharetargetimpl_p.cpp \
+        android/androidmainnewintentlistener.cpp
 }
 }
 

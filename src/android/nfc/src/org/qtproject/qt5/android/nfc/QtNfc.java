@@ -129,11 +129,4 @@ public class QtNfc
         }
         return m_adapter.isEnabled();
     }
-
-    public static native void newIntent(Intent intent);
-
-    static public void onNewIntent(Intent intent)
-    {
-        newIntent(intent);
-    }
 }
