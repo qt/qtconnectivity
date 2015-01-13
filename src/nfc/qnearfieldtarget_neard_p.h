@@ -190,6 +190,11 @@ public:
 
     QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages)
     {
+        // disabling write due to neard crash (see QTBUG-43802)
+        qWarning("QNearFieldTarget::WriteNdefMessages() disabled. See QTBUG-43802\n");
+        return QNearFieldTarget::RequestId();
+
+
         // return old request id when previous write request hasn't completed
         if (m_currentWriteRequestId.isValid())
             return m_currentReadRequestId;
