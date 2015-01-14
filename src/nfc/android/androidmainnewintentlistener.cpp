@@ -71,7 +71,8 @@ bool MainNfcNewIntentListener::handleNewIntent(JNIEnv *env, jobject intent)
 bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *listener)
 {
     listenersLock.lockForWrite();
-    listeners.push_back(listener);
+    if (!listeners.contains(listener))
+        listeners.push_back(listener);
     listenersLock.unlock();
     return true;
 }
