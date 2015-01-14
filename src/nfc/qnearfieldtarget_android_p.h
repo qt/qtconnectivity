@@ -74,6 +74,7 @@ public:
 signals:
     void targetDestroyed(const QByteArray &tagId);
     void targetLost(QNearFieldTarget *target);
+    void ndefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id);
 
 protected slots:
     void checkIsTargetLost();

@@ -157,6 +157,9 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
                               Q_ARG(const QNdefMessage&, qNdefMessage));
     QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
                               Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+    QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
+                              Q_ARG(const QNdefMessage&, qNdefMessage),
+                              Q_ARG(const QNearFieldTarget::RequestId&, requestId));
     return requestId;
 }
 

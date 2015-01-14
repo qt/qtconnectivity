@@ -48,6 +48,7 @@
 #include "android/androidjninfc_p.h"
 
 #include <QHash>
+#include <QMap>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,19 +78,24 @@ public:
 public slots:
     void onTargetDiscovered(jobject intent);
     void onTargetDestroyed(const QByteArray &uid);
+    void handlerTargetDetected(QNearFieldTarget *target);
+    void handlerTargetLost(QNearFieldTarget *target);
+    void handlerNdefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id);
+    void handlerRequestCompleted(const QNearFieldTarget::RequestId &id);
+    void handlerError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 
 protected:
     static QByteArray getUid(JNIEnv *env, jobject tag);
+    void updateReceiveState();
 
 private:
     bool m_detecting;
     QHash<QByteArray, NearFieldTarget*> m_detectedTargets;
+    QMap<QNearFieldTarget::RequestId, QNearFieldTarget*> m_idToTarget;
 
-    /*
     int m_handlerID;
     QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
     QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
-    */
 };
 
 QT_END_NAMESPACE

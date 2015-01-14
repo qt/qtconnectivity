@@ -60,10 +60,78 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
 {
     qRegisterMetaType<jobject>("jobject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
+    connect(this, SIGNAL(targetDetected(QNearFieldTarget*)), this, SLOT(handlerTargetDetected(QNearFieldTarget*)));
+    connect(this, SIGNAL(targetLost(QNearFieldTarget*)), this, SLOT(handlerTargetLost(QNearFieldTarget*)));
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 {
+}
+
+void QNearFieldManagerPrivateImpl::handlerTargetDetected(QNearFieldTarget *target)
+{
+    if (ndefMessageHandlers.count() == 0 && ndefFilterHandlers.count() == 0) // if no handler is registered
+        return;
+    if (target->hasNdefMessage()) {
+        connect(target, SIGNAL(ndefMessageRead(const QNdefMessage &, const QNearFieldTarget::RequestId &)),
+                this, SLOT(handlerNdefMessageRead(const QNdefMessage &, const QNearFieldTarget::RequestId &)));
+        connect(target, SIGNAL(requestCompleted(const QNearFieldTarget::RequestId &)),
+                this, SLOT(handlerRequestCompleted(const QNearFieldTarget::RequestId &)));
+        connect(target, SIGNAL(error(QNearFieldTarget::Error, const QNearFieldTarget::RequestId &)),
+                this, SLOT(handlerError(QNearFieldTarget::Error, const QNearFieldTarget::RequestId &)));
+
+        QNearFieldTarget::RequestId id = target->readNdefMessages();
+        m_idToTarget.insert(id, target);
+    }
+}
+
+void QNearFieldManagerPrivateImpl::handlerTargetLost(QNearFieldTarget *target)
+{
+    disconnect(target, SIGNAL(ndefMessageRead(const QNdefMessage &, const QNearFieldTarget::RequestId &)),
+            this, SLOT(handlerNdefMessageRead(const QNdefMessage &, const QNearFieldTarget::RequestId &)));
+    disconnect(target, SIGNAL(requestCompleted(const QNearFieldTarget::RequestId &)),
+            this, SLOT(handlerRequestCompleted(const QNearFieldTarget::RequestId &)));
+    disconnect(target, SIGNAL(error(QNearFieldTarget::Error, const QNearFieldTarget::RequestId &)),
+            this, SLOT(handlerError(QNearFieldTarget::Error, const QNearFieldTarget::RequestId &)));
+    m_idToTarget.remove(m_idToTarget.key(target));
+}
+
+void QNearFieldManagerPrivateImpl::handlerNdefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id)
+{
+    QNearFieldTarget *target = m_idToTarget.value(id);
+    //For message handlers without filters
+    for (int i = 0; i < ndefMessageHandlers.count(); i++) {
+        ndefMessageHandlers.at(i).second.invoke(ndefMessageHandlers.at(i).first.second, Q_ARG(QNdefMessage, message), Q_ARG(QNearFieldTarget*, target));
+    }
+
+    //For message handlers that specified a filter
+    for (int i = 0; i < ndefFilterHandlers.count(); ++i) {
+        QNdefFilter filter = ndefFilterHandlers.at(i).second.first;
+        if (filter.recordCount() > message.count())
+            continue;
+
+        int j;
+        for (j = 0; j < filter.recordCount();) {
+            if (message.at(j).typeNameFormat() != filter.recordAt(j).typeNameFormat
+                    || message.at(j).type() != filter.recordAt(j).type ) {
+                break;
+            }
+            ++j;
+        }
+        if (j == filter.recordCount())
+            ndefFilterHandlers.at(i).second.second.invoke(ndefFilterHandlers.at(i).first.second, Q_ARG(QNdefMessage, message), Q_ARG(QNearFieldTarget*, target));
+    }
+}
+
+void QNearFieldManagerPrivateImpl::handlerRequestCompleted(const QNearFieldTarget::RequestId &id)
+{
+    m_idToTarget.remove(id);
+}
+
+void QNearFieldManagerPrivateImpl::handlerError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id)
+{
+    Q_UNUSED(error);
+    m_idToTarget.remove(id);
 }
 
 bool QNearFieldManagerPrivateImpl::isAvailable() const
@@ -76,82 +144,57 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection()
     if (m_detecting)
         return false;   // Already detecting targets
 
-    AndroidNfc::registerListener(this);
-    AndroidNfc::startDiscovery();
     m_detecting = true;
+    updateReceiveState();
     return true;
 }
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection()
 {
-    AndroidNfc::stopDiscovery();
-    AndroidNfc::unregisterListener(this);
     m_detecting = false;
+    updateReceiveState();
 }
 
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(QObject *object, const QMetaMethod &method)
 {
-    Q_UNUSED(object);
-    Q_UNUSED(method);
-    return -1;
-
-    //Not supported for now
-    /*
-    ndefMessageHandlers.append(QPair<QPair<int, QObject *>,
-                               QMetaMethod>(QPair<int, QObject *>(m_handlerID, object), method));
-
+    ndefMessageHandlers.append(QPair<QPair<int, QObject *>, QMetaMethod>(QPair<int, QObject *>(m_handlerID, object), method));
+    updateReceiveState();
     //Returns the handler ID and increments it afterwards
     return m_handlerID++;
-    */
 }
 
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(const QNdefFilter &filter,
                                                              QObject *object, const QMetaMethod &method)
 {
-    Q_UNUSED(filter);
-    Q_UNUSED(object);
-    Q_UNUSED(method);
-    return -1;
-
-    //Not supported for now
-    /*
     //If no record is set in the filter, we ignore the filter
     if (filter.recordCount()==0)
         return registerNdefMessageHandler(object, method);
 
     ndefFilterHandlers.append(QPair<QPair<int, QObject*>, QPair<QNdefFilter, QMetaMethod> >
-                              (QPair<int, QObject*>(m_handlerID, object),
-                               QPair<QNdefFilter, QMetaMethod>(filter, method)));
+                              (QPair<int, QObject*>(m_handlerID, object), QPair<QNdefFilter, QMetaMethod>(filter, method)));
 
-    // updateNdefFilter();
+    updateReceiveState();
 
     return m_handlerID++;
-    */
 }
 
 bool QNearFieldManagerPrivateImpl::unregisterNdefMessageHandler(int handlerId)
 {
-    Q_UNUSED(handlerId);
-    return false;
-
-    //Not supported for now
-    /*
-    for (int i=0; i<ndefMessageHandlers.count(); i++) {
+    for (int i=0; i<ndefMessageHandlers.count(); ++i) {
         if (ndefMessageHandlers.at(i).first.first == handlerId) {
             ndefMessageHandlers.removeAt(i);
-            // updateNdefFilter();
+            updateReceiveState();
             return true;
         }
     }
-    for (int i=0; i<ndefFilterHandlers.count(); i++) {
+    for (int i=0; i<ndefFilterHandlers.count(); ++i) {
         if (ndefFilterHandlers.at(i).first.first == handlerId) {
             ndefFilterHandlers.removeAt(i);
-            // updateNdefFilter();
+            updateReceiveState();
             return true;
         }
     }
     return false;
-    */
 }
 
 void QNearFieldManagerPrivateImpl::requestAccess(QNearFieldManager::TargetAccessModes accessModes)
@@ -235,6 +278,22 @@ QByteArray QNearFieldManagerPrivateImpl::getUid(JNIEnv *env, jobject tag)
     uid.resize(len);
     env->GetByteArrayRegion(tagId, 0, len, reinterpret_cast<jbyte*>(uid.data()));
     return uid;
+}
+
+void QNearFieldManagerPrivateImpl::updateReceiveState()
+{
+    if (m_detecting) {
+        AndroidNfc::registerListener(this);
+        AndroidNfc::startDiscovery();
+    } else {
+        if (ndefMessageHandlers.count() || ndefFilterHandlers.count()) {
+            AndroidNfc::registerListener(this);
+            AndroidNfc::startDiscovery();
+        } else {
+            AndroidNfc::stopDiscovery();
+            AndroidNfc::unregisterListener(this);
+        }
+    }
 }
 
 QT_END_NAMESPACE
