@@ -104,7 +104,11 @@ public class QtNfc
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Enabling NFC");
-                m_adapter.enableForegroundDispatch(m_activity, m_pendingIntent, null, null);
+                try {
+                    m_adapter.enableForegroundDispatch(m_activity, m_pendingIntent, null, null);
+                } catch(IllegalStateException e) {
+                    throw new RuntimeException("Fail", e);
+                }
             }
         });
     }
