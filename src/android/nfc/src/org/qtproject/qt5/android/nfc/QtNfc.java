@@ -104,8 +104,24 @@ public class QtNfc
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Enabling NFC");
+                IntentFilter[] filters = new IntentFilter[2];
+                filters[0] = new IntentFilter();
+                filters[0].addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+                filters[0].addCategory(Intent.CATEGORY_DEFAULT);
                 try {
-                    m_adapter.enableForegroundDispatch(m_activity, m_pendingIntent, null, null);
+                    filters[0].addDataType("*/*");
+                } catch (MalformedMimeTypeException e) {
+                    throw new RuntimeException("Check your mime type.");
+                }
+                // some tags will report as tech, even if they are ndef formated/formatable.
+                filters[1] = new IntentFilter();
+                filters[1].addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
+                String[][] techList = new String[][]{
+                        {"android.nfc.tech.Ndef"},
+                        {"android.nfc.tech.NdefFormatable"}
+                    };
+                try {
+                    m_adapter.enableForegroundDispatch(m_activity, m_pendingIntent, filters, techList);
                 } catch(IllegalStateException e) {
                     throw new RuntimeException("Fail", e);
                 }
