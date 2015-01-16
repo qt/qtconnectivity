@@ -75,8 +75,8 @@ tst_QNearFieldManager::tst_QNearFieldManager()
 {
     QDir::setCurrent(QLatin1String(SRCDIR));
 
-    qRegisterMetaType<QNdefMessage>("QNdefMessage");
-    qRegisterMetaType<QNearFieldTarget *>("QNearFieldTarget*");
+    qRegisterMetaType<QNdefMessage>();
+    qRegisterMetaType<QNearFieldTarget *>();
 }
 
 void tst_QNearFieldManager::initTestCase()

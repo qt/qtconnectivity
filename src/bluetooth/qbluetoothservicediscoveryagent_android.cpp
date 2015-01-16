@@ -81,7 +81,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     if (!btAdapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Platform does not support Bluetooth";
 
-    qRegisterMetaType<QList<QBluetoothUuid> >("QList<QBluetoothUuid>");
+    qRegisterMetaType<QList<QBluetoothUuid> >();
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()

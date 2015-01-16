@@ -47,8 +47,7 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
-Q_DECLARE_METATYPE(QBluetoothServiceDiscoveryAgent::Error)
+Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
 
 // Maximum time to for bluetooth device scan
 const int MaxScanTime = 5 * 60 * 1000;  // 5 minutes in ms
@@ -98,11 +97,11 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
     localDeviceAvailable = QBluetoothLocalDevice().hostMode() != QBluetoothLocalDevice::HostPoweredOff;
 #endif
 
-    qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
-    qRegisterMetaType<QBluetoothServiceInfo>("QBluetoothServiceInfo");
-    qRegisterMetaType<QList<QBluetoothUuid> >("QList<QBluetoothUuid>");
-    qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>("QBluetoothServiceDiscoveryAgent::Error");
-    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>("QBluetoothDeviceDiscoveryAgent::Error");
+    qRegisterMetaType<QBluetoothDeviceInfo>();
+    qRegisterMetaType<QBluetoothServiceInfo>();
+    qRegisterMetaType<QList<QBluetoothUuid> >();
+    qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>();
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
 
 }
 

@@ -103,9 +103,9 @@ class LocalDeviceRegisterMetaTypes
 public:
     LocalDeviceRegisterMetaTypes()
     {
-        qRegisterMetaType<QBluetoothLocalDevice::HostMode>("QBluetoothLocalDevice::HostMode");
-        qRegisterMetaType<QBluetoothLocalDevice::Pairing>("QBluetoothLocalDevice::Pairing");
-        qRegisterMetaType<QBluetoothLocalDevice::Error>("QBluetoothLocalDevice::Error");
+        qRegisterMetaType<QBluetoothLocalDevice::HostMode>();
+        qRegisterMetaType<QBluetoothLocalDevice::Pairing>();
+        qRegisterMetaType<QBluetoothLocalDevice::Error>();
     }
 } _registerLocalDeviceMetaTypes;
 }

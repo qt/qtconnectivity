@@ -78,9 +78,9 @@ tst_QBluetoothServiceInfo::~tst_QBluetoothServiceInfo()
 
 void tst_QBluetoothServiceInfo::initTestCase()
 {
-    qRegisterMetaType<QBluetoothUuid::ProtocolUuid>("QBluetoothUuid::ProtocolUuid");
-    qRegisterMetaType<QUuid>("QUuid");
-    qRegisterMetaType<QBluetoothServiceInfo::Protocol>("QBluetoothServiceInfo::Protocol");
+    qRegisterMetaType<QBluetoothUuid::ProtocolUuid>();
+    qRegisterMetaType<QUuid>();
+    qRegisterMetaType<QBluetoothServiceInfo::Protocol>();
     // start Bluetooth if not started
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     device->powerOn();

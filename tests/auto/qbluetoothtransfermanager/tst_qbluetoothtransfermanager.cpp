@@ -92,7 +92,7 @@ private:
 
 tst_QBluetoothTransferManager::tst_QBluetoothTransferManager()
 {
-    qRegisterMetaType<QBluetoothTransferReply*>("QBluetoothTransferReply*");
+    qRegisterMetaType<QBluetoothTransferReply*>();
 }
 
 tst_QBluetoothTransferManager::~tst_QBluetoothTransferManager()

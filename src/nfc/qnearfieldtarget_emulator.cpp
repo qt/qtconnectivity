@@ -187,7 +187,7 @@ bool TagType2::waitForRequestCompleted(const RequestId &id, int msecs)
 TagActivator::TagActivator()
 :   timerId(-1)
 {
-    qRegisterMetaType<QNearFieldTarget::Error>("QNearFieldTarget::Error");
+    qRegisterMetaType<QNearFieldTarget::Error>();
 }
 
 TagActivator::~TagActivator()

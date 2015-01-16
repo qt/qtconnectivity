@@ -132,8 +132,8 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
     connect(&m_queryTimer, SIGNAL(timeout()), this, SLOT(queryTimeout()));
     ppsRegisterForEvent(QStringLiteral("service_updated"), this);
     //Needed for connecting signals and slots from static function
-    qRegisterMetaType<QBluetoothServiceInfo>("QBluetoothServiceInfo");
-    qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>("QBluetoothServiceDiscoveryAgent::Error");
+    qRegisterMetaType<QBluetoothServiceInfo>();
+    qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>();
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()

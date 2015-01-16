@@ -118,8 +118,8 @@ void tst_QBluetoothServer::setHostMode(const QBluetoothAddress &localAdapter,
 
 void tst_QBluetoothServer::initTestCase()
 {
-    qRegisterMetaType<QBluetooth::SecurityFlags>("QBluetooth::SecurityFlags");
-    qRegisterMetaType<QBluetoothServer::Error>("QBluetoothServer::Error");
+    qRegisterMetaType<QBluetooth::SecurityFlags>();
+    qRegisterMetaType<QBluetoothServer::Error>();
 
     QBluetoothLocalDevice device;
     if (!device.isValid())

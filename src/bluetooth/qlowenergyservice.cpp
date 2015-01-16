@@ -296,8 +296,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
     : QObject(parent),
       d_ptr(p)
 {
-    qRegisterMetaType<QLowEnergyService::ServiceState>("QLowEnergyService::ServiceState");
-    qRegisterMetaType<QLowEnergyService::ServiceError>("QLowEnergyService::ServiceError");
+    qRegisterMetaType<QLowEnergyService::ServiceState>();
+    qRegisterMetaType<QLowEnergyService::ServiceError>();
 
     connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
             this, SIGNAL(error(QLowEnergyService::ServiceError)));

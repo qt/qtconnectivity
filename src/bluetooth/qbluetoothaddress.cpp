@@ -65,7 +65,7 @@ class BluetoothAddressRegisterMetaTypes
 public:
     BluetoothAddressRegisterMetaTypes()
     {
-        qRegisterMetaType<QBluetoothAddress>("QBluetoothAddress");
+        qRegisterMetaType<QBluetoothAddress>();
     }
 } _registerBluetoothAddressMetaTypes;
 }

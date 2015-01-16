@@ -161,4 +161,7 @@ Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketState);
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QBluetoothSocket::SocketError)
+Q_DECLARE_METATYPE(QBluetoothSocket::SocketState)
+
 #endif

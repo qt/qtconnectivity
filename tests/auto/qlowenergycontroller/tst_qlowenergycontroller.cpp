@@ -97,7 +97,6 @@ private:
 
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
-Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
