@@ -43,10 +43,16 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlContext>
 #include <QDebug>
+#include <QBluetoothLocalDevice>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication application(argc, argv);
+
+    QList<QBluetoothHostInfo> infos = QBluetoothLocalDevice::allDevices();
+    if (infos.isEmpty())
+        qWarning() << "Missing Bluetooth local device. "
+                      "Example will not work properly.";
 
     const QString mainQmlApp = QLatin1String("qrc:/chat.qml");
     QQuickView view;
