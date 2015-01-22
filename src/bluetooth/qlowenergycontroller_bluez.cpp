@@ -41,6 +41,8 @@
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QLowEnergyService>
 
+#include <errno.h>
+
 #define ATTRIBUTE_CHANNEL_ID 4
 
 #define ATT_DEFAULT_LE_MTU 23

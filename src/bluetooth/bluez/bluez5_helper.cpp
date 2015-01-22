@@ -45,16 +45,16 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 typedef enum Bluez5TestResultType
 {
-    Unknown,
-    Bluez4,
-    Bluez5
+    BluezVersionUnknown,
+    BluezVersion4,
+    BluezVersion5
 } Bluez5TestResult;
 
-Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (Bluez5TestResult::Unknown));
+Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown));
 
 bool isBluez5()
 {
-    if (*bluezVersion() == Bluez5TestResultType::Unknown) {
+    if (*bluezVersion() == BluezVersionUnknown) {
         OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
                                                          QStringLiteral("/"),
                                                          QDBusConnection::systemBus());
@@ -65,15 +65,15 @@ bool isBluez5()
         QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
         reply.waitForFinished();
         if (reply.isError()) {
-            *bluezVersion() = Bluez5TestResultType::Bluez4;
+            *bluezVersion() = BluezVersion4;
             qCDebug(QT_BT_BLUEZ) << "Bluez 4 detected.";
         } else {
-            *bluezVersion() = Bluez5TestResultType::Bluez5;
+            *bluezVersion() = BluezVersion5;
             qCDebug(QT_BT_BLUEZ) << "Bluez 5 detected.";
         }
     }
 
-    return (*bluezVersion() == Bluez5TestResultType::Bluez5);
+    return (*bluezVersion() == BluezVersion5);
 }
 
 struct AdapterData
