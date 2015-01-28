@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
-    m_detecting(false)
+    m_detecting(false), m_handlerID(0)
 {
     qRegisterMetaType<jobject>("jobject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
