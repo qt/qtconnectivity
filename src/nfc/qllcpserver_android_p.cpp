@@ -49,7 +49,7 @@ QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
 {
 }
 
-bool QLlcpServerPrivate::listen(const QString &serviceUri)
+bool QLlcpServerPrivate::listen(const QString &/*serviceUri*/)
 {
     /*//The server is already listening
     if (isListening())
