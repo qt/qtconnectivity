@@ -165,7 +165,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
-        bool /*writeWithResponse*/)
+        bool writeWithResponse)
 {
     //TODO don't ignore WriteWithResponse, right now we assume responses
     Q_ASSERT(!service.isNull());
@@ -182,9 +182,11 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     bool result = false;
     if (hub) {
         qCDebug(QT_BT_ANDROID) << "Write characteristic with handle " << charHandle
-                 << newValue.toHex() << "(service:" << service->uuid << ")";
-        result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[B)Z",
-                                                        charHandle, payload);
+                 << newValue.toHex() << "(service:" << service->uuid
+                 << ", writeWithResponse:" << writeWithResponse << ")";
+        result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[BI)Z",
+                      charHandle, payload,
+                      writeWithResponse ?  QLowEnergyService::WriteWithResponse : QLowEnergyService::WriteWithoutResponse);
     }
 
     if (env->ExceptionOccurred()) {
@@ -429,7 +431,10 @@ void QLowEnergyControllerPrivate::characteristicWritten(
         return;
     }
 
-    updateValueOfCharacteristic(charHandle, data, false);
+    // only update cache when property is readable. Otherwise it remains
+    // empty.
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, data, false);
     emit service->characteristicWritten(characteristic, data);
 }
 
@@ -477,7 +482,10 @@ void QLowEnergyControllerPrivate::characteristicChanged(
         return;
     }
 
-    updateValueOfCharacteristic(characteristic.attributeHandle(),
+    // only update cache when property is readable. Otherwise it remains
+    // empty.
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(characteristic.attributeHandle(),
                                 data, false);
     emit service->characteristicChanged(characteristic, data);
 }

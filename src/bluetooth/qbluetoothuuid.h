@@ -166,6 +166,13 @@ public:
         CyclingSpeedAndCadence = 0x1816,
         CyclingPower = 0x1818,
         LocationAndNavigation = 0x1819,
+        EnvironmentalSensing = 0x181a,
+        BodyComposition = 0x181b,
+        UserData = 0x181c,
+        WeightScale = 0x181d,
+        BondManagement = 0x181e,
+        ContinuousGlucoseMonitoring = 0x181f,
+
     };
 
     enum CharacteristicType {
@@ -180,21 +187,28 @@ public:
         DateTime = 0x2a08,
         DayOfWeek = 0x2a09,
         DayDateTime = 0x2a0a,
+        /* 0x2a0b not defined */
         ExactTime256 = 0x2a0c,
         DSTOffset = 0x2a0d,
         TimeZone = 0x2a0e,
         LocalTimeInformation = 0x2a0f,
+        /* 0x2a10 not defined */
         TimeWithDST = 0x2a11,
         TimeAccuracy = 0x2a12,
         TimeSource = 0x2a13,
         ReferenceTimeInformation = 0x2a14,
+        /* 0x2a15 not defined */
         TimeUpdateControlPoint = 0x2a16,
         TimeUpdateState = 0x2a17,
         GlucoseMeasurement = 0x2a18,
         BatteryLevel = 0x2a19,
+        /* 0x2a1a not defined */
+        /* 0x2a1b not defined */
         TemperatureMeasurement = 0x2a1c,
         TemperatureType = 0x2a1d,
         IntermediateTemperature = 0x2a1e,
+        /* 0x2a1f not defined */
+        /* 0x2a20 not defined */
         MeasurementInterval = 0x2a21,
         BootKeyboardInputReport = 0x2a22,
         SystemID = 0x2a23,
@@ -206,6 +220,11 @@ public:
         ManufacturerNameString = 0x2a29,
         IEEE1107320601RegulatoryCertificationDataList = 0x2a2a,
         CurrentTime = 0x2a2b,
+        MagneticDeclination = 0x2a2c,
+        /* 0x2a2d not defined */
+        /* 0x2a2e not defined */
+        /* 0x2a2f not defined */
+        /* 0x2a30 not defined */
         ScanRefresh = 0x2a31,
         BootKeyboardOutputReport = 0x2a32,
         BootMouseInputReport = 0x2a33,
@@ -215,6 +234,11 @@ public:
         HeartRateMeasurement = 0x2a37,
         BodySensorLocation = 0x2a38,
         HeartRateControlPoint = 0x2a39,
+        /* 0x2a3a not defined */
+        /* 0x2a3b not defined */
+        /* 0x2a3c not defined */
+        /* 0x2a3d not defined */
+        /* 0x2a3e not defined */
         AlertStatus = 0x2a3f,
         RingerControlPoint = 0x2a40,
         RingerSetting = 0x2a41,
@@ -238,9 +262,19 @@ public:
         RSCMeasurement = 0x2a53,
         RSCFeature = 0x2a54,
         SCControlPoint = 0x2a55,
+        /* 0x2a56 not defined */
+        /* 0x2a57 not defined */
+        /* 0x2a58 not defined */
+        /* 0x2a59 not defined */
+        /* 0x2a5a not defined */
         CSCMeasurement = 0x2a5b,
         CSCFeature = 0x2a5c,
         SensorLocation = 0x2a5d,
+        /* 0x2a5e not defined */
+        /* 0x2a5f not defined */
+        /* 0x2a60 not defined */
+        /* 0x2a61 not defined */
+        /* 0x2a62 not defined */
         CyclingPowerMeasurement = 0x2a63,
         CyclingPowerVector = 0x2a64,
         CyclingPowerFeature = 0x2a65,
@@ -250,6 +284,62 @@ public:
         PositionQuality = 0x2a69,
         LNFeature = 0x2a6a,
         LNControlPoint = 0x2a6b,
+        Elevation = 0x2a6c,
+        Pressure = 0x2a6d,
+        Temperature = 0x2a6e,
+        Humidity = 0x2a6f,
+        TrueWindSpeed = 0x2a70,
+        TrueWindDirection = 0x2a71,
+        ApparentWindSpeed = 0x2a72,
+        ApparentWindDirection = 0x2a73,
+        GustFactor = 0x2a74,
+        PollenConcentration = 0x2a75,
+        UVIndex = 0x2a76,
+        Irradiance = 0x2a77,
+        Rainfall = 0x2a78,
+        WindChill = 0x2a79,
+        HeatIndex = 0x2a7a,
+        DewPoint = 0x2a7b,
+        /* 0x2a7c not defined */
+        DescriptorValueChanged = 0x2a7d,
+        AerobicHeartRateLowerLimit = 0x2a7e,
+        AerobicThreshold = 0x2a7f,
+        Age = 0x2a80,
+        AnaerobicHeartRateLowerLimit = 0x2a81,
+        AnaerobicHeartRateUpperLimit = 0x2a82,
+        AnaerobicThreshold = 0x2a83,
+        AerobicHeartRateUpperLimit = 0x2a84,
+        DateOfBirth = 0x2a85,
+        DateOfThresholdAssessment = 0x2a86,
+        EmailAddress = 0x2a87,
+        FatBurnHeartRateLowerLimit = 0x2a88,
+        FatBurnHeartRateUpperLimit = 0x2a89,
+        FirstName = 0x2a8a,
+        FiveZoneHeartRateLimits = 0x2a8b,
+        Gender = 0x2a8c,
+        HeartRateMax = 0x2a8d,
+        Height = 0x2a8e,
+        HipCircumference = 0x2a8f,
+        LastName = 0x2a90,
+        MaximumRecommendedHeartRate = 0x2a91,
+        RestingHeartRate = 0x2a92,
+        SportTypeForAerobicAnaerobicThresholds = 0x2a93,
+        ThreeZoneHeartRateLimits = 0x2a94,
+        TwoZoneHeartRateLimits = 0x2a95,
+        VO2Max = 0x2a96,
+        WaistCircumference = 0x2a97,
+        Weight = 0x2a98,
+        DatabaseChangeIncrement = 0x2a99,
+        UserIndex = 0x2a9a,
+        BodyCompositionFeature = 0x2a9b,
+        BodyCompositionMeasurement = 0x2a9c,
+        WeightMeasurement = 0x2a9d,
+        WeightScaleFeature = 0x2a9e,
+        UserControlPoint = 0x2a9f,
+        MagneticFluxDensity2D = 0x2aa0,
+        MagneticFluxDensity3D = 0x2aa1,
+        Language = 0x2aa2,
+        BarometricPressureTrend = 0x2aa3
     };
 
     enum DescriptorType {
@@ -262,7 +352,12 @@ public:
         CharacteristicAggregateFormat = 0x2905,
         ValidRange = 0x2906,
         ExternalReportReference = 0x2907,
-        ReportReference = 0x2908
+        ReportReference = 0x2908,
+        /* 0x2909 not defined */
+        /* 0x290a not defined */
+        EnvironmentalSensingConfiguration = 0x290b,
+        EnvironmentalSensingMeasurement = 0x290c,
+        EnvironmentalSensingTriggerSetting = 0x290d
     };
 
     QBluetoothUuid();

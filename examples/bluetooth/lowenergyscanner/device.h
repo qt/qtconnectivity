@@ -119,6 +119,7 @@ private:
     QList<QObject*> devices;
     QList<QObject*> m_services;
     QList<QObject*> m_characteristics;
+    QString m_previousAddress;
     QString m_message;
     bool connected;
     QLowEnergyController *controller;

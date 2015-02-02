@@ -120,4 +120,7 @@ private:
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceState)
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
+
 #endif // QLOWENERGYSERVICE_H

@@ -908,8 +908,9 @@ void QLowEnergyControllerPrivate::processReply(
 
         const QByteArray newValue = request.reference2.toByteArray();
         if (!descriptorHandle) {
-            updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             QLowEnergyCharacteristic ch(service, charHandle);
+            if (ch.properties() & QLowEnergyCharacteristic::Read)
+                updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             emit service->characteristicWritten(ch, newValue);
         } else {
             updateValueOfDescriptor(charHandle, descriptorHandle, newValue, NEW_VALUE);
@@ -976,8 +977,9 @@ void QLowEnergyControllerPrivate::processReply(
                                         attrHandle, newValue, NEW_VALUE);
                 emit service->descriptorWritten(descriptor, newValue);
             } else {
-                updateValueOfCharacteristic(attrHandle, newValue, NEW_VALUE);
                 QLowEnergyCharacteristic ch(service, attrHandle);
+                if (ch.properties() & QLowEnergyCharacteristic::Read)
+                    updateValueOfCharacteristic(attrHandle, newValue, NEW_VALUE);
                 emit service->characteristicWritten(ch, newValue);
             }
         }
@@ -1236,7 +1238,8 @@ void QLowEnergyControllerPrivate::processUnsolicitedReply(const QByteArray &payl
 
     const QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
     if (ch.isValid() && ch.handle() == changedHandle) {
-        updateValueOfCharacteristic(ch.attributeHandle(), payload.mid(3), NEW_VALUE);
+        if (ch.properties() & QLowEnergyCharacteristic::Read)
+            updateValueOfCharacteristic(ch.attributeHandle(), payload.mid(3), NEW_VALUE);
         emit ch.d_ptr->characteristicChanged(ch, payload.mid(3));
     } else {
         qCWarning(QT_BT_BLUEZ) << "Cannot find matching characteristic for "

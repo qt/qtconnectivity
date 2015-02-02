@@ -34,13 +34,9 @@
 #include "osxbtsocketlistener_p.h"
 #include "osxbtutility_p.h"
 
-#include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
-// Imports, since these are Objective-C headers and
-// they do not have inclusion guards.
-#import <IOBluetooth/objc/IOBluetoothRFCOMMChannel.h>
-#import <IOBluetooth/objc/IOBluetoothL2CAPChannel.h>
+#include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +60,7 @@ using namespace QT_NAMESPACE;
 
 - (id)initWithListener:(OSXBluetooth::SocketListener *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithListener:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
     if (self = [super init]) {
         connectionNotification = nil;
         delegate = aDelegate;
@@ -84,8 +80,7 @@ using namespace QT_NAMESPACE;
 
 - (bool)listenRFCOMMConnectionsWithChannelID:(BluetoothRFCOMMChannelID)channelID
 {
-    Q_ASSERT_X(!connectionNotification, "-listenRFCOMMConnectionsWithChannelID",
-               "already listening");
+    Q_ASSERT_X(!connectionNotification, Q_FUNC_INFO, "already listening");
 
     connectionNotification = [IOBluetoothRFCOMMChannel  registerForChannelOpenNotifications:self
                                                         selector:@selector(rfcommOpenNotification:channel:)
@@ -100,8 +95,7 @@ using namespace QT_NAMESPACE;
 
 - (bool)listenL2CAPConnectionsWithPSM:(BluetoothL2CAPPSM)psm
 {
-    Q_ASSERT_X(!connectionNotification, "-listenL2CAPConnectionsWithPSM:",
-               "already listening");
+    Q_ASSERT_X(!connectionNotification, Q_FUNC_INFO, "already listening");
 
     connectionNotification = [IOBluetoothL2CAPChannel registerForChannelOpenNotifications:self
                                                       selector:@selector(l2capOpenNotification:channel:)
@@ -119,8 +113,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(notification)
 
-    Q_ASSERT_X(delegate, "-rfcommOpenNotification:channel:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->openNotify(newChannel);
 }
 
@@ -129,8 +122,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(notification)
 
-    Q_ASSERT_X(delegate, "-l2capOpenNotification:channel:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->openNotify(newChannel);
 }
 

@@ -94,7 +94,8 @@ public:
         NoError,
         InputOutputError,
         PoweredOffError,
-        UnknownError
+        UnknownError,
+        InvalidBluetoothAdapterError
     };
 
     Error error() const;

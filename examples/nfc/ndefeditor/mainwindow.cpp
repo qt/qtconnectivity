@@ -235,6 +235,8 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
                 this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
 
         m_request = target->readNdefMessages();
+        if (!m_request.isValid()) // cannot read messages
+            targetError(QNearFieldTarget::NdefReadError, m_request);
         break;
     case WriteNdef:
         connect(target, SIGNAL(ndefMessagesWritten()), this, SLOT(ndefMessageWritten()));
@@ -242,6 +244,8 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
                 this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
 
         m_request = target->writeNdefMessages(QList<QNdefMessage>() << ndefMessage());
+        if (!m_request.isValid()) // cannot write messages
+            targetError(QNearFieldTarget::NdefWriteError, m_request);
         break;
     }
 }

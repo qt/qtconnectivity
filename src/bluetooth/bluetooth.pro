@@ -177,13 +177,16 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller.cpp
     SOURCES -= qlowenergycontroller_p.cpp
 } else:ios {
-    message("iOS is currently an unsupported Bluetooth platform, WIP.")
-
     DEFINES += QT_IOS_BLUETOOTH
     LIBS += -framework Foundation -framework CoreBluetooth
 
     OBJECTIVE_SOURCES += \
-        qbluetoothdevicediscoveryagent_ios.mm
+        qbluetoothdevicediscoveryagent_ios.mm \
+        qlowenergycontroller_osx.mm \
+        qlowenergyservice_osx.mm
+
+    PRIVATE_HEADERS += \
+        qlowenergycontroller_osx_p.h
 
     include(osx/osxbt.pri)
     SOURCES += \
@@ -196,6 +199,9 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergycontroller_p.cpp
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
+    SOURCES -= qlowenergycontroller_p.cpp
+    SOURCES -= qlowenergyservice.cpp
+    SOURCES -= qlowenergycontroller.cpp
 } else:win32:!winrt:!wince {
 
     include(windows/windows.pri)

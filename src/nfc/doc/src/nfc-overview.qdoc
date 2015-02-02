@@ -105,7 +105,7 @@ Depending on the platform it may even be possible to start the application that 
 \note This feature is not available on all platforms and, in addition to the code snippets below,
 may require further platform specific setup.
 
-\snippet annotatedurl/main.cpp QNearFieldManager register handler
+\snippet annotatedurl/annotatedurl.cpp QNearFieldManager register handler
 
 For comparison an application that uses an empty NDEF filter (match all behavior) in combination with
 \l QNearFieldManager::registerNdefMessageHandler() would behave similarly to another application that uses

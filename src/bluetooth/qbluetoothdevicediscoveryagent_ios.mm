@@ -47,6 +47,7 @@
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlist.h>
@@ -108,16 +109,14 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
 {
     Q_UNUSED(adapter);
 
-    Q_ASSERT_X(q != Q_NULLPTR, "QBluetoothDeviceDiscoveryAgentPrivate()",
-               "invalid q_ptr (null)");
+    Q_ASSERT_X(q != Q_NULLPTR, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     // OSXBTLEDeviceInquiry can be constructed even if LE is not supported -
     // at this stage it's only a memory allocation of the object itself,
     // if it fails - we have some memory-related problems.
     LEDeviceInquiry newInquiryLE([[LEDeviceInquiryObjC alloc] initWithDelegate:this]);
     if (!newInquiryLE) {
-        qCWarning(QT_BT_OSX) << "QBluetoothDeviceDiscoveryAgentPrivate() "
-                                "failed to initialize a device inquiry object";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to initialize a device inquiry object";
         return;
     }
 
@@ -148,10 +147,10 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
-    Q_ASSERT_X(isValid(), "start()", "called on invalid device discovery agent");
-    Q_ASSERT_X(!isActive(), "start()", "called on active device discovery agent");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "called on invalid device discovery agent");
+    Q_ASSERT_X(!isActive(), Q_FUNC_INFO, "called on active device discovery agent");
     Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
-               "startLE()", "called with an invalid Bluetooth adapter");
+               Q_FUNC_INFO, "called with an invalid Bluetooth adapter");
 
     if (stopPending) {
         startPending = true;
@@ -173,10 +172,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
-    Q_ASSERT_X(isValid(), "stop()", "called on invalid device discovery agent");
-    Q_ASSERT_X(isActive(), "stop()", "called whithout active inquiry");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "called on invalid device discovery agent");
+    Q_ASSERT_X(isActive(), Q_FUNC_INFO, "called whithout active inquiry");
     Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
-               "stop()", "called with invalid bluetooth adapter");
+               Q_FUNC_INFO, "called with invalid bluetooth adapter");
 
     startPending = false;
     stopPending = true;
@@ -194,7 +193,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryError(QBluetoothDevic
     // after the LE scan started (so we have LE support and this is
     // a real PoweredOffError).
     Q_ASSERT_X(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError,
-               "LEdeviceInquiryError", "unexpected error");
+               Q_FUNC_INFO, "unexpected error");
 
     startPending = false;
     stopPending = false;
@@ -214,7 +213,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceFound(CBPeripheral *peripher
                                                           NSDictionary *advertisementData,
                                                           NSNumber *RSSI)
 {
-    Q_ASSERT_X(peripheral, "LEdeviceFound", "invalid peripheral (nil)");
+    Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -252,7 +251,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceFound(CBPeripheral *peripher
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryFinished()
 {
-    Q_ASSERT_X(isValid(), "LEdeviceInquiryFinished", "invalid device discovery agent");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid device discovery agent");
 
     if (stopPending && !startPending) {
         stopPending = false;
@@ -309,8 +308,8 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(
     d_ptr(new QBluetoothDeviceDiscoveryAgentPrivate(deviceAdapter, this))
 {
     if (!deviceAdapter.isNull()) {
-        qCWarning(QT_BT_OSX) << "QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(), "
-                                "local device address is not available, provided address is ignored";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "local device address is "
+                                "not available, provided address is ignored";
         d_ptr->setError(InvalidBluetoothAdapterError);
     }
 }
@@ -339,12 +338,10 @@ void QBluetoothDeviceDiscoveryAgent::start()
 {
     if (d_ptr->lastError != InvalidBluetoothAdapterError) {
         if (d_ptr->isValid()) {
-            if (!isActive()) {
+            if (!isActive())
                 d_ptr->start();
-            } else {
-                qCDebug(QT_BT_OSX) << "QBluetoothDeviceDiscoveryAgent::start(), "
-                                      "already started";
-            }
+            else
+                qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "already started";
         } else {
             // We previously failed to initialize
             // private object correctly.
@@ -357,12 +354,10 @@ void QBluetoothDeviceDiscoveryAgent::start()
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
     if (d_ptr->isValid()) {
-        if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError) {
+        if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
             d_ptr->stop();
-        } else {
-            qCDebug(QT_BT_OSX) << "QBluetoothDeviceDiscoveryAgent::stop(), "
-                                  "failed to stop";
-        }
+        else
+            qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "failed to stop";
     }
 }
 

@@ -272,9 +272,9 @@ QNearFieldTarget::RequestId &QNearFieldTarget::RequestId::operator=(const Reques
 QNearFieldTarget::QNearFieldTarget(QObject *parent)
 :   QObject(parent), d_ptr(new QNearFieldTargetPrivate)
 {
-    qRegisterMetaType<RequestId>("QNearFieldTarget::RequestId");
-    qRegisterMetaType<Error>("QNearFieldTarget::Error");
-    qRegisterMetaType<QNdefMessage>("QNdefMessage::QNdefMessage");
+    qRegisterMetaType<QNearFieldTarget::RequestId>();
+    qRegisterMetaType<QNearFieldTarget::Error>();
+    qRegisterMetaType<QNdefMessage>();
 }
 
 /*!

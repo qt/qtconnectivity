@@ -55,7 +55,7 @@ using namespace QT_NAMESPACE;
 
 - (id)initWithDelegate:(OSXBluetooth::ChannelDelegate *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -72,8 +72,8 @@ using namespace QT_NAMESPACE;
 {
     // This type of channel does not require connect, it's created with
     // already open channel.
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:channel:", "invalid delegate (null)");
-    Q_ASSERT_X(channel, "-initWithDelegate:channel:", "invalid channel (nil)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(channel, Q_FUNC_INFO, "invalid channel (nil)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -108,15 +108,13 @@ using namespace QT_NAMESPACE;
             withPSM:(BluetoothL2CAPChannelID)psm
 {
     if (address.isNull()) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "invalid peer address";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "invalid peer address";
         return kIOReturnNoDevice;
     }
 
     // Can never be called twice.
     if (connected || device || channel) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "connection is already active";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "connection is already active";
         return kIOReturnStillOpen;
     }
 
@@ -125,15 +123,13 @@ using namespace QT_NAMESPACE;
     const BluetoothDeviceAddress iobtAddress = OSXBluetooth::iobluetooth_address(address);
     device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "failed to create a device";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device";
         return kIOReturnNoDevice;
     }
 
     const IOReturn status = [device openL2CAPChannelAsync:&channel withPSM:psm delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "failed to open L2CAP channel";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to open L2CAP channel";
         // device is still autoreleased.
         device = nil;
         return status;
@@ -152,8 +148,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
-    Q_ASSERT_X(delegate, "-l2capChannelData:data:length",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (dataPointer && dataLength)
         delegate->readChannelData(dataPointer, dataLength);
@@ -164,8 +159,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
-    Q_ASSERT_X(delegate, "-l2capChannelOpenComplete:status:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (error != kIOReturnSuccess) {
         delegate->setChannelError(error);
@@ -179,7 +173,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
-    Q_ASSERT_X(delegate, "-l2capChannelClosed:", "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->channelClosed();
     connected = false;
 }
@@ -195,8 +189,7 @@ using namespace QT_NAMESPACE;
     Q_UNUSED(l2capChannel)
     Q_UNUSED(refcon)
 
-    Q_ASSERT_X(delegate, "-l2capChannelWriteComplete:refcon:status",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (error != kIOReturnSuccess)
         delegate->setChannelError(error);
@@ -243,20 +236,18 @@ using namespace QT_NAMESPACE;
 
 - (IOReturn) writeSync:(void*)data length:(UInt16)length
 {
-    Q_ASSERT_X(data, "-writeSync:length:", "invalid data (null)");
-    Q_ASSERT_X(length, "-writeSync:length:", "invalid data size");
-    Q_ASSERT_X(connected && channel, "-writeSync:",
-               "invalid L2CAP channel");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
+    Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid L2CAP channel");
 
     return [channel writeSync:data length:length];
 }
 
 - (IOReturn) writeAsync:(void*)data length:(UInt16)length
 {
-    Q_ASSERT_X(data, "-writeAsync:length:", "invalid data (null)");
-    Q_ASSERT_X(length, "-writeAync:length:", "invalid data size");
-    Q_ASSERT_X(connected && channel, "-writeAsync:length:",
-               "invalid L2CAP channel");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
+    Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid L2CAP channel");
 
     return [channel writeAsync:data length:length refcon:Q_NULLPTR];
 }

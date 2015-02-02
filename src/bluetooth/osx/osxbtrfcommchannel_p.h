@@ -44,10 +44,9 @@
 
 #include <QtCore/qglobal.h>
 
-// Has to be imported, Obj-C header, no inclusion guards.
-#import <IOBluetooth/objc/IOBluetoothRFCOMMChannel.h>
-
 #include <Foundation/Foundation.h>
+// Only after Foundation.h:
+#include "corebluetoothwrapper_p.h"
 
 @class QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel);
 @class IOBluetoothDevice;
@@ -66,20 +65,20 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel) : NSObject<IOBluetoothRFCOMMChannelDelegate>
 {
-    QT_PREPEND_NAMESPACE(OSXBluetooth::ChannelDelegate) *delegate;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *delegate;
     IOBluetoothDevice *device;
     IOBluetoothRFCOMMChannel *channel;
     bool connected;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::ChannelDelegate) *)aDelegate;
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::ChannelDelegate) *)aDelegate
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *)aDelegate;
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *)aDelegate
       channel:(IOBluetoothRFCOMMChannel *)aChannel;
 
 - (void)dealloc;
 
 // A single async connection (can connect only once).
-- (IOReturn)connectAsyncToDevice:(const QBluetoothAddress &)address
+- (IOReturn)connectAsyncToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothAddress) &)address
             withChannelID:(BluetoothRFCOMMChannelID)channelID;
 
 - (void)rfcommChannelData:(IOBluetoothRFCOMMChannel*)rfcommChannel

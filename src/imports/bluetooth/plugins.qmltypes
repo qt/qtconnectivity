@@ -30,7 +30,8 @@ Module {
                 "NoError": 0,
                 "InputOutputError": 1,
                 "PoweredOffError": 2,
-                "UnknownError": 3
+                "UnknownError": 3,
+                "InvalidBluetoothAdapterError": 4
             }
         }
         Property { name: "error"; type: "Error"; isReadonly: true }

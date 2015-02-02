@@ -241,6 +241,14 @@ void tst_QBluetoothLocalDevice::tst_name()
 }
 void tst_QBluetoothLocalDevice::tst_isValid()
 {
+#ifdef Q_OS_OSX
+    // On OS X we can have a valid device (device.isValid() == true),
+    // that has neither a name nor a valid address - this happens
+    // if a Bluetooth adapter is OFF.
+    if (!QBluetoothLocalDevice::allDevices().count())
+        QSKIP("Skipping test due to missing Bluetooth device");
+#endif
+
     QBluetoothLocalDevice localDevice;
     QBluetoothAddress invalidAddress("FF:FF:FF:FF:FF:FF");
 

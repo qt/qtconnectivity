@@ -118,14 +118,18 @@ void tst_QBluetoothServer::setHostMode(const QBluetoothAddress &localAdapter,
 
 void tst_QBluetoothServer::initTestCase()
 {
-    qRegisterMetaType<QBluetooth::SecurityFlags>("QBluetooth::SecurityFlags");
-    qRegisterMetaType<QBluetoothServer::Error>("QBluetoothServer::Error");
+    qRegisterMetaType<QBluetooth::SecurityFlags>();
+    qRegisterMetaType<QBluetoothServer::Error>();
 
     QBluetoothLocalDevice device;
     if (!device.isValid())
         return;
 
     initialHostMode = device.hostMode();
+#ifdef Q_OS_OSX
+    if (initialHostMode == QBluetoothLocalDevice::HostPoweredOff)
+        return;
+#endif
 
     setHostMode(device.address(), QBluetoothLocalDevice::HostConnectable);
 
@@ -177,6 +181,10 @@ void tst_QBluetoothServer::tst_receive()
     QFETCH(QBluetoothLocalDevice::HostMode, hostmode);
 
     QBluetoothLocalDevice localDev;
+#ifdef Q_OS_OSX
+    if (localDev.hostMode() == QBluetoothLocalDevice::HostPoweredOff)
+        QSKIP("On OS X this test requires Bluetooth adapter ON");
+#endif
     const QBluetoothAddress address = localDev.address();
 
     bool localDeviceAvailable = localDev.isValid();

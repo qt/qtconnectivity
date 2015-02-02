@@ -56,7 +56,9 @@ QT_USE_NAMESPACE
 // This define must be set if the platform provides access to GATT handles
 // otherwise it must not be defined. As of now the two supported platforms
 // (Android and Bluez/Linux) provide access or some notion of it.
+#ifndef Q_OS_MAC
 #define HANDLES_PROVIDED_BY_PLATFORM
+#endif
 
 #ifdef HANDLES_PROVIDED_BY_PLATFORM
 #define HANDLE_COMPARE(actual,expected) QCOMPARE(actual,expected)
@@ -74,6 +76,7 @@ public:
 
 private slots:
     void initTestCase();
+    void init();
     void cleanupTestCase();
     void tst_emptyCtor();
     void tst_connect();
@@ -88,12 +91,12 @@ private:
 
     QBluetoothDeviceDiscoveryAgent *devAgent;
     QBluetoothAddress remoteDevice;
+    QBluetoothDeviceInfo remoteDeviceInfo;
     QList<QBluetoothUuid> foundServices;
 };
 
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
-Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
@@ -101,6 +104,9 @@ tst_QLowEnergyController::tst_QLowEnergyController()
     qRegisterMetaType<QLowEnergyDescriptor>();
 
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+#ifndef Q_OS_MAC
+    // Core Bluetooth (OS X and iOS) does not work with addresses,
+    // making the code below useless.
     const QString remote = qgetenv("BT_TEST_DEVICE");
     if (!remote.isEmpty()) {
         remoteDevice = QBluetoothAddress(remote);
@@ -108,6 +114,7 @@ tst_QLowEnergyController::tst_QLowEnergyController()
     } else {
         qWarning() << "Not using any remote device for testing. Set BT_TEST_DEVICE env to run manual tests involving a remote device";
     }
+#endif
 }
 
 tst_QLowEnergyController::~tst_QLowEnergyController()
@@ -117,12 +124,19 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
+#ifndef Q_OS_MAC
     if (remoteDevice.isNull()
         || QBluetoothLocalDevice::allDevices().isEmpty()) {
         qWarning("No remote device or local adapter found.");
         return;
     }
-
+#elif defined(Q_OS_OSX)
+    // allDevices is always empty on iOS:
+    if (QBluetoothLocalDevice::allDevices().isEmpty()) {
+        qWarning("No local adapter found.");
+        return;
+    }
+#endif
 
     devAgent = new QBluetoothDeviceDiscoveryAgent(this);
 
@@ -135,7 +149,14 @@ void tst_QLowEnergyController::initTestCase()
     devAgent->start();
     QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0, 30000);
     foreach (const QBluetoothDeviceInfo &info, devAgent->discoveredDevices()) {
+#ifndef Q_OS_MAC
         if (info.address() == remoteDevice) {
+#else
+        // On OS X/iOS the only way to find the device we are
+        // interested in - is to use device's name.
+        if (info.name().contains("Sensor") && info.name().contains("Tag")) {
+            remoteDeviceInfo = info;
+#endif
             deviceFound = true;
             break;
         }
@@ -144,8 +165,11 @@ void tst_QLowEnergyController::initTestCase()
     QVERIFY2(deviceFound, "Cannot find remote device.");
 
     // These are the services exported by the TI SensorTag
+#ifndef Q_OS_MAC
+    // Core Bluetooth somehow ignores/hides/fails to discover these services.
     foundServices << QBluetoothUuid(QString("00001800-0000-1000-8000-00805f9b34fb"));
     foundServices << QBluetoothUuid(QString("00001801-0000-1000-8000-00805f9b34fb"));
+#endif
     foundServices << QBluetoothUuid(QString("0000180a-0000-1000-8000-00805f9b34fb"));
     foundServices << QBluetoothUuid(QString("0000ffe0-0000-1000-8000-00805f9b34fb"));
     foundServices << QBluetoothUuid(QString("f000aa00-0451-4000-b000-000000000000"));
@@ -157,6 +181,20 @@ void tst_QLowEnergyController::initTestCase()
     foundServices << QBluetoothUuid(QString("f000aa60-0451-4000-b000-000000000000"));
     foundServices << QBluetoothUuid(QString("f000ccc0-0451-4000-b000-000000000000"));
     foundServices << QBluetoothUuid(QString("f000ffc0-0451-4000-b000-000000000000"));
+}
+
+/*
+ * Executed in between each test function call.
+ */
+void tst_QLowEnergyController::init()
+{
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    /*
+     * Add a delay to give Android/iOS stack time to catch up in between
+     * the multiple connect/disconnects within each test function.
+     */
+    QTest::qWait(2000);
+#endif
 }
 
 void tst_QLowEnergyController::cleanupTestCase()
@@ -209,17 +247,38 @@ void tst_QLowEnergyController::tst_emptyCtor()
 void tst_QLowEnergyController::tst_connect()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
+
+#ifndef Q_OS_MAC
     if (localAdapters.isEmpty() || remoteDevice.isNull())
+#elif defined(Q_OS_OSX)
+    if (localAdapters.isEmpty() || remoteDeviceInfo.deviceUuid().isNull())
+#elif defined (Q_OS_IOS)
+    if (remoteDeviceInfo.deviceUuid().isNull())
+#endif
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
+#ifndef Q_OS_IOS
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
+#endif
+
+#ifndef Q_OS_MAC
     QLowEnergyController control(remoteDevice);
+#else
+    // Create a low energy controller using Apple's
+    // uuid (NSUUID).
+    QLowEnergyController control(remoteDeviceInfo);
+#endif
+
     QSignalSpy connectedSpy(&control, SIGNAL(connected()));
     QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
 
+#ifndef Q_OS_IOS
     QCOMPARE(control.localAddress(), localAdapter);
     QVERIFY(!control.localAddress().isNull());
+#endif
+#ifndef Q_OS_MAC
     QCOMPARE(control.remoteAddress(), remoteDevice);
+#endif
     QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
     QCOMPARE(control.error(), QLowEnergyController::NoError);
     QVERIFY(control.errorString().isEmpty());
@@ -355,12 +414,19 @@ void tst_QLowEnergyController::tst_connect()
 
 void tst_QLowEnergyController::tst_concurrentDiscovery()
 {
+#ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty() || remoteDevice.isNull())
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     // quick setup - more elaborate test is done by connectNew()
     QLowEnergyController control(remoteDevice);
+#else
+    if (remoteDeviceInfo.deviceUuid().isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
+#endif
+
     QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
     QCOMPARE(control.error(), QLowEnergyController::NoError);
 
@@ -625,6 +691,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
         HANDLE_COMPARE(chars[0].handle(), QLowEnergyHandle(0x12));
         QCOMPARE(chars[0].properties(), QLowEnergyCharacteristic::Read);
+        QEXPECT_FAIL("", "The value is different on different devices", Continue);
         QCOMPARE(chars[0].value(), QByteArray::fromHex("6e41ab0000296abc"));
         QVERIFY(chars[0].isValid());
         QVERIFY(info->contains(chars[0]));
@@ -1588,12 +1655,19 @@ void tst_QLowEnergyController::tst_defaultBehavior()
 
 void tst_QLowEnergyController::tst_writeCharacteristic()
 {
+#ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty() || remoteDevice.isNull())
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     // quick setup - more elaborate test is done by connect()
     QLowEnergyController control(remoteDevice);
+#else
+    if (remoteDeviceInfo.deviceUuid().isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
+#endif
+
     QCOMPARE(control.error(), QLowEnergyController::NoError);
 
     control.connectToDevice();
@@ -1658,7 +1732,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     // *******************************************
     // test writing of characteristic
     // enable Blinking LED if not already enabled
-    if (configChar.value() != QByteArray("81")) {
+    if (configChar.value() != QByteArray::fromHex("81")) {
         service->writeCharacteristic(configChar, QByteArray::fromHex("81")); //0x81 blink LED D1
         QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 10000);
         QCOMPARE(configChar.value(), QByteArray::fromHex("81"));
@@ -1737,12 +1811,17 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
 void tst_QLowEnergyController::tst_writeDescriptor()
 {
+#ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty() || remoteDevice.isNull())
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    // quick setup - more elaborate test is done by connect()
     QLowEnergyController control(remoteDevice);
+#else
+    if (remoteDeviceInfo.deviceUuid().isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
+#endif
+    // quick setup - more elaborate test is done by connect()
     control.connectToDevice();
     {
         QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
@@ -1913,7 +1992,15 @@ void tst_QLowEnergyController::tst_writeDescriptor()
 
     // write 4 byte value to 2 byte characteristic
     service->writeDescriptor(notification, QByteArray::fromHex("11112222"));
+#ifdef Q_OS_MAC
+    // On OS X/iOS we have a special method to set notify value,
+    // it accepts only false/true and not
+    // writing descriptors, there is only one way to find this error -
+    // immediately intercept in LE controller and set the error.
+    QVERIFY(!errorSpy.isEmpty());
+#else
     QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 30000);
+#endif
     QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
              QLowEnergyService::DescriptorWriteError);
     QCOMPARE(service->error(), QLowEnergyService::DescriptorWriteError);
@@ -2006,12 +2093,19 @@ void tst_QLowEnergyController::tst_encryption()
  */
 void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 {
+#ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty() || remoteDevice.isNull())
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     // quick setup - more elaborate test is done by connect()
     QLowEnergyController control(remoteDevice);
+#else
+    if (remoteDeviceInfo.deviceUuid().isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+
+    QLowEnergyController control(remoteDeviceInfo);
+#endif
     QCOMPARE(control.error(), QLowEnergyController::NoError);
 
     control.connectToDevice();
@@ -2076,6 +2170,9 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QSignalSpy charWrittenSpy(service,
                         SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
 
+    // by default the defvice enables the notificatioin bit already
+    // no need to enable it. If notifications fail to arrive the
+    // platform must check default enabled notifications.
     if (notification.value() != QByteArray::fromHex("0100")) {
         service->writeDescriptor(notification, QByteArray::fromHex("0100"));
         QTRY_VERIFY_WITH_TIMEOUT(!descWrittenSpy.isEmpty(), 3000);
@@ -2111,6 +2208,8 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QCOMPARE(imageIdentityChar, first);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Invalid image A ident info";
     }
@@ -2119,7 +2218,11 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QLowEnergyCharacteristic second = entry[0].value<QLowEnergyCharacteristic>();
     QByteArray val2 = entry[1].toByteArray();
     QCOMPARE(imageIdentityChar, second);
-    QCOMPARE(val2, QByteArray::fromHex("0"));
+    QVERIFY(val2 == QByteArray::fromHex("0") || val2 == val1);
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
 
     charChangedSpy.clear();
     charWrittenSpy.clear();
@@ -2137,6 +2240,8 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QCOMPARE(imageIdentityChar, first);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Invalid image B ident info";
     }
@@ -2145,7 +2250,16 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     second = entry[0].value<QLowEnergyCharacteristic>();
     val2 = entry[1].toByteArray();
     QCOMPARE(imageIdentityChar, second);
-    QCOMPARE(val2, QByteArray::fromHex("1"));
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
+
+    /* Bluez resends the last confirmed write value, other platforms
+     * send the value received by the change notification value.
+     */
+    qDebug() << "Image B(1):" << val1.toHex() << val2.toHex();
+    QVERIFY(val2 == QByteArray::fromHex("1") || val2 == val1);
 
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (1)");
 
@@ -2168,14 +2282,24 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
 
+#ifdef Q_OS_ANDROID
+    QEXPECT_FAIL("", "Android sends write confirmation when using WriteWithoutResponse",
+                 Continue);
+#endif
     QVERIFY(charWrittenSpy.isEmpty());
     if (val1.size() == 8) {
         QCOMPARE(first, imageIdentityChar);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Image A not set?";
     }
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
 
     charChangedSpy.clear();
 
@@ -2193,14 +2317,25 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     first = entry[0].value<QLowEnergyCharacteristic>();
     val1 = entry[1].toByteArray();
 
+#ifdef Q_OS_ANDROID
+    QEXPECT_FAIL("", "Android sends write confirmation when using WriteWithoutResponse",
+                 Continue);
+#endif
     QVERIFY(charWrittenSpy.isEmpty());
     if (val1.size() == 8) {
         QCOMPARE(first, imageIdentityChar);
         foundOneImage = true;
     } else {
+        // we received a notification for imageBlockChar without explicitly
+        // enabling them. This is caused by the device's default settings.
         QCOMPARE(imageBlockChar, first);
         qWarning() << "Image B not set?";
     }
+
+    // notifications on non-readable characteristics do not update cache
+    QVERIFY(imageIdentityChar.value().isEmpty());
+    QVERIFY(imageBlockChar.value().isEmpty());
+
 
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (2)");
 

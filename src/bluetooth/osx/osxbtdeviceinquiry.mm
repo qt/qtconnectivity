@@ -71,17 +71,16 @@ using namespace QT_NAMESPACE;
 - (id)initWithDelegate:(OSXBluetooth::DeviceInquiryDelegate *)delegate
 {
     if (self = [super init]) {
-        Q_ASSERT_X(delegate, "-initWithDelegate:", "invalid device inquiry delegate (null)");
+        Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid device inquiry delegate (null)");
 
         m_inquiry = [[IOBluetoothDeviceInquiry inquiryWithDelegate:self] retain];
 
         if (m_inquiry) {
-            // TODO: something more reasonable required!
-            [m_inquiry setInquiryLength:20];
+            [m_inquiry setInquiryLength:15];
             [m_inquiry setUpdateNewDeviceNames:NO];//Useless, disable!
             m_delegate = delegate;
         } else {
-            qCCritical(QT_BT_OSX) << "-initWithDelegate:, failed to create "
+            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create "
                                      "a device inquiry";
         }
 
@@ -109,27 +108,22 @@ using namespace QT_NAMESPACE;
 
 - (IOReturn)start
 {
-    if (!m_inquiry) {
-        qCWarning(QT_BT_OSX) << "-start, m_inquiry is nil ...";
+    if (!m_inquiry)
         return kIOReturnNoPower;
-    }
 
-    if (m_active) {
-        qCWarning(QT_BT_OSX) << "-start, already active ...";
+    if (m_active)
         return kIOReturnBusy;
-    }
 
     m_active = true;
-    [m_inquiry clearFoundDevices];// TODO: implement update?
+    [m_inquiry clearFoundDevices];
     const IOReturn result = [m_inquiry start];
     if (result != kIOReturnSuccess) {
-        // QtBluetooth will probably convert an error in UnknownError,
-        // not really interesting.
-        qCWarning(QT_BT_OSX) << "-start, failed with "
+        // QtBluetooth will probably convert an error into UnknownError,
+        // loosing the actual information.
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO <<"failed with "
                                 "IOKit error code: " << result;
         m_active = false;
-    } else
-        qCDebug(QT_BT_OSX) << "-start, device inquiry started";
+    }
 
     return result;
 }
@@ -137,9 +131,7 @@ using namespace QT_NAMESPACE;
 - (IOReturn)stop
 {
     if (m_active) {
-        Q_ASSERT_X(m_inquiry, "-stop", "active but nil inquiry");
-
-        qCDebug(QT_BT_OSX) << "-stop, trying to stop device inquiry";
+        Q_ASSERT_X(m_inquiry, Q_FUNC_INFO, "active but nil inquiry");
 
         m_active = false;
         const IOReturn res = [m_inquiry stop];
@@ -162,18 +154,14 @@ using namespace QT_NAMESPACE;
 
     m_active = false;
 
-    Q_ASSERT_X(m_delegate, "-deviceInquiryComplete:error:aborted",
-               "invalid device inquiry delegate (null)");
+    Q_ASSERT_X(m_delegate, Q_FUNC_INFO, "invalid device inquiry delegate (null)");
 
     if (error != kIOReturnSuccess) {
-        // QtBluetooth has not too many errors, 'UnknownError' is not really
-        // useful, report error code here:
-        qCWarning(QT_BT_OSX) << "-deviceInquiryComplete:error:aborted:, "
-                                "IOKit error code: " << error;
+        // QtBluetooth has not too many error codes, 'UnknownError' is not really
+        // useful, report the actual error code here:
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "IOKit error code: " << error;
         m_delegate->error(sender, error);
     } else {
-        qCDebug(QT_BT_OSX) << "-deviceInquiryComplete:error:aborted:, "
-                              "device inquiry complete";
         m_delegate->inquiryFinished(sender);
     }
 }
@@ -184,9 +172,7 @@ using namespace QT_NAMESPACE;
     if (sender != m_inquiry) // Can never happen in the current version.
         return;
 
-    Q_ASSERT_X(m_delegate, "-deviceInquiryDeviceFound:device:",
-               "invalid device inquiry delegate (null)");
-
+    Q_ASSERT_X(m_delegate, Q_FUNC_INFO, "invalid device inquiry delegate (null)");
     m_delegate->deviceFound(sender, device);
 }
 

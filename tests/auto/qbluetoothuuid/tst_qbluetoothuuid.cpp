@@ -69,7 +69,7 @@ private slots:
 
 tst_QBluetoothUuid::tst_QBluetoothUuid()
 {
-    qRegisterMetaType<quint128>("quint128");
+    qRegisterMetaType<quint128>();
 }
 
 tst_QBluetoothUuid::~tst_QBluetoothUuid()

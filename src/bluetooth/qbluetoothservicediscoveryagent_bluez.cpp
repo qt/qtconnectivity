@@ -71,9 +71,9 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
                                     QStringLiteral("org.bluez"), QStringLiteral("/"),
                                     QDBusConnection::systemBus());
-        qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>("QBluetoothServiceDiscoveryAgent::Error");
+        qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>();
     } else {
-        qRegisterMetaType<ServiceMap>("ServiceMap");
+        qRegisterMetaType<ServiceMap>();
         qDBusRegisterMetaType<ServiceMap>();
 
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),

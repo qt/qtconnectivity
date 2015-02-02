@@ -43,9 +43,8 @@
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-
-// Import - Obj-C headers do not have inclusion guards:
-#import <IOBluetooth/objc/OBEXSession.h>
+// Only after Foundation.h:
+#include "corebluetoothwrapper_p.h"
 
 @class IOBluetoothOBEXSession;
 @class IOBluetoothDevice;
@@ -97,7 +96,7 @@ QT_END_NAMESPACE
 // It either succeeds or fails and tries to cleanup in any case.
 @interface QT_MANGLE_NAMESPACE(OSXBTOBEXSession) : NSObject
 {
-    QT_PREPEND_NAMESPACE(OSXBluetooth::OBEXSessionDelegate) *delegate;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::OBEXSessionDelegate *delegate;
     IOBluetoothDevice *device;
     quint16 channelID;
     IOBluetoothOBEXSession *session;

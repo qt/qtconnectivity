@@ -42,16 +42,14 @@
 #define ANNOTATEDURL_H
 
 #include <qnfcglobal.h>
+#include <QNdefMessage>
 
 #include <QtCore/QObject>
 
 QT_FORWARD_DECLARE_CLASS(QUrl)
 QT_FORWARD_DECLARE_CLASS(QPixmap)
-
-QT_BEGIN_NAMESPACE
-class QNearFieldTarget;
-class QNdefMessage;
-QT_END_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
+QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)
 
 QT_USE_NAMESPACE
 
@@ -67,7 +65,12 @@ signals:
     void annotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
 
 public slots:
+    void targetDetected(QNearFieldTarget *target);
+    void targetLost(QNearFieldTarget *target);
     void handleMessage(const QNdefMessage &message, QNearFieldTarget *target);
+    void handlePolledNdefMessage(QNdefMessage message);
+private:
+    QNearFieldManager *manager;
 };
 
 #endif // ANNOTATEDURL_H
