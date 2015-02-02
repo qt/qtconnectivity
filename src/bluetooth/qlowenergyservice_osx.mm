@@ -63,8 +63,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> d,
     : QObject(parent),
       d_ptr(d)
 {
-    qRegisterMetaType<QLowEnergyService::ServiceState>("QLowEnergyService::ServiceState");
-    qRegisterMetaType<QLowEnergyService::ServiceError>("QLowEnergyService::ServiceError");
+    qRegisterMetaType<QLowEnergyService::ServiceState>();
+    qRegisterMetaType<QLowEnergyService::ServiceError>();
 
     connect(d.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
             this, SIGNAL(error(QLowEnergyService::ServiceError)));
@@ -184,14 +184,12 @@ void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, 
     if (!contains(ch))
         return;
 
-    if (state() != ServiceDiscovered) {
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+
+    if (state() != ServiceDiscovered || !controller) {
         d_ptr->setError(QLowEnergyService::OperationError);
         return;
     }
-
-    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (!controller)
-        return;
 
     // Don't write if properties don't permit it
     if (mode == WriteWithResponse && (ch.properties() & QLowEnergyCharacteristic::Write))
@@ -227,10 +225,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
         return;
 
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (!controller)
-        return;
-
-    if (state() != ServiceDiscovered) {
+    if (state() != ServiceDiscovered || !controller) {
         d_ptr->setError(OperationError);
         return;
     }

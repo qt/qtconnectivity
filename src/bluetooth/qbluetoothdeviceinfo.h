@@ -36,7 +36,8 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-#include <QString>
+#include <QtCore/qstring.h>
+#include <QtCore/qmetatype.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -241,5 +242,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
 
 #endif

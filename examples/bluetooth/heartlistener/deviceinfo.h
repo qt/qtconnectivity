@@ -56,7 +56,7 @@ public:
     DeviceInfo(const QBluetoothDeviceInfo &device);
     void setDevice(const QBluetoothDeviceInfo &device);
     QString getName() const { return m_device.name(); }
-    QString getAddress() const { return m_device.address().toString(); }
+    QString getAddress() const;
     QBluetoothDeviceInfo getDevice() const;
 
 signals:

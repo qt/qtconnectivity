@@ -48,10 +48,8 @@
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-
-// This header is not guarded agains multiple includes ...
-// We have to "import".
-#import <IOBluetooth/objc/IOBluetoothDevicePair.h>
+// Only after Foundation.h:
+#include "corebluetoothwrapper_p.h"
 
 @class QT_MANGLE_NAMESPACE(OSXBTPairing);
 @class IOBluetoothDevice;
@@ -68,7 +66,6 @@ public:
 
     virtual ~PairingDelegate();
 
- //   virtual void pairingStarted(ObjCPairingRequest *pair) = 0;
     virtual void connecting(ObjCPairingRequest *pair) = 0;
     virtual void requestPIN(ObjCPairingRequest *pair) = 0;
     virtual void requestUserConfirmation(ObjCPairingRequest *pair,
@@ -87,12 +84,11 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTPairing) : NSObject<IOBluetoothDevicePairDelegate>
 {
-    // TODO: check how it works - C++ object as a member
     QT_PREPEND_NAMESPACE(QBluetoothAddress) m_targetAddress;
 
     bool m_active;
     IOBluetoothDevicePair *m_pairing; // The real pairing request
-    QT_PREPEND_NAMESPACE(OSXBluetooth::PairingDelegate) *m_object;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::PairingDelegate *m_object;
 }
 
 - (id)initWithTarget:(const QBluetoothAddress &)address

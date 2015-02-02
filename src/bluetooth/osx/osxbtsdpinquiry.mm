@@ -48,11 +48,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstring.h>
 
-// We have to import - objc header files, no inclusion guards.
-#import <IOBluetooth/objc/IOBluetoothSDPServiceRecord.h>
-#import <IOBluetooth/objc/IOBluetoothSDPDataElement.h>
-#import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
+#include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +60,7 @@ SDPInquiryDelegate::~SDPInquiryDelegate()
 
 QVariant extract_attribute_value(IOBluetoothSDPDataElement *dataElement)
 {
-    Q_ASSERT_X(dataElement, "extractAttributeValue()", "invalid data element (nil)");
+    Q_ASSERT_X(dataElement, Q_FUNC_INFO, "invalid data element (nil)");
 
     // TODO: error handling and diagnostic messages.
 
@@ -158,7 +154,7 @@ using namespace OSXBluetooth;
 
 - (id)initWithDelegate:(SDPInquiryDelegate *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -177,8 +173,7 @@ using namespace OSXBluetooth;
 
 - (IOReturn)performSDPQueryWithDevice:(const QBluetoothAddress &)address
 {
-    Q_ASSERT_X(!isActive, "-performSDPQueryWithDevice",
-               "SDP query in process");
+    Q_ASSERT_X(!isActive, Q_FUNC_INFO, "SDP query in progress");
 
     QList<QBluetoothUuid> emptyFilter;
     return [self performSDPQueryWithDevice:address filters:emptyFilter];
@@ -187,10 +182,8 @@ using namespace OSXBluetooth;
 - (IOReturn)performSDPQueryWithDevice:(const QBluetoothAddress &)address
                               filters:(const QList<QBluetoothUuid> &)qtFilters
 {
-    Q_ASSERT_X(!isActive, "-performSDPQueryWithDevice:filters:",
-               "SDP query in progress");
-    Q_ASSERT_X(!address.isNull(), "-performSDPQueryWithDevice:filters:",
-               "invalid target device address");
+    Q_ASSERT_X(!isActive, Q_FUNC_INFO, "SDP query in progress");
+    Q_ASSERT_X(!address.isNull(), Q_FUNC_INFO, "invalid target device address");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -199,8 +192,7 @@ using namespace OSXBluetooth;
     if (qtFilters.size()) {
         array.reset([[NSMutableArray alloc] init]);
         if (!array) {
-            qCCritical(QT_BT_OSX) << "-performSDPQueryWithDevices:filters:, "
-                                     "failed to allocate an uuid filter";
+            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate an uuid filter";
             return kIOReturnError;
         }
 
@@ -211,8 +203,7 @@ using namespace OSXBluetooth;
         }
 
         if (int([array count]) != qtFilters.size()) {
-            qCCritical(QT_BT_OSX) << "-performSDPQueryWithDevices:filters:, "
-                                  << "failed to create an uuid filter";
+            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create an uuid filter";
             return kIOReturnError;
         }
     }
@@ -220,8 +211,7 @@ using namespace OSXBluetooth;
     const BluetoothDeviceAddress iobtAddress(iobluetooth_address(address));
     ObjCScopedPointer<IOBluetoothDevice> newDevice([[IOBluetoothDevice deviceWithAddress:&iobtAddress] retain]);
     if (!newDevice) {
-        qCCritical(QT_BT_OSX) << "-performSDPQueryWithDevices:filters:, "
-                              << "failed to create an IOBluetoothDevice object";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create an IOBluetoothDevice object";
         return kIOReturnError;
     }
 
@@ -235,9 +225,7 @@ using namespace OSXBluetooth;
         result = [device performSDPQuery:self];
 
     if (result != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << "-preformSDPQueryWithDevices:filters:, "
-                                 "failed to start an SDP query";
-
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to start an SDP query";
         device = oldDevice.take();
     } else {
         isActive = true;
@@ -265,8 +253,7 @@ using namespace OSXBluetooth;
     if (device != aDevice)
         return;
 
-    Q_ASSERT_X(delegate, "-sdpQueryComplete:status:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     isActive = false;
 

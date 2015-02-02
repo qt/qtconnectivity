@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.3
 import QtNfc 5.2
 
 Rectangle {
@@ -48,6 +48,19 @@ Rectangle {
 
     NearField {
         id: nearfield
+        property bool requiresManualPolling: false
+
+        onPollingChanged: {
+            if (!polling && requiresManualPolling)
+                polling = true; //restart polling
+        }
+
+        Component.onCompleted: {
+            if (!polling) {
+                requiresManualPolling = true;
+                polling = true;
+            }
+        }
 
         filter: [
             NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 },
@@ -61,17 +74,32 @@ Rectangle {
 
             var currentLocaleMatch = NdefTextRecord.LocaleMatchedNone;
             var i;
+            var found = false;
             for (i = 0; i < messageRecords.length; ++i) {
-                if (messageRecords[i].recordType == "urn:nfc:wkt:T") {
-                    if (messageRecords[i].localeMatch > currentLocaleMatch) {
-                        currentLocaleMatch = messageRecords[i].localeMatch;
-                        posterText.text = messageRecords[i].text;
+                switch (messageRecords[i].typeNameFormat) {
+                case NdefRecord.NfcRtd:
+                    if (messageRecords[i].type === "T") {
+                        if (messageRecords[i].localeMatch > currentLocaleMatch) {
+                            currentLocaleMatch = messageRecords[i].localeMatch;
+                            posterText.text = messageRecords[i].text;
+                            found = true;
+                        }
+
+                    } else if (messageRecords[i].type === "U") {
+                         posterUrl.text = messageRecords[i].uri;
+                        found = true;
                     }
-                } else if (messageRecords[i].recordType == "urn:nfc:wkt:U") {
-                    posterUrl.text = messageRecords[i].uri;
-                } else if (messageRecords[i].recordType.substr(0, 19) == "urn:nfc:mime:image/") {
-                    posterImage.source = messageRecords[i].uri;
+                    break;
+                case NdefRecord.Mime:
+                    if (messageRecords[i].type.startsWith("image/")) {
+                        posterImage.source = messageRecords[i].uri;
+                        found = true;
+                    }
+                    break;
                 }
+
+                if (!found)
+                    console.warn("Unknown NFC tag detected. Cannot display content.")
             }
 
             root.state = "show";

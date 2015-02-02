@@ -39,110 +39,101 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.4
 
 Item {
     id: page
     width: ListView.view.width;
     height: ListView.view.height
-    Rectangle {
-        id: frame
-        anchors.fill: parent
-        z: 1
-        color: "transparent"
-        border.color: "darkred"
-        border.width: 10
-    }
 
     Image {
         source: "qrc:/cork.jpg"
-        width: listView.width
-        height: listView.height
+        anchors.centerIn: parent
+        width: parent.width - 20
+        height: parent.height - 20
         fillMode: Image.PreserveAspectCrop
-    }
 
-    Text {
-        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 10}
-        text: name;
-        font.pixelSize: 30; font.bold: true; color: "white"
-        style: Text.Outline; styleColor: "black"
-    }
+        Text {
+            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 10}
+            text: name;
+            font.pixelSize: 30; font.bold: true; color: "white"
+            style: Text.Outline; styleColor: "black"
+        }
 
-    Repeater {
-        model: notes
-        Item {
-            id: stickyPage
-            z: 2
-
-            x: Math.random() * (listView.width-listView.width*0.30) + listView.width*0.10
-            y: Math.random() * (listView.height-listView.height*0.30) + listView.height*0.10
-
-            rotation: -listView.horizontalVelocity / 200;
-            Behavior on rotation {
-                SpringAnimation { spring: 2.0; damping: 0.15 }
-            }
-
+        Repeater {
+            model: notes
             Item {
-                id: sticky
-                scale: mouse.pressed ? 1 : 0.7
-                rotation: mouse.pressed ? 8 : 0
-                Behavior on rotation{
-                    NumberAnimation {duration: 200 }
-                }
-                Behavior on scale{
-                    NumberAnimation { duration: 200 }
-                }
+                id: stickyPage
 
-                Image {
-                    id: stickyImage
-                    x: 8 + -width * 0.6 / 2; y: -20
-                    source: "qrc:/note-yellow.png"
-                    scale: 0.6; transformOrigin: Item.TopLeft
-                    smooth: true
-                }
+                x: Math.random() * (listView.width-listView.width*0.30) + listView.width*0.10
+                y: Math.random() * (listView.height-listView.height*0.30) + listView.height*0.10
 
-                TextEdit {
-                    id: myText
-                    text: noteText
-                    x: -104; y: 36; width: 215; height: 200
-                    smooth: true
-                    font.pixelSize: 24
-                    readOnly: false
-                    rotation: -8
-                    wrapMode: TextEdit.Wrap
+                rotation: -listView.horizontalVelocity / 200;
+                Behavior on rotation {
+                    SpringAnimation { spring: 2.0; damping: 0.15 }
                 }
 
                 Item {
-                    id: interactionItem
-                    x: stickyImage.x; y: -20
-                    width: stickyImage.width * stickyImage.scale
-                    height: stickyImage.height * stickyImage.scale
-
-                    MouseArea {
-                        id: mouse
-                        anchors.fill: parent
-                        drag.target: stickyPage
-                        drag.axis: Drag.XandYAxis
+                    id: sticky
+                    scale: mouse.pressed ? 1 : 0.7
+                    rotation: mouse.pressed ? 8 : 0
+                    Behavior on rotation{
+                        NumberAnimation {duration: 200 }
                     }
+                    Behavior on scale{
+                        NumberAnimation { duration: 200 }
+                    }
+
                     Image {
-                        id: writeButton
-                        source: "qrc:/NfcFlag.png"
-                        rotation: -8    // Note image itself is rotated
-                        anchors { bottom: parent.bottom; right:parent.right }
-                        scale: flagMouse.pressed ? 1.3 : 1
+                        id: stickyImage
+                        x: 8 + -width * 0.6 / 2; y: -20
+                        source: "qrc:/note-yellow.png"
+                        scale: 0.6; transformOrigin: Item.TopLeft
+                        smooth: true
+                    }
+
+                    TextEdit {
+                        id: myText
+                        text: noteText
+                        x: -104; y: 36; width: 215; height: 200
+                        smooth: true
+                        font.pixelSize: 24
+                        readOnly: false
+                        rotation: -8
+                        wrapMode: TextEdit.Wrap
+                    }
+
+                    Item {
+                        id: interactionItem
+                        x: stickyImage.x; y: -20
+                        width: stickyImage.width * stickyImage.scale
+                        height: stickyImage.height * stickyImage.scale
+
                         MouseArea {
-                            id: flagMouse
+                            id: mouse
                             anchors.fill: parent
-                            //onClicked: { }
+                            drag.target: stickyPage
+                            drag.axis: Drag.XandYAxis
+                        }
+                        Image {
+                            id: writeButton
+                            source: "qrc:/NfcFlag.png"
+                            rotation: -8    // Note image itself is rotated
+                            anchors { bottom: parent.bottom; right:parent.right }
+                            scale: flagMouse.pressed ? 1.3 : 1
+                            MouseArea {
+                                id: flagMouse
+                                anchors.fill: parent
+                            }
                         }
                     }
                 }
-            }
 
-            Image {
-                x: -width / 2; y: -height * 0.5 / 2
-                source: "qrc:/tack.png"
-                scale: 0.7; transformOrigin: Item.TopLeft
+                Image {
+                    x: -width / 2; y: -height * 0.5 / 2
+                    source: "qrc:/tack.png"
+                    scale: 0.7; transformOrigin: Item.TopLeft
+                }
             }
         }
     }

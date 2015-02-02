@@ -40,11 +40,14 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.UUID;
 
+@SuppressWarnings("WeakerAccess")
 public class QtBluetoothSocketServer extends Thread
 {
 
     /* Pointer to the Qt object that "owns" the Java object */
+    @SuppressWarnings({"WeakerAccess", "CanBeFinal"})
     long qtObject = 0;
+    @SuppressWarnings({"WeakerAccess", "CanBeFinal"})
     public boolean logEnabled = false;
 
     private static final String TAG = "QtBluetooth";
@@ -54,9 +57,9 @@ public class QtBluetoothSocketServer extends Thread
     private BluetoothServerSocket m_serverSocket = null;
 
     //error codes
-    public static final int QT_NO_BLUETOOTH_SUPPORTED = 0;
-    public static final int QT_LISTEN_FAILED = 1;
-    public static final int QT_ACCEPT_FAILED = 2;
+    private static final int QT_NO_BLUETOOTH_SUPPORTED = 0;
+    private static final int QT_LISTEN_FAILED = 1;
+    private static final int QT_ACCEPT_FAILED = 2;
 
     public QtBluetoothSocketServer()
     {
@@ -97,7 +100,7 @@ public class QtBluetoothSocketServer extends Thread
             return;
         }
 
-        BluetoothSocket s = null;
+        BluetoothSocket s;
         if (m_serverSocket != null) {
             try {
                 while (!isInterrupted()) {

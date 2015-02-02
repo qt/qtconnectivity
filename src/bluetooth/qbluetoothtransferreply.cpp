@@ -118,8 +118,6 @@ void QBluetoothTransferReply::abort()
 QBluetoothTransferReply::QBluetoothTransferReply(QObject *parent)
     : QObject(parent), d_ptr(new QBluetoothTransferReplyPrivate())
 {
-    qRegisterMetaType<QBluetoothTransferReply*>();
-    qRegisterMetaType<QBluetoothTransferReply::TransferError>();
 }
 
 /*!

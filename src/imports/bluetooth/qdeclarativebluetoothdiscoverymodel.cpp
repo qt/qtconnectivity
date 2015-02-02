@@ -151,7 +151,19 @@ void QDeclarativeBluetoothDiscoveryModel::componentComplete()
 
 void QDeclarativeBluetoothDiscoveryModel::errorDiscovery(QBluetoothServiceDiscoveryAgent::Error error)
 {
-    d->m_error = static_cast<QDeclarativeBluetoothDiscoveryModel::Error>(error);
+    switch (error) {
+    case QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::InvalidBluetoothAdapterError; break;
+    case QBluetoothServiceDiscoveryAgent::NoError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::NoError; break;
+    case QBluetoothServiceDiscoveryAgent::InputOutputError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::InputOutputError; break;
+    case QBluetoothServiceDiscoveryAgent::PoweredOffError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::PoweredOffError; break;
+    case QBluetoothServiceDiscoveryAgent::UnknownError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::UnknownError; break;
+    }
+
     emit errorChanged();
 }
 
@@ -187,6 +199,12 @@ void QDeclarativeBluetoothDiscoveryModel::clearModel()
          \li An IO failure occurred during device discovery
     \row \li \c BluetoothDiscoveryModel.PoweredOffError
          \li The bluetooth device is not powered on.
+    \row \li \c BluetoothDiscoveryModel.InvalidBluetoothAdapterError
+         \li There is no default Bluetooth device to perform the
+             service discovery. The model always uses the local default adapter.
+             Specifying a default adapter is not possible. If that's required,
+             \l QBluetoothServiceDiscoveryAgent should be directly used. This
+             value was introduced by Qt 5.4.
     \row \li \c BluetoothDiscoveryModel.UnknownError
          \li An unknown error occurred.
     \endtable
@@ -406,6 +424,13 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
             } else {
                 //qDebug() << "Minimal Discovery";
                 d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
+            }
+
+            // we could not start service discovery
+            if (!d->m_serviceAgent->isActive()) {
+                d->m_running = false;
+                errorDiscovery(d->m_serviceAgent->error());
+                return;
             }
         }
     }

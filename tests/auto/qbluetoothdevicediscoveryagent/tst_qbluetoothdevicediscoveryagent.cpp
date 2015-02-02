@@ -44,8 +44,8 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
 Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::InquiryType)
+Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
 
 /*
  * Some parts of this test require a remote and discoverable Bluetooth
@@ -92,7 +92,7 @@ private:
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>("QBluetoothDeviceDiscoveryAgent::Error");
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
 }
 
 tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
@@ -101,8 +101,8 @@ tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
 
 void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 {
-    qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
-    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>("QBluetoothDeviceDiscoveryAgent::InquiryType");
+    qRegisterMetaType<QBluetoothDeviceInfo>();
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>();
 
     noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();
     if (!noOfLocalDevices)

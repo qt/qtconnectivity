@@ -43,8 +43,6 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothSocket::SocketState)
-Q_DECLARE_METATYPE(QBluetoothSocket::SocketError)
 Q_DECLARE_METATYPE(QBluetoothServiceInfo::Protocol)
 
 //same uuid as tests/bttestui
@@ -100,8 +98,8 @@ Q_DECLARE_METATYPE(tst_QBluetoothSocket::ClientConnectionShutdown)
 
 tst_QBluetoothSocket::tst_QBluetoothSocket()
 {
-    qRegisterMetaType<QBluetoothSocket::SocketState>("QBluetoothSocket::SocketState");
-    qRegisterMetaType<QBluetoothSocket::SocketError>("QBluetoothSocket::SocketError");
+    qRegisterMetaType<QBluetoothSocket::SocketState>();
+    qRegisterMetaType<QBluetoothSocket::SocketError>();
 
     localDeviceFound = false; // true if we have a local adapter
     done_discovery = false; //true if we found remote device

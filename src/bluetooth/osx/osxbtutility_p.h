@@ -288,6 +288,7 @@ ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid);
 bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid);
 bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid);
 QByteArray qt_bytearray(NSData *data);
+QByteArray qt_bytearray(NSObject *data);
 ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData);
 
 } // namespace OSXBluetooth

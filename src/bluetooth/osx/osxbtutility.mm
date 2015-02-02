@@ -246,6 +246,64 @@ QByteArray qt_bytearray(NSData *data)
     return value;
 }
 
+template<class Integer>
+QByteArray qt_bytearray(Integer n)
+{
+    QByteArray value;
+    value.resize(sizeof n);
+    const char *const src = reinterpret_cast<char *>(&n);
+    std::copy(src, src + sizeof n, value.data());
+
+    return value;
+}
+
+QByteArray qt_bytearray(NSString *string)
+{
+    if (!string)
+        return QByteArray();
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+    NSData *const utf8Data = [string dataUsingEncoding:NSUTF8StringEncoding];
+
+    return qt_bytearray(utf8Data);
+}
+
+QByteArray qt_bytearray(NSObject *obj)
+{
+    // descriptor.value has type 'id'.
+    // While the Apple's docs say this about descriptors:
+    //
+    // - CBUUIDCharacteristicExtendedPropertiesString
+    //   The string representation of the UUID for the extended properties descriptor.
+    //   The corresponding value for this descriptor is an NSNumber object.
+    //
+    // - CBUUIDCharacteristicUserDescriptionString
+    //   The string representation of the UUID for the user description descriptor.
+    //   The corresponding value for this descriptor is an NSString object.
+    //
+    //   ... etc.
+    //
+    // This is not true. On OS X, they all seem to be NSData (or derived from NSData),
+    // and they can be something else on iOS (NSNumber, NSString, etc.)
+    if (!obj)
+        return QByteArray();
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if ([obj isKindOfClass:[NSData class]]) {
+        return qt_bytearray(static_cast<NSData *>(obj));
+    } else if ([obj isKindOfClass:[NSString class]]) {
+        return qt_bytearray(static_cast<NSString *>(obj));
+    } else if ([obj isKindOfClass:[NSNumber class]]) {
+        NSNumber *const nsNumber = static_cast<NSNumber *>(obj);
+        return qt_bytearray([nsNumber unsignedShortValue]);
+    }
+    // TODO: Where can be more types, but Core Bluetooth does not support them,
+    // or at least it's not documented.
+
+    return QByteArray();
+}
+
 ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
 {
     if (!qtData.size())

@@ -5,7 +5,6 @@ testcase.timeout = 250 # this test is slow
 
 QT = core concurrent network bluetooth testlib
 osx:QT += widgets
-osx:CONFIG += insignificant_test
 
 OTHER_FILES += \
     README.txt

@@ -151,6 +151,9 @@ QT_BEGIN_NAMESPACE
                                 to be a secondary service. Each service may be included
                                 by another service which is indicated by IncludedService.
     \value IncludedService      The service is included by another service.
+                                On some platforms, this flag cannot be determined until
+                                the service that includes the current service was
+                                discovered.
 */
 
 /*!
@@ -242,6 +245,15 @@ QT_BEGIN_NAMESPACE
     by calling \l writeCharacteristic(). If the write operation is not successful,
     the \l error() signal is emitted using the \l CharacteristicWriteError flag.
 
+    Since this signal is an indication of a successful write operation \a newValue
+    generally matches the value that was passed to the associated
+    \l writeCharacteristic() call. However, it may happen that the two values differ
+    from each other. This can occur in cases when the written value is
+    used by the remote device to trigger an operation and it returns some other value via
+    the written and/or change notification. Such cases are very specific to the
+    target device. In any case, the reception of the written signal can still be considered
+    as a sign that the target device received the to-be-written value.
+
     \note If \l writeCharacteristic() is called using the \l WriteWithoutResponse mode,
     this signal and the \l error() are never emitted.
 
@@ -284,8 +296,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
     : QObject(parent),
       d_ptr(p)
 {
-    qRegisterMetaType<QLowEnergyService::ServiceState>("QLowEnergyService::ServiceState");
-    qRegisterMetaType<QLowEnergyService::ServiceError>("QLowEnergyService::ServiceError");
+    qRegisterMetaType<QLowEnergyService::ServiceState>();
+    qRegisterMetaType<QLowEnergyService::ServiceError>();
 
     connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
             this, SIGNAL(error(QLowEnergyService::ServiceError)));
@@ -309,6 +321,9 @@ QLowEnergyService::~QLowEnergyService()
 /*!
     Returns the UUIDs of all services which are included by the
     current service.
+
+    The returned list is empty if this service instance's \l discoverDetails()
+    was not yet called or there are no known characteristics.
 
     It is possible that an included service contains yet another service. Such
     second level includes have to be obtained via their relevant first level
@@ -335,7 +350,6 @@ QList<QBluetoothUuid> QLowEnergyService::includedServices() const
     Therefore any service object instance created after
     the first one has a state equal to already existing instances.
 
-
     A service becomes invalid if the \l QLowEnergyController disconnects
     from the remote device. An invalid service retains its internal state
     at the time of the disconnect event. This implies that once the service
@@ -358,9 +372,14 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
 /*!
     Returns the type of the service.
 
+    \note The type attribute cannot be relied upon until the service has
+    reached the \l ServiceDiscovered state. This field is initialised
+    with \l PrimaryService.
+
     \note On Android, it is not possible to determine whether a service
     is a primary or secondary service. Therefore all services
     have the \l PrimaryService flag set.
+
  */
 QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
@@ -370,6 +389,9 @@ QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 /*!
     Returns the matching characteristic for \a uuid; otherwise an invalid
     characteristic.
+
+    The returned characteristic is invalid if this service instance's \l discoverDetails()
+    was not yet called or there are no characteristics with a matching \a uuid.
 
     \sa characteristics()
 */

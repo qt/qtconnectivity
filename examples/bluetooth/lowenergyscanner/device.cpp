@@ -138,6 +138,7 @@ QString Device::getUpdate()
 void Device::scanServices(const QString &address)
 {
     // We need the current device for service discovery.
+
     for (int i = 0; i < devices.size(); i++) {
         if (((DeviceInfo*)devices.at(i))->getAddress() == address )
             currentDevice.setDevice(((DeviceInfo*)devices.at(i))->getDevice());
@@ -157,7 +158,12 @@ void Device::scanServices(const QString &address)
 
     setUpdate("Back\n(Connecting to device...)");
 
+#ifdef Q_OS_MAC
+    if (controller && m_previousAddress != currentDevice.getAddress()) {
+        m_previousAddress = currentDevice.getAddress();
+#else
     if (controller && controller->remoteAddress() != currentDevice.getDevice().address()) {
+#endif
         controller->disconnectFromDevice();
         delete controller;
         controller = 0;

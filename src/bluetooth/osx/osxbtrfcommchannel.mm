@@ -44,10 +44,6 @@
 #include "qbluetoothaddress.h"
 #include "osxbtutility_p.h"
 
-// Import, it's Obj-C header.
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
-
-
 #ifdef QT_NAMESPACE
 using namespace QT_NAMESPACE;
 #endif
@@ -56,7 +52,7 @@ using namespace QT_NAMESPACE;
 
 - (id)initWithDelegate:(OSXBluetooth::ChannelDelegate *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -73,8 +69,8 @@ using namespace QT_NAMESPACE;
 {
     // This type of channel does not require connect, it's created with
     // already open channel.
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:channel:", "invalid delegate (null)");
-    Q_ASSERT_X(aChannel, "-initWithDelegate:channel:", "invalid channel (nil)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(aChannel, Q_FUNC_INFO, "invalid channel (nil)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -105,15 +101,13 @@ using namespace QT_NAMESPACE;
             withChannelID:(BluetoothRFCOMMChannelID)channelID
 {
     if (address.isNull()) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withChannelID:, "
-                                 "invalid peer address";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "invalid peer address";
         return kIOReturnNoDevice;
     }
 
     // Can never be called twice.
     if (connected || device || channel) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withChannelID:, "
-                                 "connection is already active";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "connection is already active";
         return kIOReturnStillOpen;
     }
 
@@ -122,16 +116,14 @@ using namespace QT_NAMESPACE;
     const BluetoothDeviceAddress iobtAddress = OSXBluetooth::iobluetooth_address(address);
     device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) { // TODO: do I always check this BTW??? Apple's docs say nothing about nil.
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withChannelID:, "
-                                 "failed to create a device";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device";
         return kIOReturnNoDevice;
     }
 
     const IOReturn status = [device openRFCOMMChannelAsync:&channel
                              withChannelID:channelID delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withChannelID:, "
-                                 "failed to open L2CAP channel";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to open L2CAP channel";
         // device is still autoreleased.
         device = nil;
         return status;
@@ -148,8 +140,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(rfcommChannel)
 
-    Q_ASSERT_X(delegate, "-rfcommChannelData:data:length:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     // Not sure if it can ever happen and if
     // assert is better.
@@ -164,8 +155,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(rfcommChannel)
 
-    Q_ASSERT_X(delegate, "-rfcommChannelOpenComplete:status:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (error != kIOReturnSuccess) {
         delegate->setChannelError(error);
@@ -179,7 +169,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(rfcommChannel)
 
-    Q_ASSERT_X(delegate, "rfcommChannelClosed:", "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->channelClosed();
     connected = false;
 }
@@ -200,8 +190,7 @@ using namespace QT_NAMESPACE;
     Q_UNUSED(rfcommChannel)
     Q_UNUSED(refcon)
 
-    Q_ASSERT_X(delegate, "-rfcommChannelWriteComplete:refcon:status:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (error != kIOReturnSuccess)
         delegate->setChannelError(error);
@@ -250,20 +239,18 @@ using namespace QT_NAMESPACE;
 
 - (IOReturn) writeSync:(void*)data length:(UInt16)length
 {
-    Q_ASSERT_X(data, "-writeSync:length:", "invalid data (null)");
-    Q_ASSERT_X(length, "-writeSync:length:", "invalid data size");
-    Q_ASSERT_X(connected && channel, "-writeSync:",
-               "invalid RFCOMM channel");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
+    Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid RFCOMM channel");
 
     return [channel writeSync:data length:length];
 }
 
 - (IOReturn) writeAsync:(void*)data length:(UInt16)length
 {
-    Q_ASSERT_X(data, "-writeAsync:length:", "invalid data (null)");
-    Q_ASSERT_X(length, "-writeAync:length:", "invalid data size");
-    Q_ASSERT_X(connected && channel, "-writeAsync:length:",
-               "invalid RFCOMM channel");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
+    Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid RFCOMM channel");
 
     return [channel writeAsync:data length:length refcon:Q_NULLPTR];
 }

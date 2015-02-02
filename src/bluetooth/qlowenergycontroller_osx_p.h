@@ -83,7 +83,6 @@ private:
     void error(const QBluetoothUuid &serviceUuid,
                QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
     void error(const QBluetoothUuid &serviceUuid,
-               QLowEnergyHandle charHandle,
                QLowEnergyService::ServiceError error) Q_DECL_OVERRIDE;
 
     void connectToDevice();

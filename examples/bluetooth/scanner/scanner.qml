@@ -60,6 +60,8 @@ Item {
                     console.log("Error: Bluetooth device not turned on"); break;
                 case BluetoothDiscoveryModel.InputOutputError:
                     console.log("Error: Bluetooth I/O Error"); break;
+                case BluetoothDiscoveryModel.InvalidBluetoothAdapterError:
+                    console.log("Error: Invalid Bluetooth Adapter Error"); break;
                 case BluetoothDiscoveryModel.NoError:
                     break;
                 default:

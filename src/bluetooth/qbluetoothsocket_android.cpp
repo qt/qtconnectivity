@@ -40,7 +40,6 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 
-
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
@@ -57,8 +56,8 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
-    qRegisterMetaType<QBluetoothSocket::SocketError>("QBluetoothSocket::SocketError");
-    qRegisterMetaType<QBluetoothSocket::SocketState>("QBluetoothSocket::SocketState");
+    qRegisterMetaType<QBluetoothSocket::SocketError>();
+    qRegisterMetaType<QBluetoothSocket::SocketState>();
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()

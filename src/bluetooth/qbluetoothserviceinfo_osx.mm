@@ -52,8 +52,9 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qurl.h>
 
-// Import, it's Objective-C header (no inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothSDPServiceRecord.h>
+#include <Foundation/Foundation.h>
+// Only after Foundation.h:
+#include "osx/corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -115,7 +116,7 @@ QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate(QBluetoothServiceInfo
                                    registered(false),
                                    serviceRecordHandle(0)
 {
-    Q_ASSERT_X(q, "QBluetoothServiceInfoPrivate()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 }
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &localAdapter)
@@ -125,8 +126,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     if (registered)
         return false;
 
-    Q_ASSERT_X(!serviceRecord, "QBluetoothServiceInfoPrivate::registerService()",
-               "not registered, but serviceRecord is not nil");
+    Q_ASSERT_X(!serviceRecord, Q_FUNC_INFO, "not registered, but serviceRecord is not nil");
 
     using namespace OSXBluetooth;
 
@@ -134,8 +134,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         serviceDict(iobluetooth_service_dictionary(*q_ptr));
 
     if (!serviceDict) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to create a service dictionary";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a service dictionary";
         return false;
     }
 
@@ -148,8 +147,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     // With ARC this will require a different cast?
     const IOReturn status = IOBluetoothAddServiceDict((CFDictionaryRef)serviceDict.data(), &recordRef);
     if (status != kIOReturnSuccess) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
         return false;
     }
 
@@ -159,8 +157,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 #endif
 
     if (!newRecord) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
         // In case of SDK < 10.9 it's not possible to remove a service record ...
         // no way to obtain record handle yet.
         return false;
@@ -168,8 +165,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     BluetoothSDPServiceRecordHandle newRecordHandle = 0;
     if ([newRecord getServiceRecordHandle:&newRecordHandle] != kIOReturnSuccess) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
         [newRecord removeServiceRecord];
 #endif
@@ -204,8 +200,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 #else
         IOBluetoothRemoveServiceWithRecordHandle(newRecordHandle);
 #endif
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
         return false;
     }
 
@@ -229,8 +224,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     if (!registered)
         return false;
 
-    Q_ASSERT_X(serviceRecord, "QBluetoothServiceInfoPrivate::unregisterService()",
-               "service registered, but serviceRecord is nil");
+    Q_ASSERT_X(serviceRecord, Q_FUNC_INFO, "service registered, but serviceRecord is nil");
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
     [serviceRecord removeServiceRecord];

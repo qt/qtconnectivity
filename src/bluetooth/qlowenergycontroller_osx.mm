@@ -71,12 +71,12 @@ typedef QSharedPointer<QLowEnergyServicePrivate> ServicePrivate;
 // Convenience function, can return a smart pointer that 'isNull'.
 ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CBService *cbService, bool included)
 {
-    Q_ASSERT_X(controller, "createLEService()", "invalid controller (null)");
-    Q_ASSERT_X(cbService, "createLEService()", "invalid service (nil)");
+    Q_ASSERT_X(controller, Q_FUNC_INFO, "invalid controller (null)");
+    Q_ASSERT_X(cbService, Q_FUNC_INFO, "invalid service (nil)");
 
     CBUUID *const cbUuid = cbService.UUID;
     if (!cbUuid) {
-        qCDebug(QT_BT_OSX) << "createLEService(), invalid service, "
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "invalid service, "
                               "UUID is nil";
         return ServicePrivate();
     }
@@ -133,15 +133,13 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
       addressType(QLowEnergyController::PublicAddress)
 {
     // This is the "wrong" constructor - no valid device UUID to connect later.
-    Q_ASSERT_X(q, "QLowEnergyControllerPrivate", "invalid q_ptr (null)");
+    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
     // We still create a manager, to simplify error handling later.
     centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
     if (!centralManager) {
-        qCWarning(QT_BT_OSX) << "QBluetoothLowEnergyControllerPrivateOSX::"
-                                "QBluetoothLowEnergyControllerPrivateOSX(), "
-                                "failed to initialize central manager";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                             << "failed to initialize central manager";
     }
-
 }
 
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
@@ -153,12 +151,11 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
 {
-    Q_ASSERT_X(q, "QLowEnergyControllerPrivateOSX", "invalid q_ptr (null)");
+    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
     centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
     if (!centralManager) {
-        qCWarning(QT_BT_OSX) << "QBluetoothLowEnergyControllerPrivateOSX::"
-                                "QBluetoothLowEnergyControllerPrivateOSX(), "
-                                "failed to initialize central manager";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                             << "failed to initialize central manager";
     }
 }
 
@@ -184,7 +181,7 @@ void QLowEnergyControllerPrivateOSX::LEnotSupported()
 void QLowEnergyControllerPrivateOSX::connectSuccess()
 {
     Q_ASSERT_X(controllerState == QLowEnergyController::ConnectingState,
-               "connectSuccess", "invalid state");
+               Q_FUNC_INFO, "invalid state");
 
     controllerState = QLowEnergyController::ConnectedState;
 
@@ -197,7 +194,7 @@ void QLowEnergyControllerPrivateOSX::connectSuccess()
 void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices services)
 {
     Q_ASSERT_X(controllerState == QLowEnergyController::DiscoveringState,
-               "serviceDiscoveryFinished", "invalid state");
+               Q_FUNC_INFO, "invalid state");
 
     using namespace OSXBluetooth;
 
@@ -219,8 +216,8 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
                 continue;
             if (discoveredServices.contains(newService->uuid)) {
                 // It's a bit stupid we first created it ...
-                qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(), "
-                                   << "discovered service with a duplicated UUID "<<newService->uuid;
+                qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "discovered service with a duplicated UUID "
+                                   << newService->uuid;
                 continue;
             }
             discoveredServices.insert(newService->uuid, newService);
@@ -271,8 +268,7 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
             toVisitNext.resetWithoutRetain([[NSMutableArray alloc] init]);
         }
     } else {
-        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(), "
-                              "no services found";
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "no services found";
     }
 
     foreach (const QBluetoothUuid &uuid, discoveredServices.keys()) {
@@ -288,14 +284,13 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
 
 void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService service)
 {
-    Q_ASSERT_X(!service.isNull(), "serviceDetailsDiscoveryFinished",
-               "invalid service (null)");
+    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
     if (!discoveredServices.contains(service->uuid)) {
-        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(), "
-                              "unknown service uuid: " << service->uuid;
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "unknown service uuid: "
+                           << service->uuid;
         return;
     }
 
@@ -311,24 +306,24 @@ void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService s
 void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyHandle charHandle,
                                                                      const QByteArray &value)
 {
-    Q_ASSERT_X(charHandle, "characteristicWriteNotification",
-               "invalid characteristic handle(0)");
+    Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle(0)");
 
     ServicePrivate service(serviceForHandle(charHandle));
     if (service.isNull()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicWriteNotification(), "
-                                "can not find service for characteristic handle " << charHandle;
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "can not find service for characteristic handle "
+                             << charHandle;
         return;
     }
 
     QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
     if (!characteristic.isValid()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicWriteNotification(), "
-                                "unknown characteristic";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown characteristic";
         return;
     }
 
-    updateValueOfCharacteristic(charHandle, value, false);
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, value, false);
+
     emit service->characteristicWritten(characteristic, value);
 }
 
@@ -337,35 +332,37 @@ void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergy
 {
     // TODO: write/update notifications are quite similar (except asserts/warnings messages
     // and different signals emitted). Merge them into one function?
-    Q_ASSERT_X(charHandle, "characteristicUpdateNotification",
-               "invalid characteristic handle(0)");
+    Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle(0)");
 
     ServicePrivate service(serviceForHandle(charHandle));
     if (service.isNull()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(), "
-                                "can not find service for characteristic handle " << charHandle;
+        // This can be an error (no characteristic found for this handle),
+        // it can also be that we set notify value before the service
+        // was reported (serviceDetailsDiscoveryFinished) - this happens,
+        // if we read a descriptor (characteristic client configuration),
+        // and it's (pre)set.
         return;
     }
 
     QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
     if (!characteristic.isValid()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(), "
-                                "unknown characteristic";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown characteristic";
         return;
     }
 
-    updateValueOfCharacteristic(charHandle, value, false);
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, value, false);
+
     emit service->characteristicChanged(characteristic, value);
 }
 
 void QLowEnergyControllerPrivateOSX::descriptorWriteNotification(QLowEnergyHandle dHandle, const QByteArray &value)
 {
-    Q_ASSERT_X(dHandle, "descriptorWriteNotification", "invalid descriptor handle (0)");
+    Q_ASSERT_X(dHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
     const QLowEnergyDescriptor qtDescriptor(descriptorForHandle(dHandle));
     if (!qtDescriptor.isValid()) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::descriptorWriteNotification(), "
-                                "unknown descriptor " << dHandle;
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown descriptor " << dHandle;
         return;
     }
 
@@ -422,20 +419,17 @@ void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
         ServicePrivate qtService(discoveredServices.value(serviceUuid));
         qtService->setState(QLowEnergyService::InvalidService);
     } else {
-        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::error(), "
-                              "error reported for unknown service "<<serviceUuid;
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "error reported for unknown service "
+                           << serviceUuid;
     }
 }
 
 void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
-                                           QLowEnergyHandle charHandle,
                                            QLowEnergyService::ServiceError errorCode)
 {
-    Q_UNUSED(charHandle)
-
     if (!discoveredServices.contains(serviceUuid)) {
-        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::error(), "
-                              "unknown service uuid: " << serviceUuid;
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "unknown service uuid: "
+                           << serviceUuid;
         return;
     }
 
@@ -445,12 +439,12 @@ void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
 
 void QLowEnergyControllerPrivateOSX::connectToDevice()
 {
-    Q_ASSERT_X(isValid(), "connectToDevice", "invalid private controller");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid private controller");
     Q_ASSERT_X(controllerState == QLowEnergyController::UnconnectedState,
-               "connectToDevice", "invalid state");
-    Q_ASSERT_X(!deviceUuid.isNull(), "connectToDevice",
+               Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(!deviceUuid.isNull(), Q_FUNC_INFO,
                "invalid private controller (no device uuid)");
-    Q_ASSERT_X(!isConnecting, "connectToDevice",
+    Q_ASSERT_X(!isConnecting, Q_FUNC_INFO,
                "recursive connectToDevice call");
 
     setErrorDescription(QLowEnergyController::NoError);
@@ -481,9 +475,9 @@ void QLowEnergyControllerPrivateOSX::connectToDevice()
 
 void QLowEnergyControllerPrivateOSX::discoverServices()
 {
-    Q_ASSERT_X(isValid(), "discoverServices", "invalid private controller");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid private controller");
     Q_ASSERT_X(controllerState != QLowEnergyController::UnconnectedState,
-               "discoverServices", "not connected to peripheral");
+               Q_FUNC_INFO, "not connected to peripheral");
 
     controllerState = QLowEnergyController::DiscoveringState;
     emit q_ptr->stateChanged(QLowEnergyController::DiscoveringState);
@@ -492,18 +486,17 @@ void QLowEnergyControllerPrivateOSX::discoverServices()
 
 void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid &serviceUuid)
 {
-    Q_ASSERT_X(isValid(), "discoverServiceDetails", "invalid private controller");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid private controller");
 
     if (controllerState != QLowEnergyController::DiscoveredState) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::discoverServiceDetails(), "
-                                "can not discover service details in the current state, "
-                                "QLowEnergyController::DiscoveredState is expected";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                             << "can not discover service details in the current state, "
+                             << "QLowEnergyController::DiscoveredState is expected";
         return;
     }
 
     if (!discoveredServices.contains(serviceUuid)) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::discoverServiceDetails(), "
-                                "unknown service: " << serviceUuid;
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown service: " << serviceUuid;
         return;
     }
 
@@ -521,18 +514,29 @@ void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergySer
                                                     QLowEnergyHandle charHandle,
                                                     const QByteArray &newValue)
 {
-    Q_ASSERT_X(!service.isNull(), "setNotifyValue", "invalid service (null)");
-    Q_ASSERT_X(isValid(), "setNotifyValue", "invalid controller");
+    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
+
+    if (newValue.size() > 2) {
+        // Qt's API requires an error on such write.
+        // With Core Bluetooth we do not write any descriptor,
+        // but instead call a special method. So it's better to
+        // intercept wrong data size here:
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "client characteristic configuration descriptor "
+                                "is 2 bytes, but value size is: " << newValue.size();
+        service->setError(QLowEnergyService::DescriptorWriteError);
+        return;
+    }
 
     if (!discoveredServices.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::setNotifyValue(), "
-                                "no service with uuid: " << service->uuid << " found";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid: "
+                             << service->uuid << " found";
         return;
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::setNotifyValue(), "
-                              "no characteristic with handle: " << charHandle << " found";
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "no characteristic with handle: "
+                           << charHandle << " found";
         return;
     }
 
@@ -544,21 +548,21 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
                                                          QLowEnergyHandle charHandle, const QByteArray &newValue,
                                                          bool writeWithResponse)
 {
-    Q_ASSERT_X(!service.isNull(), "writeCharacteristic", "invalid service (null)");
-    Q_ASSERT_X(isValid(), "writeCharacteristic", "invalid controller");
+    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
 
     // We can work only with services, found on a given peripheral
     // (== created by the given LE controller),
     // otherwise we can not write anything at all.
     if (!discoveredServices.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeCharacteristic(), "
-                                "no service with uuid: " << service->uuid << " found";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid: "
+                             << service->uuid << " found";
         return;
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeCharacteristic(), "
-                              "no characteristic with handle: " << charHandle << " found";
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "no characteristic with handle: "
+                           << charHandle << " found";
         return;
     }
 
@@ -590,15 +594,15 @@ void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergySe
                                                      QLowEnergyHandle descriptorHandle,
                                                      const QByteArray &newValue)
 {
-    Q_ASSERT_X(!service.isNull(), "writeDescriptor", "invalid service (null)");
-    Q_ASSERT_X(isValid(), "writeDescriptor", "invalid controller");
+    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
 
     // We can work only with services found on a given peripheral
     // (== created by the given LE controller),
     // otherwise we can not write anything at all.
     if (!discoveredServices.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "QLowEnergyControllerPrivateOSX::writeDescriptor(), "
-                                "no service with uuid: " << service->uuid << " found";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid: "
+                             << service->uuid << " found";
         return;
     }
 
@@ -716,10 +720,13 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
     : QObject(parent),
       d_ptr(new QLowEnergyControllerPrivateOSX(this))
 {
-    Q_UNUSED(remoteAddress)
+    OSX_D_PTR;
 
-    qCWarning(QT_BT_OSX) << "QLowEnergyController::QLowEnergyController(), "
-                            "construction with remote address is not supported!";
+    osx_d_ptr->remoteAddress = remoteAddress;
+    osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
+
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "construction with remote address "
+                            "is not supported!";
 }
 
 QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
@@ -727,6 +734,9 @@ QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDev
     : QObject(parent),
       d_ptr(new QLowEnergyControllerPrivateOSX(this, remoteDevice))
 {
+    OSX_D_PTR;
+
+    osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
     // That's the only "real" ctor - with Core Bluetooth we need a _valid_ deviceUuid
     // from 'remoteDevice'.
 }
@@ -742,8 +752,8 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
     osx_d_ptr->remoteAddress = remoteAddress;
     osx_d_ptr->localAddress = localAddress;
 
-    qCWarning(QT_BT_OSX) << "QLowEnergyController::QLowEnergyController(), "
-                            "construction with remote/local addresses is not supported!";
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "construction with remote/local "
+                            "addresses is not supported!";
 }
 
 QLowEnergyController::~QLowEnergyController()

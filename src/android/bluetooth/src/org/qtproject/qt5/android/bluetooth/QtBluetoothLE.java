@@ -45,7 +45,6 @@ import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +57,7 @@ public class QtBluetoothLE {
 
     private BluetoothGatt mBluetoothGatt = null;
     private String mRemoteGattAddress;
-    final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 
     /* Pointer to the Qt object that "owns" the Java object */
@@ -67,6 +66,7 @@ public class QtBluetoothLE {
     @SuppressWarnings("WeakerAccess")
     Activity qtactivity = null;
 
+    @SuppressWarnings("WeakerAccess")
     public QtBluetoothLE() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
@@ -347,6 +347,24 @@ public class QtBluetoothLE {
             leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
                     descriptor.getCharacteristic().getUuid().toString(), runningHandle+1,
                     descriptor.getUuid().toString(), descriptor.getValue());
+
+            /* Some devices preset ClientCharacteristicConfiguration descriptors
+             * to enable notifications out of the box. However the additional
+             * BluetoothGatt.setCharacteristicNotification call prevents
+             * automatic notifications from coming through. Hence we manually set them
+             * up here.
+             */
+
+            if (descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
+                final int value = descriptor.getValue()[0];
+                // notification or indication bit set?
+                if ((value & 0x03) > 0) {
+                    Log.d(TAG, "Found descriptor with automatic notifications.");
+                    mBluetoothGatt.setCharacteristicNotification(
+                            descriptor.getCharacteristic(), true);
+                }
+            }
+
             performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
         }
 
@@ -432,6 +450,7 @@ public class QtBluetoothLE {
     {
         public GattEntry entry;
         public byte[] newValue;
+        public int requestedWriteType;
     }
 
     private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
@@ -787,7 +806,8 @@ public class QtBluetoothLE {
     /* Write Characteristics                                     */
     /*************************************************************/
 
-    public boolean writeCharacteristic(int charHandle, byte[] newValue)
+    public boolean writeCharacteristic(int charHandle, byte[] newValue,
+                                       int writeMode)
     {
         if (mBluetoothGatt == null)
             return false;
@@ -803,6 +823,17 @@ public class QtBluetoothLE {
         WriteJob newJob = new WriteJob();
         newJob.newValue = newValue;
         newJob.entry = entry;
+
+        // writeMode must be in sync with QLowEnergyService::WriteMode
+        // For now we ignore SignedWriteType as Qt doesn't support it yet.
+        switch (writeMode) {
+            case 1: //WriteWithoutResponse
+                newJob.requestedWriteType = BluetoothGattCharacteristic. WRITE_TYPE_NO_RESPONSE;
+                break;
+            default:
+                newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+                break;
+        }
 
         boolean result;
         synchronized (writeQueue) {
@@ -838,6 +869,7 @@ public class QtBluetoothLE {
         WriteJob newJob = new WriteJob();
         newJob.newValue = newValue;
         newJob.entry = entry;
+        newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 
         boolean result;
         synchronized (writeQueue) {
@@ -873,6 +905,9 @@ public class QtBluetoothLE {
             boolean result;
             switch (nextJob.entry.type) {
                 case Characteristic:
+                    if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
+                        nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+                    }
                     result = nextJob.entry.characteristic.setValue(nextJob.newValue);
                     if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
                         skip = true;
@@ -882,9 +917,9 @@ public class QtBluetoothLE {
                         /*
                             For some reason, Android splits characteristic notifications
                             into two operations. BluetoothGatt.enableCharacteristicNotification
-                            ensures the local Blueooth stack forwards the notifications. In addition,
+                            ensures the local Bluetooth stack forwards the notifications. In addition,
                             BluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-                            must be written to the peripheral
+                            must be written to the peripheral.
                          */
 
 

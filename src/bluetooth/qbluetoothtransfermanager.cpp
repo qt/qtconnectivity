@@ -90,6 +90,8 @@ QT_BEGIN_NAMESPACE
 QBluetoothTransferManager::QBluetoothTransferManager(QObject *parent)
 :   QObject(parent)
 {
+    qRegisterMetaType<QBluetoothTransferReply*>();
+    qRegisterMetaType<QBluetoothTransferReply::TransferError>();
 }
 
 /*!

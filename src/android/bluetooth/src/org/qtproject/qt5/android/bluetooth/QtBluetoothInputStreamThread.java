@@ -37,10 +37,13 @@ import java.io.InputStream;
 import java.io.IOException;
 import android.util.Log;
 
+@SuppressWarnings("WeakerAccess")
 public class QtBluetoothInputStreamThread extends Thread
 {
     /* Pointer to the Qt object that "owns" the Java object */
+    @SuppressWarnings("CanBeFinal")
     long qtObject = 0;
+    @SuppressWarnings("CanBeFinal")
     public boolean logEnabled = false;
     private static final String TAG = "QtBluetooth";
     private InputStream m_inputStream = null;
@@ -68,7 +71,7 @@ public class QtBluetoothInputStreamThread extends Thread
         }
 
         byte[] buffer = new byte[1000];
-        int bytesRead = 0;
+        int bytesRead;
 
         try {
             while (!isInterrupted()) {

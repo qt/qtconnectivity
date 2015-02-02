@@ -47,9 +47,6 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qlist.h>
 
-// The Foundation header must be included before
-// corebluetoothwrapper_p.h - a workaround for a broken
-// 10.9 SDK.
 #include <Foundation/Foundation.h>
 
 @class QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
@@ -88,7 +85,7 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
 {// Protocols are adopted in the mm file.
-    QT_PREPEND_NAMESPACE(OSXBluetooth::LEDeviceInquiryDelegate) *delegate;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *delegate;
 
     // TODO: scoped pointers/shared pointers?
     NSMutableDictionary *peripherals; // Found devices.
@@ -101,7 +98,7 @@ QT_END_NAMESPACE
     bool isActive;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::LEDeviceInquiryDelegate) *)aDelegate;
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *)aDelegate;
 - (void)dealloc;
 
 // Actual scan can be delayed - we have to wait for a status update first.
