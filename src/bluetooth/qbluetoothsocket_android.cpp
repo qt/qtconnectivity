@@ -37,6 +37,7 @@
 #include "qbluetoothaddress.h"
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QTime>
+#include <QtCore/private/qjni_p.h>
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 
@@ -91,32 +92,37 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
     qCWarning(QT_BT_ANDROID) << "Falling back to workaround.";
 
     QAndroidJniEnvironment env;
-    jclass remoteDeviceClazz = env->GetObjectClass(remoteDevice.object());
-    jmethodID getClassMethod = env->GetMethodID(remoteDeviceClazz, "getClass", "()Ljava/lang/Class;");
-    if (!getClassMethod) {
-        qCWarning(QT_BT_ANDROID) << "BluetoothDevice.getClass method could not be found.";
-        return false;
-    }
 
-
-    QAndroidJniObject remoteDeviceClass = QAndroidJniObject(env->CallObjectMethod(remoteDevice.object(), getClassMethod));
+    QAndroidJniObject remoteDeviceClass = remoteDevice.callObjectMethod("getClass", "()Ljava/lang/Class;");
     if (!remoteDeviceClass.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not invoke BluetoothDevice.getClass.";
         return false;
     }
 
-    jclass classClass = env->FindClass("java/lang/Class");
-    jclass integerClass = env->FindClass("java/lang/Integer");
-    jfieldID integerType = env->GetStaticFieldID(integerClass, "TYPE", "Ljava/lang/Class;");
-    jobject integerObject = env->GetStaticObjectField(integerClass, integerType);
-    if (!integerObject) {
+    QAndroidJniObject integerObject = QAndroidJniObject::getStaticObjectField<jobject>(
+                                            "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
+    if (!integerObject.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not get Integer.TYPE";
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+
         return false;
     }
 
-    jobjectArray paramTypes = env->NewObjectArray(1, classClass, integerObject);
-    if (!paramTypes) {
+    jclass classClass = QJNIEnvironmentPrivate::findClass("java/lang/Class");
+    jobjectArray rawArray = env->NewObjectArray(1, classClass,
+                                                integerObject.object<jobject>());
+    QAndroidJniObject paramTypes(rawArray);
+    env->DeleteLocalRef(rawArray);
+    if (!paramTypes.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not create new Class[]{Integer.TYPE}";
+
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         return false;
     }
 
@@ -144,7 +150,7 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
                 "getMethod",
                 "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;",
                 QAndroidJniObject::fromString(QLatin1String("createRfcommSocket")).object<jstring>(),
-                paramTypes);
+                paramTypes.object<jobjectArray>());
     if (!method.isValid() || env->ExceptionCheck()) {
         qCWarning(QT_BT_ANDROID) << "Could not invoke getMethod";
         if (env->ExceptionCheck()) {
@@ -154,29 +160,23 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
         return false;
     }
 
-    jclass methodClass = env->GetObjectClass(method.object());
-    jmethodID invokeMethodId = env->GetMethodID(
-                methodClass, "invoke",
-                "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
-    if (!invokeMethodId) {
-        qCWarning(QT_BT_ANDROID) << "Could not invoke method.";
-        return false;
-    }
+    jclass objectClass = QJNIEnvironmentPrivate::findClass("java/lang/Object");
+    QAndroidJniObject channelObject = QAndroidJniObject::callStaticObjectMethod(
+                                        "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", channel);
+    rawArray = env->NewObjectArray(1, objectClass, channelObject.object<jobject>());
 
-    jmethodID valueOfMethodId = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
-    jclass objectClass = env->FindClass("java/lang/Object");
-    jobjectArray invokeParams = env->NewObjectArray(1, objectClass, env->CallStaticObjectMethod(integerClass, valueOfMethodId, channel));
-
-
-    jobject invokeResult = env->CallObjectMethod(method.object(), invokeMethodId,
-                                                 remoteDevice.object(), invokeParams);
-    if (!invokeResult)
+    QAndroidJniObject invokeResult = method.callObjectMethod("invoke",
+                                         "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",
+                                         remoteDevice.object<jobject>(), rawArray);
+    env->DeleteLocalRef(rawArray);
+    if (!invokeResult.isValid())
     {
         qCWarning(QT_BT_ANDROID) << "Invoke Resulted with error.";
         if (env->ExceptionCheck()) {
             env->ExceptionDescribe();
             env->ExceptionClear();
         }
+
         return false;
     }
 
@@ -187,7 +187,6 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
         env->ExceptionClear();
 
         qCWarning(QT_BT_ANDROID) << "Socket connect via workaround failed.";
-
         return false;
     }
 
