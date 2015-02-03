@@ -46,7 +46,7 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.Bundle;
-//import android.util.Log;
+import android.util.Log;
 import android.content.BroadcastReceiver;
 
 public class QtNfc
@@ -115,7 +115,8 @@ public class QtNfc
                 try {
                     m_adapter.enableForegroundDispatch(m_activity, m_pendingIntent, filters, techList);
                 } catch(IllegalStateException e) {
-                    throw new RuntimeException("Fail", e);
+                    // On Android we must call enableForegroundDisplatch when the activity is in forground, only.
+                    Log.d(TAG, "enableForegroundDispatch failed: " + e.toString());
                 }
             }
         });
