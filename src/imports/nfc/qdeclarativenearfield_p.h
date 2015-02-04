@@ -63,7 +63,7 @@ class QDeclarativeNearField : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQmlListProperty<QQmlNdefRecord> messageRecords READ messageRecords NOTIFY messageRecordsChanged)
     Q_PROPERTY(QQmlListProperty<QDeclarativeNdefFilter> filter READ filter NOTIFY filterChanged)
     Q_PROPERTY(bool orderMatch READ orderMatch WRITE setOrderMatch NOTIFY orderMatchChanged)
-    Q_PROPERTY(bool polling READ polling WRITE setPolling NOTIFY pollingChanged)
+    Q_PROPERTY(bool polling READ polling WRITE setPolling NOTIFY pollingChanged REVISION 1)
 
     Q_INTERFACES(QQmlParserStatus)
 
@@ -88,10 +88,10 @@ signals:
     void messageRecordsChanged();
     void filterChanged();
     void orderMatchChanged();
-    void pollingChanged();
+    Q_REVISION(1) void pollingChanged();
 
-    void tagFound();
-    void tagRemoved();
+    Q_REVISION(1) void tagFound();
+    Q_REVISION(1) void tagRemoved();
 
 private slots:
     void _q_handleNdefMessage(const QNdefMessage &message);
