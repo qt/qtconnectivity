@@ -79,6 +79,10 @@ public:
         // introduces 5.4 version, other existing 5.2 exports become automatically available under 5.2-5.4l
         minor = 4;
         qmlRegisterType<QDeclarativeNearField>(uri, major, minor, "NearField");
+
+        // Register the 5.5 types
+        minor = 5;
+        qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
     }
 };
 
