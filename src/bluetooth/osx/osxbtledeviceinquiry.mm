@@ -45,6 +45,7 @@
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
 #include "corebluetoothwrapper_p.h"
@@ -57,7 +58,6 @@ LEDeviceInquiryDelegate::~LEDeviceInquiryDelegate()
 {
 }
 
-// TODO: check versions!
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
 
 QBluetoothUuid qt_uuid(NSUUID *nsUuid)
@@ -72,7 +72,7 @@ QBluetoothUuid qt_uuid(NSUUID *nsUuid)
     return QBluetoothUuid(qtUuidData);
 }
 
-#else
+#endif
 
 QBluetoothUuid qt_uuid(CFUUIDRef uuid)
 {
@@ -103,8 +103,6 @@ StringStrongReference uuid_as_nsstring(CFUUIDRef uuid)
     // Imporant: with ARC this will require a different cast/ownership!
     return StringStrongReference((NSString *)cfStr, false);
 }
-
-#endif
 
 }
 
@@ -301,17 +299,20 @@ using namespace QT_NAMESPACE;
 
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    if (!peripheral.identifier) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+        if (!peripheral.identifier) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
+            return;
+        }
+
+        if (![peripherals objectForKey:peripheral.identifier]) {
+            [peripherals setObject:peripheral forKey:peripheral.identifier];
+            const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.identifier));
+            delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
+        }
         return;
     }
-
-    if (![peripherals objectForKey:peripheral.identifier]) {
-        [peripherals setObject:peripheral forKey:peripheral.identifier];
-        const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.identifier));
-        delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
-    }
-#else
+#endif
     if (!peripheral.UUID) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without UUID";
         return;
@@ -323,8 +324,6 @@ using namespace QT_NAMESPACE;
         const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.UUID));
         delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
     }
-#endif
-
 }
 
 - (bool)isActive
