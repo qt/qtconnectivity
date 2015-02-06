@@ -44,6 +44,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qbytearray.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
@@ -95,10 +96,13 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
     // TODO: isPrimary is ... always 'NO' - to be investigated.
     /*
     #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    if (!cbService.isPrimary) {
-        // Our guess included/not was probably wrong.
-        newService->type &= ~QLowEnergyService::PrimaryService;
-        newService->type |= QLowEnergyService::IncludedService;
+    using OSXBluetooth::qt_OS_limit;
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+        if (!cbService.isPrimary) {
+            // Our guess included/not was probably wrong.
+            newService->type &= ~QLowEnergyService::PrimaryService;
+            newService->type |= QLowEnergyService::IncludedService;
+        }
     }
     #endif
     */
