@@ -44,6 +44,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
@@ -290,6 +291,17 @@ bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid);
 QByteArray qt_bytearray(NSData *data);
 QByteArray qt_bytearray(NSObject *data);
 ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData);
+
+inline QSysInfo::MacVersion qt_OS_limit(QSysInfo::MacVersion osxVersion, QSysInfo::MacVersion iosVersion)
+{
+#ifdef Q_OS_OSX
+    Q_UNUSED(iosVersion)
+    return osxVersion;
+#else
+    Q_UNUSED(osxVersion)
+    return iosVersion;
+#endif
+}
 
 } // namespace OSXBluetooth
 

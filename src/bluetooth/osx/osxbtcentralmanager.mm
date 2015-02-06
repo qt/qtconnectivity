@@ -45,6 +45,7 @@
 
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
 #include <algorithm>
@@ -206,31 +207,33 @@ using namespace QT_NAMESPACE;
     }
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    const quint128 qtUuidData(deviceUuid.toUInt128());
-    // STATIC_ASSERT on sizes would be handy!
-    uuid_t uuidData = {};
-    std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
-    const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData]);
-    if (!nsUuid) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSUUID identifier";
-        return QLowEnergyController::ConnectionError;
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+        const quint128 qtUuidData(deviceUuid.toUInt128());
+        // STATIC_ASSERT on sizes would be handy!
+        uuid_t uuidData = {};
+        std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
+        const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData]);
+        if (!nsUuid) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSUUID identifier";
+            return QLowEnergyController::ConnectionError;
+        }
+
+        [uuids addObject:nsUuid];
+
+        // With the latest CoreBluetooth, we can synchronously retrive peripherals:
+        QT_BT_MAC_AUTORELEASEPOOL;
+        NSArray *const peripherals = [manager retrievePeripheralsWithIdentifiers:uuids];
+        if (!peripherals || peripherals.count != 1) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
+            return QLowEnergyController::UnknownRemoteDeviceError;
+        }
+
+        peripheral = [static_cast<CBPeripheral *>([peripherals objectAtIndex:0]) retain];
+        [self connectToPeripheral];
+
+        return QLowEnergyController::NoError;
     }
-
-    [uuids addObject:nsUuid];
-
-    // With the latest CoreBluetooth, we can synchronously retrive peripherals:
-    QT_BT_MAC_AUTORELEASEPOOL;
-    NSArray *const peripherals = [manager retrievePeripheralsWithIdentifiers:uuids];
-    if (!peripherals || peripherals.count != 1) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
-        return QLowEnergyController::UnknownRemoteDeviceError;
-    }
-
-    peripheral = [static_cast<CBPeripheral *>([peripherals objectAtIndex:0]) retain];
-    [self connectToPeripheral];
-
-    return QLowEnergyController::NoError;
-#else
+#endif
     OSXBluetooth::CFStrongReference<CFUUIDRef> cfUuid(OSXBluetooth::cf_uuid(deviceUuid));
     if (!cfUuid) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create CFUUID object";
@@ -243,7 +246,6 @@ using namespace QT_NAMESPACE;
     [manager retrievePeripherals:uuids];
 
     return QLowEnergyController::NoError;
-#endif
 }
 
 - (void)connectToPeripheral
@@ -270,10 +272,12 @@ using namespace QT_NAMESPACE;
         return false;
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
-    return peripheral.state == CBPeripheralStateConnected;
-#else
-    return peripheral.isConnected;
+    using OSXBluetooth::qt_OS_limit;
+
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0))
+        return peripheral.state == CBPeripheralStateConnected;
 #endif
+    return peripheral.isConnected;
 }
 
 - (void)disconnectFromDevice
