@@ -152,10 +152,10 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
             xmlOutput.append("encoding=\"hex\" value=\"");
             xmlOutput.append(text.toHex());
         } else {
-            text.replace("&", "&amp");
-            text.replace("<", "&lt");
-            text.replace(">", "&gt");
-            text.replace("\"", "&quot");
+            text.replace('&', "&amp");
+            text.replace('<', "&lt");
+            text.replace('>', "&gt");
+            text.replace('"', "&quot");
 
             xmlOutput.append("value=\"");
             xmlOutput.append(text);
