@@ -204,8 +204,10 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
 //! [listen]
     QBluetoothServiceInfo serviceInfo;
     serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, serviceName);
+    QBluetoothServiceInfo::Sequence browseSequence;
+    browseSequence << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
     serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                             QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+                             browseSequence);
 
     QBluetoothServiceInfo::Sequence classId;
     classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));

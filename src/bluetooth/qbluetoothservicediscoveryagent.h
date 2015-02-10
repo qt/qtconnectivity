@@ -42,6 +42,10 @@
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
 
+#ifdef QT_BLUEZ_BLUETOOTH
+#include <QtCore/qprocess.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -106,7 +110,7 @@ private:
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_discoveredServices(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_createdDevice(QDBusPendingCallWatcher*))
-    Q_PRIVATE_SLOT(d_func(), void _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error, const QString &, const QStringList &))
+    Q_PRIVATE_SLOT(d_func(), void _q_sdpScannerDone(int,QProcess::ExitStatus))
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_processFetchedUuids(const QBluetoothAddress &address,

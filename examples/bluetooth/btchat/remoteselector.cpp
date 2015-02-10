@@ -136,6 +136,8 @@ void RemoteSelector::on_remoteDevices_itemActivated(QListWidgetItem *item)
 {
     qDebug() << "got click" << item->text();
     m_service = m_discoveredServices.value(item);
+    if (m_discoveryAgent->isActive())
+        m_discoveryAgent->stop();
 
     accept();
 }

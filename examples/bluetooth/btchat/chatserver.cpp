@@ -101,8 +101,10 @@ void ChatServer::startServer(const QBluetoothAddress& localAdapter)
     //! [Service UUID set]
 
     //! [Service Discoverability]
+    QBluetoothServiceInfo::Sequence publicBrowse;
+    publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
     serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                             QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+                             publicBrowse);
     //! [Service Discoverability]
 
     //! [Protocol descriptor list]
