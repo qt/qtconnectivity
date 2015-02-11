@@ -42,7 +42,7 @@
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
-class MainNfcNewIntentListener : public QtAndroidPrivate::NewIntentListener
+class MainNfcNewIntentListener : public QtAndroidPrivate::NewIntentListener, QtAndroidPrivate::ResumePauseListener
 {
 public:
     MainNfcNewIntentListener();
@@ -50,9 +50,14 @@ public:
     bool handleNewIntent(JNIEnv *env, jobject intent);
     bool registerListener(AndroidNfcListenerInterface *listener);
     bool unregisterListener(AndroidNfcListenerInterface *listener);
+    void handleResume();
+    void handlePause();
+    void updateReceiveState();
 protected:
     QList<AndroidNfc::AndroidNfcListenerInterface*> listeners;
     QReadWriteLock listenersLock;
+    bool paused;
+    bool receiving;
 };
 
 QT_END_ANDROIDNFC_NAMESPACE

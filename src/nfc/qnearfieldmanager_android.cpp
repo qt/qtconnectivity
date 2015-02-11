@@ -276,13 +276,10 @@ void QNearFieldManagerPrivateImpl::updateReceiveState()
 {
     if (m_detecting) {
         AndroidNfc::registerListener(this);
-        AndroidNfc::startDiscovery();
     } else {
         if (ndefMessageHandlers.count() || ndefFilterHandlers.count()) {
             AndroidNfc::registerListener(this);
-            AndroidNfc::startDiscovery();
         } else {
-            AndroidNfc::stopDiscovery();
             AndroidNfc::unregisterListener(this);
         }
     }

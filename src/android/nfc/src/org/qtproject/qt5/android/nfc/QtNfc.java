@@ -90,9 +90,9 @@ public class QtNfc
         //Log.d(TAG, "Thread:" + Thread.currentThread().getId());
     }
 
-    static public void start()
+    static public boolean start()
     {
-        if (m_adapter == null) return;
+        if (m_adapter == null) return false;
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Enabling NFC");
@@ -120,17 +120,19 @@ public class QtNfc
                 }
             }
         });
+        return true;
     }
 
-    static public void stop()
+    static public boolean stop()
     {
-        if (m_adapter == null) return;
+        if (m_adapter == null) return false;
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Disabling NFC");
                 m_adapter.disableForegroundDispatch(m_activity);
             }
         });
+        return true;
     }
 
     static public boolean isAvailable()

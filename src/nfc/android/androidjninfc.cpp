@@ -79,8 +79,7 @@ bool startDiscovery()
     if (!aenv.jniEnv)
         return false;
 
-    aenv.jniEnv->CallStaticObjectMethod(nfcClass, startDiscoveryId);
-    return true;
+    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, startDiscoveryId);
 }
 
 bool isAvailable()
@@ -95,12 +94,12 @@ bool isAvailable()
 
 bool stopDiscovery()
 {
+    __android_log_print(ANDROID_LOG_INFO, "Qt", "QtNfc::stopDiscovery()");
     AttachedJNIEnv aenv;
     if (!aenv.jniEnv)
         return false;
 
-    aenv.jniEnv->CallStaticObjectMethod(nfcClass, stopDiscoveryId);
-    return true;
+    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, startDiscoveryId);
 }
 
 bool registerListener(AndroidNfcListenerInterface *listener)
@@ -168,8 +167,8 @@ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
     FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/nfc/QtNfc");
     nfcClass = static_cast<jclass>(env->NewGlobalRef(clazz));
 
-    GET_AND_CHECK_STATIC_METHOD(startDiscoveryId, nfcClass, "start", "()V");
-    GET_AND_CHECK_STATIC_METHOD(stopDiscoveryId, nfcClass, "stop", "()V");
+    GET_AND_CHECK_STATIC_METHOD(startDiscoveryId, nfcClass, "start", "()Z");
+    GET_AND_CHECK_STATIC_METHOD(stopDiscoveryId, nfcClass, "stop", "()Z");
     GET_AND_CHECK_STATIC_METHOD(isAvailableId, nfcClass, "isAvailable", "()Z");
     javaVM = vm;
 

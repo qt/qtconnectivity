@@ -37,14 +37,16 @@
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
 MainNfcNewIntentListener::MainNfcNewIntentListener()
- : listeners(), listenersLock()
+ : listeners(), listenersLock(), paused(true), receiving(false)
 {
     QtAndroidPrivate::registerNewIntentListener(this);
+    QtAndroidPrivate::registerResumePauseListener(this);
 }
 
 MainNfcNewIntentListener::~MainNfcNewIntentListener()
 {
     QtAndroidPrivate::unregisterNewIntentListener(this);
+    QtAndroidPrivate::unregisterResumePauseListener(this);
 }
 
 bool MainNfcNewIntentListener::handleNewIntent(JNIEnv *env, jobject intent)
@@ -67,6 +69,7 @@ bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *lis
     if (!listeners.contains(listener))
         listeners.push_back(listener);
     listenersLock.unlock();
+    updateReceiveState();
     return true;
 }
 
@@ -75,7 +78,38 @@ bool MainNfcNewIntentListener::unregisterListener(AndroidNfcListenerInterface *l
     listenersLock.lockForWrite();
     listeners.removeOne(listener);
     listenersLock.unlock();
+    updateReceiveState();
     return true;
+}
+
+void MainNfcNewIntentListener::handleResume()
+{
+    paused = false;
+    updateReceiveState();
+}
+
+void MainNfcNewIntentListener::handlePause()
+{
+    paused = true;
+    updateReceiveState();
+}
+
+void MainNfcNewIntentListener::updateReceiveState()
+{
+    if (paused && receiving) {
+        AndroidNfc::stopDiscovery();
+        receiving = false;
+        return;
+    }
+    listenersLock.lockForRead();
+    if (listeners.count() && !receiving)
+        receiving = AndroidNfc::startDiscovery();
+
+    if (!listeners.count() && receiving) {
+        AndroidNfc::stopDiscovery();
+        receiving = false;
+    }
+    listenersLock.unlock();
 }
 
 QT_END_ANDROIDNFC_NAMESPACE
