@@ -376,9 +376,9 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         return;
     }
 
-    // BluetoothDevice::createBond() requires Android API 19
-    if (QtAndroidPrivate::androidSdkVersion() < 19 || !d_ptr->adapter()) {
-        qCWarning(QT_BT_ANDROID) <<  "Unable to pair: requires Android API 19+";
+    // BluetoothDevice::createBond() requires Android API 15
+    if (QtAndroidPrivate::androidSdkVersion() < 15 || !d_ptr->adapter()) {
+        qCWarning(QT_BT_ANDROID) <<  "Unable to pair: requires Android API 15+";
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));

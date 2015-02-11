@@ -345,6 +345,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                 QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                           Q_ARG(QBluetoothLocalDevice::Error,
                                                 QBluetoothLocalDevice::PairingError));
+                delete device;
                 return;
             }
             delete device;
@@ -368,6 +369,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                 QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                           Q_ARG(QBluetoothLocalDevice::Error,
                                                 QBluetoothLocalDevice::PairingError));
+                delete device;
                 return;
             }
             delete device;
@@ -579,15 +581,21 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
 
         QDBusPendingReply<QVariantMap> deviceReply = device->GetProperties();
         deviceReply.waitForFinished();
-        if (deviceReply.isError())
+        if (deviceReply.isError()) {
+            delete device;
             return Unpaired;
+        }
 
         QVariantMap map = deviceReply.value();
 
-        if (map.value(QStringLiteral("Trusted")).toBool() && map.value(QStringLiteral("Paired")).toBool())
+        if (map.value(QStringLiteral("Trusted")).toBool() && map.value(QStringLiteral("Paired")).toBool()) {
+            delete device;
             return AuthorizedPaired;
-        else if (map.value(QStringLiteral("Paired")).toBool())
+        } else if (map.value(QStringLiteral("Paired")).toBool()) {
+            delete device;
             return Paired;
+        }
+        delete device;
     } else if (d_ptr->adapterBluez5) {
 
         QDBusPendingReply<ManagedObjectList> reply = d_ptr->managerBluez5->GetManagedObjects();

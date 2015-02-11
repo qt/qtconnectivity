@@ -58,6 +58,7 @@ class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
 class OrgFreedesktopDBusObjectManagerInterface;
+#include <QtCore/qprocess.h>
 
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
@@ -127,6 +128,7 @@ public:
     void _q_discoverGattCharacteristics(QDBusPendingCallWatcher *watcher);
     void _q_discoveredGattCharacteristic(QDBusPendingCallWatcher *watcher);
     */
+    void _q_sdpScannerDone(int exitCode, QProcess::ExitStatus status);
     void _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error errorCode,
                           const QString &errorDescription,
                           const QStringList &xmlRecords);
@@ -147,8 +149,9 @@ private:
 
 #ifdef QT_BLUEZ_BLUETOOTH
     void startBluez5(const QBluetoothAddress &address);
-    void runSdpScan(const QBluetoothAddress &remoteAddress,
+    void runExternalSdpScan(const QBluetoothAddress &remoteAddress,
                     const QBluetoothAddress localAddress);
+    void sdpScannerDone(int exitCode, QProcess::ExitStatus exitStatus);
     QVariant readAttributeValue(QXmlStreamReader &xml);
     QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
@@ -195,6 +198,7 @@ private:
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
     OrgBluezAdapterInterface *adapter;
     OrgBluezDeviceInterface *device;
+    QProcess *sdpScannerProcess;
 #endif
 
 #ifdef QT_ANDROID_BLUETOOTH

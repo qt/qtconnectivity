@@ -183,6 +183,11 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoot
 
 QBluetoothServiceDiscoveryAgent::~QBluetoothServiceDiscoveryAgent()
 {
+    if (isActive()) {
+        disconnect(); //don't emit any signals due to stop()
+        stop();
+    }
+
     delete d_ptr;
 }
 

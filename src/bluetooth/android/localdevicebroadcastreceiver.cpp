@@ -50,8 +50,8 @@ LocalDeviceBroadcastReceiver::LocalDeviceBroadcastReceiver(QObject *parent) :
     addAction(valueForStaticField(JavaNames::BluetoothAdapter, JavaNames::ActionScanModeChanged));
     addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionAclConnected));
     addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionAclDisconnected));
-    if (QtAndroidPrivate::androidSdkVersion() >= 19)
-        addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionPairingRequest)); //API 19
+    if (QtAndroidPrivate::androidSdkVersion() >= 15)
+        addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionPairingRequest)); //API 15
 
     //cache integer values for host & bonding mode
     //don't use the java fields directly but refer to them by name
