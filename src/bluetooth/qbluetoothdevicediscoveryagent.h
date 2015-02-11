@@ -36,7 +36,7 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-#include <QObject>
+#include <QtCore/QObject>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothAddress>
 

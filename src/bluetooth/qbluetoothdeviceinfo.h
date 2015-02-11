@@ -36,7 +36,7 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-#include <QString>
+#include <QtCore/QString>
 
 QT_BEGIN_NAMESPACE
 

@@ -34,7 +34,7 @@
 #ifndef QLOWENERGYCONTROLLER_H
 #define QLOWENERGYCONTROLLER_H
 
-#include <QObject>
+#include <QtCore/QObject>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QLowEnergyService>
