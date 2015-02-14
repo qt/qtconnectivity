@@ -46,6 +46,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qendian.h>
 #include <sys/socket.h>
 #include <QtBluetooth/QBluetoothUuid>
 
@@ -96,12 +97,12 @@ struct bt_security {
 #define btohl(d)  (d)
 #define btohll(d) (d)
 #elif __BYTE_ORDER == __BIG_ENDIAN
-#define htobs(d)  bswap_16(d)
-#define htobl(d)  bswap_32(d)
-#define htobll(d) bswap_64(d)
-#define btohs(d)  bswap_16(d)
-#define btohl(d)  bswap_32(d)
-#define btohll(d) bswap_64(d)
+#define htobs(d)  qbswap((quint16)(d))
+#define htobl(d)  qbswap((quint32)(d))
+#define htobll(d) qbswap((quint64)(d))
+#define btohs(d)  qbswap((quint16)(d))
+#define btohl(d)  qbswap((quint32)(d))
+#define btohll(d) qbswap((quint64)(d))
 #else
 #error "Unknown byte order"
 #endif
@@ -169,7 +170,7 @@ static inline quint16 bt_get_le16(const void *ptr)
 #elif __BYTE_ORDER == __BIG_ENDIAN
 static inline quint16 bt_get_le16(const void *ptr)
 {
-    return bswap_16(bt_get_unaligned((const quint16 *) ptr));
+    return qbswap(bt_get_unaligned((const quint16 *) ptr));
 }
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
