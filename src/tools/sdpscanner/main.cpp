@@ -141,9 +141,13 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         QByteArray text = QByteArray::fromRawData(data->val.str, data->unitSize);
 
         bool hasNonPrintableChar = false;
-        for (int i = 0; i < text.count() && !hasNonPrintableChar; i++) {
-            if (!isprint(text[i])) {
+        for (int i = 0; i < text.count(); i++) {
+            if (text[i] == '\0') {
+                text.resize(i); // cut trailing content
+                break;
+            } else if (!isprint(text[i])) {
                 hasNonPrintableChar = true;
+                text.resize(text.indexOf('\0')); // cut trailing content
                 break;
             }
         }
@@ -152,10 +156,10 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
             xmlOutput.append("encoding=\"hex\" value=\"");
             xmlOutput.append(text.toHex());
         } else {
-            text.replace("&", "&amp");
-            text.replace("<", "&lt");
-            text.replace(">", "&gt");
-            text.replace("\"", "&quot");
+            text.replace('&', "&amp;");
+            text.replace('<', "&lt;");
+            text.replace('>', "&gt;");
+            text.replace('"', "&quot;");
 
             xmlOutput.append("value=\"");
             xmlOutput.append(text);

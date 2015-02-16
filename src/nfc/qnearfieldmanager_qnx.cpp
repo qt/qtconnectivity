@@ -85,7 +85,7 @@ void QNearFieldManagerPrivateImpl::stopTargetDetection()
 int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(QObject *object, const QMetaMethod &method)
 {
     QList<QByteArray> filterList;
-    filterList += "*";
+    filterList += '*';
     QNXNFCManager::instance()->updateNdefFilters(filterList, this);
 
     ndefMessageHandlers.append(QPair<QPair<int, QObject *>, QMetaMethod>(QPair<int, QObject *>(m_handlerID, object), method));
@@ -180,7 +180,7 @@ void QNearFieldManagerPrivateImpl::updateNdefFilter()
     qQNXNFCDebug() << "Updating NDEF filter";
     QList<QByteArray> filterList;
     if (ndefMessageHandlers.size() > 0) { ///SUbscribe for all ndef messages
-        filterList += "*";
+        filterList += '*';
         QNXNFCManager::instance()->updateNdefFilters(filterList, this);
     } else if (ndefFilterHandlers.size() > 0){
         for (int i = 0; i < ndefFilterHandlers.count(); i++) {
