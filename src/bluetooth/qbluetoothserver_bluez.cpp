@@ -151,9 +151,11 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         else
             convertAddress(device.address().toUInt64(), addr.rc_bdaddr.b);
 
-
         if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_rc)) < 0) {
-            d->m_lastError = InputOutputError;
+            if (errno == EADDRINUSE)
+                d->m_lastError = ServiceAlreadyRegisteredError;
+            else
+                d->m_lastError = InputOutputError;
             emit error(d->m_lastError);
             return false;
         }
