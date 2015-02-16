@@ -36,7 +36,7 @@
 #define QNEARFIELDSHARETARGET_H
 
 #include <QtCore/QObject>
-#include <QFileInfo>
+#include <QtCore/QFileInfo>
 #include <QtNfc/QNdefMessage>
 #include <QtNfc/QNearFieldShareManager>
 

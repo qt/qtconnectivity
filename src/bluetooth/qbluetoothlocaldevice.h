@@ -36,9 +36,9 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-#include <QObject>
+#include <QtCore/QObject>
 #include <QtCore/QList>
-#include <QString>
+#include <QtCore/QString>
 
 #include <QtBluetooth/QBluetoothHostInfo>
 

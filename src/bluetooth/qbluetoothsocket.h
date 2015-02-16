@@ -40,7 +40,7 @@
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QBluetoothServiceInfo>
 
-#include <QIODevice>
+#include <QtCore/QIODevice>
 #include <QtNetwork/QAbstractSocket>
 
 QT_BEGIN_NAMESPACE
