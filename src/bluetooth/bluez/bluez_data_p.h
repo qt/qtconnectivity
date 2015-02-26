@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -75,8 +75,8 @@
 
 #define BT_SECURITY 4
 struct bt_security {
-    uint8_t level;
-    uint8_t key_size;
+    quint8 level;
+    quint8 key_size;
 };
 #define BT_SECURITY_SDP     0
 #define BT_SECURITY_LOW     1
@@ -162,14 +162,14 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
         dst->data[15 - i] = src->data[i];
 }
 
-static inline uint16_t bt_get_le16(const void *ptr)
+static inline quint16 bt_get_le16(const void *ptr)
 {
-    return bt_get_unaligned((const uint16_t *) ptr);
+    return bt_get_unaligned((const quint16 *) ptr);
 }
 #elif __BYTE_ORDER == __BIG_ENDIAN
-static inline uint16_t bt_get_le16(const void *ptr)
+static inline quint16 bt_get_le16(const void *ptr)
 {
-    return bswap_16(bt_get_unaligned((const uint16_t *) ptr));
+    return bswap_16(bt_get_unaligned((const quint16 *) ptr));
 }
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
@@ -213,79 +213,79 @@ struct sockaddr_hci {
 };
 
 struct hci_dev_req {
-    uint16_t dev_id;
-    uint32_t dev_opt;
+    quint16 dev_id;
+    quint32 dev_opt;
 };
 
 struct hci_dev_list_req {
-    uint16_t dev_num;
+    quint16 dev_num;
     struct hci_dev_req dev_req[0];
 };
 
 struct hci_dev_stats {
-    uint32_t err_rx;
-    uint32_t err_tx;
-    uint32_t cmd_tx;
-    uint32_t evt_rx;
-    uint32_t acl_tx;
-    uint32_t acl_rx;
-    uint32_t sco_tx;
-    uint32_t sco_rx;
-    uint32_t byte_rx;
-    uint32_t byte_tx;
+    quint32 err_rx;
+    quint32 err_tx;
+    quint32 cmd_tx;
+    quint32 evt_rx;
+    quint32 acl_tx;
+    quint32 acl_rx;
+    quint32 sco_tx;
+    quint32 sco_rx;
+    quint32 byte_rx;
+    quint32 byte_tx;
 };
 
 struct hci_dev_info {
-    uint16_t dev_id;
+    quint16 dev_id;
     char     name[8];
 
     bdaddr_t bdaddr;
 
-    uint32_t flags;
-    uint8_t  type;
+    quint32 flags;
+    quint8  type;
 
-    uint8_t  features[8];
+    quint8  features[8];
 
-    uint32_t pkt_type;
-    uint32_t link_policy;
-    uint32_t link_mode;
+    quint32 pkt_type;
+    quint32 link_policy;
+    quint32 link_mode;
 
-    uint16_t acl_mtu;
-    uint16_t acl_pkts;
-    uint16_t sco_mtu;
-    uint16_t sco_pkts;
+    quint16 acl_mtu;
+    quint16 acl_pkts;
+    quint16 sco_mtu;
+    quint16 sco_pkts;
 
     struct   hci_dev_stats stat;
 };
 
 struct hci_conn_info {
-    uint16_t handle;
+    quint16 handle;
     bdaddr_t bdaddr;
-    uint8_t  type;
-    uint8_t  out;
-    uint16_t state;
-    uint32_t link_mode;
+    quint8  type;
+    quint8  out;
+    quint16 state;
+    quint32 link_mode;
 };
 
 struct hci_conn_list_req {
-    uint16_t dev_id;
-    uint16_t conn_num;
+    quint16 dev_id;
+    quint16 conn_num;
     struct hci_conn_info conn_info[0];
 };
 
 struct hci_filter {
-    uint32_t type_mask;
-    uint32_t event_mask[2];
-    uint16_t opcode;
+    quint32 type_mask;
+    quint32 event_mask[2];
+    quint16 opcode;
 };
 
 static inline void hci_set_bit(int nr, void *addr)
 {
-    *((uint32_t *) addr + (nr >> 5)) |= (1 << (nr & 31));
+    *((quint32 *) addr + (nr >> 5)) |= (1 << (nr & 31));
 }
 static inline void hci_clear_bit(int nr, void *addr)
 {
-    *((uint32_t *) addr + (nr >> 5)) &= ~(1 << (nr & 31));
+    *((quint32 *) addr + (nr >> 5)) &= ~(1 << (nr & 31));
 }
 static inline void hci_filter_clear(struct hci_filter *f)
 {
@@ -317,16 +317,16 @@ static inline void hci_filter_all_events(struct hci_filter *f)
 }
 
 typedef struct {
-    uint8_t evt;
-    uint8_t plen;
+    quint8 evt;
+    quint8 plen;
 } __attribute__ ((packed)) hci_event_hdr;
 #define HCI_EVENT_HDR_SIZE 2
 
 #define EVT_ENCRYPT_CHANGE 0x08
 typedef struct {
-    uint8_t  status;
-    uint16_t handle;
-    uint8_t  encrypt;
+    quint8  status;
+    quint16 handle;
+    quint8  encrypt;
 } __attribute__ ((packed)) evt_encrypt_change;
 #define EVT_ENCRYPT_CHANGE_SIZE 4
 
