@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -44,6 +44,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qbytearray.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
@@ -95,10 +96,13 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
     // TODO: isPrimary is ... always 'NO' - to be investigated.
     /*
     #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    if (!cbService.isPrimary) {
-        // Our guess included/not was probably wrong.
-        newService->type &= ~QLowEnergyService::PrimaryService;
-        newService->type |= QLowEnergyService::IncludedService;
+    using OSXBluetooth::qt_OS_limit;
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+        if (!cbService.isPrimary) {
+            // Our guess included/not was probably wrong.
+            newService->type &= ~QLowEnergyService::PrimaryService;
+            newService->type |= QLowEnergyService::IncludedService;
+        }
     }
     #endif
     */
