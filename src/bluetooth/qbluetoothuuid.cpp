@@ -804,8 +804,8 @@ QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uu
     case QBluetoothUuid::AlertNotificationService: return QBluetoothServiceDiscoveryAgent::tr("Alert Notification Service");
     case QBluetoothUuid::HumanInterfaceDevice: return QBluetoothServiceDiscoveryAgent::tr("Human Interface Device");
     case QBluetoothUuid::ScanParameters: return QBluetoothServiceDiscoveryAgent::tr("Scan Parameters");
-    case QBluetoothUuid::RunningSpeedAndCadence: return QBluetoothServiceDiscoveryAgent::tr("Running Speed and Cadance");
-    case QBluetoothUuid::CyclingSpeedAndCadence: return QBluetoothServiceDiscoveryAgent::tr("Cycling Speed and Cadance");
+    case QBluetoothUuid::RunningSpeedAndCadence: return QBluetoothServiceDiscoveryAgent::tr("Running Speed and Cadence");
+    case QBluetoothUuid::CyclingSpeedAndCadence: return QBluetoothServiceDiscoveryAgent::tr("Cycling Speed and Cadence");
     case QBluetoothUuid::CyclingPower: return QBluetoothServiceDiscoveryAgent::tr("Cycling Power");
     case QBluetoothUuid::LocationAndNavigation: return QBluetoothServiceDiscoveryAgent::tr("Location and Navigation");
     case QBluetoothUuid::EnvironmentalSensing: return QBluetoothServiceDiscoveryAgent::tr("Environmental Sensing");
@@ -855,7 +855,7 @@ QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
     case QBluetoothUuid::Avdtp: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Distribution Transport Protocol");
     case QBluetoothUuid::Cmtp: return QBluetoothServiceDiscoveryAgent::tr("Common ISDN Access Protocol");
     case QBluetoothUuid::UdiCPlain: return QBluetoothServiceDiscoveryAgent::tr("UdiCPlain");
-    case QBluetoothUuid::McapControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol -Conrol");
+    case QBluetoothUuid::McapControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol -Control");
     case QBluetoothUuid::McapDataChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol - Data");
     case QBluetoothUuid::L2cap: return QBluetoothServiceDiscoveryAgent::tr("Layer 2 Control Protocol");
     default:
