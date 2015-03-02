@@ -33,6 +33,7 @@
 
 
 #include "androidmainnewintentlistener_p.h"
+#include <QtGui/QGuiApplication>
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
@@ -65,6 +66,19 @@ bool MainNfcNewIntentListener::handleNewIntent(JNIEnv *env, jobject intent)
 
 bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *listener)
 {
+    static bool firstListener = true;
+    if (firstListener) {
+        AttachedJNIEnv aenv;
+        if (aenv.jniEnv) {
+            jobject intent = AndroidNfc::getStartIntent();
+            if (intent) {
+                jobject newIntentRef = aenv.jniEnv->NewGlobalRef(intent);
+                listener->newIntent(newIntentRef);
+            }
+        }
+        paused = static_cast<QGuiApplication*>(QGuiApplication::instance())->applicationState() != Qt::ApplicationActive;
+    }
+    firstListener = false;
     listenersLock.lockForWrite();
     if (!listeners.contains(listener))
         listeners.push_back(listener);

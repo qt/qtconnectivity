@@ -64,6 +64,7 @@ private:
 
 bool startDiscovery();
 bool stopDiscovery();
+jobject getStartIntent();
 bool isAvailable();
 bool registerListener(AndroidNfcListenerInterface *listener);
 bool unregisterListener(AndroidNfcListenerInterface *listener);

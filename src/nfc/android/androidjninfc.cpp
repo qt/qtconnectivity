@@ -47,6 +47,7 @@ static jclass nfcClass;
 static jmethodID startDiscoveryId;
 static jmethodID stopDiscoveryId;
 static jmethodID isAvailableId;
+static jmethodID getStartIntentId;
 
 static AndroidNfc::MainNfcNewIntentListener mainListener;
 
@@ -100,6 +101,15 @@ bool stopDiscovery()
         return false;
 
     return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, stopDiscoveryId);
+}
+
+jobject getStartIntent()
+{
+    AttachedJNIEnv aenv;
+    if (!aenv.jniEnv)
+        return NULL;
+
+    return aenv.jniEnv->CallStaticObjectMethod(nfcClass, getStartIntentId);
 }
 
 bool registerListener(AndroidNfcListenerInterface *listener)
@@ -170,6 +180,7 @@ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
     GET_AND_CHECK_STATIC_METHOD(startDiscoveryId, nfcClass, "start", "()Z");
     GET_AND_CHECK_STATIC_METHOD(stopDiscoveryId, nfcClass, "stop", "()Z");
     GET_AND_CHECK_STATIC_METHOD(isAvailableId, nfcClass, "isAvailable", "()Z");
+    GET_AND_CHECK_STATIC_METHOD(getStartIntentId, nfcClass, "getStartIntent", "()Landroid/content/Intent;");
     javaVM = vm;
 
     return JNI_VERSION_1_6;

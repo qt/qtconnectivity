@@ -149,4 +149,18 @@ public class QtNfc
         }
         return m_adapter.isEnabled();
     }
+
+    static public Intent getStartIntent()
+    {
+        Log.d(TAG, "getStartIntent");
+        if (m_activity == null) return null;
+        Intent intent = m_activity.getIntent();
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()) ||
+                NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) ||
+                NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())) {
+            return intent;
+        } else {
+            return null;
+        }
+    }
 }
