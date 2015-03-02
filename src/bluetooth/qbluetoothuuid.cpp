@@ -876,14 +876,19 @@ QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
 QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
 {
     switch (uuid) {
+    //: GAP:  Generic Access Profile (Bluetooth)
     case QBluetoothUuid::DeviceName: return QBluetoothServiceDiscoveryAgent::tr("GAP Device Name");
+    //: GAP:  Generic Access Profile (Bluetooth)
     case QBluetoothUuid::Appearance: return QBluetoothServiceDiscoveryAgent::tr("GAP Appearance");
     case QBluetoothUuid::PeripheralPrivacyFlag:
+        //: GAP:  Generic Access Profile (Bluetooth)
         return QBluetoothServiceDiscoveryAgent::tr("GAP Peripheral Privacy Flag");
     case QBluetoothUuid::ReconnectionAddress:
+        //: GAP:  Generic Access Profile (Bluetooth)
         return QBluetoothServiceDiscoveryAgent::tr("GAP Reconnection Address");
     case QBluetoothUuid::PeripheralPreferredConnectionParameters:
         return QBluetoothServiceDiscoveryAgent::tr("GAP Peripheral Preferred Connection Parameters");
+    //: GATT: _G_eneric _Att_ribute Profile (Bluetooth)
     case QBluetoothUuid::ServiceChanged: return QBluetoothServiceDiscoveryAgent::tr("GATT Service Changed");
     case QBluetoothUuid::AlertLevel: return QBluetoothServiceDiscoveryAgent::tr("Alert Level");
     case QBluetoothUuid::TxPowerLevel: return QBluetoothServiceDiscoveryAgent::tr("TX Power");
@@ -950,8 +955,10 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::SupportedUnreadAlertCategory:
         return QBluetoothServiceDiscoveryAgent::tr("Supported Unread Alert Category");
     case QBluetoothUuid::BloodPressureFeature: return QBluetoothServiceDiscoveryAgent::tr("Blood Pressure Feature");
+        //: HID: Human Interface Device Profile (Bluetooth)
     case QBluetoothUuid::HIDInformation: return QBluetoothServiceDiscoveryAgent::tr("HID Information");
     case QBluetoothUuid::ReportMap: return QBluetoothServiceDiscoveryAgent::tr("Report Map");
+        //: HID: Human Interface Device Profile (Bluetooth)
     case QBluetoothUuid::HIDControlPoint: return QBluetoothServiceDiscoveryAgent::tr("HID Control Point");
     case QBluetoothUuid::Report: return QBluetoothServiceDiscoveryAgent::tr("Report");
     case QBluetoothUuid::ProtocolMode: return QBluetoothServiceDiscoveryAgent::tr("Protocol Mode");
@@ -959,11 +966,16 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::PnPID: return QBluetoothServiceDiscoveryAgent::tr("PnP ID");
     case QBluetoothUuid::GlucoseFeature: return QBluetoothServiceDiscoveryAgent::tr("Glucose Feature");
     case QBluetoothUuid::RecordAccessControlPoint:
+        //: Glucose Sensor patient record database.
         return QBluetoothServiceDiscoveryAgent::tr("Record Access Control Point");
+    //: RSC: Running Speed and Cadence
     case QBluetoothUuid::RSCMeasurement: return QBluetoothServiceDiscoveryAgent::tr("RSC Measurement");
+    //: RSC: Running Speed and Cadence
     case QBluetoothUuid::RSCFeature: return QBluetoothServiceDiscoveryAgent::tr("RSC Feature");
     case QBluetoothUuid::SCControlPoint: return QBluetoothServiceDiscoveryAgent::tr("SC Control Point");
+    //: CSC: Cycling Speed and Cadence
     case QBluetoothUuid::CSCMeasurement: return QBluetoothServiceDiscoveryAgent::tr("CSC Measurement");
+    //: CSC: Cycling Speed and Cadence
     case QBluetoothUuid::CSCFeature: return QBluetoothServiceDiscoveryAgent::tr("CSC Feature");
     case QBluetoothUuid::SensorLocation: return QBluetoothServiceDiscoveryAgent::tr("Sensor Location");
     case QBluetoothUuid::CyclingPowerMeasurement:
@@ -971,25 +983,30 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::CyclingPowerVector: return QBluetoothServiceDiscoveryAgent::tr("Cycling Power Vector");
     case QBluetoothUuid::CyclingPowerFeature: return QBluetoothServiceDiscoveryAgent::tr("Cycling Power Feature");
     case QBluetoothUuid::CyclingPowerControlPoint:
-        return QBluetoothServiceDiscoveryAgent::tr("Cycling Power COntrol Point");
+        return QBluetoothServiceDiscoveryAgent::tr("Cycling Power Control Point");
     case QBluetoothUuid::LocationAndSpeed: return QBluetoothServiceDiscoveryAgent::tr("Location And Speed");
     case QBluetoothUuid::Navigation: return QBluetoothServiceDiscoveryAgent::tr("Navigation");
     case QBluetoothUuid::PositionQuality: return QBluetoothServiceDiscoveryAgent::tr("Position Quality");
     case QBluetoothUuid::LNFeature: return QBluetoothServiceDiscoveryAgent::tr("LN Feature");
     case QBluetoothUuid::LNControlPoint: return QBluetoothServiceDiscoveryAgent::tr("LN Control Point");
     case QBluetoothUuid::MagneticDeclination:
-        return QBluetoothServiceDiscoveryAgent::tr("Magnetic Declination", "angle between geographic and magnetic north");
-    case QBluetoothUuid::Elevation: return QBluetoothServiceDiscoveryAgent::tr("Elevation", "above/below sea level");
+        //: Angle between geographic and magnetic north
+        return QBluetoothServiceDiscoveryAgent::tr("Magnetic Declination");
+    //: Above/below sea level
+    case QBluetoothUuid::Elevation: return QBluetoothServiceDiscoveryAgent::tr("Elevation");
     case QBluetoothUuid::Pressure: return QBluetoothServiceDiscoveryAgent::tr("Pressure");
     case QBluetoothUuid::Temperature: return QBluetoothServiceDiscoveryAgent::tr("Temperature");
     case QBluetoothUuid::Humidity: return QBluetoothServiceDiscoveryAgent::tr("Humidity");
-    case QBluetoothUuid::TrueWindSpeed: return QBluetoothServiceDiscoveryAgent::tr("True Wind Speed", "wind speed while standing");
+    //: Wind speed while standing
+    case QBluetoothUuid::TrueWindSpeed: return QBluetoothServiceDiscoveryAgent::tr("True Wind Speed");
     case QBluetoothUuid::TrueWindDirection : return QBluetoothServiceDiscoveryAgent::tr("True Wind Direction");
     case QBluetoothUuid::ApparentWindSpeed:
-        return QBluetoothServiceDiscoveryAgent::tr("Apparent Wind Speed", "wind speed while observer is moving");
+        //: Wind speed while observer is moving
+        return QBluetoothServiceDiscoveryAgent::tr("Apparent Wind Speed");
     case QBluetoothUuid::ApparentWindDirection: return QBluetoothServiceDiscoveryAgent::tr("Apparent Wind Direction");
     case QBluetoothUuid::GustFactor:
-        return QBluetoothServiceDiscoveryAgent::tr("Gust Factor", "factor by which wind gust is stronger than average wind");
+        //: Factor by which wind gust is stronger than average wind
+        return QBluetoothServiceDiscoveryAgent::tr("Gust Factor");
     case QBluetoothUuid::PollenConcentration: return QBluetoothServiceDiscoveryAgent::tr("Pollen Concentration");
     case QBluetoothUuid::UVIndex: return QBluetoothServiceDiscoveryAgent::tr("UV Index");
     case QBluetoothUuid::Irradiance: return QBluetoothServiceDiscoveryAgent::tr("Irradiance");
@@ -998,13 +1015,15 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::HeatIndex: return QBluetoothServiceDiscoveryAgent::tr("Heat Index");
     case QBluetoothUuid::DewPoint: return QBluetoothServiceDiscoveryAgent::tr("Dew Point");
     case QBluetoothUuid::DescriptorValueChanged:
-        return QBluetoothServiceDiscoveryAgent::tr("Descriptor Value Changed", "Environmental sensing related");
+        //: Environmental sensing related
+        return QBluetoothServiceDiscoveryAgent::tr("Descriptor Value Changed");
     case QBluetoothUuid::AerobicHeartRateLowerLimit:
         return QBluetoothServiceDiscoveryAgent::tr("Aerobic Heart Rate Lower Limit");
     case QBluetoothUuid::AerobicHeartRateUpperLimit:
         return QBluetoothServiceDiscoveryAgent::tr("Aerobic Heart Rate Upper Limit");
     case QBluetoothUuid::AerobicThreshold: return QBluetoothServiceDiscoveryAgent::tr("Aerobic Threshold");
-    case QBluetoothUuid::Age: return QBluetoothServiceDiscoveryAgent::tr("Age", "age of person");
+    //: Age of person
+    case QBluetoothUuid::Age: return QBluetoothServiceDiscoveryAgent::tr("Age");
     case QBluetoothUuid::AnaerobicHeartRateLowerLimit:
         return QBluetoothServiceDiscoveryAgent::tr("Anaerobic Heart Rate Lower Limit");
     case QBluetoothUuid::AnaerobicHeartRateUpperLimit:
@@ -1021,7 +1040,8 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::FiveZoneHeartRateLimits: return QBluetoothServiceDiscoveryAgent::tr("5-Zone Heart Rate Limits");
     case QBluetoothUuid::Gender: return QBluetoothServiceDiscoveryAgent::tr("Gender");
     case QBluetoothUuid::HeartRateMax: return QBluetoothServiceDiscoveryAgent::tr("Heart Rate Maximum");
-    case QBluetoothUuid::Height: return QBluetoothServiceDiscoveryAgent::tr("Height", "of a person");
+    //: Height of a person
+    case QBluetoothUuid::Height: return QBluetoothServiceDiscoveryAgent::tr("Height");
     case QBluetoothUuid::HipCircumference: return QBluetoothServiceDiscoveryAgent::tr("Hip Circumference");
     case QBluetoothUuid::LastName: return QBluetoothServiceDiscoveryAgent::tr("Last Name");
     case QBluetoothUuid::MaximumRecommendedHeartRate:
@@ -1035,7 +1055,8 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::WaistCircumference: return QBluetoothServiceDiscoveryAgent::tr("Waist Circumference");
     case QBluetoothUuid::Weight: return QBluetoothServiceDiscoveryAgent::tr("Weight");
     case QBluetoothUuid::DatabaseChangeIncrement:
-        return QBluetoothServiceDiscoveryAgent::tr("Database Change Increment", "Environmental sensing related");
+        //: Environmental sensing related
+        return QBluetoothServiceDiscoveryAgent::tr("Database Change Increment");
     case QBluetoothUuid::UserIndex: return QBluetoothServiceDiscoveryAgent::tr("User Index");
     case QBluetoothUuid::BodyCompositionFeature: return QBluetoothServiceDiscoveryAgent::tr("Body Composition Feature");
     case QBluetoothUuid::BodyCompositionMeasurement: return QBluetoothServiceDiscoveryAgent::tr("Body Composition Measurement");
@@ -1070,7 +1091,7 @@ QString QBluetoothUuid::descriptorToString(QBluetoothUuid::DescriptorType uuid)
     case QBluetoothUuid::ClientCharacteristicConfiguration:
         return QBluetoothServiceDiscoveryAgent::tr("Client Characteristic Configuration");
     case QBluetoothUuid::ServerCharacteristicConfiguration:
-        return QBluetoothServiceDiscoveryAgent::tr("Server Characteristic Configuratio");
+        return QBluetoothServiceDiscoveryAgent::tr("Server Characteristic Configuration");
     case QBluetoothUuid::CharacteristicPresentationFormat:
         return QBluetoothServiceDiscoveryAgent::tr("Characteristic Presentation Format");
     case QBluetoothUuid::CharacteristicAggregateFormat:
