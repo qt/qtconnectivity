@@ -115,7 +115,7 @@ public class QtNfc
                 try {
                     m_adapter.enableForegroundDispatch(m_activity, m_pendingIntent, filters, techList);
                 } catch(IllegalStateException e) {
-                    // On Android we must call enableForegroundDisplatch when the activity is in forground, only.
+                    // On Android we must call enableForegroundDispatch when the activity is in foreground, only.
                     Log.d(TAG, "enableForegroundDispatch failed: " + e.toString());
                 }
             }
@@ -129,7 +129,12 @@ public class QtNfc
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Disabling NFC");
-                m_adapter.disableForegroundDispatch(m_activity);
+                try {
+                    m_adapter.disableForegroundDispatch(m_activity);
+                } catch(IllegalStateException e) {
+                    // On Android we must call disableForegroundDispatch when the activity is in foreground, only.
+                    Log.d(TAG, "disableForegroundDispatch failed: " + e.toString());
+                }
             }
         });
         return true;
