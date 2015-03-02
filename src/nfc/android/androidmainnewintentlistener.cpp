@@ -96,15 +96,22 @@ void MainNfcNewIntentListener::handlePause()
 
 void MainNfcNewIntentListener::updateReceiveState()
 {
-    if (paused && receiving) {
-        AndroidNfc::stopDiscovery();
-        receiving = false;
+    if (paused) {
+        // We were paused while receiving, so we stop receiving.
+        if (receiving) {
+            AndroidNfc::stopDiscovery();
+            receiving = false;
+        }
         return;
     }
+
+    // We reach here, so we are not paused.
     listenersLock.lockForRead();
+    // We have nfc listeners and do not receive. Switch on.
     if (listeners.count() && !receiving)
         receiving = AndroidNfc::startDiscovery();
 
+    // we have no nfc listeners and do receive. Switch off.
     if (!listeners.count() && receiving) {
         AndroidNfc::stopDiscovery();
         receiving = false;
