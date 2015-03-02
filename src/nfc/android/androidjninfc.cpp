@@ -99,7 +99,7 @@ bool stopDiscovery()
     if (!aenv.jniEnv)
         return false;
 
-    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, startDiscoveryId);
+    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, stopDiscoveryId);
 }
 
 bool registerListener(AndroidNfcListenerInterface *listener)
