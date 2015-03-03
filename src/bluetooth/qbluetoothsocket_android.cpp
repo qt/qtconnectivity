@@ -98,7 +98,7 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
         return false;
     }
 
-    QAndroidJniObject integerObject = QAndroidJniObject::getStaticObjectField<jobject>(
+    QAndroidJniObject integerObject = QAndroidJniObject::getStaticObjectField(
                                             "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
     if (!integerObject.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not get Integer.TYPE";
