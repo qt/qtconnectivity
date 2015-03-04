@@ -123,7 +123,7 @@ bool QBluetoothTransferReplyBluez::start()
         m_tempfile->open();
         qCDebug(QT_BT_BLUEZ) << "Not a QFile, making a copy" << m_tempfile->fileName();
         if (!m_source->isReadable()) {
-            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read."
+            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read. "
                                                      "Make sure it is open for reading.");
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;
