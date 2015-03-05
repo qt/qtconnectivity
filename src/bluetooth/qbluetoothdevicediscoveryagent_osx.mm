@@ -38,6 +38,7 @@
 #include "osx/osxbtsdpinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 #include "qbluetoothhostinfo.h"
 #include "qbluetoothuuid.h"
 
@@ -206,7 +207,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     const IOReturn res = [inquiry start];
     if (res != kIOReturnSuccess) {
-        setError(res, QObject::tr("device discovery agent: failed to start"));
+        setError(res, QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED));
         agentState = NonActive;
         emit q_ptr->error(lastError);
     }
@@ -224,8 +225,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
         // We can be here only if we have some kind of resource allocation error, so we
         // do not emit finished, we emit error.
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
-                 QObject::tr("device discovery agent, LE mode: "
-                             "resource allocation error"));
+                 QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED_LE));
         agentState = NonActive;
         emit q_ptr->error(lastError);
     }
@@ -250,7 +250,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to stop";
             startPending = prevStart;
             stopPending = false;
-            setError(res, QObject::tr("device discovery agent: failed to stop"));
+            setError(res, QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STOPPED));
             emit q_ptr->error(lastError);
         }
     } else {
@@ -357,17 +357,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
             errorString = QString();
             break;
         case QBluetoothDeviceDiscoveryAgent::PoweredOffError:
-            errorString = QObject::tr("device discovery agent: adapter is powered off");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_POWERED_OFF);
             break;
         case QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError:
-            errorString = QObject::tr("device discovery agent: invalid bluetooth adapter");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_INVALID_ADAPTER);
             break;
         case QBluetoothDeviceDiscoveryAgent::InputOutputError:
-            errorString = QObject::tr("device discovery agent: input output error");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_IO);
             break;
         case QBluetoothDeviceDiscoveryAgent::UnknownError:
         default:
-            errorString = QObject::tr("device discovery agent: unknown error");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
         }
     }
 

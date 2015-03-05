@@ -42,6 +42,7 @@
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 #include "qbluetoothsocket.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -250,7 +251,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
             status = [l2capChannel writeAsync:writeChunk.data() length:UInt16(size)];
 
         if (status != kIOReturnSuccess) {
-            errorString = QBluetoothSocket::tr("Network Error");
+            errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
             q_ptr->setSocketError(QBluetoothSocket::NetworkError);
             return;
         } else {
@@ -386,7 +387,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     Q_ASSERT_X(maxSize > 0, Q_FUNC_INFO, "invalid data size");
 
     if (state != QBluetoothSocket::ConnectedState) {
-        errorString = tr("Cannot write while not connected");
+        errorString = QCoreApplication::translate(SOCKET, SOC_NOWRITE);
         q_ptr->setSocketError(QBluetoothSocket::OperationError);
         return -1;
     }
@@ -445,7 +446,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 {
     if (state() != UnconnectedState && state() != ServiceLookupState) {
         qCWarning(QT_BT_OSX)  << Q_FUNC_INFO << "called on a busy socket";
-        d_ptr->errorString = tr("Trying to connect while connection is in progress");
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(OperationError);
         return;
     }
@@ -474,7 +475,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 {
     if (state() != QBluetoothSocket::UnconnectedState) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
-        d_ptr->errorString = tr("Trying to connect while connection is in progress");
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(QBluetoothSocket::OperationError);
         return;
     }
@@ -491,7 +492,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
 {
     if (state() != QBluetoothSocket::UnconnectedState) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
-        d_ptr->errorString = tr("Trying to connect while connection is in progress");
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(OperationError);
         return;
     }
@@ -585,7 +586,7 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
 
 void QBluetoothSocket::discoveryFinished()
 {
-    d_ptr->errorString = tr("Service cannot be found");
+    d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_SERVICE_NOT_FOUND);
     setSocketState(UnconnectedState);
     setSocketError(ServiceNotFoundError);
 }
@@ -642,7 +643,7 @@ quint16 QBluetoothSocket::peerPort() const
 qint64 QBluetoothSocket::writeData(const char *data, qint64 maxSize)
 {
     if (!data || maxSize <= 0) {
-        d_ptr->errorString = tr("Invalid data/data size");
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_INVAL_DATASIZE);
         setSocketError(QBluetoothSocket::OperationError);
         return -1;
     }
@@ -653,7 +654,7 @@ qint64 QBluetoothSocket::writeData(const char *data, qint64 maxSize)
 qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
 {
     if (state != QBluetoothSocket::ConnectedState) {
-        errorString = tr("Cannot read while not connected");
+        errorString = QCoreApplication::translate(SOCKET, SOC_NOREAD);
         q_ptr->setSocketError(QBluetoothSocket::OperationError);
         return -1;
     }

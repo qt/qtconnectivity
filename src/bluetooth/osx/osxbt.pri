@@ -1,3 +1,6 @@
+SOURCES += osx/uistrings.cpp
+PRIVATE_HEADERS += osx/uistrings_p.h
+
 CONFIG(osx) {
     PRIVATE_HEADERS += osx/osxbtutility_p.h \
                        osx/osxbtdevicepair_p.h \

@@ -385,7 +385,7 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
         m_errorStr = tr("Could not open file for sending");
     } else if (in1 == QStringLiteral("Operation canceled")) {
         m_error = QBluetoothTransferReply::UserCanceledTransferError;
-        m_errorStr = tr("Operation canceled");
+        m_errorStr = QBluetoothTransferReply::tr("Operation canceled");
     } else {
         m_error = QBluetoothTransferReply::UnknownError;
     }
