@@ -33,7 +33,9 @@
 
 
 #include "androidmainnewintentlistener_p.h"
+#include "qdebug.h"
 #include <QtGui/QGuiApplication>
+#include <QtAndroidExtras/QAndroidJniObject>
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
@@ -50,15 +52,11 @@ MainNfcNewIntentListener::~MainNfcNewIntentListener()
     QtAndroidPrivate::unregisterResumePauseListener(this);
 }
 
-bool MainNfcNewIntentListener::handleNewIntent(JNIEnv *env, jobject intent)
+bool MainNfcNewIntentListener::handleNewIntent(JNIEnv */*env*/, jobject intent)
 {
-    AndroidNfc::AttachedJNIEnv aenv;
     listenersLock.lockForRead();
     foreach (AndroidNfc::AndroidNfcListenerInterface *listener, listeners) {
-        // Making new global reference for each listener.
-        // Listeners must release reference when it is not used anymore.
-        jobject newIntentRef = env->NewGlobalRef(intent);
-        listener->newIntent(newIntentRef);
+        listener->newIntent(QAndroidJniObject(intent));
     }
     listenersLock.unlock();
     return true;
@@ -68,13 +66,9 @@ bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *lis
 {
     static bool firstListener = true;
     if (firstListener) {
-        AttachedJNIEnv aenv;
-        if (aenv.jniEnv) {
-            jobject intent = AndroidNfc::getStartIntent();
-            if (intent) {
-                jobject newIntentRef = aenv.jniEnv->NewGlobalRef(intent);
-                listener->newIntent(newIntentRef);
-            }
+        QAndroidJniObject intent = AndroidNfc::getStartIntent();
+        if (intent.isValid()) {
+            listener->newIntent(intent);
         }
         paused = static_cast<QGuiApplication*>(QGuiApplication::instance())->applicationState() != Qt::ApplicationActive;
     }

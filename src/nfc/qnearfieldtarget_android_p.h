@@ -42,6 +42,8 @@
 #include "qstringlist.h"
 #include <QTimer>
 
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,7 +51,7 @@ class NearFieldTarget : public QNearFieldTarget
 {
     Q_OBJECT
 public:
-    NearFieldTarget(jobject intent,
+    NearFieldTarget(QAndroidJniObject intent,
                     const QByteArray uid,
                     QObject *parent = 0);
     virtual ~NearFieldTarget();
@@ -61,7 +63,7 @@ public:
     virtual RequestId sendCommand(const QByteArray &command);
     virtual RequestId sendCommands(const QList<QByteArray> &commands);
     virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
-    void setIntent(jobject intent);
+    void setIntent(QAndroidJniObject intent);
 
 signals:
     void targetDestroyed(const QByteArray &tagId);
@@ -83,7 +85,7 @@ protected:
     bool catchJavaExceptions(JNIEnv *env) const;
 
 protected:
-    jobject m_intent;
+    QAndroidJniObject m_intent;
     QByteArray m_uid;
     QStringList m_techList;
     Type m_type;

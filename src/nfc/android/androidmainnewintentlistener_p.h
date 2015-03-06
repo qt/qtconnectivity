@@ -47,11 +47,18 @@ class MainNfcNewIntentListener : public QtAndroidPrivate::NewIntentListener, QtA
 public:
     MainNfcNewIntentListener();
     ~MainNfcNewIntentListener();
+
+    //QtAndroidPrivate::NewIntentListener
     bool handleNewIntent(JNIEnv *env, jobject intent);
+
     bool registerListener(AndroidNfcListenerInterface *listener);
     bool unregisterListener(AndroidNfcListenerInterface *listener);
+
+    //QtAndroidPrivate::ResumePauseListener
     void handleResume();
     void handlePause();
+
+private:
     void updateReceiveState();
 protected:
     QList<AndroidNfc::AndroidNfcListenerInterface*> listeners;

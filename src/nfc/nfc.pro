@@ -153,7 +153,7 @@ CONFIG(blackberry) {
     ANDROID_JAR_DEPENDENCIES = \
         jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
     DEFINES += ANDROID_NFC
-    QT += core-private gui
+    QT += core-private gui androidextras
 
     PRIVATE_HEADERS += \
         qllcpserver_android_p.h \

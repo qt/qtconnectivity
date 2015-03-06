@@ -35,7 +35,7 @@
 
 #include "qglobal.h"
 
-#include <jni.h>
+#include <QtAndroidExtras/QAndroidJniObject>
 
 #define QT_USE_ANDROIDNFC_NAMESPACE using namespace ::AndroidNfc;
 #define QT_BEGIN_ANDROIDNFC_NAMESPACE namespace AndroidNfc {
@@ -47,28 +47,16 @@ class AndroidNfcListenerInterface
 {
 public:
     virtual ~AndroidNfcListenerInterface(){}
-    virtual void newIntent(jobject intent) = 0;
-};
-
-class AttachedJNIEnv
-{
-public:
-    AttachedJNIEnv();
-    virtual ~AttachedJNIEnv();
-    bool attached;
-    JNIEnv *jniEnv;
-
-private:
-    Q_DISABLE_COPY(AttachedJNIEnv)
+    virtual void newIntent(QAndroidJniObject intent) = 0;
 };
 
 bool startDiscovery();
 bool stopDiscovery();
-jobject getStartIntent();
+QAndroidJniObject getStartIntent();
 bool isAvailable();
 bool registerListener(AndroidNfcListenerInterface *listener);
 bool unregisterListener(AndroidNfcListenerInterface *listener);
-jobject getTag(JNIEnv *env, jobject intent);
+QAndroidJniObject getTag(const QAndroidJniObject &intent);
 
 QT_END_ANDROIDNFC_NAMESPACE
 

@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     m_detecting(false), m_handlerID(0)
 {
-    qRegisterMetaType<jobject>("jobject");
+    qRegisterMetaType<QAndroidJniObject>("QAndroidJniObject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
     connect(this, SIGNAL(targetDetected(QNearFieldTarget*)), this, SLOT(handlerTargetDetected(QNearFieldTarget*)));
     connect(this, SIGNAL(targetLost(QNearFieldTarget*)), this, SLOT(handlerTargetLost(QNearFieldTarget*)));
@@ -201,49 +201,28 @@ void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccess
     //Do nothing, because we dont have access modes for the target
 }
 
-void QNearFieldManagerPrivateImpl::newIntent(jobject intent)
+void QNearFieldManagerPrivateImpl::newIntent(QAndroidJniObject intent)
 {
     // This function is called from different thread and is used to move intent to main thread.
-    QMetaObject::invokeMethod(this, "onTargetDiscovered", Qt::QueuedConnection, Q_ARG(jobject, intent));
+    QMetaObject::invokeMethod(this, "onTargetDiscovered", Qt::QueuedConnection, Q_ARG(QAndroidJniObject, intent));
 }
 
-QByteArray QNearFieldManagerPrivateImpl::getUid(jobject intent)
+QByteArray QNearFieldManagerPrivateImpl::getUid(const QAndroidJniObject &intent)
 {
-    if (intent == 0)
+    if (!intent.isValid())
         return QByteArray();
 
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
-    jobject tag = AndroidNfc::getTag(env, intent);
-
-    jclass tagClass = env->GetObjectClass(tag);
-    Q_ASSERT_X(tagClass != 0, "getUid", "could not get Tag class");
-
-    jmethodID getIdMID = env->GetMethodID(tagClass, "getId", "()[B");
-    Q_ASSERT_X(getIdMID != 0, "getUid", "could not get method ID for getId()");
-
-    jbyteArray tagId = reinterpret_cast<jbyteArray>(env->CallObjectMethod(tag, getIdMID));
-    Q_ASSERT_X(tagId != 0, "getUid", "getId() returned null object");
-
-    QByteArray uid;
-    jsize len = env->GetArrayLength(tagId);
-    uid.resize(len);
-    env->GetByteArrayRegion(tagId, 0, len, reinterpret_cast<jbyte*>(uid.data()));
-
-    return uid;
+    QAndroidJniEnvironment env;
+    QAndroidJniObject tag = AndroidNfc::getTag(intent);
+    return getUidforTag(tag);
 }
 
-void QNearFieldManagerPrivateImpl::onTargetDiscovered(jobject intent)
+void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
 {
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
-    Q_ASSERT_X(env != 0, "onTargetDiscovered", "env pointer is null");
+    // Getting UID
+    QByteArray uid = getUid(intent);
 
-    // Getting tag object and UID
-    jobject tag = AndroidNfc::getTag(env, intent);
-    QByteArray uid = getUid(env, tag);
-
-    // Accepting all targest but only sending signal of requested types.
+    // Accepting all targets but only sending signal of requested types.
     NearFieldTarget *&target = m_detectedTargets[uid];
     if (target) {
         target->setIntent(intent);  // Updating existing target
@@ -260,15 +239,17 @@ void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)
     m_detectedTargets.remove(uid);
 }
 
-QByteArray QNearFieldManagerPrivateImpl::getUid(JNIEnv *env, jobject tag)
+QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QAndroidJniObject &tag)
 {
-    jclass tagClass = env->GetObjectClass(tag);
-    jmethodID getIdMID = env->GetMethodID(tagClass, "getId", "()[B");
-    jbyteArray tagId = reinterpret_cast<jbyteArray>(env->CallObjectMethod(tag, getIdMID));
+    if (!tag.isValid())
+        return QByteArray();
+
+    QAndroidJniEnvironment env;
+    QAndroidJniObject tagId = tag.callObjectMethod("getId", "()[B");
     QByteArray uid;
-    jsize len = env->GetArrayLength(tagId);
+    jsize len = env->GetArrayLength(tagId.object<jbyteArray>());
     uid.resize(len);
-    env->GetByteArrayRegion(tagId, 0, len, reinterpret_cast<jbyte*>(uid.data()));
+    env->GetByteArrayRegion(tagId.object<jbyteArray>(), 0, len, reinterpret_cast<jbyte*>(uid.data()));
     return uid;
 }
 

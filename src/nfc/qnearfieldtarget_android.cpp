@@ -45,7 +45,7 @@ const QString NearFieldTarget::MifareClassicTechnology = QString::fromUtf8("andr
 const QString NearFieldTarget::MifareUltralightTechnology = QString::fromUtf8("android.nfc.tech.MifareUltralight");
 
 
-NearFieldTarget::NearFieldTarget(jobject intent, const QByteArray uid, QObject *parent) :
+NearFieldTarget::NearFieldTarget(QAndroidJniObject intent, const QByteArray uid, QObject *parent) :
     QNearFieldTarget(parent),
     m_intent(intent),
     m_uid(uid)
@@ -90,7 +90,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
 
     // Making sure that target is still in range
     QNearFieldTarget::RequestId requestId(new QNearFieldTarget::RequestIdPrivate);
-    if (m_intent == 0) {
+    if (!m_intent.isValid()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -98,9 +98,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     }
 
     // Getting Ndef technology object
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
-    Q_ASSERT_X(env != 0, "readNdefMessages", "env pointer is null");
+    QAndroidJniEnvironment env;
     jobject ndef = getTagTechnology(NdefTechology, env);
     if (ndef == 0) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
@@ -228,8 +226,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     if (messages.size() > 1)
         qWarning("QNearFieldTarget::writeNdefMessages: Android supports writing only one NDEF message per tag.");
 
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
+    QAndroidJniEnvironment env;
     jmethodID writeMethod;
     jobject tagTechnology;
     jclass tagClass;
@@ -294,14 +291,14 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     return requestId;
 }
 
-void NearFieldTarget::setIntent(jobject intent)
+void NearFieldTarget::setIntent(QAndroidJniObject intent)
 {
     if (m_intent == intent)
         return;
 
     releaseIntent();
     m_intent = intent;
-    if (m_intent) {
+    if (m_intent.isValid()) {
         // Updating tech list and type in case of there is another tag with same UID as one before.
         updateTechList();
         updateType();
@@ -311,14 +308,12 @@ void NearFieldTarget::setIntent(jobject intent)
 
 void NearFieldTarget::checkIsTargetLost()
 {
-    if (m_intent == 0 || m_techList.isEmpty()) {
+    if (!m_intent.isValid() || m_techList.isEmpty()) {
         handleTargetLost();
         return;
     }
 
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
-
+    QAndroidJniEnvironment env;
     // Using first available technology to check connection
     QString techStr = m_techList.first();
     jobject tagTechObj = getTagTechnology(techStr, env);
@@ -340,24 +335,18 @@ void NearFieldTarget::releaseIntent()
 {
     m_targetCheckTimer->stop();
 
-    if (m_intent == 0)
-        return;
-
-    AndroidNfc::AttachedJNIEnv aenv;
-    Q_ASSERT_X(aenv.jniEnv != 0, "releaseIntent", "aenv.jniEnv pointer is null");
-    aenv.jniEnv->DeleteGlobalRef(m_intent);
-    m_intent = 0;
+    m_intent = QAndroidJniObject();
 }
 
 void NearFieldTarget::updateTechList()
 {
-    if (m_intent == 0)
+    if (!m_intent.isValid())
         return;
 
     // Getting tech list
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
-    jobject tag = AndroidNfc::getTag(env, m_intent);
+    QAndroidJniEnvironment env;
+    QAndroidJniObject x = AndroidNfc::getTag(/*env,*/ m_intent);
+    jobject tag = x.object<jobject>();
     jclass tagClass = env->GetObjectClass(tag);
     jmethodID techListMID = env->GetMethodID(tagClass, "getTechList", "()[Ljava/lang/String;");
     jobjectArray techListArray = reinterpret_cast<jobjectArray>(env->CallObjectMethod(tag, techListMID));
@@ -384,9 +373,7 @@ void NearFieldTarget::updateType()
 
 QNearFieldTarget::Type NearFieldTarget::getTagType() const
 {
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
-    Q_ASSERT_X(env != 0, "type", "env pointer is null");
+    QAndroidJniEnvironment env;
 
     if (m_techList.contains(NdefTechology)) {
         jobject ndef = getTagTechnology(NdefTechology, env);
@@ -462,7 +449,9 @@ jobject NearFieldTarget::getTagTechnology(const QString &tech, JNIEnv *env) cons
     techClass.replace(QLatin1Char('.'), QLatin1Char('/'));
 
     // Getting requested technology
-    jobject tag = AndroidNfc::getTag(env, m_intent);
+    QAndroidJniEnvironment aenv;
+    QAndroidJniObject x = AndroidNfc::getTag(m_intent);
+    jobject tag = x.object<jobject>();
     jclass tagClass = env->FindClass(techClass.toUtf8().constData());
     const QString sig = QString::fromUtf8("(Landroid/nfc/Tag;)L%1;");
     jmethodID getTagMethodID = env->GetStaticMethodID(tagClass, "get", sig.arg(techClass).toUtf8().constData());

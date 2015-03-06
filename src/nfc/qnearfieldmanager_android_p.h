@@ -41,6 +41,8 @@
 
 #include <QHash>
 #include <QMap>
+#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtAndroidExtras/QAndroidJniEnvironment>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,11 +66,11 @@ public:
     virtual bool unregisterNdefMessageHandler(int handlerId);
     virtual void requestAccess(QNearFieldManager::TargetAccessModes accessModes);
     virtual void releaseAccess(QNearFieldManager::TargetAccessModes accessModes);
-    virtual void newIntent(jobject intent);
-    QByteArray getUid(jobject intent);
+    virtual void newIntent(QAndroidJniObject intent);
+    QByteArray getUid(const QAndroidJniObject &intent);
 
 public slots:
-    void onTargetDiscovered(jobject intent);
+    void onTargetDiscovered(QAndroidJniObject intent);
     void onTargetDestroyed(const QByteArray &uid);
     void handlerTargetDetected(QNearFieldTarget *target);
     void handlerTargetLost(QNearFieldTarget *target);
@@ -77,7 +79,7 @@ public slots:
     void handlerError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 
 protected:
-    static QByteArray getUid(JNIEnv *env, jobject tag);
+    static QByteArray getUidforTag(const QAndroidJniObject &tag);
     void updateReceiveState();
 
 private:

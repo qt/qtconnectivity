@@ -41,75 +41,31 @@
 #include "qbytearray.h"
 #include "qdebug.h"
 
-static JavaVM *javaVM = 0;
-static jclass nfcClass;
-
-static jmethodID startDiscoveryId;
-static jmethodID stopDiscoveryId;
-static jmethodID isAvailableId;
-static jmethodID getStartIntentId;
+static const char *nfcClassName = "org/qtproject/qt5/android/nfc/QtNfc";
 
 static AndroidNfc::MainNfcNewIntentListener mainListener;
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
-AttachedJNIEnv::AttachedJNIEnv()
-{
-    Q_ASSERT_X(javaVM != 0, "constructor", "javaVM pointer is null");
-    attached = false;
-    if (javaVM->GetEnv((void**)&jniEnv, JNI_VERSION_1_6) < 0) {
-        if (javaVM->AttachCurrentThread(&jniEnv, NULL) < 0) {
-            __android_log_print(ANDROID_LOG_ERROR, "Qt", "AttachCurrentThread failed");
-            jniEnv = 0;
-            return;
-        }
-        attached = true;
-    }
-}
-
-AttachedJNIEnv::~AttachedJNIEnv()
-{
-    if (attached)
-        javaVM->DetachCurrentThread();
-}
-
 bool startDiscovery()
 {
-    //__android_log_print(ANDROID_LOG_INFO, "Qt", "QtNfc::startDiscovery()");
-    AttachedJNIEnv aenv;
-    if (!aenv.jniEnv)
-        return false;
-
-    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, startDiscoveryId);
+    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"start");
 }
 
 bool isAvailable()
 {
-    //__android_log_print(ANDROID_LOG_INFO, "Qt", "QtNfc::isAvailable()");
-    AttachedJNIEnv aenv;
-    if (!aenv.jniEnv)
-        return false;
-
-    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, isAvailableId);
+    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"isAvailable");
 }
 
 bool stopDiscovery()
 {
-    __android_log_print(ANDROID_LOG_INFO, "Qt", "QtNfc::stopDiscovery()");
-    AttachedJNIEnv aenv;
-    if (!aenv.jniEnv)
-        return false;
-
-    return aenv.jniEnv->CallStaticBooleanMethod(nfcClass, stopDiscoveryId);
+    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"stop");
 }
 
-jobject getStartIntent()
+QAndroidJniObject getStartIntent()
 {
-    AttachedJNIEnv aenv;
-    if (!aenv.jniEnv)
-        return NULL;
-
-    return aenv.jniEnv->CallStaticObjectMethod(nfcClass, getStartIntentId);
+    QAndroidJniObject ret = QAndroidJniObject::callStaticObjectMethod(nfcClassName, "getStartIntent", "()Landroid/content/Intent;");
+    return ret;
 }
 
 bool registerListener(AndroidNfcListenerInterface *listener)
@@ -122,66 +78,22 @@ bool unregisterListener(AndroidNfcListenerInterface *listener)
     return mainListener.unregisterListener(listener);
 }
 
-jobject getTag(JNIEnv *env, jobject intent)
+QAndroidJniObject getTag(const QAndroidJniObject &intent)
 {
-    jclass intentClass = env->GetObjectClass(intent);
-    Q_ASSERT_X(intentClass != 0, "getTag", "could not get Intent class");
-
-    jmethodID getParcelableExtraMID = env->GetMethodID(intentClass,
-                                                       "getParcelableExtra",
-                                                       "(Ljava/lang/String;)Landroid/os/Parcelable;");
-    Q_ASSERT_X(getParcelableExtraMID != 0, "getTag", "could not get method ID for getParcelableExtra()");
-
-    jclass nfcAdapterClass = env->FindClass("android/nfc/NfcAdapter");
-    Q_ASSERT_X(nfcAdapterClass != 0, "getTag", "could not find NfcAdapter class");
-
-    jfieldID extraTagFID = env->GetStaticFieldID(nfcAdapterClass, "EXTRA_TAG", "Ljava/lang/String;");
-    Q_ASSERT_X(extraTagFID != 0, "getTag", "could not get field ID for EXTRA_TAG");
-
-    jobject extraTag = env->GetStaticObjectField(nfcAdapterClass, extraTagFID);
-    Q_ASSERT_X(extraTag != 0, "getTag", "could not get EXTRA_TAG");
-
-    jobject tag = env->CallObjectMethod(intent, getParcelableExtraMID, extraTag);
-    Q_ASSERT_X(tag != 0, "getTag", "could not get Tag object");
-
+    QAndroidJniObject extraTag = QAndroidJniObject::getStaticObjectField("android/nfc/NfcAdapter", "EXTRA_TAG", "Ljava/lang/String;");
+    QAndroidJniObject tag = intent.callObjectMethod("getParcelableExtra", "(Ljava/lang/String;)Landroid/os/Parcelable;", extraTag.object<jstring>());
+    Q_ASSERT_X(tag.isValid(), "getTag", "could not get Tag object");
     return tag;
 }
 
 QT_END_ANDROIDNFC_NAMESPACE
 
-static const char logTag[] = "Qt";
-static const char classErrorMsg[] = "Can't find class \"%s\"";
-static const char methodErrorMsg[] = "Can't find method \"%s%s\"";
-
-#define FIND_AND_CHECK_CLASS(CLASS_NAME) \
-    clazz = env->FindClass(CLASS_NAME); \
-    if (!clazz) { \
-    return JNI_FALSE; \
-    }
-
-#define GET_AND_CHECK_STATIC_METHOD(VAR, CLASS, METHOD_NAME, METHOD_SIGNATURE) \
-    VAR = env->GetStaticMethodID(CLASS, METHOD_NAME, METHOD_SIGNATURE); \
-    if (!VAR) { \
-    return JNI_FALSE; \
-    }
-
 Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
 {
-    //__android_log_print(ANDROID_LOG_INFO, "Qt", "JNI_OnLoad for QtNfc");
     JNIEnv* env;
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
         return -1;
     }
-
-    jclass clazz;
-    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/nfc/QtNfc");
-    nfcClass = static_cast<jclass>(env->NewGlobalRef(clazz));
-
-    GET_AND_CHECK_STATIC_METHOD(startDiscoveryId, nfcClass, "start", "()Z");
-    GET_AND_CHECK_STATIC_METHOD(stopDiscoveryId, nfcClass, "stop", "()Z");
-    GET_AND_CHECK_STATIC_METHOD(isAvailableId, nfcClass, "isAvailable", "()Z");
-    GET_AND_CHECK_STATIC_METHOD(getStartIntentId, nfcClass, "getStartIntent", "()Landroid/content/Intent;");
-    javaVM = vm;
 
     return JNI_VERSION_1_6;
 }
