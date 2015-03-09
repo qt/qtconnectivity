@@ -98,9 +98,8 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     }
 
     // Getting Ndef technology object
-    QAndroidJniEnvironment env;
-    jobject ndef = getTagTechnology(NdefTechology, env);
-    if (ndef == 0) {
+    QAndroidJniObject ndef = getTagTechnology(NdefTechology);
+    if (!ndef.isValid()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnsupportedError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -108,10 +107,8 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     }
 
     // Connect
-    jclass ndefClass = env->GetObjectClass(ndef);
-    jmethodID connectMID = env->GetMethodID(ndefClass, "connect", "()V");
-    env->CallVoidMethod(ndef, connectMID);
-    if (catchJavaExceptions(env)) {
+    ndef.callMethod<void>("connect");
+    if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -119,11 +116,10 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     }
 
     // Get NdefMessage object
-    jmethodID getNdefMessageMID = env->GetMethodID(ndefClass, "getNdefMessage", "()Landroid/nfc/NdefMessage;");
-    jobject ndefMessage = env->CallObjectMethod(ndef, getNdefMessageMID);
-    if (catchJavaExceptions(env))
-        ndefMessage = 0;
-    if (ndefMessage == 0) {
+    QAndroidJniObject ndefMessage = ndef.callObjectMethod("getNdefMessage", "()Landroid/nfc/NdefMessage;");
+    if (catchJavaExceptions())
+        ndefMessage = QAndroidJniObject();
+    if (!ndefMessage.isValid()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefReadError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -131,15 +127,12 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     }
 
     // Convert to byte array
-    jclass ndefMessageClass = env->GetObjectClass(ndefMessage);
-    jmethodID toByteArrayMID = env->GetMethodID(ndefMessageClass, "toByteArray", "()[B");
-    jbyteArray ndefMessageBA = reinterpret_cast<jbyteArray>(env->CallObjectMethod(ndefMessage, toByteArrayMID));
-    QByteArray ndefMessageQBA = jbyteArrayToQByteArray(ndefMessageBA, env);
+    QAndroidJniObject ndefMessageBA = ndefMessage.callObjectMethod("toByteArray", "()[B");
+    QByteArray ndefMessageQBA = jbyteArrayToQByteArray(ndefMessageBA.object<jbyteArray>());
 
     // Closing connection
-    jmethodID closeMID = env->GetMethodID(ndefClass, "close", "()V");
-    env->CallVoidMethod(ndef, closeMID);
-    catchJavaExceptions(env);   // IOException at this point does not matter anymore.
+    ndef.callMethod<void>("close");
+    catchJavaExceptions();   // IOException at this point does not matter anymore.
 
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
@@ -227,19 +220,16 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
         qWarning("QNearFieldTarget::writeNdefMessages: Android supports writing only one NDEF message per tag.");
 
     QAndroidJniEnvironment env;
-    jmethodID writeMethod;
-    jobject tagTechnology;
-    jclass tagClass;
+    const char *writeMethod;
+    QAndroidJniObject tagTechnology;
 
     // Getting write method
     if (m_techList.contains(NdefFormatableTechnology)) {
-        tagTechnology = getTagTechnology(NdefFormatableTechnology, env);
-        tagClass = env->GetObjectClass(tagTechnology);
-        writeMethod = env->GetMethodID(tagClass, "format", "(Landroid/nfc/NdefMessage;)V");
+        tagTechnology = getTagTechnology(NdefFormatableTechnology);
+        writeMethod = "format";
     } else if (m_techList.contains(NdefTechology)) {
-        tagTechnology = getTagTechnology(NdefTechology, env);
-        tagClass = env->GetObjectClass(tagTechnology);
-        writeMethod = env->GetMethodID(tagClass, "writeNdefMessage", "(Landroid/nfc/NdefMessage;)V");
+        tagTechnology = getTagTechnology(NdefTechology);
+        writeMethod = "writeNdefMessage";
     } else {
         // An invalid request id will be returned if the target does not support writing NDEF messages.
         return QNearFieldTarget::RequestId();
@@ -247,10 +237,8 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
 
     // Connecting
     QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
-    jclass ndefMessageClass = env->FindClass("android/nfc/NdefMessage");
-    jmethodID connectMethodID = env->GetMethodID(tagClass, "connect", "()V");
-    env->CallVoidMethod(tagTechnology, connectMethodID);
-    if (catchJavaExceptions(env)) {
+    tagTechnology.callMethod<void>("connect");
+    if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -258,13 +246,12 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     }
 
     // Making NdefMessage object
-    jmethodID ndefMessageInitMID = env->GetMethodID(ndefMessageClass, "<init>", "([B)V");
     const QNdefMessage &message = messages.first();
     QByteArray ba = message.toByteArray();
-    jbyteArray jba = env->NewByteArray(ba.size());
-    env->SetByteArrayRegion(jba, 0, ba.size(), reinterpret_cast<jbyte*>(ba.data()));
-    jobject jmessage = env->NewObject(ndefMessageClass, ndefMessageInitMID, jba);
-    if (catchJavaExceptions(env)) {
+    QAndroidJniObject jba = env->NewByteArray(ba.size());
+    env->SetByteArrayRegion(jba.object<jbyteArray>(), 0, ba.size(), reinterpret_cast<jbyte*>(ba.data()));
+    QAndroidJniObject jmessage = QAndroidJniObject("android/nfc/NdefMessage", "([B)V", jba.object<jbyteArray>());
+    if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -272,11 +259,8 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     }
 
     // Writing
-    env->CallVoidMethod(tagTechnology, writeMethod, jmessage);
-    bool gotException = catchJavaExceptions(env);
-    env->DeleteLocalRef(jba);
-    env->DeleteLocalRef(jmessage);
-    if (gotException) {
+    tagTechnology.callMethod<void>(writeMethod, "(Landroid/nfc/NdefMessage;)V", jmessage.object<jobject>());
+    if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefWriteError),
                                   Q_ARG(const QNearFieldTarget::RequestId&, requestId));
@@ -284,9 +268,8 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     }
 
     // Closing connection, sending signal and exit
-    jmethodID closeMID = env->GetMethodID(tagClass, "close", "()V");
-    env->CallVoidMethod(tagTechnology, closeMID);
-    catchJavaExceptions(env);   // IOException at this point does not matter anymore.
+    tagTechnology.callMethod<void>("close");
+    catchJavaExceptions();   // IOException at this point does not matter anymore.
     QMetaObject::invokeMethod(this, "ndefMessagesWritten", Qt::QueuedConnection);
     return requestId;
 }
@@ -312,22 +295,16 @@ void NearFieldTarget::checkIsTargetLost()
         handleTargetLost();
         return;
     }
-
-    QAndroidJniEnvironment env;
     // Using first available technology to check connection
     QString techStr = m_techList.first();
-    jobject tagTechObj = getTagTechnology(techStr, env);
-    jclass tagTechClass = env->GetObjectClass(tagTechObj);
-    jmethodID connectMID = env->GetMethodID(tagTechClass, "connect","()V");
-    jmethodID closeMID = env->GetMethodID(tagTechClass, "close","()V");
-
-    env->CallObjectMethod(tagTechObj, connectMID);
-    if (catchJavaExceptions(env)) {
+    QAndroidJniObject tagTech = getTagTechnology(techStr);
+    tagTech.callMethod<void>("connect");
+    if (catchJavaExceptions()) {
         handleTargetLost();
         return;
     }
-    env->CallObjectMethod(tagTechObj, closeMID);
-    if (catchJavaExceptions(env))
+    tagTech.callMethod<void>("close");
+    if (catchJavaExceptions())
         handleTargetLost();
 }
 
@@ -345,24 +322,19 @@ void NearFieldTarget::updateTechList()
 
     // Getting tech list
     QAndroidJniEnvironment env;
-    QAndroidJniObject x = AndroidNfc::getTag(/*env,*/ m_intent);
-    jobject tag = x.object<jobject>();
-    jclass tagClass = env->GetObjectClass(tag);
-    jmethodID techListMID = env->GetMethodID(tagClass, "getTechList", "()[Ljava/lang/String;");
-    jobjectArray techListArray = reinterpret_cast<jobjectArray>(env->CallObjectMethod(tag, techListMID));
-    if (techListArray == 0) {
+    QAndroidJniObject tag = AndroidNfc::getTag(m_intent);
+    QAndroidJniObject techListArray = tag.callObjectMethod("getTechList", "()[Ljava/lang/String;");
+    if (!techListArray.isValid()) {
         handleTargetLost();
         return;
     }
 
     // Converting tech list array to QStringList.
     m_techList.clear();
-    jsize techCount = env->GetArrayLength(techListArray);
+    jsize techCount = env->GetArrayLength(techListArray.object<jobjectArray>());
     for (jsize i = 0; i < techCount; ++i) {
-        jstring tech = reinterpret_cast<jstring>(env->GetObjectArrayElement(techListArray, i));
-        const char *techStr = env->GetStringUTFChars(tech, JNI_FALSE);
-        m_techList.append(QString::fromUtf8(techStr));
-        env->ReleaseStringUTFChars(tech, techStr);
+        QAndroidJniObject tech = env->GetObjectArrayElement(techListArray.object<jobjectArray>(), i);
+        m_techList.append(tech.callObjectMethod<jstring>("toString").toString());
     }
 }
 
@@ -376,14 +348,8 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
     QAndroidJniEnvironment env;
 
     if (m_techList.contains(NdefTechology)) {
-        jobject ndef = getTagTechnology(NdefTechology, env);
-        jclass ndefClass = env->GetObjectClass(ndef);
-
-        jmethodID typeMethodID = env->GetMethodID(ndefClass, "getType", "()Ljava/lang/String;");
-        jstring jtype = reinterpret_cast<jstring>(env->CallObjectMethod(ndef, typeMethodID));
-        const char *type_data = env->GetStringUTFChars(jtype, JNI_FALSE);
-        QString qtype = QString::fromUtf8(type_data);
-        env->ReleaseStringUTFChars(jtype, type_data);
+        QAndroidJniObject ndef = getTagTechnology(NdefTechology);
+        QString qtype = ndef.callObjectMethod("getType", "()Ljava/lang/String;").toString();
 
         QHash<QString, Type> types;
         types.insert(QString::fromUtf8("com.nxp.ndef.mifareclassic"), MifareTag);
@@ -400,11 +366,9 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
 
         // Checking ATQA/SENS_RES
         // xxx0 0000  xxxx xxxx: Identifies tag Type 1 platform
-        jobject nfca = getTagTechnology(NfcATechnology, env);
-        jclass nfcaClass = env->GetObjectClass(nfca);
-        jmethodID atqaMethodID = env->GetMethodID(nfcaClass, "getAtqa", "()[B");
-        jbyteArray atqaBA = reinterpret_cast<jbyteArray>(env->CallObjectMethod(nfca, atqaMethodID));
-        QByteArray atqaQBA = jbyteArrayToQByteArray(atqaBA, env);
+        QAndroidJniObject nfca = getTagTechnology(NfcATechnology);
+        QAndroidJniObject atqaBA = nfca.callObjectMethod("getAtqa", "()[B");
+        QByteArray atqaQBA = jbyteArrayToQByteArray(atqaBA.object<jbyteArray>());
         if (atqaQBA.isEmpty())
             return ProprietaryTag;
         if ((atqaQBA[0] & 0x1F) == 0x00)
@@ -413,8 +377,7 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
         // Checking SAK/SEL_RES
         // xxxx xxxx  x00x x0xx: Identifies tag Type 2 platform
         // xxxx xxxx  x01x x0xx: Identifies tag Type 4 platform
-        jmethodID sakMethodID = env->GetMethodID(nfcaClass, "getSak", "()S");
-        jshort sakS = env->CallShortMethod(nfca, sakMethodID);
+        jshort sakS = nfca.callMethod<jshort>("getSak");
         if ((sakS & 0x0064) == 0x0000)
             return NfcTagType2;
         else if ((sakS & 0x0064) == 0x0020)
@@ -443,24 +406,22 @@ void NearFieldTarget::handleTargetLost()
     emit targetLost(this);
 }
 
-jobject NearFieldTarget::getTagTechnology(const QString &tech, JNIEnv *env) const
+QAndroidJniObject NearFieldTarget::getTagTechnology(const QString &tech) const
 {
     QString techClass(tech);
     techClass.replace(QLatin1Char('.'), QLatin1Char('/'));
 
     // Getting requested technology
-    QAndroidJniEnvironment aenv;
-    QAndroidJniObject x = AndroidNfc::getTag(m_intent);
-    jobject tag = x.object<jobject>();
-    jclass tagClass = env->FindClass(techClass.toUtf8().constData());
+    QAndroidJniObject tag = AndroidNfc::getTag(m_intent);
     const QString sig = QString::fromUtf8("(Landroid/nfc/Tag;)L%1;");
-    jmethodID getTagMethodID = env->GetStaticMethodID(tagClass, "get", sig.arg(techClass).toUtf8().constData());
-    jobject tagtech = env->CallStaticObjectMethod(tagClass, getTagMethodID, tag);
+    QAndroidJniObject tagtech = QAndroidJniObject::callStaticObjectMethod(techClass.toUtf8().constData(), "get",
+            sig.arg(techClass).toUtf8().constData(), tag.object<jobject>());
     return tagtech;
 }
 
-QByteArray NearFieldTarget::jbyteArrayToQByteArray(const jbyteArray &byteArray, JNIEnv *env) const
+QByteArray NearFieldTarget::jbyteArrayToQByteArray(const jbyteArray &byteArray) const
 {
+    QAndroidJniEnvironment env;
     QByteArray resultArray;
     jsize len = env->GetArrayLength(byteArray);
     resultArray.resize(len);
@@ -468,10 +429,10 @@ QByteArray NearFieldTarget::jbyteArrayToQByteArray(const jbyteArray &byteArray, 
     return resultArray;
 }
 
-bool NearFieldTarget::catchJavaExceptions(JNIEnv *env) const
+bool NearFieldTarget::catchJavaExceptions() const
 {
-    jthrowable exc = env->ExceptionOccurred();
-    if (exc) {
+    QAndroidJniEnvironment env;
+    if (env->ExceptionCheck()) {
         env->ExceptionDescribe();
         env->ExceptionClear();
         return true;

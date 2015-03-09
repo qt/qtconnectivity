@@ -80,9 +80,9 @@ protected:
     Type getTagType() const;
     void setupTargetCheckTimer();
     void handleTargetLost();
-    jobject getTagTechnology(const QString &tech, JNIEnv *env) const;
-    QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray, JNIEnv *env) const;
-    bool catchJavaExceptions(JNIEnv *env) const;
+    QAndroidJniObject getTagTechnology(const QString &tech) const;
+    QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray) const;
+    bool catchJavaExceptions() const;
 
 protected:
     QAndroidJniObject m_intent;
