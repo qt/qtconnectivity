@@ -79,6 +79,7 @@
 #define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
 
 //GATT command sizes in bytes
+#define ERROR_RESPONSE_HEADER_SIZE 5
 #define FIND_INFO_REQUEST_HEADER_SIZE 5
 #define GRP_TYPE_REQ_HEADER_SIZE 7
 #define READ_BY_TYPE_REQ_HEADER_SIZE 7
@@ -352,9 +353,20 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
     case ATT_OP_READ_REQUEST:
     case ATT_OP_FIND_INFORMATION_REQUEST:
     case ATT_OP_WRITE_REQUEST:
-        qCWarning(QT_BT_BLUEZ) << "Unexpected message type" << hex << command
-                               << "will be ignored"   ;
+    {
+        qCDebug(QT_BT_BLUEZ) << "Server request" << hex << command;
+
+        //send not supported
+        QByteArray packet(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
+        packet[0] = ATT_OP_ERROR_RESPONSE;
+        packet[1] = command;
+        bt_put_unaligned(htobs(0), (quint16 *)(packet.data() + 2));
+        packet[4] = ATT_ERROR_REQUEST_NOT_SUPPORTED;
+
+        sendCommand(packet);
+
         return;
+    }
     default:
         //only solicited replies finish pending requests
         requestPending = false;
