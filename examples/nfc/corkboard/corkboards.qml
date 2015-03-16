@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.3
-import QtNfc 5.2
+import QtNfc 5.5
 
 Rectangle {
     width: 800; height: 480
