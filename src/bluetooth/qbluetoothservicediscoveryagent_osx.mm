@@ -37,6 +37,7 @@
 #include "osx/osxbtsdpinquiry_p.h"
 #include "qbluetoothhostinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
@@ -176,7 +177,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
         discoveredDevices.clear();
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::PoweredOffError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Local device is powered off");
+            errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_LOCAL_DEV_OFF);
             emit q_ptr->error(error);
         }
 
@@ -250,7 +251,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     error = QBluetoothServiceDiscoveryAgent::UnknownError;
-    errorString = tr("Unknown error while scanning for devices");
+    errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
 
     deviceDiscoveryAgent->stop();
     deviceDiscoveryAgent.reset(Q_NULLPTR);
@@ -326,7 +327,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *
     // TODO: find a better mapping from IOReturn to QBluetoothServiceDiscoveryAgent::Error.
     if (singleDevice) {
         error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QObject::tr("service discovery agent: unknown error");
+        errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
         emit q_ptr->error(error);
     }
 
@@ -344,7 +345,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
     if (!device || !device.services) {
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::UnknownError;
-            errorString = tr("service discovery agent: minimal service discovery failed");
+            errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_MINIMAL_FAILED);
             emit q_ptr->error(error);
         }
     } else {
@@ -431,7 +432,7 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoot
                 return;
         }
         d_ptr->error = InvalidBluetoothAdapterError;
-        d_ptr->errorString = tr("Invalid Bluetooth adapter address");
+        d_ptr->errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_INVALID_ADDRESS);
     }
 }
 

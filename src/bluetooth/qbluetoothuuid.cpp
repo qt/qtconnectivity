@@ -812,6 +812,7 @@ QString QBluetoothUuid::serviceClassToString(QBluetoothUuid::ServiceClassUuid uu
     case QBluetoothUuid::BodyComposition: return QBluetoothServiceDiscoveryAgent::tr("Body Composition");
     case QBluetoothUuid::UserData: return QBluetoothServiceDiscoveryAgent::tr("User Data");
     case QBluetoothUuid::WeightScale: return QBluetoothServiceDiscoveryAgent::tr("Weight Scale");
+    //: Connection management (Bluetooth)
     case QBluetoothUuid::BondManagement: return QBluetoothServiceDiscoveryAgent::tr("Bond Management");
     case QBluetoothUuid::ContinuousGlucoseMonitoring: return QBluetoothServiceDiscoveryAgent::tr("Continuous Glucose Monitoring");
     default:
@@ -855,7 +856,7 @@ QString QBluetoothUuid::protocolToString(QBluetoothUuid::ProtocolUuid uuid)
     case QBluetoothUuid::Avdtp: return QBluetoothServiceDiscoveryAgent::tr("Audio/Video Distribution Transport Protocol");
     case QBluetoothUuid::Cmtp: return QBluetoothServiceDiscoveryAgent::tr("Common ISDN Access Protocol");
     case QBluetoothUuid::UdiCPlain: return QBluetoothServiceDiscoveryAgent::tr("UdiCPlain");
-    case QBluetoothUuid::McapControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol -Control");
+    case QBluetoothUuid::McapControlChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol - Control");
     case QBluetoothUuid::McapDataChannel: return QBluetoothServiceDiscoveryAgent::tr("Multi-Channel Adaptation Protocol - Data");
     case QBluetoothUuid::L2cap: return QBluetoothServiceDiscoveryAgent::tr("Layer 2 Control Protocol");
     default:
