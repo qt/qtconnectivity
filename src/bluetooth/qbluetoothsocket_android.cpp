@@ -137,7 +137,8 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
         }
 
         if (socketChannel
-                == remoteDevice.getStaticField<jint>("android/bluetooth/BluetoothDevice", "ERROR")) {
+                == remoteDevice.getStaticField<jint>("android/bluetooth/BluetoothDevice", "ERROR")
+            || socketChannel == -1) {
             qCWarning(QT_BT_ANDROID) << "Cannot determine RFCOMM service channel.";
         } else {
             qCWarning(QT_BT_ANDROID) << "Using found rfcomm channel" << socketChannel;
