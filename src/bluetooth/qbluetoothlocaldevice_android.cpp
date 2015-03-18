@@ -83,35 +83,20 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 {
     QAndroidJniEnvironment env;
 
-    jclass btAdapterClass = env->FindClass("android/bluetooth/BluetoothAdapter");
-    if (btAdapterClass == NULL) {
-        qCWarning(QT_BT_ANDROID)
-            << "Native registration unable to find class android/bluetooth/BluetoothAdapter";
-        return;
-    }
-
-    jmethodID getDefaultAdapterID
-        = env->GetStaticMethodID(btAdapterClass, "getDefaultAdapter",
-                                 "()Landroid/bluetooth/BluetoothAdapter;");
-    if (getDefaultAdapterID == NULL) {
-        qCWarning(QT_BT_ANDROID)
-            << "Native registration unable to get method ID: " \
-               "getDefaultAdapter of android/bluetooth/BluetoothAdapter";
-        return;
-    }
-
-    jobject btAdapterObject = env->CallStaticObjectMethod(btAdapterClass, getDefaultAdapterID);
-    if (btAdapterObject == NULL) {
+    QAndroidJniObject adapter = QAndroidJniObject::callStaticObjectMethod(
+                                    "android/bluetooth/BluetoothAdapter", "getDefaultAdapter",
+                                    "()Landroid/bluetooth/BluetoothAdapter;");
+    if (!adapter.isValid()) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         qCWarning(QT_BT_ANDROID) <<  "Device does not support Bluetooth";
-        env->DeleteLocalRef(btAdapterClass);
         return;
     }
 
-    obj = new QAndroidJniObject(btAdapterObject);
-    if (!obj->isValid()) {
-        delete obj;
-        obj = 0;
-    } else if (!address.isNull()) {
+    obj = new QAndroidJniObject(adapter);
+    if (!address.isNull()) {
         const QString localAddress
             = obj->callObjectMethod("getAddress", "()Ljava/lang/String;").toString();
         if (localAddress != address.toString()) {
@@ -120,9 +105,6 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
             obj = 0;
         }
     }
-
-    env->DeleteLocalRef(btAdapterObject);
-    env->DeleteLocalRef(btAdapterClass);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
