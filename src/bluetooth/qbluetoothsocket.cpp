@@ -602,6 +602,13 @@ void QBluetoothSocket::abort()
 
     Q_D(QBluetoothSocket);
     setOpenMode(QIODevice::NotOpen);
+
+    if (state() == ServiceLookupState && d->discoveryAgent) {
+        d->discoveryAgent->disconnect();
+        d->discoveryAgent->stop();
+        d->discoveryAgent = 0;
+    }
+
     setSocketState(ClosingState);
     d->abort();
 
@@ -679,6 +686,13 @@ void QBluetoothSocket::close()
 
     Q_D(QBluetoothSocket);
     setOpenMode(QIODevice::NotOpen);
+
+    if (state() == ServiceLookupState && d->discoveryAgent) {
+        d->discoveryAgent->disconnect();
+        d->discoveryAgent->stop();
+        d->discoveryAgent = 0;
+    }
+
     setSocketState(ClosingState);
 
     d->close();
