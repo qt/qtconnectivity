@@ -89,14 +89,6 @@ protected:
     QByteArray m_uid;
     QStringList m_techList;
     Type m_type;
-    static const QString NdefTechology;
-    static const QString NdefFormatableTechnology;
-    static const QString NfcATechnology;
-    static const QString NfcBTechnology;
-    static const QString NfcFTechnology;
-    static const QString NfcVTechnology;
-    static const QString MifareClassicTechnology;
-    static const QString MifareUltralightTechnology;
     QTimer *m_targetCheckTimer;
 };
 

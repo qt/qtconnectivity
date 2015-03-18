@@ -35,15 +35,20 @@
 #include "android/androidjninfc_p.h"
 #include "qdebug.h"
 
-const QString NearFieldTarget::NdefTechology = QString::fromUtf8("android.nfc.tech.Ndef");
-const QString NearFieldTarget::NdefFormatableTechnology = QString::fromUtf8("android.nfc.tech.NdefFormatable");
-const QString NearFieldTarget::NfcATechnology = QString::fromUtf8("android.nfc.tech.NfcA");
-const QString NearFieldTarget::NfcBTechnology = QString::fromUtf8("android.nfc.tech.NfcB");
-const QString NearFieldTarget::NfcFTechnology = QString::fromUtf8("android.nfc.tech.NfcF");
-const QString NearFieldTarget::NfcVTechnology = QString::fromUtf8("android.nfc.tech.NfcV");
-const QString NearFieldTarget::MifareClassicTechnology = QString::fromUtf8("android.nfc.tech.MifareClassic");
-const QString NearFieldTarget::MifareUltralightTechnology = QString::fromUtf8("android.nfc.tech.MifareUltralight");
+#define NDEFTECHNOLOGY "android.nfc.tech.Ndef"
+#define NDEFFORMATABLETECHNOLOGY "android.nfc.tech.NdefFormatable"
+#define NFCATECHNOLOGY "android.nfc.tech.NfcA"
+#define NFCBTECHNOLOGY "android.nfc.tech.NfcB"
+#define NFCFTECHNOLOGY "android.nfc.tech.NfcF"
+#define NFCVTECHNOLOGY "android.nfc.tech.NfcV"
+#define MIFARECLASSICTECHNOLOGY "android.nfc.tech.MifareClassic"
+#define MIFARECULTRALIGHTTECHNOLOGY "android.nfc.tech.MifareUltralight"
 
+#define MIFARETAG "com.nxp.ndef.mifareclassic"
+#define NFCTAGTYPE1 "org.nfcforum.ndef.type1"
+#define NFCTAGTYPE2 "org.nfcforum.ndef.type2"
+#define NFCTAGTYPE3 "org.nfcforum.ndef.type3"
+#define NFCTAGTYPE4 "org.nfcforum.ndef.type4"
 
 NearFieldTarget::NearFieldTarget(QAndroidJniObject intent, const QByteArray uid, QObject *parent) :
     QNearFieldTarget(parent),
@@ -79,7 +84,7 @@ QNearFieldTarget::AccessMethods NearFieldTarget::accessMethods() const
 
 bool NearFieldTarget::hasNdefMessage()
 {
-    return m_techList.contains(NdefTechology);
+    return m_techList.contains(QStringLiteral(NDEFTECHNOLOGY));
 }
 
 QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
@@ -98,7 +103,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     }
 
     // Getting Ndef technology object
-    QAndroidJniObject ndef = getTagTechnology(NdefTechology);
+    QAndroidJniObject ndef = getTagTechnology(QStringLiteral(NDEFTECHNOLOGY));
     if (!ndef.isValid()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnsupportedError),
@@ -163,14 +168,14 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     JNIEnv *env = aenv.jniEnv;
 
     jobject tagTech;
-    if (m_techList.contains(NfcATechnology)) {
-        tagTech = getTagTechnology(NfcATechnology);
-    } else if (m_techList.contains(NfcBTechnology)) {
-        tagTech = getTagTechnology(NfcBTechnology);
-    } else if (m_techList.contains(NfcFTechnology)) {
-        tagTech = getTagTechnology(NfcFTechnology);
-    } else if (m_techList.contains(NfcVTechnology)) {
-        tagTech = getTagTechnology(NfcVTechnology);
+    if (m_techList.contains(QStringLiteral(NFCATECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCATECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCBTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCBTECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCFTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCFTECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCVTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCVTECHNOLOGY));
     } else {
         Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
@@ -224,11 +229,11 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     QAndroidJniObject tagTechnology;
 
     // Getting write method
-    if (m_techList.contains(NdefFormatableTechnology)) {
-        tagTechnology = getTagTechnology(NdefFormatableTechnology);
+    if (m_techList.contains(QStringLiteral(NDEFFORMATABLETECHNOLOGY))) {
+        tagTechnology = getTagTechnology(QStringLiteral(NDEFFORMATABLETECHNOLOGY));
         writeMethod = "format";
-    } else if (m_techList.contains(NdefTechology)) {
-        tagTechnology = getTagTechnology(NdefTechology);
+    } else if (m_techList.contains(QStringLiteral(NDEFTECHNOLOGY))) {
+        tagTechnology = getTagTechnology(QStringLiteral(NDEFTECHNOLOGY));
         writeMethod = "writeNdefMessage";
     } else {
         // An invalid request id will be returned if the target does not support writing NDEF messages.
@@ -347,26 +352,28 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
 {
     QAndroidJniEnvironment env;
 
-    if (m_techList.contains(NdefTechology)) {
-        QAndroidJniObject ndef = getTagTechnology(NdefTechology);
+    if (m_techList.contains(QStringLiteral(NDEFTECHNOLOGY))) {
+        QAndroidJniObject ndef = getTagTechnology(QStringLiteral(NDEFTECHNOLOGY));
         QString qtype = ndef.callObjectMethod("getType", "()Ljava/lang/String;").toString();
 
-        QHash<QString, Type> types;
-        types.insert(QString::fromUtf8("com.nxp.ndef.mifareclassic"), MifareTag);
-        types.insert(QString::fromUtf8("org.nfcforum.ndef.type1"), NfcTagType1);
-        types.insert(QString::fromUtf8("org.nfcforum.ndef.type2"), NfcTagType2);
-        types.insert(QString::fromUtf8("org.nfcforum.ndef.type3"), NfcTagType3);
-        types.insert(QString::fromUtf8("org.nfcforum.ndef.type4"), NfcTagType4);
-        if (!types.contains(qtype))
-            return ProprietaryTag;
-        return types[qtype];
-    } else if (m_techList.contains(NfcATechnology)) {
-        if (m_techList.contains(MifareClassicTechnology))
+        if (qtype.compare(QStringLiteral(MIFARETAG)) == 0)
+            return MifareTag;
+        if (qtype.compare(QStringLiteral(NFCTAGTYPE1)) == 0)
+            return NfcTagType1;
+        if (qtype.compare(QStringLiteral(NFCTAGTYPE2)) == 0)
+            return NfcTagType2;
+        if (qtype.compare(QStringLiteral(NFCTAGTYPE3)) == 0)
+            return NfcTagType3;
+        if (qtype.compare(QStringLiteral(NFCTAGTYPE4)) == 0)
+            return NfcTagType4;
+        return ProprietaryTag;
+    } else if (m_techList.contains(QStringLiteral(NFCATECHNOLOGY))) {
+        if (m_techList.contains(QStringLiteral(MIFARECLASSICTECHNOLOGY)))
             return MifareTag;
 
         // Checking ATQA/SENS_RES
         // xxx0 0000  xxxx xxxx: Identifies tag Type 1 platform
-        QAndroidJniObject nfca = getTagTechnology(NfcATechnology);
+        QAndroidJniObject nfca = getTagTechnology(QStringLiteral(NFCATECHNOLOGY));
         QAndroidJniObject atqaBA = nfca.callObjectMethod("getAtqa", "()[B");
         QByteArray atqaQBA = jbyteArrayToQByteArray(atqaBA.object<jbyteArray>());
         if (atqaQBA.isEmpty())
@@ -383,9 +390,9 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
         else if ((sakS & 0x0064) == 0x0020)
             return NfcTagType4;
         return ProprietaryTag;
-    } else if (m_techList.contains(NfcBTechnology)) {
+    } else if (m_techList.contains(QStringLiteral(NFCBTECHNOLOGY))) {
         return NfcTagType4;
-    } else if (m_techList.contains(NfcFTechnology)) {
+    } else if (m_techList.contains(QStringLiteral(NFCFTECHNOLOGY))) {
         return NfcTagType3;
     }
 
