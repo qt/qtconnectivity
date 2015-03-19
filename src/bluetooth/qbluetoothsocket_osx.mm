@@ -153,10 +153,6 @@ void QBluetoothSocketPrivate::close()
     Q_ASSERT_X(!isConnecting, Q_FUNC_INFO, "internal inconsistency - "
                "still in connectToService()");
 
-    // Only go through closing if the socket was fully opened
-    if (state == QBluetoothSocket::ConnectedState)
-        q_ptr->setSocketState(QBluetoothSocket::ClosingState);
-
     if (!txBuffer.size())
         abort();
 }
@@ -596,15 +592,17 @@ void QBluetoothSocket::abort()
     if (state() == UnconnectedState)
         return;
 
+    setOpenMode(NotOpen);
+
     if (state() == ServiceLookupState && d_ptr->discoveryAgent) {
         d_ptr->discoveryAgent->disconnect();
         d_ptr->discoveryAgent->stop();
         d_ptr->discoveryAgent.reset();
     }
 
+    setSocketState(QBluetoothSocket::ClosingState);
     d_ptr->abort();
 
-    setOpenMode(NotOpen);
     setSocketState(QBluetoothSocket::UnconnectedState);
     emit disconnected();
 }
