@@ -392,10 +392,12 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
 void QLowEnergyControllerPrivate::encryptionChangedEvent(
         const QBluetoothAddress &address, bool wasSuccess)
 {
+    if (!encryptionChangePending) // somebody else caused change event
+        return;
+
     if (remoteDevice != address)
         return;
 
-    Q_ASSERT(encryptionChangePending);
     securityLevelValue = securityLevel();
 
     // On success continue to process ATT command queue
