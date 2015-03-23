@@ -651,6 +651,10 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
         emit closeJavaSocket();
 
         inputStream = outputStream = remoteDevice = socketObject = QAndroidJniObject();
+        if (inputThread) {
+            // deleted already above (client->deleteLater())
+            inputThread = 0;
+        }
     }
 
     q->setSocketState(QBluetoothSocket::UnconnectedState);
