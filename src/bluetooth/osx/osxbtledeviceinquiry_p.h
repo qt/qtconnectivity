@@ -36,6 +36,7 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 
+#include <QtCore/qdatetime.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qlist.h>
 
@@ -88,7 +89,11 @@ QT_END_NAMESPACE
     bool cancelled;
     // scan actually started.
     bool isActive;
+    QTime startTime;
 }
+
+// Inquiry length in milliseconds.
++ (int)inquiryLength;
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *)aDelegate;
 - (void)dealloc;
@@ -99,6 +104,7 @@ QT_END_NAMESPACE
 - (void)stop;
 
 - (bool)isActive;
+- (const QTime &)startTime;
 
 @end
 

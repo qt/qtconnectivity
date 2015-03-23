@@ -115,11 +115,12 @@ using namespace QT_NAMESPACE;
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
 
-+ (NSTimeInterval)inquiryLength
++ (int)inquiryLength
 {
     // There is no default timeout,
     // scan does not stop if not asked.
-    return 10;
+    // Return in milliseconds
+    return 10 * 1000;
 }
 
 - (id)initWithDelegate:(OSXBluetooth::LEDeviceInquiryDelegate *)aDelegate
@@ -188,6 +189,7 @@ using namespace QT_NAMESPACE;
         [manager release];
     }
 
+    startTime = QTime();
     pendingStart = true;
     manager = [CBCentralManager alloc];
     manager = [manager initWithDelegate:self queue:nil];
@@ -215,8 +217,12 @@ using namespace QT_NAMESPACE;
         if (pendingStart) {
             pendingStart = false;
             isActive = true;
-            [self performSelector:@selector(stopScan) withObject:nil
-                  afterDelay:[QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) inquiryLength]];
+#ifndef Q_OS_OSX
+            const NSTimeInterval timeout([QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) inquiryLength] / 1000);
+            Q_ASSERT_X(timeout > 0., Q_FUNC_INFO, "invalid scan timeout");
+            [self performSelector:@selector(stopScan) withObject:nil afterDelay:timeout];
+#endif
+            startTime = QTime::currentTime();
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
@@ -285,10 +291,10 @@ using namespace QT_NAMESPACE;
 
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
-    Q_ASSERT_X(isActive,Q_FUNC_INFO, "called while there is no active scan");
-    Q_ASSERT_X(!pendingStart, Q_FUNC_INFO, "both pendingStart and isActive are true");
+    if (!isActive)
+        return;
 
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
     if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
@@ -321,6 +327,11 @@ using namespace QT_NAMESPACE;
 - (bool)isActive
 {
     return pendingStart || isActive;
+}
+
+- (const QTime&)startTime
+{
+    return startTime;
 }
 
 @end
