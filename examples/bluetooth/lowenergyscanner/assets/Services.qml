@@ -76,6 +76,10 @@ Rectangle {
             else
                 info.visible = false;
         }
+
+        onDisconnected: {
+            pageLoader.source = "main.qml"
+        }
     }
 
     ListView {
