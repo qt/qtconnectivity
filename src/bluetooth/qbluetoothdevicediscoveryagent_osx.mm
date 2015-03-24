@@ -217,7 +217,8 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isValid() const
     // can fail to initialize some important data-members
     // (and the error is probably not even related to Bluetooth at all)
     // - say, allocation error - this is what meant here by valid/invalid.
-    return hostController && [hostController powerState] == kBluetoothHCIPowerStateON && inquiry;
+    return hostController && [hostController powerState] == kBluetoothHCIPowerStateON
+           && inquiry && inquiryLE;
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -564,14 +565,12 @@ QBluetoothDeviceDiscoveryAgent::~QBluetoothDeviceDiscoveryAgent()
 
 QBluetoothDeviceDiscoveryAgent::InquiryType QBluetoothDeviceDiscoveryAgent::inquiryType() const
 {
-    Q_D(const QBluetoothDeviceDiscoveryAgent);
-    return d->inquiryType;
+    return d_ptr->inquiryType;
 }
 
 void QBluetoothDeviceDiscoveryAgent::setInquiryType(QBluetoothDeviceDiscoveryAgent::InquiryType type)
 {
-    Q_D(QBluetoothDeviceDiscoveryAgent);
-    d->inquiryType = type;
+    d_ptr->inquiryType = type;
 }
 
 QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() const

@@ -108,7 +108,6 @@ using namespace QT_NAMESPACE;
 #endif
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate, CBPeripheralDelegate>
-+ (NSTimeInterval)inquiryLength;
 // "Timeout" callback to stop a scan.
 - (void)stopScan;
 @end
