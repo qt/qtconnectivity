@@ -185,6 +185,8 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 {
+    if (state != QBluetoothSocket::UnconnectedState)
+        emit closeJavaSocket();
 }
 
 bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
