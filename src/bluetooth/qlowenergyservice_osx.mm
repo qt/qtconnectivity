@@ -177,6 +177,22 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     return false;
 }
 
+void QLowEnergyService::readCharacteristic(const QLowEnergyCharacteristic &characteristic)
+{
+    // not a characteristic of this service
+    if (!contains(characteristic))
+        return;
+
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (state() != ServiceDiscovered || !controller) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    //TODO implement QLowEnergyService::readCharacteristic() on iOS/OSX
+}
+
+
 void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, const QByteArray &newValue,
                                             WriteMode mode)
 {
@@ -216,6 +232,20 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     }
 
     return false;
+}
+
+void QLowEnergyService::readDescriptor(const QLowEnergyDescriptor &descriptor)
+{
+    if (!contains(descriptor))
+        return;
+
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (state() != ServiceDiscovered || !controller) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    //TODO implement QLowEnergyService::readDescriptor() on iOS/OSX
 }
 
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
