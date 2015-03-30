@@ -613,11 +613,10 @@ void QLowEnergyService::writeCharacteristic(
     if (!contains(characteristic))
         return;
 
-    if (state() != ServiceDiscovered)
+    if (state() != ServiceDiscovered || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
-
-    if (!d->controller)
         return;
+    }
 
     // don't write if properties don't permit it
     if (mode == WriteWithResponse
