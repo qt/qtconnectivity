@@ -256,7 +256,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::characteristicWritten(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
+    \fn void QLowEnergyService::characteristicWritten(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
 
     This signal is emitted when the value of \a characteristic
     is successfully changed to \a newValue. The change must have been triggered
@@ -279,7 +279,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
+    \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
 
     This signal is emitted when the value of \a characteristic is changed
     by an event on the peripheral. The \a newValue parameter contains the
