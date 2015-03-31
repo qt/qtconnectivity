@@ -235,6 +235,21 @@ void QLowEnergyControllerPrivate::writeDescriptor(
         service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
+void QLowEnergyControllerPrivate::readCharacteristic(
+        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QLowEnergyHandle /*charHandle*/)
+{
+
+}
+
+void QLowEnergyControllerPrivate::readDescriptor(
+        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QLowEnergyHandle /*charHandle*/,
+        const QLowEnergyHandle /*descriptorHandle*/)
+{
+
+}
+
 void QLowEnergyControllerPrivate::connectionUpdated(
         QLowEnergyController::ControllerState newState,
         QLowEnergyController::Error errorCode)

@@ -112,6 +112,12 @@ public:
                                  const QByteArray &value,
                                  bool appendValue);
 
+    // read data
+    void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                            const QLowEnergyHandle charHandle);
+    void readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QLowEnergyHandle descriptorHandle);
 
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,

@@ -339,6 +339,10 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
             this, SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
     connect(p.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)),
             this, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
+    connect(p.data(), SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)),
+            this, SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    connect(p.data(), SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)),
+            this, SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
 }
 
 /*!
@@ -574,7 +578,8 @@ void QLowEnergyService::readCharacteristic(
         return;
     }
 
-    //TODO
+    d->controller->readCharacteristic(characteristic.d_ptr,
+                                      characteristic.attributeHandle());
 }
 
 /*!
@@ -688,7 +693,9 @@ void QLowEnergyService::readDescriptor(
         return;
     }
 
-    //TODO implement QLowEnergyService::readDescriptor()
+    d->controller->readDescriptor(descriptor.d_ptr,
+                                  descriptor.characteristicHandle(),
+                                  descriptor.handle());
 }
 
 /*!
