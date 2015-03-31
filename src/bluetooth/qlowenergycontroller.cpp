@@ -420,6 +420,7 @@ QLowEnergyController::QLowEnergyController(
     d->remoteDevice = remoteDeviceInfo.address();
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
+    d->remoteName = remoteDeviceInfo.name();
 }
 
 /*!
@@ -477,6 +478,16 @@ QBluetoothAddress QLowEnergyController::localAddress() const
 QBluetoothAddress QLowEnergyController::remoteAddress() const
 {
     return d_ptr->remoteDevice;
+}
+
+/*!
+    Returns the name of the remote Bluetooth Low Energy device.
+
+    \since 5.5
+ */
+QString QLowEnergyController::remoteName() const
+{
+    return d_ptr->remoteName;
 }
 
 /*!

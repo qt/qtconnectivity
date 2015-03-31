@@ -82,6 +82,8 @@ public:
     QBluetoothAddress localAddress() const;
     QBluetoothAddress remoteAddress() const;
 
+    QString remoteName() const;
+
     ControllerState state() const;
 
     RemoteAddressType remoteAddressType() const;
