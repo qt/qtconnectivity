@@ -1720,6 +1720,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QVERIFY(service->contains(dataChar));
     QVERIFY(configChar.isValid());
     QVERIFY(configChar.properties() & QLowEnergyCharacteristic::Write);
+    QVERIFY(configChar.properties() & QLowEnergyCharacteristic::Read);
     QVERIFY(service->contains(configChar));
 
     QCOMPARE(dataChar.value(), QByteArray::fromHex("3f00"));
@@ -1728,6 +1729,8 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
     QSignalSpy writeSpy(service,
                         SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy readSpy(service,
+                       SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
 
     // *******************************************
     // test writing of characteristic
@@ -1744,9 +1747,27 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
         QVERIFY(signalChar == configChar);
 
         writeSpy.clear();
+
     }
 
-    service->writeCharacteristic(configChar, QByteArray::fromHex("00")); //0x81 blink LED D1
+    // test direct read of configChar
+    QVERIFY(readSpy.isEmpty());
+    service->readCharacteristic(configChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!readSpy.isEmpty(), 10000);
+    QCOMPARE(configChar.value(), QByteArray::fromHex("81"));
+    QCOMPARE(readSpy.count(), 1); //expect one characteristicRead signal
+    {
+        //verify the readCharacteristic()
+        QList<QVariant> firstSignalData = readSpy.first();
+        QLowEnergyCharacteristic signalChar = firstSignalData[0].value<QLowEnergyCharacteristic>();
+        QByteArray signalValue = firstSignalData[1].toByteArray();
+
+        QCOMPARE(signalValue, QByteArray::fromHex("81"));
+        QCOMPARE(signalValue, configChar.value());
+        QVERIFY(signalChar == configChar);
+    }
+
+    service->writeCharacteristic(configChar, QByteArray::fromHex("00")); //turn LED D1 off
     QTRY_VERIFY_WITH_TIMEOUT(!writeSpy.isEmpty(), 10000);
     QCOMPARE(configChar.value(), QByteArray::fromHex("00"));
     QList<QVariant> firstSignalData = writeSpy.first();
@@ -2024,10 +2045,24 @@ void tst_QLowEnergyController::tst_writeDescriptor()
 }
 
 /*
- * Tests encrypted read/write.
+ * By default this test is skipped.
+ *
+ * Following tests are performed:
+ * - encrypted read and discovery
+ * - readCharacteristic() of values longer than MTU
+ * - readCharacteristic() if values equal to MTU
+ *
  * This test is semi manual as the test device environment is very specific.
- * Adjust the various uuids and addresses at the top to cater for the current
- * situation. By default this test is skipped.
+ * A programmable BTLE device is required. Currently, the test requires
+ * the CSR Dev Kit using the hr_sensor example.
+ *
+  * The following changes must be done to example to be able to fully
+ * utilise the test:
+ * 1.) gap_service_db.db -> UUID_DEVICE_NAME char - add FLAG_ENCR_R
+ *      => tests encrypted read/discovery
+ * 2.) dev_info_service_db.db -> UUID_DEVICE_INFO_MANUFACTURER_NAME
+ *      =>  The default name "Cambridge Silicon Radio" must be changed
+ *          to "Cambridge Silicon Radi" (new length 22)
  */
 void tst_QLowEnergyController::tst_encryption()
 {
@@ -2072,16 +2107,91 @@ void tst_QLowEnergyController::tst_encryption()
 
     QLowEnergyService *service = control.createServiceObject(serviceUuid, this);
     QVERIFY(service);
+
+    // 1.) discovery triggers read of device name char which is encrypted
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
-    QLowEnergyCharacteristic characteristic = service->characteristic(
+    QLowEnergyCharacteristic encryptedChar = service->characteristic(
                                                     characterristicUuid);
+    const QByteArray encryptedReference("CSR HR Sensor");
+    QVERIFY(encryptedChar.isValid());
+    QCOMPARE(encryptedChar.value(), encryptedReference);
 
-    QVERIFY(characteristic.isValid());
-    qDebug() << "Encrypted char value:" << characteristic.value().toHex() << characteristic.value();
-    QVERIFY(!characteristic.value().isEmpty());
+    // 2.) read of encrypted characteristic
+    //     => the discovery of the encrypted char above will have switched to
+    //     encryption already.
+    QSignalSpy encryptedReadSpy(service,
+                                SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy encryptedErrorSpy(service,
+                                 SIGNAL(error(QLowEnergyService::ServiceError)));
+    service->readCharacteristic(encryptedChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!encryptedReadSpy.isEmpty(), 10000);
+    QVERIFY(encryptedErrorSpy.isEmpty());
+    QCOMPARE(encryptedReadSpy.count(), 1);
+    QList<QVariant> entry = encryptedReadSpy[0];
+    QVERIFY(entry[0].value<QLowEnergyCharacteristic>() == encryptedChar);
+    QCOMPARE(entry[1].toByteArray(), encryptedReference);
+    QCOMPARE(encryptedChar.value(), encryptedReference);
+
+    delete service;
+
+    //change to Device Information service
+    QVERIFY(uuids.contains(QBluetoothUuid::DeviceInformation));
+    service = control.createServiceObject(QBluetoothUuid::DeviceInformation);
+    QVERIFY(service);
+
+    service->discoverDetails();
+    QTRY_VERIFY_WITH_TIMEOUT(
+        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+
+    // 3.) read of software revision string which is longer than mtu
+    //     tests readCharacteristic() including blob reads
+    QSignalSpy readSpy(service,
+                       SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy errorSpy(service,
+                       SIGNAL(error(QLowEnergyService::ServiceError)));
+
+    const QByteArray expectedSoftRev("Application version 2.3.0.0");
+    QLowEnergyCharacteristic softwareRevChar
+            = service->characteristic(QBluetoothUuid::SoftwareRevisionString);
+    QVERIFY(softwareRevChar.isValid());
+    QCOMPARE(softwareRevChar.value(), expectedSoftRev);
+
+    service->readCharacteristic(softwareRevChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!readSpy.isEmpty(), 10000);
+    QVERIFY(errorSpy.isEmpty());
+    QCOMPARE(readSpy.count(), 1);
+    entry = readSpy[0];
+    QVERIFY(entry[0].value<QLowEnergyCharacteristic>() == softwareRevChar);
+    QCOMPARE(entry[1].toByteArray(), expectedSoftRev);
+    QCOMPARE(softwareRevChar.value(), expectedSoftRev);
+
+
+    // 4.) read of manufacturer string which is exactly as long as single
+    //     MTU size (assuming negotiated MTU is 23)
+    //     => blob read test without blob being required
+    //     => the read blob answer will have zero length
+
+    readSpy.clear();
+
+    // This assumes the manufacturer string was mondified via CSR SDK
+    // see function description above
+    const QByteArray expectedManufacturer("Cambridge Silicon Radi");
+    QLowEnergyCharacteristic manufacturerChar = service->characteristic(
+                QBluetoothUuid::ManufacturerNameString);
+    QVERIFY(manufacturerChar.isValid());
+    QCOMPARE(manufacturerChar.value(), expectedManufacturer);
+
+    service->readCharacteristic(manufacturerChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!readSpy.isEmpty(), 10000);
+    QVERIFY(errorSpy.isEmpty());
+    QCOMPARE(readSpy.count(), 1);
+    entry = readSpy[0];
+    QVERIFY(entry[0].value<QLowEnergyCharacteristic>() == manufacturerChar);
+    QCOMPARE(entry[1].toByteArray(), expectedManufacturer);
+    QCOMPARE(manufacturerChar.value(), expectedManufacturer);
 
     delete service;
     control.disconnectFromDevice();
@@ -2150,6 +2260,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QVERIFY(imageIdentityChar.isValid());
     QVERIFY(imageIdentityChar.properties() & QLowEnergyCharacteristic::Write);
     QVERIFY(imageIdentityChar.properties() & QLowEnergyCharacteristic::WriteNoResponse);
+    QVERIFY(!(imageIdentityChar.properties() & QLowEnergyCharacteristic::Read)); //not readable
     QVERIFY(imageBlockChar.isValid());
 
     // 2. Get "Image Identity" notification descriptor
@@ -2169,8 +2280,13 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
                         SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
     QSignalSpy charWrittenSpy(service,
                         SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy charReadSpy(service,
+                        SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy errorSpy(service,
+                        SIGNAL(error(QLowEnergyService::ServiceError)));
 
-    // by default the defvice enables the notificatioin bit already
+
+    // by default the device enables the notification bit already
     // no need to enable it. If notifications fail to arrive the
     // platform must check default enabled notifications.
     if (notification.value() != QByteArray::fromHex("0100")) {
@@ -2185,8 +2301,20 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         descWrittenSpy.clear();
     }
 
-    // 4. Trigger image identity announcement (using traditional write)
     QList<QVariant> entry;
+
+    // Test direct read of non-readable characteristic
+    QVERIFY(errorSpy.isEmpty());
+    QVERIFY(charReadSpy.isEmpty());
+    service->readCharacteristic(imageIdentityChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
+    QCOMPARE(errorSpy.count(), 1); // should throw CharacteristicReadError
+    QVERIFY(charReadSpy.isEmpty());
+    entry = errorSpy[0];
+    QCOMPARE(entry[0].value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::CharacteristicReadError);
+
+    // 4. Trigger image identity announcement (using traditional write)
     bool foundOneImage = false;
 
     // Image A
