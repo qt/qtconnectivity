@@ -558,7 +558,8 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
 
     A characteristic can only be read if the service is in the \l ServiceDiscovered state,
     belongs to the service and is readable. If \a characteristic is readable its
-    \l QLowEnergyCharacteristic::Read property is set.
+    \l QLowEnergyCharacteristic::Read property is set. If one of those conditions is
+    not true the \l QLowEnergyService::OperationError is set.
 
     \sa characteristicRead()
 
@@ -569,11 +570,9 @@ void QLowEnergyService::readCharacteristic(
 {
     Q_D(QLowEnergyService);
 
-    // not a characteristic of this service
-    if (!contains(characteristic))
-        return;
-
-    if (state() != ServiceDiscovered || !d->controller) {
+    if (!contains(characteristic)
+            || state() != ServiceDiscovered
+            || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -603,7 +602,8 @@ void QLowEnergyService::readCharacteristic(
     Bluetooth specification.
 
     A characteristic can only be written if this service is in the \l ServiceDiscovered state,
-    belongs to the service and is writable.
+    belongs to the service and is writable. If one of those conditions is
+    not true the \l QLowEnergyService::OperationError is set.
 
     \sa QLowEnergyCharacteristic::properties()
  */
@@ -614,11 +614,9 @@ void QLowEnergyService::writeCharacteristic(
     //TODO check behavior when writing to WriteSigned characteristic
     Q_D(QLowEnergyService);
 
-    // not a characteristic of this service
-    if (!contains(characteristic))
-        return;
-
-    if (state() != ServiceDiscovered || !d->controller) {
+    if (!contains(characteristic)
+            || state() != ServiceDiscovered
+            || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -674,7 +672,8 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     The queue does not eliminate duplicated read requests for the same descriptor.
 
     A descriptor can only be written if the service is in the \l ServiceDiscovered state,
-    belongs to the service and is readable.
+    belongs to the service and is readable. If one of those conditions is
+    not true the \l QLowEnergyService::OperationError is set.
 
     \sa descriptorRead()
 
@@ -685,10 +684,9 @@ void QLowEnergyService::readDescriptor(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor))
-        return;
-
-    if (state() != ServiceDiscovered || !d->controller) {
+    if (!contains(descriptor)
+            || state() != ServiceDiscovered
+            || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -710,17 +708,17 @@ void QLowEnergyService::readDescriptor(
     to B, the two write request are executed in the given order.
 
     A descriptor can only be written if this service is in the \l ServiceDiscovered state,
-    belongs to the service and is writable.
+    belongs to the service and is writable. If one of those conditions is
+    not true the \l QLowEnergyService::OperationError is set.
  */
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor))
-        return;
-
-    if (state() != ServiceDiscovered || !d->controller) {
+    if (!contains(descriptor)
+            || state() != ServiceDiscovered
+            || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
