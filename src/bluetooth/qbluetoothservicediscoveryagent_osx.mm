@@ -171,6 +171,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
     state = ServiceDiscovery;
     const QBluetoothAddress &address(discoveredDevices.at(0).address());
 
+    if (address.isNull()) {
+        // This can happen: LE scan works with CoreBluetooth, but CBPeripherals
+        // do not expose hardware addresses.
+        // Pop the current QBluetoothDeviceInfo and decide what to do next.
+        return serviceDiscoveryFinished();
+    }
+
     // Autoreleased object.
     IOBluetoothHostController *const hc = [IOBluetoothHostController defaultController];
     if (![hc powerState]) {

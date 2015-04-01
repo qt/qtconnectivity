@@ -153,10 +153,6 @@ void QBluetoothSocketPrivate::close()
     Q_ASSERT_X(!isConnecting, Q_FUNC_INFO, "internal inconsistency - "
                "still in connectToService()");
 
-    // Only go through closing if the socket was fully opened
-    if (state == QBluetoothSocket::ConnectedState)
-        q_ptr->setSocketState(QBluetoothSocket::ClosingState);
-
     if (!txBuffer.size())
         abort();
 }
@@ -396,7 +392,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     // IOBluetoothL2CAPChannel buffered (writeAsync).
 
     if (!txBuffer.size())
-        QMetaObject::invokeMethod(this, Q_FUNC_INFO, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
 
     char *dst = txBuffer.reserve(maxSize);
     std::copy(data, data + maxSize, dst);
@@ -596,9 +592,17 @@ void QBluetoothSocket::abort()
     if (state() == UnconnectedState)
         return;
 
+    setOpenMode(NotOpen);
+
+    if (state() == ServiceLookupState && d_ptr->discoveryAgent) {
+        d_ptr->discoveryAgent->disconnect();
+        d_ptr->discoveryAgent->stop();
+        d_ptr->discoveryAgent.reset();
+    }
+
+    setSocketState(QBluetoothSocket::ClosingState);
     d_ptr->abort();
 
-    setOpenMode(NotOpen);
     setSocketState(QBluetoothSocket::UnconnectedState);
     emit disconnected();
 }
@@ -676,6 +680,13 @@ void QBluetoothSocket::close()
         return;
 
     setOpenMode(NotOpen);
+
+    if (state() == ServiceLookupState && d_ptr->discoveryAgent) {
+        d_ptr->discoveryAgent->disconnect();
+        d_ptr->discoveryAgent->stop();
+        d_ptr->discoveryAgent.reset();
+    }
+
     setSocketState(ClosingState);
 
     d_ptr->close();

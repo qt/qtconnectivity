@@ -680,9 +680,7 @@ using namespace QT_NAMESPACE;
 
     writeQueue.enqueue(request);
     [self performNextWriteRequest];
-    // TODO: this is quite ugly: true value can be returned after
-    // write actually. If I have any problems with the order later,
-    // I'll use performSelector afterDelay with some delay.
+
     return true;
 }
 
@@ -705,9 +703,7 @@ using namespace QT_NAMESPACE;
 
     writeQueue.enqueue(request);
     [self performNextWriteRequest];
-    // TODO: this is quite ugly: true value can be returned after
-    // write actually. If I have any problems with the order later,
-    // I'll use performSelector afterDelay with some delay.
+
     return true;
 }
 
