@@ -200,9 +200,9 @@ void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, 
     }
 
     // Don't write if properties don't permit it
-    if (mode == WriteWithResponse && (ch.properties() & QLowEnergyCharacteristic::Write))
+    if (mode == WriteWithResponse)
         controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, true);
-    else if (mode == WriteWithoutResponse && (ch.properties() & QLowEnergyCharacteristic::WriteNoResponse))
+    else if (mode == WriteWithoutResponse)
         controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, false);
     else
         d_ptr->setError(QLowEnergyService::OperationError);

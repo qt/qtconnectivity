@@ -1801,8 +1801,8 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
     QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
     QCOMPARE(errorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
-             QLowEnergyService::OperationError);
-    QCOMPARE(service->error(), QLowEnergyService::OperationError);
+             QLowEnergyService::CharacteristicWriteError);
+    QCOMPARE(service->error(), QLowEnergyService::CharacteristicWriteError);
     QCOMPARE(writeSpy.count(), 0);
     QCOMPARE(dataChar.value(), QByteArray::fromHex("3f00"));
 

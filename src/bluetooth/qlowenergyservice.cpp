@@ -550,16 +550,20 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
 /*!
     Reads the value of \a characteristic. If the operation is successful, the
     \l characteristicRead() signal is emitted; otherwise the \l CharacteristicReadError
-    is set.
+    is set.  In general, a \a characteristic is readable, if its
+    \l QLowEnergyCharacteristic::Read property is set.
 
     All descriptor and characteristic requests towards the same remote device are
     serialised. A queue is employed when issuing multiple requests at the same time.
     The queue does not eliminate duplicated read requests for the same characteristic.
 
     A characteristic can only be read if the service is in the \l ServiceDiscovered state,
-    belongs to the service and is readable. If \a characteristic is readable its
-    \l QLowEnergyCharacteristic::Read property is set. If one of those conditions is
+    belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
+
+    \note Calling this function despite \l properties() reporting a non-readable property
+    always attempts to read the characteristic's value on the hardware. If the hardware
+    returns with an error the \l CharacteristicWriteError is set.
 
     \sa characteristicRead()
 
@@ -602,8 +606,14 @@ void QLowEnergyService::readCharacteristic(
     Bluetooth specification.
 
     A characteristic can only be written if this service is in the \l ServiceDiscovered state,
-    belongs to the service and is writable. If one of those conditions is
+    and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
+
+    \note Calling this function despite \l properties() reporting a non-writable property
+    always attempts to write to the hardware. Similarly, a \l WriteWithoutResponse
+    is sent to the hardware too although the characteristic may only support
+    \l WriteWithResponse. If the hardware returns with an error the
+    \l CharacteristicWriteError is set.
 
     \sa QLowEnergyCharacteristic::properties()
  */
@@ -622,15 +632,13 @@ void QLowEnergyService::writeCharacteristic(
     }
 
     // don't write if properties don't permit it
-    if (mode == WriteWithResponse
-            && (characteristic.properties() & QLowEnergyCharacteristic::Write))
+    if (mode == WriteWithResponse)
     {
         d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
                                        newValue,
                                        true);
-    } else if (mode == WriteWithoutResponse
-               && (characteristic.properties() & QLowEnergyCharacteristic::WriteNoResponse)) {
+    } else if (mode == WriteWithoutResponse) {
         d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
                                        newValue,
@@ -671,8 +679,8 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     serialised. A queue is employed when issuing multiple requests at the same time.
     The queue does not eliminate duplicated read requests for the same descriptor.
 
-    A descriptor can only be written if the service is in the \l ServiceDiscovered state,
-    belongs to the service and is readable. If one of those conditions is
+    A descriptor can only be written if the service is in the \l ServiceDiscovered state
+    and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
     \sa descriptorRead()
@@ -708,7 +716,7 @@ void QLowEnergyService::readDescriptor(
     to B, the two write request are executed in the given order.
 
     A descriptor can only be written if this service is in the \l ServiceDiscovered state,
-    belongs to the service and is writable. If one of those conditions is
+    belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
  */
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
