@@ -42,7 +42,7 @@ import QtQuick 2.0
 
 Text {
     property string textContent: ""
-    font.pixelSize: 30
+    font.pointSize: 20
     anchors.horizontalCenter: parent.horizontalCenter
     color: "#363636"
     horizontalAlignment: Text.AlignHCenter

@@ -36,6 +36,7 @@
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -156,8 +157,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         // We can be here only if we have some kind of
         // resource allocation error.
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
-                 QObject::tr("device discovery agent, failed to start: "
-                             "resource allocation error"));
+                 QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED);
         emit q_ptr->error(lastError);
     }
 }
@@ -270,20 +270,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
             errorString = QString();
             break;
         case QBluetoothDeviceDiscoveryAgent::PoweredOffError:
-            errorString = QObject::tr("device discovery agent: adapter is powered off");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_POWERED_OFF);
             break;
         case QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError:
-            errorString = QObject::tr("device discovery agent: invalid bluetooth adapter");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_INVALID_ADAPTER);
             break;
         case QBluetoothDeviceDiscoveryAgent::InputOutputError:
-            errorString = QObject::tr("device discovery agent: input output error");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_IO);
             break;
         case QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError:
-            errorString = QObject::tr("Bluetooth LE is not supported");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_NOTSUPPORTED);
             break;
         case QBluetoothDeviceDiscoveryAgent::UnknownError:
         default:
-            errorString = QObject::tr("device discovery agent: unknown error");
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
         }
     }
 }

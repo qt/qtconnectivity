@@ -112,7 +112,7 @@ bool QBluetoothTransferReplyQnx::start()
             file.remove();
         }
         else if (directory.exists(appName) && busy) {
-            m_errorStr = QBluetoothTransferReply::tr("Resurce busy.");
+            m_errorStr = QBluetoothTransferReply::tr("Resource busy.");
             m_error = QBluetoothTransferReply::ResourceBusyError;
             m_finished = true;
             m_running = false;
@@ -121,7 +121,7 @@ bool QBluetoothTransferReplyQnx::start()
             return false;
         }
         if (!source->isReadable()) {
-            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read."
+            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read. "
                                                      "Make sure it is open for reading.");
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;

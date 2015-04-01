@@ -91,7 +91,7 @@ Rectangle {
                     }
                     break;
                 case NdefRecord.Mime:
-                    if (messageRecords[i].type.startsWith("image/")) {
+                    if (messageRecords[i].type.indexOf("image/") === 0 ) {
                         posterImage.source = messageRecords[i].uri;
                         found = true;
                     }
@@ -115,15 +115,6 @@ Rectangle {
         font.pointSize: 18
     }
 
-    Text {
-        id: posterText
-        anchors.horizontalCenter: parent.right
-        anchors.horizontalCenterOffset: - parent.width / 4
-        y: -height
-        font.bold: true
-        font.pointSize: 18
-    }
-
     Image {
         id: posterImage
         scale: Image.PreserveAspectFit
@@ -132,6 +123,15 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         x: -width
         smooth: true
+    }
+
+    Text {
+        id: posterText
+        anchors.horizontalCenter: parent.right
+        anchors.horizontalCenterOffset: - parent.width / 4
+        y: -height
+        font.bold: true
+        font.pointSize: 18
     }
 
     Text {

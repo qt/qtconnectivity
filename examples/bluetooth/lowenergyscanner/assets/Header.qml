@@ -54,7 +54,7 @@ Rectangle {
         anchors.fill: parent
         text: headerText
         font.bold: true
-        font.pixelSize: 30
+        font.pointSize: 20
         elide: Text.ElideMiddle
         color: "#363636"
     }
