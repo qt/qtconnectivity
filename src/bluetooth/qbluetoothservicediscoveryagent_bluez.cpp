@@ -272,7 +272,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
 
     if (errorCode != QBluetoothServiceDiscoveryAgent::NoError) {
         qCWarning(QT_BT_BLUEZ) << "SDP search failed for"
-                              << discoveredDevices.at(0).address().toString();
+                              << (!discoveredDevices.isEmpty()
+                                     ? discoveredDevices.at(0).address().toString()
+                                     : QStringLiteral("<Unknown>"));
         // We have an error which we need to indicate and stop further processing
         discoveredDevices.clear();
         error = errorCode;
