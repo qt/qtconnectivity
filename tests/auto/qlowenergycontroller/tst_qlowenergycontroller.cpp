@@ -85,7 +85,7 @@ private slots:
     void tst_writeCharacteristic();
     void tst_writeCharacteristicNoResponse();
     void tst_writeDescriptor();
-    void tst_encryption();
+    void tst_customProgrammableDevice();
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
 
@@ -2063,8 +2063,14 @@ void tst_QLowEnergyController::tst_writeDescriptor()
  * 2.) dev_info_service_db.db -> UUID_DEVICE_INFO_MANUFACTURER_NAME
  *      =>  The default name "Cambridge Silicon Radio" must be changed
  *          to "Cambridge Silicon Radi" (new length 22)
+ * 3.) revert change 1 above and redo test. This attempts to write a
+ *     char that is readable w/o encryption but writeable with encryption
+ *     => tests encryption code lines in writeCharacteristic()
+ *     => otherwise the read encryption would have increased security level already
+ *     => programmable CSR device must be reset before each run of this test
+ *        (to undo the previous write)
  */
-void tst_QLowEnergyController::tst_encryption()
+void tst_QLowEnergyController::tst_customProgrammableDevice()
 {
     QSKIP("Skipping encryption");
 
@@ -2135,6 +2141,22 @@ void tst_QLowEnergyController::tst_encryption()
     QCOMPARE(entry[1].toByteArray(), encryptedReference);
     QCOMPARE(encryptedChar.value(), encryptedReference);
 
+    // 3.) write to encrypted characteristic
+    QSignalSpy encryptedWriteSpy(service,
+                                 SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
+    encryptedReadSpy.clear();
+    encryptedErrorSpy.clear();
+    const QByteArray newValue("ZZZ HR Sensor");
+    service->writeCharacteristic(encryptedChar, newValue);
+    QTRY_VERIFY_WITH_TIMEOUT(!encryptedWriteSpy.isEmpty(), 10000);
+    QVERIFY(encryptedErrorSpy.isEmpty());
+    QVERIFY(encryptedReadSpy.isEmpty());
+    QCOMPARE(encryptedWriteSpy.count(), 1);
+    entry = encryptedWriteSpy[0];
+    QVERIFY(entry[0].value<QLowEnergyCharacteristic>() == encryptedChar);
+    QCOMPARE(entry[1].toByteArray(), newValue);
+    QCOMPARE(encryptedChar.value(), newValue);
+
     delete service;
 
     //change to Device Information service
@@ -2146,7 +2168,7 @@ void tst_QLowEnergyController::tst_encryption()
     QTRY_VERIFY_WITH_TIMEOUT(
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
-    // 3.) read of software revision string which is longer than mtu
+    // 4.) read of software revision string which is longer than mtu
     //     tests readCharacteristic() including blob reads
     QSignalSpy readSpy(service,
                        SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
@@ -2169,7 +2191,7 @@ void tst_QLowEnergyController::tst_encryption()
     QCOMPARE(softwareRevChar.value(), expectedSoftRev);
 
 
-    // 4.) read of manufacturer string which is exactly as long as single
+    // 5.) read of manufacturer string which is exactly as long as single
     //     MTU size (assuming negotiated MTU is 23)
     //     => blob read test without blob being required
     //     => the read blob answer will have zero length
