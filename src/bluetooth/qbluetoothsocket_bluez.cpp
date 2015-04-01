@@ -511,20 +511,10 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
 
 void QBluetoothSocketPrivate::close()
 {
-    Q_Q(QBluetoothSocket);
-
-    // Only go through closing if the socket was fully opened
-    if(state == QBluetoothSocket::ConnectedState)
-        q->setSocketState(QBluetoothSocket::ClosingState);
-
-    if(txBuffer.size() > 0 &&
-       state == QBluetoothSocket::ClosingState){
+    if (txBuffer.size() > 0)
         connectWriteNotifier->setEnabled(true);
-    }
-    else {
+    else
         abort();
-    }
-
 }
 
 bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType_,

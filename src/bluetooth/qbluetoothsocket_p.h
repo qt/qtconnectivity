@@ -52,8 +52,10 @@
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
 #include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QPointer>
 #include "android/inputstreamthread_p.h"
 #include <jni.h>
+class WorkerThread;
 #endif
 
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
@@ -94,18 +96,14 @@ public:
     ~QBluetoothSocketPrivate();
 
 //On QNX and Android we connect using the uuid not the port
-#if defined(QT_QNX_BLUETOOTH)
-    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode);
-#elif defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
-                          QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
-    bool fallBackConnect(QAndroidJniObject uuid, int channel);
+                          QIODevice::OpenMode openMode);
 #else
     void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
-    void connectToServiceConc(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
-                              QIODevice::OpenMode openMode, int fallbackServiceChannel = 1);
+    bool fallBackConnect(QAndroidJniObject uuid, int channel);
 #endif
 
 
@@ -167,8 +165,17 @@ public:
     QAndroidJniObject outputStream;
     InputStreamThread *inputThread;
 
-private slots:
+public slots:
+    void socketConnectSuccess(const QAndroidJniObject &socket);
+    void defaultSocketConnectFailed(const QAndroidJniObject & socket,
+                                    const QAndroidJniObject &targetUuid);
+    void fallbackSocketConnectFailed(const QAndroidJniObject &socket,
+                                     const QAndroidJniObject &targetUuid);
     void inputThreadError(int errorCode);
+
+signals:
+    void connectJavaSocket();
+    void closeJavaSocket();
 
 #endif
 

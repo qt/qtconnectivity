@@ -33,6 +33,7 @@
 ****************************************************************************/
 
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 
 #include "qlowenergyserviceprivate_p.h"
 #include "qlowenergycontroller_osx_p.h"
@@ -694,17 +695,17 @@ void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::E
         errorString.clear();
         break;
     case QLowEnergyController::UnknownRemoteDeviceError:
-        errorString = QLowEnergyController::tr("Remote device cannot be found");
+        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_RDEV_NO_FOUND);
         break;
     case QLowEnergyController::InvalidBluetoothAdapterError:
-        errorString = QLowEnergyController::tr("Cannot find local adapter");
+        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_NO_LOCAL_DEV);
         break;
     case QLowEnergyController::NetworkError:
-        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
+        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_IO_ERROR);
         break;
     case QLowEnergyController::UnknownError:
     default:
-        errorString = QLowEnergyController::tr("Unknown Error");
+        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_UNKNOWN_ERROR);
         break;
     }
 }

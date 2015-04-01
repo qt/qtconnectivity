@@ -123,7 +123,7 @@ bool QBluetoothTransferReplyBluez::start()
         m_tempfile->open();
         qCDebug(QT_BT_BLUEZ) << "Not a QFile, making a copy" << m_tempfile->fileName();
         if (!m_source->isReadable()) {
-            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read."
+            m_errorStr = QBluetoothTransferReply::tr("QIODevice cannot be read. "
                                                      "Make sure it is open for reading.");
             m_error = QBluetoothTransferReply::IODeviceNotReadableError;
             m_finished = true;
@@ -385,7 +385,7 @@ void QBluetoothTransferReplyBluez::Error(const QDBusObjectPath &in0, const QStri
         m_errorStr = tr("Could not open file for sending");
     } else if (in1 == QStringLiteral("Operation canceled")) {
         m_error = QBluetoothTransferReply::UserCanceledTransferError;
-        m_errorStr = tr("Operation canceled");
+        m_errorStr = QBluetoothTransferReply::tr("Operation canceled");
     } else {
         m_error = QBluetoothTransferReply::UnknownError;
     }

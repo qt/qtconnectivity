@@ -31,47 +31,38 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qbluetoothdevicediscoveryagent_p.h"
-#include "qbluetoothaddress.h"
-#include "qbluetoothuuid.h"
+#ifndef QBLUETOOTHDEVICEDISCOVERYTIMER_OSX_P_H
+#define QBLUETOOTHDEVICEDISCOVERYTIMER_OSX_P_H
 
-#define QT_DEVICEDISCOVERY_DEBUG
+#include <QtCore/qglobal.h>
+#include <QtCore/qtimer.h>
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
-                const QBluetoothAddress &deviceAdapter,
-                QBluetoothDeviceDiscoveryAgent *parent)
-    :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
-        lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-        q_ptr(parent)
+class QBluetoothDeviceDiscoveryAgentPrivate;
+
+namespace OSXBluetooth {
+
+class DDATimerHandler : public QObject
 {
-    Q_UNUSED(deviceAdapter);
+    Q_OBJECT
+
+public:
+    DDATimerHandler(QBluetoothDeviceDiscoveryAgentPrivate *d);
+
+    void start(int msec);
+    void stop();
+
+private slots:
+    void onTimer();
+
+private:
+    QTimer timer;
+    QBluetoothDeviceDiscoveryAgentPrivate *owner;
+};
+
 }
-
-QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
-{
-}
-
-bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
-{
-    return false;
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
-{
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
-    lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError;
-    errorString = QBluetoothDeviceDiscoveryAgent::tr("Device discovery not supported on this platform");
-
-    emit q->error(lastError);
-}
-
-void QBluetoothDeviceDiscoveryAgentPrivate::stop()
-{
-}
-
-
 
 QT_END_NAMESPACE
+
+#endif // QBLUETOOTHDEVICEDISCOVERYTIMER_OSX_P_H
