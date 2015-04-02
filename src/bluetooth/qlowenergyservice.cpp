@@ -94,13 +94,37 @@ QT_BEGIN_NAMESPACE
 
     The values of characteristics and descriptors can be retrieved via
     \l QLowEnergyCharacteristic and \l QLowEnergyDescriptor, respectively.
-    However writing those attributes requires the service object. The
-    \l writeCharacteristic() function attempts to write a new value to the given
+    However, direct reading or writing of these attributes requires the service object.
+    The \l readCharacteristic() function attempts to re-read the value of a characteristic.
+    Although the initial service discovery may have obtained a value already this call may
+    be required in cases where the characteristic value constantly changes without
+    any notifications being provided. An example might be a time characteristic
+    that provides a continuous value. If the read attempt is successful, the
+    \l characteristicRead() signal is emitted. A failure to read the value triggers
+    the \l CharacteristicReadError.
+    The \l writeCharacteristic() function attempts to write a new value to the given
     characteristic. If the write attempt is successful, the \l characteristicWritten()
     signal is emitted. A failure to write triggers the \l CharacteristicWriteError.
-    Writing a descriptor follows the same pattern. Write requests are serialised.
-    Issuing a second write request before the previous request has finished
-    is delayed until the first write request has finished.
+    Reading and writing of descriptors follows the same pattern.
+
+    Every attempt is made to read or write the value of a descriptor
+    or characteristic on the hardware. This means that meta information such as
+    \l QLowEnergyCharacteristic::properties() is generally ignored when reading and writing.
+    As an example, it is possible to call \l writeCharacteristic() despite the characteristic
+    being read-only based on its meta data description. The resulting write request is
+    forwarded to the connected device and it is up to the device to respond to the
+    potentially invalid request. In this case the result is the emission of the
+    \l CharacteristicWriteError in response to the returned device error. This behavior
+    simplies interaction with devices which report wrong meta information.
+    If it was not possible to forward the request to the remote device the
+    \l OperationError is set. A potential reason could be that the to-be-written
+    characteristic object does not even belong the current service. In
+    summary, the two types of errors permit a quick distinction of local
+    and remote error cases.
+
+    All requests are serialised based on First-In First-Out principle.
+    For example, issuing a second write request, before the previous
+    write request has finished, is delayed until the first write request has finished.
 
     \note Currently, it is not possible to send signed write or reliable write requests.
 
@@ -130,8 +154,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet doc_src_qtbluetooth.cpp data_share_qlowenergyservice
 
-    Other operations such as calls to \l writeCharacteristic(),
-    writeDescriptor() or the invalidation of the service due to the
+    Other operations such as calls to \l readCharacteristic(), \l readDescriptor(), \l writeCharacteristic(),
+    \l writeDescriptor() or the invalidation of the service due to the
     related \l QLowEnergyController disconnecting from the device are shared
     the same way.
 
@@ -561,11 +585,11 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
-    \note Calling this function despite \l properties() reporting a non-readable property
+    \note Calling this function despite \l QLowEnergyCharacteristic::properties() reporting a non-readable property
     always attempts to read the characteristic's value on the hardware. If the hardware
     returns with an error the \l CharacteristicWriteError is set.
 
-    \sa characteristicRead()
+    \sa characteristicRead(), writeCharacteristic()
 
     \since 5.5
  */
@@ -609,13 +633,14 @@ void QLowEnergyService::readCharacteristic(
     and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
-    \note Calling this function despite \l properties() reporting a non-writable property
-    always attempts to write to the hardware. Similarly, a \l WriteWithoutResponse
-    is sent to the hardware too although the characteristic may only support
-    \l WriteWithResponse. If the hardware returns with an error the
-    \l CharacteristicWriteError is set.
+    \note Calling this function despite \l QLowEnergyCharacteristic::properties() reporting
+    a non-writable property always attempts to write to the hardware.
+    Similarly, a \l WriteWithoutResponse is sent to the hardware too although the
+    characteristic may only support \l WriteWithResponse. If the hardware returns
+    with an error the \l CharacteristicWriteError is set.
 
-    \sa QLowEnergyCharacteristic::properties()
+    \sa QLowEnergyService::characteristicWritten(), QLowEnergyService::readCharacteristic()
+
  */
 void QLowEnergyService::writeCharacteristic(
         const QLowEnergyCharacteristic &characteristic,
@@ -683,7 +708,7 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
-    \sa descriptorRead()
+    \sa descriptorRead(), writeDescriptor()
 
     \since 5.5
  */
@@ -718,6 +743,8 @@ void QLowEnergyService::readDescriptor(
     A descriptor can only be written if this service is in the \l ServiceDiscovered state,
     belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
+
+    \sa descriptorWritten(), readDescriptor()
  */
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
