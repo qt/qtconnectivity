@@ -86,6 +86,7 @@ private slots:
     void tst_writeCharacteristicNoResponse();
     void tst_writeDescriptor();
     void tst_customProgrammableDevice();
+    void tst_errorCases();
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
 
@@ -2216,6 +2217,235 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     QCOMPARE(manufacturerChar.value(), expectedManufacturer);
 
     delete service;
+    control.disconnectFromDevice();
+}
+
+
+/*  1.) Test with undiscovered devices
+        - read and write invalid char
+    2.) Test with discovered devices
+        - read non-readable char
+        - write non-writable char
+ */
+void tst_QLowEnergyController::tst_errorCases()
+{
+#ifndef Q_OS_MAC
+    QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
+    if (localAdapters.isEmpty() || remoteDevice.isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+
+    // quick setup - more elaborate test is done by connect()
+    QLowEnergyController control(remoteDevice);
+#else
+    if (remoteDeviceInfo.deviceUuid().isNull())
+        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
+
+    QLowEnergyController control(remoteDeviceInfo);
+#endif
+    QCOMPARE(control.error(), QLowEnergyController::NoError);
+
+    control.connectToDevice();
+    {
+        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
+              30000);
+    }
+
+    if (control.state() == QLowEnergyController::ConnectingState
+            || control.error() != QLowEnergyController::NoError) {
+        // default BTLE backend forever hangs in ConnectingState
+        QSKIP("Cannot connect to remote device");
+    }
+
+    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control.discoverServices();
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveringState);
+    QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
+             QLowEnergyController::DiscoveredState);
+
+
+    // Setup required uuids
+    const QBluetoothUuid irTemperaturServiceUuid(QStringLiteral("f000aa00-0451-4000-b000-000000000000"));
+    const QBluetoothUuid irCharUuid(QString("f000aa01-0451-4000-b000-000000000000"));
+    const QBluetoothUuid oadServiceUuid(QStringLiteral("f000ffc0-0451-4000-b000-000000000000"));
+    const QBluetoothUuid oadCharUuid(QString("f000ffc1-0451-4000-b000-000000000000"));
+
+    QVERIFY(control.services().contains(irTemperaturServiceUuid));
+    QVERIFY(control.services().contains(oadServiceUuid));
+
+    // Create service objects and basic tests
+    QLowEnergyService *irService = control.createServiceObject(irTemperaturServiceUuid);
+    QVERIFY(irService);
+    QCOMPARE(irService->state(), QLowEnergyService::DiscoveryRequired);
+    QVERIFY(irService->characteristics().isEmpty());
+    QLowEnergyService *oadService = control.createServiceObject(oadServiceUuid);
+    QVERIFY(oadService);
+    QCOMPARE(oadService->state(), QLowEnergyService::DiscoveryRequired);
+    QVERIFY(oadService->characteristics().isEmpty());
+
+    QLowEnergyCharacteristic invalidChar;
+    QLowEnergyDescriptor invalidDesc;
+
+    QVERIFY(!irService->contains(invalidChar));
+    QVERIFY(!irService->contains(invalidDesc));
+
+    QSignalSpy irErrorSpy(irService, SIGNAL(error(QLowEnergyService::ServiceError)));
+    QSignalSpy oadErrorSpy(oadService, SIGNAL(error(QLowEnergyService::ServiceError)));
+
+    QSignalSpy irReadSpy(irService, SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy irWrittenSpy(irService, SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
+    QSignalSpy irDescReadSpy(irService, SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
+    QSignalSpy irDescWrittenSpy(irService, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
+
+    QSignalSpy oadCharReadSpy(oadService, SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
+
+    // ********************************************************
+    // Test read/write to discovered service
+    // with invalid characteristic & descriptor
+
+    // discover IR Service
+    irService->discoverDetails();
+    QTRY_VERIFY_WITH_TIMEOUT(
+        irService->state() == QLowEnergyService::ServiceDiscovered, 30000);
+    QVERIFY(!irService->contains(invalidChar));
+    QVERIFY(!irService->contains(invalidDesc));
+    irErrorSpy.clear();
+
+    // read invalid characteristic
+    irService->readCharacteristic(invalidChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
+    QCOMPARE(irErrorSpy.count(), 1);
+    QVERIFY(irWrittenSpy.isEmpty());
+    QVERIFY(irReadSpy.isEmpty());
+    QCOMPARE(irErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    irErrorSpy.clear();
+
+    // read invalid descriptor
+    irService->readDescriptor(invalidDesc);
+    QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
+    QCOMPARE(irErrorSpy.count(), 1);
+    QVERIFY(irDescWrittenSpy.isEmpty());
+    QVERIFY(irDescReadSpy.isEmpty());
+    QCOMPARE(irErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    irErrorSpy.clear();
+
+    // write invalid characteristic
+    irService->writeCharacteristic(invalidChar, QByteArray("foo"));
+    QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
+    QCOMPARE(irErrorSpy.count(), 1);
+    QVERIFY(irWrittenSpy.isEmpty());
+    QVERIFY(irReadSpy.isEmpty());
+    QCOMPARE(irErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    irErrorSpy.clear();
+
+    // write invalid descriptor
+    irService->readDescriptor(invalidDesc);
+    QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
+    QCOMPARE(irErrorSpy.count(), 1);
+    QVERIFY(irDescWrittenSpy.isEmpty());
+    QVERIFY(irDescReadSpy.isEmpty());
+    QCOMPARE(irErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    irErrorSpy.clear();
+
+    // ********************************************************
+    // Test read/write to undiscovered service
+    // with invalid characteristic & descriptor
+
+    // read invalid characteristic
+    oadService->readCharacteristic(invalidChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!oadErrorSpy.isEmpty(), 5000);
+    QCOMPARE(oadErrorSpy.count(), 1);
+    QCOMPARE(oadErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    oadErrorSpy.clear();
+
+    // read invalid descriptor
+    oadService->readDescriptor(invalidDesc);
+    QTRY_VERIFY_WITH_TIMEOUT(!oadErrorSpy.isEmpty(), 5000);
+    QCOMPARE(oadErrorSpy.count(), 1);
+    QCOMPARE(oadErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    oadErrorSpy.clear();
+
+    // write invalid characteristic
+    oadService->writeCharacteristic(invalidChar, QByteArray("foo"));
+    QTRY_VERIFY_WITH_TIMEOUT(!oadErrorSpy.isEmpty(), 5000);
+    QCOMPARE(oadErrorSpy.count(), 1);
+    QCOMPARE(oadErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    oadErrorSpy.clear();
+
+    // write invalid descriptor
+    oadService->readDescriptor(invalidDesc);
+    QTRY_VERIFY_WITH_TIMEOUT(!oadErrorSpy.isEmpty(), 5000);
+    QCOMPARE(oadErrorSpy.count(), 1);
+    QCOMPARE(oadErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::OperationError);
+    oadErrorSpy.clear();
+
+    // ********************************************************
+    // Write to non-writable char
+
+    QLowEnergyCharacteristic nonWritableChar = irService->characteristic(irCharUuid);
+    QVERIFY(nonWritableChar.isValid());
+    // not writeable in any form
+    QVERIFY(!(nonWritableChar.properties()
+            & (QLowEnergyCharacteristic::Write|QLowEnergyCharacteristic::WriteNoResponse
+               |QLowEnergyCharacteristic::WriteSigned)));
+    irService->writeCharacteristic(nonWritableChar, QByteArray("ABCD"));
+    QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
+    QVERIFY(irWrittenSpy.isEmpty());
+    QVERIFY(irReadSpy.isEmpty());
+    QCOMPARE(irErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::CharacteristicWriteError);
+    irErrorSpy.clear();
+
+    // ********************************************************
+    // Write to non-writable desc
+    // CharacteristicUserDescription is not writable
+
+    QLowEnergyDescriptor nonWritableDesc = nonWritableChar.descriptor(
+                QBluetoothUuid::CharacteristicUserDescription);
+    QVERIFY(nonWritableDesc.isValid());
+    irService->writeDescriptor(nonWritableDesc, QByteArray("ABCD"));
+    QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
+    QVERIFY(irWrittenSpy.isEmpty());
+    QVERIFY(irReadSpy.isEmpty());
+    QCOMPARE(irErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::DescriptorWriteError);
+    irErrorSpy.clear();
+
+
+    // ********************************************************
+    // Read non-readable char
+
+    // discover OAD Service
+    oadService->discoverDetails();
+    QTRY_VERIFY_WITH_TIMEOUT(
+        oadService->state() == QLowEnergyService::ServiceDiscovered, 30000);
+    oadErrorSpy.clear();
+
+    // Test reading
+    QLowEnergyCharacteristic oadChar = oadService->characteristic(oadCharUuid);
+    QVERIFY(oadChar.isValid());
+    oadService->readCharacteristic(oadChar);
+    QTRY_VERIFY_WITH_TIMEOUT(!oadErrorSpy.isEmpty(), 5000);
+    QCOMPARE(oadErrorSpy.count(), 1);
+    QVERIFY(oadCharReadSpy.isEmpty());
+    QCOMPARE(oadErrorSpy[0].at(0).value<QLowEnergyService::ServiceError>(),
+             QLowEnergyService::CharacteristicReadError);
+    oadErrorSpy.clear();
+
+    delete irService;
+    delete oadService;
     control.disconnectFromDevice();
 }
 
