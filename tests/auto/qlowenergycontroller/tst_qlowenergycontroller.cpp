@@ -84,7 +84,7 @@ private slots:
     void tst_defaultBehavior();
     void tst_writeCharacteristic();
     void tst_writeCharacteristicNoResponse();
-    void tst_writeDescriptor();
+    void tst_readWriteDescriptor();
     void tst_customProgrammableDevice();
     void tst_errorCases();
 private:
@@ -1831,7 +1831,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     delete service;
 }
 
-void tst_QLowEnergyController::tst_writeDescriptor()
+void tst_QLowEnergyController::tst_readWriteDescriptor()
 {
 #ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
@@ -1910,9 +1910,11 @@ void tst_QLowEnergyController::tst_writeDescriptor()
         QCOMPARE(tempConfig.value(), QByteArray::fromHex("00"));
     }
 
-    // 3. Test writing to descriptor -> activate notifications
+    // 3. Test reading and writing to descriptor -> activate notifications
     QSignalSpy descWrittenSpy(service,
                         SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
+    QSignalSpy descReadSpy(service,
+                        SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
     QSignalSpy charWrittenSpy(service,
                         SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
     QSignalSpy charChangedSpy(service,
@@ -1971,7 +1973,19 @@ void tst_QLowEnergyController::tst_writeDescriptor()
         service->writeCharacteristic(tempConfig, QByteArray::fromHex("00"));
     }
 
-    // 5. Test writing to descriptor -> deactivate notifications
+    // 5. Test reading and writing of/to descriptor -> deactivate notifications
+
+    service->readDescriptor(notification);
+    QTRY_VERIFY_WITH_TIMEOUT(!descReadSpy.isEmpty(), 3000);
+    QCOMPARE(descReadSpy.count(), 1);
+    firstSignalData = descReadSpy.first();
+    signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
+    signalValue = firstSignalData[1].toByteArray();
+    QCOMPARE(signalValue, notification.value());
+    QCOMPARE(notification.value(), QByteArray::fromHex("0100"));
+    descReadSpy.clear();
+
+
     service->writeDescriptor(notification, QByteArray::fromHex("0000"));
     // verify
     QTRY_VERIFY_WITH_TIMEOUT(!descWrittenSpy.isEmpty(), 3000);
@@ -2003,6 +2017,19 @@ void tst_QLowEnergyController::tst_writeDescriptor()
         QVERIFY(notification == signalDesc);
 
     }
+
+    // 5. Test reading and writing of/to descriptor -> deactivate notifications
+
+    service->readDescriptor(notification);
+    QTRY_VERIFY_WITH_TIMEOUT(!descReadSpy.isEmpty(), 3000);
+    QCOMPARE(descReadSpy.count(), 1);
+    firstSignalData = descReadSpy.first();
+    signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
+    signalValue = firstSignalData[1].toByteArray();
+    QCOMPARE(signalValue, notification.value());
+    QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
+    descReadSpy.clear();
+
     descWrittenSpy.clear();
 
     // *******************************************
