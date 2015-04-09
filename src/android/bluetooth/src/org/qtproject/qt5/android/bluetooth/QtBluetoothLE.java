@@ -174,6 +174,7 @@ public class QtBluetoothLE {
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
         {
+            // TODO test error handling for read requests
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "onCharacteristicRead error: " + status);
                 return;
@@ -222,10 +223,15 @@ public class QtBluetoothLE {
                     return;
                 }
 
+                synchronized (readWriteQueue) {
+                    ioJobPending = false;
+                }
+
                 leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
                         foundHandle+1, characteristic.getUuid().toString(),
                         characteristic.getProperties(), characteristic.getValue());
 
+                performNextIO();
                 return;
             }
 
@@ -263,11 +269,11 @@ public class QtBluetoothLE {
                     errorCode = 2; break; // CharacteristicWriteError
             }
 
-            synchronized (writeQueue) {
-                writeJobPending = false;
+            synchronized (readWriteQueue) {
+                ioJobPending = false;
             }
             leCharacteristicWritten(qtObject, handle+1, characteristic.getValue(), errorCode);
-            performNextWrite();
+            performNextIO();
         }
 
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
@@ -333,9 +339,15 @@ public class QtBluetoothLE {
                 if (foundHandle == -1)
                     Log.w(TAG, "Out-of-detail-discovery: char update failed");
 
+                synchronized (readWriteQueue) {
+                    ioJobPending = false;
+                }
+
                 leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
                         descriptor.getCharacteristic().getUuid().toString(), foundHandle+1,
                         descriptor.getUuid().toString(), descriptor.getValue());
+
+                performNextIO();
                 return;
             }
 
@@ -386,12 +398,12 @@ public class QtBluetoothLE {
                     errorCode = 3; break; // DescriptorWriteError
             }
 
-            synchronized (writeQueue) {
-                writeJobPending = false;
+            synchronized (readWriteQueue) {
+                ioJobPending = false;
             }
 
             leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
-            performNextWrite();
+            performNextIO();
         }
         //TODO Requires Android API 21 which is not available on CI yet.
 //        public void onReliableWriteCompleted(android.bluetooth.BluetoothGatt gatt,
@@ -446,11 +458,18 @@ public class QtBluetoothLE {
         public BluetoothGattDescriptor descriptor = null;
         public int endHandle;
     }
-    private class WriteJob
+
+    private enum IoJobType
+    {
+        Read, Write
+    }
+
+    private class ReadWriteJob
     {
         public GattEntry entry;
         public byte[] newValue;
         public int requestedWriteType;
+        public IoJobType jobType;
     }
 
     private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
@@ -458,8 +477,8 @@ public class QtBluetoothLE {
     private final LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
 
 
-    private final LinkedList<WriteJob> writeQueue = new LinkedList<WriteJob>();
-    private boolean writeJobPending;
+    private final LinkedList<ReadWriteJob> readWriteQueue = new LinkedList<ReadWriteJob>();
+    private boolean ioJobPending;
 
     /*
         Internal helper function
@@ -603,8 +622,8 @@ public class QtBluetoothLE {
             entries.clear();
             servicesToBeDiscovered.clear();
         }
-        synchronized (writeQueue) {
-            writeQueue.clear();
+        synchronized (readWriteQueue) {
+            readWriteQueue.clear();
         }
     }
 
@@ -820,15 +839,16 @@ public class QtBluetoothLE {
             return false;
         }
 
-        WriteJob newJob = new WriteJob();
+        ReadWriteJob newJob = new ReadWriteJob();
         newJob.newValue = newValue;
         newJob.entry = entry;
+        newJob.jobType = IoJobType.Write;
 
         // writeMode must be in sync with QLowEnergyService::WriteMode
         // For now we ignore SignedWriteType as Qt doesn't support it yet.
         switch (writeMode) {
             case 1: //WriteWithoutResponse
-                newJob.requestedWriteType = BluetoothGattCharacteristic. WRITE_TYPE_NO_RESPONSE;
+                newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
                 break;
             default:
                 newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
@@ -836,8 +856,8 @@ public class QtBluetoothLE {
         }
 
         boolean result;
-        synchronized (writeQueue) {
-            result = writeQueue.add(newJob);
+        synchronized (readWriteQueue) {
+            result = readWriteQueue.add(newJob);
         }
 
         if (!result) {
@@ -845,7 +865,7 @@ public class QtBluetoothLE {
             return false;
         }
 
-        performNextWrite();
+        performNextIO();
         return true;
     }
 
@@ -866,14 +886,15 @@ public class QtBluetoothLE {
             return false;
         }
 
-        WriteJob newJob = new WriteJob();
+        ReadWriteJob newJob = new ReadWriteJob();
         newJob.newValue = newValue;
         newJob.entry = entry;
         newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
+        newJob.jobType = IoJobType.Write;
 
         boolean result;
-        synchronized (writeQueue) {
-            result = writeQueue.add(newJob);
+        synchronized (readWriteQueue) {
+            result = readWriteQueue.add(newJob);
         }
 
         if (!result) {
@@ -881,39 +902,126 @@ public class QtBluetoothLE {
             return false;
         }
 
-        performNextWrite();
+        performNextIO();
+        return true;
+    }
+
+    /*************************************************************/
+    /* Read Characteristics                                      */
+    /*************************************************************/
+
+    public boolean readCharacteristic(int charHandle)
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        GattEntry entry;
+        try {
+            entry = entries.get(charHandle-1); //Qt always uses handles+1
+        } catch (IndexOutOfBoundsException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        ReadWriteJob newJob = new ReadWriteJob();
+        newJob.entry = entry;
+        newJob.jobType = IoJobType.Read;
+
+        boolean result;
+        synchronized (readWriteQueue) {
+            result = readWriteQueue.add(newJob);
+        }
+
+        if (!result) {
+            Log.w(TAG, "Cannot add characteristic read request for " + charHandle + " to queue" );
+            return false;
+        }
+
+        performNextIO();
+        return true;
+    }
+
+    public boolean readDescriptor(int descHandle)
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        GattEntry entry;
+        try {
+            entry = entries.get(descHandle-1); //Qt always uses handles+1
+        } catch (IndexOutOfBoundsException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+
+        ReadWriteJob newJob = new ReadWriteJob();
+        newJob.entry = entry;
+        newJob.jobType = IoJobType.Read;
+
+        boolean result;
+        synchronized (readWriteQueue) {
+            result = readWriteQueue.add(newJob);
+        }
+
+        if (!result) {
+            Log.w(TAG, "Cannot add descriptor read request for " + descHandle + " to queue" );
+            return false;
+        }
+
+        performNextIO();
         return true;
     }
 
     /*
-        The queuing is required because two writeCharacteristic/writeDescriptor calls
-        cannot execute at the same time. The second write must happen after the
-        previous write has finished with on(Characteristic|Descriptor)Write().
-     */
-    private void performNextWrite()
+       The queuing is required because two writeCharacteristic/writeDescriptor calls
+       cannot execute at the same time. The second write must happen after the
+       previous write has finished with on(Characteristic|Descriptor)Write().
+    */
+    private void performNextIO()
     {
         if (mBluetoothGatt == null)
             return;
 
         boolean skip = false;
-        final WriteJob nextJob;
-        synchronized (writeQueue) {
-            if (writeQueue.isEmpty() || writeJobPending)
+        final ReadWriteJob nextJob;
+        synchronized (readWriteQueue) {
+            if (readWriteQueue.isEmpty() || ioJobPending)
                 return;
 
-            nextJob = writeQueue.remove();
-            boolean result;
-            switch (nextJob.entry.type) {
-                case Characteristic:
-                    if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
-                        nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
-                    }
-                    result = nextJob.entry.characteristic.setValue(nextJob.newValue);
-                    if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
-                        skip = true;
-                    break;
-                case Descriptor:
-                    if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
+            nextJob = readWriteQueue.remove();
+
+            Log.w(TAG, "Performing queued job " + nextJob.jobType);
+            if (nextJob.jobType == IoJobType.Read)
+                skip = executeReadJob(nextJob);
+            else
+                skip = executeWriteJob(nextJob);
+
+            if (!skip)
+                ioJobPending = true;
+        }
+
+        if (skip) {
+            Log.w(TAG, "Skipping: " + nextJob.entry.type);
+            performNextIO();
+        }
+    }
+
+    // Runs inside the Mutex on readWriteQueue.
+    // Returns true if nextJob should be skipped.
+    private boolean executeWriteJob(ReadWriteJob nextJob)
+    {
+        boolean result;
+        switch (nextJob.entry.type) {
+            case Characteristic:
+                if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
+                    nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+                }
+                result = nextJob.entry.characteristic.setValue(nextJob.newValue);
+                if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
+                    return true;
+                break;
+            case Descriptor:
+                if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
                         /*
                             For some reason, Android splits characteristic notifications
                             into two operations. BluetoothGatt.enableCharacteristicNotification
@@ -931,42 +1039,56 @@ public class QtBluetoothLE {
                             Bluetooth spec Vol 3, Part G, 4.11 . If neither of the two bits are set
                             we disable the signals.
                          */
-                        boolean enableNotifications = false;
-                        int value = (nextJob.newValue[0] & 0xff);
-                        // first or second bit must be set
-                        if (((value & 0x1) == 1) || (((value >> 1) & 0x1) == 1)) {
-                            enableNotifications = true;
-                        }
-
-                        result = mBluetoothGatt.setCharacteristicNotification(
-                                nextJob.entry.descriptor.getCharacteristic(), enableNotifications);
-                        if (!result) {
-                            Log.w(TAG, "Cannot set characteristic notification");
-                            //we continue anyway to ensure that we write the requested value
-                            //to the device
-                        }
-
-                        Log.d(TAG, "Enable notifications: " + enableNotifications);
+                    boolean enableNotifications = false;
+                    int value = (nextJob.newValue[0] & 0xff);
+                    // first or second bit must be set
+                    if (((value & 0x1) == 1) || (((value >> 1) & 0x1) == 1)) {
+                        enableNotifications = true;
                     }
 
-                    result = nextJob.entry.descriptor.setValue(nextJob.newValue);
-                    if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
-                        skip = true;
-                    break;
-                case Service:
-                case CharacteristicValue:
-                    skip = true;
-                    break;
-            }
+                    result = mBluetoothGatt.setCharacteristicNotification(
+                            nextJob.entry.descriptor.getCharacteristic(), enableNotifications);
+                    if (!result) {
+                        Log.w(TAG, "Cannot set characteristic notification");
+                        //we continue anyway to ensure that we write the requested value
+                        //to the device
+                    }
 
-            if (!skip)
-                writeJobPending = true;
-        }
+                    Log.d(TAG, "Enable notifications: " + enableNotifications);
+                }
 
-        if (skip) {
-            Log.w(TAG, "Skipping write: " + nextJob.entry.type);
-            performNextWrite();
+                result = nextJob.entry.descriptor.setValue(nextJob.newValue);
+                if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
+                    return true;
+                break;
+            case Service:
+            case CharacteristicValue:
+                return true;
         }
+        return false;
+    }
+
+    // Runs inside the Mutex on readWriteQueue.
+    // Returns true if nextJob should be skipped.
+    private boolean executeReadJob(ReadWriteJob nextJob)
+    {
+        boolean result;
+        switch (nextJob.entry.type) {
+            case Characteristic:
+                result = mBluetoothGatt.readCharacteristic(nextJob.entry.characteristic);
+                if (!result)
+                    return true; // skip
+                break;
+            case Descriptor:
+                result = mBluetoothGatt.readDescriptor(nextJob.entry.descriptor);
+                if (!result)
+                    return true; // skip
+                break;
+            case Service:
+            case CharacteristicValue:
+                return true;
+        }
+        return false;
     }
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);

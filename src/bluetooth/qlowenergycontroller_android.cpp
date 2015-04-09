@@ -236,18 +236,57 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 }
 
 void QLowEnergyControllerPrivate::readCharacteristic(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-        const QLowEnergyHandle /*charHandle*/)
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle)
 {
+    Q_ASSERT(!service.isNull());
 
+    if (!service->characteristicList.contains(charHandle))
+        return;
+
+    QAndroidJniEnvironment env;
+    bool result = false;
+    if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Read characteristic with handle"
+                               <<  charHandle << service->uuid;
+        result = hub->javaObject().callMethod<jboolean>("readCharacteristic",
+                      "(I)Z", charHandle);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    if (!result)
+        service->setError(QLowEnergyService::CharacteristicWriteError);
 }
 
 void QLowEnergyControllerPrivate::readDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle /*charHandle*/,
-        const QLowEnergyHandle /*descriptorHandle*/)
+        const QLowEnergyHandle descriptorHandle)
 {
+    Q_ASSERT(!service.isNull());
 
+    QAndroidJniEnvironment env;
+    bool result = false;
+    if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Read descriptor with handle"
+                               <<  descriptorHandle << service->uuid;
+        result = hub->javaObject().callMethod<jboolean>("readDescriptor",
+                      "(I)Z", descriptorHandle);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    if (!result)
+        service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
 void QLowEnergyControllerPrivate::connectionUpdated(
@@ -390,6 +429,15 @@ void QLowEnergyControllerPrivate::characteristicRead(
     charDetails.value = data;
     //value handle always one larger than characteristics value handle
     charDetails.valueHandle = charHandle + 1;
+
+    if (service->state == QLowEnergyService::ServiceDiscovered) {
+        QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
+        if (!characteristic.isValid()) {
+            qCWarning(QT_BT_ANDROID) << "characteristicRead: Cannot find characteristic";
+            return;
+        }
+        emit service->characteristicRead(characteristic, data);
+    }
 }
 
 void QLowEnergyControllerPrivate::descriptorRead(
@@ -421,6 +469,13 @@ void QLowEnergyControllerPrivate::descriptorRead(
     if (!entryUpdated) {
         qCWarning(QT_BT_ANDROID) << "Cannot find/update descriptor"
                                  << descUuid << charUuid << serviceUuid;
+    } else if (service->state == QLowEnergyService::ServiceDiscovered){
+        QLowEnergyDescriptor descriptor = descriptorForHandle(descHandle);
+        if (!descriptor.isValid()) {
+            qCWarning(QT_BT_ANDROID) << "descriptorRead: Cannot find descriptor";
+            return;
+        }
+        emit service->descriptorRead(descriptor, data);
     }
 }
 
