@@ -76,6 +76,11 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> d,
             this, SIGNAL(characteristicWritten(QLowEnergyCharacteristic, QByteArray)));
     connect(d.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor, QByteArray)),
             this, SIGNAL(descriptorWritten(QLowEnergyDescriptor, QByteArray)));
+    connect(d.data(), SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)),
+            this, SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    connect(d.data(), SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)),
+            this, SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
+
 }
 
 QLowEnergyService::~QLowEnergyService()
@@ -185,7 +190,7 @@ void QLowEnergyService::readCharacteristic(const QLowEnergyCharacteristic &chara
         return;
     }
 
-    //TODO implement QLowEnergyService::readCharacteristic() on iOS/OSX
+    controller->readCharacteristic(characteristic.d_ptr, characteristic.attributeHandle());
 }
 
 
@@ -234,7 +239,7 @@ void QLowEnergyService::readDescriptor(const QLowEnergyDescriptor &descriptor)
         return;
     }
 
-    //TODO implement QLowEnergyService::readDescriptor() on iOS/OSX
+    controller->readDescriptor(descriptor.d_ptr, descriptor.handle());
 }
 
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
