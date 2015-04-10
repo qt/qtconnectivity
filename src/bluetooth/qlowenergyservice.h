@@ -55,11 +55,11 @@ public:
     enum ServiceError {
         NoError = 0,
         OperationError,
-        CharacteristicReadError,
         CharacteristicWriteError,
-        DescriptorReadError,
         DescriptorWriteError,
-        UnknownError
+        UnknownError,
+        CharacteristicReadError,
+        DescriptorReadError
     };
 
     enum ServiceState {
