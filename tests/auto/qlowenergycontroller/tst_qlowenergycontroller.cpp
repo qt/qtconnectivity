@@ -322,7 +322,7 @@ void tst_QLowEnergyController::tst_connect()
         QSignalSpy serviceFoundSpy(&control, SIGNAL(serviceDiscovered(QBluetoothUuid)));
         QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         control.discoverServices();
-        QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+        QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
         QCOMPARE(stateSpy.count(), 2);
         QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
                  QLowEnergyController::DiscoveringState);
@@ -475,7 +475,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
@@ -533,7 +533,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
     QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
     stateSpy.clear();
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
@@ -692,8 +692,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].uuid(), QBluetoothUuid(temp));
         HANDLE_COMPARE(chars[0].handle(), QLowEnergyHandle(0x12));
         QCOMPARE(chars[0].properties(), QLowEnergyCharacteristic::Read);
-        QEXPECT_FAIL("", "The value is different on different devices", Continue);
-        QCOMPARE(chars[0].value(), QByteArray::fromHex("6e41ab0000296abc"));
+//        Do not read the System ID as it is different for every device
+//        QEXPECT_FAIL("", "The value is different on different devices", Continue);
+//        QCOMPARE(chars[0].value(), QByteArray::fromHex("6e41ab0000296abc"));
         QVERIFY(chars[0].isValid());
         QVERIFY(info->contains(chars[0]));
         QCOMPARE(chars[0].descriptors().count(), 0);
@@ -1687,7 +1688,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
@@ -1860,7 +1861,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
@@ -2129,7 +2130,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
@@ -2287,7 +2288,7 @@ void tst_QLowEnergyController::tst_errorCases()
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
@@ -2513,7 +2514,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control.discoverServices();
-    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveringState);
