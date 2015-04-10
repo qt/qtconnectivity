@@ -560,4 +560,16 @@ void QLowEnergyControllerPrivate::characteristicChanged(
     emit service->characteristicChanged(characteristic, data);
 }
 
+void QLowEnergyControllerPrivate::serviceError(
+        int attributeHandle, QLowEnergyService::ServiceError errorCode)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(attributeHandle);
+    Q_ASSERT(!service.isNull());
+
+    // ATM we don't really use attributeHandle but later on we might
+    // want to associate the error code with a char or desc
+    service->setError(errorCode);
+}
+
 QT_END_NAMESPACE

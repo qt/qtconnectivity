@@ -281,4 +281,19 @@ void LowEnergyNotificationHub::lowEnergy_characteristicChanged(
                               Q_ARG(int, charHandle), Q_ARG(QByteArray, payload));
 }
 
+void LowEnergyNotificationHub::lowEnergy_serviceError(
+        JNIEnv *, jobject, jlong qtObject, jint attributeHandle, int errorCode)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QMetaObject::invokeMethod(hub, "serviceError", Qt::QueuedConnection,
+                              Q_ARG(int, attributeHandle),
+                              Q_ARG(QLowEnergyService::ServiceError,
+                                    (QLowEnergyService::ServiceError)errorCode));
+}
+
 QT_END_NAMESPACE

@@ -76,6 +76,8 @@ public:
                                             jint errorCode);
     static void lowEnergy_characteristicChanged(JNIEnv *, jobject, jlong qtObject,
                                                 jint charHandle, jbyteArray data);
+    static void lowEnergy_serviceError(JNIEnv *, jobject, jlong qtObject,
+                                       jint attributeHandle, int errorCode);
 
     QAndroidJniObject javaObject()
     {
@@ -98,6 +100,7 @@ signals:
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
+    void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
 
 public slots:
 private:
