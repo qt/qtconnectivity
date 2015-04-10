@@ -80,6 +80,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::descriptorWritten);
         connect(hub, &LowEnergyNotificationHub::characteristicChanged,
                 this, &QLowEnergyControllerPrivate::characteristicChanged);
+        connect(hub, &LowEnergyNotificationHub::serviceError,
+                this, &QLowEnergyControllerPrivate::serviceError);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -563,6 +565,10 @@ void QLowEnergyControllerPrivate::characteristicChanged(
 void QLowEnergyControllerPrivate::serviceError(
         int attributeHandle, QLowEnergyService::ServiceError errorCode)
 {
+    // ignore call if it isn't really an error
+    if (errorCode == QLowEnergyService::NoError)
+        return;
+
     QSharedPointer<QLowEnergyServicePrivate> service =
             serviceForHandle(attributeHandle);
     Q_ASSERT(!service.isNull());

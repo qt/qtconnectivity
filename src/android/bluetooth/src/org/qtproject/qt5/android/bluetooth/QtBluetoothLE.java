@@ -1031,6 +1031,38 @@ public class QtBluetoothLE {
 
         if (skip) {
             Log.w(TAG, "Skipping: " + nextJob.entry.type);
+
+            /*
+                BluetoothGatt.[read|write][Characteristic|Descriptor]() immediately
+                return in cases where meta data doesn't match the intended action
+                (e.g. trying to write to read-only char). When this happens
+                we have to report an error back to Qt. This is not required during
+                the initial service discovery though.
+             */
+            final boolean isServiceDiscoveryRun = (runningHandle != -1);
+            if (!isServiceDiscoveryRun) {
+                int handle = -1;
+                if (nextJob.entry.type == GattEntryType.Characteristic)
+                    handle = handleForCharacteristic(nextJob.entry.characteristic);
+                else
+                    handle = handleForDescriptor(nextJob.entry.descriptor);
+
+                if (handle != -1) {
+                    int errorCode = 0;
+
+                    // The error codes below must be in sync with QLowEnergyService::ServiceError
+                    if (nextJob.jobType == IoJobType.Read) {
+                        errorCode = (nextJob.entry.type == GattEntryType.Characteristic) ?
+                                    5 : 6; // CharacteristicReadError : DescriptorReadError
+                    } else {
+                        errorCode = (nextJob.entry.type == GattEntryType.Characteristic) ?
+                                    2 : 3; // CharacteristicWriteError : DescriptorWriteError
+                    }
+
+                    leServiceError(qtObject, handle + 1, errorCode);
+                }
+            }
+
             performNextIO();
         }
     }
