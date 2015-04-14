@@ -115,7 +115,7 @@ QT_BEGIN_NAMESPACE
     forwarded to the connected device and it is up to the device to respond to the
     potentially invalid request. In this case the result is the emission of the
     \l CharacteristicWriteError in response to the returned device error. This behavior
-    simplies interaction with devices which report wrong meta information.
+    simplifies interaction with devices which report wrong meta information.
     If it was not possible to forward the request to the remote device the
     \l OperationError is set. A potential reason could be that the to-be-written
     characteristic object does not even belong the current service. In
@@ -704,8 +704,8 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     serialised. A queue is employed when issuing multiple requests at the same time.
     The queue does not eliminate duplicated read requests for the same descriptor.
 
-    A descriptor can only be written if the service is in the \l ServiceDiscovered state
-    and belongs to the service. If one of these conditions is
+    A descriptor can only be read if the service is in the \l ServiceDiscovered state
+    and the descriptor belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
     \sa descriptorRead(), writeDescriptor()
