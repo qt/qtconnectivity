@@ -63,7 +63,7 @@ public:
         NfcTagType2,
         NfcTagType3,
         NfcTagType4,
-        MifareTag,
+        MifareTag
     };
 
     enum AccessMethod {
