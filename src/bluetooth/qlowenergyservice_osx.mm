@@ -177,24 +177,32 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     return false;
 }
 
+void QLowEnergyService::readCharacteristic(const QLowEnergyCharacteristic &characteristic)
+{
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (!contains(characteristic) || state() != ServiceDiscovered || !controller) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    //TODO implement QLowEnergyService::readCharacteristic() on iOS/OSX
+}
+
+
 void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, const QByteArray &newValue,
                                             WriteMode mode)
 {
-    // Not a characteristic of this service
-    if (!contains(ch))
-        return;
-
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
 
-    if (state() != ServiceDiscovered || !controller) {
+    if (!contains(ch) || state() != ServiceDiscovered || !controller) {
         d_ptr->setError(QLowEnergyService::OperationError);
         return;
     }
 
     // Don't write if properties don't permit it
-    if (mode == WriteWithResponse && (ch.properties() & QLowEnergyCharacteristic::Write))
+    if (mode == WriteWithResponse)
         controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, true);
-    else if (mode == WriteWithoutResponse && (ch.properties() & QLowEnergyCharacteristic::WriteNoResponse))
+    else if (mode == WriteWithoutResponse)
         controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, false);
     else
         d_ptr->setError(QLowEnergyService::OperationError);
@@ -218,14 +226,22 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
     return false;
 }
 
+void QLowEnergyService::readDescriptor(const QLowEnergyDescriptor &descriptor)
+{
+    QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
+    if (!contains(descriptor) || state() != ServiceDiscovered || !controller) {
+        d_ptr->setError(OperationError);
+        return;
+    }
+
+    //TODO implement QLowEnergyService::readDescriptor() on iOS/OSX
+}
+
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
-    if (!contains(descriptor))
-        return;
-
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (state() != ServiceDiscovered || !controller) {
+    if (!contains(descriptor) || state() != ServiceDiscovered || !controller) {
         d_ptr->setError(OperationError);
         return;
     }
