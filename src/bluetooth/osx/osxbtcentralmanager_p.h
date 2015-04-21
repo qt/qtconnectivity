@@ -72,10 +72,14 @@ public:
     virtual void connectSuccess() = 0;
     virtual void serviceDiscoveryFinished(LEServices services) = 0;
     virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
+    virtual void characteristicReadNotification(QLowEnergyHandle charHandle,
+                                                const QByteArray &value) = 0;
     virtual void characteristicWriteNotification(QLowEnergyHandle charHandle,
                                                  const QByteArray &value) = 0;
     virtual void characteristicUpdateNotification(QLowEnergyHandle charHandle,
                                                   const QByteArray &value) = 0;
+    virtual void descriptorReadNotification(QLowEnergyHandle descHandle,
+                                            const QByteArray &value) = 0;
     virtual void descriptorWriteNotification(QLowEnergyHandle descHandle,
                                              const QByteArray &value) = 0;
     virtual void disconnected() = 0;
@@ -111,23 +115,30 @@ typedef QHash<QLowEnergyHandle, CBService *> ServiceHash;
 typedef QHash<QLowEnergyHandle, CBCharacteristic *> CharHash;
 typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
 
-// Descriptor write request - we have to serialize 'concurrent' write requests.
-struct LEWriteRequest
-{
-    LEWriteRequest() : isDescriptor(false),
-                       isClientConfiguration(false),
-                       withResponse(false),
-                       handle(0)
+// Descriptor/charactesirsti read/write requests
+// - we have to serialize 'concurrent' write requests.
+struct LERequest {
+    enum RequestType {
+        CharRead,
+        CharWrite,
+        DescRead,
+        DescWrite,
+        ClientConfiguration,
+        Invalid
+    };
+
+    LERequest() : type(Invalid),
+                  withResponse(false),
+                  handle(0)
     {}
 
-    bool isDescriptor;
-    bool isClientConfiguration;
+    RequestType type;
     bool withResponse;
     QLowEnergyHandle handle;
     QByteArray value;
 };
 
-typedef QQueue<LEWriteRequest> WriteQueue;
+typedef QQueue<LERequest> RequestQueue;
 
 // Core Bluetooth's write confirmation does not provide
 // the updated value (characteristic or descriptor).
@@ -170,8 +181,9 @@ QT_END_NAMESPACE
 
     QT_PREPEND_NAMESPACE(QLowEnergyHandle) lastValidHandle;
 
-    bool writePending;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::WriteQueue writeQueue;
+    bool requestPending;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::RequestQueue requests;
+    QT_PREPEND_NAMESPACE(QLowEnergyHandle) currentReadHandle;
 
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ValueHash valuesToWrite;
 }
@@ -190,9 +202,13 @@ QT_END_NAMESPACE
 - (bool)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
 
+- (bool)readCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
+
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
         withResponse:(bool)writeWithResponse;
+
+- (bool)readDescriptor:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
 
 - (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         descHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
