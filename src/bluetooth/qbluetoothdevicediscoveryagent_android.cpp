@@ -228,8 +228,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
                 return;
             }
 
-            // same device found -> avoid duplicates and update info in place
-            discoveredDevices.replace(i, info);
+            // same device found -> avoid duplicates and update core configuration
+            discoveredDevices[i].setCoreConfigurations(discoveredDevices[i].coreConfigurations() | info.coreConfigurations());
 
             emit q->deviceDiscovered(info);
             return;
