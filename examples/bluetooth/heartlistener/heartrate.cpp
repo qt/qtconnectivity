@@ -152,15 +152,7 @@ void HeartRate::connectToService(const QString &address)
 
     }
     //! [Connect signals]
-#ifdef Q_OS_MAC
-    // with CoreBluetooth controller requires QBluetoothDeviceInfo to connect:
-    m_control = new QLowEnergyController(m_currentDevice.getDevice(),
-                                            this);
-
-#else
-    m_control = new QLowEnergyController(m_currentDevice.getDevice().address(),
-                                            this);
-#endif
+    m_control = new QLowEnergyController(m_currentDevice.getDevice(), this);
     connect(m_control, SIGNAL(serviceDiscovered(QBluetoothUuid)),
             this, SLOT(serviceDiscovered(QBluetoothUuid)));
     connect(m_control, SIGNAL(discoveryFinished()),

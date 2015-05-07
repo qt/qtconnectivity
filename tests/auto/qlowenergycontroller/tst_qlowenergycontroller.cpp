@@ -156,8 +156,8 @@ void tst_QLowEnergyController::initTestCase()
         // On OS X/iOS the only way to find the device we are
         // interested in - is to use device's name.
         if (info.name().contains("Sensor") && info.name().contains("Tag")) {
-            remoteDeviceInfo = info;
 #endif
+            remoteDeviceInfo = info;
             deviceFound = true;
             break;
         }
@@ -249,31 +249,23 @@ void tst_QLowEnergyController::tst_connect()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
 
-#ifndef Q_OS_MAC
-    if (localAdapters.isEmpty() || remoteDevice.isNull())
-#elif defined(Q_OS_OSX)
-    if (localAdapters.isEmpty() || remoteDeviceInfo.deviceUuid().isNull())
-#elif defined (Q_OS_IOS)
-    if (remoteDeviceInfo.deviceUuid().isNull())
+#ifdef Q_OS_IOS
+    if (remoteDeviceInfo.isValid())
+#else
+    if (localAdapters.isEmpty() || !remoteDeviceInfo.isValid())
 #endif
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
-#ifndef Q_OS_IOS
-    const QBluetoothAddress localAdapter = localAdapters.at(0).address();
-#endif
-
-#ifndef Q_OS_MAC
-    QLowEnergyController control(remoteDevice);
-#else
-    // Create a low energy controller using Apple's
-    // uuid (NSUUID).
     QLowEnergyController control(remoteDeviceInfo);
-#endif
-
     QSignalSpy connectedSpy(&control, SIGNAL(connected()));
     QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
+    if (remoteDeviceInfo.name().isEmpty())
+        QVERIFY(control.remoteName().isEmpty());
+    else
+        QCOMPARE(control.remoteName(), remoteDeviceInfo.name());
 
 #ifndef Q_OS_IOS
+    const QBluetoothAddress localAdapter = localAdapters.at(0).address();
     QCOMPARE(control.localAddress(), localAdapter);
     QVERIFY(!control.localAddress().isNull());
 #endif
@@ -417,16 +409,14 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 {
 #ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.isEmpty() || remoteDevice.isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    // quick setup - more elaborate test is done by connectNew()
-    QLowEnergyController control(remoteDevice);
-#else
-    if (remoteDeviceInfo.deviceUuid().isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    if (localAdapters.isEmpty())
+        QSKIP("No local Bluetooth device found. Skipping test.");
 #endif
+
+    if (!remoteDeviceInfo.isValid())
+        QSKIP("No remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
+
 
     QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
     QCOMPARE(control.error(), QLowEnergyController::NoError);
@@ -1659,16 +1649,13 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 {
 #ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.isEmpty() || remoteDevice.isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    // quick setup - more elaborate test is done by connect()
-    QLowEnergyController control(remoteDevice);
-#else
-    if (remoteDeviceInfo.deviceUuid().isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    if (localAdapters.isEmpty())
+        QSKIP("No local Bluetooth device found. Skipping test.");
 #endif
+
+    if (!remoteDeviceInfo.isValid())
+        QSKIP("No remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
 
     QCOMPARE(control.error(), QLowEnergyController::NoError);
 
@@ -1836,14 +1823,14 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
 {
 #ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.isEmpty() || remoteDevice.isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDevice);
-#else
-    if (remoteDeviceInfo.deviceUuid().isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    if (localAdapters.isEmpty())
+        QSKIP("No local Bluetooth device found. Skipping test.");
 #endif
+
+    if (!remoteDeviceInfo.isValid())
+        QSKIP("No remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
+
     // quick setup - more elaborate test is done by connect()
     control.connectToDevice();
     {
@@ -2259,17 +2246,13 @@ void tst_QLowEnergyController::tst_errorCases()
 {
 #ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.isEmpty() || remoteDevice.isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    // quick setup - more elaborate test is done by connect()
-    QLowEnergyController control(remoteDevice);
-#else
-    if (remoteDeviceInfo.deviceUuid().isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    QLowEnergyController control(remoteDeviceInfo);
+    if (localAdapters.isEmpty())
+        QSKIP("No local Bluetooth device found. Skipping test.");
 #endif
+
+    if (!remoteDeviceInfo.isValid())
+        QSKIP("No remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
     QCOMPARE(control.error(), QLowEnergyController::NoError);
 
     control.connectToDevice();
@@ -2485,17 +2468,14 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 {
 #ifndef Q_OS_MAC
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.isEmpty() || remoteDevice.isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    // quick setup - more elaborate test is done by connect()
-    QLowEnergyController control(remoteDevice);
-#else
-    if (remoteDeviceInfo.deviceUuid().isNull())
-        QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
-
-    QLowEnergyController control(remoteDeviceInfo);
+    if (localAdapters.isEmpty())
+        QSKIP("No local Bluetooth device found. Skipping test.");
 #endif
+
+    if (!remoteDeviceInfo.isValid())
+        QSKIP("No remote BTLE device found. Skipping test.");
+    QLowEnergyController control(remoteDeviceInfo);
+
     QCOMPARE(control.error(), QLowEnergyController::NoError);
 
     control.connectToDevice();

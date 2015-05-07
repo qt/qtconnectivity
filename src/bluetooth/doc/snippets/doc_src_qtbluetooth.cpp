@@ -190,7 +190,7 @@ void MyClass::characteristicChanged(const QLowEnergyCharacteristic &, const QByt
 
 void MyClass::btleSharedData()
 {
-    QBluetoothAddress remoteDevice;
+    QBluetoothDeviceInfo remoteDevice;
 
 //! [data_share_qlowenergyservice]
     QLowEnergyService *first, *second;
@@ -213,7 +213,7 @@ void MyClass::btleSharedData()
 
 void MyClass::enableCharNotifications()
 {
-    QBluetoothAddress remoteDevice;
+    QBluetoothDeviceInfo remoteDevice;
     QLowEnergyService *service;
     QLowEnergyController *control = new QLowEnergyController(remoteDevice, this);
     control->connectToDevice();

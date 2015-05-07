@@ -385,6 +385,8 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 
     The controller uses the local default Bluetooth adapter for
     the connection management.
+
+    \obsolete
  */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
@@ -435,6 +437,8 @@ QLowEnergyController::QLowEnergyController(
     \a localDevice specifies a local device that is not a local Bluetooth
     adapter, \l error() is set to \l InvalidBluetoothAdapterError once
     \l connectToDevice() is called.
+
+    \obsolete
  */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
