@@ -308,6 +308,27 @@ void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService s
     qtService->setState(QLowEnergyService::ServiceDiscovered);
 }
 
+void QLowEnergyControllerPrivateOSX::characteristicReadNotification(QLowEnergyHandle charHandle,
+                                                                    const QByteArray &value)
+{
+    Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle(0)");
+
+    ServicePrivate service(serviceForHandle(charHandle));
+    if (service.isNull())
+        return;
+
+    QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown characteristic";
+        return;
+    }
+
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(charHandle, value, false);
+
+    emit service->characteristicRead(characteristic, value);
+}
+
 void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyHandle charHandle,
                                                                      const QByteArray &value)
 {
@@ -359,6 +380,21 @@ void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergy
         updateValueOfCharacteristic(charHandle, value, false);
 
     emit service->characteristicChanged(characteristic, value);
+}
+
+void QLowEnergyControllerPrivateOSX::descriptorReadNotification(QLowEnergyHandle dHandle, const QByteArray &value)
+{
+    Q_ASSERT_X(dHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
+
+    const QLowEnergyDescriptor qtDescriptor(descriptorForHandle(dHandle));
+    if (!qtDescriptor.isValid()) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown descriptor " << dHandle;
+        return;
+    }
+
+    ServicePrivate service(serviceForHandle(qtDescriptor.characteristicHandle()));
+    updateValueOfDescriptor(qtDescriptor.characteristicHandle(), dHandle, value, false);
+    emit service->descriptorRead(qtDescriptor, value);
 }
 
 void QLowEnergyControllerPrivateOSX::descriptorWriteNotification(QLowEnergyHandle dHandle, const QByteArray &value)
@@ -549,6 +585,28 @@ void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergySer
         service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
+void QLowEnergyControllerPrivateOSX::readCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
+                                                        QLowEnergyHandle charHandle)
+{
+    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
+
+    if (!discoveredServices.contains(service->uuid)) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid:"
+                             << service->uuid << "found";
+        return;
+    }
+
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "no characteristic with handle:"
+                           << charHandle << "found";
+        return;
+    }
+
+    if (![centralManager readCharacteristic:charHandle])
+        service->setError(QLowEnergyService::CharacteristicReadError);
+}
+
 void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
                                                          QLowEnergyHandle charHandle, const QByteArray &newValue,
                                                          bool writeWithResponse)
@@ -593,6 +651,22 @@ quint16 QLowEnergyControllerPrivateOSX::updateValueOfCharacteristic(QLowEnergyHa
     }
 
     return 0;
+}
+
+void QLowEnergyControllerPrivateOSX::readDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
+                                                    QLowEnergyHandle descriptorHandle)
+{
+    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
+    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
+
+    if (!discoveredServices.contains(service->uuid)) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid:"
+                             << service->uuid << "found";
+        return;
+    }
+
+    if (![centralManager readDescriptor:descriptorHandle])
+        service->setError(QLowEnergyService::DescriptorReadError);
 }
 
 void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,

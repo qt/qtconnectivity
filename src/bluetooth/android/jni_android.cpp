@@ -215,6 +215,8 @@ static JNINativeMethod methods_le[] = {
                 (void *) LowEnergyNotificationHub::lowEnergy_descriptorWritten},
     {"leCharacteristicChanged", "(JI[B)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_characteristicChanged},
+    {"leServiceError", "(JII)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_serviceError},
 };
 
 static JNINativeMethod methods_server[] = {

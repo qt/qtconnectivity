@@ -92,6 +92,8 @@ using namespace QT_NAMESPACE;
 - (void)discoverIncludedServices;
 - (void)readCharacteristics:(CBService *)service;
 - (void)serviceDetailsDiscoveryFinished:(CBService *)service;
+- (void)performNextRequest;
+- (void)performNextReadRequest;
 - (void)performNextWriteRequest;
 
 // Aux. functions.
@@ -124,7 +126,8 @@ using namespace QT_NAMESPACE;
         delegate = aDelegate;
         currentService = 0;
         lastValidHandle = 0;
-        writePending = false;
+        requestPending = false;
+        currentReadHandle = 0;
     }
 
     return self;
@@ -540,22 +543,81 @@ using namespace QT_NAMESPACE;
     delegate->serviceDetailsDiscoveryFinished(qtService);
 }
 
+- (void)performNextRequest
+{
+    using namespace OSXBluetooth;
+
+    if (requestPending || !requests.size())
+        return;
+
+    switch (requests.head().type) {
+    case LERequest::CharRead:
+    case LERequest::DescRead:
+        return [self performNextReadRequest];
+    case LERequest::CharWrite:
+    case LERequest::DescWrite:
+    case LERequest::ClientConfiguration:
+        return [self performNextWriteRequest];
+    default:
+        // Should never happen.
+        Q_ASSERT(0);
+    }
+}
+
+- (void)performNextReadRequest
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
+    Q_ASSERT_X(!requestPending, Q_FUNC_INFO, "processing another request");
+    Q_ASSERT_X(requests.size(), Q_FUNC_INFO, "no requests to handle");
+    Q_ASSERT_X(requests.head().type == LERequest::CharRead
+               || requests.head().type == LERequest::DescRead,
+               Q_FUNC_INFO, "not a read request");
+
+    const LERequest request(requests.dequeue());
+    if (request.type == LERequest::CharRead) {
+        if (!charMap.contains(request.handle)) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic with handle"
+                                 << request.handle << "not found";
+            return [self performNextRequest];
+        }
+
+        requestPending = true;
+        currentReadHandle = request.handle;
+        [peripheral readValueForCharacteristic:charMap[request.handle]];
+    } else {
+        if (!descMap.contains(request.handle)) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "descriptor with handle"
+                                 << request.handle << "not found";
+            return [self performNextRequest];
+        }
+
+        requestPending = true;
+        currentReadHandle = request.handle;
+        [peripheral readValueForDescriptor:descMap[request.handle]];
+    }
+}
+
 - (void)performNextWriteRequest
 {
     using namespace OSXBluetooth;
 
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
+    Q_ASSERT_X(!requestPending, Q_FUNC_INFO, "processing another request");
+    Q_ASSERT_X(requests.size(), Q_FUNC_INFO, "no requests to handle");
+    Q_ASSERT_X(requests.head().type == LERequest::CharWrite
+               || requests.head().type == LERequest::DescWrite
+               || requests.head().type == LERequest::ClientConfiguration,
+               Q_FUNC_INFO, "not a write request");
 
-    if (writePending || !writeQueue.size())
-        return;
+    const LERequest request(requests.dequeue());
 
-    LEWriteRequest request(writeQueue.dequeue());
-
-    if (request.isDescriptor) {
+    if (request.type == LERequest::DescWrite) {
         if (!descMap.contains(request.handle)) {
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle: "
                                  << request.handle << " not found";
-            return [self performNextWriteRequest];
+            return [self performNextRequest];
         }
 
         CBDescriptor *const descriptor = descMap[request.handle];
@@ -564,58 +626,58 @@ using namespace QT_NAMESPACE;
             // Even if qtData.size() == 0, we still need NSData object.
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed "
                                     "to allocate an NSData object";
-            return [self performNextWriteRequest];
+            return [self performNextRequest];
         }
 
         if (![self cacheWriteValue:request.value for:descriptor])
-            return [self performNextWriteRequest];
+            return [self performNextRequest];
 
-        writePending = true;
+        requestPending = true;
         return [peripheral writeValue:data.data() forDescriptor:descriptor];
     } else {
         if (!charMap.contains(request.handle)) {
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic with "
                                     "handle: " << request.handle << " not found";
-            return [self performNextWriteRequest];
+            return [self performNextRequest];
         }
 
         CBCharacteristic *const characteristic = charMap[request.handle];
 
-        if (request.isClientConfiguration) {
+        if (request.type == LERequest::ClientConfiguration) {
             const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
             CBDescriptor *const descriptor = [self descriptor:qtUuid forCharacteristic:characteristic];
             Q_ASSERT_X(descriptor, Q_FUNC_INFO, "no client characteristic "
                        "configuration descriptor found");
 
             if (![self cacheWriteValue:request.value for:descriptor])
-                return [self performNextWriteRequest];
+                return [self performNextRequest];
 
             bool enable = false;
             if (request.value.size())
                 enable = request.value[0] & 3;
 
-            writePending = true;
+            requestPending = true;
             [peripheral setNotifyValue:enable forCharacteristic:characteristic];
         } else {
             ObjCStrongReference<NSData> data(data_from_bytearray(request.value));
             if (!data) {
                 // Even if qtData.size() == 0, we still need NSData object.
                 qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSData object";
-                return [self performNextWriteRequest];
+                return [self performNextRequest];
             }
 
             // TODO: check what happens if I'm using NSData with length 0.
             if (request.withResponse) {
                 if (![self cacheWriteValue:request.value for:characteristic])
-                    return [self performNextWriteRequest];
+                    return [self performNextRequest];
 
-                writePending = true;
+                requestPending = true;
                 [peripheral writeValue:data.data() forCharacteristic:characteristic
                             type:CBCharacteristicWriteWithResponse];
             } else {
                 [peripheral writeValue:data.data() forCharacteristic:characteristic
                             type:CBCharacteristicWriteWithoutResponse];
-                [self performNextWriteRequest];
+                [self performNextRequest];
             }
         }
     }
@@ -624,6 +686,8 @@ using namespace QT_NAMESPACE;
 - (bool)setNotifyValue:(const QByteArray &)value
         forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
 {
+    using namespace OSXBluetooth;
+
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -643,17 +707,37 @@ using namespace QT_NAMESPACE;
         return false;
     }
 
-    OSXBluetooth::LEWriteRequest request;
-    request.isDescriptor = false;
-    request.isClientConfiguration = true;
+    LERequest request;
+    request.type = LERequest::ClientConfiguration;
     request.handle = charHandle;
     request.value = value;
 
-    writeQueue.enqueue(request);
-    [self performNextWriteRequest];
-    // TODO: check if I need a special map - to reset notify to NO
-    // before disconnect/dealloc later! Also, this can be needed if notify was set
-    // to YES from another application - to be tested.
+    requests.enqueue(request);
+    [self performNextRequest];
+
+    return true;
+}
+
+- (bool)readCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if (!charMap.contains(charHandle)) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic: " << charHandle << " not found";
+        return false;
+    }
+
+    LERequest request;
+    request.type = LERequest::CharRead;
+    request.handle = charHandle;
+
+    requests.enqueue(request);
+    [self performNextRequest];
+
     return true;
 }
 
@@ -672,14 +756,36 @@ using namespace QT_NAMESPACE;
         return false;
     }
 
-    LEWriteRequest request;
-    request.isDescriptor = false;
+    LERequest request;
+    request.type = LERequest::CharWrite;
     request.withResponse = withResponse;
     request.handle = charHandle;
     request.value = value;
 
-    writeQueue.enqueue(request);
-    [self performNextWriteRequest];
+    requests.enqueue(request);
+    [self performNextRequest];
+
+    return true;
+}
+
+- (bool)readDescriptor:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle
+{
+    using namespace OSXBluetooth;
+
+    Q_ASSERT_X(descHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
+
+    if (!descMap.contains(descHandle)) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle:"
+                             << descHandle << "not found";
+        return false;
+    }
+
+    LERequest request;
+    request.type = LERequest::DescRead;
+    request.handle = descHandle;
+
+    requests.enqueue(request);
+    [self performNextRequest];
 
     return true;
 }
@@ -696,13 +802,13 @@ using namespace QT_NAMESPACE;
         return false;
     }
 
-    LEWriteRequest request;
-    request.isDescriptor = true;
+    LERequest request;
+    request.type = LERequest::DescWrite;
     request.handle = descHandle;
     request.value = value;
 
-    writeQueue.enqueue(request);
-    [self performNextWriteRequest];
+    requests.enqueue(request);
+    [self performNextRequest];
 
     return true;
 }
@@ -906,15 +1012,15 @@ using namespace QT_NAMESPACE;
 
 - (void)reset
 {
-    writePending = false;
+    requestPending = false;
     valuesToWrite.clear();
-    writeQueue.clear();
+    requests.clear();
     servicesToDiscoverDetails.clear();
     lastValidHandle = 0;
     serviceMap.clear();
     charMap.clear();
     descMap.clear();
-
+    currentReadHandle = 0;
     // TODO: also serviceToVisit/VisitNext and visitedServices ?
 }
 
@@ -1193,7 +1299,8 @@ using namespace QT_NAMESPACE;
     }
 }
 
-- (void)peripheral:(CBPeripheral *)aPeripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic
+- (void)peripheral:(CBPeripheral *)aPeripheral
+        didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic
         error:(NSError *)error
 {
     Q_UNUSED(aPeripheral)
@@ -1202,18 +1309,25 @@ using namespace QT_NAMESPACE;
 
     Q_ASSERT_X(managerState != CentralManagerUpdating, Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
     // First, let's check if we're discovering a service details now.
     CBService *const service = characteristic.service;
     const QBluetoothUuid qtUuid(qt_uuid(service.UUID));
     const bool isDetailsDiscovery = servicesToDiscoverDetails.contains(qtUuid);
+    const QLowEnergyHandle chHandle = charMap.key(characteristic);
 
     if (error) {
         // Use NSLog, not qCDebug/qCWarning to log the actual error.
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
         if (!isDetailsDiscovery) {
-            // TODO: this can be something else in a future (if needed at all).
+            if (chHandle && chHandle == currentReadHandle) {
+                currentReadHandle = 0;
+                requestPending = false;
+                delegate->error(qtUuid, QLowEnergyService::CharacteristicReadError);
+                [self performNextRequest];
+            }
             return;
         }
     }
@@ -1228,7 +1342,6 @@ using namespace QT_NAMESPACE;
             [self discoverDescriptors:characteristic.service];
     } else {
         // This is (probably) the result of update notification.
-        const QLowEnergyHandle chHandle = charMap.key(characteristic);
         // It's very possible we can have an invalid handle here (0) -
         // if something esle is wrong (we subscribed for a notification),
         // disconnected (but other application is connected) and still receiveing
@@ -1240,9 +1353,17 @@ using namespace QT_NAMESPACE;
             return;
         }
 
-        Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
-        delegate->characteristicUpdateNotification(chHandle,
-                                                   qt_bytearray(characteristic.value));
+        if (currentReadHandle == chHandle) {
+            // Even if it was not a reply to our read request (no way to test it)
+            // report it.
+            requestPending = false;
+            currentReadHandle = 0;
+            //
+            delegate->characteristicReadNotification(chHandle, qt_bytearray(characteristic.value));
+            [self performNextRequest];
+        } else {
+            delegate->characteristicUpdateNotification(chHandle, qt_bytearray(characteristic.value));
+        }
     }
 }
 
@@ -1261,7 +1382,7 @@ using namespace QT_NAMESPACE;
     if (error) {
         // Log the error using NSLog:
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
-        // Probably, we can continue though ...
+        // We can continue though ...
     }
 
     // Do we have more characteristics on this service to discover descriptors?
@@ -1288,12 +1409,19 @@ using namespace QT_NAMESPACE;
     CBService *const service = descriptor.characteristic.service;
     const QBluetoothUuid qtUuid(qt_uuid(service.UUID));
     const bool isDetailsDiscovery = servicesToDiscoverDetails.contains(qtUuid);
+    const QLowEnergyHandle dHandle = descMap.key(descriptor);
 
     if (error) {
         // NSLog to log the actual error ...
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
+
         if (!isDetailsDiscovery) {
-            // TODO: probably will be required in a future.
+            if (dHandle && dHandle == currentReadHandle) {
+                currentReadHandle = 0;
+                requestPending = false;
+                delegate->error(qtUuid, QLowEnergyService::DescriptorReadError);
+                [self performNextRequest];
+            }
             return;
         }
     }
@@ -1322,7 +1450,18 @@ using namespace QT_NAMESPACE;
             [self serviceDetailsDiscoveryFinished:service];
         }
     } else {
-        // TODO: this can be something else in a future (if needed at all).
+        if (!dHandle) {
+            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "unexpected value update notification, "
+                                     "no descriptor handle found";
+            return;
+        }
+
+        if (dHandle == currentReadHandle) {
+            currentReadHandle = 0;
+            requestPending = false;
+            delegate->descriptorReadNotification(dHandle, qt_bytearray(static_cast<NSObject *>(descriptor.value)));
+            [self performNextRequest];
+        }
     }
 }
 
@@ -1344,7 +1483,7 @@ using namespace QT_NAMESPACE;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    writePending = false;
+    requestPending = false;
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -1368,7 +1507,7 @@ using namespace QT_NAMESPACE;
         delegate->characteristicWriteNotification(cHandle, valueToReport);
     }
 
-    [self performNextWriteRequest];
+    [self performNextRequest];
 }
 
 - (void)peripheral:(CBPeripheral *)aPeripheral
@@ -1383,7 +1522,7 @@ using namespace QT_NAMESPACE;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    writePending = false;
+    requestPending = false;
 
     using namespace OSXBluetooth;
 
@@ -1404,7 +1543,7 @@ using namespace QT_NAMESPACE;
         delegate->descriptorWriteNotification(dHandle, valueToReport);
     }
 
-    [self performNextWriteRequest];
+    [self performNextRequest];
 }
 
 - (void)peripheral:(CBPeripheral *)aPeripheral
@@ -1417,7 +1556,7 @@ using namespace QT_NAMESPACE;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    writePending = false;
+    requestPending = false;
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (nil)");
 
@@ -1446,7 +1585,7 @@ using namespace QT_NAMESPACE;
         }
     }
 
-    [self performNextWriteRequest];
+    [self performNextRequest];
 }
 
 @end
