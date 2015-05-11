@@ -80,6 +80,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 this, &QLowEnergyControllerPrivate::descriptorWritten);
         connect(hub, &LowEnergyNotificationHub::characteristicChanged,
                 this, &QLowEnergyControllerPrivate::characteristicChanged);
+        connect(hub, &LowEnergyNotificationHub::serviceError,
+                this, &QLowEnergyControllerPrivate::serviceError);
     }
 
     if (!hub->javaObject().isValid()) {
@@ -235,6 +237,60 @@ void QLowEnergyControllerPrivate::writeDescriptor(
         service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
+void QLowEnergyControllerPrivate::readCharacteristic(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle)
+{
+    Q_ASSERT(!service.isNull());
+
+    if (!service->characteristicList.contains(charHandle))
+        return;
+
+    QAndroidJniEnvironment env;
+    bool result = false;
+    if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Read characteristic with handle"
+                               <<  charHandle << service->uuid;
+        result = hub->javaObject().callMethod<jboolean>("readCharacteristic",
+                      "(I)Z", charHandle);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    if (!result)
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+}
+
+void QLowEnergyControllerPrivate::readDescriptor(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle /*charHandle*/,
+        const QLowEnergyHandle descriptorHandle)
+{
+    Q_ASSERT(!service.isNull());
+
+    QAndroidJniEnvironment env;
+    bool result = false;
+    if (hub) {
+        qCDebug(QT_BT_ANDROID) << "Read descriptor with handle"
+                               <<  descriptorHandle << service->uuid;
+        result = hub->javaObject().callMethod<jboolean>("readDescriptor",
+                      "(I)Z", descriptorHandle);
+    }
+
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        result = false;
+    }
+
+    if (!result)
+        service->setError(QLowEnergyService::DescriptorWriteError);
+}
+
 void QLowEnergyControllerPrivate::connectionUpdated(
         QLowEnergyController::ControllerState newState,
         QLowEnergyController::Error errorCode)
@@ -375,6 +431,15 @@ void QLowEnergyControllerPrivate::characteristicRead(
     charDetails.value = data;
     //value handle always one larger than characteristics value handle
     charDetails.valueHandle = charHandle + 1;
+
+    if (service->state == QLowEnergyService::ServiceDiscovered) {
+        QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
+        if (!characteristic.isValid()) {
+            qCWarning(QT_BT_ANDROID) << "characteristicRead: Cannot find characteristic";
+            return;
+        }
+        emit service->characteristicRead(characteristic, data);
+    }
 }
 
 void QLowEnergyControllerPrivate::descriptorRead(
@@ -406,6 +471,13 @@ void QLowEnergyControllerPrivate::descriptorRead(
     if (!entryUpdated) {
         qCWarning(QT_BT_ANDROID) << "Cannot find/update descriptor"
                                  << descUuid << charUuid << serviceUuid;
+    } else if (service->state == QLowEnergyService::ServiceDiscovered){
+        QLowEnergyDescriptor descriptor = descriptorForHandle(descHandle);
+        if (!descriptor.isValid()) {
+            qCWarning(QT_BT_ANDROID) << "descriptorRead: Cannot find descriptor";
+            return;
+        }
+        emit service->descriptorRead(descriptor, data);
     }
 }
 
@@ -488,6 +560,22 @@ void QLowEnergyControllerPrivate::characteristicChanged(
         updateValueOfCharacteristic(characteristic.attributeHandle(),
                                 data, false);
     emit service->characteristicChanged(characteristic, data);
+}
+
+void QLowEnergyControllerPrivate::serviceError(
+        int attributeHandle, QLowEnergyService::ServiceError errorCode)
+{
+    // ignore call if it isn't really an error
+    if (errorCode == QLowEnergyService::NoError)
+        return;
+
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(attributeHandle);
+    Q_ASSERT(!service.isNull());
+
+    // ATM we don't really use attributeHandle but later on we might
+    // want to associate the error code with a char or desc
+    service->setError(errorCode);
 }
 
 QT_END_NAMESPACE

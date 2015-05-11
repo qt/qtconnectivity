@@ -77,7 +77,7 @@ public:
         UdiCPlain = 0x001D,
         McapControlChannel = 0x001E,
         McapDataChannel = 0x001F,
-        L2cap = 0x0100,
+        L2cap = 0x0100
     };
 
     enum ServiceClassUuid {
@@ -171,8 +171,7 @@ public:
         UserData = 0x181c,
         WeightScale = 0x181d,
         BondManagement = 0x181e,
-        ContinuousGlucoseMonitoring = 0x181f,
-
+        ContinuousGlucoseMonitoring = 0x181f
     };
 
     enum CharacteristicType {

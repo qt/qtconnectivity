@@ -112,6 +112,12 @@ public:
                                  const QByteArray &value,
                                  bool appendValue);
 
+    // read data
+    void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                            const QLowEnergyHandle charHandle);
+    void readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QLowEnergyHandle descriptorHandle);
 
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
@@ -211,6 +217,7 @@ private slots:
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
+    void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
 #endif
 private:
     QLowEnergyController *q_ptr;

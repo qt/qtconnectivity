@@ -157,7 +157,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         // We can be here only if we have some kind of
         // resource allocation error.
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
-                 QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED);
+                 QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED));
         emit q_ptr->error(lastError);
     }
 }

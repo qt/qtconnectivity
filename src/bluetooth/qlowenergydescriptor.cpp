@@ -237,8 +237,8 @@ QLowEnergyHandle QLowEnergyDescriptor::handle() const
 /*!
     Returns the cached value of the descriptor.
 
-    A descriptor value may be updated using
-    \l QLowEnergyService::writeDescriptor().
+    The cached descriptor value may be updated using
+    \l QLowEnergyService::writeDescriptor() or \l QLowEnergyService::readDescriptor().
 */
 QByteArray QLowEnergyDescriptor::value() const
 {

@@ -192,8 +192,8 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 
     The cache is updated during the associated service's
     \l {QLowEnergyService::discoverDetails()} {detail discovery}, a successful
-    \l {QLowEnergyService::writeCharacteristic()}{write operation} or when an update
-    notification is received.
+    \l {QLowEnergyService::readCharacteristic()}{read}/\l {QLowEnergyService::writeCharacteristic()}{write}
+    operation or when an update notification is received.
 
     The returned \l QByteArray always remains empty if the characteristic does not
     have the \l {QLowEnergyCharacteristic::Read}{read permission}. In such cases only

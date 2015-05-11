@@ -57,7 +57,9 @@ public:
         OperationError,
         CharacteristicWriteError,
         DescriptorWriteError,
-        UnknownError
+        UnknownError,
+        CharacteristicReadError,
+        DescriptorReadError
     };
 
     enum ServiceState {
@@ -65,7 +67,7 @@ public:
         DiscoveryRequired,  // we know start/end handle but nothing more
         //TODO Rename DiscoveringServices -> DiscoveringDetails or DiscoveringService
         DiscoveringServices,// discoverDetails() called and running
-        ServiceDiscovered,  // all details have been synchronized
+        ServiceDiscovered   // all details have been synchronized
     };
 
     enum WriteMode {
@@ -90,11 +92,13 @@ public:
     ServiceError error() const;
 
     bool contains(const QLowEnergyCharacteristic &characteristic) const;
+    void readCharacteristic(const QLowEnergyCharacteristic &characteristic);
     void writeCharacteristic(const QLowEnergyCharacteristic &characteristic,
                              const QByteArray &newValue,
                              WriteMode mode = WriteWithResponse);
 
     bool contains(const QLowEnergyDescriptor &descriptor) const;
+    void readDescriptor(const QLowEnergyDescriptor &descriptor);
     void writeDescriptor(const QLowEnergyDescriptor &descriptor,
                          const QByteArray &newValue);
 
@@ -102,8 +106,12 @@ Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);
     void characteristicChanged(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
+    void characteristicRead(const QLowEnergyCharacteristic &info,
+                            const QByteArray &value);
     void characteristicWritten(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
+    void descriptorRead(const QLowEnergyDescriptor &info,
+                        const QByteArray &value);
     void descriptorWritten(const QLowEnergyDescriptor &info,
                            const QByteArray &value);
     void error(QLowEnergyService::ServiceError error);

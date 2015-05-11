@@ -38,6 +38,7 @@
 #include "objectmanager_p.h"
 #include "properties_p.h"
 #include "adapter1_bluez5_p.h"
+#include "manager_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -47,7 +48,8 @@ typedef enum Bluez5TestResultType
 {
     BluezVersionUnknown,
     BluezVersion4,
-    BluezVersion5
+    BluezVersion5,
+    BluezNotAvailable
 } Bluez5TestResult;
 
 Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown));
@@ -65,8 +67,20 @@ bool isBluez5()
         QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
         reply.waitForFinished();
         if (reply.isError()) {
-            *bluezVersion() = BluezVersion4;
-            qCDebug(QT_BT_BLUEZ) << "Bluez 4 detected.";
+            // not Bluez 5.x
+            OrgBluezManagerInterface manager_bluez4(QStringLiteral("org.bluez"),
+                                             QStringLiteral("/"),
+                                             QDBusConnection::systemBus());
+            QDBusPendingReply<QList<QDBusObjectPath> > reply
+                    = manager_bluez4.ListAdapters();
+            reply.waitForFinished();
+            if (reply.isError()) {
+                *bluezVersion() = BluezNotAvailable;
+                qWarning() << "Cannot find a running Bluez. Please check the Bluez installation.";
+            } else {
+                *bluezVersion() = BluezVersion4;
+                qCDebug(QT_BT_BLUEZ) << "Bluez 4 detected.";
+            }
         } else {
             *bluezVersion() = BluezVersion5;
             qCDebug(QT_BT_BLUEZ) << "Bluez 5 detected.";

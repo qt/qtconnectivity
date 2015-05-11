@@ -62,7 +62,7 @@ public:
         ConnectedState,
         DiscoveringState,
         DiscoveredState,
-        ClosingState,
+        ClosingState
     };
 
     enum RemoteAddressType {

@@ -72,10 +72,14 @@ private:
 
     void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
     void serviceDetailsDiscoveryFinished(LEService service) Q_DECL_OVERRIDE;
+    void characteristicReadNotification(QLowEnergyHandle charHandle,
+                                        const QByteArray &value) Q_DECL_OVERRIDE;
     void characteristicWriteNotification(QLowEnergyHandle charHandle,
                                          const QByteArray &newValue) Q_DECL_OVERRIDE;
     void characteristicUpdateNotification(QLowEnergyHandle charHandle,
                                           const QByteArray &value) Q_DECL_OVERRIDE;
+    void descriptorReadNotification(QLowEnergyHandle descHandle,
+                                    const QByteArray &value) Q_DECL_OVERRIDE;
     void descriptorWriteNotification(QLowEnergyHandle descHandle,
                                      const QByteArray &newValue) Q_DECL_OVERRIDE;
     void disconnected() Q_DECL_OVERRIDE;
@@ -89,9 +93,14 @@ private:
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
 
+    // TODO: all these read/write /setNotify can be simplified -
+    // by just passing either characteristic or descriptor (that
+    // has all needed information - service, handle, etc.).
     void setNotifyValue(QSharedPointer<QLowEnergyServicePrivate> service,
                         QLowEnergyHandle charHandle, const QByteArray &newValue);
 
+    void readCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
+                            QLowEnergyHandle charHandle);
     void writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
                              QLowEnergyHandle charHandle, const QByteArray &newValue,
                              bool writeWithResponse);
@@ -100,6 +109,8 @@ private:
                                         const QByteArray &value,
                                         bool appendValue);
 
+    void readDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
+                        QLowEnergyHandle charHandle);
     void writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
                          QLowEnergyHandle descriptorHandle,
                          const QByteArray &newValue);
