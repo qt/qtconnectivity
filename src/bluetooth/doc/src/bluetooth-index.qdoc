@@ -66,7 +66,7 @@ import statement in your \c .qml file:
 \section2 Guides
 \list
     \li \l {Qt Bluetooth Overview}{Classic Bluetooth Overview}
-    \li \l {Bluetooth Low Energy Overview} (Tech Preview)
+    \li \l {Bluetooth Low Energy Overview}
 \endlist
 
 \section2 Reference

@@ -93,9 +93,6 @@ QT_BEGIN_NAMESPACE
     connection becomes invalid as soon as the controller disconnects from the
     remote Bluetooth Low Energy device.
 
-    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
-    Some API elements may change until the final release of the feature.
-
     \sa QLowEnergyService, QLowEnergyCharacteristic, QLowEnergyDescriptor
 */
 
