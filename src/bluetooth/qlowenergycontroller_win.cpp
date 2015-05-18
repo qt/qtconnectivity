@@ -162,11 +162,26 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
 
 }
 
+void QLowEnergyControllerPrivate::readCharacteristic(
+        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QLowEnergyHandle /*charHandle*/)
+{
+
+}
+
 void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
         const QLowEnergyHandle /*charHandle*/,
         const QByteArray &/*newValue*/,
         bool /*writeWithResponse*/)
+{
+
+}
+
+void QLowEnergyControllerPrivate::readDescriptor(
+        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+        const QLowEnergyHandle /*charHandle*/,
+        const QLowEnergyHandle /*descriptorHandle*/)
 {
 
 }
