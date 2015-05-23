@@ -68,7 +68,6 @@
         \li deviceName
         \li serviceDescription
         \li serviceName
-        \li servicePort
         \li serviceProtocol
         \li serviceUuid
     \endlist
