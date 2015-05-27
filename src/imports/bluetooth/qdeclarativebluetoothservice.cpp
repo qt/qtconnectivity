@@ -159,6 +159,7 @@ void QDeclarativeBluetoothService::setDeviceAddress(const QString &newAddress)
     QBluetoothAddress address(newAddress);
     QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::ComputerDevice);
     d->m_service->setDevice(device);
+    emit detailsChanged();
 }
 
 /*!
@@ -176,6 +177,7 @@ QString QDeclarativeBluetoothService::serviceName() const
 void QDeclarativeBluetoothService::setServiceName(const QString &name)
 {
     d->m_service->setServiceName(name);
+    emit detailsChanged();
 }
 
 
