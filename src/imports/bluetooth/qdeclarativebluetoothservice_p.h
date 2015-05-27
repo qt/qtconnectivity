@@ -66,9 +66,7 @@ class QDeclarativeBluetoothService : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString serviceUuid READ serviceUuid WRITE setServiceUuid NOTIFY detailsChanged)
     Q_PROPERTY(Protocol serviceProtocol READ serviceProtocol WRITE setServiceProtocol NOTIFY detailsChanged)
     Q_PROPERTY(bool registered READ isRegistered WRITE setRegistered NOTIFY registeredChanged)
-
     Q_INTERFACES(QQmlParserStatus)
-    Q_ENUMS(Protocol)
 
 public:
     /// TODO: Merge/Replace with QBluetoothServiceInfo::Protocol in Qt 6
@@ -77,6 +75,7 @@ public:
         L2CapProtocol = QBluetoothServiceInfo::L2capProtocol,
         UnknownProtocol = QBluetoothServiceInfo::UnknownProtocol
     };
+    Q_ENUM(Protocol)
 
     explicit QDeclarativeBluetoothService(QObject *parent = 0);
     explicit QDeclarativeBluetoothService(const QBluetoothServiceInfo &service,

@@ -38,8 +38,6 @@
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-Q_DECLARE_METATYPE(QBluetoothServer::Error)
-
 ServerAcceptanceThread::ServerAcceptanceThread(QObject *parent) :
     QObject(parent), maxPendingConnections(1)
 {
