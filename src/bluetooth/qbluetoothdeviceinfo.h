@@ -241,6 +241,9 @@ private:
     Q_DECLARE_PRIVATE(QBluetoothDeviceInfo)
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QBluetoothDeviceInfo::CoreConfigurations)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QBluetoothDeviceInfo::ServiceClasses)
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
