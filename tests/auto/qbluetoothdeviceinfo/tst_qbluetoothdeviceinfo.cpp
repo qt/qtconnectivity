@@ -67,6 +67,8 @@ private slots:
     void tst_serviceUuids();
 
     void tst_cached();
+
+    void tst_flags();
 };
 
 tst_QBluetoothDeviceInfo::tst_QBluetoothDeviceInfo()
@@ -475,6 +477,47 @@ void tst_QBluetoothDeviceInfo::tst_cached()
 
     deviceInfo.setCached(false);
     QVERIFY(!(deviceInfo.isCached()));
+}
+
+void tst_QBluetoothDeviceInfo::tst_flags()
+{
+    QBluetoothDeviceInfo::CoreConfigurations flags1(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    QBluetoothDeviceInfo::CoreConfigurations flags2(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+    QBluetoothDeviceInfo::CoreConfigurations result;
+
+    // test QFlags &operator|=(QFlags f)
+    result = flags1 | flags2;
+    QVERIFY(result.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration));
+    QVERIFY(result.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration));
+
+    // test QFlags &operator|=(Enum f)
+    result = flags1 | QBluetoothDeviceInfo::BaseRateCoreConfiguration;
+    QVERIFY(result.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration));
+    QVERIFY(result.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration));
+
+    // test Q_DECLARE_OPERATORS_FOR_FLAGS(QBluetoothDeviceInfo::CoreConfigurations)
+    result = QBluetoothDeviceInfo::BaseRateCoreConfiguration | flags1;
+    QVERIFY(result.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration));
+    QVERIFY(result.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration));
+
+    QBluetoothDeviceInfo::ServiceClasses serviceFlag1(QBluetoothDeviceInfo::AudioService);
+    QBluetoothDeviceInfo::ServiceClasses serviceFlag2(QBluetoothDeviceInfo::CapturingService);
+    QBluetoothDeviceInfo::ServiceClasses serviceResult;
+
+    // test QFlags &operator|=(QFlags f)
+    serviceResult = serviceFlag1 | serviceFlag2;
+    QVERIFY(serviceResult.testFlag(QBluetoothDeviceInfo::AudioService));
+    QVERIFY(serviceResult.testFlag(QBluetoothDeviceInfo::CapturingService));
+
+    // test QFlags &operator|=(Enum f)
+    serviceResult = serviceFlag1 | QBluetoothDeviceInfo::CapturingService;
+    QVERIFY(serviceResult.testFlag(QBluetoothDeviceInfo::AudioService));
+    QVERIFY(serviceResult.testFlag(QBluetoothDeviceInfo::CapturingService));
+
+    // test Q_DECLARE_OPERATORS_FOR_FLAGS(QBluetoothDeviceInfo::ServiceClasses)
+    serviceResult = QBluetoothDeviceInfo::CapturingService | serviceFlag1;
+    QVERIFY(serviceResult.testFlag(QBluetoothDeviceInfo::AudioService));
+    QVERIFY(serviceResult.testFlag(QBluetoothDeviceInfo::CapturingService));
 }
 
 QTEST_MAIN(tst_QBluetoothDeviceInfo)
