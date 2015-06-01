@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -38,6 +38,8 @@
 #include "qnearfieldmanager_simulator_p.h"
 #elif defined(QNX_NFC)
 #include "qnearfieldmanager_qnx_p.h"
+#elif defined(NEARD_NFC)
+#include "qnearfieldmanager_neard_p.h"
 #else
 #include "qnearfieldmanagerimpl_p.h"
 #endif
@@ -112,6 +114,14 @@ QT_BEGIN_NAMESPACE
         </filter>
     </invoke-target>
     \endcode
+
+    \section3 NFC on Linux
+    The \l{https://01.org/linux-nfc}{Linux NFC project} provides software to support NFC on Linux platforms.
+    The neard daemon will allow access to the supported hardware via DBus interfaces. QtNfc requires neard
+    version 0.14 which can be built from source or installed via the appropriate Linux package manager. Not
+    all API features are currently supported.
+    To allow QtNfc to access the DBus interfaces the neard daemon has to be running. In case of problems
+    debug output can be enabled by enabling categorized logging for 'qt.nfc.neard'.
 */
 
 /*!
@@ -213,6 +223,8 @@ bool QNearFieldManager::isAvailable() const
     successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
     when a target is within proximity.
     \sa stopTargetDetection()
+
+    \note For platforms using neard: target detection will stop as soon as a tag has been detected.
 */
 bool QNearFieldManager::startTargetDetection()
 {
@@ -276,6 +288,8 @@ static QMetaMethod methodForSignature(QObject *object, const char *method)
 
     \note The \e target parameter of \a method may not be available on all platforms, in which case
     \e target will be 0.
+
+    \note On platforms using neard registering message handlers is not supported.
 */
 
 int QNearFieldManager::registerNdefMessageHandler(QNdefRecord::TypeNameFormat typeNameFormat,

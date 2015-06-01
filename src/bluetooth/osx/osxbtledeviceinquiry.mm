@@ -1,51 +1,43 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#include "osxbtcentralmanagerdelegate_p.h"
 #include "osxbtledeviceinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
 #include "corebluetoothwrapper_p.h"
@@ -58,7 +50,6 @@ LEDeviceInquiryDelegate::~LEDeviceInquiryDelegate()
 {
 }
 
-// TODO: check versions!
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
 
 QBluetoothUuid qt_uuid(NSUUID *nsUuid)
@@ -73,7 +64,7 @@ QBluetoothUuid qt_uuid(NSUUID *nsUuid)
     return QBluetoothUuid(qtUuidData);
 }
 
-#else
+#endif
 
 QBluetoothUuid qt_uuid(CFUUIDRef uuid)
 {
@@ -105,8 +96,6 @@ StringStrongReference uuid_as_nsstring(CFUUIDRef uuid)
     return StringStrongReference((NSString *)cfStr, false);
 }
 
-#endif
-
 }
 
 
@@ -119,23 +108,23 @@ using namespace QT_NAMESPACE;
 #endif
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate, CBPeripheralDelegate>
-+ (NSTimeInterval)inquiryLength;
 // "Timeout" callback to stop a scan.
 - (void)stopScan;
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
 
-+ (NSTimeInterval)inquiryLength
++ (int)inquiryLength
 {
-    // 10 seconds at the moment. There is no default 'time-out',
-    // CBCentralManager startScan does not stop if not asked.
-    return 10;
+    // There is no default timeout,
+    // scan does not stop if not asked.
+    // Return in milliseconds
+    return 10 * 1000;
 }
 
 - (id)initWithDelegate:(OSXBluetooth::LEDeviceInquiryDelegate *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithWithDelegate:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -151,24 +140,13 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManagerTransientDelegate) TransientDelegate;
-
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
 
     if (manager) {
-        // -start was called.
-        if (pendingStart) {
-            // State was not updated yet, too early to release.
-            TransientDelegate *const transient = [[TransientDelegate alloc] initWithManager:manager];
-            // On ARC the lifetime of a transient delegate will become a problem, since delegate itself
-            // is a weak reference in a manager.
-            [manager setDelegate:transient];
-        } else {
-            [manager setDelegate:nil];
-            if (isActive)
-                [manager stopScan];
-            [manager release];
-        }
+        [manager setDelegate:nil];
+        if (isActive)
+            [manager stopScan];
+        [manager release];
     }
 
     [peripherals release];
@@ -178,11 +156,11 @@ using namespace QT_NAMESPACE;
 - (void)stopScan
 {
     // Scan's timeout.
-    Q_ASSERT_X(delegate, "-stopScan", "invalid delegate (null)");
-    Q_ASSERT_X(manager, "-stopScan", "invalid central (nil)");
-    Q_ASSERT_X(!pendingStart, "-stopScan", "invalid state");
-    Q_ASSERT_X(!cancelled, "-stopScan", "invalid state");
-    Q_ASSERT_X(isActive, "-stopScan", "invalid state");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid central (nil)");
+    Q_ASSERT_X(!pendingStart, Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(!cancelled, Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(isActive, Q_FUNC_INFO, "invalid state");
 
     [manager setDelegate:nil];
     [manager stopScan];
@@ -193,11 +171,11 @@ using namespace QT_NAMESPACE;
 
 - (bool)start
 {
-    Q_ASSERT_X(![self isActive], "-start", "LE device scan is already active");
-    Q_ASSERT_X(delegate, "-start", "invalid delegate (null)");
+    Q_ASSERT_X(![self isActive], Q_FUNC_INFO, "LE device scan is already active");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (!peripherals) {
-        qCCritical(QT_BT_OSX) << "-start, internal error (allocation problem)";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "internal error";
         return false;
     }
 
@@ -210,11 +188,12 @@ using namespace QT_NAMESPACE;
         [manager release];
     }
 
+    startTime = QTime();
     pendingStart = true;
     manager = [CBCentralManager alloc];
     manager = [manager initWithDelegate:self queue:nil];
     if (!manager) {
-        qCCritical(QT_BT_OSX) << "-start, failed to create a central manager";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a central manager";
         return false;
     }
 
@@ -223,10 +202,10 @@ using namespace QT_NAMESPACE;
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
-    Q_ASSERT_X(delegate, "-centralManagerDidUpdateState:", "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (cancelled) {
-        Q_ASSERT_X(!isActive, "-centralManagerDidUpdateState:", "isActive is true");
+        Q_ASSERT_X(!isActive, Q_FUNC_INFO, "isActive is true");
         pendingStart = false;
         delegate->LEdeviceInquiryFinished();
         return;
@@ -237,8 +216,12 @@ using namespace QT_NAMESPACE;
         if (pendingStart) {
             pendingStart = false;
             isActive = true;
-            [self performSelector:@selector(stopScan) withObject:nil
-                  afterDelay:[QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) inquiryLength]];
+#ifndef Q_OS_OSX
+            const NSTimeInterval timeout([QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) inquiryLength] / 1000);
+            Q_ASSERT_X(timeout > 0., Q_FUNC_INFO, "invalid scan timeout");
+            [self performSelector:@selector(stopScan) withObject:nil afterDelay:timeout];
+#endif
+            startTime = QTime::currentTime();
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
@@ -307,30 +290,28 @@ using namespace QT_NAMESPACE;
 
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(delegate, "-centralManager:didDiscoverPeripheral:advertisementData:RSSI:",
-               "invalid delegate (null)");
-    Q_ASSERT_X(isActive, "-centralManager:didDiscoverPeripheral:advertisementData:RSSI:",
-               "called while there is no active scan");
-    Q_ASSERT_X(!pendingStart, "-centralManager:didDiscoverPeripheral:advertisementData:RSSI:",
-               "both pendingStart and isActive are true");
+    if (!isActive)
+        return;
 
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    if (!peripheral.identifier) {
-        qCWarning(QT_BT_OSX) << "-centramManager:didDiscoverPeripheral:advertisementData:RSSI:, "
-                                "peripheral without NSUUID";
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+        if (!peripheral.identifier) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
+            return;
+        }
+
+        if (![peripherals objectForKey:peripheral.identifier]) {
+            [peripherals setObject:peripheral forKey:peripheral.identifier];
+            const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.identifier));
+            delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
+        }
         return;
     }
-
-    if (![peripherals objectForKey:peripheral.identifier]) {
-        [peripherals setObject:peripheral forKey:peripheral.identifier];
-        const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.identifier));
-        delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
-    }
-#else
+#endif
     if (!peripheral.UUID) {
-        qCWarning(QT_BT_OSX) << "-centramManager:didDiscoverPeripheral:advertisementData:RSSI:, "
-                                "peripheral without UUID";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without UUID";
         return;
     }
 
@@ -340,13 +321,16 @@ using namespace QT_NAMESPACE;
         const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.UUID));
         delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
     }
-#endif
-
 }
 
 - (bool)isActive
 {
     return pendingStart || isActive;
+}
+
+- (const QTime&)startTime
+{
+    return startTime;
 }
 
 @end

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -141,9 +141,13 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         QByteArray text = QByteArray::fromRawData(data->val.str, data->unitSize);
 
         bool hasNonPrintableChar = false;
-        for (int i = 0; i < text.count() && !hasNonPrintableChar; i++) {
-            if (!isprint(text[i])) {
+        for (int i = 0; i < text.count(); i++) {
+            if (text[i] == '\0') {
+                text.resize(i); // cut trailing content
+                break;
+            } else if (!isprint(text[i])) {
                 hasNonPrintableChar = true;
+                text.resize(text.indexOf('\0')); // cut trailing content
                 break;
             }
         }
@@ -152,10 +156,10 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
             xmlOutput.append("encoding=\"hex\" value=\"");
             xmlOutput.append(text.toHex());
         } else {
-            text.replace("&", "&amp");
-            text.replace("<", "&lt");
-            text.replace(">", "&gt");
-            text.replace("\"", "&quot");
+            text.replace('&', "&amp;");
+            text.replace('<', "&lt;");
+            text.replace('>', "&gt;");
+            text.replace('"', "&quot;");
 
             xmlOutput.append("value=\"");
             xmlOutput.append(text);

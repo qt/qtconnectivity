@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -47,13 +39,15 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qmap.h>
 #include <QtCore/qurl.h>
 
-// Import, it's Objective-C header (no inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothSDPServiceRecord.h>
+#include <Foundation/Foundation.h>
+// Only after Foundation.h:
+#include "osx/corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +59,11 @@ namespace {
 class ServiceRecordRefGuard
 {
 public:
-    ServiceRecordRefGuard(IOBluetoothSDPServiceRecordRef r)
+    ServiceRecordRefGuard()
+        : recordRef(Q_NULLPTR)
+    {
+    }
+    explicit ServiceRecordRefGuard(IOBluetoothSDPServiceRecordRef r)
         : recordRef(r)
     {
     }
@@ -73,6 +71,14 @@ public:
     {
         if (recordRef) // Requires non-NULL pointers.
             CFRelease(recordRef);
+    }
+
+    void reset(IOBluetoothSDPServiceRecordRef r)
+    {
+        if (recordRef)
+            CFRelease(recordRef);
+        // Take the ownership:
+        recordRef = r;
     }
 
 private:
@@ -115,7 +121,7 @@ QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate(QBluetoothServiceInfo
                                    registered(false),
                                    serviceRecordHandle(0)
 {
-    Q_ASSERT_X(q, "QBluetoothServiceInfoPrivate()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 }
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &localAdapter)
@@ -125,8 +131,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     if (registered)
         return false;
 
-    Q_ASSERT_X(!serviceRecord, "QBluetoothServiceInfoPrivate::registerService()",
-               "not registered, but serviceRecord is not nil");
+    Q_ASSERT_X(!serviceRecord, Q_FUNC_INFO, "not registered, but serviceRecord is not nil");
 
     using namespace OSXBluetooth;
 
@@ -134,33 +139,35 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         serviceDict(iobluetooth_service_dictionary(*q_ptr));
 
     if (!serviceDict) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to create a service dictionary";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a service dictionary";
         return false;
     }
 
+    ServiceRecordRefGuard refGuard;
     SDPRecord newRecord;
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
-    newRecord.reset([[IOBluetoothSDPServiceRecord
-                      publishedServiceRecordWithDictionary:serviceDict] retain]);
+#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9) {
+        newRecord.reset([[IOBluetoothSDPServiceRecord
+                          publishedServiceRecordWithDictionary:serviceDict] retain]);
+    } else {
 #else
-    IOBluetoothSDPServiceRecordRef recordRef = Q_NULLPTR;
-    // With ARC this will require a different cast?
-    const IOReturn status = IOBluetoothAddServiceDict((CFDictionaryRef)serviceDict.data(), &recordRef);
-    if (status != kIOReturnSuccess) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
-        return false;
-    }
-
-    const ServiceRecordRefGuard refGuard(recordRef);
-    newRecord.reset([[IOBluetoothSDPServiceRecord withSDPServiceRecordRef:recordRef] retain]);
-    // It's weird, but ... it's not possible to release a record ref yet.
+    {
 #endif
+        IOBluetoothSDPServiceRecordRef recordRef = Q_NULLPTR;
+        // With ARC this will require a different cast?
+        const IOReturn status = IOBluetoothAddServiceDict((CFDictionaryRef)serviceDict.data(), &recordRef);
+        if (status != kIOReturnSuccess) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
+            return false;
+        }
+
+        refGuard.reset(recordRef);
+        newRecord.reset([[IOBluetoothSDPServiceRecord withSDPServiceRecordRef:recordRef] retain]);
+        // It's weird, but ... it's not possible to release a record ref yet.
+    }
 
     if (!newRecord) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
         // In case of SDK < 10.9 it's not possible to remove a service record ...
         // no way to obtain record handle yet.
         return false;
@@ -168,10 +175,10 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     BluetoothSDPServiceRecordHandle newRecordHandle = 0;
     if ([newRecord getServiceRecordHandle:&newRecordHandle] != kIOReturnSuccess) {
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
-        [newRecord removeServiceRecord];
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
+#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
+        if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9)
+            [newRecord removeServiceRecord];
 #endif
         // With SDK < 10.9 there is no way to unregister at this point ...
         return false;
@@ -199,13 +206,17 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     }
 
     if (!configured) {
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
-        [newRecord removeServiceRecord];
+#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
+        if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9) {
+            [newRecord removeServiceRecord];
+        } else {
 #else
-        IOBluetoothRemoveServiceWithRecordHandle(newRecordHandle);
+        {// Just to balance braces ...
 #endif
-        qCWarning(QT_BT_OSX) << "QBluetoothServiceInfoPrivate::registerService(), "
-                                "failed to register a service record";
+            IOBluetoothRemoveServiceWithRecordHandle(newRecordHandle);
+        }
+
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
         return false;
     }
 
@@ -229,15 +240,18 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     if (!registered)
         return false;
 
-    Q_ASSERT_X(serviceRecord, "QBluetoothServiceInfoPrivate::unregisterService()",
-               "service registered, but serviceRecord is nil");
+    Q_ASSERT_X(serviceRecord, Q_FUNC_INFO, "service registered, but serviceRecord is nil");
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_NA)
-    [serviceRecord removeServiceRecord];
+#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9) {
+        [serviceRecord removeServiceRecord];
+    } else {
 #else
-    // Assert on newRecordHandle? Is 0 a valid/invalid handle?
-    IOBluetoothRemoveServiceWithRecordHandle(serviceRecordHandle);
+    {
 #endif
+    // Assert on newRecordHandle? Is 0 a valid/invalid handle?
+        IOBluetoothRemoveServiceWithRecordHandle(serviceRecordHandle);
+    }
 
     serviceRecord.reset(nil);
 

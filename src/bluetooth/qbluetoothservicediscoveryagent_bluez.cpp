@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -65,15 +65,15 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
-    manager(0), managerBluez5(0), adapter(0), device(0)
+    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0)
 {
     if (isBluez5()) {
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
                                     QStringLiteral("org.bluez"), QStringLiteral("/"),
                                     QDBusConnection::systemBus());
-        qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>("QBluetoothServiceDiscoveryAgent::Error");
+        qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>();
     } else {
-        qRegisterMetaType<ServiceMap>("ServiceMap");
+        qRegisterMetaType<ServiceMap>();
         qDBusRegisterMetaType<ServiceMap>();
 
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
@@ -136,6 +136,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
 }
 
+// Bluez 5
 void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress &address)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
@@ -185,81 +186,64 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
     if (DiscoveryMode() == QBluetoothServiceDiscoveryAgent::MinimalDiscovery) {
         performMinimalServiceDiscovery(address);
     } else {
-        // we need to run the discovery in a different thread
-        // as it involves blocking calls
-        QtConcurrent::run(this, &QBluetoothServiceDiscoveryAgentPrivate::runSdpScan,
-                          address, QBluetoothAddress(adapter.address()));
+        runExternalSdpScan(address, QBluetoothAddress(adapter.address()));
     }
 }
 
-/*
- * This function runs in a different thread. We need to be very careful what we
- * access from here. That's why invokeMethod is used below.
- *
+/* Bluez 5
  * src/tools/sdpscanner performs an SDP scan. This is
  * done out-of-process to avoid license issues. At this stage Bluez uses GPLv2.
  */
-void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
+void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
         const QBluetoothAddress &remoteAddress, const QBluetoothAddress localAddress)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
-    const QString binPath = QLibraryInfo::location(QLibraryInfo::BinariesPath);
+    if (!sdpScannerProcess) {
+        const QString binPath = QLibraryInfo::location(QLibraryInfo::BinariesPath);
+        QFileInfo fileInfo(binPath, QStringLiteral("sdpscanner"));
+        if (!fileInfo.exists() || !fileInfo.isExecutable()) {
+            _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::InputOutputError,
+                             QBluetoothServiceDiscoveryAgent::tr("Unable to find sdpscanner"),
+                             QStringList());
+            qCWarning(QT_BT_BLUEZ) << "Cannot find sdpscanner:"
+                                   << fileInfo.canonicalFilePath();
+            return;
+        }
 
-    QFileInfo fileInfo(binPath, QStringLiteral("sdpscanner"));
-    if (!fileInfo.exists() || !fileInfo.isExecutable()) {
-        QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
-                                        QBluetoothServiceDiscoveryAgent::InputOutputError),
-                                  Q_ARG(QString,
-                                        QBluetoothServiceDiscoveryAgent::tr("Unable to find sdpscanner")),
-                                  Q_ARG(QStringList, QStringList()));
-        qCWarning(QT_BT_BLUEZ) << "Cannot find sdpscanner:"
-                               << fileInfo.canonicalFilePath();
-        return;
+        sdpScannerProcess = new QProcess(q);
+        sdpScannerProcess->setReadChannel(QProcess::StandardOutput);
+        sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
+        q->connect(sdpScannerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
+                   q, SLOT(_q_sdpScannerDone(int,QProcess::ExitStatus)));
+
     }
 
     QStringList arguments;
     arguments << remoteAddress.toString() << localAddress.toString();
 
-    QByteArray output;
+    sdpScannerProcess->setArguments(arguments);
+    sdpScannerProcess->start();
+}
 
-    QProcess process;
-    process.setProcessChannelMode(QProcess::ForwardedErrorChannel);
-    process.setReadChannel(QProcess::StandardOutput);
-    process.start(fileInfo.canonicalFilePath(), arguments);
-
-    if (process.waitForStarted(-1)) {
-        while (process.waitForReadyRead(-1))
-            output += process.readAllStandardOutput();
-    }
-
-    process.waitForFinished();
-
-    if (process.exitStatus() != QProcess::NormalExit
-            || process.exitCode() != 0) {
-        qCWarning(QT_BT_BLUEZ) << "SDP scan failure"
-                               << process.exitStatus() << process.exitCode()
-                               << remoteAddress;
+// Bluez 5
+void QBluetoothServiceDiscoveryAgentPrivate::_q_sdpScannerDone(int exitCode, QProcess::ExitStatus status)
+{
+    if (status != QProcess::NormalExit || exitCode != 0) {
+        qCWarning(QT_BT_BLUEZ) << "SDP scan failure" << status << exitCode;
         if (singleDevice) {
-            QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
-                                        QBluetoothServiceDiscoveryAgent::InputOutputError),
-                                  Q_ARG(QString,
-                                        QBluetoothServiceDiscoveryAgent::tr("Unable to perform SDP scan")),
-                                  Q_ARG(QStringList, QStringList()));
+            _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::InputOutputError,
+                             QBluetoothServiceDiscoveryAgent::tr("Unable to perform SDP scan"),
+                             QStringList());
         } else {
             // go to next device
-            QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
-                                      Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
-                                            QBluetoothServiceDiscoveryAgent::NoError),
-                                      Q_ARG(QString, QString()),
-                                      Q_ARG(QStringList, QStringList()));
+            _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::NoError, QString(), QStringList());
         }
         return;
     }
 
     QStringList xmlRecords;
+    const QByteArray output = sdpScannerProcess->readAllStandardOutput();
     const QString decodedData = QString::fromUtf8(QByteArray::fromBase64(output));
 
     // split the various xml docs up
@@ -276,13 +260,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::runSdpScan(
         } while ( start != -1);
     }
 
-    QMetaObject::invokeMethod(q, "_q_finishSdpScan", Qt::QueuedConnection,
-                              Q_ARG(QBluetoothServiceDiscoveryAgent::Error,
-                                    QBluetoothServiceDiscoveryAgent::NoError),
-                              Q_ARG(QString, QString()),
-                              Q_ARG(QStringList, xmlRecords));
+    _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::NoError, QString(), xmlRecords);
 }
 
+// Bluez 5
 void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error errorCode,
                                                               const QString &errorDescription,
                                                               const QStringList &xmlRecords)
@@ -291,7 +272,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
 
     if (errorCode != QBluetoothServiceDiscoveryAgent::NoError) {
         qCWarning(QT_BT_BLUEZ) << "SDP search failed for"
-                              << discoveredDevices.at(0).address().toString();
+                              << (!discoveredDevices.isEmpty()
+                                     ? discoveredDevices.at(0).address().toString()
+                                     : QStringLiteral("<Unknown>"));
         // We have an error which we need to indicate and stop further processing
         discoveredDevices.clear();
         error = errorCode;
@@ -352,8 +335,19 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
         Q_ASSERT(!device);
     }
 
+
     discoveredDevices.clear();
     setDiscoveryState(Inactive);
+
+    // must happen after discoveredDevices.clear() above to avoid retrigger of next scan
+    // while waitForFinished() is waiting
+    if (sdpScannerProcess) { // Bluez 5
+        if (sdpScannerProcess->state() != QProcess::NotRunning) {
+            sdpScannerProcess->kill();
+            sdpScannerProcess->waitForFinished();
+        }
+    }
+
     Q_Q(QBluetoothServiceDiscoveryAgent);
     emit q->canceled();
 }
@@ -591,6 +585,7 @@ QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
     return serviceInfo;
 }
 
+// Bluez 5
 void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress)
 {
     if (foundHostAdapterPath.isEmpty()) {

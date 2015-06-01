@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -44,8 +44,8 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
 Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::InquiryType)
+Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
 
 /*
  * Some parts of this test require a remote and discoverable Bluetooth
@@ -92,7 +92,7 @@ private:
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>("QBluetoothDeviceDiscoveryAgent::Error");
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
 }
 
 tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
@@ -101,8 +101,8 @@ tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
 
 void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 {
-    qRegisterMetaType<QBluetoothDeviceInfo>("QBluetoothDeviceInfo");
-    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>("QBluetoothDeviceDiscoveryAgent::InquiryType");
+    qRegisterMetaType<QBluetoothDeviceInfo>();
+    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>();
 
     noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();
     if (!noOfLocalDevices)
@@ -427,7 +427,13 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
                 }
             }
         }
-        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry
+#ifdef Q_OS_IOS
+        //On iOS, we do not have access to the local device/adapter, numberOfAdapters is 0,
+        //so we skip this test at all.
+        QSKIP("iOS: no local Bluetooth device available. Skipping remaining part of test.");
+#endif
+
+        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry.
         if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
             QVERIFY((numberOfAdapters-1) == counter);
     }

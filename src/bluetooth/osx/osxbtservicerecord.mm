@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -47,10 +39,7 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qurl.h>
 
-#include <IOBluetooth/BluetoothAssignedNumbers.h>
-
-// Import, since it's Objective-C header (no inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
+#include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -146,7 +135,7 @@ Number variant_to_nsnumber<int>(const QVariant &var)
 template<class ValueType>
 void add_attribute(const QVariant &var, AttributeId key, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_attribute", "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     if (!var.canConvert<ValueType>())
         return;
@@ -158,7 +147,7 @@ void add_attribute(const QVariant &var, AttributeId key, Dictionary dict)
 template<>
 void add_attribute<QString>(const QVariant &var, AttributeId key, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_attribute", "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     if (!var.canConvert<QString>())
         return;
@@ -173,7 +162,7 @@ void add_attribute<QString>(const QVariant &var, AttributeId key, Dictionary dic
 template<>
 void add_attribute<QBluetoothUuid>(const QVariant &var, AttributeId key, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_attribute", "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     if (!var.canConvert<QBluetoothUuid>())
         return;
@@ -185,7 +174,7 @@ void add_attribute<QBluetoothUuid>(const QVariant &var, AttributeId key, Diction
 template<>
 void add_attribute<QUrl>(const QVariant &var, AttributeId key, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_attribute", "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     if (!var.canConvert<QUrl>())
         return;
@@ -203,7 +192,7 @@ void add_attribute(const QVariant &var, NSMutableArray *list);
 template<class ValueType>
 void add_attribute(const QVariant &var, NSMutableArray *list)
 {
-    Q_ASSERT_X(list, "add_attribute", "invalid list (nil)");
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
 
     if (!var.canConvert<ValueType>())
         return;
@@ -215,7 +204,7 @@ void add_attribute(const QVariant &var, NSMutableArray *list)
 template<>
 void add_attribute<QString>(const QVariant &var, NSMutableArray *list)
 {
-    Q_ASSERT_X(list, "add_attribute", "invalid list (nil)");
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
 
     if (!var.canConvert<QString>())
         return;
@@ -230,7 +219,7 @@ void add_attribute<QString>(const QVariant &var, NSMutableArray *list)
 template<>
 void add_attribute<QBluetoothUuid>(const QVariant &var, NSMutableArray *list)
 {
-    Q_ASSERT_X(list, "add_attribute", "invalid list (nil)");
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
 
     if (!var.canConvert<QBluetoothUuid>())
         return;
@@ -242,7 +231,7 @@ void add_attribute<QBluetoothUuid>(const QVariant &var, NSMutableArray *list)
 template<>
 void add_attribute<QUrl>(const QVariant &var, NSMutableArray *list)
 {
-    Q_ASSERT_X(list, "add_attribute", "invalid list (nil)");
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
 
     if (!var.canConvert<QUrl>())
         return;
@@ -254,12 +243,9 @@ void add_attribute<QUrl>(const QVariant &var, NSMutableArray *list)
 
 void add_rfcomm_protocol_descriptor_list(uint16 channelID, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_rfcomm_protocol_descriptor_list",
-               "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
-
-    // TODO: error handling?
 
     // Objective-C has literals (for arrays and dictionaries), but it will not compile
     // on 10.7 or below, so quite a lot of code here.
@@ -288,12 +274,9 @@ void add_rfcomm_protocol_descriptor_list(uint16 channelID, Dictionary dict)
 
 void add_l2cap_protocol_descriptor_list(uint16 psm, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_l2cap_protocol_descriptor_list",
-               "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
-
-    // TODO: error handling?
 
     // Objective-C has literals (for arrays and dictionaries), but it will not compile
     // on 10.7 or below, so quite a lot of code here.
@@ -317,10 +300,7 @@ void add_l2cap_protocol_descriptor_list(uint16 psm, Dictionary dict)
 
 bool add_attribute(const QVariant &var, AttributeId key, NSMutableArray *list)
 {
-    Q_ASSERT_X(list, "add_attribute", "invalid list (nil)");
-
-    // TODO: test if it works at all - add an attribute
-    // (some NSObject) into the sequence.
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
 
     if (var.canConvert<Sequence>())
         return false;
@@ -333,7 +313,7 @@ bool add_attribute(const QVariant &var, AttributeId key, NSMutableArray *list)
     } else {
         // Here we need 'key' to understand the type.
         // We can have different integer types actually, so I have to check
-        // the 'key' to be sure conversion is reasonable.
+        // the 'key' to be sure the conversion is reasonable.
         switch (key) {
         case QSInfo::ServiceRecordHandle:
         case QSInfo::ServiceRecordState:
@@ -357,7 +337,7 @@ bool add_attribute(const QVariant &var, AttributeId key, NSMutableArray *list)
 
 bool add_attribute(const QBluetoothServiceInfo &serviceInfo, AttributeId key, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_attribute", "invalid dict (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dict (nil)");
 
     const QVariant var(serviceInfo.attribute(key));
     if (var.canConvert<Sequence>())
@@ -370,7 +350,7 @@ bool add_attribute(const QBluetoothServiceInfo &serviceInfo, AttributeId key, Di
         add_attribute<QBluetoothUuid>(serviceInfo.attribute(key), key, dict);
     } else {
         // We can have different integer types actually, so I have to check
-        // the 'key' to be sure conversion is reasonable.
+        // the 'key' to be sure the conversion is reasonable.
         switch (key) {
         case QSInfo::ServiceRecordHandle:
         case QSInfo::ServiceRecordState:
@@ -395,7 +375,7 @@ bool add_attribute(const QBluetoothServiceInfo &serviceInfo, AttributeId key, Di
 bool add_sequence_attribute(const QVariant &var, AttributeId key, NSMutableArray *list)
 {
     // Add a "nested" sequence.
-    Q_ASSERT_X(list, "add_sequence_attribute", "invalid list (nil)");
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
 
     if (var.isNull() || !var.canConvert<Sequence>())
         return false;
@@ -416,7 +396,7 @@ bool add_sequence_attribute(const QVariant &var, AttributeId key, NSMutableArray
 
 bool add_sequence_attribute(const QBluetoothServiceInfo &serviceInfo, AttributeId key, Dictionary dict)
 {
-    Q_ASSERT_X(dict, "add_sequence_attribute", "invalid dictionary (nil)");
+    Q_ASSERT_X(dict, Q_FUNC_INFO, "invalid dictionary (nil)");
 
     const QVariant &var(serviceInfo.attribute(key));
     if (var.isNull() || !var.canConvert<Sequence>())
@@ -451,8 +431,6 @@ Dictionary iobluetooth_service_dictionary(const QBluetoothServiceInfo &serviceIn
     foreach (quint16 key, attributeIds) {
         if (key == QSInfo::ProtocolDescriptorList) // We handle it in a special way.
             continue;
-        //if (key == QSInfo::BluetoothProfileDescriptorList)
-        //    continue;
         // TODO: check if non-sequence QVariant still must be
         // converted into NSArray for some attribute ID.
         if (!add_sequence_attribute(serviceInfo, AttributeId(key), dict))
@@ -465,8 +443,6 @@ Dictionary iobluetooth_service_dictionary(const QBluetoothServiceInfo &serviceIn
     } else {
         add_rfcomm_protocol_descriptor_list(serviceInfo.serverChannel(), dict);
     }
-
-    // BluetoothProfileDescriptorList.
 
     return dict;
 }

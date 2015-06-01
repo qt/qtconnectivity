@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -70,10 +70,11 @@ QT_BEGIN_NAMESPACE
     The first step is to establish a connection via \l connectToDevice().
     Once the connection has been established, the controller's \l state()
     changes to \l QLowEnergyController::ConnectedState and the \l connected()
-    signal is emitted. It is important to mention that the remote device can
-    usually only be connected to a single device. Therefore it is not
-    possible to have multiple instances of this class being connected to the
-    same remote device. The \l disconnectFromDevice() function is used to break
+    signal is emitted. It is important to mention that some platforms such as
+    a BlueZ based Linux cannot maintain two connected instances of
+    \l QLowEnergyController to the same remote device. In such cases the second
+    call to \l connectToDevice() may fail. This limitation may disappear at some
+    stage in the future. The \l disconnectFromDevice() function is used to break
     the existing connection.
 
     The second step after establishing the connection is to discover the services
@@ -513,8 +514,13 @@ void QLowEnergyController::setRemoteAddressType(
     Connects to the remote Bluetooth Low Energy device.
 
     This function does nothing if the controller's \l state()
-    is \l UnconnectedState. The \l connected() signal is emitted
+    is not equal to \l UnconnectedState. The \l connected() signal is emitted
     once the connection is successfully established.
+
+    On Linux/BlueZ systems, it is not possible to connect to the same
+    remote device using two instances of this class. The second call
+    to this function may fail with an error. This limitation may
+    be removed in future releases.
 
     \sa disconnectFromDevice()
  */
@@ -541,6 +547,8 @@ void QLowEnergyController::connectToDevice()
     Once any of those objects become invalid they remain invalid even if this
     controller object reconnects.
 
+    This function does nothing if the controller is in the \l UnconnectedState.
+
     \sa connectToDevice()
  */
 void QLowEnergyController::disconnectFromDevice()
@@ -562,6 +570,13 @@ void QLowEnergyController::disconnectFromDevice()
 
     If the controller instance is not connected or the controller has performed
     the service discovery already this function will do nothing.
+
+    \note Some platforms internally cache the service list of a device
+    which was discovered in the past. This can be problematic if the remote device
+    changed its list of services or their inclusion tree. If this behavior is a
+    problem, the best workaround is to temporarily turn Bluetooth off. This
+    causes a reset of the cache data. Currently Android exhibits such a
+    cache behavior.
  */
 void QLowEnergyController::discoverServices()
 {

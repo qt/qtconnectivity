@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -47,10 +39,6 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlist.h>
-
-// Import, since it's Obj-C headers:
-#import <IOBluetooth/objc/IOBluetoothOBEXSession.h>
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -91,7 +79,7 @@ enum {
 quint32 extract_uint32(const uint8_t *bytes)
 {
     // Four byte value, high byte first.
-    Q_ASSERT_X(bytes, "extract_uint32", "invalid input data (null)");
+    Q_ASSERT_X(bytes, Q_FUNC_INFO, "invalid input data (null)");
 
     uint32_t value = uint32_t();
     std::copy(bytes, bytes + sizeof value, reinterpret_cast<uint8_t *>(&value));
@@ -102,7 +90,7 @@ quint32 extract_uint32(const uint8_t *bytes)
 quint16 extract_uint16(const uint8_t *bytes)
 {
     // Two byte value, high byte first.
-    Q_ASSERT_X(bytes, "extract_uint16", "invalid input data (null)");
+    Q_ASSERT_X(bytes, Q_FUNC_INFO, "invalid input data (null)");
 
     uint16_t value = uint16_t();
     std::copy(bytes, bytes + sizeof value, reinterpret_cast<uint8_t *>(&value));
@@ -140,8 +128,8 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
     // 3. 10 A single byte value.
     // 4. 11 A four byte value, sent high byte first.
 
-    Q_ASSERT_X(data, "qt_bluetooth_headers", "invalid data (null)");
-    Q_ASSERT_X(length >= 2, "qt_bluetooth_headers", "invalid data length");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length >= 2, Q_FUNC_INFO, "invalid data length");
 
     Q_UNUSED(data)
     Q_UNUSED(length)
@@ -209,7 +197,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
             break;
         }
         default:
-            qCWarning(QT_BT_OSX) << "qt_bluetooth_headers(), invalid header format";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid header format";
             return empty;
         }
 
@@ -315,7 +303,7 @@ ObjCStrongReference<NSMutableData> next_data_chunk(QIODevice &inputStream, IOBlu
                                                    NSUInteger headersLength, bool &isLast)
 {
     // Work only for OBEX put (we request a specific payload length).
-    Q_ASSERT_X(session, "next_data_chunk", "invalid OBEX session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
     const OBEXMaxPacketLength packetSize = [session getAvailableCommandPayloadLength:kOBEXOpCodePut];
     if (!packetSize || headersLength >= packetSize)
@@ -345,7 +333,7 @@ ObjCStrongReference<NSMutableData> next_data_chunk(QIODevice &inputStream, IOBlu
 
 bool check_connect_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &response)
 {
-    Q_ASSERT_X(e, "check_connect_event", "invalid event (null)");
+    Q_ASSERT_X(e, Q_FUNC_INFO, "invalid event (null)");
 
     // This function tries to extract either an error code or a
     // server response code. "Good" event has type connect command respond
@@ -364,7 +352,7 @@ bool check_connect_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode
         response = e->u.connectCommandResponseData.serverResponseOpCode;
         return response == kOBEXResponseCodeSuccessWithFinalBit;
     } else {
-        qCWarning(QT_BT_OSX) << "check_connect_event, unexpected event type";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected event type";
         error = kOBEXGeneralError;
         return false;
     }
@@ -372,7 +360,7 @@ bool check_connect_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode
 
 bool check_put_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &response)
 {
-    Q_ASSERT_X(e, "check_put_event", "invalid event (null)");
+    Q_ASSERT_X(e, Q_FUNC_INFO, "invalid event (null)");
 
     // See the comments above.
 
@@ -384,7 +372,7 @@ bool check_put_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &re
         return response == kOBEXResponseCodeContinueWithFinalBit ||
                response == kOBEXResponseCodeSuccessWithFinalBit;
     } else {
-        qCWarning(QT_BT_OSX) << "check_put_event, unexpected event type";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected event type";
         error = kOBEXGeneralError;
         return false;
     }
@@ -392,7 +380,7 @@ bool check_put_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &re
 
 bool check_abort_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &response)
 {
-    Q_ASSERT_X(e, "check_abort_event", "invalid event (null)");
+    Q_ASSERT_X(e, Q_FUNC_INFO, "invalid event (null)");
 
     if (e->type == kOBEXSessionEventTypeError) {
         error = e->u.errorData.error;
@@ -401,7 +389,7 @@ bool check_abort_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &
         response = e->u.abortCommandResponseData.serverResponseOpCode;
         return response == kOBEXResponseCodeSuccessWithFinalBit;
     } else {
-        qCWarning(QT_BT_OSX) << "check_abort_event, unexpected event type";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected event type";
         return false;
     }
 }
@@ -440,12 +428,9 @@ using namespace QT_NAMESPACE;
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::OBEXSessionDelegate) *)aDelegate
       remoteDevice:(const QBluetoothAddress &)deviceAddress channelID:(quint16)port
 {
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:remoteDevice:channelID:",
-               "invalid delegate (null)");
-    Q_ASSERT_X(!deviceAddress.isNull(), "-initWithDelegate:remoteDevice:channelID:",
-                "invalid remote device address");
-    Q_ASSERT_X(port, "-initWithDelegate:remoteDevice:channelID:",
-               "invalid port (0)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(!deviceAddress.isNull(), Q_FUNC_INFO, "invalid remote device address");
+    Q_ASSERT_X(port, Q_FUNC_INFO, "invalid port (0)");
 
     if (self = [super init]) {
         connected = false;
@@ -456,15 +441,13 @@ using namespace QT_NAMESPACE;
         const BluetoothDeviceAddress addr(OSXBluetooth::iobluetooth_address(deviceAddress));
         device = [[IOBluetoothDevice deviceWithAddress:&addr] retain];
         if (!device) {
-            qCWarning(QT_BT_OSX) << "-initWithDelegate:remoteDevice:channelID:, "
-                                    "failed to create an IOBluetoothDevice";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create an IOBluetoothDevice";
             return self;
         }
 
         session = [[IOBluetoothOBEXSession alloc] initWithDevice:device channelID:port];
         if (!session) {
-            qCWarning(QT_BT_OSX) << "-initWithDelegate:remoteDevice:channelID:, "
-                                    "failed to create an OBEX session";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create an OBEX session";
             return self;
         }
 
@@ -489,12 +472,12 @@ using namespace QT_NAMESPACE;
 - (OBEXError)OBEXConnect
 {
     if (!session) {
-        qCWarning(QT_BT_OSX) << "-OBEXConnect, invalid session (nil)";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid session (nil)";
         return kOBEXGeneralError;
     }
 
     // That's a "single-shot" operation:
-    Q_ASSERT_X(currentRequest == OSXBluetooth::OBEXNoop, "-connect",
+    Q_ASSERT_X(currentRequest == OSXBluetooth::OBEXNoop, Q_FUNC_INFO,
                "can not connect in this state (another request is active)");
 
     connected = false;
@@ -523,7 +506,7 @@ using namespace QT_NAMESPACE;
 {
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(session, "-OBEXConnectHandler:", "invalid session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid session (nil)");
 
     if (pendingAbort) {
         currentRequest = OBEXNoop;
@@ -532,7 +515,7 @@ using namespace QT_NAMESPACE;
     }
 
     if (currentRequest != OBEXConnect) {
-        qCWarning(QT_BT_OSX) << "-OBEXConnectHandler:, called while there is no"
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called while there is no "
                                 "active connect request";
         return;
     }
@@ -578,7 +561,7 @@ using namespace QT_NAMESPACE;
 {
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(session, "-OBEXAbort", "invalid OBEX session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
     if (currentRequest == OBEXNoop) {
         pendingAbort = false;
@@ -608,10 +591,10 @@ using namespace QT_NAMESPACE;
 {
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(session, "-OBEXAbortHandler:", "invalid OBEX session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
     if (currentRequest != OBEXAbort) {
-        qCWarning(QT_BT_OSX) << "-OBEXAbortHandler:, called while there "
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called while there "
                                 "is no ABORT request";
         return;
     }
@@ -634,23 +617,22 @@ using namespace QT_NAMESPACE;
     if (!session || ![self isConnected])
         return kOBEXSessionNotConnectedError;
 
-    Q_ASSERT_X(currentRequest == OBEXNoop, "-OBEXPutFile:withName:",
+    Q_ASSERT_X(currentRequest == OBEXNoop, Q_FUNC_INFO,
                "the current session has an active request already");
-    Q_ASSERT_X(input, "-OBEXPutFile:withName:", "invalid input stream (null)");
-    Q_ASSERT_X(input->isReadable(), "-OBEXPutFile:withName:",
-               "invalid input stream (not readable)");
+    Q_ASSERT_X(input, Q_FUNC_INFO, "invalid input stream (null)");
+    Q_ASSERT_X(input->isReadable(), Q_FUNC_INFO, "invalid input stream (not readable)");
 
     // We send a put request with a couple of headers (size/file name/may be connection ID) +
     // a payload.
     const qint64 fileSize = input->size();
     if (fileSize <= 0 || fileSize >= std::numeric_limits<uint32_t>::max()) {
-        qCWarning(QT_BT_OSX) << "-OBEXPutFile:withName:, invalid input file size";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid input file size";
         return kOBEXBadArgumentError;
     }
 
     ObjCStrongReference<NSMutableData> headers([[NSMutableData alloc] init], false);
     if (!headers) {
-        qCWarning(QT_BT_OSX) << "-OBEXPutFile:withName:, failed to allocate headers";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate headers";
         return kOBEXNoResourcesError;
     }
 
@@ -660,16 +642,16 @@ using namespace QT_NAMESPACE;
 
     if (connectionIDFound) {
         if (!append_four_byte_header(headers, kOBEXHeaderIDConnectionID, connectionID)) {
-            qCWarning(QT_BT_OSX) << "-OBEXPutFile:withName:, "
-                                    "failed to append connection ID header";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to "
+                                    "append connection ID header";
             return kOBEXNoResourcesError;
         }
     }
 
     if (name.length()) {
         if (!append_unicode_header(headers, kOBEXHeaderIDName, name)) {
-            qCWarning(QT_BT_OSX) << "-OBEXPutFile:withName:, "
-                                    "failed to append a unicode string";
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to append "
+                                    "a unicode string";
             return kOBEXNoResourcesError;
         }
     }
@@ -682,7 +664,7 @@ using namespace QT_NAMESPACE;
     if (!chunk || ![chunk length]) {
         // We do not support PUT-DELETE (?)
         // At least the first chunk is expected to be non-empty.
-        qCWarning(QT_BT_OSX) << "-OBEXPutFile:withName:, invalid input stream";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid input stream";
         return kOBEXBadArgumentError;
     }
 
@@ -720,7 +702,7 @@ using namespace QT_NAMESPACE;
 {
     using namespace OSXBluetooth;
 
-    Q_ASSERT_X(session, "-OBEXPutHandler:", "invalid OBEX session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
     if (pendingAbort) {
         currentRequest = OBEXNoop;
@@ -729,7 +711,7 @@ using namespace QT_NAMESPACE;
     }
 
     if (currentRequest != OBEXPut) {
-        qCWarning(QT_BT_OSX) << "-OBEXPutHandler:, called while the current "
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called while the current "
                                 "request is not a put request";
         return;
     }
@@ -751,7 +733,7 @@ using namespace QT_NAMESPACE;
         // 0 for the headers length, no more headers.
         ObjCStrongReference<NSMutableData> chunk(next_data_chunk(*inputStream, session, 0, lastChunk));
         if (!chunk && !lastChunk) {
-            qCWarning(QT_BT_OSX) << "-OBEXPutHandler:, failed to "
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to "
                                     "allocate the next memory chunk";
             return;
         }
@@ -768,7 +750,7 @@ using namespace QT_NAMESPACE;
                                           refCon:Q_NULLPTR];
 
         if (status != kOBEXSuccess) {
-            qCWarning(QT_BT_OSX) << "-OBEXPutHandler:, failed to "
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to "
                                     "send the next memory chunk";
             currentRequest = OBEXNoop;
             if (delegate) // Response code is not important here.
@@ -794,7 +776,7 @@ using namespace QT_NAMESPACE;
 
 - (void)OBEXDisconnect
 {
-    Q_ASSERT_X(session, "-OBEXDisconnect", "invalid session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid session (nil)");
 
     currentRequest = OSXBluetooth::OBEXDisconnect;
 
@@ -809,7 +791,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(event)
 
-    Q_ASSERT_X(session, "-OBEXDisconnectHandler:", "invalid session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid session (nil)");
 
     // Event can have an error type, but there's nothing
     // we can do - even "cleanup" failed.

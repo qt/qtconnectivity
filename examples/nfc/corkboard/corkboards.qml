@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2014 BlackBerry Limited. All rights reserved.
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtNfc module.
 **
@@ -18,8 +18,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -39,18 +39,50 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
-import QtNfc 5.2
+import QtQuick 2.3
+import QtNfc 5.5
 
 Rectangle {
     width: 800; height: 480
-    color: "black"
+    color: "darkred"
 
     NearField {
+        property bool requiresManualPolling: false
         orderMatch: false
 
         onMessageRecordsChanged: {
-            list.get(listView.currentIndex).notes.append({"noteText":messageRecords[0].text})
+            var i;
+            for (i = 0; i < messageRecords.length; ++i) {
+                var data = "";
+                if (messageRecords[i].typeNameFormat === NdefRecord.NfcRtd) {
+                    if (messageRecords[i].type === "T") {
+                        data = messageRecords[i].text;
+                    } else if (messageRecords[i].type === "U") {
+                        data = messageRecords[i].uri;
+                    }
+                }
+                if (!data)
+                    data = "Unknown content";
+
+                list.get(listView.currentIndex).notes.append( {
+                        "noteText":data
+                })
+            }
+        }
+
+        onPollingChanged: {
+            if (!polling && requiresManualPolling)
+                polling = true; //restart polling
+        }
+
+        Component.onCompleted: {
+            // Polling should be true if
+            // QNearFieldManager::registerNdefMessageHandler() was successful;
+            // otherwise the platform requires manual polling mode.
+            if (!polling) {
+                requiresManualPolling = true;
+                polling = true;
+            }
         }
     }
 
@@ -60,7 +92,6 @@ Rectangle {
         ListElement {
             name: "Personal"
             notes: [
-                ListElement { noteText: "https://developer.blackberry.com" },
                 ListElement { noteText: "Near Field Communication" },
                 ListElement { noteText: "Touch a tag and its contents will appear as a new note" }
             ]

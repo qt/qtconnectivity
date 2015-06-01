@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -151,7 +151,19 @@ void QDeclarativeBluetoothDiscoveryModel::componentComplete()
 
 void QDeclarativeBluetoothDiscoveryModel::errorDiscovery(QBluetoothServiceDiscoveryAgent::Error error)
 {
-    d->m_error = static_cast<QDeclarativeBluetoothDiscoveryModel::Error>(error);
+    switch (error) {
+    case QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::InvalidBluetoothAdapterError; break;
+    case QBluetoothServiceDiscoveryAgent::NoError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::NoError; break;
+    case QBluetoothServiceDiscoveryAgent::InputOutputError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::InputOutputError; break;
+    case QBluetoothServiceDiscoveryAgent::PoweredOffError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::PoweredOffError; break;
+    case QBluetoothServiceDiscoveryAgent::UnknownError:
+        d->m_error = QDeclarativeBluetoothDiscoveryModel::UnknownError; break;
+    }
+
     emit errorChanged();
 }
 
@@ -187,6 +199,12 @@ void QDeclarativeBluetoothDiscoveryModel::clearModel()
          \li An IO failure occurred during device discovery
     \row \li \c BluetoothDiscoveryModel.PoweredOffError
          \li The bluetooth device is not powered on.
+    \row \li \c BluetoothDiscoveryModel.InvalidBluetoothAdapterError
+         \li There is no default Bluetooth device to perform the
+             service discovery. The model always uses the local default adapter.
+             Specifying a default adapter is not possible. If that's required,
+             \l QBluetoothServiceDiscoveryAgent should be directly used. This
+             value was introduced by Qt 5.4.
     \row \li \c BluetoothDiscoveryModel.UnknownError
          \li An unknown error occurred.
     \endtable
@@ -406,6 +424,13 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
             } else {
                 //qDebug() << "Minimal Discovery";
                 d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
+            }
+
+            // we could not start service discovery
+            if (!d->m_serviceAgent->isActive()) {
+                d->m_running = false;
+                errorDiscovery(d->m_serviceAgent->error());
+                return;
             }
         }
     }

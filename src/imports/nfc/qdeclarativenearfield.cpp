@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -40,6 +40,8 @@
 #include <qndefmessage.h>
 #include <qndefnfctextrecord.h>
 #include <qndefnfcurirecord.h>
+
+#include <QtNfc/QNearFieldTarget>
 
 /*!
     \qmltype NearField
@@ -61,6 +63,9 @@
     and \l orderMatch properties to match the required NDEF messages.  Once an NDEF message is
     successfully read from a tag the \l messageRecords property is updated.
 
+    \note For platforms using neard, filtering is currently not implemented. For more information
+    on neard see \l QNearFieldManager.
+
     \snippet doc_src_qtnfc.qml QML register for messages
 */
 
@@ -77,6 +82,8 @@
     set to NDEF messages which match the filter. If no filter is set, a message handler for
     all NDEF messages will be registered.
 
+    \note Filtering is not supported when using neard.
+
     \l QNearFieldManager::registerNdefMessageHandler()
 */
 
@@ -84,13 +91,47 @@
     \qmlproperty bool NearField::orderMatch
 
     This property indicates whether the order of records should be taken into account when matching
-    messages.
+    messages. This is not supported when using neard.
+*/
+
+/*!
+    \qmlproperty bool NearField::polling
+    \since 5.5
+
+    This property indicates if the underlying adapter is currently in polling state. If set to \c true
+    the adapter will start polling and stop polling if set to \c false.
+
+    \note On platforms using neard, the adapter will stop polling as soon as a tag has been detected.
+    For more information see \l QNearFieldManager.
+*/
+
+/*!
+    \qmlsignal NearField::tagFound()
+    \since 5.5
+
+    This signal will be emitted when a tag has been detected.
+*/
+
+/*!
+    \qmlsignal NearField::tagRemoved()
+    \since 5.5
+
+    This signal will be emitted when a tag has been removed.
 */
 
 QDeclarativeNearField::QDeclarativeNearField(QObject *parent)
-:   QObject(parent), m_orderMatch(false), m_componentCompleted(false), m_messageUpdating(false),
-    m_manager(0), m_messageHandlerId(-1)
+    : QObject(parent),
+      m_orderMatch(false),
+      m_componentCompleted(false),
+      m_messageUpdating(false),
+      m_manager(new QNearFieldManager(this)),
+      m_messageHandlerId(-1),
+      m_polling(false)
 {
+    connect(m_manager, SIGNAL(targetDetected(QNearFieldTarget*)),
+            this, SLOT(_q_handleTargetDetected(QNearFieldTarget*)));
+    connect(m_manager, SIGNAL(targetLost(QNearFieldTarget*)),
+            this, SLOT(_q_handleTargetLost(QNearFieldTarget*)));
 }
 
 QQmlListProperty<QQmlNdefRecord> QDeclarativeNearField::messageRecords()
@@ -133,11 +174,30 @@ void QDeclarativeNearField::componentComplete()
     registerMessageHandler();
 }
 
+bool QDeclarativeNearField::polling() const
+{
+    return m_polling;
+}
+
+void QDeclarativeNearField::setPolling(bool on)
+{
+    if (m_polling == on)
+        return;
+
+    if (on) {
+        if (m_manager->startTargetDetection()) {
+            m_polling = true;
+            emit pollingChanged();
+        }
+    } else {
+        m_manager->stopTargetDetection();
+        m_polling = false;
+        emit pollingChanged();
+    }
+}
+
 void QDeclarativeNearField::registerMessageHandler()
 {
-    if (!m_manager)
-        m_manager = new QNearFieldManager(this);
-
     if (m_messageHandlerId != -1)
         m_manager->unregisterNdefMessageHandler(m_messageHandlerId);
 
@@ -152,6 +212,12 @@ void QDeclarativeNearField::registerMessageHandler()
     }
 
     m_messageHandlerId = m_manager->registerNdefMessageHandler(ndefFilter, this, SLOT(_q_handleNdefMessage(QNdefMessage)));
+
+    // FIXME: if a message handler has been registered we just assume that constant polling is done
+    if (m_messageHandlerId >= 0) {
+        m_polling = true;
+        emit pollingChanged();
+    }
 }
 
 void QDeclarativeNearField::_q_handleNdefMessage(const QNdefMessage &message)
@@ -168,6 +234,31 @@ void QDeclarativeNearField::_q_handleNdefMessage(const QNdefMessage &message)
     m_messageUpdating = false;
 
     emit messageRecordsChanged();
+}
+
+void QDeclarativeNearField::_q_handleTargetLost(QNearFieldTarget *target)
+{
+    Q_UNUSED(target);
+    // FIXME: only notify that polling stopped when there is no registered message handler
+    if (m_messageHandlerId == -1) {
+        m_polling = false;
+        emit pollingChanged();
+    }
+
+    emit tagRemoved();
+}
+
+void QDeclarativeNearField::_q_handleTargetDetected(QNearFieldTarget *target)
+{
+    Q_UNUSED(target);
+
+    if (m_messageHandlerId == -1) {
+        connect(target, SIGNAL(ndefMessageRead(QNdefMessage)),
+                this, SLOT(_q_handleNdefMessage(QNdefMessage)));
+        target->readNdefMessages();
+    }
+
+    emit tagFound();
 }
 
 void QDeclarativeNearField::append_messageRecord(QQmlListProperty<QQmlNdefRecord> *list,

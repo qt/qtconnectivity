@@ -1,7 +1,7 @@
 /***************************************************************************
  **
  ** Copyright (C) 2011 - 2012 Research In Motion
- ** Contact: http://www.qt-project.org/legal
+ ** Contact: http://www.qt.io/licensing/
  **
  ** This file is part of the QtNfc module of the Qt Toolkit.
  **
@@ -10,9 +10,9 @@
  ** Licensees holding valid commercial Qt licenses may use this file in
  ** accordance with the commercial license agreement provided with the
  ** Software or, alternatively, in accordance with the terms contained in
- ** a written agreement between you and Digia. For licensing terms and
- ** conditions see http://qt.digia.com/licensing. For further information
- ** use the contact form at http://qt.digia.com/contact-us.
+ ** a written agreement between you and The Qt Company. For licensing terms
+ ** and conditions see http://www.qt.io/terms-conditions. For further
+ ** information use the contact form at http://www.qt.io/contact-us.
  **
  ** GNU Lesser General Public License Usage
  ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
  ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
  ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
  **
- ** In addition, as a special exception, Digia gives you certain additional
- ** rights. These rights are described in the Digia Qt LGPL Exception
+ ** As a special exception, The Qt Company gives you certain additional
+ ** rights. These rights are described in The Qt Company LGPL Exception
  ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
  **
  ** $QT_END_LICENSE$
@@ -602,7 +602,10 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
 }
 
 /*!
-    Adds the icon record list \a icons to the smart poster. Any existing records are overwritten.
+    Adds the icon record list \a icons to the smart poster.
+    Any existing records are overwritten.
+
+    \sa hasIcon(), icon()
  */
 void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
 {
@@ -617,7 +620,13 @@ void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
 }
 
 /*!
-    Returns the size from the size record if available. Otherwise returns 0.
+    Returns the size from the size record if available; otherwise returns 0.
+
+    The value is optional and contains the size in bytes of the object
+    that the URI refers to. It may be used by the device to determine
+    whether it can accommodate the object.
+
+    \sa setSize()
  */
 quint32 QNdefNfcSmartPosterRecord::size() const
 {
@@ -628,7 +637,10 @@ quint32 QNdefNfcSmartPosterRecord::size() const
 }
 
 /*!
-    Sets the size record to \a size
+    Sets the record \a size. The value contains the size in bytes of
+    the object that the URI refers to.
+
+    \sa size(), hasSize()
  */
 void QNdefNfcSmartPosterRecord::setSize(quint32 size)
 {
@@ -642,7 +654,12 @@ void QNdefNfcSmartPosterRecord::setSize(quint32 size)
 }
 
 /*!
-    Returns the type from the type record if available. Otherwise returns an empty byte array.
+    Returns the UTF-8 encoded MIME type that describes the type of the objects
+    that can be reached via uri().
+
+    If the type is not known the return QByteArray is empty.
+
+    \sa setTypeInfo(), hasTypeInfo()
  */
 QByteArray QNdefNfcSmartPosterRecord::typeInfo() const
 {
@@ -653,7 +670,10 @@ QByteArray QNdefNfcSmartPosterRecord::typeInfo() const
 }
 
 /*!
-    Sets the type record to \a type
+    Sets the type record to \a type. \a type must be UTF-8 encoded
+    and describes the type of the object referenced by uri()
+
+    \sa typeInfo()
  */
 void QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray &type)
 {

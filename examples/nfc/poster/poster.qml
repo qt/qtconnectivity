@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
@@ -17,8 +17,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtNfc 5.2
+import QtQuick 2.3
+import QtNfc 5.5
 
 Rectangle {
     id: root
@@ -48,6 +48,19 @@ Rectangle {
 
     NearField {
         id: nearfield
+        property bool requiresManualPolling: false
+
+        onPollingChanged: {
+            if (!polling && requiresManualPolling)
+                polling = true; //restart polling
+        }
+
+        Component.onCompleted: {
+            if (!polling) {
+                requiresManualPolling = true;
+                polling = true;
+            }
+        }
 
         filter: [
             NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 },
@@ -61,17 +74,32 @@ Rectangle {
 
             var currentLocaleMatch = NdefTextRecord.LocaleMatchedNone;
             var i;
+            var found = false;
             for (i = 0; i < messageRecords.length; ++i) {
-                if (messageRecords[i].recordType == "urn:nfc:wkt:T") {
-                    if (messageRecords[i].localeMatch > currentLocaleMatch) {
-                        currentLocaleMatch = messageRecords[i].localeMatch;
-                        posterText.text = messageRecords[i].text;
+                switch (messageRecords[i].typeNameFormat) {
+                case NdefRecord.NfcRtd:
+                    if (messageRecords[i].type === "T") {
+                        if (messageRecords[i].localeMatch > currentLocaleMatch) {
+                            currentLocaleMatch = messageRecords[i].localeMatch;
+                            posterText.text = messageRecords[i].text;
+                            found = true;
+                        }
+
+                    } else if (messageRecords[i].type === "U") {
+                         posterUrl.text = messageRecords[i].uri;
+                        found = true;
                     }
-                } else if (messageRecords[i].recordType == "urn:nfc:wkt:U") {
-                    posterUrl.text = messageRecords[i].uri;
-                } else if (messageRecords[i].recordType.substr(0, 19) == "urn:nfc:mime:image/") {
-                    posterImage.source = messageRecords[i].uri;
+                    break;
+                case NdefRecord.Mime:
+                    if (messageRecords[i].type.indexOf("image/") === 0 ) {
+                        posterImage.source = messageRecords[i].uri;
+                        found = true;
+                    }
+                    break;
                 }
+
+                if (!found)
+                    console.warn("Unknown NFC tag detected. Cannot display content.")
             }
 
             root.state = "show";
@@ -87,15 +115,6 @@ Rectangle {
         font.pointSize: 18
     }
 
-    Text {
-        id: posterText
-        anchors.horizontalCenter: parent.right
-        anchors.horizontalCenterOffset: - parent.width / 4
-        y: -height
-        font.bold: true
-        font.pointSize: 18
-    }
-
     Image {
         id: posterImage
         scale: Image.PreserveAspectFit
@@ -104,6 +123,15 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         x: -width
         smooth: true
+    }
+
+    Text {
+        id: posterText
+        anchors.horizontalCenter: parent.right
+        anchors.horizontalCenterOffset: - parent.width / 4
+        y: -height
+        font.bold: true
+        font.pointSize: 18
     }
 
     Text {

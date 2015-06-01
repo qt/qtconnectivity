@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -36,6 +36,7 @@
 #include "osx/osxbtobexsession_p.h"
 #include "qbluetoothserviceinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 #include "qbluetoothuuid.h"
 
 
@@ -120,7 +121,7 @@ QBluetoothTransferReplyOSXPrivate::QBluetoothTransferReplyOSXPrivate(QBluetoothT
       minimalScan(true),
       requestComplete(false)
 {
-    Q_ASSERT_X(q, "QBluetoothTransferReplyOSXPrivate", "invalid q_ptr (null)");
+    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 }
 
 QBluetoothTransferReplyOSXPrivate::~QBluetoothTransferReplyOSXPrivate()
@@ -140,8 +141,8 @@ bool QBluetoothTransferReplyOSXPrivate::isActive() const
 
 bool QBluetoothTransferReplyOSXPrivate::startOPP(const QBluetoothAddress &device)
 {
-    Q_ASSERT_X(!isActive(), "startOPP", "already started");
-    Q_ASSERT_X(!device.isNull(), "startOPP", "invalid device address");
+    Q_ASSERT_X(!isActive(), Q_FUNC_INFO, "already started");
+    Q_ASSERT_X(!device.isNull(), Q_FUNC_INFO, "invalid device address");
 
     errorString.clear();
     error = QBluetoothTransferReply::NoError;
@@ -164,28 +165,25 @@ bool QBluetoothTransferReplyOSXPrivate::startOPP(const QBluetoothAddress &device
 
 void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &device, quint16 channelID)
 {
-    Q_ASSERT_X(!session, "sendConnect", "session is already active");
+    Q_ASSERT_X(!session, Q_FUNC_INFO, "session is already active");
 
     error = QBluetoothTransferReply::NoError;
     errorString.clear();
 
     if (device.isNull() || !channelID) {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSXPrivate::sendConnect(), "
-                                "invalid device address or port";
-
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid device address or port";
         setReplyError(QBluetoothTransferReply::HostNotFoundError,
-                      QObject::tr("Invalid target address"));
+                      QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
         return;
     }
 
     OBEXSession newSession([[ObjCOBEXSession alloc] initWithDelegate:this
                             remoteDevice:device channelID:channelID]);
     if (!newSession) {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSXPrivate::sendConnect(), "
-                                "failed to allocate OSXBTOBEXSession object";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate OSXBTOBEXSession object";
 
         setReplyError(QBluetoothTransferReply::UnknownError,
-                      QObject::tr("Failed to create an OBEX session"));
+                      QCoreApplication::translate(TRANSFER_REPLY, TR_SESSION_NO_START));
         return;
     }
 
@@ -197,13 +195,12 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
         if ([session isConnected])
             sendPut();// Connected, send a PUT request.
     } else {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSXPrivate::sendConnect(), "
-                                "OBEXConnect failed";
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "OBEXConnect failed";
 
         if (error == QBluetoothTransferReply::NoError) {
             // The error is not set yet.
             error = QBluetoothTransferReply::SessionError;
-            errorString = QObject::tr("OBEXConnect failed");
+            errorString = QCoreApplication::translate(TRANSFER_REPLY, TR_CONNECT_FAILED);
         }
 
         requestComplete = true;
@@ -214,10 +211,10 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
 
 void QBluetoothTransferReplyOSXPrivate::sendPut()
 {
-    Q_ASSERT_X(inputStream, "sendPut", "invalid input stream (null)");
-    Q_ASSERT_X(session, "sendPut", "invalid OBEX session (nil)");
-    Q_ASSERT_X([session isConnected], "sendPut", "not connected");
-    Q_ASSERT_X(![session hasActiveRequest], "sendPut",
+    Q_ASSERT_X(inputStream, Q_FUNC_INFO, "invalid input stream (null)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
+    Q_ASSERT_X([session isConnected], Q_FUNC_INFO, "not connected");
+    Q_ASSERT_X(![session hasActiveRequest], Q_FUNC_INFO,
                "session already has an active request");
 
     QString fileName;
@@ -225,14 +222,13 @@ void QBluetoothTransferReplyOSXPrivate::sendPut()
     if (file) {
         if (!file->exists()) {
             setReplyError(QBluetoothTransferReply::FileNotFoundError,
-                          QObject::tr("Source file does not exist"));
+                          QCoreApplication::translate(TRANSFER_REPLY, TR_FILE_NOT_EXIST));
             return;
         } else if (!file->isReadable()) {
             file->open(QIODevice::ReadOnly);
             if (!file->isReadable()) {
                 setReplyError(QBluetoothTransferReply::IODeviceNotReadableError,
-                              QObject::tr("File cannot be read. "
-                                          "Make sure it is open for reading."));
+                              QCoreApplication::translate(TRANSFER_REPLY, TR_NOT_READ_IODEVICE));
                 return;
             }
         }
@@ -241,8 +237,7 @@ void QBluetoothTransferReplyOSXPrivate::sendPut()
     } else {
         if (!inputStream->isReadable()) {
             setReplyError(QBluetoothTransferReply::IODeviceNotReadableError,
-                          QObject::tr("QIODevice cannot be read. "
-                                      "Make sure it is open for reading."));
+                          QCoreApplication::translate(TRANSFER_REPLY, TR_NOT_READ_IODEVICE));
             return;
         }
 
@@ -257,7 +252,7 @@ void QBluetoothTransferReplyOSXPrivate::sendPut()
     if ([session OBEXPutFile:inputStream withName:fileName] != kOBEXSuccess) {
         // TODO: convert OBEXError into something reasonable?
         setReplyError(QBluetoothTransferReply::SessionError,
-                      QObject::tr("OBEX put failed"));
+                      QCoreApplication::translate(TRANSFER_REPLY, TR_SESSION_FAILED));
     }
 }
 
@@ -269,12 +264,12 @@ void QBluetoothTransferReplyOSXPrivate::OBEXConnectError(OBEXError errorCode, OB
 
     if (session) {
         setReplyError(QBluetoothTransferReply::SessionError,
-                      QObject::tr("OBEX connect failed"));
+                      QCoreApplication::translate(TRANSFER_REPLY, TR_CONNECT_FAILED));
     } else {
         // Else we're still in OBEXConnect, in a call-back
         // and do not want to emit yet (will be done a bit later).
         error = QBluetoothTransferReply::SessionError;
-        errorString = QObject::tr("OBEX connect failed");
+        errorString = QCoreApplication::translate(TRANSFER_REPLY, TR_CONNECT_FAILED);
         requestComplete = true;
     }
 }
@@ -322,7 +317,7 @@ void QBluetoothTransferReplyOSXPrivate::OBEXPutError(OBEXError errorCode, OBEXOp
     }
 
     setReplyError(QBluetoothTransferReply::SessionError,
-                  QObject::tr("OBEX PUT command failed"));
+                  QCoreApplication::translate(TRANSFER_REPLY, TR_SESSION_FAILED));
 }
 
 void QBluetoothTransferReplyOSXPrivate::setReplyError(QBluetoothTransferReply::TransferError errorCode,
@@ -354,11 +349,9 @@ QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(QIODevice *input,
     if (input) {
         QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
     } else {
-        qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(), "
-                                "invalid input stream (null)";
-
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid input stream (null)";
         osx_d_ptr->requestComplete = true;
-        osx_d_ptr->errorString = tr("Invalid input file (null)");
+        osx_d_ptr->errorString = QCoreApplication::translate(TRANSFER_REPLY, TR_INVALID_DEVICE);
         osx_d_ptr->error = FileNotFoundError;
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothTransferReply::TransferError, FileNotFoundError));
@@ -399,7 +392,7 @@ bool QBluetoothTransferReplyOSX::abort()
 
     // Not setReplyError, we emit finished only!
     osx_d_ptr->requestComplete = true;
-    osx_d_ptr->errorString = tr("Operation canceled");
+    osx_d_ptr->errorString = QCoreApplication::translate(TRANSFER_REPLY, TR_OP_CANCEL);
     osx_d_ptr->error = UserCanceledTransferError;
 
     emit finished(this);
@@ -417,22 +410,23 @@ bool QBluetoothTransferReplyOSX::start()
     if (!osx_d_ptr->isActive()) {
         // Step 0: find a channelID.
         if (request().address().isNull()) {
-            qCWarning(QT_BT_OSX) << "QBluetoothTransferReplyOSX::start(), "
-                                    "invalid device address";
-            osx_d_ptr->setReplyError(HostNotFoundError, tr("Invalid target address"));
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid device address";
+            osx_d_ptr->setReplyError(HostNotFoundError,
+                                     QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
             return false;
         }
 
         return osx_d_ptr->startOPP(request().address());
     } else {
-        osx_d_ptr->setReplyError(UnknownError, tr("Transfer already started"));
+        osx_d_ptr->setReplyError(UnknownError,
+                                 QCoreApplication::translate(TRANSFER_REPLY, TR_IN_PROGRESS));
         return false;
     }
 }
 
 void QBluetoothTransferReplyOSX::serviceDiscoveryFinished()
 {
-    Q_ASSERT_X(osx_d_ptr->agent.data(), "serviceDiscoveryFinished",
+    Q_ASSERT_X(osx_d_ptr->agent.data(), Q_FUNC_INFO,
                "invalid service discovery agent (null)");
 
     const QList<QBluetoothServiceInfo> services = osx_d_ptr->agent->discoveredServices();
@@ -447,18 +441,20 @@ void QBluetoothTransferReplyOSX::serviceDiscoveryFinished()
             osx_d_ptr->agent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
         } else {
             // No service record, no channel ID, no OBEX session.
-            osx_d_ptr->setReplyError(HostNotFoundError, tr("OBEX/OPP serice not found"));
+            osx_d_ptr->setReplyError(HostNotFoundError,
+                                     QCoreApplication::translate(TRANSFER_REPLY, TR_SERVICE_NO_FOUND));
         }
     }
 }
 
 void QBluetoothTransferReplyOSX::serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error errorCode)
 {
-    Q_ASSERT_X(osx_d_ptr->agent.data(), "serviceDiscoveryError", "invalid service discovery agent (null)");
+    Q_ASSERT_X(osx_d_ptr->agent.data(), Q_FUNC_INFO, "invalid service discovery agent (null)");
 
     if (errorCode == QBluetoothServiceDiscoveryAgent::PoweredOffError) {
         // There's nothing else we can do.
-        osx_d_ptr->setReplyError(UnknownError, tr("Bluetooth adapter is powered off"));
+        osx_d_ptr->setReplyError(UnknownError,
+                                 QCoreApplication::translate(DEV_DISCOVERY, DD_POWERED_OFF));
         return;
     }
 
@@ -466,7 +462,8 @@ void QBluetoothTransferReplyOSX::serviceDiscoveryError(QBluetoothServiceDiscover
         osx_d_ptr->minimalScan = false;
         osx_d_ptr->agent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
     } else {
-        osx_d_ptr->setReplyError(HostNotFoundError, tr("Invalid target address"));
+        osx_d_ptr->setReplyError(HostNotFoundError,
+                                 QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
     }
 }
 

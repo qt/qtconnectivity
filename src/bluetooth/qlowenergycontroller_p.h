@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -33,6 +33,24 @@
 
 #ifndef QLOWENERGYCONTROLLERPRIVATE_P_H
 #define QLOWENERGYCONTROLLERPRIVATE_P_H
+
+#if defined(QT_OSX_BLUETOOTH) || defined(QT_IOS_BLUETOOTH)
+
+#include <QtCore/qglobal.h>
+#include <QtCore/qobject.h>
+
+QT_BEGIN_NAMESPACE
+
+class QLowEnergyControllerPrivate : public QObject
+{
+public:
+    // This class is required to make shared pointer machinery and
+    // moc (== Obj-C syntax) happy on both OS X and iOS.
+};
+
+QT_END_NAMESPACE
+
+#else
 
 #include <qglobal.h>
 #include <QtCore/QQueue>
@@ -94,6 +112,12 @@ public:
                                  const QByteArray &value,
                                  bool appendValue);
 
+    // read data
+    void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                            const QLowEnergyHandle charHandle);
+    void readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QLowEnergyHandle descriptorHandle);
 
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
@@ -165,6 +189,8 @@ private:
                                      const QByteArray &newValue, quint16 offset);
     bool increaseEncryptLevelfRequired(quint8 errorCode);
 
+    void resetController();
+
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();
@@ -179,7 +205,19 @@ private slots:
                            QLowEnergyController::Error errorCode);
     void servicesDiscovered(QLowEnergyController::Error errorCode,
                             const QString &foundServices);
-
+    void serviceDetailsDiscoveryFinished(const QString& serviceUuid,
+                                         int startHandle, int endHandle);
+    void characteristicRead(const QBluetoothUuid &serviceUuid, int handle,
+                            const QBluetoothUuid &charUuid, int properties,
+                            const QByteArray& data);
+    void descriptorRead(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
+                        int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
+    void characteristicWritten(int charHandle, const QByteArray &data,
+                               QLowEnergyService::ServiceError errorCode);
+    void descriptorWritten(int descHandle, const QByteArray &data,
+                           QLowEnergyService::ServiceError errorCode);
+    void characteristicChanged(int charHandle, const QByteArray &data);
+    void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
 #endif
 private:
     QLowEnergyController *q_ptr;
@@ -187,5 +225,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+#endif // QT_OSX_BLUETOOTH || QT_IOS_BLUETOOTH
 
 #endif // QLOWENERGYCONTROLLERPRIVATE_P_H

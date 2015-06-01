@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module.
 **
@@ -18,8 +18,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -60,6 +60,8 @@ Item {
                     console.log("Error: Bluetooth device not turned on"); break;
                 case BluetoothDiscoveryModel.InputOutputError:
                     console.log("Error: Bluetooth I/O Error"); break;
+                case BluetoothDiscoveryModel.InvalidBluetoothAdapterError:
+                    console.log("Error: Invalid Bluetooth Adapter Error"); break;
                 case BluetoothDiscoveryModel.NoError:
                     break;
                 default:

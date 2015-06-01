@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
 **
@@ -17,8 +17,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -42,16 +42,14 @@
 #define ANNOTATEDURL_H
 
 #include <qnfcglobal.h>
+#include <QNdefMessage>
 
 #include <QtCore/QObject>
 
 QT_FORWARD_DECLARE_CLASS(QUrl)
 QT_FORWARD_DECLARE_CLASS(QPixmap)
-
-QT_BEGIN_NAMESPACE
-class QNearFieldTarget;
-class QNdefMessage;
-QT_END_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
+QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)
 
 QT_USE_NAMESPACE
 
@@ -67,7 +65,12 @@ signals:
     void annotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
 
 public slots:
+    void targetDetected(QNearFieldTarget *target);
+    void targetLost(QNearFieldTarget *target);
     void handleMessage(const QNdefMessage &message, QNearFieldTarget *target);
+    void handlePolledNdefMessage(QNdefMessage message);
+private:
+    QNearFieldManager *manager;
 };
 
 #endif // ANNOTATEDURL_H

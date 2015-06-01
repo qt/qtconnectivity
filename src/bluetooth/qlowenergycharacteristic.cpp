@@ -1,7 +1,7 @@
 /***************************************************************************
 **
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -192,12 +192,14 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristic::properties() c
 
     The cache is updated during the associated service's
     \l {QLowEnergyService::discoverDetails()} {detail discovery}, a successful
-    \l {QLowEnergyService::writeCharacteristic()}{write operation} or when an update
-    notification is received.
+    \l {QLowEnergyService::readCharacteristic()}{read}/\l {QLowEnergyService::writeCharacteristic()}{write}
+    operation or when an update notification is received.
 
-    The returned \l QByteArray is empty if the characteristic does not have the
-    \l {QLowEnergyCharacteristic::Read}{read permission}. However, a non-readable
-    characteristic may obtain a non-empty value via a related notification or write operation.
+    The returned \l QByteArray always remains empty if the characteristic does not
+    have the \l {QLowEnergyCharacteristic::Read}{read permission}. In such cases only
+    the \l QLowEnergyService::characteristicChanged() or
+    \l QLowEnergyService::characteristicWritten() may provice information about the
+    value of this characteristic.
 */
 QByteArray QLowEnergyCharacteristic::value() const
 {
@@ -212,6 +214,9 @@ QByteArray QLowEnergyCharacteristic::value() const
     Returns the handle of the characteristic's value attribute;
     or \c 0 if the handle cannot be accessed on the platform or
     if the characteristic is invalid.
+
+    \note On OS X and iOS handles can differ from 0, but these
+    values have no special meaning outside of internal/private API.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
 {
@@ -311,6 +316,9 @@ bool QLowEnergyCharacteristic::isValid() const
     Returns the handle of the characteristic or
     \c 0 if the handle cannot be accessed on the platform or if the
     characteristic is invalid.
+
+    \note On OS X and iOS handles can differ from 0, but these
+    values have no special meaning outside of internal/private API.
 
     \sa isValid()
  */

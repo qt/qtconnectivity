@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
 **
@@ -17,8 +17,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -63,7 +63,7 @@ class Device: public QObject
     Q_PROPERTY(QVariant devicesList READ getDevices NOTIFY devicesUpdated)
     Q_PROPERTY(QVariant servicesList READ getServices NOTIFY servicesUpdated)
     Q_PROPERTY(QVariant characteristicList READ getCharacteristics NOTIFY characteristicsUpdated)
-    Q_PROPERTY(QString update READ getUpdate NOTIFY updateChanged)
+    Q_PROPERTY(QString update READ getUpdate WRITE setUpdate NOTIFY updateChanged)
     Q_PROPERTY(bool useRandomAddress READ isRandomAddress WRITE setRandomAddress NOTIFY randomAddressChanged)
     Q_PROPERTY(bool state READ state NOTIFY stateChanged)
     Q_PROPERTY(bool controllerError READ hasControllerError)
@@ -119,6 +119,7 @@ private:
     QList<QObject*> devices;
     QList<QObject*> m_services;
     QList<QObject*> m_characteristics;
+    QString m_previousAddress;
     QString m_message;
     bool connected;
     QLowEnergyController *controller;

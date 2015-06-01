@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -48,19 +48,20 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
-        const QBluetoothAddress &deviceAdapter)
+        const QBluetoothAddress &/*deviceAdapter*/)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
       state(Inactive), deviceDiscoveryAgent(0),
       mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
       singleDevice(false), receiver(0), localDeviceReceiver(0)
 {
     QList<QBluetoothHostInfo> devices = QBluetoothLocalDevice::allDevices();
-    Q_ASSERT(devices.count() == 1); //Android only supports one device at the moment
+    Q_ASSERT(devices.count() <= 1); //Android only supports one device at the moment
 
-    if (deviceAdapter.isNull() && devices.count() > 0 )
-        m_deviceAdapterAddress = devices.at(0).address();
-    else
-        m_deviceAdapterAddress = deviceAdapter;
+    if (devices.isEmpty()) {
+        error = QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Invalid Bluetooth adapter address");
+        return;
+    }
 
     if (QtAndroidPrivate::androidSdkVersion() < 15)
         qCWarning(QT_BT_ANDROID)
@@ -69,13 +70,10 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
             << "Service discovery will return empty list.";
 
 
-        /*  We assume that the current local adapter has been passed.
-            Android only supports one adapter at the moment. If m_deviceAdapterAddress
-            doesn't match the local adapter then we won't get to this point since
-            we have an InvalidBluetoothAdapter error.
-
-            The logic below must change once there is more than one adapter.
-        */
+    /*
+      We assume that the current local adapter has been passed.
+      The logic below must change once there is more than one adapter.
+    */
 
     btAdapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                            "getDefaultAdapter",
@@ -83,7 +81,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     if (!btAdapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Platform does not support Bluetooth";
 
-    qRegisterMetaType<QList<QBluetoothUuid> >("QList<QBluetoothUuid>");
+    qRegisterMetaType<QList<QBluetoothUuid> >();
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()

@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -94,11 +94,37 @@ QT_BEGIN_NAMESPACE
 
     The values of characteristics and descriptors can be retrieved via
     \l QLowEnergyCharacteristic and \l QLowEnergyDescriptor, respectively.
-    However writing those attributes requires the service object. The
-    \l writeCharacteristic() function attempts to write a new value to the given
+    However, direct reading or writing of these attributes requires the service object.
+    The \l readCharacteristic() function attempts to re-read the value of a characteristic.
+    Although the initial service discovery may have obtained a value already this call may
+    be required in cases where the characteristic value constantly changes without
+    any notifications being provided. An example might be a time characteristic
+    that provides a continuous value. If the read attempt is successful, the
+    \l characteristicRead() signal is emitted. A failure to read the value triggers
+    the \l CharacteristicReadError.
+    The \l writeCharacteristic() function attempts to write a new value to the given
     characteristic. If the write attempt is successful, the \l characteristicWritten()
     signal is emitted. A failure to write triggers the \l CharacteristicWriteError.
-    Writing a descriptor follows the same pattern.
+    Reading and writing of descriptors follows the same pattern.
+
+    Every attempt is made to read or write the value of a descriptor
+    or characteristic on the hardware. This means that meta information such as
+    \l QLowEnergyCharacteristic::properties() is generally ignored when reading and writing.
+    As an example, it is possible to call \l writeCharacteristic() despite the characteristic
+    being read-only based on its meta data description. The resulting write request is
+    forwarded to the connected device and it is up to the device to respond to the
+    potentially invalid request. In this case the result is the emission of the
+    \l CharacteristicWriteError in response to the returned device error. This behavior
+    simplifies interaction with devices which report wrong meta information.
+    If it was not possible to forward the request to the remote device the
+    \l OperationError is set. A potential reason could be that the to-be-written
+    characteristic object does not even belong the current service. In
+    summary, the two types of errors permit a quick distinction of local
+    and remote error cases.
+
+    All requests are serialised based on First-In First-Out principle.
+    For example, issuing a second write request, before the previous
+    write request has finished, is delayed until the first write request has finished.
 
     \note Currently, it is not possible to send signed write or reliable write requests.
 
@@ -128,8 +154,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet doc_src_qtbluetooth.cpp data_share_qlowenergyservice
 
-    Other operations such as calls to \l writeCharacteristic(),
-    writeDescriptor() or the invalidation of the service due to the
+    Other operations such as calls to \l readCharacteristic(), \l readDescriptor(), \l writeCharacteristic(),
+    \l writeDescriptor() or the invalidation of the service due to the
     related \l QLowEnergyController disconnecting from the device are shared
     the same way.
 
@@ -149,6 +175,9 @@ QT_BEGIN_NAMESPACE
                                 to be a secondary service. Each service may be included
                                 by another service which is indicated by IncludedService.
     \value IncludedService      The service is included by another service.
+                                On some platforms, this flag cannot be determined until
+                                the service that includes the current service was
+                                discovered.
 */
 
 /*!
@@ -163,12 +192,20 @@ QT_BEGIN_NAMESPACE
                                     the service while it was not yet in the
                                     \l ServiceDiscovered \l state() or the service is invalid
                                     due to a loss of connection to the peripheral device.
+    \value CharacteristicReadError  An attempt to read a characteristic value failed. For example,
+                                    it might be triggered in response to a call to
+                                    \l readCharacteristic(). This value was introduced by Qt 5.5.
     \value CharacteristicWriteError An attempt to write a new value to a characteristic
                                     failed. For example, it might be triggered when attempting
                                     to write to a read-only characteristic.
+    \value DescriptorReadError      An attempt to read a descriptor value failed. For example,
+                                    it might be triggered in response to a call to
+                                    \l readDescriptor(). This value was introduced by Qt 5.5.
     \value DescriptorWriteError     An attempt to write a new value to a descriptor
                                     failed. For example, it might be triggered when attempting
                                     to write to a read-only descriptor.
+    \value UnknownError             An unknown error occurred when interacting with the service.
+                                    This value was introduced by Qt 5.5.
  */
 
 /*!
@@ -231,12 +268,33 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::characteristicWritten(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
+    \fn void QLowEnergyService::characteristicRead(const QLowEnergyCharacteristic &characteristic, const QByteArray &value)
+
+    This signal is emitted when the read request for \a characteristic successfully returned
+    its \a value. The signal might be triggered by calling \l characteristicRead(). If
+    the read operation is not successful, the \l error() signal is emitted using the
+    \l CharacteristicReadError flag.
+
+    \sa readCharacteristic()
+    \since 5.5
+ */
+
+/*!
+    \fn void QLowEnergyService::characteristicWritten(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
 
     This signal is emitted when the value of \a characteristic
     is successfully changed to \a newValue. The change must have been triggered
     by calling \l writeCharacteristic(). If the write operation is not successful,
     the \l error() signal is emitted using the \l CharacteristicWriteError flag.
+
+    Since this signal is an indication of a successful write operation \a newValue
+    generally matches the value that was passed to the associated
+    \l writeCharacteristic() call. However, it may happen that the two values differ
+    from each other. This can occur in cases when the written value is
+    used by the remote device to trigger an operation and it returns some other value via
+    the written and/or change notification. Such cases are very specific to the
+    target device. In any case, the reception of the written signal can still be considered
+    as a sign that the target device received the to-be-written value.
 
     \note If \l writeCharacteristic() is called using the \l WriteWithoutResponse mode,
     this signal and the \l error() are never emitted.
@@ -245,7 +303,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue);
+    \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
 
     This signal is emitted when the value of \a characteristic is changed
     by an event on the peripheral. The \a newValue parameter contains the
@@ -256,6 +314,18 @@ QT_BEGIN_NAMESPACE
     \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
     descriptor prior to the change event on the peripheral. More details on how this might be
     done can be found further \l{notifications}{above}.
+ */
+
+/*!
+    \fn void QLowEnergyService::descriptorRead(const QLowEnergyDescriptor &descriptor, const QByteArray &value)
+
+    This signal is emitted when the read request for \a descriptor successfully returned
+    its \a value. The signal might be triggered by calling \l descriptorRead(). If
+    the read operation is not successful, the \l error() signal is emitted using the
+    \l DescriptorReadError flag.
+
+    \sa readDescriptor()
+    \since 5.5
  */
 
 /*!
@@ -280,8 +350,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
     : QObject(parent),
       d_ptr(p)
 {
-    qRegisterMetaType<QLowEnergyService::ServiceState>("QLowEnergyService::ServiceState");
-    qRegisterMetaType<QLowEnergyService::ServiceError>("QLowEnergyService::ServiceError");
+    qRegisterMetaType<QLowEnergyService::ServiceState>();
+    qRegisterMetaType<QLowEnergyService::ServiceError>();
 
     connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
             this, SIGNAL(error(QLowEnergyService::ServiceError)));
@@ -293,6 +363,10 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
             this, SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
     connect(p.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)),
             this, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
+    connect(p.data(), SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)),
+            this, SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
+    connect(p.data(), SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)),
+            this, SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
 }
 
 /*!
@@ -305,6 +379,9 @@ QLowEnergyService::~QLowEnergyService()
 /*!
     Returns the UUIDs of all services which are included by the
     current service.
+
+    The returned list is empty if this service instance's \l discoverDetails()
+    was not yet called or there are no known characteristics.
 
     It is possible that an included service contains yet another service. Such
     second level includes have to be obtained via their relevant first level
@@ -331,7 +408,6 @@ QList<QBluetoothUuid> QLowEnergyService::includedServices() const
     Therefore any service object instance created after
     the first one has a state equal to already existing instances.
 
-
     A service becomes invalid if the \l QLowEnergyController disconnects
     from the remote device. An invalid service retains its internal state
     at the time of the disconnect event. This implies that once the service
@@ -353,6 +429,15 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
 
 /*!
     Returns the type of the service.
+
+    \note The type attribute cannot be relied upon until the service has
+    reached the \l ServiceDiscovered state. This field is initialised
+    with \l PrimaryService.
+
+    \note On Android, it is not possible to determine whether a service
+    is a primary or secondary service. Therefore all services
+    have the \l PrimaryService flag set.
+
  */
 QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 {
@@ -362,6 +447,9 @@ QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 /*!
     Returns the matching characteristic for \a uuid; otherwise an invalid
     characteristic.
+
+    The returned characteristic is invalid if this service instance's \l discoverDetails()
+    was not yet called or there are no characteristics with a matching \a uuid.
 
     \sa characteristics()
 */
@@ -482,6 +570,45 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     return false;
 }
 
+
+/*!
+    Reads the value of \a characteristic. If the operation is successful, the
+    \l characteristicRead() signal is emitted; otherwise the \l CharacteristicReadError
+    is set.  In general, a \a characteristic is readable, if its
+    \l QLowEnergyCharacteristic::Read property is set.
+
+    All descriptor and characteristic requests towards the same remote device are
+    serialised. A queue is employed when issuing multiple requests at the same time.
+    The queue does not eliminate duplicated read requests for the same characteristic.
+
+    A characteristic can only be read if the service is in the \l ServiceDiscovered state,
+    belongs to the service. If one of these conditions is
+    not true the \l QLowEnergyService::OperationError is set.
+
+    \note Calling this function despite \l QLowEnergyCharacteristic::properties() reporting a non-readable property
+    always attempts to read the characteristic's value on the hardware. If the hardware
+    returns with an error the \l CharacteristicWriteError is set.
+
+    \sa characteristicRead(), writeCharacteristic()
+
+    \since 5.5
+ */
+void QLowEnergyService::readCharacteristic(
+        const QLowEnergyCharacteristic &characteristic)
+{
+    Q_D(QLowEnergyService);
+
+    if (!contains(characteristic)
+            || state() != ServiceDiscovered
+            || !d->controller) {
+        d->setError(QLowEnergyService::OperationError);
+        return;
+    }
+
+    d->controller->readCharacteristic(characteristic.d_ptr,
+                                      characteristic.attributeHandle());
+}
+
 /*!
     Writes \a newValue as value for the \a characteristic. If the operation is successful,
     the \l characteristicWritten() signal is emitted; otherwise the \l CharacteristicWriteError
@@ -493,13 +620,27 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     \l QLowEnergyCharacteristic::Write and \l QLowEnergyCharacteristic::WriteNoResponse
     properties.
 
+    All descriptor and characteristic write requests towards the same remote device are
+    serialised. A queue is employed when issuing multiple write requests at the same time.
+    The queue does not eliminate duplicated write requests for the same characteristic.
+    For example, if the same descriptor is set to the value A and immediately afterwards
+    to B, the two write request are executed in the given order.
+
     \note Currently, it is not possible to use signed or reliable writes as defined by the
     Bluetooth specification.
 
     A characteristic can only be written if this service is in the \l ServiceDiscovered state,
-    belongs to the service and is writable.
+    and belongs to the service. If one of these conditions is
+    not true the \l QLowEnergyService::OperationError is set.
 
-    \sa QLowEnergyCharacteristic::properties()
+    \note Calling this function despite \l QLowEnergyCharacteristic::properties() reporting
+    a non-writable property always attempts to write to the hardware.
+    Similarly, a \l WriteWithoutResponse is sent to the hardware too although the
+    characteristic may only support \l WriteWithResponse. If the hardware returns
+    with an error the \l CharacteristicWriteError is set.
+
+    \sa QLowEnergyService::characteristicWritten(), QLowEnergyService::readCharacteristic()
+
  */
 void QLowEnergyService::writeCharacteristic(
         const QLowEnergyCharacteristic &characteristic,
@@ -508,26 +649,21 @@ void QLowEnergyService::writeCharacteristic(
     //TODO check behavior when writing to WriteSigned characteristic
     Q_D(QLowEnergyService);
 
-    // not a characteristic of this service
-    if (!contains(characteristic))
-        return;
-
-    if (state() != ServiceDiscovered)
+    if (!contains(characteristic)
+            || state() != ServiceDiscovered
+            || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
-
-    if (!d->controller)
         return;
+    }
 
     // don't write if properties don't permit it
-    if (mode == WriteWithResponse
-            && (characteristic.properties() & QLowEnergyCharacteristic::Write))
+    if (mode == WriteWithResponse)
     {
         d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
                                        newValue,
                                        true);
-    } else if (mode == WriteWithoutResponse
-               && (characteristic.properties() & QLowEnergyCharacteristic::WriteNoResponse)) {
+    } else if (mode == WriteWithoutResponse) {
         d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
                                        newValue,
@@ -560,22 +696,64 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 }
 
 /*!
+    Reads the value of \a descriptor. If the operation is successful, the
+    \l descriptorRead() signal is emitted; otherwise the \l DescriptorReadError
+    is set.
+
+    All descriptor and characteristic requests towards the same remote device are
+    serialised. A queue is employed when issuing multiple requests at the same time.
+    The queue does not eliminate duplicated read requests for the same descriptor.
+
+    A descriptor can only be read if the service is in the \l ServiceDiscovered state
+    and the descriptor belongs to the service. If one of these conditions is
+    not true the \l QLowEnergyService::OperationError is set.
+
+    \sa descriptorRead(), writeDescriptor()
+
+    \since 5.5
+ */
+void QLowEnergyService::readDescriptor(
+        const QLowEnergyDescriptor &descriptor)
+{
+    Q_D(QLowEnergyService);
+
+    if (!contains(descriptor)
+            || state() != ServiceDiscovered
+            || !d->controller) {
+        d->setError(QLowEnergyService::OperationError);
+        return;
+    }
+
+    d->controller->readDescriptor(descriptor.d_ptr,
+                                  descriptor.characteristicHandle(),
+                                  descriptor.handle());
+}
+
+/*!
     Writes \a newValue as value for \a descriptor. If the operation is successful,
     the \l descriptorWritten() signal is emitted; otherwise the \l DescriptorWriteError
     is emitted.
 
+    All descriptor and characteristic requests towards the same remote device are
+    serialised. A queue is employed when issuing multiple write requests at the same time.
+    The queue does not eliminate duplicated write requests for the same descriptor.
+    For example, if the same descriptor is set to the value A and immediately afterwards
+    to B, the two write request are executed in the given order.
+
     A descriptor can only be written if this service is in the \l ServiceDiscovered state,
-    belongs to the service and is writable.
+    belongs to the service. If one of these conditions is
+    not true the \l QLowEnergyService::OperationError is set.
+
+    \sa descriptorWritten(), readDescriptor()
  */
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor))
-        return;
-
-    if (state() != ServiceDiscovered || !d->controller) {
+    if (!contains(descriptor)
+            || state() != ServiceDiscovered
+            || !d->controller) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }

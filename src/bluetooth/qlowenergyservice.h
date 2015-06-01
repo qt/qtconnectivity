@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -56,7 +56,10 @@ public:
         NoError = 0,
         OperationError,
         CharacteristicWriteError,
-        DescriptorWriteError
+        DescriptorWriteError,
+        UnknownError,
+        CharacteristicReadError,
+        DescriptorReadError
     };
 
     enum ServiceState {
@@ -64,7 +67,7 @@ public:
         DiscoveryRequired,  // we know start/end handle but nothing more
         //TODO Rename DiscoveringServices -> DiscoveringDetails or DiscoveringService
         DiscoveringServices,// discoverDetails() called and running
-        ServiceDiscovered,  // all details have been synchronized
+        ServiceDiscovered   // all details have been synchronized
     };
 
     enum WriteMode {
@@ -89,11 +92,13 @@ public:
     ServiceError error() const;
 
     bool contains(const QLowEnergyCharacteristic &characteristic) const;
+    void readCharacteristic(const QLowEnergyCharacteristic &characteristic);
     void writeCharacteristic(const QLowEnergyCharacteristic &characteristic,
                              const QByteArray &newValue,
                              WriteMode mode = WriteWithResponse);
 
     bool contains(const QLowEnergyDescriptor &descriptor) const;
+    void readDescriptor(const QLowEnergyDescriptor &descriptor);
     void writeDescriptor(const QLowEnergyDescriptor &descriptor,
                          const QByteArray &newValue);
 
@@ -101,8 +106,12 @@ Q_SIGNALS:
     void stateChanged(QLowEnergyService::ServiceState newState);
     void characteristicChanged(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
+    void characteristicRead(const QLowEnergyCharacteristic &info,
+                            const QByteArray &value);
     void characteristicWritten(const QLowEnergyCharacteristic &info,
                                const QByteArray &value);
+    void descriptorRead(const QLowEnergyDescriptor &info,
+                        const QByteArray &value);
     void descriptorWritten(const QLowEnergyDescriptor &info,
                            const QByteArray &value);
     void error(QLowEnergyService::ServiceError error);
@@ -118,5 +127,8 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceState)
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
 
 #endif // QLOWENERGYSERVICE_H

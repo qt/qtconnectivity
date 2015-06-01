@@ -154,20 +154,55 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothservicediscoveryagent_osx.mm \
         qbluetoothsocket_osx.mm \
         qbluetoothserver_osx.mm \
-        qbluetoothtransferreply_osx.mm
+        qbluetoothtransferreply_osx.mm \
+        qlowenergycontroller_osx.mm \
+        qlowenergyservice_osx.mm
 
     SOURCES += \
         qlowenergycontroller_p.cpp
 
     PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
                        qbluetoothserver_osx_p.h \
-                       qbluetoothtransferreply_osx_p.h
+                       qbluetoothtransferreply_osx_p.h \
+                       qbluetoothtransferreply_osx_p.h \
+                       qbluetoothdevicediscoverytimer_osx_p.h \
+                       qlowenergycontroller_osx_p.h
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
     SOURCES -= qbluetoothsocket.cpp
     SOURCES -= qbluetoothserver.cpp
+    SOURCES -= qlowenergyservice_p.cpp
+    SOURCES -= qlowenergyservice.cpp
+    SOURCES -= qlowenergycontroller.cpp
+    SOURCES -= qlowenergycontroller_p.cpp
+} else:ios {
+    DEFINES += QT_IOS_BLUETOOTH
+    LIBS += -framework Foundation -framework CoreBluetooth
+
+    OBJECTIVE_SOURCES += \
+        qbluetoothdevicediscoveryagent_ios.mm \
+        qlowenergycontroller_osx.mm \
+        qlowenergyservice_osx.mm
+
+    PRIVATE_HEADERS += \
+        qlowenergycontroller_osx_p.h
+
+    include(osx/osxbt.pri)
+    SOURCES += \
+        qbluetoothdevicediscoveryagent_p.cpp \
+        qbluetoothlocaldevice_p.cpp \
+        qbluetoothserviceinfo_p.cpp \
+        qbluetoothservicediscoveryagent_p.cpp \
+        qbluetoothsocket_p.cpp \
+        qbluetoothserver_p.cpp \
+        qlowenergycontroller_p.cpp
+
+    SOURCES -= qbluetoothdevicediscoveryagent.cpp
+    SOURCES -= qlowenergycontroller_p.cpp
+    SOURCES -= qlowenergyservice.cpp
+    SOURCES -= qlowenergycontroller.cpp
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers.")

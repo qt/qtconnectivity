@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module.
 **
@@ -17,8 +17,8 @@
 **     notice, this list of conditions and the following disclaimer in
 **     the documentation and/or other materials provided with the
 **     distribution.
-**   * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
-**     of its contributors may be used to endorse or promote products derived
+**   * Neither the name of The Qt Company Ltd nor the names of its
+**     contributors may be used to endorse or promote products derived
 **     from this software without specific prior written permission.
 **
 **
@@ -43,10 +43,16 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlContext>
 #include <QDebug>
+#include <QBluetoothLocalDevice>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication application(argc, argv);
+
+    QList<QBluetoothHostInfo> infos = QBluetoothLocalDevice::allDevices();
+    if (infos.isEmpty())
+        qWarning() << "Missing Bluetooth local device. "
+                      "Example will not work properly.";
 
     const QString mainQmlApp = QLatin1String("qrc:/chat.qml");
     QQuickView view;

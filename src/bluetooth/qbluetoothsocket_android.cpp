@@ -1,8 +1,8 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Lauri Laanmets (Proekspert AS) <lauri.laanmets@eesti.ee>
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -36,14 +36,135 @@
 #include "qbluetoothsocket_p.h"
 #include "qbluetoothaddress.h"
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QThread>
 #include <QtCore/QTime>
-#include <QtConcurrent/QtConcurrentRun>
+#include <QtCore/private/qjni_p.h>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
-
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
+
+#define FALLBACK_CHANNEL 1
+#define USE_FALLBACK true
+
+Q_DECLARE_METATYPE(QAndroidJniObject)
+
+
+/* BluetoothSocket.connect() can block up to 10s. Therefore it must be
+ * in a separate thread. Unfortunately if BluetoothSocket.close() is
+ * called while connect() is still blocking the resulting behavior is not reliable.
+ * This may well be an Android platform bug. In any case, close() must
+ * be queued up until connect() has returned.
+ *
+ * The WorkerThread manages the connect() and close() calls. Interaction
+ * with the main thread happens via signals and slots. There is an accepted but
+ * undesirable side effect of this approach as the user may call connect()
+ * and close() and the socket would continue to successfully connect to
+ * the remote device just to immidiately close the physical connection again.
+ *
+ * WorkerThread and SocketConnectWorker are cleaned up via the threads
+ * finished() signal.
+ */
+
+class SocketConnectWorker : public QObject
+{
+    Q_OBJECT
+public:
+    SocketConnectWorker(const QAndroidJniObject& socket,
+                        const QAndroidJniObject& targetUuid)
+        : QObject(),
+          mSocketObject(socket),
+          mTargetUuid(targetUuid)
+    {
+        static int t = qRegisterMetaType<QAndroidJniObject>();
+        Q_UNUSED(t);
+    }
+
+signals:
+    void socketConnectDone(const QAndroidJniObject &socket);
+    void socketConnectFailed(const QAndroidJniObject &socket,
+                             const QAndroidJniObject &targetUuid);
+public slots:
+    void connectSocket()
+    {
+        QAndroidJniEnvironment env;
+
+        qCDebug(QT_BT_ANDROID) << "Connecting socket";
+        mSocketObject.callMethod<void>("connect");
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+
+            emit socketConnectFailed(mSocketObject, mTargetUuid);
+            QThread::currentThread()->quit();
+            return;
+        }
+
+        qCDebug(QT_BT_ANDROID) << "Socket connection established";
+        emit socketConnectDone(mSocketObject);
+    }
+
+    void closeSocket()
+    {
+        qCDebug(QT_BT_ANDROID) << "Executing queued closeSocket()";
+
+        QAndroidJniEnvironment env;
+        mSocketObject.callMethod<void>("close");
+        if (env->ExceptionCheck()) {
+
+            qCWarning(QT_BT_ANDROID) << "Error during closure of abandoned socket";
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+
+        QThread::currentThread()->quit();
+    }
+
+private:
+    QAndroidJniObject mSocketObject;
+    QAndroidJniObject mTargetUuid;
+};
+
+class WorkerThread: public QThread
+{
+    Q_OBJECT
+public:
+    WorkerThread()
+        : QThread(), workerPointer(0)
+    {
+    }
+
+    // Runs in same thread as QBluetoothSocketPrivate
+    void setupWorker(QBluetoothSocketPrivate* d_ptr, const QAndroidJniObject& socketObject,
+                     const QAndroidJniObject& uuidObject, bool useFallback)
+    {
+        SocketConnectWorker* worker = new SocketConnectWorker(
+                                            socketObject, uuidObject);
+        worker->moveToThread(this);
+
+        connect(this, &QThread::finished, worker, &QObject::deleteLater);
+        connect(this, &QThread::finished, this, &QObject::deleteLater);
+        connect(d_ptr, &QBluetoothSocketPrivate::connectJavaSocket,
+                worker, &SocketConnectWorker::connectSocket);
+        connect(d_ptr, &QBluetoothSocketPrivate::closeJavaSocket,
+                worker, &SocketConnectWorker::closeSocket);
+        connect(worker, &SocketConnectWorker::socketConnectDone,
+                d_ptr, &QBluetoothSocketPrivate::socketConnectSuccess);
+        if (useFallback) {
+            connect(worker, &SocketConnectWorker::socketConnectFailed,
+                    d_ptr, &QBluetoothSocketPrivate::fallbackSocketConnectFailed);
+        } else {
+            connect(worker, &SocketConnectWorker::socketConnectFailed,
+                d_ptr, &QBluetoothSocketPrivate::defaultSocketConnectFailed);
+        }
+
+        workerPointer = worker;
+    }
+
+private:
+    QPointer<SocketConnectWorker> workerPointer;
+};
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
   : socket(-1),
@@ -57,12 +178,14 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
-    qRegisterMetaType<QBluetoothSocket::SocketError>("QBluetoothSocket::SocketError");
-    qRegisterMetaType<QBluetoothSocket::SocketState>("QBluetoothSocket::SocketState");
+    qRegisterMetaType<QBluetoothSocket::SocketError>();
+    qRegisterMetaType<QBluetoothSocket::SocketState>();
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 {
+    if (state != QBluetoothSocket::UnconnectedState)
+        emit closeJavaSocket();
 }
 
 bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
@@ -74,49 +197,42 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     return false;
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
-                                               const QBluetoothUuid &uuid,
-                                               QIODevice::OpenMode openMode,
-                                               int fallbackServiceChannel)
-{
-    Q_Q(QBluetoothSocket);
-
-    q->setSocketState(QBluetoothSocket::ConnectingState);
-    QtConcurrent::run(this, &QBluetoothSocketPrivate::connectToServiceConc,
-                      address, uuid, openMode, fallbackServiceChannel);
-}
-
 bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channel)
 {
     qCWarning(QT_BT_ANDROID) << "Falling back to workaround.";
 
     QAndroidJniEnvironment env;
-    jclass remoteDeviceClazz = env->GetObjectClass(remoteDevice.object());
-    jmethodID getClassMethod = env->GetMethodID(remoteDeviceClazz, "getClass", "()Ljava/lang/Class;");
-    if (!getClassMethod) {
-        qCWarning(QT_BT_ANDROID) << "BluetoothDevice.getClass method could not be found.";
-        return false;
-    }
 
-
-    QAndroidJniObject remoteDeviceClass = QAndroidJniObject(env->CallObjectMethod(remoteDevice.object(), getClassMethod));
+    QAndroidJniObject remoteDeviceClass = remoteDevice.callObjectMethod("getClass", "()Ljava/lang/Class;");
     if (!remoteDeviceClass.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not invoke BluetoothDevice.getClass.";
         return false;
     }
 
-    jclass classClass = env->FindClass("java/lang/Class");
-    jclass integerClass = env->FindClass("java/lang/Integer");
-    jfieldID integerType = env->GetStaticFieldID(integerClass, "TYPE", "Ljava/lang/Class;");
-    jobject integerObject = env->GetStaticObjectField(integerClass, integerType);
-    if (!integerObject) {
+    QAndroidJniObject integerObject = QAndroidJniObject::getStaticObjectField(
+                                            "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
+    if (!integerObject.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not get Integer.TYPE";
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+
         return false;
     }
 
-    jobjectArray paramTypes = env->NewObjectArray(1, classClass, integerObject);
-    if (!paramTypes) {
+    jclass classClass = QJNIEnvironmentPrivate::findClass("java/lang/Class");
+    jobjectArray rawArray = env->NewObjectArray(1, classClass,
+                                                integerObject.object<jobject>());
+    QAndroidJniObject paramTypes(rawArray);
+    env->DeleteLocalRef(rawArray);
+    if (!paramTypes.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Could not create new Class[]{Integer.TYPE}";
+
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         return false;
     }
 
@@ -132,7 +248,8 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
         }
 
         if (socketChannel
-                == remoteDevice.getStaticField<jint>("android/bluetooth/BluetoothDevice", "ERROR")) {
+                == remoteDevice.getStaticField<jint>("android/bluetooth/BluetoothDevice", "ERROR")
+            || socketChannel == -1) {
             qCWarning(QT_BT_ANDROID) << "Cannot determine RFCOMM service channel.";
         } else {
             qCWarning(QT_BT_ANDROID) << "Using found rfcomm channel" << socketChannel;
@@ -144,7 +261,7 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
                 "getMethod",
                 "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;",
                 QAndroidJniObject::fromString(QLatin1String("createRfcommSocket")).object<jstring>(),
-                paramTypes);
+                paramTypes.object<jobjectArray>());
     if (!method.isValid() || env->ExceptionCheck()) {
         qCWarning(QT_BT_ANDROID) << "Could not invoke getMethod";
         if (env->ExceptionCheck()) {
@@ -154,54 +271,63 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
         return false;
     }
 
-    jclass methodClass = env->GetObjectClass(method.object());
-    jmethodID invokeMethodId = env->GetMethodID(
-                methodClass, "invoke",
-                "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
-    if (!invokeMethodId) {
-        qCWarning(QT_BT_ANDROID) << "Could not invoke method.";
-        return false;
-    }
+    jclass objectClass = QJNIEnvironmentPrivate::findClass("java/lang/Object");
+    QAndroidJniObject channelObject = QAndroidJniObject::callStaticObjectMethod(
+                                        "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", channel);
+    rawArray = env->NewObjectArray(1, objectClass, channelObject.object<jobject>());
 
-    jmethodID valueOfMethodId = env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;");
-    jclass objectClass = env->FindClass("java/lang/Object");
-    jobjectArray invokeParams = env->NewObjectArray(1, objectClass, env->CallStaticObjectMethod(integerClass, valueOfMethodId, channel));
-
-
-    jobject invokeResult = env->CallObjectMethod(method.object(), invokeMethodId,
-                                                 remoteDevice.object(), invokeParams);
-    if (!invokeResult)
+    QAndroidJniObject invokeResult = method.callObjectMethod("invoke",
+                                         "(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",
+                                         remoteDevice.object<jobject>(), rawArray);
+    env->DeleteLocalRef(rawArray);
+    if (!invokeResult.isValid())
     {
         qCWarning(QT_BT_ANDROID) << "Invoke Resulted with error.";
         if (env->ExceptionCheck()) {
             env->ExceptionDescribe();
             env->ExceptionClear();
         }
+
         return false;
     }
 
     socketObject = QAndroidJniObject(invokeResult);
-    socketObject.callMethod<void>("connect");
-    if (env->ExceptionCheck()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
 
-        qCWarning(QT_BT_ANDROID) << "Socket connect via workaround failed.";
+    WorkerThread *workerThread = new WorkerThread();
+    workerThread->setupWorker(this, socketObject, uuid, USE_FALLBACK);
+    workerThread->start();
+    emit connectJavaSocket();
 
-        return false;
-    }
-
-    qCWarning(QT_BT_ANDROID) << "Workaround invoked.";
+    qCWarning(QT_BT_ANDROID) << "Workaround thread invoked.";
     return true;
 }
 
-void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &address,
-                                                   const QBluetoothUuid &uuid, QIODevice::OpenMode openMode, int fallbackServiceChannel)
+
+/*
+ * The call order during a connectToService() is as follows:
+ *
+ * 1. call connectToService()
+ * 2. wait for execution of SocketConnectThread::run()
+ * 3. if threaded connect succeeds call socketConnectSuccess() via signals
+ *      -> done
+ * 4. if threaded connect fails call defaultSocketConnectFailed() via signals
+ * 5. call fallBackConnect()
+ * 6. if threaded connect on fallback channel succeeds call socketConnectSuccess()
+ *    via signals
+ *      -> done
+ * 7. if threaded connect on fallback channel fails call fallbackSocketConnectFailed()
+ *      -> complete failure of entire connectToService()
+ * */
+void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
+                                               const QBluetoothUuid &uuid,
+                                               QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
     Q_UNUSED(openMode);
 
-    qCDebug(QT_BT_ANDROID) << "connectToServiceConc()" << address.toString() << uuid.toString();
+    qCDebug(QT_BT_ANDROID) << "connectToService()" << address.toString() << uuid.toString();
+
+    q->setSocketState(QBluetoothSocket::ConnectingState);
 
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
@@ -261,22 +387,21 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
         return;
     }
 
-    socketObject.callMethod<void>("connect");
-    if (env->ExceptionCheck()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
+    WorkerThread *workerThread = new WorkerThread();
+    workerThread->setupWorker(this, socketObject, uuidObject, !USE_FALLBACK);
+    workerThread->start();
+    emit connectJavaSocket();
+}
 
-        bool success = fallBackConnect(uuidObject, fallbackServiceChannel);
-        if (!success) {
-            errorString = QBluetoothSocket::tr("Connection to service failed");
-            socketObject = remoteDevice = QAndroidJniObject();
-            q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
-            q->setSocketState(QBluetoothSocket::UnconnectedState);
+void QBluetoothSocketPrivate::socketConnectSuccess(const QAndroidJniObject &socket)
+{
+    Q_Q(QBluetoothSocket);
+    QAndroidJniEnvironment env;
 
-            env->ExceptionClear(); //just in case
-            return;
-        }
-    }
+    // test we didn't get a success from a previous connect
+    // which was cleaned up late
+    if (socket != socketObject)
+        return;
 
     if (inputThread) {
         inputThread->deleteLater();
@@ -290,13 +415,7 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
         env->ExceptionDescribe();
         env->ExceptionClear();
 
-        //close socket again
-        socketObject.callMethod<void>("close");
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
-
+        emit closeJavaSocket();
         socketObject = inputStream = outputStream = remoteDevice = QAndroidJniObject();
 
 
@@ -314,11 +433,7 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
 
     if (!inputThread->run()) {
         //close socket again
-        socketObject.callMethod<void>("close");
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
+        emit closeJavaSocket();
 
         socketObject = inputStream = outputStream = remoteDevice = QAndroidJniObject();
 
@@ -336,6 +451,48 @@ void QBluetoothSocketPrivate::connectToServiceConc(const QBluetoothAddress &addr
 
     q->setSocketState(QBluetoothSocket::ConnectedState);
     emit q->connected();
+}
+
+void QBluetoothSocketPrivate::defaultSocketConnectFailed(
+        const QAndroidJniObject &socket, const QAndroidJniObject &targetUuid)
+{
+    Q_Q(QBluetoothSocket);
+
+    // test we didn't get a fail from a previous connect
+    // which was cleaned up late - should be same socket
+    if (socket != socketObject)
+        return;
+
+    bool success = fallBackConnect(targetUuid, FALLBACK_CHANNEL);
+    if (!success) {
+        errorString = QBluetoothSocket::tr("Connection to service failed");
+        socketObject = remoteDevice = QAndroidJniObject();
+        q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
+
+        QAndroidJniEnvironment env;
+        env->ExceptionClear(); // just in case
+        qCWarning(QT_BT_ANDROID) << "Workaround failed";
+    }
+}
+
+void QBluetoothSocketPrivate::fallbackSocketConnectFailed(
+        const QAndroidJniObject &socket, const QAndroidJniObject &targetUuid)
+{
+    Q_UNUSED(targetUuid);
+    Q_Q(QBluetoothSocket);
+
+    // test we didn't get a fail from a previous connect
+    // which was cleaned up late - should be same socket
+    if (socket != socketObject)
+        return;
+
+    qCWarning(QT_BT_ANDROID) << "Socket connect via workaround failed.";
+    errorString = QBluetoothSocket::tr("Connection to service failed");
+    socketObject = remoteDevice = QAndroidJniObject();
+
+    q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+    q->setSocketState(QBluetoothSocket::UnconnectedState);
 }
 
 void QBluetoothSocketPrivate::abort()
@@ -357,23 +514,26 @@ void QBluetoothSocketPrivate::abort()
         if (inputThread)
             inputThread->prepareForClosure();
 
-        //triggers abort of input thread as well
-        socketObject.callMethod<void>("close");
-        if (env->ExceptionCheck()) {
+        emit closeJavaSocket();
 
-            qCWarning(QT_BT_ANDROID) << "Error during closure of socket";
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
+        inputStream = outputStream = socketObject = remoteDevice = QAndroidJniObject();
 
         if (inputThread) {
+            // inputThread exists hence we had a successful connect
+            // which means inputThread is responsible for setting Unconnected
+
             //don't delete here as signals caused by Java Thread are still
             //going to be emitted
             //delete occurs in inputThreadError()
             inputThread = 0;
+        } else {
+            // inputThread doesn't exist hence
+            // we abort in the middle of connect(). WorkerThread will do
+            // close() without further feedback. Therefore we have to set
+            // Unconnected (now) in advance
+            Q_Q(QBluetoothSocket);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
         }
-
-        inputStream = outputStream = socketObject = remoteDevice = QAndroidJniObject();
     }
 }
 
@@ -487,14 +647,13 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
         //cleanup internal objects
         //if it was call to local close()/abort() the objects are cleaned up already
 
-        QAndroidJniEnvironment env;
-        socketObject.callMethod<void>("close");
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
+        emit closeJavaSocket();
 
         inputStream = outputStream = remoteDevice = socketObject = QAndroidJniObject();
+        if (inputThread) {
+            // deleted already above (client->deleteLater())
+            inputThread = 0;
+        }
     }
 
     q->setSocketState(QBluetoothSocket::UnconnectedState);
@@ -576,6 +735,14 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socke
     q->setSocketState(socketState);
     q->setOpenMode(openMode | QIODevice::Unbuffered);
 
+    // WorkerThread manages all sockets for us
+    // When we come through here the socket was already connected by
+    // server socket listener (see QBluetoothServer)
+    // Therefore we only use WorkerThread to potentially close it later on
+    WorkerThread *workerThread = new WorkerThread();
+    workerThread->setupWorker(this, socketObject, QAndroidJniObject(), !USE_FALLBACK);
+    workerThread->start();
+
     if (openMode == QBluetoothSocket::ConnectedState)
         emit q->connected();
 
@@ -592,3 +759,5 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
 }
 
 QT_END_NAMESPACE
+
+#include <qbluetoothsocket_android.moc>

@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -45,17 +37,18 @@
 #include "osx/osxbtsdpinquiry_p.h"
 #include "qbluetoothhostinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/uistrings_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlist.h>
 
-// We have to import obj-C headers, they are not guarded against a multiple inclusion.
-#import <IOBluetooth/objc/IOBluetoothSDPServiceRecord.h>
-#import <IOBluetooth/objc/IOBluetoothHostController.h>
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
+#include <Foundation/Foundation.h>
+// Only after Foundation.h
+#include "osx/corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -130,10 +123,10 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
 
 void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 {
-    Q_ASSERT_X(q_ptr, "startDeviceDiscovery()", "invalid q_ptr (null)");
-    Q_ASSERT_X(state == Inactive, "startDeviceDiscovery()", "invalid state");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
+    Q_ASSERT_X(state == Inactive, Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(error != QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError,
-               "startDeviceDiscovery()", "invalid bluetooth adapter");
+               Q_FUNC_INFO, "invalid bluetooth adapter");
 
     Q_ASSERT_X(deviceDiscoveryAgent.isNull(), "startDeviceDiscovery()",
                "discovery agent already exists");
@@ -146,11 +139,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 
 void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
 {
-    Q_ASSERT_X(q_ptr, "stopDeviceDiscovery()", "invalid q_ptr (null)");
-    Q_ASSERT_X(!deviceDiscoveryAgent.isNull(), "stopDeviceDiscovery()",
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
+    Q_ASSERT_X(!deviceDiscoveryAgent.isNull(), Q_FUNC_INFO,
                "invalid device discovery agent (null)");
-    Q_ASSERT_X(state == DeviceDiscovery, "stopDeviceDiscovery()",
-               "invalid state");
+    Q_ASSERT_X(state == DeviceDiscovery, Q_FUNC_INFO, "invalid state");
 
     deviceDiscoveryAgent->stop();
     deviceDiscoveryAgent.reset(Q_NULLPTR);
@@ -164,9 +156,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
     // Any of 'Inactive'/'DeviceDiscovery'/'ServiceDiscovery' states
     // are possible.
 
-    Q_ASSERT_X(q_ptr, "startServiceDiscovery()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
     Q_ASSERT_X(error != QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError,
-               "startServiceDiscovery()", "invalid bluetooth adapter");
+               Q_FUNC_INFO, "invalid bluetooth adapter");
 
     if (discoveredDevices.isEmpty()) {
         state = Inactive;
@@ -179,13 +171,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
     state = ServiceDiscovery;
     const QBluetoothAddress &address(discoveredDevices.at(0).address());
 
+    if (address.isNull()) {
+        // This can happen: LE scan works with CoreBluetooth, but CBPeripherals
+        // do not expose hardware addresses.
+        // Pop the current QBluetoothDeviceInfo and decide what to do next.
+        return serviceDiscoveryFinished();
+    }
+
     // Autoreleased object.
     IOBluetoothHostController *const hc = [IOBluetoothHostController defaultController];
     if (![hc powerState]) {
         discoveredDevices.clear();
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::PoweredOffError;
-            errorString = QBluetoothServiceDiscoveryAgent::tr("Local device is powered off");
+            errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_LOCAL_DEV_OFF);
             emit q_ptr->error(error);
         }
 
@@ -210,8 +209,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::startServiceDiscovery()
 
 void QBluetoothServiceDiscoveryAgentPrivate::stopServiceDiscovery()
 {
-    Q_ASSERT_X(state != Inactive, "stopServiceDiscovery()", "invalid state");
-    Q_ASSERT_X(q_ptr, "stopServiceDiscovery()", "invalid q_ptr (null)");
+    Q_ASSERT_X(state != Inactive, Q_FUNC_INFO, "invalid state");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     discoveredDevices.clear();
     state = Inactive;
@@ -256,10 +255,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered(const QBluetoot
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error)
 {
-    Q_ASSERT_X(q_ptr, "_q_deviceDiscoveryError()", "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     error = QBluetoothServiceDiscoveryAgent::UnknownError;
-    errorString = tr("Unknown error while scanning for devices");
+    errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
 
     deviceDiscoveryAgent->stop();
     deviceDiscoveryAgent.reset(Q_NULLPTR);
@@ -271,8 +270,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
 {
-    Q_ASSERT_X(q_ptr, "_q_deviceDiscoveryFinished()",
-               "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     if (deviceDiscoveryAgent->error() != QBluetoothDeviceDiscoveryAgent::NoError) {
         //Forward the device discovery error
@@ -295,7 +293,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
 
 void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevice *device)
 {
-    Q_ASSERT_X(device, "SDPInquiryFinished()", "invalid IOBluetoothDevice (nil)");
+    Q_ASSERT_X(device, Q_FUNC_INFO, "invalid IOBluetoothDevice (nil)");
 
     if (state == Inactive)
         return;
@@ -305,8 +303,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevic
     NSArray *const records = device.services;
     for (IOBluetoothSDPServiceRecord *record in records) {
         QBluetoothServiceInfo serviceInfo;
-        Q_ASSERT_X(discoveredDevices.size() >= 1, "SDPInquiryFinished()",
-                   "invalid number of devices");
+        Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO, "invalid number of devices");
 
         serviceInfo.setDevice(discoveredDevices.at(0));
         OSXBluetooth::extract_service_record(record, serviceInfo);
@@ -331,14 +328,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *
 {
     Q_UNUSED(device)
 
-    qCWarning(QT_BT_OSX) << "QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(), "
-                            "inquiry failed with IOKit code: " << int(errorCode);
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "inquiry failed with IOKit code: " << int(errorCode);
 
     discoveredDevices.clear();
     // TODO: find a better mapping from IOReturn to QBluetoothServiceDiscoveryAgent::Error.
     if (singleDevice) {
         error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QObject::tr("service discovery agent: unknown error");
+        errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
         emit q_ptr->error(error);
     }
 
@@ -347,8 +343,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *
 
 void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress)
 {
-    Q_ASSERT_X(!deviceAddress.isNull(), "performMinimalServiceDiscovery()",
-               "invalid device address");
+    Q_ASSERT_X(!deviceAddress.isNull(), Q_FUNC_INFO, "invalid device address");
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -357,7 +352,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
     if (!device || !device.services) {
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::UnknownError;
-            errorString = tr("service discovery agent: minimal service discovery failed");
+            errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_MINIMAL_FAILED);
             emit q_ptr->error(error);
         }
     } else {
@@ -365,7 +360,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         NSArray *const records = device.services;
         for (IOBluetoothSDPServiceRecord *record in records) {
             QBluetoothServiceInfo serviceInfo;
-            Q_ASSERT_X(discoveredDevices.size() >= 1, "SDPInquiryFinished()",
+            Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO,
                        "invalid number of devices");
 
             serviceInfo.setDevice(discoveredDevices.at(0));
@@ -389,11 +384,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
 
 void QBluetoothServiceDiscoveryAgentPrivate::setupDeviceDiscoveryAgent()
 {
-    Q_ASSERT_X(q_ptr, "setupDeviceDiscoveryAgent()",
-               "invalid q_ptr (null)");
+    Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
     Q_ASSERT_X(deviceDiscoveryAgent.isNull() || !deviceDiscoveryAgent->isActive(),
-               "setupDeviceDiscoveryAgent()",
-               "device discovery agent is active");
+               Q_FUNC_INFO, "device discovery agent is active");
 
     deviceDiscoveryAgent.reset(new QBluetoothDeviceDiscoveryAgent(localAdapterAddress, q_ptr));
 
@@ -446,7 +439,7 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoot
                 return;
         }
         d_ptr->error = InvalidBluetoothAdapterError;
-        d_ptr->errorString = tr("Invalid Bluetooth adapter address");
+        d_ptr->errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_INVALID_ADDRESS);
     }
 }
 

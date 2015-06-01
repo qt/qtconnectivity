@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2015 The Qt Company Ltd.
 ** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
-** Contact: http://www.qt-project.org/legal
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -40,6 +40,8 @@
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QLowEnergyService>
+
+#include <errno.h>
 
 #define ATTRIBUTE_CHANNEL_ID 4
 
@@ -77,6 +79,7 @@
 #define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
 
 //GATT command sizes in bytes
+#define ERROR_RESPONSE_HEADER_SIZE 5
 #define FIND_INFO_REQUEST_HEADER_SIZE 5
 #define GRP_TYPE_REQ_HEADER_SIZE 7
 #define READ_BY_TYPE_REQ_HEADER_SIZE 7
@@ -277,6 +280,7 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
     setState(QLowEnergyController::ClosingState);
     l2cpSocket->close();
+    resetController();
 }
 
 void QLowEnergyControllerPrivate::l2cpDisconnected()
@@ -312,7 +316,17 @@ void QLowEnergyControllerPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError
     }
 
     invalidateServices();
+    resetController();
     setState(QLowEnergyController::UnconnectedState);
+}
+
+
+void QLowEnergyControllerPrivate::resetController()
+{
+    openRequests.clear();
+    requestPending = false;
+    encryptionChangePending = false;
+    securityLevelValue = -1;
 }
 
 void QLowEnergyControllerPrivate::l2cpReadyRead()
@@ -345,9 +359,20 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
     case ATT_OP_READ_REQUEST:
     case ATT_OP_FIND_INFORMATION_REQUEST:
     case ATT_OP_WRITE_REQUEST:
-        qCWarning(QT_BT_BLUEZ) << "Unexpected message type" << hex << command
-                               << "will be ignored"   ;
+    {
+        qCDebug(QT_BT_BLUEZ) << "Server request" << hex << command;
+
+        //send not supported
+        QByteArray packet(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
+        packet[0] = ATT_OP_ERROR_RESPONSE;
+        packet[1] = command;
+        bt_put_unaligned(htobs(0), (quint16 *)(packet.data() + 2));
+        packet[4] = ATT_ERROR_REQUEST_NOT_SUPPORTED;
+
+        sendCommand(packet);
+
         return;
+    }
     default:
         //only solicited replies finish pending requests
         requestPending = false;
@@ -373,10 +398,12 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
 void QLowEnergyControllerPrivate::encryptionChangedEvent(
         const QBluetoothAddress &address, bool wasSuccess)
 {
+    if (!encryptionChangePending) // somebody else caused change event
+        return;
+
     if (remoteDevice != address)
         return;
 
-    Q_ASSERT(encryptionChangePending);
     securityLevelValue = securityLevel();
 
     // On success continue to process ATT command queue
@@ -677,6 +704,11 @@ void QLowEnergyControllerPrivate::processReply(
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
+        QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+        Q_ASSERT(!service.isNull());
+        bool isServiceDiscoveryRun
+                = !(service->state == QLowEnergyService::ServiceDiscovered);
+
         if (isErrorResponse) {
             Q_ASSERT(!encryptionChangePending);
             encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
@@ -685,6 +717,12 @@ void QLowEnergyControllerPrivate::processReply(
                 // Retry the same command again once the change has happened
                 openRequests.prepend(request);
                 break;
+            } else if (!isServiceDiscoveryRun) {
+                // not encryption problem -> abort readCharacteristic()/readDescriptor() run
+                if (!descriptorHandle)
+                    emit service->error(QLowEnergyService::CharacteristicReadError);
+                else
+                    emit service->error(QLowEnergyService::DescriptorReadError);
             }
         } else {
             if (!descriptorHandle)
@@ -694,18 +732,32 @@ void QLowEnergyControllerPrivate::processReply(
                                         response.mid(1), NEW_VALUE);
 
             if (response.size() == mtuSize) {
+                qCDebug(QT_BT_BLUEZ) << "Switching to blob reads for"
+                         << charHandle << descriptorHandle
+                         << service->characteristicList[charHandle].uuid.toString();
                 // Potentially more data -> switch to blob reads
                 readServiceValuesByOffset(handleData, mtuSize-1,
                                           request.reference2.toBool());
                 break;
+            } else if (!isServiceDiscoveryRun) {
+                // readCharacteristic() or readDescriptor() ongoing
+                if (!descriptorHandle) {
+                    QLowEnergyCharacteristic ch(service, charHandle);
+                    emit service->characteristicRead(ch, response.mid(1));
+                } else {
+                    QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
+                    emit service->descriptorRead(descriptor, response.mid(1));
+                }
+                break;
             }
         }
 
-        if (request.reference2.toBool()) {
+        if (request.reference2.toBool() && isServiceDiscoveryRun) {
+            // we only run into this code path during the initial service discovery
+            // and not when processing readCharacteristics() after service discovery
+
             //last characteristic -> progress to descriptor discovery
             //last descriptor -> service discovery is done
-            QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-            Q_ASSERT(!service.isNull());
             if (!descriptorHandle)
                 discoverServiceDescriptors(service->uuid);
             else
@@ -716,12 +768,15 @@ void QLowEnergyControllerPrivate::processReply(
     case ATT_OP_READ_BLOB_REQUEST: //error case
     case ATT_OP_READ_BLOB_RESPONSE:
     {
-        //Reading characteristic or descriptor with value longer than MTU
+        //Reading characteristic or descriptor with value longer value than MTU
         Q_ASSERT(request.command == ATT_OP_READ_BLOB_REQUEST);
 
         uint handleData = request.reference.toUInt();
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
         const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
+
+        QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+        Q_ASSERT(!service.isNull());
 
         /*
          * READ_BLOB does not require encryption setup code. BLOB commands
@@ -736,18 +791,33 @@ void QLowEnergyControllerPrivate::processReply(
             else
                 length = updateValueOfDescriptor(charHandle, descriptorHandle,
                                         response.mid(1), APPEND_VALUE);
+
             if (response.size() == mtuSize) {
                 readServiceValuesByOffset(handleData, length,
                                           request.reference2.toBool());
                 break;
+            } else if (service->state == QLowEnergyService::ServiceDiscovered) {
+                // readCharacteristic() or readDescriptor() ongoing
+                if (!descriptorHandle) {
+                    QLowEnergyCharacteristic ch(service, charHandle);
+                    emit service->characteristicRead(ch, ch.value());
+                } else {
+                    QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
+                    emit service->descriptorRead(descriptor, descriptor.value());
+                }
+                break;
             }
+        } else {
+            qWarning() << "READ BLOB for char:" << charHandle
+                       << "descriptor:" << descriptorHandle << "on service"
+                       << service->uuid.toString() << "failed (service discovery run:"
+                       << (service->state == QLowEnergyService::ServiceDiscovered) << ")";
         }
 
         if (request.reference2.toBool()) {
             //last overlong characteristic -> progress to descriptor discovery
             //last overlong descriptor -> service discovery is done
-            QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-            Q_ASSERT(!service.isNull());
+
             if (!descriptorHandle)
                 discoverServiceDescriptors(service->uuid);
             else
@@ -897,8 +967,9 @@ void QLowEnergyControllerPrivate::processReply(
 
         const QByteArray newValue = request.reference2.toByteArray();
         if (!descriptorHandle) {
-            updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             QLowEnergyCharacteristic ch(service, charHandle);
+            if (ch.properties() & QLowEnergyCharacteristic::Read)
+                updateValueOfCharacteristic(charHandle, newValue, NEW_VALUE);
             emit service->characteristicWritten(ch, newValue);
         } else {
             updateValueOfDescriptor(charHandle, descriptorHandle, newValue, NEW_VALUE);
@@ -965,8 +1036,9 @@ void QLowEnergyControllerPrivate::processReply(
                                         attrHandle, newValue, NEW_VALUE);
                 emit service->descriptorWritten(descriptor, newValue);
             } else {
-                updateValueOfCharacteristic(attrHandle, newValue, NEW_VALUE);
                 QLowEnergyCharacteristic ch(service, attrHandle);
+                if (ch.properties() & QLowEnergyCharacteristic::Read)
+                    updateValueOfCharacteristic(attrHandle, newValue, NEW_VALUE);
                 emit service->characteristicWritten(ch, newValue);
             }
         }
@@ -1051,7 +1123,8 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
 /*!
     \internal
 
-    Reads the value of characteristics and descriptors.
+    Reads all values of specific characteristic and descriptor. This function is
+    used during the initial service discovery process.
 
     \a readCharacteristics determines whether we intend to read a characteristic;
     otherwise we read a descriptor.
@@ -1062,10 +1135,10 @@ void QLowEnergyControllerPrivate::readServiceValues(
     quint8 packet[READ_REQUEST_HEADER_SIZE];
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (readCharacteristics)
-            qCDebug(QT_BT_BLUEZ) << "Reading characteristic values for"
+            qCDebug(QT_BT_BLUEZ) << "Reading all characteristic values for"
                          << serviceUuid.toString();
         else
-            qCDebug(QT_BT_BLUEZ) << "Reading descriptor values for"
+            qCDebug(QT_BT_BLUEZ) << "Reading all descriptor values for"
                          << serviceUuid.toString();
     }
 
@@ -1225,7 +1298,8 @@ void QLowEnergyControllerPrivate::processUnsolicitedReply(const QByteArray &payl
 
     const QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
     if (ch.isValid() && ch.handle() == changedHandle) {
-        updateValueOfCharacteristic(ch.attributeHandle(), payload.mid(3), NEW_VALUE);
+        if (ch.properties() & QLowEnergyCharacteristic::Read)
+            updateValueOfCharacteristic(ch.attributeHandle(), payload.mid(3), NEW_VALUE);
         emit ch.d_ptr->characteristicChanged(ch, payload.mid(3));
     } else {
         qCWarning(QT_BT_BLUEZ) << "Cannot find matching characteristic for "
@@ -1547,6 +1621,84 @@ void QLowEnergyControllerPrivate::writeDescriptor(
     request.command = ATT_OP_WRITE_REQUEST;
     request.reference = (charHandle | (descriptorHandle << 16));
     request.reference2 = newValue;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
+/*!
+    \internal
+
+    Reads the value of one specific characteristic.
+ */
+void QLowEnergyControllerPrivate::readCharacteristic(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle)
+{
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
+
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!(charDetails.properties & QLowEnergyCharacteristic::Read)) {
+        // if this succeeds the device has a bug, char is advertised as
+        // non-readable. We try to be permissive and let the remote
+        // device answer to the read attempt
+        qCWarning(QT_BT_BLUEZ) << "Reading non-readable char" << charHandle;
+    }
+
+    quint8 packet[READ_REQUEST_HEADER_SIZE];
+    packet[0] = ATT_OP_READ_REQUEST;
+    bt_put_unaligned(htobs(charDetails.valueHandle), (quint16 *) &packet[1]);
+
+    QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
+
+    qCDebug(QT_BT_BLUEZ) << "Targeted reading characteristic" << hex << charHandle;
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_READ_REQUEST;
+    request.reference = charHandle;
+    // reference2 not really required but false prevents service discovery
+    // code from running in ATT_OP_READ_RESPONSE handler
+    request.reference2 = false;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
+void QLowEnergyControllerPrivate::readDescriptor(
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle)
+{
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
+
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!charDetails.descriptorList.contains(descriptorHandle))
+        return;
+
+    quint8 packet[READ_REQUEST_HEADER_SIZE];
+    packet[0] = ATT_OP_READ_REQUEST;
+    bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
+
+    QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
+
+    qCDebug(QT_BT_BLUEZ) << "Targeted reading descriptor" << hex << descriptorHandle;
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_READ_REQUEST;
+    request.reference = (charHandle | (descriptorHandle << 16));
+    // reference2 not really required but false prevents service discovery
+    // code from running in ATT_OP_READ_RESPONSE handler
+    request.reference2 = false;
     openRequests.enqueue(request);
 
     sendNextPendingRequest();

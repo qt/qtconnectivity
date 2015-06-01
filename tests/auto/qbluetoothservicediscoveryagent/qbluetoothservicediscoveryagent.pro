@@ -4,7 +4,6 @@ CONFIG += testcase
 
 QT = core concurrent bluetooth testlib
 osx:QT += widgets
-
 blackberry {
     LIBS += -lbtapi
 }

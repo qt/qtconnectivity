@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt local connectivty modules.
 **
@@ -10,15 +10,15 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
 ** Documentation License version 1.3 as published by the Free Software
 ** Foundation and appearing in the file included in the packaging of
-** this file.  Please review the following information to ensure
+** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
 ** will be met: http://www.gnu.org/copyleft/fdl.html.
 ** $QT_END_LICENSE$
@@ -36,15 +36,10 @@ Low Energy devices.
 
     \section1 Technology Preview
 
-    The Qt Bluetooth Low Energy API has been introduced in Qt 5.4.
-    The API is considered to be a preview of the technology and currently only works
-    on BlueZ 4 & 5 based Linux systems. Support for further platforms, for example Android,
-    is currently being worked on and will be added by later Qt releases. In addition,
-    Qt only supports the central role. For more details on this limitation see below.
-
-    While the API is not yet frozen it is close to its final stage.
-    We would like to encourage you to send us feedback and bug reports related to
-    this new feature.
+    The Qt Bluetooth Low Energy API was introduced by Qt 5.4. Since Qt 5.5 the API
+    is frozen and a compatibility guarantee is given for future releases.
+    At the moment, Qt only supports the Bluetooth Low Energy central role.
+    For more details on this limitation see below.
 
     \section1 What Is Bluetooth Low Energy
 
@@ -172,8 +167,7 @@ Low Energy devices.
     \l {heartlistener}{Heart Listener} example.
 
     \note As of Qt 5.4 the Qt Bluetooth Low Energy API is in tech preview mode and supports Linux
-    with BlueZ 4 & 5. Only the last versions of Bluez 4.x (v 4.101 confirmed to work) and Linux kernels
-    from version 3.5 onwards support this feature.
+    with BlueZ 4.101 & 5.x. The minimal Linux kernel version is 3.5.
 
     \section2 Establishing a Connection
 

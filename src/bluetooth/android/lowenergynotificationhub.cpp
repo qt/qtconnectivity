@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -10,9 +10,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -23,8 +23,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -120,6 +120,180 @@ void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
                               Q_ARG(QLowEnergyController::Error,
                                     (QLowEnergyController::Error)errorCode),
                               Q_ARG(QString, uuids));
+}
+
+void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
+        JNIEnv *, jobject, jlong qtObject, jobject uuid, jint startHandle,
+        jint endHandle)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    const QString serviceUuid = QAndroidJniObject(uuid).toString();
+    QMetaObject::invokeMethod(hub, "serviceDetailsDiscoveryFinished",
+                              Qt::QueuedConnection,
+                              Q_ARG(QString, serviceUuid),
+                              Q_ARG(int, startHandle),
+                              Q_ARG(int, endHandle));
+}
+
+void LowEnergyNotificationHub::lowEnergy_characteristicRead(
+        JNIEnv *env, jobject, jlong qtObject, jobject sUuid, jint handle,
+        jobject cUuid, jint properties, jbyteArray data)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    const QBluetoothUuid serviceUuid(QAndroidJniObject(sUuid).toString());
+    if (serviceUuid.isNull())
+        return;
+
+    const QBluetoothUuid charUuid(QAndroidJniObject(cUuid).toString());
+    if (charUuid.isNull())
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "characteristicRead", Qt::QueuedConnection,
+                              Q_ARG(QBluetoothUuid, serviceUuid),
+                              Q_ARG(int, handle),
+                              Q_ARG(QBluetoothUuid, charUuid),
+                              Q_ARG(int, properties),
+                              Q_ARG(QByteArray, payload));
+
+}
+
+void LowEnergyNotificationHub::lowEnergy_descriptorRead(
+        JNIEnv *env, jobject, jlong qtObject, jobject sUuid, jobject cUuid,
+        jint handle, jobject dUuid, jbyteArray data)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    const QBluetoothUuid serviceUuid(QAndroidJniObject(sUuid).toString());
+    if (serviceUuid.isNull())
+        return;
+
+    const QBluetoothUuid charUuid(QAndroidJniObject(cUuid).toString());
+    const QBluetoothUuid descUuid(QAndroidJniObject(dUuid).toString());
+    if (charUuid.isNull() || descUuid.isNull())
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "descriptorRead", Qt::QueuedConnection,
+                              Q_ARG(QBluetoothUuid, serviceUuid),
+                              Q_ARG(QBluetoothUuid, charUuid),
+                              Q_ARG(int, handle),
+                              Q_ARG(QBluetoothUuid, descUuid),
+                              Q_ARG(QByteArray, payload));
+}
+
+void LowEnergyNotificationHub::lowEnergy_characteristicWritten(
+        JNIEnv *env, jobject, jlong qtObject, jint charHandle,
+        jbyteArray data, jint errorCode)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "characteristicWritten", Qt::QueuedConnection,
+                              Q_ARG(int, charHandle),
+                              Q_ARG(QByteArray, payload),
+                              Q_ARG(QLowEnergyService::ServiceError,
+                                    (QLowEnergyService::ServiceError)errorCode));
+}
+
+void LowEnergyNotificationHub::lowEnergy_descriptorWritten(
+        JNIEnv *env, jobject, jlong qtObject, jint descHandle,
+        jbyteArray data, jint errorCode)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "descriptorWritten", Qt::QueuedConnection,
+                              Q_ARG(int, descHandle),
+                              Q_ARG(QByteArray, payload),
+                              Q_ARG(QLowEnergyService::ServiceError,
+                                    (QLowEnergyService::ServiceError)errorCode));
+}
+
+void LowEnergyNotificationHub::lowEnergy_characteristicChanged(
+        JNIEnv *env, jobject, jlong qtObject, jint charHandle, jbyteArray data)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QByteArray payload;
+    if (data) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(data);
+        payload.resize(length);
+        env->GetByteArrayRegion(data, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "characteristicChanged", Qt::QueuedConnection,
+                              Q_ARG(int, charHandle), Q_ARG(QByteArray, payload));
+}
+
+void LowEnergyNotificationHub::lowEnergy_serviceError(
+        JNIEnv *, jobject, jlong qtObject, jint attributeHandle, int errorCode)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QMetaObject::invokeMethod(hub, "serviceError", Qt::QueuedConnection,
+                              Q_ARG(int, attributeHandle),
+                              Q_ARG(QLowEnergyService::ServiceError,
+                                    (QLowEnergyService::ServiceError)errorCode));
 }
 
 QT_END_NAMESPACE

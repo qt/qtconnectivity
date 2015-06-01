@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -55,7 +47,7 @@ using namespace QT_NAMESPACE;
 
 - (id)initWithDelegate:(OSXBluetooth::ChannelDelegate *)aDelegate
 {
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:", "invalid delegate (null)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -72,8 +64,8 @@ using namespace QT_NAMESPACE;
 {
     // This type of channel does not require connect, it's created with
     // already open channel.
-    Q_ASSERT_X(aDelegate, "-initWithDelegate:channel:", "invalid delegate (null)");
-    Q_ASSERT_X(channel, "-initWithDelegate:channel:", "invalid channel (nil)");
+    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(channel, Q_FUNC_INFO, "invalid channel (nil)");
 
     if (self = [super init]) {
         delegate = aDelegate;
@@ -108,15 +100,13 @@ using namespace QT_NAMESPACE;
             withPSM:(BluetoothL2CAPChannelID)psm
 {
     if (address.isNull()) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "invalid peer address";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "invalid peer address";
         return kIOReturnNoDevice;
     }
 
     // Can never be called twice.
     if (connected || device || channel) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "connection is already active";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "connection is already active";
         return kIOReturnStillOpen;
     }
 
@@ -125,15 +115,13 @@ using namespace QT_NAMESPACE;
     const BluetoothDeviceAddress iobtAddress = OSXBluetooth::iobluetooth_address(address);
     device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "failed to create a device";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device";
         return kIOReturnNoDevice;
     }
 
     const IOReturn status = [device openL2CAPChannelAsync:&channel withPSM:psm delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << "-connectAsyncToDevice:withPSM:, "
-                                 "failed to open L2CAP channel";
+        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to open L2CAP channel";
         // device is still autoreleased.
         device = nil;
         return status;
@@ -152,8 +140,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
-    Q_ASSERT_X(delegate, "-l2capChannelData:data:length",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (dataPointer && dataLength)
         delegate->readChannelData(dataPointer, dataLength);
@@ -164,8 +151,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
-    Q_ASSERT_X(delegate, "-l2capChannelOpenComplete:status:",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (error != kIOReturnSuccess) {
         delegate->setChannelError(error);
@@ -179,7 +165,7 @@ using namespace QT_NAMESPACE;
 {
     Q_UNUSED(l2capChannel)
 
-    Q_ASSERT_X(delegate, "-l2capChannelClosed:", "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->channelClosed();
     connected = false;
 }
@@ -195,8 +181,7 @@ using namespace QT_NAMESPACE;
     Q_UNUSED(l2capChannel)
     Q_UNUSED(refcon)
 
-    Q_ASSERT_X(delegate, "-l2capChannelWriteComplete:refcon:status",
-               "invalid delegate (null)");
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
     if (error != kIOReturnSuccess)
         delegate->setChannelError(error);
@@ -243,20 +228,18 @@ using namespace QT_NAMESPACE;
 
 - (IOReturn) writeSync:(void*)data length:(UInt16)length
 {
-    Q_ASSERT_X(data, "-writeSync:length:", "invalid data (null)");
-    Q_ASSERT_X(length, "-writeSync:length:", "invalid data size");
-    Q_ASSERT_X(connected && channel, "-writeSync:",
-               "invalid L2CAP channel");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
+    Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid L2CAP channel");
 
     return [channel writeSync:data length:length];
 }
 
 - (IOReturn) writeAsync:(void*)data length:(UInt16)length
 {
-    Q_ASSERT_X(data, "-writeAsync:length:", "invalid data (null)");
-    Q_ASSERT_X(length, "-writeAync:length:", "invalid data size");
-    Q_ASSERT_X(connected && channel, "-writeAsync:length:",
-               "invalid L2CAP channel");
+    Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
+    Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
+    Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid L2CAP channel");
 
     return [channel writeAsync:data length:length refcon:Q_NULLPTR];
 }

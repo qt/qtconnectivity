@@ -1,8 +1,8 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Lauri Laanmets (Proekspert AS) <lauri.laanmets@eesti.ee>
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
@@ -11,9 +11,9 @@
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia. For licensing terms and
-** conditions see http://qt.digia.com/licensing. For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -24,8 +24,8 @@
 ** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights. These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ** $QT_END_LICENSE$
@@ -83,35 +83,20 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 {
     QAndroidJniEnvironment env;
 
-    jclass btAdapterClass = env->FindClass("android/bluetooth/BluetoothAdapter");
-    if (btAdapterClass == NULL) {
-        qCWarning(QT_BT_ANDROID)
-            << "Native registration unable to find class android/bluetooth/BluetoothAdapter";
-        return;
-    }
-
-    jmethodID getDefaultAdapterID
-        = env->GetStaticMethodID(btAdapterClass, "getDefaultAdapter",
-                                 "()Landroid/bluetooth/BluetoothAdapter;");
-    if (getDefaultAdapterID == NULL) {
-        qCWarning(QT_BT_ANDROID)
-            << "Native registration unable to get method ID: " \
-               "getDefaultAdapter of android/bluetooth/BluetoothAdapter";
-        return;
-    }
-
-    jobject btAdapterObject = env->CallStaticObjectMethod(btAdapterClass, getDefaultAdapterID);
-    if (btAdapterObject == NULL) {
+    QAndroidJniObject adapter = QAndroidJniObject::callStaticObjectMethod(
+                                    "android/bluetooth/BluetoothAdapter", "getDefaultAdapter",
+                                    "()Landroid/bluetooth/BluetoothAdapter;");
+    if (!adapter.isValid()) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         qCWarning(QT_BT_ANDROID) <<  "Device does not support Bluetooth";
-        env->DeleteLocalRef(btAdapterClass);
         return;
     }
 
-    obj = new QAndroidJniObject(btAdapterObject);
-    if (!obj->isValid()) {
-        delete obj;
-        obj = 0;
-    } else if (!address.isNull()) {
+    obj = new QAndroidJniObject(adapter);
+    if (!address.isNull()) {
         const QString localAddress
             = obj->callObjectMethod("getAddress", "()Ljava/lang/String;").toString();
         if (localAddress != address.toString()) {
@@ -120,9 +105,6 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
             obj = 0;
         }
     }
-
-    env->DeleteLocalRef(btAdapterObject);
-    env->DeleteLocalRef(btAdapterClass);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
@@ -376,9 +358,9 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         return;
     }
 
-    // BluetoothDevice::createBond() requires Android API 19
-    if (QtAndroidPrivate::androidSdkVersion() < 19 || !d_ptr->adapter()) {
-        qCWarning(QT_BT_ANDROID) <<  "Unable to pair: requires Android API 19+";
+    // BluetoothDevice::createBond() requires Android API 15
+    if (QtAndroidPrivate::androidSdkVersion() < 15 || !d_ptr->adapter()) {
+        qCWarning(QT_BT_ANDROID) <<  "Unable to pair: requires Android API 15+";
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));

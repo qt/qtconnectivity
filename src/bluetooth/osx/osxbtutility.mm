@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -43,6 +35,7 @@
 #include "osxbtutility_p.h"
 #include "qbluetoothuuid.h"
 
+#include <QtCore/qendian.h>
 #include <QtCore/qstring.h>
 
 #ifndef QT_IOS_BLUETOOTH
@@ -158,6 +151,159 @@ QString qt_error_string(IOReturn errorCode)
 }
 
 #endif
+
+
+// Apple has: CBUUID, NSUUID, CFUUID, IOBluetoothSDPUUID
+// and it's handy to have several converters:
+
+QBluetoothUuid qt_uuid(CBUUID *uuid)
+{
+    // Apples' docs say "128 bit" and "16-bit UUIDs are implicitly
+    // pre-filled with the Bluetooth Base UUID."
+    // But Core Bluetooth can return CBUUID objects of length 2
+    // (16-bit, so they are not pre-filled?).
+
+    if (!uuid)
+        return QBluetoothUuid();
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if (uuid.data.length == 2) {
+        // CBUUID's docs say nothing about byte-order.
+        // Seems to be in big-endian.
+        const uchar *const src = static_cast<const uchar *>(uuid.data.bytes);
+        return QBluetoothUuid(qFromBigEndian<quint16>(src));
+    } else if (uuid.data.length == 16) {
+        quint128 qtUuidData = {};
+        const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
+        std::copy(source, source + 16, qtUuidData.data);
+
+        return QBluetoothUuid(qtUuidData);
+    } else {
+        qCDebug(QT_BT_OSX) << "qt_uuid, invalid CBUUID, 2 or 16 bytes expected, but got "
+                           << uuid.data.length << " bytes length";
+        return QBluetoothUuid();
+    }
+
+    if (uuid.data.length != 16) // TODO: warning?
+        return QBluetoothUuid();
+
+}
+
+CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
+{
+    const quint128 qtUuidData = qtUuid.toUInt128();
+    const quint8 *const data = qtUuidData.data;
+
+    CFUUIDBytes bytes = {data[0],  data[1],  data[2],  data[3],
+                         data[4],  data[5],  data[6],  data[7],
+                         data[8],  data[9],  data[10], data[11],
+                         data[12], data[13], data[14], data[15]};
+
+    CFUUIDRef cfUuid = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, bytes);
+    return CFStrongReference<CFUUIDRef>(cfUuid, false);// false == already retained.
+}
+
+ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
+{
+    CFStrongReference<CFUUIDRef> cfUuid(cf_uuid(qtUuid));
+    if (!cfUuid)
+        return ObjCStrongReference<CBUUID>();
+
+    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], true); //true == retain.
+    return cbUuid;
+}
+
+bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid)
+{
+    const QBluetoothUuid qtUuid2(qt_uuid(cbUuid));
+    return qtUuid == qtUuid2;
+}
+
+bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid)
+{
+    return equal_uuids(qtUuid, cbUuid);
+}
+
+QByteArray qt_bytearray(NSData *data)
+{
+    QByteArray value;
+    if (!data || !data.length)
+        return value;
+
+    value.resize(data.length);
+    const char *const src = static_cast<const char *>(data.bytes);
+    std::copy(src, src + data.length, value.data());
+
+    return value;
+}
+
+template<class Integer>
+QByteArray qt_bytearray(Integer n)
+{
+    QByteArray value;
+    value.resize(sizeof n);
+    const char *const src = reinterpret_cast<char *>(&n);
+    std::copy(src, src + sizeof n, value.data());
+
+    return value;
+}
+
+QByteArray qt_bytearray(NSString *string)
+{
+    if (!string)
+        return QByteArray();
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+    NSData *const utf8Data = [string dataUsingEncoding:NSUTF8StringEncoding];
+
+    return qt_bytearray(utf8Data);
+}
+
+QByteArray qt_bytearray(NSObject *obj)
+{
+    // descriptor.value has type 'id'.
+    // While the Apple's docs say this about descriptors:
+    //
+    // - CBUUIDCharacteristicExtendedPropertiesString
+    //   The string representation of the UUID for the extended properties descriptor.
+    //   The corresponding value for this descriptor is an NSNumber object.
+    //
+    // - CBUUIDCharacteristicUserDescriptionString
+    //   The string representation of the UUID for the user description descriptor.
+    //   The corresponding value for this descriptor is an NSString object.
+    //
+    //   ... etc.
+    //
+    // This is not true. On OS X, they all seem to be NSData (or derived from NSData),
+    // and they can be something else on iOS (NSNumber, NSString, etc.)
+    if (!obj)
+        return QByteArray();
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    if ([obj isKindOfClass:[NSData class]]) {
+        return qt_bytearray(static_cast<NSData *>(obj));
+    } else if ([obj isKindOfClass:[NSString class]]) {
+        return qt_bytearray(static_cast<NSString *>(obj));
+    } else if ([obj isKindOfClass:[NSNumber class]]) {
+        NSNumber *const nsNumber = static_cast<NSNumber *>(obj);
+        return qt_bytearray([nsNumber unsignedShortValue]);
+    }
+    // TODO: Where can be more types, but Core Bluetooth does not support them,
+    // or at least it's not documented.
+
+    return QByteArray();
+}
+
+ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
+{
+    if (!qtData.size())
+        return ObjCStrongReference<NSData>([[NSData alloc] init], false);
+
+    ObjCStrongReference<NSData> result([NSData dataWithBytes:qtData.constData() length:qtData.size()], true);
+    return result;
+}
 
 }
 

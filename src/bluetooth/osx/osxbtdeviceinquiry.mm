@@ -1,39 +1,31 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
-** Contact: http://www.qt-project.org/legal
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
-** use the contact form at http://qt.digia.com/contact-us.
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -71,17 +63,16 @@ using namespace QT_NAMESPACE;
 - (id)initWithDelegate:(OSXBluetooth::DeviceInquiryDelegate *)delegate
 {
     if (self = [super init]) {
-        Q_ASSERT_X(delegate, "-initWithDelegate:", "invalid device inquiry delegate (null)");
+        Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid device inquiry delegate (null)");
 
         m_inquiry = [[IOBluetoothDeviceInquiry inquiryWithDelegate:self] retain];
 
         if (m_inquiry) {
-            // TODO: something more reasonable required!
-            [m_inquiry setInquiryLength:20];
+            [m_inquiry setInquiryLength:15];
             [m_inquiry setUpdateNewDeviceNames:NO];//Useless, disable!
             m_delegate = delegate;
         } else {
-            qCCritical(QT_BT_OSX) << "-initWithDelegate:, failed to create "
+            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create "
                                      "a device inquiry";
         }
 
@@ -116,16 +107,15 @@ using namespace QT_NAMESPACE;
         return kIOReturnBusy;
 
     m_active = true;
-    [m_inquiry clearFoundDevices];// TODO: implement update?
+    [m_inquiry clearFoundDevices];
     const IOReturn result = [m_inquiry start];
     if (result != kIOReturnSuccess) {
-        // QtBluetooth will probably convert an error in UnknownError,
-        // not really interesting.
-        qCWarning(QT_BT_OSX) << "-start, failed with "
+        // QtBluetooth will probably convert an error into UnknownError,
+        // loosing the actual information.
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO <<"failed with "
                                 "IOKit error code: " << result;
         m_active = false;
-    } else
-        qCDebug(QT_BT_OSX) << "-start, device inquiry started";
+    }
 
     return result;
 }
@@ -133,7 +123,7 @@ using namespace QT_NAMESPACE;
 - (IOReturn)stop
 {
     if (m_active) {
-        Q_ASSERT_X(m_inquiry, "-stop", "active but nil inquiry");
+        Q_ASSERT_X(m_inquiry, Q_FUNC_INFO, "active but nil inquiry");
 
         m_active = false;
         const IOReturn res = [m_inquiry stop];
@@ -158,18 +148,14 @@ using namespace QT_NAMESPACE;
 
     m_active = false;
 
-    Q_ASSERT_X(m_delegate, "-deviceInquiryComplete:error:aborted",
-               "invalid device inquiry delegate (null)");
+    Q_ASSERT_X(m_delegate, Q_FUNC_INFO, "invalid device inquiry delegate (null)");
 
     if (error != kIOReturnSuccess) {
-        // QtBluetooth has not too many errors, 'UnknownError' is not really
-        // useful, report error code here:
-        qCWarning(QT_BT_OSX) << "-deviceInquiryComplete:error:aborted:, "
-                                "IOKit error code: " << error;
+        // QtBluetooth has not too many error codes, 'UnknownError' is not really
+        // useful, report the actual error code here:
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "IOKit error code: " << error;
         m_delegate->error(sender, error);
     } else {
-        qCDebug(QT_BT_OSX) << "-deviceInquiryComplete:error:aborted:, "
-                              "device inquiry complete";
         m_delegate->inquiryFinished(sender);
     }
 }
@@ -180,9 +166,7 @@ using namespace QT_NAMESPACE;
     if (sender != m_inquiry) // Can never happen in the current version.
         return;
 
-    Q_ASSERT_X(m_delegate, "-deviceInquiryDeviceFound:device:",
-               "invalid device inquiry delegate (null)");
-
+    Q_ASSERT_X(m_delegate, Q_FUNC_INFO, "invalid device inquiry delegate (null)");
     m_delegate->deviceFound(sender, device);
 }
 
