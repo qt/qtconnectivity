@@ -40,10 +40,6 @@
 #include <QtNfc/qndefnfctextrecord.h>
 #include <QtNfc/qndefnfcurirecord.h>
 
-#if 0
-#pragma qt_sync_skip_header_check
-#endif
-
 QT_FORWARD_DECLARE_CLASS(QUrl)
 
 QT_BEGIN_NAMESPACE
@@ -84,6 +80,7 @@ public:
     QNdefNfcSmartPosterRecord();
     QNdefNfcSmartPosterRecord(const QNdefRecord &other);
     QNdefNfcSmartPosterRecord(const QNdefNfcSmartPosterRecord &other);
+    QNdefNfcSmartPosterRecord &operator=(const QNdefNfcSmartPosterRecord &other);
     ~QNdefNfcSmartPosterRecord();
 
     void setPayload(const QByteArray &payload);

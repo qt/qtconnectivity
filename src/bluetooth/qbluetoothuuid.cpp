@@ -587,9 +587,12 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 */
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
     data1 = qFromBigEndian<quint32>(*reinterpret_cast<quint32 *>(&uuid.data[0]));
     data2 = qFromBigEndian<quint16>(*reinterpret_cast<quint16 *>(&uuid.data[4]));
     data3 = qFromBigEndian<quint16>(*reinterpret_cast<quint16 *>(&uuid.data[6]));
+QT_WARNING_POP
 
     memcpy(data4, &uuid.data[8], 8);
 }

@@ -126,6 +126,8 @@ private:
                       QObject *parent = 0);
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyService::ServiceTypes)
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QLowEnergyService::ServiceState)

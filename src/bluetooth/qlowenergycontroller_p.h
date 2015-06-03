@@ -132,6 +132,8 @@ public:
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
+    QString remoteName;
+
     QLowEnergyController::ControllerState state;
     QLowEnergyController::Error error;
     QString errorString;

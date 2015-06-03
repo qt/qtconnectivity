@@ -34,11 +34,9 @@ Low Energy devices.
 
 \tableofcontents
 
-    \section1 Technology Preview
-
     The Qt Bluetooth Low Energy API was introduced by Qt 5.4. Since Qt 5.5 the API
     is frozen and a compatibility guarantee is given for future releases.
-    At the moment, Qt only supports the Bluetooth Low Energy central role.
+    At the moment, Qt supports the Bluetooth Low Energy central role.
     For more details on this limitation see below.
 
     \section1 What Is Bluetooth Low Energy
@@ -165,9 +163,6 @@ Low Energy devices.
     permits creating connections to peripheral devices, discovering their services, as well as reading
     and writing data stored on the device. The example code below is taken from the
     \l {heartlistener}{Heart Listener} example.
-
-    \note As of Qt 5.4 the Qt Bluetooth Low Energy API is in tech preview mode and supports Linux
-    with BlueZ 4.101 & 5.x. The minimal Linux kernel version is 3.5.
 
     \section2 Establishing a Connection
 

@@ -93,9 +93,6 @@ QT_BEGIN_NAMESPACE
     connection becomes invalid as soon as the controller disconnects from the
     remote Bluetooth Low Energy device.
 
-    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
-    Some API elements may change until the final release of the feature.
-
     \sa QLowEnergyService, QLowEnergyCharacteristic, QLowEnergyDescriptor
 */
 
@@ -385,6 +382,8 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 
     The controller uses the local default Bluetooth adapter for
     the connection management.
+
+    \obsolete
  */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
@@ -420,6 +419,7 @@ QLowEnergyController::QLowEnergyController(
     d->remoteDevice = remoteDeviceInfo.address();
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
+    d->remoteName = remoteDeviceInfo.name();
 }
 
 /*!
@@ -434,6 +434,8 @@ QLowEnergyController::QLowEnergyController(
     \a localDevice specifies a local device that is not a local Bluetooth
     adapter, \l error() is set to \l InvalidBluetoothAdapterError once
     \l connectToDevice() is called.
+
+    \obsolete
  */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
@@ -477,6 +479,16 @@ QBluetoothAddress QLowEnergyController::localAddress() const
 QBluetoothAddress QLowEnergyController::remoteAddress() const
 {
     return d_ptr->remoteDevice;
+}
+
+/*!
+    Returns the name of the remote Bluetooth Low Energy device.
+
+    \since 5.5
+ */
+QString QLowEnergyController::remoteName() const
+{
+    return d_ptr->remoteName;
 }
 
 /*!

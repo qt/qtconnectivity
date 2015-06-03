@@ -31,40 +31,48 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHHOSTINFO_H
-#define QBLUETOOTHHOSTINFO_H
+#include <QtTest/QtTest>
 
-#include <QtBluetooth/qbluetoothglobal.h>
-#include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/qlowenergyservice.h>
 
-QT_BEGIN_NAMESPACE
 
-class QBluetoothHostInfoPrivate;
-class Q_BLUETOOTH_EXPORT QBluetoothHostInfo
+/*
+ * This is a very simple test despite the complexity of QLowEnergyService.
+ * It mostly aims to test the static API behaviors of the class. The connection
+ * orientated elements are test by the test for QLowEnergyController as it
+ * is impossible to test the two classes separately from each other.
+ */
+
+class tst_QLowEnergyService : public QObject
 {
-public:
-    QBluetoothHostInfo();
-    QBluetoothHostInfo(const QBluetoothHostInfo &other);
-    ~QBluetoothHostInfo();
+    Q_OBJECT
 
-    QBluetoothHostInfo &operator=(const QBluetoothHostInfo &other);
-
-    bool operator==(const QBluetoothHostInfo &other) const;
-    bool operator!=(const QBluetoothHostInfo &other) const;
-
-    QBluetoothAddress address() const;
-    void setAddress(const QBluetoothAddress &address);
-
-    QString name() const;
-    void setName(const QString &name);
-
-private:
-    Q_DECLARE_PRIVATE(QBluetoothHostInfo)
-    QBluetoothHostInfoPrivate *d_ptr;
+private slots:
+    void tst_flags();
 };
 
-QT_END_NAMESPACE
+void tst_QLowEnergyService::tst_flags()
+{
+    QLowEnergyService::ServiceTypes flag1(QLowEnergyService::PrimaryService);
+    QLowEnergyService::ServiceTypes flag2(QLowEnergyService::IncludedService);
+    QLowEnergyService::ServiceTypes result;
 
-Q_DECLARE_METATYPE(QBluetoothHostInfo)
+    // test QFlags &operator|=(QFlags f)
+    result = flag1 | flag2;
+    QVERIFY(result.testFlag(QLowEnergyService::PrimaryService));
+    QVERIFY(result.testFlag(QLowEnergyService::IncludedService));
 
-#endif
+    // test QFlags &operator|=(Enum f)
+    result = flag1 | QLowEnergyService::IncludedService;
+    QVERIFY(result.testFlag(QLowEnergyService::PrimaryService));
+    QVERIFY(result.testFlag(QLowEnergyService::IncludedService));
+
+    // test Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyService::ServiceTypes)
+    result = QLowEnergyService::IncludedService | flag1;
+    QVERIFY(result.testFlag(QLowEnergyService::PrimaryService));
+    QVERIFY(result.testFlag(QLowEnergyService::IncludedService));
+}
+
+QTEST_MAIN(tst_QLowEnergyService)
+
+#include "tst_qlowenergyservice.moc"

@@ -56,6 +56,7 @@ tests/auto/qbluetoothuuid/tst_qbluetoothuuid
 tests/auto/qlowenergycharacteristic/tst_qlowenergycharacteristic
 tests/auto/qlowenergycontroller/tst_qlowenergycontroller
 tests/auto/qlowenergydescriptor/tst_qlowenergydescriptor
+tests/auto/qlowenergyservice/tst_qlowenergyservice
 tests/auto/qlowenergyserviceinfo/tst_qlowenergyserviceinfo
 tests/auto/qndefmessage/tst_qndefmessage
 tests/auto/qndefnfcsmartposterrecord/tst_qndefnfcsmartposterrecord

@@ -133,6 +133,8 @@ public class QtBluetoothLE {
                     resetData();
                     // reset mBluetoothGatt, reusing same object is not very reliable
                     // sometimes it reconnects and sometimes it does not.
+                    if (mBluetoothGatt != null)
+                        mBluetoothGatt.close();
                     mBluetoothGatt = null;
                     break;
                 case BluetoothProfile.STATE_CONNECTED:

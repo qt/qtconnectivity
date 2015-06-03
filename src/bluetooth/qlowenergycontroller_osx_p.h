@@ -131,6 +131,7 @@ private:
 
     QLowEnergyController *q_ptr;
     QBluetoothUuid deviceUuid;
+    QString deviceName;
     // To be sure we set controller's state correctly
     // (Connecting or Connected) we have to know if we're
     // still inside connectToDevice - this is important,
