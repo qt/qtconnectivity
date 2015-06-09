@@ -140,6 +140,12 @@ void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccess
     //Do nothing, because we don't have access modes for the target
 }
 
+struct VerifyRecord
+{
+    QNdefFilter::Record filterRecord;
+    unsigned int count;
+};
+
 void QNearFieldManagerPrivateImpl::handleMessage(const QNdefMessage &message, QNearFieldTarget *target)
 {
     qQNXNFCDebug() << "Handling message in near field manager. Filtercount:"
@@ -151,20 +157,53 @@ void QNearFieldManagerPrivateImpl::handleMessage(const QNdefMessage &message, QN
 
     //For message handlers that specified a filter
     for (int i = 0; i < ndefFilterHandlers.count(); i++) {
-        QNdefFilter filter = ndefFilterHandlers.at(i).second.first;
-        if (filter.recordCount() > message.count())
-            continue;
+        bool matched = true;
 
-        int j=0;
-        for (j = 0; j < filter.recordCount();) {
-            if (message.at(j).typeNameFormat() != filter.recordAt(j).typeNameFormat
-                    || message.at(j).type() != filter.recordAt(j).type ) {
-                break;
-            }
-            j++;
+        QNdefFilter filter = ndefFilterHandlers.at(i).second.first;
+
+        QList<VerifyRecord> filterRecords;
+        for (int j = 0; j < filter.recordCount(); ++j) {
+            VerifyRecord vr;
+            vr.count = 0;
+            vr.filterRecord = filter.recordAt(j);
+
+            filterRecords.append(vr);
         }
-        if (j == filter.recordCount())
+
+        foreach (const QNdefRecord &record, message) {
+            for (int j = 0; matched && (j < filterRecords.count()); ++j) {
+                VerifyRecord &vr = filterRecords[j];
+
+                if (vr.filterRecord.typeNameFormat == record.typeNameFormat() &&
+                    ( vr.filterRecord.type == record.type() ||
+                      vr.filterRecord.type.isEmpty()) ) {
+                    ++vr.count;
+                    break;
+                } else {
+                    if (filter.orderMatch()) {
+                        if (vr.filterRecord.minimum <= vr.count &&
+                            vr.count <= vr.filterRecord.maximum) {
+                            continue;
+                        } else {
+                            matched = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int j = 0; matched && (j < filterRecords.count()); ++j) {
+            const VerifyRecord &vr = filterRecords.at(j);
+
+            if (vr.filterRecord.minimum <= vr.count && vr.count <= vr.filterRecord.maximum)
+                continue;
+            else
+                matched = false;
+        }
+
+        if (matched) {
             ndefFilterHandlers.at(i).second.second.invoke(ndefFilterHandlers.at(i).first.second, Q_ARG(QNdefMessage, message), Q_ARG(QNearFieldTarget*, target));
+        }
     }
 }
 

@@ -172,7 +172,8 @@ void QNearFieldManagerPrivateVirtualBase::ndefReceived(const QNdefMessage &messa
                 VerifyRecord &vr = filterRecords[j];
 
                 if (vr.filterRecord.typeNameFormat == record.typeNameFormat() &&
-                    vr.filterRecord.type == record.type()) {
+                    ( vr.filterRecord.type == record.type() ||
+                      vr.filterRecord.type.isEmpty()) ) {
                     ++vr.count;
                     break;
                 } else {
