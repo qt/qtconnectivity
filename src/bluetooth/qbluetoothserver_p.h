@@ -51,10 +51,6 @@
 #include "qbluetoothserver.h"
 #include "qbluetooth.h"
 
-#ifdef QT_QNX_BLUETOOTH
-#include "qnx/ppshelpers_p.h"
-#endif
-
 #ifdef QT_BLUEZ_BLUETOOTH
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
@@ -77,13 +73,7 @@ class QBluetoothServer;
 #ifndef QT_OSX_BLUETOOTH
 
 class QBluetoothServerPrivate
-#ifdef QT_QNX_BLUETOOTH
-: public QObject
 {
-    Q_OBJECT
-#else
-{
-#endif
     Q_DECLARE_PUBLIC(QBluetoothServer)
 
 public:
@@ -101,31 +91,12 @@ public:
     QBluetooth::SecurityFlags securityFlags;
     QBluetoothServiceInfo::Protocol serverType;
 
-#ifdef QT_QNX_BLUETOOTH
-#ifdef QT_QNX_BT_BLUETOOTH
-    static void btCallback(long param, int socket);
-    Q_INVOKABLE void setBtCallbackParameters(int receivedSocket);
-#endif
-    QList<QBluetoothSocket *> activeSockets;
-    QString m_serviceName;
-#endif
-
 protected:
     QBluetoothServer *q_ptr;
 
 private:
     QBluetoothServer::Error m_lastError;
-#ifdef QT_QNX_BLUETOOTH
-    QBluetoothUuid m_uuid;
-    bool serverRegistered;
-    QString nextClientAddress;
-
-private slots:
-#ifndef QT_QNX_BT_BLUETOOTH
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-#endif
-#elif defined(QT_BLUEZ_BLUETOOTH)
+#if defined(QT_BLUEZ_BLUETOOTH)
     QSocketNotifier *socketNotifier;
 #elif defined(QT_ANDROID_BLUETOOTH)
     ServerAcceptanceThread *thread;

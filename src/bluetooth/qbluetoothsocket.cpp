@@ -46,7 +46,6 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT)
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
 
 /*!
     \class QBluetoothSocket
@@ -60,7 +59,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}.
 
     \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} is a low level datagram-oriented Bluetooth socket.
-    Android and BlackBerry do not support \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} for socket
+    Android does not support \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} for socket
     connections.
 
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM} is a reliable, stream-oriented socket. RFCOMM
@@ -199,7 +198,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On BlackBerry, Android and OS X, this feature is not supported and returns 0.
+    On Android and OS X, this feature is not supported and returns 0.
 */
 
 /*!
@@ -218,7 +217,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_QNX)
     \fn quint16 QBluetoothSocket::peerPort() const
 
     Return the port number of the peer socket if available, otherwise returns 0.
-    On BlackBerry and Android, this feature is not supported.
+    On Android, this feature is not supported.
 */
 
 /*!
@@ -322,7 +321,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         setSocketError(QBluetoothSocket::OperationError);
         return;
     }
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH)
     if (!d->ensureNativeSocket(service.socketProtocol())) {
         d->errorString = tr("Socket type not supported");
         setSocketError(QBluetoothSocket::UnsupportedProtocolError);
@@ -367,8 +366,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     ConnectingState, and attempts to connect to \a address. If a connection is established,
     QBluetoothSocket enters Connected State and emits connected().
 
-    On BlackBerry and Android, the service connection can directly be established
-    using the UUID of the remote service. Therefore these platforms do not require
+    On Android, the service connection can directly be established
+    using the UUID of the remote service. Therefore the platforms does not require
     the \l ServiceLookupState and \l socketType() is always set to
     \l QBluetoothServiceInfo::RfcommProtocol.
 
@@ -390,7 +389,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
         return;
     }
 
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH)
     if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
         d->errorString = tr("Socket type not supported");
         setSocketError(QBluetoothSocket::UnsupportedProtocolError);
@@ -416,7 +415,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 
     At any point, the socket can emit error() to signal that an error occurred.
 
-    On BlackBerry and Android, a connection to a service can not be established using a port. Calling this function
+    On Android, a connection to a service can not be established using a port. Calling this function
     will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
@@ -427,7 +426,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
     Q_D(QBluetoothSocket);
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH)
     Q_UNUSED(port);
     Q_UNUSED(openMode);
     Q_UNUSED(address);
@@ -451,7 +450,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
     Returns the socket type. The socket automatically adjusts to the protocol
     offered by the remote service.
 
-    Blackberry and Android only support \l{QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}
+    Android only support \l{QBluetoothServiceInfo::RfcommProtocol}{RFCOMM}
     based sockets.
 */
 QBluetoothServiceInfo::Protocol QBluetoothSocket::socketType() const

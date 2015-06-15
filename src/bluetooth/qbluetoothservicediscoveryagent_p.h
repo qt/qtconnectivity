@@ -66,14 +66,6 @@ class QXmlStreamReader;
 QT_END_NAMESPACE
 #endif
 
-#ifdef QT_QNX_BLUETOOTH
-#include "qnx/ppshelpers_p.h"
-#include <fcntl.h>
-#include <unistd.h>
-#include <QTimer>
-#include <btapi/btdevice.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
@@ -85,13 +77,7 @@ class LocalDeviceBroadcastReceiver;
 #endif
 
 class QBluetoothServiceDiscoveryAgentPrivate
-#ifdef QT_QNX_BLUETOOTH
-: public QObject
 {
-    Q_OBJECT
-#else
-{
-#endif
     Q_DECLARE_PUBLIC(QBluetoothServiceDiscoveryAgent)
 
 public:
@@ -155,24 +141,6 @@ private:
     QVariant readAttributeValue(QXmlStreamReader &xml);
     QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
-#endif
-
-#ifdef QT_QNX_BLUETOOTH
-private slots:
-    void remoteDevicesChanged(int fd);
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-    void queryTimeout();
-#ifdef QT_QNX_BT_BLUETOOTH
-    static void deviceServicesDiscoveryCallback(bt_sdp_list_t *, void *, uint8_t);
-#endif
-
-private:
-    int m_rdfd;
-    QSocketNotifier *rdNotifier;
-    QTimer m_queryTimer;
-    bool m_btInitialized;
-    bool m_serviceScanDone;
 #endif
 
 public:

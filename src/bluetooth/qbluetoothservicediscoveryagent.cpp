@@ -257,8 +257,9 @@ QList<QBluetoothUuid> QBluetoothServiceDiscoveryAgent::uuidFilter() const
     address can only be set while there is no service discovery in progress; otherwise
     this function returns false.
 
-    On some platforms such as Blackberry the service discovery might lead to pairing requests.
+    On some platforms the service discovery might lead to pairing requests.
     Therefore it is not recommended to do service discoveries on all devices.
+    This function can be used to restrict the service discovery to a particular device.
 
     \sa remoteAddress()
 */
@@ -289,7 +290,7 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
 /*!
     Starts service discovery. \a mode specifies the type of service discovery to perform.
 
-    On BlackBerry devices, device discovery may lead to pairing requests.
+    On some platforms, device discovery may lead to pairing requests.
 
     \sa DiscoveryMode
 */

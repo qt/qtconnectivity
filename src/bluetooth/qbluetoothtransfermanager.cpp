@@ -36,8 +36,6 @@
 #include "qbluetoothtransferreply.h"
 #ifdef QT_BLUEZ_BLUETOOTH
 #include "qbluetoothtransferreply_bluez_p.h"
-#elif QT_QNX_BLUETOOTH
-#include "qbluetoothtransferreply_qnx_p.h"
 #elif QT_OSX_BLUETOOTH
 #include "qbluetoothtransferreply_osx_p.h"
 #endif
@@ -108,10 +106,6 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
     QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data, request, this);
     connect(rep, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
     return rep;
-#elif QT_QNX_BLUETOOTH
-    QBluetoothTransferReplyQnx *reply = new QBluetoothTransferReplyQnx(data, request, this);
-    connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
-    return reply;
 #elif QT_OSX_BLUETOOTH
     QBluetoothTransferReply *reply = new QBluetoothTransferReplyOSX(data, request, this);
     connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));

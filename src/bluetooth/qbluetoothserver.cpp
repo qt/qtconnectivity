@@ -126,8 +126,6 @@ QT_BEGIN_NAMESPACE
     Sets the maximum number of pending connections to \a numConnections. If
     the number of pending sockets exceeds this limit new sockets will be rejected.
 
-    QNX platform supports only one device at the time and it will ignore this value.
-
     \sa maxPendingConnections()
 */
 
@@ -152,7 +150,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn quint16 QBluetoothServer::serverPort() const
 
-    Returns the server port number. On BlackBerry, this port might not correspond to the real RFCOMM port.
+    Returns the server port number.
 */
 
 /*!
@@ -253,10 +251,7 @@ bool QBluetoothServer::isListening() const
 {
     Q_D(const QBluetoothServer);
 
-#ifdef QT_QNX_BLUETOOTH
-    if (!d->socket)
-        return false;
-#elif defined(QT_ANDROID_BLUETOOTH)
+#ifdef QT_ANDROID_BLUETOOTH
     return d->isListening();
 #endif
 
@@ -284,8 +279,6 @@ int QBluetoothServer::maxPendingConnections() const
     Android only supports two levels of security (secure and non-secure). If this flag is set to
     \l QBluetooth::NoSecurity the server object will not employ any authentication or encryption.
     Any other security flag combination will trigger a secure Bluetooth connection.
-
-    On BlackBerry, security flags are not supported and will be ignored.
 */
 
 /*!

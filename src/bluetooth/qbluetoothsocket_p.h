@@ -47,9 +47,6 @@
 
 #include "qbluetoothsocket.h"
 
-#ifdef QT_QNX_BLUETOOTH
-#include "qnx/ppshelpers_p.h"
-#endif
 #ifdef QT_ANDROID_BLUETOOTH
 #include <QtAndroidExtras/QAndroidJniObject>
 #include <QtCore/QPointer>
@@ -95,8 +92,8 @@ public:
     QBluetoothSocketPrivate();
     ~QBluetoothSocketPrivate();
 
-//On QNX and Android we connect using the uuid not the port
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+//On Android we connect using the uuid not the port
+#if defined(QT_ANDROID_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                           QIODevice::OpenMode openMode);
 #else
@@ -179,7 +176,7 @@ signals:
 
 #endif
 
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_BLUEZ_BLUETOOTH)
+#if defined(QT_BLUEZ_BLUETOOTH)
 private slots:
     void _q_readNotify();
     void _q_writeNotify();
@@ -189,15 +186,6 @@ protected:
     QBluetoothSocket *q_ptr;
 
 private:
-#ifdef QT_QNX_BLUETOOTH
-    QBluetoothAddress m_peerAddress;
-    QBluetoothUuid m_uuid;
-    bool isServerSocket;
-
-private slots:
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-#endif
 
 #ifdef QT_BLUEZ_BLUETOOTH
 public:
