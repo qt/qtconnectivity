@@ -101,7 +101,7 @@ Rectangle {
             name: "Work"
             notes: [
                 //ListElement { noteText: "To write a tag, click the red flag of a note and then touch a tag" },
-                ListElement { noteText: "https://developer.blackberry.com/native/documentation/core/com.qnx.doc.nfc/topic/manual/c_stub_nfcdevguide_general_introduction.html" }
+                ListElement { noteText: "https://www.qt.io" }
             ]
         }
     }

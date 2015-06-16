@@ -56,50 +56,7 @@ SOURCES += \
     qnearfieldsharetarget.cpp \
     qnfc.cpp
 
-CONFIG(blackberry) {
-    NFC_BACKEND_AVAILABLE = yes
-    DEFINES += QNX_NFC #QQNXNFC_DEBUG
-
-    LIBS += -lnfc
-
-    PRIVATE_HEADERS += \
-        qllcpserver_qnx_p.h \
-        qllcpsocket_qnx_p.h \
-        qnearfieldmanager_qnx_p.h \
-        qnx/qnxnfcmanager_p.h \
-        qnearfieldtarget_qnx_p.h \
-        qnx/qnxnfceventfilter_p.h
-
-    SOURCES += \
-        qllcpserver_qnx_p.cpp \
-        qllcpsocket_qnx_p.cpp \
-        qnearfieldmanager_qnx.cpp \
-        qnx/qnxnfcmanager.cpp \
-        qnx/qnxnfceventfilter.cpp
-
-    config_libbb2 {
-        SOURCES += \
-            qnearfieldsharemanager_qnx_p.cpp \
-            qnearfieldsharetarget_qnx_p.cpp \
-            qnx/qnxnfcsharemanager_p.cpp
-
-        PRIVATE_HEADERS += \
-            qnearfieldsharemanager_qnx_p.h \
-            qnearfieldsharetarget_qnx_p.h \
-            qnx/qnxnfcsharemanager_p.h
-
-        LIBS += -l:libbbsystem.so.2
-    } else {
-        SOURCES += \
-            qnearfieldsharemanagerimpl_p.cpp \
-            qnearfieldsharetargetimpl_p.cpp
-
-        PRIVATE_HEADERS += \
-            qnearfieldsharemanagerimpl_p.h \
-            qnearfieldsharetargetimpl_p.h
-    }
-
-} else:linux:!android:qtHaveModule(dbus) {
+linux:!android:qtHaveModule(dbus) {
     NFC_BACKEND_AVAILABLE = yes
 
     QT += dbus

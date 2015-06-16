@@ -36,8 +36,6 @@
 
 #if defined(QT_SIMULATOR)
 #include "qnearfieldmanager_simulator_p.h"
-#elif defined(QNX_NFC)
-#include "qnearfieldmanager_qnx_p.h"
 #elif defined(NEARD_NFC)
 #include "qnearfieldmanager_neard_p.h"
 #elif defined(ANDROID_NFC)
@@ -103,8 +101,6 @@ QT_BEGIN_NAMESPACE
     \snippet doc_src_qtnfc.cpp handleNdefMessage
 
     Automatically launching NDEF message handlers is supported on
-    \l{nfc-blackberry.html}{Blackberry}
-    and
     \l{nfc-android.html}{Android}.
 
     \section3 NFC on Linux

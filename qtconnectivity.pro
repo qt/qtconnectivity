@@ -1,5 +1,4 @@
 load(configure)
 qtCompileTest(bluez)
 qtCompileTest(bluez_le)
-qtCompileTest(libbb2)
 load(qt_parts)
