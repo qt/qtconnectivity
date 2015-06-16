@@ -279,6 +279,8 @@ int QBluetoothServer::maxPendingConnections() const
     Android only supports two levels of security (secure and non-secure). If this flag is set to
     \l QBluetooth::NoSecurity the server object will not employ any authentication or encryption.
     Any other security flag combination will trigger a secure Bluetooth connection.
+
+    On OS X, security flags are not supported and will be ignored.
 */
 
 /*!
