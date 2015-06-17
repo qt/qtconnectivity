@@ -34,7 +34,7 @@
 
 The NFC API provides connectivity between NFC enabled devices.
 
-Currently the API is supported on \l{Qt for BlackBerry}{BlackBerry 10} and Linux using \l {https://01.org/linux-nfc}{Neard} v0.14 or later.
+Currently the API is supported on Linux using \l {https://01.org/linux-nfc}{Neard} v0.14 or later.
 
 \section1 Overview
 
