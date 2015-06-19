@@ -712,6 +712,18 @@ int QBluetoothSocket::socketDescriptor() const
     return -1;
 }
 
+/* not supported on OS X */
+void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags)
+{
+    Q_UNUSED(flags)
+}
+
+/* not supported on OS X - platform always uses encryption */
+QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
+{
+    return QBluetooth::Secure;
+}
+
 #ifndef QT_NO_DEBUG_STREAM
 
 QDebug operator<<(QDebug debug, QBluetoothSocket::SocketError error)

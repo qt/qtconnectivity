@@ -148,6 +148,7 @@ public:
 
     QBluetoothServiceDiscoveryAgent *discoveryAgent;
     QBluetoothSocket::OpenMode openMode;
+    QBluetooth::SecurityFlags secFlags;
 
 
 //    QByteArray rxBuffer;

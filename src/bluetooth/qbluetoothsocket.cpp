@@ -487,6 +487,60 @@ QString QBluetoothSocket::errorString() const
 }
 
 /*!
+    Sets the preferred security parameter for the connection attempt to
+    \a flags. This value is incorporated when calling \l connectToService().
+    Therefore it is required to reconnect to change this parameter for an
+    existing connection.
+
+    On Bluez this property is set to QBluetooth::Authorization by default.
+
+    On OS X, this value is ignored as the platform does not permit access
+    to the security parameter of the socket. By default the platform prefers
+    secure/encrypted connections though and therefore this function always
+    returns \l QBluetooth::Secure.
+
+    Android only supports two levels of security (secure and non-secure). If this flag is set to
+    \l QBluetooth::NoSecurity the socket object will not employ any authentication or encryption.
+    Any other security flag combination will trigger a secure Bluetooth connection.
+    This flag is set to \l QBluetooth::Secure by default.
+
+    \note A secure connection requires a pairing between the two devices. On
+    some platforms, the pairing is automatically initiated during the establishment
+    of the connection. Other platforms require the application to manually trigger
+    the pairing before attempting to connect.
+
+    \sa preferredSecurityFlags()
+
+    \since 5.5
+*/
+void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags)
+{
+    Q_D(QBluetoothSocket);
+    if (d->secFlags != flags)
+        d->secFlags = flags;
+}
+
+/*!
+    Returns the security parameters used for the initial connection
+    attempt.
+
+    The security parameters may be renegotiated between the two parties
+    during or after the connection has been established. If such a change happens
+    it is not reflected in the value of this flag.
+
+    On OS X, this flag is always set to \l QBluetooth::Secure.
+
+    \sa setPreferredSecurityFlags()
+
+    \since 5.5
+*/
+QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
+{
+    Q_D(const QBluetoothSocket);
+    return d->secFlags;
+}
+
+/*!
     Sets the socket state to \a state.
 */
 void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)

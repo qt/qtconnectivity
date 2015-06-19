@@ -36,12 +36,13 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-#include <QtBluetooth/QBluetoothAddress>
-#include <QtBluetooth/QBluetoothUuid>
-#include <QtBluetooth/QBluetoothServiceInfo>
+#include <QtBluetooth/qbluetooth.h>
+#include <QtBluetooth/qbluetoothaddress.h>
+#include <QtBluetooth/qbluetoothuuid.h>
+#include <QtBluetooth/qbluetoothserviceinfo.h>
 
-#include <QtCore/QIODevice>
-#include <QtNetwork/QAbstractSocket>
+#include <QtCore/qiodevice.h>
+#include <QtNetwork/qabstractsocket.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -128,6 +129,9 @@ public:
     //bool waitForConnected(int msecs = 30000);
     //bool waitForDisconnected(int msecs = 30000);
     //virtual bool waitForReadyRead(int msecs = 30000);
+
+    void setPreferredSecurityFlags(QBluetooth::SecurityFlags flags);
+    QBluetooth::SecurityFlags preferredSecurityFlags() const;
 
 Q_SIGNALS:
     void connected();
