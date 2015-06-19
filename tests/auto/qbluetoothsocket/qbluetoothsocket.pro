@@ -9,4 +9,10 @@ osx:QT += widgets
 OTHER_FILES += \
     README.txt
 
-DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+osx {
+    DEFINES += QT_OSX_BLUETOOTH
+} else:android:!android-no-sdk {
+    DEFINES += QT_ANDROID_BLUETOOTH
+} config_bluez:qtHaveModule(dbus) {
+    DEFINES += QT_BLUEZ_BLUETOOTH
+}

@@ -81,6 +81,8 @@ private slots:
 
     void tst_error();
 
+    void tst_preferredSecurityFlags();
+
 public slots:
     void serviceDiscovered(const QBluetoothServiceInfo &info);
     void finished();
@@ -497,6 +499,29 @@ void tst_QBluetoothSocket::tst_error()
     QVERIFY(e == QBluetoothSocket::NoSocketError);
 
     QVERIFY(socket.errorString() == QString());
+}
+
+void tst_QBluetoothSocket::tst_preferredSecurityFlags()
+{
+    QBluetoothSocket socket;
+
+    //test default values
+#if defined(QT_ANDROID_BLUETOOTH) | defined(QT_OSX_BLUETOOTH)
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Secure);
+#elif defined(QT_BLUEZ_BLUETOOTH)
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Authorization);
+#else
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::NoSecurity);
+#endif
+
+    socket.setPreferredSecurityFlags(QBluetooth::Authentication|QBluetooth::Encryption);
+
+#if defined(QT_OSX_BLUETOOTH)
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Secure);
+#else
+    QCOMPARE(socket.preferredSecurityFlags(),
+            QBluetooth::Encryption|QBluetooth::Authentication);
+#endif
 }
 
 QTEST_MAIN(tst_QBluetoothSocket)
