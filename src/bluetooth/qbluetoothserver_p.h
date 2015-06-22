@@ -82,6 +82,8 @@ public:
 
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_newConnection();
+    void setSocketSecurityLevel(QBluetooth::SecurityFlags requestedSecLevel, int *errnoCode);
+    QBluetooth::SecurityFlags socketSecurityLevel() const;
 #endif
 
 public:
