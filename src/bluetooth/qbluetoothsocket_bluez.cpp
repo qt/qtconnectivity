@@ -133,6 +133,27 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         return;
     }
 
+    // apply preferred security level
+    // ignore QBluetooth::Authentication -> not used anymore by kernel
+    struct bt_security security;
+    memset(&security, 0, sizeof(security));
+
+    if (secFlags & QBluetooth::Authorization)
+        security.level = BT_SECURITY_LOW;
+    if (secFlags & QBluetooth::Encryption)
+        security.level = BT_SECURITY_MEDIUM;
+    if (secFlags & QBluetooth::Secure)
+        security.level = BT_SECURITY_HIGH;
+
+    if (setsockopt(socket, SOL_BLUETOOTH, BT_SECURITY,
+                   &security, sizeof(security)) != 0) {
+        qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errno;
+        qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errno);
+        errorString = QBluetoothSocket::tr("Cannot set connection security level");
+        q->setSocketError(QBluetoothSocket::UnknownSocketError);
+        return;
+    }
+
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
 
