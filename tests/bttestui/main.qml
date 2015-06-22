@@ -90,6 +90,18 @@ Rectangle {
         anchors.bottomMargin: 3
         text: device.evaluateSocketState(0)
     }
+    Text {
+        id: secFlagLabel; text: "SecFlags: "
+        anchors.left: parent.left
+        anchors.bottom: hostModeText.top
+        anchors.bottomMargin: 3
+    }
+    Text {
+        anchors.left: secFlagLabel.right
+        anchors.bottom: hostModeText.top
+        anchors.bottomMargin: 3
+        text: device.secFlags
+    }
 
     Row {
         anchors.top: parent.top
@@ -131,6 +143,10 @@ Rectangle {
             Button {
                 buttonText: "Unpair"
                 onClicked: device.requestPairingUpdate(false)
+            }
+            Button {
+                buttonText: "Cycle SecFlag"
+                onClicked: device.cycleSecurityFlags()
             }
         }
         Column {
