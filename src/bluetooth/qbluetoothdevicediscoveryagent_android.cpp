@@ -201,6 +201,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
         // start LE scan if supported
         if (QtAndroidPrivate::androidSdkVersion() < 18) {
             qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan";
+            m_active = NoScanActive;
             emit q->finished();
         } else {
             startLowEnergyScan();

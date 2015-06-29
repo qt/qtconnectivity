@@ -71,6 +71,7 @@ public:
         BoundState = QAbstractSocket::BoundState,
         ListeningState = QAbstractSocket::ListeningState
     };
+    Q_ENUM(SocketState)
 
     enum SocketError {
         UnknownSocketError = QAbstractSocket::UnknownSocketError,
@@ -78,6 +79,7 @@ public:
         SocketAccessError = QAbstractSocket::SocketAccessError,
         SocketResourceError = QAbstractSocket::SocketResourceError
     };
+    Q_ENUM(SocketError)
 
     explicit QLlcpSocket(QObject *parent = 0);
     ~QLlcpSocket();

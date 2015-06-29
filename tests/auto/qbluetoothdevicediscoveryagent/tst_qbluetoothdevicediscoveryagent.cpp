@@ -44,9 +44,6 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::InquiryType)
-Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
-
 /*
  * Some parts of this test require a remote and discoverable Bluetooth
  * device. Setting the BT_TEST_DEVICE environment variable will

@@ -42,8 +42,6 @@
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
-Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
-
 QT_USE_NAMESPACE
 
 // This define must be set if the platform provides access to GATT handles
