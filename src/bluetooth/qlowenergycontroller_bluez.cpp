@@ -478,7 +478,7 @@ QLowEnergyHandle parseReadByTypeCharDiscovery(
 
     QLowEnergyHandle attributeHandle = bt_get_le16(&data[0]);
     charData->properties =
-            (QLowEnergyCharacteristic::PropertyTypes)data[2];
+            (QLowEnergyCharacteristic::PropertyTypes)(data[2] & 0xff);
     charData->valueHandle = bt_get_le16(&data[3]);
 
     if (elementLength == 7) // 16 bit uuid
