@@ -34,11 +34,7 @@
 #include "qnearfieldsharemanager.h"
 #include "qnearfieldsharemanager_p.h"
 
-#if defined(QNX_NFC)
-#include "qnearfieldsharemanager_qnx_p.h"
-#else
 #include "qnearfieldsharemanagerimpl_p.h"
-#endif
 
 #include "qnearfieldsharetarget.h"
 

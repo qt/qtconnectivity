@@ -45,7 +45,6 @@ QT_USE_NAMESPACE
 #define TEST_SERVICE_UUID "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
 
 Q_DECLARE_METATYPE(QBluetooth::SecurityFlags)
-Q_DECLARE_METATYPE(QBluetoothServer::Error)
 
 // Max time to wait for connection
 static const int MaxConnectTime = 60 * 1000;   // 1 minute in ms

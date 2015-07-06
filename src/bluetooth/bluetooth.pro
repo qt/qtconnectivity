@@ -97,29 +97,6 @@ config_bluez:qtHaveModule(dbus) {
             qlowenergycontroller_p.cpp
     }
 
-} else:CONFIG(blackberry) {
-    DEFINES += QT_QNX_BLUETOOTH
-
-    include(qnx/qnx.pri)
-
-    LIBS += -lbtapi
-    config_btapi10_2_1 {
-         DEFINES += QT_QNX_BT_BLUETOOTH
-    }
-
-    PRIVATE_HEADERS += \
-        qbluetoothtransferreply_qnx_p.h
-
-    SOURCES += \
-        qbluetoothdevicediscoveryagent_qnx.cpp \
-        qbluetoothlocaldevice_qnx.cpp \
-        qbluetoothserviceinfo_qnx.cpp \
-        qbluetoothservicediscoveryagent_qnx.cpp \
-        qbluetoothsocket_qnx.cpp \
-        qbluetoothserver_qnx.cpp \
-        qbluetoothtransferreply_qnx.cpp \
-        qlowenergycontroller_p.cpp
-
 } else:android:!android-no-sdk {
     include(android/android.pri)
     DEFINES += QT_ANDROID_BLUETOOTH

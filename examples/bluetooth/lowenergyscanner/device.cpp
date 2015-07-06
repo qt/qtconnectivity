@@ -158,12 +158,7 @@ void Device::scanServices(const QString &address)
 
     setUpdate("Back\n(Connecting to device...)");
 
-#ifdef Q_OS_MAC
     if (controller && m_previousAddress != currentDevice.getAddress()) {
-        m_previousAddress = currentDevice.getAddress();
-#else
-    if (controller && controller->remoteAddress() != currentDevice.getDevice().address()) {
-#endif
         controller->disconnectFromDevice();
         delete controller;
         controller = 0;
@@ -172,11 +167,7 @@ void Device::scanServices(const QString &address)
     //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
-#ifdef Q_OS_MAC
         controller = new QLowEnergyController(currentDevice.getDevice());
-#else
-        controller = new QLowEnergyController(currentDevice.getDevice().address());
-#endif
         connect(controller, SIGNAL(connected()),
                 this, SLOT(deviceConnected()));
         connect(controller, SIGNAL(error(QLowEnergyController::Error)),
@@ -195,6 +186,8 @@ void Device::scanServices(const QString &address)
         controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
     controller->connectToDevice();
     //! [les-controller-1]
+
+    m_previousAddress = currentDevice.getAddress();
 }
 
 void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)

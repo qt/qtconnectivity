@@ -495,9 +495,6 @@ QList<QBluetoothUuid> QBluetoothServiceDiscoveryAgent::uuidFilter() const
     address can only be set while there is no service discovery in progress; otherwise
     this function returns false.
 
-    On some platforms such as Blackberry the service discovery might lead to pairing requests.
-    Therefore it is not recommended to do service discoveries on all devices.
-
     \sa remoteAddress()
 */
 bool QBluetoothServiceDiscoveryAgent::setRemoteAddress(const QBluetoothAddress &address)

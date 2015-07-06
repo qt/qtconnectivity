@@ -62,6 +62,7 @@ public:
         EraseAndWrite,
         WriteOnly
     };
+    Q_ENUM(WriteMode)
 
     explicit QNearFieldTagType1(QObject *parent = 0);
     ~QNearFieldTagType1();

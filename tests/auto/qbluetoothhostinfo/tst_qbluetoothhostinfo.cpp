@@ -59,6 +59,9 @@ private slots:
     void tst_construction();
 
     void tst_copy();
+
+    void tst_compare_data();
+    void tst_compare();
 };
 
 tst_QBluetoothHostInfo::tst_QBluetoothHostInfo()
@@ -179,6 +182,61 @@ void tst_QBluetoothHostInfo::tst_copy()
     assignOperator = original;
     QCOMPARE(assignOperator.name(), original.name());
     QCOMPARE(assignOperator.address(), original.address());
+}
+
+void tst_QBluetoothHostInfo::tst_compare_data()
+{
+    QTest::addColumn<QString>("btAddress1");
+    QTest::addColumn<QString>("name1");
+    QTest::addColumn<QString>("btAddress2");
+    QTest::addColumn<QString>("name2");
+    QTest::addColumn<bool>("sameHostInfo");
+
+    QTest::newRow("11:22:33:44:55:66 - same") << QString("11:22:33:44:55:66") << QString("same")
+                                       << QString("11:22:33:44:55:66") << QString("same")
+                                       << true;
+    QTest::newRow("11:22:33:44:55:66 - address") << QString("11:22:33:44:55:66") << QString("same")
+                                       << QString("11:22:33:44:55:77") << QString("same")
+                                       << false;
+    QTest::newRow("11:22:33:44:55:66 - name") << QString("11:22:33:44:55:66") << QString("same")
+                                       << QString("11:22:33:44:55:66") << QString("different")
+                                       << false;
+    QTest::newRow("11:22:33:44:55:66 - name/address") << QString("11:22:33:44:55:66") << QString("same")
+                                       << QString("11:22:33:44:55:77") << QString("different")
+                                       << false;
+    QTest::newRow("empty") << QString() << QString() << QString() << QString() << true;
+    QTest::newRow("empty left") << QString() << QString()
+                                << QString("11:22:33:44:55:66") << QString("same") << false;
+    QTest::newRow("empty right") << QString("11:22:33:44:55:66") << QString("same")
+                                 << QString() << QString() << false;
+    QTest::newRow("00:00:00:00:00:00") << QString("00:00:00:00:00:00") << QString("foobar1")
+                                       << QString("") << QString("foobar1") << true;
+    QTest::newRow("00:00:00:00:00:00") << QString("00:00:00:00:00:00") << QString("foobar1")
+                                       << QString("") << QString("foobar2") << false;
+    QTest::newRow("00:00:00:00:00:00") << QString("00:00:00:00:00:00") << QString("")
+                                       << QString("") << QString("") << true;
+}
+
+void tst_QBluetoothHostInfo::tst_compare()
+{
+    QFETCH(QString, btAddress1);
+    QFETCH(QString, name1);
+    QFETCH(QString, btAddress2);
+    QFETCH(QString, name2);
+    QFETCH(bool, sameHostInfo);
+
+    QVERIFY(QBluetoothHostInfo() == QBluetoothHostInfo());
+
+    QBluetoothHostInfo info1;
+    info1.setAddress(QBluetoothAddress(btAddress1));
+    info1.setName(name1);
+
+    QBluetoothHostInfo info2;
+    info2.setAddress(QBluetoothAddress(btAddress2));
+    info2.setName(name2);
+
+    QCOMPARE(info1 == info2, sameHostInfo);
+    QCOMPARE(info1 != info2, !sameHostInfo);
 }
 
 QTEST_MAIN(tst_QBluetoothHostInfo)

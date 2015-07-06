@@ -92,6 +92,8 @@
 
     This property indicates whether the order of records should be taken into account when matching
     messages. This is not supported when using neard.
+
+    The default of orderMatch is false.
 */
 
 /*!

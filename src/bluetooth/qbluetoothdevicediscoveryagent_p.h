@@ -70,15 +70,12 @@ class OrgBluezDevice1Interface;
 QT_BEGIN_NAMESPACE
 class QDBusVariant;
 QT_END_NAMESPACE
-#elif defined(QT_QNX_BLUETOOTH)
-#include "qnx/ppshelpers_p.h"
-#include <QTimer>
 #endif
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QT_QNX_BLUETOOTH) || defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH)
     : public QObject
 {
     Q_OBJECT
@@ -150,30 +147,6 @@ private:
 
     bool useExtendedDiscovery;
     QTimer extendedDiscoveryTimer;
-
-#elif defined(QT_QNX_BLUETOOTH)
-private slots:
-    void finished();
-    void remoteDevicesChanged(int);
-    void controlReply(ppsResult result);
-    void controlEvent(ppsResult result);
-    void startDeviceSearch();
-
-private:
-    QSocketNotifier *m_rdNotifier;
-    QTimer m_finishedTimer;
-
-    int m_rdfd;
-    bool m_active;
-    enum Ops {
-        None,
-        Cancel,
-        Start
-    };
-    Ops m_nextOp;
-    Ops m_currentOp;
-    void processNextOp();
-    bool isFinished;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

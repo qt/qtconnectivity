@@ -69,11 +69,8 @@ class OrgBluezManagerInterface;
 QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 QT_END_NAMESPACE
-
-#elif defined(QT_QNX_BLUETOOTH)
-#include <QSocketNotifier>
-#include "qnx/ppshelpers_p.h"
 #endif
+
 #ifdef QT_ANDROID_BLUETOOTH
 #include <jni.h>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
@@ -200,42 +197,6 @@ private:
 
     void initializeAdapter();
     void initializeAdapterBluez5();
-};
-
-#elif defined(QT_QNX_BLUETOOTH)
-
-class QBluetoothLocalDevicePrivate : public QObject
-{
-    Q_OBJECT
-    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
-public:
-    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *);
-    ~QBluetoothLocalDevicePrivate();
-
-    static QString name();
-    static QBluetoothAddress address();
-
-    void powerOn();
-    void powerOff();
-
-    void setHostMode(QBluetoothLocalDevice::HostMode mode);
-    QBluetoothLocalDevice::HostMode hostMode() const;
-
-    void requestPairing(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
-
-    void setAccess(int);
-    // This method will be used for emitting signals.
-    void connectedDevices();
-
-    Q_INVOKABLE void controlReply(ppsResult res);
-    Q_INVOKABLE void controlEvent(ppsResult res);
-
-    bool isValid() const;
-
-private:
-    QBluetoothLocalDevice *q_ptr;
-    bool isValidDevice;
-    QList<QBluetoothAddress> connectedDevicesSet;
 };
 #elif !defined(QT_OSX_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject

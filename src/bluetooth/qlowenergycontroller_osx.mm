@@ -151,6 +151,7 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
                                                                const QBluetoothDeviceInfo &deviceInfo)
     : q_ptr(q),
       deviceUuid(deviceInfo.deviceUuid()),
+      deviceName(deviceInfo.name()),
       isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
@@ -853,6 +854,13 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
     OSX_D_PTR;
 
     return osx_d_ptr->remoteAddress;
+}
+
+QString QLowEnergyController::remoteName() const
+{
+   OSX_D_PTR;
+
+   return osx_d_ptr->deviceName;
 }
 
 QLowEnergyController::ControllerState QLowEnergyController::state() const

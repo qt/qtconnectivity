@@ -59,8 +59,6 @@ class QDeclarativeNdefTextRecord : public QQmlNdefRecord
     Q_PROPERTY(QString locale READ locale WRITE setLocale NOTIFY localeChanged)
     Q_PROPERTY(LocaleMatch localeMatch READ localeMatch NOTIFY localeMatchChanged)
 
-    Q_ENUMS(LocaleMatch)
-
 public:
     enum LocaleMatch {
         LocaleMatchedNone,
@@ -68,6 +66,7 @@ public:
         LocaleMatchedLanguage,
         LocaleMatchedLanguageAndCountry
     };
+    Q_ENUM(LocaleMatch)
 
     explicit QDeclarativeNdefTextRecord(QObject *parent = 0);
     Q_INVOKABLE QDeclarativeNdefTextRecord(const QNdefRecord &record, QObject *parent = 0);

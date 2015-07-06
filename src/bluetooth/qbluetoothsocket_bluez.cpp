@@ -64,6 +64,7 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       connectWriteNotifier(0),
       connecting(false),
       discoveryAgent(0),
+      secFlags(QBluetooth::Authorization),
       lowEnergySocketType(0)
 {
 }

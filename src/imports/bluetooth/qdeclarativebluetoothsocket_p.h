@@ -67,11 +67,8 @@ class QDeclarativeBluetoothSocket : public QObject, public QQmlParserStatus
     Q_PROPERTY(SocketState socketState READ state NOTIFY stateChanged)
     Q_PROPERTY(QString stringData READ stringData WRITE sendStringData NOTIFY dataAvailable)
     Q_INTERFACES(QQmlParserStatus)
-    Q_ENUMS(Error)
-    Q_ENUMS(SocketState)
 
 public:
-
     enum Error {
         NoError = QBluetoothSocket::NoSocketError,
         UnknownSocketError = QBluetoothSocket::UnknownSocketError,
@@ -80,6 +77,7 @@ public:
         NetworkError = QBluetoothSocket::NetworkError,
         UnsupportedProtocolError = QBluetoothSocket::UnsupportedProtocolError
     };
+    Q_ENUM(Error)
 
     enum SocketState {
         Unconnected = QBluetoothSocket::UnconnectedState,
@@ -91,6 +89,7 @@ public:
         Listening = QBluetoothSocket::ListeningState,
         NoServiceSet = 100 //Leave gap for future enums and to avoid collision with QBluetoothSocket enums
     };
+    Q_ENUM(SocketState)
 
     explicit QDeclarativeBluetoothSocket(QObject *parent = 0);
     explicit QDeclarativeBluetoothSocket(QDeclarativeBluetoothService *service,

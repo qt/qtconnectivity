@@ -40,7 +40,8 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     : socket(-1),
       socketType(QBluetoothServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
-      socketError(QBluetoothSocket::NoSocketError)
+      socketError(QBluetoothSocket::NoSocketError),
+      secFlags(QBluetooth::NoSecurity)
 {
 }
 

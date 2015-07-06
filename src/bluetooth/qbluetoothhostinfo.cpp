@@ -89,6 +89,29 @@ QBluetoothHostInfo &QBluetoothHostInfo::operator=(const QBluetoothHostInfo &othe
 }
 
 /*!
+    \since 5.5
+
+    Returns true if \a other is equal to this QBluetoothHostInfo, otherwise false.
+*/
+bool QBluetoothHostInfo::operator==(const QBluetoothHostInfo &other) const
+{
+    if (d_ptr == other.d_ptr)
+        return true;
+
+    return d_ptr->m_address == other.d_ptr->m_address && d_ptr->m_name == other.d_ptr->m_name;
+}
+
+/*!
+    \since 5.5
+
+    Returns true if \a other is not equal to this QBluetoothHostInfo, otherwise false.
+*/
+bool QBluetoothHostInfo::operator!=(const QBluetoothHostInfo &other) const
+{
+    return !operator==(other);
+}
+
+/*!
     Returns the Bluetooth address as a QBluetoothAddress.
 */
 QBluetoothAddress QBluetoothHostInfo::address() const

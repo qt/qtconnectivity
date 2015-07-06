@@ -12,3 +12,10 @@ RESOURCES += \
 OTHER_FILES += \
     corkboards.qml \
     Mode.qml
+
+android:!android-no-sdk {
+OTHER_FILES += \
+    android/AndroidManifest.xml
+
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+}
