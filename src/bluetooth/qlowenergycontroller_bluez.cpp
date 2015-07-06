@@ -672,6 +672,7 @@ void QLowEnergyControllerPrivate::processReply(
                 lastHandle = parseReadByTypeCharDiscovery(
                             &characteristic, &data[offset], elementLength);
                 p->characteristicList[lastHandle] = characteristic;
+                offset += elementLength;
             } else if (attributeType == GATT_INCLUDED_SERVICE) {
                 QList<QBluetoothUuid> includedServices;
                 lastHandle = parseReadByTypeIncludeDiscovery(
