@@ -1222,7 +1222,7 @@ void QLowEnergyControllerPrivate::readServiceValues(
     starting the next read request.
  */
 void QLowEnergyControllerPrivate::readServiceValuesByOffset(
-        quint16 handleData, quint16 offset, bool isLastValue)
+        uint handleData, quint16 offset, bool isLastValue)
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
