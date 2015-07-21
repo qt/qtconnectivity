@@ -72,10 +72,14 @@ class QDBusVariant;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+class QWinRTBluetoothDeviceDiscoveryWorker;
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH)
     : public QObject
 {
     Q_OBJECT
@@ -147,6 +151,15 @@ private:
 
     bool useExtendedDiscovery;
     QTimer extendedDiscoveryTimer;
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+private slots:
+    void onListInitializationCompleted();
+
+private:
+    void disconnectAndClearWorker();
+    QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

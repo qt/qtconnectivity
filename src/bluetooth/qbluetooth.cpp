@@ -80,5 +80,6 @@ namespace QBluetooth {
 Q_LOGGING_CATEGORY(QT_BT, "qt.bluetooth")
 Q_LOGGING_CATEGORY(QT_BT_ANDROID, "qt.bluetooth.android")
 Q_LOGGING_CATEGORY(QT_BT_BLUEZ, "qt.bluetooth.bluez")
+Q_LOGGING_CATEGORY(QT_BT_WINRT, "qt.bluetooth.winphone")
 
 QT_END_NAMESPACE
