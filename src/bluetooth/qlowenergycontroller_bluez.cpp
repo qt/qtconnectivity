@@ -478,7 +478,7 @@ QLowEnergyHandle parseReadByTypeCharDiscovery(
 
     QLowEnergyHandle attributeHandle = bt_get_le16(&data[0]);
     charData->properties =
-            (QLowEnergyCharacteristic::PropertyTypes)data[2];
+            (QLowEnergyCharacteristic::PropertyTypes)(data[2] & 0xff);
     charData->valueHandle = bt_get_le16(&data[3]);
 
     if (elementLength == 7) // 16 bit uuid
@@ -672,6 +672,7 @@ void QLowEnergyControllerPrivate::processReply(
                 lastHandle = parseReadByTypeCharDiscovery(
                             &characteristic, &data[offset], elementLength);
                 p->characteristicList[lastHandle] = characteristic;
+                offset += elementLength;
             } else if (attributeType == GATT_INCLUDED_SERVICE) {
                 QList<QBluetoothUuid> includedServices;
                 lastHandle = parseReadByTypeIncludeDiscovery(
@@ -1222,7 +1223,7 @@ void QLowEnergyControllerPrivate::readServiceValues(
     starting the next read request.
  */
 void QLowEnergyControllerPrivate::readServiceValuesByOffset(
-        quint16 handleData, quint16 offset, bool isLastValue)
+        uint handleData, quint16 offset, bool isLastValue)
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
