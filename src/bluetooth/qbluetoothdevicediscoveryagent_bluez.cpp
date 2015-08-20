@@ -427,6 +427,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
                     return;
                 }
 
+                QDBusPendingReply<> reply = adapter->StopDiscovery();
+                reply.waitForFinished();
                 adapter->deleteLater();
                 adapter = 0;
                 emit q->finished();
