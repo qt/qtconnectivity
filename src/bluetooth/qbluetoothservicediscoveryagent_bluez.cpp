@@ -354,8 +354,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWatcher *watcher)
 {
-    if (!adapter)
+    if (!adapter) {
+        watcher->deleteLater();
         return;
+    }
 
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
@@ -364,6 +366,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "created" << address.toString();
 
     QDBusPendingReply<QDBusObjectPath> deviceObjectPath = *watcher;
+    watcher->deleteLater();
     if (deviceObjectPath.isError()) {
         if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.AlreadyExists")) {
             delete adapter;
@@ -488,8 +491,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
 // Bluez 4
 void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingCallWatcher *watcher)
 {
-    if (!device)
+    if (!device) {
+        watcher->deleteLater();
         return;
+    }
 
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
     Q_Q(QBluetoothServiceDiscoveryAgent);
