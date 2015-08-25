@@ -50,7 +50,7 @@
 #include "qndeffilter.h"
 
 #include <QtCore/QObject>
-#include <QtCore/QWeakPointer>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +74,7 @@ private slots:
 private:
     void ndefReceived(const QNdefMessage &message, QNearFieldTarget *target);
 
-    QMap<TagBase *, QWeakPointer<QNearFieldTarget> > m_targets;
+    QMap<TagBase *, QPointer<QNearFieldTarget> > m_targets;
 
 };
 
