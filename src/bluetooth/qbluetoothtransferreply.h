@@ -96,4 +96,6 @@ private:
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QBluetoothTransferReply::TransferError)
+
 #endif // QBLUETOOTHTRANSFERREPLY_H

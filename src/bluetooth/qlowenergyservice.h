@@ -134,4 +134,9 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyService::ServiceTypes)
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceState)
+Q_DECLARE_METATYPE(QLowEnergyService::ServiceType)
+Q_DECLARE_METATYPE(QLowEnergyService::WriteMode)
+
 #endif // QLOWENERGYSERVICE_H
