@@ -35,7 +35,7 @@ Low Energy devices.
 \tableofcontents
 
     The Qt Bluetooth Low Energy API was introduced by Qt 5.4. Since Qt 5.5 the API
-    is frozen and a compatibility guarantee is given for future releases.
+    is final and a compatibility guarantee is given for future releases.
     At the moment, Qt supports the Bluetooth Low Energy central role.
     For more details on this limitation see below.
 
