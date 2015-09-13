@@ -239,9 +239,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
     QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
     reply.waitForFinished();
     if (!reply.isError()) {
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const QDBusObjectPath &path = it.key();
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
+
                 if (iface == QStringLiteral("org.bluez.Device1")) {
 
                     if (path.path().indexOf(adapterBluez5->path()) != 0)

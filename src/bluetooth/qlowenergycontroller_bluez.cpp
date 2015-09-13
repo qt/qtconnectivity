@@ -1151,12 +1151,11 @@ void QLowEnergyControllerPrivate::readServiceValues(
 
     // Create list of attribute handles which need to be read
     QList<QPair<QLowEnergyHandle, quint32> > targetHandles;
-    const QList<QLowEnergyHandle> keys = service->characteristicList.keys();
-    for (int i = 0; i < keys.count(); i++) {
-        const QLowEnergyHandle charHandle = keys[i];
-        const QLowEnergyServicePrivate::CharData &charDetails =
-                service->characteristicList[charHandle];
 
+    CharacteristicDataMap::const_iterator charIt = service->characteristicList.constBegin();
+    for ( ; charIt != service->characteristicList.constEnd(); ++charIt) {
+        const QLowEnergyHandle charHandle = charIt.key();
+        const QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
 
         if (readCharacteristics) {
             // Collect handles of all characteristic value attributes
@@ -1171,7 +1170,10 @@ void QLowEnergyControllerPrivate::readServiceValues(
 
         } else {
             // Collect handles of all descriptor attributes
-            foreach (QLowEnergyHandle descriptorHandle, charDetails.descriptorList.keys()) {
+            DescriptorDataMap::const_iterator descIt = charDetails.descriptorList.constBegin();
+            for ( ; descIt != charDetails.descriptorList.constEnd(); ++descIt) {
+                const QLowEnergyHandle descriptorHandle = descIt.key();
+
                 pair.first = descriptorHandle;
                 pair.second = (charHandle | (descriptorHandle << 16));
                 targetHandles.append(pair);
@@ -1270,15 +1272,15 @@ void QLowEnergyControllerPrivate::discoverServiceDescriptors(
     qCDebug(QT_BT_BLUEZ) << "Discovering descriptor values for"
                          << serviceUuid.toString();
     QSharedPointer<QLowEnergyServicePrivate> service = serviceList.value(serviceUuid);
-    // start handle of all known characteristics
-    QList<QLowEnergyHandle> keys = service->characteristicList.keys();
 
-    if (keys.isEmpty()) { // service has no characteristics
+    if (service->characteristicList.isEmpty()) { // service has no characteristics
         // implies that characteristic & descriptor discovery can be skipped
         service->setState(QLowEnergyService::ServiceDiscovered);
         return;
     }
 
+    // start handle of all known characteristics
+    QList<QLowEnergyHandle> keys = service->characteristicList.keys();
     std::sort(keys.begin(), keys.end());
 
     discoverNextDescriptor(service, keys, keys[0]);

@@ -652,14 +652,18 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
     }
 
     QStringList uuidStrings;
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
-        const InterfaceList ifaceList = reply.value().value(path);
-        foreach (const QString &iface, ifaceList.keys()) {
+
+    ManagedObjectList managedObjectList = reply.value();
+    for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+        const InterfaceList &ifaceList = it.value();
+
+        for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+            const QString &iface = jt.key();
+            const QVariantMap &ifaceValues = jt.value();
+
             if (iface == QStringLiteral("org.bluez.Device1")) {
-                const QVariantMap details = ifaceList.value(iface);
-                if (deviceAddress.toString()
-                        == details.value(QStringLiteral("Address")).toString()) {
-                    uuidStrings = details.value(QStringLiteral("UUIDs")).toStringList();
+                if (deviceAddress.toString() == ifaceValues.value(QStringLiteral("Address")).toString()) {
+                    uuidStrings = ifaceValues.value(QStringLiteral("UUIDs")).toStringList();
                     break;
                 }
             }

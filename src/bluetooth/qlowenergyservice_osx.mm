@@ -104,9 +104,13 @@ QLowEnergyService::ServiceState QLowEnergyService::state() const
 
 QLowEnergyCharacteristic QLowEnergyService::characteristic(const QBluetoothUuid &uuid) const
 {
-    foreach (const QLowEnergyHandle handle, d_ptr->characteristicList.keys()) {
-        if (d_ptr->characteristicList[handle].uuid == uuid)
-            return QLowEnergyCharacteristic(d_ptr, handle);
+    CharacteristicDataMap::const_iterator charIt = d_ptr->characteristicList.constBegin();
+    for ( ; charIt != d_ptr->characteristicList.constEnd(); ++charIt) {
+        const QLowEnergyHandle charHandle = charIt.key();
+        const QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
+        if (charDetails.uuid == uuid)
+            return QLowEnergyCharacteristic(d_ptr, charHandle);
     }
 
     return QLowEnergyCharacteristic();

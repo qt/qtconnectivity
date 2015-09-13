@@ -213,17 +213,22 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
         if (reply.isError())
             return localDevices;
 
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
+                const QVariantMap &ifaceValues = jt.value();
+
                 if (iface == QStringLiteral("org.bluez.Adapter1")) {
                     QBluetoothHostInfo hostInfo;
-                    const QString temp = ifaceList.value(iface).value(QStringLiteral("Address")).toString();
+                    const QString temp = ifaceValues.value(QStringLiteral("Address")).toString();
 
                     hostInfo.setAddress(QBluetoothAddress(temp));
                     if (hostInfo.address().isNull())
                         continue;
-                    hostInfo.setName(ifaceList.value(iface).value(QStringLiteral("Name")).toString());
+                    hostInfo.setName(ifaceValues.value(QStringLiteral("Name")).toString());
                     localDevices.append(hostInfo);
                 }
             }
@@ -447,10 +452,13 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
         return;
     }
 
+    ManagedObjectList managedObjectList = reply.value();
+    for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+        const QDBusObjectPath &path = it.key();
+        const InterfaceList &ifaceList = it.value();
 
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
-        const InterfaceList ifaceList = reply.value().value(path);
-        foreach (const QString &iface, ifaceList.keys()) {
+        for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+            const QString &iface = jt.key();
 
             if (iface == QStringLiteral("org.bluez.Device1")) {
 
@@ -603,9 +611,13 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
         if (reply.isError())
             return Unpaired;
 
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const QDBusObjectPath &path = it.key();
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
 
                 if (iface == QStringLiteral("org.bluez.Device1")) {
 
@@ -670,9 +682,16 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
             return;
 
         OrgFreedesktopDBusPropertiesInterface *monitor = 0;
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
+
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const QDBusObjectPath &path = it.key();
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
+                const QVariantMap &ifaceValues = jt.value();
+
                 if (iface == QStringLiteral("org.bluez.Device1")) {
                     monitor = new OrgFreedesktopDBusPropertiesInterface(QStringLiteral("org.bluez"),
                                                                         path.path(),
@@ -681,7 +700,6 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
                             SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
                     deviceChangeMonitors.insert(path.path(), monitor);
 
-                    const QVariantMap ifaceValues = ifaceList.value(QStringLiteral("org.bluez.Device1"));
                     if (ifaceValues.value(QStringLiteral("Connected"), false).toBool()) {
                         QBluetoothAddress address(ifaceValues.value(QStringLiteral("Address")).toString());
                         connectedDevicesSet.insert(address);
