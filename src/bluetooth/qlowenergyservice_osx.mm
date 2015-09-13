@@ -185,7 +185,7 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
 void QLowEnergyService::readCharacteristic(const QLowEnergyCharacteristic &characteristic)
 {
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (!contains(characteristic) || state() != ServiceDiscovered || !controller) {
+    if (controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
         d_ptr->setError(OperationError);
         return;
     }
@@ -198,8 +198,7 @@ void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, 
                                             WriteMode mode)
 {
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-
-    if (!contains(ch) || state() != ServiceDiscovered || !controller) {
+    if (controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(ch)) {
         d_ptr->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -234,7 +233,7 @@ bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const
 void QLowEnergyService::readDescriptor(const QLowEnergyDescriptor &descriptor)
 {
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (!contains(descriptor) || state() != ServiceDiscovered || !controller) {
+    if (controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d_ptr->setError(OperationError);
         return;
     }
@@ -246,7 +245,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
                                         const QByteArray &newValue)
 {
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (!contains(descriptor) || state() != ServiceDiscovered || !controller) {
+    if (controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d_ptr->setError(OperationError);
         return;
     }

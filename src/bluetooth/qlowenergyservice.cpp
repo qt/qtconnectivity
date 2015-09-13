@@ -597,9 +597,7 @@ void QLowEnergyService::readCharacteristic(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(characteristic)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -648,9 +646,7 @@ void QLowEnergyService::writeCharacteristic(
     //TODO check behavior when writing to WriteSigned characteristic
     Q_D(QLowEnergyService);
 
-    if (!contains(characteristic)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -716,9 +712,7 @@ void QLowEnergyService::readDescriptor(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -750,9 +744,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
