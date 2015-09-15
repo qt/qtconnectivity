@@ -511,7 +511,7 @@ QString QBluetoothSocket::errorString() const
 
     \sa preferredSecurityFlags()
 
-    \since 5.5
+    \since 5.6
 */
 void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags)
 {
@@ -532,7 +532,7 @@ void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags
 
     \sa setPreferredSecurityFlags()
 
-    \since 5.5
+    \since 5.6
 */
 QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
 {
