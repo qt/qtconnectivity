@@ -384,13 +384,17 @@ QString QBluetoothSocketPrivate::peerName() const
         if (reply.isError())
             return QString();
 
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
+                const QVariantMap &ifaceValues = jt.value();
+
                 if (iface == QStringLiteral("org.bluez.Device1")) {
-                    if (ifaceList.value(iface).value(QStringLiteral("Address")).toString()
-                            == peerAddress)
-                        return ifaceList.value(iface).value(QStringLiteral("Alias")).toString();
+                    if (ifaceValues.value(QStringLiteral("Address")).toString() == peerAddress)
+                        return ifaceValues.value(QStringLiteral("Alias")).toString();
                 }
             }
         }
@@ -407,13 +411,13 @@ QString QBluetoothSocketPrivate::peerName() const
         OrgBluezAdapterInterface adapter(QStringLiteral("org.bluez"), reply.value().path(),
                                          QDBusConnection::systemBus());
 
-        QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.CreateDevice(peerAddress);
+        QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.FindDevice(peerAddress);
         deviceObjectPath.waitForFinished();
         if (deviceObjectPath.isError()) {
-            if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.AlreadyExists"))
+            if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.DoesNotExist"))
                 return QString();
 
-            deviceObjectPath = adapter.FindDevice(peerAddress);
+            deviceObjectPath = adapter.CreateDevice(peerAddress);
             deviceObjectPath.waitForFinished();
             if (deviceObjectPath.isError())
                 return QString();

@@ -108,6 +108,7 @@ public:
 #ifdef QT_BLUEZ_BLUETOOTH
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
+    void _q_foundDevice(QDBusPendingCallWatcher *watcher);
     //Slots below are used for discovering Bluetooth Low Energy devices. It will be used with Bluez 5.x version.
     /*
     void _g_discoveredGattService();
@@ -141,6 +142,7 @@ private:
     QVariant readAttributeValue(QXmlStreamReader &xml);
     QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
+    void discoverServices(const QString deviceObjectPath);
 #endif
 
 public:

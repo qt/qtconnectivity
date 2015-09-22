@@ -83,6 +83,11 @@ public:
         // Register the 5.5 types
         minor = 5;
         qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
+
+        // Register the 5.6 types
+        minor = 6;
+        qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
+
     }
 };
 

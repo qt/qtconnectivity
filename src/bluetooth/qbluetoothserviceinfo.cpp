@@ -375,7 +375,7 @@ bool QBluetoothServiceInfo::isValid() const
 */
 bool QBluetoothServiceInfo::isComplete() const
 {
-    return d_ptr->attributes.keys().contains(ProtocolDescriptorList);
+    return d_ptr->attributes.contains(ProtocolDescriptorList);
 }
 
 /*!

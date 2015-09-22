@@ -277,7 +277,9 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
         qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "no services found";
     }
 
-    foreach (const QBluetoothUuid &uuid, discoveredServices.keys()) {
+    for (ServiceMap::const_iterator it = discoveredServices.constBegin(); it != discoveredServices.constEnd(); ++it) {
+        const QBluetoothUuid &uuid = it.key();
+
         QMetaObject::invokeMethod(q_ptr, "serviceDiscovered", Qt::QueuedConnection,
                                  Q_ARG(QBluetoothUuid, uuid));
     }
@@ -642,13 +644,18 @@ quint16 QLowEnergyControllerPrivateOSX::updateValueOfCharacteristic(QLowEnergyHa
                                                                     bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (!service.isNull() && service->characteristicList.contains(charHandle)) {
-        if (appendValue)
-            service->characteristicList[charHandle].value += value;
-        else
-            service->characteristicList[charHandle].value = value;
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charData = charIt.value();
 
-        return service->characteristicList[charHandle].value.size();
+            if (appendValue)
+                charData.value += value;
+            else
+                charData.value = value;
+
+            return charData.value.size();
+        }
     }
 
     return 0;
@@ -693,19 +700,27 @@ void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergySe
 quint16 QLowEnergyControllerPrivateOSX::updateValueOfDescriptor(QLowEnergyHandle charHandle, QLowEnergyHandle descHandle,
                                                                 const QByteArray &value, bool appendValue)
 {
-    ServicePrivate service(serviceForHandle(charHandle));
-    if (service.isNull() || !service->characteristicList.contains(charHandle))
-        return 0;
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charData = charIt.value();
 
-    if (!service->characteristicList[charHandle].descriptorList.contains(descHandle))
-        return 0;
+            DescriptorDataMap::iterator descIt = charData.descriptorList.find(descHandle);
+            if (descIt != charData.descriptorList.end()) {
+                QLowEnergyServicePrivate::DescData &descDetails = descIt.value();
 
-    if (appendValue)
-        service->characteristicList[charHandle].descriptorList[descHandle].value += value;
-    else
-        service->characteristicList[charHandle].descriptorList[descHandle].value = value;
+                if (appendValue)
+                    descDetails.value += value;
+                else
+                    descDetails.value = value;
 
-    return service->characteristicList[charHandle].descriptorList[descHandle].value.size();
+                return descDetails.value.size();
+            }
+        }
+    }
+
+    return 0;
 }
 
 QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivateOSX::serviceForHandle(QLowEnergyHandle handle)
@@ -952,10 +967,16 @@ QLowEnergyService *QLowEnergyController::createServiceObject(const QBluetoothUui
 {
     OSX_D_PTR;
 
-    if (!osx_d_ptr->discoveredServices.contains(serviceUuid))
-        return Q_NULLPTR;
+    QLowEnergyService *service = Q_NULLPTR;
 
-    return new QLowEnergyService(osx_d_ptr->discoveredServices.value(serviceUuid), parent);
+    QLowEnergyControllerPrivateOSX::ServiceMap::const_iterator it = osx_d_ptr->discoveredServices.constFind(serviceUuid);
+    if (it != osx_d_ptr->discoveredServices.constEnd()) {
+        const QSharedPointer<QLowEnergyServicePrivate> &serviceData = it.value();
+
+        service = new QLowEnergyService(serviceData, parent);
+    }
+
+    return service;
 }
 
 QLowEnergyController::Error QLowEnergyController::error() const
