@@ -338,11 +338,18 @@ QLowEnergyDescriptor QLowEnergyCharacteristic::descriptor(const QBluetoothUuid &
     if (d_ptr.isNull() || !data)
         return QLowEnergyDescriptor();
 
-    QList<QLowEnergyHandle> descriptorKeys = d_ptr->characteristicList[data->handle].
-                                                    descriptorList.keys();
-    foreach (const QLowEnergyHandle descHandle, descriptorKeys) {
-        if (uuid == d_ptr->characteristicList[data->handle].descriptorList[descHandle].uuid)
-            return QLowEnergyDescriptor(d_ptr, data->handle, descHandle);
+    CharacteristicDataMap::const_iterator charIt = d_ptr->characteristicList.constFind(data->handle);
+    if (charIt != d_ptr->characteristicList.constEnd()) {
+        const QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
+        DescriptorDataMap::const_iterator descIt = charDetails.descriptorList.constBegin();
+        for ( ; descIt != charDetails.descriptorList.constEnd(); ++descIt) {
+            const QLowEnergyHandle descHandle = descIt.key();
+            const QLowEnergyServicePrivate::DescData &descDetails = descIt.value();
+
+            if (descDetails.uuid == uuid)
+                return QLowEnergyDescriptor(d_ptr, data->handle, descHandle);
+        }
     }
 
     return QLowEnergyDescriptor();

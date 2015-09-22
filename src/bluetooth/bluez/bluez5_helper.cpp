@@ -302,9 +302,14 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
     typedef QPair<QString, QBluetoothAddress> AddressForPathType;
     QList<AddressForPathType> localAdapters;
 
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
-        const InterfaceList ifaceList = reply.value().value(path);
-        foreach (const QString &iface, ifaceList.keys()) {
+    ManagedObjectList managedObjectList = reply.value();
+    for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+        const QDBusObjectPath &path = it.key();
+        const InterfaceList &ifaceList = it.value();
+
+        for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+            const QString &iface = jt.key();
+
             if (iface == QStringLiteral("org.bluez.Adapter1")) {
                 AddressForPathType pair;
                 pair.first = path.path();

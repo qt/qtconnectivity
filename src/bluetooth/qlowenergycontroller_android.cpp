@@ -453,9 +453,11 @@ void QLowEnergyControllerPrivate::descriptorRead(
             serviceList.value(serviceUuid);
 
     bool entryUpdated = false;
-    foreach (QLowEnergyHandle charHandle, service->characteristicList.keys()) {
-        QLowEnergyServicePrivate::CharData &charDetails =
-                service->characteristicList[charHandle];
+
+    CharacteristicDataMap::iterator charIt = service->characteristicList.begin();
+    for ( ; charIt != service->characteristicList.end(); ++charIt) {
+        QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
         if (charDetails.uuid != charUuid)
             continue;
 
