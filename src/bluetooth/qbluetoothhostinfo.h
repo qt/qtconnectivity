@@ -49,6 +49,9 @@ public:
 
     QBluetoothHostInfo &operator=(const QBluetoothHostInfo &other);
 
+    bool operator==(const QBluetoothHostInfo &other) const;
+    bool operator!=(const QBluetoothHostInfo &other) const;
+
     QBluetoothAddress address() const;
     void setAddress(const QBluetoothAddress &address);
 
@@ -61,5 +64,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QBluetoothHostInfo)
 
 #endif

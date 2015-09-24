@@ -45,7 +45,7 @@
 //#define SOCKET_PROTOCOL QBluetoothServiceInfo::L2capProtocol
 
 BtLocalDevice::BtLocalDevice(QObject *parent) :
-    QObject(parent)
+    QObject(parent), securityFlags(QBluetooth::NoSecurity)
 {
     localDevice = new QBluetoothLocalDevice(this);
     connect(localDevice, SIGNAL(error(QBluetoothLocalDevice::Error)),
@@ -90,9 +90,9 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
         connect(socket, SIGNAL(connected()), this, SLOT(socketConnected()));
         connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
         connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
+        setSecFlags(socket->preferredSecurityFlags());
 
         server = new QBluetoothServer(SOCKET_PROTOCOL, this);
-        server->setSecurityFlags(QBluetooth::NoSecurity);
         connect(server, SIGNAL(newConnection()), this, SLOT(serverNewConnection()));
         connect(server, SIGNAL(error(QBluetoothServer::Error)),
                 this, SLOT(serverError(QBluetoothServer::Error)));
@@ -111,6 +111,21 @@ BtLocalDevice::~BtLocalDevice()
         QBluetoothSocket* s = serverSockets.takeFirst();
         s->abort();
         s->deleteLater();
+    }
+}
+
+int BtLocalDevice::secFlags() const
+{
+    return (int)securityFlags;
+}
+
+void BtLocalDevice::setSecFlags(int newFlags)
+{
+    QBluetooth::SecurityFlags fl(newFlags);
+
+    if (securityFlags != fl) {
+        securityFlags = fl;
+        emit secFlagsChanged();
     }
 }
 
@@ -194,6 +209,20 @@ void BtLocalDevice::confirmPairing()
     confirm = !confirm; //toggle
     qDebug() << "######" << "Sending pairing confirmation: " << confirm;
     localDevice->pairingConfirmation(confirm);
+}
+
+void BtLocalDevice::cycleSecurityFlags()
+{
+    if (securityFlags.testFlag(QBluetooth::Secure))
+        setSecFlags(QBluetooth::NoSecurity);
+    else if (securityFlags.testFlag(QBluetooth::Encryption))
+        setSecFlags(secFlags() | QBluetooth::Secure);
+    else if (securityFlags.testFlag(QBluetooth::Authentication))
+        setSecFlags(secFlags() | QBluetooth::Encryption);
+    else if (securityFlags.testFlag(QBluetooth::Authorization))
+        setSecFlags(secFlags() | QBluetooth::Authentication);
+    else
+        setSecFlags(secFlags() | QBluetooth::Authorization);
 }
 
 void BtLocalDevice::deviceDiscovered(const QBluetoothDeviceInfo &info)
@@ -371,8 +400,11 @@ void BtLocalDevice::dumpServiceDiscovery()
 
 void BtLocalDevice::connectToService()
 {
-    if (socket)
+    if (socket) {
+        if (socket->preferredSecurityFlags() != securityFlags)
+            socket->setPreferredSecurityFlags(securityFlags);
         socket->connectToService(QBluetoothAddress(BTCHAT_DEVICE_ADDR),QBluetoothUuid(QString(TEST_SERVICE_UUID)));
+    }
 }
 
 void BtLocalDevice::connectToServiceViaSearch()
@@ -380,6 +412,9 @@ void BtLocalDevice::connectToServiceViaSearch()
     if (socket) {
         qDebug() << "###### Connecting to service socket";
         if (!foundTestServers.isEmpty()) {
+            if (socket->preferredSecurityFlags() != securityFlags)
+                socket->setPreferredSecurityFlags(securityFlags);
+
             QBluetoothServiceInfo info = foundTestServers.at(0);
             socket->connectToService(info.device().address(), QBluetoothUuid(QString(TEST_SERVICE_UUID)));
         } else {
@@ -512,6 +547,12 @@ void BtLocalDevice::serverListenPort()
             qDebug() << "###### Already listening" << serviceInfo.isRegistered();
             return;
         }
+
+        if (server->securityFlags() != securityFlags) {
+            qDebug() << "###### Setting security policy on server socket" << securityFlags;
+            server->setSecurityFlags(securityFlags);
+        }
+
         qDebug() << "###### Start listening via port";
         bool ret = server->listen(localDevice->address());
         qDebug() << "###### Listening(Expecting TRUE):" << ret;
@@ -576,6 +617,12 @@ void BtLocalDevice::serverListenUuid()
             qDebug() << "###### Already listening" << serviceInfo.isRegistered();
             return;
         }
+
+        if (server->securityFlags() != securityFlags) {
+            qDebug() << "###### Setting security policy on server socket" << securityFlags;
+            server->setSecurityFlags(securityFlags);
+        }
+
         qDebug() << "###### Start listening via UUID";
         serviceInfo = server->listen(QBluetoothUuid(QString(TEST_SERVICE_UUID)), tr("Bt Chat Server"));
         qDebug() << "###### Listening(Expecting TRUE, TRUE):" << serviceInfo.isRegistered() << serviceInfo.isValid();

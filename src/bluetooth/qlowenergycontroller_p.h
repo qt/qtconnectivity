@@ -138,6 +138,8 @@ public:
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
+    QString remoteName;
+
     QLowEnergyController::ControllerState state;
     QLowEnergyController::Error error;
     QString errorString;
@@ -177,7 +179,7 @@ private:
     void sendReadValueRequest(QLowEnergyHandle attributeHandle, bool isDescriptor);
     void readServiceValues(const QBluetoothUuid &service,
                            bool readCharacteristics);
-    void readServiceValuesByOffset(quint16 handleData, quint16 offset,
+    void readServiceValuesByOffset(uint handleData, quint16 offset,
                                    bool isLastValue);
 
     void discoverServiceDescriptors(const QBluetoothUuid &serviceUuid);

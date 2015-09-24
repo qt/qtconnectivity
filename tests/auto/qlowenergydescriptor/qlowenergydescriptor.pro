@@ -3,9 +3,6 @@ TARGET = tst_qlowenergydescriptor
 CONFIG += testcase
 
 QT = core bluetooth testlib
-blackberry {
-    LIBS += -lbtapi
-}
 
 osx:CONFIG += insignificant_test
 

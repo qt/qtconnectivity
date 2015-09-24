@@ -64,9 +64,6 @@ QT_BEGIN_NAMESPACE
     format or range information specifying how the characteristic's value is to be\
     interpreted.
 
-    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
-    Some API elements may change until the final release of the feature.
-
     \sa QLowEnergyService, QLowEnergyDescriptor
 */
 
@@ -341,11 +338,18 @@ QLowEnergyDescriptor QLowEnergyCharacteristic::descriptor(const QBluetoothUuid &
     if (d_ptr.isNull() || !data)
         return QLowEnergyDescriptor();
 
-    QList<QLowEnergyHandle> descriptorKeys = d_ptr->characteristicList[data->handle].
-                                                    descriptorList.keys();
-    foreach (const QLowEnergyHandle descHandle, descriptorKeys) {
-        if (uuid == d_ptr->characteristicList[data->handle].descriptorList[descHandle].uuid)
-            return QLowEnergyDescriptor(d_ptr, data->handle, descHandle);
+    CharacteristicDataMap::const_iterator charIt = d_ptr->characteristicList.constFind(data->handle);
+    if (charIt != d_ptr->characteristicList.constEnd()) {
+        const QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
+        DescriptorDataMap::const_iterator descIt = charDetails.descriptorList.constBegin();
+        for ( ; descIt != charDetails.descriptorList.constEnd(); ++descIt) {
+            const QLowEnergyHandle descHandle = descIt.key();
+            const QLowEnergyServicePrivate::DescData &descDetails = descIt.value();
+
+            if (descDetails.uuid == uuid)
+                return QLowEnergyDescriptor(d_ptr, data->handle, descHandle);
+        }
     }
 
     return QLowEnergyDescriptor();

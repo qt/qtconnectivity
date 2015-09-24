@@ -34,7 +34,7 @@
 The Bluetooth API provides connectivity between Bluetooth enabled devices.
 
 Currently, the API is supported on the following platforms: \l{Qt for Android}{Android},
-\l{Qt for BlackBerry}{BlackBerry 10}, \l{Qt for iOS}{iOS}, \l{Qt for Linux/X11}{Linux}
+\l{Qt for iOS}{iOS}, \l{Qt for Linux/X11}{Linux}
 (\l{http://www.bluez.org}{BlueZ 4.x/5.x}) and \l{Qt for OS X}{OS X}.
 
 \section1 Overview
@@ -66,7 +66,7 @@ import statement in your \c .qml file:
 \section2 Guides
 \list
     \li \l {Qt Bluetooth Overview}{Classic Bluetooth Overview}
-    \li \l {Bluetooth Low Energy Overview} (Tech Preview)
+    \li \l {Bluetooth Low Energy Overview}
 \endlist
 
 \section2 Reference

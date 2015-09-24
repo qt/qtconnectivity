@@ -66,11 +66,13 @@ public:
         //New Errors must be added after Unknown Error the space before UnknownError is reserved
         //for future device discovery errors
     };
+    Q_ENUM(Error)
 
     enum DiscoveryMode {
         MinimalDiscovery,
         FullDiscovery
     };
+    Q_ENUM(DiscoveryMode)
 
     QBluetoothServiceDiscoveryAgent(QObject *parent = 0);
     explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
@@ -112,6 +114,7 @@ private:
 #ifdef QT_BLUEZ_BLUETOOTH
     Q_PRIVATE_SLOT(d_func(), void _q_discoveredServices(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_createdDevice(QDBusPendingCallWatcher*))
+    Q_PRIVATE_SLOT(d_func(), void _q_foundDevice(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_sdpScannerDone(int,QProcess::ExitStatus))
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
@@ -123,7 +126,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QBluetoothServiceDiscoveryAgent::Error)
 
 #endif

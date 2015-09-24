@@ -92,6 +92,18 @@ QNdefNfcSmartPosterRecord::QNdefNfcSmartPosterRecord(const QNdefNfcSmartPosterRe
 }
 
 /*!
+    Assigns the \a other smart poster record to this record and returns a reference to
+    this record.
+*/
+QNdefNfcSmartPosterRecord &QNdefNfcSmartPosterRecord::operator=(const QNdefNfcSmartPosterRecord &other)
+{
+    if (this != &other)
+        d = other.d;
+
+    return *this;
+}
+
+/*!
     Destroys the smart poster.
 */
 QNdefNfcSmartPosterRecord::~QNdefNfcSmartPosterRecord()

@@ -93,9 +93,6 @@ QT_BEGIN_NAMESPACE
     connection becomes invalid as soon as the controller disconnects from the
     remote Bluetooth Low Energy device.
 
-    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
-    Some API elements may change until the final release of the feature.
-
     \sa QLowEnergyService, QLowEnergyCharacteristic, QLowEnergyDescriptor
 */
 
@@ -342,13 +339,18 @@ quint16 QLowEnergyControllerPrivate::updateValueOfCharacteristic(
         QLowEnergyHandle charHandle,const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (!service.isNull() && service->characteristicList.contains(charHandle)) {
-        if (appendValue)
-            service->characteristicList[charHandle].value += value;
-        else
-            service->characteristicList[charHandle].value = value;
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
 
-        return service->characteristicList[charHandle].value.size();
+            if (appendValue)
+                charDetails.value += value;
+            else
+                charDetails.value = value;
+
+            return charDetails.value.size();
+        }
     }
 
     return 0;
@@ -362,18 +364,26 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
         const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (service.isNull() || !service->characteristicList.contains(charHandle))
-        return 0;
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
 
-    if (!service->characteristicList[charHandle].descriptorList.contains(descriptorHandle))
-        return 0;
+            DescriptorDataMap::iterator descIt = charDetails.descriptorList.find(descriptorHandle);
+            if (descIt != charDetails.descriptorList.end()) {
+                QLowEnergyServicePrivate::DescData &descDetails = descIt.value();
 
-    if (appendValue)
-        service->characteristicList[charHandle].descriptorList[descriptorHandle].value += value;
-    else
-        service->characteristicList[charHandle].descriptorList[descriptorHandle].value = value;
+                if (appendValue)
+                    descDetails.value += value;
+                else
+                    descDetails.value = value;
 
-    return service->characteristicList[charHandle].descriptorList[descriptorHandle].value.size();
+                return descDetails.value.size();
+            }
+        }
+    }
+
+    return 0;
 }
 
 /*!
@@ -385,6 +395,8 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 
     The controller uses the local default Bluetooth adapter for
     the connection management.
+
+    \obsolete
  */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
@@ -420,6 +432,7 @@ QLowEnergyController::QLowEnergyController(
     d->remoteDevice = remoteDeviceInfo.address();
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
+    d->remoteName = remoteDeviceInfo.name();
 }
 
 /*!
@@ -434,6 +447,8 @@ QLowEnergyController::QLowEnergyController(
     \a localDevice specifies a local device that is not a local Bluetooth
     adapter, \l error() is set to \l InvalidBluetoothAdapterError once
     \l connectToDevice() is called.
+
+    \obsolete
  */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
@@ -477,6 +492,16 @@ QBluetoothAddress QLowEnergyController::localAddress() const
 QBluetoothAddress QLowEnergyController::remoteAddress() const
 {
     return d_ptr->remoteDevice;
+}
+
+/*!
+    Returns the name of the remote Bluetooth Low Energy device.
+
+    \since 5.5
+ */
+QString QLowEnergyController::remoteName() const
+{
+    return d_ptr->remoteName;
 }
 
 /*!
@@ -629,11 +654,15 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
         const QBluetoothUuid &serviceUuid, QObject *parent)
 {
     Q_D(QLowEnergyController);
-    if (!d->serviceList.contains(serviceUuid))
-        return 0;
 
-    QLowEnergyService *service = new QLowEnergyService(
-                d->serviceList.value(serviceUuid), parent);
+    QLowEnergyService *service = Q_NULLPTR;
+
+    ServiceDataMap::const_iterator it = d->serviceList.constFind(serviceUuid);
+    if (it != d->serviceList.constEnd()) {
+        const QSharedPointer<QLowEnergyServicePrivate> &serviceData = it.value();
+
+        service = new QLowEnergyService(serviceData, parent);
+    }
 
     return service;
 }

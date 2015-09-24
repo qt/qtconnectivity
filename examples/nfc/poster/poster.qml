@@ -63,8 +63,9 @@ Rectangle {
         }
 
         filter: [
-            NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1; maximum: 1 },
-            NdefFilter { type: "T"; typeNameFormat: NdefRecord.NfcRtd; minimum: 1 }
+            NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; maximum: 1 },
+            NdefFilter { type: "T"; typeNameFormat: NdefRecord.NfcRtd },
+            NdefFilter { typeNameFormat: NdefRecord.Mime; minimum: 0; maximum: 1 }
         ]
 
         onMessageRecordsChanged: {

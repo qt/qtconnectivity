@@ -135,7 +135,7 @@ QT_BEGIN_NAMESPACE
 
     \value UnknownProtocol  The service uses an unknown socket protocol.
     \value L2capProtocol    The service uses the L2CAP socket protocol. This protocol is not supported
-                            for direct socket connections on Android and BlackBerry.
+                            for direct socket connections on Android.
     \value RfcommProtocol   The service uses the RFCOMM socket protocol.
 */
 
@@ -375,7 +375,7 @@ bool QBluetoothServiceInfo::isValid() const
 */
 bool QBluetoothServiceInfo::isComplete() const
 {
-    return d_ptr->attributes.keys().contains(ProtocolDescriptorList);
+    return d_ptr->attributes.contains(ProtocolDescriptorList);
 }
 
 /*!

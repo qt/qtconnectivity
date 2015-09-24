@@ -57,8 +57,8 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
 }
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
-    :   maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError),
-        socketNotifier(0)
+    :   maxPendingConnections(1), securityFlags(QBluetooth::Authorization), serverType(sType),
+        m_lastError(QBluetoothServer::NoError), socketNotifier(0)
 {
     if (sType == QBluetoothServiceInfo::RfcommProtocol)
         socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
@@ -79,6 +79,57 @@ void QBluetoothServerPrivate::_q_newConnection()
     socketNotifier->setEnabled(false);
 
     emit q_ptr->newConnection();
+}
+
+void QBluetoothServerPrivate::setSocketSecurityLevel(
+        QBluetooth::SecurityFlags requestedSecLevel, int *errnoCode)
+{
+    if (requestedSecLevel == QBluetooth::NoSecurity) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot set NoSecurity on server socket";
+        return;
+    }
+
+    struct bt_security security;
+    memset(&security, 0, sizeof(security));
+
+    // ignore QBluetooth::Authentication -> not used anymore
+    if (requestedSecLevel & QBluetooth::Authorization)
+        security.level = BT_SECURITY_LOW;
+    if (requestedSecLevel & QBluetooth::Encryption)
+        security.level = BT_SECURITY_MEDIUM;
+    if (requestedSecLevel & QBluetooth::Secure)
+        security.level = BT_SECURITY_HIGH;
+
+    if (setsockopt(socket->socketDescriptor(), SOL_BLUETOOTH, BT_SECURITY,
+                   &security, sizeof(security)) != 0) {
+        if (errnoCode)
+            *errnoCode = errno;
+    }
+}
+
+QBluetooth::SecurityFlags QBluetoothServerPrivate::socketSecurityLevel() const
+{
+    struct bt_security security;
+    memset(&security, 0, sizeof(security));
+    socklen_t length = sizeof(security);
+
+    if (getsockopt(socket->socketDescriptor(), SOL_BLUETOOTH, BT_SECURITY,
+                   &security, &length) != 0) {
+        qCWarning(QT_BT_BLUEZ) << "Failed to get security flags" << qt_error_string(errno);
+        return QBluetooth::NoSecurity;
+    }
+
+    switch (security.level) {
+    case BT_SECURITY_LOW:
+        return QBluetooth::Authorization;
+    case BT_SECURITY_MEDIUM:
+        return QBluetooth::Encryption;
+    case BT_SECURITY_HIGH:
+        return QBluetooth::Secure;
+    default:
+        qCWarning(QT_BT_BLUEZ) << "Unknown server socket security level" << security.level;
+        return QBluetooth::NoSecurity;
+    }
 }
 
 void QBluetoothServer::close()
@@ -178,6 +229,8 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         }
     }
 
+    d->setSocketSecurityLevel(d->securityFlags, 0);
+
     if (::listen(sock, d->maxPendingConnections) < 0) {
         d->m_lastError = InputOutputError;
         emit error(d->m_lastError);
@@ -269,95 +322,31 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
     Q_D(QBluetoothServer);
 
-    int lm = 0;
-    if (security == QBluetooth::NoSecurity)
-        lm = 0;
-
-    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
-        if (security.testFlag(QBluetooth::Authorization))
-            lm |= RFCOMM_LM_AUTH;
-        if (security.testFlag(QBluetooth::Authentication))
-            lm |= RFCOMM_LM_TRUSTED;
-        if (security.testFlag(QBluetooth::Encryption))
-            lm |= RFCOMM_LM_ENCRYPT;
-        if (security.testFlag(QBluetooth::Secure))
-            lm |= RFCOMM_LM_SECURE;
-
-        qCDebug(QT_BT_BLUEZ) << hex << "Setting lm to" << lm << security;
-
-        if (setsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, sizeof(lm)) < 0){
-            qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errno;
-            qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errno);
-            d->m_lastError = InputOutputError;
-            emit error(d->m_lastError);
-            d->socket->close();
-        }
-    } else {
-        if (security.testFlag(QBluetooth::Authorization))
-            lm |= L2CAP_LM_AUTH;
-        if (security.testFlag(QBluetooth::Authentication))
-            lm |= L2CAP_LM_TRUSTED;
-        if (security.testFlag(QBluetooth::Encryption))
-            lm |= L2CAP_LM_ENCRYPT;
-        if (security.testFlag(QBluetooth::Secure))
-            lm |= L2CAP_LM_SECURE;
-
-        if (setsockopt(d->socket->socketDescriptor(), SOL_L2CAP, L2CAP_LM, &lm, sizeof(lm)) < 0){
-            qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errno;
-            qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errno);
-            d->m_lastError = InputOutputError;
-            emit error(d->m_lastError);
-            d->socket->close();
-        }
+    if (d->socket->state() == QBluetoothSocket::UnconnectedState) {
+        // nothing to set beyond the fact to remember the sec level for the next listen()
+        d->securityFlags = security;
+        return;
     }
 
+    int errorCode = 0;
+    d->setSocketSecurityLevel(security, &errorCode);
+    if (errorCode) {
+        qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errorCode;
+        qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errorCode);
+        d->m_lastError = InputOutputError;
+        emit error(d->m_lastError);
+        d->socket->close();
+    }
 }
 
 QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
 {
     Q_D(const QBluetoothServer);
 
-    int lm = 0;
-    int len = sizeof(lm);
-    int security = QBluetooth::NoSecurity;
+    if (d->socket->state() == QBluetoothSocket::UnconnectedState)
+        return d->securityFlags;
 
-    if (d->serverType == QBluetoothServiceInfo::RfcommProtocol) {
-        if (getsockopt(d->socket->socketDescriptor(), SOL_RFCOMM, RFCOMM_LM, &lm, (socklen_t *)&len) < 0) {
-            qCWarning(QT_BT_BLUEZ) << "Failed to get security flags" << qt_error_string(errno);
-            return QBluetooth::NoSecurity;
-        }
-
-        if (lm & RFCOMM_LM_SECURE)
-            security |= QBluetooth::Secure;
-
-        if (lm & RFCOMM_LM_ENCRYPT)
-            security |= QBluetooth::Encryption;
-
-        if (lm & RFCOMM_LM_TRUSTED)
-            security |= QBluetooth::Authentication;
-
-        if (lm & RFCOMM_LM_AUTH)
-            security |= QBluetooth::Authorization;
-    } else {
-        if (getsockopt(d->socket->socketDescriptor(), SOL_L2CAP, L2CAP_LM, &lm, (socklen_t *)&len) < 0) {
-            qCWarning(QT_BT_BLUEZ) << "Failed to get security flags" << qt_error_string(errno);
-            return QBluetooth::NoSecurity;
-        }
-
-        if (lm & L2CAP_LM_SECURE)
-            security |= QBluetooth::Secure;
-
-        if (lm & L2CAP_LM_ENCRYPT)
-            security |= QBluetooth::Encryption;
-
-        if (lm & L2CAP_LM_TRUSTED)
-            security |= QBluetooth::Authentication;
-
-        if (lm & L2CAP_LM_AUTH)
-            security |= QBluetooth::Authorization;
-    }
-
-    return static_cast<QBluetooth::Security>(security);
+    return d->socketSecurityLevel();
 }
 
 QT_END_NAMESPACE

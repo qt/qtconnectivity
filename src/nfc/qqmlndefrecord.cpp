@@ -271,7 +271,7 @@ QString QQmlNdefRecord::type() const
 }
 
 /*!
-    Sets the record type to \a type if it is not currently equal to \a type; otherwise does
+    Sets the record type to \a newtype if it is not currently equal to \l type(); otherwise does
     nothing.  If the record type is set the typeChanged() signal will be emitted.
 
     \sa QNdefRecord::setType(), QNdefRecord::type()

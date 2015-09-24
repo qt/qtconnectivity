@@ -58,7 +58,7 @@ public:
         ResourceBusyError,
         SessionError
     };
-
+    Q_ENUM(TransferError)
 
     ~QBluetoothTransferReply();
 

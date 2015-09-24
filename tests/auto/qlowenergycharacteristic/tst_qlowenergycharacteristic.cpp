@@ -42,8 +42,6 @@
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
-Q_DECLARE_METATYPE(QBluetoothDeviceDiscoveryAgent::Error)
-
 QT_USE_NAMESPACE
 
 // This define must be set if the platform provides access to GATT handles
@@ -75,7 +73,7 @@ private slots:
     void tst_assignCompare();
 
 private:
-    QSet<QString> remoteLeDevices;
+    QList<QBluetoothDeviceInfo> remoteLeDevices;
     QLowEnergyController *globalControl;
     QLowEnergyService *globalService;
 };
@@ -121,9 +119,10 @@ void tst_QLowEnergyCharacteristic::initTestCase()
 
     // find first service with descriptor
     QLowEnergyController *controller = 0;
-    foreach (const QString &remoteDevice, remoteLeDevices.toList()) {
-        controller = new QLowEnergyController(QBluetoothAddress(remoteDevice), this);
-        qDebug() << "Connecting to" << remoteDevice;
+    foreach (const QBluetoothDeviceInfo &remoteDevice, remoteLeDevices) {
+        controller = new QLowEnergyController(remoteDevice, this);
+        qDebug() << "Connecting to" << remoteDevice.name()
+                 << remoteDevice.address() << remoteDevice.deviceUuid();
         controller->connectToDevice();
         QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
                   20000);
@@ -158,7 +157,7 @@ void tst_QLowEnergyCharacteristic::initTestCase()
                 if (!ch.descriptors().isEmpty()) {
                     globalService = leService;
                     globalControl = controller;
-                    qWarning() << "Found service with descriptor" << remoteDevice
+                    qWarning() << "Found service with descriptor" << remoteDevice.address()
                                << globalService->serviceName() << globalService->serviceUuid();
                     break;
                 }
@@ -191,7 +190,7 @@ void tst_QLowEnergyCharacteristic::cleanupTestCase()
 void tst_QLowEnergyCharacteristic::deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
     if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-        remoteLeDevices.insert(info.address().toString());
+        remoteLeDevices.append(info);
 }
 
 void tst_QLowEnergyCharacteristic::tst_constructionDefault()

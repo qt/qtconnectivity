@@ -48,13 +48,18 @@ public:
     explicit BtLocalDevice(QObject *parent = 0);
     ~BtLocalDevice();
     Q_PROPERTY(QString hostMode READ hostMode NOTIFY hostModeStateChanged)
+    Q_PROPERTY(int secFlags READ secFlags WRITE setSecFlags
+               NOTIFY secFlagsChanged)
 
+    int secFlags() const;
+    void setSecFlags(int);
     QString hostMode() const;
 
 signals:
     void error(QBluetoothLocalDevice::Error error);
     void hostModeStateChanged();
     void socketStateUpdate(int foobar);
+    void secFlagsChanged();
 
 public slots:
     //QBluetoothLocalDevice
@@ -68,6 +73,7 @@ public slots:
     void disconnected(const QBluetoothAddress &addr);
     void pairingDisplayConfirmation(const QBluetoothAddress &address, const QString &pin);
     void confirmPairing();
+    void cycleSecurityFlags();
 
     //QBluetoothDeviceDiscoveryAgent
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
@@ -123,6 +129,7 @@ private:
     QBluetoothServiceInfo serviceInfo;
 
     QList<QBluetoothServiceInfo> foundTestServers;
+    QBluetooth::SecurityFlags securityFlags;
 };
 
 #endif // BTLOCALDEVICE_H

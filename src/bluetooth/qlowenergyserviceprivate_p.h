@@ -104,6 +104,9 @@ public:
     QPointer<QLowEnergyControllerPrivate> controller;
 };
 
+typedef QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> CharacteristicDataMap;
+typedef QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> DescriptorDataMap;
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QSharedPointer<QLowEnergyServicePrivate>)

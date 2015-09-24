@@ -36,12 +36,13 @@
 
 #include <QtBluetooth/qbluetoothglobal.h>
 
-#include <QtBluetooth/QBluetoothAddress>
-#include <QtBluetooth/QBluetoothUuid>
-#include <QtBluetooth/QBluetoothServiceInfo>
+#include <QtBluetooth/qbluetooth.h>
+#include <QtBluetooth/qbluetoothaddress.h>
+#include <QtBluetooth/qbluetoothuuid.h>
+#include <QtBluetooth/qbluetoothserviceinfo.h>
 
-#include <QtCore/QIODevice>
-#include <QtNetwork/QAbstractSocket>
+#include <QtCore/qiodevice.h>
+#include <QtNetwork/qabstractsocket.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,6 +68,7 @@ public:
         ClosingState = QAbstractSocket::ClosingState,
         ListeningState = QAbstractSocket::ListeningState
     };
+    Q_ENUM(SocketState)
 
     enum SocketError {
         NoSocketError = -2,
@@ -78,6 +80,7 @@ public:
         OperationError = QAbstractSocket::OperationError //19
         //New enums (independent of QAbstractSocket) should be added from 100 onwards
     };
+    Q_ENUM(SocketError)
 
     explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = 0);   // create socket of type socketType
     QBluetoothSocket(QObject *parent = 0);  // create a blank socket
@@ -127,6 +130,9 @@ public:
     //bool waitForDisconnected(int msecs = 30000);
     //virtual bool waitForReadyRead(int msecs = 30000);
 
+    void setPreferredSecurityFlags(QBluetooth::SecurityFlags flags);
+    QBluetooth::SecurityFlags preferredSecurityFlags() const;
+
 Q_SIGNALS:
     void connected();
     void disconnected();
@@ -160,8 +166,5 @@ Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketState);
 #endif
 
 QT_END_NAMESPACE
-
-Q_DECLARE_METATYPE(QBluetoothSocket::SocketError)
-Q_DECLARE_METATYPE(QBluetoothSocket::SocketState)
 
 #endif

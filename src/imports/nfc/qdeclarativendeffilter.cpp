@@ -70,12 +70,18 @@
 */
 
 /*!
+    \qmlproperty QQmlNdefRecord::TypeNameFormat NdefFilter::typeNameFormat
+
+    This property holds the NDEF record name format type \enum QQmlNdefRecord::TypeNameFormat.
+*/
+
+/*!
     \qmlproperty int NdefFilter::minimum
 
     This property holds the minimum number of records of the given type that must be in the NDEF
     message for it match.
 
-    To match any number of records set both the minimum and maximum properties to -1.
+    The default minimum is 1.
 
     \sa maximum
 */
@@ -86,13 +92,13 @@
     This property holds the maximum number of records of the given type that must be in the NDEF
     message for it match.
 
-    To match any number of records set both the minimum and maximum properties to -1.
+    The default maximum is UINT_MAX.
 
     \sa minimum
 */
 
 QDeclarativeNdefFilter::QDeclarativeNdefFilter(QObject *parent)
-:   QObject(parent), m_minimum(-1), m_maximum(-1)
+:   QObject(parent), m_minimum(1), m_maximum(UINT_MAX)
 {
 }
 

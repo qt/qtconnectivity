@@ -64,8 +64,6 @@ class QDeclarativeBluetoothDiscoveryModelPrivate;
 class QDeclarativeBluetoothDiscoveryModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
-    Q_ENUMS(DiscoveryMode)
-    Q_ENUMS(Error)
     Q_PROPERTY(Error error READ error NOTIFY errorChanged)
     Q_PROPERTY(DiscoveryMode discoveryMode READ discoveryMode WRITE setDiscoveryMode NOTIFY discoveryModeChanged)
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
@@ -88,6 +86,7 @@ public:
         FullServiceDiscovery,
         DeviceDiscovery
     };
+    Q_ENUM(DiscoveryMode)
 
     enum Error
     {
@@ -97,6 +96,7 @@ public:
         UnknownError,
         InvalidBluetoothAdapterError
     };
+    Q_ENUM(Error)
 
     Error error() const;
 

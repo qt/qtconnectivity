@@ -46,9 +46,11 @@
 void usage()
 {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "\tsdpscanner <remote bdaddr> <local bdaddr>\n\n");
+    fprintf(stderr, "\tsdpscanner <remote bdaddr> <local bdaddr> [Options]\n\n");
     fprintf(stderr, "Performs an SDP scan on remote device, using the SDP server\n"
-                    "represented by the local Bluetooth device.\n");
+                    "represented by the local Bluetooth device.\n\n"
+                    "Options:\n"
+                    "   -p      Show scan results in human-readable form\n");
 }
 
 #define BUFFER_SIZE 1024
@@ -245,7 +247,7 @@ QByteArray parseSdpRecord(sdp_record_t *record)
 
 int main(int argc, char **argv)
 {
-    if (argc != 3) {
+    if (argc < 3) {
         usage();
         return RETURN_USAGE;
     }
@@ -264,6 +266,27 @@ int main(int argc, char **argv)
     if (result < 0) {
         fprintf(stderr, "Invalid local address: %s\n", argv[2]);
         return RETURN_INVALPARAM;
+    }
+
+    bool showHumanReadable = false;
+
+    for (int i = 3; i < argc; i++) {
+        if (argv[i][0] != '-') {
+            usage();
+            return RETURN_USAGE;
+        }
+
+        switch (argv[i][1])
+        {
+        case 'p':
+            showHumanReadable = true;
+            break;
+        default:
+            fprintf(stderr, "Wrong argument: %s\n", argv[i]);
+            usage();
+            return RETURN_USAGE;
+
+        }
     }
 
     sdp_session_t *session = sdp_connect( &local, &remote, SDP_RETRY_IF_BUSY);
@@ -314,7 +337,10 @@ int main(int argc, char **argv)
     }
 
     if (!total.isEmpty()) {
-        printf("%s", total.toBase64().constData());
+        if (showHumanReadable)
+            printf("%s", total.constData());
+        else
+            printf("%s", total.toBase64().constData());
     }
 
     sdp_close(session);

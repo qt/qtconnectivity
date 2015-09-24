@@ -159,9 +159,6 @@ QT_BEGIN_NAMESPACE
     related \l QLowEnergyController disconnecting from the device are shared
     the same way.
 
-    \note This class is provided by Qt 5.4 as part of a Bluetooth Low Energy Tech Preview.
-    Some API elements may change until the final release of the feature.
-
     \sa QLowEnergyController, QLowEnergyCharacteristic, QLowEnergyDescriptor
  */
 
@@ -352,6 +349,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
 {
     qRegisterMetaType<QLowEnergyService::ServiceState>();
     qRegisterMetaType<QLowEnergyService::ServiceError>();
+    qRegisterMetaType<QLowEnergyService::ServiceType>();
+    qRegisterMetaType<QLowEnergyService::WriteMode>();
 
     connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
             this, SIGNAL(error(QLowEnergyService::ServiceError)));
@@ -455,9 +454,13 @@ QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 */
 QLowEnergyCharacteristic QLowEnergyService::characteristic(const QBluetoothUuid &uuid) const
 {
-    foreach (const QLowEnergyHandle handle, d_ptr->characteristicList.keys()) {
-        if (d_ptr->characteristicList[handle].uuid == uuid)
-            return QLowEnergyCharacteristic(d_ptr, handle);
+    CharacteristicDataMap::const_iterator charIt = d_ptr->characteristicList.constBegin();
+    for ( ; charIt != d_ptr->characteristicList.constEnd(); ++charIt) {
+        const QLowEnergyHandle charHandle = charIt.key();
+        const QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
+        if (charDetails.uuid == uuid)
+            return QLowEnergyCharacteristic(d_ptr, charHandle);
     }
 
     return QLowEnergyCharacteristic();
@@ -598,9 +601,7 @@ void QLowEnergyService::readCharacteristic(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(characteristic)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -649,9 +650,7 @@ void QLowEnergyService::writeCharacteristic(
     //TODO check behavior when writing to WriteSigned characteristic
     Q_D(QLowEnergyService);
 
-    if (!contains(characteristic)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -717,9 +716,7 @@ void QLowEnergyService::readDescriptor(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -751,9 +748,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
