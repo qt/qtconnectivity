@@ -240,8 +240,8 @@ void QLowEnergyControllerPrivate::startDiscoveryOfPrimaryServices()
         primaryServicesDiscoveryWatcher = new QFutureWatcher<
                 WinLowEnergyBluetooth::ServicesDiscoveryResult>(this);
 
-        QObject::connect(primaryServicesDiscoveryWatcher, SIGNAL(finished()),
-                         this, SLOT(primaryServicesDiscoveryCompleted()));
+        connect(primaryServicesDiscoveryWatcher, &QFutureWatcher<WinLowEnergyBluetooth::ServicesDiscoveryResult>::finished,
+                this, &QLowEnergyControllerPrivate::primaryServicesDiscoveryCompleted);
     }
 
     if (primaryServicesDiscoveryWatcher->isRunning())

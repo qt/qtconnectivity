@@ -200,8 +200,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startDiscoveryForFirstClassicDevice(
     if (!classicDiscoveryWatcher) {
         classicDiscoveryWatcher = new QFutureWatcher<
                 WinClassicBluetooth::RemoteDeviceDiscoveryResult>(this);
-        QObject::connect(classicDiscoveryWatcher, SIGNAL(finished()),
-                         this, SLOT(classicDeviceDiscovered()));
+        connect(classicDiscoveryWatcher, &QFutureWatcher<WinClassicBluetooth::RemoteDeviceDiscoveryResult>::finished,
+                this, &QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceDiscovered);
     }
 
     const QFuture<WinClassicBluetooth::RemoteDeviceDiscoveryResult> future =
@@ -258,8 +258,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startDiscoveryForLowEnergyDevices()
     if (!lowEnergyDiscoveryWatcher) {
         lowEnergyDiscoveryWatcher = new QFutureWatcher<
                 WinLowEnergyBluetooth::DeviceDiscoveryResult>(this);
-        QObject::connect(lowEnergyDiscoveryWatcher, SIGNAL(finished()),
-                         this, SLOT(lowEnergyDeviceDiscovered()));
+        connect(lowEnergyDiscoveryWatcher, &QFutureWatcher<WinLowEnergyBluetooth::DeviceDiscoveryResult>::finished,
+                this, &QBluetoothDeviceDiscoveryAgentPrivate::lowEnergyDeviceDiscovered);
     }
 
     const QFuture<WinLowEnergyBluetooth::DeviceDiscoveryResult> future =
