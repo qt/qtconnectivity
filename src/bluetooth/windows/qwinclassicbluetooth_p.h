@@ -61,8 +61,6 @@ struct RemoteDeviceDiscoveryResult
     DWORD error;
 };
 
-LocalRadiosDiscoveryResult enumerateLocalRadios();
-
 RemoteDeviceDiscoveryResult startDiscoveryOfFirstRemoteDevice();
 RemoteDeviceDiscoveryResult startDiscoveryOfNextRemoteDevice(HBLUETOOTH_DEVICE_FIND hSearch);
 void cancelRemoteDevicesDiscovery(HBLUETOOTH_DEVICE_FIND hSearch);

@@ -39,6 +39,9 @@
 
 #include <QtCore/QLoggingCategory>
 
+#include <qt_windows.h>
+#include <bluetoothapis.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
@@ -154,17 +157,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
 
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
-    const WinClassicBluetooth::LocalRadiosDiscoveryResult result =
-            WinClassicBluetooth::enumerateLocalRadios();
-
-    QList<QBluetoothHostInfo> devices;
-    foreach (const BLUETOOTH_RADIO_INFO &radio, result.radios) {
-        QBluetoothHostInfo device;
-        device.setAddress(QBluetoothAddress(radio.address.ullLong));
-        device.setName(QString::fromWCharArray(radio.szName));
-        devices.append(device);
-    }
-    return devices;
+    return QBluetoothLocalDevicePrivate::localAdapters();
 }
 
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
@@ -206,29 +199,11 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 {
     Q_Q(QBluetoothLocalDevice);
 
-    const WinClassicBluetooth::LocalRadiosDiscoveryResult result =
-            WinClassicBluetooth::enumerateLocalRadios();
-
-    if (result.error != NO_ERROR
-            && result.error != ERROR_NO_MORE_ITEMS) {
-        qCWarning(QT_BT_WINDOWS) << qt_error_string(result.error);
-        QMetaObject::invokeMethod(q, "error", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothLocalDevice::Error,
-                                        QBluetoothLocalDevice::UnknownError));
-        return;
-    } else if (result.radios.isEmpty()) {
-        qCWarning(QT_BT_WINDOWS) << "No any classic local radio found";
-        QMetaObject::invokeMethod(q, "error", Qt::QueuedConnection,
-                                  Q_ARG(QBluetoothLocalDevice::Error,
-                                        QBluetoothLocalDevice::UnknownError));
-        return;
-    }
-
-    foreach (const BLUETOOTH_RADIO_INFO &radio, result.radios) {
+    foreach (const QBluetoothHostInfo &adapterInfo, QBluetoothLocalDevicePrivate::localAdapters()) {
         if (address == QBluetoothAddress()
-             || address == QBluetoothAddress(radio.address.ullLong)) {
-            deviceAddress = QBluetoothAddress(radio.address.ullLong);
-            deviceName = QString::fromWCharArray(radio.szName);
+             || address == adapterInfo.address()) {
+            deviceAddress = adapterInfo.address();
+            deviceName = adapterInfo.name();
             deviceValid = true;
             return;
         }
@@ -238,6 +213,43 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
     QMetaObject::invokeMethod(q, "error", Qt::QueuedConnection,
                               Q_ARG(QBluetoothLocalDevice::Error,
                                     QBluetoothLocalDevice::UnknownError));
+}
+
+QList<QBluetoothHostInfo> QBluetoothLocalDevicePrivate::localAdapters()
+{
+    BLUETOOTH_FIND_RADIO_PARAMS params;
+    ::ZeroMemory(&params, sizeof(params));
+    params.dwSize = sizeof(params);
+
+    QList<QBluetoothHostInfo> foundAdapters;
+
+    HANDLE hRadio = 0;
+    if (const HBLUETOOTH_RADIO_FIND hSearch = ::BluetoothFindFirstRadio(&params, &hRadio)) {
+        forever {
+            BLUETOOTH_RADIO_INFO radio;
+            ::ZeroMemory(&radio, sizeof(radio));
+            radio.dwSize = sizeof(radio);
+
+            const DWORD retval = ::BluetoothGetRadioInfo(hRadio, &radio);
+            ::CloseHandle(hRadio);
+
+            if (retval != ERROR_SUCCESS)
+                break;
+
+            QBluetoothHostInfo adapterInfo;
+            adapterInfo.setAddress(QBluetoothAddress(radio.address.ullLong));
+            adapterInfo.setName(QString::fromWCharArray(radio.szName));
+
+            foundAdapters << adapterInfo;
+
+            if (!::BluetoothFindNextRadio(hSearch, &hRadio))
+                break;
+        }
+
+        ::BluetoothFindRadioClose(hSearch);
+    }
+
+    return foundAdapters;
 }
 
 QT_END_NAMESPACE

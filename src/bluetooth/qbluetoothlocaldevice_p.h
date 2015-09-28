@@ -79,10 +79,6 @@ QT_END_NAMESPACE
 #include <QtCore/QPair>
 #endif
 
-#ifdef Q_OS_WIN32
-#include "windows/qwinclassicbluetooth_p.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -217,6 +213,8 @@ public:
     ~QBluetoothLocalDevicePrivate();
     bool isValid() const;
     void initialize(const QBluetoothAddress &address);
+
+    static QList<QBluetoothHostInfo> localAdapters();
 
     QBluetoothAddress deviceAddress;
     QString deviceName;

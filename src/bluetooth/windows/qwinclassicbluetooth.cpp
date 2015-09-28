@@ -51,48 +51,6 @@ RemoteDeviceDiscoveryResult::RemoteDeviceDiscoveryResult()
     device.dwSize = sizeof(device);
 }
 
-LocalRadiosDiscoveryResult enumerateLocalRadios()
-{
-    BLUETOOTH_FIND_RADIO_PARAMS params;
-    ::ZeroMemory(&params, sizeof(params));
-    params.dwSize = sizeof(params);
-
-    HANDLE hRadio = 0;
-    const HBLUETOOTH_RADIO_FIND hSearch =
-            ::BluetoothFindFirstRadio(&params, &hRadio);
-
-    LocalRadiosDiscoveryResult result;
-
-    if (!hSearch) {
-        result.error = ::GetLastError();
-        return result;
-    }
-
-    forever {
-        BLUETOOTH_RADIO_INFO radio;
-        ::ZeroMemory(&radio, sizeof(radio));
-        radio.dwSize = sizeof(radio);
-
-        const DWORD retval = ::BluetoothGetRadioInfo(hRadio, &radio);
-        ::CloseHandle(hRadio);
-
-        if (retval != ERROR_SUCCESS) {
-            result.error = ::GetLastError();
-            break;
-        }
-
-        result.radios.append(radio);
-
-        if (!::BluetoothFindNextRadio(hSearch, &hRadio)) {
-            result.error = ::GetLastError();
-            break;
-        }
-    }
-
-    ::BluetoothFindRadioClose(hSearch);
-    return result;
-}
-
 RemoteDeviceDiscoveryResult startDiscoveryOfFirstRemoteDevice()
 {
     BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams;

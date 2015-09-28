@@ -36,6 +36,7 @@
 #include "qbluetoothdevicediscoveryagent_p.h"
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
+#include "qbluetoothlocaldevice_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -171,20 +172,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::initialize(
 bool QBluetoothDeviceDiscoveryAgentPrivate::isClassicAdapterValid(
         const QBluetoothAddress &deviceAdapter)
 {
-    const WinClassicBluetooth::LocalRadiosDiscoveryResult result =
-            WinClassicBluetooth::enumerateLocalRadios();
-
-    if (!isDiscoveredSuccessfully(result.error)) {
-        qCWarning(QT_BT_WINDOWS) << "Occurred error during search of classic local radios";
-        return false;
-    } else if (result.radios.isEmpty()) {
-        qCWarning(QT_BT_WINDOWS) << "No any classic local radio found";
-        return false;
-    }
-
-    foreach (const BLUETOOTH_RADIO_INFO &radio, result.radios) {
+    foreach (const QBluetoothHostInfo &adapterInfo, QBluetoothLocalDevicePrivate::localAdapters()) {
         if (deviceAdapter == QBluetoothAddress()
-                || deviceAdapter == QBluetoothAddress(radio.address.ullLong)) {
+                || deviceAdapter == adapterInfo.address()) {
             return true;
         }
     }
