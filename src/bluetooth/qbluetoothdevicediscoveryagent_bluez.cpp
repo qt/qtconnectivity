@@ -247,6 +247,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
                         continue; //devices whose path doesn't start with same path we skip
 
                     deviceFoundBluez5(path.path());
+                    if (!isActive()) // Can happen if stop() was called from a slot in user code.
+                      return;
                 }
             }
         }
