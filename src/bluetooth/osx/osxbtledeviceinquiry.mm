@@ -295,8 +295,8 @@ using namespace QT_NAMESPACE;
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0)) {
         if (!peripheral.identifier) {
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
             return;
@@ -310,15 +310,25 @@ using namespace QT_NAMESPACE;
         return;
     }
 #endif
-    if (!peripheral.UUID) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without UUID";
+    // Either SDK or the target is below 10.9/7.0:
+    // The property UUID was finally removed in iOS 9, we have
+    // to avoid compilation errors ...
+    CFUUIDRef cfUUID = Q_NULLPTR;
+
+    if ([peripheral respondsToSelector:@selector(UUID)]) {
+        // This will require a bridged cast if we switch to ARC ...
+        cfUUID = reinterpret_cast<CFUUIDRef>([peripheral performSelector:@selector(UUID)]);
+    }
+
+    if (!cfUUID) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without CFUUID";
         return;
     }
 
-    StringStrongReference key(uuid_as_nsstring(peripheral.UUID));
+    StringStrongReference key(uuid_as_nsstring(cfUUID));
     if (![peripherals objectForKey:key.data()]) {
         [peripherals setObject:peripheral forKey:key.data()];
-        const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.UUID));
+        const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(cfUUID));
         delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
     }
 }
