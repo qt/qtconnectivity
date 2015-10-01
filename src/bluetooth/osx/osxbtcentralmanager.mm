@@ -201,8 +201,8 @@ using namespace QT_NAMESPACE;
         return QLowEnergyController::ConnectionError;
     }
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
+    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0)) {
         const quint128 qtUuidData(deviceUuid.toUInt128());
         // STATIC_ASSERT on sizes would be handy!
         uuid_t uuidData = {};
@@ -229,6 +229,12 @@ using namespace QT_NAMESPACE;
         return QLowEnergyController::NoError;
     }
 #endif
+    // Either SDK or the target is below 10.9/7.0
+    if (![manager respondsToSelector:@selector(retrievePeripherals:)]) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
+        return QLowEnergyController::UnknownRemoteDeviceError;
+    }
+
     OSXBluetooth::CFStrongReference<CFUUIDRef> cfUuid(OSXBluetooth::cf_uuid(deviceUuid));
     if (!cfUuid) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create CFUUID object";
@@ -238,7 +244,7 @@ using namespace QT_NAMESPACE;
     [uuids addObject:(id)cfUuid.data()];
     // Unfortunately, with old Core Bluetooth this call is asynchronous ...
     managerState = OSXBluetooth::CentralManagerConnecting;
-    [manager retrievePeripherals:uuids];
+    [manager performSelector:@selector(retrievePeripherals:) withObject:uuids.data()];
 
     return QLowEnergyController::NoError;
 }
@@ -272,7 +278,12 @@ using namespace QT_NAMESPACE;
     if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0))
         return peripheral.state == CBPeripheralStateConnected;
 #endif
-    return peripheral.isConnected;
+    // Either SDK or the target is below 10.9/7.0 ...
+    if (![peripheral respondsToSelector:@selector(isConnected)])
+        return false;
+
+    // Ugly cast to deal with id being a pointer ...
+    return reinterpret_cast<quintptr>([peripheral performSelector:@selector(isConnected)]);
 }
 
 - (void)disconnectFromDevice
