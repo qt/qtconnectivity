@@ -614,6 +614,11 @@ void QBluetoothDeviceInfo::setDeviceUuid(const QBluetoothUuid &uuid)
 /*!
    Returns a unique identifier for a Bluetooth device without an address.
 
+   In general, this uuid is invalid on every platform but OS X and iOS.
+   It is used as a workaround for those two platforms as they do not
+   provide Bluetooth addresses for found Bluetooth Low Energy devices.
+   Every other platform uses \l address() instead.
+
    \sa setDeviceUuid()
    \since 5.5
   */
