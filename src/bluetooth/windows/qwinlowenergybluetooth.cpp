@@ -102,6 +102,11 @@ static inline bool resolveFunctions(QLibrary *library)
 
 Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 
+ServicesDiscoveryResult::ServicesDiscoveryResult()
+    : error(NO_ERROR)
+{
+}
+
 static QString deviceRegistryProperty(
         HDEVINFO deviceInfoHandle,
         const PSP_DEVINFO_DATA deviceInfoData,
@@ -135,150 +140,11 @@ static QString deviceRegistryProperty(
                 reinterpret_cast<const wchar_t *>(propertyBuffer.constData()));
 }
 
-static QString deviceFriendlyName(
-        HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
-{
-    return deviceRegistryProperty(
-                deviceInfoSet, deviceInfoData, SPDRP_FRIENDLYNAME);
-}
-
 static QString deviceService(
         HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
 {
     return deviceRegistryProperty(
                 deviceInfoSet, deviceInfoData, SPDRP_SERVICE);
-}
-
-static QString deviceSystemPath(
-        const PSP_INTERFACE_DEVICE_DETAIL_DATA detailData)
-{
-    return QString::fromWCharArray(detailData->DevicePath);
-}
-
-static QBluetoothAddress parseRemoteAddress(const QString &devicePath)
-{
-    const int firstbound = devicePath.indexOf(QStringLiteral("dev_"));
-    const int lastbound = devicePath.indexOf(QLatin1Char('#'), firstbound);
-
-    const QString hex =
-            devicePath.mid(firstbound + 4, lastbound - firstbound - 4);
-
-    bool ok = false;
-    return QBluetoothAddress(hex.toULongLong(&ok, 16));
-}
-
-DeviceInfo::DeviceInfo(
-        const QBluetoothAddress &address,
-        const QString &name,
-        const QString &systemPath)
-    : address(address)
-    , name(name)
-    , systemPath(systemPath)
-{
-}
-
-DeviceDiscoveryResult::DeviceDiscoveryResult()
-    : error(NO_ERROR)
-{
-}
-
-ServicesDiscoveryResult::ServicesDiscoveryResult()
-    : error(NO_ERROR)
-{
-}
-
-static DeviceDiscoveryResult availableSystemInterfaces(
-        const GUID &deviceInterface)
-{
-    const DWORD flags = DIGCF_PRESENT | DIGCF_DEVICEINTERFACE;
-    const HDEVINFO deviceInfoHandle = ::SetupDiGetClassDevs(
-                &deviceInterface, 0, 0, flags);
-
-    DeviceDiscoveryResult result;
-
-    if (deviceInfoHandle == INVALID_HANDLE_VALUE) {
-        result.error = ::GetLastError();
-        return result;
-    }
-
-    DWORD index = 0;
-
-    forever {
-
-        SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
-        ::ZeroMemory(&deviceInterfaceData, sizeof(deviceInterfaceData));
-        deviceInterfaceData.cbSize = sizeof(deviceInterfaceData);
-
-        if (!::SetupDiEnumDeviceInterfaces(
-                    deviceInfoHandle,
-                    NULL,
-                    &deviceInterface,
-                    index++,
-                    &deviceInterfaceData)) {
-
-            result.error = ::GetLastError();
-            break;
-        }
-
-        DWORD deviceInterfaceDetailDataSize = 0;
-        if (!::SetupDiGetDeviceInterfaceDetail(
-                    deviceInfoHandle,
-                    &deviceInterfaceData,
-                    NULL,
-                    deviceInterfaceDetailDataSize,
-                    &deviceInterfaceDetailDataSize,
-                    NULL)) {
-
-            const DWORD error = ::GetLastError();
-            if (error != ERROR_INSUFFICIENT_BUFFER) {
-                result.error = ::GetLastError();
-
-                break;
-            }
-        }
-
-        SP_DEVINFO_DATA deviceInfoData;
-        ::ZeroMemory(&deviceInfoData, sizeof(deviceInfoData));
-        deviceInfoData.cbSize = sizeof(deviceInfoData);
-
-        QByteArray deviceInterfaceDetailDataBuffer(
-                    deviceInterfaceDetailDataSize, 0);
-
-        PSP_INTERFACE_DEVICE_DETAIL_DATA deviceInterfaceDetailData =
-                reinterpret_cast<PSP_INTERFACE_DEVICE_DETAIL_DATA>
-                (deviceInterfaceDetailDataBuffer.data());
-
-        deviceInterfaceDetailData->cbSize =
-                sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
-
-        if (!::SetupDiGetDeviceInterfaceDetail(
-                    deviceInfoHandle,
-                    &deviceInterfaceData,
-                    deviceInterfaceDetailData,
-                    deviceInterfaceDetailDataBuffer.size(),
-                    &deviceInterfaceDetailDataSize,
-                    &deviceInfoData)) {
-            result.error = ::GetLastError();
-            break;
-        }
-
-        const QString systemPath =
-                deviceSystemPath(deviceInterfaceDetailData);
-
-        const QBluetoothAddress address = parseRemoteAddress(systemPath);
-        if (address.isNull())
-            continue;
-
-        const QString friendlyName =
-                deviceFriendlyName(deviceInfoHandle, &deviceInfoData);
-
-        const DeviceInfo info(address, friendlyName, systemPath);
-        result.devices.append(info);
-
-    }
-
-    ::SetupDiDestroyDeviceInfoList(deviceInfoHandle);
-    return result;
 }
 
 static QStringList availableSystemServices(const GUID &deviceInterface)
@@ -309,12 +175,6 @@ static QStringList availableSystemServices(const GUID &deviceInterface)
 
     ::SetupDiDestroyDeviceInfoList(deviceInfoHandle);
     return result;
-}
-
-DeviceDiscoveryResult startDiscoveryOfRemoteDevices()
-{
-    return availableSystemInterfaces(
-                QUuid("781aee18-7733-4ce4-add0-91f41c67b592"));
 }
 
 ServicesDiscoveryResult startDiscoveryOfPrimaryServices(

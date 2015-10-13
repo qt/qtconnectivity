@@ -157,23 +157,6 @@ typedef VOID (CALLBACK *PFNBLUETOOTH_GATT_EVENT_CALLBACK)(
 
 typedef ULONG64 BTH_LE_GATT_RELIABLE_WRITE_CONTEXT, *PBTH_LE_GATT_RELIABLE_WRITE_CONTEXT;
 
-struct DeviceInfo
-{
-    DeviceInfo(const QBluetoothAddress &address,
-               const QString &name,
-               const QString &systemPath);
-    QBluetoothAddress address;
-    QString name;
-    QString systemPath;
-};
-
-struct DeviceDiscoveryResult
-{
-    DeviceDiscoveryResult();
-    QList<DeviceInfo> devices;
-    DWORD error;
-};
-
 struct ServicesDiscoveryResult
 {
     ServicesDiscoveryResult();
@@ -184,7 +167,6 @@ struct ServicesDiscoveryResult
 bool isSupported();
 bool hasLocalRadio();
 
-DeviceDiscoveryResult startDiscoveryOfRemoteDevices();
 ServicesDiscoveryResult startDiscoveryOfPrimaryServices(HANDLE hDevice);
 
 } // namespace WinLowEnergyBluetooth

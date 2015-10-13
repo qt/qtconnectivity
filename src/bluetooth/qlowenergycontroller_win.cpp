@@ -31,7 +31,10 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "qlowenergycontroller_p.h"
+#include "qbluetoothdevicediscoveryagent_p.h"
+
 #include <QtCore/QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
@@ -75,49 +78,29 @@ void QLowEnergyControllerPrivate::connectToDevice()
 
     setState(QLowEnergyController::ConnectingState);
 
-    const WinLowEnergyBluetooth::DeviceDiscoveryResult result =
-            WinLowEnergyBluetooth::startDiscoveryOfRemoteDevices();
+    const QString deviceSystemPath = QBluetoothDeviceDiscoveryAgentPrivate::discoveredLeDeviceSystemPath(remoteDevice);
 
-    if (result.error != NO_ERROR
-            && result.error != ERROR_NO_MORE_ITEMS) {
+    const DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
+    const DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+
+    hRemoteDevice = ::CreateFile(
+                reinterpret_cast<const wchar_t *>(deviceSystemPath.utf16()),
+                desiredAccess,
+                shareMode,
+                NULL,
+                OPEN_EXISTING,
+                0,
+                NULL);
+
+    if (hRemoteDevice == INVALID_HANDLE_VALUE) {
         qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
-        setError(QLowEnergyController::UnknownRemoteDeviceError);
+        setError(QLowEnergyController::ConnectionError);
         setState(QLowEnergyController::UnconnectedState);
         return;
     }
 
-    foreach (const WinLowEnergyBluetooth::DeviceInfo &info, result.devices) {
-
-        if (info.address != remoteDevice)
-            continue;
-
-        const DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
-        const DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-
-        hRemoteDevice = ::CreateFile(
-                    reinterpret_cast<const wchar_t *>(info.systemPath.utf16()),
-                    desiredAccess,
-                    shareMode,
-                    NULL,
-                    OPEN_EXISTING,
-                    0,
-                    NULL);
-
-        if (hRemoteDevice == INVALID_HANDLE_VALUE) {
-            qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            return;
-        }
-
-        setState(QLowEnergyController::ConnectedState);
-        emit q->connected();
-        return;
-    }
-
-    qCWarning(QT_BT_WINDOWS) << qt_error_string(ERROR_FILE_NOT_FOUND);
-    setError(QLowEnergyController::UnknownRemoteDeviceError);
-    setState(QLowEnergyController::UnconnectedState);
+    setState(QLowEnergyController::ConnectedState);
+    emit q->connected();
 }
 
 void QLowEnergyControllerPrivate::disconnectFromDevice()
