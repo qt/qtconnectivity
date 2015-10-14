@@ -165,7 +165,6 @@ struct ServicesDiscoveryResult
 };
 
 bool isSupported();
-bool hasLocalRadio();
 
 ServicesDiscoveryResult startDiscoveryOfPrimaryServices(HANDLE hDevice);
 

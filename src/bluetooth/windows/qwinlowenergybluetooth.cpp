@@ -107,76 +107,6 @@ ServicesDiscoveryResult::ServicesDiscoveryResult()
 {
 }
 
-static QString deviceRegistryProperty(
-        HDEVINFO deviceInfoHandle,
-        const PSP_DEVINFO_DATA deviceInfoData,
-        DWORD registryProperty)
-{
-    DWORD propertyRegDataType = 0;
-    DWORD propertyBufferSize = 0;
-    QByteArray propertyBuffer;
-
-    while (!::SetupDiGetDeviceRegistryProperty(
-               deviceInfoHandle,
-               deviceInfoData,
-               registryProperty,
-               &propertyRegDataType,
-               reinterpret_cast<PBYTE>(propertyBuffer.data()),
-               propertyBuffer.size(),
-               &propertyBufferSize)) {
-
-        const DWORD error = ::GetLastError();
-
-        if (error != ERROR_INSUFFICIENT_BUFFER
-                || (propertyRegDataType != REG_SZ
-                    && propertyRegDataType != REG_EXPAND_SZ)) {
-            return QString();
-        }
-
-        propertyBuffer.fill(0, propertyBufferSize * sizeof(WCHAR));
-    }
-
-    return QString::fromWCharArray(
-                reinterpret_cast<const wchar_t *>(propertyBuffer.constData()));
-}
-
-static QString deviceService(
-        HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
-{
-    return deviceRegistryProperty(
-                deviceInfoSet, deviceInfoData, SPDRP_SERVICE);
-}
-
-static QStringList availableSystemServices(const GUID &deviceInterface)
-{
-    const DWORD flags = DIGCF_PRESENT;
-    const HDEVINFO deviceInfoHandle = ::SetupDiGetClassDevs(
-                &deviceInterface, NULL, 0, flags);
-
-    if (deviceInfoHandle == INVALID_HANDLE_VALUE)
-        return QStringList();
-
-    SP_DEVINFO_DATA deviceInfoData;
-    ::memset(&deviceInfoData, 0, sizeof(deviceInfoData));
-    deviceInfoData.cbSize = sizeof(deviceInfoData);
-
-    DWORD index = 0;
-    QStringList result;
-
-    while (::SetupDiEnumDeviceInfo(
-               deviceInfoHandle, index++, &deviceInfoData)) {
-
-        const QString service = deviceService(deviceInfoHandle, &deviceInfoData);
-        if (service.isEmpty())
-            continue;
-
-        result.append(service);
-    }
-
-    ::SetupDiDestroyDeviceInfoList(deviceInfoHandle);
-    return result;
-}
-
 ServicesDiscoveryResult startDiscoveryOfPrimaryServices(
         HANDLE hDevice)
 {
@@ -207,15 +137,6 @@ bool isSupported()
 {
     static bool resolved = resolveFunctions(bluetoothapis());
     return resolved;
-}
-
-bool hasLocalRadio()
-{
-    const QStringList systemServices =
-            availableSystemServices(
-                QUuid("e0cbf06c-cd8b-4647-bb8a-263b43f0f974"));
-
-    return systemServices.contains(QStringLiteral("BthLEEnum"));
 }
 
 } // namespace WinLowEnergyBluetooth
