@@ -65,12 +65,6 @@ QT_END_NAMESPACE
 #include "android/lowenergynotificationhub_p.h"
 #endif
 
-#if defined(Q_OS_WIN32)
-#include <QtConcurrent>
-#include <QtBluetooth/qbluetoothuuid.h>
-#include "windows/qwinlowenergybluetooth_p.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
@@ -227,15 +221,8 @@ private slots:
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
 #elif defined(Q_OS_WIN32)
-private slots:
-    void primaryServicesDiscoveryCompleted();
-
 private:
-    void startDiscoveryOfPrimaryServices();
-    bool isConnected() const;
-
-    HANDLE hRemoteDevice;
-    QFutureWatcher<WinLowEnergyBluetooth::ServicesDiscoveryResult> *primaryServicesDiscoveryWatcher;
+    QString deviceSystemPath;
 #endif
 private:
     QLowEnergyController *q_ptr;

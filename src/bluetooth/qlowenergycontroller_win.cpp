@@ -37,17 +37,80 @@
 
 #include <QtCore/QLoggingCategory>
 
+#include <windows/qwinlowenergybluetooth_p.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError),
-      hRemoteDevice(INVALID_HANDLE_VALUE),
-      primaryServicesDiscoveryWatcher(0)
+Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
+
+static bool gattFunctionsResolved = false;
+
+static HANDLE openSystemDevice(const QString &systemPath, int *systemErrorCode)
 {
+    const DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
+    const DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    const HANDLE serviceHandle = ::CreateFile(
+                reinterpret_cast<const wchar_t *>(systemPath.utf16()),
+                desiredAccess,
+                shareMode,
+                NULL,
+                OPEN_EXISTING,
+                0,
+                NULL);
+
+    *systemErrorCode = (INVALID_HANDLE_VALUE == serviceHandle)
+            ? ::GetLastError() : NO_ERROR;
+    return serviceHandle;
+}
+
+static void closeSystemDevice(HANDLE deviceHandle)
+{
+    if (deviceHandle && deviceHandle != INVALID_HANDLE_VALUE)
+        ::CloseHandle(deviceHandle);
+}
+
+static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
+        HANDLE deviceHandle, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return QVector<BTH_LE_GATT_SERVICE>();
+    }
+
+    QVector<BTH_LE_GATT_SERVICE> foundServices;
+    USHORT servicesCount = 0;
+    forever {
+        const HRESULT hr = ::BluetoothGATTGetServices(
+                    deviceHandle,
+                    servicesCount,
+                    foundServices.isEmpty() ? NULL : &foundServices[0],
+                    &servicesCount,
+                    BLUETOOTH_GATT_FLAG_NONE);
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
+            foundServices.resize(servicesCount);
+        } else if (hr == S_OK) {
+            *systemErrorCode = NO_ERROR;
+            return foundServices;
+        } else {
+            *systemErrorCode = ::GetLastError();
+            return QVector<BTH_LE_GATT_SERVICE>();
+        }
+    }
+}
+
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
+    : QObject()
+    , state(QLowEnergyController::UnconnectedState)
+    , error(QLowEnergyController::NoError)
+{
+    gattFunctionsResolved = resolveFunctions(bluetoothapis());
+    if (!gattFunctionsResolved) {
+        qCWarning(QT_BT_WINDOWS) << "LE is not supported on this OS";
+        return;
+    }
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
@@ -56,8 +119,6 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 
 void QLowEnergyControllerPrivate::connectToDevice()
 {
-    Q_Q(QLowEnergyController);
-
     // required to pass unit test on default backend
     if (remoteDevice.isNull()) {
         qWarning() << "Invalid/null remote device address";
@@ -65,78 +126,97 @@ void QLowEnergyControllerPrivate::connectToDevice()
         return;
     }
 
-    if (!WinLowEnergyBluetooth::isSupported()) {
-        qWarning() << "Low energy is not supported by OS";
-        setError(QLowEnergyController::UnknownError);
-        return;
-    }
-
-    if (isConnected()) {
+    if (!deviceSystemPath.isEmpty()) {
         qCDebug(QT_BT_WINDOWS) << "Already is connected";
         return;
     }
 
     setState(QLowEnergyController::ConnectingState);
 
-    const QString deviceSystemPath = QBluetoothDeviceDiscoveryAgentPrivate::discoveredLeDeviceSystemPath(remoteDevice);
+    deviceSystemPath =
+            QBluetoothDeviceDiscoveryAgentPrivate::discoveredLeDeviceSystemPath(
+                remoteDevice);
 
-    const DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
-    const DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-
-    hRemoteDevice = ::CreateFile(
-                reinterpret_cast<const wchar_t *>(deviceSystemPath.utf16()),
-                desiredAccess,
-                shareMode,
-                NULL,
-                OPEN_EXISTING,
-                0,
-                NULL);
-
-    if (hRemoteDevice == INVALID_HANDLE_VALUE) {
-        qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
-        setError(QLowEnergyController::ConnectionError);
+    if (deviceSystemPath.isEmpty()) {
+        qCWarning(QT_BT_WINDOWS) << qt_error_string(ERROR_PATH_NOT_FOUND);
+        setError(QLowEnergyController::UnknownRemoteDeviceError);
         setState(QLowEnergyController::UnconnectedState);
         return;
     }
 
     setState(QLowEnergyController::ConnectedState);
+
+    Q_Q(QLowEnergyController);
     emit q->connected();
 }
 
 void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
-    Q_Q(QLowEnergyController);
-
-    if (!WinLowEnergyBluetooth::isSupported()) {
-        qWarning() << "Low energy is not supported by OS";
-        setError(QLowEnergyController::UnknownError);
-        return;
-    }
-
-    if (!isConnected()) {
+    if (deviceSystemPath.isEmpty()) {
         qCDebug(QT_BT_WINDOWS) << "Already is disconnected";
         return;
     }
 
     setState(QLowEnergyController::ClosingState);
-
-    if (!::CloseHandle(hRemoteDevice))
-        qCWarning(QT_BT_WINDOWS) << qt_error_string(::GetLastError());
-
-    hRemoteDevice = INVALID_HANDLE_VALUE;
+    deviceSystemPath.clear();
     setState(QLowEnergyController::UnconnectedState);
+
+    Q_Q(QLowEnergyController);
     emit q->disconnected();
 }
 
 void QLowEnergyControllerPrivate::discoverServices()
 {
-    if (!WinLowEnergyBluetooth::isSupported()) {
-        qWarning() << "Low energy is not supported by OS";
-        setError(QLowEnergyController::UnknownError);
+    int systemErrorCode = NO_ERROR;
+
+    const HANDLE deviceHandle = openSystemDevice(deviceSystemPath, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << qt_error_string(systemErrorCode);
+        setError(QLowEnergyController::NetworkError);
+        setState(QLowEnergyController::ConnectedState);
         return;
     }
 
-    startDiscoveryOfPrimaryServices();
+    const QVector<BTH_LE_GATT_SERVICE> foundServices =
+            enumeratePrimaryGattServices(deviceHandle, &systemErrorCode);
+
+    closeSystemDevice(deviceHandle);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << qt_error_string(systemErrorCode);
+        setError(QLowEnergyController::NetworkError);
+        setState(QLowEnergyController::ConnectedState);
+        return;
+    }
+
+    setState(QLowEnergyController::DiscoveringState);
+
+    Q_Q(QLowEnergyController);
+
+    foreach (const BTH_LE_GATT_SERVICE &service, foundServices) {
+
+        const QBluetoothUuid uuid(
+                    service.ServiceUuid.IsShortUuid
+                    ? QBluetoothUuid(service.ServiceUuid.Value.ShortUuid)
+                    : QBluetoothUuid(service.ServiceUuid.Value.LongUuid));
+
+        qCDebug(QT_BT_WINDOWS) << "Found uuid:" << uuid;
+
+        QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
+        priv->uuid = uuid;
+        priv->type = QLowEnergyService::PrimaryService;
+        priv->startHandle = service.AttributeHandle;
+        priv->setController(this);
+
+        QSharedPointer<QLowEnergyServicePrivate> pointer(priv);
+        serviceList.insert(uuid, pointer);
+
+        emit q->serviceDiscovered(uuid);
+    }
+
+    setState(QLowEnergyController::DiscoveredState);
+    emit q->discoveryFinished();
 }
 
 void QLowEnergyControllerPrivate::discoverServiceDetails(
@@ -176,71 +256,6 @@ void QLowEnergyControllerPrivate::writeDescriptor(
         const QByteArray &/*newValue*/)
 {
 
-}
-
-void QLowEnergyControllerPrivate::primaryServicesDiscoveryCompleted()
-{
-    Q_Q(QLowEnergyController);
-
-    const WinLowEnergyBluetooth::ServicesDiscoveryResult result =
-            primaryServicesDiscoveryWatcher->result();
-
-    if (result.error != NO_ERROR) {
-        qCWarning(QT_BT_WINDOWS) << qt_error_string(result.error);
-        setError(QLowEnergyController::UnknownError);
-        return;
-    }
-
-    foreach (const WinLowEnergyBluetooth::BTH_LE_GATT_SERVICE &service,
-             result.services) {
-
-        const QBluetoothUuid uuid(
-                    service.ServiceUuid.IsShortUuid
-                    ? QBluetoothUuid(service.ServiceUuid.Value.ShortUuid)
-                    : QBluetoothUuid(service.ServiceUuid.Value.LongUuid));
-
-        qCDebug(QT_BT_WINDOWS) << "Found uuid:" << uuid;
-
-        QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
-        priv->uuid = uuid;
-        priv->type = QLowEnergyService::PrimaryService;
-        priv->startHandle = service.AttributeHandle;
-        priv->setController(this);
-
-        QSharedPointer<QLowEnergyServicePrivate> pointer(priv);
-
-        serviceList.insert(uuid, pointer);
-        emit q->serviceDiscovered(uuid);
-    }
-
-    setState(QLowEnergyController::DiscoveredState);
-    emit q->discoveryFinished();
-}
-
-void QLowEnergyControllerPrivate::startDiscoveryOfPrimaryServices()
-{
-    if (!primaryServicesDiscoveryWatcher) {
-        primaryServicesDiscoveryWatcher = new QFutureWatcher<
-                WinLowEnergyBluetooth::ServicesDiscoveryResult>(this);
-
-        connect(primaryServicesDiscoveryWatcher, &QFutureWatcher<WinLowEnergyBluetooth::ServicesDiscoveryResult>::finished,
-                this, &QLowEnergyControllerPrivate::primaryServicesDiscoveryCompleted);
-    }
-
-    if (primaryServicesDiscoveryWatcher->isRunning())
-        return;
-
-    const QFuture<WinLowEnergyBluetooth::ServicesDiscoveryResult> future =
-            QtConcurrent::run(
-                WinLowEnergyBluetooth::startDiscoveryOfPrimaryServices,
-                hRemoteDevice);
-
-    primaryServicesDiscoveryWatcher->setFuture(future);
-}
-
-bool QLowEnergyControllerPrivate::isConnected() const
-{
-    return hRemoteDevice && (hRemoteDevice != INVALID_HANDLE_VALUE);
 }
 
 QT_END_NAMESPACE
