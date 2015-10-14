@@ -257,6 +257,7 @@ void tst_QLowEnergyController::tst_connect()
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     QLowEnergyController control(remoteDeviceInfo);
+    QCOMPARE(control.role(), QLowEnergyController::CentralRole);
     QSignalSpy connectedSpy(&control, SIGNAL(connected()));
     QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
     if (remoteDeviceInfo.name().isEmpty())

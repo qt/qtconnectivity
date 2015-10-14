@@ -156,6 +156,8 @@ private:
     QBluetoothAddress localAddress;
     QBluetoothAddress remoteAddress;
 
+    QLowEnergyController::Role role;
+
     QLowEnergyController::ControllerState controllerState;
     QLowEnergyController::RemoteAddressType addressType;
 

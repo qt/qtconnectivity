@@ -34,6 +34,7 @@
 
 #include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
+#include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
 
@@ -203,7 +204,8 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       mtuSize(ATT_DEFAULT_LE_MTU),
       securityLevelValue(-1),
       encryptionChangePending(false),
-      hciManager(0)
+      hciManager(0),
+      advertiser(0)
 {
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 
@@ -218,6 +220,26 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
+}
+void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+        const QLowEnergyAdvertisingData &advertisingData,
+        const QLowEnergyAdvertisingData &scanResponseData)
+{
+    qCDebug(QT_BT_BLUEZ) << "Starting to advertise";
+    if (!advertiser) {
+        advertiser = new QLeAdvertiserBluez(params, advertisingData, scanResponseData, *hciManager,
+                                            this);
+        connect(advertiser, &QLeAdvertiser::errorOccurred, this,
+                &QLowEnergyControllerPrivate::handleAdvertisingError);
+    }
+    setState(QLowEnergyController::AdvertisingState);
+    advertiser->startAdvertising();
+}
+
+void QLowEnergyControllerPrivate::stopAdvertising()
+{
+    setState(QLowEnergyController::UnconnectedState);
+    advertiser->stopAdvertising();
 }
 
 void QLowEnergyControllerPrivate::connectToDevice()
@@ -1741,6 +1763,13 @@ bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode
     }
 
     return false;
+}
+
+void QLowEnergyControllerPrivate::handleAdvertisingError()
+{
+    qCWarning(QT_BT_BLUEZ) << "received advertising error";
+    setError(QLowEnergyController::AdvertisingError);
+    setState(QLowEnergyController::UnconnectedState);
 }
 
 QT_END_NAMESPACE

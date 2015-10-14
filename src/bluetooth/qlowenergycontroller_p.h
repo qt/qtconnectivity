@@ -85,6 +85,7 @@ class LowEnergyNotificationHub;
 #endif
 
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
+class QLeAdvertiser;
 
 class QLowEnergyControllerPrivate : public QObject
 {
@@ -106,6 +107,11 @@ public:
     void invalidateServices();
 
     void discoverServiceDetails(const QBluetoothUuid &service);
+
+    void startAdvertising(const QLowEnergyAdvertisingParameters &params,
+                          const QLowEnergyAdvertisingData &advertisingData,
+                          const QLowEnergyAdvertisingData &scanResponseData);
+    void stopAdvertising();
 
     // misc helpers
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
@@ -142,6 +148,7 @@ public:
 
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
+    QLowEnergyController::Role role;
 
     QString remoteName;
 
@@ -172,6 +179,7 @@ private:
     bool encryptionChangePending;
 
     HciManager *hciManager;
+    QLeAdvertiser *advertiser;
 
     void sendCommand(const QByteArray &packet);
     void sendNextPendingRequest();
@@ -204,6 +212,7 @@ private:
 
     void resetController();
 
+    void handleAdvertisingError();
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();

@@ -38,11 +38,14 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothUuid>
+#include <QtBluetooth/QLowEnergyAdvertisingData>
 #include <QtBluetooth/QLowEnergyService>
 
 QT_BEGIN_NAMESPACE
 
+class QLowEnergyAdvertisingParameters;
 class QLowEnergyControllerPrivate;
+
 class Q_BLUETOOTH_EXPORT QLowEnergyController : public QObject
 {
     Q_OBJECT
@@ -53,7 +56,8 @@ public:
         UnknownRemoteDeviceError,
         NetworkError,
         InvalidBluetoothAdapterError,
-        ConnectionError
+        ConnectionError,
+        AdvertisingError,
     };
     Q_ENUM(Error)
 
@@ -63,7 +67,8 @@ public:
         ConnectedState,
         DiscoveringState,
         DiscoveredState,
-        ClosingState
+        ClosingState,
+        AdvertisingState,
     };
     Q_ENUM(ControllerState)
 
@@ -73,6 +78,9 @@ public:
     };
     Q_ENUM(RemoteAddressType)
 
+    enum Role { CentralRole, PeripheralRole };
+    Q_ENUM(Role)
+
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      QObject *parent = 0); // TODO Qt 6 remove ctor
     explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
@@ -80,6 +88,11 @@ public:
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      const QBluetoothAddress &localDevice,
                                      QObject *parent = 0); // TODO Qt 6 remove ctor
+
+    static QLowEnergyController *createCentral(const QBluetoothDeviceInfo &remoteDevice,
+                                               QObject *parent = 0);
+    static QLowEnergyController *createPeripheral(QObject *parent = 0);
+
     ~QLowEnergyController();
 
     QBluetoothAddress localAddress() const;
@@ -100,8 +113,15 @@ public:
     QLowEnergyService *createServiceObject(
             const QBluetoothUuid &service, QObject *parent = 0);
 
+    void startAdvertising(const QLowEnergyAdvertisingParameters &parameters,
+                          const QLowEnergyAdvertisingData &advertisingData,
+                          const QLowEnergyAdvertisingData &scanResponseData = QLowEnergyAdvertisingData());
+    void stopAdvertising();
+
     Error error() const;
     QString errorString() const;
+
+    Role role() const;
 
 Q_SIGNALS:
     void connected();
@@ -113,6 +133,8 @@ Q_SIGNALS:
     void discoveryFinished();
 
 private:
+    explicit QLowEnergyController(QObject *parent = 0); // For the peripheral role.
+
     Q_DECLARE_PRIVATE(QLowEnergyController)
     QLowEnergyControllerPrivate *d_ptr;
 };
@@ -122,5 +144,6 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QLowEnergyController::Error)
 Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
 Q_DECLARE_METATYPE(QLowEnergyController::RemoteAddressType)
+Q_DECLARE_METATYPE(QLowEnergyController::Role)
 
 #endif // QLOWENERGYCONTROLLER_H

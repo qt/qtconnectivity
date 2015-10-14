@@ -27,6 +27,8 @@ PUBLIC_HEADERS += \
     qlowenergycharacteristic.h \
     qlowenergydescriptor.h \
     qbluetoothtransferreply.h \
+    qlowenergyadvertisingdata.h \
+    qlowenergyadvertisingparameters.h \
     qlowenergycontroller.h
 
 PRIVATE_HEADERS += \
@@ -43,7 +45,8 @@ PRIVATE_HEADERS += \
     qprivatelinearbuffer_p.h \
     qbluetoothlocaldevice_p.h \
     qlowenergycontroller_p.h \
-    qlowenergyserviceprivate_p.h
+    qlowenergyserviceprivate_p.h \
+    qleadvertiser_p.h \
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -60,6 +63,8 @@ SOURCES += \
     qbluetoothtransfermanager.cpp \
     qbluetoothtransferrequest.cpp \
     qbluetoothtransferreply.cpp \
+    qlowenergyadvertisingdata.cpp \
+    qlowenergyadvertisingparameters.cpp \
     qlowenergyservice.cpp \
     qlowenergycharacteristic.cpp \
     qlowenergydescriptor.cpp \
@@ -88,6 +93,7 @@ config_bluez:qtHaveModule(dbus) {
     # old versions of Bluez do not have the required BTLE symbols
     config_bluez_le {
         SOURCES +=  \
+            qleadvertiser_bluez.cpp \
             qlowenergycontroller_bluez.cpp
     } else {
         message("Bluez version is too old to support Bluetooth Low Energy.")

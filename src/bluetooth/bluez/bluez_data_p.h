@@ -217,11 +217,13 @@ template<> inline void putBtData(quint128 src, void *dst)
 #define HCI_FILTER 2
 
 // HCI packet types
+#define HCI_COMMAND_PKT 0x01
 #define HCI_EVENT_PKT   0x04
 #define HCI_VENDOR_PKT  0xff
 
 #define HCI_FLT_TYPE_BITS  31
 #define HCI_FLT_EVENT_BITS 63
+
 
 struct sockaddr_hci {
     sa_family_t hci_family;
@@ -346,6 +348,36 @@ typedef struct {
     quint8  encrypt;
 } __attribute__ ((packed)) evt_encrypt_change;
 #define EVT_ENCRYPT_CHANGE_SIZE 4
+
+#define EVT_CMD_COMPLETE                0x0E
+struct evt_cmd_complete {
+    quint8 ncmd;
+    quint16 opcode;
+} __attribute__ ((packed));
+
+struct hci_command_hdr {
+    quint16 opcode;         /* OCF & OGF */
+    quint8 plen;
+} __attribute__ ((packed));
+
+enum OpCodeGroupField {
+    OgfLinkControl = 0x8,
+};
+
+enum OpCodeCommandField {
+    OcfLeSetAdvParams = 0x6,
+    OcfLeReadTxPowerLevel = 0x7,
+    OcfLeSetAdvData = 0x8,
+    OcfLeSetScanResponseData = 0x9,
+    OcfLeSetAdvEnable = 0xa,
+    OcfLeClearWhiteList = 0x10,
+    OcfLeAddToWhiteList = 0x11,
+};
+
+/* Command opcode pack/unpack */
+#define opCodePack(ogf, ocf) (quint16(((ocf) & 0x03ff)|((ogf) << 10)))
+#define ogfFromOpCode(op) ((op) >> 10)
+#define ocfFromOpCode(op) ((op) & 0x03ff)
 
 QT_END_NAMESPACE
 

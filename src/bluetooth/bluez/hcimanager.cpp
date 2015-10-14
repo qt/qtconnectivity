@@ -36,12 +36,14 @@
 
 #include "qbluetoothsocket_p.h"
 
-#include <QtCore/QLoggingCategory>
+#include <QtCore/qloggingcategory.h>
 
+#include <cstring>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #define HCIGETCONNLIST  _IOR('H', 212, int)
@@ -174,6 +176,36 @@ bool HciManager::monitorEvent(HciManager::HciEvent event)
     return true;
 }
 
+bool HciManager::sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters)
+{
+    qCDebug(QT_BT_BLUEZ) << "sending command; ogf:" << ogf << "ocf:" << ocf;
+    quint8 packetType = HCI_COMMAND_PKT;
+    hci_command_hdr command = {
+        opCodePack(ogf, ocf),
+        static_cast<uint8_t>(parameters.count())
+    };
+    static_assert(sizeof command == 3, "unexpected struct size");
+    struct iovec iv[3];
+    iv[0].iov_base = &packetType;
+    iv[0].iov_len  = 1;
+    iv[1].iov_base = &command;
+    iv[1].iov_len  = sizeof command;
+    int ivn = 2;
+    if (!parameters.isEmpty()) {
+        iv[2].iov_base = const_cast<char *>(parameters.constData()); // const_cast is safe, since iov_base will not get modified.
+        iv[2].iov_len  = parameters.count();
+        ++ivn;
+    }
+    while (writev(hciSocket, iv, ivn) < 0) {
+        if (errno == EAGAIN || errno == EINTR)
+            continue;
+        qCDebug(QT_BT_BLUEZ()) << "hci command failure:" << strerror(errno);
+        return false;
+    }
+    qCDebug(QT_BT_BLUEZ) << "command sent successfully";
+    return true;
+}
+
 /*
  * Unsubscribe from all events
  */
@@ -273,6 +305,18 @@ void HciManager::_q_readNotify()
         QBluetoothAddress remoteDevice = addressForConnectionHandle(event->handle);
         if (!remoteDevice.isNull())
             emit encryptionChangedEvent(remoteDevice, event->status == 0);
+    }
+        break;
+    case EVT_CMD_COMPLETE: {
+        auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
+        static_assert(sizeof *event == 3, "unexpected struct size");
+
+        // There is always a status byte right after the generic structure.
+        Q_ASSERT(size > static_cast<int>(sizeof *event));
+        const quint8 status = data[sizeof *event];
+        const auto additionalData = QByteArray(reinterpret_cast<const char *>(data)
+                                               + sizeof *event + 1, size - sizeof *event - 1);
+        emit commandCompleted(event->opcode, status, additionalData);
     }
         break;
     default:

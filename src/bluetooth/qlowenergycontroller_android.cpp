@@ -580,4 +580,19 @@ void QLowEnergyControllerPrivate::serviceError(
     service->setError(errorCode);
 }
 
+void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+        const QLowEnergyAdvertisingData &advertisingData,
+        const QLowEnergyAdvertisingData &scanResponseData)
+{
+    Q_UNUSED(params);
+    Q_UNUSED(advertisingData);
+    Q_UNUSED(scanResponseData);
+    qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
+}
+
+void QLowEnergyControllerPrivate::stopAdvertising()
+{
+    qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
+}
+
 QT_END_NAMESPACE

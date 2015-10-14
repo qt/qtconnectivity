@@ -31,62 +31,26 @@
 **
 ****************************************************************************/
 
-#ifndef HCIMANAGER_P_H
-#define HCIMANAGER_P_H
+#include <QtBluetooth/qlowenergyadvertisingdata.h>
+#include <QtBluetooth/qlowenergyadvertisingparameters.h>
+#include <QtBluetooth/qlowenergycontroller.h>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qscopedpointer.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QObject>
-#include <QtCore/QSet>
-#include <QtCore/QSocketNotifier>
-#include <QtBluetooth/QBluetoothAddress>
-#include "bluez/bluez_data_p.h"
-
-QT_BEGIN_NAMESPACE
-
-class HciManager : public QObject
+int main(int argc, char *argv[])
 {
-    Q_OBJECT
-public:
-    enum HciEvent {
-        EncryptChangeEvent = EVT_ENCRYPT_CHANGE,
-        CommandCompleteEvent = EVT_CMD_COMPLETE,
-    };
+    QCoreApplication app(argc, argv);
 
-    explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
-    ~HciManager();
+    QLowEnergyAdvertisingParameters params;
+    params.setMode(QLowEnergyAdvertisingParameters::AdvInd);
+    QLowEnergyAdvertisingData data;
+    data.setDiscoverability(QLowEnergyAdvertisingData::DiscoverabilityLimited);
+    data.setServices(QList<QBluetoothUuid>() << QBluetoothUuid::AlertNotificationService);
+    data.setIncludePowerLevel(true);
+    data.setLocalName("Qt GATT server");
+    const QScopedPointer<QLowEnergyController> leController(QLowEnergyController::createPeripheral());
+    leController->startAdvertising(params, data);
 
-    bool isValid() const;
-    bool monitorEvent(HciManager::HciEvent event);
-    bool sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters);
-    void stopEvents();
-    QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
+    return app.exec();
+}
 
-signals:
-    void encryptionChangedEvent(const QBluetoothAddress &address, bool wasSuccess);
-    void commandCompleted(quint16 opCode, quint8 status, const QByteArray &data);
-
-private slots:
-    void _q_readNotify();
-
-private:
-    int hciForAddress(const QBluetoothAddress &deviceAdapter);
-
-    int hciSocket;
-    int hciDev;
-    QSocketNotifier *notifier;
-    QSet<HciManager::HciEvent> runningEvents;
-};
-
-QT_END_NAMESPACE
-
-#endif // HCIMANAGER_P_H

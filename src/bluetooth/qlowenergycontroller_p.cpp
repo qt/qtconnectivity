@@ -104,4 +104,14 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 
 }
 
+void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &/* params */,
+        const QLowEnergyAdvertisingData &/* advertisingData */,
+        const QLowEnergyAdvertisingData &/* scanResponseData */)
+{
+}
+
+void QLowEnergyControllerPrivate::stopAdvertising()
+{
+}
+
 QT_END_NAMESPACE
