@@ -45,6 +45,8 @@
 #include <QtBluetooth/QLowEnergyService>
 #include <QtBluetooth/QLowEnergyServiceData>
 
+#include <algorithm>
+#include <cstring>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -66,12 +68,16 @@
 #define ATT_OP_EXCHANGE_MTU_RESPONSE    0x3 //receive server MTU
 #define ATT_OP_FIND_INFORMATION_REQUEST 0x4 //discover individual attribute info
 #define ATT_OP_FIND_INFORMATION_RESPONSE 0x5
+#define ATT_OP_FIND_BY_TYPE_VALUE_REQUEST 0x6
+#define ATT_OP_FIND_BY_TYPE_VALUE_RESPONSE 0x7
 #define ATT_OP_READ_BY_TYPE_REQUEST     0x8 //discover characteristics
 #define ATT_OP_READ_BY_TYPE_RESPONSE    0x9
 #define ATT_OP_READ_REQUEST             0xA //read characteristic & descriptor values
 #define ATT_OP_READ_RESPONSE            0xB
 #define ATT_OP_READ_BLOB_REQUEST        0xC //read values longer than MTU-1
 #define ATT_OP_READ_BLOB_RESPONSE       0xD
+#define ATT_OP_READ_MULTIPLE_REQUEST    0xE
+#define ATT_OP_READ_MULTIPLE_RESPONSE   0xF
 #define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
 #define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
 #define ATT_OP_WRITE_REQUEST            0x12 //write characteristic with response
@@ -84,6 +90,7 @@
 #define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
 #define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
 #define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
+#define ATT_OP_SIGNED_WRITE_COMMAND     0x2D
 
 //GATT command sizes in bytes
 #define ERROR_RESPONSE_HEADER_SIZE 5
@@ -124,6 +131,8 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
+
+const int maxPrepareQueueSize = 1024;
 
 static inline QBluetoothUuid convert_uuid128(const quint128 *p)
 {
@@ -457,8 +466,10 @@ void QLowEnergyControllerPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError
 void QLowEnergyControllerPrivate::resetController()
 {
     openRequests.clear();
+    openPrepareWriteRequests.clear();
     requestPending = false;
     encryptionChangePending = false;
+    receivedMtuExchangeRequest = false;
     securityLevelValue = -1;
 }
 
@@ -487,26 +498,42 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         processUnsolicitedReply(incomingPacket);
         return;
     }
+
     case ATT_OP_EXCHANGE_MTU_REQUEST:
-    case ATT_OP_READ_BY_GROUP_REQUEST:
-    case ATT_OP_READ_BY_TYPE_REQUEST:
-    case ATT_OP_READ_REQUEST:
-    case ATT_OP_FIND_INFORMATION_REQUEST:
-    case ATT_OP_WRITE_REQUEST:
-    {
-        qCDebug(QT_BT_BLUEZ) << "Server request" << hex << command;
-
-        //send not supported
-        QByteArray packet(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
-        packet[0] = ATT_OP_ERROR_RESPONSE;
-        packet[1] = command;
-        bt_put_unaligned(htobs(0), (quint16 *)(packet.data() + 2));
-        packet[4] = ATT_ERROR_REQUEST_NOT_SUPPORTED;
-
-        sendPacket(packet);
-
+        handleExchangeMtuRequest(incomingPacket);
         return;
-    }
+    case ATT_OP_FIND_INFORMATION_REQUEST:
+        handleFindInformationRequest(incomingPacket);
+        return;
+    case ATT_OP_FIND_BY_TYPE_VALUE_REQUEST:
+        handleFindByTypeValueRequest(incomingPacket);
+        return;
+    case ATT_OP_READ_BY_TYPE_REQUEST:
+        handleReadByTypeRequest(incomingPacket);
+        return;
+    case ATT_OP_READ_REQUEST:
+        handleReadRequest(incomingPacket);
+        return;
+    case ATT_OP_READ_BLOB_REQUEST:
+        handleReadBlobRequest(incomingPacket);
+        return;
+    case ATT_OP_READ_MULTIPLE_REQUEST:
+        handleReadMultipleRequest(incomingPacket);
+        return;
+    case ATT_OP_READ_BY_GROUP_REQUEST:
+        handleReadByGroupTypeRequest(incomingPacket);
+        return;
+    case ATT_OP_WRITE_REQUEST:
+    case ATT_OP_WRITE_COMMAND:
+    case ATT_OP_SIGNED_WRITE_COMMAND:
+        handleWriteRequestOrCommand(incomingPacket);
+        return;
+    case ATT_OP_PREPARE_WRITE_REQUEST:
+        handlePrepareWriteRequest(incomingPacket);
+        return;
+    case ATT_OP_EXECUTE_WRITE_REQUEST:
+        handleExecuteWriteRequest(incomingPacket);
+        return;
     default:
         //only solicited replies finish pending requests
         requestPending = false;
@@ -1878,6 +1905,484 @@ void QLowEnergyControllerPrivate::handleAdvertisingError()
     setState(QLowEnergyController::UnconnectedState);
 }
 
+bool QLowEnergyControllerPrivate::checkPacketSize(const QByteArray &packet, int minSize,
+                                                  int maxSize)
+{
+    if (maxSize == -1)
+        maxSize = minSize;
+    if (Q_LIKELY(packet.count() >= minSize && packet.count() <= maxSize))
+        return true;
+    qCWarning(QT_BT_BLUEZ) << "client request of type" << packet.at(0)
+                           << "has unexpected packet size" << packet.count();
+    sendErrorResponse(packet.at(0), 0, ATT_ERROR_INVALID_PDU);
+    return false;
+}
+
+bool QLowEnergyControllerPrivate::checkHandle(const QByteArray &packet, QLowEnergyHandle handle)
+{
+    if (handle != 0 && handle <= lastLocalHandle)
+        return true;
+    sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVALID_HANDLE);
+    return false;
+}
+
+bool QLowEnergyControllerPrivate::checkHandlePair(quint8 request, QLowEnergyHandle startingHandle,
+                                                  QLowEnergyHandle endingHandle)
+{
+    if (startingHandle == 0 || startingHandle > endingHandle) {
+        qCDebug(QT_BT_BLUEZ) << "handle range invalid";
+        sendErrorResponse(request, startingHandle, ATT_ERROR_INVALID_HANDLE);
+        return false;
+    }
+    return true;
+}
+
+void QLowEnergyControllerPrivate::handleExchangeMtuRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.2
+
+    if (!checkPacketSize(packet, 3))
+        return;
+    if (receivedMtuExchangeRequest) { // Client must only send this once per connection.
+        qCDebug(QT_BT_BLUEZ) << "Client sent extraneous MTU exchange packet";
+        sendErrorResponse(packet.at(0), 0, ATT_ERROR_REQUEST_NOT_SUPPORTED);
+        return;
+    }
+    receivedMtuExchangeRequest = true;
+
+    // Send reply.
+    QByteArray reply(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
+    reply[0] = ATT_OP_EXCHANGE_MTU_RESPONSE;
+    putBtData(static_cast<quint16>(ATT_MAX_LE_MTU), reply.data() + 1);
+    sendPacket(reply);
+
+    // Apply requested MTU.
+    const quint16 clientRxMtu = bt_get_le16(packet.constData() + 1);
+    mtuSize = qMax<quint16>(ATT_DEFAULT_LE_MTU, qMin<quint16>(clientRxMtu, ATT_MAX_LE_MTU));
+    qCDebug(QT_BT_BLUEZ) << "MTU request from client:" << clientRxMtu
+                         << "effective client RX MTU:" << mtuSize;
+    qCDebug(QT_BT_BLUEZ) << "Sending server RX MTU" << ATT_MAX_LE_MTU;
+}
+
+void QLowEnergyControllerPrivate::handleFindInformationRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.3.1-2
+
+    if (!checkPacketSize(packet, 5))
+        return;
+    const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
+    const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+    qCDebug(QT_BT_BLUEZ) << "client sends find information request; start:" << startingHandle
+                         << "end:" << endingHandle;
+    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+        return;
+
+    QVector<Attribute> results = getAttributes(startingHandle, endingHandle);
+    if (results.isEmpty()) {
+        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        return;
+    }
+    ensureUniformUuidSizes(results);
+
+    QByteArray responsePrefix(2, Qt::Uninitialized);
+    const int uuidSize = getUuidSize(results.first().type);
+    responsePrefix[0] = ATT_OP_FIND_INFORMATION_RESPONSE;
+    responsePrefix[1] = uuidSize == 2 ? 0x1 : 0x2;
+    const int elementSize = sizeof(QLowEnergyHandle) + uuidSize;
+    const auto elemWriter = [](const Attribute &attr, char *&data) {
+        putDataAndIncrement(attr.handle, data);
+        putDataAndIncrement(attr.type, data);
+    };
+    sendListResponse(responsePrefix, elementSize, results, elemWriter);
+
+}
+
+void QLowEnergyControllerPrivate::handleFindByTypeValueRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.3.3-4
+
+    if (!checkPacketSize(packet, 7, mtuSize))
+        return;
+    const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
+    const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+    const quint16 type = bt_get_le16(packet.constData() + 5);
+    const QByteArray value = QByteArray::fromRawData(packet.constData() + 7, packet.count() - 7);
+    qCDebug(QT_BT_BLUEZ) << "client sends find by type value request; start:" << startingHandle
+                         << "end:" << endingHandle << "type:" << type
+                         << "value:" << value.toHex();
+    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+        return;
+
+    const auto predicate = [value, this, type](const Attribute &attr) {
+        return attr.type == QBluetoothUuid(type) && attr.value == value
+                && checkReadPermissions(attr) == 0;
+    };
+    const QVector<Attribute> results = getAttributes(startingHandle, endingHandle, predicate);
+    if (results.isEmpty()) {
+        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        return;
+    }
+
+    QByteArray responsePrefix(1, ATT_OP_FIND_BY_TYPE_VALUE_RESPONSE);
+    const int elemSize = 2 * sizeof(QLowEnergyHandle);
+    const auto elemWriter = [](const Attribute &attr, char *&data) {
+        putDataAndIncrement(attr.handle, data);
+        putDataAndIncrement(attr.groupEndHandle, data);
+    };
+    sendListResponse(responsePrefix, elemSize, results, elemWriter);
+}
+
+void QLowEnergyControllerPrivate::handleReadByTypeRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.4.1-2
+
+    if (!checkPacketSize(packet, 7, 21))
+        return;
+    const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
+    const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+    const void * const typeStart = packet.constData() + 5;
+    const bool is16BitUuid = packet.count() == 7;
+    const bool is128BitUuid = packet.count() == 21;
+    QBluetoothUuid type;
+    if (is16BitUuid) {
+        type = QBluetoothUuid(bt_get_le16(typeStart));
+    } else if (is128BitUuid) {
+        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const quint128 *>(typeStart)));
+    } else {
+        qCWarning(QT_BT_BLUEZ) << "read by type request has invalid packet size" << packet.count();
+        sendErrorResponse(packet.at(0), 0, ATT_ERROR_INVALID_PDU);
+        return;
+    }
+    qCDebug(QT_BT_BLUEZ) << "client sends read by type request, start:" << startingHandle
+                         << "end:" << endingHandle << "type:" << type;
+    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+        return;
+
+    // Get all attributes with matching type.
+    QVector<Attribute> results = getAttributes(startingHandle, endingHandle,
+        [type](const Attribute &attr) { return attr.type == type; });
+    ensureUniformValueSizes(results);
+
+    if (results.isEmpty()) {
+        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        return;
+    }
+
+    const int error = checkReadPermissions(results);
+    if (error) {
+        sendErrorResponse(packet.at(0), results.first().handle, error);
+        return;
+    }
+
+    const int elementSize = sizeof(QLowEnergyHandle) + results.first().value.count();
+    QByteArray responsePrefix(2, Qt::Uninitialized);
+    responsePrefix[0] = ATT_OP_READ_BY_TYPE_RESPONSE;
+    responsePrefix[1] = elementSize;
+    const auto elemWriter = [](const Attribute &attr, char *&data) {
+        putDataAndIncrement(attr.handle, data);
+        putDataAndIncrement(attr.value, data);
+    };
+    sendListResponse(responsePrefix, elementSize, results, elemWriter);
+}
+
+void QLowEnergyControllerPrivate::handleReadRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.4.3-4
+
+    if (!checkPacketSize(packet, 3))
+        return;
+    const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
+    qCDebug(QT_BT_BLUEZ) << "client sends read request; handle:" << handle;
+
+    if (!checkHandle(packet, handle))
+        return;
+    const Attribute &attribute = localAttributes.at(handle);
+    const int permissionsError = checkReadPermissions(attribute);
+    if (permissionsError) {
+        sendErrorResponse(packet.at(0), handle, permissionsError);
+        return;
+    }
+
+    const int sentValueLength = qMin(attribute.value.count(), mtuSize - 1);
+    QByteArray response(1 + sentValueLength, Qt::Uninitialized);
+    response[0] = ATT_OP_READ_RESPONSE;
+    using namespace std;
+    memcpy(response.data() + 1, attribute.value.constData(), sentValueLength);
+    qCDebug(QT_BT_BLUEZ) << "sending response:" << response.toHex();
+    sendPacket(response);
+}
+
+void QLowEnergyControllerPrivate::handleReadBlobRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.4.5-6
+
+    if (!checkPacketSize(packet, 5))
+        return;
+    const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
+    const quint16 valueOffset = bt_get_le16(packet.constData() + 3);
+    qCDebug(QT_BT_BLUEZ) << "client sends read blob request; handle:" << handle
+                         << "offset:" << valueOffset;
+
+    if (!checkHandle(packet, handle))
+        return;
+    const Attribute &attribute = localAttributes.at(handle);
+    const int permissionsError = checkReadPermissions(attribute);
+    if (permissionsError) {
+        sendErrorResponse(packet.at(0), handle, permissionsError);
+        return;
+    }
+    if (valueOffset > attribute.value.count()) {
+        sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVALID_OFFSET);
+        return;
+    }
+    if (attribute.value.count() <= mtuSize - 3) {
+        sendErrorResponse(packet.at(0), handle, ATT_ERROR_ATTRIBUTE_NOT_LONG);
+        return;
+    }
+
+    // Yes, this value can be zero.
+    const int sentValueLength = qMin(attribute.value.count() - valueOffset, mtuSize - 1);
+
+    QByteArray response(1 + sentValueLength, Qt::Uninitialized);
+    response[0] = ATT_OP_READ_BLOB_RESPONSE;
+    using namespace std;
+    memcpy(response.data() + 1, attribute.value.constData() + valueOffset, sentValueLength);
+    qCDebug(QT_BT_BLUEZ) << "sending response:" << response.toHex();
+    sendPacket(response);
+}
+
+void QLowEnergyControllerPrivate::handleReadMultipleRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.4.7-8
+
+    if (!checkPacketSize(packet, 5, mtuSize))
+        return;
+    QVector<QLowEnergyHandle> handles((packet.count() - 1) / sizeof(QLowEnergyHandle));
+    auto *packetPtr = reinterpret_cast<const QLowEnergyHandle *>(packet.constData() + 1);
+    for (int i = 0; i < handles.count(); ++i, ++packetPtr)
+        handles[i] = bt_get_le16(packetPtr);
+    qCDebug(QT_BT_BLUEZ) << "client sends read multiple request for handles" << handles;
+
+    const auto it = std::find_if(handles.constBegin(), handles.constEnd(),
+            [this](QLowEnergyHandle handle) { return handle >= lastLocalHandle; });
+    if (it != handles.constEnd()) {
+        sendErrorResponse(packet.at(0), *it, ATT_ERROR_INVALID_HANDLE);
+        return;
+    }
+    const QVector<Attribute> results = getAttributes(handles.first(), handles.last());
+    QByteArray response(1, ATT_OP_READ_MULTIPLE_RESPONSE);
+    foreach (const Attribute &attr, results) {
+        const int error = checkReadPermissions(attr);
+        if (error) {
+            sendErrorResponse(packet.at(0), attr.handle, error);
+            return;
+        }
+
+        // Note: We do not abort if no more values fit into the packet, because we still have to
+        //       report possible permission errors for the other handles.
+        response += attr.value.left(mtuSize - response.count());
+    }
+
+    qCDebug(QT_BT_BLUEZ) << "sending response:" << response.toHex();
+    sendPacket(response);
+}
+
+void QLowEnergyControllerPrivate::handleReadByGroupTypeRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.4.9-10
+
+    if (!checkPacketSize(packet, 7, 21))
+        return;
+    const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
+    const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+    const bool is16BitUuid = packet.count() == 7;
+    const bool is128BitUuid = packet.count() == 21;
+    const void * const typeStart = packet.constData() + 5;
+    QBluetoothUuid type;
+    if (is16BitUuid) {
+        type = QBluetoothUuid(bt_get_le16(typeStart));
+    } else if (is128BitUuid) {
+        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const quint128 *>(typeStart)));
+    } else {
+        qCWarning(QT_BT_BLUEZ) << "read by group type request has invalid packet size"
+                               << packet.count();
+        sendErrorResponse(packet.at(0), 0, ATT_ERROR_INVALID_PDU);
+        return;
+    }
+    qCDebug(QT_BT_BLUEZ) << "client sends read by group type request, start:" << startingHandle
+                         << "end:" << endingHandle << "type:" << type;
+
+    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+        return;
+    if (type != QBluetoothUuid(static_cast<quint16>(GATT_PRIMARY_SERVICE))
+            && type != QBluetoothUuid(static_cast<quint16>(GATT_SECONDARY_SERVICE))) {
+        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_UNSUPPRTED_GROUP_TYPE);
+        return;
+    }
+
+    QVector<Attribute> results = getAttributes(startingHandle, endingHandle,
+            [type](const Attribute &attr) { return attr.type == type; });
+    if (results.isEmpty()) {
+        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        return;
+    }
+    const int error = checkReadPermissions(results);
+    if (error) {
+        sendErrorResponse(packet.at(0), results.first().handle, error);
+        return;
+    }
+
+    ensureUniformValueSizes(results);
+
+    const int elementSize = 2 * sizeof(QLowEnergyHandle) + results.first().value.count();
+    QByteArray responsePrefix(2, Qt::Uninitialized);
+    responsePrefix[0] = ATT_OP_READ_BY_GROUP_RESPONSE;
+    responsePrefix[1] = elementSize;
+    const auto elemWriter = [](const Attribute &attr, char *&data) {
+        putDataAndIncrement(attr.handle, data);
+        putDataAndIncrement(attr.groupEndHandle, data);
+        putDataAndIncrement(attr.value, data);
+    };
+    sendListResponse(responsePrefix, elementSize, results, elemWriter);
+}
+
+void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.5.1-3
+
+    if (!checkPacketSize(packet, 3, mtuSize))
+        return;
+    const bool isRequest = packet.at(0) == ATT_OP_WRITE_REQUEST;
+    const bool isSigned = packet.at(0) == ATT_OP_SIGNED_WRITE_COMMAND;
+    const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
+    qCDebug(QT_BT_BLUEZ) << "client sends" << (isSigned ? "signed" : "") << "write"
+                         << (isRequest ? "request" : "command") << "for handle" << handle;
+
+    if (!checkHandle(packet, handle))
+        return;
+
+    if (isSigned) {
+        // const QByteArray signature = packet.right(12);
+        return; // TODO: Check signature and continue if it's valid. Store sign counter.
+        // TODO: extract value
+    } else {
+        // TODO: Extract value.
+    }
+
+    const Attribute &attribute = localAttributes.at(handle);
+    const QLowEnergyCharacteristic::PropertyType type = isRequest
+            ? QLowEnergyCharacteristic::Write : isSigned
+              ? QLowEnergyCharacteristic::WriteSigned : QLowEnergyCharacteristic::WriteNoResponse;
+    const int permissionsError = checkPermissions(attribute, type);
+    if (permissionsError) {
+        sendErrorResponse(packet.at(0), handle, permissionsError);
+        return;
+    }
+    if (false /* value is greater than maximum */) {
+        sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
+        return;
+    }
+
+    // TODO: Write attribute
+
+    if (isRequest)
+        sendErrorResponse(packet.at(0), 0, ATT_ERROR_REQUEST_NOT_SUPPORTED);
+        //sendPacket(QByteArray(1, ATT_OP_WRITE_RESPONSE));
+}
+
+void QLowEnergyControllerPrivate::handlePrepareWriteRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.6.1
+
+    if (!checkPacketSize(packet, 5, mtuSize))
+        return;
+    const quint16 handle = bt_get_le16(packet.constData() + 1);
+    qCDebug(QT_BT_BLUEZ) << "client sends prepare write request for handle" << handle;
+
+    if (!checkHandle(packet, handle))
+        return;
+    const Attribute &attribute = localAttributes.at(handle);
+    const int permissionsError = checkPermissions(attribute, QLowEnergyCharacteristic::Write);
+    if (permissionsError) {
+        sendErrorResponse(packet.at(0), handle, permissionsError);
+        return;
+    }
+    if (openPrepareWriteRequests.count() >= maxPrepareQueueSize) {
+        sendErrorResponse(packet.at(0), handle, ATT_ERROR_PREPARE_QUEUE_FULL);
+        return;
+    }
+
+    // The value is not checked here, but on the Execute request.
+    openPrepareWriteRequests << WriteRequest(handle, bt_get_le16(packet.constData() + 3),
+                                                    packet.mid(5));
+
+    QByteArray response = packet;
+    response[0] = ATT_OP_PREPARE_WRITE_RESPONSE;
+    sendPacket(response);
+}
+
+void QLowEnergyControllerPrivate::handleExecuteWriteRequest(const QByteArray &packet)
+{
+    // Spec v4.2, Vol 3, Part F, 3.4.6.3
+
+    if (!checkPacketSize(packet, 2))
+        return;
+    const bool cancel = packet.at(1) == 0;
+    qCDebug(QT_BT_BLUEZ) << "client sends execute write request; flag is"
+                         << (cancel ? "cancel" : "flush");
+
+    QVector<WriteRequest> requests = openPrepareWriteRequests;
+    openPrepareWriteRequests.clear();
+    if (!cancel) {
+        if (false /* maximum value size exceeded */) {
+            sendErrorResponse(packet.at(0), 0 /* handle? */, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
+            return;
+        }
+        if (false /* offset invalid */) {
+            sendErrorResponse(packet.at(0), 0 /* handle? */, ATT_ERROR_INVALID_OFFSET);
+            return;
+        }
+
+        // TODO: Write attribute.
+
+    }
+    openPrepareWriteRequests.clear();
+    sendErrorResponse(packet.at(0), 0, ATT_ERROR_REQUEST_NOT_SUPPORTED);
+    //sendPacket(QByteArray(1, ATT_OP_EXECUTE_WRITE_RESPONSE));
+}
+
+void QLowEnergyControllerPrivate::sendErrorResponse(quint8 request, quint16 handle, quint8 code)
+{
+    // An ATT command never receives an error response.
+    if (request == ATT_OP_WRITE_COMMAND || request == ATT_OP_SIGNED_WRITE_COMMAND)
+        return;
+
+    QByteArray packet(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
+    packet[0] = ATT_OP_ERROR_RESPONSE;
+    packet[1] = request;
+    putBtData(handle, packet.data() + 2);
+    packet[4] = code;
+    qCWarning(QT_BT_BLUEZ) << "sending error response; request:" << request << "handle:" << handle
+                << "code:" << code;
+    sendPacket(packet);
+}
+
+void QLowEnergyControllerPrivate::sendListResponse(const QByteArray &packetStart, int elemSize,
+        const QVector<Attribute> &attributes, const ElemWriter &elemWriter)
+{
+    const int offset = packetStart.count();
+    const int elemCount = qMin(attributes.count(), (mtuSize - offset) / elemSize);
+    const int totalPacketSize = offset + elemCount * elemSize;
+    QByteArray response(totalPacketSize, Qt::Uninitialized);
+    using namespace std;
+    memcpy(response.data(), packetStart.constData(), offset);
+    char *data = response.data() + offset;
+    for_each(attributes.constBegin(), attributes.constBegin() + elemCount,
+             [&data, elemWriter](const Attribute &attr) { elemWriter(attr, data); });
+    qCDebug(QT_BT_BLUEZ) << "sending response:" << response.toHex();
+    sendPacket(response);
+}
+
 void QLowEnergyControllerPrivate::handleConnectionRequest()
 {
     if (state != QLowEnergyController::AdvertisingState) {
@@ -1910,6 +2415,8 @@ void QLowEnergyControllerPrivate::handleConnectionRequest()
             ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
     l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol);
     setState(QLowEnergyController::ConnectedState);
+    // TODO: Send notifications and indications if this is a bonded device.
+    // The latter need to be queued.
 }
 
 void QLowEnergyControllerPrivate::closeServerSocket()
@@ -1997,6 +2504,102 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
     }
     serviceAttribute.groupEndHandle = currentHandle;
     localAttributes[serviceAttribute.handle] = serviceAttribute;
+}
+
+void QLowEnergyControllerPrivate::ensureUniformAttributes(QVector<Attribute> &attributes,
+        const std::function<int (const Attribute &)> &getSize)
+{
+    if (attributes.isEmpty())
+        return;
+    const int firstSize = getSize(attributes.first());
+    const auto it = std::find_if(attributes.begin() + 1, attributes.end(),
+            [firstSize, getSize](const Attribute &attr) { return getSize(attr) != firstSize; });
+    if (it != attributes.end())
+        attributes.erase(it, attributes.end());
+
+}
+
+void QLowEnergyControllerPrivate::ensureUniformUuidSizes(QVector<Attribute> &attributes)
+{
+    ensureUniformAttributes(attributes,
+                            [](const Attribute &attr) { return getUuidSize(attr.type); });
+}
+
+void QLowEnergyControllerPrivate::ensureUniformValueSizes(QVector<Attribute> &attributes)
+{
+    ensureUniformAttributes(attributes,
+                            [](const Attribute &attr) { return attr.value.count(); });
+}
+
+QVector<QLowEnergyControllerPrivate::Attribute> QLowEnergyControllerPrivate::getAttributes(QLowEnergyHandle startHandle,
+        QLowEnergyHandle endHandle, const AttributePredicate &attributePredicate)
+{
+    QVector<Attribute> results;
+    if (startHandle > lastLocalHandle)
+        return results;
+    if (lastLocalHandle == 0) // We have no services at all.
+        return results;
+    Q_ASSERT(startHandle <= endHandle); // Must have been checked before.
+    const QLowEnergyHandle firstHandle = qMin(startHandle, lastLocalHandle);
+    const QLowEnergyHandle lastHandle = qMin(endHandle, lastLocalHandle);
+    for (QLowEnergyHandle i = firstHandle; i <= lastHandle; ++i) {
+        const Attribute &attr = localAttributes.at(i);
+        if (attributePredicate(attr))
+            results << attr;
+    }
+    return results;
+}
+
+int QLowEnergyControllerPrivate::checkPermissions(const Attribute &attr,
+                                                  QLowEnergyCharacteristic::PropertyType type)
+{
+    // TODO: Actual permission checks.
+    if (false)
+        return ATT_ERROR_INSUF_AUTHORIZATION;
+    if (false)
+        return ATT_ERROR_INSUF_AUTHENTICATION;
+    if (false)
+        return ATT_ERROR_INSUF_ENCR_KEY_SIZE;
+    if (false)
+        return ATT_ERROR_INSUF_ENCRYPTION;
+    if (!(attr.properties & type)) {
+        switch (type) {
+        case QLowEnergyCharacteristic::Read:
+            return ATT_ERROR_READ_NOT_PERM;
+        case QLowEnergyCharacteristic::Write:
+        case QLowEnergyCharacteristic::WriteSigned:
+        case QLowEnergyCharacteristic::WriteNoResponse:
+            return ATT_ERROR_WRITE_NOT_PERM;
+        default:
+            Q_ASSERT(false); // Cannot happen.
+        }
+    }
+    return 0;
+}
+
+int QLowEnergyControllerPrivate::checkReadPermissions(const Attribute &attr)
+{
+    return checkPermissions(attr, QLowEnergyCharacteristic::Read);
+}
+
+int QLowEnergyControllerPrivate::checkReadPermissions(QVector<Attribute> &attributes)
+{
+    if (attributes.isEmpty())
+        return 0;
+
+    // The logic prescribed in the spec is as follows:
+    //    1) If the first in a list of matching attributes has a permissions error,
+    //       then that error is returned via an error response.
+    //    2) If any other element of that list would cause a permissions error, then all
+    //       attributes from this one on are not part of the result set, but no error is returned.
+    const int error = checkReadPermissions(attributes.first());
+    if (error)
+        return error;
+    const auto it = std::find_if(attributes.begin() + 1, attributes.end(),
+            [this](const Attribute &attr) { return checkReadPermissions(attr) != 0; });
+    if (it != attributes.end())
+        attributes.erase(it, attributes.end());
+    return 0;
 }
 
 QT_END_NAMESPACE

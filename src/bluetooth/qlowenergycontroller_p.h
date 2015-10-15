@@ -65,6 +65,7 @@ QT_END_NAMESPACE
 
 #include <qglobal.h>
 #include <QtCore/QQueue>
+#include <QtCore/QVector>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"
@@ -196,10 +197,22 @@ private:
         QVariant reference2;
     };
     QQueue<Request> openRequests;
+
+    struct WriteRequest {
+        WriteRequest() {}
+        WriteRequest(quint16 h, quint16 o, const QByteArray &v)
+            : handle(h), valueOffset(o), value(v) {}
+        quint16 handle;
+        quint16 valueOffset;
+        QByteArray value;
+    };
+    QVector<WriteRequest> openPrepareWriteRequests;
+
     bool requestPending;
     quint16 mtuSize;
     int securityLevelValue;
     bool encryptionChangePending;
+    bool receivedMtuExchangeRequest = false;
 
     HciManager *hciManager;
     QLeAdvertiser *advertiser;
@@ -240,6 +253,42 @@ private:
     void resetController();
 
     void handleAdvertisingError();
+
+    bool checkPacketSize(const QByteArray &packet, int minSize, int maxSize = -1);
+    bool checkHandle(const QByteArray &packet, QLowEnergyHandle handle);
+    bool checkHandlePair(quint8 request, QLowEnergyHandle startingHandle,
+                         QLowEnergyHandle endingHandle);
+
+    void handleExchangeMtuRequest(const QByteArray &packet);
+    void handleFindInformationRequest(const QByteArray &packet);
+    void handleFindByTypeValueRequest(const QByteArray &packet);
+    void handleReadByTypeRequest(const QByteArray &packet);
+    void handleReadRequest(const QByteArray &packet);
+    void handleReadBlobRequest(const QByteArray &packet);
+    void handleReadMultipleRequest(const QByteArray &packet);
+    void handleReadByGroupTypeRequest(const QByteArray &packet);
+    void handleWriteRequestOrCommand(const QByteArray &packet);
+    void handlePrepareWriteRequest(const QByteArray &packet);
+    void handleExecuteWriteRequest(const QByteArray &packet);
+
+    void sendErrorResponse(quint8 request, quint16 handle, quint8 code);
+
+    using ElemWriter = std::function<void(const Attribute &, char *&)>;
+    void sendListResponse(const QByteArray &packetStart, int elemSize,
+                          const QVector<Attribute> &attributes, const ElemWriter &elemWriter);
+
+    void ensureUniformAttributes(QVector<Attribute> &attributes, const std::function<int(const Attribute &)> &getSize);
+    void ensureUniformUuidSizes(QVector<Attribute> &attributes);
+    void ensureUniformValueSizes(QVector<Attribute> &attributes);
+
+    using AttributePredicate = std::function<bool(const Attribute &)>;
+    QVector<Attribute> getAttributes(QLowEnergyHandle startHandle, QLowEnergyHandle endHandle,
+            const AttributePredicate &attributePredicate = [](const Attribute &) { return true; });
+
+    int checkPermissions(const Attribute &attr, QLowEnergyCharacteristic::PropertyType type);
+    int checkReadPermissions(const Attribute &attr);
+    int checkReadPermissions(QVector<Attribute> &attributes);
+
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();

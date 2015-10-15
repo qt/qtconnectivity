@@ -34,23 +34,118 @@
 #include <QtBluetooth/qlowenergyadvertisingdata.h>
 #include <QtBluetooth/qlowenergyadvertisingparameters.h>
 #include <QtBluetooth/qlowenergycontroller.h>
+#include <QtBluetooth/qlowenergycharacteristicdata.h>
+#include <QtBluetooth/qlowenergydescriptordata.h>
+#include <QtBluetooth/qlowenergyservicedata.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qhash.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtCore/qsharedpointer.h>
+#include <QtCore/qvector.h>
 
-int main(int argc, char *argv[])
+static QByteArray deviceName() { return "Qt GATT server"; }
+
+static QScopedPointer<QLowEnergyController> leController;
+typedef QSharedPointer<QLowEnergyService> ServicePtr;
+static QHash<QBluetoothUuid, ServicePtr> services;
+
+void addService(const QLowEnergyServiceData &serviceData)
 {
-    QCoreApplication app(argc, argv);
+    const ServicePtr service(leController->addService(serviceData));
+    Q_ASSERT(service);
+    services.insert(service->serviceUuid(), service);
+}
 
+void addRunningSpeedService()
+{
+    QLowEnergyServiceData serviceData;
+    serviceData.setUuid(QBluetoothUuid::RunningSpeedAndCadence);
+    serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+
+    QLowEnergyDescriptorData desc;
+    desc.setUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+    desc.setValue(QByteArray(1, 0)); // Default: No indication, no notification.
+    QLowEnergyCharacteristicData charData;
+    charData.setUuid(QBluetoothUuid::RSCMeasurement);
+    charData.addDescriptor(desc);
+    charData.setProperties(QLowEnergyCharacteristic::Notify);
+    QByteArray value(4, 0);
+    value[0] = 1 << 2; // "Running", no optional fields.
+    charData.setValue(value);
+    serviceData.addCharacteristic(charData);
+
+    charData = QLowEnergyCharacteristicData();
+    charData.setUuid(QBluetoothUuid::RSCFeature);
+    charData.setProperties(QLowEnergyCharacteristic::Read);
+    value = QByteArray(2, 0);
+    value[0] = 1 << 2; // "Walking or Running" supported.
+    charData.setValue(value);
+    serviceData.addCharacteristic(charData);
+    addService(serviceData);
+}
+
+void addGenericAccessService()
+{
+    QLowEnergyServiceData serviceData;
+    serviceData.setUuid(QBluetoothUuid::GenericAccess);
+    serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+
+    QLowEnergyCharacteristicData charData;
+    charData.setUuid(QBluetoothUuid::DeviceName);
+    charData.setProperties(QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::Write);
+    charData.setValue(deviceName());
+    serviceData.addCharacteristic(charData);
+
+    charData = QLowEnergyCharacteristicData();
+    charData.setUuid(QBluetoothUuid::Appearance);
+    charData.setProperties(QLowEnergyCharacteristic::Read);
+    QByteArray value(2, 0);
+    value[0] = -1; // 128 => Generic computer.
+    charData.setValue(value);
+    serviceData.addCharacteristic(charData);
+
+    serviceData.addIncludedService(services.value(QBluetoothUuid::RunningSpeedAndCadence).data());
+    addService(serviceData);
+}
+
+void addCustomService()
+{
+    QLowEnergyServiceData serviceData;
+    serviceData.setUuid(QBluetoothUuid(quint16(0x2000))); // Made up.
+    serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+
+    QLowEnergyCharacteristicData charData;
+    charData.setUuid(QBluetoothUuid(quint16(0x5000))); // Made up.
+    charData.setProperties(QLowEnergyCharacteristic::Read);
+    charData.setValue(QByteArray(1024, 'x')); // Long value to test "Read Blob".
+    serviceData.addCharacteristic(charData);
+
+    addService(serviceData);
+}
+
+void startAdvertising()
+{
     QLowEnergyAdvertisingParameters params;
     params.setMode(QLowEnergyAdvertisingParameters::AdvInd);
     QLowEnergyAdvertisingData data;
     data.setDiscoverability(QLowEnergyAdvertisingData::DiscoverabilityLimited);
-    data.setServices(QList<QBluetoothUuid>() << QBluetoothUuid::AlertNotificationService);
+    data.setServices(services.keys());
     data.setIncludePowerLevel(true);
-    data.setLocalName("Qt GATT server");
-    const QScopedPointer<QLowEnergyController> leController(QLowEnergyController::createPeripheral());
+    data.setLocalName(deviceName());
     leController->startAdvertising(params, data);
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    leController.reset(QLowEnergyController::createPeripheral());
+    addRunningSpeedService();
+    addGenericAccessService();
+    addCustomService();
+    startAdvertising();
+
+    // TODO: Change characteristics, client checks that it gets indication/notification
+    // TODO: Where to test that we get the characteristicChanged signal for characteristics that the client writes?
 
     return app.exec();
 }
-
