@@ -464,16 +464,17 @@ void QLowEnergyControllerPrivate::resetController()
 
 void QLowEnergyControllerPrivate::l2cpReadyRead()
 {
-    const QByteArray reply = l2cpSocket->readAll();
-    qCDebug(QT_BT_BLUEZ) << "Received size:" << reply.size() << "data:" << reply.toHex();
-    if (reply.isEmpty())
+    const QByteArray incomingPacket = l2cpSocket->readAll();
+    qCDebug(QT_BT_BLUEZ) << "Received size:" << incomingPacket.size() << "data:"
+                         << incomingPacket.toHex();
+    if (incomingPacket.isEmpty())
         return;
 
-    const quint8 command = reply.constData()[0];
+    const quint8 command = incomingPacket.constData()[0];
     switch (command) {
     case ATT_OP_HANDLE_VAL_NOTIFICATION:
     {
-        processUnsolicitedReply(reply);
+        processUnsolicitedReply(incomingPacket);
         return;
     }
     case ATT_OP_HANDLE_VAL_INDICATION:
@@ -483,7 +484,7 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         packet.append(static_cast<char>(ATT_OP_HANDLE_VAL_CONFIRMATION));
         sendCommand(packet);
 
-        processUnsolicitedReply(reply);
+        processUnsolicitedReply(incomingPacket);
         return;
     }
     case ATT_OP_EXCHANGE_MTU_REQUEST:
@@ -514,7 +515,7 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
 
     Q_ASSERT(!openRequests.isEmpty());
     const Request request = openRequests.dequeue();
-    processReply(request, reply);
+    processReply(request, incomingPacket);
 
     sendNextPendingRequest();
 }
