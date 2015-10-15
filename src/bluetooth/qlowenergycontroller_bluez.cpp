@@ -43,6 +43,9 @@
 #include <QtBluetooth/QLowEnergyService>
 
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #define ATTRIBUTE_CHANNEL_ID 4
 
@@ -205,7 +208,8 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       securityLevelValue(-1),
       encryptionChangePending(false),
       hciManager(0),
-      advertiser(0)
+      advertiser(0),
+      serverSocketNotifier(0)
 {
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 
@@ -220,7 +224,58 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
+    closeServerSocket();
 }
+
+class ServerSocket
+{
+public:
+    bool listen(const QBluetoothAddress &localAdapter)
+    {
+        m_socket = ::socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+        if (m_socket == -1) {
+            qCWarning(QT_BT_BLUEZ) << "socket creation failed:" << qt_error_string(errno);
+            return false;
+        }
+        sockaddr_l2 addr;
+
+        // memset should be in std namespace for C++ compilers, but we also need to support
+        // broken ones that put it in the global one.
+        using namespace std;
+        memset(&addr, 0, sizeof addr);
+
+        addr.l2_family = AF_BLUETOOTH;
+        addr.l2_cid = htobs(ATTRIBUTE_CHANNEL_ID);
+        addr.l2_bdaddr_type = BDADDR_LE_PUBLIC;
+        convertAddress(localAdapter.toUInt64(), addr.l2_bdaddr.b);
+        if (::bind(m_socket, reinterpret_cast<sockaddr *>(&addr), sizeof addr) == -1) {
+            qCWarning(QT_BT_BLUEZ) << "bind() failed:" << qt_error_string(errno);
+            return false;
+        }
+        if (::listen(m_socket, 1)) {
+            qCWarning(QT_BT_BLUEZ) << "listen() failed:" << qt_error_string(errno);
+            return false;
+        }
+        return true;
+    }
+
+    ~ServerSocket()
+    {
+        if (m_socket != -1)
+            close(m_socket);
+    }
+
+    int takeSocket()
+    {
+        const int socket = m_socket;
+        m_socket = -1;
+        return socket;
+    }
+
+private:
+    int m_socket = -1;
+};
+
 void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
         const QLowEnergyAdvertisingData &advertisingData,
         const QLowEnergyAdvertisingData &scanResponseData)
@@ -234,6 +289,24 @@ void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingPa
     }
     setState(QLowEnergyController::AdvertisingState);
     advertiser->startAdvertising();
+    if (params.mode() == QLowEnergyAdvertisingParameters::AdvNonConnInd
+            || params.mode() == QLowEnergyAdvertisingParameters::AdvScanInd) {
+        qCDebug(QT_BT_BLUEZ) << "Non-connectable advertising requested, "
+                                "not listening for connections.";
+        return;
+    }
+
+    ServerSocket serverSocket;
+    if (!serverSocket.listen(localAdapter)) {
+        setError(QLowEnergyController::AdvertisingError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    }
+
+    const int socketFd = serverSocket.takeSocket();
+    serverSocketNotifier = new QSocketNotifier(socketFd, QSocketNotifier::Read, this);
+    connect(serverSocketNotifier, &QSocketNotifier::activated, this,
+            &QLowEnergyControllerPrivate::handleConnectionRequest);
 }
 
 void QLowEnergyControllerPrivate::stopAdvertising()
@@ -315,7 +388,8 @@ void QLowEnergyControllerPrivate::l2cpDisconnected()
 {
     Q_Q(QLowEnergyController);
 
-    securityLevelValue = -1;
+    invalidateServices();
+    resetController();
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
 }
@@ -1770,6 +1844,50 @@ void QLowEnergyControllerPrivate::handleAdvertisingError()
     qCWarning(QT_BT_BLUEZ) << "received advertising error";
     setError(QLowEnergyController::AdvertisingError);
     setState(QLowEnergyController::UnconnectedState);
+}
+
+void QLowEnergyControllerPrivate::handleConnectionRequest()
+{
+    if (state != QLowEnergyController::AdvertisingState) {
+        qCWarning(QT_BT_BLUEZ) << "Incoming connection request in unexpected state" << state;
+        return;
+    }
+    Q_ASSERT(serverSocketNotifier);
+    serverSocketNotifier->setEnabled(false);
+    sockaddr_l2 clientAddr;
+    socklen_t clientAddrSize = sizeof clientAddr;
+    const int clientSocket = accept(serverSocketNotifier->socket(),
+                                    reinterpret_cast<sockaddr *>(&clientAddr), &clientAddrSize);
+    if (clientSocket == -1) {
+        // Not fatal in itself. The next one might succeed.
+        qCWarning(QT_BT_BLUEZ) << "accept() failed:" << qt_error_string(errno);
+        serverSocketNotifier->setEnabled(true);
+        return;
+    }
+    remoteDevice = QBluetoothAddress(convertAddress(clientAddr.l2_bdaddr.b));
+    qCDebug(QT_BT_BLUEZ) << "GATT connection from device" << remoteDevice;
+
+    closeServerSocket();
+    l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
+    connect(l2cpSocket, &QBluetoothSocket::disconnected,
+            this, &QLowEnergyControllerPrivate::l2cpDisconnected);
+    connect(l2cpSocket, static_cast<void (QBluetoothSocket::*)(QBluetoothSocket::SocketError)>
+            (&QBluetoothSocket::error), this, &QLowEnergyControllerPrivate::l2cpErrorChanged);
+    connect(l2cpSocket, &QIODevice::readyRead, this, &QLowEnergyControllerPrivate::l2cpReadyRead);
+    l2cpSocket->d_ptr->lowEnergySocketType = addressType == QLowEnergyController::PublicAddress
+            ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
+    l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol);
+    setState(QLowEnergyController::ConnectedState);
+}
+
+void QLowEnergyControllerPrivate::closeServerSocket()
+{
+    if (!serverSocketNotifier)
+        return;
+    serverSocketNotifier->disconnect();
+    close(serverSocketNotifier->socket());
+    serverSocketNotifier->deleteLater();
+    serverSocketNotifier = nullptr;
 }
 
 QT_END_NAMESPACE

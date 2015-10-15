@@ -306,6 +306,10 @@ void QLowEnergyControllerPrivate::setState(
         return;
 
     state = newState;
+    if (state == QLowEnergyController::UnconnectedState
+            && role == QLowEnergyController::PeripheralRole) {
+        remoteDevice.clear();
+    }
     emit q->stateChanged(state);
 }
 
@@ -769,10 +773,8 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
 /*!
    Starts advertising the data given in \a advertisingData and \a scanResponseData, using
    the parameters set in \a parameters. The controller has to be in the \l PeripheralRole.
-   \omit
-   If \a parameters indicates that the advertisement should be connectable, then this call
+   If \a parameters indicates that the advertisement should be connectable, then this function
    also starts listening for incoming client connections.
-   \endomit
 
    Providing \a scanResponseData is not required, as it is not applicable for certain
    configurations of \c parameters.

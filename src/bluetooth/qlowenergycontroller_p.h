@@ -80,6 +80,7 @@ QT_BEGIN_NAMESPACE
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
+class QSocketNotifier;
 #elif defined(QT_ANDROID_BLUETOOTH)
 class LowEnergyNotificationHub;
 #endif
@@ -180,6 +181,10 @@ private:
 
     HciManager *hciManager;
     QLeAdvertiser *advertiser;
+    QSocketNotifier *serverSocketNotifier;
+
+    void handleConnectionRequest();
+    void closeServerSocket();
 
     void sendCommand(const QByteArray &packet);
     void sendNextPendingRequest();

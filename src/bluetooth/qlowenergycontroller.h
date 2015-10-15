@@ -93,6 +93,8 @@ public:
                                                QObject *parent = 0);
     static QLowEnergyController *createPeripheral(QObject *parent = 0);
 
+    // TODO: Allow to set connection timeout (disconnect when no data has been exchanged for n seconds).
+
     ~QLowEnergyController();
 
     QBluetoothAddress localAddress() const;
