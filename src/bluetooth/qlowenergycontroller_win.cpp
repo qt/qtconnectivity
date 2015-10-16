@@ -36,8 +36,11 @@
 #include "qbluetoothdevicediscoveryagent_p.h"
 
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QIODevice> // for open modes
 
 #include <windows/qwinlowenergybluetooth_p.h>
+
+#include <setupapi.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -47,10 +50,101 @@ Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 
 static bool gattFunctionsResolved = false;
 
-static HANDLE openSystemDevice(const QString &systemPath, int *systemErrorCode)
+static QString getServiceSystemPath(const QBluetoothUuid &serviceUuid, int *systemErrorCode)
 {
-    const DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
-    const DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(
+                reinterpret_cast<const GUID *>(&serviceUuid),
+                NULL,
+                0,
+                DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+
+    if (deviceInfoSet == INVALID_HANDLE_VALUE) {
+        *systemErrorCode = ::GetLastError();
+        return QString();
+    }
+
+    QString foundSystemPath;
+    DWORD index = 0;
+
+    forever {
+        SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
+        ::ZeroMemory(&deviceInterfaceData, sizeof(deviceInterfaceData));
+        deviceInterfaceData.cbSize = sizeof(deviceInterfaceData);
+
+        if (!::SetupDiEnumDeviceInterfaces(
+                    deviceInfoSet,
+                    NULL,
+                    reinterpret_cast<const GUID *>(&serviceUuid),
+                    index++,
+                    &deviceInterfaceData)) {
+            *systemErrorCode = ::GetLastError();
+            break;
+        }
+
+        DWORD deviceInterfaceDetailDataSize = 0;
+        if (!::SetupDiGetDeviceInterfaceDetail(
+                    deviceInfoSet,
+                    &deviceInterfaceData,
+                    NULL,
+                    deviceInterfaceDetailDataSize,
+                    &deviceInterfaceDetailDataSize,
+                    NULL)) {
+            if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+                *systemErrorCode = ::GetLastError();
+                break;
+            }
+        }
+
+        SP_DEVINFO_DATA deviceInfoData;
+        ::ZeroMemory(&deviceInfoData, sizeof(deviceInfoData));
+        deviceInfoData.cbSize = sizeof(deviceInfoData);
+
+        QByteArray deviceInterfaceDetailDataBuffer(
+                    deviceInterfaceDetailDataSize, 0);
+
+        PSP_INTERFACE_DEVICE_DETAIL_DATA deviceInterfaceDetailData =
+                reinterpret_cast<PSP_INTERFACE_DEVICE_DETAIL_DATA>
+                (deviceInterfaceDetailDataBuffer.data());
+
+        deviceInterfaceDetailData->cbSize =
+                sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
+
+        if (!::SetupDiGetDeviceInterfaceDetail(
+                    deviceInfoSet,
+                    &deviceInterfaceData,
+                    deviceInterfaceDetailData,
+                    deviceInterfaceDetailDataBuffer.size(),
+                    &deviceInterfaceDetailDataSize,
+                    &deviceInfoData)) {
+            *systemErrorCode = ::GetLastError();
+            break;
+        }
+
+        foundSystemPath = QString::fromWCharArray(deviceInterfaceDetailData->DevicePath);
+        *systemErrorCode = NO_ERROR;
+        break;
+    }
+
+    ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
+    return foundSystemPath;
+}
+
+static HANDLE openSystemDevice(
+        const QString &systemPath, QIODevice::OpenMode openMode, int *systemErrorCode)
+{
+    DWORD desiredAccess = 0;
+    DWORD shareMode = 0;
+
+    if (openMode & QIODevice::ReadOnly) {
+        desiredAccess |= GENERIC_READ;
+        shareMode |= FILE_SHARE_READ;
+    }
+
+    if (openMode & QIODevice::WriteOnly) {
+        desiredAccess |= GENERIC_WRITE;
+        shareMode |= FILE_SHARE_WRITE;
+    }
+
     const HANDLE serviceHandle = ::CreateFile(
                 reinterpret_cast<const wchar_t *>(systemPath.utf16()),
                 desiredAccess,
@@ -97,6 +191,136 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
         } else {
             *systemErrorCode = ::GetLastError();
             return QVector<BTH_LE_GATT_SERVICE>();
+        }
+    }
+}
+
+static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
+        HANDLE serviceHandle, PBTH_LE_GATT_SERVICE gattService, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return QVector<BTH_LE_GATT_CHARACTERISTIC>();
+    }
+
+    QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics;
+    USHORT characteristicsCount = 0;
+    forever {
+        const HRESULT hr = ::BluetoothGATTGetCharacteristics(
+                    serviceHandle,
+                    gattService,
+                    characteristicsCount,
+                    foundCharacteristics.isEmpty() ? NULL : &foundCharacteristics[0],
+                    &characteristicsCount,
+                    BLUETOOTH_GATT_FLAG_NONE);
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
+            foundCharacteristics.resize(characteristicsCount);
+        } else if (hr == S_OK) {
+            *systemErrorCode = NO_ERROR;
+            return foundCharacteristics;
+        } else {
+            *systemErrorCode = ::GetLastError();
+            return QVector<BTH_LE_GATT_CHARACTERISTIC>();
+        }
+    }
+}
+
+static QByteArray getGattCharacteristicValue(
+        HANDLE serviceHandle, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return QByteArray();
+    }
+
+    QByteArray valueBuffer;
+    USHORT valueBufferSize = 0;
+    forever {
+        const HRESULT hr = ::BluetoothGATTGetCharacteristicValue(
+                    serviceHandle,
+                    gattCharacteristic,
+                    valueBufferSize,
+                    valueBuffer.isEmpty() ? NULL : reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data()),
+                    &valueBufferSize,
+                    BLUETOOTH_GATT_FLAG_NONE);
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
+            valueBuffer.resize(valueBufferSize);
+        } else if (hr == S_OK) {
+            *systemErrorCode = NO_ERROR;
+            const PBTH_LE_GATT_CHARACTERISTIC_VALUE value = reinterpret_cast<
+                    PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data());
+
+            return QByteArray(reinterpret_cast<const char *>(&value->Data[0]), value->DataSize);
+        } else {
+            *systemErrorCode = ::GetLastError();
+            return QByteArray();
+        }
+    }
+}
+
+static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
+        HANDLE serviceHandle, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return QVector<BTH_LE_GATT_DESCRIPTOR>();
+    }
+
+    QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors;
+    USHORT descriptorsCount = 0;
+    forever {
+        const HRESULT hr = ::BluetoothGATTGetDescriptors(
+                    serviceHandle,
+                    gattCharacteristic,
+                    descriptorsCount,
+                    foundDescriptors.isEmpty() ? NULL : &foundDescriptors[0],
+                    &descriptorsCount,
+                    BLUETOOTH_GATT_FLAG_NONE);
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
+            foundDescriptors.resize(descriptorsCount);
+        } else if (hr == S_OK) {
+            *systemErrorCode = NO_ERROR;
+            return foundDescriptors;
+        } else {
+            *systemErrorCode = ::GetLastError();
+            return QVector<BTH_LE_GATT_DESCRIPTOR>();
+        }
+    }
+}
+
+static QByteArray getGattDescriptorValue(
+        HANDLE serviceHandle, PBTH_LE_GATT_DESCRIPTOR gattDescriptor, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return QByteArray();
+    }
+
+    QByteArray valueBuffer;
+    USHORT valueBufferSize = 0;
+    forever {
+        const HRESULT hr = ::BluetoothGATTGetDescriptorValue(
+                    serviceHandle,
+                    gattDescriptor,
+                    valueBufferSize,
+                    valueBuffer.isEmpty() ? NULL : reinterpret_cast<PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data()),
+                    &valueBufferSize,
+                    BLUETOOTH_GATT_FLAG_NONE);
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
+            valueBuffer.resize(valueBufferSize);
+        } else if (hr == S_OK) {
+            *systemErrorCode = NO_ERROR;
+            const PBTH_LE_GATT_DESCRIPTOR_VALUE value = reinterpret_cast<
+                    PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data());
+
+            return QByteArray(reinterpret_cast<const char *>(&value->Data[0]), value->DataSize);
+        } else {
+            *systemErrorCode = ::GetLastError();
+            return QByteArray();
         }
     }
 }
@@ -169,7 +393,8 @@ void QLowEnergyControllerPrivate::discoverServices()
 {
     int systemErrorCode = NO_ERROR;
 
-    const HANDLE deviceHandle = openSystemDevice(deviceSystemPath, &systemErrorCode);
+    const HANDLE deviceHandle = openSystemDevice(
+                deviceSystemPath, QIODevice::ReadOnly, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << qt_error_string(systemErrorCode);
@@ -220,9 +445,143 @@ void QLowEnergyControllerPrivate::discoverServices()
 }
 
 void QLowEnergyControllerPrivate::discoverServiceDetails(
-        const QBluetoothUuid &/*service*/)
+        const QBluetoothUuid &service)
 {
+    if (!serviceList.contains(service)) {
+        qCWarning(QT_BT_WINDOWS) << "Discovery of unknown service" << service.toString()
+                                 << "not possible";
+        return;
+    }
 
+    QSharedPointer<QLowEnergyServicePrivate> servicePrivate =
+                serviceList.value(service);
+
+    int systemErrorCode = NO_ERROR;
+
+    const QString serviceSystemPath = getServiceSystemPath(service, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to find service" << service.toString()
+                                 << "path :" << qt_error_string(systemErrorCode);
+        servicePrivate->setError(QLowEnergyService::UnknownError);
+        servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+    }
+
+    const HANDLE serviceHandle = openSystemDevice
+            (serviceSystemPath, QIODevice::ReadOnly, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        servicePrivate->setError(QLowEnergyService::UnknownError);
+        servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+    }
+
+    const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
+            enumerateGattCharacteristics(serviceHandle, NULL, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        closeSystemDevice(serviceHandle);
+        qCWarning(QT_BT_WINDOWS) << "Unable to get characteristics for service" << service.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        servicePrivate->setError(QLowEnergyService::CharacteristicReadError);
+        servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+        return;
+    }
+
+    foreach (const BTH_LE_GATT_CHARACTERISTIC &gattCharacteristic, foundCharacteristics) {
+        const QLowEnergyHandle characteristicHandle = gattCharacteristic.AttributeHandle;
+
+        QLowEnergyServicePrivate::CharData detailsData;
+        detailsData.uuid = QBluetoothUuid(
+                    gattCharacteristic.CharacteristicUuid.IsShortUuid
+                    ? QBluetoothUuid(gattCharacteristic.CharacteristicUuid.Value.ShortUuid)
+                    : QBluetoothUuid(gattCharacteristic.CharacteristicUuid.Value.LongUuid));
+        detailsData.valueHandle = gattCharacteristic.CharacteristicValueHandle;
+
+        QLowEnergyCharacteristic::PropertyTypes properties = QLowEnergyCharacteristic::Unknown;
+        if (gattCharacteristic.HasExtendedProperties)
+            properties |= QLowEnergyCharacteristic::ExtendedProperty;
+        if (gattCharacteristic.IsBroadcastable)
+            properties |= QLowEnergyCharacteristic::Broadcasting;
+        if (gattCharacteristic.IsIndicatable)
+            properties |= QLowEnergyCharacteristic::Indicate;
+        if (gattCharacteristic.IsNotifiable)
+            properties |= QLowEnergyCharacteristic::Notify;
+        if (gattCharacteristic.IsReadable)
+            properties |= QLowEnergyCharacteristic::Read;
+        if (gattCharacteristic.IsSignedWritable)
+            properties |= QLowEnergyCharacteristic::WriteSigned;
+        if (gattCharacteristic.IsWritable)
+            properties |= QLowEnergyCharacteristic::Write;
+        if (gattCharacteristic.IsWritableWithoutResponse)
+            properties |= QLowEnergyCharacteristic::WriteNoResponse;
+
+        detailsData.properties = properties;
+        detailsData.value = getGattCharacteristicValue(
+                    serviceHandle, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
+                        &gattCharacteristic), &systemErrorCode);
+
+        if (systemErrorCode != NO_ERROR) {
+            // We do not interrupt enumerating of characteristics
+            // if value can not be read
+            qCWarning(QT_BT_WINDOWS) << "Unable to get value for characteristic"
+                                     << detailsData.uuid.toString()
+                                     << "of the service" << service.toString()
+                                     << ":" << qt_error_string(systemErrorCode);
+        }
+
+        const QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors = enumerateGattDescriptors(
+                    serviceHandle, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
+                        &gattCharacteristic), &systemErrorCode);
+
+        if (systemErrorCode != NO_ERROR) {
+            if (systemErrorCode != ERROR_NOT_FOUND) {
+                closeSystemDevice(serviceHandle);
+                qCWarning(QT_BT_WINDOWS) << "Unable to get descriptor for characteristic"
+                                         << detailsData.uuid.toString()
+                                         << "of the service" << service.toString()
+                                         << ":" << qt_error_string(systemErrorCode);
+                servicePrivate->setError(QLowEnergyService::DescriptorReadError);
+                servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+                return;
+            }
+        }
+
+        foreach (const BTH_LE_GATT_DESCRIPTOR &gattDescriptor, foundDescriptors) {
+            const QLowEnergyHandle descriptorHandle = gattDescriptor.AttributeHandle;
+
+            QLowEnergyServicePrivate::DescData data;
+            data.uuid = QBluetoothUuid(
+                        gattDescriptor.DescriptorUuid.IsShortUuid
+                        ? QBluetoothUuid(gattDescriptor.DescriptorUuid.Value.ShortUuid)
+                        : QBluetoothUuid(gattDescriptor.DescriptorUuid.Value.LongUuid));
+
+            data.value = getGattDescriptorValue(serviceHandle, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
+                                                    &gattDescriptor), &systemErrorCode);
+
+            if (systemErrorCode != NO_ERROR) {
+                closeSystemDevice(serviceHandle);
+                qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
+                                         << data.uuid.toString()
+                                         << "for characteristic"
+                                         << detailsData.uuid.toString()
+                                         << "of the service" << service.toString()
+                                         << ":" << qt_error_string(systemErrorCode);
+                servicePrivate->setError(QLowEnergyService::DescriptorReadError);
+                servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+                return;
+            }
+
+            detailsData.descriptorList.insert(descriptorHandle, data);
+        }
+
+        servicePrivate->characteristicList.insert(characteristicHandle, detailsData);
+    }
+
+    closeSystemDevice(serviceHandle);
+
+    servicePrivate->setState(QLowEnergyService::ServiceDiscovered);
 }
 
 void QLowEnergyControllerPrivate::readCharacteristic(
