@@ -66,6 +66,10 @@ class QXmlStreamReader;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QT_WIN_BLUETOOTH
+#include <QFutureWatcher>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
@@ -128,6 +132,9 @@ public:
     void _q_fetchUuidsTimeout();
     void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
 #endif
+#ifdef QT_WIN_BLUETOOTH
+    void _q_nextSdpScan();
+#endif
 
 private:
     void start(const QBluetoothAddress &address);
@@ -177,6 +184,19 @@ private:
 
     QAndroidJniObject btAdapter;
     QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
+#endif
+
+#ifdef QT_WIN_BLUETOOTH
+public:
+    typedef void* SearchHandle;
+private:
+    int systemError;
+    bool pendingStop;
+    bool pendingFinish;
+
+    QFutureWatcher<QBluetoothServiceInfo> *searchWatcher;
+
+    SearchHandle hSearch;
 #endif
 
 protected:

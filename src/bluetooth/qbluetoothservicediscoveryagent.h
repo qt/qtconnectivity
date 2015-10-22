@@ -123,6 +123,9 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_fetchUuidsTimeout())
     Q_PRIVATE_SLOT(d_func(), void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state))
 #endif
+#ifdef QT_WIN_BLUETOOTH
+    Q_PRIVATE_SLOT(d_func(), void _q_nextSdpScan())
+#endif
 };
 
 QT_END_NAMESPACE
