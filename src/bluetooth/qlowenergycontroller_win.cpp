@@ -325,6 +325,12 @@ static QByteArray getGattDescriptorValue(
     }
 }
 
+static QBluetoothUuid qtBluetoothUuidFromNativeLeUuid(const BTH_LE_UUID &uuid)
+{
+    return uuid.IsShortUuid ? QBluetoothUuid(uuid.Value.ShortUuid)
+                            : QBluetoothUuid(uuid.Value.LongUuid);
+}
+
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject()
     , state(QLowEnergyController::UnconnectedState)
@@ -420,12 +426,8 @@ void QLowEnergyControllerPrivate::discoverServices()
     Q_Q(QLowEnergyController);
 
     foreach (const BTH_LE_GATT_SERVICE &service, foundServices) {
-
-        const QBluetoothUuid uuid(
-                    service.ServiceUuid.IsShortUuid
-                    ? QBluetoothUuid(service.ServiceUuid.Value.ShortUuid)
-                    : QBluetoothUuid(service.ServiceUuid.Value.LongUuid));
-
+        const QBluetoothUuid uuid = qtBluetoothUuidFromNativeLeUuid(
+                    service.ServiceUuid);
         qCDebug(QT_BT_WINDOWS) << "Found uuid:" << uuid;
 
         QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
@@ -493,10 +495,8 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         const QLowEnergyHandle characteristicHandle = gattCharacteristic.AttributeHandle;
 
         QLowEnergyServicePrivate::CharData detailsData;
-        detailsData.uuid = QBluetoothUuid(
-                    gattCharacteristic.CharacteristicUuid.IsShortUuid
-                    ? QBluetoothUuid(gattCharacteristic.CharacteristicUuid.Value.ShortUuid)
-                    : QBluetoothUuid(gattCharacteristic.CharacteristicUuid.Value.LongUuid));
+        detailsData.uuid = qtBluetoothUuidFromNativeLeUuid(
+                    gattCharacteristic.CharacteristicUuid);
         detailsData.valueHandle = gattCharacteristic.CharacteristicValueHandle;
 
         QLowEnergyCharacteristic::PropertyTypes properties = QLowEnergyCharacteristic::Unknown;
@@ -552,10 +552,8 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
             const QLowEnergyHandle descriptorHandle = gattDescriptor.AttributeHandle;
 
             QLowEnergyServicePrivate::DescData data;
-            data.uuid = QBluetoothUuid(
-                        gattDescriptor.DescriptorUuid.IsShortUuid
-                        ? QBluetoothUuid(gattDescriptor.DescriptorUuid.Value.ShortUuid)
-                        : QBluetoothUuid(gattDescriptor.DescriptorUuid.Value.LongUuid));
+            data.uuid = qtBluetoothUuidFromNativeLeUuid(
+                        gattDescriptor.DescriptorUuid);
 
             data.value = getGattDescriptorValue(serviceHandle, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
                                                     &gattDescriptor), &systemErrorCode);
