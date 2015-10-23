@@ -349,6 +349,52 @@ static QBluetoothUuid qtBluetoothUuidFromNativeLeUuid(const BTH_LE_UUID &uuid)
                             : QBluetoothUuid(uuid.Value.LongUuid);
 }
 
+static BTH_LE_UUID nativeLeUuidFromQtBluetoothUuid(const QBluetoothUuid &uuid)
+{
+    BTH_LE_UUID gattUuid;
+    ::ZeroMemory(&gattUuid, sizeof(gattUuid));
+    if (uuid.minimumSize() == 2) {
+        gattUuid.IsShortUuid = TRUE;
+        gattUuid.Value.ShortUuid = uuid.data1; // other fields should be empty!
+    } else {
+        gattUuid.Value.LongUuid = uuid;
+    }
+    return gattUuid;
+}
+
+static BTH_LE_GATT_CHARACTERISTIC recoverNativeLeGattCharacteristic(
+        QLowEnergyHandle serviceHandle, QLowEnergyHandle characteristicHandle,
+        const QLowEnergyServicePrivate::CharData &characteristicData)
+{
+    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic;
+
+    gattCharacteristic.ServiceHandle = serviceHandle;
+    gattCharacteristic.AttributeHandle = characteristicHandle;
+    gattCharacteristic.CharacteristicValueHandle = characteristicData.valueHandle;
+
+    gattCharacteristic.CharacteristicUuid = nativeLeUuidFromQtBluetoothUuid(
+                characteristicData.uuid);
+
+    gattCharacteristic.HasExtendedProperties = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::ExtendedProperty);
+    gattCharacteristic.IsBroadcastable = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::Broadcasting);
+    gattCharacteristic.IsIndicatable = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::Indicate);
+    gattCharacteristic.IsNotifiable = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::Notify);
+    gattCharacteristic.IsReadable = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::Read);
+    gattCharacteristic.IsSignedWritable = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::WriteSigned);
+    gattCharacteristic.IsWritable = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::Write);
+    gattCharacteristic.IsWritableWithoutResponse = bool(characteristicData.properties
+            & QLowEnergyCharacteristic::WriteNoResponse);
+
+    return gattCharacteristic;
+}
+
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject()
     , state(QLowEnergyController::UnconnectedState)
@@ -593,10 +639,53 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
 }
 
 void QLowEnergyControllerPrivate::readCharacteristic(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-        const QLowEnergyHandle /*charHandle*/)
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
 
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!(charDetails.properties & QLowEnergyCharacteristic::Read)) {
+        // if this succeeds the device has a bug, char is advertised as
+        // non-readable. We try to be permissive and let the remote
+        // device answer to the read attempt
+        qCWarning(QT_BT_WINDOWS) << "Reading non-readable char" << charHandle;
+    }
+
+    int systemErrorCode = NO_ERROR;
+
+    const HANDLE hService = openSystemService(
+                service->uuid, QIODevice::ReadOnly, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::CharacteristicReadError);
+        return;
+    }
+
+    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
+                service->startHandle, charHandle, charDetails);
+
+    const QByteArray characteristicValue = getGattCharacteristicValue(
+            hService, &gattCharacteristic, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to get value for characteristic"
+                                 << charDetails.uuid.toString()
+                                 << "of the service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::CharacteristicReadError);
+        return;
+    }
+
+    updateValueOfCharacteristic(charHandle, characteristicValue, false);
+
+    QLowEnergyCharacteristic ch(service, charHandle);
+    emit service->characteristicRead(ch, characteristicValue);
 }
 
 void QLowEnergyControllerPrivate::writeCharacteristic(
