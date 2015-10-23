@@ -159,6 +159,24 @@ static HANDLE openSystemDevice(
     return serviceHandle;
 }
 
+static HANDLE openSystemService(
+        const QBluetoothUuid &service, QIODevice::OpenMode openMode, int *systemErrorCode)
+{
+    const QString serviceSystemPath = getServiceSystemPath(
+                service, systemErrorCode);
+
+    if (*systemErrorCode != NO_ERROR)
+        return INVALID_HANDLE_VALUE;
+
+    const HANDLE hService = openSystemDevice(
+                serviceSystemPath, openMode, systemErrorCode);
+
+    if (*systemErrorCode != NO_ERROR)
+        return INVALID_HANDLE_VALUE;
+
+    return hService;
+}
+
 static void closeSystemDevice(HANDLE deviceHandle)
 {
     if (deviceHandle && deviceHandle != INVALID_HANDLE_VALUE)
@@ -460,18 +478,8 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
 
     int systemErrorCode = NO_ERROR;
 
-    const QString serviceSystemPath = getServiceSystemPath(service, &systemErrorCode);
-
-    if (systemErrorCode != NO_ERROR) {
-        qCWarning(QT_BT_WINDOWS) << "Unable to find service" << service.toString()
-                                 << "path :" << qt_error_string(systemErrorCode);
-        servicePrivate->setError(QLowEnergyService::UnknownError);
-        servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
-        return;
-    }
-
-    const HANDLE serviceHandle = openSystemDevice
-            (serviceSystemPath, QIODevice::ReadOnly, &systemErrorCode);
+    const HANDLE hService = openSystemService(
+                service, QIODevice::ReadOnly, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service.toString()
@@ -482,10 +490,10 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
     }
 
     const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
-            enumerateGattCharacteristics(serviceHandle, NULL, &systemErrorCode);
+            enumerateGattCharacteristics(hService, NULL, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
-        closeSystemDevice(serviceHandle);
+        closeSystemDevice(hService);
         qCWarning(QT_BT_WINDOWS) << "Unable to get characteristics for service" << service.toString()
                                  << ":" << qt_error_string(systemErrorCode);
         servicePrivate->setError(QLowEnergyService::CharacteristicReadError);
@@ -521,7 +529,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
 
         detailsData.properties = properties;
         detailsData.value = getGattCharacteristicValue(
-                    serviceHandle, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
+                    hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
                         &gattCharacteristic), &systemErrorCode);
 
         if (systemErrorCode != NO_ERROR) {
@@ -534,12 +542,12 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         }
 
         const QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors = enumerateGattDescriptors(
-                    serviceHandle, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
+                    hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
                         &gattCharacteristic), &systemErrorCode);
 
         if (systemErrorCode != NO_ERROR) {
             if (systemErrorCode != ERROR_NOT_FOUND) {
-                closeSystemDevice(serviceHandle);
+                closeSystemDevice(hService);
                 qCWarning(QT_BT_WINDOWS) << "Unable to get descriptor for characteristic"
                                          << detailsData.uuid.toString()
                                          << "of the service" << service.toString()
@@ -557,11 +565,11 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
             data.uuid = qtBluetoothUuidFromNativeLeUuid(
                         gattDescriptor.DescriptorUuid);
 
-            data.value = getGattDescriptorValue(serviceHandle, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
+            data.value = getGattDescriptorValue(hService, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
                                                     &gattDescriptor), &systemErrorCode);
 
             if (systemErrorCode != NO_ERROR) {
-                closeSystemDevice(serviceHandle);
+                closeSystemDevice(hService);
                 qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
                                          << data.uuid.toString()
                                          << "for characteristic"
@@ -579,7 +587,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         servicePrivate->characteristicList.insert(characteristicHandle, detailsData);
     }
 
-    closeSystemDevice(serviceHandle);
+    closeSystemDevice(hService);
 
     servicePrivate->setState(QLowEnergyService::ServiceDiscovered);
 }
