@@ -171,7 +171,7 @@ private:
     QFutureWatcher<QBluetoothDeviceInfo> *scanWatcher;
     bool active;
     int systemErrorCode;
-    SearchHandle searchHandle;
+    SearchHandle hSearch;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

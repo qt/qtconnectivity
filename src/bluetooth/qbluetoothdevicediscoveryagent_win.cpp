@@ -122,7 +122,7 @@ static QBluetoothDeviceInfo createClassicDeviceInfo(const BLUETOOTH_DEVICE_INFO 
 }
 
 static QBluetoothDeviceInfo findFirstClassicDevice(
-        int *systemErrorCode, HBLUETOOTH_DEVICE_FIND *searchHandle)
+        int *systemErrorCode, HBLUETOOTH_DEVICE_FIND *hSearch)
 {
     BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams;
     ::ZeroMemory(&searchParams, sizeof(searchParams));
@@ -144,7 +144,7 @@ static QBluetoothDeviceInfo findFirstClassicDevice(
 
     QBluetoothDeviceInfo foundDevice;
     if (hFind) {
-        *searchHandle = hFind;
+        *hSearch = hFind;
         *systemErrorCode = NO_ERROR;
         foundDevice = createClassicDeviceInfo(deviceInfo);
     } else {
@@ -155,14 +155,14 @@ static QBluetoothDeviceInfo findFirstClassicDevice(
 }
 
 static QBluetoothDeviceInfo findNextClassicDevice(
-        int *systemErrorCode, HBLUETOOTH_DEVICE_FIND searchHandle)
+        int *systemErrorCode, HBLUETOOTH_DEVICE_FIND hSearch)
 {
     BLUETOOTH_DEVICE_INFO deviceInfo;
     ::ZeroMemory(&deviceInfo, sizeof(deviceInfo));
     deviceInfo.dwSize = sizeof(deviceInfo);
 
     QBluetoothDeviceInfo foundDevice;
-    if (!::BluetoothFindNextDevice(searchHandle, &deviceInfo)) {
+    if (!::BluetoothFindNextDevice(hSearch, &deviceInfo)) {
         *systemErrorCode = ::GetLastError();
     } else {
         *systemErrorCode = NO_ERROR;
@@ -172,11 +172,11 @@ static QBluetoothDeviceInfo findNextClassicDevice(
     return foundDevice;
 }
 
-static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND *searchHandle)
+static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND *hSearch)
 {
-    if (searchHandle && *searchHandle) {
-        ::BluetoothFindDeviceClose(*searchHandle);
-        *searchHandle = 0;
+    if (hSearch && *hSearch) {
+        ::BluetoothFindDeviceClose(*hSearch);
+        *hSearch = 0;
     }
 }
 
@@ -301,7 +301,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     , scanWatcher(Q_NULLPTR)
     , active(false)
     , systemErrorCode(NO_ERROR)
-    , searchHandle(0)
+    , hSearch(0)
     , q_ptr(parent)
 {
     scanWatcher = new QFutureWatcher<QBluetoothDeviceInfo>(this);
@@ -368,7 +368,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
 
     // Start scan for first classic device.
     const QFuture<QBluetoothDeviceInfo> future = QtConcurrent::run(
-                findFirstClassicDevice, &systemErrorCode, &searchHandle);
+                findFirstClassicDevice, &systemErrorCode, &hSearch);
     scanWatcher->setFuture(future);
 }
 
@@ -386,17 +386,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::taskFinished()
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
     if (pendingCancel && !pendingStart) {
-        closeClassicSearch(&searchHandle);
+        closeClassicSearch(&hSearch);
         active = false;
         pendingCancel = false;
         emit q->canceled();
     } else if (pendingStart) {
-        closeClassicSearch(&searchHandle);
+        closeClassicSearch(&hSearch);
         pendingStart = pendingCancel = false;
         start();
     } else {
         if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
-                closeClassicSearch(&searchHandle);
+                closeClassicSearch(&hSearch);
                 // Enumerate LE devices.
                 const QList<QBluetoothDeviceInfo> foundDevices =
                         enumerateLeDevices(&systemErrorCode);
@@ -418,10 +418,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::taskFinished()
             processDiscoveredDevice(scanWatcher->result());
             // Start scan for next classic device.
             const QFuture<QBluetoothDeviceInfo> future = QtConcurrent::run(
-                        findNextClassicDevice, &systemErrorCode, searchHandle);
+                        findNextClassicDevice, &systemErrorCode, hSearch);
             scanWatcher->setFuture(future);
         } else {
-            closeClassicSearch(&searchHandle);
+            closeClassicSearch(&hSearch);
             pendingStart = pendingCancel = false;
             active = false;
             lastError = (systemErrorCode == ERROR_INVALID_HANDLE) ?

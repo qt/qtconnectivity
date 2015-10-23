@@ -145,7 +145,7 @@ static HANDLE openSystemDevice(
         shareMode |= FILE_SHARE_WRITE;
     }
 
-    const HANDLE serviceHandle = ::CreateFile(
+    const HANDLE hDevice = ::CreateFile(
                 reinterpret_cast<const wchar_t *>(systemPath.utf16()),
                 desiredAccess,
                 shareMode,
@@ -154,9 +154,9 @@ static HANDLE openSystemDevice(
                 0,
                 NULL);
 
-    *systemErrorCode = (INVALID_HANDLE_VALUE == serviceHandle)
+    *systemErrorCode = (INVALID_HANDLE_VALUE == hDevice)
             ? ::GetLastError() : NO_ERROR;
-    return serviceHandle;
+    return hDevice;
 }
 
 static HANDLE openSystemService(
@@ -177,14 +177,14 @@ static HANDLE openSystemService(
     return hService;
 }
 
-static void closeSystemDevice(HANDLE deviceHandle)
+static void closeSystemDevice(HANDLE hDevice)
 {
-    if (deviceHandle && deviceHandle != INVALID_HANDLE_VALUE)
-        ::CloseHandle(deviceHandle);
+    if (hDevice && hDevice != INVALID_HANDLE_VALUE)
+        ::CloseHandle(hDevice);
 }
 
 static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
-        HANDLE deviceHandle, int *systemErrorCode)
+        HANDLE hDevice, int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
@@ -195,7 +195,7 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
     USHORT servicesCount = 0;
     forever {
         const HRESULT hr = ::BluetoothGATTGetServices(
-                    deviceHandle,
+                    hDevice,
                     servicesCount,
                     foundServices.isEmpty() ? NULL : &foundServices[0],
                     &servicesCount,
@@ -214,7 +214,7 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
 }
 
 static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
-        HANDLE serviceHandle, PBTH_LE_GATT_SERVICE gattService, int *systemErrorCode)
+        HANDLE hService, PBTH_LE_GATT_SERVICE gattService, int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
@@ -225,7 +225,7 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
     USHORT characteristicsCount = 0;
     forever {
         const HRESULT hr = ::BluetoothGATTGetCharacteristics(
-                    serviceHandle,
+                    hService,
                     gattService,
                     characteristicsCount,
                     foundCharacteristics.isEmpty() ? NULL : &foundCharacteristics[0],
@@ -245,7 +245,7 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
 }
 
 static QByteArray getGattCharacteristicValue(
-        HANDLE serviceHandle, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
+        HANDLE hService, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
@@ -256,7 +256,7 @@ static QByteArray getGattCharacteristicValue(
     USHORT valueBufferSize = 0;
     forever {
         const HRESULT hr = ::BluetoothGATTGetCharacteristicValue(
-                    serviceHandle,
+                    hService,
                     gattCharacteristic,
                     valueBufferSize,
                     valueBuffer.isEmpty() ? NULL : reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data()),
@@ -279,7 +279,7 @@ static QByteArray getGattCharacteristicValue(
 }
 
 static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
-        HANDLE serviceHandle, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
+        HANDLE hService, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
@@ -290,7 +290,7 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
     USHORT descriptorsCount = 0;
     forever {
         const HRESULT hr = ::BluetoothGATTGetDescriptors(
-                    serviceHandle,
+                    hService,
                     gattCharacteristic,
                     descriptorsCount,
                     foundDescriptors.isEmpty() ? NULL : &foundDescriptors[0],
@@ -310,7 +310,7 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
 }
 
 static QByteArray getGattDescriptorValue(
-        HANDLE serviceHandle, PBTH_LE_GATT_DESCRIPTOR gattDescriptor, int *systemErrorCode)
+        HANDLE hService, PBTH_LE_GATT_DESCRIPTOR gattDescriptor, int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
@@ -321,7 +321,7 @@ static QByteArray getGattDescriptorValue(
     USHORT valueBufferSize = 0;
     forever {
         const HRESULT hr = ::BluetoothGATTGetDescriptorValue(
-                    serviceHandle,
+                    hService,
                     gattDescriptor,
                     valueBufferSize,
                     valueBuffer.isEmpty() ? NULL : reinterpret_cast<PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data()),
@@ -417,7 +417,7 @@ void QLowEnergyControllerPrivate::discoverServices()
 {
     int systemErrorCode = NO_ERROR;
 
-    const HANDLE deviceHandle = openSystemDevice(
+    const HANDLE hDevice = openSystemDevice(
                 deviceSystemPath, QIODevice::ReadOnly, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
@@ -428,9 +428,9 @@ void QLowEnergyControllerPrivate::discoverServices()
     }
 
     const QVector<BTH_LE_GATT_SERVICE> foundServices =
-            enumeratePrimaryGattServices(deviceHandle, &systemErrorCode);
+            enumeratePrimaryGattServices(hDevice, &systemErrorCode);
 
-    closeSystemDevice(deviceHandle);
+    closeSystemDevice(hDevice);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << qt_error_string(systemErrorCode);
