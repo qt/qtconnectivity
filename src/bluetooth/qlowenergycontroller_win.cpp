@@ -467,6 +467,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
                                  << "path :" << qt_error_string(systemErrorCode);
         servicePrivate->setError(QLowEnergyService::UnknownError);
         servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+        return;
     }
 
     const HANDLE serviceHandle = openSystemDevice
@@ -477,6 +478,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
                                  << ":" << qt_error_string(systemErrorCode);
         servicePrivate->setError(QLowEnergyService::UnknownError);
         servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+        return;
     }
 
     const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
