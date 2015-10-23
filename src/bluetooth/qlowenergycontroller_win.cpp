@@ -278,6 +278,35 @@ static QByteArray getGattCharacteristicValue(
     }
 }
 
+static void setGattCharacteristicValue(
+        HANDLE hService, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic,
+        const QByteArray &value, DWORD flags, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return;
+    }
+
+    QByteArray valueBuffer;
+    QDataStream out(&valueBuffer, QIODevice::WriteOnly);
+    ULONG dataSize = value.size();
+    out.writeRawData(reinterpret_cast<const char *>(&dataSize), sizeof(dataSize));
+    out.writeRawData(value.constData(), value.size());
+
+    BTH_LE_GATT_RELIABLE_WRITE_CONTEXT reliableWriteContext = 0;
+
+    if (::BluetoothGATTSetCharacteristicValue(
+                hService,
+                gattCharacteristic,
+                reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data()),
+                reliableWriteContext,
+                flags) != S_OK) {
+        *systemErrorCode = ::GetLastError();
+    } else {
+        *systemErrorCode = NO_ERROR;
+    }
+}
+
 static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
         HANDLE hService, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
 {
@@ -689,12 +718,58 @@ void QLowEnergyControllerPrivate::readCharacteristic(
 }
 
 void QLowEnergyControllerPrivate::writeCharacteristic(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-        const QLowEnergyHandle /*charHandle*/,
-        const QByteArray &/*newValue*/,
-        bool /*writeWithResponse*/)
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QByteArray &newValue,
+        bool writeWithResponse)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
 
+    int systemErrorCode = NO_ERROR;
+
+    const HANDLE hService = openSystemService(
+                service->uuid, QIODevice::ReadWrite, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+        return;
+    }
+
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+
+    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
+                service->startHandle, charHandle, charDetails);
+
+    const DWORD flags = writeWithResponse
+            ? BLUETOOTH_GATT_FLAG_NONE
+            : BLUETOOTH_GATT_FLAG_WRITE_WITHOUT_RESPONSE;
+
+    // TODO: If a device is not connected, this function will block
+    // for some time. So, need to re-implement of writeCharacteristic()
+    // with use QFutureWatcher.
+    setGattCharacteristicValue(hService, &gattCharacteristic,
+                               newValue, flags, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to set value for characteristic"
+                                 << charDetails.uuid.toString()
+                                 << "of the service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+        return;
+    }
+
+    updateValueOfCharacteristic(charHandle, newValue, false);
+
+    if (writeWithResponse) {
+        QLowEnergyCharacteristic ch(service, charHandle);
+        emit service->characteristicWritten(ch, newValue);
+    }
 }
 
 void QLowEnergyControllerPrivate::readDescriptor(
