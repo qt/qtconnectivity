@@ -37,6 +37,9 @@
 #include <QtBluetooth/qlowenergyadvertisingdata.h>
 #include <QtBluetooth/qlowenergyadvertisingparameters.h>
 #include <QtBluetooth/qlowenergycontroller.h>
+#include <QtBluetooth/qlowenergycharacteristicdata.h>
+#include <QtBluetooth/qlowenergydescriptordata.h>
+#include <QtBluetooth/qlowenergyservicedata.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/QtTest>
@@ -53,6 +56,7 @@ private slots:
     void advertisingData();
     void advertisedData();
     void controllerType();
+    void serviceData();
 
 private:
     QBluetoothAddress m_serverAddress;
@@ -162,6 +166,94 @@ void TestQLowEnergyControllerGattServer::controllerType()
     const QScopedPointer<QLowEnergyController> controller(QLowEnergyController::createPeripheral());
     QVERIFY(!controller.isNull());
     QCOMPARE(controller->role(), QLowEnergyController::PeripheralRole);
+}
+
+void TestQLowEnergyControllerGattServer::serviceData()
+{
+    QLowEnergyDescriptorData descData;
+    QVERIFY(!descData.isValid());
+
+    descData.setUuid(QBluetoothUuid::ValidRange);
+    QCOMPARE(descData.uuid(), QBluetoothUuid(QBluetoothUuid::ValidRange));
+    QVERIFY(descData.isValid());
+    QVERIFY(descData != QLowEnergyDescriptorData());
+
+    descData.setValue("xyz");
+    QCOMPARE(descData.value().constData(), "xyz");
+
+    QLowEnergyDescriptorData descData2(QBluetoothUuid::ReportReference, "abc");
+    QVERIFY(descData2 != QLowEnergyDescriptorData());
+    QVERIFY(descData2.isValid());
+    QCOMPARE(descData2.uuid(), QBluetoothUuid(QBluetoothUuid::ReportReference));
+    QCOMPARE(descData2.value().constData(), "abc");
+
+    QLowEnergyCharacteristicData charData;
+    QVERIFY(!charData.isValid());
+
+    charData.setUuid(QBluetoothUuid::BatteryLevel);
+    QVERIFY(charData != QLowEnergyCharacteristicData());
+    QCOMPARE(charData.uuid(), QBluetoothUuid(QBluetoothUuid::BatteryLevel));
+    QVERIFY(charData.isValid());
+
+    charData.setValue("value");
+    QCOMPARE(charData.value().constData(), "value");
+
+    const QLowEnergyCharacteristic::PropertyTypes props
+            = QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::WriteSigned;
+    charData.setProperties(props);
+    QCOMPARE(charData.properties(),  props);
+
+    charData.setDescriptors(QList<QLowEnergyDescriptorData>() << descData << descData2);
+    QLowEnergyDescriptorData descData3(QBluetoothUuid::ExternalReportReference, "someval");
+    charData.addDescriptor(descData3);
+    charData.addDescriptor(QLowEnergyDescriptorData()); // Invalid.
+    QCOMPARE(charData.descriptors(),
+             QList<QLowEnergyDescriptorData>() << descData << descData2 << descData3);
+
+    QLowEnergyServiceData secondaryData;
+    QVERIFY(!secondaryData.isValid());
+
+    secondaryData.setUuid(QBluetoothUuid::SerialPort);
+    QCOMPARE(secondaryData.uuid(), QBluetoothUuid(QBluetoothUuid::SerialPort));
+    QVERIFY(secondaryData.isValid());
+    QVERIFY(secondaryData != QLowEnergyServiceData());
+
+    secondaryData.setType(QLowEnergyServiceData::ServiceTypeSecondary);
+    QCOMPARE(secondaryData.type(), QLowEnergyServiceData::ServiceTypeSecondary);
+
+    secondaryData.setCharacteristics(QList<QLowEnergyCharacteristicData>()
+                                     << charData << QLowEnergyCharacteristicData());
+    QCOMPARE(secondaryData.characteristics(), QList<QLowEnergyCharacteristicData>() << charData);
+
+#ifdef Q_OS_DARWIN
+    QSKIP("GATT server functionality not implemented for Apple platforms");
+#endif
+    const QScopedPointer<QLowEnergyController> controller(QLowEnergyController::createPeripheral());
+    QVERIFY(!controller->addService(QLowEnergyServiceData()));
+    const QScopedPointer<QLowEnergyService> secondaryService(controller->addService(secondaryData));
+    QVERIFY(!secondaryService.isNull());
+    QCOMPARE(secondaryService->serviceUuid(), secondaryData.uuid());
+    const QList<QLowEnergyCharacteristic> characteristics = secondaryService->characteristics();
+    QCOMPARE(characteristics.count(), 1);
+    QCOMPARE(characteristics.first().uuid(), charData.uuid());
+    const QList<QLowEnergyDescriptor> descriptors = characteristics.first().descriptors();
+    QCOMPARE(descriptors.count(), 3);
+    const auto inUuids = QSet<QBluetoothUuid>() << descData.uuid() << descData2.uuid()
+                                                << descData3.uuid();
+    QSet<QBluetoothUuid> outUuids;
+    foreach (const QLowEnergyDescriptor &desc, descriptors)
+        outUuids << desc.uuid();
+    QCOMPARE(inUuids, outUuids);
+
+    QLowEnergyServiceData primaryData;
+    primaryData.setUuid(QBluetoothUuid::Headset);
+    primaryData.addIncludedService(secondaryService.data());
+    const QScopedPointer<QLowEnergyService> primaryService(controller->addService(primaryData));
+    QVERIFY(!primaryService.isNull());
+    QCOMPARE(primaryService->characteristics().count(), 0);
+    const QList<QBluetoothUuid> includedServices = primaryService->includedServices();
+    QCOMPARE(includedServices.count(), 1);
+    QCOMPARE(includedServices.first(), secondaryService->serviceUuid());
 }
 
 QTEST_MAIN(TestQLowEnergyControllerGattServer)

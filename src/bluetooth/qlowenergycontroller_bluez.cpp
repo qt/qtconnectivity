@@ -40,7 +40,10 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/QLowEnergyCharacteristicData>
+#include <QtBluetooth/QLowEnergyDescriptorData>
 #include <QtBluetooth/QLowEnergyService>
+#include <QtBluetooth/QLowEnergyServiceData>
 
 #include <errno.h>
 #include <sys/types.h>
@@ -52,10 +55,10 @@
 #define ATT_DEFAULT_LE_MTU 23
 #define ATT_MAX_LE_MTU 0x200
 
-#define GATT_PRIMARY_SERVICE    0x2800
-#define GATT_SECONDARY_SERVICE  0x2801
-#define GATT_INCLUDED_SERVICE   0x2802
-#define GATT_CHARACTERISTIC     0x2803
+#define GATT_PRIMARY_SERVICE    quint16(0x2800)
+#define GATT_SECONDARY_SERVICE  quint16(0x2801)
+#define GATT_INCLUDED_SERVICE   quint16(0x2802)
+#define GATT_CHARACTERISTIC     quint16(0x2803)
 
 // GATT commands
 #define ATT_OP_ERROR_RESPONSE           0x1
@@ -199,10 +202,38 @@ static void dumpErrorInformation(const QByteArray &response)
              << "handle:" << handle;
 }
 
+static int getUuidSize(const QBluetoothUuid &uuid)
+{
+    return uuid.minimumSize() == 2 ? 2 : 16;
+}
+
+template<typename T> static void putDataAndIncrement(const T &src, char *&dst)
+{
+    putBtData(src, dst);
+    dst += sizeof(T);
+}
+template<> void putDataAndIncrement(const QBluetoothUuid &uuid, char *&dst)
+{
+    const int uuidSize = getUuidSize(uuid);
+    if (uuidSize == 2)
+        putBtData(uuid.toUInt16(), dst);
+    else
+        putBtData(uuid.toUInt128(), dst);
+    dst += uuidSize;
+}
+template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
+{
+    using namespace std;
+    memcpy(dst, value.constData(), value.count());
+    dst += value.count();
+}
+
+
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
       state(QLowEnergyController::UnconnectedState),
       error(QLowEnergyController::NoError),
+      lastLocalHandle(0),
       l2cpSocket(0), requestPending(false),
       mtuSize(ATT_DEFAULT_LE_MTU),
       securityLevelValue(-1),
@@ -1888,6 +1919,83 @@ void QLowEnergyControllerPrivate::closeServerSocket()
     close(serverSocketNotifier->socket());
     serverSocketNotifier->deleteLater();
     serverSocketNotifier = nullptr;
+}
+
+static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
+{
+    QByteArray ba;
+    if (uuid.minimumSize() == 2) {
+        ba.resize(2);
+        putBtData(uuid.toUInt16(), ba.data());
+    } else {
+        ba.resize(16);
+        putBtData(uuid.toUInt128(), ba.data());
+    }
+    return ba;
+}
+
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &service,
+                                                            QLowEnergyHandle startHandle)
+{
+    // Construct generic attribute data for the service with handles as keys.
+    // Otherwise a number of request handling functions will be awkward to write
+    // as well as computationally inefficient.
+
+    localAttributes.resize(lastLocalHandle + 1);
+    Attribute serviceAttribute;
+    serviceAttribute.handle = startHandle;
+    serviceAttribute.type = QBluetoothUuid(static_cast<quint16>(service.type()));
+    serviceAttribute.properties = QLowEnergyCharacteristic::Read;
+    serviceAttribute.value = uuidToByteArray(service.uuid());
+    QLowEnergyHandle currentHandle = startHandle;
+    foreach (const QLowEnergyService * const service, service.includedServices()) {
+        Attribute attribute;
+        attribute.handle = ++currentHandle;
+        attribute.type = QBluetoothUuid(GATT_INCLUDED_SERVICE);
+        attribute.properties = QLowEnergyCharacteristic::Read;
+        const bool includeUuidInValue = service->serviceUuid().minimumSize() == 2;
+        attribute.value.resize((2 + includeUuidInValue) * sizeof(QLowEnergyHandle));
+        char *valueData = attribute.value.data();
+        putDataAndIncrement(service->d_ptr->startHandle, valueData);
+        putDataAndIncrement(service->d_ptr->endHandle, valueData);
+        if (includeUuidInValue)
+            putDataAndIncrement(service->serviceUuid(), valueData);
+        localAttributes[attribute.handle] = attribute;
+    }
+    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+        Attribute attribute;
+
+        // Characteristic declaration;
+        attribute.handle = ++currentHandle;
+        attribute.groupEndHandle = attribute.handle + 1 + cd.descriptors().count();
+        attribute.type = QBluetoothUuid(GATT_CHARACTERISTIC);
+        attribute.properties = QLowEnergyCharacteristic::Read;
+        attribute.value.resize(1 + sizeof(QLowEnergyHandle) + cd.uuid().minimumSize());
+        char *valueData = attribute.value.data();
+        putDataAndIncrement(static_cast<quint8>(cd.properties()), valueData);
+        putDataAndIncrement(QLowEnergyHandle(currentHandle + 1), valueData);
+        putDataAndIncrement(cd.uuid(), valueData);
+        localAttributes[attribute.handle] = attribute;
+
+        // Characteristic value declaration.
+        attribute.handle = ++currentHandle;
+        attribute.groupEndHandle = attribute.handle;
+        attribute.type = cd.uuid();
+        attribute.properties = cd.properties();
+        attribute.value = cd.value();
+        localAttributes[attribute.handle] = attribute;
+
+        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+            attribute.handle = ++currentHandle;
+            attribute.groupEndHandle = attribute.handle;
+            attribute.type = dd.uuid();
+            attribute.properties = QLowEnergyCharacteristic::Read; // TODO: The different descriptor types have different read/write capabilities.
+            attribute.value = dd.value();
+            localAttributes[attribute.handle] = attribute;
+        }
+    }
+    serviceAttribute.groupEndHandle = currentHandle;
+    localAttributes[serviceAttribute.handle] = serviceAttribute;
 }
 
 QT_END_NAMESPACE

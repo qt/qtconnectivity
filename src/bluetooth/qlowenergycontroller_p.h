@@ -66,6 +66,7 @@ QT_END_NAMESPACE
 #include <qglobal.h>
 #include <QtCore/QQueue>
 #include <QtBluetooth/qbluetooth.h>
+#include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"
 #include "qlowenergyserviceprivate_p.h"
 
@@ -76,7 +77,11 @@ QT_END_NAMESPACE
 #include "android/lowenergynotificationhub_p.h"
 #endif
 
+#include <functional>
+
 QT_BEGIN_NAMESPACE
+
+class QLowEnergyServiceData;
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
@@ -146,6 +151,8 @@ public:
                          const QLowEnergyHandle descriptorHandle,
                          const QByteArray &newValue);
 
+    void addToGenericAttributeList(const QLowEnergyServiceData &service,
+                                   QLowEnergyHandle startHandle);
 
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
@@ -159,6 +166,21 @@ public:
 
     // list of all found service uuids
     ServiceDataMap serviceList;
+
+    QLowEnergyHandle lastLocalHandle;
+    ServiceDataMap localServices;
+
+    struct Attribute {
+        Attribute() : handle(0) {}
+
+        QLowEnergyHandle handle;
+        QLowEnergyHandle groupEndHandle;
+        QLowEnergyCharacteristic::PropertyTypes properties;
+        QBluetoothUuid type;
+        QByteArray value;
+        // TODO: authentication/authorization requirements
+    };
+    QVector<Attribute> localAttributes;
 
     QLowEnergyController::RemoteAddressType addressType;
 
@@ -250,6 +272,8 @@ private:
     QLowEnergyController *q_ptr;
 
 };
+
+Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivate::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 

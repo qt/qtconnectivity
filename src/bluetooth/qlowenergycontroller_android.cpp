@@ -595,4 +595,11 @@ void QLowEnergyControllerPrivate::stopAdvertising()
     qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
 }
 
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &service,
+                                                            QLowEnergyHandle startHandle)
+{
+    Q_UNUSED(service);
+    Q_UNUSED(startHandle);
+}
+
 QT_END_NAMESPACE

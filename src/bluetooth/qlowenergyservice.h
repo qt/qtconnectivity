@@ -126,6 +126,7 @@ private:
 
     // QLowEnergyController is the factory for this class
     friend class QLowEnergyController;
+    friend class QLowEnergyControllerPrivate;
     QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                       QObject *parent = 0);
 };

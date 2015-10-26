@@ -34,6 +34,10 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontroller_p.h"
 
+#include "qlowenergycharacteristicdata.h"
+#include "qlowenergydescriptordata.h"
+#include "qlowenergyservicedata.h"
+
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtCore/QLoggingCategory>
 
@@ -98,13 +102,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     Such an object acts as a peripheral device itself, enabling features such as advertising
     services and allowing clients to get notified about changes to characteristic values.
 
-    \omit
     After having created a controller object in the peripheral role, the first step is to
-    populate the set of GATT services offered to client devices [not yet implemented].
+    populate the set of GATT services offered to client devices via calls to \l addService().
     Afterwards, one would call \l startAdvertising() to let the device broadcast some data
     and, depending on the type of advertising being done, also listen for incoming connections
     from GATT clients.
-    \endomit
 
     \sa QLowEnergyService, QLowEnergyCharacteristic, QLowEnergyDescriptor
     \sa QLowEnergyAdvertisingParameters, QLowEnergyAdvertisingData
@@ -809,6 +811,72 @@ void QLowEnergyController::stopAdvertising()
         return;
     }
     d->stopAdvertising();
+}
+
+/*!
+  Constructs and returns a \l QLowEnergyService object with \a parent from \a service.
+  The controller must be in the \l PeripheralRole and in the \l UnconnectedState. The \a service
+  object must be valid.
+ */
+QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
+                                                    QObject *parent)
+{
+    if (role() != PeripheralRole) {
+        qCWarning(QT_BT) << "Services can only be added in the peripheral role";
+        return nullptr;
+    }
+    if (state() != UnconnectedState) {
+        qCWarning(QT_BT) << "Services can only be added in unconnected state";
+        return nullptr;
+    }
+    if (!service.isValid()) {
+        qCWarning(QT_BT) << "Not adding invalid service";
+        return nullptr;
+    }
+
+    // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).
+    // Since this is not mandatory, we ignore it here and let the caller take responsibility
+    // for it.
+
+    const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
+    servicePrivate->uuid = service.uuid();
+    servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
+            ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
+    foreach (QLowEnergyService * const includedService, service.includedServices()) {
+        servicePrivate->includedServices << includedService->serviceUuid();
+        includedService->d_ptr->type |= QLowEnergyService::IncludedService;
+    }
+
+    // Spec v4.2, Vol 3, Part G, Section 3.
+    const QLowEnergyHandle oldLastHandle = d_ptr->lastLocalHandle;
+    servicePrivate->startHandle = ++d_ptr->lastLocalHandle; // Service declaration.
+    d_ptr->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
+    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+        const QLowEnergyHandle declHandle = ++d_ptr->lastLocalHandle;
+        QLowEnergyServicePrivate::CharData charData;
+        charData.valueHandle = ++d_ptr->lastLocalHandle;
+        charData.uuid = cd.uuid();
+        charData.properties = cd.properties();
+        charData.value = cd.value();
+        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+            QLowEnergyServicePrivate::DescData descData;
+            descData.uuid = dd.uuid();
+            descData.value = dd.value();
+            charData.descriptorList.insert(++d_ptr->lastLocalHandle, descData);
+        }
+        servicePrivate->characteristicList.insert(declHandle, charData);
+    }
+    servicePrivate->endHandle = d_ptr->lastLocalHandle;
+    const bool handleOverflow = d_ptr->lastLocalHandle <= oldLastHandle;
+    if (handleOverflow) {
+        qCWarning(QT_BT) << "Not enough attribute handles left to create this service";
+        d_ptr->lastLocalHandle = oldLastHandle;
+        return nullptr;
+    }
+
+    d_ptr->localServices.insert(servicePrivate->uuid, servicePrivate);
+    d_ptr->addToGenericAttributeList(service, servicePrivate->startHandle);
+    return new QLowEnergyService(servicePrivate, parent);
 }
 
 /*!

@@ -1038,4 +1038,13 @@ void QLowEnergyController::stopAdvertising()
     qCWarning(QT_BT_OSX) << "LE advertising not implemented for OS X";
 }
 
+QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
+                                                    QObject *parent)
+{
+    Q_UNUSED(service);
+    Q_UNUSED(parent);
+    qCWarning(QT_BT_OSX) << "GATT server functionality not implemented for OS X";
+    return nullptr;
+}
+
 QT_END_NAMESPACE

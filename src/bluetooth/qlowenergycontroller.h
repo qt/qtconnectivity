@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
 
 class QLowEnergyAdvertisingParameters;
 class QLowEnergyControllerPrivate;
+class QLowEnergyServiceData;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyController : public QObject
 {
@@ -119,6 +120,8 @@ public:
                           const QLowEnergyAdvertisingData &advertisingData,
                           const QLowEnergyAdvertisingData &scanResponseData = QLowEnergyAdvertisingData());
     void stopAdvertising();
+
+    QLowEnergyService *addService(const QLowEnergyServiceData &service, QObject *parent = 0);
 
     Error error() const;
     QString errorString() const;

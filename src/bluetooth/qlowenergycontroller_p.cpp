@@ -38,7 +38,8 @@ QT_BEGIN_NAMESPACE
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
       state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError)
+      error(QLowEnergyController::NoError),
+      lastLocalHandle(0)
 {
 }
 
@@ -111,6 +112,11 @@ void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingPa
 }
 
 void QLowEnergyControllerPrivate::stopAdvertising()
+{
+}
+
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &/* service */,
+                                                            QLowEnergyHandle /* startHandle */)
 {
 }
 

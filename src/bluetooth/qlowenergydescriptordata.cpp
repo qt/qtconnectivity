@@ -1,0 +1,149 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing/
+**
+** This file is part of the QtBluetooth module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL21$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see http://www.qt.io/terms-conditions. For further
+** information use the contact form at http://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** As a special exception, The Qt Company gives you certain additional
+** rights. These rights are described in The Qt Company LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qlowenergydescriptordata.h"
+
+#include <QtCore/qbytearray.h>
+
+QT_BEGIN_NAMESPACE
+
+struct QLowEnergyDescriptorDataPrivate : public QSharedData
+{
+    QBluetoothUuid uuid;
+    QByteArray value;
+};
+
+/*!
+    \since 5.7
+    \class QLowEnergyDescriptorData
+    \brief The QLowEnergyDescriptorData class is used to create GATT service data.
+    \inmodule QtBluetooth
+    \ingroup shared
+
+    An object of this class provides a descriptor to be added to a
+    \l QLowEnergyCharacteristicData object via \l QLowEnergyCharacteristicData::addDescriptor().
+
+    \sa QLowEnergyCharacteristicData
+    \sa QLowEnergyServiceData
+    \sa QLowEnergyController::addService
+*/
+
+/*! Creates a new invalid object of this class. */
+QLowEnergyDescriptorData::QLowEnergyDescriptorData() : d(new QLowEnergyDescriptorDataPrivate)
+{
+}
+
+/*!
+  Creates a new object of this class with UUID and value being provided by \a uuid and \a value,
+  respectively.
+ */
+QLowEnergyDescriptorData::QLowEnergyDescriptorData(const QBluetoothUuid &uuid,
+                                                   const QByteArray &value)
+    : d(new QLowEnergyDescriptorDataPrivate)
+{
+    setUuid(uuid);
+    setValue(value);
+}
+
+/*! Constructs a new object of this class that is a copy of \a other. */
+QLowEnergyDescriptorData::QLowEnergyDescriptorData(const QLowEnergyDescriptorData &other)
+    : d(other.d)
+{
+}
+
+/*! Destroys this object. */
+QLowEnergyDescriptorData::~QLowEnergyDescriptorData()
+{
+}
+
+/*! Makes this object a copy of \a other and returns the new value of this object. */
+QLowEnergyDescriptorData &QLowEnergyDescriptorData::operator=(const QLowEnergyDescriptorData &other)
+{
+    d = other.d;
+    return *this;
+}
+
+/*! Returns the value of this descriptor. */
+QByteArray QLowEnergyDescriptorData::value() const
+{
+    return d->value;
+}
+
+/*!
+  Sets the value of this descriptor. It will be sent to a peer device exactly the way it is
+  provided here, so callers need to take care of things such as endianness.
+ */
+void QLowEnergyDescriptorData::setValue(const QByteArray &value)
+{
+    d->value = value;
+}
+
+/*! Returns the UUID of this descriptor. */
+QBluetoothUuid QLowEnergyDescriptorData::uuid() const
+{
+    return d->uuid;
+}
+
+/*! Sets the UUID of this descriptor to \a uuid. */
+void QLowEnergyDescriptorData::setUuid(const QBluetoothUuid &uuid)
+{
+    d->uuid = uuid;
+}
+
+/*! Returns true if and only if this object has a non-null UUID. */
+bool QLowEnergyDescriptorData::isValid() const
+{
+    return !uuid().isNull();
+}
+
+/*!
+   \fn void QLowEnergyDescriptorData::swap(QLowEnergyDescriptorData &other)
+    Swaps this object with \a other.
+ */
+
+/*!
+   Returns \c true if \a d1 and \a d2 are equal with respect to their public state,
+   otherwise returns \c false.
+ */
+bool operator==(const QLowEnergyDescriptorData &d1, const QLowEnergyDescriptorData &d2)
+{
+    return d1.d == d2.d || (d1.uuid() == d2.uuid() && d1.value() == d2.value());
+}
+
+/*!
+   \fn bool operator!=(const QLowEnergyDescriptorData &d1, const QLowEnergyDescriptorData &d2)
+   Returns \c true if \a d1 and \a d2 are not equal with respect to their public state,
+   otherwise returns \c false.
+ */
+
+QT_END_NAMESPACE
