@@ -38,6 +38,8 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QIODevice> // for open modes
 
+#include <algorithm> // for std::max
+
 #include <windows/qwinlowenergybluetooth_p.h>
 
 #include <setupapi.h>
@@ -564,6 +566,9 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         return;
     }
 
+    // We assume that the service does not have any characteristics with descriptors.
+    servicePrivate->endHandle = servicePrivate->startHandle;
+
     const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
             enumerateGattCharacteristics(hService, NULL, &systemErrorCode);
 
@@ -616,6 +621,12 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
                                      << ":" << qt_error_string(systemErrorCode);
         }
 
+        // We assume that the characteristic has no any descriptors. So, the
+        // biggest characteristic + 1 will indicate an end handle of service.
+        servicePrivate->endHandle = std::max(
+                    servicePrivate->endHandle,
+                    QLowEnergyHandle(gattCharacteristic.AttributeHandle + 1));
+
         const QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors = enumerateGattDescriptors(
                     hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
                         &gattCharacteristic), &systemErrorCode);
@@ -655,6 +666,11 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
                 servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
                 return;
             }
+
+            // Biggest descriptor will contain an end handle of service.
+            servicePrivate->endHandle = std::max(
+                        servicePrivate->endHandle,
+                        QLowEnergyHandle(gattDescriptor.AttributeHandle));
 
             detailsData.descriptorList.insert(descriptorHandle, data);
         }
