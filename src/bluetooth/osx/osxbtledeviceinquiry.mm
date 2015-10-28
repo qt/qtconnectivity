@@ -110,6 +110,7 @@ using namespace QT_NAMESPACE;
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate, CBPeripheralDelegate>
 // "Timeout" callback to stop a scan.
 - (void)stopScan;
+- (void)handlePoweredOffAfterDelay;
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
@@ -169,6 +170,27 @@ using namespace QT_NAMESPACE;
     delegate->LEdeviceInquiryFinished();
 }
 
+- (void)handlePoweredOffAfterDelay
+{
+    // If we are here, this means:
+    // we received 'PoweredOff' while pendingStart == true
+    // and no 'PoweredOn' after this.
+
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(pendingStart, Q_FUNC_INFO, "invalid state");
+
+    pendingStart = false;
+    if (cancelled) {
+        // Timeout happened before
+        // the second status update, but after 'stop'.
+        delegate->LEdeviceInquiryFinished();
+    } else {
+        // Timeout and not 'stop' between 'start'
+        // and 'DidUpdateStatus':
+        delegate->LEnotSupported();
+    }
+}
+
 - (bool)start
 {
     Q_ASSERT_X(![self isActive], Q_FUNC_INFO, "LE device scan is already active");
@@ -204,6 +226,17 @@ using namespace QT_NAMESPACE;
 {
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
+    const CBCentralManagerState state = central.state;
+
+    if (pendingStart && (state == CBCentralManagerStatePoweredOn
+                         || state == CBCentralManagerStateUnsupported
+                         || state == CBCentralManagerStateUnauthorized
+                         || state == CBCentralManagerStatePoweredOff)) {
+        // We probably had 'PoweredOff' before,
+        // cancel the previous handlePoweredOffAfterDelay.
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    }
+
     if (cancelled) {
         Q_ASSERT_X(!isActive, Q_FUNC_INFO, "isActive is true");
         pendingStart = false;
@@ -211,7 +244,6 @@ using namespace QT_NAMESPACE;
         return;
     }
 
-    const CBCentralManagerState state = central.state;
     if (state == CBCentralManagerStatePoweredOn) {
         if (pendingStart) {
             pendingStart = false;
@@ -229,22 +261,28 @@ using namespace QT_NAMESPACE;
             pendingStart = false;
             delegate->LEnotSupported();
         } else if (isActive) {
-            // It's not clear if this thing can happen at all.
-            // We had LE supported and now .. not anymore?
-            // Report as an error.
+            // Cancel stopScan:
             [NSObject cancelPreviousPerformRequestsWithTarget:self];
+
             isActive = false;
             [manager stopScan];
             delegate->LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         }
     } else if (state == CBCentralManagerStatePoweredOff) {
         if (pendingStart) {
+#ifndef Q_OS_OSX
+            // On iOS a user can see at this point an alert asking to enable
+            // Bluetooth in the "Settings" app. If a user does,
+            // we'll receive 'PoweredOn' state update later.
+            [self performSelector:@selector(handlePoweredOffAfterDelay) withObject:nil afterDelay:30.];
+            return;
+#endif
             pendingStart = false;
             delegate->LEnotSupported();
         } else if (isActive) {
-            // We were able to start (isActive == true), so we had
-            // powered ON and now the adapter is OFF.
+            // Cancel stopScan:
             [NSObject cancelPreviousPerformRequestsWithTarget:self];
+
             isActive = false;
             [manager stopScan];
             delegate->LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
@@ -259,18 +297,21 @@ using namespace QT_NAMESPACE;
         // -CBCentralManagerStateResetting
         // The connection with the system service was momentarily
         // lost; an update is imminent. "
-        //
-        // TODO: check if "is imminent" means UpdateState will
-        // be called again with something more reasonable.
     }
 }
 
 - (void)stop
 {
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    if (!pendingStart) {
+        // pendingStart == true means either no selector at all,
+        // or handlePoweredOffAfter delay and we do not want to cancel it yet,
+        // waiting for DidUpdateState or handlePoweredOffAfter, whoever
+        // fires first ...
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    }
 
     if (pendingStart || cancelled) {
-        // We have to wait for a status update.
+        // We have to wait for a status update or handlePoweredOffAfterDelay.
         cancelled = true;
         return;
     }
