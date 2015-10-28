@@ -62,6 +62,9 @@ public:
         QLowEnergyCharacteristic::PropertyTypes properties;
         QByteArray value;
         QHash<QLowEnergyHandle, DescData> descriptorList;
+#ifdef Q_OS_WIN32
+        Qt::HANDLE hValueChangeEvent;
+#endif
     };
 
     enum GattAttributeTypes {

@@ -37,6 +37,7 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QIODevice> // for open modes
+#include <QtCore/QEvent>
 
 #include <algorithm> // for std::max
 
@@ -49,6 +50,37 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
+
+const QEvent::Type CharactericticValueEventType = static_cast<QEvent::Type>(QEvent::User + 1);
+
+class CharactericticValueEvent : public QEvent
+{
+public:
+    explicit CharactericticValueEvent(const PBLUETOOTH_GATT_VALUE_CHANGED_EVENT gattValueChangedEvent)
+        : QEvent(CharactericticValueEventType)
+        , m_handle(0)
+    {
+        if (!gattValueChangedEvent || gattValueChangedEvent->CharacteristicValueDataSize == 0)
+            return;
+
+        m_handle = gattValueChangedEvent->ChangedAttributeHandle;
+
+        const PBTH_LE_GATT_CHARACTERISTIC_VALUE gattValue = gattValueChangedEvent->CharacteristicValue;
+        if (!gattValue)
+            return;
+
+        m_value = QByteArray(reinterpret_cast<const char *>(&gattValue->Data[0]),
+                gattValue->DataSize);
+    }
+
+    QByteArray m_value;
+    QLowEnergyHandle m_handle;
+};
+
+// Bit masks of ClientCharacteristicConfiguration value, see btle spec.
+namespace ClientCharacteristicConfigurationValue {
+enum { UseNotifications = 0x1, UseIndications = 0x2 };
+}
 
 static bool gattFunctionsResolved = false;
 
@@ -374,6 +406,111 @@ static QByteArray getGattDescriptorValue(
     }
 }
 
+static void setGattDescriptorValue(
+        HANDLE hService, PBTH_LE_GATT_DESCRIPTOR gattDescriptor,
+        QByteArray value, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return;
+    }
+
+    const int requiredValueBufferSize = sizeof(BTH_LE_GATT_DESCRIPTOR_VALUE)
+                + value.size();
+
+    QByteArray valueBuffer(requiredValueBufferSize, 0);
+
+    PBTH_LE_GATT_DESCRIPTOR_VALUE gattValue = reinterpret_cast<
+                PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data());
+
+    gattValue->DescriptorType = gattDescriptor->DescriptorType;
+
+    if (gattValue->DescriptorType == ClientCharacteristicConfiguration) {
+        QDataStream in(value);
+        quint8 u;
+        in >> u;
+
+        // We need to setup appropriate fields that allow to subscribe for events.
+        gattValue->ClientCharacteristicConfiguration.IsSubscribeToNotification =
+                bool(u & ClientCharacteristicConfigurationValue::UseNotifications);
+        gattValue->ClientCharacteristicConfiguration.IsSubscribeToIndication =
+                bool(u & ClientCharacteristicConfigurationValue::UseIndications);
+    }
+
+    gattValue->DataSize = ULONG(value.size());
+    ::memcpy(gattValue->Data, value.constData(), value.size());
+
+    if (::BluetoothGATTSetDescriptorValue(
+                hService,
+                gattDescriptor,
+                gattValue,
+                BLUETOOTH_GATT_FLAG_NONE) != S_OK) {
+        *systemErrorCode = ::GetLastError();
+        return;
+    }
+
+    *systemErrorCode = NO_ERROR;
+}
+
+static void WINAPI eventChangedCallbackEntry(
+        BTH_LE_GATT_EVENT_TYPE eventType, PVOID eventOutParameter, PVOID context)
+{
+    if ((eventType != CharacteristicValueChangedEvent) || !eventOutParameter || !context)
+        return;
+
+    CharactericticValueEvent *e = new CharactericticValueEvent(
+                reinterpret_cast<const PBLUETOOTH_GATT_VALUE_CHANGED_EVENT>(eventOutParameter));
+
+    QCoreApplication::postEvent(static_cast<QLowEnergyControllerPrivate *>(context), e);
+}
+
+static HANDLE registerEvent(
+        HANDLE hService, BTH_LE_GATT_CHARACTERISTIC gattCharacteristic,
+        PVOID context, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return INVALID_HANDLE_VALUE;
+    }
+
+    HANDLE hEvent = INVALID_HANDLE_VALUE;
+
+    BLUETOOTH_GATT_VALUE_CHANGED_EVENT_REGISTRATION registration;
+    ::ZeroMemory(&registration, sizeof(registration));
+    registration.NumCharacteristics = 1;
+    registration.Characteristics[0] = gattCharacteristic;
+    if (::BluetoothGATTRegisterEvent(
+                hService,
+                CharacteristicValueChangedEvent,
+                &registration,
+                eventChangedCallbackEntry,
+                context,
+                &hEvent,
+                BLUETOOTH_GATT_FLAG_NONE) != S_OK) {
+        *systemErrorCode = ::GetLastError();
+    } else {
+        *systemErrorCode = NO_ERROR;
+    }
+
+    return hEvent;
+}
+
+static void unregisterEvent(HANDLE hEvent, int *systemErrorCode)
+{
+    if (!gattFunctionsResolved) {
+        *systemErrorCode = ERROR_NOT_SUPPORTED;
+        return;
+    }
+
+    if (::BluetoothGATTUnregisterEvent(
+                hEvent,
+                BLUETOOTH_GATT_FLAG_NONE) != S_OK) {
+        *systemErrorCode = ::GetLastError();
+    } else {
+        *systemErrorCode = NO_ERROR;
+    }
+}
+
 static QBluetoothUuid qtBluetoothUuidFromNativeLeUuid(const BTH_LE_UUID &uuid)
 {
     return uuid.IsShortUuid ? QBluetoothUuid(uuid.Value.ShortUuid)
@@ -424,6 +561,67 @@ static BTH_LE_GATT_CHARACTERISTIC recoverNativeLeGattCharacteristic(
             & QLowEnergyCharacteristic::WriteNoResponse);
 
     return gattCharacteristic;
+}
+
+static BTH_LE_GATT_DESCRIPTOR_TYPE nativeLeGattDescriptorTypeFromUuid(
+        const QBluetoothUuid &uuid)
+{
+    switch (uuid.toUInt16()) {
+    case QBluetoothUuid::CharacteristicExtendedProperties:
+        return CharacteristicExtendedProperties;
+    case QBluetoothUuid::CharacteristicUserDescription:
+        return CharacteristicUserDescription;
+    case QBluetoothUuid::ClientCharacteristicConfiguration:
+        return ClientCharacteristicConfiguration;
+    case QBluetoothUuid::ServerCharacteristicConfiguration:
+        return ServerCharacteristicConfiguration;
+    case QBluetoothUuid::CharacteristicPresentationFormat:
+        return CharacteristicFormat;
+    case QBluetoothUuid::CharacteristicAggregateFormat:
+        return CharacteristicAggregateFormat;
+    default:
+        return CustomDescriptor;
+    }
+}
+
+static BTH_LE_GATT_DESCRIPTOR recoverNativeLeGattDescriptor(
+        QLowEnergyHandle serviceHandle, QLowEnergyHandle characteristicHandle,
+        QLowEnergyHandle descriptorHandle,
+         const QLowEnergyServicePrivate::DescData &descriptorData)
+{
+    BTH_LE_GATT_DESCRIPTOR gattDescriptor;
+
+    gattDescriptor.ServiceHandle = serviceHandle;
+    gattDescriptor.CharacteristicHandle = characteristicHandle;
+    gattDescriptor.AttributeHandle = descriptorHandle;
+
+    gattDescriptor.DescriptorUuid = nativeLeUuidFromQtBluetoothUuid(
+                descriptorData.uuid);
+
+    gattDescriptor.DescriptorType = nativeLeGattDescriptorTypeFromUuid
+            (descriptorData.uuid);
+
+    return gattDescriptor;
+}
+
+void QLowEnergyControllerPrivate::customEvent(QEvent *e)
+{
+    if (e->type() != CharactericticValueEventType)
+        return;
+
+    const CharactericticValueEvent *characteristicEvent
+            = static_cast<CharactericticValueEvent *>(e);
+
+    updateValueOfCharacteristic(characteristicEvent->m_handle,
+                                characteristicEvent->m_value, false);
+
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(
+                characteristicEvent->m_handle);
+    if (service.isNull())
+        return;
+
+    QLowEnergyCharacteristic ch(service, characteristicEvent->m_handle);
+    emit service->characteristicChanged(ch, characteristicEvent->m_value);
 }
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
@@ -585,6 +783,9 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         const QLowEnergyHandle characteristicHandle = gattCharacteristic.AttributeHandle;
 
         QLowEnergyServicePrivate::CharData detailsData;
+
+        detailsData.hValueChangeEvent = NULL;
+
         detailsData.uuid = qtBluetoothUuidFromNativeLeUuid(
                     gattCharacteristic.CharacteristicUuid);
         detailsData.valueHandle = gattCharacteristic.CharacteristicValueHandle;
@@ -789,20 +990,145 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 }
 
 void QLowEnergyControllerPrivate::readDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-        const QLowEnergyHandle /*charHandle*/,
-        const QLowEnergyHandle /*descriptorHandle*/)
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
 
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!charDetails.descriptorList.contains(descriptorHandle))
+        return;
+
+    int systemErrorCode = NO_ERROR;
+
+    const HANDLE hService = openSystemService(
+                service->uuid, QIODevice::ReadOnly, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::DescriptorReadError);
+        return;
+    }
+
+    const QLowEnergyServicePrivate::DescData &dscrDetails
+            = charDetails.descriptorList[descriptorHandle];
+
+    BTH_LE_GATT_DESCRIPTOR gattDescriptor = recoverNativeLeGattDescriptor(
+                service->startHandle, charHandle, descriptorHandle, dscrDetails);
+
+    const QByteArray value = getGattDescriptorValue(
+                hService, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
+                    &gattDescriptor), &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        closeSystemDevice(hService);
+        qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
+                                 << dscrDetails.uuid.toString()
+                                 << "for characteristic"
+                                 << charDetails.uuid.toString()
+                                 << "of the service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::DescriptorReadError);
+        return;
+    }
+
+    updateValueOfDescriptor(charHandle, descriptorHandle, value, false);
+
+    QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
+    emit service->descriptorRead(dscr, value);
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-        const QLowEnergyHandle /*charHandle*/,
-        const QLowEnergyHandle /*descriptorHandle*/,
-        const QByteArray &/*newValue*/)
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle,
+        const QByteArray &newValue)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
 
+    QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!charDetails.descriptorList.contains(descriptorHandle))
+        return;
+
+    int systemErrorCode = NO_ERROR;
+
+    const HANDLE hService = openSystemService(
+                service->uuid, QIODevice::ReadWrite, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::DescriptorWriteError);
+        return;
+    }
+
+    const QLowEnergyServicePrivate::DescData &dscrDetails
+            = charDetails.descriptorList[descriptorHandle];
+
+    BTH_LE_GATT_DESCRIPTOR gattDescriptor = recoverNativeLeGattDescriptor(
+                service->startHandle, charHandle, descriptorHandle, dscrDetails);
+
+    setGattDescriptorValue(hService, &gattDescriptor, newValue, &systemErrorCode);
+
+    if (systemErrorCode != NO_ERROR) {
+        closeSystemDevice(hService);
+        qCWarning(QT_BT_WINDOWS) << "Unable to set value for descriptor"
+                                 << dscrDetails.uuid.toString()
+                                 << "for characteristic"
+                                 << charDetails.uuid.toString()
+                                 << "of the service" << service->uuid.toString()
+                                 << ":" << qt_error_string(systemErrorCode);
+        service->setError(QLowEnergyService::DescriptorWriteError);
+        return;
+    }
+
+    if (gattDescriptor.DescriptorType == ClientCharacteristicConfiguration) {
+
+        QDataStream in(newValue);
+        quint8 u;
+        in >> u;
+
+        if (u & ClientCharacteristicConfigurationValue::UseNotifications
+                || u & ClientCharacteristicConfigurationValue::UseIndications) {
+            if (!charDetails.hValueChangeEvent) {
+                BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
+                            service->startHandle, charHandle, charDetails);
+
+                charDetails.hValueChangeEvent = registerEvent(
+                            hService, gattCharacteristic, this, &systemErrorCode);
+            }
+        } else {
+            if (charDetails.hValueChangeEvent) {
+                unregisterEvent(charDetails.hValueChangeEvent, &systemErrorCode);
+                charDetails.hValueChangeEvent = NULL;
+            }
+        }
+
+        if (systemErrorCode != NO_ERROR) {
+            closeSystemDevice(hService);
+            qCWarning(QT_BT_WINDOWS) << "Unable to subscribe events for descriptor"
+                                     << dscrDetails.uuid.toString()
+                                     << "for characteristic"
+                                     << charDetails.uuid.toString()
+                                     << "of the service" << service->uuid.toString()
+                                     << ":" << qt_error_string(systemErrorCode);
+            service->setError(QLowEnergyService::DescriptorWriteError);
+            return;
+        }
+    }
+
+    updateValueOfDescriptor(charHandle, descriptorHandle, newValue, false);
+
+    QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
+    emit service->descriptorWritten(dscr, newValue);
 }
 
 QT_END_NAMESPACE

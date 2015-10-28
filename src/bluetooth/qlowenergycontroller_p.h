@@ -221,6 +221,8 @@ private slots:
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
 #elif defined(Q_OS_WIN32)
+protected:
+    void customEvent(QEvent *e);
 private:
     QString deviceSystemPath;
 #endif
