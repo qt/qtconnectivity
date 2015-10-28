@@ -191,6 +191,20 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #error "Unknown byte order"
 #endif
 
+inline quint8 hostToBt(quint8 val) { return val; }
+inline quint16 hostToBt(quint16 val) { return htobs(val); }
+inline quint32 hostToBt(quint32 val) { return htobl(val); }
+inline quint64 hostToBt(quint64 val) { return htobll(val); }
+
+template<typename T> inline void putBtData(T src, void *dst)
+{
+    bt_put_unaligned(hostToBt(src), reinterpret_cast<T *>(dst));
+}
+template<> inline void putBtData(quint128 src, void *dst)
+{
+    btoh128(&src, reinterpret_cast<quint128 *>(dst));
+}
+
 #define hton128(x, y) ntoh128(x, y)
 
 // HCI related
