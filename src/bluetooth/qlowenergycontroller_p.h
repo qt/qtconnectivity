@@ -208,7 +208,7 @@ private:
     void handleConnectionRequest();
     void closeServerSocket();
 
-    void sendCommand(const QByteArray &packet);
+    void sendPacket(const QByteArray &packet);
     void sendNextPendingRequest();
     void processReply(const Request &request, const QByteArray &reply);
 

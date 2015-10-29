@@ -482,7 +482,7 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         //send confirmation
         QByteArray packet;
         packet.append(static_cast<char>(ATT_OP_HANDLE_VAL_CONFIRMATION));
-        sendCommand(packet);
+        sendPacket(packet);
 
         processUnsolicitedReply(incomingPacket);
         return;
@@ -503,7 +503,7 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         bt_put_unaligned(htobs(0), (quint16 *)(packet.data() + 2));
         packet[4] = ATT_ERROR_REQUEST_NOT_SUPPORTED;
 
-        sendCommand(packet);
+        sendPacket(packet);
 
         return;
     }
@@ -578,12 +578,12 @@ void QLowEnergyControllerPrivate::encryptionChangedEvent(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivate::sendCommand(const QByteArray &packet)
+void QLowEnergyControllerPrivate::sendPacket(const QByteArray &packet)
 {
     qint64 result = l2cpSocket->write(packet.constData(),
                                       packet.size());
     if (result == -1) {
-        qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP command:" << hex
+        qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP packet:" << hex
                              << packet.toHex()
                              << l2cpSocket->errorString();
         setError(QLowEnergyController::NetworkError);
@@ -600,7 +600,7 @@ void QLowEnergyControllerPrivate::sendNextPendingRequest()
 //             << request.payload.toHex();
 
     requestPending = true;
-    sendCommand(request.payload);
+    sendPacket(request.payload);
 }
 
 QLowEnergyHandle parseReadByTypeCharDiscovery(
@@ -1713,7 +1713,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     // It can be send at any time and does not produce responses.
     // Therefore we will not put them into the openRequest queue at all.
     if (!writeWithResponse) {
-        sendCommand(data);
+        sendPacket(data);
         return;
     }
 
