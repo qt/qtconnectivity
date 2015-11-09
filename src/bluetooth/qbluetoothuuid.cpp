@@ -311,7 +311,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value DescriptorValueChanged        This characteristic is related to the Environmental Sensing Service.
     \value DeviceName                    The Device Name characteristic contains the name of the device.
     \value DewPoint                      This characteristic states the dew point in degree Celsius.
-    \value DSTOffset                     The DST Offset characteristic describes the offset employed by the daylight saving time.
+    \value DSTOffset                     The DST Offset characteristic describes the offset employed by daylight-saving time.
     \value Elevation                     The Elevation characteristic states the elevation above/below sea level.
     \value EmailAddress                  This characteristic states the email of the user.
     \value ExactTime256                  The Exact Time 256 characteristic describes the data, day and time
