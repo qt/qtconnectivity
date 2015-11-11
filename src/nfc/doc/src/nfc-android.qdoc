@@ -48,7 +48,7 @@ This means the application has to provide an AndroidManifest.xml file with prope
 \endcode
 
 When the application is started it has to register an message handler with
-\l registerNdefMessageHandler().
+\l {QNearFieldManager::}{registerNdefMessageHandler()}
 The first NDEF message arriving in the handler is the message that started the application.
 See the \l {corkboard}{CorkBoard} application for an example.
 

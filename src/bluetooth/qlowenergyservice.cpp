@@ -390,7 +390,7 @@ QLowEnergyService::~QLowEnergyService()
     \l {QLowEnergyController::createServiceObject()} should be used to obtain
     service instances for each of the UUIDs.
 
-    \sa createServiceObject()
+    \sa {QLowEnergyController::}{createServiceObject()}
  */
 QList<QBluetoothUuid> QLowEnergyService::includedServices() const
 {
