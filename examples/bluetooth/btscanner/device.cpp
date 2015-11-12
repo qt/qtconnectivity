@@ -181,6 +181,8 @@ void DeviceDiscoveryDialog::hostModeStateChanged(QBluetoothLocalDevice::HostMode
 }
 void DeviceDiscoveryDialog::displayPairingMenu(const QPoint &pos)
 {
+    if (ui->list->count() == 0)
+        return;
     QMenu menu(this);
     QAction *pairAction = menu.addAction("Pair");
     QAction *removePairAction = menu.addAction("Remove Pairing");

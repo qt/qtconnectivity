@@ -34,6 +34,17 @@
 #ifndef OSXBTLEDEVICEINQUIRY_P_H
 #define OSXBTLEDEVICEINQUIRY_P_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include "qbluetoothdevicediscoveryagent.h"
 
 #include <QtCore/qdatetime.h>
@@ -75,6 +86,13 @@ public:
 QT_END_NAMESPACE
 
 // Bluetooth Low Energy scan for iOS and OS X.
+// Strong enum would be quite handy ...
+enum LEScanPhase
+{
+    noActivity,
+    startingScan,
+    activeScan
+};
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
 {// Protocols are adopted in the mm file.
@@ -84,11 +102,8 @@ QT_END_NAMESPACE
     NSMutableDictionary *peripherals; // Found devices.
     CBCentralManager *manager;
 
-    // pending - waiting for a status update first.
-    bool pendingStart;
+    LEScanPhase scanPhase;
     bool cancelled;
-    // scan actually started.
-    bool isActive;
     QTime startTime;
 }
 

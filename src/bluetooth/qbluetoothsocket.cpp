@@ -72,6 +72,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     If the \l {QBluetoothServiceInfo::Protocol}{Protocol} is not supported on a platform, calling
     \l connectToService() will emit a \l {QBluetoothSocket::UnsupportedProtocolError}{UnsupportedProtocolError} error.
 
+    \note QBluetoothSocket does not support synchronous read and write operations. Functions such
+    as \l waitForReadyRead() and \l waitForBytesWritten() are not implemented. I/O operations should be
+    performed using \l readyRead(), \l read() and \l write().
 */
 
 /*!
