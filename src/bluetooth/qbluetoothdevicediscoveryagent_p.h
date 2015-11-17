@@ -156,7 +156,6 @@ private:
 
 #ifdef QT_WIN_BLUETOOTH
 public:
-    typedef void* SearchHandle;
     static QString discoveredLeDeviceSystemPath(const QBluetoothAddress &deviceAddress);
 
 private slots:
@@ -171,7 +170,7 @@ private:
     QFutureWatcher<QBluetoothDeviceInfo> *scanWatcher;
     bool active;
     int systemErrorCode;
-    SearchHandle hSearch;
+    Qt::HANDLE hSearch;
 #endif
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;

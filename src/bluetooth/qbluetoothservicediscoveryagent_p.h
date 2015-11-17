@@ -187,8 +187,6 @@ private:
 #endif
 
 #ifdef QT_WIN_BLUETOOTH
-public:
-    typedef void* SearchHandle;
 private:
     int systemError;
     bool pendingStop;
@@ -196,7 +194,7 @@ private:
 
     QFutureWatcher<QBluetoothServiceInfo> *searchWatcher;
 
-    SearchHandle hSearch;
+    Qt::HANDLE hSearch;
 #endif
 
 protected:
