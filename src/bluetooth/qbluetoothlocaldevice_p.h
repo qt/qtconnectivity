@@ -200,7 +200,7 @@ private:
     void initializeAdapterBluez5();
 };
 
-#elif defined(Q_OS_WIN32)
+#elif defined(QT_WIN_BLUETOOTH)
 
 class QBluetoothLocalDevicePrivate : public QObject
 {

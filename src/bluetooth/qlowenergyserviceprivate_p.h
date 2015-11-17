@@ -62,7 +62,7 @@ public:
         QLowEnergyCharacteristic::PropertyTypes properties;
         QByteArray value;
         QHash<QLowEnergyHandle, DescData> descriptorList;
-#ifdef Q_OS_WIN32
+#ifdef QT_WIN_BLUETOOTH
         Qt::HANDLE hValueChangeEvent;
 #endif
     };

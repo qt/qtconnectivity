@@ -220,7 +220,7 @@ private slots:
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
-#elif defined(Q_OS_WIN32)
+#elif defined(QT_WIN_BLUETOOTH)
 protected:
     void customEvent(QEvent *e);
 private:

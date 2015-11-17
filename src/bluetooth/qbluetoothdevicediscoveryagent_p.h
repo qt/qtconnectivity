@@ -73,14 +73,14 @@ class QDBusVariant;
 QT_END_NAMESPACE
 #endif
 
-#ifdef Q_OS_WIN32
+#ifdef QT_WIN_BLUETOOTH
 #include <QtConcurrent>
 #endif
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QT_ANDROID_BLUETOOTH) || defined(Q_OS_WIN32)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WIN_BLUETOOTH)
     : public QObject
 {
     Q_OBJECT
@@ -154,7 +154,7 @@ private:
     QTimer extendedDiscoveryTimer;
 #endif
 
-#ifdef Q_OS_WIN32
+#ifdef QT_WIN_BLUETOOTH
 public:
     typedef void* SearchHandle;
     static QString discoveredLeDeviceSystemPath(const QBluetoothAddress &deviceAddress);
