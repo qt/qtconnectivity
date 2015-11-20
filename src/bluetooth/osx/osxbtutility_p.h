@@ -94,8 +94,7 @@ public:
     }
 };
 
-typedef ObjCScopedPointer<NSAutoreleasePool> AutoreleasePool;
-#define QT_BT_MAC_AUTORELEASEPOOL const OSXBluetooth::AutoreleasePool pool([[NSAutoreleasePool alloc] init])
+#define QT_BT_MAC_AUTORELEASEPOOL const QMacAutoReleasePool pool;
 
 template<class T>
 class ObjCStrongReference {
