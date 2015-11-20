@@ -44,6 +44,7 @@
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qscopedpointer.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
@@ -127,7 +128,7 @@ private:
     typedef QList<QBluetoothDeviceInfo> DevicesList;
     DevicesList discoveredDevices;
 
-    OSXBluetooth::DDATimerHandler timer;
+    QScopedPointer<OSXBluetooth::DDATimerHandler> timer;
 };
 
 namespace OSXBluetooth {
@@ -173,8 +174,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     startPending(false),
     stopPending(false),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-    inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
-    timer(this)
+    inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry)
 {
     Q_ASSERT_X(q != Q_NULLPTR, Q_FUNC_INFO, "invalid q_ptr (null)");
 
@@ -267,12 +267,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
 
     // CoreBluetooth does not have a timeout. We start a timer here
     // and check if scan really started and if yes if we have a timeout.
-    timer.start([LEDeviceInquiryObjC inquiryLength]);
+    timer.reset(new OSXBluetooth::DDATimerHandler(this));
+    timer->start([LEDeviceInquiryObjC inquiryLength]);
 
     if (![inquiryLE start]) {
         // We can be here only if we have some kind of resource allocation error, so we
         // do not emit finished, we emit error.
-        timer.stop();
+        timer->stop();
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
                  QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED_LE));
         agentState = NonActive;
@@ -438,10 +439,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::checkLETimeout()
         if (elapsed >= timeout)
             [inquiryLE stop];
         else
-            timer.start(timeout - elapsed);
+            timer->start(timeout - elapsed);
     } else {
         // Scan not started yet. Wait 5 seconds more.
-        timer.start(timeout / 2);
+        timer->start(timeout / 2);
     }
 }
 
@@ -452,7 +453,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryError(QBluetoothDevic
     Q_ASSERT_X(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError,
                Q_FUNC_INFO, "unexpected error code");
 
-    timer.stop();
+    timer->stop();
 
     agentState = NonActive;
     setError(error);
@@ -466,7 +467,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported()
     // After we call startLE and before receive NotSupported,
     // the user can call stop (setting a pending stop).
     // So the same rule apply:
-    timer.stop();
+    timer->stop();
 
     LEdeviceInquiryFinished();
 }
@@ -500,7 +501,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryFinished()
     // The same logic as in inquiryFinished, but does not start LE scan.
     agentState = NonActive;
 
-    timer.stop();
+    timer->stop();
 
     if (stopPending && !startPending) {
         stopPending = false;
