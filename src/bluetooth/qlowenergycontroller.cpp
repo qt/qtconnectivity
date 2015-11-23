@@ -707,7 +707,7 @@ void QLowEnergyController::discoverServices()
 {
     Q_D(QLowEnergyController);
 
-    if (d->role != PeripheralRole) {
+    if (d->role != CentralRole) {
         qCWarning(QT_BT) << "Cannot discover services in peripheral role";
         return;
     }
