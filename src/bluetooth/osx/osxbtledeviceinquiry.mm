@@ -46,10 +46,6 @@ QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
 
-LEDeviceInquiryDelegate::~LEDeviceInquiryDelegate()
-{
-}
-
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
 
 QBluetoothUuid qt_uuid(NSUUID *nsUuid)
@@ -107,32 +103,19 @@ using namespace QT_NAMESPACE;
 
 #endif
 
-@interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate, CBPeripheralDelegate>
-// "Timeout" callback to stop a scan.
+@interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate>
 - (void)stopScan;
-- (void)handlePoweredOffAfterDelay;
+- (void)handlePoweredOff;
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
 
-+ (int)inquiryLength
+- (id)init
 {
-    // There is no default timeout,
-    // scan does not stop if not asked.
-    // Return in milliseconds
-    return 10 * 1000;
-}
-
-- (id)initWithDelegate:(OSXBluetooth::LEDeviceInquiryDelegate *)aDelegate
-{
-    Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
-
     if (self = [super init]) {
-        delegate = aDelegate;
-        peripherals = [[NSMutableDictionary alloc] init];
-        manager = nil;
-        scanPhase = noActivity;
-        cancelled = false;
+        uuids.reset([[NSMutableSet alloc] init]);
+        internalState = InquiryStarting;
+        state.store(int(internalState));
     }
 
     return self;
@@ -140,150 +123,137 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
-
     if (manager) {
         [manager setDelegate:nil];
-        if (scanPhase == activeScan)
+        if (internalState == InquiryActive)
             [manager stopScan];
-        [manager release];
     }
 
-    [peripherals release];
     [super dealloc];
 }
 
 - (void)stopScan
 {
-    // Scan's timeout.
-    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
-    Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid central (nil)");
-    Q_ASSERT_X(scanPhase == activeScan, Q_FUNC_INFO, "invalid state");
-    Q_ASSERT_X(!cancelled, Q_FUNC_INFO, "invalid state");
+    // Scan's "timeout" - we consider LE device
+    // discovery finished.
+    using namespace OSXBluetooth;
 
-    [manager setDelegate:nil];
-    [manager stopScan];
-    scanPhase = noActivity;
-
-    delegate->LEdeviceInquiryFinished();
-}
-
-- (void)handlePoweredOffAfterDelay
-{
-    // If we are here, this means:
-    // we received 'PoweredOff' while scanPhase == startingScan
-    // and no 'PoweredOn' after this.
-
-    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
-    Q_ASSERT_X(scanPhase == startingScan, Q_FUNC_INFO, "invalid state");
-
-    scanPhase = noActivity;
-    if (cancelled) {
-        // Timeout happened before
-        // the second status update, but after 'stop'.
-        delegate->LEdeviceInquiryFinished();
-    } else {
-        // Timeout and no 'stop' between 'start'
-        // and 'centralManagerDidUpdateStatus':
-        delegate->LEnotSupported();
+    if (internalState == InquiryActive) {
+        if (scanTimer.elapsed() >= qt_LE_deviceInquiryLength() * 1000) {
+            // We indeed stop now:
+            [manager stopScan];
+            [manager setDelegate:nil];
+            internalState = InquiryFinished;
+            state.store(int(internalState));
+        } else {
+            dispatch_queue_t leQueue(qt_LE_queue());
+            Q_ASSERT(leQueue);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                         int64_t(qt_LE_deviceInquiryLength() / 100. * NSEC_PER_SEC)),
+                                         leQueue,
+                                         ^{
+                                               [self stopScan];
+                                          });
+        }
     }
 }
 
-- (bool)start
+- (void)handlePoweredOff
 {
-    Q_ASSERT_X(![self isActive], Q_FUNC_INFO, "LE device scan is already active");
-    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    // This is interesting on iOS only, where
+    // the system shows an alert asking to enable
+    // Bluetooth in the 'Settings' app. If not done yet (after 30
+    // seconds) - we consider it an error.
+    if (internalState == InquiryStarting) {
+        if (errorTimer.elapsed() >= 30000) {
+            [manager setDelegate:nil];
+            internalState = ErrorPoweredOff;
+            state.store(int(internalState));
+        } else {
+            dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+            Q_ASSERT(leQueue);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                         (int64_t)(30 / 100. * NSEC_PER_SEC)),
+                                         leQueue,
+                                         ^{
+                                              [self handlePoweredOff];
+                                          });
 
-    if (!peripherals) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "internal error";
-        return false;
+        }
     }
+}
 
-    cancelled = false;
-    [peripherals removeAllObjects];
+- (void)start
+{
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
 
-    if (manager) {
-        // We can never be here, if status was not updated yet.
-        [manager setDelegate:nil];
-        [manager release];
-    }
-
-    startTime = QTime();
-    scanPhase = startingScan;
-    manager = [CBCentralManager alloc];
-    manager = [manager initWithDelegate:self queue:nil];
-    if (!manager) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a central manager";
-        return false;
-    }
-
-    return true;
+    Q_ASSERT(leQueue);
+    manager.reset([[CBCentralManager alloc] initWithDelegate:self queue:leQueue]);
 }
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
-    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
-
-    const CBCentralManagerState state = central.state;
-
-    if (scanPhase == startingScan && (state == CBCentralManagerStatePoweredOn
-                                   || state == CBCentralManagerStateUnsupported
-                                   || state == CBCentralManagerStateUnauthorized
-                                   || state == CBCentralManagerStatePoweredOff)) {
-        // We probably had 'PoweredOff' before,
-        // cancel the previous handlePoweredOffAfterDelay.
-        [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    }
-
-    if (cancelled) {
-        Q_ASSERT_X(scanPhase != activeScan, Q_FUNC_INFO, "in 'activeScan' phase");
-        scanPhase = noActivity;
-        delegate->LEdeviceInquiryFinished();
+    if (central != manager)
         return;
-    }
 
-    if (state == CBCentralManagerStatePoweredOn) {
-        if (scanPhase == startingScan) {
-            scanPhase = activeScan;
-#ifndef Q_OS_OSX
-            const NSTimeInterval timeout([QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) inquiryLength] / 1000);
-            Q_ASSERT_X(timeout > 0., Q_FUNC_INFO, "invalid scan timeout");
-            [self performSelector:@selector(stopScan) withObject:nil afterDelay:timeout];
-#endif
-            startTime = QTime::currentTime();
+    if (internalState != InquiryActive && internalState != InquiryStarting)
+        return;
+
+    using namespace OSXBluetooth;
+
+    dispatch_queue_t leQueue(qt_LE_queue());
+    Q_ASSERT(leQueue);
+
+    const CBCentralManagerState cbState(central.state);
+    if (cbState == CBCentralManagerStatePoweredOn) {
+        if (internalState == InquiryStarting) {
+            internalState = InquiryActive;
+            // Scan time is actually 10 seconds. Having a block with such delay can prevent
+            // 'self' from being deleted in time, which is not good. So we split this
+            // 10 s. timeout into smaller 'chunks'.
+            scanTimer.start();
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                         int64_t(qt_LE_deviceInquiryLength() / 100. * NSEC_PER_SEC)),
+                                         leQueue,
+                                         ^{
+                                               [self stopScan];
+                                          });
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
-        if (scanPhase == startingScan) {
-            scanPhase = noActivity;
-            delegate->LEnotSupported();
-        } else if (scanPhase == activeScan) {
-            // Cancel stopScan:
-            [NSObject cancelPreviousPerformRequestsWithTarget:self];
-
-            scanPhase = noActivity;
+        if (internalState == InquiryActive) {
             [manager stopScan];
-            delegate->LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
+            // Not sure how this is possible at all, probably, can never happen.
+            internalState = ErrorPoweredOff;
+        } else {
+            internalState = ErrorLENotSupported;
         }
-    } else if (state == CBCentralManagerStatePoweredOff) {
-        if (scanPhase == startingScan) {
+
+        [manager setDelegate:nil];
+    } else if (cbState == CBCentralManagerStatePoweredOff) {
+        if (internalState == InquiryStarting) {
 #ifndef Q_OS_OSX
             // On iOS a user can see at this point an alert asking to enable
             // Bluetooth in the "Settings" app. If a user does,
             // we'll receive 'PoweredOn' state update later.
-            [self performSelector:@selector(handlePoweredOffAfterDelay) withObject:nil afterDelay:30.];
+            // No change in state. Wait for 30 seconds (we split it into 'chunks' not
+            // to retain 'self' for too long ) ...
+            errorTimer.start();
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                         (int64_t)(30 / 100. * NSEC_PER_SEC)),
+                                         leQueue,
+                                         ^{
+                                              [self handlePoweredOff];
+                                          });
             return;
 #endif
-            scanPhase = noActivity;
-            delegate->LEnotSupported();
-        } else if (scanPhase == activeScan) {
-            // Cancel stopScan:
-            [NSObject cancelPreviousPerformRequestsWithTarget:self];
-
-            scanPhase = noActivity;
+            internalState = ErrorPoweredOff;
+        } else {
+            internalState = ErrorPoweredOff;
             [manager stopScan];
-            delegate->LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
-        } // Else we ignore.
+        }
+
+        [manager setDelegate:nil];
     } else {
         // The following two states we ignore (from Apple's docs):
         //"
@@ -294,44 +264,36 @@ using namespace QT_NAMESPACE;
         // -CBCentralManagerStateResetting
         // The connection with the system service was momentarily
         // lost; an update is imminent. "
+        // Wait for this imminent update.
     }
+
+    state.store(int(internalState));
 }
 
 - (void)stop
 {
-    if (scanPhase != startingScan) {
-        // startingScan means either no selector at all,
-        // or handlePoweredOffAfterDelay and we do not want to cancel it yet,
-        // waiting for DidUpdateState or handlePoweredOffAfterDelay, whoever
-        // fires first ...
-        [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    }
-
-    if (scanPhase == startingScan || cancelled) {
-        // We have to wait for a status update or handlePoweredOffAfterDelay.
-        cancelled = true;
-        return;
-    }
-
-    if (scanPhase == activeScan) {
+    if (internalState == InquiryActive)
         [manager stopScan];
-        scanPhase = noActivity;
-        delegate->LEdeviceInquiryFinished();
-    }
+
+    [manager setDelegate:nil];
+    internalState = InquiryCancelled;
+    state.store(int(internalState));
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral
         advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
-    Q_UNUSED(central)
-    Q_UNUSED(advertisementData)
+    Q_UNUSED(advertisementData);
 
     using namespace OSXBluetooth;
 
-    if (scanPhase != activeScan)
+    if (central != manager)
         return;
 
-    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    if (internalState != InquiryActive)
+        return;
+
+    QBluetoothUuid deviceUuid;
 
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
     if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0)) {
@@ -340,45 +302,64 @@ using namespace QT_NAMESPACE;
             return;
         }
 
-        if (![peripherals objectForKey:peripheral.identifier]) {
-            [peripherals setObject:peripheral forKey:peripheral.identifier];
-            const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(peripheral.identifier));
-            delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
+        if ([uuids containsObject:peripheral.identifier]) {
+            // We already know this peripheral ...
+            return;
         }
-        return;
+
+        [uuids addObject:peripheral.identifier];
+        deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
     }
 #endif
     // Either SDK or the target is below 10.9/7.0:
     // The property UUID was finally removed in iOS 9, we have
     // to avoid compilation errors ...
-    CFUUIDRef cfUUID = Q_NULLPTR;
+    if (deviceUuid.isNull()) {
+        CFUUIDRef cfUUID = Q_NULLPTR;
 
-    if ([peripheral respondsToSelector:@selector(UUID)]) {
-        // This will require a bridged cast if we switch to ARC ...
-        cfUUID = reinterpret_cast<CFUUIDRef>([peripheral performSelector:@selector(UUID)]);
+        if ([peripheral respondsToSelector:@selector(UUID)]) {
+            // This will require a bridged cast if we switch to ARC ...
+            cfUUID = reinterpret_cast<CFUUIDRef>([peripheral performSelector:@selector(UUID)]);
+        }
+
+        if (!cfUUID) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without CFUUID";
+            return;
+        }
+
+        StringStrongReference key(uuid_as_nsstring(cfUUID));
+        if ([uuids containsObject:key.data()])
+            return; // We've seen this peripheral before ...
+        [uuids addObject:key.data()];
+        deviceUuid = OSXBluetooth::qt_uuid(cfUUID);
     }
 
-    if (!cfUUID) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without CFUUID";
+    if (deviceUuid.isNull()) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no way to address peripheral, QBluetoothUuid is null";
         return;
     }
 
-    StringStrongReference key(uuid_as_nsstring(cfUUID));
-    if (![peripherals objectForKey:key.data()]) {
-        [peripherals setObject:peripheral forKey:key.data()];
-        const QBluetoothUuid deviceUuid(OSXBluetooth::qt_uuid(cfUUID));
-        delegate->LEdeviceFound(peripheral, deviceUuid, advertisementData, RSSI);
-    }
+    QString name;
+    if (peripheral.name)
+        name = QString::fromNSString(peripheral.name);
+
+    // TODO: fix 'classOfDevice' (0 for now).
+    QBluetoothDeviceInfo newDeviceInfo(deviceUuid, name, 0);
+    if (RSSI)
+        newDeviceInfo.setRssi([RSSI shortValue]);
+    // CoreBluetooth scans only for LE devices.
+    newDeviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    devices.append(newDeviceInfo);
 }
 
-- (bool)isActive
+- (LEInquiryState) inquiryState
 {
-    return scanPhase == startingScan || scanPhase == activeScan;
+    return LEInquiryState(state.load());
 }
 
-- (const QTime&)startTime
+- (const QList<QBluetoothDeviceInfo> &)discoveredDevices
 {
-    return startTime;
+    return devices;
 }
 
 @end
