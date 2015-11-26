@@ -69,41 +69,7 @@ class QLowEnergyServicePrivate;
 
 namespace OSXBluetooth {
 
-class CentralManagerDelegate
-{
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
-    typedef ObjCStrongReference<NSArray> LEServices;
-    typedef QSharedPointer<QLowEnergyServicePrivate> LEService;
-    typedef ObjCStrongReference<CBCharacteristic> LECharacteristic;
-
-    virtual ~CentralManagerDelegate();
-
-    virtual void LEnotSupported() = 0;
-    virtual void connectSuccess() = 0;
-    virtual void serviceDiscoveryFinished(LEServices services) = 0;
-    virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
-    virtual void characteristicReadNotification(QLowEnergyHandle charHandle,
-                                                const QByteArray &value) = 0;
-    virtual void characteristicWriteNotification(QLowEnergyHandle charHandle,
-                                                 const QByteArray &value) = 0;
-    virtual void characteristicUpdateNotification(QLowEnergyHandle charHandle,
-                                                  const QByteArray &value) = 0;
-    virtual void descriptorReadNotification(QLowEnergyHandle descHandle,
-                                            const QByteArray &value) = 0;
-    virtual void descriptorWriteNotification(QLowEnergyHandle descHandle,
-                                             const QByteArray &value) = 0;
-    virtual void disconnected() = 0;
-
-    // General errors.
-    virtual void error(QLowEnergyController::Error error) = 0;
-    // Service related errors.
-    virtual void error(const QBluetoothUuid &serviceUuid,
-                       QLowEnergyController::Error error) = 0;
-    // Characteristics/descriptors related errors.
-    virtual void error(const QBluetoothUuid &serviceUuid,
-                       QLowEnergyService::ServiceError error) = 0;
-};
+class LECentralNotifier;
 
 enum CentralManagerState
 {
@@ -126,8 +92,8 @@ typedef QHash<QLowEnergyHandle, CBService *> ServiceHash;
 typedef QHash<QLowEnergyHandle, CBCharacteristic *> CharHash;
 typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
 
-// Descriptor/charactesirsti read/write requests
-// - we have to serialize 'concurrent' write requests.
+// Descriptor/charactesirstic read/write requests
+// - we have to serialize 'concurrent' requests.
 struct LERequest {
     enum RequestType {
         CharRead,
@@ -165,14 +131,14 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate, CBPeripheralDelegate>
 {
+@private
     CBCentralManager *manager;
     QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerState managerState;
     bool disconnectPending;
 
     QT_PREPEND_NAMESPACE(QBluetoothUuid) deviceUuid;
-    CBPeripheral *peripheral;
 
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *delegate;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::LECentralNotifier *notifier;
 
     // Quite a verbose service discovery machinery
     // (a "graph traversal").
@@ -197,32 +163,43 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(QLowEnergyHandle) currentReadHandle;
 
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ValueHash valuesToWrite;
+@public
+    CBPeripheral *peripheral;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
+- (id)initWith:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LECentralNotifier *)notifier;
 - (void)dealloc;
 
-- (QT_PREPEND_NAMESPACE(QLowEnergyController)::Error)
-    connectToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)aDeviceUuid;
+// IMPORTANT: _all_ these methods are to be executed on qt_LE_queue,
+// when passing parameters - C++ objects _must_ be copied (see the controller's code).
+- (void)connectToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)aDeviceUuid;
 
 - (void)disconnectFromDevice;
 
 - (void)discoverServices;
-- (bool)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+- (void)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
-        forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
+- (void)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)readCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
+- (void)readCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+- (void)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
         withResponse:(bool)writeWithResponse;
 
-- (bool)readDescriptor:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
+- (void)readDescriptor:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
-        descHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
+- (void)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        descHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+
+- (void)detach;
+
 @end
 
 #endif
