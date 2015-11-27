@@ -199,6 +199,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       encryptionChangePending(false),
       hciManager(0)
 {
+    registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 
     hciManager = new HciManager(localAdapter, this);

@@ -56,17 +56,15 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-
-class QLowEnergyControllerMetaTypes
+static void registerQLowEnergyControllerMetaType()
 {
-public:
-    QLowEnergyControllerMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
+        initDone = true;
     }
-} qLowEnergyControllerMetaTypes;
-
+}
 
 typedef QSharedPointer<QLowEnergyServicePrivate> ServicePrivate;
 
@@ -137,6 +135,8 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
 {
+    registerQLowEnergyControllerMetaType();
+
     // This is the "wrong" constructor - no valid device UUID to connect later.
     Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
     // We still create a manager, to simplify error handling later.
@@ -157,6 +157,8 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
 {
+    registerQLowEnergyControllerMetaType();
+
     Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
     centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
     if (!centralManager) {

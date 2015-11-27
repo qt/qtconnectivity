@@ -211,6 +211,8 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q) :
     q_ptr(q)
 {
+    registerQBluetoothLocalDeviceMetaType();
+
     ppsRegisterControl();
     ppsRegisterForEvent(QStringLiteral("access_changed"), this);
     ppsRegisterForEvent(QStringLiteral("pairing_complete"), this);

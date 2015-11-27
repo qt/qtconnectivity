@@ -73,6 +73,8 @@ class HciManager;
 class LowEnergyNotificationHub;
 #endif
 
+extern void registerQLowEnergyControllerMetaType();
+
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 
 class QLowEnergyControllerPrivate : public QObject
