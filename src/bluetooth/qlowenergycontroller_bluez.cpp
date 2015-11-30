@@ -1723,9 +1723,9 @@ bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode
         return false;
 
     switch (errorCode) {
-    case ATT_ERROR_INSUF_AUTHORIZATION:
     case ATT_ERROR_INSUF_ENCRYPTION:
     case ATT_ERROR_INSUF_AUTHENTICATION:
+    case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
         if (!hciManager->isValid())
             return false;
         if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))
