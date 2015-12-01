@@ -105,6 +105,8 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
                                                            const QBluetoothAddress &address) :
         q_ptr(q)
 {
+    registerQBluetoothLocalDeviceMetaType();
+
     Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     QT_BT_MAC_AUTORELEASEPOOL;

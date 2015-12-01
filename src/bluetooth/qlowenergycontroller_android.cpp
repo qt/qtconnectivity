@@ -45,6 +45,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       error(QLowEnergyController::NoError),
       hub(0)
 {
+    registerQLowEnergyControllerMetaType();
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()

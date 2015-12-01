@@ -80,6 +80,8 @@ QT_END_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 
+extern void registerQBluetoothLocalDeviceMetaType();
+
 class QBluetoothAddress;
 
 #ifdef QT_ANDROID_BLUETOOTH

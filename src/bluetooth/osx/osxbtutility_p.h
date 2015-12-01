@@ -306,6 +306,10 @@ inline QSysInfo::MacVersion qt_OS_limit(QSysInfo::MacVersion osxVersion, QSysInf
 #endif
 }
 
+dispatch_queue_t qt_LE_queue();
+// LE scan, in seconds.
+unsigned qt_LE_deviceInquiryLength();
+
 } // namespace OSXBluetooth
 
 // Logging category for both OS X and iOS.

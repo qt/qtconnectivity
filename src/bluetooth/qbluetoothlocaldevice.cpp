@@ -97,19 +97,16 @@ QT_BEGIN_NAMESPACE
 
 */
 
-namespace {
-class LocalDeviceRegisterMetaTypes
+void registerQBluetoothLocalDeviceMetaType()
 {
-public:
-    LocalDeviceRegisterMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QBluetoothLocalDevice::HostMode>();
         qRegisterMetaType<QBluetoothLocalDevice::Pairing>();
         qRegisterMetaType<QBluetoothLocalDevice::Error>();
+        initDone = true;
     }
-} _registerLocalDeviceMetaTypes;
 }
-
 
 #ifndef QT_OSX_BLUETOOTH
 

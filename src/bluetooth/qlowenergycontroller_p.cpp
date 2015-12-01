@@ -40,6 +40,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       state(QLowEnergyController::UnconnectedState),
       error(QLowEnergyController::NoError)
 {
+    registerQLowEnergyControllerMetaType();
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
