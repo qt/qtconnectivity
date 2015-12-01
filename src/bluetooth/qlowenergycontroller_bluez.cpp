@@ -205,6 +205,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       encryptionChangePending(false),
       hciManager(0)
 {
+    registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 
     hciManager = new HciManager(localAdapter, this);
@@ -268,7 +269,9 @@ void QLowEnergyControllerPrivate::connectToDevice()
     }
 
     // connect
-    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID);
+    // Unbuffered mode required to separate each GATT packet
+    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID,
+                                 QIODevice::ReadWrite | QIODevice::Unbuffered);
 }
 
 void QLowEnergyControllerPrivate::l2cpConnected()

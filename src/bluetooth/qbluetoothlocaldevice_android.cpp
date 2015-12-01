@@ -52,6 +52,8 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(
     obj(0),
     pendingHostModeTransition(false)
 {
+    registerQBluetoothLocalDeviceMetaType();
+
     initialize(address);
 
     receiver = new LocalDeviceBroadcastReceiver(q_ptr);

@@ -497,16 +497,13 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value UnknownDescriptorType             The descriptor type is unknown.
 */
 
-namespace
+static void registerQBluetoothUuidMetaType()
 {
-    class BtUuidRegisterMetaTypes
-    {
-    public:
-        BtUuidRegisterMetaTypes()
-        {
-            qRegisterMetaType<QBluetoothUuid>();
-        }
-    } _registerBtUuidMetaTypes;
+    static bool initDone = false;
+    if (!initDone) {
+        qRegisterMetaType<QBluetoothUuid>();
+        initDone = true;
+    }
 }
 
 /*!
@@ -514,6 +511,7 @@ namespace
 */
 QBluetoothUuid::QBluetoothUuid()
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -525,6 +523,7 @@ QBluetoothUuid::QBluetoothUuid(ProtocolUuid uuid)
           baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
           baseUuid()->data4[6], baseUuid()->data4[7])
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -535,6 +534,7 @@ QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
           baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
           baseUuid()->data4[6], baseUuid()->data4[7])
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -546,6 +546,7 @@ QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
           baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
           baseUuid()->data4[6], baseUuid()->data4[7])
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -557,7 +558,7 @@ QBluetoothUuid::QBluetoothUuid(DescriptorType uuid)
               baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
               baseUuid()->data4[6], baseUuid()->data4[7])
 {
-
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -568,6 +569,7 @@ QBluetoothUuid::QBluetoothUuid(quint16 uuid)
           baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
           baseUuid()->data4[6], baseUuid()->data4[7])
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -578,6 +580,7 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
           baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
           baseUuid()->data4[6], baseUuid()->data4[7])
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -587,6 +590,7 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 */
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 {
+    registerQBluetoothUuidMetaType();
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
     data1 = qFromBigEndian<quint32>(*reinterpret_cast<quint32 *>(&uuid.data[0]));
@@ -605,6 +609,7 @@ QT_WARNING_POP
 QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 :   QUuid(uuid)
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -613,6 +618,7 @@ QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 QBluetoothUuid::QBluetoothUuid(const QBluetoothUuid &uuid)
 :   QUuid(uuid)
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -621,6 +627,7 @@ QBluetoothUuid::QBluetoothUuid(const QBluetoothUuid &uuid)
 QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
 :   QUuid(uuid)
 {
+    registerQBluetoothUuidMetaType();
 }
 
 /*!
