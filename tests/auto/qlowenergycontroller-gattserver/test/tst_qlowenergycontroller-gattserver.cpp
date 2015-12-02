@@ -46,6 +46,8 @@
 
 #include <algorithm>
 
+using namespace QBluetooth;
+
 class TestQLowEnergyControllerGattServer : public QObject
 {
     Q_OBJECT
@@ -213,7 +215,7 @@ void TestQLowEnergyControllerGattServer::initialServices()
     QCOMPARE(appearanceChar.descriptors().count(), 0);
     QCOMPARE(appearanceChar.properties(), QLowEnergyCharacteristic::Read);
     QByteArray appearanceValue(2, 0);
-    appearanceValue[0] = -1;
+    appearanceValue[0] = 64;
     QCOMPARE(appearanceChar.value(), appearanceValue);
 
     const QScopedPointer<QLowEnergyService> runningSpeedService(
@@ -254,12 +256,24 @@ void TestQLowEnergyControllerGattServer::initialServices()
         QVERIFY(spy->wait(3000));
     }
     QCOMPARE(customService->includedServices().count(), 0);
-    QCOMPARE(customService->characteristics().count(), 1);
+    QCOMPARE(customService->characteristics().count(), 2);
     QLowEnergyCharacteristic customChar
             = customService->characteristic(QBluetoothUuid(quint16(0x5000)));
     QVERIFY(customChar.isValid());
     QCOMPARE(customChar.descriptors().count(), 0);
     QCOMPARE(customChar.value(), QByteArray(1024, 'x'));
+
+    QLowEnergyCharacteristic customChar2
+            = customService->characteristic(QBluetoothUuid(quint16(0x5001)));
+    QVERIFY(customChar2.isValid());
+    QCOMPARE(customChar2.descriptors().count(), 0);
+    QCOMPARE(customChar2.value(), QByteArray()); // Was not readable due to authorization requirement.
+
+    customService->writeCharacteristic(customChar, "whatever");
+    spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
+                             (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
+    QVERIFY(spy->wait(3000));
+    QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
 }
 
 void TestQLowEnergyControllerGattServer::controllerType()
@@ -282,6 +296,13 @@ void TestQLowEnergyControllerGattServer::serviceData()
     descData.setValue("xyz");
     QCOMPARE(descData.value().constData(), "xyz");
 
+    descData.setReadPermissions(true, AttAuthenticationRequired);
+    QCOMPARE(descData.isReadable(), true);
+    QCOMPARE(descData.readConstraints(), AttAuthenticationRequired);
+
+    descData.setWritePermissions(false);
+    QCOMPARE(descData.isWritable(), false);
+
     QLowEnergyDescriptorData descData2(QBluetoothUuid::ReportReference, "abc");
     QVERIFY(descData2 != QLowEnergyDescriptorData());
     QVERIFY(descData2.isValid());
@@ -303,6 +324,11 @@ void TestQLowEnergyControllerGattServer::serviceData()
             = QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::WriteSigned;
     charData.setProperties(props);
     QCOMPARE(charData.properties(),  props);
+
+    charData.setReadConstraints(AttEncryptionRequired);
+    QCOMPARE(charData.readConstraints(), AttEncryptionRequired);
+    charData.setWriteConstraints(AttAuthenticationRequired | AttAuthorizationRequired);
+    QCOMPARE(charData.writeConstraints(), AttAuthenticationRequired | AttAuthorizationRequired);
 
     charData.setDescriptors(QList<QLowEnergyDescriptorData>() << descData << descData2);
     QLowEnergyDescriptorData descData3(QBluetoothUuid::ExternalReportReference, "someval");

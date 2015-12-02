@@ -64,7 +64,15 @@ public:
 
     bool isValid() const;
 
-    // TODO: read permissions, write permissions, authentication/authorization (only applicable for some descriptors)
+    void setReadPermissions(bool readable,
+            QBluetooth::AttAccessConstraints constraints = QBluetooth::AttAccessConstraints());
+    bool isReadable() const;
+    QBluetooth::AttAccessConstraints readConstraints() const;
+
+    void setWritePermissions(bool writable,
+            QBluetooth::AttAccessConstraints constraints = QBluetooth::AttAccessConstraints());
+    bool isWritable() const;
+    QBluetooth::AttAccessConstraints writeConstraints() const;
 
     void swap(QLowEnergyDescriptorData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
 

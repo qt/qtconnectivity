@@ -67,6 +67,20 @@ namespace QBluetooth {
     Simple Pairing from Bluetooth 2.1 or greater is required.
     Legacy pairing is not permitted.
 */
+
+/*!
+    \enum QBluetooth::AttAccessConstraint
+
+    This enum describes the possible requirements for reading or writing an ATT attribute.
+
+    \value AttAuthorizationRequired
+        The client needs authorization from the ATT server to access the attribute.
+    \value AttAuthenticationRequired
+        The client needs to be authenticated to access the attribute.
+    \value AttEncryptionRequired
+        The attribute can only be accessed if the connection is encrypted.
+*/
+
 }
 
 /*!

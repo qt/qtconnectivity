@@ -179,9 +179,10 @@ public:
         QLowEnergyHandle handle;
         QLowEnergyHandle groupEndHandle;
         QLowEnergyCharacteristic::PropertyTypes properties;
+        QBluetooth::AttAccessConstraints readConstraints;
+        QBluetooth::AttAccessConstraints writeConstraints;
         QBluetoothUuid type;
         QByteArray value;
-        // TODO: authentication/authorization requirements
     };
     QVector<Attribute> localAttributes;
 

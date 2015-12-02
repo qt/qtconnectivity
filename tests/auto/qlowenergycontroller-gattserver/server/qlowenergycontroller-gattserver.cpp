@@ -100,7 +100,7 @@ void addGenericAccessService()
     charData.setUuid(QBluetoothUuid::Appearance);
     charData.setProperties(QLowEnergyCharacteristic::Read);
     QByteArray value(2, 0);
-    value[0] = -1; // 128 => Generic computer.
+    value[0] = 64; // Generic Phone
     charData.setValue(value);
     serviceData.addCharacteristic(charData);
 
@@ -119,6 +119,12 @@ void addCustomService()
     charData.setProperties(QLowEnergyCharacteristic::Read);
     charData.setValue(QByteArray(1024, 'x')); // Long value to test "Read Blob".
     serviceData.addCharacteristic(charData);
+
+    charData.setUuid(QBluetoothUuid(quint16(0x5001))); // Made up.
+    charData.setProperties(QLowEnergyCharacteristic::Read);
+    charData.setReadConstraints(QBluetooth::AttAuthorizationRequired); // To test read failure.
+    serviceData.addCharacteristic(charData);
+    charData.setValue("something");
 
     addService(serviceData);
 }

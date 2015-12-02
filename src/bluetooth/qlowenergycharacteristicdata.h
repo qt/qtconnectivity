@@ -64,11 +64,15 @@ public:
     void setDescriptors(const QList<QLowEnergyDescriptorData> &descriptors);
     void addDescriptor(const QLowEnergyDescriptorData &descriptor);
 
+    void setReadConstraints(QBluetooth::AttAccessConstraints constraints);
+    QBluetooth::AttAccessConstraints readConstraints() const;
+
+    void setWriteConstraints(QBluetooth::AttAccessConstraints constraints);
+    QBluetooth::AttAccessConstraints writeConstraints() const;
+
     bool isValid() const;
 
     void swap(QLowEnergyCharacteristicData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
-
-    // TODO: authentication/authorization requirements (separate for reading and writing!)
 
 private:
     QSharedDataPointer<QLowEnergyCharacteristicDataPrivate> d;

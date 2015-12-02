@@ -39,8 +39,14 @@ QT_BEGIN_NAMESPACE
 
 struct QLowEnergyDescriptorDataPrivate : public QSharedData
 {
+    QLowEnergyDescriptorDataPrivate() : readable(true), writable(true) {}
+
     QBluetoothUuid uuid;
     QByteArray value;
+    QBluetooth::AttAccessConstraints readConstraints;
+    QBluetooth::AttAccessConstraints writeConstraints;
+    bool readable;
+    bool writable;
 };
 
 /*!
@@ -52,6 +58,10 @@ struct QLowEnergyDescriptorDataPrivate : public QSharedData
 
     An object of this class provides a descriptor to be added to a
     \l QLowEnergyCharacteristicData object via \l QLowEnergyCharacteristicData::addDescriptor().
+
+    \note The member functions related to access permissions are only applicable to those
+          types of descriptors for which the Bluetooth specification does not prescribe if
+          and how their values can be accessed.
 
     \sa QLowEnergyCharacteristicData
     \sa QLowEnergyServiceData
@@ -127,6 +137,60 @@ bool QLowEnergyDescriptorData::isValid() const
 }
 
 /*!
+  Specifies whether the value of this descriptor is \a readable and if so, under which
+  \a constraints.
+  \sa setWritePermissions()
+ */
+void QLowEnergyDescriptorData::setReadPermissions(bool readable,
+                                                  QBluetooth::AttAccessConstraints constraints)
+{
+    d->readable = readable;
+    d->readConstraints = constraints;
+}
+
+/*! Returns \c true if the value of this descriptor is readable and \c false otherwise. */
+bool QLowEnergyDescriptorData::isReadable() const
+{
+    return d->readable;
+}
+
+/*!
+  Returns the constraints under which the value of this descriptor can be read. This value
+  is only relevant if \l isReadable() returns \c true.
+ */
+QBluetooth::AttAccessConstraints QLowEnergyDescriptorData::readConstraints() const
+{
+    return d->readConstraints;
+}
+
+/*!
+  Specifies whether the value of this descriptor is \a writable and if so, under which
+  \a constraints.
+  \sa setReadPermissions()
+ */
+void QLowEnergyDescriptorData::setWritePermissions(bool writable,
+                                                   QBluetooth::AttAccessConstraints constraints)
+{
+    d->writable = writable;
+    d->writeConstraints = constraints;
+}
+
+/*! Returns \c true if the value of this descriptor is writable and \c false otherwise. */
+bool QLowEnergyDescriptorData::isWritable() const
+{
+    return d->writable;
+}
+
+/*!
+  Returns the constraints under which the value of this descriptor can be written. This value
+  is only relevant if \l isWritable() returns \c true.
+ */
+QBluetooth::AttAccessConstraints QLowEnergyDescriptorData::writeConstraints() const
+{
+    return d->writeConstraints;
+}
+
+/*!
    \fn void QLowEnergyDescriptorData::swap(QLowEnergyDescriptorData &other)
     Swaps this object with \a other.
  */
@@ -137,7 +201,13 @@ bool QLowEnergyDescriptorData::isValid() const
  */
 bool operator==(const QLowEnergyDescriptorData &d1, const QLowEnergyDescriptorData &d2)
 {
-    return d1.d == d2.d || (d1.uuid() == d2.uuid() && d1.value() == d2.value());
+    return d1.d == d2.d || (
+                d1.uuid() == d2.uuid()
+                && d1.value() == d2.value()
+                && d1.isReadable() == d2.isReadable()
+                && d1.isWritable() == d2.isWritable()
+                && d1.readConstraints() == d2.readConstraints()
+                && d1.writeConstraints() == d2.writeConstraints());
 }
 
 /*!

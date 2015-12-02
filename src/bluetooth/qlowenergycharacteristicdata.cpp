@@ -51,6 +51,8 @@ struct QLowEnergyCharacteristicDataPrivate : public QSharedData
     QLowEnergyCharacteristic::PropertyTypes properties;
     QList<QLowEnergyDescriptorData> descriptors;
     QByteArray value;
+    QBluetooth::AttAccessConstraints readConstraints;
+    QBluetooth::AttAccessConstraints writeConstraints;
 };
 
 /*!
@@ -157,6 +159,44 @@ void QLowEnergyCharacteristicData::addDescriptor(const QLowEnergyDescriptorData 
 }
 
 /*!
+  Specifies that clients need to fulfill \a constraints to read the value of this characteristic.
+ */
+void QLowEnergyCharacteristicData::setReadConstraints(QBluetooth::AttAccessConstraints constraints)
+{
+    d->readConstraints = constraints;
+}
+
+/*!
+  Returns the constraints needed for a client to read the value of this characteristic.
+  If \l properties() does not include \l QLowEnergyCharacteristic::Read, this value is irrelevant.
+  By default, there are no read constraints.
+ */
+QBluetooth::AttAccessConstraints QLowEnergyCharacteristicData::readConstraints() const
+{
+    return d->readConstraints;
+}
+
+/*!
+  Specifies that clients need to fulfill \a constraints to write the value of this characteristic.
+ */
+void QLowEnergyCharacteristicData::setWriteConstraints(QBluetooth::AttAccessConstraints constraints)
+{
+    d->writeConstraints = constraints;
+}
+
+/*!
+  Returns the constraints needed for a client to write the value of this characteristic.
+  If \l properties() does not include either of \l QLowEnergyCharacteristic::Write,
+  \l QLowEnergyCharacteristic::WriteNoResponse and \l QLowEnergyCharacteristic::WriteSigned,
+  this value is irrelevant.
+  By default, there are no write constraints.
+ */
+QBluetooth::AttAccessConstraints QLowEnergyCharacteristicData::writeConstraints() const
+{
+    return d->writeConstraints;
+}
+
+/*!
   Returns true if and only if this characteristic is valid, that is, it has a non-null UUID.
  */
 bool QLowEnergyCharacteristicData::isValid() const
@@ -175,8 +215,13 @@ bool QLowEnergyCharacteristicData::isValid() const
  */
 bool operator==(const QLowEnergyCharacteristicData &cd1, const QLowEnergyCharacteristicData &cd2)
 {
-    return cd1.d == cd2.d || (cd1.uuid() == cd2.uuid() && cd1.properties() == cd2.properties()
-            && cd1.descriptors() == cd2.descriptors() && cd1.value() == cd2.value());
+    return cd1.d == cd2.d || (
+                cd1.uuid() == cd2.uuid()
+                && cd1.properties() == cd2.properties()
+                && cd1.descriptors() == cd2.descriptors()
+                && cd1.value() == cd2.value()
+                && cd1.readConstraints() == cd2.readConstraints()
+                && cd1.writeConstraints() == cd2.writeConstraints());
 }
 
 /*!

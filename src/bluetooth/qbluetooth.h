@@ -39,6 +39,10 @@
 QT_BEGIN_NAMESPACE
 
 namespace QBluetooth {
+
+// TODO Qt 6: Merge these two enums? But note that ATT Authorization has no equivalent
+//            on the socket security level.
+
 enum Security {
     NoSecurity = 0x00,
     Authorization = 0x01,
@@ -49,6 +53,16 @@ enum Security {
 
 Q_DECLARE_FLAGS(SecurityFlags, Security)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
+
+enum AttAccessConstraint {
+    AttAuthorizationRequired = 0x1,
+    AttAuthenticationRequired = 0x2,
+    AttEncryptionRequired = 0x4,
+};
+
+Q_DECLARE_FLAGS(AttAccessConstraints, AttAccessConstraint)
+Q_DECLARE_OPERATORS_FOR_FLAGS(AttAccessConstraints)
+
 }
 
 typedef quint16 QLowEnergyHandle;

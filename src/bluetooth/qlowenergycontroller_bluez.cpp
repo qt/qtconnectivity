@@ -132,6 +132,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
+using namespace QBluetooth;
+
 const int maxPrepareQueueSize = 1024;
 
 static inline QBluetoothUuid convert_uuid128(const quint128 *p)
@@ -2493,6 +2495,8 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
         attribute.groupEndHandle = attribute.handle;
         attribute.type = cd.uuid();
         attribute.properties = cd.properties();
+        attribute.readConstraints = cd.readConstraints();
+        attribute.writeConstraints = cd.writeConstraints();
         attribute.value = cd.value();
         localAttributes[attribute.handle] = attribute;
 
@@ -2500,7 +2504,33 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
             attribute.handle = ++currentHandle;
             attribute.groupEndHandle = attribute.handle;
             attribute.type = dd.uuid();
-            attribute.properties = QLowEnergyCharacteristic::Read; // TODO: The different descriptor types have different read/write capabilities.
+            attribute.properties = QLowEnergyCharacteristic::PropertyTypes();
+            attribute.readConstraints = AttAccessConstraints();
+            attribute.writeConstraints = AttAccessConstraints();
+            // Spec v4.2, Vol. 3, Part G, 3.3.3.x
+            if (attribute.type == QBluetoothUuid::CharacteristicExtendedProperties
+                    || attribute.type == QBluetoothUuid::CharacteristicPresentationFormat
+                    || attribute.type == QBluetoothUuid::CharacteristicAggregateFormat) {
+                attribute.properties = QLowEnergyCharacteristic::Read;
+            } else if (attribute.type == QBluetoothUuid::ClientCharacteristicConfiguration
+                       || attribute.type == QBluetoothUuid::ServerCharacteristicConfiguration) {
+                attribute.properties = QLowEnergyCharacteristic::Read
+                        | QLowEnergyCharacteristic::Write
+                        | QLowEnergyCharacteristic::WriteNoResponse
+                        | QLowEnergyCharacteristic::WriteSigned;
+                attribute.writeConstraints = dd.writeConstraints();
+            } else {
+                if (dd.isReadable())
+                    attribute.properties |= QLowEnergyCharacteristic::Read;
+                if (dd.isWritable()) {
+                    attribute.properties |= QLowEnergyCharacteristic::Write;
+                    attribute.properties |= QLowEnergyCharacteristic::WriteNoResponse;
+                    attribute.properties |= QLowEnergyCharacteristic::WriteSigned;
+                }
+                attribute.readConstraints = dd.readConstraints();
+                attribute.writeConstraints = dd.writeConstraints();
+            }
+
             attribute.value = dd.value();
             localAttributes[attribute.handle] = attribute;
         }
@@ -2556,27 +2586,23 @@ QVector<QLowEnergyControllerPrivate::Attribute> QLowEnergyControllerPrivate::get
 int QLowEnergyControllerPrivate::checkPermissions(const Attribute &attr,
                                                   QLowEnergyCharacteristic::PropertyType type)
 {
-    // TODO: Actual permission checks.
-    if (false)
-        return ATT_ERROR_INSUF_AUTHORIZATION;
-    if (false)
+    const bool isReadAccess = type == QLowEnergyCharacteristic::Read;
+    const bool isWriteAccess = type == QLowEnergyCharacteristic::Write
+            || type == QLowEnergyCharacteristic::WriteNoResponse
+            || type == QLowEnergyCharacteristic::WriteSigned;
+    Q_ASSERT(isReadAccess || isWriteAccess);
+    if (!(attr.properties & type))
+        return isReadAccess ? ATT_ERROR_READ_NOT_PERM : ATT_ERROR_WRITE_NOT_PERM;
+    const AttAccessConstraints constraints = isReadAccess
+            ? attr.readConstraints : attr.writeConstraints;
+    if (constraints.testFlag(AttAuthorizationRequired))
+        return ATT_ERROR_INSUF_AUTHORIZATION; // TODO: emit signal (and offer authorization function)?
+    if (constraints.testFlag(AttEncryptionRequired) && securityLevel() < BT_SECURITY_MEDIUM)
+        return ATT_ERROR_INSUF_ENCRYPTION;
+    if (constraints.testFlag(AttAuthenticationRequired) && securityLevel() < BT_SECURITY_HIGH)
         return ATT_ERROR_INSUF_AUTHENTICATION;
     if (false)
         return ATT_ERROR_INSUF_ENCR_KEY_SIZE;
-    if (false)
-        return ATT_ERROR_INSUF_ENCRYPTION;
-    if (!(attr.properties & type)) {
-        switch (type) {
-        case QLowEnergyCharacteristic::Read:
-            return ATT_ERROR_READ_NOT_PERM;
-        case QLowEnergyCharacteristic::Write:
-        case QLowEnergyCharacteristic::WriteSigned:
-        case QLowEnergyCharacteristic::WriteNoResponse:
-            return ATT_ERROR_WRITE_NOT_PERM;
-        default:
-            Q_ASSERT(false); // Cannot happen.
-        }
-    }
     return 0;
 }
 
