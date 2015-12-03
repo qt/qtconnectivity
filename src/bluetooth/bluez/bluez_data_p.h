@@ -50,6 +50,8 @@
 #include <sys/socket.h>
 #include <QtBluetooth/QBluetoothUuid>
 
+QT_BEGIN_NAMESPACE
+
 #define BTPROTO_L2CAP   0
 #define BTPROTO_HCI     1
 #define BTPROTO_RFCOMM  3
@@ -330,5 +332,7 @@ typedef struct {
     quint8  encrypt;
 } __attribute__ ((packed)) evt_encrypt_change;
 #define EVT_ENCRYPT_CHANGE_SIZE 4
+
+QT_END_NAMESPACE
 
 #endif // BLUEZ_DATA_P_H

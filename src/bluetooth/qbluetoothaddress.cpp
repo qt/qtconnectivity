@@ -59,15 +59,13 @@ QT_BEGIN_NAMESPACE
     Returns true if the Bluetooth addresses are not equal, otherwise returns false.
 */
 
-namespace {
-class BluetoothAddressRegisterMetaTypes
+static void registerQBluetoothAddressMetaType()
 {
-public:
-    BluetoothAddressRegisterMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QBluetoothAddress>();
+        initDone = true;
     }
-} _registerBluetoothAddressMetaTypes;
 }
 
 /*!
@@ -76,6 +74,7 @@ public:
 QBluetoothAddress::QBluetoothAddress() :
     d_ptr(new QBluetoothAddressPrivate)
 {
+    registerQBluetoothAddressMetaType();
 }
 
 /*!
@@ -84,6 +83,8 @@ QBluetoothAddress::QBluetoothAddress() :
 QBluetoothAddress::QBluetoothAddress(quint64 address) :
     d_ptr(new QBluetoothAddressPrivate)
 {
+    registerQBluetoothAddressMetaType();
+
     Q_D(QBluetoothAddress);
     d->m_address = address;
 }
@@ -97,6 +98,8 @@ QBluetoothAddress::QBluetoothAddress(quint64 address) :
 QBluetoothAddress::QBluetoothAddress(const QString &address) :
     d_ptr(new QBluetoothAddressPrivate)
 {
+    registerQBluetoothAddressMetaType();
+
     Q_D(QBluetoothAddress);
 
     QString a = address;

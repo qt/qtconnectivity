@@ -34,77 +34,71 @@
 #ifndef OSXBTLEDEVICEINQUIRY_P_H
 #define OSXBTLEDEVICEINQUIRY_P_H
 
-#include "qbluetoothdevicediscoveryagent.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include <QtCore/qdatetime.h>
+#include "qbluetoothdevicediscoveryagent.h"
+#include "qbluetoothdeviceinfo.h"
+#include "osxbtutility_p.h"
+
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qatomic.h>
 #include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
-
-@class QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
 
 @class CBCentralManager;
 @class CBPeripheral;
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfo;
 class QBluetoothUuid;
-
-namespace OSXBluetooth {
-
-class LEDeviceInquiryDelegate
-{
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) LEDeviceInquiryObjC;
-
-    virtual ~LEDeviceInquiryDelegate();
-
-    // At the moment the only error we're reporting is PoweredOffError!
-    virtual void LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::Error error) = 0;
-
-    virtual void LEnotSupported() = 0;
-    virtual void LEdeviceFound(CBPeripheral *peripheral, const QBluetoothUuid &uuid,
-                               NSDictionary *advertisementData, NSNumber *RSSI) = 0;
-    virtual void LEdeviceInquiryFinished() = 0;
-};
-
-}
 
 QT_END_NAMESPACE
 
-// Bluetooth Low Energy scan for iOS and OS X.
+enum LEInquiryState
+{
+    InquiryStarting,
+    InquiryActive,
+    InquiryFinished,
+    InquiryCancelled,
+    ErrorPoweredOff,
+    ErrorLENotSupported
+};
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
-{// Protocols are adopted in the mm file.
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *delegate;
+{
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer<NSMutableSet> uuids;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer<CBCentralManager> manager;
 
-    // TODO: scoped pointers/shared pointers?
-    NSMutableDictionary *peripherals; // Found devices.
-    CBCentralManager *manager;
+    QList<QBluetoothDeviceInfo> devices;
 
-    // pending - waiting for a status update first.
-    bool pendingStart;
-    bool cancelled;
-    // scan actually started.
-    bool isActive;
-    QTime startTime;
+    LEInquiryState internalState;
+    QT_PREPEND_NAMESPACE(QAtomicInt) state;
+
+    // Timers to check if we can execute delayed callbacks:
+    QT_PREPEND_NAMESPACE(QElapsedTimer) errorTimer;
+    QT_PREPEND_NAMESPACE(QElapsedTimer) scanTimer;
 }
 
-// Inquiry length in milliseconds.
-+ (int)inquiryLength;
-
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *)aDelegate;
+- (id)init;
 - (void)dealloc;
 
-// Actual scan can be delayed - we have to wait for a status update first.
-- (bool)start;
-// Stop can be delayed - if we're waiting for a status update.
+// IMPORTANT: both 'start' and 'stop' are to be executed on the "Qt's LE queue".
+- (void)start;
 - (void)stop;
 
-- (bool)isActive;
-- (const QTime &)startTime;
+- (LEInquiryState)inquiryState;
+- (const QList<QBluetoothDeviceInfo> &)discoveredDevices;
 
 @end
 

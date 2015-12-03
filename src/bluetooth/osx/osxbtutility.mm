@@ -305,6 +305,47 @@ ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
     return result;
 }
 
+// A small RAII class for a dispatch queue.
+class SerialDispatchQueue
+{
+public:
+    explicit SerialDispatchQueue(const char *label)
+    {
+        Q_ASSERT(label);
+
+        queue = dispatch_queue_create(label, DISPATCH_QUEUE_SERIAL);
+        if (!queue) {
+            qCCritical(QT_BT_OSX) << "failed to create dispatch queue with label"
+                                  << label;
+        }
+    }
+    ~SerialDispatchQueue()
+    {
+        if (queue)
+            dispatch_release(queue);
+    }
+
+    dispatch_queue_t data() const
+    {
+        return queue;
+    }
+private:
+    dispatch_queue_t queue;
+
+    Q_DISABLE_COPY(SerialDispatchQueue)
+};
+
+dispatch_queue_t qt_LE_queue()
+{
+    static const SerialDispatchQueue leQueue("qt-bluetooth-LE-queue");
+    return leQueue.data();
+}
+
+unsigned qt_LE_deviceInquiryLength()
+{
+    return 10;
+}
+
 }
 
 QT_END_NAMESPACE

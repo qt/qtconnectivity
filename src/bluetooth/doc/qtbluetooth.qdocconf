@@ -4,7 +4,7 @@ project                 = QtBluetooth
 description             = Qt Bluetooth Reference Documentation
 version                 = $QT_VERSION
 
-examplesinstallpath     = bluetooth
+examplesinstallpath     = qtconnectivity/bluetooth
 
 qhp.projects            = QtBluetooth
 

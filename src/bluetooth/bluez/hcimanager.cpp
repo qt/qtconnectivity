@@ -219,12 +219,8 @@ QBluetoothAddress HciManager::addressForConnectionHandle(quint16 handle) const
     }
 
     for (int i = 0; i < infoList->conn_num; i++) {
-        if (info[i].handle == handle) {
-            quint64 converted;
-            convertAddress(info[i].bdaddr.b, converted);
-
-            return QBluetoothAddress(converted);
-        }
+        if (info[i].handle == handle)
+            return QBluetoothAddress(convertAddress(info[i].bdaddr.b));
     }
 
     return QBluetoothAddress();

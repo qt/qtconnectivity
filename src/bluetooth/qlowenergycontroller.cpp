@@ -194,17 +194,16 @@ QT_BEGIN_NAMESPACE
     \sa discoverServices(), error()
 */
 
-namespace {
-class QLowEnergyControllerMetaTypes
+void registerQLowEnergyControllerMetaType()
 {
-public:
-    QLowEnergyControllerMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
+        initDone = true;
     }
-} qLowEnergyControllerMetaTypes;
 }
+
 
 void QLowEnergyControllerPrivate::setError(
         QLowEnergyController::Error newError)
@@ -222,8 +221,12 @@ void QLowEnergyControllerPrivate::setError(
     case QLowEnergyController::NetworkError:
         errorString = QLowEnergyController::tr("Error occurred during connection I/O");
         break;
+    case QLowEnergyController::ConnectionError:
+        errorString = QLowEnergyController::tr("Error occurred trying to connect to remote device.");
+        break;
+    case QLowEnergyController::NoError:
+        return;
     case QLowEnergyController::UnknownError:
-    default:
         errorString = QLowEnergyController::tr("Unknown Error");
         break;
     }

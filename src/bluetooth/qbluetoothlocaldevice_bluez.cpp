@@ -656,6 +656,8 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
         msgConnection(0),
         q_ptr(q)
 {
+    registerQBluetoothLocalDeviceMetaType();
+
     if (isBluez5())
         initializeAdapterBluez5();
     else

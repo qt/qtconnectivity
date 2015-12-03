@@ -106,8 +106,10 @@
 #define ATT_ERROR_INVAL_ATTR_VALUE_LEN  0x0D
 #define ATT_ERROR_UNLIKELY              0x0E
 #define ATT_ERROR_INSUF_ENCRYPTION      0x0F
-#define ATT_ERROR_APPLICATION           0x10
+#define ATT_ERROR_UNSUPPRTED_GROUP_TYPE 0x10
 #define ATT_ERROR_INSUF_RESOURCES       0x11
+#define ATT_ERROR_APPLICATION_START     0x80
+#define ATT_ERROR_APPLICATION_END       0x9f
 
 #define APPEND_VALUE true
 #define NEW_VALUE false
@@ -176,12 +178,16 @@ static void dumpErrorInformation(const QByteArray &response)
         errorString = QStringLiteral("unlikely error"); break;
     case ATT_ERROR_INSUF_ENCRYPTION:
         errorString = QStringLiteral("needs encryption - permissions"); break;
-    case ATT_ERROR_APPLICATION:
-        errorString = QStringLiteral("application error"); break;
+    case ATT_ERROR_UNSUPPRTED_GROUP_TYPE:
+        errorString = QStringLiteral("unsupported group type"); break;
     case ATT_ERROR_INSUF_RESOURCES:
         errorString = QStringLiteral("insufficient resources to complete request"); break;
     default:
-        errorString = QStringLiteral("unknown error code"); break;
+        if (errorCode >= ATT_ERROR_APPLICATION_START && errorCode <= ATT_ERROR_APPLICATION_END)
+            errorString = QStringLiteral("application error");
+        else
+            errorString = QStringLiteral("unknown error code");
+        break;
     }
 
     qCDebug(QT_BT_BLUEZ) << "Error1:" << errorString
@@ -199,6 +205,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       encryptionChangePending(false),
       hciManager(0)
 {
+    registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 
     hciManager = new HciManager(localAdapter, this);
@@ -262,7 +269,9 @@ void QLowEnergyControllerPrivate::connectToDevice()
     }
 
     // connect
-    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID);
+    // Unbuffered mode required to separate each GATT packet
+    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID,
+                                 QIODevice::ReadWrite | QIODevice::Unbuffered);
 }
 
 void QLowEnergyControllerPrivate::l2cpConnected()
@@ -1717,9 +1726,9 @@ bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode
         return false;
 
     switch (errorCode) {
-    case ATT_ERROR_INSUF_AUTHORIZATION:
     case ATT_ERROR_INSUF_ENCRYPTION:
     case ATT_ERROR_INSUF_AUTHENTICATION:
+    case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
         if (!hciManager->isValid())
             return false;
         if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))

@@ -453,6 +453,12 @@ bool QBluetoothDeviceInfo::operator!=(const QBluetoothDeviceInfo &other) const
 
 /*!
     Returns the address of the device.
+
+    \note On iOS and OS X this address is invalid. Instead \l deviceUuid() should be used.
+    Those two platforms do not expose Bluetooth addresses for found Bluetooth devices
+    and utilize unique device identifiers.
+
+    \sa deviceUuid()
 */
 QBluetoothAddress QBluetoothDeviceInfo::address() const
 {
@@ -613,6 +619,11 @@ void QBluetoothDeviceInfo::setDeviceUuid(const QBluetoothUuid &uuid)
 
 /*!
    Returns a unique identifier for a Bluetooth device without an address.
+
+   In general, this uuid is invalid on every platform but OS X and iOS.
+   It is used as a workaround for those two platforms as they do not
+   provide Bluetooth addresses for found Bluetooth Low Energy devices.
+   Every other platform uses \l address() instead.
 
    \sa setDeviceUuid()
    \since 5.5
