@@ -251,6 +251,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       advertiser(0),
       serverSocketNotifier(0)
 {
+    registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 
     hciManager = new HciManager(localAdapter, this);
@@ -403,7 +404,9 @@ void QLowEnergyControllerPrivate::connectToDevice()
     }
 
     // connect
-    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID);
+    // Unbuffered mode required to separate each GATT packet
+    l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID,
+                                 QIODevice::ReadWrite | QIODevice::Unbuffered);
 }
 
 void QLowEnergyControllerPrivate::l2cpConnected()
@@ -1878,9 +1881,9 @@ bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode
         return false;
 
     switch (errorCode) {
-    case ATT_ERROR_INSUF_AUTHORIZATION:
     case ATT_ERROR_INSUF_ENCRYPTION:
     case ATT_ERROR_INSUF_AUTHENTICATION:
+    case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
         if (!hciManager->isValid())
             return false;
         if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))

@@ -91,6 +91,8 @@ class QSocketNotifier;
 class LowEnergyNotificationHub;
 #endif
 
+extern void registerQLowEnergyControllerMetaType();
+
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 class QLeAdvertiser;
 

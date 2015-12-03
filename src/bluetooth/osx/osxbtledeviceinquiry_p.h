@@ -46,80 +46,59 @@
 //
 
 #include "qbluetoothdevicediscoveryagent.h"
+#include "qbluetoothdeviceinfo.h"
+#include "osxbtutility_p.h"
 
-#include <QtCore/qdatetime.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qatomic.h>
 #include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
-
-@class QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
 
 @class CBCentralManager;
 @class CBPeripheral;
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothDeviceInfo;
 class QBluetoothUuid;
-
-namespace OSXBluetooth {
-
-class LEDeviceInquiryDelegate
-{
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) LEDeviceInquiryObjC;
-
-    virtual ~LEDeviceInquiryDelegate();
-
-    // At the moment the only error we're reporting is PoweredOffError!
-    virtual void LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::Error error) = 0;
-
-    virtual void LEnotSupported() = 0;
-    virtual void LEdeviceFound(CBPeripheral *peripheral, const QBluetoothUuid &uuid,
-                               NSDictionary *advertisementData, NSNumber *RSSI) = 0;
-    virtual void LEdeviceInquiryFinished() = 0;
-};
-
-}
 
 QT_END_NAMESPACE
 
-// Bluetooth Low Energy scan for iOS and OS X.
-// Strong enum would be quite handy ...
-enum LEScanPhase
+enum LEInquiryState
 {
-    noActivity,
-    startingScan,
-    activeScan
+    InquiryStarting,
+    InquiryActive,
+    InquiryFinished,
+    InquiryCancelled,
+    ErrorPoweredOff,
+    ErrorLENotSupported
 };
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
-{// Protocols are adopted in the mm file.
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *delegate;
+{
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer<NSMutableSet> uuids;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer<CBCentralManager> manager;
 
-    // TODO: scoped pointers/shared pointers?
-    NSMutableDictionary *peripherals; // Found devices.
-    CBCentralManager *manager;
+    QList<QBluetoothDeviceInfo> devices;
 
-    LEScanPhase scanPhase;
-    bool cancelled;
-    QTime startTime;
+    LEInquiryState internalState;
+    QT_PREPEND_NAMESPACE(QAtomicInt) state;
+
+    // Timers to check if we can execute delayed callbacks:
+    QT_PREPEND_NAMESPACE(QElapsedTimer) errorTimer;
+    QT_PREPEND_NAMESPACE(QElapsedTimer) scanTimer;
 }
 
-// Inquiry length in milliseconds.
-+ (int)inquiryLength;
-
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LEDeviceInquiryDelegate *)aDelegate;
+- (id)init;
 - (void)dealloc;
 
-// Actual scan can be delayed - we have to wait for a status update first.
-- (bool)start;
-// Stop can be delayed - if we're waiting for a status update.
+// IMPORTANT: both 'start' and 'stop' are to be executed on the "Qt's LE queue".
+- (void)start;
 - (void)stop;
 
-- (bool)isActive;
-- (const QTime &)startTime;
+- (LEInquiryState)inquiryState;
+- (const QList<QBluetoothDeviceInfo> &)discoveredDevices;
 
 @end
 

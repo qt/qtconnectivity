@@ -238,17 +238,16 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \sa discoverServices(), error()
 */
 
-namespace {
-class QLowEnergyControllerMetaTypes
+void registerQLowEnergyControllerMetaType()
 {
-public:
-    QLowEnergyControllerMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
+        initDone = true;
     }
-} qLowEnergyControllerMetaTypes;
 }
+
 
 void QLowEnergyControllerPrivate::setError(
         QLowEnergyController::Error newError)

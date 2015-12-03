@@ -176,7 +176,8 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergyservice_osx.mm
 
     PRIVATE_HEADERS += \
-        qlowenergycontroller_osx_p.h
+        qlowenergycontroller_osx_p.h \
+        qbluetoothdevicediscoverytimer_osx_p.h
 
     include(osx/osxbt.pri)
     SOURCES += \

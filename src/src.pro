@@ -1,7 +1,10 @@
 TEMPLATE = subdirs
 
 SUBDIRS += bluetooth nfc
-android: SUBDIRS += android
+android {
+    SUBDIRS += android
+    android.depends += bluetooth nfc
+}
 
 contains(QT_CONFIG, private_tests) {
     bluetooth_doc_snippets.subdir = bluetooth/doc/snippets
