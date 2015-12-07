@@ -194,7 +194,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
  * done out-of-process to avoid license issues. At this stage Bluez uses GPLv2.
  */
 void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
-        const QBluetoothAddress &remoteAddress, const QBluetoothAddress localAddress)
+        const QBluetoothAddress &remoteAddress, const QBluetoothAddress &localAddress)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
@@ -426,7 +426,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     discoverServices(deviceObjectPath.value().path());
 }
 
-void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString deviceObjectPath)
+void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &deviceObjectPath)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
