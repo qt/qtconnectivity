@@ -838,6 +838,8 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     // for it.
 
     const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
+    servicePrivate->state = QLowEnergyService::LocalService;
+    servicePrivate->setController(d_ptr);
     servicePrivate->uuid = service.uuid();
     servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
             ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;

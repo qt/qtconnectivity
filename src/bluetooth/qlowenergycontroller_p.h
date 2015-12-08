@@ -183,6 +183,8 @@ public:
         QBluetooth::AttAccessConstraints writeConstraints;
         QBluetoothUuid type;
         QByteArray value;
+        int minLength;
+        int maxLength;
     };
     QVector<Attribute> localAttributes;
 
@@ -211,6 +213,32 @@ private:
     };
     QVector<WriteRequest> openPrepareWriteRequests;
 
+    // Invariant: !scheduledIndications.isEmpty => indicationInFlight == true
+    QVector<QLowEnergyHandle> scheduledIndications;
+    bool indicationInFlight = false;
+
+    struct TempClientConfigurationData {
+        TempClientConfigurationData(QLowEnergyServicePrivate::DescData *dd = nullptr,
+                                    QLowEnergyHandle chHndl = 0, QLowEnergyHandle coHndl = 0)
+            : descData(dd), charValueHandle(chHndl), configHandle(coHndl) {}
+
+        QLowEnergyServicePrivate::DescData *descData;
+        QLowEnergyHandle charValueHandle;
+        QLowEnergyHandle configHandle;
+    };
+
+    struct ClientConfigurationData {
+        ClientConfigurationData(QLowEnergyHandle chHndl = 0, QLowEnergyHandle coHndl = 0,
+                                quint16 val = 0)
+            : charValueHandle(chHndl), configHandle(coHndl), configValue(val) {}
+
+        QLowEnergyHandle charValueHandle;
+        QLowEnergyHandle configHandle;
+        quint16 configValue;
+        bool charValueWasUpdated = false;
+    };
+    QHash<quint64, QVector<ClientConfigurationData>> clientConfigData;
+
     bool requestPending;
     quint16 mtuSize;
     int securityLevelValue;
@@ -223,6 +251,11 @@ private:
 
     void handleConnectionRequest();
     void closeServerSocket();
+
+    bool isBonded() const;
+    QVector<TempClientConfigurationData> gatherClientConfigData();
+    void storeClientConfigurations();
+    void restoreClientConfigurations();
 
     void sendPacket(const QByteArray &packet);
     void sendNextPendingRequest();
@@ -280,6 +313,11 @@ private:
     void sendListResponse(const QByteArray &packetStart, int elemSize,
                           const QVector<Attribute> &attributes, const ElemWriter &elemWriter);
 
+    void sendNotification(QLowEnergyHandle handle);
+    void sendIndication(QLowEnergyHandle handle);
+    void sendNotificationOrIndication(quint8 opCode, QLowEnergyHandle handle);
+    void sendNextIndication();
+
     void ensureUniformAttributes(QVector<Attribute> &attributes, const std::function<int(const Attribute &)> &getSize);
     void ensureUniformUuidSizes(QVector<Attribute> &attributes);
     void ensureUniformValueSizes(QVector<Attribute> &attributes);
@@ -291,6 +329,31 @@ private:
     int checkPermissions(const Attribute &attr, QLowEnergyCharacteristic::PropertyType type);
     int checkReadPermissions(const Attribute &attr);
     int checkReadPermissions(QVector<Attribute> &attributes);
+
+    void updateLocalAttributeValue(
+            QLowEnergyHandle handle,
+            const QByteArray &value,
+            QLowEnergyCharacteristic &characteristic,
+            QLowEnergyDescriptor &descriptor);
+
+    void writeCharacteristicForPeripheral(
+            QLowEnergyServicePrivate::CharData &charData,
+            const QByteArray &newValue);
+    void writeCharacteristicForCentral(
+            QLowEnergyHandle charHandle,
+            QLowEnergyHandle valueHandle,
+            const QByteArray &newValue,
+            bool writeWithResponse);
+
+    void writeDescriptorForPeripheral(
+            const QSharedPointer<QLowEnergyServicePrivate> &service,
+            const QLowEnergyHandle charHandle,
+            const QLowEnergyHandle descriptorHandle,
+            const QByteArray &newValue);
+    void writeDescriptorForCentral(
+            const QLowEnergyHandle charHandle,
+            const QLowEnergyHandle descriptorHandle,
+            const QByteArray &newValue);
 
 private slots:
     void l2cpConnected();

@@ -220,6 +220,9 @@ QT_BEGIN_NAMESPACE
                                 \l serviceUuid() and \l serviceName().
     \value DiscoveringServices  The service details are being discovered.
     \value ServiceDiscovered    The service details have been discovered.
+    \value LocalService         The service is associated with a controller object in the
+                                \l{QLowEnergyController::PeripheralRole}{peripheral role}. Such
+                                service objects do not change their state.
  */
 
 /*!
@@ -302,15 +305,20 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
 
-    This signal is emitted when the value of \a characteristic is changed
-    by an event on the peripheral. The \a newValue parameter contains the
-    updated value of the \a characteristic.
-
-    The signal emission implies that change notifications must
+    If the associated controller object is in the \l {QLowEnergyController::CentralRole}{central}
+    role, this signal is emitted when the value of \a characteristic is changed by an event on the
+    peripheral. In that case, the signal emission implies that change notifications must
     have been activated via the characteristic's
     \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
     descriptor prior to the change event on the peripheral. More details on how this might be
     done can be found further \l{notifications}{above}.
+
+    If the controller is in the \l {QLowEnergyController::PeripheralRole}{peripheral} role, that is,
+    the service object was created via \l QLowEnergyController::addService, the signal is emitted
+    when a GATT client has written the value of the characteristic using a write request or command.
+
+    The \a newValue parameter contains the updated value of the \a characteristic.
+
  */
 
 /*!
@@ -329,8 +337,10 @@ QT_BEGIN_NAMESPACE
     \fn void QLowEnergyService::descriptorWritten(const QLowEnergyDescriptor &descriptor, const QByteArray &newValue)
 
     This signal is emitted when the value of \a descriptor
-    is successfully changed to \a newValue. The change must have been caused
-    by calling \l writeDescriptor().
+    is successfully changed to \a newValue. If the associated controller object is in the
+    \l {QLowEnergyController::CentralRole}{central} role, the change must have been caused
+    by calling \l writeDescriptor(). Otherwise, the signal is the result of a write request or
+    command from a GATT client to the respective descriptor.
 
     \sa writeDescriptor()
  */
@@ -611,7 +621,13 @@ void QLowEnergyService::readCharacteristic(
 }
 
 /*!
-    Writes \a newValue as value for the \a characteristic. If the operation is successful,
+    Writes \a newValue as value for the \a characteristic. The exact semantics depend on
+    the role that the associated controller object is in.
+
+    \b {Central role}
+
+    The call results in a write request or command to a remote peripheral.
+    If the operation is successful,
     the \l characteristicWritten() signal is emitted; otherwise the \l CharacteristicWriteError
     is set.
 
@@ -640,6 +656,21 @@ void QLowEnergyService::readCharacteristic(
     characteristic may only support \l WriteWithResponse. If the hardware returns
     with an error the \l CharacteristicWriteError is set.
 
+    \b {Peripheral role}
+
+    The call results in the value of the characteristic getting updated in the local database.
+
+    If a client is currently connected and it has enabled notifications or indications for
+    the characteristic, the respective information will be sent.
+    If a device has enabled notifications or indications for the characteristic and that device
+    is currently not connected, but a bond exists between it and the local device, then
+    the notification or indication will be sent on the next reconnection.
+
+    If there is a constraint on the length of the characteristic value and \a newValue
+    does not adhere to that constraint, the behavior is unspecified.
+
+    \note The \a mode argument is ignored in peripheral mode.
+
     \sa QLowEnergyService::characteristicWritten(), QLowEnergyService::readCharacteristic()
 
  */
@@ -650,7 +681,10 @@ void QLowEnergyService::writeCharacteristic(
     //TODO check behavior when writing to WriteSigned characteristic
     Q_D(QLowEnergyService);
 
-    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
+    if (d->controller == Q_NULLPTR
+            || (d->controller->role == QLowEnergyController::CentralRole
+                && state() != ServiceDiscovered)
+            || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -727,9 +761,14 @@ void QLowEnergyService::readDescriptor(
 }
 
 /*!
-    Writes \a newValue as value for \a descriptor. If the operation is successful,
-    the \l descriptorWritten() signal is emitted; otherwise the \l DescriptorWriteError
-    is emitted.
+    Writes \a newValue as value for \a descriptor. The exact semantics depend on
+    the role that the associated controller object is in.
+
+    \b {Central role}
+
+    A call to this function results in a write request to the remote device.
+    If the operation is successful, the \l descriptorWritten() signal is emitted; otherwise
+    the \l DescriptorWriteError is emitted.
 
     All descriptor and characteristic requests towards the same remote device are
     serialised. A queue is employed when issuing multiple write requests at the same time.
@@ -741,6 +780,11 @@ void QLowEnergyService::readDescriptor(
     belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
+    \b {Peripheral Role}
+
+    The value is written to the local service database. If the contents of \a newValue are not
+    valid for \a descriptor, the behavior is unspecified.
+
     \sa descriptorWritten(), readDescriptor()
  */
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
@@ -748,7 +792,10 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 {
     Q_D(QLowEnergyService);
 
-    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
+    if (d->controller == Q_NULLPTR
+            || (d->controller->role == QLowEnergyController::CentralRole
+            && state() != ServiceDiscovered)
+        || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }

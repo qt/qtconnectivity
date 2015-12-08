@@ -39,6 +39,7 @@
 #include "bluez/hcimanager_p.h"
 
 #include <QtCore/QLoggingCategory>
+#include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -46,6 +47,7 @@
 #include <QtBluetooth/QLowEnergyServiceData>
 
 #include <algorithm>
+#include <climits>
 #include <cstring>
 #include <errno.h>
 #include <sys/types.h>
@@ -238,7 +240,6 @@ template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
     memcpy(dst, value.constData(), value.count());
     dst += value.count();
 }
-
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
@@ -433,6 +434,8 @@ void QLowEnergyControllerPrivate::l2cpDisconnected()
 {
     Q_Q(QLowEnergyController);
 
+    if (role == QLowEnergyController::PeripheralRole)
+        storeClientConfigurations();
     invalidateServices();
     resetController();
     setState(QLowEnergyController::UnconnectedState);
@@ -472,6 +475,8 @@ void QLowEnergyControllerPrivate::resetController()
 {
     openRequests.clear();
     openPrepareWriteRequests.clear();
+    scheduledIndications.clear();
+    indicationInFlight = false;
     requestPending = false;
     encryptionChangePending = false;
     receivedMtuExchangeRequest = false;
@@ -538,6 +543,14 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         return;
     case ATT_OP_EXECUTE_WRITE_REQUEST:
         handleExecuteWriteRequest(incomingPacket);
+        return;
+    case ATT_OP_HANDLE_VAL_CONFIRMATION:
+        if (indicationInFlight) {
+            indicationInFlight = false;
+            sendNextIndication();
+        } else {
+            qCWarning(QT_BT_BLUEZ) << "received unexpected handle value confirmation";
+        }
         return;
     default:
         //only solicited replies finish pending requests
@@ -1714,49 +1727,13 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     if (!service->characteristicList.contains(charHandle))
         return;
 
-    const QLowEnergyHandle valueHandle = service->characteristicList[charHandle].valueHandle;
-    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
-
-    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
-    if (writeWithResponse) {
-        if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
-            sendNextPrepareWriteRequest(charHandle, newValue, 0);
-            sendNextPendingRequest();
-            return;
-        } else {
-            // write value fits into single package
-            packet[0] = ATT_OP_WRITE_REQUEST;
-        }
+    QLowEnergyServicePrivate::CharData &charData = service->characteristicList[charHandle];
+    if (role == QLowEnergyController::PeripheralRole) {
+        writeCharacteristicForPeripheral(charData, newValue);
     } else {
-        // write without response
-        packet[0] = ATT_OP_WRITE_COMMAND;
+        writeCharacteristicForCentral(charHandle, charData.valueHandle, newValue,
+                                      writeWithResponse);
     }
-
-    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
-
-    QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
-
-    qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
-                         << "(size:" << size << "with response:" << writeWithResponse << ")";
-
-    // Advantage of write without response is the quick turnaround.
-    // It can be send at any time and does not produce responses.
-    // Therefore we will not put them into the openRequest queue at all.
-    if (!writeWithResponse) {
-        sendPacket(data);
-        return;
-    }
-
-    Request request;
-    request.payload = data;
-    request.command = ATT_OP_WRITE_REQUEST;
-    request.reference = charHandle;
-    request.reference2 = newValue;
-    openRequests.enqueue(request);
-
-    sendNextPendingRequest();
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
@@ -1767,32 +1744,10 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 {
     Q_ASSERT(!service.isNull());
 
-    if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
-        sendNextPrepareWriteRequest(descriptorHandle, newValue, 0);
-        sendNextPendingRequest();
-        return;
-    }
-
-    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
-    packet[0] = ATT_OP_WRITE_REQUEST;
-    bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
-
-    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
-    QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
-
-    qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
-                         << "(size:" << size << ")";
-
-    Request request;
-    request.payload = data;
-    request.command = ATT_OP_WRITE_REQUEST;
-    request.reference = (charHandle | (descriptorHandle << 16));
-    request.reference2 = newValue;
-    openRequests.enqueue(request);
-
-    sendNextPendingRequest();
+    if (role == QLowEnergyController::PeripheralRole)
+        writeDescriptorForPeripheral(service, charHandle, descriptorHandle, newValue);
+    else
+        writeDescriptorForCentral(charHandle, descriptorHandle, newValue);
 }
 
 /*!
@@ -2251,14 +2206,205 @@ void QLowEnergyControllerPrivate::handleReadByGroupTypeRequest(const QByteArray 
     sendListResponse(responsePrefix, elementSize, results, elemWriter);
 }
 
+void QLowEnergyControllerPrivate::updateLocalAttributeValue(
+        QLowEnergyHandle handle,
+        const QByteArray &value,
+        QLowEnergyCharacteristic &characteristic,
+        QLowEnergyDescriptor &descriptor)
+{
+    localAttributes[handle].value = value;
+    foreach (const auto &service, localServices) {
+        if (handle < service->startHandle || handle > service->endHandle)
+            continue;
+        for (auto charIt = service->characteristicList.begin();
+             charIt != service->characteristicList.end(); ++charIt) {
+            QLowEnergyServicePrivate::CharData &charData = charIt.value();
+            if (handle == charIt.key() + 1) { // Char value decl comes right after char decl.
+                charData.value = value;
+                characteristic = QLowEnergyCharacteristic(service, charIt.key());
+                return;
+            }
+            for (auto descIt = charData.descriptorList.begin();
+                 descIt != charData.descriptorList.end(); ++descIt) {
+                if (handle == descIt.key()) {
+                    descIt.value().value = value;
+                    descriptor = QLowEnergyDescriptor(service, charIt.key(), handle);
+                    return;
+                }
+            }
+        }
+    }
+    qFatal("local services map inconsistent with local attribute map");
+}
+
+static bool isNotificationEnabled(quint16 clientConfigValue) { return clientConfigValue & 0x1; }
+static bool isIndicationEnabled(quint16 clientConfigValue) { return clientConfigValue & 0x2; }
+
+void QLowEnergyControllerPrivate::writeCharacteristicForPeripheral(
+        QLowEnergyServicePrivate::CharData &charData,
+        const QByteArray &newValue)
+{
+    const QLowEnergyHandle valueHandle = charData.valueHandle;
+    Q_ASSERT(valueHandle <= lastLocalHandle);
+    Attribute &attribute = localAttributes[valueHandle];
+    if (newValue.count() < attribute.minLength || newValue.count() > attribute.maxLength) {
+        qCWarning(QT_BT_BLUEZ) << "ignoring value of invalid length" << newValue.count()
+                               << "for attribute" << valueHandle;
+        return;
+    }
+    attribute.value = newValue;
+    charData.value = newValue;
+    const bool hasNotifyProperty = attribute.properties & QLowEnergyCharacteristic::Notify;
+    const bool hasIndicateProperty
+            = attribute.properties & QLowEnergyCharacteristic::Indicate;
+    if (!hasNotifyProperty && !hasIndicateProperty)
+        return;
+    foreach (const QLowEnergyServicePrivate::DescData &desc, charData.descriptorList) {
+        if (desc.uuid != QBluetoothUuid::ClientCharacteristicConfiguration)
+            continue;
+
+        // Notify/indicate currently connected client.
+        const bool isConnected = state == QLowEnergyController::ConnectedState;
+        if (isConnected) {
+            Q_ASSERT(desc.value.count() == 2);
+            quint16 configValue = bt_get_le16(desc.value.constData());
+            if (isNotificationEnabled(configValue) && hasNotifyProperty) {
+                sendNotification(valueHandle);
+            } else if (isIndicationEnabled(configValue) && hasIndicateProperty) {
+                if (indicationInFlight)
+                    scheduledIndications << valueHandle;
+                else
+                    sendIndication(valueHandle);
+            }
+        }
+
+        // Prepare notification/indication of unconnected, bonded clients.
+        for (auto it = clientConfigData.begin(); it != clientConfigData.end(); ++it) {
+            if (isConnected && it.key() == remoteDevice.toUInt64())
+                continue;
+            QVector<ClientConfigurationData> &configDataList = it.value();
+            for (ClientConfigurationData &configData : configDataList) {
+                if (configData.charValueHandle != valueHandle)
+                    continue;
+                if ((isNotificationEnabled(configData.configValue) && hasNotifyProperty)
+                        || (isIndicationEnabled(configData.configValue) && hasIndicateProperty)) {
+                    configData.charValueWasUpdated = true;
+                    break;
+                }
+            }
+        }
+        break;
+    }
+}
+
+void QLowEnergyControllerPrivate::writeCharacteristicForCentral(
+        QLowEnergyHandle charHandle,
+        QLowEnergyHandle valueHandle,
+        const QByteArray &newValue,
+        bool writeWithResponse)
+{
+    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
+
+    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
+    if (writeWithResponse) {
+        if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
+            sendNextPrepareWriteRequest(charHandle, newValue, 0);
+            sendNextPendingRequest();
+            return;
+        } else {
+            // write value fits into single package
+            packet[0] = ATT_OP_WRITE_REQUEST;
+        }
+    } else {
+        // write without response
+        packet[0] = ATT_OP_WRITE_COMMAND;
+    }
+
+    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
+
+    QByteArray data(size, Qt::Uninitialized);
+    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
+
+    qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
+                         << "(size:" << size << "with response:" << writeWithResponse << ")";
+
+    // Advantage of write without response is the quick turnaround.
+    // It can be send at any time and does not produce responses.
+    // Therefore we will not put them into the openRequest queue at all.
+    if (!writeWithResponse) {
+        sendPacket(data);
+        return;
+    }
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_WRITE_REQUEST;
+    request.reference = charHandle;
+    request.reference2 = newValue;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
+void QLowEnergyControllerPrivate::writeDescriptorForPeripheral(
+        const QSharedPointer<QLowEnergyServicePrivate> &service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle,
+        const QByteArray &newValue)
+{
+    Q_ASSERT(descriptorHandle <= lastLocalHandle);
+    Attribute &attribute = localAttributes[descriptorHandle];
+    if (newValue.count() < attribute.minLength || newValue.count() > attribute.maxLength) {
+        qCWarning(QT_BT_BLUEZ) << "invalid value of size" << newValue.count()
+                               << "for attribute" << descriptorHandle;
+        return;
+    }
+    attribute.value = newValue;
+    service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
+}
+
+void QLowEnergyControllerPrivate::writeDescriptorForCentral(
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descriptorHandle,
+        const QByteArray &newValue)
+{
+    if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
+        sendNextPrepareWriteRequest(descriptorHandle, newValue, 0);
+        sendNextPendingRequest();
+        return;
+    }
+
+    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
+    packet[0] = ATT_OP_WRITE_REQUEST;
+    bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
+
+    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
+    QByteArray data(size, Qt::Uninitialized);
+    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
+    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
+
+    qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
+                         << "(size:" << size << ")";
+
+    Request request;
+    request.payload = data;
+    request.command = ATT_OP_WRITE_REQUEST;
+    request.reference = (charHandle | (descriptorHandle << 16));
+    request.reference2 = newValue;
+    openRequests.enqueue(request);
+
+    sendNextPendingRequest();
+}
+
 void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.5.1-3
 
-    if (!checkPacketSize(packet, 3, mtuSize))
-        return;
     const bool isRequest = packet.at(0) == ATT_OP_WRITE_REQUEST;
     const bool isSigned = packet.at(0) == ATT_OP_SIGNED_WRITE_COMMAND;
+    if (!checkPacketSize(packet, isSigned ? 15 : 3, mtuSize))
+        return;
     const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
     qCDebug(QT_BT_BLUEZ) << "client sends" << (isSigned ? "signed" : "") << "write"
                          << (isRequest ? "request" : "command") << "for handle" << handle;
@@ -2266,15 +2412,16 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
     if (!checkHandle(packet, handle))
         return;
 
+    int valueLength;
     if (isSigned) {
         // const QByteArray signature = packet.right(12);
         return; // TODO: Check signature and continue if it's valid. Store sign counter.
-        // TODO: extract value
+        valueLength = packet.count() - 15;
     } else {
-        // TODO: Extract value.
+        valueLength = packet.count() - 3;
     }
 
-    const Attribute &attribute = localAttributes.at(handle);
+    Attribute &attribute = localAttributes[handle];
     const QLowEnergyCharacteristic::PropertyType type = isRequest
             ? QLowEnergyCharacteristic::Write : isSigned
               ? QLowEnergyCharacteristic::WriteSigned : QLowEnergyCharacteristic::WriteNoResponse;
@@ -2283,16 +2430,32 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
         sendErrorResponse(packet.at(0), handle, permissionsError);
         return;
     }
-    if (false /* value is greater than maximum */) {
+    if (valueLength > attribute.maxLength) {
         sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
         return;
     }
 
-    // TODO: Write attribute
+    // If the attribute value has a fixed size and the value in the packet is shorter,
+    // then we overwrite only the start of the attribute value and keep the rest.
+    QByteArray value = packet.mid(3, valueLength);
+    if (attribute.minLength == attribute.maxLength && valueLength < attribute.minLength)
+        value += attribute.value.mid(valueLength, attribute.maxLength - valueLength);
 
-    if (isRequest)
-        sendErrorResponse(packet.at(0), 0, ATT_ERROR_REQUEST_NOT_SUPPORTED);
-        //sendPacket(QByteArray(1, ATT_OP_WRITE_RESPONSE));
+    QLowEnergyCharacteristic characteristic;
+    QLowEnergyDescriptor descriptor;
+    updateLocalAttributeValue(handle, value, characteristic, descriptor);
+
+    if (isRequest) {
+        const QByteArray response = QByteArray(1, ATT_OP_WRITE_RESPONSE);
+        sendPacket(response);
+    }
+
+    if (characteristic.isValid()) {
+        emit characteristic.d_ptr->characteristicChanged(characteristic, value);
+    } else {
+        Q_ASSERT(descriptor.isValid());
+        emit descriptor.d_ptr->descriptorWritten(descriptor, value);
+    }
 }
 
 void QLowEnergyControllerPrivate::handlePrepareWriteRequest(const QByteArray &packet)
@@ -2338,22 +2501,40 @@ void QLowEnergyControllerPrivate::handleExecuteWriteRequest(const QByteArray &pa
 
     QVector<WriteRequest> requests = openPrepareWriteRequests;
     openPrepareWriteRequests.clear();
+    QVector<QLowEnergyCharacteristic> characteristics;
+    QVector<QLowEnergyDescriptor> descriptors;
     if (!cancel) {
-        if (false /* maximum value size exceeded */) {
-            sendErrorResponse(packet.at(0), 0 /* handle? */, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
-            return;
+        foreach (const WriteRequest &request, requests) {
+            Attribute &attribute = localAttributes[request.handle];
+            if (request.valueOffset > attribute.value.count()) {
+                sendErrorResponse(packet.at(0), request.handle, ATT_ERROR_INVALID_OFFSET);
+                return;
+            }
+            const QByteArray newValue = attribute.value.left(request.valueOffset) + request.value;
+            if (newValue.count() > attribute.maxLength) {
+                sendErrorResponse(packet.at(0), request.handle, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
+                return;
+            }
+            QLowEnergyCharacteristic characteristic;
+            QLowEnergyDescriptor descriptor;
+            // TODO: Redundant attribute lookup for the case of the same handle appearing
+            //       more than once.
+            updateLocalAttributeValue(request.handle, newValue, characteristic, descriptor);
+            if (characteristic.isValid()) {
+                characteristics << characteristic;
+            } else if (descriptor.isValid()) {
+                Q_ASSERT(descriptor.isValid());
+                descriptors << descriptor;
+            }
         }
-        if (false /* offset invalid */) {
-            sendErrorResponse(packet.at(0), 0 /* handle? */, ATT_ERROR_INVALID_OFFSET);
-            return;
-        }
-
-        // TODO: Write attribute.
-
     }
-    openPrepareWriteRequests.clear();
-    sendErrorResponse(packet.at(0), 0, ATT_ERROR_REQUEST_NOT_SUPPORTED);
-    //sendPacket(QByteArray(1, ATT_OP_EXECUTE_WRITE_RESPONSE));
+
+    sendPacket(QByteArray(1, ATT_OP_EXECUTE_WRITE_RESPONSE));
+
+    foreach (const QLowEnergyCharacteristic &characteristic, characteristics)
+        emit characteristic.d_ptr->characteristicChanged(characteristic, characteristic.value());
+    foreach (const QLowEnergyDescriptor &descriptor, descriptors)
+        emit descriptor.d_ptr->descriptorWritten(descriptor, descriptor.value());
 }
 
 void QLowEnergyControllerPrivate::sendErrorResponse(quint8 request, quint16 handle, quint8 code)
@@ -2388,6 +2569,40 @@ void QLowEnergyControllerPrivate::sendListResponse(const QByteArray &packetStart
     sendPacket(response);
 }
 
+void QLowEnergyControllerPrivate::sendNotification(QLowEnergyHandle handle)
+{
+    sendNotificationOrIndication(ATT_OP_HANDLE_VAL_NOTIFICATION, handle);
+}
+
+void QLowEnergyControllerPrivate::sendIndication(QLowEnergyHandle handle)
+{
+    Q_ASSERT(!indicationInFlight);
+    indicationInFlight = true;
+    sendNotificationOrIndication(ATT_OP_HANDLE_VAL_INDICATION, handle);
+}
+
+void QLowEnergyControllerPrivate::sendNotificationOrIndication(
+        quint8 opCode,
+        QLowEnergyHandle handle)
+{
+    Q_ASSERT(handle <= lastLocalHandle);
+    const Attribute &attribute = localAttributes.at(handle);
+    const int maxValueLength = qMin(attribute.value.count(), mtuSize - 3);
+    QByteArray packet(3 + maxValueLength, Qt::Uninitialized);
+    packet[0] = opCode;
+    putBtData(handle, packet.data() + 1);
+    using namespace std;
+    memcpy(packet.data() + 3, attribute.value.constData(), maxValueLength);
+    qCDebug(QT_BT_BLUEZ) << "sending notification/indication:" << packet.toHex();
+    sendPacket(packet);
+}
+
+void QLowEnergyControllerPrivate::sendNextIndication()
+{
+    if (!scheduledIndications.isEmpty())
+        sendIndication(scheduledIndications.takeFirst());
+}
+
 void QLowEnergyControllerPrivate::handleConnectionRequest()
 {
     if (state != QLowEnergyController::AdvertisingState) {
@@ -2418,10 +2633,10 @@ void QLowEnergyControllerPrivate::handleConnectionRequest()
     connect(l2cpSocket, &QIODevice::readyRead, this, &QLowEnergyControllerPrivate::l2cpReadyRead);
     l2cpSocket->d_ptr->lowEnergySocketType = addressType == QLowEnergyController::PublicAddress
             ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
-    l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol);
+    l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol,
+            QBluetoothSocket::ConnectedState, QIODevice::ReadWrite | QIODevice::Unbuffered);
+    restoreClientConfigurations();
     setState(QLowEnergyController::ConnectedState);
-    // TODO: Send notifications and indications if this is a bonded device.
-    // The latter need to be queued.
 }
 
 void QLowEnergyControllerPrivate::closeServerSocket()
@@ -2432,6 +2647,88 @@ void QLowEnergyControllerPrivate::closeServerSocket()
     close(serverSocketNotifier->socket());
     serverSocketNotifier->deleteLater();
     serverSocketNotifier = nullptr;
+}
+
+bool QLowEnergyControllerPrivate::isBonded() const
+{
+    // Pairing does not necessarily imply bonding, but we don't know whether the
+    // bonding flag was set in the original pairing request.
+    return QBluetoothLocalDevice(localAdapter).pairingStatus(remoteDevice)
+            != QBluetoothLocalDevice::Unpaired;
+}
+
+QVector<QLowEnergyControllerPrivate::TempClientConfigurationData> QLowEnergyControllerPrivate::gatherClientConfigData()
+{
+    QVector<TempClientConfigurationData> data;
+    foreach (const auto &service, localServices) {
+        for (auto charIt = service->characteristicList.begin();
+             charIt != service->characteristicList.end(); ++charIt) {
+            QLowEnergyServicePrivate::CharData &charData = charIt.value();
+            for (auto descIt = charData.descriptorList.begin();
+                 descIt != charData.descriptorList.end(); ++descIt) {
+                QLowEnergyServicePrivate::DescData &descData = descIt.value();
+                if (descData.uuid == QBluetoothUuid::ClientCharacteristicConfiguration) {
+                    data << TempClientConfigurationData(&descData, charData.valueHandle,
+                                                        descIt.key());
+                    break;
+                }
+            }
+        }
+    }
+    return data;
+}
+
+void QLowEnergyControllerPrivate::storeClientConfigurations()
+{
+    if (!isBonded()) {
+        clientConfigData.remove(remoteDevice.toUInt64());
+        return;
+    }
+    QVector<ClientConfigurationData> clientConfigs;
+    const QVector<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
+    foreach (const auto &tempConfigData, tempConfigList) {
+        Q_ASSERT(tempConfigData.descData->value.count() == 2);
+        const quint16 value = bt_get_le16(tempConfigData.descData->value.constData());
+        if (value != 0) {
+            clientConfigs << ClientConfigurationData(tempConfigData.charValueHandle,
+                                                     tempConfigData.configHandle, value);
+        }
+    }
+    clientConfigData.insert(remoteDevice.toUInt64(), clientConfigs);
+}
+
+void QLowEnergyControllerPrivate::restoreClientConfigurations()
+{
+    const QVector<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
+    const QVector<ClientConfigurationData> &restoredClientConfigs = isBonded()
+            ? clientConfigData.value(remoteDevice.toUInt64()) : QVector<ClientConfigurationData>();
+    QVector<QLowEnergyHandle> notifications;
+    foreach (const auto &tempConfigData, tempConfigList) {
+        bool wasRestored = false;
+        foreach (const auto &restoredData, restoredClientConfigs) {
+            if (restoredData.charValueHandle == tempConfigData.charValueHandle) {
+                Q_ASSERT(tempConfigData.descData->value.count() == 2);
+                putBtData(restoredData.configValue, tempConfigData.descData->value.data());
+                wasRestored = true;
+                if (restoredData.charValueWasUpdated) {
+                    if (isNotificationEnabled(restoredData.configValue))
+                        notifications << restoredData.charValueHandle;
+                    else if (isIndicationEnabled(restoredData.configValue))
+                        scheduledIndications << restoredData.charValueHandle;
+                }
+                break;
+            }
+        }
+        if (!wasRestored)
+            tempConfigData.descData->value = QByteArray(2, 0); // Default value.
+        Q_ASSERT(lastLocalHandle >= tempConfigData.configHandle);
+        Q_ASSERT(tempConfigData.configHandle > tempConfigData.charValueHandle);
+        localAttributes[tempConfigData.configHandle].value = tempConfigData.descData->value;
+    }
+
+    foreach (const QLowEnergyHandle handle, notifications)
+        sendNotification(handle);
+    sendNextIndication();
 }
 
 static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
@@ -2498,6 +2795,8 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
         attribute.readConstraints = cd.readConstraints();
         attribute.writeConstraints = cd.writeConstraints();
         attribute.value = cd.value();
+        attribute.minLength = cd.minimumValueLength();
+        attribute.maxLength = cd.maximumValueLength();
         localAttributes[attribute.handle] = attribute;
 
         foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
@@ -2507,11 +2806,19 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
             attribute.properties = QLowEnergyCharacteristic::PropertyTypes();
             attribute.readConstraints = AttAccessConstraints();
             attribute.writeConstraints = AttAccessConstraints();
+            attribute.minLength = 0;
+            attribute.maxLength = INT_MAX;
+
             // Spec v4.2, Vol. 3, Part G, 3.3.3.x
-            if (attribute.type == QBluetoothUuid::CharacteristicExtendedProperties
-                    || attribute.type == QBluetoothUuid::CharacteristicPresentationFormat
-                    || attribute.type == QBluetoothUuid::CharacteristicAggregateFormat) {
+            if (attribute.type == QBluetoothUuid::CharacteristicExtendedProperties) {
                 attribute.properties = QLowEnergyCharacteristic::Read;
+                attribute.minLength = attribute.maxLength = 2;
+            } else if (attribute.type == QBluetoothUuid::CharacteristicPresentationFormat) {
+                attribute.properties = QLowEnergyCharacteristic::Read;
+                attribute.minLength = attribute.maxLength = 7;
+            } else if (attribute.type == QBluetoothUuid::CharacteristicAggregateFormat) {
+                attribute.properties = QLowEnergyCharacteristic::Read;
+                attribute.minLength = 4;
             } else if (attribute.type == QBluetoothUuid::ClientCharacteristicConfiguration
                        || attribute.type == QBluetoothUuid::ServerCharacteristicConfiguration) {
                 attribute.properties = QLowEnergyCharacteristic::Read
@@ -2519,6 +2826,7 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
                         | QLowEnergyCharacteristic::WriteNoResponse
                         | QLowEnergyCharacteristic::WriteSigned;
                 attribute.writeConstraints = dd.writeConstraints();
+                attribute.minLength = attribute.maxLength = 2;
             } else {
                 if (dd.isReadable())
                     attribute.properties |= QLowEnergyCharacteristic::Read;
@@ -2532,6 +2840,13 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
             }
 
             attribute.value = dd.value();
+            if (attribute.value.count() < attribute.minLength
+                    || attribute.value.count() > attribute.maxLength) {
+                qCWarning(QT_BT_BLUEZ) << "attribute of type" << attribute.type
+                                       << "has invalid length of" << attribute.value.count()
+                                       << "bytes";
+                attribute.value = QByteArray(attribute.minLength, 0);
+            }
             localAttributes[attribute.handle] = attribute;
         }
     }

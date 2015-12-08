@@ -33,6 +33,8 @@
 
 #include "qlowenergyserviceprivate_p.h"
 
+#include "qlowenergycontroller_p.h"
+
 QT_BEGIN_NAMESPACE
 
 QLowEnergyServicePrivate::QLowEnergyServicePrivate(QObject *parent) :

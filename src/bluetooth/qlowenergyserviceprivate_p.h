@@ -51,9 +51,9 @@
 #include <QtBluetooth/QLowEnergyService>
 #include <QtBluetooth/QLowEnergyCharacteristic>
 
-#include "qlowenergycontroller_p.h"
-
 QT_BEGIN_NAMESPACE
+
+class QLowEnergyControllerPrivate;
 
 class QLowEnergyServicePrivate : public QObject
 {

@@ -48,6 +48,9 @@ static QByteArray deviceName() { return "Qt GATT server"; }
 static QScopedPointer<QLowEnergyController> leController;
 typedef QSharedPointer<QLowEnergyService> ServicePtr;
 static QHash<QBluetoothUuid, ServicePtr> services;
+static int descriptorWriteCount = 0;
+static int disconnectCount = 0;
+static QBluetoothAddress remoteDevice;
 
 void addService(const QLowEnergyServiceData &serviceData)
 {
@@ -64,7 +67,7 @@ void addRunningSpeedService()
 
     QLowEnergyDescriptorData desc;
     desc.setUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
-    desc.setValue(QByteArray(1, 0)); // Default: No indication, no notification.
+    desc.setValue(QByteArray(2, 0)); // Default: No indication, no notification.
     QLowEnergyCharacteristicData charData;
     charData.setUuid(QBluetoothUuid::RSCMeasurement);
     charData.addDescriptor(desc);
@@ -111,7 +114,7 @@ void addGenericAccessService()
 void addCustomService()
 {
     QLowEnergyServiceData serviceData;
-    serviceData.setUuid(QBluetoothUuid(quint16(0x2000))); // Made up.
+    serviceData.setUuid(QBluetoothUuid(quint16(0x2000)));
     serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
 
     QLowEnergyCharacteristicData charData;
@@ -120,11 +123,23 @@ void addCustomService()
     charData.setValue(QByteArray(1024, 'x')); // Long value to test "Read Blob".
     serviceData.addCharacteristic(charData);
 
-    charData.setUuid(QBluetoothUuid(quint16(0x5001))); // Made up.
+    charData.setUuid(QBluetoothUuid(quint16(0x5001)));
     charData.setProperties(QLowEnergyCharacteristic::Read);
     charData.setReadConstraints(QBluetooth::AttAuthorizationRequired); // To test read failure.
     serviceData.addCharacteristic(charData);
     charData.setValue("something");
+
+    charData.setUuid(QBluetoothUuid(quint16(0x5002)));
+    charData.setProperties(QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::Indicate);
+    charData.setReadConstraints(QBluetooth::AttAccessConstraints());
+    const QLowEnergyDescriptorData desc(QBluetoothUuid::ClientCharacteristicConfiguration,
+                                        QByteArray(2, 0));
+    charData.addDescriptor(desc);
+    serviceData.addCharacteristic(charData);
+
+    charData.setUuid(QBluetoothUuid(quint16(0x5003)));
+    charData.setProperties(QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::Notify);
+    serviceData.addCharacteristic(charData);
 
     addService(serviceData);
 }
@@ -150,8 +165,55 @@ int main(int argc, char *argv[])
     addCustomService();
     startAdvertising();
 
-    // TODO: Change characteristics, client checks that it gets indication/notification
-    // TODO: Where to test that we get the characteristicChanged signal for characteristics that the client writes?
+    const ServicePtr customService = services.value(QBluetoothUuid(quint16(0x2000)));
+    Q_ASSERT(customService);
+
+    const auto stateChangedHandler = [customService]() {
+        switch (leController->state()) {
+        case QLowEnergyController::ConnectedState:
+            remoteDevice = leController->remoteAddress();
+            break;
+        case QLowEnergyController::UnconnectedState: {
+            if (++disconnectCount == 2) {
+                qApp->quit();
+                break;
+            }
+            Q_ASSERT(disconnectCount == 1);
+            const QLowEnergyCharacteristic indicatableChar
+                    = customService->characteristic(QBluetoothUuid(quint16(0x5002)));
+            Q_ASSERT(indicatableChar.isValid());
+            customService->writeCharacteristic(indicatableChar, "indicated2");
+            Q_ASSERT(indicatableChar.value() == "indicated2");
+            const QLowEnergyCharacteristic notifiableChar
+                    = customService->characteristic(QBluetoothUuid(quint16(0x5003)));
+            Q_ASSERT(notifiableChar.isValid());
+            customService->writeCharacteristic(notifiableChar, "notified2");
+            Q_ASSERT(notifiableChar.value() == "notified2");
+            startAdvertising();
+            break;
+        }
+        default:
+            break;
+        }
+    };
+
+    QObject::connect(leController.data(), &QLowEnergyController::stateChanged, stateChangedHandler);
+    const auto descriptorWriteHandler = [customService]() {
+        if (++descriptorWriteCount != 2)
+            return;
+        const QLowEnergyCharacteristic indicatableChar
+                = customService->characteristic(QBluetoothUuid(quint16(0x5002)));
+        Q_ASSERT(indicatableChar.isValid());
+        customService->writeCharacteristic(indicatableChar, "indicated");
+        Q_ASSERT(indicatableChar.value() == "indicated");
+        const QLowEnergyCharacteristic notifiableChar
+                = customService->characteristic(QBluetoothUuid(quint16(0x5003)));
+        Q_ASSERT(notifiableChar.isValid());
+        customService->writeCharacteristic(notifiableChar, "notified");
+        Q_ASSERT(notifiableChar.value() == "notified");
+    };
+    QObject::connect(customService.data(), &QLowEnergyService::descriptorWritten,
+                     descriptorWriteHandler);
 
     return app.exec();
 }

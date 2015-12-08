@@ -70,6 +70,10 @@ public:
     void setWriteConstraints(QBluetooth::AttAccessConstraints constraints);
     QBluetooth::AttAccessConstraints writeConstraints() const;
 
+    void setValueLength(int minimum, int maximum);
+    int minimumValueLength() const;
+    int maximumValueLength() const;
+
     bool isValid() const;
 
     void swap(QLowEnergyCharacteristicData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }

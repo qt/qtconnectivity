@@ -39,13 +39,19 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
+#include <climits>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
 struct QLowEnergyCharacteristicDataPrivate : public QSharedData
 {
-    QLowEnergyCharacteristicDataPrivate() : properties(QLowEnergyCharacteristic::Unknown) {}
+    QLowEnergyCharacteristicDataPrivate()
+        : properties(QLowEnergyCharacteristic::Unknown)
+        , minimumValueLength(0)
+        , maximumValueLength(INT_MAX)
+    {}
 
     QBluetoothUuid uuid;
     QLowEnergyCharacteristic::PropertyTypes properties;
@@ -53,6 +59,8 @@ struct QLowEnergyCharacteristicDataPrivate : public QSharedData
     QByteArray value;
     QBluetooth::AttAccessConstraints readConstraints;
     QBluetooth::AttAccessConstraints writeConstraints;
+    int minimumValueLength;
+    int maximumValueLength;
 };
 
 /*!
@@ -197,6 +205,35 @@ QBluetooth::AttAccessConstraints QLowEnergyCharacteristicData::writeConstraints(
 }
 
 /*!
+  Specifies \a minimum and \a maximum to be the smallest and largest length, respectively,
+  that the value of this characteristic can have. The unit is bytes. If \a minimum and
+  \a maximum are equal, the characteristic has a fixed-length value.
+ */
+void QLowEnergyCharacteristicData::setValueLength(int minimum, int maximum)
+{
+    d->minimumValueLength = minimum;
+    d->maximumValueLength = qMax(minimum, maximum);
+}
+
+/*!
+  Returns the minimum length in bytes that the value of this characteristic can have.
+  The default is zero.
+ */
+int QLowEnergyCharacteristicData::minimumValueLength() const
+{
+    return d->minimumValueLength;
+}
+
+/*!
+  Returns the maximum length in bytes that the value of this characteristic can have.
+  By default, there is no limit beyond the constraints of the data type.
+ */
+int QLowEnergyCharacteristicData::maximumValueLength() const
+{
+    return d->maximumValueLength;
+}
+
+/*!
   Returns true if and only if this characteristic is valid, that is, it has a non-null UUID.
  */
 bool QLowEnergyCharacteristicData::isValid() const
@@ -221,7 +258,9 @@ bool operator==(const QLowEnergyCharacteristicData &cd1, const QLowEnergyCharact
                 && cd1.descriptors() == cd2.descriptors()
                 && cd1.value() == cd2.value()
                 && cd1.readConstraints() == cd2.readConstraints()
-                && cd1.writeConstraints() == cd2.writeConstraints());
+                && cd1.writeConstraints() == cd2.writeConstraints()
+                && cd1.minimumValueLength() == cd2.maximumValueLength()
+                && cd1.maximumValueLength() == cd2.maximumValueLength());
 }
 
 /*!
