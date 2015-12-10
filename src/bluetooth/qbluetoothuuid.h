@@ -373,6 +373,7 @@ public:
     ~QBluetoothUuid();
 
     bool operator==(const QBluetoothUuid &other) const;
+    bool operator!=(const QBluetoothUuid &other) const { return !operator==(other); }
 
     int minimumSize() const;
 
