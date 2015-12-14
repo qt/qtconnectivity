@@ -1242,9 +1242,9 @@ void QLowEnergyControllerPrivate::sendReadByGroupRequest(
     quint8 packet[GRP_TYPE_REQ_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
-    bt_put_unaligned(htobs(start), (quint16 *) &packet[1]);
-    bt_put_unaligned(htobs(end), (quint16 *) &packet[3]);
-    bt_put_unaligned(htobs(type), (quint16 *) &packet[5]);
+    putBtData(start, &packet[1]);
+    putBtData(end, &packet[3]);
+    putBtData(type, &packet[5]);
 
     QByteArray data(GRP_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_HEADER_SIZE);
@@ -1280,9 +1280,9 @@ void QLowEnergyControllerPrivate::sendReadByTypeRequest(
     quint8 packet[READ_BY_TYPE_REQ_HEADER_SIZE];
 
     packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
-    bt_put_unaligned(htobs(nextHandle), (quint16 *) &packet[1]);
-    bt_put_unaligned(htobs(serviceData->endHandle), (quint16 *) &packet[3]);
-    bt_put_unaligned(htobs(attributeType), (quint16 *) &packet[5]);
+    putBtData(nextHandle, &packet[1]);
+    putBtData(serviceData->endHandle, &packet[3]);
+    putBtData(attributeType, &packet[5]);
 
     QByteArray data(READ_BY_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_BY_TYPE_REQ_HEADER_SIZE);
@@ -1376,7 +1376,7 @@ void QLowEnergyControllerPrivate::readServiceValues(
     for (int i = 0; i < targetHandles.count(); i++) {
         pair = targetHandles.at(i);
         packet[0] = ATT_OP_READ_REQUEST;
-        bt_put_unaligned(htobs(pair.first), (quint16 *) &packet[1]);
+        putBtData(pair.first, &packet[1]);
 
         QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
         memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
@@ -1431,8 +1431,8 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
         }
     }
 
-    bt_put_unaligned(htobs(handleToRead), (quint16 *) &packet[1]);
-    bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]);
+    putBtData(handleToRead, &packet[1]);
+    putBtData(offset, &packet[3]);
 
     QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet, READ_BLOB_REQUEST_HEADER_SIZE);
@@ -1495,7 +1495,7 @@ void QLowEnergyControllerPrivate::exchangeMTU()
 
     quint8 packet[MTU_EXCHANGE_HEADER_SIZE];
     packet[0] = ATT_OP_EXCHANGE_MTU_REQUEST;
-    bt_put_unaligned(htobs(ATT_MAX_LE_MTU), (quint16 *) &packet[1]);
+    putBtData(quint16(ATT_MAX_LE_MTU), &packet[1]);
 
     QByteArray data(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet, MTU_EXCHANGE_HEADER_SIZE);
@@ -1613,8 +1613,8 @@ void QLowEnergyControllerPrivate::discoverNextDescriptor(
     else
         charEndHandle = pendingCharHandles[1] - 1;
 
-    bt_put_unaligned(htobs(charStartHandle), (quint16 *) &packet[1]);
-    bt_put_unaligned(htobs(charEndHandle), (quint16 *) &packet[3]);
+    putBtData(charStartHandle, &packet[1]);
+    putBtData(charEndHandle, &packet[3]);
 
     QByteArray data(FIND_INFO_REQUEST_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet, FIND_INFO_REQUEST_HEADER_SIZE);
@@ -1649,8 +1649,8 @@ void QLowEnergyControllerPrivate::sendNextPrepareWriteRequest(
 
     quint8 packet[PREPARE_WRITE_HEADER_SIZE];
     packet[0] = ATT_OP_PREPARE_WRITE_REQUEST;
-    bt_put_unaligned(htobs(targetHandle), (quint16 *) &packet[1]); // attribute handle
-    bt_put_unaligned(htobs(offset), (quint16 *) &packet[3]); // offset into newValue
+    putBtData(targetHandle, &packet[1]); // attribute handle
+    putBtData(offset, &packet[3]); // offset into newValue
 
     qCDebug(QT_BT_BLUEZ) << "Writing long characteristic (prepare):"
                          << hex << handle;
@@ -1774,7 +1774,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
 
     quint8 packet[READ_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_READ_REQUEST;
-    bt_put_unaligned(htobs(charDetails.valueHandle), (quint16 *) &packet[1]);
+    putBtData(charDetails.valueHandle, &packet[1]);
 
     QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
@@ -1809,7 +1809,7 @@ void QLowEnergyControllerPrivate::readDescriptor(
 
     quint8 packet[READ_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_READ_REQUEST;
-    bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
+    putBtData(descriptorHandle, &packet[1]);
 
     QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
@@ -2320,7 +2320,7 @@ void QLowEnergyControllerPrivate::writeCharacteristicForCentral(
         packet[0] = ATT_OP_WRITE_COMMAND;
     }
 
-    bt_put_unaligned(htobs(valueHandle), (quint16 *) &packet[1]);
+    putBtData(valueHandle, &packet[1]);
 
     QByteArray data(size, Qt::Uninitialized);
     memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
@@ -2377,7 +2377,7 @@ void QLowEnergyControllerPrivate::writeDescriptorForCentral(
 
     quint8 packet[WRITE_REQUEST_HEADER_SIZE];
     packet[0] = ATT_OP_WRITE_REQUEST;
-    bt_put_unaligned(htobs(descriptorHandle), (quint16 *) &packet[1]);
+    putBtData(descriptorHandle, &packet[1]);
 
     const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
     QByteArray data(size, Qt::Uninitialized);

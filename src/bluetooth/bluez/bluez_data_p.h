@@ -134,22 +134,6 @@ struct sockaddr_rc {
 
 // Bt Low Energy related
 
-#define bt_get_unaligned(ptr)           \
-({                                      \
-    struct __attribute__((packed)) {    \
-        __typeof__(*(ptr)) __v;         \
-    } *__p = (__typeof__(__p)) (ptr);   \
-    __p->__v;                           \
-})
-
-#define bt_put_unaligned(val, ptr)      \
-do {                                    \
-    struct __attribute__((packed)) {    \
-        __typeof__(*(ptr)) __v;         \
-    } *__p = (__typeof__(__p)) (ptr);   \
-    __p->__v = (val);                   \
-} while (0)
-
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
@@ -165,15 +149,7 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
         dst->data[15 - i] = src->data[i];
 }
 
-static inline quint16 bt_get_le16(const void *ptr)
-{
-    return bt_get_unaligned((const quint16 *) ptr);
-}
 #elif __BYTE_ORDER == __BIG_ENDIAN
-static inline quint16 bt_get_le16(const void *ptr)
-{
-    return qbswap(bt_get_unaligned((const quint16 *) ptr));
-}
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
 {
@@ -191,14 +167,14 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #error "Unknown byte order"
 #endif
 
-inline quint8 hostToBt(quint8 val) { return val; }
-inline quint16 hostToBt(quint16 val) { return htobs(val); }
-inline quint32 hostToBt(quint32 val) { return htobl(val); }
-inline quint64 hostToBt(quint64 val) { return htobll(val); }
+static inline quint16 bt_get_le16(const void *ptr)
+{
+    return qFromLittleEndian<quint16>(reinterpret_cast<const uchar *>(ptr));
+}
 
 template<typename T> inline void putBtData(T src, void *dst)
 {
-    bt_put_unaligned(hostToBt(src), reinterpret_cast<T *>(dst));
+    qToLittleEndian(src, reinterpret_cast<uchar *>(dst));
 }
 template<> inline void putBtData(quint128 src, void *dst)
 {
