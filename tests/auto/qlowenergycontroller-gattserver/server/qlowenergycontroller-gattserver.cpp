@@ -38,6 +38,7 @@
 #include <QtBluetooth/qlowenergydescriptordata.h>
 #include <QtBluetooth/qlowenergyservicedata.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qendian.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qsharedpointer.h>
@@ -81,7 +82,7 @@ void addRunningSpeedService()
     charData.setUuid(QBluetoothUuid::RSCFeature);
     charData.setProperties(QLowEnergyCharacteristic::Read);
     value = QByteArray(2, 0);
-    value[0] = 1 << 2; // "Walking or Running" supported.
+    qToLittleEndian<quint16>(1 << 2, reinterpret_cast<uchar *>(value.data()));
     charData.setValue(value);
     serviceData.addCharacteristic(charData);
     addService(serviceData);
@@ -103,7 +104,7 @@ void addGenericAccessService()
     charData.setUuid(QBluetoothUuid::Appearance);
     charData.setProperties(QLowEnergyCharacteristic::Read);
     QByteArray value(2, 0);
-    value[0] = 64; // Generic Phone
+    qToLittleEndian<quint16>(128, reinterpret_cast<uchar *>(value.data())); // Generic computer.
     charData.setValue(value);
     serviceData.addCharacteristic(charData);
 

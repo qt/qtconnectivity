@@ -41,6 +41,7 @@
 #include <QtBluetooth/qlowenergycharacteristicdata.h>
 #include <QtBluetooth/qlowenergydescriptordata.h>
 #include <QtBluetooth/qlowenergyservicedata.h>
+#include <QtCore/qendian.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/QtTest>
@@ -222,9 +223,9 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QVERIFY(appearanceChar.isValid());
     QCOMPARE(appearanceChar.descriptors().count(), 0);
     QCOMPARE(appearanceChar.properties(), QLowEnergyCharacteristic::Read);
-    QByteArray appearanceValue(2, 0);
-    appearanceValue[0] = 64;
-    QCOMPARE(appearanceChar.value(), appearanceValue);
+    auto value = qFromLittleEndian<quint16>(reinterpret_cast<const uchar *>(
+                                                appearanceChar.value().constData()));
+    QCOMPARE(value, quint16(128));
 
     const QScopedPointer<QLowEnergyService> runningSpeedService(
                 m_leController->createServiceObject(QBluetoothUuid::RunningSpeedAndCadence));
@@ -251,9 +252,9 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QVERIFY(featureChar.isValid());
     QCOMPARE(featureChar.descriptors().count(), 0);
     QCOMPARE(featureChar.properties(), QLowEnergyCharacteristic::Read);
-    QByteArray featureValue = QByteArray(2, 0);
-    featureValue[0] = 1 << 2;
-    QCOMPARE(featureChar.value(), featureValue);
+    value = qFromLittleEndian<quint16>(reinterpret_cast<const uchar *>(
+                                           featureChar.value().constData()));
+    QCOMPARE(value, quint16(1 << 2));
 
     QScopedPointer<QLowEnergyService> customService(
                 m_leController->createServiceObject(QBluetoothUuid(quint16(0x2000))));
@@ -304,13 +305,13 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
 
     QByteArray indicateValue(2, 0);
-    indicateValue[0] = 2;
+    qToLittleEndian<quint16>(2, reinterpret_cast<uchar *>(indicateValue.data()));
     customService->writeDescriptor(cc3ClientConfig, indicateValue);
     spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::descriptorWritten));
     QVERIFY(spy->wait(3000));
 
     QByteArray notifyValue(2, 0);
-    notifyValue[0] = 1;
+    qToLittleEndian<quint16>(1, reinterpret_cast<uchar *>(notifyValue.data()));
     customService->writeDescriptor(cc4ClientConfig, notifyValue);
     spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::descriptorWritten));
     QVERIFY(spy->wait(3000));
