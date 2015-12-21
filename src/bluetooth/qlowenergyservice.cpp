@@ -584,13 +584,13 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     serialised. A queue is employed when issuing multiple requests at the same time.
     The queue does not eliminate duplicated read requests for the same characteristic.
 
-    A characteristic can only be read if the service is in the \l ServiceDiscovered state,
-    belongs to the service. If one of these conditions is
+    A characteristic can only be read if the service is in the \l ServiceDiscovered state
+    and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
     \note Calling this function despite \l QLowEnergyCharacteristic::properties() reporting a non-readable property
     always attempts to read the characteristic's value on the hardware. If the hardware
-    returns with an error the \l CharacteristicWriteError is set.
+    returns with an error the \l CharacteristicReadError is set.
 
     \sa characteristicRead(), writeCharacteristic()
 
@@ -630,7 +630,7 @@ void QLowEnergyService::readCharacteristic(
     \note Currently, it is not possible to use signed or reliable writes as defined by the
     Bluetooth specification.
 
-    A characteristic can only be written if this service is in the \l ServiceDiscovered state,
+    A characteristic can only be written if this service is in the \l ServiceDiscovered state
     and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 

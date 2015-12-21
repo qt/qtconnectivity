@@ -65,6 +65,7 @@ public:
 
     explicit QQmlNdefRecord(QObject *parent = 0);
     explicit QQmlNdefRecord(const QNdefRecord &record, QObject *parent = 0);
+    ~QQmlNdefRecord();
 
     QString type() const;
     void setType(const QString &t);
