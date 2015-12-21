@@ -41,6 +41,8 @@
 
 #include "heartrate.h"
 
+#include <QtEndian>
+
 HeartRate::HeartRate():
     m_currentDevice(QBluetoothDeviceInfo()), foundHeartRateService(false),
     m_max(0), m_min(0), calories(0), m_control(0), timer(0),
@@ -301,16 +303,16 @@ void HeartRate::updateHeartRateValue(const QLowEnergyCharacteristic &c,
         return;
 
 
-    const char *data = value.constData();
+    const quint8 *data = reinterpret_cast<const quint8 *>(value.constData());
     quint8 flags = data[0];
 
     //Heart Rate
     if (flags & 0x1) { // HR 16 bit? otherwise 8 bit
-        quint16 *heartRate = (quint16 *) &data[1];
-        //qDebug() << "16 bit HR value:" << *heartRate;
-        m_measurements.append(*heartRate);
+        const quint16 heartRate = qFromLittleEndian<quint16>(data[1]);
+        //qDebug() << "16 bit HR value:" << heartRate;
+        m_measurements.append(heartRate);
     } else {
-        quint8 *heartRate = (quint8 *) &data[1];
+        const quint8 *heartRate = &data[1];
         m_measurements.append(*heartRate);
         //qDebug() << "8 bit HR value:" << *heartRate;
     }
@@ -318,8 +320,8 @@ void HeartRate::updateHeartRateValue(const QLowEnergyCharacteristic &c,
     //Energy Expended
     if (flags & 0x8) {
         int index = (flags & 0x1) ? 5 : 3;
-        quint16 *energy = (quint16 *) &data[index];
-        qDebug() << "Used Energy:" << *energy;
+        const quint16 energy = qFromLittleEndian<quint16>(data[index]);
+        qDebug() << "Used Energy:" << energy;
     }
     //! [Reading value 1]
 

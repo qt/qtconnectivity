@@ -314,7 +314,7 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
   \qmlsignal BluetoothDiscoveryModel::deviceDiscovered(string device)
 
   This signal is emitted when a new device is discovered. \a device contains
-  the Bluetooth address of the discovred device.
+  the Bluetooth address of the discovered device.
 
   The corresponding handler is \c onDeviceDiscovered.
   */
@@ -365,7 +365,7 @@ void QDeclarativeBluetoothDiscoveryModel::setDiscoveryMode(DiscoveryMode discove
   \qmlproperty bool BluetoothDiscoveryModel::running
 
   This property starts or stops discovery. A restart of the discovery process
-  requires setting this property to \c false and subsequemtly to \c true again.
+  requires setting this property to \c false and subsequently to \c true again.
 
 */
 
