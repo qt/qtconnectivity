@@ -548,6 +548,7 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
         break;
     case QMetaType::UShort:
         qDebug("%sushort %u", indent.toLocal8Bit().constData(), var.toUInt());
+        break;
     case QMetaType::UInt:
         qDebug("%suint %u", indent.toLocal8Bit().constData(), var.toUInt());
         break;

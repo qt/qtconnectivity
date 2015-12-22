@@ -249,7 +249,7 @@ static bool registerNatives(JNIEnv *env)
     FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver");
 
     if (env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for BraodcastReceiver failed");
+        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for BroadcastReceiver failed");
         return false;
     }
 

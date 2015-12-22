@@ -243,6 +243,11 @@ QQmlNdefRecord::QQmlNdefRecord(const QNdefRecord &record, QObject *parent)
     d_ptr->record = record;
 }
 
+QQmlNdefRecord::~QQmlNdefRecord()
+{
+    delete d_ptr;
+}
+
 /*!
     \enum QQmlNdefRecord::TypeNameFormat
 

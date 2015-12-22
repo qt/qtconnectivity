@@ -137,12 +137,12 @@ private:
 #ifdef QT_BLUEZ_BLUETOOTH
     void startBluez5(const QBluetoothAddress &address);
     void runExternalSdpScan(const QBluetoothAddress &remoteAddress,
-                    const QBluetoothAddress localAddress);
+                    const QBluetoothAddress &localAddress);
     void sdpScannerDone(int exitCode, QProcess::ExitStatus exitStatus);
     QVariant readAttributeValue(QXmlStreamReader &xml);
     QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
-    void discoverServices(const QString deviceObjectPath);
+    void discoverServices(const QString &deviceObjectPath);
 #endif
 
 public:

@@ -263,7 +263,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
     }
 
     if (!result)
-        service->setError(QLowEnergyService::CharacteristicWriteError);
+        service->setError(QLowEnergyService::CharacteristicReadError);
 }
 
 void QLowEnergyControllerPrivate::readDescriptor(
@@ -289,7 +289,7 @@ void QLowEnergyControllerPrivate::readDescriptor(
     }
 
     if (!result)
-        service->setError(QLowEnergyService::DescriptorWriteError);
+        service->setError(QLowEnergyService::DescriptorReadError);
 }
 
 void QLowEnergyControllerPrivate::connectionUpdated(

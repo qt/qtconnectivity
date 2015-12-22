@@ -49,6 +49,7 @@
 #include "osx/osxbtcentralmanager_p.h"
 #include "qlowenergycontroller_p.h"
 #include "qlowenergycontroller.h"
+#include "osx/osxbtnotifier_p.h"
 #include "osx/osxbtutility_p.h"
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
@@ -60,14 +61,22 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace OSXBluetooth
+{
+
+class LECentralNotifier;
+
+}
+
 class QByteArray;
 
-// The suffix OSX is not the very right, it's also iOS.
-class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate,
-                                       public OSXBluetooth::CentralManagerDelegate
+// While suffix 'OSX', it's also for iOS.
+class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate
 {
     friend class QLowEnergyController;
     friend class QLowEnergyService;
+
+    Q_OBJECT
 public:
     QLowEnergyControllerPrivateOSX(QLowEnergyController *q);
     QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
@@ -76,30 +85,25 @@ public:
 
     bool isValid() const;
 
+private Q_SLOTS:
+    void _q_connected();
+    void _q_disconnected();
+
+    void _q_serviceDiscoveryFinished();
+    void _q_serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
+
+    void _q_characteristicRead(QLowEnergyHandle charHandle, const QByteArray &value);
+    void _q_characteristicWritten(QLowEnergyHandle charHandle, const QByteArray &value);
+    void _q_characteristicUpdated(QLowEnergyHandle charHandle, const QByteArray &value);
+    void _q_descriptorRead(QLowEnergyHandle descHandle, const QByteArray &value);
+    void _q_descriptorWritten(QLowEnergyHandle charHandle, const QByteArray &value);
+
+    void _q_LEnotSupported();
+    void _q_CBCentralManagerError(QLowEnergyController::Error error);
+    void _q_CBCentralManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
+    void _q_CBCentralManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
+
 private:
-    // CentralManagerDelegate:
-    void LEnotSupported() Q_DECL_OVERRIDE;
-    void connectSuccess() Q_DECL_OVERRIDE;
-
-    void serviceDiscoveryFinished(LEServices services) Q_DECL_OVERRIDE;
-    void serviceDetailsDiscoveryFinished(LEService service) Q_DECL_OVERRIDE;
-    void characteristicReadNotification(QLowEnergyHandle charHandle,
-                                        const QByteArray &value) Q_DECL_OVERRIDE;
-    void characteristicWriteNotification(QLowEnergyHandle charHandle,
-                                         const QByteArray &newValue) Q_DECL_OVERRIDE;
-    void characteristicUpdateNotification(QLowEnergyHandle charHandle,
-                                          const QByteArray &value) Q_DECL_OVERRIDE;
-    void descriptorReadNotification(QLowEnergyHandle descHandle,
-                                    const QByteArray &value) Q_DECL_OVERRIDE;
-    void descriptorWriteNotification(QLowEnergyHandle descHandle,
-                                     const QByteArray &newValue) Q_DECL_OVERRIDE;
-    void disconnected() Q_DECL_OVERRIDE;
-    void error(QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
-    void error(const QBluetoothUuid &serviceUuid,
-               QLowEnergyController::Error errorCode) Q_DECL_OVERRIDE;
-    void error(const QBluetoothUuid &serviceUuid,
-               QLowEnergyService::ServiceError error) Q_DECL_OVERRIDE;
-
     void connectToDevice();
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
@@ -139,6 +143,7 @@ private:
 
     void setErrorDescription(QLowEnergyController::Error errorCode);
     void invalidateServices();
+    bool connectSlots(OSXBluetooth::LECentralNotifier *notifier);
 
     QLowEnergyController *q_ptr;
     QBluetoothUuid deviceUuid;
@@ -161,6 +166,7 @@ private:
     QLowEnergyController::ControllerState controllerState;
     QLowEnergyController::RemoteAddressType addressType;
 
+    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
     typedef OSXBluetooth::ObjCScopedPointer<ObjCCentralManager> CentralManager;
     CentralManager centralManager;
 
