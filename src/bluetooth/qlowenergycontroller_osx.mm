@@ -225,6 +225,7 @@ void QLowEnergyControllerPrivateOSX::_q_disconnected()
     controllerState = QLowEnergyController::UnconnectedState;
 
     if (!isConnecting) {
+        invalidateServices();
         emit q_ptr->stateChanged(QLowEnergyController::UnconnectedState);
         emit q_ptr->disconnected();
     }
