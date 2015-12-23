@@ -91,7 +91,7 @@ QBluetoothTransferReplyBluez::QBluetoothTransferReplyBluez(QIODevice *input, con
 
         m_agent_path = agentPath;
         m_agent_path.append(QStringLiteral("/%1%2/%3").
-                            arg(QCoreApplication::applicationName()).
+                            arg(sanitizeNameForDBus(QCoreApplication::applicationName())).
                             arg(QCoreApplication::applicationPid()).
                             arg(agentPathCounter.fetchAndAddOrdered(1)));
 

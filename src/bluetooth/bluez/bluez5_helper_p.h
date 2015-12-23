@@ -59,6 +59,8 @@ QT_BEGIN_NAMESPACE
 
 bool isBluez5();
 
+QString sanitizeNameForDBus(const QString& text);
+
 QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok);
 
 class QtBluezDiscoveryManagerPrivate;
