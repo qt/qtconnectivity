@@ -135,7 +135,7 @@ static const quint16 crc_tbl[16] = {
 */
 quint16 qNfcChecksum(const char *data, uint len)
 {
-    register quint16 crc = 0x6363;
+    quint16 crc = 0x6363;
     uchar c;
     const uchar *p = reinterpret_cast<const uchar *>(data);
     while (len--) {
