@@ -132,7 +132,6 @@ UUIDList qt_servicesUuids(NSArray *services)
 
 QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q)
     : q_ptr(q),
-      isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
@@ -165,7 +164,6 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
     : q_ptr(q),
       deviceUuid(deviceInfo.deviceUuid()),
       deviceName(deviceInfo.name()),
-      isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
@@ -214,21 +212,18 @@ void QLowEnergyControllerPrivateOSX::_q_connected()
 
     controllerState = QLowEnergyController::ConnectedState;
 
-    if (!isConnecting) {
-        emit q_ptr->stateChanged(QLowEnergyController::ConnectedState);
-        emit q_ptr->connected();
-    }
+    emit q_ptr->stateChanged(QLowEnergyController::ConnectedState);
+    emit q_ptr->connected();
 }
 
 void QLowEnergyControllerPrivateOSX::_q_disconnected()
 {
     controllerState = QLowEnergyController::UnconnectedState;
 
-    if (!isConnecting) {
-        invalidateServices();
-        emit q_ptr->stateChanged(QLowEnergyController::UnconnectedState);
-        emit q_ptr->disconnected();
-    }
+    invalidateServices();
+    emit q_ptr->stateChanged(QLowEnergyController::UnconnectedState);
+    emit q_ptr->disconnected();
+
 }
 
 void QLowEnergyControllerPrivateOSX::_q_serviceDiscoveryFinished()
@@ -513,8 +508,6 @@ void QLowEnergyControllerPrivateOSX::connectToDevice()
                Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(!deviceUuid.isNull(), Q_FUNC_INFO,
                "invalid private controller (no device uuid)");
-    Q_ASSERT_X(!isConnecting, Q_FUNC_INFO,
-               "recursive connectToDevice call");
 
     dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
     if (!leQueue) {
