@@ -43,11 +43,11 @@
 #include <algorithm>
 #include <limits>
 
-QT_BEGIN_NAMESPACE
-
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyHandle)
+
+QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
 
