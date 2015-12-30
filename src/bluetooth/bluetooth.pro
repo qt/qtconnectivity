@@ -154,7 +154,7 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
     SOURCES -= qlowenergycontroller_p.cpp
-} else:ios {
+} else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
     LIBS += -framework Foundation -framework CoreBluetooth
 
@@ -197,4 +197,3 @@ config_bluez:qtHaveModule(dbus) {
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
-
