@@ -326,6 +326,14 @@ void QLowEnergyControllerPrivate::connectionUpdated(
     if (newState == QLowEnergyController::UnconnectedState
             && !(oldState == QLowEnergyController::UnconnectedState
                 || oldState == QLowEnergyController::ConnectingState)) {
+
+        // Invalidate the services if the disconnect came from the remote end.
+        // Qtherwise we disconnected via QLowEnergyController::disconnectDevice() which
+        // triggered invalidation already
+        if (!serviceList.isEmpty()) {
+            Q_ASSERT(oldState != QLowEnergyController::ClosingState);
+            invalidateServices();
+        }
         emit q->disconnected();
     } else if (newState == QLowEnergyController::ConnectedState
                && oldState != QLowEnergyController::ConnectedState ) {

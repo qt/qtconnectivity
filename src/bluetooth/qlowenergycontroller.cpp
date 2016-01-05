@@ -271,11 +271,12 @@ void QLowEnergyControllerPrivate::setError(
     case QLowEnergyController::AdvertisingError:
         errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
         break;
+    case QLowEnergyController::NoError:
+        return;
+    default:
     case QLowEnergyController::UnknownError:
         errorString = QLowEnergyController::tr("Unknown Error");
         break;
-    case QLowEnergyController::NoError:
-        return;
     }
 
     emit q->error(newError);

@@ -98,7 +98,7 @@ public:
     quint16 peerPort() const;
 
     void _q_readNotify();
-    void _q_writeNotify();
+    void _q_writeNotify() Q_DECL_OVERRIDE;
 
 private:
     // Create a socket from an external source (without connectToService).

@@ -189,7 +189,7 @@ void tst_QLowEnergyController::initTestCase()
  */
 void tst_QLowEnergyController::init()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS) || defined(Q_OS_TVOS)
     /*
      * Add a delay to give Android/iOS stack time to catch up in between
      * the multiple connect/disconnects within each test function.
@@ -249,7 +249,7 @@ void tst_QLowEnergyController::tst_connect()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
 
-#ifdef Q_OS_IOS
+#if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
     if (remoteDeviceInfo.isValid())
 #else
     if (localAdapters.isEmpty() || !remoteDeviceInfo.isValid())
@@ -265,7 +265,7 @@ void tst_QLowEnergyController::tst_connect()
     else
         QCOMPARE(control.remoteName(), remoteDeviceInfo.name());
 
-#ifndef Q_OS_IOS
+#if !defined(Q_OS_IOS) && !defined(Q_OS_TVOS)
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
     QCOMPARE(control.localAddress(), localAdapter);
     QVERIFY(!control.localAddress().isNull());
