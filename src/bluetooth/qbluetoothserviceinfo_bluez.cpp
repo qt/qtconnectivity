@@ -294,7 +294,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         // create path
         profilePath = profilePathTemplate;
         profilePath.append(QString::fromLatin1("/%1%2/%3").
-                           arg(QCoreApplication::applicationName()).
+                           arg(sanitizeNameForDBus(QCoreApplication::applicationName())).
                            arg(QCoreApplication::applicationPid()).
                            arg(pathCounter.fetchAndAddOrdered(1)));
 

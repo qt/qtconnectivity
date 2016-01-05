@@ -43,7 +43,6 @@
 #include <algorithm>
 #include <limits>
 
-
 Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
 Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyHandle)

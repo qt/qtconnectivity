@@ -148,12 +148,6 @@ private:
     QLowEnergyController *q_ptr;
     QBluetoothUuid deviceUuid;
     QString deviceName;
-    // To be sure we set controller's state correctly
-    // (Connecting or Connected) we have to know if we're
-    // still inside connectToDevice - this is important,
-    // if a peripheral is _already_ connected from Core Bluetooth's
-    // point of view.
-    bool isConnecting;
 
     QString errorString;
     QLowEnergyController::Error lastError;

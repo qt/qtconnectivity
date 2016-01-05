@@ -226,6 +226,7 @@ void QLowEnergyControllerPrivate::setError(
         break;
     case QLowEnergyController::NoError:
         return;
+    default:
     case QLowEnergyController::UnknownError:
         errorString = QLowEnergyController::tr("Unknown Error");
         break;
