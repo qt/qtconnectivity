@@ -61,7 +61,7 @@ class InputStreamThread : public QObject
 public:
     explicit InputStreamThread(QBluetoothSocketPrivate *socket_p);
 
-    bool bytesAvailable() const;
+    qint64 bytesAvailable() const;
     bool run();
 
     qint64 readData(char *data, qint64 maxSize);
