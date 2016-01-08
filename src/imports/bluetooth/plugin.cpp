@@ -39,6 +39,13 @@
 #include "qdeclarativebluetoothservice_p.h"
 #include "qdeclarativebluetoothsocket_p.h"
 
+static void initResources()
+{
+#ifdef QT_STATIC
+    Q_INIT_RESOURCE(qmake_QtBluetooth);
+#endif
+}
+
 QT_USE_NAMESPACE
 
 class QBluetoothQmlPlugin : public QQmlExtensionPlugin
@@ -46,6 +53,7 @@ class QBluetoothQmlPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 public:
+    QBluetoothQmlPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri)
     {
         // @uri QtBluetooth
