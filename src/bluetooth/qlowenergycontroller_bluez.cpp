@@ -264,6 +264,17 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     hciManager->monitorEvent(HciManager::EncryptChangeEvent);
     connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
             this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
+    hciManager->monitorEvent(HciManager::LeMetaEvent);
+    connect(hciManager, &HciManager::connectionComplete, [this](quint16 handle) {
+        connectionHandle = handle;
+        qCDebug(QT_BT_BLUEZ) << "received connection complete event, handle:" << handle;
+    });
+    connect(hciManager, &HciManager::connectionUpdate,
+            [this](quint16 handle, const QLowEnergyConnectionParameters &params) {
+                if (handle == connectionHandle)
+                    emit q_ptr->connectionUpdated(params);
+            }
+    );
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
@@ -357,6 +368,18 @@ void QLowEnergyControllerPrivate::stopAdvertising()
 {
     setState(QLowEnergyController::UnconnectedState);
     advertiser->stopAdvertising();
+}
+
+void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+{
+    // The spec says that the connection update command can be used by both slave and master
+    // devices, but BlueZ allows it only for master devices. So for slave devices, we have to use a
+    // connection parameter update request, which we need to wrap in an ACL command, as BlueZ
+    // does not allow user-space sockets for the signaling channel.
+    if (role == QLowEnergyController::CentralRole)
+        hciManager->sendConnectionUpdateCommand(connectionHandle, params);
+    else
+        hciManager->sendConnectionParameterUpdateRequest(connectionHandle, params);
 }
 
 void QLowEnergyControllerPrivate::connectToDevice()
@@ -481,6 +504,7 @@ void QLowEnergyControllerPrivate::resetController()
     encryptionChangePending = false;
     receivedMtuExchangeRequest = false;
     securityLevelValue = -1;
+    connectionHandle = 0;
 }
 
 void QLowEnergyControllerPrivate::l2cpReadyRead()
@@ -2623,6 +2647,8 @@ void QLowEnergyControllerPrivate::handleConnectionRequest()
     }
     remoteDevice = QBluetoothAddress(convertAddress(clientAddr.l2_bdaddr.b));
     qCDebug(QT_BT_BLUEZ) << "GATT connection from device" << remoteDevice;
+    if (connectionHandle == 0)
+        qCWarning(QT_BT_BLUEZ) << "Received client connection, but no connection complete event";
 
     closeServerSocket();
     l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);

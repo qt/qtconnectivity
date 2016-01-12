@@ -122,6 +122,8 @@ public:
                           const QLowEnergyAdvertisingData &scanResponseData);
     void stopAdvertising();
 
+    void requestConnectionUpdate(const QLowEnergyConnectionParameters &params);
+
     // misc helpers
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
             QLowEnergyHandle handle);
@@ -192,6 +194,7 @@ public:
 
 private:
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+    quint16 connectionHandle = 0;
     QBluetoothSocket *l2cpSocket;
     struct Request {
         quint8 command;

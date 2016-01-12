@@ -37,6 +37,7 @@
 #include <QtBluetooth/qbluetoothlocaldevice.h>
 #include <QtBluetooth/qlowenergyadvertisingdata.h>
 #include <QtBluetooth/qlowenergyadvertisingparameters.h>
+#include <QtBluetooth/qlowenergyconnectionparameters.h>
 #include <QtBluetooth/qlowenergycontroller.h>
 #include <QtBluetooth/qlowenergycharacteristicdata.h>
 #include <QtBluetooth/qlowenergydescriptordata.h>
@@ -60,6 +61,7 @@ private slots:
     // Static, local stuff goes here.
     void advertisingParameters();
     void advertisingData();
+    void connectionParameters();
     void controllerType();
     void serviceData();
 
@@ -146,6 +148,28 @@ void TestQLowEnergyControllerGattServer::advertisingData()
     QCOMPARE(data.rawData(), rawData);
 
     QVERIFY(data != QLowEnergyAdvertisingData());
+}
+
+void TestQLowEnergyControllerGattServer::connectionParameters()
+{
+    QLowEnergyConnectionParameters connParams;
+    QCOMPARE(connParams, QLowEnergyConnectionParameters());
+    connParams.setIntervalRange(8, 9);
+    QCOMPARE(connParams.minimumInterval(), double(8));
+    QCOMPARE(connParams.maximumInterval(), double(9));
+    connParams.setIntervalRange(9, 8);
+    QCOMPARE(connParams.minimumInterval(), double(9));
+    QCOMPARE(connParams.maximumInterval(), double(9));
+    connParams.setLatency(50);
+    QCOMPARE(connParams.latency(), 50);
+    connParams.setSupervisionTimeout(1000);
+    QCOMPARE(connParams.supervisionTimeout(), 1000);
+    const QLowEnergyConnectionParameters cp2 = connParams;
+    QCOMPARE(cp2, connParams);
+    QLowEnergyConnectionParameters cp3;
+    QVERIFY(cp3 != connParams);
+    cp3 = connParams;
+    QCOMPARE(cp3, connParams);
 }
 
 void TestQLowEnergyControllerGattServer::advertisedData()
@@ -324,6 +348,9 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
         QVERIFY(spy->wait(3000));
     QCOMPARE(customChar3.value().constData(), "indicated");
     QCOMPARE(customChar4.value().constData(), "notified");
+
+    spy.reset(new QSignalSpy(m_leController.data(), &QLowEnergyController::connectionUpdated));
+    QVERIFY(spy->wait(5000));
 
     const bool isBonded = QBluetoothLocalDevice().pairingStatus(m_serverAddress)
             != QBluetoothLocalDevice::Unpaired;

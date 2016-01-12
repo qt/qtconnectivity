@@ -33,6 +33,7 @@
 
 #include <QtBluetooth/qlowenergyadvertisingdata.h>
 #include <QtBluetooth/qlowenergyadvertisingparameters.h>
+#include <QtBluetooth/qlowenergyconnectionparameters.h>
 #include <QtBluetooth/qlowenergycontroller.h>
 #include <QtBluetooth/qlowenergycharacteristicdata.h>
 #include <QtBluetooth/qlowenergydescriptordata.h>
@@ -212,6 +213,11 @@ int main(int argc, char *argv[])
         Q_ASSERT(notifiableChar.isValid());
         customService->writeCharacteristic(notifiableChar, "notified");
         Q_ASSERT(notifiableChar.value() == "notified");
+        QLowEnergyConnectionParameters connParams;
+        connParams.setIntervalRange(30, 62.5);
+        connParams.setLatency(5);
+        connParams.setSupervisionTimeout(5500);
+        leController->requestConnectionUpdate(connParams);
     };
     QObject::connect(customService.data(), &QLowEnergyService::descriptorWritten,
                      descriptorWriteHandler);

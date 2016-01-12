@@ -116,6 +116,10 @@ void QLowEnergyControllerPrivate::stopAdvertising()
 {
 }
 
+void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters & /* params */)
+{
+}
+
 void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &/* service */,
                                                             QLowEnergyHandle /* startHandle */)
 {

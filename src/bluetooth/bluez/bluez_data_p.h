@@ -348,6 +348,7 @@ enum OpCodeCommandField {
     OcfLeSetAdvEnable = 0xa,
     OcfLeClearWhiteList = 0x10,
     OcfLeAddToWhiteList = 0x11,
+    OcfLeConnectionUpdate = 0x13,
 };
 
 /* Command opcode pack/unpack */

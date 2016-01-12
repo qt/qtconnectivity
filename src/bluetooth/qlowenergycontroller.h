@@ -44,6 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyAdvertisingParameters;
+class QLowEnergyConnectionParameters;
 class QLowEnergyControllerPrivate;
 class QLowEnergyServiceData;
 
@@ -123,6 +124,8 @@ public:
 
     QLowEnergyService *addService(const QLowEnergyServiceData &service, QObject *parent = 0);
 
+    void requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters);
+
     Error error() const;
     QString errorString() const;
 
@@ -136,6 +139,7 @@ Q_SIGNALS:
 
     void serviceDiscovered(const QBluetoothUuid &newService);
     void discoveryFinished();
+    void connectionUpdated(const QLowEnergyConnectionParameters &parameters);
 
 private:
     explicit QLowEnergyController(QObject *parent = 0); // For the peripheral role.

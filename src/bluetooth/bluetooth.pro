@@ -32,6 +32,7 @@ PUBLIC_HEADERS += \
     qbluetoothtransferreply.h \
     qlowenergyadvertisingdata.h \
     qlowenergyadvertisingparameters.h \
+    qlowenergyconnectionparameters.h \
     qlowenergycontroller.h
 
 PRIVATE_HEADERS += \
@@ -68,6 +69,7 @@ SOURCES += \
     qbluetoothtransferreply.cpp \
     qlowenergyadvertisingdata.cpp \
     qlowenergyadvertisingparameters.cpp \
+    qlowenergyconnectionparameters.cpp \
     qlowenergyservice.cpp \
     qlowenergyservicedata.cpp \
     qlowenergycharacteristic.cpp \

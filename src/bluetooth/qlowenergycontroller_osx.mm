@@ -1173,6 +1173,12 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     return nullptr;
 }
 
+void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+{
+    Q_UNUSED(params);
+    qCWarning(QT_BT_OSX) << "Connection update not implemented for OS X";
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qlowenergycontroller_osx_p.cpp"

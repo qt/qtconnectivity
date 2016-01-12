@@ -35,6 +35,7 @@
 #include "qlowenergycontroller_p.h"
 
 #include "qlowenergycharacteristicdata.h"
+#include "qlowenergyconnectionparameters.h"
 #include "qlowenergydescriptordata.h"
 #include "qlowenergyservicedata.h"
 
@@ -238,12 +239,25 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \sa discoverServices(), error()
 */
 
+/*!
+    \fn void QLowEnergyController::connectionUpdated(const QLowEnergyConnectionParameters &newParameters)
+
+    This signal is emitted when the connection parameters change. This can happen as a result
+    of calling \l requestConnectionUpdate() or due to other reasons, for instance because
+    the other side of the connection requested new parameters. The new values can be retrieved
+    from \a newParameters.
+
+    \sa requestConnectionUpdate()
+*/
+
+
 void registerQLowEnergyControllerMetaType()
 {
     static bool initDone = false;
     if (!initDone) {
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
+        qRegisterMetaType<QLowEnergyConnectionParameters>();
         initDone = true;
     }
 }
@@ -879,6 +893,22 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     d_ptr->localServices.insert(servicePrivate->uuid, servicePrivate);
     d_ptr->addToGenericAttributeList(service, servicePrivate->startHandle);
     return new QLowEnergyService(servicePrivate, parent);
+}
+
+/*!
+  Requests the controller to update the connection according to \a parameters.
+  If the request is successful, the \l connectionUpdated() signal will be emitted
+  with the actual new parameters.
+  See the  \l QLowEnergyConnectionParameters class for more information on connection parameters.
+  \note Currently, this functionality is only implemented on Linux.
+ */
+void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters)
+{
+    if (state() != ConnectedState) {
+        qCWarning(QT_BT) << "Connection update request only possible in connected state";
+        return;
+    }
+    d_ptr->requestConnectionUpdate(parameters);
 }
 
 /*!
