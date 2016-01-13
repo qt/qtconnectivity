@@ -193,8 +193,8 @@ void QLeAdvertiserBluez::setAdvertisingInterval(AdvParams &params)
             parameters().mode() == QLowEnergyAdvertisingParameters::AdvScanInd
             || parameters().mode() == QLowEnergyAdvertisingParameters::AdvNonConnInd ? 0xa0 : 0x20;
     const quint16 specMaximum = 0x4000;
-    params.minInterval = forceIntoRange(minVal, specMinimum, specMaximum);
-    params.maxInterval = forceIntoRange(maxVal, specMinimum, specMaximum);
+    params.minInterval = qToLittleEndian(forceIntoRange(minVal, specMinimum, specMaximum));
+    params.maxInterval = qToLittleEndian(forceIntoRange(maxVal, specMinimum, specMaximum));
     Q_ASSERT(params.minInterval <= params.maxInterval);
 }
 
