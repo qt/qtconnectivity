@@ -200,6 +200,7 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller.cpp
 } else:winphone {
     DEFINES += QT_WINRT_BLUETOOTH
+    QT += core-private
 
     # remove dummy warning once platform port is complete
     include(dummy/dummy.pri)

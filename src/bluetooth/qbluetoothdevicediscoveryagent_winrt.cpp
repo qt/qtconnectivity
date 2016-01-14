@@ -38,6 +38,7 @@
 #include "qfunctions_winrt.h"
 
 #include <QtCore/QLoggingCategory>
+#include <QtCore/private/qeventdispatcher_winrt_p.h>
 
 #include <wrl.h>
 #include <windows.devices.enumeration.h>
@@ -165,9 +166,12 @@ public:
 
     void start()
     {
-        startDeviceDiscovery(BT);
+        QEventDispatcherWinRT::runOnXamlThread([this]() {
+            startDeviceDiscovery(BT);
 
-        startDeviceDiscovery(BTLE);
+            startDeviceDiscovery(BTLE);
+            return S_OK;
+        });
 
         qCDebug(QT_BT_WINRT) << "Worker started";
     }
