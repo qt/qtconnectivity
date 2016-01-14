@@ -136,7 +136,7 @@ int HciManager::hciForAddress(const QBluetoothAddress &deviceAdapter)
 
         int result = memcmp(&adapter, &devInfo.bdaddr, sizeof(bdaddr_t));
         if (result == 0 || deviceAdapter.isNull()) // addresses match
-            return devRequest->dev_id;
+            return devInfo.dev_id;
     }
 
     return -1;
