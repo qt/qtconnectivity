@@ -412,6 +412,7 @@ QLowEnergyController::QLowEnergyController(
     d->remoteDevice = remoteDevice;
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
+    d->init();
 }
 
 /*!
@@ -437,6 +438,7 @@ QLowEnergyController::QLowEnergyController(
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
     d->remoteName = remoteDeviceInfo.name();
+    d->init();
 }
 
 /*!
@@ -464,6 +466,7 @@ QLowEnergyController::QLowEnergyController(
     d->q_ptr = this;
     d->remoteDevice = remoteDevice;
     d->localAdapter = localDevice;
+    d->init();
 }
 
 /*!

@@ -96,6 +96,8 @@ public:
     QLowEnergyControllerPrivate();
     ~QLowEnergyControllerPrivate();
 
+    void init();
+
     void setError(QLowEnergyController::Error newError);
     bool isValidLocalAdapter();
 

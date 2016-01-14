@@ -207,7 +207,14 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 {
     registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();
+}
 
+QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+{
+}
+
+void QLowEnergyControllerPrivate::init()
+{
     hciManager = new HciManager(localAdapter, this);
     if (!hciManager->isValid())
         return;
@@ -215,10 +222,6 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     hciManager->monitorEvent(HciManager::EncryptChangeEvent);
     connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
             this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
-}
-
-QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
-{
 }
 
 void QLowEnergyControllerPrivate::connectToDevice()
