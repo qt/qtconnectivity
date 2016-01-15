@@ -310,6 +310,9 @@ void QLowEnergyControllerPrivate::setError(
 
 bool QLowEnergyControllerPrivate::isValidLocalAdapter()
 {
+#ifdef QT_WINRT_BLUETOOTH
+    return true;
+#endif
     if (localAdapter.isNull())
         return false;
 
