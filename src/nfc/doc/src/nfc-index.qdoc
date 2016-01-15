@@ -73,6 +73,20 @@ import statement in your \c .qml file:
     \li \l {Qt NFC C++ Classes}{C++ Classes}
 \endlist
 
+\section2 Logging Categories
+
+The \l QtNfc module exports the following
+\l {Configuring Categories}{logging categories}:
+
+\table
+\header
+    \li Logging Category
+    \li Description
+\row
+    \li qt.nfc.neard
+    \li Enables logging of the Neard/Linux implementation
+\endtable
+
 \section2 Examples
 \list
     \li QML
