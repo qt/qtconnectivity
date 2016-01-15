@@ -242,7 +242,7 @@ template<typename T> static void addServicesData(AdvData &data, const QVector<T>
         return;
     const int spaceAvailable = sizeof data.data - data.length;
     const int maxServices = qMin<int>((spaceAvailable - 2) / sizeof(T), services.count());
-    if (maxServices == 0) {
+    if (maxServices <= 0) {
         qCWarning(QT_BT_BLUEZ) << "services data does not fit into advertising data packet";
         return;
     }
