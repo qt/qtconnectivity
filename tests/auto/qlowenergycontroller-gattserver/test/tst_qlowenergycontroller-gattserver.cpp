@@ -42,7 +42,12 @@
 #include <QtTest/qsignalspy.h>
 #include <QtTest/QtTest>
 
+#ifdef Q_OS_LINUX
+#include <QtBluetooth/private/lecmacverifier_p.h>
+#endif
+
 #include <algorithm>
+#include <cstring>
 
 using namespace QBluetooth;
 
@@ -56,6 +61,8 @@ private slots:
     // Static, local stuff goes here.
     void advertisingParameters();
     void advertisingData();
+    void cmacVerifier();
+    void cmacVerifier_data();
     void connectionParameters();
     void controllerType();
     void serviceData();
@@ -143,6 +150,42 @@ void TestQLowEnergyControllerGattServer::advertisingData()
     QCOMPARE(data.rawData(), rawData);
 
     QVERIFY(data != QLowEnergyAdvertisingData());
+}
+
+void TestQLowEnergyControllerGattServer::cmacVerifier()
+{
+#ifdef CONFIG_LINUX_CRYPTO_API
+    // Test data comes from spec v4.2, Vol 3, Part H, Appendix D.1
+    const quint128 csrk = {
+        { 0x3c, 0x4f, 0xcf, 0x09, 0x88, 0x15, 0xf7, 0xab,
+          0xa6, 0xd2, 0xae, 0x28, 0x16, 0x15, 0x7e, 0x2b }
+    };
+    QFETCH(QByteArray, message);
+    QFETCH(quint64, expectedMac);
+    const bool success = LeCmacVerifier().verify(message, csrk, expectedMac);
+    QVERIFY(success);
+#else // CONFIG_LINUX_CRYPTO_API
+    QSKIP("CMAC verification test only applicable on Linux with crypto API");
+#endif // Q_OS_LINUX
+}
+
+void TestQLowEnergyControllerGattServer::cmacVerifier_data()
+{
+    QTest::addColumn<QByteArray>("message");
+    QTest::addColumn<quint64>("expectedMac");
+    QTest::newRow("D1.1") << QByteArray() << Q_UINT64_C(0xbb1d6929e9593728);
+    QTest::newRow("D1.2") << QByteArray::fromHex("2a179373117e3de9969f402ee2bec16b")
+            << Q_UINT64_C(0x070a16b46b4d4144);
+    QByteArray messageD13 = QByteArray::fromHex("6bc1bee22e409f96e93d7e117393172aae2d8a57"
+                                                "1e03ac9c9eb76fac45af8e5130c81c46a35ce411");
+    std::reverse(messageD13.begin(), messageD13.end());
+    QTest::newRow("D1.3") << messageD13 << Q_UINT64_C(0xdfa66747de9ae630);
+    QByteArray messageD14 = QByteArray::fromHex("6bc1bee22e409f96e93d7e117393172a"
+                                                "ae2d8a571e03ac9c9eb76fac45af8e51"
+                                                "30c81c46a35ce411e5fbc1191a0a52ef"
+                                                "f69f2445df4f9b17ad2b417be66c3710");
+    std::reverse(messageD14.begin(), messageD14.end());
+    QTest::newRow("D1.4") << messageD14 << Q_UINT64_C(0x51f0bebf7e3b9d92);
 }
 
 void TestQLowEnergyControllerGattServer::connectionParameters()

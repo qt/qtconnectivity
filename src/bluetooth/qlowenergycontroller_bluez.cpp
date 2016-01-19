@@ -38,13 +38,16 @@
 **
 ****************************************************************************/
 
+#include "lecmacverifier_p.h"
 #include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
 #include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
 
+#include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QSettings>
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
@@ -59,8 +62,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
-#define ATTRIBUTE_CHANNEL_ID 4
 
 #define ATT_DEFAULT_LE_MTU 23
 #define ATT_MAX_LE_MTU 0x200
@@ -271,6 +272,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
             this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
     hciManager->monitorEvent(HciManager::LeMetaEvent);
+    hciManager->monitorAclPackets();
     connect(hciManager, &HciManager::connectionComplete, [this](quint16 handle) {
         connectionHandle = handle;
         qCDebug(QT_BT_BLUEZ) << "received connection complete event, handle:" << handle;
@@ -281,11 +283,22 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
                     emit q_ptr->connectionUpdated(params);
             }
     );
+    connect(hciManager, &HciManager::signatureResolvingKeyReceived,
+            [this](quint16 handle, const quint128 &csrk) {
+                if (handle == connectionHandle) {
+                    qCDebug(QT_BT_BLUEZ) << "received new signature resolving key"
+                                         << QByteArray(reinterpret_cast<const char *>(csrk.data),
+                                                       sizeof csrk).toHex();
+                    signingData.insert(remoteDevice.toUInt64(), SigningData(csrk));
+                }
+            }
+    );
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
     closeServerSocket();
+    delete cmacVerifier;
 }
 
 class ServerSocket
@@ -336,6 +349,7 @@ public:
 private:
     int m_socket = -1;
 };
+
 
 void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
         const QLowEnergyAdvertisingData &advertisingData,
@@ -2462,9 +2476,32 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
             qCWarning(QT_BT_BLUEZ) << "Ignoring signed write on encrypted link.";
             return;
         }
-        // const QByteArray signature = packet.right(12);
-        qCWarning(QT_BT_BLUEZ) << "signed write not implemented, ignoring.";
-        return; // TODO: Check signature and continue if it's valid. Check and update sign counter.
+        const auto signingDataIt = signingData.find(remoteDevice.toUInt64());
+        if (signingDataIt == signingData.constEnd()) {
+            qCWarning(QT_BT_BLUEZ) << "No CSRK found for peer device, ignoring signed write";
+            return;
+        }
+
+        const quint32 signCounter = getBtData<quint32>(packet.data() + packet.count() - 12);
+        if (signCounter < signingDataIt.value().counter + 1) {
+            qCWarning(QT_BT_BLUEZ) << "Client's' sign counter" << signCounter
+                                   << "not greater than local sign counter"
+                                   << signingDataIt.value().counter
+                                   << "; ignoring signed write command.";
+            return;
+        }
+
+        const quint64 macFromClient = getBtData<quint64>(packet.data() + packet.count() - 8);
+        const bool signatureCorrect = verifyMac(packet.left(packet.count() - 12),
+                signingDataIt.value().key, signCounter, macFromClient);
+        if (!signatureCorrect) {
+            qCWarning(QT_BT_BLUEZ) << "Signed Write packet has wrong signature, disconnecting";
+            disconnectFromDevice(); // Recommended by spec v4.2, Vol 3, part C, 10.4.2
+            return;
+        }
+
+        signingDataIt.value().counter = signCounter;
+        storeSignCounter();
         valueLength = packet.count() - 15;
     } else {
         valueLength = packet.count() - 3;
@@ -2678,6 +2715,7 @@ void QLowEnergyControllerPrivate::handleConnectionRequest()
     l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol,
             QBluetoothSocket::ConnectedState, QIODevice::ReadWrite | QIODevice::Unbuffered);
     restoreClientConfigurations();
+    loadSigningDataIfNecessary();
     setState(QLowEnergyController::ConnectedState);
 }
 
@@ -2771,6 +2809,64 @@ void QLowEnergyControllerPrivate::restoreClientConfigurations()
     foreach (const QLowEnergyHandle handle, notifications)
         sendNotification(handle);
     sendNextIndication();
+}
+
+void QLowEnergyControllerPrivate::loadSigningDataIfNecessary()
+{
+    const auto signingDataIt = signingData.constFind(remoteDevice.toUInt64());
+    if (signingDataIt != signingData.constEnd())
+        return; // We are up to date for this device.
+    const QString settingsFilePath = keySettingsFilePath();
+    if (!QFileInfo(settingsFilePath).exists()) {
+        qCDebug(QT_BT_BLUEZ) << "No settings found for peer device.";
+        return;
+    }
+    QSettings settings(settingsFilePath, QSettings::IniFormat);
+    settings.beginGroup(QLatin1String("RemoteSignatureKey"));
+    const QByteArray keyString = settings.value(QLatin1String("Key")).toByteArray();
+    if (keyString.isEmpty()) {
+        qCDebug(QT_BT_BLUEZ) << "No remote signature key found in settings file";
+        return;
+    }
+    const QByteArray keyData = QByteArray::fromHex(keyString);
+    if (keyData.count() != int(sizeof(quint128))) {
+        qCWarning(QT_BT_BLUEZ) << "Remote signature key in settings file has invalid size"
+                               << keyString.count();
+        return;
+    }
+    qCDebug(QT_BT_BLUEZ) << "CSRK of peer device is" << keyString;
+    const quint32 counter = settings.value(QLatin1String("Counter"), 0).toUInt();
+    quint128 csrk;
+    using namespace std;
+    memcpy(csrk.data, keyData.constData(), keyData.count());
+    signingData.insert(remoteDevice.toUInt64(), SigningData(csrk, counter - 1));
+}
+
+void QLowEnergyControllerPrivate::storeSignCounter()
+{
+    const auto signingDataIt = signingData.constFind(remoteDevice.toUInt64());
+    if (signingDataIt == signingData.constEnd())
+        return;
+    const QString settingsFilePath = keySettingsFilePath();
+    if (!QFileInfo(settingsFilePath).exists())
+        return;
+    QSettings settings(settingsFilePath, QSettings::IniFormat);
+    if (!settings.isWritable())
+        return;
+    settings.beginGroup(QLatin1String("RemoteSignatureKey"));
+    const QString counterKey = QLatin1String("Counter");
+    if (!settings.allKeys().contains(counterKey))
+        return;
+    const quint32 counterValue = signingDataIt.value().counter + 1;
+    if (counterValue == settings.value(counterKey).toUInt())
+        return;
+    settings.setValue(counterKey, counterValue);
+}
+
+QString QLowEnergyControllerPrivate::keySettingsFilePath() const
+{
+    return QString::fromLatin1("/var/lib/bluetooth/%1/%2/info")
+            .arg(localAdapter.toString(), remoteDevice.toString());
 }
 
 static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
@@ -2997,6 +3093,15 @@ int QLowEnergyControllerPrivate::checkReadPermissions(QVector<Attribute> &attrib
     if (it != attributes.end())
         attributes.erase(it, attributes.end());
     return 0;
+}
+
+bool QLowEnergyControllerPrivate::verifyMac(const QByteArray &message, const quint128 &csrk,
+                                             quint32 signCounter, quint64 expectedMac)
+{
+    if (!cmacVerifier)
+        cmacVerifier = new LeCmacVerifier;
+    return cmacVerifier->verify(LeCmacVerifier::createFullMessage(message, signCounter), csrk,
+                                expectedMac);
 }
 
 QT_END_NAMESPACE

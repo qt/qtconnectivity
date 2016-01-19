@@ -183,6 +183,29 @@ bool HciManager::monitorEvent(HciManager::HciEvent event)
     return true;
 }
 
+bool HciManager::monitorAclPackets()
+{
+    if (!isValid())
+        return false;
+
+    hci_filter filter;
+    socklen_t length = sizeof(hci_filter);
+    if (getsockopt(hciSocket, SOL_HCI, HCI_FILTER, &filter, &length) < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot retrieve HCI filter settings";
+        return false;
+    }
+
+    hci_filter_set_ptype(HCI_ACL_PKT, &filter);
+    hci_filter_all_events(&filter);
+
+    if (setsockopt(hciSocket, SOL_HCI, HCI_FILTER, &filter, sizeof(hci_filter)) < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Could not set HCI socket options:" << strerror(errno);
+        return false;
+    }
+
+    return true;
+}
+
 bool HciManager::sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters)
 {
     qCDebug(QT_BT_BLUEZ) << "sending command; ogf:" << ogf << "ocf:" << ocf;
@@ -325,28 +348,20 @@ bool HciManager::sendConnectionParameterUpdateRequest(quint16 handle,
     const quint16 sigPacketLen = sizeof connUpdateData;
     signalingPacket.length = qToLittleEndian(sigPacketLen);
 
-    struct L2CapHeader {
-        quint16 length;
-        quint16 channelId;
-    } l2CapHeader;
+    L2CapHeader l2CapHeader;
     const quint16 l2CapHeaderLen = sizeof signalingPacket + sigPacketLen;
     l2CapHeader.length = qToLittleEndian(l2CapHeaderLen);
-    l2CapHeader.channelId = qToLittleEndian(quint16(5));
+    l2CapHeader.channelId = qToLittleEndian(quint16(SIGNALING_CHANNEL_ID));
 
     // Vol 2, part E, 5.4.2
-    struct AclData {
-        quint16 handle: 12;
-        quint16 pbFlag: 2;
-        quint16 bcFlag: 2;
-        quint16 dataLen;
-    } aclData;
+    AclData aclData;
     aclData.handle = qToLittleEndian(handle); // Works because the next two values are zero.
     aclData.pbFlag = 0;
     aclData.bcFlag = 0;
     aclData.dataLen = qToLittleEndian(quint16(sizeof l2CapHeader + l2CapHeaderLen));
 
     struct iovec iv[5];
-    quint8 packetType = 2;
+    quint8 packetType = HCI_ACL_PKT;
     iv[0].iov_base = &packetType;
     iv[0].iov_len  = 1;
     iv[1].iov_base = &aclData;
@@ -372,8 +387,7 @@ bool HciManager::sendConnectionParameterUpdateRequest(quint16 handle,
  */
 void HciManager::_q_readNotify()
 {
-
-    unsigned char buffer[HCI_MAX_EVENT_SIZE];
+    unsigned char buffer[qMax<int>(HCI_MAX_EVENT_SIZE, sizeof(AclData))];
     int size;
 
     size = ::read(hciSocket, buffer, sizeof(buffer));
@@ -384,16 +398,29 @@ void HciManager::_q_readNotify()
         return;
     }
 
-    const unsigned char *data = buffer;
+    switch (buffer[0]) {
+    case HCI_EVENT_PKT:
+        handleHciEventPacket(buffer + 1, size - 1);
+        break;
+    case HCI_ACL_PKT:
+        handleHciAclPacket(buffer + 1, size - 1);
+        break;
+    default:
+        qCWarning(QT_BT_BLUEZ) << "Ignoring unexpected HCI packet type" << buffer[0];
+    }
+}
 
-    // Not interested in anything but valid HCI events
-    if ((size < HCI_EVENT_HDR_SIZE + 1) || buffer[0] != HCI_EVENT_PKT)
+void HciManager::handleHciEventPacket(const quint8 *data, int size)
+{
+    if (size < HCI_EVENT_HDR_SIZE) {
+        qCWarning(QT_BT_BLUEZ) << "Unexpected HCI event packet size:" << size;
         return;
+    }
 
-    hci_event_hdr *header = (hci_event_hdr *)(&buffer[1]);
+    hci_event_hdr *header = (hci_event_hdr *) data;
 
-    size = size - HCI_EVENT_HDR_SIZE - 1;
-    data = data + HCI_EVENT_HDR_SIZE + 1;
+    size -= HCI_EVENT_HDR_SIZE;
+    data += HCI_EVENT_HDR_SIZE;
 
     if (header->plen != size) {
         qCWarning(QT_BT_BLUEZ) << "Invalid HCI event packet size";
@@ -434,6 +461,62 @@ void HciManager::_q_readNotify()
     default:
         break;
     }
+
+}
+
+void HciManager::handleHciAclPacket(const quint8 *data, int size)
+{
+    if (size < int(sizeof(AclData))) {
+        qCWarning(QT_BT_BLUEZ) << "Unexpected HCI ACL packet size";
+        return;
+    }
+
+    quint16 rawAclData[sizeof(AclData) / sizeof(quint16)];
+    rawAclData[0] = bt_get_le16(data);
+    rawAclData[1] = bt_get_le16(data + sizeof(quint16));
+    const AclData *aclData = reinterpret_cast<AclData *>(rawAclData);
+    data += sizeof *aclData;
+    size -= sizeof *aclData;
+    if (size < aclData->dataLen) {
+        qCWarning(QT_BT_BLUEZ) << "HCI ACL packet data size" << size
+                               << "is smaller than specified size" << aclData->dataLen;
+        return;
+    }
+
+//    qCDebug(QT_BT_BLUEZ) << "handle:" << aclData->handle << "PB:" << aclData->pbFlag
+//                         << "BC:" << aclData->bcFlag << "data len:" << aclData->dataLen;
+
+    // Consider only directed, complete messages from controller to host (i.e. incoming packets).
+    if (aclData->pbFlag != 2 || aclData->bcFlag != 0)
+        return;
+
+    if (size < int(sizeof(L2CapHeader))) {
+        qCWarning(QT_BT_BLUEZ) << "Unexpected HCI ACL packet size";
+        return;
+    }
+    L2CapHeader l2CapHeader = *reinterpret_cast<const L2CapHeader*>(data);
+    l2CapHeader.channelId = qFromLittleEndian(l2CapHeader.channelId);
+    l2CapHeader.length = qFromLittleEndian(l2CapHeader.length);
+    data += sizeof l2CapHeader;
+    size -= sizeof l2CapHeader;
+    if (size < l2CapHeader.length) {
+        qCWarning(QT_BT_BLUEZ) << "L2Cap payload size" << size << "is smaller than specified size"
+                               << l2CapHeader.length;
+        return;
+    }
+//    qCDebug(QT_BT_BLUEZ) << "l2cap channel id:" << l2CapHeader.channelId
+//                         << "payload length:" << l2CapHeader.length;
+    if (l2CapHeader.channelId != SECURITY_CHANNEL_ID)
+        return;
+    if (*data != 0xa) // "Signing Information". Spec v4.2, Vol 3, Part H, 3.6.6
+        return;
+    if (size != 17) {
+        qCWarning(QT_BT_BLUEZ) << "Unexpected key size" << size << "in Signing Information packet";
+        return;
+    }
+    quint128 csrk;
+    memcpy(&csrk, data + 1, sizeof csrk);
+    emit signatureResolvingKeyReceived(aclData->handle, csrk);
 }
 
 void HciManager::handleLeMetaEvent(const quint8 *data)

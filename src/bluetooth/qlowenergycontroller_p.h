@@ -92,6 +92,7 @@ class QLowEnergyServiceData;
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
+class LeCmacVerifier;
 class QSocketNotifier;
 #elif defined(QT_ANDROID_BLUETOOTH)
 class LowEnergyNotificationHub;
@@ -248,6 +249,17 @@ private:
     };
     QHash<quint64, QVector<ClientConfigurationData>> clientConfigData;
 
+    struct SigningData {
+        SigningData() = default;
+        SigningData(const quint128 &csrk, quint32 signCounter = quint32(-1))
+            : key(csrk), counter(signCounter) {}
+
+        quint128 key;
+        quint32 counter = quint32(-1);
+    };
+    QHash<quint64, SigningData> signingData;
+    LeCmacVerifier *cmacVerifier = nullptr;
+
     bool requestPending;
     quint16 mtuSize;
     int securityLevelValue;
@@ -265,6 +277,9 @@ private:
     QVector<TempClientConfigurationData> gatherClientConfigData();
     void storeClientConfigurations();
     void restoreClientConfigurations();
+    void loadSigningDataIfNecessary();
+    void storeSignCounter();
+    QString keySettingsFilePath() const;
 
     void sendPacket(const QByteArray &packet);
     void sendNextPendingRequest();
@@ -338,6 +353,9 @@ private:
     int checkPermissions(const Attribute &attr, QLowEnergyCharacteristic::PropertyType type);
     int checkReadPermissions(const Attribute &attr);
     int checkReadPermissions(QVector<Attribute> &attributes);
+
+    bool verifyMac(const QByteArray &message, const quint128 &csrk, quint32 signCounter,
+                   quint64 expectedMac);
 
     void updateLocalAttributeValue(
             QLowEnergyHandle handle,

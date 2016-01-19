@@ -1,5 +1,5 @@
 TARGET = QtBluetooth
-QT = core
+QT = core core-private
 QT_PRIVATE = concurrent
 
 
@@ -51,6 +51,7 @@ PRIVATE_HEADERS += \
     qlowenergycontroller_p.h \
     qlowenergyserviceprivate_p.h \
     qleadvertiser_p.h \
+    lecmacverifier_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -102,7 +103,10 @@ config_bluez:qtHaveModule(dbus) {
     config_bluez_le {
         SOURCES +=  \
             qleadvertiser_bluez.cpp \
-            qlowenergycontroller_bluez.cpp
+            qlowenergycontroller_bluez.cpp \
+            lecmacverifier.cpp
+        config_linux_crypto_api:DEFINES += CONFIG_LINUX_CRYPTO_API
+        else:message("Linux crypto API not present, signed writes will not work.")
     } else {
         message("Bluez version is too old to support Bluetooth Low Energy.")
         message("Only classic Bluetooth will be available.")

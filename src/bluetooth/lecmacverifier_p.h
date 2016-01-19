@@ -36,9 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef HCIMANAGER_P_H
-#define HCIMANAGER_P_H
+#ifndef LECMACVERIFIER_H
+#define LECMACVERIFIER_H
 
 //
 //  W A R N I N G
@@ -51,64 +50,27 @@
 // We mean it.
 //
 
-#include <QObject>
-#include <QtCore/QSet>
-#include <QtCore/QSocketNotifier>
-#include <QtBluetooth/QBluetoothAddress>
-#include "bluez/bluez_data_p.h"
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyConnectionParameters;
+struct quint128;
 
-class HciManager : public QObject
+class Q_AUTOTEST_EXPORT LeCmacVerifier
 {
-    Q_OBJECT
 public:
-    enum HciEvent {
-        EncryptChangeEvent = EVT_ENCRYPT_CHANGE,
-        CommandCompleteEvent = EVT_CMD_COMPLETE,
-        LeMetaEvent = 0x3e,
-    };
+    LeCmacVerifier();
+    ~LeCmacVerifier();
 
-    explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
-    ~HciManager();
+    static QByteArray createFullMessage(const QByteArray &message, quint32 signCounter);
 
-    bool isValid() const;
-    bool monitorEvent(HciManager::HciEvent event);
-    bool monitorAclPackets();
-    bool sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters);
-
-    void stopEvents();
-    QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
-
-    bool sendConnectionUpdateCommand(quint16 handle, const QLowEnergyConnectionParameters &params);
-    bool sendConnectionParameterUpdateRequest(quint16 handle,
-                                              const QLowEnergyConnectionParameters &params);
-
-signals:
-    void encryptionChangedEvent(const QBluetoothAddress &address, bool wasSuccess);
-    void commandCompleted(quint16 opCode, quint8 status, const QByteArray &data);
-    void connectionComplete(quint16 handle);
-    void connectionUpdate(quint16 handle, const QLowEnergyConnectionParameters &parameters);
-    void signatureResolvingKeyReceived(quint16 connHandle, const quint128 &csrk);
-
-private slots:
-    void _q_readNotify();
+    bool verify(const QByteArray &message, const quint128 &csrk, quint64 expectedMac) const;
 
 private:
-    int hciForAddress(const QBluetoothAddress &deviceAdapter);
-    void handleHciEventPacket(const quint8 *data, int size);
-    void handleHciAclPacket(const quint8 *data, int size);
-    void handleLeMetaEvent(const quint8 *data);
-
-    int hciSocket;
-    int hciDev;
-    quint8 sigPacketIdentifier = 0;
-    QSocketNotifier *notifier;
-    QSet<HciManager::HciEvent> runningEvents;
+    int m_baseSocket = -1;
 };
+
 
 QT_END_NAMESPACE
 
-#endif // HCIMANAGER_P_H
+#endif // Header guard

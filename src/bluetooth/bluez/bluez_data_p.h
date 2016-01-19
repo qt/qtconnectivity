@@ -58,6 +58,10 @@
 
 QT_BEGIN_NAMESPACE
 
+#define ATTRIBUTE_CHANNEL_ID 4
+#define SIGNALING_CHANNEL_ID 5
+#define SECURITY_CHANNEL_ID 6
+
 #define BTPROTO_L2CAP   0
 #define BTPROTO_HCI     1
 #define BTPROTO_RFCOMM  3
@@ -173,9 +177,14 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #error "Unknown byte order"
 #endif
 
+template<typename T> inline T getBtData(const void *ptr)
+{
+    return qFromLittleEndian<T>(reinterpret_cast<const uchar *>(ptr));
+}
+
 static inline quint16 bt_get_le16(const void *ptr)
 {
-    return qFromLittleEndian<quint16>(reinterpret_cast<const uchar *>(ptr));
+    return getBtData<quint16>(ptr);
 }
 
 template<typename T> inline void putBtData(T src, void *dst)
@@ -200,6 +209,7 @@ template<> inline void putBtData(quint128 src, void *dst)
 
 // HCI packet types
 #define HCI_COMMAND_PKT 0x01
+#define HCI_ACL_PKT     0x02
 #define HCI_EVENT_PKT   0x04
 #define HCI_VENDOR_PKT  0xff
 
@@ -336,6 +346,18 @@ struct evt_cmd_complete {
     quint8 ncmd;
     quint16 opcode;
 } __attribute__ ((packed));
+
+struct AclData {
+    quint16 handle: 12;
+    quint16 pbFlag: 2;
+    quint16 bcFlag: 2;
+    quint16 dataLen;
+};
+
+struct L2CapHeader {
+    quint16 length;
+    quint16 channelId;
+};
 
 struct hci_command_hdr {
     quint16 opcode;         /* OCF & OGF */

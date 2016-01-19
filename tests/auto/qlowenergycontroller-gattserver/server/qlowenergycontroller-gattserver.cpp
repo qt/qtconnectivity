@@ -121,7 +121,7 @@ void addCustomService()
     serviceData.addCharacteristic(charData);
 
     charData.setUuid(QBluetoothUuid(quint16(0x5001)));
-    charData.setProperties(QLowEnergyCharacteristic::Read);
+    charData.setProperties(QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::WriteSigned);
     charData.setReadConstraints(QBluetooth::AttAuthorizationRequired); // To test read failure.
     serviceData.addCharacteristic(charData);
     charData.setValue("something");
