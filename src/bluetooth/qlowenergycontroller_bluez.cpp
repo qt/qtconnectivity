@@ -92,7 +92,7 @@
 #define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
 #define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
 #define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
-#define ATT_OP_SIGNED_WRITE_COMMAND     0x2D
+#define ATT_OP_SIGNED_WRITE_COMMAND     0xD2
 
 //GATT command sizes in bytes
 #define ERROR_RESPONSE_HEADER_SIZE 5
@@ -2426,7 +2426,7 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
     // Spec v4.2, Vol 3, Part F, 3.4.5.1-3
 
     const bool isRequest = packet.at(0) == ATT_OP_WRITE_REQUEST;
-    const bool isSigned = packet.at(0) == ATT_OP_SIGNED_WRITE_COMMAND;
+    const bool isSigned = quint8(packet.at(0)) == quint8(ATT_OP_SIGNED_WRITE_COMMAND);
     if (!checkPacketSize(packet, isSigned ? 15 : 3, mtuSize))
         return;
     const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
