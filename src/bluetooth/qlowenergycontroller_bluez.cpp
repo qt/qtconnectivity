@@ -2436,15 +2436,6 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
     if (!checkHandle(packet, handle))
         return;
 
-    int valueLength;
-    if (isSigned) {
-        // const QByteArray signature = packet.right(12);
-        return; // TODO: Check signature and continue if it's valid. Store sign counter.
-        valueLength = packet.count() - 15;
-    } else {
-        valueLength = packet.count() - 3;
-    }
-
     Attribute &attribute = localAttributes[handle];
     const QLowEnergyCharacteristic::PropertyType type = isRequest
             ? QLowEnergyCharacteristic::Write : isSigned
@@ -2454,6 +2445,24 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
         sendErrorResponse(packet.at(0), handle, permissionsError);
         return;
     }
+
+    int valueLength;
+    if (isSigned) {
+        if (!isBonded()) {
+            qCWarning(QT_BT_BLUEZ) << "Ignoring signed write from non-bonded device.";
+            return;
+        }
+        if (securityLevel() >= BT_SECURITY_MEDIUM) {
+            qCWarning(QT_BT_BLUEZ) << "Ignoring signed write on encrypted link.";
+            return;
+        }
+        // const QByteArray signature = packet.right(12);
+        return; // TODO: Check signature and continue if it's valid. Check and update sign counter.
+        valueLength = packet.count() - 15;
+    } else {
+        valueLength = packet.count() - 3;
+    }
+
     if (valueLength > attribute.maxLength) {
         sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
         return;
@@ -2928,12 +2937,23 @@ int QLowEnergyControllerPrivate::checkPermissions(const Attribute &attr,
                                                   QLowEnergyCharacteristic::PropertyType type)
 {
     const bool isReadAccess = type == QLowEnergyCharacteristic::Read;
+    const bool isWriteCommand = type == QLowEnergyCharacteristic::WriteNoResponse;
     const bool isWriteAccess = type == QLowEnergyCharacteristic::Write
-            || type == QLowEnergyCharacteristic::WriteNoResponse
-            || type == QLowEnergyCharacteristic::WriteSigned;
+            || type == QLowEnergyCharacteristic::WriteSigned
+            || isWriteCommand;
     Q_ASSERT(isReadAccess || isWriteAccess);
-    if (!(attr.properties & type))
-        return isReadAccess ? ATT_ERROR_READ_NOT_PERM : ATT_ERROR_WRITE_NOT_PERM;
+    if (!(attr.properties & type)) {
+        if (isReadAccess)
+            return ATT_ERROR_READ_NOT_PERM;
+
+        // The spec says: If an attribute requires a signed write, then a non-signed write command
+        // can also be used if the link is encrypted.
+        const bool unsignedWriteOk = isWriteCommand
+                && (attr.properties & QLowEnergyCharacteristic::WriteSigned)
+                && securityLevel() >= BT_SECURITY_MEDIUM;
+        if (!unsignedWriteOk)
+            return ATT_ERROR_WRITE_NOT_PERM;
+    }
     const AttAccessConstraints constraints = isReadAccess
             ? attr.readConstraints : attr.writeConstraints;
     if (constraints.testFlag(AttAuthorizationRequired))
