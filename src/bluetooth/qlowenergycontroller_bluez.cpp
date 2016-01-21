@@ -391,7 +391,12 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         break;
     }
 
-    Q_ASSERT(!openRequests.isEmpty());
+    if (openRequests.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Received unexpected packet from peer, disconnecting.";
+        disconnectFromDevice();
+        return;
+    }
+
     const Request request = openRequests.dequeue();
     processReply(request, reply);
 
