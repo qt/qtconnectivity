@@ -868,7 +868,14 @@ void QLowEnergyControllerPrivate::processReply(
         Q_ASSERT(!p.isNull());
 
         if (isErrorResponse) {
-            readServiceValues(p->uuid, false); //read descriptor values
+            if (keys.count() == 1) {
+                // no more descriptors to discover
+                readServiceValues(p->uuid, false); //read descriptor values
+            } else {
+                // hop to the next descriptor
+                keys.removeFirst();
+                discoverNextDescriptor(p, keys, keys.first());
+            }
             break;
         }
 
