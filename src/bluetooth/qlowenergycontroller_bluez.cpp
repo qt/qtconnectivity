@@ -2457,6 +2457,7 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
             return;
         }
         // const QByteArray signature = packet.right(12);
+        qCWarning(QT_BT_BLUEZ) << "signed write not implemented, ignoring.";
         return; // TODO: Check signature and continue if it's valid. Check and update sign counter.
         valueLength = packet.count() - 15;
     } else {
