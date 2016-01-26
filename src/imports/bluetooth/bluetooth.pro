@@ -1,3 +1,8 @@
+CXX_MODULE = connectivity
+TARGET  = declarative_bluetooth
+TARGETPATH = QtBluetooth
+IMPORT_VERSION = 5.6
+
 QT = core quick bluetooth
 
 HEADERS += \
