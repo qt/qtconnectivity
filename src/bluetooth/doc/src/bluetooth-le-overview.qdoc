@@ -34,10 +34,11 @@ Low Energy devices.
 
 \tableofcontents
 
-    The Qt Bluetooth Low Energy API was introduced by Qt 5.4. Since Qt 5.5 the API
-    is final and a compatibility guarantee is given for future releases.
-    At the moment, Qt supports the Bluetooth Low Energy central role.
-    For more details on this limitation see below.
+    The Qt Bluetooth Low Energy API for the central role was introduced by Qt 5.4.
+    Since Qt 5.5 that part of the API is final and a compatibility guarantee is given for
+    future releases.
+    In Qt 5.7, additional API supporting the peripheral role was added as a Technology Preview,
+    with the backend only implemented for Linux/BlueZ.
 
     \section1 What Is Bluetooth Low Energy
 
@@ -159,10 +160,26 @@ Low Energy devices.
 
     \section1 Using Qt Bluetooth Low Energy API
 
-    This section describes how to use the Bluetooth Low Energy API provided by Qt. Currently the API
-    permits creating connections to peripheral devices, discovering their services, as well as reading
-    and writing data stored on the device. The example code below is taken from the
-    \l {heartlistener}{Heart Listener} example.
+    This section describes how to use the Bluetooth Low Energy API provided by Qt.
+    On the client side, the API permits creating connections to peripheral devices, discovering
+    their services, as well as reading and writing data stored on the device.
+    On the server side, it allows to set up services, advertise them, and get notified when the
+    client writes characteristics.
+    The example code below is taken from the \l {heartlistener}{Heart Listener} and
+    \l {heartrate-server}{Heart Rate Server} examples.
+
+    \section2 Advertising Services
+
+    If we are implementing a GATT server application on a peripheral device, we need to define the
+    services we want to offer to central devices and advertise them:
+
+    \snippet heartrate-server/main.cpp Advertising Data
+    \snippet heartrate-server/main.cpp Start Advertising
+    \snippet heartrate-server/main.cpp Advertising Data
+
+    Now potential clients can connect to our device, discover the provided service and
+    register themselves to get notified of changes to the characteristic value.
+    This part of the API is covered in the following sections.
 
     \section2 Establishing a Connection
 
