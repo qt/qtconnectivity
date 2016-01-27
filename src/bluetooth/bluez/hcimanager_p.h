@@ -59,12 +59,16 @@
 
 QT_BEGIN_NAMESPACE
 
+class QLowEnergyConnectionParameters;
+
 class HciManager : public QObject
 {
     Q_OBJECT
 public:
     enum HciEvent {
         EncryptChangeEvent = EVT_ENCRYPT_CHANGE,
+        CommandCompleteEvent = EVT_CMD_COMPLETE,
+        LeMetaEvent = 0x3e,
     };
 
     explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
@@ -72,21 +76,31 @@ public:
 
     bool isValid() const;
     bool monitorEvent(HciManager::HciEvent event);
+    bool sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters);
+
     void stopEvents();
     QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
 
+    bool sendConnectionUpdateCommand(quint16 handle, const QLowEnergyConnectionParameters &params);
+    bool sendConnectionParameterUpdateRequest(quint16 handle,
+                                              const QLowEnergyConnectionParameters &params);
 
 signals:
     void encryptionChangedEvent(const QBluetoothAddress &address, bool wasSuccess);
+    void commandCompleted(quint16 opCode, quint8 status, const QByteArray &data);
+    void connectionComplete(quint16 handle);
+    void connectionUpdate(quint16 handle, const QLowEnergyConnectionParameters &parameters);
 
 private slots:
     void _q_readNotify();
 
 private:
     int hciForAddress(const QBluetoothAddress &deviceAdapter);
+    void handleLeMetaEvent(const quint8 *data);
 
     int hciSocket;
     int hciDev;
+    quint8 sigPacketIdentifier = 0;
     QSocketNotifier *notifier;
     QSet<HciManager::HciEvent> runningEvents;
 };

@@ -41,13 +41,16 @@
 #include "hcimanager_p.h"
 
 #include "qbluetoothsocket_p.h"
+#include "qlowenergyconnectionparameters.h"
 
-#include <QtCore/QLoggingCategory>
+#include <QtCore/qloggingcategory.h>
 
+#include <cstring>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #define HCIGETCONNLIST  _IOR('H', 212, int)
@@ -180,6 +183,36 @@ bool HciManager::monitorEvent(HciManager::HciEvent event)
     return true;
 }
 
+bool HciManager::sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters)
+{
+    qCDebug(QT_BT_BLUEZ) << "sending command; ogf:" << ogf << "ocf:" << ocf;
+    quint8 packetType = HCI_COMMAND_PKT;
+    hci_command_hdr command = {
+        opCodePack(ogf, ocf),
+        static_cast<uint8_t>(parameters.count())
+    };
+    static_assert(sizeof command == 3, "unexpected struct size");
+    struct iovec iv[3];
+    iv[0].iov_base = &packetType;
+    iv[0].iov_len  = 1;
+    iv[1].iov_base = &command;
+    iv[1].iov_len  = sizeof command;
+    int ivn = 2;
+    if (!parameters.isEmpty()) {
+        iv[2].iov_base = const_cast<char *>(parameters.constData()); // const_cast is safe, since iov_base will not get modified.
+        iv[2].iov_len  = parameters.count();
+        ++ivn;
+    }
+    while (writev(hciSocket, iv, ivn) < 0) {
+        if (errno == EAGAIN || errno == EINTR)
+            continue;
+        qCDebug(QT_BT_BLUEZ()) << "hci command failure:" << strerror(errno);
+        return false;
+    }
+    qCDebug(QT_BT_BLUEZ) << "command sent successfully";
+    return true;
+}
+
 /*
  * Unsubscribe from all events
  */
@@ -232,6 +265,108 @@ QBluetoothAddress HciManager::addressForConnectionHandle(quint16 handle) const
     return QBluetoothAddress();
 }
 
+quint16 forceIntervalIntoRange(double connectionInterval)
+{
+    return qMin<double>(qMax<double>(7.5, connectionInterval), 4000) / 1.25;
+}
+
+struct ConnectionUpdateData {
+    quint16 minInterval;
+    quint16 maxInterval;
+    quint16 slaveLatency;
+    quint16 timeout;
+};
+ConnectionUpdateData connectionUpdateData(const QLowEnergyConnectionParameters &params)
+{
+    ConnectionUpdateData data;
+    const quint16 minInterval = forceIntervalIntoRange(params.minimumInterval());
+    const quint16 maxInterval = forceIntervalIntoRange(params.maximumInterval());
+    data.minInterval = qToLittleEndian(minInterval);
+    data.maxInterval = qToLittleEndian(maxInterval);
+    const quint16 latency = qMax<quint16>(0, qMin<quint16>(params.latency(), 499));
+    data.slaveLatency = qToLittleEndian(latency);
+    const quint16 timeout
+            = qMax<quint16>(100, qMin<quint16>(32000, params.supervisionTimeout())) / 10;
+    data.timeout = qToLittleEndian(timeout);
+    return data;
+}
+
+bool HciManager::sendConnectionUpdateCommand(quint16 handle,
+                                             const QLowEnergyConnectionParameters &params)
+{
+    struct CommandParams {
+        quint16 handle;
+        ConnectionUpdateData data;
+        quint16 minCeLength;
+        quint16 maxCeLength;
+    } commandParams;
+    commandParams.handle = qToLittleEndian(handle);
+    commandParams.data = connectionUpdateData(params);
+    commandParams.minCeLength = 0;
+    commandParams.maxCeLength = qToLittleEndian(quint16(0xffff));
+    const QByteArray data = QByteArray::fromRawData(reinterpret_cast<char *>(&commandParams),
+                                                    sizeof commandParams);
+    return sendCommand(OgfLinkControl, OcfLeConnectionUpdate, data);
+}
+
+bool HciManager::sendConnectionParameterUpdateRequest(quint16 handle,
+                                                      const QLowEnergyConnectionParameters &params)
+{
+    ConnectionUpdateData connUpdateData = connectionUpdateData(params);
+
+    // Vol 3, part A, 4
+    struct SignalingPacket {
+        quint8 code;
+        quint8 identifier;
+        quint16 length;
+    } signalingPacket;
+    signalingPacket.code = 0x12;
+    signalingPacket.identifier = ++sigPacketIdentifier;
+    const quint16 sigPacketLen = sizeof connUpdateData;
+    signalingPacket.length = qToLittleEndian(sigPacketLen);
+
+    struct L2CapHeader {
+        quint16 length;
+        quint16 channelId;
+    } l2CapHeader;
+    const quint16 l2CapHeaderLen = sizeof signalingPacket + sigPacketLen;
+    l2CapHeader.length = qToLittleEndian(l2CapHeaderLen);
+    l2CapHeader.channelId = qToLittleEndian(quint16(5));
+
+    // Vol 2, part E, 5.4.2
+    struct AclData {
+        quint16 handle: 12;
+        quint16 pbFlag: 2;
+        quint16 bcFlag: 2;
+        quint16 dataLen;
+    } aclData;
+    aclData.handle = qToLittleEndian(handle); // Works because the next two values are zero.
+    aclData.pbFlag = 0;
+    aclData.bcFlag = 0;
+    aclData.dataLen = qToLittleEndian(quint16(sizeof l2CapHeader + l2CapHeaderLen));
+
+    struct iovec iv[5];
+    quint8 packetType = 2;
+    iv[0].iov_base = &packetType;
+    iv[0].iov_len  = 1;
+    iv[1].iov_base = &aclData;
+    iv[1].iov_len  = sizeof aclData;
+    iv[2].iov_base = &l2CapHeader;
+    iv[2].iov_len = sizeof l2CapHeader;
+    iv[3].iov_base = &signalingPacket;
+    iv[3].iov_len = sizeof signalingPacket;
+    iv[4].iov_base = &connUpdateData;
+    iv[4].iov_len = sizeof connUpdateData;
+    while (writev(hciSocket, iv, sizeof iv / sizeof *iv) < 0) {
+        if (errno == EAGAIN || errno == EINTR)
+            continue;
+        qCDebug(QT_BT_BLUEZ()) << "failure writing HCI ACL packet:" << strerror(errno);
+        return false;
+    }
+    qCDebug(QT_BT_BLUEZ) << "Connection Update Request packet sent successfully";
+    return true;
+}
+
 /*!
  * Process all incoming HCI events. Function cannot process anything else but events.
  */
@@ -281,10 +416,59 @@ void HciManager::_q_readNotify()
             emit encryptionChangedEvent(remoteDevice, event->status == 0);
     }
         break;
+    case EVT_CMD_COMPLETE: {
+        auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
+        static_assert(sizeof *event == 3, "unexpected struct size");
+
+        // There is always a status byte right after the generic structure.
+        Q_ASSERT(size > static_cast<int>(sizeof *event));
+        const quint8 status = data[sizeof *event];
+        const auto additionalData = QByteArray(reinterpret_cast<const char *>(data)
+                                               + sizeof *event + 1, size - sizeof *event - 1);
+        emit commandCompleted(event->opcode, status, additionalData);
+    }
+        break;
+    case LeMetaEvent:
+        handleLeMetaEvent(data);
+        break;
     default:
         break;
     }
 }
 
+void HciManager::handleLeMetaEvent(const quint8 *data)
+{
+    // Spec v4.2, Vol 2, part E, 7.7.65ff
+    switch (*data) {
+    case 0x1: {
+        const quint16 handle = bt_get_le16(data + 2);
+        emit connectionComplete(handle);
+        break;
+    }
+    case 0x3: {
+        // TODO: From little endian!
+        struct ConnectionUpdateData {
+            quint8 status;
+            quint16 handle;
+            quint16 interval;
+            quint16 latency;
+            quint16 timeout;
+        } __attribute((packed));
+        const auto * const updateData
+                = reinterpret_cast<const ConnectionUpdateData *>(data + 1);
+        if (updateData->status == 0) {
+            QLowEnergyConnectionParameters params;
+            const double interval = qFromLittleEndian(updateData->interval) * 1.25;
+            params.setIntervalRange(interval, interval);
+            params.setLatency(qFromLittleEndian(updateData->latency));
+            params.setSupervisionTimeout(qFromLittleEndian(updateData->timeout) * 10);
+            emit connectionUpdate(qFromLittleEndian(updateData->handle), params);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
 
 QT_END_NAMESPACE

@@ -1133,11 +1133,17 @@ QString QBluetoothUuid::descriptorToString(QBluetoothUuid::DescriptorType uuid)
 }
 
 /*!
-    Returns true if \a other is equal to this Bluetooth UUID, otherwise false.
+    Returns \c true if \a other is equal to this Bluetooth UUID, otherwise \c false.
 */
 bool QBluetoothUuid::operator==(const QBluetoothUuid &other) const
 {
     return QUuid::operator==(other);
 }
+
+/*!
+  \fn bool QBluetoothUuid::operator!=(const QBluetoothUuid &other) const
+  Returns \c true if \a other is not equal to this Bluetooth UUID, otherwise \c false.
+  \since 5.7
+*/
 
 QT_END_NAMESPACE

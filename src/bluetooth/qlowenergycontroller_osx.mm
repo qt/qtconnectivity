@@ -939,6 +939,7 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
 {
     OSX_D_PTR;
 
+    osx_d_ptr->role = CentralRole;
     osx_d_ptr->remoteAddress = remoteAddress;
     osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
 
@@ -953,6 +954,7 @@ QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDev
 {
     OSX_D_PTR;
 
+    osx_d_ptr->role = CentralRole;
     osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
     // That's the only "real" ctor - with Core Bluetooth we need a _valid_ deviceUuid
     // from 'remoteDevice'.
@@ -966,6 +968,7 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
 {
     OSX_D_PTR;
 
+    osx_d_ptr->role = CentralRole;
     osx_d_ptr->remoteAddress = remoteAddress;
     osx_d_ptr->localAddress = localAddress;
 
@@ -973,10 +976,37 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
                             "addresses is not supported!";
 }
 
+QLowEnergyController::QLowEnergyController(QObject *parent)
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivateOSX(this))
+{
+    OSX_D_PTR;
+
+    osx_d_ptr->role = PeripheralRole;
+    osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
+}
+
+QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDeviceInfo &remoteDevice,
+                                                          QObject *parent)
+{
+    return new QLowEnergyController(remoteDevice, parent);
+}
+
+QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
+{
+    return new QLowEnergyController(parent);
+}
+
 QLowEnergyController::~QLowEnergyController()
 {
     // Deleting a peripheral will also disconnect.
     delete d_ptr;
+}
+
+QLowEnergyController::Role QLowEnergyController::role() const
+{
+    OSX_D_PTR;
+
+    return osx_d_ptr->role;
 }
 
 QBluetoothAddress QLowEnergyController::localAddress() const
@@ -1123,6 +1153,36 @@ QString QLowEnergyController::errorString() const
     OSX_D_PTR;
 
     return osx_d_ptr->errorString;
+}
+
+void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+        const QLowEnergyAdvertisingData &advertisingData,
+        const QLowEnergyAdvertisingData &scanResponseData)
+{
+    Q_UNUSED(params);
+    Q_UNUSED(advertisingData);
+    Q_UNUSED(scanResponseData);
+    qCWarning(QT_BT_OSX) << "LE advertising not implemented for OS X";
+}
+
+void QLowEnergyController::stopAdvertising()
+{
+    qCWarning(QT_BT_OSX) << "LE advertising not implemented for OS X";
+}
+
+QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
+                                                    QObject *parent)
+{
+    Q_UNUSED(service);
+    Q_UNUSED(parent);
+    qCWarning(QT_BT_OSX) << "GATT server functionality not implemented for OS X";
+    return nullptr;
+}
+
+void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+{
+    Q_UNUSED(params);
+    qCWarning(QT_BT_OSX) << "Connection update not implemented for OS X";
 }
 
 QT_END_NAMESPACE

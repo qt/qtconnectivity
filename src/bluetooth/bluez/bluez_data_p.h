@@ -140,22 +140,6 @@ struct sockaddr_rc {
 
 // Bt Low Energy related
 
-#define bt_get_unaligned(ptr)           \
-({                                      \
-    struct __attribute__((packed)) {    \
-        __typeof__(*(ptr)) __v;         \
-    } *__p = (__typeof__(__p)) (ptr);   \
-    __p->__v;                           \
-})
-
-#define bt_put_unaligned(val, ptr)      \
-do {                                    \
-    struct __attribute__((packed)) {    \
-        __typeof__(*(ptr)) __v;         \
-    } *__p = (__typeof__(__p)) (ptr);   \
-    __p->__v = (val);                   \
-} while (0)
-
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
@@ -171,15 +155,7 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
         dst->data[15 - i] = src->data[i];
 }
 
-static inline quint16 bt_get_le16(const void *ptr)
-{
-    return bt_get_unaligned((const quint16 *) ptr);
-}
 #elif __BYTE_ORDER == __BIG_ENDIAN
-static inline quint16 bt_get_le16(const void *ptr)
-{
-    return qbswap(bt_get_unaligned((const quint16 *) ptr));
-}
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
 {
@@ -197,6 +173,20 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #error "Unknown byte order"
 #endif
 
+static inline quint16 bt_get_le16(const void *ptr)
+{
+    return qFromLittleEndian<quint16>(reinterpret_cast<const uchar *>(ptr));
+}
+
+template<typename T> inline void putBtData(T src, void *dst)
+{
+    qToLittleEndian(src, reinterpret_cast<uchar *>(dst));
+}
+template<> inline void putBtData(quint128 src, void *dst)
+{
+    btoh128(&src, reinterpret_cast<quint128 *>(dst));
+}
+
 #define hton128(x, y) ntoh128(x, y)
 
 // HCI related
@@ -209,11 +199,13 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #define HCI_FILTER 2
 
 // HCI packet types
+#define HCI_COMMAND_PKT 0x01
 #define HCI_EVENT_PKT   0x04
 #define HCI_VENDOR_PKT  0xff
 
 #define HCI_FLT_TYPE_BITS  31
 #define HCI_FLT_EVENT_BITS 63
+
 
 struct sockaddr_hci {
     sa_family_t hci_family;
@@ -338,6 +330,37 @@ typedef struct {
     quint8  encrypt;
 } __attribute__ ((packed)) evt_encrypt_change;
 #define EVT_ENCRYPT_CHANGE_SIZE 4
+
+#define EVT_CMD_COMPLETE                0x0E
+struct evt_cmd_complete {
+    quint8 ncmd;
+    quint16 opcode;
+} __attribute__ ((packed));
+
+struct hci_command_hdr {
+    quint16 opcode;         /* OCF & OGF */
+    quint8 plen;
+} __attribute__ ((packed));
+
+enum OpCodeGroupField {
+    OgfLinkControl = 0x8,
+};
+
+enum OpCodeCommandField {
+    OcfLeSetAdvParams = 0x6,
+    OcfLeReadTxPowerLevel = 0x7,
+    OcfLeSetAdvData = 0x8,
+    OcfLeSetScanResponseData = 0x9,
+    OcfLeSetAdvEnable = 0xa,
+    OcfLeClearWhiteList = 0x10,
+    OcfLeAddToWhiteList = 0x11,
+    OcfLeConnectionUpdate = 0x13,
+};
+
+/* Command opcode pack/unpack */
+#define opCodePack(ogf, ocf) (quint16(((ocf) & 0x03ff)|((ogf) << 10)))
+#define ogfFromOpCode(op) ((op) >> 10)
+#define ocfFromOpCode(op) ((op) & 0x03ff)
 
 QT_END_NAMESPACE
 

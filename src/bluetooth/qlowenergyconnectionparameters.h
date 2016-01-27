@@ -1,4 +1,4 @@
-/****************************************************************************
+/***************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -37,42 +37,56 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTH_H
-#define QBLUETOOTH_H
+#ifndef QLOWENERGYCONNECTIONPARAMETERS_H
+#define QLOWENERGYCONNECTIONPARAMETERS_H
 
 #include <QtBluetooth/qbluetoothglobal.h>
+#include <QtCore/qmetatype.h>
+#include <QtCore/qshareddata.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QBluetooth {
+class QLowEnergyConnectionParametersPrivate;
 
-// TODO Qt 6: Merge these two enums? But note that ATT Authorization has no equivalent
-//            on the socket security level.
+class Q_BLUETOOTH_EXPORT QLowEnergyConnectionParameters
+{
+    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyConnectionParameters &p1,
+                                              const QLowEnergyConnectionParameters &p2);
+public:
+    QLowEnergyConnectionParameters();
+    QLowEnergyConnectionParameters(const QLowEnergyConnectionParameters &other);
+    ~QLowEnergyConnectionParameters();
 
-enum Security {
-    NoSecurity = 0x00,
-    Authorization = 0x01,
-    Authentication = 0x02,
-    Encryption = 0x04,
-    Secure = 0x08
+    QLowEnergyConnectionParameters &operator=(const QLowEnergyConnectionParameters &other);
+
+    void setIntervalRange(double minimum, double maximum);
+    double minimumInterval() const;
+    double maximumInterval() const;
+
+    void setLatency(int latency);
+    int latency() const;
+
+    void setSupervisionTimeout(int timeout);
+    int supervisionTimeout() const;
+
+    void swap(QLowEnergyConnectionParameters &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+
+private:
+    QSharedDataPointer<QLowEnergyConnectionParametersPrivate> d;
 };
 
-Q_DECLARE_FLAGS(SecurityFlags, Security)
-Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
-
-enum AttAccessConstraint {
-    AttAuthorizationRequired = 0x1,
-    AttAuthenticationRequired = 0x2,
-    AttEncryptionRequired = 0x4,
-};
-
-Q_DECLARE_FLAGS(AttAccessConstraints, AttAccessConstraint)
-Q_DECLARE_OPERATORS_FOR_FLAGS(AttAccessConstraints)
-
+Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyConnectionParameters &p1,
+                                   const QLowEnergyConnectionParameters &p2);
+inline bool operator!=(const QLowEnergyConnectionParameters &p1,
+                       const QLowEnergyConnectionParameters &p2)
+{
+    return !(p1 == p2);
 }
 
-typedef quint16 QLowEnergyHandle;
+Q_DECLARE_SHARED(QLowEnergyConnectionParameters)
 
 QT_END_NAMESPACE
 
-#endif // QBLUETOOTH_H
+Q_DECLARE_METATYPE(QLowEnergyConnectionParameters)
+
+#endif // Include guard

@@ -1,4 +1,4 @@
-/****************************************************************************
+/***************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -37,42 +37,62 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTH_H
-#define QBLUETOOTH_H
+#ifndef QLOWENERGYSERVICEDATA_H
+#define QLOWENERGYSERVICEDATA_H
 
 #include <QtBluetooth/qbluetoothglobal.h>
+#include <QtCore/qshareddata.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace QBluetooth {
+class QBluetoothUuid;
+class QLowEnergyCharacteristicData;
+class QLowEnergyService;
+struct QLowEnergyServiceDataPrivate;
 
-// TODO Qt 6: Merge these two enums? But note that ATT Authorization has no equivalent
-//            on the socket security level.
+class Q_BLUETOOTH_EXPORT QLowEnergyServiceData
+{
+    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData sd1,
+                                              const QLowEnergyServiceData &sd2);
+public:
+    QLowEnergyServiceData();
+    QLowEnergyServiceData(const QLowEnergyServiceData &other);
+    ~QLowEnergyServiceData();
 
-enum Security {
-    NoSecurity = 0x00,
-    Authorization = 0x01,
-    Authentication = 0x02,
-    Encryption = 0x04,
-    Secure = 0x08
+    QLowEnergyServiceData &operator=(const QLowEnergyServiceData &other);
+
+    enum ServiceType { ServiceTypePrimary = 0x2800, ServiceTypeSecondary = 0x2801 };
+    ServiceType type() const;
+    void setType(ServiceType type);
+
+    QBluetoothUuid uuid() const;
+    void setUuid(const QBluetoothUuid &uuid);
+
+    QList<QLowEnergyService *> includedServices() const;
+    void setIncludedServices(const QList<QLowEnergyService *> &services);
+    void addIncludedService(QLowEnergyService *service);
+
+    QList<QLowEnergyCharacteristicData> characteristics() const;
+    void setCharacteristics(const QList<QLowEnergyCharacteristicData> &characteristics);
+    void addCharacteristic(const QLowEnergyCharacteristicData &characteristic);
+
+    bool isValid() const;
+
+    void swap(QLowEnergyServiceData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+
+private:
+    QSharedDataPointer<QLowEnergyServiceDataPrivate> d;
 };
 
-Q_DECLARE_FLAGS(SecurityFlags, Security)
-Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
-
-enum AttAccessConstraint {
-    AttAuthorizationRequired = 0x1,
-    AttAuthenticationRequired = 0x2,
-    AttEncryptionRequired = 0x4,
-};
-
-Q_DECLARE_FLAGS(AttAccessConstraints, AttAccessConstraint)
-Q_DECLARE_OPERATORS_FOR_FLAGS(AttAccessConstraints)
-
+Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData sd1,
+                                   const QLowEnergyServiceData &sd2);
+inline bool operator!=(const QLowEnergyServiceData sd1, const QLowEnergyServiceData &sd2)
+{
+    return !(sd1 == sd2);
 }
 
-typedef quint16 QLowEnergyHandle;
+Q_DECLARE_SHARED(QLowEnergyServiceData)
 
 QT_END_NAMESPACE
 
-#endif // QBLUETOOTH_H
+#endif // Include guard.

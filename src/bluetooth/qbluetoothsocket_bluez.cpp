@@ -273,9 +273,9 @@ void QBluetoothSocketPrivate::_q_readNotify()
         connectWriteNotifier->setEnabled(false);
         errorString = qt_error_string(errsv);
         qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << socket << "error:" << readFromDevice << errorString;
-        if(errsv == EHOSTDOWN)
+        if (errsv == EHOSTDOWN)
             q->setSocketError(QBluetoothSocket::HostNotFoundError);
-        else
+        else if (errsv != ECONNRESET) // The other side closing the connection is not an error.
             q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();

@@ -75,7 +75,8 @@ public:
         DiscoveryRequired,  // we know start/end handle but nothing more
         //TODO Rename DiscoveringServices -> DiscoveringDetails or DiscoveringService
         DiscoveringServices,// discoverDetails() called and running
-        ServiceDiscovered   // all details have been synchronized
+        ServiceDiscovered,  // all details have been synchronized
+        LocalService,
     };
     Q_ENUM(ServiceState)
 
@@ -132,6 +133,7 @@ private:
 
     // QLowEnergyController is the factory for this class
     friend class QLowEnergyController;
+    friend class QLowEnergyControllerPrivate;
     QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                       QObject *parent = 0);
 };

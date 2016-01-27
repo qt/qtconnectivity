@@ -44,7 +44,8 @@ QT_BEGIN_NAMESPACE
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
       state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError)
+      error(QLowEnergyController::NoError),
+      lastLocalHandle(0)
 {
     registerQLowEnergyControllerMetaType();
 }
@@ -109,6 +110,25 @@ void QLowEnergyControllerPrivate::writeDescriptor(
         const QByteArray &/*newValue*/)
 {
 
+}
+
+void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &/* params */,
+        const QLowEnergyAdvertisingData &/* advertisingData */,
+        const QLowEnergyAdvertisingData &/* scanResponseData */)
+{
+}
+
+void QLowEnergyControllerPrivate::stopAdvertising()
+{
+}
+
+void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters & /* params */)
+{
+}
+
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &/* service */,
+                                                            QLowEnergyHandle /* startHandle */)
+{
 }
 
 QT_END_NAMESPACE
