@@ -143,7 +143,7 @@ QT_BEGIN_NAMESPACE
     QNdefRecord::TypeNameFormat for the custom type and \a type is the type without the NID or NSS
     prefixes.  That is \e {example.com:f} not \e {urn:nfc:ext:example.com:f}.
 
-    See the secton on \l {Creating specialized NDEF record classes} for details.
+    See the section on \l {Creating specialized NDEF record classes} for details.
 
     \sa Q_DECLARE_NDEF_RECORD()
 */
