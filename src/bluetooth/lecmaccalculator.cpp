@@ -36,7 +36,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "lecmacverifier_p.h"
+#include "lecmaccalculator_p.h"
 
 #include "bluez/bluez_data_p.h"
 
@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-LeCmacVerifier::LeCmacVerifier()
+LeCmacCalculator::LeCmacCalculator()
 {
 #ifdef CONFIG_LINUX_CRYPTO_API
     m_baseSocket = socket(AF_ALG, SOCK_SEQPACKET, 0);
@@ -81,13 +81,13 @@ LeCmacVerifier::LeCmacVerifier()
 #endif
 }
 
-LeCmacVerifier::~LeCmacVerifier()
+LeCmacCalculator::~LeCmacCalculator()
 {
     if (m_baseSocket != -1)
         close(m_baseSocket);
 }
 
-QByteArray LeCmacVerifier::createFullMessage(const QByteArray &message, quint32 signCounter)
+QByteArray LeCmacCalculator::createFullMessage(const QByteArray &message, quint32 signCounter)
 {
     // Spec v4.2, Vol 3, Part H, 2.4.5
     QByteArray fullMessage = message;
@@ -96,8 +96,7 @@ QByteArray LeCmacVerifier::createFullMessage(const QByteArray &message, quint32 
     return fullMessage;
 }
 
-bool LeCmacVerifier::verify(const QByteArray &message, const quint128 &csrk,
-                           quint64 expectedMac) const
+quint64 LeCmacCalculator::calculateMac(const QByteArray &message, const quint128 &csrk) const
 {
 #ifdef CONFIG_LINUX_CRYPTO_API
     if (m_baseSocket == -1)
@@ -108,7 +107,7 @@ bool LeCmacVerifier::verify(const QByteArray &message, const quint128 &csrk,
                                                         sizeof csrkMsb).toHex();
     if (setsockopt(m_baseSocket, 279 /* SOL_ALG */, ALG_SET_KEY, csrkMsb.data, sizeof csrkMsb) == -1) {
         qCWarning(QT_BT_BLUEZ) << "setsockopt() failed for crypto socket:" << strerror(errno);
-        return false;
+        return 0;
     }
 
     class SocketWrapper
@@ -127,7 +126,7 @@ bool LeCmacVerifier::verify(const QByteArray &message, const quint128 &csrk,
     SocketWrapper cryptoSocket(accept(m_baseSocket, nullptr, 0));
     if (cryptoSocket.value() == -1) {
         qCWarning(QT_BT_BLUEZ) << "accept() failed for crypto socket:" << strerror(errno);
-        return false;
+        return 0;
     }
 
     QByteArray messageSwapped(message.count(), Qt::Uninitialized);
@@ -139,7 +138,7 @@ bool LeCmacVerifier::verify(const QByteArray &message, const quint128 &csrk,
                                                   messageSwapped.count() - totalBytesWritten);
         if (bytesWritten == -1) {
             qCWarning(QT_BT_BLUEZ) << "writing to crypto socket failed:" << strerror(errno);
-            return false;
+            return 0;
         }
         totalBytesWritten += bytesWritten;
     } while (totalBytesWritten < messageSwapped.count());
@@ -151,14 +150,27 @@ bool LeCmacVerifier::verify(const QByteArray &message, const quint128 &csrk,
                                               sizeof mac - totalBytesRead);
         if (bytesRead == -1) {
             qCWarning(QT_BT_BLUEZ) << "reading from crypto socket failed:" << strerror(errno);
-            return false;
+            return 0;
         }
         totalBytesRead += bytesRead;
     } while (totalBytesRead < qint64(sizeof mac));
-    mac = qFromBigEndian(mac);
-    if (mac != expectedMac) {
-        qCWarning(QT_BT_BLUEZ) << hex << "signature verification failed: calculated mac:" << mac
-                               << "expected mac:" << expectedMac;
+    return qFromBigEndian(mac);
+#else // CONFIG_LINUX_CRYPTO_API
+    Q_UNUSED(message);
+    Q_UNUSED(csrk);
+    qCWarning(QT_BT_BLUEZ) << "CMAC calculation failed due to missing Linux crypto API.";
+    return 0;
+#endif
+}
+
+bool LeCmacCalculator::verify(const QByteArray &message, const quint128 &csrk,
+                           quint64 expectedMac) const
+{
+#ifdef CONFIG_LINUX_CRYPTO_API
+    const quint64 actualMac = calculateMac(message, csrk);
+    if (actualMac != expectedMac) {
+        qCWarning(QT_BT_BLUEZ) << hex << "signature verification failed: calculated mac:"
+                               << actualMac << "expected mac:" << expectedMac;
         return false;
     }
     return true;

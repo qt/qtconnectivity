@@ -255,6 +255,18 @@ QT_BEGIN_NAMESPACE
                                 write mode. Its adavantage is a quicker
                                 write operation as it may happen in between other
                                 device interactions.
+
+  \value WriteSigned            If a characteristic is written using this mode, the remote peripheral
+                                shall not send a write confirmation. The operation's success
+                                cannot be determined and the payload must not be longer than 8 bytes.
+                                A bond must exist between the two devices and the link must not be
+                                encrypted.
+                                A characteristic must have set the
+                                \l QLowEnergyCharacteristic::WriteSigned property to support this
+                                write mode.
+                                This value was introduced in Qt 5.7 and is currently only
+                                supported on Android and on Linux with BlueZ 5 and a kernel version
+                                3.7 or newer.
  */
 
 /*!
@@ -696,20 +708,10 @@ void QLowEnergyService::writeCharacteristic(
     }
 
     // don't write if properties don't permit it
-    if (mode == WriteWithResponse)
-    {
-        d->controller->writeCharacteristic(characteristic.d_ptr,
+    d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
                                        newValue,
-                                       true);
-    } else if (mode == WriteWithoutResponse) {
-        d->controller->writeCharacteristic(characteristic.d_ptr,
-                                       characteristic.attributeHandle(),
-                                       newValue,
-                                       false);
-    } else {
-        d->setError(QLowEnergyService::OperationError);
-    }
+                                       mode);
 }
 
 /*!

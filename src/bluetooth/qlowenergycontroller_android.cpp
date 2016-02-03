@@ -178,7 +178,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
-        bool writeWithResponse)
+        QLowEnergyService::WriteMode mode)
 {
     //TODO don't ignore WriteWithResponse, right now we assume responses
     Q_ASSERT(!service.isNull());
@@ -196,10 +196,10 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     if (hub) {
         qCDebug(QT_BT_ANDROID) << "Write characteristic with handle " << charHandle
                  << newValue.toHex() << "(service:" << service->uuid
-                 << ", writeWithResponse:" << writeWithResponse << ")";
+                 << ", writeWithResponse:" << (mode == QLowEnergyService::WriteWithResponse)
+                 << ", signed:" << (mode == QLowEnergyService::WriteSigned) << ")";
         result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[BI)Z",
-                      charHandle, payload,
-                      writeWithResponse ?  QLowEnergyService::WriteWithResponse : QLowEnergyService::WriteWithoutResponse);
+                      charHandle, payload, mode);
     }
 
     if (env->ExceptionOccurred()) {

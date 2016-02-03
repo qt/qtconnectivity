@@ -51,7 +51,7 @@ PRIVATE_HEADERS += \
     qlowenergycontroller_p.h \
     qlowenergyserviceprivate_p.h \
     qleadvertiser_p.h \
-    lecmacverifier_p.h
+    lecmaccalculator_p.h
 
 SOURCES += \
     qbluetoothaddress.cpp\
@@ -104,7 +104,7 @@ config_bluez:qtHaveModule(dbus) {
         SOURCES +=  \
             qleadvertiser_bluez.cpp \
             qlowenergycontroller_bluez.cpp \
-            lecmacverifier.cpp
+            lecmaccalculator.cpp
         config_linux_crypto_api:DEFINES += CONFIG_LINUX_CRYPTO_API
         else:message("Linux crypto API not present, signed writes will not work.")
     } else {

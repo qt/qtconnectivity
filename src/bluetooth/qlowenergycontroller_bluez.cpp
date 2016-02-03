@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-#include "lecmacverifier_p.h"
+#include "lecmaccalculator_p.h"
 #include "qlowenergycontroller_p.h"
 #include "qbluetoothsocket_p.h"
 #include "qleadvertiser_p.h"
@@ -287,21 +287,25 @@ void QLowEnergyControllerPrivate::init()
             }
     );
     connect(hciManager, &HciManager::signatureResolvingKeyReceived,
-            [this](quint16 handle, const quint128 &csrk) {
-                if (handle == connectionHandle) {
-                    qCDebug(QT_BT_BLUEZ) << "received new signature resolving key"
-                                         << QByteArray(reinterpret_cast<const char *>(csrk.data),
-                                                       sizeof csrk).toHex();
-                    signingData.insert(remoteDevice.toUInt64(), SigningData(csrk));
+            [this](quint16 handle, bool remoteKey, const quint128 &csrk) {
+                if (handle != connectionHandle)
+                    return;
+                if ((remoteKey && role == QLowEnergyController::CentralRole)
+                        || (!remoteKey && role == QLowEnergyController::PeripheralRole)) {
+                    return;
                 }
-            }
+                qCDebug(QT_BT_BLUEZ) << "received new signature resolving key"
+                                     << QByteArray(reinterpret_cast<const char *>(csrk.data),
+                                                   sizeof csrk).toHex();
+                signingData.insert(remoteDevice.toUInt64(), SigningData(csrk));
+        }
     );
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
     closeServerSocket();
-    delete cmacVerifier;
+    delete cmacCalculator;
 }
 
 class ServerSocket
@@ -456,6 +460,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
     // Unbuffered mode required to separate each GATT packet
     l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID,
                                  QIODevice::ReadWrite | QIODevice::Unbuffered);
+    loadSigningDataIfNecessary(LocalSigningKey);
 }
 
 void QLowEnergyControllerPrivate::l2cpConnected()
@@ -1779,7 +1784,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
-        bool writeWithResponse)
+        QLowEnergyService::WriteMode mode)
 {
     Q_ASSERT(!service.isNull());
 
@@ -1787,12 +1792,10 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         return;
 
     QLowEnergyServicePrivate::CharData &charData = service->characteristicList[charHandle];
-    if (role == QLowEnergyController::PeripheralRole) {
+    if (role == QLowEnergyController::PeripheralRole)
         writeCharacteristicForPeripheral(charData, newValue);
-    } else {
-        writeCharacteristicForCentral(charHandle, charData.valueHandle, newValue,
-                                      writeWithResponse);
-    }
+    else
+        writeCharacteristicForCentral(service, charHandle, charData.valueHandle, newValue, mode);
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
@@ -2356,48 +2359,72 @@ void QLowEnergyControllerPrivate::writeCharacteristicForPeripheral(
     }
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristicForCentral(
+void QLowEnergyControllerPrivate::writeCharacteristicForCentral(const QSharedPointer<QLowEnergyServicePrivate> &service,
         QLowEnergyHandle charHandle,
         QLowEnergyHandle valueHandle,
         const QByteArray &newValue,
-        bool writeWithResponse)
+        QLowEnergyService::WriteMode mode)
 {
-    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
-
-    quint8 packet[WRITE_REQUEST_HEADER_SIZE];
-    if (writeWithResponse) {
+    QByteArray packet(WRITE_REQUEST_HEADER_SIZE + newValue.count(), Qt::Uninitialized);
+    putBtData(valueHandle, packet.data() + 1);
+    memcpy(packet.data() + 3, newValue.constData(), newValue.count());
+    bool writeWithResponse = false;
+    switch (mode) {
+    case QLowEnergyService::WriteWithResponse:
         if (newValue.size() > (mtuSize - WRITE_REQUEST_HEADER_SIZE)) {
             sendNextPrepareWriteRequest(charHandle, newValue, 0);
             sendNextPendingRequest();
             return;
-        } else {
-            // write value fits into single package
-            packet[0] = ATT_OP_WRITE_REQUEST;
         }
-    } else {
-        // write without response
+        // write value fits into single package
+        packet[0] = ATT_OP_WRITE_REQUEST;
+        writeWithResponse = true;
+        break;
+    case QLowEnergyService::WriteWithoutResponse:
         packet[0] = ATT_OP_WRITE_COMMAND;
+        break;
+    case QLowEnergyService::WriteSigned:
+        packet[0] = ATT_OP_SIGNED_WRITE_COMMAND;
+        if (!isBonded()) {
+            qCWarning(QT_BT_BLUEZ) << "signed write not possible: requires bond between devices";
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+            return;
+        }
+        if (securityLevel() >= BT_SECURITY_MEDIUM) {
+            qCWarning(QT_BT_BLUEZ) << "signed write not possible: not allowed on encrypted link";
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+            return;
+        }
+        const auto signingDataIt = signingData.find(remoteDevice.toUInt64());
+        if (signingDataIt == signingData.end()) {
+            qCWarning(QT_BT_BLUEZ) << "signed write not possible: no signature key found";
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+            return;
+        }
+        ++signingDataIt.value().counter;
+        packet = LeCmacCalculator::createFullMessage(packet, signingDataIt.value().counter);
+        const quint64 mac = LeCmacCalculator().calculateMac(packet, signingDataIt.value().key);
+        packet.resize(packet.count() + sizeof mac);
+        putBtData(mac, packet.data() + packet.count() - sizeof mac);
+        storeSignCounter(LocalSigningKey);
+        break;
     }
 
-    putBtData(valueHandle, &packet[1]);
-
-    QByteArray data(size, Qt::Uninitialized);
-    memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
-    memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
-
     qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
-                         << "(size:" << size << "with response:" << writeWithResponse << ")";
+                         << "(size:" << packet.count() << "with response:"
+                         << (mode == QLowEnergyService::WriteWithResponse)
+                         << "signed:" << (mode == QLowEnergyService::WriteSigned) << ")";
 
     // Advantage of write without response is the quick turnaround.
-    // It can be send at any time and does not produce responses.
+    // It can be sent at any time and does not produce responses.
     // Therefore we will not put them into the openRequest queue at all.
     if (!writeWithResponse) {
-        sendPacket(data);
+        sendPacket(packet);
         return;
     }
 
     Request request;
-    request.payload = data;
+    request.payload = packet;
     request.command = ATT_OP_WRITE_REQUEST;
     request.reference = charHandle;
     request.reference2 = newValue;
@@ -2516,7 +2543,7 @@ void QLowEnergyControllerPrivate::handleWriteRequestOrCommand(const QByteArray &
         }
 
         signingDataIt.value().counter = signCounter;
-        storeSignCounter();
+        storeSignCounter(RemoteSigningKey);
         valueLength = packet.count() - 15;
     } else {
         valueLength = packet.count() - 3;
@@ -2730,7 +2757,7 @@ void QLowEnergyControllerPrivate::handleConnectionRequest()
     l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol,
             QBluetoothSocket::ConnectedState, QIODevice::ReadWrite | QIODevice::Unbuffered);
     restoreClientConfigurations();
-    loadSigningDataIfNecessary();
+    loadSigningDataIfNecessary(RemoteSigningKey);
     setState(QLowEnergyController::ConnectedState);
 }
 
@@ -2826,7 +2853,7 @@ void QLowEnergyControllerPrivate::restoreClientConfigurations()
     sendNextIndication();
 }
 
-void QLowEnergyControllerPrivate::loadSigningDataIfNecessary()
+void QLowEnergyControllerPrivate::loadSigningDataIfNecessary(SigningKeyType keyType)
 {
     const auto signingDataIt = signingData.constFind(remoteDevice.toUInt64());
     if (signingDataIt != signingData.constEnd())
@@ -2837,15 +2864,16 @@ void QLowEnergyControllerPrivate::loadSigningDataIfNecessary()
         return;
     }
     QSettings settings(settingsFilePath, QSettings::IniFormat);
-    settings.beginGroup(QLatin1String("RemoteSignatureKey"));
+    const QString group = signingKeySettingsGroup(keyType);
+    settings.beginGroup(group);
     const QByteArray keyString = settings.value(QLatin1String("Key")).toByteArray();
     if (keyString.isEmpty()) {
-        qCDebug(QT_BT_BLUEZ) << "No remote signature key found in settings file";
+        qCDebug(QT_BT_BLUEZ) << "Group" << group << "not found in settings file";
         return;
     }
     const QByteArray keyData = QByteArray::fromHex(keyString);
     if (keyData.count() != int(sizeof(quint128))) {
-        qCWarning(QT_BT_BLUEZ) << "Remote signature key in settings file has invalid size"
+        qCWarning(QT_BT_BLUEZ) << "Signing key in settings file has invalid size"
                                << keyString.count();
         return;
     }
@@ -2857,7 +2885,7 @@ void QLowEnergyControllerPrivate::loadSigningDataIfNecessary()
     signingData.insert(remoteDevice.toUInt64(), SigningData(csrk, counter - 1));
 }
 
-void QLowEnergyControllerPrivate::storeSignCounter()
+void QLowEnergyControllerPrivate::storeSignCounter(SigningKeyType keyType) const
 {
     const auto signingDataIt = signingData.constFind(remoteDevice.toUInt64());
     if (signingDataIt == signingData.constEnd())
@@ -2868,7 +2896,7 @@ void QLowEnergyControllerPrivate::storeSignCounter()
     QSettings settings(settingsFilePath, QSettings::IniFormat);
     if (!settings.isWritable())
         return;
-    settings.beginGroup(QLatin1String("RemoteSignatureKey"));
+    settings.beginGroup(signingKeySettingsGroup(keyType));
     const QString counterKey = QLatin1String("Counter");
     if (!settings.allKeys().contains(counterKey))
         return;
@@ -2876,6 +2904,11 @@ void QLowEnergyControllerPrivate::storeSignCounter()
     if (counterValue == settings.value(counterKey).toUInt())
         return;
     settings.setValue(counterKey, counterValue);
+}
+
+QString QLowEnergyControllerPrivate::signingKeySettingsGroup(SigningKeyType keyType) const
+{
+    return QLatin1String(keyType == LocalSigningKey ? "LocalSignatureKey" : "RemoteSignatureKey");
 }
 
 QString QLowEnergyControllerPrivate::keySettingsFilePath() const
@@ -3113,9 +3146,9 @@ int QLowEnergyControllerPrivate::checkReadPermissions(QVector<Attribute> &attrib
 bool QLowEnergyControllerPrivate::verifyMac(const QByteArray &message, const quint128 &csrk,
                                              quint32 signCounter, quint64 expectedMac)
 {
-    if (!cmacVerifier)
-        cmacVerifier = new LeCmacVerifier;
-    return cmacVerifier->verify(LeCmacVerifier::createFullMessage(message, signCounter), csrk,
+    if (!cmacCalculator)
+        cmacCalculator = new LeCmacCalculator;
+    return cmacCalculator->verify(LeCmacCalculator::createFullMessage(message, signCounter), csrk,
                                 expectedMac);
 }
 

@@ -92,7 +92,7 @@ class QLowEnergyServiceData;
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
-class LeCmacVerifier;
+class LeCmacCalculator;
 class QSocketNotifier;
 #elif defined(QT_ANDROID_BLUETOOTH)
 class LowEnergyNotificationHub;
@@ -159,7 +159,7 @@ public:
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                              const QLowEnergyHandle charHandle,
-                             const QByteArray &newValue, bool writeWithResponse = true);
+                             const QByteArray &newValue, QLowEnergyService::WriteMode mode);
     void writeDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
                          const QLowEnergyHandle charHandle,
                          const QLowEnergyHandle descriptorHandle,
@@ -260,7 +260,7 @@ private:
         quint32 counter = quint32(-1);
     };
     QHash<quint64, SigningData> signingData;
-    LeCmacVerifier *cmacVerifier = nullptr;
+    LeCmacCalculator *cmacCalculator = nullptr;
 
     bool requestPending;
     quint16 mtuSize;
@@ -279,8 +279,11 @@ private:
     QVector<TempClientConfigurationData> gatherClientConfigData();
     void storeClientConfigurations();
     void restoreClientConfigurations();
-    void loadSigningDataIfNecessary();
-    void storeSignCounter();
+
+    enum SigningKeyType { LocalSigningKey, RemoteSigningKey };
+    void loadSigningDataIfNecessary(SigningKeyType keyType);
+    void storeSignCounter(SigningKeyType keyType) const;
+    QString signingKeySettingsGroup(SigningKeyType keyType) const;
     QString keySettingsFilePath() const;
 
     void sendPacket(const QByteArray &packet);
@@ -368,11 +371,11 @@ private:
     void writeCharacteristicForPeripheral(
             QLowEnergyServicePrivate::CharData &charData,
             const QByteArray &newValue);
-    void writeCharacteristicForCentral(
+    void writeCharacteristicForCentral(const QSharedPointer<QLowEnergyServicePrivate> &service,
             QLowEnergyHandle charHandle,
             QLowEnergyHandle valueHandle,
             const QByteArray &newValue,
-            bool writeWithResponse);
+            QLowEnergyService::WriteMode mode);
 
     void writeDescriptorForPeripheral(
             const QSharedPointer<QLowEnergyServicePrivate> &service,

@@ -124,7 +124,7 @@ private:
                             QLowEnergyHandle charHandle);
     void writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
                              QLowEnergyHandle charHandle, const QByteArray &newValue,
-                             bool writeWithResponse);
+                             QLowEnergyService::WriteMode mode);
 
     quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                         const QByteArray &value,

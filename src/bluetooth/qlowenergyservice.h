@@ -82,7 +82,8 @@ public:
 
     enum WriteMode {
         WriteWithResponse = 0,
-        WriteWithoutResponse
+        WriteWithoutResponse,
+        WriteSigned
     };
     Q_ENUM(WriteMode)
 

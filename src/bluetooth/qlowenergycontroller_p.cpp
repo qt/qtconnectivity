@@ -102,7 +102,7 @@ void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergy
 void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
         const QLowEnergyHandle /*charHandle*/,
         const QByteArray &/*newValue*/,
-        bool /*writeWithResponse*/)
+        QLowEnergyService::WriteMode /*writeMode*/)
 {
 
 }

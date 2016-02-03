@@ -486,8 +486,8 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
 //    qCDebug(QT_BT_BLUEZ) << "handle:" << aclData->handle << "PB:" << aclData->pbFlag
 //                         << "BC:" << aclData->bcFlag << "data len:" << aclData->dataLen;
 
-    // Consider only directed, complete messages from controller to host (i.e. incoming packets).
-    if (aclData->pbFlag != 2 || aclData->bcFlag != 0)
+    // Consider only directed, complete messages.
+    if ((aclData->pbFlag != 0 && aclData->pbFlag != 2) || aclData->bcFlag != 0)
         return;
 
     if (size < int(sizeof(L2CapHeader))) {
@@ -516,7 +516,8 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
     }
     quint128 csrk;
     memcpy(&csrk, data + 1, sizeof csrk);
-    emit signatureResolvingKeyReceived(aclData->handle, csrk);
+    const bool isRemoteKey = aclData->pbFlag == 2;
+    emit signatureResolvingKeyReceived(aclData->handle, isRemoteKey, csrk);
 }
 
 void HciManager::handleLeMetaEvent(const quint8 *data)

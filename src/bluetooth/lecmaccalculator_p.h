@@ -36,8 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef LECMACVERIFIER_H
-#define LECMACVERIFIER_H
+#ifndef LECMACCALCULATOR_H
+#define LECMACCALCULATOR_H
 
 //
 //  W A R N I N G
@@ -56,14 +56,17 @@ QT_BEGIN_NAMESPACE
 
 struct quint128;
 
-class Q_AUTOTEST_EXPORT LeCmacVerifier
+class Q_AUTOTEST_EXPORT LeCmacCalculator
 {
 public:
-    LeCmacVerifier();
-    ~LeCmacVerifier();
+    LeCmacCalculator();
+    ~LeCmacCalculator();
 
     static QByteArray createFullMessage(const QByteArray &message, quint32 signCounter);
 
+    quint64 calculateMac(const QByteArray &message, const quint128 &csrk) const;
+
+    // Convenience function.
     bool verify(const QByteArray &message, const quint128 &csrk, quint64 expectedMac) const;
 
 private:

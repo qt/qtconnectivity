@@ -835,11 +835,13 @@ public class QtBluetoothLE {
         newJob.jobType = IoJobType.Write;
 
         // writeMode must be in sync with QLowEnergyService::WriteMode
-        // For now we ignore SignedWriteType as Qt doesn't support it yet.
         switch (writeMode) {
             case 1: //WriteWithoutResponse
                 newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
                 break;
+            case 2: //WriteSigned
+                newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_SIGNED;
+                    break;
             default:
                 newJob.requestedWriteType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
                 break;

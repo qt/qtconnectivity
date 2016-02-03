@@ -664,7 +664,7 @@ void QLowEnergyControllerPrivateOSX::readCharacteristic(QSharedPointer<QLowEnerg
 
 void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
                                                          QLowEnergyHandle charHandle, const QByteArray &newValue,
-                                                         bool writeWithResponse)
+                                                         QLowEnergyService::WriteMode mode)
 {
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
@@ -697,7 +697,7 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
         [manager write:newValueCopy
                  charHandle:charHandle
                  onService:serviceUuid
-                 withResponse:writeWithResponse];
+                 withResponse:mode == QLowEnergyService::WriteWithResponse];
     });
 }
 

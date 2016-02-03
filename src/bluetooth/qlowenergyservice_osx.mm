@@ -213,13 +213,7 @@ void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, 
         return;
     }
 
-    // Don't write if properties don't permit it
-    if (mode == WriteWithResponse)
-        controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, true);
-    else if (mode == WriteWithoutResponse)
-        controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, false);
-    else
-        d_ptr->setError(QLowEnergyService::OperationError);
+    controller->writeCharacteristic(ch.d_ptr, ch.attributeHandle(), newValue, mode);
 }
 
 bool QLowEnergyService::contains(const QLowEnergyDescriptor &descriptor) const

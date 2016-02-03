@@ -43,7 +43,7 @@
 #include <QtTest/QtTest>
 
 #ifdef Q_OS_LINUX
-#include <QtBluetooth/private/lecmacverifier_p.h>
+#include <QtBluetooth/private/lecmaccalculator_p.h>
 #endif
 
 #include <algorithm>
@@ -167,7 +167,7 @@ void TestQLowEnergyControllerGattServer::cmacVerifier()
     };
     QFETCH(QByteArray, message);
     QFETCH(quint64, expectedMac);
-    const bool success = LeCmacVerifier().verify(message, csrk, expectedMac);
+    const bool success = LeCmacCalculator().verify(message, csrk, expectedMac);
     QVERIFY(success);
 #else // CONFIG_LINUX_CRYPTO_API
     QSKIP("CMAC verification test only applicable for developer builds on Linux "
@@ -333,7 +333,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
         QVERIFY(spy->wait(5000));
     }
     QCOMPARE(customService->includedServices().count(), 0);
-    QCOMPARE(customService->characteristics().count(), 4);
+    QCOMPARE(customService->characteristics().count(), 5);
     QLowEnergyCharacteristic customChar
             = customService->characteristic(QBluetoothUuid(quint16(0x5000)));
     QVERIFY(customChar.isValid());
@@ -366,11 +366,42 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
             = customChar4.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
     QVERIFY(cc4ClientConfig.isValid());
 
+    QLowEnergyCharacteristic customChar5
+            = customService->characteristic(QBluetoothUuid(quint16(0x5004)));
+    QVERIFY(customChar5.isValid());
+    QCOMPARE(customChar5.properties(),
+             QLowEnergyCharacteristic::Read | QLowEnergyCharacteristic::WriteSigned);
+    QCOMPARE(customChar5.descriptors().count(), 0);
+    QCOMPARE(customChar5.value(), QByteArray("initial"));
+
     customService->writeCharacteristic(customChar, "whatever");
     spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
                              (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
     QVERIFY(spy->wait(3000));
     QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
+
+    const bool isBonded = QBluetoothLocalDevice().pairingStatus(m_serverAddress)
+            != QBluetoothLocalDevice::Unpaired;
+
+    customService->writeCharacteristic(customChar5, "1", QLowEnergyService::WriteSigned);
+    if (isBonded) {
+        // Signed write is done twice to test the sign counter stuff.
+        // Note: We assume here that the link is not encrypted, as this information is not exported.
+        customService->readCharacteristic(customChar5);
+        spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::characteristicRead));
+        QVERIFY(spy->wait(3000));
+        QCOMPARE(customChar5.value(), QByteArray("1"));
+        customService->writeCharacteristic(customChar5, "2", QLowEnergyService::WriteSigned);
+        customService->readCharacteristic(customChar5);
+        spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::characteristicRead));
+        QVERIFY(spy->wait(3000));
+        QCOMPARE(customChar5.value(), QByteArray("2"));
+    } else {
+        spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
+                                 (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
+        QVERIFY(spy->wait(3000));
+        QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
+    }
 
     QByteArray indicateValue(2, 0);
     qToLittleEndian<quint16>(2, reinterpret_cast<uchar *>(indicateValue.data()));
@@ -396,8 +427,6 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     spy.reset(new QSignalSpy(m_leController.data(), &QLowEnergyController::connectionUpdated));
     QVERIFY(spy->wait(5000));
 
-    const bool isBonded = QBluetoothLocalDevice().pairingStatus(m_serverAddress)
-            != QBluetoothLocalDevice::Unpaired;
     m_leController->disconnectFromDevice();
 
     if (m_leController->state() != QLowEnergyController::UnconnectedState) {
@@ -438,6 +467,17 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     if (isBonded) {
         QCOMPARE(cc3ClientConfig.value(), indicateValue);
         QCOMPARE(cc4ClientConfig.value(), notifyValue);
+
+        // Do a third signed write to test sign counter persistence.
+        customChar5 = customService->characteristic(QBluetoothUuid(quint16(0x5004)));
+        QVERIFY(customChar5.isValid());
+        QCOMPARE(customChar5.value(), QByteArray("2"));
+        customService->writeCharacteristic(customChar5, "3", QLowEnergyService::WriteSigned);
+        customService->readCharacteristic(customChar5);
+        spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::characteristicRead));
+        QVERIFY(spy->wait(3000));
+        QCOMPARE(customChar5.value(), QByteArray("3"));
+
     } else {
         QCOMPARE(cc3ClientConfig.value(), QByteArray(2, 0));
         QCOMPARE(cc4ClientConfig.value(), QByteArray(2, 0));
