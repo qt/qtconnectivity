@@ -154,7 +154,7 @@ void TestQLowEnergyControllerGattServer::advertisingData()
 
 void TestQLowEnergyControllerGattServer::cmacVerifier()
 {
-#ifdef CONFIG_LINUX_CRYPTO_API
+#if defined(CONFIG_LINUX_CRYPTO_API) && defined(QT_BUILD_INTERNAL) && defined(CONFIG_BLUEZ_LE)
     // Test data comes from spec v4.2, Vol 3, Part H, Appendix D.1
     const quint128 csrk = {
         { 0x3c, 0x4f, 0xcf, 0x09, 0x88, 0x15, 0xf7, 0xab,
@@ -165,7 +165,8 @@ void TestQLowEnergyControllerGattServer::cmacVerifier()
     const bool success = LeCmacVerifier().verify(message, csrk, expectedMac);
     QVERIFY(success);
 #else // CONFIG_LINUX_CRYPTO_API
-    QSKIP("CMAC verification test only applicable on Linux with crypto API");
+    QSKIP("CMAC verification test only applicable for developer builds on Linux "
+          "with BlueZ and crypto API");
 #endif // Q_OS_LINUX
 }
 
