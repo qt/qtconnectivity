@@ -167,6 +167,7 @@ QList<QLowEnergyCharacteristicData> QLowEnergyServiceData::characteristics() con
  */
 void QLowEnergyServiceData::setCharacteristics(const QList<QLowEnergyCharacteristicData> &characteristics)
 {
+    d->characteristics.clear();
     foreach (const QLowEnergyCharacteristicData &cd, characteristics)
         addCharacteristic(cd);
 }

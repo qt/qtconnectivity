@@ -500,6 +500,10 @@ void TestQLowEnergyControllerGattServer::serviceData()
     charData.setWriteConstraints(AttAuthenticationRequired | AttAuthorizationRequired);
     QCOMPARE(charData.writeConstraints(), AttAuthenticationRequired | AttAuthorizationRequired);
 
+    charData.addDescriptor(descData);
+    QCOMPARE(charData.descriptors().count(), 1);
+    charData.setDescriptors(QList<QLowEnergyDescriptorData>());
+    QCOMPARE(charData.descriptors().count(), 0);
     charData.setDescriptors(QList<QLowEnergyDescriptorData>() << descData << descData2);
     QLowEnergyDescriptorData descData3(QBluetoothUuid::ExternalReportReference, "someval");
     charData.addDescriptor(descData3);
@@ -518,6 +522,10 @@ void TestQLowEnergyControllerGattServer::serviceData()
     secondaryData.setType(QLowEnergyServiceData::ServiceTypeSecondary);
     QCOMPARE(secondaryData.type(), QLowEnergyServiceData::ServiceTypeSecondary);
 
+    secondaryData.addCharacteristic(charData);
+    QCOMPARE(secondaryData.characteristics().count(), 1);
+    secondaryData.setCharacteristics(QList<QLowEnergyCharacteristicData>());
+    QCOMPARE(secondaryData.characteristics().count(), 0);
     secondaryData.setCharacteristics(QList<QLowEnergyCharacteristicData>()
                                      << charData << QLowEnergyCharacteristicData());
     QCOMPARE(secondaryData.characteristics(), QList<QLowEnergyCharacteristicData>() << charData);
