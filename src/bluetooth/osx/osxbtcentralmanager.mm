@@ -116,7 +116,7 @@ QT_END_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTCentralManager)
 
-- (id)initWith:(OSXBluetooth::LECentralNotifier *)aNotifier
+- (id)initWith:(OSXBluetooth::LECBManagerNotifier *)aNotifier
 {
     if (self = [super init]) {
         manager = nil;
@@ -173,7 +173,7 @@ QT_END_NAMESPACE
             managerState = OSXBluetooth::CentralManagerIdle;
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate a central manager";
             if (notifier)
-                emit notifier->CBCentralManagerError(QLowEnergyController::ConnectionError);
+                emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         }
     } else if (managerState != OSXBluetooth::CentralManagerUpdating) {
         [self retrievePeripheralAndConnect];
@@ -205,7 +205,7 @@ QT_END_NAMESPACE
     if (!uuids) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate identifiers";
         if (notifier)
-            emit notifier->CBCentralManagerError(QLowEnergyController::ConnectionError);
+            emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         return;
     }
 
@@ -219,7 +219,7 @@ QT_END_NAMESPACE
         if (!nsUuid) {
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSUUID identifier";
             if (notifier)
-                emit notifier->CBCentralManagerError(QLowEnergyController::ConnectionError);
+                emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
             return;
         }
 
@@ -230,7 +230,7 @@ QT_END_NAMESPACE
         if (!peripherals || peripherals.count != 1) {
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
             if (notifier)
-                emit notifier->CBCentralManagerError(QLowEnergyController::UnknownRemoteDeviceError);
+                emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
             return;
         }
 
@@ -243,7 +243,7 @@ QT_END_NAMESPACE
     if (![manager respondsToSelector:@selector(retrievePeripherals:)]) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
         if (notifier)
-            emit notifier->CBCentralManagerError(QLowEnergyController::UnknownRemoteDeviceError);
+            emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
     }
 
@@ -251,7 +251,7 @@ QT_END_NAMESPACE
     if (!cfUuid) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create CFUUID object";
         if (notifier)
-            emit notifier->CBCentralManagerError(QLowEnergyController::ConnectionError);
+            emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         return;
     }
     // With ARC this cast will be illegal:
@@ -406,7 +406,7 @@ QT_END_NAMESPACE
                          << serviceUuid;
 
     if (notifier) {
-        emit notifier->CBCentralManagerError(serviceUuid,
+        emit notifier->CBManagerError(serviceUuid,
                        QLowEnergyService::UnknownError);
     }
 }
@@ -501,7 +501,7 @@ QT_END_NAMESPACE
         // Well, that's unlikely :) But we must be sure.
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "can not allocate more handles";
         if (notifier)
-            notifier->CBCentralManagerError(serviceUuid, QLowEnergyService::OperationError);
+            notifier->CBManagerError(serviceUuid, QLowEnergyService::OperationError);
         return;
     }
 
@@ -721,7 +721,7 @@ QT_END_NAMESPACE
                              << "unknown characteristic handle "
                              << charHandle;
         if (notifier) {
-            emit notifier->CBCentralManagerError(serviceUuid,
+            emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorWriteError);
         }
         return;
@@ -735,7 +735,7 @@ QT_END_NAMESPACE
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO
                              << "no client characteristic configuration found";
         if (notifier) {
-            emit notifier->CBCentralManagerError(serviceUuid,
+            emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorWriteError);
         }
         return;
@@ -762,7 +762,7 @@ QT_END_NAMESPACE
     if (!charMap.contains(charHandle)) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic: " << charHandle << " not found";
         if (notifier) {
-            emit notifier->CBCentralManagerError(serviceUuid,
+            emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::CharacteristicReadError);
 
         }
@@ -792,7 +792,7 @@ QT_END_NAMESPACE
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic: "
                              << charHandle << " not found";
         if (notifier) {
-            emit notifier->CBCentralManagerError(serviceUuid,
+            emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::CharacteristicWriteError);
         }
         return;
@@ -819,7 +819,7 @@ QT_END_NAMESPACE
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle:"
                              << descHandle << "not found";
         if (notifier) {
-            emit notifier->CBCentralManagerError(serviceUuid,
+            emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorReadError);
         }
         return;
@@ -845,7 +845,7 @@ QT_END_NAMESPACE
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle: "
                              << descHandle << " not found";
         if (notifier) {
-            emit notifier->CBCentralManagerError(serviceUuid,
+            emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorWriteError);
         }
         return;
@@ -1101,7 +1101,7 @@ QT_END_NAMESPACE
             // and reset managerState from CentralManagerUpdating.
             managerState = CentralManagerIdle;
             if (notifier)
-                emit notifier->CBCentralManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
+                emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
         }
         return;
     }
@@ -1116,7 +1116,7 @@ QT_END_NAMESPACE
             // TODO: we need a better error +
             // what will happen if later the state changes to PoweredOn???
             if (notifier)
-                emit notifier->CBCentralManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
+                emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
         }
         return;
     }
@@ -1149,7 +1149,7 @@ QT_END_NAMESPACE
     if (!peripherals || peripherals.count != 1) {
         qCDebug(QT_BT_OSX) << Q_FUNC_INFO <<"unexpected number of peripherals (!= 1)";
         if (notifier)
-            emit notifier->CBCentralManagerError(QLowEnergyController::UnknownRemoteDeviceError);
+            emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
     } else {
         peripheral = [static_cast<CBPeripheral *>([peripherals objectAtIndex:0]) retain];
         [self connectToPeripheral];
@@ -1186,7 +1186,7 @@ QT_END_NAMESPACE
     managerState = OSXBluetooth::CentralManagerIdle;
     // TODO: better error mapping is required.
     if (notifier)
-        notifier->CBCentralManagerError(QLowEnergyController::UnknownRemoteDeviceError);
+        notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
 }
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)aPeripheral
@@ -1202,7 +1202,7 @@ QT_END_NAMESPACE
         managerState = OSXBluetooth::CentralManagerIdle;
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to disconnect";
         if (notifier)
-            emit notifier->CBCentralManagerError(QLowEnergyController::UnknownRemoteDeviceError);
+            emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
     } else {
         managerState = OSXBluetooth::CentralManagerIdle;
         if (notifier)
@@ -1227,7 +1227,7 @@ QT_END_NAMESPACE
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
         // TODO: better error mapping required.
         if (notifier)
-            emit notifier->CBCentralManagerError(QLowEnergyController::UnknownError);
+            emit notifier->CBManagerError(QLowEnergyController::UnknownError);
     } else {
         [self discoverIncludedServices];
     }
@@ -1323,7 +1323,7 @@ QT_END_NAMESPACE
         NSLog(@"%s failed with error: %@", Q_FUNC_INFO, error);
         // We did not discover any characteristics and can not discover descriptors,
         // inform our delegate (it will set a service state also).
-        emit notifier->CBCentralManagerError(qt_uuid(service.UUID), QLowEnergyController::UnknownError);
+        emit notifier->CBManagerError(qt_uuid(service.UUID), QLowEnergyController::UnknownError);
     } else {
         [self readCharacteristics:service];
     }
@@ -1358,7 +1358,7 @@ QT_END_NAMESPACE
             if (chHandle && chHandle == currentReadHandle) {
                 currentReadHandle = 0;
                 requestPending = false;
-                emit notifier->CBCentralManagerError(qtUuid, QLowEnergyService::CharacteristicReadError);
+                emit notifier->CBManagerError(qtUuid, QLowEnergyService::CharacteristicReadError);
                 [self performNextRequest];
             }
             return;
@@ -1460,7 +1460,7 @@ QT_END_NAMESPACE
             if (dHandle && dHandle == currentReadHandle) {
                 currentReadHandle = 0;
                 requestPending = false;
-                emit notifier->CBCentralManagerError(qtUuid, QLowEnergyService::DescriptorReadError);
+                emit notifier->CBManagerError(qtUuid, QLowEnergyService::DescriptorReadError);
                 [self performNextRequest];
             }
             return;
@@ -1541,7 +1541,7 @@ QT_END_NAMESPACE
 
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
-        emit notifier->CBCentralManagerError(qt_uuid(characteristic.service.UUID),
+        emit notifier->CBManagerError(qt_uuid(characteristic.service.UUID),
                                              QLowEnergyService::CharacteristicWriteError);
     } else {
         const QLowEnergyHandle cHandle = charMap.key(characteristic);
@@ -1575,7 +1575,7 @@ QT_END_NAMESPACE
 
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
-        emit notifier->CBCentralManagerError(qt_uuid(descriptor.characteristic.service.UUID),
+        emit notifier->CBManagerError(qt_uuid(descriptor.characteristic.service.UUID),
                        QLowEnergyService::DescriptorWriteError);
     } else {
         const QLowEnergyHandle dHandle = descMap.key(descriptor);
@@ -1610,7 +1610,7 @@ QT_END_NAMESPACE
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
         // In Qt's API it's a descriptor write actually.
-        emit notifier->CBCentralManagerError(qt_uuid(characteristic.service.UUID),
+        emit notifier->CBManagerError(qt_uuid(characteristic.service.UUID),
                                              QLowEnergyService::DescriptorWriteError);
     } else if (nRemoved) {
         const QLowEnergyHandle dHandle = descMap.key(descriptor);

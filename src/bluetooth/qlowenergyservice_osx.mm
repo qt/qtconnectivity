@@ -208,7 +208,9 @@ void QLowEnergyService::writeCharacteristic(const QLowEnergyCharacteristic &ch, 
                                             WriteMode mode)
 {
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
-    if (controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(ch)) {
+    if (controller == Q_NULLPTR ||
+        (controller->role == QLowEnergyController::CentralRole && state() != ServiceDiscovered) ||
+        !contains(ch)) {
         d_ptr->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -250,6 +252,8 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 {
     QLowEnergyControllerPrivateOSX *const controller = qt_mac_le_controller(d_ptr);
     if (controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
+        // This operation error also includes LE controller in the peripheral role:
+        // on iOS/OS X - descriptors are immutable.
         d_ptr->setError(OperationError);
         return;
     }

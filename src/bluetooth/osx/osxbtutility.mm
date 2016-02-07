@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include "qlowenergycharacteristicdata.h"
 #include "qbluetoothaddress.h"
 #include "osxbtutility_p.h"
 #include "qbluetoothuuid.h"

@@ -64,6 +64,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QLowEnergyCharacteristicData;
+class QBluetoothAddress;
 class QBluetoothUuid;
 
 namespace OSXBluetooth {
@@ -282,7 +284,7 @@ QString qt_address(NSString *address);
 
 #ifndef QT_IOS_BLUETOOTH
 
-class QBluetoothAddress qt_address(const BluetoothDeviceAddress *address);
+QBluetoothAddress qt_address(const BluetoothDeviceAddress *address);
 BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
 
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);

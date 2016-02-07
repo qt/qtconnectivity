@@ -68,7 +68,7 @@ class QLowEnergyServicePrivate;
 namespace OSXBluetooth
 {
 
-class LECentralNotifier : public QObject
+class LECBManagerNotifier : public QObject
 {
     Q_OBJECT
 
@@ -85,9 +85,9 @@ Q_SIGNALS:
     void descriptorWritten(QLowEnergyHandle descHandle, const QByteArray &value);
 
     void LEnotSupported();
-    void CBCentralManagerError(QLowEnergyController::Error error);
-    void CBCentralManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
-    void CBCentralManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
+    void CBManagerError(QLowEnergyController::Error error);
+    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
+    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
 
 };
 

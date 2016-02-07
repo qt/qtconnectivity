@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include "osx/osxbtperipheralmanager_p.h"
 #include "qlowenergyserviceprivate_p.h"
 #include "osx/osxbtcentralmanager_p.h"
 #include "qlowenergycontroller_p.h"
@@ -61,6 +62,7 @@
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qsharedpointer.h>
+#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qmap.h>
@@ -70,13 +72,13 @@ QT_BEGIN_NAMESPACE
 namespace OSXBluetooth
 {
 
-class LECentralNotifier;
+class LECBManagerNotifier;
 
 }
 
 class QByteArray;
 
-// While suffix 'OSX', it's also for iOS.
+// Suffix 'OSX' is a legacy, it's also iOS.
 class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate
 {
     friend class QLowEnergyController;
@@ -84,9 +86,8 @@ class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate
 
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivateOSX(QLowEnergyController *q);
-    QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
-                                   const QBluetoothDeviceInfo &uuid);
+    QLowEnergyControllerPrivateOSX(QLowEnergyController::Role role, QLowEnergyController *q,
+                                   const QBluetoothDeviceInfo &info = QBluetoothDeviceInfo());
     ~QLowEnergyControllerPrivateOSX();
 
     bool isValid() const;
@@ -105,18 +106,15 @@ private Q_SLOTS:
     void _q_descriptorWritten(QLowEnergyHandle charHandle, const QByteArray &value);
 
     void _q_LEnotSupported();
-    void _q_CBCentralManagerError(QLowEnergyController::Error error);
-    void _q_CBCentralManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
-    void _q_CBCentralManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
+    void _q_CBManagerError(QLowEnergyController::Error error);
+    void _q_CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
+    void _q_CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
 
 private:
     void connectToDevice();
     void discoverServices();
     void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
 
-    // TODO: all these read/write /setNotify can be simplified -
-    // by just passing either characteristic or descriptor (that
-    // has all needed information - service, handle, etc.).
     void setNotifyValue(QSharedPointer<QLowEnergyServicePrivate> service,
                         QLowEnergyHandle charHandle, const QByteArray &newValue);
 
@@ -149,7 +147,7 @@ private:
 
     void setErrorDescription(QLowEnergyController::Error errorCode);
     void invalidateServices();
-    bool connectSlots(OSXBluetooth::LECentralNotifier *notifier);
+    bool connectSlots(OSXBluetooth::LECBManagerNotifier *notifier);
 
     QLowEnergyController *q_ptr;
     QBluetoothUuid deviceUuid;
@@ -169,6 +167,10 @@ private:
     typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
     typedef OSXBluetooth::ObjCScopedPointer<ObjCCentralManager> CentralManager;
     CentralManager centralManager;
+
+    typedef QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) ObjCPeripheralManager;
+    typedef OSXBluetooth::ObjCScopedPointer<ObjCPeripheralManager> PeripheralManager;
+    PeripheralManager peripheralManager;
 
     typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceMap;
     typedef ServiceMap::const_iterator ConstServiceIterator;

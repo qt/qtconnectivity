@@ -75,7 +75,7 @@ class QLowEnergyServicePrivate;
 
 namespace OSXBluetooth {
 
-class LECentralNotifier;
+class LECBManagerNotifier;
 
 enum CentralManagerState
 {
@@ -144,7 +144,7 @@ QT_END_NAMESPACE
 
     QT_PREPEND_NAMESPACE(QBluetoothUuid) deviceUuid;
 
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::LECentralNotifier *notifier;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *notifier;
 
     // Quite a verbose service discovery machinery
     // (a "graph traversal").
@@ -173,7 +173,7 @@ QT_END_NAMESPACE
     CBPeripheral *peripheral;
 }
 
-- (id)initWith:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LECentralNotifier *)notifier;
+- (id)initWith:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *)notifier;
 - (void)dealloc;
 
 // IMPORTANT: _all_ these methods are to be executed on qt_LE_queue,
