@@ -163,6 +163,9 @@ bool LeCmacVerifier::verify(const QByteArray &message, const quint128 &csrk,
     }
     return true;
 #else // CONFIG_LINUX_CRYPTO_API
+    Q_UNUSED(message);
+    Q_UNUSED(csrk);
+    Q_UNUSED(expectedMac);
     qCWarning(QT_BT_BLUEZ) << "CMAC verification failed due to missing Linux crypto API.";
     return false;
 #endif
