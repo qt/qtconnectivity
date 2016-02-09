@@ -279,7 +279,7 @@ Module {
         exports: [
             "QtBluetooth/BluetoothDiscoveryModel 5.0",
             "QtBluetooth/BluetoothDiscoveryModel 5.2",
-            "QtBluetooth/BluetoothDiscoveryModel 5.6"
+            "QtBluetooth/BluetoothDiscoveryModel 5.7"
         ]
         exportMetaObjectRevisions: [0, 0, 0]
         Enum {
