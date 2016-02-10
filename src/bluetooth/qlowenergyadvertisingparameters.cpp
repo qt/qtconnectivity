@@ -115,9 +115,18 @@ public:
 */
 
 /*!
-    \struct QLowEnergyAdvertisingParameters::AddressInfo
+    \class QLowEnergyAdvertisingParameters::AddressInfo
+    \inmodule QtBluetooth
+    \since 5.7
 
-    Objects of this type form the elements of a white list.
+    \brief The QLowEnergyAdvertisingParameters::AddressInfo defines the elements of a white list.
+
+    A list of QLowEnergyAdvertisingParameters::AddressInfo instances is passed to
+    \l QLowEnergyAdvertisingParameters::setWhiteList(). White lists are used to
+    restrict the devices which have the permission to interact with the peripheral.
+    The permitted type of interaction is defined by
+    \l QLowEnergyAdvertisingParameters::FilterPolicy.
+
     \sa QLowEnergyAdvertisingParameters::whiteList()
 */
 
@@ -131,6 +140,18 @@ public:
         The type of the address (public or private).
 */
 
+/*!
+    \fn QLowEnergyAdvertisingParameters::AddressInfo::AddressInfo(const QBluetoothAddress &addr, QLowEnergyController::RemoteAddressType type)
+
+    Constructs a new AddressInfo instance. \a addr represents the Bluetooth address of
+    the remote device and \a type the nature of the address.
+*/
+
+/*!
+    \fn QLowEnergyAdvertisingParameters::AddressInfo::AddressInfo()
+
+    Constructs a default constructed AddressInfo instance.
+*/
 
 /*!
    Constructs a new object of this class. All values are initialized to their defaults

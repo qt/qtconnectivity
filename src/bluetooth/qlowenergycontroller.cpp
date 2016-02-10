@@ -544,7 +544,8 @@ QLowEnergyController::QLowEnergyController(
 }
 
 /*!
-   Returns a new object of this class that is in the \l CentralRole.
+   Returns a new object of this class that is in the \l CentralRole and has the
+   parent object \a parent.
    The \a remoteDevice refers to the device that a connection will be established to later.
  *
    The controller uses the local default Bluetooth adapter for the connection management.
@@ -558,9 +559,10 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
 
 
 /*!
-   Returns a new object of this class that is in the \l PeripheralRole.
+   Returns a new object of this class that is in the \l PeripheralRole and has the
+   parent object \a parent.
    Typically, the next step is to call \l startAdvertising() on the returned object.
- *
+
    The controller uses the local default Bluetooth adapter for the connection management.
    \sa QLowEnergyController::PeripheralRole
  */

@@ -116,8 +116,8 @@ QByteArray QLowEnergyDescriptorData::value() const
 }
 
 /*!
-  Sets the value of this descriptor. It will be sent to a peer device exactly the way it is
-  provided here, so callers need to take care of things such as endianness.
+  Sets the value of this descriptor to \a value. It will be sent to a peer device
+  exactly the way it is provided here, so callers need to take care of things such as endianness.
  */
 void QLowEnergyDescriptorData::setValue(const QByteArray &value)
 {
