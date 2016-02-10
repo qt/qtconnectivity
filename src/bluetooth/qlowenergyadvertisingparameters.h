@@ -68,7 +68,7 @@ public:
     struct AddressInfo {
         AddressInfo(const QBluetoothAddress &addr, QLowEnergyController::RemoteAddressType t)
             : address(addr), type(t) {}
-        AddressInfo() {}
+        AddressInfo() : type(QLowEnergyController::PublicAddress) {}
 
         QBluetoothAddress address;
         QLowEnergyController::RemoteAddressType type;

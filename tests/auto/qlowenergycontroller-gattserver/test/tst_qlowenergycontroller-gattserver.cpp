@@ -114,6 +114,11 @@ void TestQLowEnergyControllerGattServer::advertisingParameters()
     QCOMPARE(params.whiteList(), whiteList);
     QCOMPARE(params.filterPolicy(), QLowEnergyAdvertisingParameters::UseWhiteListForConnecting);
     QVERIFY(params != QLowEnergyAdvertisingParameters());
+
+    // verify default ctor
+    QLowEnergyAdvertisingParameters::AddressInfo info;
+    QVERIFY(info.address == QBluetoothAddress());
+    QVERIFY(info.type == QLowEnergyController::PublicAddress);
 }
 
 void TestQLowEnergyControllerGattServer::advertisingData()

@@ -132,12 +132,16 @@ public:
 
 /*!
     \variable QLowEnergyAdvertisingParameters::AddressInfo::address
-        The Bluetooth address of a remote address.
+
+    This is the Bluetooth address of a remote device.
 */
 
 /*!
     \variable QLowEnergyAdvertisingParameters::AddressInfo::type
-        The type of the address (public or private).
+
+    The type of the address (public or private).
+    The \l AddressInfo default constructor initialises this value to
+    \l QLowEnergyController::PublicAddress.
 */
 
 /*!
@@ -151,6 +155,10 @@ public:
     \fn QLowEnergyAdvertisingParameters::AddressInfo::AddressInfo()
 
     Constructs a default constructed AddressInfo instance.
+
+    By default the \l AddressInfo::type member is set to
+    \l QLowEnergyController::PublicAddress and the \l AddressInfo::address
+    member has a null address.
 */
 
 /*!
