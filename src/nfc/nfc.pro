@@ -1,8 +1,6 @@
 TARGET = QtNfc
 QT = core
 
-load(qt_module)
-
 QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
@@ -153,3 +151,5 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+
+load(qt_module)

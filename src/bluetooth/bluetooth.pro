@@ -6,8 +6,6 @@ QT_PRIVATE = concurrent
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
-load(qt_module)
-
 PUBLIC_HEADERS += \
     qbluetoothglobal.h \
     qbluetoothaddress.h\
@@ -198,3 +196,4 @@ OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
 
+load(qt_module)
