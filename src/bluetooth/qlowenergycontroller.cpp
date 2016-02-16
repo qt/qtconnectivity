@@ -844,6 +844,7 @@ void QLowEnergyController::stopAdvertising()
   Constructs and returns a \l QLowEnergyService object with \a parent from \a service.
   The controller must be in the \l PeripheralRole and in the \l UnconnectedState. The \a service
   object must be valid.
+  \sa QLowEnergyServiceData::addIncludedService
  */
 QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
                                                     QObject *parent)

@@ -146,7 +146,9 @@ void QLowEnergyServiceData::setIncludedServices(const QList<QLowEnergyService *>
 /*!
   Adds \a service to the list of included services.
   The \a service object must have been returned from a call to
-  \l QLowEnergyController::addService.
+  \l QLowEnergyController::addService. This requirement prevents circular includes
+  (which are forbidden by the Bluetooth specification), and also helps to support the use case of
+  including more than one service of the same type.
   \sa setIncludedServices()
 */
 void QLowEnergyServiceData::addIncludedService(QLowEnergyService *service)
