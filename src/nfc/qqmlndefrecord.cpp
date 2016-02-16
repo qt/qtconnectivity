@@ -249,6 +249,9 @@ QQmlNdefRecord::QQmlNdefRecord(const QNdefRecord &record, QObject *parent)
     d_ptr->record = record;
 }
 
+/*!
+    Destroys the QQmlNdefRecord instance.
+*/
 QQmlNdefRecord::~QQmlNdefRecord()
 {
     delete d_ptr;

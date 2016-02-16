@@ -1,4 +1,4 @@
-require(!android|qtHaveModule(androidextras))
+requires(!android|qtHaveModule(androidextras))
 
 load(configure)
 qtCompileTest(bluez)

@@ -71,7 +71,7 @@ bool InputStreamThread::run()
     return true;
 }
 
-bool InputStreamThread::bytesAvailable() const
+qint64 InputStreamThread::bytesAvailable() const
 {
     QMutexLocker locker(&m_mutex);
     return m_socket_p->buffer.size();

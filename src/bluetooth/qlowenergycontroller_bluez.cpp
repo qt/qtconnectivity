@@ -263,7 +263,10 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 {
     registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();
+}
 
+void QLowEnergyControllerPrivate::init()
+{
     hciManager = new HciManager(localAdapter, this);
     if (!hciManager->isValid())
         return;
@@ -602,7 +605,12 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         break;
     }
 
-    Q_ASSERT(!openRequests.isEmpty());
+    if (openRequests.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Received unexpected packet from peer, disconnecting.";
+        disconnectFromDevice();
+        return;
+    }
+
     const Request request = openRequests.dequeue();
     processReply(request, incomingPacket);
 
@@ -1074,7 +1082,14 @@ void QLowEnergyControllerPrivate::processReply(
         Q_ASSERT(!p.isNull());
 
         if (isErrorResponse) {
-            readServiceValues(p->uuid, false); //read descriptor values
+            if (keys.count() == 1) {
+                // no more descriptors to discover
+                readServiceValues(p->uuid, false); //read descriptor values
+            } else {
+                // hop to the next descriptor
+                keys.removeFirst();
+                discoverNextDescriptor(p, keys, keys.first());
+            }
             break;
         }
 

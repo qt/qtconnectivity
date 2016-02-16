@@ -58,6 +58,10 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
 }
 
+void QLowEnergyControllerPrivate::init()
+{
+}
+
 void QLowEnergyControllerPrivate::connectToDevice()
 {
     // required to pass unit test on default backend
