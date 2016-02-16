@@ -219,7 +219,7 @@ void QLeAdvertiserBluez::setFlags(AdvData &advData)
     quint8 flags = 0;
     if (advertisingData().discoverability() == QLowEnergyAdvertisingData::DiscoverabilityLimited)
         flags |= 0x1;
-    else if (advertisingData().discoverability() == QLowEnergyAdvertisingData::DiscoverabilityLimited)
+    else if (advertisingData().discoverability() == QLowEnergyAdvertisingData::DiscoverabilityGeneral)
         flags |= 0x2;
     if (flags) {
         advData.data[advData.length++] = 2;
