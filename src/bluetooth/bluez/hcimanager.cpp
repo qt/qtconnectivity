@@ -477,6 +477,11 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
     const AclData *aclData = reinterpret_cast<AclData *>(rawAclData);
     data += sizeof *aclData;
     size -= sizeof *aclData;
+
+    // Consider only directed, complete messages.
+    if ((aclData->pbFlag != 0 && aclData->pbFlag != 2) || aclData->bcFlag != 0)
+        return;
+
     if (size < aclData->dataLen) {
         qCWarning(QT_BT_BLUEZ) << "HCI ACL packet data size" << size
                                << "is smaller than specified size" << aclData->dataLen;
@@ -485,10 +490,6 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
 
 //    qCDebug(QT_BT_BLUEZ) << "handle:" << aclData->handle << "PB:" << aclData->pbFlag
 //                         << "BC:" << aclData->bcFlag << "data len:" << aclData->dataLen;
-
-    // Consider only directed, complete messages.
-    if ((aclData->pbFlag != 0 && aclData->pbFlag != 2) || aclData->bcFlag != 0)
-        return;
 
     if (size < int(sizeof(L2CapHeader))) {
         qCWarning(QT_BT_BLUEZ) << "Unexpected HCI ACL packet size";
