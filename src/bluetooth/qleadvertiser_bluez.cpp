@@ -221,6 +221,7 @@ void QLeAdvertiserBluez::setFlags(AdvData &advData)
         flags |= 0x1;
     else if (advertisingData().discoverability() == QLowEnergyAdvertisingData::DiscoverabilityGeneral)
         flags |= 0x2;
+    flags |= 0x4; // "BR/EDR not supported". Otherwise clients might try to connect over Bluetooth classic.
     if (flags) {
         advData.data[advData.length++] = 2;
         advData.data[advData.length++] = 0x1;
