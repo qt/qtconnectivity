@@ -80,7 +80,7 @@ linux:!android:qtHaveModule(dbus) {
 
     include(neard/neard.pri)
 
-} else:simulator {
+} else:false { # Build for simulator backend is entirely broken
     NFC_BACKEND_AVAILABLE = yes
 
     QT *= gui
