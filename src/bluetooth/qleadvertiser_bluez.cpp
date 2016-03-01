@@ -353,7 +353,9 @@ void QLeAdvertiserBluez::setData(bool isScanResponseData)
         setManufacturerData(sourceData, theData);
     }
 
-    const QByteArray dataToSend = byteArrayFromStruct(theData, 1 + theData.length);
+    std::memset(theData.data + theData.length, 0, sizeof theData.data - theData.length);
+    const QByteArray dataToSend = byteArrayFromStruct(theData);
+
     if (!isScanResponseData) {
         qCDebug(QT_BT_BLUEZ) << "advertising data:" << dataToSend.toHex();
         queueCommand(OcfLeSetAdvData, dataToSend);
