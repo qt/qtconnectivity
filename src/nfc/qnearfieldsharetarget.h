@@ -63,7 +63,7 @@ Q_SIGNALS:
     void shareFinished();
 
 private:
-    explicit QNearFieldShareTarget(QNearFieldShareManager::ShareModes modes, QObject *parent = 0);
+    explicit QNearFieldShareTarget(QNearFieldShareManager::ShareModes modes, QObject *parent = Q_NULLPTR);
 
     QNearFieldShareTargetPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QNearFieldShareTarget)

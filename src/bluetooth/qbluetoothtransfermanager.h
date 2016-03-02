@@ -52,7 +52,7 @@ class Q_BLUETOOTH_EXPORT QBluetoothTransferManager : public QObject
     Q_OBJECT
 
 public:
-    explicit QBluetoothTransferManager(QObject *parent = 0);
+    explicit QBluetoothTransferManager(QObject *parent = Q_NULLPTR);
     ~QBluetoothTransferManager();
 
     QBluetoothTransferReply *put(const QBluetoothTransferRequest &request, QIODevice *data);

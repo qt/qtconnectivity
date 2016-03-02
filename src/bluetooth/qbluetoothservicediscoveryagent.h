@@ -74,8 +74,8 @@ public:
     };
     Q_ENUM(DiscoveryMode)
 
-    QBluetoothServiceDiscoveryAgent(QObject *parent = 0);
-    explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
+    explicit QBluetoothServiceDiscoveryAgent(QObject *parent = Q_NULLPTR);
+    explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = Q_NULLPTR);
     ~QBluetoothServiceDiscoveryAgent();
 
     bool isActive() const;

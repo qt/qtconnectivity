@@ -69,9 +69,9 @@ public:
     };
     Q_ENUM(InquiryType)
 
-    QBluetoothDeviceDiscoveryAgent(QObject *parent = 0);
+    explicit QBluetoothDeviceDiscoveryAgent(QObject *parent = Q_NULLPTR);
     explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter,
-                                            QObject *parent = 0);
+                                            QObject *parent = Q_NULLPTR);
     ~QBluetoothDeviceDiscoveryAgent();
 
     // TODO Remove inquiry type in Qt 6 -> not really used anywhere

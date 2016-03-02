@@ -74,12 +74,12 @@ public:
     Q_ENUM(RemoteAddressType)
 
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
-                                     QObject *parent = 0); // TODO Qt 6 remove ctor
+                                  QObject *parent = Q_NULLPTR); // TODO Qt 6 remove ctor
     explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
-                                     QObject *parent = 0);
+                                  QObject *parent = Q_NULLPTR);
     explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
                                      const QBluetoothAddress &localDevice,
-                                     QObject *parent = 0); // TODO Qt 6 remove ctor
+                                  QObject *parent = Q_NULLPTR); // TODO Qt 6 remove ctor
     ~QLowEnergyController();
 
     QBluetoothAddress localAddress() const;
@@ -97,8 +97,7 @@ public:
 
     void discoverServices();
     QList<QBluetoothUuid> services() const;
-    QLowEnergyService *createServiceObject(
-            const QBluetoothUuid &service, QObject *parent = 0);
+    QLowEnergyService *createServiceObject(const QBluetoothUuid &service, QObject *parent = Q_NULLPTR);
 
     Error error() const;
     QString errorString() const;

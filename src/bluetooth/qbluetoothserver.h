@@ -64,7 +64,7 @@ public:
     };
     Q_ENUM(Error)
 
-    QBluetoothServer(QBluetoothServiceInfo::Protocol serverType, QObject *parent = 0);
+    explicit QBluetoothServer(QBluetoothServiceInfo::Protocol serverType, QObject *parent = Q_NULLPTR);
     ~QBluetoothServer();
 
     void close();
