@@ -6,8 +6,6 @@ QT_PRIVATE = concurrent
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
-load(qt_module)
-
 PUBLIC_HEADERS += \
     qbluetoothglobal.h \
     qbluetoothaddress.h\
@@ -81,7 +79,7 @@ SOURCES += \
     qlowenergyserviceprivate.cpp
 
 config_bluez:qtHaveModule(dbus) {
-    QT *= dbus
+    QT_FOR_PRIVATE += dbus
     DEFINES += QT_BLUEZ_BLUETOOTH
 
     include(bluez/bluez.pri)
@@ -118,7 +116,7 @@ config_bluez:qtHaveModule(dbus) {
 } else:android:!android-no-sdk {
     include(android/android.pri)
     DEFINES += QT_ANDROID_BLUETOOTH
-    QT += core-private androidextras
+    QT_FOR_PRIVATE += core-private androidextras
 
     ANDROID_PERMISSIONS = \
         android.permission.BLUETOOTH \
@@ -139,7 +137,7 @@ config_bluez:qtHaveModule(dbus) {
 
 } else:osx {
     DEFINES += QT_OSX_BLUETOOTH
-    LIBS += -framework Foundation -framework IOBluetooth
+    LIBS_PRIVATE += -framework Foundation -framework IOBluetooth
 
     include(osx/osxbt.pri)
     OBJECTIVE_SOURCES += \
@@ -174,7 +172,7 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller_p.cpp
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
-    LIBS += -framework Foundation -framework CoreBluetooth
+    LIBS_PRIVATE += -framework Foundation -framework CoreBluetooth
 
     OBJECTIVE_SOURCES += \
         qbluetoothdevicediscoveryagent_ios.mm \
@@ -215,3 +213,5 @@ config_bluez:qtHaveModule(dbus) {
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+
+load(qt_module)

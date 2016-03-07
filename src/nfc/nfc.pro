@@ -1,8 +1,6 @@
 TARGET = QtNfc
 QT = core
 
-load(qt_module)
-
 QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
@@ -59,7 +57,7 @@ SOURCES += \
 linux:!android:qtHaveModule(dbus) {
     NFC_BACKEND_AVAILABLE = yes
 
-    QT += dbus
+    QT_PRIVATE += dbus
 
     DEFINES += NEARD_NFC
 
@@ -83,7 +81,7 @@ linux:!android:qtHaveModule(dbus) {
 } else:false { # Build for simulator backend is entirely broken
     NFC_BACKEND_AVAILABLE = yes
 
-    QT *= gui
+    QT_PRIVATE += gui
 
     PRIVATE_HEADERS += \
         qnearfieldmanagervirtualbase_p.h \
@@ -110,7 +108,7 @@ linux:!android:qtHaveModule(dbus) {
     ANDROID_JAR_DEPENDENCIES = \
         jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
     DEFINES += ANDROID_NFC
-    QT += core-private gui androidextras
+    QT_PRIVATE += core-private gui androidextras
 
     PRIVATE_HEADERS += \
         qllcpserver_android_p.h \
@@ -153,3 +151,5 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+
+load(qt_module)
