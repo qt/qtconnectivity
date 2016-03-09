@@ -52,7 +52,7 @@ struct QLowEnergyServiceDataPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyServiceData
 {
-    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData sd1,
+    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData &sd1,
                                               const QLowEnergyServiceData &sd2);
 public:
     QLowEnergyServiceData();
@@ -84,9 +84,9 @@ private:
     QSharedDataPointer<QLowEnergyServiceDataPrivate> d;
 };
 
-Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData sd1,
+Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData &sd1,
                                    const QLowEnergyServiceData &sd2);
-inline bool operator!=(const QLowEnergyServiceData sd1, const QLowEnergyServiceData &sd2)
+inline bool operator!=(const QLowEnergyServiceData &sd1, const QLowEnergyServiceData &sd2)
 {
     return !(sd1 == sd2);
 }
