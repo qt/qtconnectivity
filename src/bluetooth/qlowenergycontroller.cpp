@@ -197,13 +197,17 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     This signal is emitted when the controller successfully connects to the remote
     Low Energy device (if the controller is in the \l CentralRole) or if a remote Low Energy
     device connected to the controller (if the controller is in the \l PeripheralRole).
+    On iOS and OS X this signal is not reliable if the controller is in the \l PeripheralRole
+    - the controller only guesses that some central connected to our peripheral as
+    soon as this central tries to write/read a characteristic/descriptor.
 */
 
 /*!
     \fn void QLowEnergyController::disconnected()
 
     This signal is emitted when the controller disconnects from the remote
-    Low Energy device or vice versa.
+    Low Energy device or vice versa. On iOS and OS X this signal is unreliable
+    if the controller is in the \l PeripheralRole.
 */
 
 /*!
