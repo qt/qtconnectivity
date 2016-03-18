@@ -113,7 +113,7 @@ config_bluez:qtHaveModule(dbus) {
             qlowenergycontroller_p.cpp
     }
 
-} else:android:!android-no-sdk {
+} else:android {
     include(android/android.pri)
     DEFINES += QT_ANDROID_BLUETOOTH
     QT_FOR_PRIVATE += core-private androidextras

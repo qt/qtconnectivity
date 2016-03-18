@@ -13,7 +13,7 @@ OTHER_FILES += \
     corkboards.qml \
     Mode.qml
 
-android:!android-no-sdk {
+android {
 OTHER_FILES += \
     android/AndroidManifest.xml
 
