@@ -231,7 +231,7 @@ public:
     void setRssi(qint16 signal);
 
     void setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness);
-    QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = 0) const;
+    QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = Q_NULLPTR) const;
     DataCompleteness serviceUuidsCompleteness() const;
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);

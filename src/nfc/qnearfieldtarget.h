@@ -116,7 +116,7 @@ public:
         QSharedDataPointer<RequestIdPrivate> d;
     };
 
-    explicit QNearFieldTarget(QObject *parent = 0);
+    explicit QNearFieldTarget(QObject *parent = Q_NULLPTR);
     virtual ~QNearFieldTarget();
 
     virtual QByteArray uid() const = 0;

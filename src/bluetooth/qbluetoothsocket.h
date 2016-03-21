@@ -88,8 +88,8 @@ public:
     };
     Q_ENUM(SocketError)
 
-    explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = 0);   // create socket of type socketType
-    QBluetoothSocket(QObject *parent = 0);  // create a blank socket
+    explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = Q_NULLPTR);   // create socket of type socketType
+    explicit QBluetoothSocket(QObject *parent = Q_NULLPTR);  // create a blank socket
     virtual ~QBluetoothSocket();
 
     void abort();
