@@ -575,6 +575,20 @@ void TestQLowEnergyControllerGattServer::serviceData()
                                      << charData << QLowEnergyCharacteristicData());
     QCOMPARE(secondaryData.characteristics(), QList<QLowEnergyCharacteristicData>() << charData);
 
+    QLowEnergyServiceData backupData;
+    backupData.setUuid(QBluetoothUuid::SerialPort);
+    QCOMPARE(backupData.uuid(), QBluetoothUuid(QBluetoothUuid::SerialPort));
+    QVERIFY(backupData.isValid());
+    QVERIFY(backupData != QLowEnergyServiceData());
+
+    backupData.setType(QLowEnergyServiceData::ServiceTypeSecondary);
+    QCOMPARE(backupData.type(), QLowEnergyServiceData::ServiceTypeSecondary);
+
+    backupData.setCharacteristics(QList<QLowEnergyCharacteristicData>()
+                                     << charData << QLowEnergyCharacteristicData());
+    QCOMPARE(backupData.characteristics(), QList<QLowEnergyCharacteristicData>() << charData);
+    QVERIFY(backupData == secondaryData);
+
 #ifdef Q_OS_DARWIN
     QSKIP("GATT server functionality not implemented for Apple platforms");
 #endif

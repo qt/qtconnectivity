@@ -201,7 +201,7 @@ bool QLowEnergyServiceData::isValid() const
    Returns \c true if \a sd1 and \a sd2 are equal with respect to their public state,
    otherwise returns \c false.
  */
-bool operator==(const QLowEnergyServiceData sd1, const QLowEnergyServiceData &sd2)
+bool operator==(const QLowEnergyServiceData &sd1, const QLowEnergyServiceData &sd2)
 {
     return sd1.d == sd2.d || (sd1.type() == sd2.type() && sd1.uuid() == sd2.uuid()
                               && sd1.includedServices() == sd2.includedServices()

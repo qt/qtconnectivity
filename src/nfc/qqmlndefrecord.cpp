@@ -42,6 +42,8 @@
 #include <QtCore/QMap>
 #include <QtCore/QRegExp>
 
+#include <QtCore/qglobalstatic.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -173,7 +175,8 @@ QT_BEGIN_NAMESPACE
     This macro should be expanded in the implementation file for \a className.
 */
 
-static QMap<QString, const QMetaObject *> registeredNdefRecordTypes;
+typedef QMap<QString, const QMetaObject *> NDefRecordTypesMap;
+Q_GLOBAL_STATIC(NDefRecordTypesMap, registeredNdefRecordTypes)
 
 class QQmlNdefRecordPrivate
 {
@@ -202,7 +205,7 @@ void qRegisterNdefRecordTypeHelper(const QMetaObject *metaObject,
                                    QNdefRecord::TypeNameFormat typeNameFormat,
                                    const QByteArray &type)
 {
-    registeredNdefRecordTypes.insert(urnForRecordType(typeNameFormat, type), metaObject);
+    registeredNdefRecordTypes()->insert(urnForRecordType(typeNameFormat, type), metaObject);
 }
 
 /*!
@@ -212,7 +215,7 @@ QQmlNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record
 {
     const QString urn = urnForRecordType(record.typeNameFormat(), record.type());
 
-    QMapIterator<QString, const QMetaObject *> i(registeredNdefRecordTypes);
+    QMapIterator<QString, const QMetaObject *> i(*registeredNdefRecordTypes());
     while (i.hasNext()) {
         i.next();
 
