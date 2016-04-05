@@ -78,27 +78,6 @@ linux:!android:qtHaveModule(dbus) {
 
     include(neard/neard.pri)
 
-} else:false { # Build for simulator backend is entirely broken
-    NFC_BACKEND_AVAILABLE = yes
-
-    QT_PRIVATE += gui
-
-    PRIVATE_HEADERS += \
-        qnearfieldmanagervirtualbase_p.h \
-        qnearfieldmanager_simulator_p.h \
-        qllcpsocket_simulator_p.h \
-        qllcpserver_simulator_p.h \
-        qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h
-
-
-    SOURCES += \
-        qnearfieldmanagervirtualbase.cpp \
-        qnearfieldmanager_simulator.cpp \
-        qllcpsocket_simulator_p.cpp \
-        qllcpserver_simulator_p.cpp \
-        qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp
 } else:android:!android-no-sdk {
     NFC_BACKEND_AVAILABLE = yes
     ANDROID_PERMISSIONS = \
