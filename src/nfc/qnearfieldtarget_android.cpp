@@ -304,12 +304,12 @@ void NearFieldTarget::checkIsTargetLost()
     QString techStr = m_techList.first();
     QAndroidJniObject tagTech = getTagTechnology(techStr);
     tagTech.callMethod<void>("connect");
-    if (catchJavaExceptions()) {
+    if (catchJavaExceptions(false)) {
         handleTargetLost();
         return;
     }
     tagTech.callMethod<void>("close");
-    if (catchJavaExceptions())
+    if (catchJavaExceptions(false))
         handleTargetLost();
 }
 
@@ -436,11 +436,12 @@ QByteArray NearFieldTarget::jbyteArrayToQByteArray(const jbyteArray &byteArray) 
     return resultArray;
 }
 
-bool NearFieldTarget::catchJavaExceptions() const
+bool NearFieldTarget::catchJavaExceptions(bool verbose) const
 {
     QAndroidJniEnvironment env;
     if (env->ExceptionCheck()) {
-        env->ExceptionDescribe();
+        if (verbose)
+            env->ExceptionDescribe();
         env->ExceptionClear();
         return true;
     }
