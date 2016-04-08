@@ -878,7 +878,7 @@ QT_END_NAMESPACE
             CBService *const s = [toVisit objectAtIndex:i];
             if (equal_uuids(s.UUID, qtUuid))
                 return s;
-            if ([visitedNodes containsObject:s] && s.includedServices && s.includedServices.count) {
+            if (![visitedNodes containsObject:s] && s.includedServices && s.includedServices.count) {
                 [visitedNodes addObject:s];
                 [toVisitNext addObjectsFromArray:s.includedServices];
             }
