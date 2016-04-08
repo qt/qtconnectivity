@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    Constrcuts a null QBluetoothHostInfo object.
+    Constructs a null QBluetoothHostInfo object.
 */
 QBluetoothHostInfo::QBluetoothHostInfo() :
     d_ptr(new QBluetoothHostInfoPrivate)
@@ -62,7 +62,7 @@ QBluetoothHostInfo::QBluetoothHostInfo() :
 }
 
 /*!
-    Constrcuts a new QBluetoothHostInfo which is a copy of \a other.
+    Constructs a new QBluetoothHostInfo which is a copy of \a other.
 */
 QBluetoothHostInfo::QBluetoothHostInfo(const QBluetoothHostInfo &other) :
     d_ptr(new QBluetoothHostInfoPrivate)
