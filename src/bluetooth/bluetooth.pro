@@ -102,7 +102,8 @@ config_bluez:qtHaveModule(dbus) {
 
     ANDROID_PERMISSIONS = \
         android.permission.BLUETOOTH \
-        android.permission.BLUETOOTH_ADMIN
+        android.permission.BLUETOOTH_ADMIN \
+        android.permission.ACCESS_COARSE_LOCATION # since Android 6.0 (API lvl 23)
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
         jar/QtAndroidBluetooth-bundled.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
     ANDROID_JAR_DEPENDENCIES = \
