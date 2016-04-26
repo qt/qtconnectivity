@@ -602,9 +602,12 @@ QT_WARNING_POP
 }
 
 /*!
-    Constructs a new Bluetooth UUID from the \a uuid string.
-
-    The string must be in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.
+    Creates a QBluetoothUuid object from the string \a uuid,
+    which must be formatted as five hex fields separated by '-',
+    e.g., "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" where 'x' is a hex digit.
+    The curly braces shown here are optional, but it is normal to include them.
+    If the conversion fails, a null UUID is created. See \l QUuid::toString() for an
+    explanation of how the five hex fields map to the public data members in QUuid.
 */
 QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 :   QUuid(uuid)
