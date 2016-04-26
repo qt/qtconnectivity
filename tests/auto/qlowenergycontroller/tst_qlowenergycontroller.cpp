@@ -615,8 +615,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         temp = QString("00002a02-0000-1000-8000-00805f9b34fb");
         QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
         HANDLE_COMPARE(chars[2].handle(), QLowEnergyHandle(0x7));
-        QCOMPARE(chars[2].properties(),
-                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QVERIFY(chars[2].properties() & QLowEnergyCharacteristic::Read);
         QCOMPARE(chars[2].value(), QByteArray::fromHex("00"));
         QVERIFY(chars[2].isValid());
         QCOMPARE(chars[2].descriptors().count(), 0);
