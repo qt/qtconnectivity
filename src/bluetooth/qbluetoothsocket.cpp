@@ -348,7 +348,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         d->connectToService(service.device().address(), service.serverChannel(), openMode);
     } else {
         // try doing service discovery to see if we can find the socket
-        if(service.serviceUuid().isNull()){
+        if (service.serviceUuid().isNull()
+                && !service.serviceClassUuids().contains(QBluetoothUuid::SerialPort)) {
             qCWarning(QT_BT) << "No port, no PSM, and no UUID provided, unable to connect";
             return;
         }
@@ -593,7 +594,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     Q_D(QBluetoothSocket);
 
     setSocketState(QBluetoothSocket::ServiceLookupState);
-    qCDebug(QT_BT) << "Starting discovery";
+    qCDebug(QT_BT) << "Starting Bluetooth Socket discovery";
 
     if(d->discoveryAgent) {
         d->discoveryAgent->stop();
@@ -610,11 +611,12 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
 
     d->openMode = openMode;
 
+    QList<QBluetoothUuid> filterUuids = service.serviceClassUuids();
     if(!service.serviceUuid().isNull())
-        d->discoveryAgent->setUuidFilter(service.serviceUuid());
+        filterUuids.append(service.serviceUuid());
 
-    if(!service.serviceClassUuids().isEmpty())
-        d->discoveryAgent->setUuidFilter(service.serviceClassUuids());
+    if (!filterUuids.isEmpty())
+        d->discoveryAgent->setUuidFilter(filterUuids);
 
     // we have to ID the service somehow
     Q_ASSERT(!d->discoveryAgent->uuidFilter().isEmpty());
