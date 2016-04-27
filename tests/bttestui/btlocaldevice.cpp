@@ -416,7 +416,7 @@ void BtLocalDevice::connectToServiceViaSearch()
                 socket->setPreferredSecurityFlags(securityFlags);
 
             QBluetoothServiceInfo info = foundTestServers.at(0);
-            socket->connectToService(info.device().address(), QBluetoothUuid(QString(TEST_SERVICE_UUID)));
+            socket->connectToService(info);
         } else {
             qWarning() << "Perform search for test service before triggering this function";
         }
