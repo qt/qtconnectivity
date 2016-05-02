@@ -544,7 +544,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEn
 
     HRESULT hr;
     hr = QEventDispatcherWinRT::runOnXamlThread([charHandle, service, this]() {
-        QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+        const QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
         if (!(charData.properties & QLowEnergyCharacteristic::Read))
             qCDebug(QT_BT_WINRT) << "Read flag is not set for characteristic" << charData.uuid;
 
@@ -664,12 +664,89 @@ void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergy
     Q_ASSERT_SUCCEEDED(hr);
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate>,
-        const QLowEnergyHandle,
-        const QByteArray &,
-        QLowEnergyService::WriteMode)
+void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QByteArray &newValue,
+        QLowEnergyService::WriteMode mode)
 {
-    Q_UNIMPLEMENTED();
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << newValue << mode;
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "cannot be found in service" << service->uuid;
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+        return;
+    }
+
+    QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+    const bool writeWithResponse = mode == QLowEnergyService::WriteWithResponse;
+    if (!(charData.properties & (writeWithResponse ? QLowEnergyCharacteristic::Write : QLowEnergyCharacteristic::WriteNoResponse)))
+        qCDebug(QT_BT_WINRT) << "Write flag is not set for characteristic" << charHandle;
+
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([charData, charHandle, this, service, newValue, writeWithResponse]() {
+        ComPtr<IGattDeviceService> deviceService;
+        HRESULT hr = mDevice->GetGattService(service->uuid, &deviceService);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IVectorView<GattCharacteristic *>> characteristics;
+        hr = deviceService->GetCharacteristics(charData.uuid, &characteristics);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IGattCharacteristic> characteristic;
+        hr = characteristics->GetAt(0, &characteristic);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<ABI::Windows::Storage::Streams::IBufferFactory> bufferFactory;
+        hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_Storage_Streams_Buffer).Get(), &bufferFactory);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
+        const int length = newValue.length();
+        hr = bufferFactory->Create(length, &buffer);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = buffer->put_Length(length);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
+        hr = buffer.As(&byteAccess);
+        Q_ASSERT_SUCCEEDED(hr);
+        byte *bytes;
+        hr = byteAccess->Buffer(&bytes);
+        Q_ASSERT_SUCCEEDED(hr);
+        memcpy(bytes, newValue, length);
+        ComPtr<IAsyncOperation<GattCommunicationStatus>> writeOp;
+        GattWriteOption option = writeWithResponse ? GattWriteOption_WriteWithResponse : GattWriteOption_WriteWithoutResponse;
+        hr = characteristic->WriteValueWithOptionAsync(buffer.Get(), option, &writeOp);
+        Q_ASSERT_SUCCEEDED(hr);
+        auto writeCompletedLambda =[charData, charHandle, newValue, service, this]
+                (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
+        {
+            if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "write operation failed";
+                service->setError(QLowEnergyService::CharacteristicWriteError);
+                return S_OK;
+            }
+            GattCommunicationStatus result;
+            HRESULT hr;
+            hr = op->GetResults(&result);
+            if (hr == E_BLUETOOTH_ATT_INVALID_ATTRIBUTE_VALUE_LENGTH) {
+                qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "write operation was tried with invalid value length";
+                service->setError(QLowEnergyService::CharacteristicWriteError);
+                return S_OK;
+            }
+            Q_ASSERT_SUCCEEDED(hr);
+            if (result != GattCommunicationStatus_Success) {
+                qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "write operation failed";
+                service->setError(QLowEnergyService::CharacteristicWriteError);
+                return S_OK;
+            }
+            // only update cache when property is readable. Otherwise it remains
+            // empty.
+            if (charData.properties & QLowEnergyCharacteristic::Read)
+                updateValueOfCharacteristic(charHandle, newValue, false);
+            emit service->characteristicWritten(QLowEnergyCharacteristic(service, charHandle), newValue);
+            return S_OK;
+        };
+        hr = writeOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus>>(writeCompletedLambda).Get());
+        Q_ASSERT_SUCCEEDED(hr);
+        return S_OK;
+    });
+    Q_ASSERT_SUCCEEDED(hr);
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
