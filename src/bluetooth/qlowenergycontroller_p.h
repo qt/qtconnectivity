@@ -90,6 +90,9 @@ namespace ABI {
         namespace Devices {
             namespace Bluetooth {
                 struct IBluetoothLEDevice;
+                namespace GenericAttributeProfile {
+                    struct IGattDeviceService;
+                }
             }
         }
     }
@@ -432,6 +435,9 @@ private slots:
 private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
     EventRegistrationToken mStatusChangedToken;
+
+    void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
+        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
 #endif
 private:
     QLowEnergyController *q_ptr;

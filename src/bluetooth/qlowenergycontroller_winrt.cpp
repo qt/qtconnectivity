@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 typedef ITypedEventHandler<BluetoothLEDevice *, IInspectable *> StatusHandler;
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
+
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
       state(QLowEnergyController::UnconnectedState),
@@ -194,9 +195,87 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
     emit q->disconnected();
 }
 
+void QLowEnergyControllerPrivate::obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
+    ComPtr<IGattDeviceService> service)
+{
+    Q_Q(QLowEnergyController);
+    ComPtr<IGattDeviceService2> service2;
+    HRESULT hr = service.As(&service2);
+    Q_ASSERT_SUCCEEDED(hr);
+    ComPtr<IVectorView<GattDeviceService *>> includedServices;
+    hr = service2->GetAllIncludedServices(&includedServices);
+    Q_ASSERT_SUCCEEDED(hr);
+
+    uint count;
+    includedServices->get_Size(&count);
+    for (uint i = 0; i < count; ++i) {
+        ComPtr<IGattDeviceService> includedService;
+        hr = includedServices->GetAt(i, &includedService);
+        Q_ASSERT_SUCCEEDED(hr);
+        GUID guuid;
+        hr = includedService->get_Uuid(&guuid);
+        Q_ASSERT_SUCCEEDED(hr);
+        const QBluetoothUuid includedUuid(guuid);
+        QSharedPointer<QLowEnergyServicePrivate> includedPointer;
+        if (serviceList.contains(includedUuid)) {
+            includedPointer = serviceList.value(includedUuid);
+        } else {
+            QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
+            priv->uuid = includedUuid;
+            priv->setController(this);
+
+            includedPointer = QSharedPointer<QLowEnergyServicePrivate>(priv);
+            serviceList.insert(includedUuid, includedPointer);
+        }
+        includedPointer->type |= QLowEnergyService::IncludedService;
+        servicePointer->includedServices.append(includedUuid);
+
+        obtainIncludedServices(includedPointer, includedService);
+
+        emit q->serviceDiscovered(includedUuid);
+    }
+}
+
 void QLowEnergyControllerPrivate::discoverServices()
 {
-    Q_UNIMPLEMENTED();
+    Q_Q(QLowEnergyController);
+
+    qCDebug(QT_BT_WINRT) << "Service discovery initiated";
+    ComPtr<IVectorView<GattDeviceService *>> deviceServices;
+    HRESULT hr = mDevice->get_GattServices(&deviceServices);
+    Q_ASSERT_SUCCEEDED(hr);
+    uint serviceCount;
+    hr = deviceServices->get_Size(&serviceCount);
+    Q_ASSERT_SUCCEEDED(hr);
+    for (uint i = 0; i < serviceCount; ++i) {
+        ComPtr<IGattDeviceService> deviceService;
+        hr = deviceServices->GetAt(i, &deviceService);
+        Q_ASSERT_SUCCEEDED(hr);
+        GUID guuid;
+        hr = deviceService->get_Uuid(&guuid);
+        Q_ASSERT_SUCCEEDED(hr);
+        const QBluetoothUuid service(guuid);
+
+        QSharedPointer<QLowEnergyServicePrivate> pointer;
+        if (serviceList.contains(service)) {
+            pointer = serviceList.value(service);
+        } else {
+            QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
+            priv->uuid = service;
+            priv->setController(this);
+
+            pointer = QSharedPointer<QLowEnergyServicePrivate>(priv);
+            serviceList.insert(service, pointer);
+        }
+        pointer->type |= QLowEnergyService::PrimaryService;
+
+        obtainIncludedServices(pointer, deviceService);
+
+        emit q->serviceDiscovered(service);
+    }
+
+    setState(QLowEnergyController::DiscoveredState);
+    emit q->discoveryFinished();
 }
 
 void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &)
