@@ -750,12 +750,96 @@ void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowE
 }
 
 void QLowEnergyControllerPrivate::writeDescriptor(
-        const QSharedPointer<QLowEnergyServicePrivate>,
-        const QLowEnergyHandle,
-        const QLowEnergyHandle,
-        const QByteArray &)
+        const QSharedPointer<QLowEnergyServicePrivate> service,
+        const QLowEnergyHandle charHandle,
+        const QLowEnergyHandle descHandle,
+        const QByteArray &newValue)
 {
-    Q_UNIMPLEMENTED();
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << descHandle << newValue;
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "in characteristic" << charHandle
+                             << "could not be found in service" << service->uuid;
+        service->setError(QLowEnergyService::DescriptorWriteError);
+        return;
+    }
+
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([charHandle, descHandle, this, service, newValue]() {
+        // Get native service
+        ComPtr<IGattDeviceService> deviceService;
+        HRESULT hr = mDevice->GetGattService(service->uuid, &deviceService);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        // Get native characteristic
+        QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+        ComPtr<IVectorView<GattCharacteristic *>> characteristics;
+        hr = deviceService->GetCharacteristics(charData.uuid, &characteristics);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IGattCharacteristic> characteristic;
+        hr = characteristics->GetAt(0, &characteristic);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        // Get native descriptor
+        if (!charData.descriptorList.contains(descHandle))
+            qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "could not be found in Characteristic" << charHandle;
+
+        QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
+        ComPtr<IVectorView<GattDescriptor *>> descriptors;
+        hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IGattDescriptor> descriptor;
+        hr = descriptors->GetAt(0, &descriptor);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<ABI::Windows::Storage::Streams::IBufferFactory> bufferFactory;
+        hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_Storage_Streams_Buffer).Get(), &bufferFactory);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
+        const int length = newValue.length();
+        hr = bufferFactory->Create(length, &buffer);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = buffer->put_Length(length);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
+        hr = buffer.As(&byteAccess);
+        Q_ASSERT_SUCCEEDED(hr);
+        byte *bytes;
+        hr = byteAccess->Buffer(&bytes);
+        Q_ASSERT_SUCCEEDED(hr);
+        memcpy(bytes, newValue, length);
+        ComPtr<IAsyncOperation<GattCommunicationStatus>> writeOp;
+        hr = descriptor->WriteValueAsync(buffer.Get(), &writeOp);
+        Q_ASSERT_SUCCEEDED(hr);
+        auto writeCompletedLambda = [charHandle, descHandle, newValue, service, this]
+                (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
+        {
+            if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                service->setError(QLowEnergyService::DescriptorWriteError);
+                return S_OK;
+            }
+            GattCommunicationStatus result;
+            HRESULT hr;
+            hr = op->GetResults(&result);
+            if (FAILED(hr)) {
+                qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+                service->setError(QLowEnergyService::DescriptorWriteError);
+                return S_OK;
+            }
+            if (result != GattCommunicationStatus_Success) {
+                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                service->setError(QLowEnergyService::DescriptorWriteError);
+                return S_OK;
+            }
+            updateValueOfDescriptor(charHandle, descHandle, newValue, false);
+            emit service->descriptorWritten(QLowEnergyDescriptor(service, charHandle, descHandle), newValue);
+            return S_OK;
+        };
+        hr = writeOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus>>(writeCompletedLambda).Get());
+        Q_ASSERT_SUCCEEDED(hr);
+        return S_OK;
+    });
+    Q_ASSERT_SUCCEEDED(hr);
 }
 
 void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
