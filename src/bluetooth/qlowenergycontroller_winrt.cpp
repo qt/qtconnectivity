@@ -531,10 +531,64 @@ void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnec
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> ,
-                        const QLowEnergyHandle)
+void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle)
 {
-    Q_UNIMPLEMENTED();
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle;
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_WINRT) << charHandle << "could not be found in service" << service->uuid;
+        service->setError(QLowEnergyService::CharacteristicReadError);
+        return;
+    }
+
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([charHandle, service, this]() {
+        QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+        if (!(charData.properties & QLowEnergyCharacteristic::Read))
+            qCDebug(QT_BT_WINRT) << "Read flag is not set for characteristic" << charData.uuid;
+
+        ComPtr<IGattDeviceService> deviceService;
+        HRESULT hr = mDevice->GetGattService(service->uuid, &deviceService);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IVectorView<GattCharacteristic *>> characteristics;
+        hr = deviceService->GetCharacteristics(charData.uuid, &characteristics);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IGattCharacteristic> characteristic;
+        hr = characteristics->GetAt(0, &characteristic);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IAsyncOperation<GattReadResult*>> readOp;
+        hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
+        Q_ASSERT_SUCCEEDED(hr);
+        auto readCompletedLambda = [charData, charHandle, service]
+                (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
+        {
+            if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "read operation failed.";
+                service->setError(QLowEnergyService::CharacteristicReadError);
+                return S_OK;
+            }
+            ComPtr<IGattReadResult> characteristicValue;
+            HRESULT hr;
+            hr = op->GetResults(&characteristicValue);
+            if (FAILED(hr)) {
+                qCDebug(QT_BT_WINRT) << "Could not obtain result for characteristic" << charHandle;
+                service->setError(QLowEnergyService::CharacteristicReadError);
+                return S_OK;
+            }
+
+            const QByteArray value = byteArrayFromGattResult(characteristicValue);
+            QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+            charData.value = value;
+            service->characteristicList.insert(charHandle, charData);
+            emit service->characteristicRead(QLowEnergyCharacteristic(service, charHandle), value);
+            return S_OK;
+        };
+        hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattReadResult *>>(readCompletedLambda).Get());
+        Q_ASSERT_SUCCEEDED(hr);
+        return S_OK;
+    });
+    Q_ASSERT_SUCCEEDED(hr);
 }
 
 void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate>,
