@@ -591,11 +591,77 @@ void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEn
     Q_ASSERT_SUCCEEDED(hr);
 }
 
-void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate>,
-                    const QLowEnergyHandle,
-                    const QLowEnergyHandle)
+void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+                    const QLowEnergyHandle charHandle,
+                    const QLowEnergyHandle descHandle)
 {
-    Q_UNIMPLEMENTED();
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << descHandle;
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle)) {
+        qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "in characteristic" << charHandle
+                             << "cannot be found in service" << service->uuid;
+        service->setError(QLowEnergyService::DescriptorReadError);
+        return;
+    }
+
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([charHandle, descHandle, service, this]() {
+        // Get native service
+        ComPtr<IGattDeviceService> deviceService;
+        HRESULT hr = mDevice->GetGattService(service->uuid, &deviceService);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        // Get native characteristic
+        QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+        ComPtr<IVectorView<GattCharacteristic *>> characteristics;
+        hr = deviceService->GetCharacteristics(charData.uuid, &characteristics);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IGattCharacteristic> characteristic;
+        hr = characteristics->GetAt(0, &characteristic);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        // Get native descriptor
+        if (!charData.descriptorList.contains(descHandle))
+            qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "cannot be found in characteristic" << charHandle;
+        QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
+        ComPtr<IVectorView<GattDescriptor *>> descriptors;
+        hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IGattDescriptor> descriptor;
+        hr = descriptors->GetAt(0, &descriptor);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IAsyncOperation<GattReadResult*>> readOp;
+        hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
+        Q_ASSERT_SUCCEEDED(hr);
+        auto readCompletedLambda = [&charData, charHandle, &descData, descHandle, service]
+                (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
+        {
+            if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "read operation failed";
+                service->setError(QLowEnergyService::DescriptorReadError);
+                return S_OK;
+            }
+            ComPtr<IGattReadResult> descriptorValue;
+            HRESULT hr;
+            hr = op->GetResults(&descriptorValue);
+            if (FAILED(hr)) {
+                qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+                service->setError(QLowEnergyService::DescriptorReadError);
+                return S_OK;
+            }
+            if (descData.uuid == QBluetoothUuid::CharacteristicUserDescription)
+                descData.value = byteArrayFromGattResult(descriptorValue, true);
+            else
+                descData.value = byteArrayFromGattResult(descriptorValue);
+            charData.descriptorList.insert(descHandle, descData);
+            emit service->descriptorRead(QLowEnergyDescriptor(service, charHandle, descHandle),
+                                         descData.value);
+            return S_OK;
+        };
+        hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattReadResult *>>(readCompletedLambda).Get());
+        return S_OK;
+    });
+    Q_ASSERT_SUCCEEDED(hr);
 }
 
 void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate>,
