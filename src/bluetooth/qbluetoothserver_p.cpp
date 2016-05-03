@@ -34,12 +34,14 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
+#include "dummy/dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
     : maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError)
 {
+    printDummyWarning();
     if (sType == QBluetoothServiceInfo::RfcommProtocol)
         socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     else

@@ -182,7 +182,8 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller.cpp
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
-    message("Either no Qt D-Bus found or no BlueZ headers.")
+    message("Either no Qt D-Bus found or no BlueZ headers available.")
+    include(dummy/dummy.pri)
     SOURCES += \
         qbluetoothdevicediscoveryagent_p.cpp \
         qbluetoothlocaldevice_p.cpp \

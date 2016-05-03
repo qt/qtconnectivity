@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -31,32 +31,23 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothservicediscoveryagent.h"
-#include "qbluetoothservicediscoveryagent_p.h"
-#include "dummy/dummy_helper_p.h"
+#include <QtCore/QGlobalStatic>
+#include <QtCore/QLoggingCategory>
+
+#include "dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
-    :  error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive),
-       deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
-       singleDevice(false)
-{
-    printDummyWarning();
-    Q_UNUSED(deviceAdapter);
-}
+Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
-QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
-{
-}
+Q_GLOBAL_STATIC_WITH_ARGS(bool, dummyWarningPrinted, (false))
 
-void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
+void printDummyWarning()
 {
-    Q_UNUSED(address);
-}
-
-void QBluetoothServiceDiscoveryAgentPrivate::stop()
-{
+    if (!*dummyWarningPrinted()) {
+        qCWarning(QT_BT) << "Dummy backend running. Qt Bluetooth module is non-functional.";
+        *dummyWarningPrinted() = true;
+    }
 }
 
 QT_END_NAMESPACE

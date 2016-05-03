@@ -33,11 +33,13 @@
 
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothserviceinfo_p.h"
+#include "dummy/dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 {
+    printDummyWarning();
 }
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()

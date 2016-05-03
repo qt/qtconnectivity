@@ -38,6 +38,8 @@
 #include "qbluetoothtransferreply_bluez_p.h"
 #elif QT_OSX_BLUETOOTH
 #include "qbluetoothtransferreply_osx_p.h"
+#else
+#include "dummy/dummy_helper_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -111,6 +113,10 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
     connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
     return reply;
 #else
+    // Android and iOS have no implementation
+#if !defined(QT_ANDROID_BLUETOOTH) && !defined(QT_IOS_BLUETOOTH)
+    printDummyWarning();
+#endif
     Q_UNUSED(request);
     Q_UNUSED(data);
     return 0;

@@ -35,6 +35,7 @@
 #include "qbluetoothaddress.h"
 
 #include "qbluetoothlocaldevice_p.h"
+#include "dummy/dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -42,6 +43,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(0)
 {
+    printDummyWarning();
     registerQBluetoothLocalDeviceMetaType();
 }
 

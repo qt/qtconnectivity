@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -31,32 +31,26 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothservicediscoveryagent.h"
-#include "qbluetoothservicediscoveryagent_p.h"
-#include "dummy/dummy_helper_p.h"
+#ifndef DUMMY_HELPER_H
+#define DUMMY_HELPER_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "QtCore/qglobal.h"
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
-    :  error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive),
-       deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
-       singleDevice(false)
-{
-    printDummyWarning();
-    Q_UNUSED(deviceAdapter);
-}
-
-QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
-{
-}
-
-void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
-{
-    Q_UNUSED(address);
-}
-
-void QBluetoothServiceDiscoveryAgentPrivate::stop()
-{
-}
+void printDummyWarning();
 
 QT_END_NAMESPACE
+
+#endif // DUMMY_HELPER_H
