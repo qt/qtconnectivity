@@ -1,7 +1,4 @@
-CXX_MODULE = connectivity
-TARGET  = declarative_nfc
 TARGETPATH = QtNfc
-IMPORT_VERSION = 5.6
 
 QT = core qml nfc
 
