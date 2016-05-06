@@ -120,7 +120,8 @@ config_bluez:qtHaveModule(dbus) {
 
     ANDROID_PERMISSIONS = \
         android.permission.BLUETOOTH \
-        android.permission.BLUETOOTH_ADMIN
+        android.permission.BLUETOOTH_ADMIN \
+        android.permission.ACCESS_COARSE_LOCATION # since Android 6.0 (API lvl 23)
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
         jar/QtAndroidBluetooth-bundled.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
     ANDROID_JAR_DEPENDENCIES = \
@@ -199,7 +200,8 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller.cpp
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
-    message("Either no Qt D-Bus found or no BlueZ headers.")
+    message("Either no Qt D-Bus found or no BlueZ headers available.")
+    include(dummy/dummy.pri)
     SOURCES += \
         qbluetoothdevicediscoveryagent_p.cpp \
         qbluetoothlocaldevice_p.cpp \

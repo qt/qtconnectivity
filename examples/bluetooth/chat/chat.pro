@@ -14,3 +14,6 @@ OTHER_FILES += \
     Button.qml
 
 #DEFINES += QMLJSDEBUGGER
+
+target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/chat
+INSTALLS += target

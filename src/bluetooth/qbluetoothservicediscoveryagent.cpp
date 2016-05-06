@@ -217,7 +217,9 @@ QList<QBluetoothServiceInfo> QBluetoothServiceDiscoveryAgent::discoveredServices
 }
 /*!
     Sets the UUID filter to \a uuids.  Only services matching the UUIDs in \a uuids will be
-    returned.
+    returned. The matching applies to the service's
+    \l {QBluetoothServiceInfo::ServiceId}{ServiceId} and \l {QBluetoothServiceInfo::ServiceClassIds} {ServiceClassIds}
+    attributes.
 
     An empty UUID list is equivalent to a list containing only QBluetoothUuid::PublicBrowseGroup.
 
@@ -234,6 +236,9 @@ void QBluetoothServiceDiscoveryAgent::setUuidFilter(const QList<QBluetoothUuid> 
     This is an overloaded member function, provided for convenience.
 
     Sets the UUID filter to a list containing the single element \a uuid.
+    The matching applies to the service's \l {QBluetoothServiceInfo::ServiceId}{ServiceId}
+    and \l {QBluetoothServiceInfo::ServiceClassIds} {ServiceClassIds}
+    attributes.
 
     \sa uuidFilter()
 */
