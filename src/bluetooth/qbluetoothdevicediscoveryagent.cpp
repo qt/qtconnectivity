@@ -70,6 +70,8 @@ QT_BEGIN_NAMESPACE
     of devices. However not every platform can detect both types of devices.
     On platforms with this limitation (for example iOS only suports Low Energy discovery),
     the discovery process will limit the search to the type which is supported.
+
+    \note Since Android 6.0 the ability to detect devices requires ACCESS_COARSE_LOCATION.
 */
 
 /*!

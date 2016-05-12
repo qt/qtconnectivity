@@ -98,8 +98,8 @@ public:
                                   QObject *parent = Q_NULLPTR); // TODO Qt 6 remove ctor
 
     static QLowEnergyController *createCentral(const QBluetoothDeviceInfo &remoteDevice,
-                                               QObject *parent = 0);
-    static QLowEnergyController *createPeripheral(QObject *parent = 0);
+                                               QObject *parent = nullptr);
+    static QLowEnergyController *createPeripheral(QObject *parent = nullptr);
 
     // TODO: Allow to set connection timeout (disconnect when no data has been exchanged for n seconds).
 
@@ -127,7 +127,7 @@ public:
                           const QLowEnergyAdvertisingData &scanResponseData = QLowEnergyAdvertisingData());
     void stopAdvertising();
 
-    QLowEnergyService *addService(const QLowEnergyServiceData &service, QObject *parent = 0);
+    QLowEnergyService *addService(const QLowEnergyServiceData &service, QObject *parent = nullptr);
 
     void requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters);
 
@@ -147,7 +147,7 @@ Q_SIGNALS:
     void connectionUpdated(const QLowEnergyConnectionParameters &parameters);
 
 private:
-    explicit QLowEnergyController(QObject *parent = 0); // For the peripheral role.
+    explicit QLowEnergyController(QObject *parent = nullptr); // For the peripheral role.
 
     Q_DECLARE_PRIVATE(QLowEnergyController)
     QLowEnergyControllerPrivate *d_ptr;

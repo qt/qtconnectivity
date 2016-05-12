@@ -39,6 +39,7 @@
 
 #include "qbluetoothsocket.h"
 #include "qbluetoothsocket_p.h"
+#include "dummy/dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -49,6 +50,7 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       socketError(QBluetoothSocket::NoSocketError),
       secFlags(QBluetooth::NoSecurity)
 {
+    printDummyWarning();
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()

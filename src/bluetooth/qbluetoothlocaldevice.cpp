@@ -175,6 +175,10 @@ bool QBluetoothLocalDevice::isValid() const
     \fn QBluetoothLocalDevice::address() const
 
     Returns the MAC address of this Bluetooth device.
+
+    \note On Android, this function always returns the constant
+    value \c {02:00:00:00:00:00} as local address starting with Android 6.0.
+    The programmatic access to the device's local MAC address was removed.
 */
 
 /*!

@@ -99,7 +99,7 @@ protected:
     void handleTargetLost();
     QAndroidJniObject getTagTechnology(const QString &tech) const;
     QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray) const;
-    bool catchJavaExceptions() const;
+    bool catchJavaExceptions(bool verbose = true) const;
 
 protected:
     QAndroidJniObject m_intent;

@@ -78,7 +78,7 @@ linux:!android:qtHaveModule(dbus) {
 
     include(neard/neard.pri)
 
-} else:android:!android-no-sdk {
+} else:android {
     NFC_BACKEND_AVAILABLE = yes
     ANDROID_PERMISSIONS = \
         android.permission.NFC

@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qlowenergycontroller_p.h"
+#include "dummy/dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -47,6 +48,7 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       error(QLowEnergyController::NoError),
       lastLocalHandle(0)
 {
+    printDummyWarning();
     registerQLowEnergyControllerMetaType();
 }
 

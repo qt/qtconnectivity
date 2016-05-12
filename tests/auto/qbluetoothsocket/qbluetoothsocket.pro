@@ -11,7 +11,7 @@ OTHER_FILES += \
 
 osx {
     DEFINES += QT_OSX_BLUETOOTH
-} else:android:!android-no-sdk {
+} else:android {
     DEFINES += QT_ANDROID_BLUETOOTH
 } config_bluez:qtHaveModule(dbus) {
     DEFINES += QT_BLUEZ_BLUETOOTH

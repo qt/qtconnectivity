@@ -42,6 +42,8 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
 
+#include "dummy/dummy_helper_p.h"
+
 #define QT_DEVICEDISCOVERY_DEBUG
 
 QT_BEGIN_NAMESPACE
@@ -54,6 +56,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
+    printDummyWarning();
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()

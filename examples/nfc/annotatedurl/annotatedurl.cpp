@@ -77,8 +77,8 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
                                        SLOT(handleMessage(QNdefMessage,QNearFieldTarget*)));
     //! [QNearFieldManager register handler]
 
-    if (result != -1)
-        return;
+    if (result < 0)
+        qWarning() << "Platform does not support NDEF message handler registration";
 
     manager->startTargetDetection();
     connect(manager, SIGNAL(targetDetected(QNearFieldTarget*)),
