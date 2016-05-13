@@ -273,7 +273,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
     if (!leScanTimeout) {
         leScanTimeout = new QTimer(this);
         leScanTimeout->setSingleShot(true);
-        leScanTimeout->setInterval(10000);
+        leScanTimeout->setInterval(25000);
         connect(leScanTimeout, &QTimer::timeout,
                 this, &QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan);
     }
