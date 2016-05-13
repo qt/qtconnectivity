@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -375,7 +381,7 @@ bool QBluetoothServiceInfo::isValid() const
 */
 bool QBluetoothServiceInfo::isComplete() const
 {
-    return d_ptr->attributes.keys().contains(ProtocolDescriptorList);
+    return d_ptr->attributes.contains(ProtocolDescriptorList);
 }
 
 /*!
@@ -537,80 +543,89 @@ QBluetoothServiceInfo &QBluetoothServiceInfo::operator=(const QBluetoothServiceI
     return *this;
 }
 
-static void dumpAttributeVariant(const QVariant &var, const QString indent)
+static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString& indent)
 {
     switch (int(var.type())) {
     case QMetaType::Void:
-        qDebug("%sEmpty", indent.toLocal8Bit().constData());
+        dbg << QString::asprintf("%sEmpty\n", indent.toUtf8().constData());
         break;
     case QMetaType::UChar:
-        qDebug("%suchar %u", indent.toLocal8Bit().constData(), var.toUInt());
+        dbg << QString::asprintf("%suchar %u\n", indent.toUtf8().constData(), var.toUInt());
         break;
     case QMetaType::UShort:
-        qDebug("%sushort %u", indent.toLocal8Bit().constData(), var.toUInt());
+        dbg << QString::asprintf("%sushort %u\n", indent.toUtf8().constData(), var.toUInt());
+        break;
     case QMetaType::UInt:
-        qDebug("%suint %u", indent.toLocal8Bit().constData(), var.toUInt());
+        dbg << QString::asprintf("%suint %u\n", indent.toUtf8().constData(), var.toUInt());
         break;
     case QMetaType::Char:
-        qDebug("%schar %d", indent.toLocal8Bit().constData(), var.toInt());
+        dbg << QString::asprintf("%schar %d\n", indent.toUtf8().constData(), var.toInt());
         break;
     case QMetaType::Short:
-        qDebug("%sshort %d", indent.toLocal8Bit().constData(), var.toInt());
+        dbg << QString::asprintf("%sshort %d\n", indent.toUtf8().constData(), var.toInt());
         break;
     case QMetaType::Int:
-        qDebug("%sint %d", indent.toLocal8Bit().constData(), var.toInt());
+        dbg << QString::asprintf("%sint %d\n", indent.toUtf8().constData(), var.toInt());
         break;
     case QMetaType::QString:
-        qDebug("%sstring %s", indent.toLocal8Bit().constData(), var.toString().toLocal8Bit().constData());
+        dbg << QString::asprintf("%sstring %s\n", indent.toUtf8().constData(),
+                                 var.toString().toUtf8().constData());
         break;
     case QMetaType::Bool:
-        qDebug("%sbool %d", indent.toLocal8Bit().constData(), var.toBool());
+        dbg << QString::asprintf("%sbool %d\n", indent.toUtf8().constData(), var.toBool());
         break;
     case QMetaType::QUrl:
-        qDebug("%surl %s", indent.toLocal8Bit().constData(), var.toUrl().toString().toLocal8Bit().constData());
+        dbg << QString::asprintf("%surl %s\n", indent.toUtf8().constData(),
+                                 var.toUrl().toString().toUtf8().constData());
         break;
     case QVariant::UserType:
         if (var.userType() == qMetaTypeId<QBluetoothUuid>()) {
             QBluetoothUuid uuid = var.value<QBluetoothUuid>();
             switch (uuid.minimumSize()) {
             case 0:
-                qDebug("%suuid NULL", indent.toLocal8Bit().constData());
+                dbg << QString::asprintf("%suuid NULL\n", indent.toUtf8().constData());
                 break;
             case 2:
-                qDebug("%suuid %04x", indent.toLocal8Bit().constData(), uuid.toUInt16());
+                dbg << QString::asprintf("%suuid2 %04x\n", indent.toUtf8().constData(),
+                                         uuid.toUInt16());
                 break;
             case 4:
-                qDebug("%suuid %08x", indent.toLocal8Bit().constData(), uuid.toUInt32());
+                dbg << QString::asprintf("%suuid %08x\n", indent.toUtf8().constData(),
+                                         uuid.toUInt32());
                 break;
             case 16:
-                qDebug("%suuid %s", indent.toLocal8Bit().constData(), QByteArray(reinterpret_cast<const char *>(uuid.toUInt128().data), 16).toHex().constData());
+                dbg << QString::asprintf("%suuid %s\n",
+                            indent.toUtf8().constData(),
+                            QByteArray(reinterpret_cast<const char *>(uuid.toUInt128().data), 16).toHex().constData());
                 break;
             default:
-                qDebug("%suuid ???", indent.toLocal8Bit().constData());
-                ;
+                dbg << QString::asprintf("%suuid ???\n", indent.toUtf8().constData());
             }
         } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
-            qDebug("%sSequence", indent.toLocal8Bit().constData());
+            dbg << QString::asprintf("%sSequence\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Sequence *sequence = static_cast<const QBluetoothServiceInfo::Sequence *>(var.data());
             foreach (const QVariant &v, *sequence)
-                dumpAttributeVariant(v, indent + QLatin1Char('\t'));
+                dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
         } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
-            qDebug("%sAlternative", indent.toLocal8Bit().constData());
+            dbg << QString::asprintf("%sAlternative\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Alternative *alternative = static_cast<const QBluetoothServiceInfo::Alternative *>(var.data());
             foreach (const QVariant &v, *alternative)
-                dumpAttributeVariant(v, indent + QLatin1Char('\t'));
+                dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
         }
         break;
     default:
-        qDebug("%sunknown variant type %d", indent.toLocal8Bit().constData(), var.userType());
+        dbg << QString::asprintf("%sunknown variant type %d\n", indent.toUtf8().constData(),
+                                 var.userType());
     }
 }
 
 
 QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
 {
+    QDebugStateSaver saver(dbg);
+    dbg.noquote() << "\n";
     foreach (quint16 id, info.attributes()) {
-        dumpAttributeVariant(info.attribute(id), QString::fromLatin1("(%1)\t").arg(id));
+        dumpAttributeVariant(dbg, info.attribute(id), QString::fromLatin1("(%1)\t").arg(id));
     }
     return dbg;
 }

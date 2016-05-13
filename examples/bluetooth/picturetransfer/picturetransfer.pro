@@ -21,5 +21,8 @@ SOURCES += \
     filetransfer.cpp \
     main.cpp
 
+target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/picturetransfer
+INSTALLS += target
 
-
+EXAMPLE_FILES += \
+    icon.png

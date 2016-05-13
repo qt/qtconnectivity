@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtNfc module of the Qt Toolkit.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,48 +31,23 @@
 **
 ****************************************************************************/
 
-#ifndef QLLCPSERVER_P_H
-#define QLLCPSERVER_P_H
+#include <QtCore/QGlobalStatic>
+#include <QtCore/QLoggingCategory>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <qconnectivityglobal.h>
-
-#include "qllcpserver_p.h"
+#include "dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QLlcpServerPrivate
+Q_DECLARE_LOGGING_CATEGORY(QT_BT)
+
+Q_GLOBAL_STATIC_WITH_ARGS(bool, dummyWarningPrinted, (false))
+
+void printDummyWarning()
 {
-public:
-    QLlcpServerPrivate(QLlcpServer *q);
-
-    bool listen(const QString &serviceUri);
-    bool isListening() const;
-
-    void close();
-
-    QString serviceUri() const;
-    quint8 serverPort() const;
-
-    bool hasPendingConnections() const;
-    QLlcpSocket *nextPendingConnection();
-
-    QLlcpSocket::SocketError serverError() const;
-
-private:
-    QLlcpServer *q_ptr;
-};
+    if (!*dummyWarningPrinted()) {
+        qCWarning(QT_BT) << "Dummy backend running. Qt Bluetooth module is non-functional.";
+        *dummyWarningPrinted() = true;
+    }
+}
 
 QT_END_NAMESPACE
-
-#endif // QLLCPSERVER_P_H

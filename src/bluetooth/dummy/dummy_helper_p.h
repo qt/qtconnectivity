@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtNfc module of the Qt Toolkit.
+** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
@@ -31,8 +31,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLLCPSOCKET_P_H
-#define QLLCPSOCKET_P_H
+#ifndef DUMMY_HELPER_H
+#define DUMMY_HELPER_H
 
 //
 //  W A R N I N G
@@ -45,54 +45,12 @@
 // We mean it.
 //
 
-#include <qconnectivityglobal.h>
-
-#include "qllcpsocket_p.h"
+#include "QtCore/qglobal.h"
 
 QT_BEGIN_NAMESPACE
 
-class QLlcpSocketPrivate
-{
-    Q_DECLARE_PUBLIC(QLlcpSocket)
-
-public:
-    QLlcpSocketPrivate(QLlcpSocket *q);
-
-    void connectToService(QNearFieldTarget *target, const QString &serviceUri);
-    void disconnectFromService();
-
-    bool bind(quint8 port);
-
-    bool hasPendingDatagrams() const;
-    qint64 pendingDatagramSize() const;
-
-    qint64 writeDatagram(const char *data, qint64 size);
-    qint64 writeDatagram(const QByteArray &datagram);
-
-    qint64 readDatagram(char *data, qint64 maxSize,
-                        QNearFieldTarget **target = 0, quint8 *port = 0);
-    qint64 writeDatagram(const char *data, qint64 size,
-                         QNearFieldTarget *target, quint8 port);
-    qint64 writeDatagram(const QByteArray &datagram, QNearFieldTarget *target, quint8 port);
-
-    QLlcpSocket::SocketError error() const;
-    QLlcpSocket::SocketState state() const;
-
-    qint64 readData(char *data, qint64 maxlen);
-    qint64 writeData(const char *data, qint64 len);
-
-    qint64 bytesAvailable() const;
-    bool canReadLine() const;
-
-    bool waitForReadyRead(int msecs);
-    bool waitForBytesWritten(int msecs);
-    bool waitForConnected(int msecs);
-    bool waitForDisconnected(int msecs);
-
-private:
-    QLlcpSocket *q_ptr;
-};
+void printDummyWarning();
 
 QT_END_NAMESPACE
 
-#endif // QLLCPSOCKET_P_H
+#endif // DUMMY_HELPER_H

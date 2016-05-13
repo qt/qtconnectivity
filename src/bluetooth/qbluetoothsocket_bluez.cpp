@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -267,9 +273,9 @@ void QBluetoothSocketPrivate::_q_readNotify()
         connectWriteNotifier->setEnabled(false);
         errorString = qt_error_string(errsv);
         qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << socket << "error:" << readFromDevice << errorString;
-        if(errsv == EHOSTDOWN)
+        if (errsv == EHOSTDOWN)
             q->setSocketError(QBluetoothSocket::HostNotFoundError);
-        else
+        else if (errsv != ECONNRESET) // The other side closing the connection is not an error.
             q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
         q->disconnectFromService();
@@ -309,20 +315,14 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-        if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-            quint64 bdaddr;
-            convertAddress(addr.rc_bdaddr.b, bdaddr);
-            return QBluetoothAddress(bdaddr);
-        }
+        if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
+            return QBluetoothAddress(convertAddress(addr.rc_bdaddr.b));
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
-        if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-            quint64 bdaddr;
-            convertAddress(addr.l2_bdaddr.b, bdaddr);
-            return QBluetoothAddress(bdaddr);
-        }
+        if (::getsockname(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
+            return QBluetoothAddress(convertAddress(addr.l2_bdaddr.b));
     }
 
     return QBluetoothAddress();
@@ -358,7 +358,7 @@ QString QBluetoothSocketPrivate::peerName() const
         if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) < 0)
             return QString();
 
-        convertAddress(addr.rc_bdaddr.b, bdaddr);
+        convertAddress(addr.rc_bdaddr.b, &bdaddr);
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
@@ -366,7 +366,7 @@ QString QBluetoothSocketPrivate::peerName() const
         if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) < 0)
             return QString();
 
-        convertAddress(addr.l2_bdaddr.b, bdaddr);
+        convertAddress(addr.l2_bdaddr.b, &bdaddr);
     } else {
         qCWarning(QT_BT_BLUEZ) << "peerName() called on socket of unknown type";
         return QString();
@@ -384,13 +384,17 @@ QString QBluetoothSocketPrivate::peerName() const
         if (reply.isError())
             return QString();
 
-        foreach (const QDBusObjectPath &path, reply.value().keys()) {
-            const InterfaceList ifaceList = reply.value().value(path);
-            foreach (const QString &iface, ifaceList.keys()) {
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
+                const QVariantMap &ifaceValues = jt.value();
+
                 if (iface == QStringLiteral("org.bluez.Device1")) {
-                    if (ifaceList.value(iface).value(QStringLiteral("Address")).toString()
-                            == peerAddress)
-                        return ifaceList.value(iface).value(QStringLiteral("Alias")).toString();
+                    if (ifaceValues.value(QStringLiteral("Address")).toString() == peerAddress)
+                        return ifaceValues.value(QStringLiteral("Alias")).toString();
                 }
             }
         }
@@ -407,13 +411,13 @@ QString QBluetoothSocketPrivate::peerName() const
         OrgBluezAdapterInterface adapter(QStringLiteral("org.bluez"), reply.value().path(),
                                          QDBusConnection::systemBus());
 
-        QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.CreateDevice(peerAddress);
+        QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.FindDevice(peerAddress);
         deviceObjectPath.waitForFinished();
         if (deviceObjectPath.isError()) {
-            if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.AlreadyExists"))
+            if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.DoesNotExist"))
                 return QString();
 
-            deviceObjectPath = adapter.FindDevice(peerAddress);
+            deviceObjectPath = adapter.CreateDevice(peerAddress);
             deviceObjectPath.waitForFinished();
             if (deviceObjectPath.isError())
                 return QString();
@@ -437,20 +441,14 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
         sockaddr_rc addr;
         socklen_t addrLength = sizeof(addr);
 
-        if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-            quint64 bdaddr;
-            convertAddress(addr.rc_bdaddr.b, bdaddr);
-            return QBluetoothAddress(bdaddr);
-        }
+        if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
+            return QBluetoothAddress(convertAddress(addr.rc_bdaddr.b));
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         sockaddr_l2 addr;
         socklen_t addrLength = sizeof(addr);
 
-        if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0) {
-            quint64 bdaddr;
-            convertAddress(addr.l2_bdaddr.b, bdaddr);
-            return QBluetoothAddress(bdaddr);
-        }
+        if (::getpeername(socket, reinterpret_cast<sockaddr *>(&addr), &addrLength) == 0)
+            return QBluetoothAddress(convertAddress(addr.l2_bdaddr.b));
     }
 
     return QBluetoothAddress();

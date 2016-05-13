@@ -1,32 +1,38 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Javier S. Pedro <maemo@javispedro.com>
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -220,6 +226,9 @@ QT_BEGIN_NAMESPACE
                                 \l serviceUuid() and \l serviceName().
     \value DiscoveringServices  The service details are being discovered.
     \value ServiceDiscovered    The service details have been discovered.
+    \value LocalService         The service is associated with a controller object in the
+                                \l{QLowEnergyController::PeripheralRole}{peripheral role}. Such
+                                service objects do not change their state.
  */
 
 /*!
@@ -246,6 +255,18 @@ QT_BEGIN_NAMESPACE
                                 write mode. Its adavantage is a quicker
                                 write operation as it may happen in between other
                                 device interactions.
+
+  \value WriteSigned            If a characteristic is written using this mode, the remote peripheral
+                                shall not send a write confirmation. The operation's success
+                                cannot be determined and the payload must not be longer than 8 bytes.
+                                A bond must exist between the two devices and the link must not be
+                                encrypted.
+                                A characteristic must have set the
+                                \l QLowEnergyCharacteristic::WriteSigned property to support this
+                                write mode.
+                                This value was introduced in Qt 5.7 and is currently only
+                                supported on Android and on Linux with BlueZ 5 and a kernel version
+                                3.7 or newer.
  */
 
 /*!
@@ -302,15 +323,20 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QLowEnergyService::characteristicChanged(const QLowEnergyCharacteristic &characteristic, const QByteArray &newValue)
 
-    This signal is emitted when the value of \a characteristic is changed
-    by an event on the peripheral. The \a newValue parameter contains the
-    updated value of the \a characteristic.
-
-    The signal emission implies that change notifications must
+    If the associated controller object is in the \l {QLowEnergyController::CentralRole}{central}
+    role, this signal is emitted when the value of \a characteristic is changed by an event on the
+    peripheral. In that case, the signal emission implies that change notifications must
     have been activated via the characteristic's
     \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
     descriptor prior to the change event on the peripheral. More details on how this might be
     done can be found further \l{notifications}{above}.
+
+    If the controller is in the \l {QLowEnergyController::PeripheralRole}{peripheral} role, that is,
+    the service object was created via \l QLowEnergyController::addService, the signal is emitted
+    when a GATT client has written the value of the characteristic using a write request or command.
+
+    The \a newValue parameter contains the updated value of the \a characteristic.
+
  */
 
 /*!
@@ -329,8 +355,10 @@ QT_BEGIN_NAMESPACE
     \fn void QLowEnergyService::descriptorWritten(const QLowEnergyDescriptor &descriptor, const QByteArray &newValue)
 
     This signal is emitted when the value of \a descriptor
-    is successfully changed to \a newValue. The change must have been caused
-    by calling \l writeDescriptor().
+    is successfully changed to \a newValue. If the associated controller object is in the
+    \l {QLowEnergyController::CentralRole}{central} role, the change must have been caused
+    by calling \l writeDescriptor(). Otherwise, the signal is the result of a write request or
+    command from a GATT client to the respective descriptor.
 
     \sa writeDescriptor()
  */
@@ -390,7 +418,7 @@ QLowEnergyService::~QLowEnergyService()
     \l {QLowEnergyController::createServiceObject()} should be used to obtain
     service instances for each of the UUIDs.
 
-    \sa createServiceObject()
+    \sa {QLowEnergyController::}{createServiceObject()}
  */
 QList<QBluetoothUuid> QLowEnergyService::includedServices() const
 {
@@ -454,9 +482,13 @@ QLowEnergyService::ServiceTypes QLowEnergyService::type() const
 */
 QLowEnergyCharacteristic QLowEnergyService::characteristic(const QBluetoothUuid &uuid) const
 {
-    foreach (const QLowEnergyHandle handle, d_ptr->characteristicList.keys()) {
-        if (d_ptr->characteristicList[handle].uuid == uuid)
-            return QLowEnergyCharacteristic(d_ptr, handle);
+    CharacteristicDataMap::const_iterator charIt = d_ptr->characteristicList.constBegin();
+    for ( ; charIt != d_ptr->characteristicList.constEnd(); ++charIt) {
+        const QLowEnergyHandle charHandle = charIt.key();
+        const QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
+        if (charDetails.uuid == uuid)
+            return QLowEnergyCharacteristic(d_ptr, charHandle);
     }
 
     return QLowEnergyCharacteristic();
@@ -580,13 +612,13 @@ bool QLowEnergyService::contains(const QLowEnergyCharacteristic &characteristic)
     serialised. A queue is employed when issuing multiple requests at the same time.
     The queue does not eliminate duplicated read requests for the same characteristic.
 
-    A characteristic can only be read if the service is in the \l ServiceDiscovered state,
-    belongs to the service. If one of these conditions is
+    A characteristic can only be read if the service is in the \l ServiceDiscovered state
+    and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
     \note Calling this function despite \l QLowEnergyCharacteristic::properties() reporting a non-readable property
     always attempts to read the characteristic's value on the hardware. If the hardware
-    returns with an error the \l CharacteristicWriteError is set.
+    returns with an error the \l CharacteristicReadError is set.
 
     \sa characteristicRead(), writeCharacteristic()
 
@@ -597,9 +629,7 @@ void QLowEnergyService::readCharacteristic(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(characteristic)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -609,7 +639,13 @@ void QLowEnergyService::readCharacteristic(
 }
 
 /*!
-    Writes \a newValue as value for the \a characteristic. If the operation is successful,
+    Writes \a newValue as value for the \a characteristic. The exact semantics depend on
+    the role that the associated controller object is in.
+
+    \b {Central role}
+
+    The call results in a write request or command to a remote peripheral.
+    If the operation is successful,
     the \l characteristicWritten() signal is emitted; otherwise the \l CharacteristicWriteError
     is set.
 
@@ -628,7 +664,7 @@ void QLowEnergyService::readCharacteristic(
     \note Currently, it is not possible to use signed or reliable writes as defined by the
     Bluetooth specification.
 
-    A characteristic can only be written if this service is in the \l ServiceDiscovered state,
+    A characteristic can only be written if this service is in the \l ServiceDiscovered state
     and belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
@@ -637,6 +673,21 @@ void QLowEnergyService::readCharacteristic(
     Similarly, a \l WriteWithoutResponse is sent to the hardware too although the
     characteristic may only support \l WriteWithResponse. If the hardware returns
     with an error the \l CharacteristicWriteError is set.
+
+    \b {Peripheral role}
+
+    The call results in the value of the characteristic getting updated in the local database.
+
+    If a client is currently connected and it has enabled notifications or indications for
+    the characteristic, the respective information will be sent.
+    If a device has enabled notifications or indications for the characteristic and that device
+    is currently not connected, but a bond exists between it and the local device, then
+    the notification or indication will be sent on the next reconnection.
+
+    If there is a constraint on the length of the characteristic value and \a newValue
+    does not adhere to that constraint, the behavior is unspecified.
+
+    \note The \a mode argument is ignored in peripheral mode.
 
     \sa QLowEnergyService::characteristicWritten(), QLowEnergyService::readCharacteristic()
 
@@ -648,28 +699,19 @@ void QLowEnergyService::writeCharacteristic(
     //TODO check behavior when writing to WriteSigned characteristic
     Q_D(QLowEnergyService);
 
-    if (!contains(characteristic)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR
+            || (d->controller->role == QLowEnergyController::CentralRole
+                && state() != ServiceDiscovered)
+            || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
 
     // don't write if properties don't permit it
-    if (mode == WriteWithResponse)
-    {
-        d->controller->writeCharacteristic(characteristic.d_ptr,
+    d->controller->writeCharacteristic(characteristic.d_ptr,
                                        characteristic.attributeHandle(),
                                        newValue,
-                                       true);
-    } else if (mode == WriteWithoutResponse) {
-        d->controller->writeCharacteristic(characteristic.d_ptr,
-                                       characteristic.attributeHandle(),
-                                       newValue,
-                                       false);
-    } else {
-        d->setError(QLowEnergyService::OperationError);
-    }
+                                       mode);
 }
 
 /*!
@@ -716,9 +758,7 @@ void QLowEnergyService::readDescriptor(
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR || state() != ServiceDiscovered || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -729,9 +769,14 @@ void QLowEnergyService::readDescriptor(
 }
 
 /*!
-    Writes \a newValue as value for \a descriptor. If the operation is successful,
-    the \l descriptorWritten() signal is emitted; otherwise the \l DescriptorWriteError
-    is emitted.
+    Writes \a newValue as value for \a descriptor. The exact semantics depend on
+    the role that the associated controller object is in.
+
+    \b {Central role}
+
+    A call to this function results in a write request to the remote device.
+    If the operation is successful, the \l descriptorWritten() signal is emitted; otherwise
+    the \l DescriptorWriteError is emitted.
 
     All descriptor and characteristic requests towards the same remote device are
     serialised. A queue is employed when issuing multiple write requests at the same time.
@@ -743,6 +788,11 @@ void QLowEnergyService::readDescriptor(
     belongs to the service. If one of these conditions is
     not true the \l QLowEnergyService::OperationError is set.
 
+    \b {Peripheral Role}
+
+    The value is written to the local service database. If the contents of \a newValue are not
+    valid for \a descriptor, the behavior is unspecified.
+
     \sa descriptorWritten(), readDescriptor()
  */
 void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
@@ -750,9 +800,10 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 {
     Q_D(QLowEnergyService);
 
-    if (!contains(descriptor)
-            || state() != ServiceDiscovered
-            || !d->controller) {
+    if (d->controller == Q_NULLPTR
+            || (d->controller->role == QLowEnergyController::CentralRole
+            && state() != ServiceDiscovered)
+        || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }

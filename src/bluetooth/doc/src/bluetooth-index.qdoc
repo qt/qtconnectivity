@@ -75,6 +75,32 @@ import statement in your \c .qml file:
     \li \l {Qt Bluetooth C++ Classes}{C++ Classes}
 \endlist
 
+\section2 Logging Categories
+
+The \l QtBluetooth module exports the following
+\l {Configuring Categories}{logging categories}:
+
+\table
+\header
+    \li Logging Category
+    \li Description
+\row
+    \li qt.bluetooth
+    \li Enables logging of cross platform code path in QtBluetooth
+\row
+    \li qt.bluetooth.android
+    \li Enables logging of the Android implementation
+\row
+    \li qt.bluetooth.bluez
+    \li Enables logging of the BLuez/Linux implementation
+\row
+    \li qt.bluetooth.ios
+    \li Enables logging of the iOS implementation
+\row
+    \li qt.bluetooth.osx
+    \li Enables logging of the OS X implementation
+\endtable
+
 \section2 Examples
 \list
     \li QML
@@ -84,6 +110,7 @@ import statement in your \c .qml file:
         \li \l {pingpong}{QML Bluetooth PingPong}
         \li \l {chat}{QML Bluetooth Chat}
         \li \l {heartlistener}{Bluetooth Low Energy Heart Listener}
+        \li \l {heartrate-server}{Bluetooth Low Energy Heart Rate Server}
         \li \l {lowenergyscanner}{Bluetooth Low Energy Scanner}
     \endlist
     \li C++

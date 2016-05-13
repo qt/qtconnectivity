@@ -1,42 +1,51 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Copyright (C) 2013 Javier S. Pedro <maemo@javispedro.com>
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 Javier S. Pedro <maemo@javispedro.com>
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
+#include "osx/osxbtnotifier_p.h"
 #include "osx/osxbtutility_p.h"
 #include "osx/uistrings_p.h"
 
+
 #include "qlowenergyserviceprivate_p.h"
 #include "qlowenergycontroller_osx_p.h"
+#include "qlowenergyservicedata.h"
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qlowenergycontroller.h"
@@ -56,17 +65,17 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-
-class QLowEnergyControllerMetaTypes
+static void registerQLowEnergyControllerMetaType()
 {
-public:
-    QLowEnergyControllerMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
+        qRegisterMetaType<QLowEnergyHandle>("QLowEnergyHandle");
+        qRegisterMetaType<QSharedPointer<QLowEnergyServicePrivate> >();
+        initDone = true;
     }
-} qLowEnergyControllerMetaTypes;
-
+}
 
 typedef QSharedPointer<QLowEnergyServicePrivate> ServicePrivate;
 
@@ -130,74 +139,102 @@ UUIDList qt_servicesUuids(NSArray *services)
 
 }
 
-QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q)
-    : q_ptr(q),
-      isConnecting(false),
-      lastError(QLowEnergyController::NoError),
-      controllerState(QLowEnergyController::UnconnectedState),
-      addressType(QLowEnergyController::PublicAddress)
-{
-    // This is the "wrong" constructor - no valid device UUID to connect later.
-    Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
-    // We still create a manager, to simplify error handling later.
-    centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
-    if (!centralManager) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
-                             << "failed to initialize central manager";
-    }
-}
-
-QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController *q,
+QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyController::Role r,
+                                                               QLowEnergyController *q,
                                                                const QBluetoothDeviceInfo &deviceInfo)
     : q_ptr(q),
       deviceUuid(deviceInfo.deviceUuid()),
       deviceName(deviceInfo.name()),
-      isConnecting(false),
       lastError(QLowEnergyController::NoError),
       controllerState(QLowEnergyController::UnconnectedState),
       addressType(QLowEnergyController::PublicAddress)
 {
+    registerQLowEnergyControllerMetaType();
+
     Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
-    centralManager.reset([[ObjCCentralManager alloc] initWithDelegate:this]);
-    if (!centralManager) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
-                             << "failed to initialize central manager";
+
+    using OSXBluetooth::LECBManagerNotifier;
+    using OSXBluetooth::qt_OS_limit;
+
+    role = r;
+
+
+
+    QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
+    if (role == QLowEnergyController::PeripheralRole) {
+        if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+            peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.data()]);
+            if (!peripheralManager) {
+                qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                                     << "failed to initialize peripheral manager";
+                return;
+            }
+        } else {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                                 << "peripheral role is not supported on your platform";
+            return;
+        }
+    } else {
+        centralManager.reset([[ObjCCentralManager alloc] initWith:notifier.data()]);
+        if (!centralManager) {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                                 << "failed to initialize central manager";
+            return;
+        }
     }
+
+    if (!connectSlots(notifier.data())) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                             << "failed to connect to notifier's signal(s)";
+    }
+    // Ownership was taken by central manager.
+    notifier.take();
 }
 
 QLowEnergyControllerPrivateOSX::~QLowEnergyControllerPrivateOSX()
 {
+    if (const auto leQueue = OSXBluetooth::qt_LE_queue()) {
+        if (role == QLowEnergyController::CentralRole) {
+            const auto manager = centralManager.data();
+            dispatch_sync(leQueue, ^{
+                [manager detach];
+            });
+        } else {
+            if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+                const auto manager = peripheralManager.data();
+                dispatch_sync(leQueue, ^{
+                    [manager detach];
+                });
+            }
+        }
+    }
 }
 
 bool QLowEnergyControllerPrivateOSX::isValid() const
 {
-    // isValid means only "was able to allocate all resources",
-    // nothing more.
-    return centralManager;
+    return centralManager || peripheralManager;
 }
 
-void QLowEnergyControllerPrivateOSX::LEnotSupported()
+void QLowEnergyControllerPrivateOSX::_q_connected()
 {
-    // Report as an error. But this should not be possible
-    // actually: before connecting to any device, we have
-    // to discover it, if it was discovered ... LE _must_
-    // be supported.
-}
-
-void QLowEnergyControllerPrivateOSX::connectSuccess()
-{
-    Q_ASSERT_X(controllerState == QLowEnergyController::ConnectingState,
-               Q_FUNC_INFO, "invalid state");
-
     controllerState = QLowEnergyController::ConnectedState;
 
-    if (!isConnecting) {
-        emit q_ptr->stateChanged(QLowEnergyController::ConnectedState);
-        emit q_ptr->connected();
-    }
+    emit q_ptr->stateChanged(QLowEnergyController::ConnectedState);
+    emit q_ptr->connected();
 }
 
-void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices services)
+void QLowEnergyControllerPrivateOSX::_q_disconnected()
+{
+    controllerState = QLowEnergyController::UnconnectedState;
+
+    if (role == QLowEnergyController::CentralRole)
+        invalidateServices();
+
+    emit q_ptr->stateChanged(QLowEnergyController::UnconnectedState);
+    emit q_ptr->disconnected();
+}
+
+void QLowEnergyControllerPrivateOSX::_q_serviceDiscoveryFinished()
 {
     Q_ASSERT_X(controllerState == QLowEnergyController::DiscoveringState,
                Q_FUNC_INFO, "invalid state");
@@ -206,6 +243,7 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
+    NSArray *const services = centralManager.data()->peripheral.services;
     // Now we have to traverse the discovered services tree.
     // Essentially it's an iterative version of more complicated code from the
     // OSXBTCentralManager's code.
@@ -216,7 +254,7 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
         //   during the pass 2); we also ignore duplicates (== services with the same UUID)
         // - since we do not have a way to distinguish them later
         //   (our API is using uuids when creating QLowEnergyServices).
-        for (CBService *cbService in services.data()) {
+        for (CBService *cbService in services) {
             const ServicePrivate newService(qt_createLEService(this, cbService, false));
             if (!newService.data())
                 continue;
@@ -277,7 +315,8 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
         qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "no services found";
     }
 
-    foreach (const QBluetoothUuid &uuid, discoveredServices.keys()) {
+    for (ServiceMap::const_iterator it = discoveredServices.constBegin(); it != discoveredServices.constEnd(); ++it) {
+        const QBluetoothUuid &uuid = it.key();
         QMetaObject::invokeMethod(q_ptr, "serviceDiscovered", Qt::QueuedConnection,
                                  Q_ARG(QBluetoothUuid, uuid));
     }
@@ -288,11 +327,11 @@ void QLowEnergyControllerPrivateOSX::serviceDiscoveryFinished(LEServices service
     QMetaObject::invokeMethod(q_ptr, "discoveryFinished", Qt::QueuedConnection);
 }
 
-void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService service)
+void QLowEnergyControllerPrivateOSX::_q_serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service)
 {
-    Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
-
     QT_BT_MAC_AUTORELEASEPOOL;
+
+    Q_ASSERT(service);
 
     if (!discoveredServices.contains(service->uuid)) {
         qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "unknown service uuid: "
@@ -309,8 +348,8 @@ void QLowEnergyControllerPrivateOSX::serviceDetailsDiscoveryFinished(LEService s
     qtService->setState(QLowEnergyService::ServiceDiscovered);
 }
 
-void QLowEnergyControllerPrivateOSX::characteristicReadNotification(QLowEnergyHandle charHandle,
-                                                                    const QByteArray &value)
+void QLowEnergyControllerPrivateOSX::_q_characteristicRead(QLowEnergyHandle charHandle,
+                                                           const QByteArray &value)
 {
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle(0)");
 
@@ -330,8 +369,8 @@ void QLowEnergyControllerPrivateOSX::characteristicReadNotification(QLowEnergyHa
     emit service->characteristicRead(characteristic, value);
 }
 
-void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyHandle charHandle,
-                                                                     const QByteArray &value)
+void QLowEnergyControllerPrivateOSX::_q_characteristicWritten(QLowEnergyHandle charHandle,
+                                                              const QByteArray &value)
 {
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle(0)");
 
@@ -354,8 +393,8 @@ void QLowEnergyControllerPrivateOSX::characteristicWriteNotification(QLowEnergyH
     emit service->characteristicWritten(characteristic, value);
 }
 
-void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergyHandle charHandle,
-                                                                     const QByteArray &value)
+void QLowEnergyControllerPrivateOSX::_q_characteristicUpdated(QLowEnergyHandle charHandle,
+                                                              const QByteArray &value)
 {
     // TODO: write/update notifications are quite similar (except asserts/warnings messages
     // and different signals emitted). Merge them into one function?
@@ -383,7 +422,8 @@ void QLowEnergyControllerPrivateOSX::characteristicUpdateNotification(QLowEnergy
     emit service->characteristicChanged(characteristic, value);
 }
 
-void QLowEnergyControllerPrivateOSX::descriptorReadNotification(QLowEnergyHandle dHandle, const QByteArray &value)
+void QLowEnergyControllerPrivateOSX::_q_descriptorRead(QLowEnergyHandle dHandle,
+                                                       const QByteArray &value)
 {
     Q_ASSERT_X(dHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
@@ -398,7 +438,8 @@ void QLowEnergyControllerPrivateOSX::descriptorReadNotification(QLowEnergyHandle
     emit service->descriptorRead(qtDescriptor, value);
 }
 
-void QLowEnergyControllerPrivateOSX::descriptorWriteNotification(QLowEnergyHandle dHandle, const QByteArray &value)
+void QLowEnergyControllerPrivateOSX::_q_descriptorWritten(QLowEnergyHandle dHandle,
+                                                          const QByteArray &value)
 {
     Q_ASSERT_X(dHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
@@ -414,28 +455,17 @@ void QLowEnergyControllerPrivateOSX::descriptorWriteNotification(QLowEnergyHandl
     emit service->descriptorWritten(qtDescriptor, value);
 }
 
-void QLowEnergyControllerPrivateOSX::disconnected()
+void QLowEnergyControllerPrivateOSX::_q_LEnotSupported()
 {
-    controllerState = QLowEnergyController::UnconnectedState;
-
-    if (!isConnecting) {
-        emit q_ptr->stateChanged(QLowEnergyController::UnconnectedState);
-        emit q_ptr->disconnected();
-    }
+    // Report as an error. But this should not be possible
+    // actually: before connecting to any device, we have
+    // to discover it, if it was discovered ... LE _must_
+    // be supported.
 }
 
-void QLowEnergyControllerPrivateOSX::error(QLowEnergyController::Error errorCode)
+void QLowEnergyControllerPrivateOSX::_q_CBManagerError(QLowEnergyController::Error errorCode)
 {
     // Errors reported during connect and general errors.
-
-    // We're still in connectToDevice,
-    // some error was reported synchronously.
-    // Return, the error will be correctly set later
-    // by connectToDevice.
-    if (isConnecting) {
-        lastError = errorCode;
-        return;
-    }
 
     setErrorDescription(errorCode);
     emit q_ptr->error(lastError);
@@ -450,8 +480,8 @@ void QLowEnergyControllerPrivateOSX::error(QLowEnergyController::Error errorCode
       // a service/characteristic - related error.
 }
 
-void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
-                                           QLowEnergyController::Error errorCode)
+void QLowEnergyControllerPrivateOSX::_q_CBManagerError(const QBluetoothUuid &serviceUuid,
+                                                       QLowEnergyController::Error errorCode)
 {
     // Errors reported while discovering service details etc.
     Q_UNUSED(errorCode) // TODO: setError?
@@ -466,8 +496,8 @@ void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
     }
 }
 
-void QLowEnergyControllerPrivateOSX::error(const QBluetoothUuid &serviceUuid,
-                                           QLowEnergyService::ServiceError errorCode)
+void QLowEnergyControllerPrivateOSX::_q_CBManagerError(const QBluetoothUuid &serviceUuid,
+                                                       QLowEnergyService::ServiceError errorCode)
 {
     if (!discoveredServices.contains(serviceUuid)) {
         qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "unknown service uuid: "
@@ -486,33 +516,24 @@ void QLowEnergyControllerPrivateOSX::connectToDevice()
                Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(!deviceUuid.isNull(), Q_FUNC_INFO,
                "invalid private controller (no device uuid)");
-    Q_ASSERT_X(!isConnecting, Q_FUNC_INFO,
-               "recursive connectToDevice call");
+    Q_ASSERT_X(role != QLowEnergyController::PeripheralRole,
+               Q_FUNC_INFO, "invalid role (peripheral)");
+
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        setErrorDescription(QLowEnergyController::UnknownError);
+        return;
+    }
 
     setErrorDescription(QLowEnergyController::NoError);
-
-    isConnecting = true;// Do not emit signals if some callback is executed synchronously.
     controllerState = QLowEnergyController::ConnectingState;
-    const QLowEnergyController::Error status = [centralManager connectToDevice:deviceUuid];
-    isConnecting = false;
 
-    if (status == QLowEnergyController::NoError && lastError == QLowEnergyController::NoError) {
-        emit q_ptr->stateChanged(controllerState);
-        if (controllerState == QLowEnergyController::ConnectedState) {
-            // If a peripheral is connected already from the Core Bluetooth's
-            // POV:
-            emit q_ptr->connected();
-        } else if (controllerState == QLowEnergyController::UnconnectedState) {
-            // Ooops, tried to connect, got peripheral disconnect instead -
-            // this happens with Core Bluetooth.
-            emit q_ptr->disconnected();
-        }
-    } else if (status != QLowEnergyController::NoError) {
-        error(status);
-    } else {
-        // Re-set the error/description and emit.
-        error(lastError);
-    }
+    const QBluetoothUuid deviceUuidCopy(deviceUuid);
+    ObjCCentralManager *manager = centralManager.data();
+    dispatch_async(leQueue, ^{
+        [manager connectToDevice:deviceUuidCopy];
+    });
 }
 
 void QLowEnergyControllerPrivateOSX::discoverServices()
@@ -520,10 +541,23 @@ void QLowEnergyControllerPrivateOSX::discoverServices()
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid private controller");
     Q_ASSERT_X(controllerState != QLowEnergyController::UnconnectedState,
                Q_FUNC_INFO, "not connected to peripheral");
+    Q_ASSERT_X(role != QLowEnergyController::PeripheralRole,
+               Q_FUNC_INFO, "invalid role (peripheral)");
+
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        setErrorDescription(QLowEnergyController::UnknownError);
+        return;
+    }
 
     controllerState = QLowEnergyController::DiscoveringState;
     emit q_ptr->stateChanged(QLowEnergyController::DiscoveringState);
-    [centralManager discoverServices];
+
+    ObjCCentralManager *manager = centralManager.data();
+    dispatch_async(leQueue, ^{
+        [manager discoverServices];
+    });
 }
 
 void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid &serviceUuid)
@@ -531,6 +565,8 @@ void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid private controller");
 
     if (controllerState != QLowEnergyController::DiscoveredState) {
+        // This will also exclude peripheral role, since controller
+        // can never be in discovered state ...
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO
                              << "can not discover service details in the current state, "
                              << "QLowEnergyController::DiscoveredState is expected";
@@ -542,14 +578,20 @@ void QLowEnergyControllerPrivateOSX::discoverServiceDetails(const QBluetoothUuid
         return;
     }
 
-    ServicePrivate qtService(discoveredServices.value(serviceUuid));
-    if ([centralManager discoverServiceDetails:serviceUuid]) {
-        qtService->setState(QLowEnergyService::DiscoveringServices);
-    } else {
-        // The error is returned by CentralManager - no
-        // service with a given UUID found on a peripheral.
-        qtService->setState(QLowEnergyService::InvalidService);
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        return;
     }
+
+    ServicePrivate qtService(discoveredServices.value(serviceUuid));
+    qtService->setState(QLowEnergyService::DiscoveringServices);
+    // Copy objects ...
+    ObjCCentralManager *manager = centralManager.data();
+    const QBluetoothUuid serviceUuidCopy(serviceUuid);
+    dispatch_async(leQueue, ^{
+        [manager discoverServiceDetails:serviceUuidCopy];
+    });
 }
 
 void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergyServicePrivate> service,
@@ -558,6 +600,12 @@ void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergySer
 {
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
+
+    if (role == QLowEnergyController::PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid role (peripheral)";
+        service->setError(QLowEnergyService::DescriptorWriteError);
+        return;
+    }
 
     if (newValue.size() > 2) {
         // Qt's API requires an error on such write.
@@ -582,8 +630,19 @@ void QLowEnergyControllerPrivateOSX::setNotifyValue(QSharedPointer<QLowEnergySer
         return;
     }
 
-    if (![centralManager setNotifyValue:newValue forCharacteristic:charHandle])
-        service->setError(QLowEnergyService::DescriptorWriteError);
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        return;
+    }
+    ObjCCentralManager *manager = centralManager.data();
+    const QBluetoothUuid serviceUuid(service->uuid);
+    const QByteArray newValueCopy(newValue);
+    dispatch_async(leQueue, ^{
+        [manager setNotifyValue:newValueCopy
+                 forCharacteristic:charHandle
+                 onService:serviceUuid];
+    });
 }
 
 void QLowEnergyControllerPrivateOSX::readCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
@@ -591,6 +650,11 @@ void QLowEnergyControllerPrivateOSX::readCharacteristic(QSharedPointer<QLowEnerg
 {
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
+
+    if (role == QLowEnergyController::PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid role (peripheral)";
+        return;
+    }
 
     if (!discoveredServices.contains(service->uuid)) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid:"
@@ -604,20 +668,29 @@ void QLowEnergyControllerPrivateOSX::readCharacteristic(QSharedPointer<QLowEnerg
         return;
     }
 
-    if (![centralManager readCharacteristic:charHandle])
-        service->setError(QLowEnergyService::CharacteristicReadError);
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        return;
+    }
+    // Attention! We have to copy UUID.
+    ObjCCentralManager *manager = centralManager.data();
+    const QBluetoothUuid serviceUuid(service->uuid);
+    dispatch_async(leQueue, ^{
+        [manager readCharacteristic:charHandle onService:serviceUuid];
+    });
 }
 
 void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
                                                          QLowEnergyHandle charHandle, const QByteArray &newValue,
-                                                         bool writeWithResponse)
+                                                         QLowEnergyService::WriteMode mode)
 {
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
 
-    // We can work only with services, found on a given peripheral
-    // (== created by the given LE controller),
-    // otherwise we can not write anything at all.
+    // We can work only with services found on a given peripheral
+    // (== created by the given LE controller).
+
     if (!discoveredServices.contains(service->uuid)) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid: "
                              << service->uuid << " found";
@@ -630,11 +703,34 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
         return;
     }
 
-    const bool result = [centralManager write:newValue
-                                        charHandle:charHandle
-                                        withResponse:writeWithResponse];
-    if (!result)
-        service->setError(QLowEnergyService::CharacteristicWriteError);
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        return;
+    }
+    // Attention! We have to copy objects!
+    const QByteArray newValueCopy(newValue);
+    if (role == QLowEnergyController::CentralRole) {
+        const QBluetoothUuid serviceUuid(service->uuid);
+        const auto manager = centralManager.data();
+        dispatch_async(leQueue, ^{
+            [manager write:newValueCopy
+                charHandle:charHandle
+                 onService:serviceUuid
+                 withResponse:mode == QLowEnergyService::WriteWithResponse];
+        });
+    } else {
+
+        if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
+            const auto manager = peripheralManager.data();
+            dispatch_async(leQueue, ^{
+                [manager write:newValueCopy charHandle:charHandle];
+            });
+        } else {
+            qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                                 << "peripheral role is not supported on your platform";
+        }
+    }
 }
 
 quint16 QLowEnergyControllerPrivateOSX::updateValueOfCharacteristic(QLowEnergyHandle charHandle,
@@ -642,13 +738,17 @@ quint16 QLowEnergyControllerPrivateOSX::updateValueOfCharacteristic(QLowEnergyHa
                                                                     bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (!service.isNull() && service->characteristicList.contains(charHandle)) {
-        if (appendValue)
-            service->characteristicList[charHandle].value += value;
-        else
-            service->characteristicList[charHandle].value = value;
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charData = charIt.value();
+            if (appendValue)
+                charData.value += value;
+            else
+                charData.value = value;
 
-        return service->characteristicList[charHandle].value.size();
+            return charData.value.size();
+        }
     }
 
     return 0;
@@ -660,14 +760,29 @@ void QLowEnergyControllerPrivateOSX::readDescriptor(QSharedPointer<QLowEnergySer
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
 
+    if (role == QLowEnergyController::PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid role (peripheral)";
+        return;
+    }
+
     if (!discoveredServices.contains(service->uuid)) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no service with uuid:"
                              << service->uuid << "found";
         return;
     }
 
-    if (![centralManager readDescriptor:descriptorHandle])
-        service->setError(QLowEnergyService::DescriptorReadError);
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        return;
+    }
+    // Attention! Copy objects!
+    const QBluetoothUuid serviceUuid(service->uuid);
+    ObjCCentralManager * const manager = centralManager.data();
+    dispatch_async(leQueue, ^{
+        [manager readDescriptor:descriptorHandle
+                 onService:serviceUuid];
+    });
 }
 
 void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
@@ -676,6 +791,11 @@ void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergySe
 {
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid controller");
+
+    if (role == QLowEnergyController::PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid role (peripheral)";
+        return;
+    }
 
     // We can work only with services found on a given peripheral
     // (== created by the given LE controller),
@@ -686,26 +806,46 @@ void QLowEnergyControllerPrivateOSX::writeDescriptor(QSharedPointer<QLowEnergySe
         return;
     }
 
-    if (![centralManager write:newValue descHandle:descriptorHandle])
-        service->setError(QLowEnergyService::DescriptorWriteError);
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        return;
+    }
+    // Attention! Copy objects!
+    const QBluetoothUuid serviceUuid(service->uuid);
+    ObjCCentralManager * const manager = centralManager.data();
+    const QByteArray newValueCopy(newValue);
+    dispatch_async(leQueue, ^{
+        [manager write:newValueCopy
+                 descHandle:descriptorHandle
+                 onService:serviceUuid];
+    });
 }
 
 quint16 QLowEnergyControllerPrivateOSX::updateValueOfDescriptor(QLowEnergyHandle charHandle, QLowEnergyHandle descHandle,
                                                                 const QByteArray &value, bool appendValue)
 {
-    ServicePrivate service(serviceForHandle(charHandle));
-    if (service.isNull() || !service->characteristicList.contains(charHandle))
-        return 0;
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charData = charIt.value();
 
-    if (!service->characteristicList[charHandle].descriptorList.contains(descHandle))
-        return 0;
+            DescriptorDataMap::iterator descIt = charData.descriptorList.find(descHandle);
+            if (descIt != charData.descriptorList.end()) {
+                QLowEnergyServicePrivate::DescData &descDetails = descIt.value();
 
-    if (appendValue)
-        service->characteristicList[charHandle].descriptorList[descHandle].value += value;
-    else
-        service->characteristicList[charHandle].descriptorList[descHandle].value = value;
+                if (appendValue)
+                    descDetails.value += value;
+                else
+                    descDetails.value = value;
 
-    return service->characteristicList[charHandle].descriptorList[descHandle].value.size();
+                return descDetails.value.size();
+            }
+        }
+    }
+
+    return 0;
 }
 
 QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivateOSX::serviceForHandle(QLowEnergyHandle handle)
@@ -770,17 +910,23 @@ void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::E
         errorString.clear();
         break;
     case QLowEnergyController::UnknownRemoteDeviceError:
-        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_RDEV_NO_FOUND);
+        errorString = QLowEnergyController::tr("Remote device cannot be found");
         break;
     case QLowEnergyController::InvalidBluetoothAdapterError:
-        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_NO_LOCAL_DEV);
+        errorString = QLowEnergyController::tr("Cannot find local adapter");
         break;
     case QLowEnergyController::NetworkError:
-        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_IO_ERROR);
+        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
+        break;
+    case QLowEnergyController::ConnectionError:
+        errorString = QLowEnergyController::tr("Error occurred trying to connect to remote device.");
+        break;
+    case QLowEnergyController::AdvertisingError:
+        errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
         break;
     case QLowEnergyController::UnknownError:
     default:
-        errorString = QCoreApplication::translate(LE_CONTROLLER, LEC_UNKNOWN_ERROR);
+        errorString = QLowEnergyController::tr("Unknown Error");
         break;
     }
 }
@@ -795,10 +941,49 @@ void QLowEnergyControllerPrivateOSX::invalidateServices()
     discoveredServices.clear();
 }
 
+bool QLowEnergyControllerPrivateOSX::connectSlots(OSXBluetooth::LECBManagerNotifier *notifier)
+{
+    using OSXBluetooth::LECBManagerNotifier;
+
+    Q_ASSERT_X(notifier, Q_FUNC_INFO, "invalid notifier object (null)");
+
+    bool ok = connect(notifier, &LECBManagerNotifier::connected,
+                      this, &QLowEnergyControllerPrivateOSX::_q_connected);
+    ok = ok && connect(notifier, &LECBManagerNotifier::disconnected,
+                       this, &QLowEnergyControllerPrivateOSX::_q_disconnected);
+    ok = ok && connect(notifier, &LECBManagerNotifier::serviceDiscoveryFinished,
+                       this, &QLowEnergyControllerPrivateOSX::_q_serviceDiscoveryFinished);
+    ok = ok && connect(notifier, &LECBManagerNotifier::serviceDetailsDiscoveryFinished,
+                       this, &QLowEnergyControllerPrivateOSX::_q_serviceDetailsDiscoveryFinished);
+    ok = ok && connect(notifier, &LECBManagerNotifier::characteristicRead,
+                       this, &QLowEnergyControllerPrivateOSX::_q_characteristicRead);
+    ok = ok && connect(notifier, &LECBManagerNotifier::characteristicWritten,
+                       this, &QLowEnergyControllerPrivateOSX::_q_characteristicWritten);
+    ok = ok && connect(notifier, &LECBManagerNotifier::characteristicUpdated,
+                       this, &QLowEnergyControllerPrivateOSX::_q_characteristicUpdated);
+    ok = ok && connect(notifier, &LECBManagerNotifier::descriptorRead,
+                       this, &QLowEnergyControllerPrivateOSX::_q_descriptorRead);
+    ok = ok && connect(notifier, &LECBManagerNotifier::descriptorWritten,
+                       this, &QLowEnergyControllerPrivateOSX::_q_descriptorWritten);
+    ok = ok && connect(notifier, &LECBManagerNotifier::LEnotSupported,
+                       this, &QLowEnergyControllerPrivateOSX::_q_LEnotSupported);
+    ok = ok && connect(notifier, SIGNAL(CBManagerError(QLowEnergyController::Error)),
+                       this, SLOT(_q_CBManagerError(QLowEnergyController::Error)));
+    ok = ok && connect(notifier, SIGNAL(CBManagerError(const QBluetoothUuid &, QLowEnergyController::Error)),
+                       this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyController::Error)));
+    ok = ok && connect(notifier, SIGNAL(CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)),
+                       this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)));
+
+    if (!ok)
+        notifier->disconnect();
+
+    return ok;
+}
+
 QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddress,
                                            QObject *parent)
     : QObject(parent),
-      d_ptr(new QLowEnergyControllerPrivateOSX(this))
+      d_ptr(new QLowEnergyControllerPrivateOSX(CentralRole, this))
 {
     OSX_D_PTR;
 
@@ -812,7 +997,7 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
 QLowEnergyController::QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
                                            QObject *parent)
     : QObject(parent),
-      d_ptr(new QLowEnergyControllerPrivateOSX(this, remoteDevice))
+      d_ptr(new QLowEnergyControllerPrivateOSX(CentralRole, this, remoteDevice))
 {
     OSX_D_PTR;
 
@@ -825,7 +1010,7 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
                                            const QBluetoothAddress &localAddress,
                                            QObject *parent)
     : QObject(parent),
-      d_ptr(new QLowEnergyControllerPrivateOSX(this))
+      d_ptr(new QLowEnergyControllerPrivateOSX(CentralRole, this))
 {
     OSX_D_PTR;
 
@@ -836,10 +1021,37 @@ QLowEnergyController::QLowEnergyController(const QBluetoothAddress &remoteAddres
                             "addresses is not supported!";
 }
 
+QLowEnergyController::QLowEnergyController(QObject *parent)
+    : QObject(parent),
+      d_ptr(new QLowEnergyControllerPrivateOSX(PeripheralRole, this))
+{
+    OSX_D_PTR;
+
+    osx_d_ptr->localAddress = QBluetoothLocalDevice().address();
+}
+
+QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDeviceInfo &remoteDevice,
+                                                          QObject *parent)
+{
+    return new QLowEnergyController(remoteDevice, parent);
+}
+
+QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
+{
+    return new QLowEnergyController(parent);
+}
+
 QLowEnergyController::~QLowEnergyController()
 {
     // Deleting a peripheral will also disconnect.
     delete d_ptr;
+}
+
+QLowEnergyController::Role QLowEnergyController::role() const
+{
+    OSX_D_PTR;
+
+    return osx_d_ptr->role;
 }
 
 QBluetoothAddress QLowEnergyController::localAddress() const
@@ -892,11 +1104,16 @@ void QLowEnergyController::connectToDevice()
 
     // A memory allocation problem.
     if (!osx_d_ptr->isValid())
-        return osx_d_ptr->error(UnknownError);
+        return osx_d_ptr->_q_CBManagerError(UnknownError);
+
+    if (role() == PeripheralRole) {
+        qCWarning(QT_BT_OSX) << "can not connect in peripheral role";
+        return osx_d_ptr->_q_CBManagerError(ConnectionError);
+    }
 
     // No QBluetoothDeviceInfo provided during construction.
     if (osx_d_ptr->deviceUuid.isNull())
-        return osx_d_ptr->error(UnknownRemoteDeviceError);
+        return osx_d_ptr->_q_CBManagerError(UnknownRemoteDeviceError);
 
     if (osx_d_ptr->controllerState != UnconnectedState)
         return;
@@ -911,27 +1128,48 @@ void QLowEnergyController::disconnectFromDevice()
 
     OSX_D_PTR;
 
+    if (role() != CentralRole) {
+        qCWarning(QT_BT_OSX) << "can not disconnect while in central role";
+        return osx_d_ptr->_q_CBManagerError(ConnectionError);
+    }
+
     if (osx_d_ptr->isValid()) {
         const ControllerState oldState = osx_d_ptr->controllerState;
 
-        osx_d_ptr->controllerState = ClosingState;
-        emit stateChanged(ClosingState);
-        osx_d_ptr->invalidateServices();
-        [osx_d_ptr->centralManager disconnectFromDevice];
+        if (dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
+            osx_d_ptr->controllerState = ClosingState;
+            emit stateChanged(ClosingState);
+            osx_d_ptr->invalidateServices();
 
-        if (oldState == ConnectingState) {
-            // With a pending connect attempt there is no
-            // guarantee we'll ever have didDisconnect callback,
-            // set the state here and now to make sure we still
-            // can connect.
-            osx_d_ptr->controllerState = UnconnectedState;
-            emit stateChanged(UnconnectedState);
+            QT_MANGLE_NAMESPACE(OSXBTCentralManager) *manager
+                = osx_d_ptr->centralManager.data();
+            dispatch_async(leQueue, ^{
+                [manager disconnectFromDevice];
+            });
+
+            if (oldState == ConnectingState) {
+                // With a pending connect attempt there is no
+                // guarantee we'll ever have didDisconnect callback,
+                // set the state here and now to make sure we still
+                // can connect.
+                osx_d_ptr->controllerState = UnconnectedState;
+                emit stateChanged(UnconnectedState);
+            }
+        } else {
+            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "qt LE queue is nil,"
+                                  << "can not dispatch 'disconnect'";
         }
     }
 }
 
 void QLowEnergyController::discoverServices()
 {
+    if (role() == PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                             << "invalid role (peripheral)";
+        return;
+    }
+
     if (state() != ConnectedState)
         return;
 
@@ -952,10 +1190,16 @@ QLowEnergyService *QLowEnergyController::createServiceObject(const QBluetoothUui
 {
     OSX_D_PTR;
 
-    if (!osx_d_ptr->discoveredServices.contains(serviceUuid))
-        return Q_NULLPTR;
+    QLowEnergyService *service = Q_NULLPTR;
 
-    return new QLowEnergyService(osx_d_ptr->discoveredServices.value(serviceUuid), parent);
+    QLowEnergyControllerPrivateOSX::ServiceMap::const_iterator it = osx_d_ptr->discoveredServices.constFind(serviceUuid);
+    if (it != osx_d_ptr->discoveredServices.constEnd()) {
+        const QSharedPointer<QLowEnergyServicePrivate> &serviceData = it.value();
+
+        service = new QLowEnergyService(serviceData, parent);
+    }
+
+    return service;
 }
 
 QLowEnergyController::Error QLowEnergyController::error() const
@@ -972,4 +1216,115 @@ QString QLowEnergyController::errorString() const
     return osx_d_ptr->errorString;
 }
 
+void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+        const QLowEnergyAdvertisingData &advertisingData,
+        const QLowEnergyAdvertisingData &scanResponseData)
+{
+    OSX_D_PTR;
+
+    if (!osx_d_ptr->isValid())
+        return osx_d_ptr->_q_CBManagerError(UnknownError);
+
+    if (role() != PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid role";
+        return;
+    }
+
+    if (state() != UnconnectedState) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid state" << state();
+        return;
+    }
+
+    auto leQueue(OSXBluetooth::qt_LE_queue());
+    if (!leQueue) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        osx_d_ptr->setErrorDescription(QLowEnergyController::UnknownError);
+        return;
+    }
+
+    [osx_d_ptr->peripheralManager setParameters:params
+                                  data:advertisingData
+                                  scanResponse:scanResponseData];
+
+    osx_d_ptr->controllerState = AdvertisingState;
+    emit stateChanged(AdvertisingState);
+
+    const auto manager = osx_d_ptr->peripheralManager.data();
+    dispatch_async(leQueue, ^{
+        [manager startAdvertising];
+    });
+}
+
+void QLowEnergyController::stopAdvertising()
+{
+    OSX_D_PTR;
+
+    if (!osx_d_ptr->isValid())
+        return osx_d_ptr->_q_CBManagerError(UnknownError);
+
+    if (state() != AdvertisingState) {
+        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "called in state" << state();
+        return;
+    }
+
+    if (const auto leQueue = OSXBluetooth::qt_LE_queue()) {
+        const auto manager = osx_d_ptr->peripheralManager.data();
+        dispatch_sync(leQueue, ^{
+            [manager stopAdvertising];
+        });
+
+        osx_d_ptr->controllerState = UnconnectedState;
+        emit stateChanged(UnconnectedState);
+    } else {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no LE queue found";
+        osx_d_ptr->setErrorDescription(QLowEnergyController::UnknownError);
+        return;
+    }
+}
+
+QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &data,
+                                                    QObject *parent)
+{
+    OSX_D_PTR;
+
+    if (!osx_d_ptr->isValid()) {
+        osx_d_ptr->_q_CBManagerError(UnknownError);
+        return nullptr;
+    }
+
+    if (role() != PeripheralRole) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "not in peripheral role";
+        return nullptr;
+    }
+
+    if (state() != UnconnectedState) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid state";
+        return nullptr;
+    }
+
+    if (!data.isValid()) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid service";
+        return nullptr;
+    }
+
+    for (auto includedService : data.includedServices())
+        includedService->d_ptr->type |= QLowEnergyService::IncludedService;
+
+    if (const auto servicePrivate = [osx_d_ptr->peripheralManager addService:data]) {
+        servicePrivate->setController(osx_d_ptr);
+        osx_d_ptr->discoveredServices.insert(servicePrivate->uuid, servicePrivate);
+        return new QLowEnergyService(servicePrivate, parent);
+    }
+
+    return nullptr;
+}
+
+void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+{
+    Q_UNUSED(params);
+    qCWarning(QT_BT_OSX) << "Connection update not implemented for OS X";
+}
+
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontroller_osx_p.cpp"

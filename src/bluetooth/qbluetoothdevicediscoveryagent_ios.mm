@@ -1,36 +1,43 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
+#include "qbluetoothdevicediscoverytimer_osx_p.h"
 #include "qbluetoothdevicediscoveryagent.h"
 #include "osx/osxbtledeviceinquiry_p.h"
 #include "qbluetoothlocaldevice.h"
@@ -51,27 +58,29 @@ QT_BEGIN_NAMESPACE
 
 using OSXBluetooth::ObjCScopedPointer;
 
-class QBluetoothDeviceDiscoveryAgentPrivate : public OSXBluetooth::LEDeviceInquiryDelegate
+class QBluetoothDeviceDiscoveryAgentPrivate
 {
     friend class QBluetoothDeviceDiscoveryAgent;
+    friend class OSXBluetooth::DDATimerHandler;
+
 public:
     QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &address,
                                           QBluetoothDeviceDiscoveryAgent *q);
     virtual ~QBluetoothDeviceDiscoveryAgentPrivate();
 
-    bool isValid() const;
     bool isActive() const;
 
     void start();
     void stop();
 
 private:
-    // LEDeviceInquiryDelegate:
-    void LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::Error error) Q_DECL_OVERRIDE;
-    void LEnotSupported() Q_DECL_OVERRIDE;
-    void LEdeviceFound(CBPeripheral *peripheral, const QBluetoothUuid &deviceUuid,
-                       NSDictionary *advertisementData, NSNumber *RSSI) Q_DECL_OVERRIDE;
-    void LEdeviceInquiryFinished() Q_DECL_OVERRIDE;
+    typedef QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) LEDeviceInquiryObjC;
+
+    void LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error);
+    void LEnotSupported();
+    void LEdeviceFound(const QBluetoothDeviceInfo &info);
+    void LEinquiryFinished();
+    void checkLETimeout();
 
     void setError(QBluetoothDeviceDiscoveryAgent::Error, const QString &text = QString());
 
@@ -90,7 +99,44 @@ private:
 
     bool startPending;
     bool stopPending;
+
+    QScopedPointer<OSXBluetooth::DDATimerHandler> timer;
 };
+
+namespace OSXBluetooth {
+
+DDATimerHandler::DDATimerHandler(QBluetoothDeviceDiscoveryAgentPrivate *d)
+    : owner(d)
+{
+    Q_ASSERT_X(owner, Q_FUNC_INFO, "invalid pointer");
+
+    timer.setSingleShot(false);
+    connect(&timer, &QTimer::timeout, this, &DDATimerHandler::onTimer);
+}
+
+void DDATimerHandler::start(int msec)
+{
+    Q_ASSERT_X(msec > 0, Q_FUNC_INFO, "invalid time interval");
+    if (timer.isActive()) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "timer is active";
+        return;
+    }
+
+    timer.start(msec);
+}
+
+void DDATimerHandler::stop()
+{
+    timer.stop();
+}
+
+void DDATimerHandler::onTimer()
+{
+    Q_ASSERT(owner);
+    owner->checkLETimeout();
+}
+
+}
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &adapter,
                                                                              QBluetoothDeviceDiscoveryAgent *q) :
@@ -103,29 +149,20 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     Q_UNUSED(adapter);
 
     Q_ASSERT_X(q != Q_NULLPTR, Q_FUNC_INFO, "invalid q_ptr (null)");
-
-    // OSXBTLEDeviceInquiry can be constructed even if LE is not supported -
-    // at this stage it's only a memory allocation of the object itself,
-    // if it fails - we have some memory-related problems.
-    LEDeviceInquiry newInquiryLE([[LEDeviceInquiryObjC alloc] initWithDelegate:this]);
-    if (!newInquiryLE) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to initialize a device inquiry object";
-        return;
-    }
-
-    inquiryLE.reset(newInquiryLE.take());
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
-}
-
-bool QBluetoothDeviceDiscoveryAgentPrivate::isValid() const
-{
-    // isValid() - Qt does not use exceptions, but the ctor
-    // can fail to initialize some important data-members
-    // - this is what meant here by valid/invalid.
-    return inquiryLE;
+    if (inquiryLE) {
+        // We want the LE scan to stop as soon as possible.
+        if (dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
+            // Local variable to be retained ...
+            LEDeviceInquiryObjC *inq = inquiryLE.data();
+            dispatch_async(leQueue, ^{
+                [inq stop];
+            });
+        }
+    }
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -135,50 +172,66 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     if (stopPending)
         return false;
 
-    return [inquiryLE isActive];
+    return inquiryLE;
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start()
 {
-    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "called on invalid device discovery agent");
     Q_ASSERT_X(!isActive(), Q_FUNC_INFO, "called on active device discovery agent");
-    Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
-               Q_FUNC_INFO, "called with an invalid Bluetooth adapter");
 
     if (stopPending) {
         startPending = true;
         return;
     }
 
-    discoveredDevices.clear();
-    setError(QBluetoothDeviceDiscoveryAgent::NoError);
+    using namespace OSXBluetooth;
 
-    if (![inquiryLE start]) {
-        // We can be here only if we have some kind of
-        // resource allocation error.
+    inquiryLE.reset([[LEDeviceInquiryObjC alloc] init]);
+    dispatch_queue_t leQueue(qt_LE_queue());
+    if (!leQueue || !inquiryLE) {
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
                  QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED));
         emit q_ptr->error(lastError);
     }
+
+    discoveredDevices.clear();
+    setError(QBluetoothDeviceDiscoveryAgent::NoError);
+
+    // CoreBluetooth does not have a timeout. We start a timer here
+    // and check if scan really started and if yes if we have a timeout.
+    timer.reset(new OSXBluetooth::DDATimerHandler(this));
+    timer->start(2000);
+
+    // Create a local variable - to have a strong referece in a block.
+    LEDeviceInquiryObjC *inq = inquiryLE.data();
+    dispatch_async(leQueue, ^{
+        [inq start];
+    });
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
-    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "called on invalid device discovery agent");
     Q_ASSERT_X(isActive(), Q_FUNC_INFO, "called whithout active inquiry");
-    Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
-               Q_FUNC_INFO, "called with invalid bluetooth adapter");
 
     startPending = false;
     stopPending = true;
 
+    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    Q_ASSERT(leQueue);
+
     setError(QBluetoothDeviceDiscoveryAgent::NoError);
-    // Can be asynchronous (depending on a status update of CBCentralManager).
-    // The call itself is always 'success'.
-    [inquiryLE stop];
+
+    // Create a local variable - to have a strong referece in a block.
+    LEDeviceInquiryObjC *inq = inquiryLE.data();
+    dispatch_async(leQueue, ^{
+        [inq stop];
+    });
+    // We consider LE scan to be stopped immediately and
+    // do not care about this LEDeviceInquiry object anymore.
+    LEinquiryFinished();
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryError(QBluetoothDeviceDiscoveryAgent::Error error)
+void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
     // At the moment the only error reported by osxbtledeviceinquiry
     // can be 'powered off' error, it happens
@@ -186,6 +239,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryError(QBluetoothDevic
     // a real PoweredOffError).
     Q_ASSERT_X(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError,
                Q_FUNC_INFO, "unexpected error");
+
+    inquiryLE.reset();
+    timer->stop();
 
     startPending = false;
     stopPending = false;
@@ -195,36 +251,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryError(QBluetoothDevic
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported()
 {
+    inquiryLE.reset();
+    timer->stop();
+
     startPending = false;
     stopPending = false;
     setError(QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError);
     emit q_ptr->error(lastError);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceFound(CBPeripheral *peripheral, const QBluetoothUuid &deviceUuid,
-                                                          NSDictionary *advertisementData,
-                                                          NSNumber *RSSI)
+void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceFound(const QBluetoothDeviceInfo &newDeviceInfo)
 {
-    Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
-
-    QT_BT_MAC_AUTORELEASEPOOL;
-
-    QString name;
-    if (peripheral.name && peripheral.name.length) {
-        name = QString::fromNSString(peripheral.name);
-    } else {
-        NSString *const localName = [advertisementData objectForKey:CBAdvertisementDataLocalNameKey];
-        if (localName && [localName length])
-            name = QString::fromNSString(localName);
-    }
-
-    // TODO: fix 'classOfDevice' (0 for now).
-    QBluetoothDeviceInfo newDeviceInfo(deviceUuid, name, 0);
-    if (RSSI)
-        newDeviceInfo.setRssi([RSSI shortValue]);
-    // CoreBluetooth scans only for LE devices.
-    newDeviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-
     // Update, append or discard.
     for (int i = 0, e = discoveredDevices.size(); i < e; ++i) {
         if (discoveredDevices[i].deviceUuid() == newDeviceInfo.deviceUuid()) {
@@ -241,9 +278,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceFound(CBPeripheral *peripher
     emit q_ptr->deviceDiscovered(newDeviceInfo);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryFinished()
+void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryFinished()
 {
-    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid device discovery agent");
+    inquiryLE.reset();
+    timer->stop();
 
     if (stopPending && !startPending) {
         stopPending = false;
@@ -255,6 +293,41 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceInquiryFinished()
     } else {
         emit q_ptr->finished();
     }
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::checkLETimeout()
+{
+    Q_ASSERT_X(inquiryLE, Q_FUNC_INFO, "LE device inquiry is nil");
+
+    using namespace OSXBluetooth;
+
+    const LEInquiryState state([inquiryLE inquiryState]);
+    if (state == InquiryStarting || state == InquiryActive)
+        return; // Wait ...
+
+    if (state == ErrorPoweredOff)
+        return LEinquiryError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
+
+    if (state == ErrorLENotSupported)
+        return LEnotSupported();
+
+    if (state == InquiryFinished) {
+        // Process found devices if any ...
+        const QList<QBluetoothDeviceInfo> leDevices([inquiryLE discoveredDevices]);
+        foreach (const QBluetoothDeviceInfo &info, leDevices) {
+            // We were cancelled on a previous device discovered signal ...
+            if (!inquiryLE)
+                break;
+            LEdeviceFound(info);
+        }
+
+        if (inquiryLE)
+            LEinquiryFinished();
+        return;
+    }
+
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected inquiry state in LE timeout";
+    // Actually, this deserves an assert :)
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAgent::Error error,
@@ -329,36 +402,22 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     if (d_ptr->lastError != InvalidBluetoothAdapterError) {
-        if (d_ptr->isValid()) {
-            if (!isActive())
-                d_ptr->start();
-            else
-                qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "already started";
-        } else {
-            // We previously failed to initialize
-            // private object correctly.
-            d_ptr->setError(InvalidBluetoothAdapterError);
-            emit error(InvalidBluetoothAdapterError);
-        }
+        if (!isActive())
+            d_ptr->start();
+        else
+            qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "already started";
     }
 }
 
 void QBluetoothDeviceDiscoveryAgent::stop()
 {
-    if (d_ptr->isValid()) {
-        if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
-            d_ptr->stop();
-        else
-            qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "failed to stop";
-    }
+    if (isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
+        d_ptr->stop();
 }
 
 bool QBluetoothDeviceDiscoveryAgent::isActive() const
 {
-    if (d_ptr->isValid())
-        return d_ptr->isActive();
-
-    return false;
+    return d_ptr->isActive();
 }
 
 QBluetoothDeviceDiscoveryAgent::Error QBluetoothDeviceDiscoveryAgent::error() const

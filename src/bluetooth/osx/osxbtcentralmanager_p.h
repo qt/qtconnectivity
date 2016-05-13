@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -33,6 +39,17 @@
 
 #ifndef OSXBTCENTRALMANAGER_P_H
 #define OSXBTCENTRALMANAGER_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include "qlowenergycontroller.h"
 #include "qlowenergyservice.h"
@@ -58,41 +75,7 @@ class QLowEnergyServicePrivate;
 
 namespace OSXBluetooth {
 
-class CentralManagerDelegate
-{
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
-    typedef ObjCStrongReference<NSArray> LEServices;
-    typedef QSharedPointer<QLowEnergyServicePrivate> LEService;
-    typedef ObjCStrongReference<CBCharacteristic> LECharacteristic;
-
-    virtual ~CentralManagerDelegate();
-
-    virtual void LEnotSupported() = 0;
-    virtual void connectSuccess() = 0;
-    virtual void serviceDiscoveryFinished(LEServices services) = 0;
-    virtual void serviceDetailsDiscoveryFinished(LEService service) = 0;
-    virtual void characteristicReadNotification(QLowEnergyHandle charHandle,
-                                                const QByteArray &value) = 0;
-    virtual void characteristicWriteNotification(QLowEnergyHandle charHandle,
-                                                 const QByteArray &value) = 0;
-    virtual void characteristicUpdateNotification(QLowEnergyHandle charHandle,
-                                                  const QByteArray &value) = 0;
-    virtual void descriptorReadNotification(QLowEnergyHandle descHandle,
-                                            const QByteArray &value) = 0;
-    virtual void descriptorWriteNotification(QLowEnergyHandle descHandle,
-                                             const QByteArray &value) = 0;
-    virtual void disconnected() = 0;
-
-    // General errors.
-    virtual void error(QLowEnergyController::Error error) = 0;
-    // Service related errors.
-    virtual void error(const QBluetoothUuid &serviceUuid,
-                       QLowEnergyController::Error error) = 0;
-    // Characteristics/descriptors related errors.
-    virtual void error(const QBluetoothUuid &serviceUuid,
-                       QLowEnergyService::ServiceError error) = 0;
-};
+class LECBManagerNotifier;
 
 enum CentralManagerState
 {
@@ -115,8 +98,8 @@ typedef QHash<QLowEnergyHandle, CBService *> ServiceHash;
 typedef QHash<QLowEnergyHandle, CBCharacteristic *> CharHash;
 typedef QHash<QLowEnergyHandle, CBDescriptor *> DescHash;
 
-// Descriptor/charactesirsti read/write requests
-// - we have to serialize 'concurrent' write requests.
+// Descriptor/charactesirstic read/write requests
+// - we have to serialize 'concurrent' requests.
 struct LERequest {
     enum RequestType {
         CharRead,
@@ -154,14 +137,14 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate, CBPeripheralDelegate>
 {
+@private
     CBCentralManager *manager;
     QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerState managerState;
     bool disconnectPending;
 
     QT_PREPEND_NAMESPACE(QBluetoothUuid) deviceUuid;
-    CBPeripheral *peripheral;
 
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *delegate;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *notifier;
 
     // Quite a verbose service discovery machinery
     // (a "graph traversal").
@@ -186,32 +169,43 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(QLowEnergyHandle) currentReadHandle;
 
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ValueHash valuesToWrite;
+@public
+    CBPeripheral *peripheral;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerDelegate *)aDelegate;
+- (id)initWith:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *)notifier;
 - (void)dealloc;
 
-- (QT_PREPEND_NAMESPACE(QLowEnergyController)::Error)
-    connectToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)aDeviceUuid;
+// IMPORTANT: _all_ these methods are to be executed on qt_LE_queue,
+// when passing parameters - C++ objects _must_ be copied (see the controller's code).
+- (void)connectToDevice:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)aDeviceUuid;
 
 - (void)disconnectFromDevice;
 
 - (void)discoverServices;
-- (bool)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+- (void)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
-        forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
+- (void)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)readCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle;
+- (void)readCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+- (void)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         charHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
         withResponse:(bool)writeWithResponse;
 
-- (bool)readDescriptor:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
+- (void)readDescriptor:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
 
-- (bool)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
-        descHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle;
+- (void)write:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
+        descHandle:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))descHandle
+        onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+
+- (void)detach;
+
 @end
 
 #endif

@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -34,11 +40,19 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontroller_p.h"
 
+#include "qlowenergycharacteristicdata.h"
+#include "qlowenergyconnectionparameters.h"
+#include "qlowenergydescriptordata.h"
+#include "qlowenergyservicedata.h"
+
 #include <QtBluetooth/QBluetoothLocalDevice>
+#include <QtCore/QLoggingCategory>
 
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
 /*!
     \class QLowEnergyController
@@ -49,9 +63,7 @@ QT_BEGIN_NAMESPACE
     \since 5.4
 
     QLowEnergyController acts as the entry point for Bluetooth Low Energy
-    development. Each QLowEnergyController instance acts as placeholder
-    towards a remote Low Energy device enabling connection control,
-    service discovery and state tracking.
+    development.
 
     Bluetooth Low Energy defines two types of devices; the peripheral and
     the central. Each role performs a different task. The peripheral device
@@ -62,12 +74,12 @@ QT_BEGIN_NAMESPACE
     the sensor is the peripheral device and the mobile phone acts as the
     central device.
 
-    At the moment Qt only supports the central role and therefore the remote
-    device can only be a device acting as a peripheral. This implies that the local
-    device acts within the boundaries of the central role as per the Bluetooth 4.0
-    specification.
+    A controller in the central role is created via the \l createCentral() factory method.
+    Such an object essentially acts as a placeholder towards a remote Low Energy peripheral
+    device, enabling features such as service discovery and state tracking.
 
-    The first step is to establish a connection via \l connectToDevice().
+    After having created a controller object in the central role, the first step is to establish
+    a connection via \l connectToDevice().
     Once the connection has been established, the controller's \l state()
     changes to \l QLowEnergyController::ConnectedState and the \l connected()
     signal is emitted. It is important to mention that some platforms such as
@@ -93,7 +105,18 @@ QT_BEGIN_NAMESPACE
     connection becomes invalid as soon as the controller disconnects from the
     remote Bluetooth Low Energy device.
 
+    A controller in the peripheral role is created via the \l createPeripheral() factory method.
+    Such an object acts as a peripheral device itself, enabling features such as advertising
+    services and allowing clients to get notified about changes to characteristic values.
+
+    After having created a controller object in the peripheral role, the first step is to
+    populate the set of GATT services offered to client devices via calls to \l addService().
+    Afterwards, one would call \l startAdvertising() to let the device broadcast some data
+    and, depending on the type of advertising being done, also listen for incoming connections
+    from GATT clients.
+
     \sa QLowEnergyService, QLowEnergyCharacteristic, QLowEnergyDescriptor
+    \sa QLowEnergyAdvertisingParameters, QLowEnergyAdvertisingData
 */
 
 /*!
@@ -113,6 +136,8 @@ QT_BEGIN_NAMESPACE
                                         there is no local Bluetooth device.
     \value ConnectionError              The attempt to connect to the remote device failed.
                                         This value was introduced by Qt 5.5.
+    \value AdvertisingError             The attempt to start advertising failed.
+                                        This value was introduced by Qt 5.7.
 */
 
 /*!
@@ -128,6 +153,7 @@ QT_BEGIN_NAMESPACE
     \value DiscoveredState    The controller has discovered all services offered by the
                               remote device.
     \value ClosingState       The controller is about to be disconnected from the remote device.
+    \value AdvertisingState   The controller is currently advertising data.
 */
 
 /*!
@@ -135,11 +161,33 @@ QT_BEGIN_NAMESPACE
 
     Indicates what type of Bluetooth address the remote device uses.
 
-    \value PublicAddress The peripheral uses a public Bluetooth address.
+    \value PublicAddress The remote device uses a public Bluetooth address.
     \value RandomAddress A random address is a Bluetooth Low Energy security feature.
                          Peripherals using such addresses may frequently change their
                          Bluetooth address. This information is needed when trying to
                          connect to a peripheral.
+ */
+
+/*!
+    \enum QLowEnergyController::Role
+
+    Indicates the role of the controller object.
+
+    \value CentralRole
+       The controller acts as a client interacting with a remote device which is in the peripheral
+       role. The controller can initiate connections, discover services and
+       read and write characteristics.
+    \value PeripheralRole
+       The controller can be used to advertise services and handle incoming
+       connections and client requests, acting as a GATT server. A remote device connected to
+       the controller is in the central role.
+
+   \sa QLowEnergyController::createCentral()
+   \sa QLowEnergyController::createPeripheral()
+   \since 5.7
+   \note The peripheral role is currently only supported on Linux. In addition, handling the
+         "Signed Write" ATT command on the server side requires BlueZ 5 and kernel version 3.7
+         or newer.
  */
 
 
@@ -147,14 +195,19 @@ QT_BEGIN_NAMESPACE
     \fn void QLowEnergyController::connected()
 
     This signal is emitted when the controller successfully connects to the remote
-    Low Energy device.
+    Low Energy device (if the controller is in the \l CentralRole) or if a remote Low Energy
+    device connected to the controller (if the controller is in the \l PeripheralRole).
+    On iOS and OS X this signal is not reliable if the controller is in the \l PeripheralRole
+    - the controller only guesses that some central connected to our peripheral as
+    soon as this central tries to write/read a characteristic/descriptor.
 */
 
 /*!
     \fn void QLowEnergyController::disconnected()
 
     This signal is emitted when the controller disconnects from the remote
-    Low Energy device.
+    Low Energy device or vice versa. On iOS and OS X this signal is unreliable
+    if the controller is in the \l PeripheralRole.
 */
 
 /*!
@@ -181,6 +234,8 @@ QT_BEGIN_NAMESPACE
     This signal is emitted each time a new service is discovered. The
     \a newService parameter contains the UUID of the found service.
 
+    This signal can only be emitted if the controller is in the \c CentralRole.
+
     \sa discoverServices(), discoveryFinished()
 */
 
@@ -191,20 +246,34 @@ QT_BEGIN_NAMESPACE
     The signal is not emitted if the discovery process finishes with
     an error.
 
+    This signal can only be emitted if the controller is in the \l CentralRole.
+
     \sa discoverServices(), error()
 */
 
-namespace {
-class QLowEnergyControllerMetaTypes
+/*!
+    \fn void QLowEnergyController::connectionUpdated(const QLowEnergyConnectionParameters &newParameters)
+
+    This signal is emitted when the connection parameters change. This can happen as a result
+    of calling \l requestConnectionUpdate() or due to other reasons, for instance because
+    the other side of the connection requested new parameters. The new values can be retrieved
+    from \a newParameters.
+
+    \sa requestConnectionUpdate()
+*/
+
+
+void registerQLowEnergyControllerMetaType()
 {
-public:
-    QLowEnergyControllerMetaTypes()
-    {
+    static bool initDone = false;
+    if (!initDone) {
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
+        qRegisterMetaType<QLowEnergyConnectionParameters>();
+        initDone = true;
     }
-} qLowEnergyControllerMetaTypes;
 }
+
 
 void QLowEnergyControllerPrivate::setError(
         QLowEnergyController::Error newError)
@@ -222,8 +291,16 @@ void QLowEnergyControllerPrivate::setError(
     case QLowEnergyController::NetworkError:
         errorString = QLowEnergyController::tr("Error occurred during connection I/O");
         break;
-    case QLowEnergyController::UnknownError:
+    case QLowEnergyController::ConnectionError:
+        errorString = QLowEnergyController::tr("Error occurred trying to connect to remote device.");
+        break;
+    case QLowEnergyController::AdvertisingError:
+        errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
+        break;
+    case QLowEnergyController::NoError:
+        return;
     default:
+    case QLowEnergyController::UnknownError:
         errorString = QLowEnergyController::tr("Unknown Error");
         break;
     }
@@ -257,6 +334,10 @@ void QLowEnergyControllerPrivate::setState(
         return;
 
     state = newState;
+    if (state == QLowEnergyController::UnconnectedState
+            && role == QLowEnergyController::PeripheralRole) {
+        remoteDevice.clear();
+    }
     emit q->stateChanged(state);
 }
 
@@ -339,13 +420,18 @@ quint16 QLowEnergyControllerPrivate::updateValueOfCharacteristic(
         QLowEnergyHandle charHandle,const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (!service.isNull() && service->characteristicList.contains(charHandle)) {
-        if (appendValue)
-            service->characteristicList[charHandle].value += value;
-        else
-            service->characteristicList[charHandle].value = value;
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
 
-        return service->characteristicList[charHandle].value.size();
+            if (appendValue)
+                charDetails.value += value;
+            else
+                charDetails.value = value;
+
+            return charDetails.value.size();
+        }
     }
 
     return 0;
@@ -359,18 +445,26 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
         const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
-    if (service.isNull() || !service->characteristicList.contains(charHandle))
-        return 0;
+    if (!service.isNull()) {
+        CharacteristicDataMap::iterator charIt = service->characteristicList.find(charHandle);
+        if (charIt != service->characteristicList.end()) {
+            QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
 
-    if (!service->characteristicList[charHandle].descriptorList.contains(descriptorHandle))
-        return 0;
+            DescriptorDataMap::iterator descIt = charDetails.descriptorList.find(descriptorHandle);
+            if (descIt != charDetails.descriptorList.end()) {
+                QLowEnergyServicePrivate::DescData &descDetails = descIt.value();
 
-    if (appendValue)
-        service->characteristicList[charHandle].descriptorList[descriptorHandle].value += value;
-    else
-        service->characteristicList[charHandle].descriptorList[descriptorHandle].value = value;
+                if (appendValue)
+                    descDetails.value += value;
+                else
+                    descDetails.value = value;
 
-    return service->characteristicList[charHandle].descriptorList[descriptorHandle].value.size();
+                return descDetails.value.size();
+            }
+        }
+    }
+
+    return 0;
 }
 
 /*!
@@ -392,9 +486,11 @@ QLowEnergyController::QLowEnergyController(
 {
     Q_D(QLowEnergyController);
     d->q_ptr = this;
+    d->role = CentralRole;
     d->remoteDevice = remoteDevice;
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
+    d->init();
 }
 
 /*!
@@ -408,6 +504,7 @@ QLowEnergyController::QLowEnergyController(
     the connection management.
 
     \since 5.5
+    \obsolete
 */
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothDeviceInfo &remoteDeviceInfo,
@@ -416,10 +513,12 @@ QLowEnergyController::QLowEnergyController(
 {
     Q_D(QLowEnergyController);
     d->q_ptr = this;
+    d->role = CentralRole;
     d->remoteDevice = remoteDeviceInfo.address();
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
     d->remoteName = remoteDeviceInfo.name();
+    d->init();
 }
 
 /*!
@@ -445,8 +544,48 @@ QLowEnergyController::QLowEnergyController(
 {
     Q_D(QLowEnergyController);
     d->q_ptr = this;
+    d->role = CentralRole;
     d->remoteDevice = remoteDevice;
     d->localAdapter = localDevice;
+    d->init();
+}
+
+/*!
+   Returns a new object of this class that is in the \l CentralRole and has the
+   parent object \a parent.
+   The \a remoteDevice refers to the device that a connection will be established to later.
+ *
+   The controller uses the local default Bluetooth adapter for the connection management.
+   \sa QLowEnergyController::CentralRole
+ */
+QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDeviceInfo &remoteDevice,
+                                                          QObject *parent)
+{
+    return new QLowEnergyController(remoteDevice, parent);
+}
+
+
+/*!
+   Returns a new object of this class that is in the \l PeripheralRole and has the
+   parent object \a parent.
+   Typically, the next step is to call \l startAdvertising() on the returned object.
+
+   The controller uses the local default Bluetooth adapter for the connection management.
+   \sa QLowEnergyController::PeripheralRole
+ */
+QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
+{
+    return new QLowEnergyController(parent);
+}
+
+QLowEnergyController::QLowEnergyController(QObject *parent)
+    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+{
+    Q_D(QLowEnergyController);
+    d->q_ptr = this;
+    d->role = PeripheralRole;
+    d->localAdapter = QBluetoothLocalDevice().address();
+    d->init();
 }
 
 /*!
@@ -475,6 +614,11 @@ QBluetoothAddress QLowEnergyController::localAddress() const
 
 /*!
     Returns the address of the remote Bluetooth Low Energy device.
+
+    For a controller in the \l CentralRole, this value will always be the one passed in when
+    the controller object was created. For a controller in the \l PeripheralRole, this value
+    is the address of the currently connected client device. In particular, this address will
+    be invalid if the controller is not currently in the \l ConnectedState.
  */
 QBluetoothAddress QLowEnergyController::remoteAddress() const
 {
@@ -482,7 +626,8 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
 }
 
 /*!
-    Returns the name of the remote Bluetooth Low Energy device.
+    Returns the name of the remote Bluetooth Low Energy device, if the controller is in the
+    \l CentralRole. Otherwise the result is unspecified.
 
     \since 5.5
  */
@@ -594,6 +739,10 @@ void QLowEnergyController::discoverServices()
 {
     Q_D(QLowEnergyController);
 
+    if (d->role != CentralRole) {
+        qCWarning(QT_BT) << "Cannot discover services in peripheral role";
+        return;
+    }
     if (d->state != QLowEnergyController::ConnectedState)
         return;
 
@@ -602,7 +751,8 @@ void QLowEnergyController::discoverServices()
 }
 
 /*!
-    Returns the list of services offered by the remote device.
+    Returns the list of services offered by the remote device, if the controller is in
+    the \l CentralRole. Otherwise, the result is unspecified.
 
     The list contains all primary and secondary services.
 
@@ -641,13 +791,143 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
         const QBluetoothUuid &serviceUuid, QObject *parent)
 {
     Q_D(QLowEnergyController);
-    if (!d->serviceList.contains(serviceUuid))
-        return 0;
 
-    QLowEnergyService *service = new QLowEnergyService(
-                d->serviceList.value(serviceUuid), parent);
+    QLowEnergyService *service = Q_NULLPTR;
+
+    ServiceDataMap::const_iterator it = d->serviceList.constFind(serviceUuid);
+    if (it != d->serviceList.constEnd()) {
+        const QSharedPointer<QLowEnergyServicePrivate> &serviceData = it.value();
+
+        service = new QLowEnergyService(serviceData, parent);
+    }
 
     return service;
+}
+
+/*!
+   Starts advertising the data given in \a advertisingData and \a scanResponseData, using
+   the parameters set in \a parameters. The controller has to be in the \l PeripheralRole.
+   If \a parameters indicates that the advertisement should be connectable, then this function
+   also starts listening for incoming client connections.
+
+   Providing \a scanResponseData is not required, as it is not applicable for certain
+   configurations of \c parameters.
+
+   If this object is currently not in the \l UnconnectedState, nothing happens.
+   \note Advertising will stop automatically once a client connects to the local device.
+ */
+void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameters &parameters,
+                                            const QLowEnergyAdvertisingData &advertisingData,
+                                            const QLowEnergyAdvertisingData &scanResponseData)
+{
+    Q_D(QLowEnergyController);
+    if (role() != PeripheralRole) {
+        qCWarning(QT_BT) << "Cannot start advertising in central role" << state();
+        return;
+    }
+    if (state() != UnconnectedState) {
+        qCWarning(QT_BT) << "Cannot start advertising in state" << state();
+        return;
+    }
+    d->startAdvertising(parameters, advertisingData, scanResponseData);
+}
+
+/*!
+   Stops advertising, if this object is currently in the advertising state.
+ */
+void QLowEnergyController::stopAdvertising()
+{
+    Q_D(QLowEnergyController);
+    if (state() != AdvertisingState) {
+        qCDebug(QT_BT) << "stopAdvertising called in state" << state();
+        return;
+    }
+    d->stopAdvertising();
+}
+
+/*!
+  Constructs and returns a \l QLowEnergyService object with \a parent from \a service.
+  The controller must be in the \l PeripheralRole and in the \l UnconnectedState. The \a service
+  object must be valid.
+  \sa QLowEnergyServiceData::addIncludedService
+ */
+QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
+                                                    QObject *parent)
+{
+    if (role() != PeripheralRole) {
+        qCWarning(QT_BT) << "Services can only be added in the peripheral role";
+        return nullptr;
+    }
+    if (state() != UnconnectedState) {
+        qCWarning(QT_BT) << "Services can only be added in unconnected state";
+        return nullptr;
+    }
+    if (!service.isValid()) {
+        qCWarning(QT_BT) << "Not adding invalid service";
+        return nullptr;
+    }
+
+    // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).
+    // Since this is not mandatory, we ignore it here and let the caller take responsibility
+    // for it.
+
+    const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
+    servicePrivate->state = QLowEnergyService::LocalService;
+    servicePrivate->setController(d_ptr);
+    servicePrivate->uuid = service.uuid();
+    servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
+            ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
+    foreach (QLowEnergyService * const includedService, service.includedServices()) {
+        servicePrivate->includedServices << includedService->serviceUuid();
+        includedService->d_ptr->type |= QLowEnergyService::IncludedService;
+    }
+
+    // Spec v4.2, Vol 3, Part G, Section 3.
+    const QLowEnergyHandle oldLastHandle = d_ptr->lastLocalHandle;
+    servicePrivate->startHandle = ++d_ptr->lastLocalHandle; // Service declaration.
+    d_ptr->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
+    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+        const QLowEnergyHandle declHandle = ++d_ptr->lastLocalHandle;
+        QLowEnergyServicePrivate::CharData charData;
+        charData.valueHandle = ++d_ptr->lastLocalHandle;
+        charData.uuid = cd.uuid();
+        charData.properties = cd.properties();
+        charData.value = cd.value();
+        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+            QLowEnergyServicePrivate::DescData descData;
+            descData.uuid = dd.uuid();
+            descData.value = dd.value();
+            charData.descriptorList.insert(++d_ptr->lastLocalHandle, descData);
+        }
+        servicePrivate->characteristicList.insert(declHandle, charData);
+    }
+    servicePrivate->endHandle = d_ptr->lastLocalHandle;
+    const bool handleOverflow = d_ptr->lastLocalHandle <= oldLastHandle;
+    if (handleOverflow) {
+        qCWarning(QT_BT) << "Not enough attribute handles left to create this service";
+        d_ptr->lastLocalHandle = oldLastHandle;
+        return nullptr;
+    }
+
+    d_ptr->localServices.insert(servicePrivate->uuid, servicePrivate);
+    d_ptr->addToGenericAttributeList(service, servicePrivate->startHandle);
+    return new QLowEnergyService(servicePrivate, parent);
+}
+
+/*!
+  Requests the controller to update the connection according to \a parameters.
+  If the request is successful, the \l connectionUpdated() signal will be emitted
+  with the actual new parameters.
+  See the  \l QLowEnergyConnectionParameters class for more information on connection parameters.
+  \note Currently, this functionality is only implemented on Linux.
+ */
+void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters)
+{
+    if (state() != ConnectedState) {
+        qCWarning(QT_BT) << "Connection update request only possible in connected state";
+        return;
+    }
+    d_ptr->requestConnectionUpdate(parameters);
 }
 
 /*!
@@ -665,6 +945,14 @@ QLowEnergyController::Error QLowEnergyController::error() const
 QString QLowEnergyController::errorString() const
 {
     return d_ptr->errorString;
+}
+
+/*!
+   Returns the role that this controller object is in.
+ */
+QLowEnergyController::Role QLowEnergyController::role() const
+{
+    return d_ptr->role;
 }
 
 QT_END_NAMESPACE

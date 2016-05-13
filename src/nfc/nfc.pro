@@ -1,8 +1,6 @@
 TARGET = QtNfc
 QT = core
 
-load(qt_module)
-
 QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
@@ -59,7 +57,7 @@ SOURCES += \
 linux:!android:qtHaveModule(dbus) {
     NFC_BACKEND_AVAILABLE = yes
 
-    QT += dbus
+    QT_PRIVATE += dbus
 
     DEFINES += NEARD_NFC
 
@@ -80,28 +78,7 @@ linux:!android:qtHaveModule(dbus) {
 
     include(neard/neard.pri)
 
-} else:simulator {
-    NFC_BACKEND_AVAILABLE = yes
-
-    QT *= gui
-
-    PRIVATE_HEADERS += \
-        qnearfieldmanagervirtualbase_p.h \
-        qnearfieldmanager_simulator_p.h \
-        qllcpsocket_simulator_p.h \
-        qllcpserver_simulator_p.h \
-        qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h
-
-
-    SOURCES += \
-        qnearfieldmanagervirtualbase.cpp \
-        qnearfieldmanager_simulator.cpp \
-        qllcpsocket_simulator_p.cpp \
-        qllcpserver_simulator_p.cpp \
-        qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp
-} else:android:!android-no-sdk {
+} else:android {
     NFC_BACKEND_AVAILABLE = yes
     ANDROID_PERMISSIONS = \
         android.permission.NFC
@@ -110,7 +87,7 @@ linux:!android:qtHaveModule(dbus) {
     ANDROID_JAR_DEPENDENCIES = \
         jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
     DEFINES += ANDROID_NFC
-    QT += core-private gui androidextras
+    QT_PRIVATE += core-private gui androidextras
 
     PRIVATE_HEADERS += \
         qllcpserver_android_p.h \
@@ -153,3 +130,5 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
+
+load(qt_module)

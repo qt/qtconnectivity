@@ -10,5 +10,4 @@ SOURCES += tst_qlowenergycontroller.cpp
 
 osx|ios {
     QT += widgets
-    CONFIG += insignificant_test
 }

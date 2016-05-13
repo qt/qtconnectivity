@@ -51,8 +51,10 @@
 
     A Bluetooth Low Energy device with a Heart Rate
     service is required for this application to work. An alternative might be a programmable
-    Bluetooth Low Energy device which might simulate the service. If no such device can be
-    found, the example uses a demo mode which creates and displays random values.
+    Bluetooth Low Energy device which might simulate the service. You can also use the
+    \l {heartrate-server} {Heart Rate server} example for that purpose.
+    If no such device can be found, the example uses a demo mode which creates and displays
+    random values.
 
     The \l {lowenergyscanner}{Bluetooth Low Energy Scanner} example might be more suitable
     if a heart rate device is not available. The scanner example works with any type of Bluetooth

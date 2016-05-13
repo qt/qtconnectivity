@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -45,9 +51,14 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       error(QLowEnergyController::NoError),
       hub(0)
 {
+    registerQLowEnergyControllerMetaType();
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+{
+}
+
+void QLowEnergyControllerPrivate::init()
 {
 }
 
@@ -167,7 +178,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
-        bool writeWithResponse)
+        QLowEnergyService::WriteMode mode)
 {
     //TODO don't ignore WriteWithResponse, right now we assume responses
     Q_ASSERT(!service.isNull());
@@ -185,10 +196,10 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     if (hub) {
         qCDebug(QT_BT_ANDROID) << "Write characteristic with handle " << charHandle
                  << newValue.toHex() << "(service:" << service->uuid
-                 << ", writeWithResponse:" << writeWithResponse << ")";
+                 << ", writeWithResponse:" << (mode == QLowEnergyService::WriteWithResponse)
+                 << ", signed:" << (mode == QLowEnergyService::WriteSigned) << ")";
         result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[BI)Z",
-                      charHandle, payload,
-                      writeWithResponse ?  QLowEnergyService::WriteWithResponse : QLowEnergyService::WriteWithoutResponse);
+                      charHandle, payload, mode);
     }
 
     if (env->ExceptionOccurred()) {
@@ -262,7 +273,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
     }
 
     if (!result)
-        service->setError(QLowEnergyService::CharacteristicWriteError);
+        service->setError(QLowEnergyService::CharacteristicReadError);
 }
 
 void QLowEnergyControllerPrivate::readDescriptor(
@@ -288,7 +299,7 @@ void QLowEnergyControllerPrivate::readDescriptor(
     }
 
     if (!result)
-        service->setError(QLowEnergyService::DescriptorWriteError);
+        service->setError(QLowEnergyService::DescriptorReadError);
 }
 
 void QLowEnergyControllerPrivate::connectionUpdated(
@@ -325,6 +336,14 @@ void QLowEnergyControllerPrivate::connectionUpdated(
     if (newState == QLowEnergyController::UnconnectedState
             && !(oldState == QLowEnergyController::UnconnectedState
                 || oldState == QLowEnergyController::ConnectingState)) {
+
+        // Invalidate the services if the disconnect came from the remote end.
+        // Qtherwise we disconnected via QLowEnergyController::disconnectDevice() which
+        // triggered invalidation already
+        if (!serviceList.isEmpty()) {
+            Q_ASSERT(oldState != QLowEnergyController::ClosingState);
+            invalidateServices();
+        }
         emit q->disconnected();
     } else if (newState == QLowEnergyController::ConnectedState
                && oldState != QLowEnergyController::ConnectedState ) {
@@ -453,9 +472,11 @@ void QLowEnergyControllerPrivate::descriptorRead(
             serviceList.value(serviceUuid);
 
     bool entryUpdated = false;
-    foreach (QLowEnergyHandle charHandle, service->characteristicList.keys()) {
-        QLowEnergyServicePrivate::CharData &charDetails =
-                service->characteristicList[charHandle];
+
+    CharacteristicDataMap::iterator charIt = service->characteristicList.begin();
+    for ( ; charIt != service->characteristicList.end(); ++charIt) {
+        QLowEnergyServicePrivate::CharData &charDetails = charIt.value();
+
         if (charDetails.uuid != charUuid)
             continue;
 
@@ -576,6 +597,34 @@ void QLowEnergyControllerPrivate::serviceError(
     // ATM we don't really use attributeHandle but later on we might
     // want to associate the error code with a char or desc
     service->setError(errorCode);
+}
+
+void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+        const QLowEnergyAdvertisingData &advertisingData,
+        const QLowEnergyAdvertisingData &scanResponseData)
+{
+    Q_UNUSED(params);
+    Q_UNUSED(advertisingData);
+    Q_UNUSED(scanResponseData);
+    qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
+}
+
+void QLowEnergyControllerPrivate::stopAdvertising()
+{
+    qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
+}
+
+void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+{
+    Q_UNUSED(params);
+    qCWarning(QT_BT_ANDROID) << "Connection update not implemented for Android";
+}
+
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &service,
+                                                            QLowEnergyHandle startHandle)
+{
+    Q_UNUSED(service);
+    Q_UNUSED(startHandle);
 }
 
 QT_END_NAMESPACE

@@ -20,6 +20,7 @@ qtHaveModule(bluetooth) {
         qlowenergycharacteristic \
         qlowenergydescriptor \
         qlowenergycontroller \
+        qlowenergycontroller-gattserver \
         qlowenergyservice
 }
 

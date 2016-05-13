@@ -4,7 +4,7 @@ project                 = QtNfc
 description             = Qt NFC Reference Documentation
 version                 = $QT_VERSION
 
-examplesinstallpath     = nfc
+examplesinstallpath     = qtconnectivity/nfc
 
 qhp.projects            = QtNfc
 
