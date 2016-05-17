@@ -39,6 +39,7 @@
 #include <QtBluetooth/qlowenergyservicedata.h>
 #include <QtCore/qendian.h>
 #include <QtCore/qscopedpointer.h>
+//#include <QtCore/qloggingcategory.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/QtTest>
 
@@ -80,6 +81,7 @@ private:
 
 void TestQLowEnergyControllerGattServer::initTestCase()
 {
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     const QString serverAddress = qgetenv("QT_BT_GATTSERVER_TEST_ADDRESS");
     if (serverAddress.isEmpty())
         return;
@@ -235,7 +237,7 @@ void TestQLowEnergyControllerGattServer::advertisedData()
     // name is seen on the scanning machine.
     // QCOMPARE(m_serverInfo.name(), QString("Qt GATT server"));
 
-    QCOMPARE(m_serverInfo.serviceUuids().count(), 3);
+    QVERIFY(m_serverInfo.serviceUuids().count() >= 3);
     QVERIFY(m_serverInfo.serviceUuids().contains(QBluetoothUuid::GenericAccess));
     QVERIFY(m_serverInfo.serviceUuids().contains(QBluetoothUuid::RunningSpeedAndCadence));
     QVERIFY(m_serverInfo.serviceUuids().contains(QBluetoothUuid(quint16(0x2000))));
@@ -262,10 +264,11 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     spy.reset(new QSignalSpy(m_leController.data(), &QLowEnergyController::discoveryFinished));
     QVERIFY(spy->wait(30000));
     const QList<QBluetoothUuid> serviceUuids = m_leController->services();
-    QCOMPARE(serviceUuids.count(), 3);
+    QCOMPARE(serviceUuids.count(), 4);
     QVERIFY(serviceUuids.contains(QBluetoothUuid::GenericAccess));
     QVERIFY(serviceUuids.contains(QBluetoothUuid::RunningSpeedAndCadence));
     QVERIFY(serviceUuids.contains(QBluetoothUuid(quint16(0x2000))));
+    QVERIFY(serviceUuids.contains(QBluetoothUuid(QString("c47774c7-f237-4523-8968-e4ae75431daf"))));
 
     const QScopedPointer<QLowEnergyService> genericAccessService(
                 m_leController->createServiceObject(QBluetoothUuid::GenericAccess));
@@ -324,6 +327,26 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
                                            featureChar.value().constData()));
     QCOMPARE(value, quint16(1 << 2));
 
+    // 128 bit custom uuid service
+    QBluetoothUuid serviceUuid128(QString("c47774c7-f237-4523-8968-e4ae75431daf"));
+    QBluetoothUuid charUuid128(QString("c0ad61b1-79e7-42f9-ace0-0a9aa0d0a4f8"));
+    QScopedPointer<QLowEnergyService> customService128(
+                m_leController->createServiceObject(serviceUuid128));
+    QVERIFY(!customService128.isNull());
+    customService128->discoverDetails();
+    while (customService128->state() != QLowEnergyService::ServiceDiscovered) {
+        spy.reset(new QSignalSpy(customService128.data(), &QLowEnergyService::stateChanged));
+        QVERIFY(spy->wait(5000));
+    }
+    QCOMPARE(customService128->serviceUuid(), serviceUuid128);
+    QCOMPARE(customService128->includedServices().count(), 0);
+    QCOMPARE(customService128->characteristics().count(), 1);
+    QLowEnergyCharacteristic customChar128
+            = customService128->characteristic(charUuid128);
+    QVERIFY(customChar128.isValid());
+    QCOMPARE(customChar128.descriptors().count(), 0);
+    QCOMPARE(customChar128.value(), QByteArray(15, 'a'));
+
     QScopedPointer<QLowEnergyService> customService(
                 m_leController->createServiceObject(QBluetoothUuid(quint16(0x2000))));
     QVERIFY(!customService.isNull());
@@ -380,11 +403,14 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QVERIFY(spy->wait(3000));
     QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
 
-    const bool isBonded = QBluetoothLocalDevice().pairingStatus(m_serverAddress)
-            != QBluetoothLocalDevice::Unpaired;
-
+    spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
+                             (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
     customService->writeCharacteristic(customChar5, "1", QLowEnergyService::WriteSigned);
-    if (isBonded) {
+
+    // error might happen immediately or once event loop comes back
+    bool wasError = ((spy->count() > 0) || spy->wait(3000)); //
+
+    if (!wasError) {
         // Signed write is done twice to test the sign counter stuff.
         // Note: We assume here that the link is not encrypted, as this information is not exported.
         customService->readCharacteristic(customChar5);
@@ -397,9 +423,6 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
         QVERIFY(spy->wait(3000));
         QCOMPARE(customChar5.value(), QByteArray("2"));
     } else {
-        spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
-                                 (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
-        QVERIFY(spy->wait(3000));
         QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
     }
 
@@ -424,6 +447,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QCOMPARE(customChar3.value().constData(), "indicated");
     QCOMPARE(customChar4.value().constData(), "notified");
 
+    // signal requires root privileges on Linux
     spy.reset(new QSignalSpy(m_leController.data(), &QLowEnergyController::connectionUpdated));
     QVERIFY(spy->wait(5000));
 
@@ -464,6 +488,9 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QVERIFY(cc3ClientConfig.isValid());
     cc4ClientConfig = customChar4.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
     QVERIFY(cc4ClientConfig.isValid());
+
+    const bool isBonded = QBluetoothLocalDevice().pairingStatus(m_serverAddress)
+                != QBluetoothLocalDevice::Unpaired;
     if (isBonded) {
         QCOMPARE(cc3ClientConfig.value(), indicateValue);
         QCOMPARE(cc4ClientConfig.value(), notifyValue);

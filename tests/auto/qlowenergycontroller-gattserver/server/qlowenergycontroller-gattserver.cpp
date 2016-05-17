@@ -145,6 +145,19 @@ void addCustomService()
     serviceData.addCharacteristic(charData);
 
     addService(serviceData);
+
+    // service with full 128 bit custom uuids
+    QLowEnergyServiceData serviceData128;
+    serviceData128.setUuid(QBluetoothUuid(QString("c47774c7-f237-4523-8968-e4ae75431daf")));
+    serviceData128.setType(QLowEnergyServiceData::ServiceTypePrimary);
+
+    QLowEnergyCharacteristicData charData128;
+    charData128.setUuid(QBluetoothUuid(QString("c0ad61b1-79e7-42f9-ace0-0a9aa0d0a4f8")));
+    charData128.setProperties(QLowEnergyCharacteristic::Read);
+    charData128.setValue(QByteArray(15, 'a'));
+    serviceData128.addCharacteristic(charData128);
+
+    addService(serviceData128);
 }
 
 void startAdvertising()
