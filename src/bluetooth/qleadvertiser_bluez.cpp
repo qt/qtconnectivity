@@ -162,6 +162,8 @@ void QLeAdvertiserBluez::setAdvertisingParams()
     // Spec v4.2, Vol 2, Part E, 7.8.5
     AdvParams params;
     static_assert(sizeof params == 15, "unexpected struct size");
+    using namespace std;
+    memset(&params, 0, sizeof params);
     setAdvertisingInterval(params);
     params.type = parameters().mode();
     params.filterPolicy = parameters().filterPolicy();
