@@ -175,7 +175,6 @@ Low Energy devices.
 
     \snippet heartrate-server/main.cpp Advertising Data
     \snippet heartrate-server/main.cpp Start Advertising
-    \snippet heartrate-server/main.cpp Advertising Data
 
     Now potential clients can connect to our device, discover the provided service and
     register themselves to get notified of changes to the characteristic value.
