@@ -168,18 +168,6 @@ Low Energy devices.
     The example code below is taken from the \l {heartlistener}{Heart Listener} and
     \l {heartrate-server}{Heart Rate Server} examples.
 
-    \section2 Advertising Services
-
-    If we are implementing a GATT server application on a peripheral device, we need to define the
-    services we want to offer to central devices and advertise them:
-
-    \snippet heartrate-server/main.cpp Advertising Data
-    \snippet heartrate-server/main.cpp Start Advertising
-
-    Now potential clients can connect to our device, discover the provided service and
-    register themselves to get notified of changes to the characteristic value.
-    This part of the API is covered in the following sections.
-
     \section2 Establishing a Connection
 
     To be able to read and write the characteristics of the Bluetooth Low Energy peripheral device,
@@ -256,4 +244,47 @@ Low Energy devices.
     \l {https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}{Bluetooth SIG} whereas others
     may follow a custom protocol. The above code snippet demonstrates how to the read the standardized
     HeartRate value.
+
+    \section2 Advertising Services
+
+    If we are implementing a GATT server application on a peripheral device, we need to define the
+    services we want to offer to central devices and advertise them:
+
+    \snippet heartrate-server/main.cpp Advertising Data
+    \snippet heartrate-server/main.cpp Start Advertising
+
+    Now potential clients can connect to our device, discover the provided service and
+    register themselves to get notified of changes to the characteristic value.
+    This part of the API was already covered by the above sections.
+
+    \section2 Implementing a Service on the Peripheral Device
+
+    The first step is to define the service, its characteristics and descriptors. This is achieved
+    using the \l QLowEnergyServiceData, \l QLowEnergyCharacteristicData and
+    \l QLowEnergyDescriptorData classes. These classes act as containers or building blocks for the
+    essential information that comprises the to-be-defined Bluetooth Low Energy service.
+    The code snippet below defines a simple HeartRate service which publishes
+    the measured beats per minute. An example where such a service could be used is a wrist watch.
+
+    \snippet heartrate-server/main.cpp Service Data
+
+    The resulting \c serviceData object can be published as described in the
+    \l {Advertising Services} section above. Despite the partial information overlap between the
+    information wrapped by \l QLowEnergyServiceData and \l QLowEnergyAdvertisingData the two classes
+    serve two very different tasks. The advertising data is published to nearby devices and often
+    limited in scope due to its size restriction of 29 bytes. Therefore they are not always 100%
+    complete. By comparison the service data contained inside of \l QLowEnergyServiceData provides
+    the complete set of service data and only becomes visible to the connecting client when a
+    connection with an active service discovery has been performed.
+
+    The next section demonstrates how the service can update the heart rate value. Depending on the
+    nature of the service it may have to comply with the official service definition
+    as defined on \l {https://www.bluetooth.org}. Other services may be completely custom. The
+    heart rate service was adopted and its specification can be found under
+    \l {https://www.bluetooth.com/specifications/adopted-specifications}.
+
+    \snippet heartrate-server/main.cpp Provide Heartbeat
+
+    In general characteristic and descriptor value updates on the peripheral device use the same
+    methods as connecting Bluetooth Low Energy devices.
 */
