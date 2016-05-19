@@ -48,11 +48,13 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
-        const QBluetoothAddress &/*deviceAdapter*/)
+        QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &/*deviceAdapter*/)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
       state(Inactive), deviceDiscoveryAgent(0),
       mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
-      singleDevice(false), receiver(0), localDeviceReceiver(0)
+      singleDevice(false), receiver(0), localDeviceReceiver(0),
+      q_ptr(qp)
+
 {
     QList<QBluetoothHostInfo> devices = QBluetoothLocalDevice::allDevices();
     Q_ASSERT(devices.count() <= 1); //Android only supports one device at the moment

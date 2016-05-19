@@ -39,10 +39,14 @@
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
-    :  error(QBluetoothServiceDiscoveryAgent::NoError), state(Inactive),
-       deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
-       singleDevice(false)
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
+    QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
+    : error(QBluetoothServiceDiscoveryAgent::NoError),
+      state(Inactive),
+      deviceDiscoveryAgent(0),
+      mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
+      singleDevice(false),
+      q_ptr(qp)
 {
 #ifndef QT_IOS_BLUETOOTH
     printDummyWarning();

@@ -62,10 +62,12 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
     to[5] = (from >> 40) & 0xff;
 }
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
+    QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
-    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0)
+    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0),
+    q_ptr(qp)
 {
     if (isBluez5()) {
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
