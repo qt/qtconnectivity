@@ -168,9 +168,11 @@ private:
     typedef OSXBluetooth::ObjCScopedPointer<ObjCCentralManager> CentralManager;
     CentralManager centralManager;
 
+#ifndef Q_OS_TVOS
     typedef QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) ObjCPeripheralManager;
     typedef OSXBluetooth::ObjCScopedPointer<ObjCPeripheralManager> PeripheralManager;
     PeripheralManager peripheralManager;
+#endif
 
     typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceMap;
     typedef ServiceMap::const_iterator ConstServiceIterator;

@@ -39,11 +39,15 @@ CONFIG(osx) {
                        osx/osxbtledeviceinquiry_p.h \
                        osx/corebluetoothwrapper_p.h \
                        osx/osxbtcentralmanager_p.h \
-                       osx/osxbtnotifier_p.h \
-                       osx/osxbtperipheralmanager_p.h
+                       osx/osxbtnotifier_p.h
+    ios {
+        PRIVATE_HEADERS += osx/osxbtperipheralmanager_p.h
+    }
 
     OBJECTIVE_SOURCES += osx/osxbtutility.mm \
                          osx/osxbtledeviceinquiry.mm \
-                         osx/osxbtcentralmanager.mm \
-                         osx/osxbtperipheralmanager.mm
+                         osx/osxbtcentralmanager.mm
+    ios {
+        OBJECTIVE_SOURCES += osx/osxbtperipheralmanager.mm
+    }
 }

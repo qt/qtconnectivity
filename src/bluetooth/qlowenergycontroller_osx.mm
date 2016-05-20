@@ -162,6 +162,7 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
 
     QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
     if (role == QLowEnergyController::PeripheralRole) {
+#ifndef Q_OS_TVOS
         if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
             peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.data()]);
             if (!peripheralManager) {
@@ -170,6 +171,9 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
                 return;
             }
         } else {
+#else
+        {
+#endif
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO
                                  << "peripheral role is not supported on your platform";
             return;
@@ -200,19 +204,25 @@ QLowEnergyControllerPrivateOSX::~QLowEnergyControllerPrivateOSX()
                 [manager detach];
             });
         } else {
+#ifndef Q_OS_TVOS
             if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
                 const auto manager = peripheralManager.data();
                 dispatch_sync(leQueue, ^{
                     [manager detach];
                 });
             }
+#endif
         }
     }
 }
 
 bool QLowEnergyControllerPrivateOSX::isValid() const
 {
+#ifdef Q_OS_TVOS
+    return centralManager;
+#else
     return centralManager || peripheralManager;
+#endif
 }
 
 void QLowEnergyControllerPrivateOSX::_q_connected()
@@ -720,13 +730,16 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
                  withResponse:mode == QLowEnergyService::WriteWithResponse];
         });
     } else {
-
+#ifndef Q_OS_TVOS
         if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
             const auto manager = peripheralManager.data();
             dispatch_async(leQueue, ^{
                 [manager write:newValueCopy charHandle:charHandle];
             });
         } else {
+#else
+        {
+#endif
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO
                                  << "peripheral role is not supported on your platform";
         }
@@ -1220,6 +1233,13 @@ void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameter
         const QLowEnergyAdvertisingData &advertisingData,
         const QLowEnergyAdvertisingData &scanResponseData)
 {
+#ifdef Q_OS_TVOS
+    Q_UNUSED(params)
+    Q_UNUSED(advertisingData)
+    Q_UNUSED(scanResponseData)
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                         << "advertising is not supported on your platform";
+#else
     OSX_D_PTR;
 
     if (!osx_d_ptr->isValid())
@@ -1253,10 +1273,15 @@ void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameter
     dispatch_async(leQueue, ^{
         [manager startAdvertising];
     });
+#endif
 }
 
 void QLowEnergyController::stopAdvertising()
 {
+#ifdef Q_OS_TVOS
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                         << "advertising is not supported on your platform";
+#else
     OSX_D_PTR;
 
     if (!osx_d_ptr->isValid())
@@ -1280,11 +1305,18 @@ void QLowEnergyController::stopAdvertising()
         osx_d_ptr->setErrorDescription(QLowEnergyController::UnknownError);
         return;
     }
+#endif
 }
 
 QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &data,
                                                     QObject *parent)
 {
+#ifdef Q_OS_TVOS
+    Q_UNUSED(data)
+    Q_UNUSED(parent)
+    qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                         << "peripheral role is not supported on your platform";
+#else
     OSX_D_PTR;
 
     if (!osx_d_ptr->isValid()) {
@@ -1315,6 +1347,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
         osx_d_ptr->discoveredServices.insert(servicePrivate->uuid, servicePrivate);
         return new QLowEnergyService(servicePrivate, parent);
     }
+#endif
 
     return nullptr;
 }
@@ -1322,7 +1355,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
 void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
 {
     Q_UNUSED(params);
-    qCWarning(QT_BT_OSX) << "Connection update not implemented for OS X";
+    qCWarning(QT_BT_OSX) << "Connection update not implemented on your platform";
 }
 
 QT_END_NAMESPACE
