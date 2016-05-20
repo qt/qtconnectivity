@@ -250,7 +250,7 @@ void tst_QLowEnergyController::tst_connect()
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
 
 #ifdef Q_OS_IOS
-    if (remoteDeviceInfo.isValid())
+    if (!remoteDeviceInfo.isValid())
 #else
     if (localAdapters.isEmpty() || !remoteDeviceInfo.isValid())
 #endif
