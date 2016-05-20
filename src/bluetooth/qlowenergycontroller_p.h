@@ -82,6 +82,20 @@ QT_END_NAMESPACE
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include <QtAndroidExtras/QAndroidJniObject>
 #include "android/lowenergynotificationhub_p.h"
+#elif defined(QT_WINRT_BLUETOOTH)
+#include <wrl.h>
+
+namespace ABI {
+    namespace Windows {
+        namespace Devices {
+            namespace Bluetooth {
+                struct IBluetoothLEDevice;
+            }
+        }
+    }
+}
+
+class QWinRTLowEnergyServiceHandler;
 #endif
 
 #include <functional>
@@ -414,6 +428,10 @@ private slots:
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
+#elif defined(QT_WINRT_BLUETOOTH)
+private:
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
+    EventRegistrationToken mStatusChangedToken;
 #endif
 private:
     QLowEnergyController *q_ptr;
