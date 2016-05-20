@@ -162,6 +162,8 @@ void QLeAdvertiserBluez::setAdvertisingParams()
     // Spec v4.2, Vol 2, Part E, 7.8.5
     AdvParams params;
     static_assert(sizeof params == 15, "unexpected struct size");
+    using namespace std;
+    memset(&params, 0, sizeof params);
     setAdvertisingInterval(params);
     params.type = parameters().mode();
     params.filterPolicy = parameters().filterPolicy();
@@ -283,7 +285,13 @@ void QLeAdvertiserBluez::setServicesData(const QLowEnergyAdvertisingData &src, A
             services32 << service32;
             continue;
         }
-        services128 << service.toUInt128();
+
+        // QBluetoothUuid::toUInt128() is always Big-Endian
+        // convert it to host order
+        quint128 hostOrder;
+        quint128 qtUuidOrder = service.toUInt128();
+        ntoh128(&qtUuidOrder, &hostOrder);
+        services128 << hostOrder;
     }
     addServicesData(dest, services16);
     addServicesData(dest, services32);
