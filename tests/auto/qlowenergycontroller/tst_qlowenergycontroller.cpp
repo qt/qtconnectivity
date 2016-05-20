@@ -349,7 +349,7 @@ void tst_QLowEnergyController::tst_connect()
 
         // initiate characteristic discovery
         foreach (QLowEnergyService *service, savedReferences) {
-            qDebug() << "Discoverying" << service->serviceUuid();
+            qDebug() << "Discovering" << service->serviceUuid();
             QSignalSpy stateSpy(service,
                                 SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
             QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
