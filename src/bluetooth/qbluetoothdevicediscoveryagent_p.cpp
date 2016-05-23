@@ -42,7 +42,9 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
 
+#ifndef QT_IOS_BLUETOOTH
 #include "dummy/dummy_helper_p.h"
+#endif
 
 #define QT_DEVICEDISCOVERY_DEBUG
 
@@ -56,7 +58,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
+#ifndef QT_IOS_BLUETOOTH
     printDummyWarning();
+#endif
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
