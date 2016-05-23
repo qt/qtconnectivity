@@ -33,7 +33,9 @@
 
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
+#ifndef QT_IOS_BLUETOOTH
 #include "dummy/dummy_helper_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -42,7 +44,9 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
        deviceDiscoveryAgent(0), mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
        singleDevice(false)
 {
+#ifndef QT_IOS_BLUETOOTH
     printDummyWarning();
+#endif
     Q_UNUSED(deviceAdapter);
 }
 
