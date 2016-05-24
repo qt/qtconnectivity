@@ -45,7 +45,9 @@
 #elif QT_OSX_BLUETOOTH
 #include "qbluetoothtransferreply_osx_p.h"
 #else
+#if !defined(QT_ANDROID_BLUETOOTH) && !defined(QT_IOS_BLUETOOTH)
 #include "dummy/dummy_helper_p.h"
+#endif
 #endif
 
 QT_BEGIN_NAMESPACE
