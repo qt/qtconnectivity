@@ -214,14 +214,22 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
 
         sdpScannerProcess = new QProcess(q);
         sdpScannerProcess->setReadChannel(QProcess::StandardOutput);
+        if (QT_BT_BLUEZ().isDebugEnabled())
+            sdpScannerProcess->setProcessChannelMode(QProcess::ForwardedErrorChannel);
         sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
         q->connect(sdpScannerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
                    q, SLOT(_q_sdpScannerDone(int,QProcess::ExitStatus)));
-
     }
 
     QStringList arguments;
     arguments << remoteAddress.toString() << localAddress.toString();
+
+    // No filter implies PUBLIC_BROWSE_GROUP based SDP scan
+    if (!uuidFilter.isEmpty()) {
+        arguments << QLatin1String("-u"); // cmd line option for list of uuids
+        foreach (const QBluetoothUuid& uuid, uuidFilter)
+            arguments << uuid.toString();
+    }
 
     sdpScannerProcess->setArguments(arguments);
     sdpScannerProcess->start();
