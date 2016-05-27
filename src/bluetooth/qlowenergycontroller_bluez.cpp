@@ -235,10 +235,14 @@ template<typename T> static void putDataAndIncrement(const T &src, char *&dst)
 template<> void putDataAndIncrement(const QBluetoothUuid &uuid, char *&dst)
 {
     const int uuidSize = getUuidSize(uuid);
-    if (uuidSize == 2)
+    if (uuidSize == 2) {
         putBtData(uuid.toUInt16(), dst);
-    else
-        putBtData(uuid.toUInt128(), dst);
+    } else {
+        quint128 hostOrder;
+        quint128 qtUuidOrder = uuid.toUInt128();
+        ntoh128(&qtUuidOrder, &hostOrder);
+        putBtData(hostOrder, dst);
+    }
     dst += uuidSize;
 }
 template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
@@ -2925,7 +2929,10 @@ static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
         putBtData(uuid.toUInt16(), ba.data());
     } else {
         ba.resize(16);
-        putBtData(uuid.toUInt128(), ba.data());
+        quint128 hostOrder;
+        quint128 qtUuidOrder = uuid.toUInt128();
+        ntoh128(&qtUuidOrder, &hostOrder);
+        putBtData(hostOrder, ba.data());
     }
     return ba;
 }
