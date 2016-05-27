@@ -63,6 +63,8 @@ using namespace ABI::Windows::Storage::Streams;
 QT_BEGIN_NAMESPACE
 
 typedef ITypedEventHandler<BluetoothLEDevice *, IInspectable *> StatusHandler;
+typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConfigDescriptorResult;
+typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharConfigDescriptorResult;
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
@@ -203,16 +205,46 @@ public slots:
                 hr = descriptor->get_Uuid(&descriptorUuid);
                 Q_ASSERT_SUCCEEDED(hr);
                 descData.uuid = QBluetoothUuid(descriptorUuid);
-                ComPtr<IAsyncOperation<GattReadResult *>> readOp;
-                hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
-                Q_ASSERT_SUCCEEDED(hr);
-                ComPtr<IGattReadResult> readResult;
-                hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
-                Q_ASSERT_SUCCEEDED(hr);
-                if (descData.uuid == QBluetoothUuid::CharacteristicUserDescription)
-                    descData.value = byteArrayFromGattResult(readResult, true);
-                else
-                    descData.value = byteArrayFromGattResult(readResult);
+                if (descData.uuid == QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration)) {
+                    ComPtr<IAsyncOperation<ClientCharConfigDescriptorResult *>> readOp;
+                    hr = characteristic->ReadClientCharacteristicConfigurationDescriptorAsync(&readOp);
+                    Q_ASSERT_SUCCEEDED(hr);
+                    ComPtr<IClientCharConfigDescriptorResult> readResult;
+                    hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
+                    Q_ASSERT_SUCCEEDED(hr);
+                    GattClientCharacteristicConfigurationDescriptorValue value;
+                    hr = readResult->get_ClientCharacteristicConfigurationDescriptor(&value);
+                    Q_ASSERT_SUCCEEDED(hr);
+                    quint16 result = 0;
+                    bool correct = false;
+                    if (value & GattClientCharacteristicConfigurationDescriptorValue_Indicate) {
+                        result |= GattClientCharacteristicConfigurationDescriptorValue_Indicate;
+                        correct = true;
+                    }
+                    if (value & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
+                        result |= GattClientCharacteristicConfigurationDescriptorValue_Notify;
+                        correct = true;
+                    }
+                    if (value == GattClientCharacteristicConfigurationDescriptorValue_None) {
+                        correct = true;
+                    }
+                    if (!correct)
+                        continue;
+
+                    descData.value = QByteArray(2, Qt::Uninitialized);
+                    qToLittleEndian(result, descData.value.data());
+                } else {
+                    ComPtr<IAsyncOperation<GattReadResult *>> readOp;
+                    hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
+                    Q_ASSERT_SUCCEEDED(hr);
+                    ComPtr<IGattReadResult> readResult;
+                    hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
+                    Q_ASSERT_SUCCEEDED(hr);
+                    if (descData.uuid == QBluetoothUuid::CharacteristicUserDescription)
+                        descData.value = byteArrayFromGattResult(readResult, true);
+                    else
+                        descData.value = byteArrayFromGattResult(readResult);
+                }
                 charData.descriptorList.insert(descHandle, descData);
             }
             mCharacteristicList.insert(handle, charData);
@@ -624,42 +656,99 @@ void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergy
         if (!charData.descriptorList.contains(descHandle))
             qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "cannot be found in characteristic" << charHandle;
         QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
-        ComPtr<IVectorView<GattDescriptor *>> descriptors;
-        hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<IGattDescriptor> descriptor;
-        hr = descriptors->GetAt(0, &descriptor);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<IAsyncOperation<GattReadResult*>> readOp;
-        hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
-        Q_ASSERT_SUCCEEDED(hr);
-        auto readCompletedLambda = [&charData, charHandle, &descData, descHandle, service]
-                (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
-        {
-            if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "read operation failed";
-                service->setError(QLowEnergyService::DescriptorReadError);
+        if (descData.uuid == QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration)) {
+            ComPtr<IAsyncOperation<ClientCharConfigDescriptorResult *>> readOp;
+            hr = characteristic->ReadClientCharacteristicConfigurationDescriptorAsync(&readOp);
+            Q_ASSERT_SUCCEEDED(hr);
+            auto readCompletedLambda = [&charData, charHandle, &descData, descHandle, service]
+                    (IAsyncOperation<ClientCharConfigDescriptorResult *> *op, AsyncStatus status)
+            {
+                if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "read operation failed";
+                    service->setError(QLowEnergyService::DescriptorReadError);
+                    return S_OK;
+                }
+                ComPtr<IClientCharConfigDescriptorResult> iValue;
+                HRESULT hr;
+                hr = op->GetResults(&iValue);
+                if (FAILED(hr)) {
+                    qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+                    service->setError(QLowEnergyService::DescriptorReadError);
+                    return S_OK;
+                }
+                GattClientCharacteristicConfigurationDescriptorValue value;
+                hr = iValue->get_ClientCharacteristicConfigurationDescriptor(&value);
+                if (FAILED(hr)) {
+                    qCDebug(QT_BT_WINRT) << "Could not obtain value for descriptor" << descHandle;
+                    service->setError(QLowEnergyService::DescriptorReadError);
+                    return S_OK;
+                }
+                quint16 result = 0;
+                bool correct = false;
+                if (value & GattClientCharacteristicConfigurationDescriptorValue_Indicate) {
+                    result |= QLowEnergyCharacteristic::Indicate;
+                    correct = true;
+                }
+                if (value & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
+                    result |= QLowEnergyCharacteristic::Notify;
+                    correct = true;
+                }
+                if (value == GattClientCharacteristicConfigurationDescriptorValue_None)
+                    correct = true;
+                if (!correct) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle
+                                         << "read operation failed. Obtained unexpected value.";
+                    service->setError(QLowEnergyService::DescriptorReadError);
+                    return S_OK;
+                }
+                descData.value = QByteArray(2, Qt::Uninitialized);
+                qToLittleEndian(result, descData.value.data());
+                charData.descriptorList.insert(descHandle, descData);
+                emit service->descriptorRead(QLowEnergyDescriptor(service, charHandle, descHandle),
+                    descData.value);
                 return S_OK;
-            }
-            ComPtr<IGattReadResult> descriptorValue;
-            HRESULT hr;
-            hr = op->GetResults(&descriptorValue);
-            if (FAILED(hr)) {
-                qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
-                service->setError(QLowEnergyService::DescriptorReadError);
-                return S_OK;
-            }
-            if (descData.uuid == QBluetoothUuid::CharacteristicUserDescription)
-                descData.value = byteArrayFromGattResult(descriptorValue, true);
-            else
-                descData.value = byteArrayFromGattResult(descriptorValue);
-            charData.descriptorList.insert(descHandle, descData);
-            emit service->descriptorRead(QLowEnergyDescriptor(service, charHandle, descHandle),
-                                         descData.value);
+            };
+            hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<ClientCharConfigDescriptorResult *>>(readCompletedLambda).Get());
+            Q_ASSERT_SUCCEEDED(hr);
             return S_OK;
-        };
-        hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattReadResult *>>(readCompletedLambda).Get());
-        return S_OK;
+        } else {
+            ComPtr<IVectorView<GattDescriptor *>> descriptors;
+            hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<IGattDescriptor> descriptor;
+            hr = descriptors->GetAt(0, &descriptor);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<IAsyncOperation<GattReadResult*>> readOp;
+            hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
+            Q_ASSERT_SUCCEEDED(hr);
+            auto readCompletedLambda = [&charData, charHandle, &descData, descHandle, service]
+                    (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
+            {
+                if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "read operation failed";
+                    service->setError(QLowEnergyService::DescriptorReadError);
+                    return S_OK;
+                }
+                ComPtr<IGattReadResult> descriptorValue;
+                HRESULT hr;
+                hr = op->GetResults(&descriptorValue);
+                if (FAILED(hr)) {
+                    qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+                    service->setError(QLowEnergyService::DescriptorReadError);
+                    return S_OK;
+                }
+                if (descData.uuid == QBluetoothUuid::CharacteristicUserDescription)
+                    descData.value = byteArrayFromGattResult(descriptorValue, true);
+                else
+                    descData.value = byteArrayFromGattResult(descriptorValue);
+                charData.descriptorList.insert(descHandle, descData);
+                emit service->descriptorRead(QLowEnergyDescriptor(service, charHandle, descHandle),
+                    descData.value);
+                return S_OK;
+            };
+            hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattReadResult *>>(readCompletedLambda).Get());
+            return S_OK;
+        }
     });
     Q_ASSERT_SUCCEEDED(hr);
 }
@@ -785,62 +874,111 @@ void QLowEnergyControllerPrivate::writeDescriptor(
             qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "could not be found in Characteristic" << charHandle;
 
         QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
-        ComPtr<IVectorView<GattDescriptor *>> descriptors;
-        hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<IGattDescriptor> descriptor;
-        hr = descriptors->GetAt(0, &descriptor);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<ABI::Windows::Storage::Streams::IBufferFactory> bufferFactory;
-        hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_Storage_Streams_Buffer).Get(), &bufferFactory);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
-        const int length = newValue.length();
-        hr = bufferFactory->Create(length, &buffer);
-        Q_ASSERT_SUCCEEDED(hr);
-        hr = buffer->put_Length(length);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
-        hr = buffer.As(&byteAccess);
-        Q_ASSERT_SUCCEEDED(hr);
-        byte *bytes;
-        hr = byteAccess->Buffer(&bytes);
-        Q_ASSERT_SUCCEEDED(hr);
-        memcpy(bytes, newValue, length);
-        ComPtr<IAsyncOperation<GattCommunicationStatus>> writeOp;
-        hr = descriptor->WriteValueAsync(buffer.Get(), &writeOp);
-        Q_ASSERT_SUCCEEDED(hr);
-        auto writeCompletedLambda = [charHandle, descHandle, newValue, service, this]
-                (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
-        {
-            if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
-                service->setError(QLowEnergyService::DescriptorWriteError);
-                return S_OK;
+        if (descData.uuid == QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration)) {
+            GattClientCharacteristicConfigurationDescriptorValue value;
+            quint16 intValue = qFromLittleEndian<quint16>(newValue);
+            if (intValue & GattClientCharacteristicConfigurationDescriptorValue_Indicate && intValue & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
+                qCWarning(QT_BT_WINRT) << "Setting both Indicate and Notify is not supported on WinRT";
+                value = (GattClientCharacteristicConfigurationDescriptorValue)(GattClientCharacteristicConfigurationDescriptorValue_Indicate | GattClientCharacteristicConfigurationDescriptorValue_Notify);
+            } else if (intValue & GattClientCharacteristicConfigurationDescriptorValue_Indicate) {
+                value = GattClientCharacteristicConfigurationDescriptorValue_Indicate;
+            } else if (intValue & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
+                value = GattClientCharacteristicConfigurationDescriptorValue_Notify;
+            } else if (intValue == 0) {
+                value = GattClientCharacteristicConfigurationDescriptorValue_None;
+            } else {
+                Q_ASSERT(false);
             }
-            GattCommunicationStatus result;
-            HRESULT hr;
-            hr = op->GetResults(&result);
-            if (FAILED(hr)) {
-                qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
-                service->setError(QLowEnergyService::DescriptorWriteError);
+            ComPtr<IAsyncOperation<enum GattCommunicationStatus>> writeOp;
+            hr = characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(value, &writeOp);
+            Q_ASSERT_SUCCEEDED(hr);
+            auto writeCompletedLambda = [charHandle, descHandle, newValue, service, this]
+                    (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
+            {
+                if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+                    return S_OK;
+                }
+                GattCommunicationStatus result;
+                HRESULT hr;
+                hr = op->GetResults(&result);
+                if (FAILED(hr)) {
+                    qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+                    return S_OK;
+                }
+                if (result != GattCommunicationStatus_Success) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+                    return S_OK;
+                }
+                updateValueOfDescriptor(charHandle, descHandle, newValue, false);
+                emit service->descriptorWritten(QLowEnergyDescriptor(service, charHandle, descHandle), newValue);
                 return S_OK;
-            }
-            if (result != GattCommunicationStatus_Success) {
-                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
-                service->setError(QLowEnergyService::DescriptorWriteError);
+            };
+            hr = writeOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus >>(writeCompletedLambda).Get());
+            Q_ASSERT_SUCCEEDED(hr);
+        } else {
+            ComPtr<IVectorView<GattDescriptor *>> descriptors;
+            hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<IGattDescriptor> descriptor;
+            hr = descriptors->GetAt(0, &descriptor);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<ABI::Windows::Storage::Streams::IBufferFactory> bufferFactory;
+            hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_Storage_Streams_Buffer).Get(), &bufferFactory);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
+            const int length = newValue.length();
+            hr = bufferFactory->Create(length, &buffer);
+            Q_ASSERT_SUCCEEDED(hr);
+            hr = buffer->put_Length(length);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
+            hr = buffer.As(&byteAccess);
+            Q_ASSERT_SUCCEEDED(hr);
+            byte *bytes;
+            hr = byteAccess->Buffer(&bytes);
+            Q_ASSERT_SUCCEEDED(hr);
+            memcpy(bytes, newValue, length);
+            ComPtr<IAsyncOperation<GattCommunicationStatus>> writeOp;
+            hr = descriptor->WriteValueAsync(buffer.Get(), &writeOp);
+            Q_ASSERT_SUCCEEDED(hr);
+            auto writeCompletedLambda = [charHandle, descHandle, newValue, service, this]
+                    (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
+            {
+                if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+                    return S_OK;
+                }
+                GattCommunicationStatus result;
+                HRESULT hr;
+                hr = op->GetResults(&result);
+                if (FAILED(hr)) {
+                    qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+                    return S_OK;
+                }
+                if (result != GattCommunicationStatus_Success) {
+                    qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                    service->setError(QLowEnergyService::DescriptorWriteError);
+                    return S_OK;
+                }
+                updateValueOfDescriptor(charHandle, descHandle, newValue, false);
+                emit service->descriptorWritten(QLowEnergyDescriptor(service, charHandle, descHandle), newValue);
                 return S_OK;
-            }
-            updateValueOfDescriptor(charHandle, descHandle, newValue, false);
-            emit service->descriptorWritten(QLowEnergyDescriptor(service, charHandle, descHandle), newValue);
+            };
+            hr = writeOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus>>(writeCompletedLambda).Get());
+            Q_ASSERT_SUCCEEDED(hr);
             return S_OK;
-        };
-        hr = writeOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus>>(writeCompletedLambda).Get());
-        Q_ASSERT_SUCCEEDED(hr);
+        }
         return S_OK;
     });
     Q_ASSERT_SUCCEEDED(hr);
 }
+
 
 void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
 {
