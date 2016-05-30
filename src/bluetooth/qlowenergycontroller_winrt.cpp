@@ -298,7 +298,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
         return;
     }
 
-    IVectorView <GattDeviceService *> *deviceServices;
+    ComPtr<IVectorView <GattDeviceService *>> deviceServices;
     hr = mDevice->get_GattServices(&deviceServices);
     Q_ASSERT_SUCCEEDED(hr);
     uint serviceCount;
