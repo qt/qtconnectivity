@@ -92,6 +92,7 @@ namespace ABI {
                 struct IBluetoothLEDevice;
                 namespace GenericAttributeProfile {
                     struct IGattDeviceService;
+                    struct IGattCharacteristic;
                 }
             }
         }
@@ -435,6 +436,9 @@ private slots:
 private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
     EventRegistrationToken mStatusChangedToken;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
 
     void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
