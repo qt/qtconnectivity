@@ -419,10 +419,10 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
                 }
             }
         }
-#ifdef Q_OS_IOS
-        //On iOS, we do not have access to the local device/adapter, numberOfAdapters is 0,
+#if defined(Q_OS_IOS) || defined(Q_OS_WINRT)
+        //On iOS/WinRT, we do not have access to the local device/adapter, numberOfAdapters is 0,
         //so we skip this test at all.
-        QSKIP("iOS: no local Bluetooth device available. Skipping remaining part of test.");
+        QSKIP("iOS/WinRT: no local Bluetooth device available. Skipping remaining part of test.");
 #endif
 
         //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry.
