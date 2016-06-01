@@ -522,7 +522,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
         return;
 
     if (path == adapterBluez5->path()) {
-        qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes";
+        qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes from another process.";
 
         if (discoveryTimer)
             discoveryTimer->stop();
