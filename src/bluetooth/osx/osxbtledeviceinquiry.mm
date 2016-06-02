@@ -43,7 +43,6 @@
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
 #include "corebluetoothwrapper_p.h"
@@ -51,8 +50,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
-
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
 
 QBluetoothUuid qt_uuid(NSUUID *nsUuid)
 {
@@ -64,38 +61,6 @@ QBluetoothUuid qt_uuid(NSUUID *nsUuid)
     quint128 qtUuidData = {};
     std::copy(uuidData, uuidData + 16, qtUuidData.data);
     return QBluetoothUuid(qtUuidData);
-}
-
-#endif
-
-QBluetoothUuid qt_uuid(CFUUIDRef uuid)
-{
-    if (!uuid)
-        return QBluetoothUuid();
-
-    const CFUUIDBytes data = CFUUIDGetUUIDBytes(uuid);
-    quint128 qtUuidData = {{data.byte0, data.byte1, data.byte2, data.byte3,
-                           data.byte4, data.byte5, data.byte6, data.byte7,
-                           data.byte8, data.byte9, data.byte10, data.byte11,
-                           data.byte12, data.byte13, data.byte14, data.byte15}};
-
-    return QBluetoothUuid(qtUuidData);
-}
-
-typedef ObjCStrongReference<NSString> StringStrongReference;
-
-StringStrongReference uuid_as_nsstring(CFUUIDRef uuid)
-{
-    // We use the UUDI's string representation as a key in a dictionary.
-    if (!uuid)
-        return StringStrongReference();
-
-    CFStringRef cfStr = CFUUIDCreateString(kCFAllocatorDefault, uuid);
-    if (!cfStr)
-        return StringStrongReference();
-
-    // Imporant: with ARC this will require a different cast/ownership!
-    return StringStrongReference((NSString *)cfStr, false);
 }
 
 }
@@ -301,44 +266,20 @@ using namespace QT_NAMESPACE;
 
     QBluetoothUuid deviceUuid;
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0)) {
-        if (!peripheral.identifier) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
-            return;
-        }
 
-        if ([uuids containsObject:peripheral.identifier]) {
-            // We already know this peripheral ...
-            return;
-        }
 
-        [uuids addObject:peripheral.identifier];
-        deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
+    if (!peripheral.identifier) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
+        return;
     }
-#endif
-    // Either SDK or the target is below 10.9/7.0:
-    // The property UUID was finally removed in iOS 9, we have
-    // to avoid compilation errors ...
-    if (deviceUuid.isNull()) {
-        CFUUIDRef cfUUID = Q_NULLPTR;
 
-        if ([peripheral respondsToSelector:@selector(UUID)]) {
-            // This will require a bridged cast if we switch to ARC ...
-            cfUUID = reinterpret_cast<CFUUIDRef>([peripheral performSelector:@selector(UUID)]);
-        }
-
-        if (!cfUUID) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without CFUUID";
-            return;
-        }
-
-        StringStrongReference key(uuid_as_nsstring(cfUUID));
-        if ([uuids containsObject:key.data()])
-            return; // We've seen this peripheral before ...
-        [uuids addObject:key.data()];
-        deviceUuid = OSXBluetooth::qt_uuid(cfUUID);
+    if ([uuids containsObject:peripheral.identifier]) {
+        // We already know this peripheral ...
+        return;
     }
+
+    [uuids addObject:peripheral.identifier];
+    deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
 
     if (deviceUuid.isNull()) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no way to address peripheral, QBluetoothUuid is null";

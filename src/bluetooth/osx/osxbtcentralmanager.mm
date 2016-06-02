@@ -43,7 +43,6 @@
 #include "osxbtnotifier_p.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
 #include <algorithm>
@@ -209,56 +208,31 @@ QT_END_NAMESPACE
         return;
     }
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0)) {
-        const quint128 qtUuidData(deviceUuid.toUInt128());
-        // STATIC_ASSERT on sizes would be handy!
-        uuid_t uuidData = {};
-        std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
-        const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData]);
-        if (!nsUuid) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSUUID identifier";
-            if (notifier)
-                emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
-            return;
-        }
 
-        [uuids addObject:nsUuid];
-        // With the latest CoreBluetooth, we can synchronously retrive peripherals:
-        QT_BT_MAC_AUTORELEASEPOOL;
-        NSArray *const peripherals = [manager retrievePeripheralsWithIdentifiers:uuids];
-        if (!peripherals || peripherals.count != 1) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
-            if (notifier)
-                emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
-            return;
-        }
-
-        peripheral = [static_cast<CBPeripheral *>([peripherals objectAtIndex:0]) retain];
-        [self connectToPeripheral];
+    const quint128 qtUuidData(deviceUuid.toUInt128());
+    uuid_t uuidData = {};
+    std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
+    const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData]);
+    if (!nsUuid) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSUUID identifier";
+        if (notifier)
+            emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         return;
     }
-#endif
-    // Either SDK or the target is below 10.9/7.0
-    if (![manager respondsToSelector:@selector(retrievePeripherals:)]) {
+
+    [uuids addObject:nsUuid];
+    // With the latest CoreBluetooth, we can synchronously retrive peripherals:
+    QT_BT_MAC_AUTORELEASEPOOL;
+    NSArray *const peripherals = [manager retrievePeripheralsWithIdentifiers:uuids];
+    if (!peripherals || peripherals.count != 1) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
     }
 
-    OSXBluetooth::CFStrongReference<CFUUIDRef> cfUuid(OSXBluetooth::cf_uuid(deviceUuid));
-    if (!cfUuid) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create CFUUID object";
-        if (notifier)
-            emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
-        return;
-    }
-    // With ARC this cast will be illegal:
-    [uuids addObject:(id)cfUuid.data()];
-    // Unfortunately, with old Core Bluetooth this call is asynchronous ...
-    managerState = OSXBluetooth::CentralManagerConnecting;
-    [manager performSelector:@selector(retrievePeripherals:) withObject:uuids.data()];
+    peripheral = [static_cast<CBPeripheral *>([peripherals objectAtIndex:0]) retain];
+    [self connectToPeripheral];
 }
 
 - (void)connectToPeripheral
@@ -285,18 +259,7 @@ QT_END_NAMESPACE
     if (!peripheral)
         return false;
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
-    using OSXBluetooth::qt_OS_limit;
-
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0))
-        return peripheral.state == CBPeripheralStateConnected;
-#endif
-    // Either SDK or the target is below 10.9/7.0 ...
-    if (![peripheral respondsToSelector:@selector(isConnected)])
-        return false;
-
-    // Ugly cast to deal with id being a pointer ...
-    return reinterpret_cast<quintptr>([peripheral performSelector:@selector(isConnected)]);
+    return peripheral.state == CBPeripheralStateConnected;
 }
 
 - (void)disconnectFromDevice
@@ -1129,30 +1092,6 @@ QT_END_NAMESPACE
     } else {
         // We actually handled all known states, but .. Core Bluetooth can change?
         Q_ASSERT_X(0, Q_FUNC_INFO, "invalid centra's state");
-    }
-}
-
-- (void)centralManager:(CBCentralManager *)central didRetrievePeripherals:(NSArray *)peripherals
-{
-    Q_UNUSED(central)
-
-    // This method is required for iOS before 7.0 and OS X below 10.9.
-    Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid central manager (nil)");
-
-    if (managerState != OSXBluetooth::CentralManagerConnecting) {
-        // Canceled by calling -disconnectFromDevice method.
-        return;
-    }
-
-    managerState = OSXBluetooth::CentralManagerIdle;
-
-    if (!peripherals || peripherals.count != 1) {
-        qCDebug(QT_BT_OSX) << Q_FUNC_INFO <<"unexpected number of peripherals (!= 1)";
-        if (notifier)
-            emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
-    } else {
-        peripheral = [static_cast<CBPeripheral *>([peripherals objectAtIndex:0]) retain];
-        [self connectToPeripheral];
     }
 }
 

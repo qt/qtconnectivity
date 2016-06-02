@@ -54,7 +54,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qbytearray.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
@@ -105,18 +104,13 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
 
     // TODO: isPrimary is ... always 'NO' - to be investigated.
     /*
-    #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
     using OSXBluetooth::qt_OS_limit;
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
-        if (!cbService.isPrimary) {
-            // Our guess included/not was probably wrong.
-            newService->type &= ~QLowEnergyService::PrimaryService;
-            newService->type |= QLowEnergyService::IncludedService;
-        }
+    if (!cbService.isPrimary) {
+        // Our guess included/not was probably wrong.
+        newService->type &= ~QLowEnergyService::PrimaryService;
+        newService->type |= QLowEnergyService::IncludedService;
     }
-    #endif
     */
-    // No such property before 10_9/6_0.
     return newService;
 }
 
@@ -163,21 +157,17 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
     QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
     if (role == QLowEnergyController::PeripheralRole) {
 #ifndef Q_OS_TVOS
-        if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
-            peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.data()]);
-            if (!peripheralManager) {
-                qCWarning(QT_BT_OSX) << Q_FUNC_INFO
-                                     << "failed to initialize peripheral manager";
-                return;
-            }
-        } else {
-#else
-        {
-#endif
+        peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.data()]);
+        if (!peripheralManager) {
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO
-                                 << "peripheral role is not supported on your platform";
+                                 << "failed to initialize peripheral manager";
             return;
         }
+#else
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
+                             << "peripheral role is not supported on your platform";
+        return;
+#endif
     } else {
         centralManager.reset([[ObjCCentralManager alloc] initWith:notifier.data()]);
         if (!centralManager) {
@@ -205,12 +195,10 @@ QLowEnergyControllerPrivateOSX::~QLowEnergyControllerPrivateOSX()
             });
         } else {
 #ifndef Q_OS_TVOS
-            if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
-                const auto manager = peripheralManager.data();
-                dispatch_sync(leQueue, ^{
-                    [manager detach];
-                });
-            }
+            const auto manager = peripheralManager.data();
+            dispatch_sync(leQueue, ^{
+                [manager detach];
+            });
 #endif
         }
     }
@@ -731,18 +719,14 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
         });
     } else {
 #ifndef Q_OS_TVOS
-        if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_6_0)) {
-            const auto manager = peripheralManager.data();
-            dispatch_async(leQueue, ^{
-                [manager write:newValueCopy charHandle:charHandle];
-            });
-        } else {
+        const auto manager = peripheralManager.data();
+        dispatch_async(leQueue, ^{
+            [manager write:newValueCopy charHandle:charHandle];
+        });
 #else
-        {
-#endif
             qCWarning(QT_BT_OSX) << Q_FUNC_INFO
                                  << "peripheral role is not supported on your platform";
-        }
+#endif
     }
 }
 

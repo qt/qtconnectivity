@@ -45,7 +45,6 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qvariant.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qmap.h>
@@ -56,44 +55,6 @@
 #include "osx/corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
-
-namespace {
-
-// This is not in osxbtutility_p, since it's not required
-// in general and just fixes the problem with SDK < 10.9,
-// where we have to care about about IOBluetoothSDPServiceRecordRef.
-class ServiceRecordRefGuard
-{
-public:
-    ServiceRecordRefGuard()
-        : recordRef(Q_NULLPTR)
-    {
-    }
-    explicit ServiceRecordRefGuard(IOBluetoothSDPServiceRecordRef r)
-        : recordRef(r)
-    {
-    }
-    ~ServiceRecordRefGuard()
-    {
-        if (recordRef) // Requires non-NULL pointers.
-            CFRelease(recordRef);
-    }
-
-    void reset(IOBluetoothSDPServiceRecordRef r)
-    {
-        if (recordRef)
-            CFRelease(recordRef);
-        // Take the ownership:
-        recordRef = r;
-    }
-
-private:
-    IOBluetoothSDPServiceRecordRef recordRef;
-
-    Q_DISABLE_COPY(ServiceRecordRefGuard)
-};
-
-}
 
 class QBluetoothServiceInfoPrivate
 {
@@ -149,44 +110,19 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         return false;
     }
 
-    ServiceRecordRefGuard refGuard;
     SDPRecord newRecord;
-#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
-    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9) {
-        newRecord.reset([[IOBluetoothSDPServiceRecord
-                          publishedServiceRecordWithDictionary:serviceDict] retain]);
-    } else {
-#else
-    {
-#endif
-        IOBluetoothSDPServiceRecordRef recordRef = Q_NULLPTR;
-        // With ARC this will require a different cast?
-        const IOReturn status = IOBluetoothAddServiceDict((CFDictionaryRef)serviceDict.data(), &recordRef);
-        if (status != kIOReturnSuccess) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
-            return false;
-        }
-
-        refGuard.reset(recordRef);
-        newRecord.reset([[IOBluetoothSDPServiceRecord withSDPServiceRecordRef:recordRef] retain]);
-        // It's weird, but ... it's not possible to release a record ref yet.
-    }
+    newRecord.reset([[IOBluetoothSDPServiceRecord
+                     publishedServiceRecordWithDictionary:serviceDict] retain]);
 
     if (!newRecord) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
-        // In case of SDK < 10.9 it's not possible to remove a service record ...
-        // no way to obtain record handle yet.
         return false;
     }
 
     BluetoothSDPServiceRecordHandle newRecordHandle = 0;
     if ([newRecord getServiceRecordHandle:&newRecordHandle] != kIOReturnSuccess) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
-#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
-        if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9)
-            [newRecord removeServiceRecord];
-#endif
-        // With SDK < 10.9 there is no way to unregister at this point ...
+        [newRecord removeServiceRecord];
         return false;
     }
 
@@ -212,16 +148,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     }
 
     if (!configured) {
-#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
-        if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9) {
-            [newRecord removeServiceRecord];
-        } else {
-#else
-        {// Just to balance braces ...
-#endif
-            IOBluetoothRemoveServiceWithRecordHandle(newRecordHandle);
-        }
-
+        [newRecord removeServiceRecord];
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
         return false;
     }
@@ -248,16 +175,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 
     Q_ASSERT_X(serviceRecord, Q_FUNC_INFO, "service registered, but serviceRecord is nil");
 
-#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
-    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9) {
-        [serviceRecord removeServiceRecord];
-    } else {
-#else
-    {
-#endif
-    // Assert on newRecordHandle? Is 0 a valid/invalid handle?
-        IOBluetoothRemoveServiceWithRecordHandle(serviceRecordHandle);
-    }
+    [serviceRecord removeServiceRecord];
 
     serviceRecord.reset(nil);
 
