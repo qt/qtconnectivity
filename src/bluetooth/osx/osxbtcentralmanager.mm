@@ -170,7 +170,7 @@ QT_END_NAMESPACE
 
         if (!manager) {
             managerState = OSXBluetooth::CentralManagerIdle;
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate a central manager";
+            qCWarning(QT_BT_OSX) << "failed to allocate a central manager";
             if (notifier)
                 emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         }
@@ -186,7 +186,7 @@ QT_END_NAMESPACE
                Q_FUNC_INFO, "invalid state");
 
     if ([self isConnected]) {
-        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "already connected";
+        qCDebug(QT_BT_OSX) << "already connected";
         if (notifier)
             emit notifier->connected();
         return;
@@ -202,7 +202,7 @@ QT_END_NAMESPACE
     // Retrieve a peripheral first ...
     ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init]);
     if (!uuids) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate identifiers";
+        qCWarning(QT_BT_OSX) << "failed to allocate identifiers";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         return;
@@ -214,7 +214,7 @@ QT_END_NAMESPACE
     std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
     const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData]);
     if (!nsUuid) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSUUID identifier";
+        qCWarning(QT_BT_OSX) << "failed to allocate NSUUID identifier";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         return;
@@ -225,7 +225,7 @@ QT_END_NAMESPACE
     QT_BT_MAC_AUTORELEASEPOOL;
     NSArray *const peripherals = [manager retrievePeripheralsWithIdentifiers:uuids];
     if (!peripherals || peripherals.count != 1) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to retrive a peripheral";
+        qCWarning(QT_BT_OSX) << "failed to retrive a peripheral";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
@@ -244,11 +244,11 @@ QT_END_NAMESPACE
 
     // The state is still the same - connecting.
     if ([self isConnected]) {
-        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "already connected";
+        qCDebug(QT_BT_OSX) << "already connected";
         if (notifier)
             emit notifier->connected();
     } else {
-        qCDebug(QT_BT_OSX) << Q_FUNC_INFO << "trying to connect";
+        qCDebug(QT_BT_OSX) << "trying to connect";
         managerState = OSXBluetooth::CentralManagerConnecting;
         [manager connectPeripheral:peripheral options:nil];
     }
@@ -352,7 +352,7 @@ QT_END_NAMESPACE
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
 
     if (servicesToDiscoverDetails.contains(serviceUuid)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO <<"already discovering for "
+        qCWarning(QT_BT_OSX) << "already discovering for"
                              << serviceUuid;
         return;
     }
@@ -365,7 +365,7 @@ QT_END_NAMESPACE
         return;
     }
 
-    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown service uuid "
+    qCWarning(QT_BT_OSX) << "unknown service uuid"
                          << serviceUuid;
 
     if (notifier) {
@@ -462,7 +462,7 @@ QT_END_NAMESPACE
     const QLowEnergyHandle maxHandle = std::numeric_limits<QLowEnergyHandle>::max();
     if (nHandles >= maxHandle || lastValidHandle > maxHandle - nHandles) {
         // Well, that's unlikely :) But we must be sure.
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "can not allocate more handles";
+        qCWarning(QT_BT_OSX) << "can not allocate more handles";
         if (notifier)
             notifier->CBManagerError(serviceUuid, QLowEnergyService::OperationError);
         return;
@@ -566,7 +566,7 @@ QT_END_NAMESPACE
     const LERequest request(requests.dequeue());
     if (request.type == LERequest::CharRead) {
         if (!charMap.contains(request.handle)) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic with handle"
+            qCWarning(QT_BT_OSX) << "characteristic with handle"
                                  << request.handle << "not found";
             return [self performNextRequest];
         }
@@ -576,7 +576,7 @@ QT_END_NAMESPACE
         [peripheral readValueForCharacteristic:charMap[request.handle]];
     } else {
         if (!descMap.contains(request.handle)) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "descriptor with handle"
+            qCWarning(QT_BT_OSX) << "descriptor with handle"
                                  << request.handle << "not found";
             return [self performNextRequest];
         }
@@ -603,8 +603,8 @@ QT_END_NAMESPACE
 
     if (request.type == LERequest::DescWrite) {
         if (!descMap.contains(request.handle)) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle: "
-                                 << request.handle << " not found";
+            qCWarning(QT_BT_OSX) << "handle:" << request.handle
+                                 << "not found";
             return [self performNextRequest];
         }
 
@@ -612,8 +612,7 @@ QT_END_NAMESPACE
         ObjCStrongReference<NSData> data(data_from_bytearray(request.value));
         if (!data) {
             // Even if qtData.size() == 0, we still need NSData object.
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed "
-                                    "to allocate an NSData object";
+            qCWarning(QT_BT_OSX) << "failed to allocate an NSData object";
             return [self performNextRequest];
         }
 
@@ -624,8 +623,8 @@ QT_END_NAMESPACE
         return [peripheral writeValue:data.data() forDescriptor:descriptor];
     } else {
         if (!charMap.contains(request.handle)) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic with "
-                                    "handle: " << request.handle << " not found";
+            qCWarning(QT_BT_OSX) << "characteristic with handle:"
+                                 << request.handle << "not found";
             return [self performNextRequest];
         }
 
@@ -650,7 +649,7 @@ QT_END_NAMESPACE
             ObjCStrongReference<NSData> data(data_from_bytearray(request.value));
             if (!data) {
                 // Even if qtData.size() == 0, we still need NSData object.
-                qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate NSData object";
+                qCWarning(QT_BT_OSX) << "failed to allocate NSData object";
                 return [self performNextRequest];
             }
 
@@ -680,8 +679,7 @@ QT_END_NAMESPACE
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
 
     if (!charMap.contains(charHandle)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
-                             << "unknown characteristic handle "
+        qCWarning(QT_BT_OSX) << "unknown characteristic handle"
                              << charHandle;
         if (notifier) {
             emit notifier->CBManagerError(serviceUuid,
@@ -695,8 +693,7 @@ QT_END_NAMESPACE
     // it back, so check _now_ that we really have this descriptor.
     const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
     if (![self descriptor:qtUuid forCharacteristic:charMap[charHandle]]) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO
-                             << "no client characteristic configuration found";
+        qCWarning(QT_BT_OSX) << "no client characteristic configuration found";
         if (notifier) {
             emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorWriteError);
@@ -723,7 +720,7 @@ QT_END_NAMESPACE
     QT_BT_MAC_AUTORELEASEPOOL;
 
     if (!charMap.contains(charHandle)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic: " << charHandle << " not found";
+        qCWarning(QT_BT_OSX) << "characteristic:" << charHandle << "not found";
         if (notifier) {
             emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::CharacteristicReadError);
@@ -752,8 +749,7 @@ QT_END_NAMESPACE
     QT_BT_MAC_AUTORELEASEPOOL;
 
     if (!charMap.contains(charHandle)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "characteristic: "
-                             << charHandle << " not found";
+        qCWarning(QT_BT_OSX) << "characteristic:" << charHandle << "not found";
         if (notifier) {
             emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::CharacteristicWriteError);
@@ -779,8 +775,7 @@ QT_END_NAMESPACE
     Q_ASSERT_X(descHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
     if (!descMap.contains(descHandle)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle:"
-                             << descHandle << "not found";
+        qCWarning(QT_BT_OSX) << "handle:" << descHandle << "not found";
         if (notifier) {
             emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorReadError);
@@ -805,8 +800,7 @@ QT_END_NAMESPACE
     Q_ASSERT_X(descHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
     if (!descMap.contains(descHandle)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "handle: "
-                             << descHandle << " not found";
+        qCWarning(QT_BT_OSX) << "handle:" << descHandle << "not found";
         if (notifier) {
             emit notifier->CBManagerError(serviceUuid,
                            QLowEnergyService::DescriptorWriteError);
@@ -992,27 +986,25 @@ QT_END_NAMESPACE
     if ([obj isKindOfClass:[CBCharacteristic class]]) {
         CBCharacteristic *const ch = static_cast<CBCharacteristic *>(obj);
         if (!charMap.key(ch)) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected "
-                                    "characteristic, no handle found";
+            qCWarning(QT_BT_OSX) << "unexpected characteristic, no handle found";
             return false;
         }
     } else if ([obj isKindOfClass:[CBDescriptor class]]) {
         CBDescriptor *const d = static_cast<CBDescriptor *>(obj);
         if (!descMap.key(d)) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected "
-                                    "descriptor, no handle found";
+            qCWarning(QT_BT_OSX) << "unexpected descriptor, no handle found";
             return false;
         }
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid object, "
-                                "characteristic or descriptor required";
+        qCWarning(QT_BT_OSX) << "invalid object, characteristic "
+                                "or descriptor required";
         return false;
     }
 
     if (valuesToWrite.contains(obj)) {
         // It can be a result of some previous errors - for example,
         // we never got a callback from a previous write.
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "already has a cached value for this "
+        qCWarning(QT_BT_OSX) << "already has a cached value for this "
                                 "object, the value will be replaced";
     }
 
@@ -1139,7 +1131,7 @@ QT_END_NAMESPACE
 
     if (error && managerState == OSXBluetooth::CentralManagerDisconnecting) {
         managerState = OSXBluetooth::CentralManagerIdle;
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to disconnect";
+        qCWarning(QT_BT_OSX) << "failed to disconnect";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
     } else {
@@ -1320,7 +1312,7 @@ QT_END_NAMESPACE
         // updated values ...
         // TODO: this must be properly tested.
         if (!chHandle) {
-            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "unexpected update notification, "
+            qCCritical(QT_BT_OSX) << "unexpected update notification, "
                                      "no characteristic handle found";
             return;
         }
@@ -1431,7 +1423,7 @@ QT_END_NAMESPACE
         }
     } else {
         if (!dHandle) {
-            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "unexpected value update notification, "
+            qCCritical(QT_BT_OSX) << "unexpected value update notification, "
                                      "no descriptor handle found";
             return;
         }
@@ -1474,8 +1466,8 @@ QT_END_NAMESPACE
     // Error or not, but the cached value has to be deleted ...
     const QByteArray valueToReport(valuesToWrite.value(characteristic, QByteArray()));
     if (!valuesToWrite.remove(characteristic)) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no updated value found"
-                                " for characteristic";
+        qCWarning(QT_BT_OSX) << "no updated value found "
+                                "for characteristic";
     }
 
     if (error) {
@@ -1510,7 +1502,7 @@ QT_END_NAMESPACE
     // Error or not, a value (if any) must be removed.
     const QByteArray valueToReport(valuesToWrite.value(descriptor, QByteArray()));
     if (!valuesToWrite.remove(descriptor))
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no updated value found";
+        qCWarning(QT_BT_OSX) << "no updated value found";
 
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
@@ -1518,8 +1510,7 @@ QT_END_NAMESPACE
                        QLowEnergyService::DescriptorWriteError);
     } else {
         const QLowEnergyHandle dHandle = descMap.key(descriptor);
-        Q_ASSERT_X(dHandle, Q_FUNC_INFO,
-                   "descriptor not found in the descriptors map");
+        Q_ASSERT_X(dHandle, Q_FUNC_INFO, "descriptor not found in the descriptors map");
         emit notifier->descriptorWritten(dHandle, valueToReport);
     }
 

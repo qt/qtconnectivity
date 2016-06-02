@@ -78,8 +78,7 @@ using namespace QT_NAMESPACE;
             [m_inquiry setUpdateNewDeviceNames:NO];//Useless, disable!
             m_delegate = delegate;
         } else {
-            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create "
-                                     "a device inquiry";
+            qCCritical(QT_BT_OSX) << "failed to create a device inquiry";
         }
 
         m_active = false;
@@ -118,8 +117,7 @@ using namespace QT_NAMESPACE;
     if (result != kIOReturnSuccess) {
         // QtBluetooth will probably convert an error into UnknownError,
         // loosing the actual information.
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO <<"failed with "
-                                "IOKit error code: " << result;
+        qCWarning(QT_BT_OSX) << "failed with IOKit error code:" << result;
         m_active = false;
     }
 
@@ -157,7 +155,7 @@ using namespace QT_NAMESPACE;
     if (error != kIOReturnSuccess) {
         // QtBluetooth has not too many error codes, 'UnknownError' is not really
         // useful, report the actual error code here:
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "IOKit error code: " << error;
+        qCWarning(QT_BT_OSX) << "IOKit error code: " << error;
         m_delegate->error(sender, error);
     } else {
         m_delegate->inquiryFinished(sender);

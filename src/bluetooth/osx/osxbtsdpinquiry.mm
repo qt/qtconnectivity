@@ -190,7 +190,7 @@ using namespace OSXBluetooth;
     if (qtFilters.size()) {
         array.reset([[NSMutableArray alloc] init]);
         if (!array) {
-            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate an uuid filter";
+            qCCritical(QT_BT_OSX) << "failed to allocate an uuid filter";
             return kIOReturnError;
         }
 
@@ -201,7 +201,7 @@ using namespace OSXBluetooth;
         }
 
         if (int([array count]) != qtFilters.size()) {
-            qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create an uuid filter";
+            qCCritical(QT_BT_OSX) << "failed to create an uuid filter";
             return kIOReturnError;
         }
     }
@@ -209,7 +209,7 @@ using namespace OSXBluetooth;
     const BluetoothDeviceAddress iobtAddress(iobluetooth_address(address));
     ObjCScopedPointer<IOBluetoothDevice> newDevice([[IOBluetoothDevice deviceWithAddress:&iobtAddress] retain]);
     if (!newDevice) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create an IOBluetoothDevice object";
+        qCCritical(QT_BT_OSX) << "failed to create an IOBluetoothDevice object";
         return kIOReturnError;
     }
 
@@ -223,7 +223,7 @@ using namespace OSXBluetooth;
         result = [device performSDPQuery:self];
 
     if (result != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to start an SDP query";
+        qCCritical(QT_BT_OSX) << "failed to start an SDP query";
         device = oldDevice.take();
     } else {
         isActive = true;

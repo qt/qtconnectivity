@@ -269,7 +269,7 @@ using namespace QT_NAMESPACE;
 
 
     if (!peripheral.identifier) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
+        qCWarning(QT_BT_OSX) << "peripheral without NSUUID";
         return;
     }
 
@@ -282,7 +282,7 @@ using namespace QT_NAMESPACE;
     deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
 
     if (deviceUuid.isNull()) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no way to address peripheral, QBluetoothUuid is null";
+        qCWarning(QT_BT_OSX) << "no way to address peripheral, QBluetoothUuid is null";
         return;
     }
 

@@ -108,14 +108,13 @@ using namespace QT_NAMESPACE;
     // Device is autoreleased.
     IOBluetoothDevice *const device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device "
-                                 "to pair with";
+        qCCritical(QT_BT_OSX) << "failed to create a device to pair with";
         return kIOReturnError;
     }
 
     m_pairing = [[IOBluetoothDevicePair pairWithDevice:device] retain];
     if (!m_pairing) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create pair";
+        qCCritical(QT_BT_OSX) << "failed to create pair";
         return kIOReturnError;
     }
 
