@@ -106,7 +106,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         serviceDict(iobluetooth_service_dictionary(*q_ptr));
 
     if (!serviceDict) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a service dictionary";
+        qCWarning(QT_BT_OSX) << "failed to create a service dictionary";
         return false;
     }
 
@@ -115,13 +115,13 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
                      publishedServiceRecordWithDictionary:serviceDict] retain]);
 
     if (!newRecord) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
+        qCWarning(QT_BT_OSX) << "failed to register a service record";
         return false;
     }
 
     BluetoothSDPServiceRecordHandle newRecordHandle = 0;
     if ([newRecord getServiceRecordHandle:&newRecordHandle] != kIOReturnSuccess) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
+        qCWarning(QT_BT_OSX) << "failed to register a service record";
         [newRecord removeServiceRecord];
         return false;
     }
@@ -149,7 +149,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     if (!configured) {
         [newRecord removeServiceRecord];
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to register a service record";
+        qCWarning(QT_BT_OSX) << "failed to register a service record";
         return false;
     }
 

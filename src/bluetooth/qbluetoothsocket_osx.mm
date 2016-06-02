@@ -447,7 +447,7 @@ qint64 QBluetoothSocket::bytesToWrite() const
 void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
     if (state() != UnconnectedState && state() != ServiceLookupState) {
-        qCWarning(QT_BT_OSX)  << Q_FUNC_INFO << "called on a busy socket";
+        qCWarning(QT_BT_OSX)  << "called on a busy socket";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(OperationError);
         return;
@@ -463,8 +463,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     } else {
         // Try service discovery.
         if (service.serviceUuid().isNull()) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "No port, "
-                                    "no PSM, and no UUID provided, unable to connect";
+            qCWarning(QT_BT_OSX) << "No port, no PSM, and no "
+                                    "UUID provided, unable to connect";
             return;
         }
 
@@ -476,7 +476,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
                                         OpenMode openMode)
 {
     if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
+        qCWarning(QT_BT_OSX) << "called on a busy socket";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(QBluetoothSocket::OperationError);
         return;
@@ -493,7 +493,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
                                         OpenMode openMode)
 {
     if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
+        qCWarning(QT_BT_OSX) << "called on a busy socket";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(OperationError);
         return;
@@ -534,7 +534,7 @@ void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
         // We can register for L2CAP/RFCOMM open notifications,
         // that's different from 'listen' and is implemented
         // in QBluetoothServer.
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "listening sockets are not supported";
+        qCWarning(QT_BT_OSX) << "listening sockets are not supported";
     }
 }
 

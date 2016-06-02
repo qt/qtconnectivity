@@ -334,7 +334,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(IOBluetoothDevice *
 {
     Q_UNUSED(device)
 
-    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "inquiry failed with IOKit code: " << int(errorCode);
+    qCWarning(QT_BT_OSX) << "inquiry failed with IOKit code:" << int(errorCode);
 
     discoveredDevices.clear();
     // TODO: find a better mapping from IOReturn to QBluetoothServiceDiscoveryAgent::Error.

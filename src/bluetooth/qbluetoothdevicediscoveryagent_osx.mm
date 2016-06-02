@@ -152,7 +152,7 @@ void DDATimerHandler::start(int msec)
 {
     Q_ASSERT_X(msec > 0, Q_FUNC_INFO, "invalid time interval");
     if (timer.isActive()) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "timer is active";
+        qCWarning(QT_BT_OSX) << "timer is active";
         return;
     }
 
@@ -186,15 +186,13 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
 
     HostController controller([[IOBluetoothHostController defaultController] retain]);
     if (!controller || [controller powerState] != kBluetoothHCIPowerStateON) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "no default host "
-                                 "controller or adapter is off";
+        qCCritical(QT_BT_OSX) << "no default host controller or adapter is off";
         return;
     }
 
     DeviceInquiry newInquiry([[DeviceInquiryObjC alloc]initWithDelegate:this]);
     if (!newInquiry) { // Obj-C's way of "reporting errors":
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to "
-                                 "initialize an inquiry";
+        qCCritical(QT_BT_OSX) << "failed to initialize an inquiry";
         return;
     }
 
@@ -311,7 +309,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
     if (agentState == ClassicScan) {
         const IOReturn res = [inquiry stop];
         if (res != kIOReturnSuccess) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to stop";
+            qCWarning(QT_BT_OSX) << "failed to stop";
             startPending = prevStart;
             stopPending = false;
             setError(res, QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STOPPED));
@@ -385,7 +383,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(IOBluetoothDeviceInquiry
     // Let's collect some info about this device:
     const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull()) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid Bluetooth address";
+        qCWarning(QT_BT_OSX) << "invalid Bluetooth address";
         return;
     }
 
@@ -478,8 +476,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::checkLETimeout()
         return;
     }
 
-    qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unexpected inquiry state in LE timeout";
-    // Actually, this deserves an assert :)
+    qCWarning(QT_BT_OSX) << "unexpected inquiry state in LE timeout";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error)

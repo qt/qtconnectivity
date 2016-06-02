@@ -96,7 +96,7 @@ QBluetoothServerPrivate::QBluetoothServerPrivate(QSInfo::Protocol type, QBluetoo
 {
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
     if (serverType == QSInfo::UnknownProtocol)
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown protocol";
+        qCWarning(QT_BT_OSX) << "unknown protocol";
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
@@ -117,7 +117,7 @@ bool QBluetoothServerPrivate::startListener(quint16 realPort)
     Q_ASSERT_X(realPort, Q_FUNC_INFO, "invalid port");
 
     if (serverType == QSInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
         return false;
     }
 
@@ -218,7 +218,7 @@ void QBluetoothServerPrivate::registerServer(QBluetoothServerPrivate *server, qu
         Q_ASSERT_X(!psmIsBusy(port), Q_FUNC_INFO, "port is busy");
         busyPSMs()[port] = server;
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "can not register a server "
+        qCWarning(QT_BT_OSX) << "can not register a server "
                                 "with unknown protocol type";
     }
 }
@@ -235,7 +235,7 @@ QBluetoothServerPrivate *QBluetoothServerPrivate::registeredServer(quint16 port,
         if (it != busyPSMs().end())
             return it.value();
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
     }
 
     return Q_NULLPTR;
@@ -252,17 +252,17 @@ void QBluetoothServerPrivate::unregisterServer(QBluetoothServerPrivate *server)
         if (it != busyChannels().end()) {
             busyChannels().erase(it);
         } else {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "server is not registered";
+            qCWarning(QT_BT_OSX) << "server is not registered";
         }
     } else if (type == QSInfo::L2capProtocol) {
         ServerMapIterator it = busyPSMs().find(port);
         if (it != busyPSMs().end()) {
             busyPSMs().erase(it);
         } else {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "server is not registered";
+            qCWarning(QT_BT_OSX) << "server is not registered";
         }
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
     }
 }
 
@@ -293,16 +293,15 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     typedef QBluetoothServerPrivate::ObjCListener ObjCListener;
 
     if (d_ptr->listener) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "already in listen mode, "
-                                "close server first";
+        qCWarning(QT_BT_OSX) << "already in listen mode, close server first";
         return false;
     }
 
     const QBluetoothLocalDevice device(address);
     if (!device.isValid()) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "device does not support Bluetooth or "
+        qCWarning(QT_BT_OSX) << "device does not support Bluetooth or"
                              << address.toString()
-                             << " is not a valid local adapter";
+                             << "is not a valid local adapter";
         d_ptr->lastError = UnknownError;
         emit error(UnknownError);
         return false;
@@ -310,7 +309,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
     const QBluetoothLocalDevice::HostMode hostMode = device.hostMode();
     if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "Bluetooth device is powered off";
+        qCWarning(QT_BT_OSX) << "Bluetooth device is powered off";
         d_ptr->lastError = PoweredOffError;
         emit error(PoweredOffError);
         return false;
@@ -319,7 +318,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     const QSInfo::Protocol type = d_ptr->serverType;
 
     if (type == QSInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
         d_ptr->lastError = UnsupportedProtocolError;
         emit error(d_ptr->lastError);
         return false;
@@ -333,14 +332,14 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (port) {
         if (type == QSInfo::RfcommProtocol) {
             if (d_ptr->channelIsBusy(port)) {
-                qCWarning(QT_BT_OSX) << Q_FUNC_INFO <<"server port: "
-                                     << port << "already registered";
+                qCWarning(QT_BT_OSX) << "server port:" << port
+                                     << "already registered";
                 d_ptr->lastError = ServiceAlreadyRegisteredError;
             }
         } else {
             if (d_ptr->psmIsBusy(port)) {
-                qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "server port: "
-                                     << port << "already registered";
+                qCWarning(QT_BT_OSX) << "server port:" << port
+                                     << "already registered";
                 d_ptr->lastError = ServiceAlreadyRegisteredError;
             }
         }
@@ -355,7 +354,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     }
 
     if (!port) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "all ports are busy";
+        qCWarning(QT_BT_OSX) << "all ports are busy";
         d_ptr->lastError = ServiceAlreadyRegisteredError;
         emit error(d_ptr->lastError);
         return false;
