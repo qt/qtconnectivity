@@ -432,6 +432,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
                 pendingCancel = false;
                 start();
             } else {
+                 // happens when agent is created while other agent called StopDiscovery()
+                if (!adapter)
+                    return;
+
                 if (useExtendedDiscovery) {
                     useExtendedDiscovery = false;
                     /* We don't use the Start/StopDiscovery combo here
