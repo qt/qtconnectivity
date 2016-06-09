@@ -168,7 +168,6 @@ config_bluez:qtHaveModule(dbus) {
 
     include(osx/osxbt.pri)
     SOURCES += \
-        qbluetoothdevicediscoveryagent_p.cpp \
         qbluetoothlocaldevice_p.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
