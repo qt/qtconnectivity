@@ -62,13 +62,18 @@ Rectangle {
             }
         }
 
+        //! [QML NDEF filtering]
         filter: [
             NdefFilter { type: "U"; typeNameFormat: NdefRecord.NfcRtd; maximum: 1 },
             NdefFilter { type: "T"; typeNameFormat: NdefRecord.NfcRtd },
             NdefFilter { typeNameFormat: NdefRecord.Mime; minimum: 0; maximum: 1 }
         ]
 
+        //! [QML NDEF filtering]
+
+        //! [messageRecordsChanged 1]
         onMessageRecordsChanged: {
+        //! [messageRecordsChanged 1]
             posterText.text = "";
             posterImage.source = "";
             posterUrl.text = "";
@@ -76,6 +81,7 @@ Rectangle {
             var currentLocaleMatch = NdefTextRecord.LocaleMatchedNone;
             var i;
             var found = false;
+        //! [messageRecordsChanged 2]
             for (i = 0; i < messageRecords.length; ++i) {
                 switch (messageRecords[i].typeNameFormat) {
                 case NdefRecord.NfcRtd:
@@ -102,18 +108,24 @@ Rectangle {
                 if (!found)
                     console.warn("Unknown NFC tag detected. Cannot display content.")
             }
+             //! [messageRecordsChanged 2]
 
             root.state = "show";
+        //! [messageRecordsChanged 3]
         }
+        //! [messageRecordsChanged 3]
     }
 
     Text {
         id: touchText
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        text: "Touch an NFC tag"
+        text: "Touch an NFC tag with at least one Text and one URI record."
         font.bold: true
         font.pointSize: 18
+        wrapMode: Text.WordWrap
+        width: root.width*0.75
+        horizontalAlignment: Text.AlignHCenter
     }
 
     Image {

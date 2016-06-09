@@ -68,7 +68,8 @@ public:
         ServiceDiscovery,
     };
 
-    QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &localAddress);
+    QBluetoothServiceDiscoveryAgentPrivate(QBluetoothServiceDiscoveryAgent *qp,
+                                           const QBluetoothAddress &localAddress);
 
     void startDeviceDiscovery();
     void stopDeviceDiscovery();
@@ -116,8 +117,9 @@ private:
     OSXBluetooth::ObjCScopedPointer<ObjCServiceInquiry> serviceInquiry;
 };
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &localAddress) :
-    q_ptr(0),
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
+    QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &localAddress) :
+    q_ptr(qp),
     error(QBluetoothServiceDiscoveryAgent::NoError),
     singleDevice(false),
     localAdapterAddress(localAddress),
@@ -429,15 +431,15 @@ void QBluetoothServiceDiscoveryAgentPrivate::serviceDiscoveryFinished()
 }
 
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent)
-: QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(QBluetoothAddress()))
+: QObject(parent),
+  d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(this, QBluetoothAddress()))
 {
-    d_ptr->q_ptr = this;
 }
 
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
-: QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(deviceAdapter))
+: QObject(parent),
+  d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(this, deviceAdapter))
 {
-    d_ptr->q_ptr = this;
     if (!deviceAdapter.isNull()) {
         const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
         foreach (const QBluetoothHostInfo &hostInfo, localDevices) {

@@ -68,10 +68,12 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
     to[5] = (from >> 40) & 0xff;
 }
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
+    QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
-    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0)
+    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0),
+    q_ptr(qp)
 {
     if (isBluez5()) {
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
@@ -218,14 +220,22 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
 
         sdpScannerProcess = new QProcess(q);
         sdpScannerProcess->setReadChannel(QProcess::StandardOutput);
+        if (QT_BT_BLUEZ().isDebugEnabled())
+            sdpScannerProcess->setProcessChannelMode(QProcess::ForwardedErrorChannel);
         sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
         q->connect(sdpScannerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
                    q, SLOT(_q_sdpScannerDone(int,QProcess::ExitStatus)));
-
     }
 
     QStringList arguments;
     arguments << remoteAddress.toString() << localAddress.toString();
+
+    // No filter implies PUBLIC_BROWSE_GROUP based SDP scan
+    if (!uuidFilter.isEmpty()) {
+        arguments << QLatin1String("-u"); // cmd line option for list of uuids
+        foreach (const QBluetoothUuid& uuid, uuidFilter)
+            arguments << uuid.toString();
+    }
 
     sdpScannerProcess->setArguments(arguments);
     sdpScannerProcess->start();
