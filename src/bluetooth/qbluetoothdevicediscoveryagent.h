@@ -91,6 +91,9 @@ public:
 
     QList<QBluetoothDeviceInfo> discoveredDevices() const;
 
+    void setLowEnergyDiscoveryTimeout(int msTimeout);
+    int lowEnergyDiscoveryTimeout() const;
+
 public Q_SLOTS:
     void start();
     void stop();

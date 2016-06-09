@@ -155,6 +155,7 @@ private:
     QTimer extendedDiscoveryTimer;
 #endif
 
+    int lowEnergySearchTimeout;
     QBluetoothDeviceDiscoveryAgent *q_ptr;
 };
 

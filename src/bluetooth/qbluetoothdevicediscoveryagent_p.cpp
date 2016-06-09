@@ -55,6 +55,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 QBluetoothDeviceDiscoveryAgent *parent)
     :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
         lastError(QBluetoothDeviceDiscoveryAgent::NoError),
+        lowEnergySearchTimeout(-1),
         q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);

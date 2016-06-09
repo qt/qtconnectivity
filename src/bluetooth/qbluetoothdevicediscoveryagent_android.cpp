@@ -66,6 +66,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     leScanTimeout(0),
     pendingCancel(false),
     pendingStart(false),
+    lowEnergySearchTimeout(-1), //TODO change when implemented
     q_ptr(parent)
 {
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",

@@ -101,6 +101,7 @@ private:
     bool stopPending;
 
     QScopedPointer<OSXBluetooth::DDATimerHandler> timer;
+    int lowEnergySearchTimeout;
 };
 
 namespace OSXBluetooth {
@@ -144,7 +145,8 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
     startPending(false),
-    stopPending(false)
+    stopPending(false),
+    lowEnergySearchTimeout(-1) // change when implemented
 {
     Q_UNUSED(adapter);
 
@@ -428,6 +430,21 @@ QBluetoothDeviceDiscoveryAgent::Error QBluetoothDeviceDiscoveryAgent::error() co
 QString QBluetoothDeviceDiscoveryAgent::errorString() const
 {
     return d_ptr->errorString;
+}
+
+int QBluetoothDeviceDiscoveryAgent::lowEnergyDiscoveryTimeout() const
+{
+    return d_ptr->lowEnergySearchTimeout;
+}
+
+void QBluetoothDeviceDiscoveryAgent::setLowEnergyDiscoveryTimeout(int timeout)
+{
+    // cannot deliberately turn it off
+    if (d_ptr->lowEnergySearchTimeout < 0 || timeout < 0)
+        return;
+
+    d_ptr->lowEnergySearchTimeout = timeout;
+    return;
 }
 
 QT_END_NAMESPACE

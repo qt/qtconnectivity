@@ -68,6 +68,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     adapterBluez5(0),
     discoveryTimer(0),
     useExtendedDiscovery(false),
+    lowEnergySearchTimeout(-1), //TODO change when implemented
     q_ptr(parent)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
