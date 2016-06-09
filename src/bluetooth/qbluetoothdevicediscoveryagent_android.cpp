@@ -264,6 +264,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
             env->ExceptionClear();
             m_active = NoScanActive;
             emit q->finished();
+            return;
         }
 
         leScanner.setField<jlong>("qtObject", reinterpret_cast<long>(receiver));
@@ -274,6 +275,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         qCWarning(QT_BT_ANDROID) << "Cannot start BTLE device scanner";
         m_active = NoScanActive;
         emit q->finished();
+        return;
     }
 
     if (!leScanTimeout) {

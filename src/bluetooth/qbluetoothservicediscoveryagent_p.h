@@ -93,7 +93,8 @@ public:
         ServiceDiscovery,
     };
 
-    QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter);
+    QBluetoothServiceDiscoveryAgentPrivate(QBluetoothServiceDiscoveryAgent *qp,
+                                           const QBluetoothAddress &deviceAdapter);
     ~QBluetoothServiceDiscoveryAgentPrivate();
 
     void startDeviceDiscovery();

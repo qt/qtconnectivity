@@ -117,6 +117,8 @@ public:
     DiscoveryMode discoveryMode() const;
     void setDiscoveryMode(DiscoveryMode discovery);
 
+    // TODO Qt 6 This property behaves synchronously but should really be
+    // asynchronous. The agents start/stop/restart is not immediate.
     bool running() const;
     void setRunning(bool running);
 
@@ -145,8 +147,22 @@ private slots:
 private:
     void clearModel();
 
+    enum Action {
+        IdleAction = 0,
+        StopAction,
+        DeviceDiscoveryAction,
+        MinimalServiceDiscoveryAction,
+        FullServiceDiscoveryAction
+    };
+
+    bool toggleStartStop(Action action);
+    void updateNextAction(Action action);
+    void transitionToNextAction();
+
 private:
     QDeclarativeBluetoothDiscoveryModelPrivate* d;
+    friend class QDeclarativeBluetoothDiscoveryModelPrivate;
+
 };
 
 #endif // QDECLARATIVECONTACTMODEL_P_H

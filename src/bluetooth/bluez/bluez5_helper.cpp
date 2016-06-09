@@ -266,8 +266,24 @@ void QtBluezDiscoveryManager::PropertiesChanged(const QString &interface,
             && d->references.contains(propIface->path())
             && changed_properties.contains(QStringLiteral("Discovering"))) {
         bool isDiscovering = changed_properties.value(QStringLiteral("Discovering")).toBool();
-        if (!isDiscovering)
-            removeAdapterFromMonitoring(propIface->path());
+        if (!isDiscovering) {
+
+            /*
+              Once we stop the Discovering flag will switch a few ms later. This comes through this code
+              path. If a new device discovery is started while we are still
+              waiting for the flag change signal, then the new device discovery will be aborted prematurely.
+              To compensate we check whether there was renewed interest.
+             */
+
+            AdapterData *data = d->references[propIface->path()];
+            if (!data) {
+                removeAdapterFromMonitoring(propIface->path());
+            } else {
+                OrgBluezAdapter1Interface iface(QStringLiteral("org.bluez"), propIface->path(),
+                                                QDBusConnection::systemBus());
+                iface.StartDiscovery();
+            }
+        }
     }
 }
 
