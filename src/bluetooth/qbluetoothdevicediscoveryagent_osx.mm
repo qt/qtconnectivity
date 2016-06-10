@@ -37,21 +37,21 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothdevicediscoverytimer_osx_p.h"
 #include "qbluetoothdevicediscoveryagent.h"
 #include "osx/osxbtledeviceinquiry_p.h"
 #include "osx/osxbtdeviceinquiry_p.h"
 #include "qbluetoothlocaldevice.h"
 #include "osx/osxbtsdpinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
+#include "osx/osxbtnotifier_p.h"
 #include "osx/osxbtutility_p.h"
-#include "osx/uistrings_p.h"
 #include "qbluetoothhostinfo.h"
+#include "qbluetoothaddress.h"
+#include "osx/uistrings_p.h"
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
-#include <QtCore/qdatetime.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qdebug.h>
@@ -63,18 +63,34 @@
 
 QT_BEGIN_NAMESPACE
 
-using OSXBluetooth::ObjCScopedPointer;
+namespace
+{
 
-class QBluetoothDeviceDiscoveryAgentPrivate : public OSXBluetooth::DeviceInquiryDelegate
+void registerQDeviceDiscoveryMetaType()
+{
+    static bool initDone = false;
+    if (!initDone) {
+        qRegisterMetaType<QBluetoothDeviceInfo>();
+        qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
+        initDone = true;
+    }
+}
+
+}//namespace
+
+class QBluetoothDeviceDiscoveryAgentPrivate : public QObject,
+                                              public OSXBluetooth::DeviceInquiryDelegate
 {
     friend class QBluetoothDeviceDiscoveryAgent;
-    friend class OSXBluetooth::DDATimerHandler;
 public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) LEDeviceInquiryObjC;
+    template<class T>
+    using ObjCScopedPointer = OSXBluetooth::ObjCScopedPointer<T>;
+    using LEDeviceInquiryObjC = QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
 
     QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress & address,
                                           QBluetoothDeviceDiscoveryAgent *q);
-    virtual ~QBluetoothDeviceDiscoveryAgentPrivate();
+
+    ~QBluetoothDeviceDiscoveryAgentPrivate() Q_DECL_OVERRIDE;
 
     bool isValid() const;
     bool isActive() const;
@@ -95,7 +111,6 @@ private:
     void error(IOBluetoothDeviceInquiry *inq, IOReturn error) Q_DECL_OVERRIDE;
     void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) Q_DECL_OVERRIDE;
 
-    //
     void LEinquiryFinished();
     void LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error);
     void LEnotSupported();
@@ -105,9 +120,8 @@ private:
     void deviceFound(const QBluetoothDeviceInfo &newDeviceInfo);
 
     void setError(IOReturn error, const QString &text = QString());
-    void setError(QBluetoothDeviceDiscoveryAgent::Error, const QString &text = QString());
-
-    void checkLETimeout();
+    void setError(QBluetoothDeviceDiscoveryAgent::Error,
+                  const QString &text = QString());
 
     QBluetoothDeviceDiscoveryAgent *q_ptr;
     AgentState agentState;
@@ -122,56 +136,20 @@ private:
 
     QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType;
 
-    typedef ObjCScopedPointer<DeviceInquiryObjC> DeviceInquiry;
+    using DeviceInquiry = ObjCScopedPointer<DeviceInquiryObjC>;
     DeviceInquiry inquiry;
 
-    typedef ObjCScopedPointer<LEDeviceInquiryObjC> LEDeviceInquiry;
+    using LEDeviceInquiry = ObjCScopedPointer<LEDeviceInquiryObjC>;
     LEDeviceInquiry inquiryLE;
 
-    typedef ObjCScopedPointer<IOBluetoothHostController> HostController;
+    using HostController = ObjCScopedPointer<IOBluetoothHostController>;
     HostController hostController;
 
-    typedef QList<QBluetoothDeviceInfo> DevicesList;
+    using DevicesList = QList<QBluetoothDeviceInfo>;
     DevicesList discoveredDevices;
 
-    QScopedPointer<OSXBluetooth::DDATimerHandler> timer;
     int lowEnergySearchTimeout;
 };
-
-namespace OSXBluetooth {
-
-DDATimerHandler::DDATimerHandler(QBluetoothDeviceDiscoveryAgentPrivate *d)
-    : owner(d)
-{
-    Q_ASSERT_X(owner, Q_FUNC_INFO, "invalid pointer");
-
-    timer.setSingleShot(false);
-    connect(&timer, &QTimer::timeout, this, &DDATimerHandler::onTimer);
-}
-
-void DDATimerHandler::start(int msec)
-{
-    Q_ASSERT_X(msec > 0, Q_FUNC_INFO, "invalid time interval");
-    if (timer.isActive()) {
-        qCWarning(QT_BT_OSX) << "timer is active";
-        return;
-    }
-
-    timer.start(msec);
-}
-
-void DDATimerHandler::stop()
-{
-    timer.stop();
-}
-
-void DDATimerHandler::onTimer()
-{
-    Q_ASSERT(owner);
-    owner->checkLETimeout();
-}
-
-}
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &adapter,
                                                                              QBluetoothDeviceDiscoveryAgent *q) :
@@ -182,8 +160,10 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     stopPending(false),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
-    lowEnergySearchTimeout(-1) // change when implemented
+    lowEnergySearchTimeout(OSXBluetooth::defaultLEScanTimeoutMS)
 {
+    registerQDeviceDiscoveryMetaType();
+
     Q_ASSERT_X(q != Q_NULLPTR, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     HostController controller([[IOBluetoothHostController defaultController] retain]);
@@ -209,7 +189,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
         if (dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
             // Local variable to be retained ...
             LEDeviceInquiryObjC *inq = inquiryLE.data();
-            dispatch_async(leQueue, ^{
+            dispatch_sync(leQueue, ^{
                 [inq stop];
             });
         }
@@ -270,7 +250,23 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
 
     using namespace OSXBluetooth;
 
-    inquiryLE.reset([[LEDeviceInquiryObjC alloc] init]);
+    QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
+    // Connections:
+    using ErrMemFunPtr = void (LECBManagerNotifier::*)(QBluetoothDeviceDiscoveryAgent::Error);
+    notifier->connect(notifier.data(), ErrMemFunPtr(&LECBManagerNotifier::CBManagerError),
+                      this, &QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError);
+    notifier->connect(notifier.data(), &LECBManagerNotifier::LEnotSupported,
+                      this, &QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported);
+    notifier->connect(notifier.data(), &LECBManagerNotifier::discoveryFinished,
+                      this, &QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryFinished);
+    using DeviceMemFunPtr = void (QBluetoothDeviceDiscoveryAgentPrivate::*)(const QBluetoothDeviceInfo &);
+    notifier->connect(notifier.data(), &LECBManagerNotifier::deviceDiscovered,
+                      this, DeviceMemFunPtr(&QBluetoothDeviceDiscoveryAgentPrivate::deviceFound));
+
+    // Check queue and create scanner:
+    inquiryLE.reset([[LEDeviceInquiryObjC alloc] initWithNotifier:notifier.data()]);
+    if (inquiryLE)
+        notifier.take(); // Whatever happens next, inquiryLE is already the owner ...
 
     dispatch_queue_t leQueue(qt_LE_queue());
     if (!leQueue || !inquiryLE) {
@@ -278,18 +274,15 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
                  QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED_LE));
         agentState = NonActive;
         emit q_ptr->error(lastError);
+        return;
     }
 
+    // Now start in on LE queue:
     agentState = LEScan;
-    // CoreBluetooth does not have a timeout. We start a timer here
-    // and check if scan is active/finished/finished with error(s).
-    timer.reset(new OSXBluetooth::DDATimerHandler(this));
-    timer->start(2000);
-
     // We need the local variable so that it's retained ...
     LEDeviceInquiryObjC *inq = inquiryLE.data();
     dispatch_async(leQueue, ^{
-        [inq start];
+        [inq startWithTimeout:lowEnergySearchTimeout];
     });
 }
 
@@ -322,7 +315,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
         Q_ASSERT(leQueue);
         // We need the local variable so that it's retained ...
         LEDeviceInquiryObjC *inq = inquiryLE.data();
-        dispatch_async(leQueue, ^{
+        dispatch_sync(leQueue, ^{
             [inq stop];
         });
         // We consider LE scan to be stopped immediately and
@@ -446,49 +439,16 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
         qCDebug(QT_BT_OSX) << "error set: "<<errorString;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::checkLETimeout()
-{
-    Q_ASSERT_X(agentState == LEScan, Q_FUNC_INFO, "invalid agent state");
-    Q_ASSERT_X(inquiryLE, Q_FUNC_INFO, "LE device inquiry is nil");
-
-    using namespace OSXBluetooth;
-
-    const LEInquiryState state([inquiryLE inquiryState]);
-    if (state == InquiryStarting || state == InquiryActive)
-        return; // Wait ...
-
-    if (state == ErrorPoweredOff)
-        return LEinquiryError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
-
-    if (state == ErrorLENotSupported)
-        return LEnotSupported();
-
-    if (state == InquiryFinished) {
-        // Process found devices if any ...
-        const QList<QBluetoothDeviceInfo> leDevices([inquiryLE discoveredDevices]);
-        foreach (const QBluetoothDeviceInfo &info, leDevices) {
-            // We were cancelled on a previous device discovered signal ...
-            if (agentState != LEScan)
-                break;
-            deviceFound(info);
-        }
-
-        if (agentState == LEScan)
-            LEinquiryFinished();
-        return;
-    }
-
-    qCWarning(QT_BT_OSX) << "unexpected inquiry state in LE timeout";
-}
-
 void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
     // At the moment the only error reported can be 'powered off' error, it happens
     // after the LE scan started (so we have LE support and this is a real PoweredOffError).
     Q_ASSERT(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError);
 
-    timer->stop();
     inquiryLE.reset();
+
+    startPending = false;
+    stopPending = false;
     agentState = NonActive;
     setError(error);
     emit q_ptr->error(lastError);
@@ -506,7 +466,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryFinished()
     // The same logic as in inquiryFinished, but does not start LE scan.
     agentState = NonActive;
     inquiryLE.reset();
-    timer->stop();
 
     if (stopPending && !startPending) {
         stopPending = false;

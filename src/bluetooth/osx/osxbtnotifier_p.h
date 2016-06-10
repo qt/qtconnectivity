@@ -52,7 +52,9 @@
 //
 
 
+#include "qbluetoothdevicediscoveryagent.h"
 #include "qlowenergycontroller.h"
+#include "qbluetoothdeviceinfo.h"
 #include "qbluetoothuuid.h"
 #include "qbluetooth.h"
 
@@ -73,6 +75,9 @@ class LECBManagerNotifier : public QObject
     Q_OBJECT
 
 Q_SIGNALS:
+    void deviceDiscovered(QBluetoothDeviceInfo deviceInfo);
+    void discoveryFinished();
+
     void connected();
     void disconnected();
 
@@ -85,6 +90,7 @@ Q_SIGNALS:
     void descriptorWritten(QLowEnergyHandle descHandle, const QByteArray &value);
 
     void LEnotSupported();
+    void CBManagerError(QBluetoothDeviceDiscoveryAgent::Error error);
     void CBManagerError(QLowEnergyController::Error error);
     void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
     void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);

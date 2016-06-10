@@ -53,7 +53,6 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
@@ -302,20 +301,9 @@ QByteArray qt_bytearray(NSData *data);
 QByteArray qt_bytearray(NSObject *data);
 ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData);
 
-inline QSysInfo::MacVersion qt_OS_limit(QSysInfo::MacVersion osxVersion, QSysInfo::MacVersion iosVersion)
-{
-#ifdef Q_OS_OSX
-    Q_UNUSED(iosVersion)
-    return osxVersion;
-#else
-    Q_UNUSED(osxVersion)
-    return iosVersion;
-#endif
-}
-
 dispatch_queue_t qt_LE_queue();
-// LE scan, in seconds.
-unsigned qt_LE_deviceInquiryLength();
+
+extern const int defaultLEScanTimeoutMS;
 
 } // namespace OSXBluetooth
 

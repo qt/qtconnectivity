@@ -68,6 +68,8 @@ Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.ios")
 
 namespace OSXBluetooth {
 
+const int defaultLEScanTimeoutMS = 25000;
+
 QString qt_address(NSString *address)
 {
     if (address && address.length) {
@@ -346,11 +348,6 @@ dispatch_queue_t qt_LE_queue()
 {
     static const SerialDispatchQueue leQueue("qt-bluetooth-LE-queue");
     return leQueue.data();
-}
-
-unsigned qt_LE_deviceInquiryLength()
-{
-    return 10;
 }
 
 }
