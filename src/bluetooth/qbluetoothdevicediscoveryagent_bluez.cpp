@@ -68,11 +68,12 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     adapterBluez5(0),
     discoveryTimer(0),
     useExtendedDiscovery(false),
-    lowEnergySearchTimeout(-1), //TODO change when implemented
+    lowEnergySearchTimeout(-1), // remains -1 on BlueZ 4 -> timeout not supported
     q_ptr(parent)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (isBluez5()) {
+        lowEnergySearchTimeout = 20000;
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
                                            QStringLiteral("org.bluez"),
                                            QStringLiteral("/"),
@@ -274,16 +275,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
         }
     }
 
-    // wait 20s and sum up what was found
+    // wait interval and sum up what was found
     if (!discoveryTimer) {
         discoveryTimer = new QTimer(q);
         discoveryTimer->setSingleShot(true);
-        discoveryTimer->setInterval(20000); // 20s
         QObject::connect(discoveryTimer, SIGNAL(timeout()),
                          q, SLOT(_q_discoveryFinished()));
     }
 
-    discoveryTimer->start();
+    if (lowEnergySearchTimeout > 0) { // otherwise no timeout and stop() required
+        discoveryTimer->setInterval(lowEnergySearchTimeout);
+        discoveryTimer->start();
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
