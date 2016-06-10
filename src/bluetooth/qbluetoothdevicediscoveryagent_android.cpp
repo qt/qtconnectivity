@@ -66,7 +66,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     leScanTimeout(0),
     pendingCancel(false),
     pendingStart(false),
-    lowEnergySearchTimeout(-1), //TODO change when implemented
+    lowEnergySearchTimeout(25000),
     q_ptr(parent)
 {
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
@@ -279,15 +279,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         return;
     }
 
+    // wait interval and sum up what was found
     if (!leScanTimeout) {
         leScanTimeout = new QTimer(this);
         leScanTimeout->setSingleShot(true);
-        leScanTimeout->setInterval(25000);
         connect(leScanTimeout, &QTimer::timeout,
                 this, &QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan);
     }
 
-    leScanTimeout->start();
+    if (lowEnergySearchTimeout > 0) { // otherwise no timeout and stop() required
+        leScanTimeout->setInterval(lowEnergySearchTimeout);
+        leScanTimeout->start();
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()
