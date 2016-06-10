@@ -149,9 +149,9 @@ QT_BEGIN_NAMESPACE
     local default Bluetooth adapter.
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent)
-: QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(QBluetoothAddress()))
+  : QObject(parent),
+    d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(this, QBluetoothAddress()))
 {
-     d_ptr->q_ptr = this;
 }
 
 /*!
@@ -167,9 +167,9 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
     \sa error()
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
-: QObject(parent), d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(deviceAdapter))
+  : QObject(parent),
+    d_ptr(new QBluetoothServiceDiscoveryAgentPrivate(this, deviceAdapter))
 {
-    d_ptr->q_ptr = this;
     if (!deviceAdapter.isNull()) {
         const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
         foreach (const QBluetoothHostInfo &hostInfo, localDevices) {

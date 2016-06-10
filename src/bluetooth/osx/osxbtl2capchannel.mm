@@ -106,13 +106,13 @@ using namespace QT_NAMESPACE;
             withPSM:(BluetoothL2CAPChannelID)psm
 {
     if (address.isNull()) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "invalid peer address";
+        qCCritical(QT_BT_OSX) << "invalid peer address";
         return kIOReturnNoDevice;
     }
 
     // Can never be called twice.
     if (connected || device || channel) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "connection is already active";
+        qCCritical(QT_BT_OSX) << "connection is already active";
         return kIOReturnStillOpen;
     }
 
@@ -121,13 +121,13 @@ using namespace QT_NAMESPACE;
     const BluetoothDeviceAddress iobtAddress = OSXBluetooth::iobluetooth_address(address);
     device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device";
+        qCCritical(QT_BT_OSX) << "failed to create a device";
         return kIOReturnNoDevice;
     }
 
     const IOReturn status = [device openL2CAPChannelAsync:&channel withPSM:psm delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to open L2CAP channel";
+        qCCritical(QT_BT_OSX) << "failed to open L2CAP channel";
         // device is still autoreleased.
         device = nil;
         return status;

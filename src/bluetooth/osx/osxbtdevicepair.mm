@@ -41,7 +41,6 @@
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -91,18 +90,8 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9)
-    // Stop also sets a delegate to nil (Apple's docs).
-    // 10.9 only.
-    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_9)
-        [m_pairing stop];
-    else
-        [m_pairing setDelegate:nil];
-#else
-    [m_pairing setDelegate:nil];
-#endif
+    [m_pairing stop];
     [m_pairing release];
-
     [super dealloc];
 }
 
@@ -119,14 +108,13 @@ using namespace QT_NAMESPACE;
     // Device is autoreleased.
     IOBluetoothDevice *const device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create a device "
-                                 "to pair with";
+        qCCritical(QT_BT_OSX) << "failed to create a device to pair with";
         return kIOReturnError;
     }
 
     m_pairing = [[IOBluetoothDevicePair pairWithDevice:device] retain];
     if (!m_pairing) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to create pair";
+        qCCritical(QT_BT_OSX) << "failed to create pair";
         return kIOReturnError;
     }
 

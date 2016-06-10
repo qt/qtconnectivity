@@ -98,12 +98,19 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
     delete adapterBluez5;
 }
 
+//TODO: Qt6 remove the pendingCancel/pendingStart logic as it is cumbersome.
+//      It is a behavior change across all platforms and was initially done
+//      for Bluez. The behavior should be similar to QBluetoothServiceDiscoveryAgent
+//      PendingCancel creates issues whereby the agent is still shutting down
+//      but isActive() below already returns false. This means the isActive() is
+//      out of sync with the finished() and cancel() signal.
+
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 {
     if (pendingStart)
         return true;
     if (pendingCancel)
-        return false;
+        return false; //TODO Qt6: remove pending[Cancel|Start] logic (see comment above)
 
     return (adapter || adapterBluez5);
 }
@@ -201,8 +208,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         errorString = discoveryReply.error().message();
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
-        emit q->error(lastError);
         qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "ERROR: " << errorString;
+        emit q->error(lastError);
         return;
     }
 }
@@ -421,8 +428,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
                 adapter->deleteLater();
                 adapter = 0;
 
-                emit q->canceled();
                 pendingCancel = false;
+                emit q->canceled();
             } else if (pendingStart) {
                 adapter->deleteLater();
                 adapter = 0;
@@ -431,6 +438,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
                 pendingCancel = false;
                 start();
             } else {
+                 // happens when agent is created while other agent called StopDiscovery()
+                if (!adapter)
+                    return;
+
                 if (useExtendedDiscovery) {
                     useExtendedDiscovery = false;
                     /* We don't use the Start/StopDiscovery combo here
@@ -498,8 +509,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryFinished()
     adapterBluez5 = 0;
 
     if (pendingCancel && !pendingStart) {
-        emit q->canceled();
         pendingCancel = false;
+        emit q->canceled();
     } else if (pendingStart) {
         pendingStart = false;
         pendingCancel = false;
@@ -517,7 +528,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
         return;
 
     if (path == adapterBluez5->path()) {
-        qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes";
+        qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes from another process.";
 
         if (discoveryTimer)
             discoveryTimer->stop();

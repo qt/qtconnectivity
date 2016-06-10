@@ -82,7 +82,8 @@ public:
     QNearFieldTagType1Private(QNearFieldTagType1 *q)
     :   q_ptr(q), m_readNdefMessageState(NotReadingNdefMessage),
         m_tlvReader(0),
-        m_writeNdefMessageState(NotWritingNdefMessage)
+        m_writeNdefMessageState(NotWritingNdefMessage),
+        m_tlvWriter(0)
     { }
 
     QNearFieldTagType1 *q_ptr;
@@ -170,11 +171,13 @@ void QNearFieldTagType1Private::progressToNextNdefReadMessageState()
         }
 
         m_readNdefMessageState = NdefReadReadingTlv;
+        delete m_tlvReader;
         m_tlvReader = new QTlvReader(q);
 
         // fall through
     }
     case NdefReadReadingTlv:
+        Q_ASSERT(m_tlvReader);
         while (!m_tlvReader->atEnd()) {
             if (!m_tlvReader->readNext())
                 break;
@@ -246,11 +249,13 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
         }
 
         m_writeNdefMessageState = NdefWriteReadingTlv;
+        delete m_tlvReader;
         m_tlvReader = new QTlvReader(q);
 
         // fall through
     }
     case NdefWriteReadingTlv:
+        Q_ASSERT(m_tlvReader);
         while (!m_tlvReader->atEnd()) {
             if (!m_tlvReader->readNext())
                 break;
@@ -270,6 +275,7 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
 
         // fall through
     case NdefWriteWritingTlv:
+        delete m_tlvWriter;
         m_tlvWriter = new QTlvWriter(q);
 
         // write old TLVs
@@ -288,6 +294,7 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
         // fall through
     case NdefWriteWritingTlvFlush:
         // flush the writer
+        Q_ASSERT(m_tlvWriter);
         if (m_tlvWriter->process(true)) {
             m_nextExpectedRequestId = QNearFieldTarget::RequestId();
             m_writeNdefMessageState = NotWritingNdefMessage;
