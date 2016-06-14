@@ -66,7 +66,7 @@ typedef ITypedEventHandler<BluetoothLEDevice *, IInspectable *> StatusHandler;
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
-static QVector<QBluetoothUuid> getIncludedServiceIds(ComPtr<IGattDeviceService> service)
+static QVector<QBluetoothUuid> getIncludedServiceIds(const ComPtr<IGattDeviceService> &service)
 {
     QVector<QBluetoothUuid> result;
     ComPtr<IGattDeviceService2> service2;
@@ -93,7 +93,7 @@ static QVector<QBluetoothUuid> getIncludedServiceIds(ComPtr<IGattDeviceService> 
     return result;
 }
 
-static QByteArray byteArrayFromBuffer(ComPtr<IBuffer> buffer, bool isWCharString = false)
+static QByteArray byteArrayFromBuffer(const ComPtr<IBuffer> &buffer, bool isWCharString = false)
 {
     ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
     HRESULT hr = buffer.As(&byteAccess);
@@ -111,7 +111,7 @@ static QByteArray byteArrayFromBuffer(ComPtr<IBuffer> buffer, bool isWCharString
     return QByteArray(data, size);
 }
 
-static QByteArray byteArrayFromGattResult(ComPtr<IGattReadResult> gattResult, bool isWCharString = false)
+static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult, bool isWCharString = false)
 {
     ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
     HRESULT hr;
@@ -124,7 +124,7 @@ class QWinRTLowEnergyServiceHandler : public QObject
 {
     Q_OBJECT
 public:
-    QWinRTLowEnergyServiceHandler(const QBluetoothUuid &service, ComPtr<IGattDeviceService2> deviceService)
+    QWinRTLowEnergyServiceHandler(const QBluetoothUuid &service, const ComPtr<IGattDeviceService2> &deviceService)
         : mService(service)
         , mDeviceService(deviceService)
     {
