@@ -45,9 +45,12 @@ for transferring data between devices. Bluetooth connectivity is based on
 basic device management, such as scanning for devices, gathering information
 about them, and exchanging data between them.
 
-Qt 5.5 contains the first full release of the new Qt Bluetooth
-Low Energy API. Further details can be found in the
+Qt Bluetooth supports Bluetooth Low Energy development for client/central role use cases.
+Further details can be found in the
 \l {Bluetooth Low Energy Overview}{Bluetooth Low Energy Overview} section.
+
+A new addition in this Qt Bluetooth 5.7 release covers support for Bluetooth Low Energy
+applications performing the peripheral/server role. This new API is a Technology Preview.
 
 \section1 Getting Started
 
