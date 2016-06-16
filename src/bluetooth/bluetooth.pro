@@ -91,6 +91,7 @@ config_bluez:qtHaveModule(dbus) {
         message("Bluez version is too old to support Bluetooth Low Energy.")
         message("Only classic Bluetooth will be available.")
         DEFINES += QT_BLUEZ_NO_BTLE
+        include(dummy/dummy.pri)
         SOURCES += \
             qlowenergycontroller_p.cpp
     }
