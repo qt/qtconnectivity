@@ -72,7 +72,7 @@ LeCmacCalculator::LeCmacCalculator()
     sa.salg_family = AF_ALG;
     strcpy(reinterpret_cast<char *>(sa.salg_type), "hash");
     strcpy(reinterpret_cast<char *>(sa.salg_name), "cmac(aes)");
-    if (bind(m_baseSocket, reinterpret_cast<sockaddr *>(&sa), sizeof sa) == -1) {
+    if (::bind(m_baseSocket, reinterpret_cast<sockaddr *>(&sa), sizeof sa) == -1) {
         qCWarning(QT_BT_BLUEZ) << "bind() failed for crypto socket:" << strerror(errno);
         return;
     }
