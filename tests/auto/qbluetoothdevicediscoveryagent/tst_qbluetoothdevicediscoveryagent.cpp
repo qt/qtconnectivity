@@ -77,8 +77,11 @@ private slots:
 
     void tst_deviceDiscovery_data();
     void tst_deviceDiscovery();
+
+    void tst_discoveryTimeout();
 private:
     int noOfLocalDevices;
+    bool isBluez5Runtime = false;
 };
 
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
@@ -91,12 +94,59 @@ tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
 {
 }
 
+#ifdef QT_BLUEZ_BLUETOOTH
+// This section was adopted from tst_qloggingcategory.cpp
+QString logMessage;
+
+QByteArray qMyMessageFormatString(QtMsgType type, const QMessageLogContext &context,
+                                              const QString &str)
+{
+    QByteArray message;
+    message.append(context.category);
+    switch (type) {
+    case QtDebugMsg:   message.append(".debug"); break;
+    case QtInfoMsg:    message.append(".info"); break;
+    case QtWarningMsg: message.append(".warning"); break;
+    case QtCriticalMsg:message.append(".critical"); break;
+    case QtFatalMsg:   message.append(".fatal"); break;
+    }
+    message.append(": ");
+    message.append(qPrintable(str));
+
+    return message.simplified();
+}
+
+static void myCustomMessageHandler(QtMsgType type,
+                                   const QMessageLogContext &context,
+                                   const QString &msg)
+{
+    logMessage = qMyMessageFormatString(type, context, msg);
+}
+#endif
+
+
+
 void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 {
     qRegisterMetaType<QBluetoothDeviceInfo>();
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>();
 
+#ifdef QT_BLUEZ_BLUETOOTH
+    // To distinguish Bluez 4 and 5 we peek into the debug output
+    // of first Bluetooth ctor. It executes a runtime test and prints the result
+    // as logging output. This avoids more complex runtime detection logic within this unit test.
+    QtMessageHandler oldMessageHandler;
+    oldMessageHandler = qInstallMessageHandler(myCustomMessageHandler);
+
     noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();
+    qInstallMessageHandler(oldMessageHandler);
+    isBluez5Runtime = logMessage.contains(QStringLiteral("Bluez 5"));
+    if (isBluez5Runtime)
+        qDebug() << "BlueZ 5 runtime detected.";
+#else
+    noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();
+#endif
+
     if (!noOfLocalDevices)
         return;
 
@@ -429,6 +479,37 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
         if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
             QVERIFY((numberOfAdapters-1) == counter);
     }
+}
+
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
+{
+    QBluetoothDeviceDiscoveryAgent agent;
+
+    // check default values
+#if defined(Q_OS_OSX) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID)
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
+    agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
+    agent.setLowEnergyDiscoveryTimeout(20000);
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
+#elif defined(QT_BLUEZ_BLUETOOTH)
+    if (isBluez5Runtime) {
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
+        agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
+        agent.setLowEnergyDiscoveryTimeout(25000);
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
+    } else {
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+        agent.setLowEnergyDiscoveryTimeout(20000); // feature not supported -> ignored
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+    }
+#else
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+    agent.setLowEnergyDiscoveryTimeout(20000); // feature not supported -> ignored
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+#endif
 }
 
 QTEST_MAIN(tst_QBluetoothDeviceDiscoveryAgent)
