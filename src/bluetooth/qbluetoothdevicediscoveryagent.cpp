@@ -40,8 +40,11 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
 /*!
     \class QBluetoothDeviceDiscoveryAgent
@@ -253,8 +256,11 @@ void QBluetoothDeviceDiscoveryAgent::setLowEnergyDiscoveryTimeout(int timeout)
     Q_D(QBluetoothDeviceDiscoveryAgent);
 
     // cannot deliberately turn it off
-    if (d->lowEnergySearchTimeout < 0 || timeout < 0)
+    if (d->lowEnergySearchTimeout < 0 || timeout < 0) {
+        qCDebug(QT_BT) << "The Bluetooth Low Energy device discovery timeout cannot be negative "
+                          "or set on a backend which does not support this feature.";
         return;
+    }
 
     d->lowEnergySearchTimeout = timeout;
 }
