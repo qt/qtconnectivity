@@ -83,7 +83,7 @@ public:
 
     bool isActive() const;
 
-    void start();
+    void start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods m);
     void stop();
 
 private:
@@ -154,7 +154,7 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return inquiryLE;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods /*methods*/)
 {
     Q_ASSERT_X(!isActive(), Q_FUNC_INFO, "called on active device discovery agent");
 
@@ -276,7 +276,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryFinished()
     } else if (startPending) {
         startPending = false;
         stopPending = false;
-        start();
+        // always the same method for start() on iOS
+        // classic search not supported
+        start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     } else {
         emit q_ptr->finished();
     }
@@ -351,14 +353,38 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
     return d_ptr->discoveredDevices;
 }
 
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
+{
+    return LowEnergyMethod;
+}
+
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     if (d_ptr->lastError != InvalidBluetoothAdapterError) {
         if (!isActive())
-            d_ptr->start();
+            d_ptr->start(supportedDiscoveryMethods());
         else
             qCDebug(QT_BT_OSX) << "already started";
     }
+}
+
+void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
+{
+    if (methods == NoMethod)
+        return;
+
+    DiscoveryMethods supported =
+            QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods();
+
+    if (!((supported & methods) == methods)) {
+        d_ptr->lastError = UnsupportedDiscoveryMethod;
+        d_ptr->errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
+                                                                "are not supported on this platform");
+        emit error(d_ptr->lastError);
+    }
+
+    if (!isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
+        d_ptr->start(methods);
 }
 
 void QBluetoothDeviceDiscoveryAgent::stop()

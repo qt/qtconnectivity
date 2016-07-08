@@ -91,6 +91,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                     platform. The error is set in response to a call to \l start().
                                     An example for such cases are iOS versions below 5.0 which do not support
                                     Bluetooth device search at all. This value was introduced by Qt 5.5.
+    \value UnsupportedDiscoveryMethod   One of the requested discovery methods is not supported by
+                                        the current platform. This value was introduced by Qt 5.8.
     \value UnknownError     An unknown error has occurred.
 */
 
@@ -110,6 +112,22 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     The phone scans for devices in LimitedInquiry and Service Discovery is done on one or two devices
     to speed up the service scan. After the game has connected to the device it intended to,
     the device returns to GeneralUnlimitedInquiry.
+*/
+
+/*!
+    \enum QBluetoothDeviceDiscoveryAgent::DiscoveryMethod
+
+    This enum descibes the type of discovery method employed by the QBluetoothDeviceDiscoveryAgent.
+
+    \value NoMethod             The discovery is not possible. None of the available
+                                methods are supported.
+    \value ClassicMethod        The discovery process searches for Bluetooth Classic
+                                (BaseRate) devices.
+    \value LowEnergyMethod      The discovery process searches for Bluetooth Low Energy
+                                devices.
+
+    \sa supportedDiscoveryMethods()
+    \since 5.8
 */
 
 /*!
@@ -282,16 +300,58 @@ int QBluetoothDeviceDiscoveryAgent::lowEnergyDiscoveryTimeout() const
 }
 
 /*!
+    \fn QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
+
+    This function returns the discovery methods supported by the current platform.
+    It can be used to limit the scope of the device discovery.
+
+    \since 5.8
+*/
+
+/*!
     Starts Bluetooth device discovery, if it is not already started.
 
     The deviceDiscovered() signal is emitted as each device is discovered. The finished() signal
-    is emitted once device discovery is complete.
+    is emitted once device discovery is complete. The discovery utilizes the maximum set of
+    supported discovery methods on the platform.
+
+    \sa supportedDiscoveryMethods()
 */
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
     if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
-        d->start();
+        d->start(supportedDiscoveryMethods());
+}
+
+/*!
+    Start Bluetooth device discovery, if it is not already started and the provided
+    \a methods are supported.
+    The discovery \a methods limit the scope of the device search.
+    For example, if the target service or device is a Bluetooth Low Energy device,
+    this function could be used to limit the search to Bluetooth Low Energy devices and
+    thereby reduces the discovery time significantly.
+
+    \since 5.8
+*/
+void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
+{
+    if (methods == NoMethod)
+        return;
+
+    DiscoveryMethods supported =
+            QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods();
+
+    Q_D(QBluetoothDeviceDiscoveryAgent);
+    if (!((supported & methods) == methods)) {
+        d->lastError = UnsupportedDiscoveryMethod;
+        d->errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
+                                                            "are not supported on this platform");
+        emit error(d->lastError);
+    }
+
+    if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
+        d->start(methods);
 }
 
 /*!

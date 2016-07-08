@@ -94,8 +94,16 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return m_active != NoScanActive;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
+    return (LowEnergyMethod | ClassicMethod);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
+{
+    //TODO Implement discovery method handling (see input parameter)
+    requestedMethods = methods;
+
     if (pendingCancel) {
         pendingStart = true;
         return;
@@ -193,7 +201,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
         emit q->canceled();
     } else if (pendingStart) {
         pendingStart = pendingCancel = false;
-        start();
+        start(requestedMethods);
     } else {
         // check that it didn't finish due to turned off Bluetooth Device
         const int state = adapter.callMethod<jint>("getState");

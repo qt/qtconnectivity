@@ -69,7 +69,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return false;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
+{
+    return QBluetoothDeviceDiscoveryAgent::NoMethod;
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError;
