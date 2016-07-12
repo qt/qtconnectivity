@@ -246,9 +246,10 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
 
     The new timeout value does not take effect until the device search is restarted.
     In addition the timeout does not affect the classic Bluetooth device search. Depending on
-    the platform it may add more time to the total discovery process beyond \a timeout.
+    the platform the classic search may add more time to the total discovery process
+    beyond \a timeout.
 
-    \a lowEnergyDiscoveryTimeout()
+    \sa lowEnergyDiscoveryTimeout()
     \since 5.8
  */
 void QBluetoothDeviceDiscoveryAgent::setLowEnergyDiscoveryTimeout(int timeout)
