@@ -149,18 +149,35 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     discoveredDevices.clear();
 
-    const bool success = adapter.callMethod<jboolean>("startDiscovery");
-    if (!success) {
-        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be started");
-        emit q->error(lastError);
-        return;
+    // by arbitrary definition we run classic search first
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
+        const bool success = adapter.callMethod<jboolean>("startDiscovery");
+        if (!success) {
+            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
+            emit q->error(lastError);
+            return;
+        }
+
+        m_active = SDPScanActive;
+        qCDebug(QT_BT_ANDROID)
+            << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Classic search successfully started.";
+    } else {
+        // LE search only requested
+        Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+
+        if (QtAndroidPrivate::androidSdkVersion() < 18) {
+            qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan due to"
+                                      "insufficient Android version.";
+            m_active = NoScanActive;
+            lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Low Energy Discovery not supported");
+            emit q->error(lastError);
+            return;
+        }
+
+        startLowEnergyScan();
     }
-
-    m_active = SDPScanActive;
-
-    qCDebug(QT_BT_ANDROID)
-        << "QBluetoothDeviceDiscoveryAgentPrivate::start() - successfully executed.";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -210,6 +227,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
             lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
             emit q->error(lastError);
+            return;
+        }
+
+        // no BTLE scan requested
+        if (!(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)) {
+            m_active = NoScanActive;
+            emit q->finished();
             return;
         }
 
@@ -299,6 +323,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         leScanTimeout->setInterval(lowEnergySearchTimeout);
         leScanTimeout->start();
     }
+
+    qCDebug(QT_BT_ANDROID)
+        << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Low Energy search successfully started.";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()
