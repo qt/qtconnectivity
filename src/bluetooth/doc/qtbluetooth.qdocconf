@@ -47,6 +47,7 @@ exampledirs += ../../../examples/bluetooth \
                snippets/ \
                ../
 
+manifestmeta.thumbnail.names = "QtBluetooth/Bluetooth Low Energy Heart Rate Server Example"
 
 imagedirs   += images
 
