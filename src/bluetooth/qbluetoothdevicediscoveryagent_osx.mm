@@ -95,7 +95,8 @@ public:
     bool isValid() const;
     bool isActive() const;
 
-    void start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods m);
+    void start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods);
+    void startClassic();
     void startLE();
     void stop();
 
@@ -161,7 +162,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     stopPending(false),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
-    lowEnergySearchTimeout(OSXBluetooth::defaultLEScanTimeoutMS)
+    lowEnergySearchTimeout(OSXBluetooth::defaultLEScanTimeoutMS),
+    requestedMethods(QBluetoothDeviceDiscoveryAgent::ClassicMethod
+                     | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
 {
     registerQDeviceDiscoveryMetaType();
 
@@ -173,14 +176,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
         return;
     }
 
-    DeviceInquiry newInquiry([[DeviceInquiryObjC alloc]initWithDelegate:this]);
-    if (!newInquiry) { // Obj-C's way of "reporting errors":
-        qCCritical(QT_BT_OSX) << "failed to initialize an inquiry";
-        return;
-    }
-
     hostController.reset(controller.take());
-    inquiry.reset(newInquiry.take());
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -199,12 +195,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isValid() const
 {
-    // isValid() - Qt does not use exceptions, but the ctor
-    // can fail to initialize some important data-members
-    // (and the error is probably not even related to Bluetooth at all)
-    // - say, allocation error - this is what meant here by valid/invalid.
-    return hostController && [hostController powerState] == kBluetoothHCIPowerStateON
-           && inquiry;
+    return hostController && [hostController powerState] == kBluetoothHCIPowerStateON;
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -220,12 +211,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
-    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "called on invalid device discovery agent");
-    Q_ASSERT_X(!isActive(), Q_FUNC_INFO, "called on active device discovery agent");
-    Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
-               Q_FUNC_INFO, "called with an invalid Bluetooth adapter");
+    Q_ASSERT(isValid());
+    Q_ASSERT(!isActive());
+    Q_ASSERT(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
+    Q_ASSERT(methods & (QBluetoothDeviceDiscoveryAgent::ClassicMethod
+                        | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod));
 
-    //TODO Implement discovery method handling (see input parameter)
     requestedMethods = methods;
 
     if (stopPending) {
@@ -233,10 +224,40 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
-    agentState = ClassicScan;
+    // This function (re)starts the scan(s) from the scratch;
+    // starting from Classic if it's in 'methods' (or LE scan if not).
 
+    agentState = NonActive;
     discoveredDevices.clear();
     setError(QBluetoothDeviceDiscoveryAgent::NoError);
+
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod)
+        return startClassic();
+
+    startLE();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::startClassic()
+{
+    Q_ASSERT(isValid());
+    Q_ASSERT(!isActive());
+    Q_ASSERT(lastError == QBluetoothDeviceDiscoveryAgent::NoError);
+    Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod);
+    Q_ASSERT(agentState == NonActive);
+
+    if (!inquiry) {
+        // The first Classic scan for this DDA.
+        inquiry.reset([[DeviceInquiryObjC alloc]initWithDelegate:this]);
+        if (!inquiry) {
+            qCCritical(QT_BT_OSX) << "failed to initialize an Classic device inquiry";
+            setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
+                     QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED));
+            emit q_ptr->error(lastError);
+            return;
+        }
+    }
+
+    agentState = ClassicScan;
 
     const IOReturn res = [inquiry start];
     if (res != kIOReturnSuccess) {
@@ -248,9 +269,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
 void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
 {
-    Q_ASSERT_X(isValid(), Q_FUNC_INFO, "called on invalid device discovery agent");
-    Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
-               Q_FUNC_INFO, "called with an invalid Bluetooth adapter");
+    Q_ASSERT(isValid());
+    Q_ASSERT(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
+    Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 
     using namespace OSXBluetooth;
 
@@ -347,10 +368,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::inquiryFinished(IOBluetoothDeviceInq
         start(requestedMethods);
     } else {
         // We can be here _only_ if a classic scan
-        // finished in a normal way (not cancelled).
+        // finished in a normal way (not cancelled)
+        // and requestedMethods includes LowEnergyMethod.
         // startLE() will take care of old devices
         // not supporting Bluetooth 4.0.
-        startLE();
+        if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
+            startLE();
+        else
+            emit q_ptr->finished();
     }
 }
 
@@ -412,8 +437,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(IOReturn error, const QStri
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError, text);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAgent::Error error,
-                                                     const QString &text)
+void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAgent::Error error, const QString &text)
 {
     lastError = error;
 
@@ -440,14 +464,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
     }
 
     if (lastError != QBluetoothDeviceDiscoveryAgent::NoError)
-        qCDebug(QT_BT_OSX) << "error set: "<<errorString;
+        qCDebug(QT_BT_OSX) << "error set:"<<errorString;
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
-    // At the moment the only error reported can be 'powered off' error, it happens
-    // after the LE scan started (so we have LE support and this is a real PoweredOffError).
-    Q_ASSERT(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError);
+    Q_ASSERT(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError
+             || error == QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
 
     inquiryLE.reset();
 
@@ -460,9 +483,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDisco
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported()
 {
-    // Not supported is not an error (we still have 'Classic').
     qCDebug(QT_BT_OSX) << "no Bluetooth LE support";
-    LEinquiryFinished();
+
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
+        // Having both Classic | LE means this is not an error.
+        LEinquiryFinished();
+    } else {
+        // In the past this was never an error, that's why we have
+        // LEnotSupported as a special method. But now, since
+        // we can have separate Classic/LE scans, we have to report it
+        // as UnsupportedDiscoveryMethod.
+        LEinquiryError(QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryFinished()
@@ -537,7 +569,7 @@ QBluetoothDeviceDiscoveryAgent::InquiryType QBluetoothDeviceDiscoveryAgent::inqu
     return d_ptr->inquiryType;
 }
 
-void QBluetoothDeviceDiscoveryAgent::setInquiryType(QBluetoothDeviceDiscoveryAgent::InquiryType type)
+void QBluetoothDeviceDiscoveryAgent::setInquiryType(InquiryType type)
 {
     d_ptr->inquiryType = type;
 }
@@ -549,15 +581,31 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
 
 QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
-    return (ClassicMethod | LowEnergyMethod);
+    return ClassicMethod | LowEnergyMethod;
 }
 
 void QBluetoothDeviceDiscoveryAgent::start()
 {
+    start(supportedDiscoveryMethods());
+}
+
+void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
+{
+    if (methods == NoMethod)
+        return;
+
+    if ((supportedDiscoveryMethods() & methods) != methods) {
+        d_ptr->lastError = UnsupportedDiscoveryMethod;
+        d_ptr->errorString = tr("One or more device discovery methods "
+                                "are not supported on this platform");
+        emit error(d_ptr->lastError);
+        return;
+    }
+
     if (d_ptr->lastError != InvalidBluetoothAdapterError) {
         if (d_ptr->isValid()) {
             if (!isActive())
-                d_ptr->start(supportedDiscoveryMethods());
+                d_ptr->start(methods);
         } else {
             // We previously failed to initialize d_ptr correctly:
             // either some memory allocation problem or
@@ -566,26 +614,6 @@ void QBluetoothDeviceDiscoveryAgent::start()
             emit error(InvalidBluetoothAdapterError);
         }
     }
-}
-
-void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
-{
-    if (methods == NoMethod)
-        return;
-
-    DiscoveryMethods supported =
-            QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods();
-
-    Q_D(QBluetoothDeviceDiscoveryAgent);
-    if (!((supported & methods) == methods)) {
-        d_ptr->lastError = UnsupportedDiscoveryMethod;
-        d_ptr->errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
-                                                            "are not supported on this platform");
-        emit error(d_ptr->lastError);
-    }
-
-    if (!isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
-        d_ptr->start(methods);
 }
 
 void QBluetoothDeviceDiscoveryAgent::stop()
