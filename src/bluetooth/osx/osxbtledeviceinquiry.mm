@@ -39,6 +39,7 @@
 
 #include "osxbtledeviceinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
+#include "osxbtnotifier_p.h"
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 
@@ -46,6 +47,8 @@
 #include <QtCore/qdebug.h>
 
 #include "corebluetoothwrapper_p.h"
+
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,30 +66,35 @@ QBluetoothUuid qt_uuid(NSUUID *nsUuid)
     return QBluetoothUuid(qtUuidData);
 }
 
-}
+const int timeStepMS = 100;
 
+const int powerOffTimeoutMS = 30000;
+const qreal powerOffTimeStepS = 30. / 100.;
+
+}
 
 QT_END_NAMESPACE
 
-#ifdef QT_NAMESPACE
-
-using namespace QT_NAMESPACE;
-
-#endif
+QT_USE_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate>
+// These two methods are scheduled with a small time step
+// within a given timeout, they either re-schedule
+// themselves or emit a signal/stop some operation.
 - (void)stopScan;
 - (void)handlePoweredOff;
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
 
-- (id)init
+-(id)initWithNotifier:(LECBManagerNotifier *)aNotifier
 {
     if (self = [super init]) {
+        Q_ASSERT(aNotifier);
+        notifier = aNotifier;
         uuids.reset([[NSMutableSet alloc] init]);
         internalState = InquiryStarting;
-        state.store(int(internalState));
+        inquiryTimeoutMS = OSXBluetooth::defaultLEScanTimeoutMS;
     }
 
     return self;
@@ -100,27 +108,36 @@ using namespace QT_NAMESPACE;
             [manager stopScan];
     }
 
+    if (notifier) {
+        notifier->disconnect();
+        notifier->deleteLater();
+    }
+
     [super dealloc];
 }
 
 - (void)stopScan
 {
-    // Scan's "timeout" - we consider LE device
-    // discovery finished.
     using namespace OSXBluetooth;
 
+    // We never schedule stopScan if there is no timeout:
+    Q_ASSERT(inquiryTimeoutMS > 0);
+
     if (internalState == InquiryActive) {
-        if (scanTimer.elapsed() >= qt_LE_deviceInquiryLength() * 1000) {
-            // We indeed stop now:
+        const int elapsed = scanTimer.elapsed();
+        if (elapsed >= inquiryTimeoutMS) {
             [manager stopScan];
             [manager setDelegate:nil];
             internalState = InquiryFinished;
-            state.store(int(internalState));
+            Q_ASSERT(notifier);
+            emit notifier->discoveryFinished();
         } else {
+            // Re-schedule 'stopScan':
             dispatch_queue_t leQueue(qt_LE_queue());
             Q_ASSERT(leQueue);
+            const int timeChunkMS = std::min(inquiryTimeoutMS - elapsed, timeStepMS);
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         int64_t(qt_LE_deviceInquiryLength() / 100. * NSEC_PER_SEC)),
+                                         int64_t(timeChunkMS / 1000. * NSEC_PER_SEC)),
                                          leQueue,
                                          ^{
                                                [self stopScan];
@@ -135,30 +152,32 @@ using namespace QT_NAMESPACE;
     // the system shows an alert asking to enable
     // Bluetooth in the 'Settings' app. If not done yet (after 30
     // seconds) - we consider it an error.
+    using namespace OSXBluetooth;
+
     if (internalState == InquiryStarting) {
-        if (errorTimer.elapsed() >= 30000) {
+        if (errorTimer.elapsed() >= powerOffTimeoutMS) {
             [manager setDelegate:nil];
             internalState = ErrorPoweredOff;
-            state.store(int(internalState));
+            Q_ASSERT(notifier);
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         } else {
-            dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+            dispatch_queue_t leQueue(qt_LE_queue());
             Q_ASSERT(leQueue);
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         (int64_t)(30 / 100. * NSEC_PER_SEC)),
+                                         (int64_t)(powerOffTimeStepS * NSEC_PER_SEC)),
                                          leQueue,
                                          ^{
                                               [self handlePoweredOff];
                                           });
-
         }
     }
 }
 
-- (void)start
+- (void)startWithTimeout:(int)timeout
 {
     dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
-
     Q_ASSERT(leQueue);
+    inquiryTimeoutMS = timeout;
     manager.reset([[CBCentralManager alloc] initWithDelegate:self queue:leQueue]);
 }
 
@@ -170,6 +189,8 @@ using namespace QT_NAMESPACE;
     if (internalState != InquiryActive && internalState != InquiryStarting)
         return;
 
+    Q_ASSERT(notifier);
+
     using namespace OSXBluetooth;
 
     dispatch_queue_t leQueue(qt_LE_queue());
@@ -179,39 +200,50 @@ using namespace QT_NAMESPACE;
     if (cbState == CBCentralManagerStatePoweredOn) {
         if (internalState == InquiryStarting) {
             internalState = InquiryActive;
-            // Scan time is actually 10 seconds. Having a block with such delay can prevent
-            // 'self' from being deleted in time, which is not good. So we split this
-            // 10 s. timeout into smaller 'chunks'.
-            scanTimer.start();
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         int64_t(qt_LE_deviceInquiryLength() / 100. * NSEC_PER_SEC)),
-                                         leQueue,
-                                         ^{
-                                               [self stopScan];
-                                          });
+
+            if (inquiryTimeoutMS > 0) {
+                // We have a finite-length discovery, schedule stopScan,
+                // with a smaller time step, otherwise it can prevent
+                // 'self' from being deleted in time, which is not good
+                // (the block will retain 'self', waiting for timeout).
+                scanTimer.start();
+                const int timeChunkMS = std::min(timeStepMS, inquiryTimeoutMS);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                             int64_t(timeChunkMS / 1000. * NSEC_PER_SEC)),
+                                             leQueue,
+                                             ^{
+                                                   [self stopScan];
+                                              });
+            }
+
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
-    } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
+    } else if (cbState == CBCentralManagerStateUnsupported
+               || cbState == CBCentralManagerStateUnauthorized) {
         if (internalState == InquiryActive) {
             [manager stopScan];
-            // Not sure how this is possible at all, probably, can never happen.
+            // Not sure how this is possible at all,
+            // probably, can never happen.
             internalState = ErrorPoweredOff;
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         } else {
             internalState = ErrorLENotSupported;
+            emit notifier->LEnotSupported();
         }
 
         [manager setDelegate:nil];
     } else if (cbState == CBCentralManagerStatePoweredOff) {
         if (internalState == InquiryStarting) {
 #ifndef Q_OS_OSX
-            // On iOS a user can see at this point an alert asking to enable
-            // Bluetooth in the "Settings" app. If a user does,
+            // On iOS a user can see at this point an alert asking to
+            // enable Bluetooth in the "Settings" app. If a user does,
             // we'll receive 'PoweredOn' state update later.
-            // No change in state. Wait for 30 seconds (we split it into 'chunks' not
-            // to retain 'self' for too long ) ...
+            // No change in internalState. Wait for 30 seconds
+            // (we split it into smaller steps not to retain 'self' for
+            // too long ) ...
             errorTimer.start();
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         (int64_t)(30 / 100. * NSEC_PER_SEC)),
+                                         (int64_t)(powerOffTimeStepS * NSEC_PER_SEC)),
                                          leQueue,
                                          ^{
                                               [self handlePoweredOff];
@@ -219,9 +251,10 @@ using namespace QT_NAMESPACE;
             return;
 #endif
             internalState = ErrorPoweredOff;
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         } else {
-            internalState = ErrorPoweredOff;
             [manager stopScan];
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         }
 
         [manager setDelegate:nil];
@@ -237,8 +270,6 @@ using namespace QT_NAMESPACE;
         // lost; an update is imminent. "
         // Wait for this imminent update.
     }
-
-    state.store(int(internalState));
 }
 
 - (void)stop
@@ -248,11 +279,16 @@ using namespace QT_NAMESPACE;
 
     [manager setDelegate:nil];
     internalState = InquiryCancelled;
-    state.store(int(internalState));
+
+    notifier->disconnect();
+    notifier->deleteLater();
+    notifier = nullptr;
 }
 
-- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral
-        advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
+- (void)centralManager:(CBCentralManager *)central
+        didDiscoverPeripheral:(CBPeripheral *)peripheral
+        advertisementData:(NSDictionary *)advertisementData
+        RSSI:(NSNumber *)RSSI
 {
     Q_UNUSED(advertisementData);
 
@@ -264,9 +300,10 @@ using namespace QT_NAMESPACE;
     if (internalState != InquiryActive)
         return;
 
+    if (!notifier)
+        return;
+
     QBluetoothUuid deviceUuid;
-
-
 
     if (!peripheral.identifier) {
         qCWarning(QT_BT_OSX) << "peripheral without NSUUID";
@@ -274,7 +311,9 @@ using namespace QT_NAMESPACE;
     }
 
     if ([uuids containsObject:peripheral.identifier]) {
-        // We already know this peripheral ...
+        // TODO: my understanding of the same peripheral reported many times seems
+        // to be outdated or even wrong - nowadays it's reported twice and the
+        // second time (AFAIK) more info can be extracted ...
         return;
     }
 
@@ -296,17 +335,7 @@ using namespace QT_NAMESPACE;
         newDeviceInfo.setRssi([RSSI shortValue]);
     // CoreBluetooth scans only for LE devices.
     newDeviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    devices.append(newDeviceInfo);
-}
-
-- (LEInquiryState) inquiryState
-{
-    return LEInquiryState(state.load());
-}
-
-- (const QList<QBluetoothDeviceInfo> &)discoveredDevices
-{
-    return devices;
+    emit notifier->deviceDiscovered(newDeviceInfo);
 }
 
 @end

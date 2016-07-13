@@ -229,6 +229,7 @@ QT_BEGIN_NAMESPACE
     \value LocalService         The service is associated with a controller object in the
                                 \l{QLowEnergyController::PeripheralRole}{peripheral role}. Such
                                 service objects do not change their state.
+                                This value was introduced by Qt 5.7.
  */
 
 /*!

@@ -99,7 +99,7 @@ public:
             QBluetoothDeviceDiscoveryAgent *parent);
     ~QBluetoothDeviceDiscoveryAgentPrivate();
 
-    void start();
+    void start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods);
     void stop();
     bool isActive() const;
 
@@ -168,6 +168,8 @@ private:
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
 #endif
 
+    int lowEnergySearchTimeout;
+    QBluetoothDeviceDiscoveryAgent::DiscoveryMethods requestedMethods;
     QBluetoothDeviceDiscoveryAgent *q_ptr;
 };
 

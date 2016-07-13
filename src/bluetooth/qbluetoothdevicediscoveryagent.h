@@ -65,6 +65,7 @@ public:
         PoweredOffError,
         InvalidBluetoothAdapterError,
         UnsupportedPlatformError,
+        UnsupportedDiscoveryMethod,
         UnknownError = 100 // New errors must be added before Unknown error
     };
     Q_ENUM(Error)
@@ -74,6 +75,15 @@ public:
         LimitedInquiry
     };
     Q_ENUM(InquiryType)
+
+    enum DiscoveryMethod
+    {
+        NoMethod = 0x0,
+        ClassicMethod = 0x01,
+        LowEnergyMethod = 0x02,
+    };
+    Q_DECLARE_FLAGS(DiscoveryMethods, DiscoveryMethod)
+    Q_FLAG(DiscoveryMethods)
 
     explicit QBluetoothDeviceDiscoveryAgent(QObject *parent = Q_NULLPTR);
     explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter,
@@ -91,8 +101,13 @@ public:
 
     QList<QBluetoothDeviceInfo> discoveredDevices() const;
 
+    void setLowEnergyDiscoveryTimeout(int msTimeout);
+    int lowEnergyDiscoveryTimeout() const;
+
+    static DiscoveryMethods supportedDiscoveryMethods();
 public Q_SLOTS:
     void start();
+    void start(DiscoveryMethods method);
     void stop();
 
 Q_SIGNALS:
@@ -115,6 +130,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_extendedDeviceDiscoveryTimeout())
 #endif
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods)
 
 QT_END_NAMESPACE
 

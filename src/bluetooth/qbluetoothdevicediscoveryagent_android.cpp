@@ -66,6 +66,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     leScanTimeout(0),
     pendingCancel(false),
     pendingStart(false),
+    lowEnergySearchTimeout(25000),
     q_ptr(parent)
 {
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
@@ -93,8 +94,16 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return m_active != NoScanActive;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
+    return (LowEnergyMethod | ClassicMethod);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
+{
+    //TODO Implement discovery method handling (see input parameter)
+    requestedMethods = methods;
+
     if (pendingCancel) {
         pendingStart = true;
         return;
@@ -192,7 +201,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
         emit q->canceled();
     } else if (pendingStart) {
         pendingStart = pendingCancel = false;
-        start();
+        start(requestedMethods);
     } else {
         // check that it didn't finish due to turned off Bluetooth Device
         const int state = adapter.callMethod<jint>("getState");
@@ -278,15 +287,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         return;
     }
 
+    // wait interval and sum up what was found
     if (!leScanTimeout) {
         leScanTimeout = new QTimer(this);
         leScanTimeout->setSingleShot(true);
-        leScanTimeout->setInterval(25000);
         connect(leScanTimeout, &QTimer::timeout,
                 this, &QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan);
     }
 
-    leScanTimeout->start();
+    if (lowEnergySearchTimeout > 0) { // otherwise no timeout and stop() required
+        leScanTimeout->setInterval(lowEnergySearchTimeout);
+        leScanTimeout->start();
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()

@@ -109,6 +109,7 @@ config_bluez:qtHaveModule(dbus) {
         message("Bluez version is too old to support Bluetooth Low Energy.")
         message("Only classic Bluetooth will be available.")
         DEFINES += QT_BLUEZ_NO_BTLE
+        include(dummy/dummy.pri)
         SOURCES += \
             qlowenergycontroller_p.cpp
     }
@@ -152,14 +153,10 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergycontroller_osx.mm \
         qlowenergyservice_osx.mm
 
-    SOURCES += \
-        qlowenergycontroller_p.cpp
-
     PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
                        qbluetoothserver_osx_p.h \
                        qbluetoothtransferreply_osx_p.h \
                        qbluetoothtransferreply_osx_p.h \
-                       qbluetoothdevicediscoverytimer_osx_p.h \
                        qlowenergycontroller_osx_p.h
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
@@ -181,12 +178,10 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergyservice_osx.mm
 
     PRIVATE_HEADERS += \
-        qlowenergycontroller_osx_p.h \
-        qbluetoothdevicediscoverytimer_osx_p.h
+        qlowenergycontroller_osx_p.h
 
     include(osx/osxbt.pri)
     SOURCES += \
-        qbluetoothdevicediscoveryagent_p.cpp \
         qbluetoothlocaldevice_p.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \

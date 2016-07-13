@@ -154,6 +154,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                               remote device.
     \value ClosingState       The controller is about to be disconnected from the remote device.
     \value AdvertisingState   The controller is currently advertising data.
+                              This value was introduced by Qt 5.7.
 */
 
 /*!
@@ -259,6 +260,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     the other side of the connection requested new parameters. The new values can be retrieved
     from \a newParameters.
 
+    \since 5.7
     \sa requestConnectionUpdate()
 */
 
@@ -557,9 +559,11 @@ QLowEnergyController::QLowEnergyController(
    Returns a new object of this class that is in the \l CentralRole and has the
    parent object \a parent.
    The \a remoteDevice refers to the device that a connection will be established to later.
- *
+
    The controller uses the local default Bluetooth adapter for the connection management.
+
    \sa QLowEnergyController::CentralRole
+   \since 5.7
  */
 QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDeviceInfo &remoteDevice,
                                                           QObject *parent)
@@ -574,7 +578,9 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
    Typically, the next step is to call \l startAdvertising() on the returned object.
 
    The controller uses the local default Bluetooth adapter for the connection management.
+
    \sa QLowEnergyController::PeripheralRole
+   \since 5.7
  */
 QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
 {
@@ -818,6 +824,9 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
 
    If this object is currently not in the \l UnconnectedState, nothing happens.
    \note Advertising will stop automatically once a client connects to the local device.
+
+   \since 5.7
+   \sa stopAdvertising()
  */
 void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameters &parameters,
                                             const QLowEnergyAdvertisingData &advertisingData,
@@ -837,6 +846,9 @@ void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameter
 
 /*!
    Stops advertising, if this object is currently in the advertising state.
+
+   \since 5.7
+   \sa startAdvertising()
  */
 void QLowEnergyController::stopAdvertising()
 {
@@ -852,6 +864,8 @@ void QLowEnergyController::stopAdvertising()
   Constructs and returns a \l QLowEnergyService object with \a parent from \a service.
   The controller must be in the \l PeripheralRole and in the \l UnconnectedState. The \a service
   object must be valid.
+
+  \since 5.7
   \sa QLowEnergyServiceData::addIncludedService
  */
 QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
@@ -923,6 +937,8 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
   with the actual new parameters.
   See the  \l QLowEnergyConnectionParameters class for more information on connection parameters.
   \note Currently, this functionality is only implemented on Linux.
+
+  \since 5.7
  */
 void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters)
 {
@@ -952,6 +968,11 @@ QString QLowEnergyController::errorString() const
 
 /*!
    Returns the role that this controller object is in.
+
+   The role is determined when constructing a QLowEnergyController instance
+   using \l createCentral() or \l createPeripheral().
+
+   \since 5.7
  */
 QLowEnergyController::Role QLowEnergyController::role() const
 {

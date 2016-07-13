@@ -287,6 +287,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
 
     :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
         lastError(QBluetoothDeviceDiscoveryAgent::NoError),
+        lowEnergySearchTimeout(-1), // TODO
         q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
@@ -302,7 +303,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return worker;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
+{
+    return (ClassicMethod | LowEnergyMethod);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods)
 {
     if (worker)
         return;

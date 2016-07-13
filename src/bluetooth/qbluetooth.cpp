@@ -76,6 +76,7 @@ namespace QBluetooth {
 
 /*!
     \enum QBluetooth::AttAccessConstraint
+    \since 5.7
 
     This enum describes the possible requirements for reading or writing an ATT attribute.
 

@@ -42,9 +42,7 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
 
-#ifndef QT_IOS_BLUETOOTH
 #include "dummy/dummy_helper_p.h"
-#endif
 
 #define QT_DEVICEDISCOVERY_DEBUG
 
@@ -55,12 +53,11 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 QBluetoothDeviceDiscoveryAgent *parent)
     :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
         lastError(QBluetoothDeviceDiscoveryAgent::NoError),
+        lowEnergySearchTimeout(-1),
         q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
-#ifndef QT_IOS_BLUETOOTH
     printDummyWarning();
-#endif
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -72,7 +69,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return false;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
+{
+    return QBluetoothDeviceDiscoveryAgent::NoMethod;
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError;

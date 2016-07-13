@@ -103,7 +103,6 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateOSX *controller, CB
 
     // TODO: isPrimary is ... always 'NO' - to be investigated.
     /*
-    using OSXBluetooth::qt_OS_limit;
     if (!cbService.isPrimary) {
         // Our guess included/not was probably wrong.
         newService->type &= ~QLowEnergyService::PrimaryService;
@@ -147,11 +146,8 @@ QLowEnergyControllerPrivateOSX::QLowEnergyControllerPrivateOSX(QLowEnergyControl
     Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     using OSXBluetooth::LECBManagerNotifier;
-    using OSXBluetooth::qt_OS_limit;
 
     role = r;
-
-
 
     QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
     if (role == QLowEnergyController::PeripheralRole) {

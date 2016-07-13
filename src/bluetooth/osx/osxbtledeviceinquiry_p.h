@@ -57,7 +57,6 @@
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
-#include <QtCore/qatomic.h>
 #include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
@@ -69,7 +68,19 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothUuid;
 
+namespace OSXBluetooth
+{
+
+class LECBManagerNotifier;
+
+}
+
 QT_END_NAMESPACE
+
+// Ugly but all these QT_PREPEND_NAMESPACE etc. are even worse ...
+using OSXBluetooth::LECBManagerNotifier;
+using OSXBluetooth::ObjCScopedPointer;
+using QT_PREPEND_NAMESPACE(QElapsedTimer);
 
 enum LEInquiryState
 {
@@ -83,28 +94,26 @@ enum LEInquiryState
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
 {
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer<NSMutableSet> uuids;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer<CBCentralManager> manager;
+    LECBManagerNotifier *notifier;
+    ObjCScopedPointer<NSMutableSet> uuids;
+    ObjCScopedPointer<CBCentralManager> manager;
 
     QList<QBluetoothDeviceInfo> devices;
-
     LEInquiryState internalState;
-    QT_PREPEND_NAMESPACE(QAtomicInt) state;
+    int inquiryTimeoutMS;
 
     // Timers to check if we can execute delayed callbacks:
     QT_PREPEND_NAMESPACE(QElapsedTimer) errorTimer;
     QT_PREPEND_NAMESPACE(QElapsedTimer) scanTimer;
 }
 
-- (id)init;
+- (id)initWithNotifier:(LECBManagerNotifier *)aNotifier;
 - (void)dealloc;
 
-// IMPORTANT: both 'start' and 'stop' are to be executed on the "Qt's LE queue".
-- (void)start;
+// IMPORTANT: both 'startWithTimeout' and 'stop'
+// can be executed only on the "Qt's LE queue".
+- (void)startWithTimeout:(int)timeout;
 - (void)stop;
-
-- (LEInquiryState)inquiryState;
-- (const QList<QBluetoothDeviceInfo> &)discoveredDevices;
 
 @end
 

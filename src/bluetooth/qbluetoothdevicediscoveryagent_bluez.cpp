@@ -68,10 +68,12 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     adapterBluez5(0),
     discoveryTimer(0),
     useExtendedDiscovery(false),
+    lowEnergySearchTimeout(-1), // remains -1 on BlueZ 4 -> timeout not supported
     q_ptr(parent)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (isBluez5()) {
+        lowEnergySearchTimeout = 20000;
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
                                            QStringLiteral("org.bluez"),
                                            QStringLiteral("/"),
@@ -115,8 +117,17 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return (adapter || adapterBluez5);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
+    return (ClassicMethod | LowEnergyMethod);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods /*methods*/)
+{
+    // Currently both BlueZ backends do not distinguish discovery methods.
+    // The DBus API's always return both device types. Therefore we ignore
+    // the passed in methods.
+
     if (pendingCancel == true) {
         pendingStart = true;
         return;
@@ -273,16 +284,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
         }
     }
 
-    // wait 20s and sum up what was found
+    // wait interval and sum up what was found
     if (!discoveryTimer) {
         discoveryTimer = new QTimer(q);
         discoveryTimer->setSingleShot(true);
-        discoveryTimer->setInterval(20000); // 20s
         QObject::connect(discoveryTimer, SIGNAL(timeout()),
                          q, SLOT(_q_discoveryFinished()));
     }
 
-    discoveryTimer->start();
+    if (lowEnergySearchTimeout > 0) { // otherwise no timeout and stop() required
+        discoveryTimer->setInterval(lowEnergySearchTimeout);
+        discoveryTimer->start();
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -436,7 +449,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
 
                 pendingStart = false;
                 pendingCancel = false;
-                start();
+                // start parameter ignored since Bluez 4 doesn't distinguish them
+                start(QBluetoothDeviceDiscoveryAgent::ClassicMethod
+                      | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
             } else {
                  // happens when agent is created while other agent called StopDiscovery()
                 if (!adapter)
@@ -514,7 +529,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryFinished()
     } else if (pendingStart) {
         pendingStart = false;
         pendingCancel = false;
-        start();
+        start(QBluetoothDeviceDiscoveryAgent::ClassicMethod
+              | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     } else {
         emit q->finished();
     }
