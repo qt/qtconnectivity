@@ -79,6 +79,8 @@ private slots:
     void tst_deviceDiscovery();
 
     void tst_discoveryTimeout();
+
+    void tst_discoveryMethods();
 private:
     int noOfLocalDevices;
     bool isBluez5Runtime = false;
@@ -510,6 +512,134 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
     agent.setLowEnergyDiscoveryTimeout(20000); // feature not supported -> ignored
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
 #endif
+}
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
+{
+    const QBluetoothLocalDevice localDevice;
+    if (localDevice.allDevices().size() != 1) {
+        // On iOS it returns 0 but we still have working BT.
+#ifndef Q_OS_IOS
+        QSKIP("This test expects exactly one local device working");
+#endif
+    }
+
+    const QBluetoothDeviceDiscoveryAgent::DiscoveryMethods
+        supportedMethods = QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods();
+
+    QVERIFY(supportedMethods != QBluetoothDeviceDiscoveryAgent::NoMethod);
+
+    QBluetoothDeviceDiscoveryAgent::DiscoveryMethod
+        unsupportedMethods = QBluetoothDeviceDiscoveryAgent::NoMethod;
+    QBluetoothDeviceInfo::CoreConfiguration
+        expectedConfiguration = QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
+
+    if (supportedMethods == QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
+        unsupportedMethods = QBluetoothDeviceDiscoveryAgent::LowEnergyMethod;
+        expectedConfiguration = QBluetoothDeviceInfo::BaseRateCoreConfiguration;
+    } else if (supportedMethods == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
+        unsupportedMethods = QBluetoothDeviceDiscoveryAgent::ClassicMethod;
+        expectedConfiguration = QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
+    }
+
+    QBluetoothDeviceDiscoveryAgent agent;
+    QSignalSpy finishedSpy(&agent, SIGNAL(finished()));
+    QSignalSpy errorSpy(&agent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QSignalSpy discoveredSpy(&agent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)));
+
+    // NoMethod - should just immediately return:
+    agent.start(QBluetoothDeviceDiscoveryAgent::NoMethod);
+    QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
+    QVERIFY(!agent.isActive());
+    QCOMPARE(finishedSpy.size(), 0);
+    QCOMPARE(errorSpy.size(), 0);
+    QCOMPARE(discoveredSpy.size(), 0);
+
+    if (unsupportedMethods != QBluetoothDeviceDiscoveryAgent::NoMethod) {
+        agent.start(unsupportedMethods);
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+        QVERIFY(!agent.isActive());
+        QVERIFY(finishedSpy.isEmpty());
+        QCOMPARE(errorSpy.size(), 1);
+        errorSpy.clear();
+        QVERIFY(discoveredSpy.isEmpty());
+    }
+
+    // Start discovery, probably both Classic and LE methods:
+    agent.start(supportedMethods);
+    QVERIFY(agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+
+
+#define RUN_DISCOVERY(maxTimeout, step, condition) \
+    for (int scanTime = maxTimeout; (condition) && scanTime > 0; scanTime -= step) \
+        QTest::qWait(step);
+
+    // Wait for up to MaxScanTime for the scan to finish
+    const int timeStep = 15000;
+    RUN_DISCOVERY(MaxScanTime, timeStep, finishedSpy.isEmpty())
+
+    QVERIFY(!agent.isActive());
+    QVERIFY(errorSpy.size() <= 1);
+
+    if (errorSpy.size()) {
+        // For example, old iOS device could report it supports LE method,
+        // but it actually does not.
+        QVERIFY(supportedMethods == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+    } else {
+        QVERIFY(finishedSpy.count() == 1);
+        QVERIFY(agent.error() == QBluetoothDeviceDiscoveryAgent::NoError);
+        QVERIFY(agent.errorString().isEmpty());
+
+        while (!discoveredSpy.isEmpty()) {
+            const QBluetoothDeviceInfo info =
+                qvariant_cast<QBluetoothDeviceInfo>(discoveredSpy.takeFirst().at(0));
+            QVERIFY(info.isValid());
+            QVERIFY(info.coreConfigurations() & expectedConfiguration);
+        }
+    }
+
+    if (unsupportedMethods != QBluetoothDeviceDiscoveryAgent::NoMethod)
+        return;
+
+    // Both methods were reported as supported. We already tested them
+    // above, now let's test first Classic then LE.
+    finishedSpy.clear();
+    errorSpy.clear();
+    discoveredSpy.clear();
+
+    agent.start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
+    QVERIFY(agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+    QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
+
+    RUN_DISCOVERY(MaxScanTime, timeStep, finishedSpy.isEmpty())
+
+    QVERIFY(!agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+    QCOMPARE(finishedSpy.size(), 1);
+
+    finishedSpy.clear();
+    discoveredSpy.clear();
+
+    agent.start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    QVERIFY(agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+
+    RUN_DISCOVERY(MaxScanTime, timeStep, finishedSpy.isEmpty() && errorSpy.isEmpty())
+
+    QVERIFY(!agent.isActive());
+    QVERIFY(errorSpy.size() <= 1);
+
+    if (errorSpy.size()) {
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+        qDebug() << "QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods is inaccurate"
+                    " on your platform/with your device, LowEnergyMethod is not supported";
+    } else {
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
+        QCOMPARE(finishedSpy.size(), 1);
+    }
 }
 
 QTEST_MAIN(tst_QBluetoothDeviceDiscoveryAgent)
