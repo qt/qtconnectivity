@@ -310,19 +310,23 @@ void QLowEnergyControllerPrivate::connectToDevice()
     BluetoothConnectionStatus status;
     hr = mDevice->get_ConnectionStatus(&status);
     Q_ASSERT_SUCCEEDED(hr);
-    hr = mDevice->add_ConnectionStatusChanged(Callback<StatusHandler>([this, q](IBluetoothLEDevice *dev, IInspectable *){
-        BluetoothConnectionStatus status;
-        dev->get_ConnectionStatus(&status);
-        if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
-            setState(QLowEnergyController::ConnectedState);
-            emit q->connected();
-        } else if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
-            setState(QLowEnergyController::UnconnectedState);
-            emit q->disconnected();
-        }
+    hr = QEventDispatcherWinRT::runOnXamlThread([this, q]() {
+        HRESULT hr;
+        hr = mDevice->add_ConnectionStatusChanged(Callback<StatusHandler>([this, q](IBluetoothLEDevice *dev, IInspectable *) {
+            BluetoothConnectionStatus status;
+            dev->get_ConnectionStatus(&status);
+            if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
+                setState(QLowEnergyController::ConnectedState);
+                emit q->connected();
+            } else if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
+                setState(QLowEnergyController::UnconnectedState);
+                emit q->disconnected();
+            }
+            return S_OK;
+        }).Get(), &mStatusChangedToken);
+        Q_ASSERT_SUCCEEDED(hr);
         return S_OK;
-    }).Get(), &mStatusChangedToken);
-    Q_ASSERT_SUCCEEDED(hr);
+    });
 
     if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
         setState(QLowEnergyController::ConnectedState);
