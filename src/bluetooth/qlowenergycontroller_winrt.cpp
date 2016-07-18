@@ -352,6 +352,11 @@ void QLowEnergyControllerPrivate::connectToDevice()
         ComPtr<IVectorView<GattCharacteristic *>> characteristics;
         hr = service2->GetAllCharacteristics(&characteristics);
         if (hr == E_ACCESSDENIED) {
+            // Everything will work as expected up until this point if the manifest capabilties
+            // for bluetooth LE are not set.
+            qCWarning(QT_BT_WINRT) << "Could not obtain characteristic list. Please check your "
+                                      "manifest capabilities";
+            setState(QLowEnergyController::UnconnectedState);
             setError(QLowEnergyController::ConnectionError);
             return;
         } else {
