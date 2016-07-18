@@ -688,12 +688,19 @@ void QLowEnergyControllerPrivate::sendPacket(const QByteArray &packet)
 {
     qint64 result = l2cpSocket->write(packet.constData(),
                                       packet.size());
+    // We ignore result == 0 which is likely to be caused by EAGAIN.
+    // This packet is effectively discarded but the controller can still recover
+
     if (result == -1) {
         qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP packet:" << hex
                              << packet.toHex()
                              << l2cpSocket->errorString();
         setError(QLowEnergyController::NetworkError);
+    } else if (result < packet.size()) {
+        qCWarning(QT_BT_BLUEZ) << "L2CP write request incomplete:"
+                               << result << "of" << packet.size();
     }
+
 }
 
 void QLowEnergyControllerPrivate::sendNextPendingRequest()
