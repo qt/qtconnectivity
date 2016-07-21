@@ -381,6 +381,7 @@ void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
         d_ptr->errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
                                                                 "are not supported on this platform");
         emit error(d_ptr->lastError);
+        return;
     }
 
     if (!isActive() && d_ptr->lastError != InvalidBluetoothAdapterError)
