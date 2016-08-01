@@ -58,7 +58,7 @@ public:
         MiscellaneousDevice = 0,
         ComputerDevice = 1,
         PhoneDevice = 2,
-        LANAccessDevice = 3,
+        LANAccessDevice = 3, // TODO Qt 6 rename to NetworkDevice -> inconsistency with MinorNetworkClass
         AudioVideoDevice = 4,
         PeripheralDevice = 5,
         ImagingDevice = 6,
