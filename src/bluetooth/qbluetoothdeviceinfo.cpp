@@ -504,7 +504,12 @@ QBluetoothDeviceInfo::MajorDeviceClass QBluetoothDeviceInfo::majorDeviceClass() 
 }
 
 /*!
-    Returns the minor device class of the device.
+    Returns the minor device class of the device. The actual information
+    is context dependent on the value of \l majorDeviceClass().
+
+    \sa MinorAudioVideoClass, MinorComputerClass, MinorHealthClass, MinorImagingClass,
+    MinorMiscellaneousClass, MinorNetworkClass, MinorPeripheralClass, MinorPhoneClass,
+    MinorToyClass, MinorWearableClass
 */
 quint8 QBluetoothDeviceInfo::minorDeviceClass() const
 {

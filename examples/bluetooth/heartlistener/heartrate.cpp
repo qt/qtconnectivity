@@ -234,8 +234,10 @@ void HeartRate::disconnectService()
         return;
     }
 
-    //disable notifications
-    if (m_notificationDesc.isValid() && m_service) {
+    //disable notifications before disconnecting
+    if (m_notificationDesc.isValid() && m_service
+            && m_notificationDesc.value() == QByteArray::fromHex("0100"))
+    {
         m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0000"));
     } else {
         m_control->disconnectFromDevice();
@@ -266,7 +268,7 @@ void HeartRate::serviceStateChanged(QLowEnergyService::ServiceState s)
             break;
         }
 
-        const QLowEnergyDescriptor m_notificationDesc = hrChar.descriptor(
+        m_notificationDesc = hrChar.descriptor(
                     QBluetoothUuid::ClientCharacteristicConfiguration);
         if (m_notificationDesc.isValid()) {
             m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0100"));
@@ -333,7 +335,7 @@ void HeartRate::updateHeartRateValue(const QLowEnergyCharacteristic &c,
 void HeartRate::confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
                                          const QByteArray &value)
 {
-    if (d.isValid() && d == m_notificationDesc && value == QByteArray("0000")) {
+    if (d.isValid() && d == m_notificationDesc && value == QByteArray::fromHex("0000")) {
         //disabled notifications -> assume disconnect intent
         m_control->disconnectFromDevice();
         delete m_service;

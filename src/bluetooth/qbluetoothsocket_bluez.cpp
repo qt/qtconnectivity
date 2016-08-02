@@ -48,6 +48,7 @@
 #include "bluez/bluez_data_p.h"
 
 #include <qplatformdefs.h>
+#include <QtCore/private/qcore_unix_p.h>
 
 #include <QtCore/QLoggingCategory>
 
@@ -241,13 +242,28 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         char buf[1024];
 
         int size = txBuffer.read(buf, 1024);
-
-        if (::write(socket, buf, size) != size) {
-            errorString = QBluetoothSocket::tr("Network Error");
-            q->setSocketError(QBluetoothSocket::NetworkError);
-        }
-        else {
-            emit q->bytesWritten(size);
+        int writtenBytes = qt_safe_write(socket, buf, size);
+        if (writtenBytes < 0) {
+            switch (errno) {
+            case EAGAIN:
+                writtenBytes = 0;
+                txBuffer.ungetBlock(buf, size);
+                break;
+            default:
+                // every other case returns error
+                errorString = QBluetoothSocket::tr("Network Error: %1");
+                errorString.arg(qt_error_string(errno));
+                q->setSocketError(QBluetoothSocket::NetworkError);
+                break;
+            }
+        } else {
+            if (writtenBytes < size) {
+                // add remainder back to buffer
+                char* remainder = buf + writtenBytes;
+                txBuffer.ungetBlock(remainder, size - writtenBytes);
+            }
+            if (writtenBytes > 0)
+                emit q->bytesWritten(writtenBytes);
         }
 
         if (txBuffer.size()) {
@@ -484,15 +500,23 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     }
 
     if (q->openMode() & QIODevice::Unbuffered) {
-        if (::write(socket, data, maxSize) != maxSize) {
-            errorString = QBluetoothSocket::tr("Network Error");
-            q->setSocketError(QBluetoothSocket::NetworkError);
-            return -1;
+        int sz = ::qt_safe_write(socket, data, maxSize);
+        if (sz < 0) {
+            switch (errno) {
+            case EAGAIN:
+                sz = 0;
+                break;
+            default:
+                errorString = QBluetoothSocket::tr("Network Error: %1");
+                errorString.arg(qt_error_string(errno));
+                q->setSocketError(QBluetoothSocket::NetworkError);
+            }
         }
 
-        emit q->bytesWritten(maxSize);
+        if (sz > 0)
+            emit q->bytesWritten(sz);
 
-        return maxSize;
+        return sz;
     }
     else {
 
