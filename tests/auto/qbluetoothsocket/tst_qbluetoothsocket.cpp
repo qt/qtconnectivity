@@ -83,6 +83,8 @@ private slots:
 
     void tst_preferredSecurityFlags();
 
+    void tst_unsupportedProtocolError();
+
 public slots:
     void serviceDiscovered(const QBluetoothServiceInfo &info);
     void finished();
@@ -522,6 +524,51 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
     QCOMPARE(socket.preferredSecurityFlags(),
             QBluetooth::Encryption|QBluetooth::Authentication);
 #endif
+}
+
+void tst_QBluetoothSocket::tst_unsupportedProtocolError()
+{
+#if defined(QT_ANDROID_BLUETOOTH)
+    QSKIP("Android platform (re)sets RFCOMM socket type, nothing to test");
+#endif
+    // This socket has 'UnknownProtocol' socketType.
+    // Any attempt to connectToService should end in
+    // UnsupportedProtocolError.
+    QBluetoothSocket socket;
+    QCOMPARE(socket.socketType(), QBluetoothServiceInfo::UnknownProtocol);
+    QVERIFY(socket.error() == QBluetoothSocket::NoSocketError);
+    QVERIFY(socket.errorString() == QString());
+
+    QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
+
+    // 1. Stop early with 'UnsupportedProtocolError'.
+    QBluetoothServiceInfo dummyServiceInfo;
+    socket.connectToService(dummyServiceInfo, QIODevice::ReadWrite);
+    QTRY_COMPARE_WITH_TIMEOUT(errorSpy.size(), 1, 1000);
+    QCOMPARE(errorSpy.size(), 1);
+    QCOMPARE(errorSpy.takeFirst().at(0).toInt(), int(QBluetoothSocket::UnsupportedProtocolError));
+    QVERIFY(socket.errorString().size() != 0);
+    QCOMPARE(socket.state(), QBluetoothSocket::UnconnectedState);
+
+    errorSpy.clear();
+
+    // 2. Stop early with UnsupportedProtocolError (before testing an invalid address/port).
+    socket.connectToService(QBluetoothAddress(), 1, QIODevice::ReadWrite);
+    QTRY_COMPARE_WITH_TIMEOUT(errorSpy.size(), 1, 1000);
+    QCOMPARE(errorSpy.size(), 1);
+    QCOMPARE(errorSpy.takeFirst().at(0).toInt(), int(QBluetoothSocket::UnsupportedProtocolError));
+    QVERIFY(socket.errorString().size() != 0);
+    QCOMPARE(socket.state(), QBluetoothSocket::UnconnectedState);
+
+    errorSpy.clear();
+
+    // 3. Stop early (ignoring an invalid address/uuid).
+    socket.connectToService(QBluetoothAddress(), QBluetoothUuid(), QIODevice::ReadWrite);
+    QTRY_COMPARE_WITH_TIMEOUT(errorSpy.size(), 1, 1000);
+    QCOMPARE(errorSpy.size(), 1);
+    QCOMPARE(errorSpy.takeFirst().at(0).toInt(), int(QBluetoothSocket::UnsupportedProtocolError));
+    QVERIFY(socket.errorString().size() != 0);
+    QCOMPARE(socket.state(), QBluetoothSocket::UnconnectedState);
 }
 
 QTEST_MAIN(tst_QBluetoothSocket)

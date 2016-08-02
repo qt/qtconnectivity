@@ -332,6 +332,15 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     }
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
 #else
+    // Report this problem early:
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (service.protocolServiceMultiplexer() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
             d->errorString = tr("Unknown socket error");
@@ -401,6 +410,15 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
     }
     d->connectToService(address, uuid, openMode);
 #else
+    // Report this problem early, prevent device discovery:
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     QBluetoothServiceInfo service;
     QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::MiscellaneousDevice);
     service.setDevice(device);
@@ -438,6 +456,15 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
     setSocketError(QBluetoothSocket::ServiceNotFoundError);
     qCWarning(QT_BT) << "Connecting to port is not supported";
 #else
+    // Report this problem early:
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (state() != QBluetoothSocket::UnconnectedState) {
         qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
         d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
