@@ -82,6 +82,24 @@ QT_END_NAMESPACE
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include <QtAndroidExtras/QAndroidJniObject>
 #include "android/lowenergynotificationhub_p.h"
+#elif defined(QT_WINRT_BLUETOOTH)
+#include <wrl.h>
+
+namespace ABI {
+    namespace Windows {
+        namespace Devices {
+            namespace Bluetooth {
+                struct IBluetoothLEDevice;
+                namespace GenericAttributeProfile {
+                    struct IGattDeviceService;
+                    struct IGattCharacteristic;
+                }
+            }
+        }
+    }
+}
+
+class QWinRTLowEnergyServiceHandler;
 #endif
 
 #include <functional>
@@ -414,6 +432,16 @@ private slots:
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
+#elif defined(QT_WINRT_BLUETOOTH)
+private:
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
+    EventRegistrationToken mStatusChangedToken;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
+
+    void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
+        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
 #endif
 private:
     QLowEnergyController *q_ptr;

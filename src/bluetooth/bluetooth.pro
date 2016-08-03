@@ -193,6 +193,21 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller_p.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
+} else:winphone {
+    DEFINES += QT_WINRT_BLUETOOTH
+    QT += core-private
+
+    # remove dummy warning once platform port is complete
+    include(dummy/dummy.pri)
+
+    SOURCES += \
+        qbluetoothdevicediscoveryagent_winrt.cpp \
+        qbluetoothlocaldevice_p.cpp \
+        qbluetoothserver_p.cpp \
+        qbluetoothservicediscoveryagent_p.cpp \
+        qbluetoothserviceinfo_p.cpp \
+        qbluetoothsocket_p.cpp \
+        qlowenergycontroller_winrt.cpp
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers available.")

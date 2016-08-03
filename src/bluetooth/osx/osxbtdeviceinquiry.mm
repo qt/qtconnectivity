@@ -133,6 +133,8 @@ using namespace QT_NAMESPACE;
         const IOReturn res = [m_inquiry stop];
         if (res != kIOReturnSuccess)
             m_active = true;
+        else
+            qCDebug(QT_BT_OSX) << "-stop, success (waiting for 'inquiryComplete')";
 
         return res;
     }
