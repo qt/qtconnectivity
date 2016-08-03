@@ -162,10 +162,13 @@ private:
 #ifdef QT_WINRT_BLUETOOTH
 private slots:
     void onListInitializationCompleted();
+    void onScanFinished();
+    void onScanCanceled();
 
 private:
     void disconnectAndClearWorker();
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
+    QTimer *leScanTimer;
 #endif
 
     int lowEnergySearchTimeout;

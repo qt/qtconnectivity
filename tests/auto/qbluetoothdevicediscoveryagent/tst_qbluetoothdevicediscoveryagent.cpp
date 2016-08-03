@@ -489,7 +489,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
     QBluetoothDeviceDiscoveryAgent agent;
 
     // check default values
-#if defined(Q_OS_OSX) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID)
+#if defined(Q_OS_OSX) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_WINRT)
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
     agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);

@@ -178,6 +178,8 @@ public:
 
     ~QWinRTBluetoothDeviceDiscoveryWorker()
     {
+        if (leDeviceWatcher && leDeviceAddedToken.value)
+            leDeviceWatcher->remove_Added(leDeviceAddedToken);
     }
 
 private:
@@ -225,7 +227,7 @@ private:
         if (initializedModes == BTAll) {
             qCDebug(QT_BT_WINRT) << "All scans completed";
             emit initializationCompleted();
-            deleteLater();
+            setupLEDeviceWatcher();
         }
     }
 
@@ -271,14 +273,61 @@ private:
         }
     }
 
+    void setupLEDeviceWatcher()
+    {
+        HString deviceSelector;
+        ComPtr<IDeviceInformationStatics> deviceInformationStatics;
+        HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Enumeration_DeviceInformation).Get(), &deviceInformationStatics);
+        WARN_AND_RETURN_IF_FAILED("Could not obtain device information statics", return);
+        ComPtr<IBluetoothLEDeviceStatics> bluetoothLeDeviceStatics;
+        hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &bluetoothLeDeviceStatics);
+        WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth LE device statics", return);
+        hr = bluetoothLeDeviceStatics->GetDeviceSelector(deviceSelector.GetAddressOf());
+        WARN_AND_RETURN_IF_FAILED("Could not obtain device selector string", return);
+        hr = deviceInformationStatics->CreateWatcherAqsFilter(deviceSelector.Get(), &leDeviceWatcher);
+        WARN_AND_RETURN_IF_FAILED("Could not create le device watcher", return);
+        auto deviceAddedCallback =
+            Callback<ITypedEventHandler<DeviceWatcher*, DeviceInformation*>>([this](IDeviceWatcher *, IDeviceInformation *deviceInfo)
+        {
+            HString deviceId;
+            HRESULT hr;
+            hr = deviceInfo->get_Id(deviceId.GetAddressOf());
+            Q_ASSERT_SUCCEEDED(hr);
+            const QBluetoothDeviceInfo info = bluetoothInfoFromLeDeviceId(deviceId.Get());
+            if (!info.isValid())
+                return S_OK;
+
+            qCDebug(QT_BT_WINRT) << "Found device" << info.name() << info.address();
+            emit leDeviceFound(info);
+            return S_OK;
+        });
+        hr = leDeviceWatcher->add_Added(deviceAddedCallback.Get(), &leDeviceAddedToken);
+        WARN_AND_RETURN_IF_FAILED("Could not add \"device added\" callback", return);
+    }
+
+public slots:
+    void onLeTimeout()
+    {
+        if (initializedModes == BTAll)
+            emit scanFinished();
+        else
+            emit scanCanceled();
+        deleteLater();
+    }
+
 Q_SIGNALS:
     void initializationCompleted();
+    void leDeviceFound(const QBluetoothDeviceInfo &info);
+    void scanFinished();
+    void scanCanceled();
 
 public:
     QVector<QBluetoothDeviceInfo> deviceList;
 
 private:
     quint8 initializedModes;
+    ComPtr<IDeviceWatcher> leDeviceWatcher;
+    EventRegistrationToken leDeviceAddedToken;
 };
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
@@ -287,8 +336,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
 
     :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
         lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-        lowEnergySearchTimeout(-1), // TODO
-        q_ptr(parent)
+        lowEnergySearchTimeout(25000),
+        q_ptr(parent),
+        leScanTimer(0)
 {
     Q_UNUSED(deviceAdapter);
 }
@@ -310,6 +360,7 @@ QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent:
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods)
 {
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (worker)
         return;
 
@@ -321,7 +372,24 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     discoveredDevices.clear();
     connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::initializationCompleted,
         this, &QBluetoothDeviceDiscoveryAgentPrivate::onListInitializationCompleted);
+    connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::scanFinished,
+            this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished);
+    connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::scanCanceled,
+            this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanCanceled);
+    connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::leDeviceFound,
+            q, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered);
     worker->start();
+
+    if (lowEnergySearchTimeout > 0) { // otherwise no timeout and stop() required
+        if (!leScanTimer) {
+            leScanTimer = new QTimer(this);
+            leScanTimer->setSingleShot(true);
+            connect(leScanTimer, &QTimer::timeout,
+                    worker, &QWinRTBluetoothDeviceDiscoveryWorker::onLeTimeout);
+        }
+        leScanTimer->setInterval(lowEnergySearchTimeout);
+        leScanTimer->start();
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -339,9 +407,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::onListInitializationCompleted()
     discoveredDevices = worker->deviceList.toList();
     foreach (const QBluetoothDeviceInfo &info, worker->deviceList)
         emit q->deviceDiscovered(info);
+}
 
+void QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
     disconnectAndClearWorker();
     emit q->finished();
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::onScanCanceled()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    disconnectAndClearWorker();
+    emit q->canceled();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::disconnectAndClearWorker()
@@ -351,7 +430,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::disconnectAndClearWorker()
 
     disconnect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::initializationCompleted,
         this, &QBluetoothDeviceDiscoveryAgentPrivate::onListInitializationCompleted);
-    // worker deletion is done by the worker itself (see comment in start())
+    worker->deleteLater();
     worker.clear();
 }
 
