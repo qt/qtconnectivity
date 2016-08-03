@@ -694,6 +694,11 @@ void QLowEnergyController::connectToDevice()
 {
     Q_D(QLowEnergyController);
 
+    if (role() != CentralRole) {
+        qCWarning(QT_BT) << "Connection can only be established while in central role";
+        return;
+    }
+
     if (!d->isValidLocalAdapter()) {
         d->setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
