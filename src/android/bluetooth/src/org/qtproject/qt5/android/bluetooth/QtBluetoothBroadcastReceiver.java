@@ -46,6 +46,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -58,14 +59,15 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
     @SuppressWarnings("WeakerAccess")
     long qtObject = 0;
     @SuppressWarnings("WeakerAccess")
-    static Activity qtactivity = null;
+    static Context qtContext = null;
 
     private static final int TURN_BT_ON = 3330;
     private static final int TURN_BT_DISCOVERABLE = 3331;
+    private static final String TAG = "QtBluetoothBroadcastReceiver";
 
     public void onReceive(Context context, Intent intent)
     {
-        synchronized (qtactivity) {
+        synchronized (qtContext) {
             if (qtObject == 0)
                 return;
 
@@ -75,25 +77,30 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 
     public void unregisterReceiver()
     {
-        synchronized (qtactivity) {
+        synchronized (qtContext) {
             qtObject = 0;
-            qtactivity.unregisterReceiver(this);
+            qtContext.unregisterReceiver(this);
         }
     }
 
     public native void jniOnReceive(long qtObject, Context context, Intent intent);
 
-    static public void setActivity(Activity activity, Object activityDelegate)
+    static public void setContext(Context context)
     {
-        qtactivity = activity;
+        qtContext = context;
     }
 
     static public void setDiscoverable()
     {
+        if (!(qtContext instanceof android.app.Activity)) {
+            Log.w(TAG, "Discovery mode cannot be enabled from a service.");
+            return;
+        }
+
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
         try {
-            qtactivity.startActivityForResult(intent, TURN_BT_ON);
+            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_ON);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -101,9 +108,14 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 
     static public void setConnectable()
     {
+        if (!(qtContext instanceof android.app.Activity)) {
+            Log.w(TAG, "Connectable mode cannot be enabled from a service.");
+            return;
+        }
+
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         try {
-            qtactivity.startActivityForResult(intent, TURN_BT_DISCOVERABLE);
+            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_DISCOVERABLE);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -142,7 +154,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         try {
             //Bluetooth service name
             Field f = Context.class.getField("BLUETOOTH_SERVICE");
-            String serviceValueString = (String)f.get(qtactivity);
+            String serviceValueString = (String)f.get(qtContext);
 
             Class btProfileClz = Class.forName("android.bluetooth.BluetoothProfile");
 
@@ -155,7 +167,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
             int gattServer = f.getInt(null);
 
             //get BluetoothManager instance
-            Object bluetoothManager = qtactivity.getSystemService(serviceValueString);
+            Object bluetoothManager = qtContext.getSystemService(serviceValueString);
 
             Class[] cArg = new Class[1];
             cArg[0] = int.class;

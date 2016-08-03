@@ -79,7 +79,7 @@ protected:
     virtual void onReceiveLeScan(JNIEnv *env, jobject jBluetoothDevice, jint rssi) = 0;
 
 
-    QAndroidJniObject activityObject;
+    QAndroidJniObject contextObject;
     QAndroidJniObject intentFilterObject;
     QAndroidJniObject broadcastReceiverObject;
     bool valid;
