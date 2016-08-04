@@ -53,18 +53,25 @@ QReadWriteLock LowEnergyNotificationHub::lock;
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-LowEnergyNotificationHub::LowEnergyNotificationHub(
-        const QBluetoothAddress &remote, QObject *parent)
+LowEnergyNotificationHub::LowEnergyNotificationHub(const QBluetoothAddress &remote,
+                                                   bool isPeripheral, QObject *parent)
     :   QObject(parent), javaToCtoken(0)
 {
     QAndroidJniEnvironment env;
-    const QAndroidJniObject address =
+
+    if (isPeripheral) {
+        qCDebug(QT_BT_ANDROID) << "Creating Android Peripheral/Server support for BTLE";
+        jBluetoothLe = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLEServer",
+                                         "(Landroid/content/Context;)V", QtAndroidPrivate::context());
+    } else {
+        qCDebug(QT_BT_ANDROID) << "Creating Android Central/Client support for BTLE";
+        const QAndroidJniObject address =
             QAndroidJniObject::fromString(remote.toString());
-    jBluetoothLe = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLE",
+        jBluetoothLe = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLE",
                                      "(Ljava/lang/String;Landroid/content/Context;)V",
                                      address.object<jstring>(),
                                      QtAndroidPrivate::activity() ? QtAndroidPrivate::activity() : QtAndroidPrivate::service());
-
+    }
 
     if (env->ExceptionCheck() || !jBluetoothLe.isValid()) {
         env->ExceptionDescribe();

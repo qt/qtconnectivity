@@ -74,7 +74,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
     setState(QLowEnergyController::ConnectingState);
 
     if (!hub) {
-        hub = new LowEnergyNotificationHub(remoteDevice, this);
+        hub = new LowEnergyNotificationHub(remoteDevice, false, this);
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
                 this, &QLowEnergyControllerPrivate::connectionUpdated);
         connect(hub, &LowEnergyNotificationHub::servicesDiscovered,

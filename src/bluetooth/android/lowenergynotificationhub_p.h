@@ -67,7 +67,7 @@ class LowEnergyNotificationHub : public QObject
 {
     Q_OBJECT
 public:
-    explicit LowEnergyNotificationHub(const QBluetoothAddress &remote,
+    explicit LowEnergyNotificationHub(const QBluetoothAddress &remote, bool isPeripheral,
                                       QObject *parent = 0);
     ~LowEnergyNotificationHub();
 
