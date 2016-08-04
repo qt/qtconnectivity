@@ -60,21 +60,30 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 
 void QLowEnergyControllerPrivate::init()
 {
-}
+    // Android Central/Client support starts with v18
+    // Peripheral/Server support requires Android API v21
+    const bool isPeripheral = (role == QLowEnergyController::PeripheralRole);
+    const jint version = QtAndroidPrivate::androidSdkVersion();
 
-void QLowEnergyControllerPrivate::connectToDevice()
-{
-    // required to pass unit test on default backend
-    if (remoteDevice.isNull()) {
-        qWarning() << "Invalid/null remote device address";
-        setError(QLowEnergyController::UnknownRemoteDeviceError);
-        return;
-    }
+    if (isPeripheral) {
+        if (version < 21) {
+            qWarning() << "Qt Bluetooth LE Peripheral support not available"
+                          "on Android devices below version 21";
+            return;
+        }
 
-    setState(QLowEnergyController::ConnectingState);
+        hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
+        // we only connect to the peripheral role specific signals
+        // TODO add connections as they get added later on
+    } else {
+        if (version < 18) {
+            qWarning() << "Qt Bluetooth LE Central/Client support not available"
+                          "on Android devices below version 18";
+            return;
+        }
 
-    if (!hub) {
-        hub = new LowEnergyNotificationHub(remoteDevice, false, this);
+        hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
+        // we only connect to the central role specific signals
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
                 this, &QLowEnergyControllerPrivate::connectionUpdated);
         connect(hub, &LowEnergyNotificationHub::servicesDiscovered,
@@ -94,6 +103,21 @@ void QLowEnergyControllerPrivate::connectToDevice()
         connect(hub, &LowEnergyNotificationHub::serviceError,
                 this, &QLowEnergyControllerPrivate::serviceError);
     }
+}
+
+void QLowEnergyControllerPrivate::connectToDevice()
+{
+    if (!hub)
+        return; // Android version below v18
+
+    // required to pass unit test on default backend
+    if (remoteDevice.isNull()) {
+        qWarning() << "Invalid/null remote device address";
+        setError(QLowEnergyController::UnknownRemoteDeviceError);
+        return;
+    }
+
+    setState(QLowEnergyController::ConnectingState);
 
     if (!hub->javaObject().isValid()) {
         qCWarning(QT_BT_ANDROID) << "Cannot initiate QtBluetoothLE";
