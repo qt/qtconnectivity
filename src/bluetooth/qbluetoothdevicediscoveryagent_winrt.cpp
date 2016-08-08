@@ -178,8 +178,11 @@ public:
 
     ~QWinRTBluetoothDeviceDiscoveryWorker()
     {
-        if (leDeviceWatcher && leDeviceAddedToken.value)
-            leDeviceWatcher->remove_Added(leDeviceAddedToken);
+        if (leDeviceWatcher && leDeviceAddedToken.value) {
+            HRESULT hr;
+            hr = leDeviceWatcher->remove_Added(leDeviceAddedToken);
+            Q_ASSERT_SUCCEEDED(hr);
+        }
     }
 
 private:
@@ -221,7 +224,9 @@ private:
     {
         qCDebug(QT_BT_WINRT) << (mode == BT ? "BT" : "BTLE") << "scan completed";
         ComPtr<IVectorView<DeviceInformation *>> devices;
-        op->GetResults(&devices);
+        HRESULT hr;
+        hr = op->GetResults(&devices);
+        Q_ASSERT_SUCCEEDED(hr);
         onDevicesFound(devices.Get(), mode);
         initializedModes |= mode;
         if (initializedModes == BTAll) {
