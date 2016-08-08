@@ -162,6 +162,7 @@ private:
 #ifdef QT_WINRT_BLUETOOTH
 private slots:
     void onListInitializationCompleted();
+    void onLeDeviceFound(const QBluetoothDeviceInfo &info);
     void onScanFinished();
     void onScanCanceled();
 

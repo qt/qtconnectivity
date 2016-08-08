@@ -365,7 +365,6 @@ QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent:
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (worker)
         return;
 
@@ -378,12 +377,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     discoveredDevices.clear();
     connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::initializationCompleted,
         this, &QBluetoothDeviceDiscoveryAgentPrivate::onListInitializationCompleted);
+    connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::leDeviceFound,
+            this, &QBluetoothDeviceDiscoveryAgentPrivate::onLeDeviceFound);
     connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::scanFinished,
             this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished);
     connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::scanCanceled,
             this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanCanceled);
-    connect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::leDeviceFound,
-            q, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered);
     worker->start();
 
     if (lowEnergySearchTimeout > 0 && methods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) { // otherwise no timeout and stop() required
@@ -415,6 +414,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::onListInitializationCompleted()
     discoveredDevices = worker->deviceList.toList();
     foreach (const QBluetoothDeviceInfo &info, worker->deviceList)
         emit q->deviceDiscovered(info);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::onLeDeviceFound(const QBluetoothDeviceInfo &info)
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    for (auto discoveredInfo : discoveredDevices)
+        if (discoveredInfo.address() == info.address())
+            return;
+
+    discoveredDevices << info;
+    emit q->deviceDiscovered(info);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished()
