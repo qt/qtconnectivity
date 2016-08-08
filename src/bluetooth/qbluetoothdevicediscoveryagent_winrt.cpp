@@ -368,10 +368,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (worker)
         return;
 
-    // The worker handles its lifetime on its own (basically deletes itself as soon
-    // as it's done with its work) to prevent windows callbacks that access objects
-    // that have already been destroyed. Thus we create a new worker for every start
-    // and just forget about it as soon as the operation is canceled or finished.
     worker = new QWinRTBluetoothDeviceDiscoveryWorker();
     worker->requestedModes = methods;
     discoveredDevices.clear();
