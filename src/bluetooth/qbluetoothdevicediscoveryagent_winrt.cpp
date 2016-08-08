@@ -406,6 +406,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
         disconnectAndClearWorker();
         emit q->canceled();
     }
+    if (leScanTimer)
+        leScanTimer->stop();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::onListInitializationCompleted()
