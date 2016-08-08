@@ -308,6 +308,8 @@ private:
         });
         hr = leDeviceWatcher->add_Added(deviceAddedCallback.Get(), &leDeviceAddedToken);
         WARN_AND_RETURN_IF_FAILED("Could not add \"device added\" callback", return);
+        hr = leDeviceWatcher->Start();
+        WARN_AND_RETURN_IF_FAILED("Could not start device watcher", return);
     }
 
 public slots:
