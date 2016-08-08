@@ -390,9 +390,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         if (!leScanTimer) {
             leScanTimer = new QTimer(this);
             leScanTimer->setSingleShot(true);
-            connect(leScanTimer, &QTimer::timeout,
-                    worker, &QWinRTBluetoothDeviceDiscoveryWorker::onLeTimeout);
         }
+        connect(leScanTimer, &QTimer::timeout,
+            worker, &QWinRTBluetoothDeviceDiscoveryWorker::onLeTimeout);
         leScanTimer->setInterval(lowEnergySearchTimeout);
         leScanTimer->start();
     }
@@ -445,6 +445,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::disconnectAndClearWorker()
         this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished);
     disconnect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::leDeviceFound,
         q, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered);
+    if (leScanTimer) {
+        disconnect(leScanTimer, &QTimer::timeout,
+            worker, &QWinRTBluetoothDeviceDiscoveryWorker::onLeTimeout);
+    }
     worker->deleteLater();
     worker.clear();
 }
