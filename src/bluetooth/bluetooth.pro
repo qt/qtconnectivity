@@ -193,7 +193,7 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller_p.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
-} else:winphone {
+} else:if(winphone|winrt-*-msvc2015) {
     DEFINES += QT_WINRT_BLUETOOTH
     QT += core-private
 
