@@ -137,6 +137,32 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
+    // check Android v23+ permissions
+    // -> BTLE search requires android.permission.ACCESS_COARSE_LOCATION
+    if (requestedMethods && QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
+        QString permission(QLatin1String("android.permission.ACCESS_COARSE_LOCATION"));
+
+        // do we have required permission already, if so nothing to do
+        if (QtAndroidPrivate::checkPermission(permission) == QtAndroidPrivate::PermissionsResult::Denied) {
+            qCWarning(QT_BT_ANDROID) << "Requesting ACCESS_COARSE_LOCATION permission";
+
+            QAndroidJniEnvironment env;
+            const QHash<QString, QtAndroidPrivate::PermissionsResult> results =
+                    QtAndroidPrivate::requestPermissionsSync(env, QStringList() << permission);
+            if (!results.contains(permission)
+                || results[permission] == QtAndroidPrivate::PermissionsResult::Denied)
+            {
+                qCWarning(QT_BT_ANDROID) << "Search not possible due to missing permission (ACCESS_COARSE_LOCATION)";
+                lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+                errorString = QBluetoothDeviceDiscoveryAgent::tr("Missing Location permission. Search is not possible");
+                emit q->error(lastError);
+                return;
+            }
+        }
+
+        qCWarning(QT_BT_ANDROID) << "ACCESS_COARSE_LOCATION permission available";
+    }
+
     // install Java BroadcastReceiver
     if (!receiver) {
         // SDP based device discovery
