@@ -35,7 +35,7 @@ The Bluetooth API provides connectivity between Bluetooth enabled devices.
 
 Currently, the API is supported on the following platforms: \l{Qt for Android}{Android},
 \l{Qt for iOS}{iOS}, \l{Qt for Linux/X11}{Linux}
-(\l{http://www.bluez.org}{BlueZ 4.x/5.x}) and \l{Qt for OS X}{OS X}.
+(\l{http://www.bluez.org}{BlueZ 4.x/5.x}) and \l{Qt for macOS}{\macos}.
 
 \section1 Overview
 
@@ -114,7 +114,7 @@ The \l QtBluetooth module exports the following
     \li Enables logging of the iOS implementation
 \row
     \li qt.bluetooth.osx
-    \li Enables logging of the OS X implementation
+    \li Enables logging of the \macos implementation
 \endtable
 
 \section2 Examples

@@ -45,6 +45,9 @@ With the Qt NFC API typical use cases are:
 
 The following sections describe how to use Qt NFC C++ classes and QML types for the above use cases.
 
+\note On Android, Qt Nfc only works in foreground applications. Android services are not supported which is due to
+API limitations on the Android side.
+
 \section1 C++ Overview
 
 The C++ API provides access to the full feature set of the Qt NFC API. This section introduces the

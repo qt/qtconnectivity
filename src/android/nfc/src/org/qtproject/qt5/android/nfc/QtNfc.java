@@ -64,10 +64,15 @@ public class QtNfc
     static public IntentFilter[] m_filters;
     static public Activity m_activity;
 
-    static public void setActivity(Activity activity, Object activityDelegate)
+    static public void setContext(Context context)
     {
-        //Log.d(TAG, "setActivity " + activity);
-        m_activity = activity;
+        if (!(context instanceof Activity)) {
+            Log.w(TAG, "NFC only works with Android activities and not in Android services. " +
+                       "NFC has been disabled.");
+            return;
+        }
+
+        m_activity = (Activity)context;
         m_adapter = NfcAdapter.getDefaultAdapter(m_activity);
         if (m_adapter == null) {
             //Log.e(TAG, "No NFC available");
