@@ -286,7 +286,7 @@ int QBluetoothServer::maxPendingConnections() const
     \l QBluetooth::NoSecurity the server object will not employ any authentication or encryption.
     Any other security flag combination will trigger a secure Bluetooth connection.
 
-    On OS X, security flags are not supported and will be ignored.
+    On \macos, security flags are not supported and will be ignored.
 */
 
 /*!

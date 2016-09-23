@@ -61,9 +61,9 @@ LowEnergyNotificationHub::LowEnergyNotificationHub(
     const QAndroidJniObject address =
             QAndroidJniObject::fromString(remote.toString());
     jBluetoothLe = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLE",
-                                     "(Ljava/lang/String;Landroid/app/Activity;)V",
+                                     "(Ljava/lang/String;Landroid/content/Context;)V",
                                      address.object<jstring>(),
-                                     QtAndroidPrivate::activity());
+                                     QtAndroidPrivate::activity() ? QtAndroidPrivate::activity() : QtAndroidPrivate::service());
 
 
     if (env->ExceptionCheck() || !jBluetoothLe.isValid()) {

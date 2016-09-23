@@ -39,7 +39,6 @@
 
 package org.qtproject.qt5.android.bluetooth;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -48,6 +47,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -70,16 +70,16 @@ public class QtBluetoothLE {
     @SuppressWarnings({"CanBeFinal", "WeakerAccess"})
     long qtObject = 0;
     @SuppressWarnings("WeakerAccess")
-    Activity qtactivity = null;
+    Context qtContext = null;
 
     @SuppressWarnings("WeakerAccess")
     public QtBluetoothLE() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
-    public QtBluetoothLE(final String remoteAddress, Activity activity) {
+    public QtBluetoothLE(final String remoteAddress, Context context) {
         this();
-        qtactivity = activity;
+        qtContext = context;
         mRemoteGattAddress = remoteAddress;
     }
 
@@ -413,7 +413,7 @@ public class QtBluetoothLE {
             return false;
         }
 
-        mBluetoothGatt = mRemoteGattDevice.connectGatt(qtactivity, false, gattCallback);
+        mBluetoothGatt = mRemoteGattDevice.connectGatt(qtContext, false, gattCallback);
         return mBluetoothGatt != null;
     }
 

@@ -99,7 +99,7 @@ QT_BEGIN_NAMESPACE
      only made discoverable for a limited period of time. This can speed up discovery between gaming devices,
      as service discovery can be skipped on devices not in LimitedInquiry mode. In this mode, the device will
      be connectable and powered on, if required. This mode is is not supported on Android.
-     On OS X, it is not possible to set the \l hostMode() to HostConnectable or HostPoweredOff.
+     On \macos, it is not possible to set the \l hostMode() to HostConnectable or HostPoweredOff.
 
 */
 
@@ -153,7 +153,7 @@ bool QBluetoothLocalDevice::isValid() const
     \note Due to varying security policies on the supported platforms, this method may have
     differing behaviors on the various platforms. For example the system may ask the user for
     confirmation before turning Bluetooth on or off and not all host modes may be supported.
-    On OS X, it is not possbile to programmatically change the \l hostMode().
+    On \macos, it is not possbile to programmatically change the \l hostMode().
     A user can only switch Bluetooth on/off in the System Preferences.
     Please refer to the platform specific Bluetooth documentation for details.
 */
@@ -161,7 +161,7 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
     \fn QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 
-    Returns the current host mode of this local Bluetooth device. On OS X, it is either
+    Returns the current host mode of this local Bluetooth device. On \macos, it is either
     HostPoweredOff or HostConnectable.
 */
 
@@ -184,7 +184,7 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
     \fn QList<QBluetoothLocalDevice> QBluetoothLocalDevice::allDevices()
 
-    Returns a list of all available local Bluetooth devices. On OS X, there is
+    Returns a list of all available local Bluetooth devices. On \macos, there is
     only the "default" local device.
 */
 
@@ -196,7 +196,7 @@ bool QBluetoothLocalDevice::isValid() const
   \note Due to varying security policies on the supported platforms, this method may have
   differing behaviors on the various platforms. For example
   the system may ask the user for confirmation before turning Bluetooth on or off.
-  On OS X it is not possible to power on/off Bluetooth.
+  On \macos it is not possible to power on/off Bluetooth.
   Please refer to the platform specific Bluetooth documentation for details.
 */
 
@@ -237,7 +237,7 @@ bool QBluetoothLocalDevice::isValid() const
   Returns the list of connected devices. This list is different from the list of currently
   paired devices.
 
-  On Android and OS X, it is not possible to retrieve a list of connected devices. It is only possible to
+  On Android and \macos, it is not possible to retrieve a list of connected devices. It is only possible to
   listen to (dis)connect changes. For convenience, this class monitors all connect
   and disconnect events since its instanciation and returns the current list when calling this function.
   Therefore it is possible that this function returns an empty list shortly after creating an
@@ -260,7 +260,7 @@ bool QBluetoothLocalDevice::isValid() const
   must be called to indicate if the user accepts or rejects the displayed pin.
 
   This signal is only emitted for pairing requests issues by calling \l requestPairing().
-  On OS X, this method never gets called - there is a callback with a PIN (IOBluetooth),
+  On \macos, this method never gets called - there is a callback with a PIN (IOBluetooth),
   but it expects immediate reply yes/no - and there is no time to show any dialog or compare PINs.
 
   \sa pairingConfirmation()
@@ -288,9 +288,9 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 
   Set the \a pairing status with \a address.  The results are returned by the signal, pairingFinished().
-  On Android and OS X, AuthorizedPaired is not possible and will have the same behavior as Paired.
+  On Android and \macos, AuthorizedPaired is not possible and will have the same behavior as Paired.
 
-  On OS X, it is not possible to unpair a device. If Unpaired is requested, \l pairingFinished()
+  On \macos, it is not possible to unpair a device. If Unpaired is requested, \l pairingFinished()
   is immediately emitted although the device remains paired. It is possible to request the pairing
   for a previously unpaired device. In addition \l AuthorizedPaired has the same behavior as \l Paired.
 

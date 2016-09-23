@@ -53,8 +53,10 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 AndroidBroadcastReceiver::AndroidBroadcastReceiver(QObject* parent)
     : QObject(parent), valid(false)
 {
-    //get QtActivity
-    activityObject = QAndroidJniObject(QtAndroidPrivate::activity());
+    // get Qt Context
+    // TODO: replace with QtAndroidPrivate::context() introduced by Qt 5.8
+    contextObject = QAndroidJniObject(QtAndroidPrivate::activity()
+                                      ? QtAndroidPrivate::activity() : QtAndroidPrivate::service());
 
     broadcastReceiverObject = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver");
     if (!broadcastReceiverObject.isValid())
@@ -92,7 +94,7 @@ void AndroidBroadcastReceiver::addAction(const QAndroidJniObject &action)
 
     intentFilterObject.callMethod<void>("addAction", "(Ljava/lang/String;)V", action.object<jstring>());
 
-    activityObject.callObjectMethod(
+    contextObject.callObjectMethod(
                 "registerReceiver",
                 "(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;)Landroid/content/Intent;",
                 broadcastReceiverObject.object<jobject>(),
