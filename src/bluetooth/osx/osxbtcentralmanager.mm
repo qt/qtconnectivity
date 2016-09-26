@@ -1072,10 +1072,19 @@ QT_USE_NAMESPACE
 {
     using namespace OSXBluetooth;
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    const CBManagerState state = central.state;
+#else
     const CBCentralManagerState state = central.state;
+#endif
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    if (state == CBManagerStateUnknown
+        || state == CBManagerStateResetting) {
+#else
     if (state == CBCentralManagerStateUnknown
         || state == CBCentralManagerStateResetting) {
+#endif
         // We still have to wait, docs say:
         // "The current state of the central manager is unknown;
         // an update is imminent." or
@@ -1085,7 +1094,11 @@ QT_USE_NAMESPACE
     }
 
     // Let's check some states we do not like first:
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
+#else
     if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
+#endif
         if (managerState == CentralManagerUpdating) {
             // We tried to connect just to realize, LE is not supported. Report this.
             managerState = CentralManagerIdle;
@@ -1101,7 +1114,11 @@ QT_USE_NAMESPACE
         return;
     }
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    if (state == CBManagerStatePoweredOff) {
+#else
     if (state == CBCentralManagerStatePoweredOff) {
+#endif
         managerState = CentralManagerIdle;
         if (managerState == CentralManagerUpdating) {
             // I've seen this instead of Unsupported on OS X.
@@ -1116,7 +1133,11 @@ QT_USE_NAMESPACE
         return;
     }
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    if (state == CBManagerStatePoweredOn) {
+#else
     if (state == CBCentralManagerStatePoweredOn) {
+#endif
         if (managerState == CentralManagerUpdating && !disconnectPending) {
             managerState = CentralManagerIdle;
             [self retrievePeripheralAndConnect];
