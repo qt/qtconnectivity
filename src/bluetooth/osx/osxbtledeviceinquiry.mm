@@ -210,8 +210,13 @@ using namespace QT_NAMESPACE;
     dispatch_queue_t leQueue(qt_LE_queue());
     Q_ASSERT(leQueue);
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    const CBManagerState cbState(central.state);
+    if (cbState == CBManagerStatePoweredOn) {
+#else
     const CBCentralManagerState cbState(central.state);
     if (cbState == CBCentralManagerStatePoweredOn) {
+#endif
         if (internalState == InquiryStarting) {
             internalState = InquiryActive;
             // Scan time is actually 10 seconds. Having a block with such delay can prevent
@@ -226,7 +231,11 @@ using namespace QT_NAMESPACE;
                                           });
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
+#else
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
+#endif
         if (internalState == InquiryActive) {
             [manager stopScan];
             // Not sure how this is possible at all, probably, can never happen.
@@ -236,7 +245,11 @@ using namespace QT_NAMESPACE;
         }
 
         [manager setDelegate:nil];
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    } else if (cbState == CBManagerStatePoweredOff) {
+#else
     } else if (cbState == CBCentralManagerStatePoweredOff) {
+#endif
         if (internalState == InquiryStarting) {
 #ifndef Q_OS_OSX
             // On iOS a user can see at this point an alert asking to enable
