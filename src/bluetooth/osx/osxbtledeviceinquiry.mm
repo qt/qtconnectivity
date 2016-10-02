@@ -42,6 +42,11 @@
 
 #include "corebluetoothwrapper_p.h"
 
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
+#import <CoreBluetooth/CBCentralManager.h>
+#import <CoreBluetooth/CBPeripheral.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {

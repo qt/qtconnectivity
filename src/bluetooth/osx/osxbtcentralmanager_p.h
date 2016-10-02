@@ -61,6 +61,14 @@
 
 #include "corebluetoothwrapper_p.h"
 
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
+#include <CoreBluetooth/CBService.h>
+#include <CoreBluetooth/CBCharacteristic.h>
+#include <CoreBluetooth/CBDescriptor.h>
+#include <CoreBluetooth/CBCentralManager.h>
+#include <CoreBluetooth/CBPeripheral.h>
+#endif
+
 @class QT_MANGLE_NAMESPACE(OSXBTCentralManager);
 
 QT_BEGIN_NAMESPACE
