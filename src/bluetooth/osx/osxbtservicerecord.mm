@@ -33,13 +33,12 @@
 
 #include "qbluetoothserviceinfo.h"
 #include "osxbtservicerecord_p.h"
+#include "osxbluetooth_p.h"
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qmap.h>
 #include <QtCore/qurl.h>
-
-#include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 

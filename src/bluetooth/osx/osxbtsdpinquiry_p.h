@@ -47,6 +47,7 @@
 
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
+#include "osxbluetooth_p.h"
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qlist.h>
@@ -54,9 +55,6 @@
 #include <Foundation/Foundation.h>
 
 @class QT_MANGLE_NAMESPACE(OSXBTSDPInquiry);
-@class IOBluetoothSDPServiceRecord;
-@class IOBluetoothSDPDataElement;
-@class IOBluetoothDevice;
 
 QT_BEGIN_NAMESPACE
 

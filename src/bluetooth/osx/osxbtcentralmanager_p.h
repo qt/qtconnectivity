@@ -49,25 +49,14 @@
 #include "qlowenergyservice.h"
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
+#include "osxbluetooth_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qqueue.h>
 #include <QtCore/qhash.h>
 
-// Foundation.h must be included before corebluetoothwrapper_p.h -
-// a workaround for a broken 10.9 SDK.
 #include <Foundation/Foundation.h>
-
-#include "corebluetoothwrapper_p.h"
-
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
-#include <CoreBluetooth/CBService.h>
-#include <CoreBluetooth/CBCharacteristic.h>
-#include <CoreBluetooth/CBDescriptor.h>
-#include <CoreBluetooth/CBCentralManager.h>
-#include <CoreBluetooth/CBPeripheral.h>
-#endif
 
 @class QT_MANGLE_NAMESPACE(OSXBTCentralManager);
 

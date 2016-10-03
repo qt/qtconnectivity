@@ -36,6 +36,7 @@
 #include "qbluetoothlocaldevice.h"
 #include "osx/osxbtdevicepair_p.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/osxbluetooth_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qstring.h>
@@ -45,8 +46,6 @@
 
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h:
-#include "osx/corebluetoothwrapper_p.h"
 
 #include <algorithm>
 

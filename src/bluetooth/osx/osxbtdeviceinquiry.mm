@@ -37,7 +37,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
-
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
@@ -51,11 +50,7 @@ DeviceInquiryDelegate::~DeviceInquiryDelegate()
 
 QT_END_NAMESPACE
 
-
-#ifdef QT_NAMESPACE
-// We do not want to litter a code with QT_PREPEND_NAMESPACE, right?
-using namespace QT_NAMESPACE;
-#endif
+QT_USE_NAMESPACE
 
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry)

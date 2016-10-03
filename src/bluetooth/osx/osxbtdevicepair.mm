@@ -61,10 +61,7 @@ PairingDelegate::~PairingDelegate()
 
 QT_END_NAMESPACE
 
-
-#ifdef QT_NAMESPACE
-using namespace QT_NAMESPACE;
-#endif
+QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTPairing)
 
