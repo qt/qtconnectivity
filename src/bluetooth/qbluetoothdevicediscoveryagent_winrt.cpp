@@ -72,7 +72,7 @@ QBluetoothDeviceInfo bluetoothInfoFromDeviceId(HSTRING deviceId)
     ComPtr<IAsyncOperation<BluetoothDevice *>> deviceFromIdOperation;
     hr = deviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
     WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth device from id", return QBluetoothDeviceInfo());
-    QWinRTFunctions::await(deviceFromIdOperation, device.GetAddressOf());
+    hr = QWinRTFunctions::await(deviceFromIdOperation, device.GetAddressOf());
     WARN_AND_RETURN_IF_FAILED("Could not wait for bluetooth device operation to finish", return QBluetoothDeviceInfo());
     if (!device)
         return QBluetoothDeviceInfo();
@@ -80,24 +80,32 @@ QBluetoothDeviceInfo bluetoothInfoFromDeviceId(HSTRING deviceId)
     HString name;
     ComPtr<IBluetoothClassOfDevice> classOfDevice;
     UINT32 classOfDeviceInt;
-    device->get_BluetoothAddress(&address);
-    device->get_Name(name.GetAddressOf());
+    hr = device->get_BluetoothAddress(&address);
+    WARN_AND_RETURN_IF_FAILED("Could not obtain device's bluetooth address", return QBluetoothDeviceInfo());
+    hr = device->get_Name(name.GetAddressOf());
+    WARN_AND_RETURN_IF_FAILED("Could not obtain device's name", return QBluetoothDeviceInfo());
     const QString btName = QString::fromWCharArray(WindowsGetStringRawBuffer(name.Get(), nullptr));
-    device->get_ClassOfDevice(&classOfDevice);
-    classOfDevice->get_RawValue(&classOfDeviceInt);
+    hr = device->get_ClassOfDevice(&classOfDevice);
+    WARN_AND_RETURN_IF_FAILED("Could not obtain device's ckass", return QBluetoothDeviceInfo());
+    hr = classOfDevice->get_RawValue(&classOfDeviceInt);
+    WARN_AND_RETURN_IF_FAILED("Could not obtain raw device value", return QBluetoothDeviceInfo());
     IVectorView <Rfcomm::RfcommDeviceService *> *deviceServices;
     hr = device->get_RfcommServices(&deviceServices);
     WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth device services", return QBluetoothDeviceInfo());
     uint serviceCount;
-    deviceServices->get_Size(&serviceCount);
+    hr = deviceServices->get_Size(&serviceCount);
+    Q_ASSERT_SUCCEEDED(hr);
     QList<QBluetoothUuid> uuids;
     for (uint i = 0; i < serviceCount; ++i) {
         ComPtr<Rfcomm::IRfcommDeviceService> service;
-        deviceServices->GetAt(i, &service);
+        hr = deviceServices->GetAt(i, &service);
+        Q_ASSERT_SUCCEEDED(hr);
         ComPtr<Rfcomm::IRfcommServiceId> id;
-        service->get_ServiceId(&id);
+        hr = service->get_ServiceId(&id);
+        Q_ASSERT_SUCCEEDED(hr);
         GUID uuid;
-        id->get_Uuid(&uuid);
+        hr = id->get_Uuid(&uuid);
+        Q_ASSERT_SUCCEEDED(hr);
         uuids.append(QBluetoothUuid(uuid));
     }
 
@@ -121,27 +129,32 @@ QBluetoothDeviceInfo bluetoothInfoFromLeDeviceId(HSTRING deviceId)
     ComPtr<IAsyncOperation<BluetoothLEDevice *>> deviceFromIdOperation;
     hr = deviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
     WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth LE device from id", return QBluetoothDeviceInfo());
-    QWinRTFunctions::await(deviceFromIdOperation, device.GetAddressOf());
+    hr = QWinRTFunctions::await(deviceFromIdOperation, device.GetAddressOf());
     WARN_AND_RETURN_IF_FAILED("Could not wait for bluetooth LE device operation to finish", return QBluetoothDeviceInfo());
     if (!device)
         return QBluetoothDeviceInfo();
     UINT64 address;
     HString name;
-    device->get_BluetoothAddress(&address);
-    device->get_Name(name.GetAddressOf());
+    hr = device->get_BluetoothAddress(&address);
+    WARN_AND_RETURN_IF_FAILED("Could not obtain device's bluetooth address", return QBluetoothDeviceInfo());
+    hr = device->get_Name(name.GetAddressOf());
+    WARN_AND_RETURN_IF_FAILED("Could not obtain device's name", return QBluetoothDeviceInfo());
     const QString btName = QString::fromWCharArray(WindowsGetStringRawBuffer(name.Get(), nullptr));
     IVectorView <GenericAttributeProfile::GattDeviceService *> *deviceServices;
     hr = device->get_GattServices(&deviceServices);
     WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth LE device services", return QBluetoothDeviceInfo());
     uint serviceCount;
-    deviceServices->get_Size(&serviceCount);
+    hr = deviceServices->get_Size(&serviceCount);
+    Q_ASSERT_SUCCEEDED(hr);
     QList<QBluetoothUuid> uuids;
     for (uint i = 0; i < serviceCount; ++i) {
         ComPtr<GenericAttributeProfile::IGattDeviceService> service;
-        deviceServices->GetAt(i, &service);
+        hr = deviceServices->GetAt(i, &service);
+        Q_ASSERT_SUCCEEDED(hr);
         ComPtr<Rfcomm::IRfcommServiceId> id;
         GUID uuid;
-        service->get_Uuid(&uuid);
+        hr = service->get_Uuid(&uuid);
+        Q_ASSERT_SUCCEEDED(hr);
         uuids.append(QBluetoothUuid(uuid));
     }
 
@@ -208,7 +221,7 @@ private:
         ComPtr<IAsyncOperation<DeviceInformationCollection *>> op;
         hr = deviceInformationStatics->FindAllAsyncAqsFilter(deviceSelector.Get(), &op);
         WARN_AND_RETURN_IF_FAILED("Could not start bluetooth device discovery operation", return);
-        op->put_Completed(
+        hr = op->put_Completed(
             Callback<IAsyncOperationCompletedHandler<DeviceInformationCollection *>>([this, mode](IAsyncOperation<DeviceInformationCollection *> *op, AsyncStatus) {
                 onDeviceDiscoveryFinished(op, mode);
                 return S_OK;
@@ -236,7 +249,9 @@ private:
     void onDeviceAdded(IDeviceInformation *deviceInfo, QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
     {
         HString deviceId;
-        deviceInfo->get_Id(deviceId.GetAddressOf());
+        HRESULT hr;
+        hr = deviceInfo->get_Id(deviceId.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
         const QBluetoothDeviceInfo info = mode == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod
             ? bluetoothInfoFromLeDeviceId(deviceId.Get())
             : bluetoothInfoFromDeviceId(deviceId.Get());
@@ -267,10 +282,12 @@ private:
     {
         quint32 deviceCount;
         HRESULT hr = devices->get_Size(&deviceCount);
+        Q_ASSERT_SUCCEEDED(hr);
         deviceList.reserve(deviceList.length() + deviceCount);
         for (quint32 i = 0; i < deviceCount; ++i) {
             ComPtr<IDeviceInformation> device;
             hr = devices->GetAt(i, &device);
+            Q_ASSERT_SUCCEEDED(hr);
             onDeviceAdded(device.Get(), mode);
         }
     }

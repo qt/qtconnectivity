@@ -79,7 +79,8 @@ static QVector<QBluetoothUuid> getIncludedServiceIds(const ComPtr<IGattDeviceSer
     Q_ASSERT_SUCCEEDED(hr);
 
     uint count;
-    includedServices->get_Size(&count);
+    hr = includedServices->get_Size(&count);
+    Q_ASSERT_SUCCEEDED(hr);
     for (uint i = 0; i < count; ++i) {
         ComPtr<IGattDeviceService> includedService;
         hr = includedServices->GetAt(i, &includedService);
@@ -154,6 +155,7 @@ public slots:
 
         uint characteristicsCount;
         hr = characteristics->get_Size(&characteristicsCount);
+        Q_ASSERT_SUCCEEDED(hr);
         for (uint i = 0; i < characteristicsCount; ++i) {
             ComPtr<IGattCharacteristic> characteristic;
             hr = characteristics->GetAt(i, &characteristic);
@@ -178,6 +180,7 @@ public slots:
             if (charData.properties & QLowEnergyCharacteristic::Read) {
                 ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                 hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
+                Q_ASSERT_SUCCEEDED(hr);
                 ComPtr<IGattReadResult> readResult;
                 hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
                 Q_ASSERT_SUCCEEDED(hr);
@@ -314,7 +317,9 @@ void QLowEnergyControllerPrivate::connectToDevice()
         HRESULT hr;
         hr = mDevice->add_ConnectionStatusChanged(Callback<StatusHandler>([this, q](IBluetoothLEDevice *dev, IInspectable *) {
             BluetoothConnectionStatus status;
-            dev->get_ConnectionStatus(&status);
+            HRESULT hr;
+            hr = dev->get_ConnectionStatus(&status);
+            Q_ASSERT_SUCCEEDED(hr);
             if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
                 setState(QLowEnergyController::ConnectedState);
                 emit q->connected();
@@ -327,6 +332,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
         Q_ASSERT_SUCCEEDED(hr);
         return S_OK;
     });
+    Q_ASSERT_SUCCEEDED(hr);
 
     if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
         setState(QLowEnergyController::ConnectedState);
@@ -438,7 +444,8 @@ void QLowEnergyControllerPrivate::obtainIncludedServices(QSharedPointer<QLowEner
     Q_ASSERT_SUCCEEDED(hr);
 
     uint count;
-    includedServices->get_Size(&count);
+    hr = includedServices->get_Size(&count);
+    Q_ASSERT_SUCCEEDED(hr);
     for (uint i = 0; i < count; ++i) {
         ComPtr<IGattDeviceService> includedService;
         hr = includedServices->GetAt(i, &includedService);
