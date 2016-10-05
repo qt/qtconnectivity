@@ -220,9 +220,9 @@ QT_USE_NAMESPACE
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
 #if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
-    } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
+    } else if (cbState == CBManagerStateUnsupported || cbState == CBManagerStateUnauthorized) {
 #else
-    } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
+    } else if (cbState == CBCentralManagerStateUnsupported || cbState == CBCentralManagerStateUnauthorized) {
 #endif
         if (internalState == InquiryActive) {
             [manager stopScan];
