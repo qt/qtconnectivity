@@ -48,6 +48,7 @@
 
 #include "qbluetoothlocaldevice.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/osxbluetooth_p.h"
 #include "qbluetoothserver.h"
 #include "qbluetoothsocket.h"
 
@@ -59,8 +60,6 @@
 
 // Import, since Obj-C headers do not have inclusion guards.
 #include <Foundation/Foundation.h>
-// Only after Foundation.h
-#include "osx/corebluetoothwrapper_p.h"
 
 #include <limits>
 

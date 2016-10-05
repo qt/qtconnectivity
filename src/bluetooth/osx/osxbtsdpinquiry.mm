@@ -42,11 +42,8 @@
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 
-
 #include <QtCore/qvariant.h>
 #include <QtCore/qstring.h>
-
-#include "corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -141,10 +138,7 @@ QList<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
 
 QT_END_NAMESPACE
 
-
-#ifdef QT_NAMESPACE
-using namespace QT_NAMESPACE;
-#endif
+QT_USE_NAMESPACE
 
 using namespace OSXBluetooth;
 

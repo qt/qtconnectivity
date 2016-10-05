@@ -42,10 +42,6 @@
 
 #include <QtCore/qdebug.h>
 
-// Import, since these headers are not protected from the multiple inclusion.
-#import <IOBluetooth/objc/IOBluetoothUserNotification.h>
-#import <IOBluetooth/objc/IOBluetoothDevice.h>
-
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {

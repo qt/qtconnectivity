@@ -42,6 +42,7 @@
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/osxbluetooth_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qvariant.h>
@@ -52,8 +53,6 @@
 #include <QtCore/qurl.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h:
-#include "osx/corebluetoothwrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 

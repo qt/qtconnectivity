@@ -42,9 +42,7 @@
 #include "qbluetoothaddress.h"
 #include "osxbtutility_p.h"
 
-#ifdef QT_NAMESPACE
-using namespace QT_NAMESPACE;
-#endif
+QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel)
 

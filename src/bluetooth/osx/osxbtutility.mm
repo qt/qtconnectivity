@@ -47,6 +47,9 @@
 #ifndef QT_IOS_BLUETOOTH
 
 #import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
+#import <CoreBluetooth/CBUUID.h>
+#endif
 
 #endif
 

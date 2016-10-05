@@ -46,8 +46,6 @@
 #include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
-#include "corebluetoothwrapper_p.h"
-
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
@@ -103,11 +101,7 @@ StringStrongReference uuid_as_nsstring(CFUUIDRef uuid)
 
 QT_END_NAMESPACE
 
-#ifdef QT_NAMESPACE
-
-using namespace QT_NAMESPACE;
-
-#endif
+QT_USE_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate>
 - (void)stopScan;
