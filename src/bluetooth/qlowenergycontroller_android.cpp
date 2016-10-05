@@ -56,6 +56,10 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
+    if (role == QLowEnergyController::PeripheralRole) {
+        if (hub)
+            hub->javaObject().callMethod<void>("disconnectServer");
+    }
 }
 
 void QLowEnergyControllerPrivate::init()
@@ -630,12 +634,27 @@ void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingPa
     Q_UNUSED(params);
     Q_UNUSED(advertisingData);
     Q_UNUSED(scanResponseData);
-    qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
+
+    setState(QLowEnergyController::AdvertisingState);
+
+    if (!hub->javaObject().isValid()) {
+        qCWarning(QT_BT_ANDROID) << "Cannot initiate QtBluetoothLEServer";
+        setError(QLowEnergyController::AdvertisingError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    }
+
+    const bool result = hub->javaObject().callMethod<jboolean>("startAdvertising");
+    if (!result) {
+        setError(QLowEnergyController::AdvertisingError);
+        setState(QLowEnergyController::UnconnectedState);
+    }
 }
 
 void QLowEnergyControllerPrivate::stopAdvertising()
 {
-    qCWarning(QT_BT_ANDROID) << "LE advertising not implemented for Android";
+    setState(QLowEnergyController::UnconnectedState);
+    hub->javaObject().callMethod<void>("stopAdvertising");
 }
 
 void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)

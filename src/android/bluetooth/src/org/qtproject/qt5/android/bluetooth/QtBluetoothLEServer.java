@@ -150,7 +150,15 @@ public class QtBluetoothLEServer {
 //        }
     };
 
-    public void disconnect()
+    public boolean connectServer()
+    {
+        if (mGattServer == null)
+            return false;
+
+        return true;
+    }
+
+    public void disconnectServer()
     {
         if (mGattServer == null)
             return;
@@ -158,26 +166,16 @@ public class QtBluetoothLEServer {
         mGattServer.close();
     }
 
-    public void startAdvertising()
+    public boolean startAdvertising()
     {
         if (mLeAdvertiser == null)
-            return;
+            return false;
 
-        // TODO for now everything hardcoded to get basic working frame
-        AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
-        dataBuilder.setIncludeDeviceName(true);
-        dataBuilder.setIncludeTxPowerLevel(false);
+        connectServer();
 
-        // randomly chosen UUID below
-        dataBuilder.addServiceUuid(ParcelUuid.fromString("e8e10f95-1a70-4b27-9ccf-02010264e9c8"));
+        Log.w(TAG, "Starting to advertise.");
 
-        AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
-        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED);
-        settingsBuilder.setConnectable(true); // prevents beacon mode
-        settingsBuilder.setTimeout(0);
-        settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);
-
-        mLeAdvertiser.startAdvertising(settingsBuilder.build(), dataBuilder.build(), mAdvertiseListener);
+        return true;
     }
 
     public void stopAdvertising()
@@ -186,6 +184,7 @@ public class QtBluetoothLEServer {
             return;
 
         mLeAdvertiser.stopAdvertising(mAdvertiseListener);
+        Log.w(TAG, "Advertisement stopped.");
     }
 
     /*
@@ -200,6 +199,7 @@ public class QtBluetoothLEServer {
 
         @Override
         public void onStartFailure(int errorCode) {
+            Log.e(TAG, "Advertising failure: " + errorCode);
             super.onStartFailure(errorCode);
         }
     };
