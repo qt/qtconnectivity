@@ -222,6 +222,12 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergycontroller_p.cpp
 }
 
+winrt-*-msvc2015 {
+    MODULE_WINRT_CAPABILITIES_DEVICE += \
+        bluetooth.genericAttributeProfile \
+        bluetooth.rfcomm
+}
+
 OTHER_FILES +=
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
