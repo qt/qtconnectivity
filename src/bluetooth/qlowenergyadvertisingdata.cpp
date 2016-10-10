@@ -129,6 +129,13 @@ QLowEnergyAdvertisingData &QLowEnergyAdvertisingData::operator=(const QLowEnergy
    Specifies that \a name should be broadcast as the name of the device. If the full name does not
    fit into the advertising data packet, an abbreviated name is sent, as described by the
    Bluetooth Low Energy specification.
+
+   On Android, the local name cannot be changed. Android always uses the device name.
+   If this local name is not empty, the Android implementation includes the device name
+   in the advertisement packet; otherwise the device name is omitted from the advertisement
+   packet.
+
+   \sa localName()
  */
 void QLowEnergyAdvertisingData::setLocalName(const QString &name)
 {
@@ -137,6 +144,8 @@ void QLowEnergyAdvertisingData::setLocalName(const QString &name)
 
 /*!
    Returns the name of the local device that is to be advertised.
+
+   \sa setLocalName()
  */
 QString QLowEnergyAdvertisingData::localName() const
 {

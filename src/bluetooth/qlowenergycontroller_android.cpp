@@ -40,6 +40,12 @@
 #include "qlowenergycontroller_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtBluetooth/QLowEnergyServiceData>
+#include <QtBluetooth/QLowEnergyCharacteristicData>
+#include <QtBluetooth/QLowEnergyDescriptorData>
+#include <QtBluetooth/QLowEnergyAdvertisingData>
+#include <QtBluetooth/QLowEnergyAdvertisingParameters>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -627,14 +633,113 @@ void QLowEnergyControllerPrivate::serviceError(
     service->setError(errorCode);
 }
 
+static QAndroidJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid& uuid)
+{
+    QString output = uuid.toString();
+    // cut off leading and trailing brackets
+    output = output.mid(1, output.size()-2);
+
+    QAndroidJniObject javaString = QAndroidJniObject::fromString(output);
+    QAndroidJniObject parcelUuid = QAndroidJniObject::callStaticObjectMethod(
+                "android/os/ParcelUuid", "fromString",
+                "(Ljava/lang/String;)Landroid/os/ParcelUuid;", javaString.object());
+
+    return parcelUuid;
+}
+
+static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
+{
+    QAndroidJniObject builder = QAndroidJniObject("android/bluetooth/le/AdvertiseData$Builder");
+
+    // device name cannot be set but there is choice to show it or not
+    builder = builder.callObjectMethod("setIncludeDeviceName", "(Z)Landroid/bluetooth/le/AdvertiseData$Builder;",
+                                       !data.localName().isEmpty());
+    builder = builder.callObjectMethod("setIncludeTxPowerLevel", "(Z)Landroid/bluetooth/le/AdvertiseData$Builder;",
+                                       data.includePowerLevel());
+    for (const auto service: data.services())
+    {
+        builder = builder.callObjectMethod("addServiceUuid",
+                                       "(Landroid/os/ParcelUuid;)Landroid/bluetooth/le/AdvertiseData$Builder;",
+                                       javaParcelUuidfromQtUuid(service).object());
+    }
+
+    if (!data.manufacturerData().isEmpty()) {
+        QAndroidJniEnvironment env;
+        const qint32 nativeSize = data.manufacturerData().size();
+        jbyteArray nativeData = env->NewByteArray(nativeSize);
+        env->SetByteArrayRegion(nativeData, 0, nativeSize,
+                                reinterpret_cast<const jbyte*>(data.manufacturerData().constData()));
+        builder = builder.callObjectMethod("addManufacturerData",
+                                       "(I[B])Landroid/bluetooth/le/AdvertiseData$Builder;",
+                                       data.manufacturerId(), nativeData);
+        env->DeleteLocalRef(nativeData);
+
+        if (env->ExceptionCheck()) {
+            qCWarning(QT_BT_ANDROID) << "Cannot set manufacturer id/data";
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+    }
+
+    /*// TODO Qt vs Java API mismatch
+          -> Qt assumes rawData() is a global field
+          -> Android pairs rawData() per service uuid
+    if (!data.rawData().isEmpty()) {
+        QAndroidJniEnvironment env;
+        qint32 nativeSize = data.rawData().size();
+        jbyteArray nativeData = env->NewByteArray(nativeSize);
+        env->SetByteArrayRegion(nativeData, 0, nativeSize,
+                                reinterpret_cast<const jbyte*>(data.rawData().constData()));
+        builder = builder.callObjectMethod("addServiceData",
+                                       "(Landroid/os/ParcelUuid;[B])Landroid/bluetooth/le/AdvertiseData$Builder;",
+                                       data.rawData().object(), nativeData);
+        env->DeleteLocalRef(nativeData);
+
+        if (env->ExceptionCheck()) {
+            qCWarning(QT_BT_ANDROID) << "Cannot set advertisement raw data";
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+    }*/
+
+    QAndroidJniObject javaAdvertiseData = builder.callObjectMethod("build",
+                                       "()Landroid/bluetooth/le/AdvertiseData;");
+    return javaAdvertiseData;
+}
+
+static QAndroidJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertisingParameters& params)
+{
+    QAndroidJniObject builder = QAndroidJniObject("android/bluetooth/le/AdvertiseSettings$Builder");
+
+    bool connectable = false;
+    switch (params.mode())
+    {
+    case QLowEnergyAdvertisingParameters::AdvInd:
+        connectable = true;
+        break;
+    case QLowEnergyAdvertisingParameters::AdvScanInd:
+    case QLowEnergyAdvertisingParameters::AdvNonConnInd:
+        connectable = false;
+        break;
+    // intentionally no default case
+    }
+    builder = builder.callObjectMethod("setConnectable", "(Z)Landroid/bluetooth/le/AdvertiseSettings$Builder;",
+                                       connectable);
+
+    /* TODO No Android API for further QLowEnergyAdvertisingParameters options
+     *      Android TxPowerLevel, AdvertiseMode and Timeout not mappable to Qt
+     */
+
+    QAndroidJniObject javaAdvertiseSettings = builder.callObjectMethod("build",
+                                            "()Landroid/bluetooth/le/AdvertiseSettings;");
+    return javaAdvertiseSettings;
+}
+
+
 void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
         const QLowEnergyAdvertisingData &advertisingData,
         const QLowEnergyAdvertisingData &scanResponseData)
 {
-    Q_UNUSED(params);
-    Q_UNUSED(advertisingData);
-    Q_UNUSED(scanResponseData);
-
     setState(QLowEnergyController::AdvertisingState);
 
     if (!hub->javaObject().isValid()) {
@@ -644,7 +749,14 @@ void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingPa
         return;
     }
 
-    const bool result = hub->javaObject().callMethod<jboolean>("startAdvertising");
+    // Pass on advertisingData, scanResponse & AdvertiseSettings
+    QAndroidJniObject jAdvertiseData = createJavaAdvertiseData(advertisingData);
+    QAndroidJniObject jScanResponse = createJavaAdvertiseData(scanResponseData);
+    QAndroidJniObject jAdvertiseSettings = createJavaAdvertiseSettings(params);
+
+    const bool result = hub->javaObject().callMethod<jboolean>("startAdvertising",
+            "(Landroid/bluetooth/le/AdvertiseData;Landroid/bluetooth/le/AdvertiseData;Landroid/bluetooth/le/AdvertiseSettings;)Z",
+            jAdvertiseData.object(), jScanResponse.object(), jAdvertiseSettings.object());
     if (!result) {
         setError(QLowEnergyController::AdvertisingError);
         setState(QLowEnergyController::UnconnectedState);
@@ -663,11 +775,85 @@ void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnec
     qCWarning(QT_BT_ANDROID) << "Connection update not implemented for Android";
 }
 
-void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &service,
+// Conversion: QBluetoothUuid -> java.util.UUID
+static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
+{
+    QString output = uuid.toString();
+    // cut off leading and trailing brackets
+    output = output.mid(1, output.size()-2);
+
+    QAndroidJniObject javaString = QAndroidJniObject::fromString(output);
+    QAndroidJniObject javaUuid = QAndroidJniObject::callStaticObjectMethod(
+                "java/util/UUID", "fromString", "(Ljava/lang/String;)Ljava/util/UUID;",
+                javaString.object());
+
+    return javaUuid;
+}
+
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &serviceData,
                                                             QLowEnergyHandle startHandle)
 {
-    Q_UNUSED(service);
-    Q_UNUSED(startHandle);
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(startHandle);
+    if (service.isNull())
+        return;
+
+    // create BluetoothGattService object
+    jint sType = QAndroidJniObject::getStaticField<jint>(
+                            "android/bluetooth/BluetoothGattService", "SERVICE_TYPE_PRIMARY");
+    if (serviceData.type() == QLowEnergyServiceData::ServiceTypeSecondary)
+        sType = QAndroidJniObject::getStaticField<jint>(
+                                    "android/bluetooth/BluetoothGattService", "SERVICE_TYPE_SECONDARY");
+
+    service->androidService = QAndroidJniObject("android/bluetooth/BluetoothGattService",
+                                                "(Ljava/util/UUID;I)V",
+                                                javaUuidfromQtUuid(service->uuid).object(), sType);
+
+    // add included services, which must have been added earlier already
+    const QList<QLowEnergyService*> includedServices = serviceData.includedServices();
+    for (const auto includedServiceEntry: includedServices) {
+        //TODO test this end-to-end
+        const jboolean result = service->androidService.callMethod<jboolean>(
+                        "addService", "(Landroid/bluetooth/BluetoothGattService;)Z",
+                        includedServiceEntry->d_ptr->androidService.object());
+        if (!result)
+            qWarning(QT_BT_ANDROID) << "Cannot add included service " << includedServiceEntry->serviceUuid()
+                                    << "to current service" << service->uuid;
+    }
+
+    // add characteristics
+    const QList<QLowEnergyCharacteristicData> serviceCharsData = serviceData.characteristics();
+    for (const auto &charData: serviceCharsData) {
+        // TODO set all characteristic properties
+        int permissions = 0;
+
+        //TODO add chars and their descriptors
+        QAndroidJniObject javaChar = QAndroidJniObject("android/bluetooth/BluetoothGattCharacteristic",
+                                                       "(Ljava/util/UUID;II)V",
+                                                       javaUuidfromQtUuid(charData.uuid()).object(),
+                                                       int(charData.properties()), permissions);
+
+        QAndroidJniEnvironment env;
+        jbyteArray jb = env->NewByteArray(charData.value().size());
+        env->SetByteArrayRegion(jb, 0, charData.value().size(), (jbyte*)charData.value().data());
+        jboolean success = javaChar.callMethod<jboolean>("setValue", "([B)Z", jb);
+        if (!success)
+            qWarning() << "Cannot setup initial characteristic value for " << charData.uuid();
+
+        env->DeleteLocalRef(jb);
+
+        // TODO set all descriptors
+
+        success = service->androidService.callMethod<jboolean>(
+                            "addCharacteristic",
+                            "(Landroid/bluetooth/BluetoothGattCharacteristic;)Z", javaChar.object());
+        if (!success)
+            qWarning() << "Cannot add characteristic" << charData.uuid() << "to service"
+                       << service->uuid;
+    }
+
+    hub->javaObject().callMethod<void>("addService",
+                                       "(Landroid/bluetooth/BluetoothGattService;)V",
+                                       service->androidService.object());
 }
 
 QT_END_NAMESPACE

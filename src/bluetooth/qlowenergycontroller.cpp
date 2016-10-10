@@ -359,7 +359,12 @@ void QLowEnergyControllerPrivate::invalidateServices()
 QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivate::serviceForHandle(
         QLowEnergyHandle handle)
 {
-    foreach (QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values())
+    ServiceDataMap& currentList = serviceList;
+    if (role == QLowEnergyController::PeripheralRole)
+        currentList = localServices;
+
+    const QList<QSharedPointer<QLowEnergyServicePrivate>> values = currentList.values();
+    for (auto service: values)
         if (service->startHandle <= handle && handle <= service->endHandle)
             return service;
 

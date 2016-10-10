@@ -166,7 +166,9 @@ public class QtBluetoothLEServer {
         mGattServer.close();
     }
 
-    public boolean startAdvertising()
+    public boolean startAdvertising(AdvertiseData advertiseData,
+                                    AdvertiseData scanResponse,
+                                    AdvertiseSettings settings)
     {
         if (mLeAdvertiser == null)
             return false;
@@ -174,6 +176,7 @@ public class QtBluetoothLEServer {
         connectServer();
 
         Log.w(TAG, "Starting to advertise.");
+        mLeAdvertiser.startAdvertising(settings, advertiseData, scanResponse, mAdvertiseListener);
 
         return true;
     }
@@ -185,6 +188,14 @@ public class QtBluetoothLEServer {
 
         mLeAdvertiser.stopAdvertising(mAdvertiseListener);
         Log.w(TAG, "Advertisement stopped.");
+    }
+
+    public void addService(BluetoothGattService service)
+    {
+        if (mGattServer == null)
+            return;
+
+        mGattServer.addService(service);
     }
 
     /*

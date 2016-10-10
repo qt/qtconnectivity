@@ -57,6 +57,10 @@
 #include <QtBluetooth/QLowEnergyService>
 #include <QtBluetooth/QLowEnergyCharacteristic>
 
+#if defined(QT_ANDROID_BLUETOOTH)
+#include <QtAndroidExtras/QAndroidJniObject>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyControllerPrivate;
@@ -119,6 +123,12 @@ public:
     QHash<QLowEnergyHandle, CharData> characteristicList;
 
     QPointer<QLowEnergyControllerPrivate> controller;
+
+#if defined(QT_ANDROID_BLUETOOTH)
+    // reference to the BluetoothGattService object
+    QAndroidJniObject androidService;
+#endif
+
 };
 
 typedef QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> CharacteristicDataMap;

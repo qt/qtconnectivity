@@ -184,10 +184,11 @@ public:
     QLowEnergyController::Error error;
     QString errorString;
 
-    // list of all found service uuids
+    // list of all found service uuids on remote device
     ServiceDataMap serviceList;
 
     QLowEnergyHandle lastLocalHandle;
+    // list of all service uuids on local peripheral device
     ServiceDataMap localServices;
 
     struct Attribute {
