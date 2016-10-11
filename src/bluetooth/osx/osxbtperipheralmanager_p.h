@@ -58,11 +58,9 @@
 #include <deque>
 #include <map>
 
-// Foundation.h must be included before corebluetoothwrapper_p.h -
-// a workaround for a broken 10.9 SDK.
 #include <Foundation/Foundation.h>
 
-#include "corebluetoothwrapper_p.h"
+#include "osxbluetooth_p.h"
 
 QT_BEGIN_NAMESPACE
 

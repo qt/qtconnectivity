@@ -46,8 +46,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
-#include "corebluetoothwrapper_p.h"
-
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -196,8 +194,13 @@ QT_USE_NAMESPACE
     dispatch_queue_t leQueue(qt_LE_queue());
     Q_ASSERT(leQueue);
 
-    const CBCentralManagerState cbState(central.state);
-    if (cbState == CBCentralManagerStatePoweredOn) {
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    const CBManagerState state(central.state);
+    if (state == CBManagerStatePoweredOn) {
+#else
+    const CBCentralManagerState state(central.state);
+    if (state == CBCentralManagerStatePoweredOn) {
+#endif
         if (internalState == InquiryStarting) {
             internalState = InquiryActive;
 
@@ -218,8 +221,11 @@ QT_USE_NAMESPACE
 
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
-    } else if (cbState == CBCentralManagerStateUnsupported
-               || cbState == CBCentralManagerStateUnauthorized) {
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
+#else
+    } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
+#endif
         if (internalState == InquiryActive) {
             [manager stopScan];
             // Not sure how this is possible at all,
@@ -232,7 +238,11 @@ QT_USE_NAMESPACE
         }
 
         [manager setDelegate:nil];
-    } else if (cbState == CBCentralManagerStatePoweredOff) {
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    } else if (state == CBManagerStatePoweredOff) {
+#else
+    } else if (state == CBCentralManagerStatePoweredOff) {
+#endif
         if (internalState == InquiryStarting) {
 #ifndef Q_OS_OSX
             // On iOS a user can see at this point an alert asking to

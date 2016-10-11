@@ -54,15 +54,13 @@
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdeviceinfo.h"
 #include "osxbtutility_p.h"
+#include "osxbluetooth_p.h"
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
-
-@class CBCentralManager;
-@class CBPeripheral;
 
 QT_BEGIN_NAMESPACE
 

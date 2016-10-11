@@ -45,9 +45,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 
-#ifdef QT_NAMESPACE
-using namespace QT_NAMESPACE;
-#endif
+QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel)
 

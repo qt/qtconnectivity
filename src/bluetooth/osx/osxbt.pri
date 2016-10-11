@@ -15,7 +15,7 @@ CONFIG(osx) {
                        osx/osxbtsocketlistener_p.h \
                        osx/osxbtobexsession_p.h \
                        osx/osxbtledeviceinquiry_p.h \
-                       osx/corebluetoothwrapper_p.h \
+                       osx/osxbluetooth_p.h \
                        osx/osxbtcentralmanager_p.h \
                        osx/osxbtnotifier_p.h \
                        osx/osxbtperipheralmanager_p.h
@@ -37,7 +37,7 @@ CONFIG(osx) {
 } else {
     PRIVATE_HEADERS += osx/osxbtutility_p.h \
                        osx/osxbtledeviceinquiry_p.h \
-                       osx/corebluetoothwrapper_p.h \
+                       osx/osxbluetooth_p.h \
                        osx/osxbtcentralmanager_p.h \
                        osx/osxbtnotifier_p.h
     ios {

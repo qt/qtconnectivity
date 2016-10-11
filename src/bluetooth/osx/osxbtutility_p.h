@@ -51,15 +51,13 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h!
-#include "corebluetoothwrapper_p.h"
-
-@class CBUUID;
 
 QT_BEGIN_NAMESPACE
 
