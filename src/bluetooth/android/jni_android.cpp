@@ -190,10 +190,12 @@ static void QtBluetoothInputStreamThread_readyData(JNIEnv */*env*/, jobject /*ja
     reinterpret_cast<InputStreamThread*>(qtObject)->javaReadyRead(buffer, bufferLength);
 }
 
-void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject, jobject bluetoothDevice, jint rssi)
+void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject, jobject bluetoothDevice,
+                                jint rssi, jbyteArray scanRecord)
 {
     reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceiveLeScan(
-                                                                env, bluetoothDevice, rssi);
+                                                                env, bluetoothDevice, rssi,
+                                                                scanRecord);
 }
 
 
@@ -203,7 +205,7 @@ static JNINativeMethod methods[] = {
 };
 
 static JNINativeMethod methods_le[] = {
-    {"leScanResult", "(JLandroid/bluetooth/BluetoothDevice;I)V",
+    {"leScanResult", "(JLandroid/bluetooth/BluetoothDevice;I[B)V",
                 (void *) QtBluetoothLE_leScanResult},
     {"leConnectionStateChange", "(JII)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},

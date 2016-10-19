@@ -114,11 +114,11 @@ public class QtBluetoothLE {
                     if (qtObject == 0)
                         return;
 
-                    leScanResult(qtObject, device, rssi);
+                    leScanResult(qtObject, device, rssi, scanRecord);
                 }
             };
 
-    public native void leScanResult(long qtObject, BluetoothDevice device, int rssi);
+    public native void leScanResult(long qtObject, BluetoothDevice device, int rssi, byte[] scanRecord);
 
     /*************************************************************/
     /* Service Discovery                                         */
