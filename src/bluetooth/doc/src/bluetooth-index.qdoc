@@ -136,4 +136,17 @@ The \l QtBluetooth module exports the following
         \li \l {btfiletransfer}{Bluetooth File Transfer}
     \endlist
 \endlist
+
+\section1 Licenses and Attributions
+
+Qt Bluetooth is available under commercial licenses from \l{The Qt Company}.
+In addition, it is available under the
+\l{GNU Lesser General Public License, version 3}, or
+the \l{GNU General Public License, version 2}.
+See \l{Qt Licensing} for further details.
+
+On Linux, Qt Bluetooth uses a separate executable, \c sdpscanner,
+to integrate with the official Linux bluetooth protocol stack
+BlueZ. BlueZ is available under the \l{GNU General Public License,
+version 2}.
 */
