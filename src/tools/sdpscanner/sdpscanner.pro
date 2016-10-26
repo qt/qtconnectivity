@@ -5,8 +5,8 @@ QT = core
 
 SOURCES = main.cpp
 
-CONFIG += link_pkgconfig
-PKGCONFIG_PRIVATE += bluez
+QT_FOR_CONFIG += bluetooth-private
+QMAKE_USE += bluez
 
 load(qt_tool)
 
