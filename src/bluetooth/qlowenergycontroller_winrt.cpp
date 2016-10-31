@@ -968,7 +968,9 @@ void QLowEnergyControllerPrivate::writeDescriptor(
             } else if (intValue == 0) {
                 value = GattClientCharacteristicConfigurationDescriptorValue_None;
             } else {
-                Q_ASSERT(false);
+                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed: Invalid value";
+                service->setError(QLowEnergyService::DescriptorWriteError);
+                return S_OK;
             }
             ComPtr<IAsyncOperation<enum GattCommunicationStatus>> writeOp;
             HRESULT hr = characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(value, &writeOp);
