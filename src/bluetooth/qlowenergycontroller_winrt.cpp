@@ -63,6 +63,7 @@ using namespace ABI::Windows::Storage::Streams;
 QT_BEGIN_NAMESPACE
 
 typedef ITypedEventHandler<BluetoothLEDevice *, IInspectable *> StatusHandler;
+typedef ITypedEventHandler<GattCharacteristic *, GattValueChangedEventArgs *> ValueChangedHandler;
 typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConfigDescriptorResult;
 typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharConfigDescriptorResult;
 
@@ -141,6 +142,7 @@ public:
 public slots:
     void obtainCharList()
     {
+        QVector<QBluetoothUuid> indicateChars;
         quint16 startHandle = 0;
         quint16 endHandle = 0;
         qCDebug(QT_BT_WINRT) << __FUNCTION__;
@@ -148,7 +150,7 @@ public slots:
         HRESULT hr = mDeviceService->GetAllCharacteristics(&characteristics);
         Q_ASSERT_SUCCEEDED(hr);
         if (!characteristics) {
-            emit charListObtained(mService, mCharacteristicList, startHandle, endHandle);
+            emit charListObtained(mService, mCharacteristicList, indicateChars, startHandle, endHandle);
             QThread::currentThread()->quit();
             return;
         }
@@ -236,6 +238,7 @@ public slots:
 
                     descData.value = QByteArray(2, Qt::Uninitialized);
                     qToLittleEndian(result, descData.value.data());
+                    indicateChars << charData.uuid;
                 } else {
                     ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                     hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
@@ -252,7 +255,7 @@ public slots:
             }
             mCharacteristicList.insert(handle, charData);
         }
-        emit charListObtained(mService, mCharacteristicList, startHandle, endHandle);
+        emit charListObtained(mService, mCharacteristicList, indicateChars, startHandle, endHandle);
         QThread::currentThread()->quit();
     }
 
@@ -262,7 +265,9 @@ public:
     QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> mCharacteristicList;
 
 signals:
-    void charListObtained(const QBluetoothUuid &service, QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList,
+    void charListObtained(const QBluetoothUuid &service, QHash<QLowEnergyHandle,
+                          QLowEnergyServicePrivate::CharData> charList,
+                          QVector<QBluetoothUuid> indicateChars,
                           QLowEnergyHandle startHandle, QLowEnergyHandle endHandle);
 };
 
@@ -278,6 +283,10 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
     if (mDevice && mStatusChangedToken.value)
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
+
+    qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
+    for (const ValueChangedEntry &entry : mValueChangedTokens)
+        entry.characteristic->remove_ValueChanged(entry.token);
 }
 
 void QLowEnergyControllerPrivate::init()
@@ -432,6 +441,39 @@ ComPtr<IGattCharacteristic> QLowEnergyControllerPrivate::getNativeCharacteristic
     return characteristic;
 }
 
+void QLowEnergyControllerPrivate::registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid)
+{
+    qCDebug(QT_BT_WINRT) << "Registering characteristic" << charUuid << "in service"
+                         << serviceUuid << "for value changes";
+    for (const ValueChangedEntry &entry : mValueChangedTokens) {
+        GUID guuid;
+        HRESULT hr;
+        hr = entry.characteristic->get_Uuid(&guuid);
+        Q_ASSERT_SUCCEEDED(hr);
+        if (QBluetoothUuid(guuid) == charUuid)
+            return;
+    }
+    ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(serviceUuid, charUuid);
+
+    EventRegistrationToken token;
+    HRESULT hr;
+    hr = characteristic->add_ValueChanged(Callback<ValueChangedHandler>([this](IGattCharacteristic *characteristic, IGattValueChangedEventArgs *args) {
+        HRESULT hr;
+        quint16 handle;
+        hr = characteristic->get_AttributeHandle(&handle);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IBuffer> buffer;
+        hr = args->get_CharacteristicValue(&buffer);
+        Q_ASSERT_SUCCEEDED(hr);
+        characteristicChanged(handle, byteArrayFromBuffer(buffer));
+        return S_OK;
+    }).Get(), &token);
+    Q_ASSERT_SUCCEEDED(hr);
+    mValueChangedTokens.append(ValueChangedEntry(characteristic, token));
+    qCDebug(QT_BT_WINRT) << "Characteristic" << charUuid << "in service"
+        << serviceUuid << "registered for value changes";
+}
+
 void QLowEnergyControllerPrivate::obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
     ComPtr<IGattDeviceService> service)
 {
@@ -574,6 +616,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained,
             [this, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList
+            , QVector<QBluetoothUuid> indicateChars
             , QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
             qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"
@@ -585,6 +628,15 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
         pointer->startHandle = startHandle;
         pointer->endHandle = endHandle;
         pointer->characteristicList = charList;
+
+        HRESULT hr;
+        hr = QEventDispatcherWinRT::runOnXamlThread([indicateChars, service, this]() {
+            for (const QBluetoothUuid &indicateChar : indicateChars)
+                registerForValueChanges(service, indicateChar);
+            return S_OK;
+        });
+        Q_ASSERT_SUCCEEDED(hr);
+
         pointer->setState(QLowEnergyService::ServiceDiscovered);
         thread->exit(0);
     });
@@ -1012,6 +1064,31 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
 {
     Q_UNIMPLEMENTED();
+}
+
+void QLowEnergyControllerPrivate::characteristicChanged(
+        int charHandle, const QByteArray &data)
+{
+    QSharedPointer<QLowEnergyServicePrivate> service =
+            serviceForHandle(charHandle);
+    if (service.isNull())
+        return;
+
+    qCDebug(QT_BT_WINRT) << "Characteristic change notification" << service->uuid
+                           << charHandle << data.toHex();
+
+    QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
+    if (!characteristic.isValid()) {
+        qCWarning(QT_BT_WINRT) << "characteristicChanged: Cannot find characteristic";
+        return;
+    }
+
+    // only update cache when property is readable. Otherwise it remains
+    // empty.
+    if (characteristic.properties() & QLowEnergyCharacteristic::Read)
+        updateValueOfCharacteristic(characteristic.attributeHandle(),
+                                data, false);
+    emit service->characteristicChanged(characteristic, data);
 }
 
 QT_END_NAMESPACE
