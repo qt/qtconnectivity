@@ -329,10 +329,12 @@ void QLowEnergyControllerPrivate::connectToDevice()
             HRESULT hr;
             hr = dev->get_ConnectionStatus(&status);
             Q_ASSERT_SUCCEEDED(hr);
-            if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
+            if (state == QLowEnergyController::ConnectingState
+                    && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
                 setState(QLowEnergyController::ConnectedState);
                 emit q->connected();
-            } else if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
+            } else if (state == QLowEnergyController::ConnectedState
+                       && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
                 setState(QLowEnergyController::UnconnectedState);
                 emit q->disconnected();
             }
