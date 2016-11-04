@@ -35,6 +35,8 @@
 
 #if defined(QT_SIMULATOR)
 #include "qllcpserver_simulator_p.h"
+#elif defined(QT_ANDROID_NFC)
+#include "qllcpserver_android_p.h"
 #else
 #include "qllcpserver_p_p.h"
 #endif
