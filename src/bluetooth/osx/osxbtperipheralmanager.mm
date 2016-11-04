@@ -362,7 +362,11 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
     if (peripheral != manager || !notifier)
         return;
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    if (peripheral.state == CBManagerStatePoweredOn) {
+#else
     if (peripheral.state == CBPeripheralManagerStatePoweredOn) {
+#endif
         // "Bluetooth is currently powered on and is available to use."
         if (state == PeripheralState::waitingForPowerOn) {
             [manager removeAllServices];
@@ -393,8 +397,13 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
      explicitly added again."
     */
 
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    if (peripheral.state == CBManagerStateUnauthorized ||
+        peripheral.state == CBManagerStateUnsupported) {
+#else
     if (peripheral.state == CBPeripheralManagerStateUnauthorized ||
         peripheral.state == CBPeripheralManagerStateUnsupported) {
+#endif
         emit notifier->LEnotSupported();
         state = PeripheralState::idle;
     }
