@@ -317,6 +317,19 @@ ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
     return result;
 }
 
+ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray &qtData)
+{
+    using MutableData = ObjCStrongReference<NSMutableData>;
+
+    if (!qtData.size())
+        return MutableData([[NSMutableData alloc] init], false);
+
+    MutableData result([[NSMutableData alloc] initWithLength:qtData.size()], false);
+    [result replaceBytesInRange:NSMakeRange(0, qtData.size())
+                      withBytes:qtData.constData()];
+    return result;
+}
+
 // A small RAII class for a dispatch queue.
 class SerialDispatchQueue
 {

@@ -341,7 +341,7 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
         return;
     }
 
-    const auto nsData = data_from_bytearray(value);
+    const auto nsData = mutable_data_from_bytearray(value);
     charValues[charHandle] = nsData;
     updateQueue.push_back(UpdateRequest{charHandle, nsData});
     [self sendUpdateRequests];
@@ -530,7 +530,7 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
 
         const auto charHandle = charMap.key(request.characteristic);
         updated.insert(charHandle);
-        NSMutableData *const data = static_cast<NSMutableData *>(charValues[charHandle]);
+        NSMutableData *const data = charValues[charHandle];
         [data replaceBytesInRange:NSMakeRange(request.offset, request.value.length)
                         withBytes:data.bytes];
     }
@@ -680,7 +680,7 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
             continue;
         }
 
-        const auto nsData(data_from_bytearray(ch.value()));
+        const auto nsData(mutable_data_from_bytearray(ch.value()));
         if (!nsData) {
             qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
                                     "addService: failed to allocate NSData (char value)";
@@ -692,7 +692,7 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
         const auto declHandle = ++lastHandle;
         // CB part:
         charMap[declHandle] = cbChar;
-        charValues[declHandle] = data_from_bytearray(ch.value());
+        charValues[declHandle] = nsData;
         // QT part:
         QLowEnergyServicePrivate::CharData charData;
         charData.valueHandle = ++lastHandle;

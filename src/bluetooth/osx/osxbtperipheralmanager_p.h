@@ -98,14 +98,14 @@ enum class PeripheralState
 struct UpdateRequest
 {
     UpdateRequest() = default;
-    UpdateRequest(QLowEnergyHandle handle, const ObjCStrongReference<NSData> &val)
+    UpdateRequest(QLowEnergyHandle handle, const ObjCStrongReference<NSMutableData> &val)
         : charHandle(handle),
           value(val)
     {
     }
 
     QLowEnergyHandle charHandle = {};
-    ObjCStrongReference<NSData> value;
+    ObjCStrongReference<NSMutableData> value;
 };
 
 @interface QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) : NSObject<CBPeripheralManagerDelegate>
@@ -125,7 +125,7 @@ struct UpdateRequest
     ObjCScopedPointer<NSMutableDictionary> advertisementData;
 
     GenericLEMap<CBCharacteristic *> charMap;
-    GenericLEMap<ObjCStrongReference<NSData>> charValues;
+    GenericLEMap<ObjCStrongReference<NSMutableData>> charValues;
 
     std::deque<UpdateRequest> updateQueue;
 
