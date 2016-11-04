@@ -148,6 +148,16 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
     return nEntries;
 }
 
+bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
+{
+    if (data.minimumValueLength() > data.maximumValueLength()
+        || data.minimumValueLength() < 0) {
+        return false;
+    }
+
+    return data.value().size() <= data.maximumValueLength();
+}
+
 }
 
 @interface QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) (PrivateAPI)
@@ -336,14 +346,24 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
 
     QT_BT_MAC_AUTORELEASEPOOL
 
-    if (!charMap.contains(charHandle)) {
+    if (!charMap.contains(charHandle) || !valueRanges.contains(charHandle)) {
         emit notifier->CBManagerError(QLowEnergyController::UnknownError);
+        return;
+    }
+
+    const auto & range = valueRanges[charHandle];
+    if (value.size() < int(range.first) || value.size() > int(range.second)) {
+        qCWarning(QT_BT_OSX) << "ignoring value of invalid length" << value.count();
         return;
     }
 
     const auto nsData = mutable_data_from_bytearray(value);
     charValues[charHandle] = nsData;
-    updateQueue.push_back(UpdateRequest{charHandle, nsData});
+    // We copy data here: sending update requests is async (see sendUpdateRequests),
+    // by the time we're allowed to actually send them, the data can change again
+    // and we'll send an 'out of order' value.
+    const ObjCStrongReference<NSData> copy([NSData dataWithData:nsData], true);
+    updateQueue.push_back(UpdateRequest{charHandle, copy});
     [self sendUpdateRequests];
 }
 
@@ -509,6 +529,27 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
     [manager respondToRequest:request withResult:CBATTErrorSuccess];
 }
 
+
+- (void)writeValueForCharacteristic:(QLowEnergyHandle) charHandle
+        withWriteRequest:(CBATTRequest *)request
+{
+    Q_ASSERT(charHandle);
+    Q_ASSERT(request);
+
+    Q_ASSERT(valueRanges.contains(charHandle));
+    const auto &range = valueRanges[charHandle];
+    Q_ASSERT(request.offset <= range.second
+             &&  request.value.length <= range.second - request.offset);
+
+    Q_ASSERT(charValues.contains(charHandle));
+    NSMutableData *const value = charValues[charHandle];
+    if (request.offset + request.value.length > value.length)
+        [value increaseLengthBy:request.offset + request.value.length - value.length];
+
+    [value replaceBytesInRange:NSMakeRange(request.offset, request.value.length)
+                     withBytes:request.value.bytes];
+}
+
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
         didReceiveWriteRequests:(NSArray *)requests
 {
@@ -539,18 +580,22 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
 
         const auto charHandle = charMap.key(request.characteristic);
         updated.insert(charHandle);
-        NSMutableData *const data = charValues[charHandle];
-        [data replaceBytesInRange:NSMakeRange(request.offset, request.value.length)
-                        withBytes:data.bytes];
+        [self writeValueForCharacteristic:charHandle withWriteRequest:request];
     }
 
-    for (const auto handle : updated)
+    for (const auto handle : updated) {
         emit notifier->characteristicUpdated(handle, qt_bytearray(charValues[handle]));
+        const ObjCStrongReference<NSData> copy([NSData dataWithData:charValues[handle]],
+                                               true);
+        updateQueue.push_back(UpdateRequest{handle, copy});
+    }
 
     if (requests.count) {
         [manager respondToRequest:[requests objectAtIndex:0]
                        withResult:CBATTErrorSuccess];
     }
+
+    [self sendUpdateRequests];
 }
 
 - (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral
@@ -569,13 +614,14 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
 
     while (updateQueue.size()) {
         const auto &request = updateQueue.front();
-        Q_ASSERT(charMap.contains(request.charHandle));
-        const BOOL res = [manager updateValue:request.value
-                          forCharacteristic:static_cast<CBMutableCharacteristic *>(charMap[request.charHandle])
-                          onSubscribedCentrals:nil];
-        if (!res) {
-            // Have to wait for the 'ManagerIsReadyToUpdate'.
-            break;
+        if (charMap.contains(request.charHandle)) {
+            const BOOL res = [manager updateValue:request.value
+                              forCharacteristic:static_cast<CBMutableCharacteristic *>(charMap[request.charHandle])
+                              onSubscribedCentrals:nil];
+            if (!res) {
+                // Have to wait for the 'ManagerIsReadyToUpdate'.
+                break;
+            }
         }
 
         updateQueue.pop_front();
@@ -682,6 +728,12 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
     }
 
     for (const auto &ch : data.characteristics()) {
+        if (!qt_validate_value_range(ch)) {
+            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
+                                    "invalid value size/min-max length";
+            continue;
+        }
+
         const auto cbChar(create_characteristic(ch));
         if (!cbChar) {
             qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
@@ -702,6 +754,7 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
         // CB part:
         charMap[declHandle] = cbChar;
         charValues[declHandle] = nsData;
+        valueRanges[declHandle] = ValueRange(ch.minimumValueLength(), ch.maximumValueLength());
         // QT part:
         QLowEnergyServicePrivate::CharData charData;
         charData.valueHandle = ++lastHandle;
@@ -753,9 +806,14 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
     if (!handle || !charValues.contains(handle))
         return CBATTErrorInvalidHandle;
 
-    NSMutableData *data = static_cast<NSMutableData *>(charValues[handle]);
-    if (request.offset > data.length || request.value.length > data.length - request.offset)
+    Q_ASSERT(valueRanges.contains(handle));
+
+    const auto &range = valueRanges[handle];
+    if (request.offset > range.second)
         return CBATTErrorInvalidOffset;
+
+    if (request.value.length > range.second - request.offset)
+        return CBATTErrorInvalidAttributeValueLength;
 
     return CBATTErrorSuccess;
 }

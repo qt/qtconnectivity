@@ -52,6 +52,7 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qpair.h>
 #include <QtCore/qmap.h>
 
 #include <vector>
@@ -98,15 +99,17 @@ enum class PeripheralState
 struct UpdateRequest
 {
     UpdateRequest() = default;
-    UpdateRequest(QLowEnergyHandle handle, const ObjCStrongReference<NSMutableData> &val)
+    UpdateRequest(QLowEnergyHandle handle, const ObjCStrongReference<NSData> &val)
         : charHandle(handle),
           value(val)
     {
     }
 
     QLowEnergyHandle charHandle = {};
-    ObjCStrongReference<NSMutableData> value;
+    ObjCStrongReference<NSData> value;
 };
+
+using ValueRange = QPair<NSUInteger, NSUInteger>;
 
 @interface QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) : NSObject<CBPeripheralManagerDelegate>
 {
@@ -126,6 +129,8 @@ struct UpdateRequest
 
     GenericLEMap<CBCharacteristic *> charMap;
     GenericLEMap<ObjCStrongReference<NSMutableData>> charValues;
+
+    QMap<QLowEnergyHandle, ValueRange> valueRanges;
 
     std::deque<UpdateRequest> updateQueue;
 
