@@ -427,7 +427,6 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
 void DeviceDiscoveryBroadcastReceiver::onReceiveLeScan(
         JNIEnv *env, jobject jBluetoothDevice, jint rssi)
 {
-    qCDebug(QT_BT_ANDROID) << "DeviceDiscoveryBroadcastReceiver::onReceiveLeScan()";
     const QAndroidJniObject bluetoothDevice(jBluetoothDevice);
     if (!bluetoothDevice.isValid())
         return;
