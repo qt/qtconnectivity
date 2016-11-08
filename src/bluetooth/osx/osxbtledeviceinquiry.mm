@@ -69,6 +69,46 @@ const int timeStepMS = 100;
 const int powerOffTimeoutMS = 30000;
 const qreal powerOffTimeStepS = 30. / 100.;
 
+struct AdvertisementData {
+    // That's what CoreBluetooth has:
+    // CBAdvertisementDataLocalNameKey
+    // CBAdvertisementDataTxPowerLevelKey
+    // CBAdvertisementDataServiceUUIDsKey
+    // CBAdvertisementDataServiceDataKey
+    // CBAdvertisementDataManufacturerDataKey
+    // CBAdvertisementDataOverflowServiceUUIDsKey
+    // CBAdvertisementDataIsConnectable
+    // CBAdvertisementDataSolicitedServiceUUIDsKey
+
+    // For now, we "parse":
+    QString localName;
+    QList<QBluetoothUuid> serviceUuids;
+    // TODO: other keys probably?
+    AdvertisementData(NSDictionary *AdvertisementData);
+};
+
+AdvertisementData::AdvertisementData(NSDictionary *advertisementData)
+{
+    if (!advertisementData)
+        return;
+
+    // ... constant CBAdvertisementDataLocalNameKey ...
+    // NSString containing the local name of a peripheral.
+    NSObject *value = [advertisementData objectForKey:CBAdvertisementDataLocalNameKey];
+    if (value && [value isKindOfClass:[NSString class]])
+        localName = QString::fromNSString(static_cast<NSString *>(value));
+
+    // ... constant CBAdvertisementDataServiceUUIDsKey ...
+    // A list of one or more CBUUID objects, representing CBService UUIDs.
+
+    value = [advertisementData objectForKey:CBAdvertisementDataServiceUUIDsKey];
+    if (value && [value isKindOfClass:[NSArray class]]) {
+        NSArray *uuids = static_cast<NSArray *>(value);
+        for (CBUUID *cbUuid in uuids)
+            serviceUuids << qt_uuid(cbUuid);
+    }
+}
+
 }
 
 QT_END_NAMESPACE
@@ -90,7 +130,6 @@ QT_USE_NAMESPACE
     if (self = [super init]) {
         Q_ASSERT(aNotifier);
         notifier = aNotifier;
-        uuids.reset([[NSMutableSet alloc] init]);
         internalState = InquiryStarting;
         inquiryTimeoutMS = OSXBluetooth::defaultLEScanTimeoutMS;
     }
@@ -300,8 +339,6 @@ QT_USE_NAMESPACE
         advertisementData:(NSDictionary *)advertisementData
         RSSI:(NSNumber *)RSSI
 {
-    Q_UNUSED(advertisementData);
-
     using namespace OSXBluetooth;
 
     if (central != manager)
@@ -320,14 +357,6 @@ QT_USE_NAMESPACE
         return;
     }
 
-    if ([uuids containsObject:peripheral.identifier]) {
-        // TODO: my understanding of the same peripheral reported many times seems
-        // to be outdated or even wrong - nowadays it's reported twice and the
-        // second time (AFAIK) more info can be extracted ...
-        return;
-    }
-
-    [uuids addObject:peripheral.identifier];
     deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
 
     if (deviceUuid.isNull()) {
@@ -339,10 +368,20 @@ QT_USE_NAMESPACE
     if (peripheral.name)
         name = QString::fromNSString(peripheral.name);
 
+    const AdvertisementData qtAdvData(advertisementData);
+    if (!name.size()) // Probably, it's not possible to have one and not the other.
+        name = qtAdvData.localName;
+
     // TODO: fix 'classOfDevice' (0 for now).
     QBluetoothDeviceInfo newDeviceInfo(deviceUuid, name, 0);
     if (RSSI)
         newDeviceInfo.setRssi([RSSI shortValue]);
+
+    if (qtAdvData.serviceUuids.size()) {
+        newDeviceInfo.setServiceUuids(qtAdvData.serviceUuids,
+                                      QBluetoothDeviceInfo::DataIncomplete);
+    }
+
     // CoreBluetooth scans only for LE devices.
     newDeviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
     emit notifier->deviceDiscovered(newDeviceInfo);

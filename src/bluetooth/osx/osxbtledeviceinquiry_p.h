@@ -93,7 +93,6 @@ enum LEInquiryState
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject
 {
     LECBManagerNotifier *notifier;
-    ObjCScopedPointer<NSMutableSet> uuids;
     ObjCScopedPointer<CBCentralManager> manager;
 
     QList<QBluetoothDeviceInfo> devices;
