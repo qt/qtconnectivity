@@ -236,6 +236,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     services.push_back(newCBService);
     serviceIndex[data.uuid()] = newCBService;
 
+    newQtService->endHandle = lastHandle;
+
     return newQtService;
 }
 
@@ -356,6 +358,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         qCWarning(QT_BT_OSX) << "ignoring value of invalid length" << value.count();
         return;
     }
+
+    emit notifier->characteristicWritten(charHandle, value);
 
     const auto nsData = mutable_data_from_bytearray(value);
     charValues[charHandle] = nsData;
@@ -480,6 +484,9 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         return;
 
     [self addConnectedCentral:central];
+
+    if (const auto handle = charMap.key(characteristic))
+        emit notifier->notificationEnabled(handle, true);
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central
@@ -491,6 +498,11 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         return;
 
     [self removeConnectedCentral:central];
+
+    if (![connectedCentrals count]) {
+        if (const auto handle = charMap.key(characteristic))
+            emit notifier->notificationEnabled(handle, false);
+    }
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -757,7 +769,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         valueRanges[declHandle] = ValueRange(ch.minimumValueLength(), ch.maximumValueLength());
         // QT part:
         QLowEnergyServicePrivate::CharData charData;
-        charData.valueHandle = ++lastHandle;
+        charData.valueHandle = declHandle;
         charData.uuid = ch.uuid();
         charData.properties = ch.properties();
         charData.value = ch.value();
