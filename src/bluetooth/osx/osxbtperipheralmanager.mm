@@ -51,7 +51,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <set>
 
 namespace
 {
@@ -584,20 +583,24 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         }
     }
 
-    std::set<QLowEnergyHandle> updated;
+    std::map<QLowEnergyHandle, NSUInteger> updated;
 
     for (CBATTRequest *request in requests) {
         // Transition to 'connected' if needed.
         [self addConnectedCentral:request.central];
-
         const auto charHandle = charMap.key(request.characteristic);
-        updated.insert(charHandle);
+        const auto prevLen = updated[charHandle];
+        updated[charHandle] = std::max(request.offset + request.value.length,
+                                       prevLen);
         [self writeValueForCharacteristic:charHandle withWriteRequest:request];
     }
 
-    for (const auto handle : updated) {
-        emit notifier->characteristicUpdated(handle, qt_bytearray(charValues[handle]));
-        const ObjCStrongReference<NSData> copy([NSData dataWithData:charValues[handle]],
+    for (const auto pair : updated) {
+        const auto handle = pair.first;
+        NSMutableData *value = charValues[handle];
+        value.length = pair.second;
+        emit notifier->characteristicUpdated(handle, qt_bytearray(value));
+        const ObjCStrongReference<NSData> copy([NSData dataWithData:value],
                                                true);
         updateQueue.push_back(UpdateRequest{handle, copy});
     }
