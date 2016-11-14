@@ -137,6 +137,7 @@ using ValueRange = QPair<NSUInteger, NSUInteger>;
     ObjCScopedPointer<NSMutableSet> connectedCentrals;
 
     PeripheralState state;
+    NSUInteger maxNotificationValueLength;
 }
 
 - (id)initWith:(LECBManagerNotifier *)notifier;

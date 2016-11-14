@@ -72,6 +72,8 @@ Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.ios")
 namespace OSXBluetooth {
 
 const int defaultLEScanTimeoutMS = 25000;
+// We use it only on iOS for now:
+const int maxValueLength = 512;
 
 QString qt_address(NSString *address)
 {

@@ -304,6 +304,7 @@ ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray 
 dispatch_queue_t qt_LE_queue();
 
 extern const int defaultLEScanTimeoutMS;
+extern const int maxValueLength;
 
 } // namespace OSXBluetooth
 

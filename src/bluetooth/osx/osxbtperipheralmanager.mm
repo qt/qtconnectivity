@@ -187,6 +187,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         state = PeripheralState::idle;
         nextServiceToAdd = {};
         connectedCentrals.reset([[NSMutableSet alloc] init]);
+        maxNotificationValueLength = std::numeric_limits<NSUInteger>::max();
     }
 
     return self;
@@ -353,8 +354,13 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     }
 
     const auto & range = valueRanges[charHandle];
-    if (value.size() < int(range.first) || value.size() > int(range.second)) {
-        qCWarning(QT_BT_OSX) << "ignoring value of invalid length" << value.count();
+    if (value.size() < int(range.first) || value.size() > int(range.second)
+#ifdef Q_OS_IOS
+        || value.size() > OSXBluetooth::maxValueLength) {
+#else
+       ) {
+#endif
+        qCWarning(QT_BT_OSX) << "ignoring value of invalid length" << value.size();
         return;
     }
 
@@ -630,6 +636,12 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     while (updateQueue.size()) {
         const auto &request = updateQueue.front();
         if (charMap.contains(request.charHandle)) {
+            if ([connectedCentrals count]
+                && maxNotificationValueLength < [request.value length]) {
+                qCWarning(QT_BT_OSX) << "value of length" << [request.value length]
+                                     << "will possibly be truncated to"
+                                     << maxNotificationValueLength;
+            }
             const BOOL res = [manager updateValue:request.value
                               forCharacteristic:static_cast<CBMutableCharacteristic *>(charMap[request.charHandle])
                               onSubscribedCentrals:nil];
@@ -654,6 +666,9 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         // We were detached.
         return;
     }
+
+    maxNotificationValueLength = std::min(maxNotificationValueLength,
+                                          central.maximumUpdateValueLength);
 
     QT_BT_MAC_AUTORELEASEPOOL
 
@@ -683,6 +698,9 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         state = PeripheralState::idle;
         emit notifier->disconnected();
     }
+
+    if (![connectedCentrals count])
+        maxNotificationValueLength = std::numeric_limits<NSUInteger>::max();
 }
 
 - (CBService *)findIncludedService:(const QBluetoothUuid &)qtUUID
@@ -748,6 +766,16 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
                                     "invalid value size/min-max length";
             continue;
         }
+
+#ifdef Q_OS_IOS
+        if (ch.value().length() > OSXBluetooth::maxValueLength) {
+            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
+                                    "value exceeds the maximal permitted "
+                                    "value length (" << OSXBluetooth::maxValueLength
+                                    << "octets) on the platform";
+            continue;
+        }
+#endif
 
         const auto cbChar(create_characteristic(ch));
         if (!cbChar) {
