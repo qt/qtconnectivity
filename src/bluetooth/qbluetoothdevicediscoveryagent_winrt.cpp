@@ -118,6 +118,9 @@ private:
     QVector<quint64> m_foundLEDevices;
 #endif // !Q_OS_WINPHONE
     int m_pendingPairedDevices;
+
+    ComPtr<IBluetoothDeviceStatics> m_deviceStatics;
+    ComPtr<IBluetoothLEDeviceStatics> m_leDeviceStatics;
 };
 
 QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
@@ -125,6 +128,11 @@ QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(QBlue
     , m_pendingPairedDevices(0)
 {
     qRegisterMetaType<QBluetoothDeviceInfo>();
+
+    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &m_deviceStatics);
+    Q_ASSERT_SUCCEEDED(hr);
+    hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &m_leDeviceStatics);
+    Q_ASSERT_SUCCEEDED(hr);
 }
 
 QWinRTBluetoothDeviceDiscoveryWorker::~QWinRTBluetoothDeviceDiscoveryWorker()
@@ -168,17 +176,10 @@ void QWinRTBluetoothDeviceDiscoveryWorker::startDeviceDiscovery(QBluetoothDevice
     ComPtr<IDeviceInformationStatics> deviceInformationStatics;
     HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Enumeration_DeviceInformation).Get(), &deviceInformationStatics);
     WARN_AND_RETURN_IF_FAILED("Could not obtain device information statics", return);
-    if (mode == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
-        ComPtr<IBluetoothLEDeviceStatics> bluetoothLeDeviceStatics;
-        hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &bluetoothLeDeviceStatics);
-        WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth LE device statics", return);
-        bluetoothLeDeviceStatics->GetDeviceSelector(deviceSelector.GetAddressOf());
-    } else {
-        ComPtr<IBluetoothDeviceStatics> bluetoothDeviceStatics;
-        hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &bluetoothDeviceStatics);
-        WARN_AND_RETURN_IF_FAILED("Could not obtain bluetooth device statics", return);
-        bluetoothDeviceStatics->GetDeviceSelector(deviceSelector.GetAddressOf());
-    }
+    if (mode == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
+        m_leDeviceStatics->GetDeviceSelector(deviceSelector.GetAddressOf());
+    else
+        m_deviceStatics->GetDeviceSelector(deviceSelector.GetAddressOf());
     ComPtr<IAsyncOperation<DeviceInformationCollection *>> op;
     hr = deviceInformationStatics->FindAllAsyncAqsFilter(deviceSelector.Get(), &op);
     WARN_AND_RETURN_IF_FAILED("Could not start bluetooth device discovery operation", return);
@@ -262,14 +263,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleLeTimeout()
 // "deviceFound" will be emitted at the end of the deviceFromIdOperation callback
 void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync(HSTRING deviceId)
 {
-    ComPtr<IBluetoothDeviceStatics> deviceStatics;
-    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &deviceStatics);
-    Q_ASSERT_SUCCEEDED(hr);
-
-    hr = QEventDispatcherWinRT::runOnXamlThread([deviceId, deviceStatics, this]() {
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([deviceId, this]() {
         ComPtr<IAsyncOperation<BluetoothDevice *>> deviceFromIdOperation;
         // on Windows 10 FromIdAsync might ask for device permission. We cannot wait here but have to handle that asynchronously
-        HRESULT hr = deviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
+        HRESULT hr = m_deviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
         if (FAILED(hr)) {
             --m_pendingPairedDevices;
             qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from id";
@@ -291,13 +289,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
 // "deviceFound" will be emitted at the end of the deviceFromIdOperation callback
 void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTRING deviceId)
 {
-    ComPtr<IBluetoothLEDeviceStatics> deviceStatics;
-    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &deviceStatics);
-    Q_ASSERT_SUCCEEDED(hr);
-    hr = QEventDispatcherWinRT::runOnXamlThread([deviceId, deviceStatics, this]() {
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([deviceId, this]() {
         ComPtr<IAsyncOperation<BluetoothLEDevice *>> deviceFromIdOperation;
         // on Windows 10 FromIdAsync might ask for device permission. We cannot wait here but have to handle that asynchronously
-        HRESULT hr = deviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
+        HRESULT hr = m_leDeviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
         if (FAILED(hr)) {
             --m_pendingPairedDevices;
             qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from id";
@@ -319,14 +315,12 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTR
 // "deviceFound" will be emitted at the end of the deviceFromAdressOperation callback
 void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromAddressAsync(quint64 address)
 {
-    ComPtr<IBluetoothLEDeviceStatics> deviceStatics;
-    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &deviceStatics);
-    Q_ASSERT_SUCCEEDED(hr);
-    hr = QEventDispatcherWinRT::runOnXamlThread([address, deviceStatics, this]() {
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([address, this]() {
         ComPtr<IAsyncOperation<BluetoothLEDevice *>> deviceFromAddressOperation;
         // on Windows 10 FromBluetoothAddressAsync might ask for device permission. We cannot wait
         // here but have to handle that asynchronously
-        HRESULT hr = deviceStatics->FromBluetoothAddressAsync(address, &deviceFromAddressOperation);
+        HRESULT hr = m_leDeviceStatics->FromBluetoothAddressAsync(address, &deviceFromAddressOperation);
         if (FAILED(hr)) {
             qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from address";
             return S_OK;
