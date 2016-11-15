@@ -33,9 +33,50 @@
 
 The Bluetooth API provides connectivity between Bluetooth enabled devices.
 
-Currently, the API is supported on the following platforms: \l{Qt for Android}{Android},
-\l{Qt for iOS}{iOS}, \l{Qt for Linux/X11}{Linux}
-(\l{http://www.bluez.org}{BlueZ 4.x/5.x}) and \l{Qt for macOS}{\macos}.
+Currently, the API is supported on the following platforms:
+
+\table
+\header
+    \li API Feature
+    \li \l {Qt for Android}{Android}
+    \li \l {Qt for iOS}{iOS}
+    \li \l {Qt for Linux/X11}{Linux (BlueZ 4.x/5.x)}
+    \li \l {Qt for OS X}{macOS}
+    \li \l {Qt for WinRT}{WinRT}
+    \li \l {Qt for Windows}{Windows}
+\row
+    \li Classic Bluetooth
+    \li x
+    \li x
+    \li x
+    \li x
+    \li
+    \li
+\row
+    \li Bluetooth LE Central
+    \li x
+    \li x
+    \li x
+    \li x
+    \li x
+    \li
+\row
+    \li Bluetooth LE Peripheral
+    \li
+    \li x
+    \li x
+    \li x
+    \li
+    \li
+\row
+    \li Bluetooth LE Advertisement & Scanning
+    \li
+    \li
+    \li
+    \li
+    \li
+    \li
+\endtable
 
 \section1 Overview
 
@@ -49,8 +90,8 @@ Qt Bluetooth supports Bluetooth Low Energy development for client/central role u
 Further details can be found in the
 \l {Bluetooth Low Energy Overview}{Bluetooth Low Energy Overview} section.
 
-A new addition in this Qt Bluetooth 5.7 release covers support for Bluetooth Low Energy
-applications performing the peripheral/server role. This new API is a Technology Preview.
+A new addition since the Qt Bluetooth 5.7 release covers support for Bluetooth Low Energy
+applications performing the peripheral/server role. This new API remains in Technology Preview.
 
 \section1 Getting Started
 

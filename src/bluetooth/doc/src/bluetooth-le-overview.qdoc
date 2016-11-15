@@ -37,8 +37,8 @@ Low Energy devices.
     The Qt Bluetooth Low Energy API for the central role was introduced by Qt 5.4.
     Since Qt 5.5 that part of the API is final and a compatibility guarantee is given for
     future releases.
-    In Qt 5.7, additional API supporting the peripheral role was added as a Technology Preview,
-    with the backend only implemented for Linux/BlueZ.
+    Since Qt 5.7, additional API supporting the peripheral role was added as a Technology Preview,
+    with the backend implemented for Linux/BlueZ, iOS and macOS.
 
     \section1 What Is Bluetooth Low Energy
 
