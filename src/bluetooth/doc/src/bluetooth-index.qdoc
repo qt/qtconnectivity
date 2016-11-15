@@ -190,4 +190,6 @@ On Linux, Qt Bluetooth uses a separate executable, \c sdpscanner,
 to integrate with the official Linux bluetooth protocol stack
 BlueZ. BlueZ is available under the \l{GNU General Public License,
 version 2}.
+
+\generatelist{groupsbymodule attributions-qtbluetooth}
 */
