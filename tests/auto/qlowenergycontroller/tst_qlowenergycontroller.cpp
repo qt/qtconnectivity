@@ -142,7 +142,7 @@ void tst_QLowEnergyController::initTestCase()
     QVERIFY(finishedSpy.isEmpty());
 
     bool deviceFound = false;
-    devAgent->start();
+    devAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0, 30000);
     foreach (const QBluetoothDeviceInfo &info, devAgent->discoveredDevices()) {
 #ifndef Q_OS_MAC
@@ -252,6 +252,7 @@ void tst_QLowEnergyController::tst_connect()
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     QLowEnergyController control(remoteDeviceInfo);
+    QCOMPARE(remoteDeviceInfo.deviceUuid(), control.remoteDeviceUuid());
     QCOMPARE(control.role(), QLowEnergyController::CentralRole);
     QSignalSpy connectedSpy(&control, SIGNAL(connected()));
     QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
