@@ -182,9 +182,21 @@ public class QtBluetoothLE {
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
         {
-            //runningHandle is only used during serviceDetailsDiscovery
-            //If it is -1 we got an update outside of the details discovery process
-            final boolean isServiceDiscoveryRun = (runningHandle != -1);
+            int foundHandle = -1;
+            synchronized (this) {
+                foundHandle = handleForCharacteristic(characteristic);
+                if (foundHandle == -1 || foundHandle >= entries.size() ) {
+                    Log.w(TAG, "Cannot find characteristic read request for read notification - handle: " +
+                               foundHandle + " size: " + entries.size());
+                    return;
+                }
+            }
+
+            GattEntry entry = entries.get(foundHandle);
+            final boolean isServiceDiscoveryRun = !entry.valueKnown;
+            entry.valueKnown = true;
+            entries.set(foundHandle, entry);
+
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "onCharacteristicRead error: " + status);
@@ -202,44 +214,30 @@ public class QtBluetoothLE {
             // once we have a service discovery run we report regular changes
             if (!isServiceDiscoveryRun) {
 
-                int foundHandle = -1;
-                synchronized (this) {
-                    foundHandle = handleForCharacteristic(characteristic);
-                }
-
                 synchronized (readWriteQueue) {
                     ioJobPending = false;
                 }
 
-                if (foundHandle == -1) {
-                    Log.w(TAG, "Out-of-detail-discovery: char update failed. " +
-                               "Cannot find handle for characteristic");
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
+                            foundHandle + 1, characteristic.getUuid().toString(),
+                            characteristic.getProperties(), characteristic.getValue());
                 } else {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
-                                foundHandle + 1, characteristic.getUuid().toString(),
-                                characteristic.getProperties(), characteristic.getValue());
-                    } else {
-                        // This must be in sync with QLowEnergyService::CharacteristicReadError
-                        final int characteristicReadError = 5;
-                        leServiceError(qtObject, foundHandle + 1, characteristicReadError);
-                    }
+                    // This must be in sync with QLowEnergyService::CharacteristicReadError
+                    final int characteristicReadError = 5;
+                    leServiceError(qtObject, foundHandle + 1, characteristicReadError);
                 }
 
                 performNextIO();
                 return;
             }
 
-            GattEntry entry = entries.get(runningHandle);
-            entry.valueKnown = true;
-            entries.set(runningHandle, entry);
-
             // Qt manages handles starting at 1, in Java we use a system starting with 0
             //TODO avoid sending service uuid -> service handle should be sufficient
             leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
-                    runningHandle + 1, characteristic.getUuid().toString(),
+                    foundHandle + 1, characteristic.getUuid().toString(),
                     characteristic.getProperties(), characteristic.getValue());
-            performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+            performServiceDetailDiscoveryForHandle(foundHandle + 1, false);
         }
 
         public void onCharacteristicWrite(android.bluetooth.BluetoothGatt gatt,
@@ -287,9 +285,20 @@ public class QtBluetoothLE {
                                      android.bluetooth.BluetoothGattDescriptor descriptor,
                                      int status)
         {
-            //runningHandle is only used during serviceDetailsDiscovery
-            //If it is -1 we got an update outside of the details discovery process
-            final boolean isServiceDiscoveryRun = (runningHandle != -1);
+            int foundHandle = -1;
+            synchronized (this) {
+                foundHandle = handleForDescriptor(descriptor);
+                if (foundHandle == -1 || foundHandle >= entries.size() ) {
+                    Log.w(TAG, "Cannot find descriptor read request for read notification - handle: " +
+                               foundHandle + " size: " + entries.size());
+                    return;
+                }
+            }
+
+            GattEntry entry = entries.get(foundHandle);
+            final boolean isServiceDiscoveryRun = !entry.valueKnown;
+            entry.valueKnown = true;
+            entries.set(foundHandle, entry);
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "onDescriptorRead error: " + status);
@@ -307,41 +316,27 @@ public class QtBluetoothLE {
 
             if (!isServiceDiscoveryRun) {
 
-                int foundHandle = -1;
-                synchronized (this) {
-                    foundHandle = handleForDescriptor(descriptor);
-                }
-
                 synchronized (readWriteQueue) {
                     ioJobPending = false;
                 }
 
-                if (foundHandle == -1) {
-                    Log.w(TAG, "Out-of-detail-discovery: char update failed. " +
-                            "Cannot find handle for descriptor.");
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
+                            descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
+                            descriptor.getUuid().toString(), descriptor.getValue());
                 } else {
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
-                                descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
-                                descriptor.getUuid().toString(), descriptor.getValue());
-                    } else {
-                        // This must be in sync with QLowEnergyService::DescriptorReadError
-                        final int descriptorReadError = 6;
-                        leServiceError(qtObject, foundHandle + 1, descriptorReadError);
-                    }
+                    // This must be in sync with QLowEnergyService::DescriptorReadError
+                    final int descriptorReadError = 6;
+                    leServiceError(qtObject, foundHandle + 1, descriptorReadError);
                 }
 
                 performNextIO();
                 return;
             }
 
-
-            GattEntry entry = entries.get(runningHandle);
-            entry.valueKnown = true;
-            entries.set(runningHandle, entry);
             //TODO avoid sending service and characteristic uuid -> handles should be sufficient
             leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
-                    descriptor.getCharacteristic().getUuid().toString(), runningHandle+1,
+                    descriptor.getCharacteristic().getUuid().toString(), foundHandle+1,
                     descriptor.getUuid().toString(), descriptor.getValue());
 
             /* Some devices preset ClientCharacteristicConfiguration descriptors
@@ -361,7 +356,7 @@ public class QtBluetoothLE {
                 }
             }
 
-            performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+            performServiceDetailDiscoveryForHandle(foundHandle + 1, false);
         }
 
         public void onDescriptorWrite(android.bluetooth.BluetoothGatt gatt,
@@ -601,12 +596,10 @@ public class QtBluetoothLE {
     }
 
     private int currentServiceInDiscovery = -1;
-    private int runningHandle = -1;
 
     private void resetData()
     {
         synchronized (this) {
-            runningHandle = -1;
             currentServiceInDiscovery = -1;
             uuidToEntry.clear();
             entries.clear();
@@ -723,7 +716,6 @@ public class QtBluetoothLE {
         discoveredService.valueKnown = true;
         entries.set(currentServiceInDiscovery, discoveredService);
 
-        runningHandle = -1;
         currentServiceInDiscovery = -1;
 
         leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString(),
@@ -744,9 +736,7 @@ public class QtBluetoothLE {
         try {
             if (searchStarted) {
                 currentServiceInDiscovery = nextHandle;
-                runningHandle = ++nextHandle;
-            } else {
-                runningHandle = nextHandle;
+                nextHandle++;
             }
 
             GattEntry entry;
@@ -772,7 +762,7 @@ public class QtBluetoothLE {
                             leCharacteristicRead(qtObject, entry.characteristic.getService().getUuid().toString(),
                                     nextHandle + 1, entry.characteristic.getUuid().toString(),
                                     entry.characteristic.getProperties(), entry.characteristic.getValue());
-                            performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+                            performServiceDetailDiscoveryForHandle(nextHandle + 1, false);
                         }
                     } catch (Exception ex)
                     {
@@ -781,7 +771,7 @@ public class QtBluetoothLE {
                     break;
                 case CharacteristicValue:
                     // ignore -> nothing to do for this artificial type
-                    performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+                    performServiceDetailDiscoveryForHandle(nextHandle + 1, false);
                     break;
                 case Descriptor:
                     result = mBluetoothGatt.readDescriptor(entry.descriptor);
@@ -795,7 +785,7 @@ public class QtBluetoothLE {
                                 entry.descriptor.getCharacteristic().getUuid().toString(),
                                 nextHandle+1, entry.descriptor.getUuid().toString(),
                                 entry.descriptor.getValue());
-                        performServiceDetailDiscoveryForHandle(runningHandle + 1, false);
+                        performServiceDetailDiscoveryForHandle(nextHandle + 1, false);
                     }
                     break;
                 case Service:
@@ -1002,28 +992,25 @@ public class QtBluetoothLE {
                 we have to report an error back to Qt. This is not required during
                 the initial service discovery though.
              */
-            final boolean isServiceDiscoveryRun = (runningHandle != -1);
-            if (!isServiceDiscoveryRun) {
-                int handle = -1;
-                if (nextJob.entry.type == GattEntryType.Characteristic)
-                    handle = handleForCharacteristic(nextJob.entry.characteristic);
-                else
-                    handle = handleForDescriptor(nextJob.entry.descriptor);
+            int handle = -1;
+            if (nextJob.entry.type == GattEntryType.Characteristic)
+                handle = handleForCharacteristic(nextJob.entry.characteristic);
+            else
+                handle = handleForDescriptor(nextJob.entry.descriptor);
 
-                if (handle != -1) {
-                    int errorCode = 0;
+            if (handle != -1) {
+                int errorCode = 0;
 
-                    // The error codes below must be in sync with QLowEnergyService::ServiceError
-                    if (nextJob.jobType == IoJobType.Read) {
-                        errorCode = (nextJob.entry.type == GattEntryType.Characteristic) ?
-                                    5 : 6; // CharacteristicReadError : DescriptorReadError
-                    } else {
-                        errorCode = (nextJob.entry.type == GattEntryType.Characteristic) ?
-                                    2 : 3; // CharacteristicWriteError : DescriptorWriteError
-                    }
-
-                    leServiceError(qtObject, handle + 1, errorCode);
+                // The error codes below must be in sync with QLowEnergyService::ServiceError
+                if (nextJob.jobType == IoJobType.Read) {
+                    errorCode = (nextJob.entry.type == GattEntryType.Characteristic) ?
+                                5 : 6; // CharacteristicReadError : DescriptorReadError
+                } else {
+                    errorCode = (nextJob.entry.type == GattEntryType.Characteristic) ?
+                                2 : 3; // CharacteristicWriteError : DescriptorWriteError
                 }
+
+                leServiceError(qtObject, handle + 1, errorCode);
             }
 
             performNextIO();
