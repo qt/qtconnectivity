@@ -436,6 +436,8 @@ public class QtBluetoothLE {
         public BluetoothGattCharacteristic characteristic = null;
         public BluetoothGattDescriptor descriptor = null;
         public int endHandle;
+        // pointer back to the handle that describes the service that this GATT entry belongs to
+        public int associatedServiceHandle;
     }
 
     private enum IoJobType
@@ -451,8 +453,12 @@ public class QtBluetoothLE {
         public IoJobType jobType;
     }
 
+    // service uuid -> service handle mapping (there can be more than one service with same uuid)
     private final Hashtable<UUID, List<Integer>> uuidToEntry = new Hashtable<UUID, List<Integer>>(100);
+    // index into array is equivalent to handle id
     private final ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
+    //backlog of to be discovered services
+    // TODO remove
     private final LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
 
 
@@ -556,6 +562,9 @@ public class QtBluetoothLE {
 
             // remember handle for the service for later update
             int serviceHandle = entries.size() - 1;
+            //point to itself -> mostly done for consistence reasons with other entries
+            serviceEntry.associatedServiceHandle = serviceHandle;
+
 
             //some devices may have more than one service with the same uuid
             List<Integer> old = uuidToEntry.get(service.getUuid());
@@ -570,11 +579,13 @@ public class QtBluetoothLE {
                 entry = new GattEntry();
                 entry.type = GattEntryType.Characteristic;
                 entry.characteristic = characteristic;
+                entry.associatedServiceHandle = serviceHandle;
                 entries.add(entry);
 
                 // this emulates GATT value attributes
                 entry = new GattEntry();
                 entry.type = GattEntryType.CharacteristicValue;
+                entry.associatedServiceHandle = serviceHandle;
                 entries.add(entry);
 
                 // add all descriptors
@@ -583,6 +594,7 @@ public class QtBluetoothLE {
                     entry = new GattEntry();
                     entry.type = GattEntryType.Descriptor;
                     entry.descriptor = desc;
+                    entry.associatedServiceHandle = serviceHandle;
                     entries.add(entry);
                 }
             }
@@ -610,6 +622,10 @@ public class QtBluetoothLE {
         }
     }
 
+    //TODO rewrite for queue based service discovery
+    //      - remove currentServiceInDiscovery variable
+    //      - remove servicesToBeDiscovered list (implied by readWriteQueue already)
+    //      - ensure discovery for pending service not run twice (currently a bug)
     public synchronized boolean discoverServiceDetails(String serviceUuid)
     {
         try {
@@ -709,6 +725,18 @@ public class QtBluetoothLE {
         return builder.toString();
     }
 
+    //TODO function not yet used
+    private void finishCurrentServiceDiscovery(int handleDiscoveredService)
+    {
+        GattEntry discoveredService = entries.get(handleDiscoveredService);
+        discoveredService.valueKnown = true;
+        entries.set(handleDiscoveredService, discoveredService);
+
+        leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString(),
+                handleDiscoveredService + 1, discoveredService.endHandle + 1);
+    }
+
+    //TODO replaced by finishCurrentServiceDiscovery(int) above for queue  based service discovery
     private void finishCurrentServiceDiscovery()
     {
         int currentEntry = currentServiceInDiscovery;
@@ -731,6 +759,54 @@ public class QtBluetoothLE {
         }
     }
 
+    /*
+        Internal Helper function for discoverServiceDetails()
+
+        Adds all Gatt entries for the given service to the readWriteQueue to be discovered.
+        This function only ever adds read requests to the queue.
+
+        //TODO function not yet used
+     */
+    private void scheduleServiceDetailDiscovery(int serviceHandle)
+    {
+        GattEntry serviceEntry = entries.get(serviceHandle);
+        final int endHandle = serviceEntry.endHandle;
+
+        synchronized (readWriteQueue) {
+            // entire block inside mutex to ensure all service discovery jobs go in one after the other
+            // ensures that serviceDiscovered() signal is sent when required
+
+
+            // serviceHandle + 1 -> ignore service handle itself
+            for (int i = serviceHandle + 1; i <= endHandle; i++) {
+                GattEntry entry = entries.get(i);
+
+                switch (entry.type) {
+                    case Characteristic:
+                    case Descriptor:
+                        break;
+                    case CharacteristicValue:
+                        continue; //ignore this type of entry
+                    case Service:
+                        // should not really happen unless endHandle is wrong
+                        Log.w(TAG, "scheduleServiceDetailDiscovery: wrong endHandle");
+                        return;
+                }
+
+                // only descriptor and characteristic fall through to this point
+                ReadWriteJob newJob = new ReadWriteJob();
+                newJob.entry = entry;
+                newJob.jobType = IoJobType.Read;
+
+                final boolean result = readWriteQueue.add(newJob);
+                if (!result)
+                    Log.w(TAG, "Cannot add service discovery job for " + serviceEntry.service.getUuid()
+                                + " on item " + entry.type);
+            }
+        }
+    }
+
+    //TODO replaced by scheduleServiceDetailDiscovery(int) when queue based discovery activated
     private synchronized void performServiceDetailDiscoveryForHandle(int nextHandle, boolean searchStarted)
     {
         try {
