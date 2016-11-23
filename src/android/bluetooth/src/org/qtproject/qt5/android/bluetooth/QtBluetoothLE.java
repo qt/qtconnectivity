@@ -195,7 +195,6 @@ public class QtBluetoothLE {
             GattEntry entry = entries.get(foundHandle);
             final boolean isServiceDiscoveryRun = !entry.valueKnown;
             entry.valueKnown = true;
-            entries.set(foundHandle, entry);
 
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
@@ -298,7 +297,6 @@ public class QtBluetoothLE {
             GattEntry entry = entries.get(foundHandle);
             final boolean isServiceDiscoveryRun = !entry.valueKnown;
             entry.valueKnown = true;
-            entries.set(foundHandle, entry);
 
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "onDescriptorRead error: " + status);
@@ -435,7 +433,7 @@ public class QtBluetoothLE {
         public BluetoothGattService service = null;
         public BluetoothGattCharacteristic characteristic = null;
         public BluetoothGattDescriptor descriptor = null;
-        public int endHandle;
+        public int endHandle = -1;
         // pointer back to the handle that describes the service that this GATT entry belongs to
         public int associatedServiceHandle;
     }
@@ -558,13 +556,12 @@ public class QtBluetoothLE {
             GattEntry serviceEntry = new GattEntry();
             serviceEntry.type = GattEntryType.Service;
             serviceEntry.service = service;
-            entries.add(entry);
+            entries.add(serviceEntry);
 
             // remember handle for the service for later update
             int serviceHandle = entries.size() - 1;
             //point to itself -> mostly done for consistence reasons with other entries
             serviceEntry.associatedServiceHandle = serviceHandle;
-
 
             //some devices may have more than one service with the same uuid
             List<Integer> old = uuidToEntry.get(service.getUuid());
@@ -601,7 +598,6 @@ public class QtBluetoothLE {
 
             // update endHandle of current service
             serviceEntry.endHandle = entries.size() - 1;
-            entries.set(serviceHandle, serviceEntry);
         }
 
         entries.trimToSize();
@@ -730,7 +726,6 @@ public class QtBluetoothLE {
     {
         GattEntry discoveredService = entries.get(handleDiscoveredService);
         discoveredService.valueKnown = true;
-        entries.set(handleDiscoveredService, discoveredService);
 
         leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString(),
                 handleDiscoveredService + 1, discoveredService.endHandle + 1);
@@ -742,7 +737,6 @@ public class QtBluetoothLE {
         int currentEntry = currentServiceInDiscovery;
         GattEntry discoveredService = entries.get(currentServiceInDiscovery);
         discoveredService.valueKnown = true;
-        entries.set(currentServiceInDiscovery, discoveredService);
 
         currentServiceInDiscovery = -1;
 
