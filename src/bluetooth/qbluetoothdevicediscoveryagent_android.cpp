@@ -68,9 +68,17 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     pendingStart(false),
     q_ptr(parent)
 {
+    QAndroidJniEnvironment env;
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
+    if (!adapter.isValid()) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+        qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
+    }
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
