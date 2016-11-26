@@ -842,7 +842,10 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
    also starts listening for incoming client connections.
 
    Providing \a scanResponseData is not required, as it is not applicable for certain
-   configurations of \c parameters.
+   configurations of \c parameters. \a advertisingData and \a scanResponseData are limited
+   to 31 byte user data. If, for example, several 128bit uuids are added to \a advertisingData,
+   the advertised packets may not contain all uuids. The existing limit may have caused the truncation
+   of uuids. In such cases \a scanResponseData may be used for additional information.
 
    If this object is currently not in the \l UnconnectedState, nothing happens.
    \note Advertising will stop automatically once a client connects to the local device.
