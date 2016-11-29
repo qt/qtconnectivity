@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 Governikus GmbH & Co. KG
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -37,47 +37,17 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDTARGET_P_H
-#define QNEARFIELDTARGET_P_H
+#include <QCoreApplication>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qnfcglobal.h"
-
-#include "qnearfieldtarget.h"
-
-#include <QtCore/QMap>
-#include <QtCore/QSharedData>
-#include <QtCore/QVariant>
+#include "qnearfieldtarget_p.h"
+#include "qnearfieldtarget_android_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QNearFieldTarget::RequestIdPrivate : public QSharedData
+int QNearFieldTargetPrivate::maxCommandLength() const
 {
-};
-
-class QNearFieldTargetPrivate
-{
-    QNearFieldTarget *q_ptr;
-    Q_DECLARE_PUBLIC(QNearFieldTarget)
-
-public:
-    QNearFieldTargetPrivate(QNearFieldTarget *q) : q_ptr(q) {}
-
-    QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
-
-    int maxCommandLength() const;
-};
+    NearFieldTarget * const q = reinterpret_cast<NearFieldTarget *>(q_ptr);
+    return q->maxCommandLength();
+}
 
 QT_END_NAMESPACE
-
-#endif // QNEARFIELDTARGET_P_H

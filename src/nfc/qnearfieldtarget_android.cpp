@@ -170,9 +170,34 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     return requestId;
 }
 
+int NearFieldTarget::maxCommandLength() const
+{
+    QAndroidJniObject tagTech;
+    if (m_techList.contains(QStringLiteral(ISODEPTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(ISODEPTECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCATECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCATECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCBTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCBTECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCFTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCFTECHNOLOGY));
+    } else if (m_techList.contains(QStringLiteral(NFCVTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(NFCVTECHNOLOGY));
+    } else {
+        return 0;
+    }
+
+    int returnVal = tagTech.callMethod<jint>("getMaxTransceiveLength");
+    if (catchJavaExceptions()) {
+        return 0;
+    }
+
+    return returnVal;
+}
+
 QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &command)
 {
-    if (command.size() == 0) {
+    if (command.size() == 0 || command.size() > maxCommandLength()) {
         Q_EMIT QNearFieldTarget::error(QNearFieldTarget::InvalidParametersError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     }
@@ -184,8 +209,8 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     QAndroidJniEnvironment env;
 
     QAndroidJniObject tagTech;
-    if (m_techList.contains(ISODEPTECHNOLOGY)) {
-        tagTech = getTagTechnology(ISODEPTECHNOLOGY);
+    if (m_techList.contains(QStringLiteral(ISODEPTECHNOLOGY))) {
+        tagTech = getTagTechnology(QStringLiteral(ISODEPTECHNOLOGY));
     } else if (m_techList.contains(QStringLiteral(NFCATECHNOLOGY))) {
         tagTech = getTagTechnology(QStringLiteral(NFCATECHNOLOGY));
     } else if (m_techList.contains(QStringLiteral(NFCBTECHNOLOGY))) {

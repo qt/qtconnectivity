@@ -277,7 +277,7 @@ QNearFieldTarget::RequestId &QNearFieldTarget::RequestId::operator=(const Reques
     Constructs a new near field target with \a parent.
 */
 QNearFieldTarget::QNearFieldTarget(QObject *parent)
-:   QObject(parent), d_ptr(new QNearFieldTargetPrivate)
+:   QObject(parent), d_ptr(new QNearFieldTargetPrivate(this))
 {
     qRegisterMetaType<QNearFieldTarget::RequestId>();
     qRegisterMetaType<QNearFieldTarget::Error>();
@@ -362,6 +362,19 @@ QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNde
     Q_UNUSED(messages);
 
     return RequestId();
+}
+
+/*!
+    \since 5.9
+
+    Returns the maximum number of bytes that can be sent with sendCommand. 0 will
+    be returned if the target does not support sending tag type specific commands.
+
+    \sa sendCommand(), sendCommands()
+*/
+int QNearFieldTarget::maxCommandLength() const
+{
+    return d_ptr->maxCommandLength();
 }
 
 /*!

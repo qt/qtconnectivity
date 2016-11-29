@@ -74,7 +74,8 @@ linux:!android:qtHaveModule(dbus) {
         qllcpserver_p.cpp \
         qnearfieldsharemanagerimpl_p.cpp \
         qnearfieldsharetargetimpl_p.cpp \
-        qnearfieldmanager_neard.cpp
+        qnearfieldmanager_neard.cpp \
+        qnearfieldtarget_neard_p.cpp
 
     include(neard/neard.pri)
 
@@ -107,6 +108,7 @@ linux:!android:qtHaveModule(dbus) {
         android/androidjninfc.cpp \
         qnearfieldmanager_android.cpp \
         qnearfieldtarget_android.cpp \
+        qnearfieldtarget_android_p.cpp \
         qnearfieldsharemanagerimpl_p.cpp \
         qnearfieldsharetargetimpl_p.cpp \
         android/androidmainnewintentlistener.cpp
@@ -127,7 +129,8 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
         qllcpserver_p.cpp \
         qnearfieldmanagerimpl_p.cpp \
         qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp
+        qnearfieldsharetargetimpl_p.cpp \
+        qnearfieldtarget_p.cpp
 }
 
 HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 Governikus GmbH & Co. K
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -37,47 +37,16 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDTARGET_P_H
-#define QNEARFIELDTARGET_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qnfcglobal.h"
+#include <QCoreApplication>
 
 #include "qnearfieldtarget.h"
-
-#include <QtCore/QMap>
-#include <QtCore/QSharedData>
-#include <QtCore/QVariant>
+#include "qnearfieldtarget_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QNearFieldTarget::RequestIdPrivate : public QSharedData
+int QNearFieldTargetPrivate::maxCommandLength() const
 {
-};
-
-class QNearFieldTargetPrivate
-{
-    QNearFieldTarget *q_ptr;
-    Q_DECLARE_PUBLIC(QNearFieldTarget)
-
-public:
-    QNearFieldTargetPrivate(QNearFieldTarget *q) : q_ptr(q) {}
-
-    QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
-
-    int maxCommandLength() const;
-};
+    return 0;
+}
 
 QT_END_NAMESPACE
-
-#endif // QNEARFIELDTARGET_P_H

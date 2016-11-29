@@ -134,6 +134,7 @@ public:
     virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
 
     // TagTypeSpecificAccess
+    int maxCommandLength() const;
     virtual RequestId sendCommand(const QByteArray &command);
     virtual RequestId sendCommands(const QList<QByteArray> &commands);
 
