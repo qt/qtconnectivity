@@ -64,7 +64,7 @@ public:
     explicit LocalDeviceBroadcastReceiver(QObject *parent = 0);
     virtual ~LocalDeviceBroadcastReceiver() {}
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
-    virtual void onReceiveLeScan(JNIEnv *, jobject, jint) {}
+    virtual void onReceiveLeScan(JNIEnv *, jobject, jint, jbyteArray) {}
     bool pairingConfirmation(bool accept);
 
 signals:

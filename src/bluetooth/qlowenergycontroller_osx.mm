@@ -1098,6 +1098,13 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
     return osx_d_ptr->remoteAddress;
 }
 
+QBluetoothUuid QLowEnergyController::remoteDeviceUuid() const
+{
+    OSX_D_PTR;
+
+    return osx_d_ptr->deviceUuid;
+}
+
 QString QLowEnergyController::remoteName() const
 {
    OSX_D_PTR;

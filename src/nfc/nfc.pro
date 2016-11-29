@@ -80,6 +80,7 @@ linux:!android:qtHaveModule(dbus) {
 
 } else:android {
     NFC_BACKEND_AVAILABLE = yes
+    DEFINES += QT_ANDROID_NFC
     ANDROID_PERMISSIONS = \
         android.permission.NFC
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
