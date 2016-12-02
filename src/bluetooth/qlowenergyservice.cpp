@@ -294,6 +294,8 @@ QT_BEGIN_NAMESPACE
     the read operation is not successful, the \l error() signal is emitted using the
     \l CharacteristicReadError flag.
 
+    \note This signal is only emitted for Central Role related use cases.
+
     \sa readCharacteristic()
     \since 5.5
  */
@@ -306,17 +308,13 @@ QT_BEGIN_NAMESPACE
     by calling \l writeCharacteristic(). If the write operation is not successful,
     the \l error() signal is emitted using the \l CharacteristicWriteError flag.
 
-    Since this signal is an indication of a successful write operation \a newValue
-    generally matches the value that was passed to the associated
-    \l writeCharacteristic() call. However, it may happen that the two values differ
-    from each other. This can occur in cases when the written value is
-    used by the remote device to trigger an operation and it returns some other value via
-    the written and/or change notification. Such cases are very specific to the
-    target device. In any case, the reception of the written signal can still be considered
-    as a sign that the target device received the to-be-written value.
+    The reception of the written signal can be considered as a sign that the target device
+    received the to-be-written value and reports back the status of write request.
 
     \note If \l writeCharacteristic() is called using the \l WriteWithoutResponse mode,
     this signal and the \l error() are never emitted.
+
+    \note This signal is only emitted for Central Role related use cases.
 
     \sa writeCharacteristic()
  */
@@ -326,7 +324,7 @@ QT_BEGIN_NAMESPACE
 
     If the associated controller object is in the \l {QLowEnergyController::CentralRole}{central}
     role, this signal is emitted when the value of \a characteristic is changed by an event on the
-    peripheral. In that case, the signal emission implies that change notifications must
+    peripheral/device side. In that case, the signal emission implies that change notifications must
     have been activated via the characteristic's
     \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
     descriptor prior to the change event on the peripheral. More details on how this might be
@@ -347,6 +345,8 @@ QT_BEGIN_NAMESPACE
     its \a value. The signal might be triggered by calling \l descriptorRead(). If
     the read operation is not successful, the \l error() signal is emitted using the
     \l DescriptorReadError flag.
+
+    \note This signal is only emitted for Central Role related use cases.
 
     \sa readDescriptor()
     \since 5.5
@@ -648,7 +648,8 @@ void QLowEnergyService::readCharacteristic(
     The call results in a write request or command to a remote peripheral.
     If the operation is successful,
     the \l characteristicWritten() signal is emitted; otherwise the \l CharacteristicWriteError
-    is set.
+    is set. Calling this function does not trigger the a \l characteristicChanged()
+    signal unless the peripheral itself changes the value again after the current write request.
 
     The \a mode parameter determines whether the remote device should send a write
     confirmation. The to-be-written \a characteristic must support the relevant
