@@ -325,6 +325,10 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 
     jobject btAdapterObject = env->CallStaticObjectMethod(btAdapterClass, getDefaultAdapterID);
     if (btAdapterObject == NULL) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         env->DeleteLocalRef(btAdapterClass);
         return localDevices;
