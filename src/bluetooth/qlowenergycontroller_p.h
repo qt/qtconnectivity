@@ -94,6 +94,7 @@ class QWinRTLowEnergyServiceHandler;
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServiceData;
+class QTimer;
 
 #if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
@@ -276,6 +277,24 @@ private:
     HciManager *hciManager;
     QLeAdvertiser *advertiser;
     QSocketNotifier *serverSocketNotifier;
+    QTimer *requestTimer = nullptr;
+
+    /*
+      Defines the maximum number of milliseconds the implementation will
+      wait for requests that require a response.
+
+      This addresses the problem that some non-conformant BTLE devices
+      do not implement the request/response system properly. In such cases
+      the queue system would hang forever.
+
+      Once timeout has been triggered we gracefully continue with the next request.
+      Depending on the type of the timed out ATT command we either ignore it
+      or artifically trigger an error response to ensure the API gives the
+      appropriate response. Potentially this can cause problems when the
+      response for the dropped requests arrives very late. That's why a big warning
+      is printed about the compromised state when a timeout is triggered.
+     */
+    int gattRequestTimeout = 20000;
 
     void handleConnectionRequest();
     void closeServerSocket();
@@ -392,12 +411,15 @@ private:
             const QLowEnergyHandle descriptorHandle,
             const QByteArray &newValue);
 
+    void restartRequestTimer();
+
 private slots:
     void l2cpConnected();
     void l2cpDisconnected();
     void l2cpErrorChanged(QBluetoothSocket::SocketError);
     void l2cpReadyRead();
     void encryptionChangedEvent(const QBluetoothAddress&, bool);
+    void handleGattRequestTimeout();
 #elif defined(QT_ANDROID_BLUETOOTH)
     LowEnergyNotificationHub *hub;
 
