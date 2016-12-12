@@ -107,6 +107,7 @@ public:
 
     QBluetoothAddress localAddress() const;
     QBluetoothAddress remoteAddress() const;
+    QBluetoothUuid remoteDeviceUuid() const;
 
     QString remoteName() const;
 

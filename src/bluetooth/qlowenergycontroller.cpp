@@ -635,6 +635,23 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
 }
 
 /*!
+    Returns the unique identifier of the remote Bluetooth Low Energy device.
+
+    On macOS/iOS/tvOS CoreBluetooth does not expose/accept hardware addresses for
+    LE devices; instead developers are supposed to use unique 128-bit UUIDs, generated
+    by CoreBluetooth. These UUIDS will stay constant for the same central <-> peripheral
+    pair and we use them when connecting to a remote device. For a controller in the
+    \l CentralRole, this value will always be the one passed in when the controller
+    object was created. For a controller in the \l PeripheralRole, this value is invalid.
+
+    \since 5.8
+ */
+QBluetoothUuid QLowEnergyController::remoteDeviceUuid() const
+{
+    return  QBluetoothUuid();
+}
+
+/*!
     Returns the name of the remote Bluetooth Low Energy device, if the controller is in the
     \l CentralRole. Otherwise the result is unspecified.
 
@@ -825,7 +842,10 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
    also starts listening for incoming client connections.
 
    Providing \a scanResponseData is not required, as it is not applicable for certain
-   configurations of \c parameters.
+   configurations of \c parameters. \a advertisingData and \a scanResponseData are limited
+   to 31 byte user data. If, for example, several 128bit uuids are added to \a advertisingData,
+   the advertised packets may not contain all uuids. The existing limit may have caused the truncation
+   of uuids. In such cases \a scanResponseData may be used for additional information.
 
    If this object is currently not in the \l UnconnectedState, nothing happens.
    \note Advertising will stop automatically once a client connects to the local device.

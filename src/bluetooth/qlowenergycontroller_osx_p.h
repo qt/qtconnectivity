@@ -104,6 +104,7 @@ private Q_SLOTS:
     void _q_characteristicUpdated(QLowEnergyHandle charHandle, const QByteArray &value);
     void _q_descriptorRead(QLowEnergyHandle descHandle, const QByteArray &value);
     void _q_descriptorWritten(QLowEnergyHandle charHandle, const QByteArray &value);
+    void _q_notificationEnabled(QLowEnergyHandle charHandle, bool enabled);
 
     void _q_LEnotSupported();
     void _q_CBManagerError(QLowEnergyController::Error error);

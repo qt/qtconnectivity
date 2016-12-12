@@ -51,14 +51,12 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-#include <IOBluetooth/Bluetooth.h>
 
-@class IOBluetoothUserNotification;
-@class IOBluetoothRFCOMMChannel;
-@class IOBluetoothL2CAPChannel;
 @class QT_MANGLE_NAMESPACE(OSXBTSocketListener);
 
 QT_BEGIN_NAMESPACE

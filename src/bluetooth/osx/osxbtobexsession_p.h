@@ -48,15 +48,12 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qvariant.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h:
-#include "corebluetoothwrapper_p.h"
-
-@class IOBluetoothOBEXSession;
-@class IOBluetoothDevice;
 
 @class QT_MANGLE_NAMESPACE(OSXBTOBEXSession);
 

@@ -51,10 +51,9 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
+#include "osxbluetooth_p.h"
 
-// We have to import objc code (it does not have inclusion guards).
-#import <IOBluetooth/objc/IOBluetoothDeviceInquiry.h>
+#include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
 #include <IOKit/IOReturn.h>

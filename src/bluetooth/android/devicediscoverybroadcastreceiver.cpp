@@ -39,13 +39,16 @@
 ****************************************************************************/
 
 #include "android/devicediscoverybroadcastreceiver_p.h"
+#include <QtCore/QtEndian>
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
+#include <QtBluetooth/QBluetoothUuid>
 #include "android/jni_android_p.h"
 #include <QtCore/private/qjnihelpers_p.h>
 #include <QtCore/QHash>
 #include <QtCore/qbitarray.h>
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -233,6 +236,27 @@ static const MinorClassJavaToQtMapping minorMappings[] = {
     // QBluetoothDevice::UncategorizedDevice
     { Q_NULLPTR, 0 }, // index 64 & separator
 };
+
+/*! Advertising Data Type (AD type) for LE scan records, as defined in Bluetooth CSS v6. */
+enum ADType {
+    ADType16BitUuidIncomplete = 0x02,
+    ADType16BitUuidComplete = 0x03,
+    ADType32BitUuidIncomplete = 0x04,
+    ADType32BitUuidComplete = 0x05,
+    ADType128BitUuidIncomplete = 0x06,
+    ADType128BitUuidComplete = 0x07,
+    // .. more will be added when required
+};
+
+// Endianness conversion for quint128 doesn't (yet) exist in qtendian.h
+template <>
+inline quint128 qbswap<quint128>(const quint128 src)
+{
+    quint128 dst;
+    for (int i = 0; i < 16; i++)
+        dst.data[i] = src.data[15 - i];
+    return dst;
+}
 
 QBluetoothDeviceInfo::CoreConfigurations qtBtTypeForJavaBtType(jint javaType)
 {
@@ -425,19 +449,18 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
 
 // Runs in Java thread
 void DeviceDiscoveryBroadcastReceiver::onReceiveLeScan(
-        JNIEnv *env, jobject jBluetoothDevice, jint rssi)
+        JNIEnv *env, jobject jBluetoothDevice, jint rssi, jbyteArray scanRecord)
 {
-    qCDebug(QT_BT_ANDROID) << "DeviceDiscoveryBroadcastReceiver::onReceiveLeScan()";
     const QAndroidJniObject bluetoothDevice(jBluetoothDevice);
     if (!bluetoothDevice.isValid())
         return;
 
-    const QBluetoothDeviceInfo info = retrieveDeviceInfo(env, bluetoothDevice, rssi);
+    const QBluetoothDeviceInfo info = retrieveDeviceInfo(env, bluetoothDevice, rssi, scanRecord);
     if (info.isValid())
         emit deviceDiscovered(info, true);
 }
 
-QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv *env, const QAndroidJniObject &bluetoothDevice, int rssi)
+QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv *env, const QAndroidJniObject &bluetoothDevice, int rssi, jbyteArray scanRecord)
 {
     const QString deviceName = bluetoothDevice.callObjectMethod<jstring>("getName").toString();
     const QBluetoothAddress deviceAddress(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
@@ -484,6 +507,60 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
 
     QBluetoothDeviceInfo info(deviceAddress, deviceName, classType);
     info.setRssi(rssi);
+
+    if (scanRecord != nullptr) {
+        // Parse scan record
+        jboolean isCopy;
+        const char *scanRecordBuffer = reinterpret_cast<const char *>(env->GetByteArrayElements(scanRecord, &isCopy));
+        const int scanRecordLength = env->GetArrayLength(scanRecord);
+
+        QList<QBluetoothUuid> serviceUuids;
+        int i = 0;
+
+        // Spec 4.2, Vol 3, Part C, Chapter 11
+        while (i < scanRecordLength) {
+            // sizeof(EIR Data) = sizeof(Length) + sizeof(EIR data Type) + sizeof(EIR Data)
+            // Length = sizeof(EIR data Type) + sizeof(EIR Data)
+
+            const int nBytes = scanRecordBuffer[i];
+            if (nBytes == 0)
+                break;
+
+            if ((i + nBytes) >= scanRecordLength)
+                break;
+
+            const int adType = scanRecordBuffer[i+1];
+            const char *dataPtr = &scanRecordBuffer[i+2];
+            QBluetoothUuid foundService;
+
+            switch (adType) {
+            case ADType16BitUuidIncomplete:
+            case ADType16BitUuidComplete:
+                foundService = QBluetoothUuid(qFromLittleEndian<quint16>(dataPtr));
+                break;
+            case ADType32BitUuidIncomplete:
+            case ADType32BitUuidComplete:
+                foundService = QBluetoothUuid(qFromLittleEndian<quint32>(dataPtr));
+                break;
+            case ADType128BitUuidIncomplete:
+            case ADType128BitUuidComplete:
+                foundService =
+                    QBluetoothUuid(qToBigEndian<quint128>(qFromLittleEndian<quint128>(dataPtr)));
+                break;
+            default:
+                // no other types supported yet and therefore skipped
+                // https://www.bluetooth.org/en-us/specification/assigned-numbers/generic-access-profile
+                break;
+            }
+
+            i += nBytes + 1;
+
+            if (!foundService.isNull() && !serviceUuids.contains(foundService))
+                serviceUuids.append(foundService);
+        }
+
+        info.setServiceUuids(serviceUuids, QBluetoothDeviceInfo::DataIncomplete);
+    }
 
     if (QtAndroidPrivate::androidSdkVersion() >= 18) {
         jint javaBtType = bluetoothDevice.callMethod<jint>("getType");

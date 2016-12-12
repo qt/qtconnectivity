@@ -42,8 +42,6 @@
 
 #include <QtCore/qdebug.h>
 
-#include "corebluetoothwrapper_p.h"
-
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
@@ -56,11 +54,7 @@ SocketListener::~SocketListener()
 
 QT_END_NAMESPACE
 
-#ifdef QT_NAMESPACE
-
-using namespace QT_NAMESPACE;
-
-#endif
+QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTSocketListener)
 

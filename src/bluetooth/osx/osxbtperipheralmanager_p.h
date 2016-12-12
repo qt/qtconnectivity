@@ -40,6 +40,16 @@
 #ifndef OSXBTPERIPHERALMANAGER_P_H
 #define OSXBTPERIPHERALMANAGER_P_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API. It exists for the convenience
+// of internal files. This header file may change from version to version
+// without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include "osxbtutility_p.h"
 
@@ -52,17 +62,16 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
+#include <QtCore/qpair.h>
 #include <QtCore/qmap.h>
 
 #include <vector>
 #include <deque>
 #include <map>
 
-// Foundation.h must be included before corebluetoothwrapper_p.h -
-// a workaround for a broken 10.9 SDK.
 #include <Foundation/Foundation.h>
 
-#include "corebluetoothwrapper_p.h"
+#include "osxbluetooth_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -110,6 +119,8 @@ struct UpdateRequest
     ObjCStrongReference<NSData> value;
 };
 
+using ValueRange = QPair<NSUInteger, NSUInteger>;
+
 @interface QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) : NSObject<CBPeripheralManagerDelegate>
 {
     ObjCScopedPointer<CBPeripheralManager> manager;
@@ -127,13 +138,16 @@ struct UpdateRequest
     ObjCScopedPointer<NSMutableDictionary> advertisementData;
 
     GenericLEMap<CBCharacteristic *> charMap;
-    GenericLEMap<ObjCStrongReference<NSData>> charValues;
+    GenericLEMap<ObjCStrongReference<NSMutableData>> charValues;
+
+    QMap<QLowEnergyHandle, ValueRange> valueRanges;
 
     std::deque<UpdateRequest> updateQueue;
 
     ObjCScopedPointer<NSMutableSet> connectedCentrals;
 
     PeripheralState state;
+    NSUInteger maxNotificationValueLength;
 }
 
 - (id)initWith:(LECBManagerNotifier *)notifier;

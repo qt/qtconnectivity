@@ -50,6 +50,7 @@ HeartRate::HeartRate():
 {
     //! [devicediscovery-1]
     m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    m_deviceDiscoveryAgent->setLowEnergyDiscoveryTimeout(5000);
 
     connect(m_deviceDiscoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
             this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
@@ -73,7 +74,7 @@ void HeartRate::deviceSearch()
     qDeleteAll(m_devices);
     m_devices.clear();
     //! [devicediscovery-2]
-    m_deviceDiscoveryAgent->start();
+    m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     //! [devicediscovery-2]
     setMessage("Scanning for devices...");
 }

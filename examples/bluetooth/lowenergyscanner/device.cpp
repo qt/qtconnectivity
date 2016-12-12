@@ -54,6 +54,7 @@ Device::Device():
 {
     //! [les-devicediscovery-1]
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
+    discoveryAgent->setLowEnergyDiscoveryTimeout(5000);
     connect(discoveryAgent, SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo&)),
             this, SLOT(addDevice(const QBluetoothDeviceInfo&)));
     connect(discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
@@ -84,7 +85,7 @@ void Device::startDeviceDiscovery()
 
     setUpdate("Scanning for devices ...");
     //! [les-devicediscovery-2]
-    discoveryAgent->start();
+    discoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     //! [les-devicediscovery-2]
 
     if (discoveryAgent->isActive()) {

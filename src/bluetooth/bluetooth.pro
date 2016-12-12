@@ -78,7 +78,7 @@ SOURCES += \
     qlowenergycontroller.cpp \
     qlowenergyserviceprivate.cpp
 
-config_bluez:qtHaveModule(dbus) {
+qtConfig(bluez):qtHaveModule(dbus) {
     QT_FOR_PRIVATE += dbus
     DEFINES += QT_BLUEZ_BLUETOOTH
 
@@ -98,16 +98,13 @@ config_bluez:qtHaveModule(dbus) {
 
 
     # old versions of Bluez do not have the required BTLE symbols
-    config_bluez_le {
+    qtConfig(bluez_le) {
         SOURCES +=  \
             qleadvertiser_bluez.cpp \
             qlowenergycontroller_bluez.cpp \
             lecmaccalculator.cpp
-        config_linux_crypto_api:DEFINES += CONFIG_LINUX_CRYPTO_API
-        else:message("Linux crypto API not present, signed writes will not work.")
+        qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
-        message("Bluez version is too old to support Bluetooth Low Energy.")
-        message("Only classic Bluetooth will be available.")
         DEFINES += QT_BLUEZ_NO_BTLE
         include(dummy/dummy.pri)
         SOURCES += \
@@ -193,7 +190,7 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller_p.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
-} else:winphone {
+} else:if(winphone|winrt-*-msvc2015) {
     DEFINES += QT_WINRT_BLUETOOTH
     QT += core-private
 
@@ -220,6 +217,12 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
+}
+
+winrt-*-msvc2015 {
+    MODULE_WINRT_CAPABILITIES_DEVICE += \
+        bluetooth.genericAttributeProfile \
+        bluetooth.rfcomm
 }
 
 OTHER_FILES +=

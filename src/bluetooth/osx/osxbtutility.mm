@@ -48,6 +48,9 @@
 #ifndef QT_IOS_BLUETOOTH
 
 #import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
+#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
+#import <CoreBluetooth/CBUUID.h>
+#endif
 
 #endif
 
@@ -69,6 +72,8 @@ Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.ios")
 namespace OSXBluetooth {
 
 const int defaultLEScanTimeoutMS = 25000;
+// We use it only on iOS for now:
+const int maxValueLength = 512;
 
 QString qt_address(NSString *address)
 {
@@ -311,6 +316,19 @@ ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
         return ObjCStrongReference<NSData>([[NSData alloc] init], false);
 
     ObjCStrongReference<NSData> result([NSData dataWithBytes:qtData.constData() length:qtData.size()], true);
+    return result;
+}
+
+ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray &qtData)
+{
+    using MutableData = ObjCStrongReference<NSMutableData>;
+
+    if (!qtData.size())
+        return MutableData([[NSMutableData alloc] init], false);
+
+    MutableData result([[NSMutableData alloc] initWithLength:qtData.size()], false);
+    [result replaceBytesInRange:NSMakeRange(0, qtData.size())
+                      withBytes:qtData.constData()];
     return result;
 }
 

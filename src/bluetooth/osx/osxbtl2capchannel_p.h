@@ -51,11 +51,11 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h:
-#include "corebluetoothwrapper_p.h"
 
 #include <cstddef>
 
@@ -70,8 +70,6 @@ class ChannelDelegate;
 }
 
 QT_END_NAMESPACE
-
-@class IOBluetoothDevice;
 
 @interface QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel) : NSObject<IOBluetoothL2CAPChannelDelegate>
 {
