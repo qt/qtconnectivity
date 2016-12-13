@@ -91,7 +91,8 @@ public:
         ChecksumMismatchError,
         InvalidParametersError,
         NdefReadError,
-        NdefWriteError
+        NdefWriteError,
+        CommandError
     };
     Q_ENUM(Error)
 

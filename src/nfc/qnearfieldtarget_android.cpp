@@ -43,6 +43,7 @@
 
 #define NDEFTECHNOLOGY "android.nfc.tech.Ndef"
 #define NDEFFORMATABLETECHNOLOGY "android.nfc.tech.NdefFormatable"
+#define ISODEPTECHNOLOGY "android.nfc.tech.IsoDep"
 #define NFCATECHNOLOGY "android.nfc.tech.NfcA"
 #define NFCBTECHNOLOGY "android.nfc.tech.NfcB"
 #define NFCFTECHNOLOGY "android.nfc.tech.NfcF"
@@ -84,7 +85,19 @@ QNearFieldTarget::Type NearFieldTarget::type() const
 
 QNearFieldTarget::AccessMethods NearFieldTarget::accessMethods() const
 {
-    AccessMethods result = NdefAccess;
+    AccessMethods result = UnknownAccess;
+
+    if (m_techList.contains(QStringLiteral(NDEFTECHNOLOGY))
+            || m_techList.contains(QStringLiteral(NDEFFORMATABLETECHNOLOGY)))
+        result |= NdefAccess;
+
+    if (m_techList.contains(QStringLiteral(ISODEPTECHNOLOGY))
+            || m_techList.contains(QStringLiteral(NFCATECHNOLOGY))
+            || m_techList.contains(QStringLiteral(NFCBTECHNOLOGY))
+            || m_techList.contains(QStringLiteral(NFCFTECHNOLOGY))
+            || m_techList.contains(QStringLiteral(NFCVTECHNOLOGY)))
+        result |= TagTypeSpecificAccess;
+
     return result;
 }
 
@@ -157,24 +170,23 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     return requestId;
 }
 
-
 QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &command)
 {
-    Q_UNUSED(command);
-    Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
-    return QNearFieldTarget::RequestId();
-
-    //Not supported for now
-    /*if (command.size() == 0) {
+    if (command.size() == 0) {
         Q_EMIT QNearFieldTarget::error(QNearFieldTarget::InvalidParametersError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     }
 
-    AndroidNfc::AttachedJNIEnv aenv;
-    JNIEnv *env = aenv.jniEnv;
+    // Making sure that target has commands
+    if (!(accessMethods() & TagTypeSpecificAccess))
+        return QNearFieldTarget::RequestId();
 
-    jobject tagTech;
-    if (m_techList.contains(QStringLiteral(NFCATECHNOLOGY))) {
+    QAndroidJniEnvironment env;
+
+    QAndroidJniObject tagTech;
+    if (m_techList.contains(ISODEPTECHNOLOGY)) {
+        tagTech = getTagTechnology(ISODEPTECHNOLOGY);
+    } else if (m_techList.contains(QStringLiteral(NFCATECHNOLOGY))) {
         tagTech = getTagTechnology(QStringLiteral(NFCATECHNOLOGY));
     } else if (m_techList.contains(QStringLiteral(NFCBTECHNOLOGY))) {
         tagTech = getTagTechnology(QStringLiteral(NFCBTECHNOLOGY));
@@ -187,30 +199,41 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
         return QNearFieldTarget::RequestId();
     }
 
-    QByteArray ba(ba);
+    // Connecting
+    QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
+    tagTech.callMethod<void>("connect");
+    if (catchJavaExceptions()) {
+        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
+                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+        return requestId;
+    }
 
-    jclass techClass = env->GetObjectClass(tagTech);
-    jmethodID tranceiveMID = env->GetMethodID(techClass, "tranceive", "([B)[B");
-    Q_ASSERT_X(tranceiveMID != 0, "sendCommand", "could not find tranceive method");
-
+    // Making QByteArray
+    QByteArray ba(command);
     jbyteArray jba = env->NewByteArray(ba.size());
     env->SetByteArrayRegion(jba, 0, ba.size(), reinterpret_cast<jbyte*>(ba.data()));
 
-    jbyteArray rsp = reinterpret_cast<jbyteArray>(env->CallObjectMethod(tagTech, tranceiveMID, jba));
-
-    jsize len = env->GetArrayLength(rsp);
-    QByteArray rspQBA;
-    rspQBA.resize(len);
-
-    env->GetByteArrayRegion(rsp, 0, len, reinterpret_cast<jbyte*>(rspQBA.data()));
-
-    qDebug() << "Send command returned QBA size: " << rspQBA.size();
-
-
+    // Writing
+    QAndroidJniObject myNewVal = tagTech.callObjectMethod("transceive", "([B)[B", jba);
+    if (catchJavaExceptions()) {
+        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::CommandError),
+                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+        return requestId;
+    }
+    QByteArray result = jbyteArrayToQByteArray(myNewVal.object<jbyteArray>());
     env->DeleteLocalRef(jba);
 
+    handleResponse(requestId, result);
 
-    return QNearFieldTarget::RequestId();*/
+    // Closing connection, sending signal and exit
+    tagTech.callMethod<void>("close");
+    catchJavaExceptions();   // IOException at this point does not matter anymore.
+    QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
+                              Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+
+    return requestId;
 }
 
 QNearFieldTarget::RequestId NearFieldTarget::sendCommands(const QList<QByteArray> &commands)

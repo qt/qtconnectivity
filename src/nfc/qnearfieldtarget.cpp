@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \enum QNearFieldTarget::Error
 
-    This enum describes the error codes that that a near field target reports.
+    This enum describes the error codes that a near field target reports.
 
     \value NoError                  No error has occurred.
     \value UnknownError             An unidentified error occurred.
@@ -123,6 +123,7 @@ QT_BEGIN_NAMESPACE
     \value InvalidParametersError   Invalid parameters were passed to a tag type specific function.
     \value NdefReadError            Failed to read NDEF messages from the target.
     \value NdefWriteError           Failed to write NDEF messages to the target.
+    \value CommandError             Failed to send a command to the target.
 */
 
 // Copied from qbytearray.cpp
