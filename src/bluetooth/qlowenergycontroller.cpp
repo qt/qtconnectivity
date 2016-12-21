@@ -968,19 +968,35 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
 /*!
   Requests the controller to update the connection according to \a parameters.
   If the request is successful, the \l connectionUpdated() signal will be emitted
-  with the actual new parameters.
-  See the  \l QLowEnergyConnectionParameters class for more information on connection parameters.
-  \note Currently, this functionality is only implemented on Linux.
+  with the actual new parameters. See the  \l QLowEnergyConnectionParameters class for more
+  information on connection parameters.
 
+  Android only indirectly permits the adjustment of this parameter set.
+  The connection parameters are separated into three categories (high, low & balanced priority).
+  Each category implies a pre-configured set of values for
+  \l QLowEnergyConnectionParameters::minimumInterval(),
+  \l QLowEnergyConnectionParameters::maximumInterval() and
+  \l QLowEnergyConnectionParameters::latency(). Although the connection request is an asynchronous
+  operation, Android does not provide a callback stating the result of the request. This is
+  an acknowledged Android bug. Due to this bug Android does not emit the \l connectionUpdated()
+  signal.
+
+  \note Currently, this functionality is only implemented on Linux and Android.
+
+  \sa connectionUpdated()
   \since 5.7
  */
 void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters)
 {
-    if (state() != ConnectedState) {
+    switch (state()) {
+    case ConnectedState:
+    case DiscoveredState:
+    case DiscoveringState:
+        d_ptr->requestConnectionUpdate(parameters);
+        break;
+    default:
         qCWarning(QT_BT) << "Connection update request only possible in connected state";
-        return;
     }
-    d_ptr->requestConnectionUpdate(parameters);
 }
 
 /*!

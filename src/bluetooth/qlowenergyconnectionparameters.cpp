@@ -68,6 +68,32 @@ public:
     with each other. In general, a lower connection interval and latency means faster communication,
     but also higher power consumption. How these criteria should be weighed against each other
     is highly dependent on the concrete use case.
+
+    Android only indirectly permits the adjustment of this parameter set.
+    The platform separates the connection parameters into three categories (hight, low & balanced
+    priority). Each category implies a predefined set of values for \l minimumInterval(),
+    \l maximumInterval() and \l latency(). Additionally, the value ranges of each category can vary
+    from one Android device to the next. Qt uses the \l minimumInterval() to determine the target
+    category as follows:
+
+    \table
+    \header
+        \li minimumInterval()
+        \li Android priority
+    \row
+        \li interval < 30
+        \li CONNECTION_PRIORITY_HIGH
+    \row
+        \li 30 <= interval <= 100
+        \li CONNECTION_PRIORITY_BALANCED
+    \row
+        \li interval > 100
+        \li CONNECTION_PRIORITY_LOW_POWER
+    \endtable
+
+    The \l supervisionTimeout() cannot be changed on Android and is therefore ignored.
+
+
     \inmodule QtBluetooth
     \ingroup shared
 
@@ -163,6 +189,9 @@ int QLowEnergyConnectionParameters::latency() const
   Sets the link supervision timeout to \a timeout milliseconds.
   There are several constraints on this value: It must be in the range [100,32000] and it must be
   larger than (1 + \l latency()) * 2 * \l maximumInterval().
+
+  On Android, this timeout is not adjustable and therefore ignored.
+
   \sa supervisionTimeout()
  */
 void QLowEnergyConnectionParameters::setSupervisionTimeout(int timeout)

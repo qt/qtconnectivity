@@ -52,6 +52,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -59,6 +60,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+
 
 public class QtBluetoothLE {
     private static final String TAG = "QtBluetoothGatt";
@@ -1280,6 +1282,32 @@ public class QtBluetoothLE {
         }
 
         return modifiedHandle;
+    }
+
+    // Directly called from public Qt API
+    public boolean requestConnectionUpdatePriority(double minimalInterval)
+    {
+        if (mBluetoothGatt == null)
+            return false;
+
+        try {
+            //Android API v21
+            Method connectionUpdateMethod = mBluetoothGatt.getClass().getDeclaredMethod(
+                                                "requestConnectionPriority", int.class);
+            if (connectionUpdateMethod == null)
+                return false;
+
+            int requestPriority = 0; // BluetoothGatt.CONNECTION_PRIORITY_BALANCED
+            if (minimalInterval < 30)
+                requestPriority = 1; // BluetoothGatt.CONNECTION_PRIORITY_HIGH
+            else if (minimalInterval > 100)
+                requestPriority = 2; //BluetoothGatt/CONNECTION_PRIORITY_LOW_POWER
+
+            Object result = connectionUpdateMethod.invoke(mBluetoothGatt, requestPriority);
+            return (Boolean) result;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);

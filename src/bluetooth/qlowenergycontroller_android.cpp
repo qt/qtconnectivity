@@ -45,6 +45,7 @@
 #include <QtBluetooth/QLowEnergyDescriptorData>
 #include <QtBluetooth/QLowEnergyAdvertisingData>
 #include <QtBluetooth/QLowEnergyAdvertisingParameters>
+#include <QtBluetooth/QLowEnergyConnectionParameters>
 
 
 QT_BEGIN_NAMESPACE
@@ -771,8 +772,25 @@ void QLowEnergyControllerPrivate::stopAdvertising()
 
 void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
 {
-    Q_UNUSED(params);
-    qCWarning(QT_BT_ANDROID) << "Connection update not implemented for Android";
+    // Possible since Android v21
+    // Android does not permit specification of specific latency or min/max
+    // connection intervals (see BluetoothGatt.requestConnectionPriority()
+    // In fact, each device manufacturer is permitted to change those values via a config
+    // file too. Therefore we can only make an approximated guess (see implementation below)
+    // In addition there is no feedback signal (known bug) from the hardware layer as per v24.
+
+    // TODO recheck in later Android releases whether callback for
+    // BluetoothGatt.requestConnectionPriority() was added
+
+    if (role != QLowEnergyController::CentralRole) {
+        qCWarning(QT_BT_ANDROID) << "On Android, connection requests only work for central role";
+        return;
+    }
+
+    bool result = hub->javaObject().callMethod<jboolean>("requestConnectionUpdatePriority",
+                                                         "(D)Z", params.minimumInterval());
+    if (!result)
+        qCWarning(QT_BT_ANDROID) << "Cannot set connection update priority";
 }
 
 // Conversion: QBluetoothUuid -> java.util.UUID
