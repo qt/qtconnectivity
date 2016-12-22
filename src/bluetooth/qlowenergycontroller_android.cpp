@@ -808,6 +808,70 @@ static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
     return javaUuid;
 }
 
+/*
+ * Returns the Java char permissions based on the given characteristic data.
+ */
+static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
+{
+    int permission = 0;
+    if (charData.properties() & QLowEnergyCharacteristic::Read) {
+        if (int(charData.readConstraints()) == 0 // nothing is equivalent to simple read
+            || (charData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_READ");
+        }
+
+        if (charData.readConstraints() & QBluetooth::AttAuthenticationRequired) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_READ_ENCRYPTED");
+        }
+
+        if (charData.readConstraints() & QBluetooth::AttEncryptionRequired) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_READ_ENCRYPTED_MITM");
+        }
+    }
+
+    if (charData.properties() &
+                (QLowEnergyCharacteristic::Write|QLowEnergyCharacteristic::WriteNoResponse) ) {
+        if (((int)charData.writeConstraints()) == 0 // no flag is equivalent ti simple write
+             || (charData.writeConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_WRITE");
+        }
+
+        if (charData.writeConstraints() & QBluetooth::AttAuthenticationRequired) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_WRITE_ENCRYPTED");
+        }
+
+        if (charData.writeConstraints() & QBluetooth::AttEncryptionRequired) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_WRITE_ENCRYPTED_MITM");
+        }
+    }
+
+    if (charData.properties() & QLowEnergyCharacteristic::WriteSigned) {
+        if (charData.writeConstraints() & QBluetooth::AttEncryptionRequired) {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_WRITE_SIGNED_MITM");
+        } else {
+            permission |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattCharacteristic",
+                                                "PERMISSION_WRITE_SIGNED");
+        }
+    }
+
+    return permission;
+}
+
 void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &serviceData,
                                                             QLowEnergyHandle startHandle)
 {
@@ -841,14 +905,12 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
     // add characteristics
     const QList<QLowEnergyCharacteristicData> serviceCharsData = serviceData.characteristics();
     for (const auto &charData: serviceCharsData) {
-        // TODO set all characteristic properties
-        int permissions = 0;
-
         //TODO add chars and their descriptors
         QAndroidJniObject javaChar = QAndroidJniObject("android/bluetooth/BluetoothGattCharacteristic",
                                                        "(Ljava/util/UUID;II)V",
                                                        javaUuidfromQtUuid(charData.uuid()).object(),
-                                                       int(charData.properties()), permissions);
+                                                       int(charData.properties()),
+                                                       setupCharPermissions(charData));
 
         QAndroidJniEnvironment env;
         jbyteArray jb = env->NewByteArray(charData.value().size());
