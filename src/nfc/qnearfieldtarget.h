@@ -40,9 +40,10 @@
 #ifndef QNEARFIELDTARGET_H
 #define QNEARFIELDTARGET_H
 
-#include <QtCore/QObject>
+#include <QtCore/QByteArray>
 #include <QtCore/QList>
 #include <QtCore/QMetaType>
+#include <QtCore/QObject>
 #include <QtCore/QSharedDataPointer>
 #include <QtNfc/qnfcglobal.h>
 
@@ -162,7 +163,9 @@ private:
     QNearFieldTargetPrivate *d_ptr;
 };
 
+#if QT_DEPRECATED_SINCE(5, 9)
 Q_NFC_EXPORT quint16 qNfcChecksum(const char * data, uint len);
+#endif
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldTarget::AccessMethods)
 

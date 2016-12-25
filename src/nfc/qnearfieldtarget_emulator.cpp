@@ -40,11 +40,12 @@
 #include "qnearfieldtarget_emulator_p.h"
 #include "qnearfieldtarget_p.h"
 
-#include <QtCore/QDirIterator>
-#include <QtCore/QSettings>
-#include <QtCore/QMutex>
+#include <QtCore/QByteArray>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
+#include <QtCore/QDirIterator>
+#include <QtCore/QMutex>
+#include <QtCore/QSettings>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,7 +88,7 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
         return id;
     }
 
-    quint16 crc = qNfcChecksum(command.constData(), command.length());
+    quint16 crc = qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41);
 
     QByteArray response = m_tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
 
@@ -99,7 +100,7 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
     }
 
     // check crc
-    if (qNfcChecksum(response.constData(), response.length()) != 0) {
+    if (qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41) != 0) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, ChecksumMismatchError),
                                   Q_ARG(QNearFieldTarget::RequestId, id));
@@ -157,7 +158,7 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
         return id;
     }
 
-    quint16 crc = qNfcChecksum(command.constData(), command.length());
+    quint16 crc = qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41);
 
     QByteArray response = m_tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
 
@@ -166,7 +167,7 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
 
     if (response.length() > 1) {
         // check crc
-        if (qNfcChecksum(response.constData(), response.length()) != 0) {
+        if (qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41) != 0) {
             QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                       Q_ARG(QNearFieldTarget::Error, ChecksumMismatchError),
                                       Q_ARG(QNearFieldTarget::RequestId, id));

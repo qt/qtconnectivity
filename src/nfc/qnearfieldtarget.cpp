@@ -126,15 +126,7 @@ QT_BEGIN_NAMESPACE
     \value CommandError             Failed to send a command to the target.
 */
 
-// Copied from qbytearray.cpp
-// Modified to initialize the crc with 0x6363 instead of 0xffff and to not invert the final result.
-static const quint16 crc_tbl[16] = {
-    0x0000, 0x1081, 0x2102, 0x3183,
-    0x4204, 0x5285, 0x6306, 0x7387,
-    0x8408, 0x9489, 0xa50a, 0xb58b,
-    0xc60c, 0xd68d, 0xe70e, 0xf78f
-};
-
+#if QT_DEPRECATED_SINCE(5, 9)
 /*!
     \relates QNearFieldTarget
 
@@ -142,17 +134,9 @@ static const quint16 crc_tbl[16] = {
 */
 quint16 qNfcChecksum(const char *data, uint len)
 {
-    quint16 crc = 0x6363;
-    uchar c;
-    const uchar *p = reinterpret_cast<const uchar *>(data);
-    while (len--) {
-        c = *p++;
-        crc = ((crc >> 4) & 0x0fff) ^ crc_tbl[((crc ^ c) & 15)];
-        c >>= 4;
-        crc = ((crc >> 4) & 0x0fff) ^ crc_tbl[((crc ^ c) & 15)];
-    }
-    return crc;
+    return qChecksum(data, len, Qt::ChecksumItuV41);
 }
+#endif
 
 /*!
     \fn void QNearFieldTarget::disconnected()
