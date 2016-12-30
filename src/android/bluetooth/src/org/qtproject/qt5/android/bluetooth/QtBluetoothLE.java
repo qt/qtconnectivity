@@ -184,6 +184,8 @@ public class QtBluetoothLE {
             switch (status) {
                 case BluetoothGatt.GATT_SUCCESS:
                     errorCode = 0; break; //QLowEnergyController::NoError
+                case 8: // link loss
+                    errorCode = 5; break; //QLowEnergyController::ConnectionError
                 default:
                     Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status);
                     errorCode = status; break; //TODO deal with all errors
