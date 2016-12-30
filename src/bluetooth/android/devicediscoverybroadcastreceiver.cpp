@@ -511,7 +511,8 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
     if (scanRecord != nullptr) {
         // Parse scan record
         jboolean isCopy;
-        const char *scanRecordBuffer = reinterpret_cast<const char *>(env->GetByteArrayElements(scanRecord, &isCopy));
+        jbyte *elems = env->GetByteArrayElements(scanRecord, &isCopy);
+        const char *scanRecordBuffer = reinterpret_cast<const char *>(elems);
         const int scanRecordLength = env->GetArrayLength(scanRecord);
 
         QList<QBluetoothUuid> serviceUuids;
@@ -560,6 +561,8 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
         }
 
         info.setServiceUuids(serviceUuids, QBluetoothDeviceInfo::DataIncomplete);
+
+        env->ReleaseByteArrayElements(scanRecord, elems, JNI_ABORT);
     }
 
     if (QtAndroidPrivate::androidSdkVersion() >= 18) {
