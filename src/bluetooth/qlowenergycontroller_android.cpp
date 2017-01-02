@@ -872,6 +872,58 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
     return permission;
 }
 
+/*
+ * Returns the Java desc permissions based on the given descriptor data.
+ */
+static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
+{
+    int permissions = 0;
+
+    if (descData.isReadable()) {
+        if (int(descData.readConstraints()) == 0 // empty is equivalent to simple read
+            || (descData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            permissions |= QAndroidJniObject::getStaticField<jint>(
+                                "android/bluetooth/BluetoothGattDescriptor",
+                                "PERMISSION_READ");
+        }
+
+        if (descData.readConstraints() & QBluetooth::AttAuthenticationRequired) {
+            permissions |= QAndroidJniObject::getStaticField<jint>(
+                                "android/bluetooth/BluetoothGattDescriptor",
+                                "PERMISSION_READ_ENCRYPTED");
+        }
+
+        if (descData.readConstraints() & QBluetooth::AttEncryptionRequired) {
+            permissions |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattDescriptor",
+                                                "PERMISSION_READ_ENCRYPTED_MITM");
+        }
+    }
+
+    if (descData.isWritable()) {
+        if (((int)descData.readConstraints()) == 0 // empty is equivalent to simple read
+            || (descData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            permissions |= QAndroidJniObject::getStaticField<jint>(
+                                "android/bluetooth/BluetoothGattDescriptor",
+                                "PERMISSION_WRITE");
+        }
+
+        if (descData.readConstraints() & QBluetooth::AttAuthenticationRequired) {
+            permissions |= QAndroidJniObject::getStaticField<jint>(
+                                "android/bluetooth/BluetoothGattDescriptor",
+                                "PERMISSION_WRITE_ENCRYPTED");
+        }
+
+        if (descData.readConstraints() & QBluetooth::AttEncryptionRequired) {
+            permissions |= QAndroidJniObject::getStaticField<jint>(
+                                                "android/bluetooth/BluetoothGattDescriptor",
+                                                "PERMISSION_WRITE_ENCRYPTED_MITM");
+        }
+    }
+
+    return permissions;
+}
+
 void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &serviceData,
                                                             QLowEnergyHandle startHandle)
 {
@@ -905,7 +957,6 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
     // add characteristics
     const QList<QLowEnergyCharacteristicData> serviceCharsData = serviceData.characteristics();
     for (const auto &charData: serviceCharsData) {
-        //TODO add chars and their descriptors
         QAndroidJniObject javaChar = QAndroidJniObject("android/bluetooth/BluetoothGattCharacteristic",
                                                        "(Ljava/util/UUID;II)V",
                                                        javaUuidfromQtUuid(charData.uuid()).object(),
@@ -917,18 +968,46 @@ void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServ
         env->SetByteArrayRegion(jb, 0, charData.value().size(), (jbyte*)charData.value().data());
         jboolean success = javaChar.callMethod<jboolean>("setValue", "([B)Z", jb);
         if (!success)
-            qWarning() << "Cannot setup initial characteristic value for " << charData.uuid();
+            qCWarning(QT_BT_ANDROID) << "Cannot setup initial characteristic value for " << charData.uuid();
 
         env->DeleteLocalRef(jb);
 
-        // TODO set all descriptors
+        const QList<QLowEnergyDescriptorData> descriptorList = charData.descriptors();
+        for (const auto &descData: descriptorList) {
+            QAndroidJniObject javaDesc = QAndroidJniObject("android/bluetooth/BluetoothGattDescriptor",
+                                                           "(Ljava/util/UUID;I)V",
+                                                           javaUuidfromQtUuid(descData.uuid()).object(),
+                                                           setupDescPermissions(descData));
+
+            jb = env->NewByteArray(descData.value().size());
+            env->SetByteArrayRegion(jb, 0, descData.value().size(), (jbyte*)descData.value().data());
+            success = javaDesc.callMethod<jboolean>("setValue", "([B)Z", jb);
+            if (!success) {
+                qCWarning(QT_BT_ANDROID) << "Cannot setup initial descriptor value for "
+                                         << descData.uuid() << "(char" << charData.uuid()
+                                         << "on service " << service->uuid << ")";
+            }
+
+            env->DeleteLocalRef(jb);
+
+
+            success = javaChar.callMethod<jboolean>("addDescriptor",
+                                                    "(Landroid/bluetooth/BluetoothGattDescriptor;)Z",
+                                                    javaDesc.object());
+            if (!success) {
+                qCWarning(QT_BT_ANDROID) << "Cannot add descriptor" << descData.uuid()
+                                         << "to service" << service->uuid << "(char:"
+                                         << charData.uuid() << ")";
+            }
+        }
 
         success = service->androidService.callMethod<jboolean>(
                             "addCharacteristic",
                             "(Landroid/bluetooth/BluetoothGattCharacteristic;)Z", javaChar.object());
-        if (!success)
-            qWarning() << "Cannot add characteristic" << charData.uuid() << "to service"
-                       << service->uuid;
+        if (!success) {
+            qCWarning(QT_BT_ANDROID) << "Cannot add characteristic" << charData.uuid()
+                                     << "to service" << service->uuid;
+        }
     }
 
     hub->javaObject().callMethod<void>("addService",
