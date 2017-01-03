@@ -227,6 +227,11 @@ static JNINativeMethod methods_le[] = {
                 (void *) LowEnergyNotificationHub::lowEnergy_serviceError},
 };
 
+static JNINativeMethod methods_leServer[] = {
+    {"leServerConnectionStateChange", "(JII)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
+};
+
 static JNINativeMethod methods_server[] = {
         {"errorOccurred", "(JI)V",
                     (void *) QtBluetoothSocketServer_errorOccurred},
@@ -267,6 +272,11 @@ static bool registerNatives(JNIEnv *env)
         return false;
     }
 
+    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothLEServer");
+    if (env->RegisterNatives(clazz, methods_leServer, sizeof(methods_leServer) / sizeof(methods_leServer[0])) < 0) {
+        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for QBLuetoothLEServer failed");
+        return false;
+    }
 
     FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothSocketServer");
     if (env->RegisterNatives(clazz, methods_server, sizeof(methods_server) / sizeof(methods_server[0])) < 0) {

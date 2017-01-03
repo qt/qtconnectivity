@@ -86,6 +86,8 @@ void QLowEnergyControllerPrivate::init()
         hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
         // we only connect to the peripheral role specific signals
         // TODO add connections as they get added later on
+        connect(hub, &LowEnergyNotificationHub::connectionUpdated,
+                this, &QLowEnergyControllerPrivate::connectionUpdated);
     } else {
         if (version < 18) {
             qWarning() << "Qt Bluetooth LE Central/Client support not available"
@@ -341,13 +343,55 @@ void QLowEnergyControllerPrivate::connectionUpdated(
         QLowEnergyController::ControllerState newState,
         QLowEnergyController::Error errorCode)
 {
+    qCDebug(QT_BT_ANDROID) << "Connection updated:"
+                           << "error:" << errorCode
+                           << "oldState:" << state
+                           << "newState:" << newState;
+
+    if (role == QLowEnergyController::PeripheralRole)
+        peripheralConnectionUpdated(newState, errorCode);
+    else
+        centralConnectionUpdated(newState, errorCode);
+}
+
+// called if server/peripheral
+void QLowEnergyControllerPrivate::peripheralConnectionUpdated(
+        QLowEnergyController::ControllerState newState,
+        QLowEnergyController::Error errorCode)
+{
+    // Java errorCode can be larger than max QLowEnergyController::Error
+    if (errorCode > QLowEnergyController::AdvertisingError)
+        errorCode = QLowEnergyController::UnknownError;
+
+    if (errorCode != QLowEnergyController::NoError)
+        setError(errorCode);
+
+    const QLowEnergyController::ControllerState oldState = state;
+    setState(newState);
+
+    // disconnect implies stop of advertisement
+    if (newState == QLowEnergyController::UnconnectedState)
+        stopAdvertising();
+
+
+    Q_Q(QLowEnergyController);
+    if (oldState == QLowEnergyController::ConnectedState
+            && newState != QLowEnergyController::ConnectedState) {
+        emit q->disconnected();
+    } else if (newState == QLowEnergyController::ConnectedState
+                 && oldState != QLowEnergyController::ConnectedState) {
+        emit q->connected();
+    }
+}
+
+// called if client/central
+void QLowEnergyControllerPrivate::centralConnectionUpdated(
+        QLowEnergyController::ControllerState newState,
+        QLowEnergyController::Error errorCode)
+{
     Q_Q(QLowEnergyController);
 
     const QLowEnergyController::ControllerState oldState = state;
-    qCDebug(QT_BT_ANDROID) << "Connection updated:"
-                           << "error:" << errorCode
-                           << "oldState:" << oldState
-                           << "newState:" << newState;
 
     if (errorCode != QLowEnergyController::NoError) {
         // ConnectionError if transition from Connecting to Connected

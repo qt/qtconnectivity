@@ -442,6 +442,13 @@ private slots:
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
+
+private:
+    void peripheralConnectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
+    void centralConnectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
+
 #elif defined(QT_WINRT_BLUETOOTH)
 private slots:
     void characteristicChanged(int charHandle, const QByteArray &data);

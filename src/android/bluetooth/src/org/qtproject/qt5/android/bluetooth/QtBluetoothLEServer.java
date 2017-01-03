@@ -45,9 +45,11 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseData.Builder;
@@ -105,7 +107,30 @@ public class QtBluetoothLEServer {
     {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            Log.w(TAG, "Our gatt server connection state changed, new state: " + Integer.toString(newState));
             super.onConnectionStateChange(device, status, newState);
+
+            int qtControllerState = 0;
+            switch (newState) {
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    qtControllerState = 0; // QLowEnergyController::UnconnectedState
+                    break;
+                case BluetoothProfile.STATE_CONNECTED:
+                    qtControllerState = 2; // QLowEnergyController::ConnectedState
+                    break;
+            }
+
+            int qtErrorCode;
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    qtErrorCode = 0; break;
+                default:
+                    Log.w(TAG, "Unhandled error code on peripheral connectionStateChanged: " + status + " " + newState);
+                    qtErrorCode = status;
+                    break;
+            }
+
+            leServerConnectionStateChange(qtObject, qtErrorCode, qtControllerState);
         }
 
         @Override
@@ -214,5 +239,7 @@ public class QtBluetoothLEServer {
             super.onStartFailure(errorCode);
         }
     };
+
+    public native void leServerConnectionStateChange(long qtObject, int errorCode, int newState);
 
 }
