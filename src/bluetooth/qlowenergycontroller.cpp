@@ -737,6 +737,10 @@ void QLowEnergyController::connectToDevice()
 
     This function does nothing if the controller is in the \l UnconnectedState.
 
+    If the controller is in the peripheral role, it stops advertising too.
+    The application must restart the advertising mode by calling
+    \l startAdvertising().
+
     \sa connectToDevice()
  */
 void QLowEnergyController::disconnectFromDevice()

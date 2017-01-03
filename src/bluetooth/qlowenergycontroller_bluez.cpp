@@ -639,6 +639,10 @@ void QLowEnergyControllerPrivate::resetController()
     receivedMtuExchangeRequest = false;
     securityLevelValue = -1;
     connectionHandle = 0;
+
+    // public API behavior requires stop of advertisement
+    if (role == QLowEnergyController::PeripheralRole && advertiser)
+        advertiser->stopAdvertising();
 }
 
 void QLowEnergyControllerPrivate::restartRequestTimer()
