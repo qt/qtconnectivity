@@ -230,6 +230,8 @@ static JNINativeMethod methods_le[] = {
 static JNINativeMethod methods_leServer[] = {
     {"leServerConnectionStateChange", "(JII)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
+    {"leServerAdvertisementError", "(JI)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_advertisementError},
 };
 
 static JNINativeMethod methods_server[] = {

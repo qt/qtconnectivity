@@ -442,6 +442,7 @@ private slots:
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
+    void advertisementError(int errorCode);
 
 private:
     void peripheralConnectionUpdated(QLowEnergyController::ControllerState newState,

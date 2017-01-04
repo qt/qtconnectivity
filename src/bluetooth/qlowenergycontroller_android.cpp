@@ -88,6 +88,8 @@ void QLowEnergyControllerPrivate::init()
         // TODO add connections as they get added later on
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
                 this, &QLowEnergyControllerPrivate::connectionUpdated);
+        connect(hub, &LowEnergyNotificationHub::advertisementError,
+                this, &QLowEnergyControllerPrivate::advertisementError);
     } else {
         if (version < 18) {
             qWarning() << "Qt Bluetooth LE Central/Client support not available"
@@ -676,6 +678,54 @@ void QLowEnergyControllerPrivate::serviceError(
     // ATM we don't really use attributeHandle but later on we might
     // want to associate the error code with a char or desc
     service->setError(errorCode);
+}
+
+void QLowEnergyControllerPrivate::advertisementError(int errorCode)
+{
+    Q_Q(QLowEnergyController);
+
+    switch (errorCode)
+    {
+    case 1: // AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE
+        errorString = QLowEnergyController::tr("Advertisement data is larger than 31 bytes");
+        break;
+    case 2: // AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED
+        errorString = QLowEnergyController::tr("Advertisement feature not supported on the platform");
+        break;
+    case 3: // AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR
+        errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
+        break;
+    case 4: // AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS
+        errorString = QLowEnergyController::tr("Failed due to too many advertisers");
+        break;
+    default:
+        errorString = QLowEnergyController::tr("Unknown advertisment error");
+        break;
+    }
+
+    error = QLowEnergyController::AdvertisingError;
+    emit q->error(error);
+
+    // not relevant states in peripheral mode
+    Q_ASSERT(state != QLowEnergyController::DiscoveredState);
+    Q_ASSERT(state != QLowEnergyController::DiscoveringState);
+
+    switch (state)
+    {
+    case QLowEnergyController::UnconnectedState:
+    case QLowEnergyController::ConnectingState:
+    case QLowEnergyController::ConnectedState:
+    case QLowEnergyController::ClosingState:
+        // noop as remote is already connected or about to disconnect.
+        // when connection drops we reset to unconnected anyway
+        break;
+
+    case QLowEnergyController::AdvertisingState:
+        setState(QLowEnergyController::UnconnectedState);
+        break;
+    default:
+        break;
+    }
 }
 
 static QAndroidJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid& uuid)

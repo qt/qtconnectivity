@@ -237,9 +237,33 @@ public class QtBluetoothLEServer {
         public void onStartFailure(int errorCode) {
             Log.e(TAG, "Advertising failure: " + errorCode);
             super.onStartFailure(errorCode);
+
+            // changing errorCode here implies changes to errorCode handling on Qt side
+            int qtErrorCode = 0;
+            switch (errorCode) {
+                case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
+                    return; // ignore -> noop
+                case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
+                    qtErrorCode = 1;
+                    break;
+                case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+                    qtErrorCode = 2;
+                    break;
+                default: // default maps to internal error
+                case AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
+                    qtErrorCode = 3;
+                    break;
+                case AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+                    qtErrorCode = 4;
+                    break;
+            }
+
+            if (qtErrorCode > 0)
+                leServerAdvertisementError(qtObject, qtErrorCode);
         }
     };
 
     public native void leServerConnectionStateChange(long qtObject, int errorCode, int newState);
+    public native void leServerAdvertisementError(long qtObject, int status);
 
 }

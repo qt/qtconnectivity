@@ -309,4 +309,17 @@ void LowEnergyNotificationHub::lowEnergy_serviceError(
                                     (QLowEnergyService::ServiceError)errorCode));
 }
 
+void LowEnergyNotificationHub::lowEnergy_advertisementError(
+        JNIEnv *, jobject, jlong qtObject, jint status)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QMetaObject::invokeMethod(hub, "advertisementError", Qt::QueuedConnection,
+                              Q_ARG(int, status));
+}
+
 QT_END_NAMESPACE
