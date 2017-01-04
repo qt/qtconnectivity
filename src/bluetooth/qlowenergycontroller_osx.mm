@@ -1165,9 +1165,11 @@ void QLowEnergyController::disconnectFromDevice()
 
     OSX_D_PTR;
 
-    if (role() != CentralRole) {
-        qCWarning(QT_BT_OSX) << "can not disconnect while in central role";
-        return osx_d_ptr->_q_CBManagerError(ConnectionError);
+    if (role() == PeripheralRole) {
+        // CoreBluetooth API intentionally does not provide any way of closing
+        // a connection. All we can do here is to stop the advertisement.
+        stopAdvertising();
+        return;
     }
 
     if (osx_d_ptr->isValid()) {
@@ -1309,7 +1311,7 @@ void QLowEnergyController::stopAdvertising()
         return osx_d_ptr->_q_CBManagerError(UnknownError);
 
     if (state() != AdvertisingState) {
-        qCDebug(QT_BT_OSX) << "called in state" << state();
+        qCDebug(QT_BT_OSX) << "cannot stop advertising, called in state" << state();
         return;
     }
 
