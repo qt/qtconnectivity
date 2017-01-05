@@ -44,6 +44,21 @@
 
 QT_BEGIN_NAMESPACE
 
+bool QNearFieldTargetPrivate::keepConnection() const
+{
+    return false;
+}
+
+bool QNearFieldTargetPrivate::setKeepConnection(bool isPersistent)
+{
+    return false;
+}
+
+bool QNearFieldTargetPrivate::disconnect()
+{
+    return false;
+}
+
 int QNearFieldTargetPrivate::maxCommandLength() const
 {
     return 0;

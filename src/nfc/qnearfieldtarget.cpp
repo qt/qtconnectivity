@@ -303,6 +303,52 @@ QUrl QNearFieldTarget::url() const
 */
 
 /*!
+    \since 5.9
+
+    Returns true if this feature is enabled.
+
+    \sa setKeepConnection(), disconnect()
+*/
+bool QNearFieldTarget::keepConnection() const
+{
+    return d_ptr->keepConnection();
+}
+
+/*!
+    \since 5.9
+
+    Causes QNearFieldTarget to keep the connection after processing a command
+    or reading/writing NDEF messages. A call of this function is only needed once.
+
+    Returns true if enabling this feature was successful. A possible
+    reason for a failure is the lack of support on the used platform.
+
+    Enabling this feature requires to use the disconnect() function too, to close the
+    connection manually and enable communication with the target from a different instance.
+    Disabling this feature will also close an open connection.
+
+    \sa keepConnection(), disconnect()
+*/
+bool QNearFieldTarget::setKeepConnection(bool isPersistent)
+{
+    return d_ptr->setKeepConnection(isPersistent);
+}
+
+/*!
+    \since 5.9
+
+    Closes the connection to the target.
+
+    Returns true only if an existing connection was successfully closed.
+
+    \sa keepConnection(), setKeepConnection()
+*/
+bool QNearFieldTarget::disconnect()
+{
+    return d_ptr->disconnect();
+}
+
+/*!
     Returns true if the target is processing commands; otherwise returns false.
 */
 bool QNearFieldTarget::isProcessingCommand() const
