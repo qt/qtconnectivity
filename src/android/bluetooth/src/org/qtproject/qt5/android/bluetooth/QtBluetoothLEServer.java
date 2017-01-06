@@ -58,6 +58,7 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 public class QtBluetoothLEServer {
@@ -139,27 +140,106 @@ public class QtBluetoothLEServer {
         }
 
         @Override
-        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic)
+        {
+            byte[] dataArray;
+            try {
+                dataArray = Arrays.copyOfRange(characteristic.getValue(), offset, characteristic.getValue().length);
+                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, dataArray);
+            } catch (Exception ex) {
+                Log.w(TAG, "onCharacteristicReadRequest: " + requestId + " " + offset + " " + characteristic.getValue().length);
+                ex.printStackTrace();
+                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null);
+            }
+
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
         }
 
         @Override
-        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic,
+                                                 boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
+        {
+            Log.w(TAG, "onCharacteristicWriteRequest");
+            int resultStatus = BluetoothGatt.GATT_SUCCESS;
+
+            if (!preparedWrite) { // regular write
+                if (offset == 0) {
+                    characteristic.setValue(value);
+                } else {
+                    // This should not really happen as per Bluetooth spec
+                    Log.w(TAG, "onCharacteristicWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
+                    resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+                }
+
+
+            } else {
+                Log.w(TAG, "onCharacteristicWriteRequest: preparedWrite, offset " + offset + ", Not supported");
+                resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+
+                // TODO we need to record all requests and execute them in one go once onExecuteWrite() is received
+                // we use a queue to remember the pending requests
+                // TODO we are ignoring the device identificator for now -> Bluetooth spec requires a queue per device
+            }
+
+
+            if (responseNeeded)
+                mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
+
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
         }
 
         @Override
-        public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
+        public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor)
+        {
+            byte[] dataArray;
+            try {
+                dataArray = Arrays.copyOfRange(descriptor.getValue(), offset, descriptor.getValue().length);
+                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, dataArray);
+            } catch (Exception ex) {
+                Log.w(TAG, "onDescriptorReadRequest: " + requestId + " " + offset + " " + descriptor.getValue().length);
+                ex.printStackTrace();
+                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null);
+            }
+
             super.onDescriptorReadRequest(device, requestId, offset, descriptor);
         }
 
         @Override
-        public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+        public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor,
+                                             boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
+        {
+            int resultStatus = BluetoothGatt.GATT_SUCCESS;
+            if (!preparedWrite) { // regular write
+                if (offset == 0) {
+                    descriptor.setValue(value);
+                } else {
+                    // This should not really happen as per Bluetooth spec
+                    Log.w(TAG, "onDescriptorWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
+                    resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+                }
+
+
+            } else {
+                Log.w(TAG, "onDescriptorWriteRequest: preparedWrite, offset " + offset + ", Not supported");
+                resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+                // TODO we need to record all requests and execute them in one go once onExecuteWrite() is received
+                // we use a queue to remember the pending requests
+                // TODO we are ignoring the device identificator for now -> Bluetooth spec requires a queue per device
+            }
+
+
+            if (responseNeeded)
+                mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
+
             super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
         }
 
         @Override
-        public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
+        public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute)
+        {
+            // TODO not yet implemented -> return proper GATT error for it
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, 0, null);
+
             super.onExecuteWrite(device, requestId, execute);
         }
 
