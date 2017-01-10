@@ -844,6 +844,12 @@ public class QtBluetoothLE {
         GattEntry serviceEntry = entries.get(serviceHandle);
         final int endHandle = serviceEntry.endHandle;
 
+        if (serviceHandle == endHandle) {
+            Log.w(TAG, "scheduleServiceDetailDiscovery: service is empty; nothing to discover");
+            finishCurrentServiceDiscovery(serviceHandle);
+            return;
+        }
+
         synchronized (readWriteQueue) {
             // entire block inside mutex to ensure all service discovery jobs go in one after the other
             // ensures that serviceDiscovered() signal is sent when required
