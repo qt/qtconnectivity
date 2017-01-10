@@ -254,8 +254,13 @@ public class QtBluetoothLE {
                         characteristic.getProperties(), characteristic.getValue());
             } else {
                 if (isServiceDiscoveryRun) {
-                    //do nothing just continue with queue
                     Log.w(TAG, "onCharacteristicRead during discovery error: " + status);
+
+                    Log.d(TAG, "Non-readable characteristic " + characteristic.getUuid() +
+                                    " for service " + characteristic.getService().getUuid());
+                    leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
+                        foundHandle + 1, characteristic.getUuid().toString(),
+                        characteristic.getProperties(), characteristic.getValue());
                 } else {
                     // This must be in sync with QLowEnergyService::CharacteristicReadError
                     final int characteristicReadError = 5;
