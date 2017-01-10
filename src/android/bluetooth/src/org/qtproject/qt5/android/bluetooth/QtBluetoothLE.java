@@ -394,7 +394,8 @@ public class QtBluetoothLE {
                  * up here.
                  */
                 if (descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
-                    final int value = descriptor.getValue()[0];
+                    byte[] bytearray = descriptor.getValue();
+                    final int value = (bytearray != null && bytearray.length > 0) ? bytearray[0] : 0;
                     // notification or indication bit set?
                     if ((value & 0x03) > 0) {
                         Log.d(TAG, "Found descriptor with automatic notifications.");
