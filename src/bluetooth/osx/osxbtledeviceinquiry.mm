@@ -364,13 +364,10 @@ QT_USE_NAMESPACE
         return;
     }
 
-    QString name;
-    if (peripheral.name)
-        name = QString::fromNSString(peripheral.name);
-
     const AdvertisementData qtAdvData(advertisementData);
-    if (!name.size()) // Probably, it's not possible to have one and not the other.
-        name = qtAdvData.localName;
+    QString name(qtAdvData.localName);
+    if (!name.size() && peripheral.name)
+        name = QString::fromNSString(peripheral.name);
 
     // TODO: fix 'classOfDevice' (0 for now).
     QBluetoothDeviceInfo newDeviceInfo(deviceUuid, name, 0);
