@@ -48,6 +48,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QSettings>
+#include <QtCore/QTimer>
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothSocket>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
@@ -132,6 +133,13 @@
 #define ATT_ERROR_UNSUPPRTED_GROUP_TYPE 0x10
 #define ATT_ERROR_INSUF_RESOURCES       0x11
 #define ATT_ERROR_APPLICATION_START     0x80
+//------------------------------------------
+// The error codes in this block are
+// implementation specific errors
+
+#define ATT_ERROR_REQUEST_STALLED       0x81
+
+//------------------------------------------
 #define ATT_ERROR_APPLICATION_END       0x9f
 
 #define APPEND_VALUE true
@@ -211,7 +219,7 @@ static void dumpErrorInformation(const QByteArray &response)
         errorString = QStringLiteral("insufficient resources to complete request"); break;
     default:
         if (errorCode >= ATT_ERROR_APPLICATION_START && errorCode <= ATT_ERROR_APPLICATION_END)
-            errorString = QStringLiteral("application error");
+            errorString = QStringLiteral("application error: %1").arg(errorCode);
         else
             errorString = QStringLiteral("unknown error code");
         break;
@@ -304,6 +312,100 @@ void QLowEnergyControllerPrivate::init()
                 signingData.insert(remoteDevice.toUInt64(), SigningData(csrk));
         }
     );
+
+    if (role == QLowEnergyController::CentralRole) {
+        if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("BLUETOOTH_GATT_TIMEOUT"))) {
+            bool ok = false;
+            int value = qEnvironmentVariableIntValue("BLUETOOTH_GATT_TIMEOUT", &ok);
+            if (ok)
+                gattRequestTimeout = value;
+        }
+
+        // permit disabling of timeout behavior via environment variable
+        if (gattRequestTimeout > 0) {
+            qCWarning(QT_BT_BLUEZ) << "Enabling GATT request timeout behavior" << gattRequestTimeout;
+            requestTimer = new QTimer(this);
+            requestTimer->setSingleShot(true);
+            requestTimer->setInterval(gattRequestTimeout);
+            connect(requestTimer, &QTimer::timeout,
+                    this, &QLowEnergyControllerPrivate::handleGattRequestTimeout);
+        }
+    }
+}
+
+void QLowEnergyControllerPrivate::handleGattRequestTimeout()
+{
+    // antyhing open that might require cancellation or a warning?
+    if (encryptionChangePending) {
+        // We cannot really recover for now but the warning is essential for debugging
+        qCWarning(QT_BT_BLUEZ) << "****** Encryption change event blocking further GATT requests";
+        return;
+    }
+
+    if (!openRequests.isEmpty() && requestPending) {
+        requestPending = false; // reset pending flag
+        const Request currentRequest = openRequests.dequeue();
+
+        qCWarning(QT_BT_BLUEZ).nospace() << "****** Request type 0x" << hex << currentRequest.command
+                           << " to server/peripheral timed out";
+        qCWarning(QT_BT_BLUEZ) << "****** Looks like the characteristic or descriptor does NOT act in"
+                               <<  "accordance to Bluetooth 4.x spec.";
+        qCWarning(QT_BT_BLUEZ) << "****** Please check server implementation."
+                               << "Continuing under reservation.";
+
+        quint8 command = currentRequest.command;
+        const auto createRequestErrorMessage = [](quint8 opcodeWithError,
+                                           QLowEnergyHandle handle) {
+            QByteArray errorPackage(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
+            errorPackage[0] = ATT_OP_ERROR_RESPONSE;
+            errorPackage[1] = opcodeWithError; // e.g. ATT_OP_READ_REQUEST
+            putBtData(handle, errorPackage.data() + 2); //
+            errorPackage[4] = ATT_ERROR_REQUEST_STALLED;
+
+            return errorPackage;
+        };
+
+        switch (command) {
+        case ATT_OP_EXCHANGE_MTU_REQUEST:  // MTU change request
+            // never received reply to MTU request
+            // it is safe to skip and go to next request
+            sendNextPendingRequest();
+            break;
+        case ATT_OP_READ_BY_GROUP_REQUEST: // primary or secondary service discovery
+        case ATT_OP_READ_BY_TYPE_REQUEST:  // characteristic or included service discovery
+            // jump back into usual response handling with custom error code
+            // 2nd param "0" as required by spec
+            processReply(currentRequest, createRequestErrorMessage(command, 0));
+            break;
+        case ATT_OP_READ_REQUEST:          // read descriptor or characteristic value
+        case ATT_OP_READ_BLOB_REQUEST:     // read long descriptor or characteristic
+        case ATT_OP_WRITE_REQUEST:         // write descriptor or characteristic
+        {
+            uint handleData = currentRequest.reference.toUInt();
+            const QLowEnergyHandle charHandle = (handleData & 0xffff);
+            const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
+            processReply(currentRequest, createRequestErrorMessage(command,
+                                descriptorHandle ? descriptorHandle : charHandle));
+        }
+            break;
+        case ATT_OP_FIND_INFORMATION_REQUEST: // get descriptor information
+            processReply(currentRequest, createRequestErrorMessage(
+                                            command, currentRequest.reference2.toUInt()));
+            break;
+        case ATT_OP_PREPARE_WRITE_REQUEST: // prepare to write long desc or char
+        case ATT_OP_EXECUTE_WRITE_REQUEST: // execute long write of desc or char
+        {
+            uint handleData = currentRequest.reference.toUInt();
+            const QLowEnergyHandle attrHandle = (handleData & 0xffff);
+            processReply(currentRequest,
+                         createRequestErrorMessage(command, attrHandle));
+        }
+            break;
+        default:
+            // not a command used by central role implementation
+            return;
+        }
+    }
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
@@ -537,6 +639,19 @@ void QLowEnergyControllerPrivate::resetController()
     receivedMtuExchangeRequest = false;
     securityLevelValue = -1;
     connectionHandle = 0;
+
+    // public API behavior requires stop of advertisement
+    if (role == QLowEnergyController::PeripheralRole && advertiser)
+        advertiser->stopAdvertising();
+}
+
+void QLowEnergyControllerPrivate::restartRequestTimer()
+{
+    if (!requestTimer)
+        return;
+
+    if (gattRequestTimeout > 0)
+        requestTimer->start(gattRequestTimeout);
 }
 
 void QLowEnergyControllerPrivate::l2cpReadyRead()
@@ -564,7 +679,8 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
         processUnsolicitedReply(incomingPacket);
         return;
     }
-
+    //--------------------------------------------------
+    // Peripheral side packet handling
     case ATT_OP_EXCHANGE_MTU_REQUEST:
         handleExchangeMtuRequest(incomingPacket);
         return;
@@ -608,6 +724,7 @@ void QLowEnergyControllerPrivate::l2cpReadyRead()
             qCWarning(QT_BT_BLUEZ) << "received unexpected handle value confirmation";
         }
         return;
+    //--------------------------------------------------
     default:
         //only solicited replies finish pending requests
         requestPending = false;
@@ -713,6 +830,7 @@ void QLowEnergyControllerPrivate::sendNextPendingRequest()
 //             << request.payload.toHex();
 
     requestPending = true;
+    restartRequestTimer();
     sendPacket(request.payload);
 }
 
@@ -1920,8 +2038,10 @@ bool QLowEnergyControllerPrivate::increaseEncryptLevelfRequired(quint8 errorCode
             return false;
         if (securityLevelValue != BT_SECURITY_HIGH) {
             qCDebug(QT_BT_BLUEZ) << "Requesting encrypted link";
-            if (setSecurityLevel(BT_SECURITY_HIGH))
+            if (setSecurityLevel(BT_SECURITY_HIGH)) {
+                restartRequestTimer();
                 return true;
+            }
         }
         break;
     default:

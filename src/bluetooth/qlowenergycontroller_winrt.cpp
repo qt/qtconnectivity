@@ -277,6 +277,9 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
       error(QLowEnergyController::NoError)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
+
+    qRegisterMetaType<QLowEnergyCharacteristic>();
+    qRegisterMetaType<QLowEnergyDescriptor>();
 }
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()

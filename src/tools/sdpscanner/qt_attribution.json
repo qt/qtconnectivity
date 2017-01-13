@@ -2,7 +2,7 @@
     "Id": "bluez",
     "Name": "BlueZ",
     "QDocModule": "qtbluetooth",
-    "QtUsage": "On Linux, Qt Bluetooth uses a separate executable, \c sdpscanner, to integrate with the official Linux bluetooth protocol stack BlueZ. The Qt Bluetooth library does not link against BlueZ directly.",
+    "QtUsage": "On Linux, Qt Bluetooth uses a separate executable, sdpscanner, to integrate with the official Linux bluetooth protocol stack BlueZ. The Qt Bluetooth library does not link against BlueZ directly.",
 
     "Description": "BlueZ",
     "Homepage": "http://www.bluez.org/",
