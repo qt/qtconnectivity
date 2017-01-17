@@ -52,6 +52,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
+Q_DECLARE_METATYPE(QAndroidJniObject)
+
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
       state(QLowEnergyController::UnconnectedState),
@@ -83,6 +85,8 @@ void QLowEnergyControllerPrivate::init()
             return;
         }
 
+        qRegisterMetaType<QAndroidJniObject>();
+
         hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
         // we only connect to the peripheral role specific signals
         // TODO add connections as they get added later on
@@ -90,6 +94,8 @@ void QLowEnergyControllerPrivate::init()
                 this, &QLowEnergyControllerPrivate::connectionUpdated);
         connect(hub, &LowEnergyNotificationHub::advertisementError,
                 this, &QLowEnergyControllerPrivate::advertisementError);
+        connect(hub, &LowEnergyNotificationHub::serverCharacteristicChanged,
+                this, &QLowEnergyControllerPrivate::serverCharacteristicChanged);
     } else {
         if (version < 18) {
             qWarning() << "Qt Bluetooth LE Central/Client support not available"
@@ -115,8 +121,6 @@ void QLowEnergyControllerPrivate::init()
                 this, &QLowEnergyControllerPrivate::descriptorWritten);
         connect(hub, &LowEnergyNotificationHub::characteristicChanged,
                 this, &QLowEnergyControllerPrivate::characteristicChanged);
-        connect(hub, &LowEnergyNotificationHub::serviceError,
-                this, &QLowEnergyControllerPrivate::serviceError);
     }
 }
 
@@ -662,6 +666,55 @@ void QLowEnergyControllerPrivate::characteristicChanged(
         updateValueOfCharacteristic(characteristic.attributeHandle(),
                                 data, false);
     emit service->characteristicChanged(characteristic, data);
+}
+
+void QLowEnergyControllerPrivate::serverCharacteristicChanged(
+        const QAndroidJniObject &characteristic, const QByteArray &newValue)
+{
+    qCDebug(QT_BT_ANDROID) << "Server characteristic change notification" << newValue.toHex();
+
+    // match characteristic to servicePrivate
+    QAndroidJniObject service = characteristic.callObjectMethod(
+                                    "getService", "()Landroid/bluetooth/BluetoothGattService;");
+    if (!service.isValid())
+        return;
+
+    QAndroidJniObject jniUuid = service.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    QBluetoothUuid serviceUuid(jniUuid.toString());
+    if (serviceUuid.isNull())
+        return;
+
+    // TODO test if two service with same uuid exist
+    if (!localServices.contains(serviceUuid))
+        return;
+
+    auto servicePrivate = localServices.value(serviceUuid);
+
+    jniUuid = characteristic.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    QBluetoothUuid characteristicUuid(jniUuid.toString());
+    if (characteristicUuid.isNull())
+        return;
+
+    QLowEnergyHandle foundHandle = 0;
+    const auto handleList = servicePrivate->characteristicList.keys();
+    // TODO test if service contains two characteristics with same uuid
+    for (const auto handle : handleList) {
+        QLowEnergyServicePrivate::CharData& charData = servicePrivate->characteristicList[handle];
+        if (charData.uuid != characteristicUuid)
+            continue;
+
+        qCDebug(QT_BT_ANDROID) << "serverCharacteristicChanged: Matching characteristic"
+                               << characteristicUuid << " on " << serviceUuid;
+        charData.value = newValue;
+        foundHandle = handle;
+        break;
+    }
+
+    if (!foundHandle)
+        return;
+
+    emit servicePrivate->characteristicChanged(
+                QLowEnergyCharacteristic(servicePrivate, foundHandle), newValue);
 }
 
 void QLowEnergyControllerPrivate::serviceError(

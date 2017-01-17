@@ -441,6 +441,7 @@ private slots:
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
     void characteristicChanged(int charHandle, const QByteArray &data);
+    void serverCharacteristicChanged(const QAndroidJniObject &jniChar, const QByteArray &newValue);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
     void advertisementError(int errorCode);
 
