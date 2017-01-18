@@ -164,6 +164,8 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
     \l InvalidBluetoothAdapterError. Therefore it is recommended to test the error flag immediately after
     using this constructor.
 
+    \note On WinRT the passed adapter address will be ignored.
+
     \sa error()
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)

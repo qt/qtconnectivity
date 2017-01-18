@@ -201,10 +201,17 @@ qtConfig(bluez):qtHaveModule(dbus) {
         qbluetoothdevicediscoveryagent_winrt.cpp \
         qbluetoothlocaldevice_p.cpp \
         qbluetoothserver_p.cpp \
-        qbluetoothservicediscoveryagent_p.cpp \
+        qbluetoothservicediscoveryagent_winrt.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothsocket_p.cpp \
         qlowenergycontroller_winrt.cpp
+
+    WINRT_SDK_VERSION_STRING = $$(UCRTVersion)
+    WINRT_SDK_VERSION = $$member($$list($$split(WINRT_SDK_VERSION_STRING, .)), 2)
+    lessThan(WINRT_SDK_VERSION, 14393) {
+        DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
+        DEFINES += QT_UCRTVERSION=$$WINRT_SDK_VERSION
+    }
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers available.")

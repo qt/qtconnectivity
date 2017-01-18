@@ -72,6 +72,10 @@ class QXmlStreamReader;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+class QWinRTBluetoothServiceDiscoveryWorker;
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
@@ -83,7 +87,13 @@ class LocalDeviceBroadcastReceiver;
 #endif
 
 class QBluetoothServiceDiscoveryAgentPrivate
+#if defined QT_WINRT_BLUETOOTH
+        : public QObject
 {
+    Q_OBJECT
+#else
+{
+#endif
     Q_DECLARE_PUBLIC(QBluetoothServiceDiscoveryAgent)
 
 public:
@@ -184,6 +194,17 @@ private:
 
     QAndroidJniObject btAdapter;
     QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+private slots:
+    void processFoundService(quint64 deviceAddress, const QBluetoothServiceInfo &info);
+    void onScanFinished(quint64 deviceAddress);
+    void onScanCanceled();
+    void onError();
+
+private:
+    QPointer<QWinRTBluetoothServiceDiscoveryWorker> worker;
 #endif
 
 protected:
