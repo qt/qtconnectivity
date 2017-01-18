@@ -203,7 +203,7 @@ qtConfig(bluez):qtHaveModule(dbus) {
         qbluetoothserver_p.cpp \
         qbluetoothservicediscoveryagent_winrt.cpp \
         qbluetoothserviceinfo_p.cpp \
-        qbluetoothsocket_p.cpp \
+        qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
     WINRT_SDK_VERSION_STRING = $$(UCRTVersion)
