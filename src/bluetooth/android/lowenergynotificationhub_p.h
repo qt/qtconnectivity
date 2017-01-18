@@ -122,9 +122,9 @@ signals:
                                QLowEnergyService::ServiceError errorCode);
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
-    void serverDescriptorWritten(const QAndroidJniObject &descriptor, const QByteArray newValue);
+    void serverDescriptorWritten(const QAndroidJniObject &descriptor, const QByteArray &newValue);
     void characteristicChanged(int charHandle, const QByteArray &data);
-    void serverCharacteristicChanged(const QAndroidJniObject& characteristic, const QByteArray& newValue);
+    void serverCharacteristicChanged(const QAndroidJniObject &characteristic, const QByteArray &newValue);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
     void advertisementError(int status);
 

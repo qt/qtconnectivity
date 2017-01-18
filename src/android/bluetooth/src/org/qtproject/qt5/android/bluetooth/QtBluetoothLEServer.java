@@ -108,7 +108,7 @@ public class QtBluetoothLEServer {
     {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            Log.w(TAG, "Our gatt server connection state changed, new state: " + Integer.toString(newState));
+            Log.w(TAG, "Our gatt server connection state changed, new state: " + newState);
             super.onConnectionStateChange(device, status, newState);
 
             int qtControllerState = 0;

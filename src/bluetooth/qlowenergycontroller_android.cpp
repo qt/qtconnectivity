@@ -685,13 +685,13 @@ void QLowEnergyControllerPrivate::serverDescriptorWritten(
     // TODO test if service contains two characteristics with same uuid
     // or characteristic contains two descriptors with same uuid
     const auto handleList = servicePrivate->characteristicList.keys();
-    for (const auto charHandle : handleList) {
+    for (const auto charHandle: handleList) {
         const auto &charData = servicePrivate->characteristicList.value(charHandle);
         if (charData.uuid != characteristicUuid)
             continue;
 
         const auto &descHandleList = charData.descriptorList.keys();
-        for (const auto descHandle : descHandleList) {
+        for (const auto descHandle: descHandleList) {
             const auto &descData = charData.descriptorList.value(descHandle);
             if (descData.uuid != descriptorUuid)
                 continue;
@@ -765,8 +765,8 @@ void QLowEnergyControllerPrivate::serverCharacteristicChanged(
     QLowEnergyHandle foundHandle = 0;
     const auto handleList = servicePrivate->characteristicList.keys();
     // TODO test if service contains two characteristics with same uuid
-    for (const auto handle : handleList) {
-        QLowEnergyServicePrivate::CharData& charData = servicePrivate->characteristicList[handle];
+    for (const auto handle: handleList) {
+        QLowEnergyServicePrivate::CharData &charData = servicePrivate->characteristicList[handle];
         if (charData.uuid != characteristicUuid)
             continue;
 
@@ -848,7 +848,7 @@ void QLowEnergyControllerPrivate::advertisementError(int errorCode)
     }
 }
 
-static QAndroidJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid& uuid)
+static QAndroidJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid &uuid)
 {
     QString output = uuid.toString();
     // cut off leading and trailing brackets
@@ -922,7 +922,7 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
     return javaAdvertiseData;
 }
 
-static QAndroidJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertisingParameters& params)
+static QAndroidJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertisingParameters &params)
 {
     QAndroidJniObject builder = QAndroidJniObject("android/bluetooth/le/AdvertiseSettings$Builder");
 
@@ -1001,7 +1001,7 @@ void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnec
         return;
     }
 
-    bool result = hub->javaObject().callMethod<jboolean>("requestConnectionUpdatePriority",
+    const bool result = hub->javaObject().callMethod<jboolean>("requestConnectionUpdatePriority",
                                                          "(D)Z", params.minimumInterval());
     if (!result)
         qCWarning(QT_BT_ANDROID) << "Cannot set connection update priority";
@@ -1051,7 +1051,7 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
 
     if (charData.properties() &
                 (QLowEnergyCharacteristic::Write|QLowEnergyCharacteristic::WriteNoResponse) ) {
-        if (((int)charData.writeConstraints()) == 0 // no flag is equivalent ti simple write
+        if (int(charData.writeConstraints()) == 0 // no flag is equivalent ti simple write
              || (charData.writeConstraints() & QBluetooth::AttAuthorizationRequired)) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
@@ -1115,7 +1115,7 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
     }
 
     if (descData.isWritable()) {
-        if (((int)descData.readConstraints()) == 0 // empty is equivalent to simple read
+        if (int(descData.readConstraints()) == 0 // empty is equivalent to simple read
             || (descData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",

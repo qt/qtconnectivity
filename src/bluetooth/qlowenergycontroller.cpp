@@ -359,7 +359,7 @@ void QLowEnergyControllerPrivate::invalidateServices()
 QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivate::serviceForHandle(
         QLowEnergyHandle handle)
 {
-    ServiceDataMap& currentList = serviceList;
+    ServiceDataMap &currentList = serviceList;
     if (role == QLowEnergyController::PeripheralRole)
         currentList = localServices;
 
