@@ -234,6 +234,8 @@ static JNINativeMethod methods_leServer[] = {
                 (void *) LowEnergyNotificationHub::lowEnergy_advertisementError},
     {"leServerCharacteristicChanged", "(JLandroid/bluetooth/BluetoothGattCharacteristic;[B)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_serverCharacteristicChanged},
+    {"leServerDescriptorWritten", "(JLandroid/bluetooth/BluetoothGattDescriptor;[B)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_serverDescriptorWritten},
 };
 
 static JNINativeMethod methods_server[] = {

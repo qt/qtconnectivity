@@ -213,6 +213,7 @@ public class QtBluetoothLEServer {
             if (!preparedWrite) { // regular write
                 if (offset == 0) {
                     descriptor.setValue(value);
+                    leServerDescriptorWritten(qtObject, descriptor, value);
                 } else {
                     // This should not really happen as per Bluetooth spec
                     Log.w(TAG, "onDescriptorWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
@@ -349,4 +350,7 @@ public class QtBluetoothLEServer {
     public native void leServerCharacteristicChanged(long qtObject,
                                                      BluetoothGattCharacteristic characteristic,
                                                      byte[] newValue);
+    public native void leServerDescriptorWritten(long qtObject,
+                                                 BluetoothGattDescriptor descriptor,
+                                                 byte[] newValue);
 }

@@ -96,6 +96,8 @@ void QLowEnergyControllerPrivate::init()
                 this, &QLowEnergyControllerPrivate::advertisementError);
         connect(hub, &LowEnergyNotificationHub::serverCharacteristicChanged,
                 this, &QLowEnergyControllerPrivate::serverCharacteristicChanged);
+        connect(hub, &LowEnergyNotificationHub::serverDescriptorWritten,
+                this, &QLowEnergyControllerPrivate::serverDescriptorWritten);
     } else {
         if (version < 18) {
             qWarning() << "Qt Bluetooth LE Central/Client support not available"
@@ -641,6 +643,71 @@ void QLowEnergyControllerPrivate::descriptorWritten(
     updateValueOfDescriptor(descriptor.characteristicHandle(),
                             descHandle, data, false);
     emit service->descriptorWritten(descriptor, data);
+}
+
+void QLowEnergyControllerPrivate::serverDescriptorWritten(
+        const QAndroidJniObject &jniDesc, const QByteArray &newValue)
+{
+    qCDebug(QT_BT_ANDROID) << "Server descriptor change notification" << newValue.toHex();
+
+    // retrieve service, char and desc uuids
+    QAndroidJniObject jniChar = jniDesc.callObjectMethod(
+                                    "getCharacteristic", "()Landroid/bluetooth/BluetoothGattCharacteristic;");
+    if (!jniChar.isValid())
+        return;
+
+    QAndroidJniObject jniService = jniChar.callObjectMethod(
+                                    "getService", "()Landroid/bluetooth/BluetoothGattService;");
+    if (!jniService.isValid())
+        return;
+
+    QAndroidJniObject jniUuid = jniService.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    const QBluetoothUuid serviceUuid(jniUuid.toString());
+    if (serviceUuid.isNull())
+        return;
+
+    // TODO test if two service with same uuid exist
+    if (!localServices.contains(serviceUuid))
+        return;
+
+    jniUuid = jniChar.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    const QBluetoothUuid characteristicUuid(jniUuid.toString());
+    if (characteristicUuid.isNull())
+        return;
+
+    jniUuid = jniDesc.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    const QBluetoothUuid descriptorUuid(jniUuid.toString());
+    if (descriptorUuid.isNull())
+        return;
+
+    // find matching QLEDescriptor
+    auto servicePrivate = localServices.value(serviceUuid);
+    // TODO test if service contains two characteristics with same uuid
+    // or characteristic contains two descriptors with same uuid
+    const auto handleList = servicePrivate->characteristicList.keys();
+    for (const auto charHandle : handleList) {
+        const auto &charData = servicePrivate->characteristicList.value(charHandle);
+        if (charData.uuid != characteristicUuid)
+            continue;
+
+        const auto &descHandleList = charData.descriptorList.keys();
+        for (const auto descHandle : descHandleList) {
+            const auto &descData = charData.descriptorList.value(descHandle);
+            if (descData.uuid != descriptorUuid)
+                continue;
+
+            qCDebug(QT_BT_ANDROID) << "serverDescriptorChanged: Matching descriptor"
+                                   << descriptorUuid << "in char" << characteristicUuid
+                                   << "of service" << serviceUuid;
+
+            servicePrivate->characteristicList[charHandle].descriptorList[descHandle].value = newValue;
+
+            emit servicePrivate->descriptorWritten(
+                        QLowEnergyDescriptor(servicePrivate, charHandle, descHandle),
+                        newValue);
+            return;
+        }
+    }
 }
 
 void QLowEnergyControllerPrivate::characteristicChanged(

@@ -273,6 +273,28 @@ void LowEnergyNotificationHub::lowEnergy_descriptorWritten(
                                     (QLowEnergyService::ServiceError)errorCode));
 }
 
+void LowEnergyNotificationHub::lowEnergy_serverDescriptorWritten(
+        JNIEnv *env, jobject, jlong qtObject, jobject descriptor, jbyteArray newValue)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QByteArray payload;
+    if (newValue) { //empty Java byte array is 0x0
+        jsize length = env->GetArrayLength(newValue);
+        payload.resize(length);
+        env->GetByteArrayRegion(newValue, 0, length,
+                                reinterpret_cast<signed char*>(payload.data()));
+    }
+
+    QMetaObject::invokeMethod(hub, "serverDescriptorWritten", Qt::QueuedConnection,
+                              Q_ARG(QAndroidJniObject, descriptor),
+                              Q_ARG(QByteArray, payload));
+}
+
 void LowEnergyNotificationHub::lowEnergy_characteristicChanged(
         JNIEnv *env, jobject, jlong qtObject, jint charHandle, jbyteArray data)
 {
