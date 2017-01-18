@@ -436,6 +436,10 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
         ComPtr<IDeviceInformation> deviceInfo;
         hr = device2->get_DeviceInformation(&deviceInfo);
         Q_ASSERT_SUCCEEDED(hr);
+        if (!deviceInfo) {
+            qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: Could not obtain device information";
+            return S_OK;
+        }
         ComPtr<IDeviceInformation2> deviceInfo2;
         hr = deviceInfo.As(&deviceInfo2);
         Q_ASSERT_SUCCEEDED(hr);
