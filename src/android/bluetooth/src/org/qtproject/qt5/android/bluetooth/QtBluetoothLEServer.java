@@ -58,7 +58,13 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class QtBluetoothLEServer {
@@ -75,6 +81,115 @@ public class QtBluetoothLEServer {
     private final BluetoothAdapter mBluetoothAdapter;
     private BluetoothGattServer mGattServer = null;
     private BluetoothLeAdvertiser mLeAdvertiser = null;
+
+    /*
+        As per Bluetooth specification each connected device can have individual and persistent
+        Client characteristic configurations (see Bluetooth Spec 5.0 Vol 3 Part G 3.3.3.3)
+        This class manages the existing configurrations.
+     */
+    private class ClientCharacteristicManager {
+        private final HashMap<BluetoothGattCharacteristic, List<Entry>> notificationStore = new HashMap<BluetoothGattCharacteristic, List<Entry>>();
+
+        private class Entry {
+            BluetoothDevice device = null;
+            byte[] value = null;
+            boolean isConnected = false;
+        }
+
+        public void insertOrUpdate(BluetoothGattCharacteristic characteristic,
+                              BluetoothDevice device, byte[] newValue)
+        {
+            if (notificationStore.containsKey(characteristic)) {
+
+                List<Entry> entries = notificationStore.get(characteristic);
+                for (int i = 0; i < entries.size(); i++) {
+                    if (entries.get(i).device.equals(device)) {
+                        Entry e = entries.get(i);
+                        e.value = newValue;
+                        entries.set(i, e);
+                        return;
+                    }
+                }
+
+                // not match so far -> add device to list
+                Entry e = new Entry();
+                e.device = device;
+                e.value = newValue;
+                e.isConnected = true;
+                entries.add(e);
+                return;
+            }
+
+            // new characteristic
+            Entry e = new Entry();
+            e.device = device;
+            e.value = newValue;
+            e.isConnected = true;
+            List<Entry> list = new LinkedList<Entry>();
+            list.add(e);
+            notificationStore.put(characteristic, list);
+        }
+
+        /*
+            Marks client characteristic configuration entries as (in)active based the associated
+            devices general connectivity state.
+            This function avoids that existing configurations are not acted
+            upon when the associated device is not connected.
+         */
+        public void markDeviceConnectivity(BluetoothDevice device, boolean isConnected)
+        {
+            final Iterator<BluetoothGattCharacteristic> keys = notificationStore.keySet().iterator();
+            while (keys.hasNext()) {
+                final BluetoothGattCharacteristic characteristic = keys.next();
+                final List<Entry> entries = notificationStore.get(characteristic);
+                if (entries == null)
+                    continue;
+
+                ListIterator<Entry> charConfig = entries.listIterator();
+                while (charConfig.hasNext()) {
+                    Entry e = charConfig.next();
+                    if (e.device.equals(device))
+                        e.isConnected = isConnected;
+                }
+            }
+        }
+
+        // Returns list of all BluetoothDevices which require notification or indication.
+        // No match returns an empty list.
+        List<BluetoothDevice> getToBeUpdatedDevices(BluetoothGattCharacteristic characteristic)
+        {
+            ArrayList<BluetoothDevice> result = new ArrayList<BluetoothDevice>();
+            if (!notificationStore.containsKey(characteristic))
+                return result;
+
+            final ListIterator<Entry> iter = notificationStore.get(characteristic).listIterator();
+            while (iter.hasNext())
+                result.add(iter.next().device);
+
+            return result;
+        }
+
+        // Returns null if no match; otherwise the configured actual client characteristic
+        // configuration value
+        byte[] valueFor(BluetoothGattCharacteristic characteristic, BluetoothDevice device)
+        {
+            if (!notificationStore.containsKey(characteristic))
+                return null;
+
+            List<Entry> entries = notificationStore.get(characteristic);
+            for (int i = 0; i < entries.size(); i++) {
+                final Entry entry = entries.get(i);
+                if (entry.device.equals(device) && entry.isConnected == true)
+                    return entries.get(i).value;
+            }
+
+            return null;
+        }
+    }
+
+    private static final UUID CLIENT_CHARACTERISTIC_CONFIGURATION_UUID = UUID
+            .fromString("00002902-0000-1000-8000-00805f9b34fb");
+    ClientCharacteristicManager clientCharacteristicManager = new ClientCharacteristicManager();
 
     public QtBluetoothLEServer(Context context)
     {
@@ -115,8 +230,10 @@ public class QtBluetoothLEServer {
             switch (newState) {
                 case BluetoothProfile.STATE_DISCONNECTED:
                     qtControllerState = 0; // QLowEnergyController::UnconnectedState
+                    clientCharacteristicManager.markDeviceConnectivity(device, false);
                     break;
                 case BluetoothProfile.STATE_CONNECTED:
+                    clientCharacteristicManager.markDeviceConnectivity(device, true);
                     qtControllerState = 2; // QLowEnergyController::ConnectedState
                     break;
             }
@@ -161,11 +278,12 @@ public class QtBluetoothLEServer {
         {
             Log.w(TAG, "onCharacteristicWriteRequest");
             int resultStatus = BluetoothGatt.GATT_SUCCESS;
-
+            boolean sendNotificationOrIndication = false;
             if (!preparedWrite) { // regular write
                 if (offset == 0) {
                     characteristic.setValue(value);
                     leServerCharacteristicChanged(qtObject, characteristic, value);
+                    sendNotificationOrIndication = true;
                 } else {
                     // This should not really happen as per Bluetooth spec
                     Log.w(TAG, "onCharacteristicWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
@@ -185,6 +303,8 @@ public class QtBluetoothLEServer {
 
             if (responseNeeded)
                 mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
+            if (sendNotificationOrIndication)
+                sendNotificationsOrIndications(characteristic);
 
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
         }
@@ -192,12 +312,18 @@ public class QtBluetoothLEServer {
         @Override
         public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor)
         {
-            byte[] dataArray;
+            byte[] dataArray = descriptor.getValue();
             try {
-                dataArray = Arrays.copyOfRange(descriptor.getValue(), offset, descriptor.getValue().length);
+                if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
+                    dataArray = clientCharacteristicManager.valueFor(descriptor.getCharacteristic(), device);
+                    if (dataArray == null)
+                        dataArray = descriptor.getValue();
+                }
+
+                dataArray = Arrays.copyOfRange(dataArray, offset, dataArray.length);
                 mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, dataArray);
             } catch (Exception ex) {
-                Log.w(TAG, "onDescriptorReadRequest: " + requestId + " " + offset + " " + descriptor.getValue().length);
+                Log.w(TAG, "onDescriptorReadRequest: " + requestId + " " + offset + " " + dataArray.length);
                 ex.printStackTrace();
                 mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null);
             }
@@ -213,6 +339,12 @@ public class QtBluetoothLEServer {
             if (!preparedWrite) { // regular write
                 if (offset == 0) {
                     descriptor.setValue(value);
+
+                    if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
+                        clientCharacteristicManager.insertOrUpdate(descriptor.getCharacteristic(),
+                                                                   device, value);
+                    }
+
                     leServerDescriptorWritten(qtObject, descriptor, value);
                 } else {
                     // This should not really happen as per Bluetooth spec
@@ -248,6 +380,7 @@ public class QtBluetoothLEServer {
         @Override
         public void onNotificationSent(BluetoothDevice device, int status) {
             super.onNotificationSent(device, status);
+            Log.w(TAG, "onNotificationSent" + device + " " + status);
         }
 
         // MTU change disabled since it requires API level 22. Right now we only enforce lvl 21
@@ -303,6 +436,64 @@ public class QtBluetoothLEServer {
             return;
 
         mGattServer.addService(service);
+    }
+
+    /*
+        Check the client characteristics configuration for the given characteristic
+        and sends notifications or indications as per required.
+     */
+    private void sendNotificationsOrIndications(BluetoothGattCharacteristic characteristic)
+    {
+        final ListIterator<BluetoothDevice> iter =
+                clientCharacteristicManager.getToBeUpdatedDevices(characteristic).listIterator();
+
+        // TODO This quick loop over multiple devices should be synced with onNotificationSent().
+        //      The next notifyCharacteristicChanged() call must wait until onNotificationSent()
+        //      was received. At this becomes an issue when the server accepts multiple remote
+        //      devices at the same time.
+        while (iter.hasNext()) {
+            final BluetoothDevice device = iter.next();
+            final byte[] clientCharacteristicConfig = clientCharacteristicManager.valueFor(characteristic, device);
+            if (clientCharacteristicConfig != null) {
+                if (Arrays.equals(clientCharacteristicConfig, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)) {
+                    mGattServer.notifyCharacteristicChanged(device, characteristic, false);
+                } else if (Arrays.equals(clientCharacteristicConfig, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
+                    mGattServer.notifyCharacteristicChanged(device, characteristic, true);
+                }
+            }
+        }
+    }
+
+    /*
+        Updates the local database value for the given characteristic with \a charUuid and
+        \a newValue. If notifications for this task are enabled an approproiate notification will
+        be send to the remote client.
+
+        This function is called from the Qt thread.
+     */
+    public boolean writeCharacteristic(BluetoothGattService service, UUID charUuid, byte[] newValue)
+    {
+        BluetoothGattCharacteristic foundChar = null;
+        List<BluetoothGattCharacteristic> charList = service.getCharacteristics();
+        for (BluetoothGattCharacteristic iter: charList) {
+            if (iter.getUuid().equals(charUuid) && foundChar == null) {
+                foundChar = iter;
+                // don't break here since we want to check next condition below on next iteration
+            } else if (iter.getUuid().equals(charUuid)) {
+                Log.w(TAG, "Found second char with same UUID. Wrong char may have been selected.");
+                break;
+            }
+        }
+
+        if (foundChar == null) {
+            Log.w(TAG, "writeCharacteristic: update for unknown characteristic failed");
+            return false;
+        }
+
+        foundChar.setValue(newValue);
+        sendNotificationsOrIndications(foundChar);
+
+        return true;
     }
 
     /*

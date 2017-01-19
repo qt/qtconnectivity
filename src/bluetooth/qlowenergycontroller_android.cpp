@@ -54,6 +54,21 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 Q_DECLARE_METATYPE(QAndroidJniObject)
 
+// Conversion: QBluetoothUuid -> java.util.UUID
+static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
+{
+    QString output = uuid.toString();
+    // cut off leading and trailing brackets
+    output = output.mid(1, output.size()-2);
+
+    QAndroidJniObject javaString = QAndroidJniObject::fromString(output);
+    QAndroidJniObject javaUuid = QAndroidJniObject::callStaticObjectMethod(
+                "java/util/UUID", "fromString", "(Ljava/lang/String;)Ljava/util/UUID;",
+                javaString.object());
+
+    return javaUuid;
+}
+
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject(),
       state(QLowEnergyController::UnconnectedState),
@@ -239,12 +254,26 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 
     bool result = false;
     if (hub) {
-        qCDebug(QT_BT_ANDROID) << "Write characteristic with handle " << charHandle
-                 << newValue.toHex() << "(service:" << service->uuid
-                 << ", writeWithResponse:" << (mode == QLowEnergyService::WriteWithResponse)
-                 << ", signed:" << (mode == QLowEnergyService::WriteSigned) << ")";
-        result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[BI)Z",
-                      charHandle, payload, mode);
+        if (role == QLowEnergyController::CentralRole) {
+            qCDebug(QT_BT_ANDROID) << "Write characteristic with handle " << charHandle
+                     << newValue.toHex() << "(service:" << service->uuid
+                     << ", writeWithResponse:" << (mode == QLowEnergyService::WriteWithResponse)
+                     << ", signed:" << (mode == QLowEnergyService::WriteSigned) << ")";
+            result = hub->javaObject().callMethod<jboolean>("writeCharacteristic", "(I[BI)Z",
+                          charHandle, payload, mode);
+        } else { // peripheral mode
+            qCDebug(QT_BT_ANDROID) << "Write server characteristic with handle " << charHandle
+                     << newValue.toHex() << "(service:" << service->uuid;
+
+            const auto &characteristic = characteristicForHandle(charHandle);
+            if (characteristic.isValid()) {
+                const QAndroidJniObject charUuid = javaUuidfromQtUuid(characteristic.uuid());
+                result = hub->javaObject().callMethod<jboolean>(
+                            "writeCharacteristic",
+                            "(Landroid/bluetooth/BluetoothGattService;Ljava/util/UUID;[B)Z",
+                            service->androidService.object(), charUuid.object(), payload);
+            }
+        }
     }
 
     if (env->ExceptionOccurred()) {
@@ -1005,21 +1034,6 @@ void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnec
                                                          "(D)Z", params.minimumInterval());
     if (!result)
         qCWarning(QT_BT_ANDROID) << "Cannot set connection update priority";
-}
-
-// Conversion: QBluetoothUuid -> java.util.UUID
-static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
-{
-    QString output = uuid.toString();
-    // cut off leading and trailing brackets
-    output = output.mid(1, output.size()-2);
-
-    QAndroidJniObject javaString = QAndroidJniObject::fromString(output);
-    QAndroidJniObject javaUuid = QAndroidJniObject::callStaticObjectMethod(
-                "java/util/UUID", "fromString", "(Ljava/lang/String;)Ljava/util/UUID;",
-                javaString.object());
-
-    return javaUuid;
 }
 
 /*
