@@ -51,6 +51,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.lang.reflect.Method;
 
@@ -187,9 +188,11 @@ public class QtBluetoothLE {
                 case BluetoothGatt.GATT_SUCCESS:
                     errorCode = 0; break; //QLowEnergyController::NoError
                 case 8: // link loss
+                case 22: // BTA_GATT_CONN_LMP_TIMEOUT
+                    Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");
                     errorCode = 5; break; //QLowEnergyController::ConnectionError
                 default:
-                    Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status);
+                    Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status + " " + newState);
                     errorCode = status; break; //TODO deal with all errors
             }
             leConnectionStateChange(qtObject, errorCode, qLowEnergyController_State);
@@ -479,7 +482,31 @@ public class QtBluetoothLE {
             return false;
         }
 
-        mBluetoothGatt = mRemoteGattDevice.connectGatt(qtContext, false, gattCallback);
+        try {
+            // BluetoothDevice.,connectGatt(Context, boolean, BluetoothGattCallback, int) was
+            // officially introduced by Android API v23. Earlier Android versions have a private
+            // implementation already though. Let's check at runtime and use it if possible.
+            //
+            // In general the new connectGatt() seems to be much more reliable than the function
+            // that doesn't specify the transport layer.
+
+            Class[] args = new Class[4];
+            args[0] = android.content.Context.class;
+            args[1] = boolean.class;
+            args[2] = android.bluetooth.BluetoothGattCallback.class;
+            args[3] = int.class;
+            Method connectMethod = mRemoteGattDevice.getClass().getDeclaredMethod("connectGatt", args);
+            if (connectMethod != null) {
+                mBluetoothGatt = (BluetoothGatt) connectMethod.invoke(mRemoteGattDevice, qtContext,
+                                                                      false, gattCallback,
+                                                                      2 /*TRANSPORT_LE*/);
+                Log.w(TAG, "Using Android v23 BluetoothDevice.connectGatt()");
+            }
+        } catch (Exception ex) {
+            // fallback to less reliable API 18 version
+            mBluetoothGatt = mRemoteGattDevice.connectGatt(qtContext, false, gattCallback);
+        }
+
         return mBluetoothGatt != null;
     }
 
@@ -818,6 +845,12 @@ public class QtBluetoothLE {
     {
         GattEntry serviceEntry = entries.get(serviceHandle);
         final int endHandle = serviceEntry.endHandle;
+
+        if (serviceHandle == endHandle) {
+            Log.w(TAG, "scheduleServiceDetailDiscovery: service is empty; nothing to discover");
+            finishCurrentServiceDiscovery(serviceHandle);
+            return;
+        }
 
         synchronized (readWriteQueue) {
             // entire block inside mutex to ensure all service discovery jobs go in one after the other
