@@ -64,6 +64,7 @@ QT_BEGIN_NAMESPACE
     Call serverPort() to get the channel number that is being used.
 
     If the \l QBluetoothServiceInfo::Protocol is not supported by a platform, \l listen() will return \c false.
+    Android and WinRT only support RFCOMM for example.
 
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
