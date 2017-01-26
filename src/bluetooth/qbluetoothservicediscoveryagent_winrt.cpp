@@ -427,6 +427,9 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             BYTE length;
             hr = dataReader->ReadByte(&length);
             Q_ASSERT_SUCCEEDED(hr);
+            remainingLength -= 1;
+            if (bytesRead)
+                *bytesRead += 1;
             HString value;
             hr = dataReader->ReadString(length, value.GetAddressOf());
             Q_ASSERT_SUCCEEDED(hr);
@@ -435,7 +438,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             result.append(QVariant::fromValue(str));
             remainingLength -= length;
             if (bytesRead)
-                *bytesRead += 2;
+                *bytesRead += length;
             break;
         }
         case TYPE_SEQUENCE: {
