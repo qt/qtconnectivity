@@ -153,6 +153,8 @@ public class QtNfc
 
     static public boolean isAvailable()
     {
+        if (m_activity == null) return false;
+
         m_adapter = NfcAdapter.getDefaultAdapter(m_activity);
         if (m_adapter == null) {
             //Log.e(TAG, "No NFC available (Adapter is null)");
