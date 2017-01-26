@@ -62,22 +62,25 @@ public class QtNfc
     static public NfcAdapter m_adapter = null;
     static public PendingIntent m_pendingIntent = null;
     static public IntentFilter[] m_filters;
-    static public Activity m_activity;
+    static public Context m_context = null;
+    static public Activity m_activity = null;
 
     static public void setContext(Context context)
     {
-        if (!(context instanceof Activity)) {
-            Log.w(TAG, "NFC only works with Android activities and not in Android services. " +
-                       "NFC has been disabled.");
+        m_context = context;
+        if (context instanceof Activity) m_activity = (Activity) context;
+        m_adapter = NfcAdapter.getDefaultAdapter(context);
+
+        if (m_activity == null) {
+            Log.w(TAG, "New NFC tags will only be recognized with Android activities and not with Android services.");
             return;
         }
 
-        m_activity = (Activity)context;
-        m_adapter = NfcAdapter.getDefaultAdapter(m_activity);
         if (m_adapter == null) {
             //Log.e(TAG, "No NFC available");
             return;
         }
+
         m_pendingIntent = PendingIntent.getActivity(
             m_activity,
             0,
@@ -103,7 +106,8 @@ public class QtNfc
 
     static public boolean start()
     {
-        if (m_adapter == null) return false;
+        if (m_adapter == null || m_activity == null) return false;
+
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Enabling NFC");
@@ -136,7 +140,8 @@ public class QtNfc
 
     static public boolean stop()
     {
-        if (m_adapter == null) return false;
+        if (m_adapter == null || m_activity == null) return false;
+
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Disabling NFC");
@@ -153,13 +158,11 @@ public class QtNfc
 
     static public boolean isAvailable()
     {
-        if (m_activity == null) return false;
-
-        m_adapter = NfcAdapter.getDefaultAdapter(m_activity);
         if (m_adapter == null) {
             //Log.e(TAG, "No NFC available (Adapter is null)");
             return false;
         }
+
         return m_adapter.isEnabled();
     }
 
@@ -167,6 +170,7 @@ public class QtNfc
     {
         Log.d(TAG, "getStartIntent");
         if (m_activity == null) return null;
+
         Intent intent = m_activity.getIntent();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()) ||
                 NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) ||
