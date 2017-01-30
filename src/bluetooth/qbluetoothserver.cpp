@@ -257,7 +257,7 @@ bool QBluetoothServer::isListening() const
 {
     Q_D(const QBluetoothServer);
 
-#ifdef QT_ANDROID_BLUETOOTH
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH)
     return d->isListening();
 #endif
 

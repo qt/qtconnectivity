@@ -200,9 +200,9 @@ qtConfig(bluez):qtHaveModule(dbus) {
     SOURCES += \
         qbluetoothdevicediscoveryagent_winrt.cpp \
         qbluetoothlocaldevice_p.cpp \
-        qbluetoothserver_p.cpp \
+        qbluetoothserver_winrt.cpp \
         qbluetoothservicediscoveryagent_winrt.cpp \
-        qbluetoothserviceinfo_p.cpp \
+        qbluetoothserviceinfo_winrt.cpp \
         qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 

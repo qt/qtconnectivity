@@ -62,6 +62,22 @@
 class OrgBluezServiceInterface;
 class OrgBluezProfileManager1Interface;
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <wrl.h>
+
+namespace ABI {
+    namespace Windows {
+        namespace Devices {
+            namespace Bluetooth {
+                namespace Rfcomm {
+                    struct IRfcommServiceProvider;
+                }
+            }
+        }
+    }
+}
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
@@ -96,6 +112,12 @@ private:
     quint32 serviceRecord;
     QBluetoothAddress currentLocalAdapter;
     QString profilePath;
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::Rfcomm::IRfcommServiceProvider> serviceProvider;
+
+    bool writeSdpAttributes();
 #endif
 
     mutable bool registered;

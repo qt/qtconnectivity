@@ -69,6 +69,12 @@ QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 class ServerAcceptanceThread;
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <wrl.h>
+// No forward declares because QBluetoothServerPrivate::listener does not work with them
+#include <windows.networking.sockets.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -114,7 +120,21 @@ public:
     bool isListening() const;
     bool initiateActiveListening(const QBluetoothUuid& uuid, const QString &serviceName);
     bool deactivateActiveListening();
+#elif defined(QT_WINRT_BLUETOOTH)
+    EventRegistrationToken connectionToken {-1};
 
+    mutable QMutex pendingConnectionsMutex;
+    QVector<Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket>> pendingConnections;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocketListener> socketListener;
+    HRESULT handleClientConnection(ABI::Windows::Networking::Sockets::IStreamSocketListener *listener,
+                                   ABI::Windows::Networking::Sockets::IStreamSocketListenerConnectionReceivedEventArgs *args);
+
+public:
+    bool isListening() const;
+    Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocketListener> listener() { return socketListener; }
+    bool initiateActiveListening(const QString &serviceName);
+    bool deactivateActiveListening();
 #endif
 };
 

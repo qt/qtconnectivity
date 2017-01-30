@@ -533,11 +533,22 @@ void QBluetoothSocketPrivate::close()
 bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
-    Q_UNUSED(socketDescriptor);
-    Q_UNUSED(socketType)
-    Q_UNUSED(socketState);
-    Q_UNUSED(openMode);
-    return false;
+    Q_Q(QBluetoothSocket);
+    if (socketType != QBluetoothServiceInfo::RfcommProtocol)
+        return false;
+
+    m_socketObject = nullptr;
+    socket = -1;
+
+    m_socketObject = reinterpret_cast<IStreamSocket *>(qintptr(socketDescriptor));
+    if (!m_socketObject)
+        return false;
+    socket = qintptr(m_socketObject.Get());
+    m_worker->setSocket(m_socketObject);
+    if (socketState == QBluetoothSocket::ConnectedState)
+        m_worker->startReading();
+    q->setOpenMode(openMode);
+    return true;
 }
 
 qint64 QBluetoothSocketPrivate::bytesAvailable() const
