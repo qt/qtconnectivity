@@ -549,7 +549,7 @@ void QBluetoothSocketPrivate::handleNewData(const QVector<QByteArray> &data)
 {
     // Defer putting the data into the list until the next event loop iteration
     // (where the readyRead signal is emitted as well)
-    QMetaObject::invokeMethod(this, "putIntoPendingData", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "addToPendingData", Qt::QueuedConnection,
                               Q_ARG(QVector<QByteArray>, data));
 }
 
