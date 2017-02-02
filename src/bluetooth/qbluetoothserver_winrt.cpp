@@ -192,6 +192,12 @@ void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
     QMutexLocker locker(&d->pendingConnectionsMutex);
+    if (d->pendingConnections.count() > numConnections) {
+        qCWarning(QT_BT_WINRT) << "There are currently more than" << numConnections << "connections"
+                               << "pending. Number of maximum pending connections was not changed.";
+        return;
+    }
+
     d->maxPendingConnections = numConnections;
 }
 
