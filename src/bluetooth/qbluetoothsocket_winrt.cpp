@@ -167,15 +167,21 @@ public slots:
 public:
     void startReading()
     {
-        ComPtr<IBuffer> buffer;
-        HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<IInputStream> stream;
-        hr = m_socket->get_InputStream(&stream);
-        Q_ASSERT_SUCCEEDED(hr);
-        hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
-        Q_ASSERT_SUCCEEDED(hr);
-        hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+        HRESULT hr;
+        hr = QEventDispatcherWinRT::runOnXamlThread([this]()
+        {
+            ComPtr<IBuffer> buffer;
+            HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<IInputStream> stream;
+            hr = m_socket->get_InputStream(&stream);
+            Q_ASSERT_SUCCEEDED(hr);
+            hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
+            Q_ASSERT_SUCCEEDED(hr);
+            hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+            Q_ASSERT_SUCCEEDED(hr);
+            return S_OK;
+        });
         Q_ASSERT_SUCCEEDED(hr);
     }
 
