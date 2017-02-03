@@ -557,6 +557,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(ComPtr<IStreamSocket> socketPt
     m_socketObject = socketPtr;
     socket = qintptr(m_socketObject.Get());
     m_worker->setSocket(m_socketObject);
+    q->setSocketState(socketState);
     if (socketState == QBluetoothSocket::ConnectedState)
         m_worker->startReading();
     q->setOpenMode(openMode);
