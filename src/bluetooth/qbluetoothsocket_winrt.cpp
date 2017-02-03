@@ -539,16 +539,22 @@ void QBluetoothSocketPrivate::close()
 bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
+    Q_UNUSED(socketDescriptor);
+    Q_UNUSED(socketType)
+    Q_UNUSED(socketState);
+    Q_UNUSED(openMode);
+    qCWarning(QT_BT_WINRT) << "No socket descriptor support on WinRT.";
+    return false;
+}
+
+bool QBluetoothSocketPrivate::setSocketDescriptor(ComPtr<IStreamSocket> socketPtr, QBluetoothServiceInfo::Protocol socketType,
+                                           QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
+{
     Q_Q(QBluetoothSocket);
-    if (socketType != QBluetoothServiceInfo::RfcommProtocol)
+    if (socketType != QBluetoothServiceInfo::RfcommProtocol || !socketPtr)
         return false;
 
-    m_socketObject = nullptr;
-    socket = -1;
-
-    m_socketObject = reinterpret_cast<IStreamSocket *>(qintptr(socketDescriptor));
-    if (!m_socketObject)
-        return false;
+    m_socketObject = socketPtr;
     socket = qintptr(m_socketObject.Get());
     m_worker->setSocket(m_socketObject);
     if (socketState == QBluetoothSocket::ConnectedState)

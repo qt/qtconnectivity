@@ -221,7 +221,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     ComPtr<IStreamSocket> socket = d->pendingConnections.takeFirst();
 
     QBluetoothSocket *newSocket = new QBluetoothSocket();
-    bool success = newSocket->d_ptr->setSocketDescriptor(qintptr(socket.Get()), d->serverType);
+    bool success = newSocket->d_ptr->setSocketDescriptor(socket, d->serverType);
     if (!success) {
         delete newSocket;
         newSocket = 0;
