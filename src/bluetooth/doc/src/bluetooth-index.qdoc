@@ -50,7 +50,7 @@ Currently, the API is supported on the following platforms:
     \li x
     \li x
     \li x
-    \li
+    \li x
     \li
 \row
     \li Bluetooth LE Central
@@ -62,7 +62,7 @@ Currently, the API is supported on the following platforms:
     \li
 \row
     \li Bluetooth LE Peripheral
-    \li
+    \li x
     \li x
     \li x
     \li x
