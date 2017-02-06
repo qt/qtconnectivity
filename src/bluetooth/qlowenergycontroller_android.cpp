@@ -848,7 +848,7 @@ void QLowEnergyControllerPrivate::advertisementError(int errorCode)
         errorString = QLowEnergyController::tr("Failed due to too many advertisers");
         break;
     default:
-        errorString = QLowEnergyController::tr("Unknown advertisment error");
+        errorString = QLowEnergyController::tr("Unknown advertisement error");
         break;
     }
 
