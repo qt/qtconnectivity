@@ -164,6 +164,14 @@ The \l QtBluetooth module exports the following
     \li Enables logging of the \l {Qt for WinRT} {WinRT} implementation
 \endtable
 
+Logging categories can be used to enable additional warning and debug output
+for QtBluetooth. More detailed information about logging can be found in \l QLoggingCategory.
+A quick way to enable all QtBluetooth logging is to add the following line to the \c main() function:
+
+\code
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+\endcode
+
 \section2 Examples
 \list
     \li QML
