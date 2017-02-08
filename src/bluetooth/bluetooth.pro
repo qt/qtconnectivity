@@ -194,9 +194,6 @@ qtConfig(bluez):qtHaveModule(dbus) {
     DEFINES += QT_WINRT_BLUETOOTH
     QT += core-private
 
-    # remove dummy warning once platform port is complete
-    include(dummy/dummy.pri)
-
     SOURCES += \
         qbluetoothdevicediscoveryagent_winrt.cpp \
         qbluetoothlocaldevice_p.cpp \
