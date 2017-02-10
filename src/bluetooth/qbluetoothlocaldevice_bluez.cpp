@@ -672,6 +672,11 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     connectDeviceChanges();
 }
 
+bool objectPathIsForThisDevice(const QString &adapterPath, const QString &objectPath)
+{
+    return (!adapterPath.isEmpty() && objectPath.startsWith(adapterPath));
+}
+
 void QBluetoothLocalDevicePrivate::connectDeviceChanges()
 {
     if (adapter) { // invalid QBluetoothLocalDevice due to wrong local adapter address
@@ -695,6 +700,10 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
         for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
             const QDBusObjectPath &path = it.key();
             const InterfaceList &ifaceList = it.value();
+
+            // don't track connected devices from other adapters but the current
+            if (!objectPathIsForThisDevice(deviceAdapterPath, path.path()))
+                continue;
 
             for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
                 const QString &iface = jt.key();
@@ -817,6 +826,7 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
     if (!ok || adapterPath.isEmpty())
         return;
 
+    deviceAdapterPath = adapterPath;
     adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
                                                    adapterPath,
                                                    QDBusConnection::systemBus(), this);
@@ -901,19 +911,22 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
     if (interfaces_and_properties.contains(QStringLiteral("org.bluez.Device1"))
         && !deviceChangeMonitors.contains(object_path.path())) {
         // a new device was added which we need to add to list of known devices
-        OrgFreedesktopDBusPropertiesInterface *monitor = new OrgFreedesktopDBusPropertiesInterface(
-                                           QStringLiteral("org.bluez"),
-                                           object_path.path(),
-                                           QDBusConnection::systemBus());
-        connect(monitor, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
-                SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
-        deviceChangeMonitors.insert(object_path.path(), monitor);
 
-        const QVariantMap ifaceValues = interfaces_and_properties.value(QStringLiteral("org.bluez.Device1"));
-        if (ifaceValues.value(QStringLiteral("Connected"), false).toBool()) {
-            QBluetoothAddress address(ifaceValues.value(QStringLiteral("Address")).toString());
-            connectedDevicesSet.insert(address);
-            emit q_ptr->deviceConnected(address);
+        if (objectPathIsForThisDevice(deviceAdapterPath, object_path.path())) {
+            OrgFreedesktopDBusPropertiesInterface *monitor = new OrgFreedesktopDBusPropertiesInterface(
+                                               QStringLiteral("org.bluez"),
+                                               object_path.path(),
+                                               QDBusConnection::systemBus());
+            connect(monitor, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
+                    SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
+            deviceChangeMonitors.insert(object_path.path(), monitor);
+
+            const QVariantMap ifaceValues = interfaces_and_properties.value(QStringLiteral("org.bluez.Device1"));
+            if (ifaceValues.value(QStringLiteral("Connected"), false).toBool()) {
+                QBluetoothAddress address(ifaceValues.value(QStringLiteral("Address")).toString());
+                connectedDevicesSet.insert(address);
+                emit q_ptr->deviceConnected(address);
+            }
         }
     }
 
@@ -933,17 +946,19 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
     if (deviceChangeMonitors.contains(object_path.path())
             && interfaces.contains(QLatin1String("org.bluez.Device1"))) {
 
-        //a device was removed
-        delete deviceChangeMonitors.take(object_path.path());
+        if (objectPathIsForThisDevice(deviceAdapterPath, object_path.path())) {
+            //a device was removed
+            delete deviceChangeMonitors.take(object_path.path());
 
-        //the path contains the address (e.g.: /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX)
-        //-> use it to update current list of connected devices
-        QString addressString = object_path.path().right(17);
-        addressString.replace(QStringLiteral("_"), QStringLiteral(":"));
-        const QBluetoothAddress address(addressString);
-        bool found = connectedDevicesSet.remove(address);
-        if (found)
-            emit q_ptr->deviceDisconnected(address);
+            //the path contains the address (e.g.: /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX)
+            //-> use it to update current list of connected devices
+            QString addressString = object_path.path().right(17);
+            addressString.replace(QStringLiteral("_"), QStringLiteral(":"));
+            const QBluetoothAddress address(addressString);
+            bool found = connectedDevicesSet.remove(address);
+            if (found)
+                emit q_ptr->deviceDisconnected(address);
+        }
     }
 
     if (adapterBluez5
