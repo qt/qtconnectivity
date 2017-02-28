@@ -13,4 +13,5 @@ qtHaveModule(quick): SUBDIRS += scanner \
                                 pingpong \
                                 lowenergyscanner \
                                 heartlistener \
+                                heartrate-game \
                                 chat
