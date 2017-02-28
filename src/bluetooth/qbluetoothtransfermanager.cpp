@@ -121,8 +121,8 @@ QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransfer
     connect(reply, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
     return reply;
 #else
-    // Android and iOS have no implementation
-#if !defined(QT_ANDROID_BLUETOOTH) && !defined(QT_IOS_BLUETOOTH)
+    // Android, iOS, and WinRT have no implementation
+#if !defined(QT_ANDROID_BLUETOOTH) && !defined(QT_IOS_BLUETOOTH) && !defined(QT_WINRT_BLUETOOTH)
     printDummyWarning();
 #endif
     Q_UNUSED(request);

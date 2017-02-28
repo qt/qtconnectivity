@@ -497,6 +497,44 @@ public class QtBluetoothLEServer {
     }
 
     /*
+        Updates the local database value for the given \a descUuid to \a newValue.
+
+        This function is called from the Qt thread.
+     */
+    public boolean writeDescriptor(BluetoothGattService service, UUID charUuid, UUID descUuid,
+                                   byte[] newValue)
+    {
+        BluetoothGattDescriptor foundDesc = null;
+        BluetoothGattCharacteristic foundChar = null;
+        final List<BluetoothGattCharacteristic> charList = service.getCharacteristics();
+        for (BluetoothGattCharacteristic iter: charList) {
+            if (!iter.getUuid().equals(charUuid))
+                continue;
+
+            if (foundChar == null) {
+                foundChar = iter;
+            } else {
+                Log.w(TAG, "Found second char with same UUID. Wrong char may have been selected.");
+                break;
+            }
+        }
+
+        if (foundChar != null)
+            foundDesc = foundChar.getDescriptor(descUuid);
+
+        if (foundChar == null || foundDesc == null) {
+            Log.w(TAG, "writeDescriptor: update for unknown char or desc failed (" + foundChar + ")");
+            return false;
+        }
+
+        // we even write CLIENT_CHARACTERISTIC_CONFIGURATION_UUID this way as we choose
+        // to interpret the server's call as a change of the default value.
+        foundDesc.setValue(newValue);
+
+        return true;
+    }
+
+    /*
      * Call back handler for Advertisement requests.
      */
     private AdvertiseCallback mAdvertiseListener = new AdvertiseCallback()

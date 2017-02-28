@@ -50,7 +50,7 @@ Currently, the API is supported on the following platforms:
     \li x
     \li x
     \li x
-    \li
+    \li x
     \li
 \row
     \li Bluetooth LE Central
@@ -62,7 +62,7 @@ Currently, the API is supported on the following platforms:
     \li
 \row
     \li Bluetooth LE Peripheral
-    \li
+    \li x
     \li x
     \li x
     \li x
@@ -146,17 +146,31 @@ The \l QtBluetooth module exports the following
     \li Enables logging of cross platform code path in QtBluetooth
 \row
     \li qt.bluetooth.android
-    \li Enables logging of the Android implementation
+    \li Enables logging of the \l {Qt for Android} {Android} implementation
 \row
     \li qt.bluetooth.bluez
     \li Enables logging of the BLuez/Linux implementation
 \row
     \li qt.bluetooth.ios
-    \li Enables logging of the iOS implementation
+    \li Enables logging of the \l {Qt for iOS} {iOS} implementation
 \row
     \li qt.bluetooth.osx
-    \li Enables logging of the \macos implementation
+    \li Enables logging of the \l {Qt for macOS} {macOS} implementation
+\row
+    \li qt.bluetooth.qml
+     \li Enables logging of the QtBluetooth QML implementation
+\row
+    \li qt.bluetooth.winrt
+    \li Enables logging of the \l {Qt for WinRT} {WinRT} implementation
 \endtable
+
+Logging categories can be used to enable additional warning and debug output
+for QtBluetooth. More detailed information about logging can be found in \l QLoggingCategory.
+A quick way to enable all QtBluetooth logging is to add the following line to the \c main() function:
+
+\code
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+\endcode
 
 \section2 Examples
 \list

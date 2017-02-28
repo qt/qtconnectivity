@@ -74,6 +74,69 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
 extern QHash<QBluetoothServerPrivate *, int> __fakeServerPorts;
 
+bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
+{
+    ComPtr<IDataReaderStatics> dataReaderStatics;
+    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Storage_Streams_DataReader).Get(),
+                                      &dataReaderStatics);
+    Q_ASSERT_SUCCEEDED(hr);
+
+    ComPtr<IDataReader> reader;
+    hr = dataReaderStatics->FromBuffer(buffer.Get(), reader.GetAddressOf());
+    Q_ASSERT_SUCCEEDED(hr);
+
+    BYTE type;
+    hr = reader->ReadByte(&type);
+    Q_ASSERT_SUCCEEDED(hr);
+    if (type != TYPE_SEQUENCE) {
+        qCWarning(QT_BT_WINRT) << Q_FUNC_INFO << "Malformed profile descriptor list read";
+        return false;
+    }
+
+    quint8 length;
+    hr = reader->ReadByte(&length);
+    Q_ASSERT_SUCCEEDED(hr);
+
+    hr = reader->ReadByte(&type);
+    Q_ASSERT_SUCCEEDED(hr);
+    // We have to "repair" the structure if the outer sequence contains a uuid directly
+    if (type == TYPE_SHORT_UUID && length == 4) {
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Repairing profile descriptor list";
+        quint16 uuid;
+        hr = reader->ReadUInt16(&uuid);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        ComPtr<IDataWriter> writer;
+        hr = RoActivateInstance(HString::MakeReference(RuntimeClass_Windows_Storage_Streams_DataWriter).Get(),
+            &writer);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        hr = writer->WriteByte(TYPE_SEQUENCE);
+        Q_ASSERT_SUCCEEDED(hr);
+        // 8 == length of nested sequence (outer sequence -> inner sequence -> uuid and version)
+        hr = writer->WriteByte(8);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteByte(TYPE_SEQUENCE);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteByte(7);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteByte(TYPE_SHORT_UUID);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteUInt16(uuid);
+        Q_ASSERT_SUCCEEDED(hr);
+        // Write default version to make WinRT happy
+        hr = writer->WriteByte(TYPE_UINT16);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteUInt16(0x100);
+        Q_ASSERT_SUCCEEDED(hr);
+
+        hr = writer->DetachBuffer(&buffer);
+        Q_ASSERT_SUCCEEDED(hr);
+    }
+
+    return true;
+}
+
 static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
 {
     ComPtr<IDataWriter> writer;
@@ -359,6 +422,15 @@ bool QBluetoothServiceInfoPrivate::writeSdpAttributes()
         if (!buffer) {
             qCWarning(QT_BT_WINRT) << "Could not create buffer from attribute with id:" << key;
             return false;
+        }
+
+        // Other backends support a wrong structure in profile descriptor list. In order to make
+        // WinRT accept the list without breaking existing apps we have to repair this structure.
+        if (key == QBluetoothServiceInfo::BluetoothProfileDescriptorList) {
+            if (!repairProfileDescriptorListIfNeeded(buffer)) {
+                qCWarning(QT_BT_WINRT) << Q_FUNC_INFO << "Error while checking/repairing structure of profile descriptor list";
+                return false;
+            }
         }
 
         hr = writer->WriteBuffer(buffer.Get());

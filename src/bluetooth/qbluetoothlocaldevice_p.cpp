@@ -51,7 +51,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(0)
 {
-#ifndef QT_IOS_BLUETOOTH
+#if !defined(QT_IOS_BLUETOOTH) && !defined(QT_WINRT_BLUETOOTH)
     printDummyWarning();
 #endif
     registerQBluetoothLocalDeviceMetaType();

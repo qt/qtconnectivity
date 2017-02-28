@@ -167,15 +167,21 @@ public slots:
 public:
     void startReading()
     {
-        ComPtr<IBuffer> buffer;
-        HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<IInputStream> stream;
-        hr = m_socket->get_InputStream(&stream);
-        Q_ASSERT_SUCCEEDED(hr);
-        hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
-        Q_ASSERT_SUCCEEDED(hr);
-        hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+        HRESULT hr;
+        hr = QEventDispatcherWinRT::runOnXamlThread([this]()
+        {
+            ComPtr<IBuffer> buffer;
+            HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<IInputStream> stream;
+            hr = m_socket->get_InputStream(&stream);
+            Q_ASSERT_SUCCEEDED(hr);
+            hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
+            Q_ASSERT_SUCCEEDED(hr);
+            hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+            Q_ASSERT_SUCCEEDED(hr);
+            return S_OK;
+        });
         Q_ASSERT_SUCCEEDED(hr);
     }
 
@@ -533,18 +539,25 @@ void QBluetoothSocketPrivate::close()
 bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
+    Q_UNUSED(socketDescriptor);
+    Q_UNUSED(socketType)
+    Q_UNUSED(socketState);
+    Q_UNUSED(openMode);
+    qCWarning(QT_BT_WINRT) << "No socket descriptor support on WinRT.";
+    return false;
+}
+
+bool QBluetoothSocketPrivate::setSocketDescriptor(ComPtr<IStreamSocket> socketPtr, QBluetoothServiceInfo::Protocol socketType,
+                                           QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
+{
     Q_Q(QBluetoothSocket);
-    if (socketType != QBluetoothServiceInfo::RfcommProtocol)
+    if (socketType != QBluetoothServiceInfo::RfcommProtocol || !socketPtr)
         return false;
 
-    m_socketObject = nullptr;
-    socket = -1;
-
-    m_socketObject = reinterpret_cast<IStreamSocket *>(qintptr(socketDescriptor));
-    if (!m_socketObject)
-        return false;
+    m_socketObject = socketPtr;
     socket = qintptr(m_socketObject.Get());
     m_worker->setSocket(m_socketObject);
+    q->setSocketState(socketState);
     if (socketState == QBluetoothSocket::ConnectedState)
         m_worker->startReading();
     q->setOpenMode(openMode);

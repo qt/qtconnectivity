@@ -290,7 +290,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 
 void QLowEnergyControllerPrivate::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
-        const QLowEnergyHandle /*charHandle*/,
+        const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descHandle,
         const QByteArray &newValue)
 {
@@ -304,10 +304,27 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 
     bool result = false;
     if (hub) {
-        qCDebug(QT_BT_ANDROID) << "Write descriptor with handle " << descHandle
-                 << newValue.toHex() << "(service:" << service->uuid << ")";
-        result = hub->javaObject().callMethod<jboolean>("writeDescriptor", "(I[B)Z",
-                                                        descHandle, payload);
+        if (role == QLowEnergyController::CentralRole) {
+            qCDebug(QT_BT_ANDROID) << "Write descriptor with handle " << descHandle
+                     << newValue.toHex() << "(service:" << service->uuid << ")";
+            result = hub->javaObject().callMethod<jboolean>("writeDescriptor", "(I[B)Z",
+                                                            descHandle, payload);
+        } else {
+            const auto &characteristic = characteristicForHandle(charHandle);
+            const auto &descriptor = descriptorForHandle(descHandle);
+            if (characteristic.isValid() && descriptor.isValid()) {
+                qCDebug(QT_BT_ANDROID) << "Write descriptor" << descriptor.uuid()
+                                   << "(service:" << service->uuid
+                                   << "char: " << characteristic.uuid() << ")";
+                const QAndroidJniObject charUuid = javaUuidfromQtUuid(characteristic.uuid());
+                const QAndroidJniObject descUuid = javaUuidfromQtUuid(descriptor.uuid());
+                result = hub->javaObject().callMethod<jboolean>(
+                            "writeDescriptor",
+                            "(Landroid/bluetooth/BluetoothGattService;Ljava/util/UUID;Ljava/util/UUID;[B)Z",
+                            service->androidService.object(), charUuid.object(),
+                            descUuid.object(), payload);
+            }
+        }
     }
 
     if (env->ExceptionOccurred()) {
@@ -848,7 +865,7 @@ void QLowEnergyControllerPrivate::advertisementError(int errorCode)
         errorString = QLowEnergyController::tr("Failed due to too many advertisers");
         break;
     default:
-        errorString = QLowEnergyController::tr("Unknown advertisment error");
+        errorString = QLowEnergyController::tr("Unknown advertisement error");
         break;
     }
 

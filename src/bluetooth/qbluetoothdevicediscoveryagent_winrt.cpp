@@ -46,11 +46,7 @@
 #include <windows.foundation.collections.h>
 #include <windows.storage.streams.h>
 
-#ifndef Q_OS_WINPHONE
 #include <windows.devices.bluetooth.advertisement.h>
-
-using namespace ABI::Windows::Devices::Bluetooth::Advertisement;
-#endif // !Q_OS_WINPHONE
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -58,6 +54,7 @@ using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::Devices;
 using namespace ABI::Windows::Devices::Bluetooth;
+using namespace ABI::Windows::Devices::Bluetooth::Advertisement;
 using namespace ABI::Windows::Devices::Enumeration;
 
 QT_BEGIN_NAMESPACE
@@ -112,11 +109,9 @@ public:
     quint8 requestedModes;
 
 private:
-#ifndef Q_OS_WINPHONE
     ComPtr<IBluetoothLEAdvertisementWatcher> m_leWatcher;
     EventRegistrationToken m_leDeviceAddedToken;
     QVector<quint64> m_foundLEDevices;
-#endif // !Q_OS_WINPHONE
     int m_pendingPairedDevices;
 
     ComPtr<IBluetoothDeviceStatics> m_deviceStatics;
@@ -158,7 +153,6 @@ void QWinRTBluetoothDeviceDiscoveryWorker::start()
 
 void QWinRTBluetoothDeviceDiscoveryWorker::stop()
 {
-#ifndef Q_OS_WINPHONE
     if (m_leWatcher) {
         HRESULT hr = m_leWatcher->Stop();
         Q_ASSERT_SUCCEEDED(hr);
@@ -167,7 +161,6 @@ void QWinRTBluetoothDeviceDiscoveryWorker::stop()
             Q_ASSERT_SUCCEEDED(hr);
         }
     }
-#endif // !Q_OS_WINPHONE
 }
 
 void QWinRTBluetoothDeviceDiscoveryWorker::startDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
@@ -230,7 +223,6 @@ void QWinRTBluetoothDeviceDiscoveryWorker::gatherMultipleDeviceInformation(IVect
 
 void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
 {
-#ifndef Q_OS_WINPHONE
     HRESULT hr = RoActivateInstance(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_Advertisement_BluetoothLEAdvertisementWatcher).Get(), &m_leWatcher);
     Q_ASSERT_SUCCEEDED(hr);
     hr = m_leWatcher->add_Received(Callback<ITypedEventHandler<BluetoothLEAdvertisementWatcher *, BluetoothLEAdvertisementReceivedEventArgs *>>([this](IBluetoothLEAdvertisementWatcher *, IBluetoothLEAdvertisementReceivedEventArgs *args) {
@@ -248,7 +240,6 @@ void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
     Q_ASSERT_SUCCEEDED(hr);
     hr = m_leWatcher->Start();
     Q_ASSERT_SUCCEEDED(hr);
-#endif // !Q_OS_WINPHONE
 }
 
 void QWinRTBluetoothDeviceDiscoveryWorker::handleLeTimeout()
@@ -429,7 +420,6 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     }
 
     if (pairingCheck == CheckForPairing) {
-#ifndef Q_OS_WINPHONE
         ComPtr<IBluetoothLEDevice2> device2;
         HRESULT hr = device.As(&device2);
         Q_ASSERT_SUCCEEDED(hr);
@@ -477,9 +467,6 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
             }).Get());
             return S_OK;
         }
-#else // !Q_OS_WINPHONE
-        Q_ASSERT(false);
-#endif // Q_OS_WINPHONE
     }
 
     UINT64 address;

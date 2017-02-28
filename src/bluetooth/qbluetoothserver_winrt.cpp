@@ -43,6 +43,7 @@
 #include "qbluetoothsocket_p.h"
 
 #include <QtCore/QLoggingCategory>
+#include <QtCore/private/qeventdispatcher_winrt_p.h>
 #include <qfunctions_winrt.h>
 
 #include <windows.networking.h>
@@ -156,11 +157,16 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
 
     HRESULT hr;
-    hr = RoActivateInstance(HString::MakeReference(RuntimeClass_Windows_Networking_Sockets_StreamSocketListener).Get(),
-                            &d->socketListener);
-    Q_ASSERT_SUCCEEDED(hr);
-    hr = d->socketListener->add_ConnectionReceived(Callback<ClientConnectedHandler>(d, &QBluetoothServerPrivate::handleClientConnection).Get(),
-                                                 &d->connectionToken);
+    hr = QEventDispatcherWinRT::runOnXamlThread([d, this] ()
+    {
+        HRESULT hr = RoActivateInstance(HString::MakeReference(RuntimeClass_Windows_Networking_Sockets_StreamSocketListener).Get(),
+                                &d->socketListener);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = d->socketListener->add_ConnectionReceived(Callback<ClientConnectedHandler>(d, &QBluetoothServerPrivate::handleClientConnection).Get(),
+                                                       &d->connectionToken);
+        Q_ASSERT_SUCCEEDED(hr);
+        return S_OK;
+    });
     Q_ASSERT_SUCCEEDED(hr);
 
     //We can not register an actual Rfcomm port, because the platform does not allow it
@@ -192,6 +198,12 @@ void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
     QMutexLocker locker(&d->pendingConnectionsMutex);
+    if (d->pendingConnections.count() > numConnections) {
+        qCWarning(QT_BT_WINRT) << "There are currently more than" << numConnections << "connections"
+                               << "pending. Number of maximum pending connections was not changed.";
+        return;
+    }
+
     d->maxPendingConnections = numConnections;
 }
 
@@ -209,7 +221,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     ComPtr<IStreamSocket> socket = d->pendingConnections.takeFirst();
 
     QBluetoothSocket *newSocket = new QBluetoothSocket();
-    bool success = newSocket->d_ptr->setSocketDescriptor(qintptr(socket.Get()), d->serverType);
+    bool success = newSocket->d_ptr->setSocketDescriptor(socket, d->serverType);
     if (!success) {
         delete newSocket;
         newSocket = 0;
