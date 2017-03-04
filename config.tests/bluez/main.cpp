@@ -30,5 +30,6 @@
 
 int main()
 {
+    bacmp(BDADDR_ANY, BDADDR_NONE);
     return 0;
 }
