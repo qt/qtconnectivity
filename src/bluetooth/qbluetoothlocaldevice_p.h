@@ -200,6 +200,7 @@ private:
 
     QDBusMessage msgConfirmation;
     QDBusConnection *msgConnection;
+    QString deviceAdapterPath;
 
     QBluetoothLocalDevice *q_ptr;
 
