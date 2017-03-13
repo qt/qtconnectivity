@@ -51,6 +51,7 @@ bool QNearFieldTargetPrivate::keepConnection() const
 
 bool QNearFieldTargetPrivate::setKeepConnection(bool isPersistent)
 {
+    Q_UNUSED(isPersistent);
     return false;
 }
 
