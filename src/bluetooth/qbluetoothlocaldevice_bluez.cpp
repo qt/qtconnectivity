@@ -1164,7 +1164,7 @@ QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
     Q_Q(QBluetoothLocalDevice);
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path();
     // seeded in constructor, 6 digit pin
-    QString pin = QString::fromLatin1("%1").arg(qrand()&1000000);
+    QString pin = QString::fromLatin1("%1").arg(qrand() % 1000000);
     pin = QString::fromLatin1("%1").arg(pin, 6, QLatin1Char('0'));
 
     emit q->pairingDisplayPinCode(address, pin);
@@ -1276,7 +1276,7 @@ uint QBluetoothLocalDevicePrivate::RequestPasskey(const QDBusObjectPath &in0)
 {
     Q_UNUSED(in0);
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
-    return qrand()&0x1000000;
+    return (qrand() % 1000000);
 }
 
 // Bluez 4
