@@ -41,6 +41,7 @@
 #include "heartrate-global.h"
 #include "connectionhandler.h"
 #include <QtDebug>
+#include <QtBluetooth/qtbluetooth-config.h>
 
 ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)
 {
@@ -56,6 +57,16 @@ bool ConnectionHandler::alive() const
     return m_localDevice.isValid() && m_localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff;
 #endif
 }
+
+bool ConnectionHandler::requiresAddressType() const
+{
+#if QT_CONFIG(bluez)
+    return true;
+#else
+    return false;
+#endif
+}
+
 QString ConnectionHandler::name() const
 {
     return m_localDevice.name();

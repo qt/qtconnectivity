@@ -113,7 +113,7 @@ void DeviceFinder::scanFinished()
 {
 #ifdef SIMULATOR
     // Only for testing
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 4; i++)
         m_devices.append(new DeviceInfo(QBluetoothDeviceInfo()));
 #endif
 

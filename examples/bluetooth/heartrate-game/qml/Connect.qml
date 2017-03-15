@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.5
+import Shared 1.0
 
 GamePage {
 
@@ -48,7 +49,9 @@ GamePage {
     Rectangle {
         id: viewContainer
         anchors.top: parent.top
-        anchors.bottom: searchButton.top
+        anchors.bottom:
+            // only BlueZ platform has address type selection
+            connectionHandler.requiresAddressType ? addressTypeButton.top : searchButton.top
         anchors.topMargin: GameSettings.fieldMargin + messageHeight
         anchors.bottomMargin: GameSettings.fieldMargin
         anchors.horizontalCenter: parent.horizontalCenter
@@ -120,6 +123,38 @@ GamePage {
                     color: Qt.darker(GameSettings.textColor)
                 }
             }
+        }
+    }
+
+    GameButton {
+        id: addressTypeButton
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: searchButton.top
+        anchors.bottomMargin: GameSettings.fieldMargin*0.5
+        width: viewContainer.width
+        height: GameSettings.fieldHeight
+        visible: connectionHandler.requiresAddressType // only required on BlueZ
+        state: "public"
+        onClicked: state == "public" ? state = "random" : state = "public"
+
+        states: [
+            State {
+                name: "public"
+                PropertyChanges { target: addressTypeText; text: qsTr("Public Address") }
+                PropertyChanges { target: deviceHandler; addressType: AddressType.PublicAddress }
+            },
+            State {
+                name: "random"
+                PropertyChanges { target: addressTypeText; text: qsTr("Random Address") }
+                PropertyChanges { target: deviceHandler; addressType: AddressType.RandomAddress }
+            }
+        ]
+
+        Text {
+            id: addressTypeText
+            anchors.centerIn: parent
+            font.pixelSize: GameSettings.tinyFontSize
+            color: GameSettings.textColor
         }
     }
 

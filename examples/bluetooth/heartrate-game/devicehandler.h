@@ -63,11 +63,21 @@ class DeviceHandler : public BluetoothBaseClass
     Q_PROPERTY(float average READ average NOTIFY statsChanged)
     Q_PROPERTY(int time READ time NOTIFY statsChanged)
     Q_PROPERTY(float calories READ calories NOTIFY statsChanged)
+    Q_PROPERTY(AddressType addressType READ addressType WRITE setAddressType)
 
 public:
+    enum class AddressType {
+        PublicAddress,
+        RandomAddress
+    };
+    Q_ENUM(AddressType)
+
     DeviceHandler(QObject *parent = 0);
 
     void setDevice(DeviceInfo *device);
+    void setAddressType(AddressType type);
+    AddressType addressType() const;
+
     bool measuring() const;
     bool alive() const;
 
@@ -122,6 +132,7 @@ private:
     QDateTime m_stop;
 
     QVector<int> m_measurements;
+    QLowEnergyController::RemoteAddressType m_addressType = QLowEnergyController::PublicAddress;
 
 #ifdef SIMULATOR
     QTimer m_demoTimer;

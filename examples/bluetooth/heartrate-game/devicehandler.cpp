@@ -62,6 +62,26 @@ DeviceHandler::DeviceHandler(QObject *parent) :
 #endif
 }
 
+void DeviceHandler::setAddressType(AddressType type)
+{
+    switch (type) {
+    case DeviceHandler::AddressType::PublicAddress:
+        m_addressType = QLowEnergyController::PublicAddress;
+        break;
+    case DeviceHandler::AddressType::RandomAddress:
+        m_addressType = QLowEnergyController::RandomAddress;
+        break;
+    }
+}
+
+DeviceHandler::AddressType DeviceHandler::addressType() const
+{
+    if (m_addressType == QLowEnergyController::RandomAddress)
+        return DeviceHandler::AddressType::RandomAddress;
+
+    return DeviceHandler::AddressType::PublicAddress;
+}
+
 void DeviceHandler::setDevice(DeviceInfo *device)
 {
     clearMessages();
@@ -84,6 +104,7 @@ void DeviceHandler::setDevice(DeviceInfo *device)
 
         // Make connections
         m_control = new QLowEnergyController(m_currentDevice->getDevice(), this);
+        m_control->setRemoteAddressType(m_addressType);
         connect(m_control, &QLowEnergyController::serviceDiscovered,
                 this, &DeviceHandler::serviceDiscovered);
         connect(m_control, &QLowEnergyController::discoveryFinished,

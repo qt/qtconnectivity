@@ -22,7 +22,7 @@ qtHaveModule(quick) {
 }
 
 include($$OUT_PWD/bluetooth/qtbluetooth-config.pri)
-QT_FOR_CONFIG += bluetooth-private
+QT_FOR_CONFIG += bluetooth
 qtConfig(bluez):qtHaveModule(dbus) {
     sdpscanner.subdir = tools/sdpscanner
     sdpscanner.depends = bluetooth
