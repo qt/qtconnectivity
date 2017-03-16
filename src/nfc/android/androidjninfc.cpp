@@ -88,7 +88,6 @@ QAndroidJniObject getTag(const QAndroidJniObject &intent)
 {
     QAndroidJniObject extraTag = QAndroidJniObject::getStaticObjectField("android/nfc/NfcAdapter", "EXTRA_TAG", "Ljava/lang/String;");
     QAndroidJniObject tag = intent.callObjectMethod("getParcelableExtra", "(Ljava/lang/String;)Landroid/os/Parcelable;", extraTag.object<jstring>());
-    Q_ASSERT_X(tag.isValid(), "getTag", "could not get Tag object");
     return tag;
 }
 

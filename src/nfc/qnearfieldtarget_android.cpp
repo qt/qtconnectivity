@@ -401,6 +401,8 @@ void NearFieldTarget::updateTechList()
     // Getting tech list
     QAndroidJniEnvironment env;
     QAndroidJniObject tag = AndroidNfc::getTag(m_intent);
+    Q_ASSERT_X(tag.isValid(), "updateTechList", "could not get Tag object");
+
     QAndroidJniObject techListArray = tag.callObjectMethod("getTechList", "()[Ljava/lang/String;");
     if (!techListArray.isValid()) {
         handleTargetLost();
@@ -493,6 +495,8 @@ QAndroidJniObject NearFieldTarget::getTagTechnology(const QString &tech) const
 
     // Getting requested technology
     QAndroidJniObject tag = AndroidNfc::getTag(m_intent);
+    Q_ASSERT_X(tag.isValid(), "getTagTechnology", "could not get Tag object");
+
     const QString sig = QString::fromUtf8("(Landroid/nfc/Tag;)L%1;");
     QAndroidJniObject tagTech = QAndroidJniObject::callStaticObjectMethod(techClass.toUtf8().constData(), "get",
             sig.arg(techClass).toUtf8().constData(), tag.object<jobject>());
