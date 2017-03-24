@@ -91,9 +91,6 @@ private:
     QList<QBluetoothUuid> foundServices;
 };
 
-Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
-Q_DECLARE_METATYPE(QLowEnergyDescriptor)
-
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyCharacteristic>();

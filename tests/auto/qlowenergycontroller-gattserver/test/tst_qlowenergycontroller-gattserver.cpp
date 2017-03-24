@@ -243,10 +243,6 @@ void TestQLowEnergyControllerGattServer::advertisedData()
     QVERIFY(m_serverInfo.serviceUuids().contains(QBluetoothUuid(quint16(0x2000))));
 }
 
-// TODO: Why on earth is this not in the library???
-Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
-Q_DECLARE_METATYPE(QLowEnergyDescriptor)
-
 void TestQLowEnergyControllerGattServer::serverCommunication()
 {
     qRegisterMetaType<QLowEnergyCharacteristic>();
