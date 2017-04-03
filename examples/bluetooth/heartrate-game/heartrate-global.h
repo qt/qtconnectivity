@@ -38,55 +38,14 @@
 **
 ****************************************************************************/
 
-#ifndef DEVICEFINDER_H
-#define DEVICEFINDER_H
+#ifndef HEARTRATEGLOBAL_H
+#define HEARTRATEGLOBAL_H
 
-#include "heartrate-global.h"
-#include "bluetoothbaseclass.h"
+//#define USE_SIMULATOR
 
-#include <QTimer>
-#include <QBluetoothDeviceDiscoveryAgent>
-#include <QBluetoothDeviceInfo>
-#include <QVariant>
-
-class DeviceInfo;
-class DeviceHandler;
-
-class DeviceFinder: public BluetoothBaseClass
-{
-    Q_OBJECT
-
-    Q_PROPERTY(bool scanning READ scanning NOTIFY scanningChanged)
-    Q_PROPERTY(QVariant devices READ devices NOTIFY devicesChanged)
-
-public:
-    DeviceFinder(DeviceHandler *handler, QObject *parent = 0);
-    ~DeviceFinder();
-
-    bool scanning() const;
-    QVariant devices();
-
-public slots:
-    void startSearch();
-    void connectToService(const QString &address);
-
-private slots:
-    void addDevice(const QBluetoothDeviceInfo&);
-    void scanError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void scanFinished();
-
-signals:
-    void scanningChanged();
-    void devicesChanged();
-
-private:
-    DeviceHandler *m_deviceHandler;
-    QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
-    QList<QObject*> m_devices;
-
-#ifdef SIMULATOR
-    QTimer m_demoTimer;
+#if defined(Q_OS_WIN32) || defined(USE_SIMULATOR)
+#define SIMULATOR
 #endif
-};
 
-#endif // DEVICEFINDER_H
+
+#endif // HEARTRATEGLOBAL_H

@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+#include "heartrate-global.h"
 #include "deviceinfo.h"
 #include <QBluetoothAddress>
 #include <QBluetoothUuid>
@@ -54,7 +55,7 @@ QBluetoothDeviceInfo DeviceInfo::getDevice() const
 
 QString DeviceInfo::getName() const
 {
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     return "Demo device";
 #else
     return m_device.name();
@@ -63,7 +64,7 @@ QString DeviceInfo::getName() const
 
 QString DeviceInfo::getAddress() const
 {
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     return "00:11:22:33:44:55";
 #elif Q_OS_DARWIN
     // workaround for Core Bluetooth:

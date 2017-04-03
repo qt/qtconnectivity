@@ -101,7 +101,7 @@ private:
     void confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
                               const QByteArray &value);
 
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     void updateDemoHR();
 #endif
 private:
@@ -123,7 +123,7 @@ private:
 
     QVector<int> m_measurements;
 
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     QTimer m_demoTimer;
 #endif
 };

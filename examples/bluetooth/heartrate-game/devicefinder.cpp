@@ -58,7 +58,7 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled, this, &DeviceFinder::scanFinished);
 
 
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     m_demoTimer.setSingleShot(true);
     m_demoTimer.setInterval(2000);
     connect(&m_demoTimer, &QTimer::timeout, this, &DeviceFinder::scanFinished);
@@ -80,7 +80,7 @@ void DeviceFinder::startSearch()
 
     emit devicesChanged();
 
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     m_demoTimer.start();
 #else
     m_deviceDiscoveryAgent->start();
@@ -111,7 +111,7 @@ void DeviceFinder::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
 
 void DeviceFinder::scanFinished()
 {
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     // Only for testing
     for (int i = 0; i < 5; i++)
         m_devices.append(new DeviceInfo(QBluetoothDeviceInfo()));
@@ -146,7 +146,7 @@ void DeviceFinder::connectToService(const QString &address)
 
 bool DeviceFinder::scanning() const
 {
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     return m_demoTimer.isActive();
 #else
     return m_deviceDiscoveryAgent->isActive();

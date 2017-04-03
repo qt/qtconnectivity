@@ -9,7 +9,8 @@ HEADERS += \
     deviceinfo.h \
     devicefinder.h \
     devicehandler.h \
-    bluetoothbaseclass.h
+    bluetoothbaseclass.h \
+    heartrate-global.h
 
 SOURCES += main.cpp \
     connectionhandler.cpp \

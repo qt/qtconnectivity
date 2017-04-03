@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+#include "heartrate-global.h"
 #include "devicehandler.h"
 #include "deviceinfo.h"
 #include <QtEndian>
@@ -52,7 +53,7 @@ DeviceHandler::DeviceHandler(QObject *parent) :
     m_currentValue(0),
     m_min(0), m_max(0), m_sum(0), m_avg(0), m_calories(0)
 {
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     m_demoTimer.setSingleShot(false);
     m_demoTimer.setInterval(2000);
     connect(&m_demoTimer, &QTimer::timeout, this, &DeviceHandler::updateDemoHR);
@@ -66,7 +67,7 @@ void DeviceHandler::setDevice(DeviceInfo *device)
     clearMessages();
     m_currentDevice = device;
 
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     setInfo(tr("Demo device connected."));
     return;
 #endif
@@ -209,7 +210,7 @@ void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, cons
     addMeasurement(hrvalue);
 }
 
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
 void DeviceHandler::updateDemoHR()
 {
     int randomValue = 0;
@@ -258,7 +259,7 @@ bool DeviceHandler::measuring() const
 
 bool DeviceHandler::alive() const
 {
-#ifdef Q_OS_WIN32
+#ifdef SIMULATOR
     return true;
 #endif
 
