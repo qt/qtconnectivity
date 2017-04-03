@@ -47,6 +47,7 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     m_deviceHandler(handler)
 {
     m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    m_deviceDiscoveryAgent->setLowEnergyDiscoveryTimeout(5000);
 
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &DeviceFinder::addDevice);
     connect(m_deviceDiscoveryAgent, static_cast<void (QBluetoothDeviceDiscoveryAgent::*)(QBluetoothDeviceDiscoveryAgent::Error)>(&QBluetoothDeviceDiscoveryAgent::error),
@@ -81,7 +82,7 @@ void DeviceFinder::startSearch()
 #ifdef SIMULATOR
     m_demoTimer.start();
 #else
-    m_deviceDiscoveryAgent->start();
+    m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 #endif
     emit scanningChanged();
     setInfo(tr("Scanning for devices..."));

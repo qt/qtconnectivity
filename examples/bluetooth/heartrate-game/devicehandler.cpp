@@ -249,7 +249,7 @@ void DeviceHandler::updateDemoHR()
 
 void DeviceHandler::confirmedDescriptorWrite(const QLowEnergyDescriptor &d, const QByteArray &value)
 {
-    if (d.isValid() && d == m_notificationDesc && value == QByteArray("0000")) {
+    if (d.isValid() && d == m_notificationDesc && value == QByteArray::fromHex("0000")) {
         //disabled notifications -> assume disconnect intent
         m_control->disconnectFromDevice();
         delete m_service;
@@ -262,7 +262,8 @@ void DeviceHandler::disconnectService()
     m_foundHeartRateService = false;
 
     //disable notifications
-    if (m_notificationDesc.isValid() && m_service) {
+    if (m_notificationDesc.isValid() && m_service
+            && m_notificationDesc.value() == QByteArray::fromHex("0100")) {
         m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0000"));
     } else {
         if (m_control)
