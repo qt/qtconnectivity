@@ -40,6 +40,8 @@ examples/bluetooth/btfiletransfer/btfiletransfer
 examples/bluetooth/btscanner/btscanner
 examples/bluetooth/chat/qml_chat
 examples/bluetooth/heartlistener/heartlistener
+examples/bluetooth/heartrate-game/heartrate-game
+examples/bluetooth/heartrate-server/heartrate-server
 examples/bluetooth/lowenergyscanner/lowenergyscanner
 examples/bluetooth/pingpong/pingpong
 examples/bluetooth/picturetransfer/qml_picturetransfer
@@ -48,8 +50,15 @@ examples/nfc/annotatedurl/annotatedurl
 examples/nfc/ndefeditor/ndefeditor
 examples/nfc/poster/qml_poster
 examples/nfc/corkboard/qml_corkboard
+src/bluetooth/codeattributions.qdoc
 src/bluetooth/doc/snippets/bluetooth_cppsnippet
+src/bluetooth/qtattributionsscanner_wrapper.sh
+src/bluetooth/qtbluetooth-config.h
+src/bluetooth/qtbluetooth-config.pri
+src/bluetooth/qtbluetooth-config_p.h
+src/nfc/codeattributions.qdoc
 src/nfc/doc/snippets/nfc_cppsnippet
+src/nfc/qtattributionsscanner_wrapper.sh
 tests/auto/cmake/build
 tests/auto/qbluetoothaddress/tst_qbluetoothaddress
 tests/auto/qbluetoothdevicediscoveryagent/tst_qbluetoothdevicediscoveryagent
