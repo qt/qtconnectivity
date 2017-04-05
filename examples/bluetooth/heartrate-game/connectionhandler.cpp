@@ -40,7 +40,6 @@
 
 #include "heartrate-global.h"
 #include "connectionhandler.h"
-#include <QtDebug>
 #include <QtBluetooth/qtbluetooth-config.h>
 
 ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)

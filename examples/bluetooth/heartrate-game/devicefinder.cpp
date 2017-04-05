@@ -42,8 +42,6 @@
 #include "devicehandler.h"
 #include "deviceinfo.h"
 
-#include <QBluetoothUuid>
-
 DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     BluetoothBaseClass(parent),
     m_deviceHandler(handler)
