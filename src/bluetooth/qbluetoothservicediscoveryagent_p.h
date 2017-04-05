@@ -59,7 +59,7 @@
 #include <QStack>
 #include <QStringList>
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
@@ -122,7 +122,7 @@ public:
     void _q_deviceDiscovered(const QBluetoothDeviceInfo &info);
     void _q_serviceDiscoveryFinished();
     void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error);
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
     void _q_foundDevice(QDBusPendingCallWatcher *watcher);
@@ -151,7 +151,7 @@ private:
     void stop();
     bool isDuplicatedService(const QBluetoothServiceInfo &serviceInfo) const;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     void startBluez5(const QBluetoothAddress &address);
     void runExternalSdpScan(const QBluetoothAddress &remoteAddress,
                     const QBluetoothAddress &localAddress);
@@ -179,7 +179,7 @@ private:
     QBluetoothServiceDiscoveryAgent::DiscoveryMode mode;
 
     bool singleDevice;
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     QString foundHostAdapterPath;
     OrgBluezManagerInterface *manager;
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5;

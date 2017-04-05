@@ -80,7 +80,6 @@ SOURCES += \
 
 qtConfig(bluez) {
     QT_FOR_PRIVATE += dbus
-    DEFINES += QT_BLUEZ_BLUETOOTH
 
     include(bluez/bluez.pri)
 

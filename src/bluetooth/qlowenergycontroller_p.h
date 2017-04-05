@@ -77,7 +77,7 @@ QT_END_NAMESPACE
 #include "qlowenergycontroller.h"
 #include "qlowenergyserviceprivate_p.h"
 
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
 #include <QtBluetooth/QBluetoothSocket>
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include <QtAndroidExtras/QAndroidJniObject>
@@ -96,7 +96,7 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyServiceData;
 class QTimer;
 
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
 class HciManager;
 class LeCmacCalculator;
 class QSocketNotifier;
@@ -209,7 +209,7 @@ public:
     QLowEnergyController::RemoteAddressType addressType;
 
 private:
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
     quint16 connectionHandle = 0;
     QBluetoothSocket *l2cpSocket;
     struct Request {

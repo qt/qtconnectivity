@@ -40,7 +40,7 @@
 #include "qbluetoothtransfermanager.h"
 #include "qbluetoothtransferrequest.h"
 #include "qbluetoothtransferreply.h"
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 #include "qbluetoothtransferreply_bluez_p.h"
 #elif QT_OSX_BLUETOOTH
 #include "qbluetoothtransferreply_osx_p.h"
@@ -112,7 +112,7 @@ QBluetoothTransferManager::~QBluetoothTransferManager()
 QBluetoothTransferReply *QBluetoothTransferManager::put(const QBluetoothTransferRequest &request,
                                                         QIODevice *data)
 {
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     QBluetoothTransferReplyBluez *rep = new QBluetoothTransferReplyBluez(data, request, this);
     connect(rep, SIGNAL(finished(QBluetoothTransferReply*)), this, SIGNAL(finished(QBluetoothTransferReply*)));
     return rep;

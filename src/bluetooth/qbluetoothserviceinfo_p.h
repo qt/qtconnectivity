@@ -104,7 +104,7 @@ public:
     QBluetoothServiceInfo::Sequence protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const;
     int serverChannel() const;
 private:
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     bool ensureSdpConnection(const QBluetoothAddress &localAdapter = QBluetoothAddress());
 
     OrgBluezServiceInterface *service;

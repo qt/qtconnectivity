@@ -40,6 +40,7 @@
 #define QTBLUETOOTH_H
 
 #include <QtCore/qglobal.h>
+#include <QtBluetooth/qtbluetooth-config.h> // for feature detection
 
 QT_BEGIN_NAMESPACE
 

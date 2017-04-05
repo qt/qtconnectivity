@@ -185,7 +185,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         // only Linux (of all platforms supported by this library) supports this type
         // of socket.
 
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
         if (lowEnergySocketType) {
             addr.l2_cid = htobs(port);
             addr.l2_bdaddr_type = lowEnergySocketType;
