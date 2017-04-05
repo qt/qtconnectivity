@@ -78,7 +78,7 @@ SOURCES += \
     qlowenergycontroller.cpp \
     qlowenergyserviceprivate.cpp
 
-qtConfig(bluez):qtHaveModule(dbus) {
+qtConfig(bluez) {
     QT_FOR_PRIVATE += dbus
     DEFINES += QT_BLUEZ_BLUETOOTH
 

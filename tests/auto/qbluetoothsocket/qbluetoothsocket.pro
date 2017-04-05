@@ -13,6 +13,6 @@ osx {
     DEFINES += QT_OSX_BLUETOOTH
 } else: android {
     DEFINES += QT_ANDROID_BLUETOOTH
-} else: qtConfig(bluez):qtHaveModule(dbus) {
+} else: qtConfig(bluez) {
     DEFINES += QT_BLUEZ_BLUETOOTH
 }
