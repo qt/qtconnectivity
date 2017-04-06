@@ -46,6 +46,7 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     BluetoothBaseClass(parent),
     m_deviceHandler(handler)
 {
+    //! [devicediscovery-1]
     m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     m_deviceDiscoveryAgent->setLowEnergyDiscoveryTimeout(5000);
 
@@ -55,6 +56,7 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
 
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &DeviceFinder::scanFinished);
     connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled, this, &DeviceFinder::scanFinished);
+    //! [devicediscovery-1]
 
 
 #ifdef SIMULATOR
@@ -82,21 +84,28 @@ void DeviceFinder::startSearch()
 #ifdef SIMULATOR
     m_demoTimer.start();
 #else
+    //! [devicediscovery-2]
     m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    //! [devicediscovery-2]
 #endif
     emit scanningChanged();
     setInfo(tr("Scanning for devices..."));
 }
 
+//! [devicediscovery-3]
 void DeviceFinder::addDevice(const QBluetoothDeviceInfo &device)
 {
     // If device is LowEnergy-device, add it to the list
     if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
         m_devices.append(new DeviceInfo(device));
         setInfo(tr("Low Energy device found. Scanning more..."));
+//! [devicediscovery-3]
         emit devicesChanged();
+//! [devicediscovery-4]
     }
+    //...
 }
+//! [devicediscovery-4]
 
 void DeviceFinder::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
 {

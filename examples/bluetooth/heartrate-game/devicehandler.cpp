@@ -103,8 +103,11 @@ void DeviceHandler::setDevice(DeviceInfo *device)
     if (m_currentDevice) {
 
         // Make connections
+        //! [Connect-Signals-1]
         m_control = new QLowEnergyController(m_currentDevice->getDevice(), this);
+        //! [Connect-Signals-1]
         m_control->setRemoteAddressType(m_addressType);
+        //! [Connect-Signals-2]
         connect(m_control, &QLowEnergyController::serviceDiscovered,
                 this, &DeviceHandler::serviceDiscovered);
         connect(m_control, &QLowEnergyController::discoveryFinished,
@@ -125,6 +128,7 @@ void DeviceHandler::setDevice(DeviceInfo *device)
 
         // Connect
         m_control->connectToDevice();
+        //! [Connect-Signals-2]
     }
 }
 
@@ -149,6 +153,7 @@ void DeviceHandler::stopMeasurement()
     emit measuringChanged();
 }
 
+//! [Filter HeartRate service 1]
 void DeviceHandler::serviceDiscovered(const QBluetoothUuid &gatt)
 {
     if (gatt == QBluetoothUuid(QBluetoothUuid::HeartRate)) {
@@ -156,6 +161,7 @@ void DeviceHandler::serviceDiscovered(const QBluetoothUuid &gatt)
         m_foundHeartRateService = true;
     }
 }
+//! [Filter HeartRate service 1]
 
 void DeviceHandler::serviceScanDone()
 {
@@ -167,6 +173,7 @@ void DeviceHandler::serviceScanDone()
         m_service = 0;
     }
 
+//! [Filter HeartRate service 2]
     // If heartRateService found, create new service
     if (m_foundHeartRateService)
         m_service = m_control->createServiceObject(QBluetoothUuid(QBluetoothUuid::HeartRate), this);
@@ -179,9 +186,11 @@ void DeviceHandler::serviceScanDone()
     } else {
         setError("Heart Rate Service not found.");
     }
+//! [Filter HeartRate service 2]
 }
 
 // Service functions
+//! [Find HRM characteristic]
 void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
 {
     switch (s) {
@@ -211,7 +220,9 @@ void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
 
     emit aliveChanged();
 }
+//! [Find HRM characteristic]
 
+//! [Reading value]
 void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, const QByteArray &value)
 {
     // ignore any other characteristic change -> shouldn't really happen though
@@ -230,6 +241,7 @@ void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, cons
 
     addMeasurement(hrvalue);
 }
+//! [Reading value]
 
 #ifdef SIMULATOR
 void DeviceHandler::updateDemoHR()
