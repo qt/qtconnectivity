@@ -317,10 +317,11 @@ bool QNearFieldTarget::keepConnection() const
 /*!
     \since 5.9
 
-    Causes QNearFieldTarget to keep the connection after processing a command
-    or reading/writing NDEF messages. A call of this function is only needed once.
+    Preserves the connection to the target device after processing a command or
+    reading/writing NDEF messages if \a isPersistent is \c true.
+    By default, this behavior is not enabled.
 
-    Returns true if enabling this feature was successful. A possible
+    Returns \c true if enabling this feature was successful. A possible
     reason for a failure is the lack of support on the used platform.
 
     Enabling this feature requires to use the disconnect() function too, to close the
