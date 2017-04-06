@@ -51,7 +51,7 @@
     \endlist
 
     The example implements a server application, which means it has no graphical user interface.
-    To visualize what it is doing, you can use the \l {heartlistener}{Heart Listener}
+    To visualize what it is doing, you can use the \l {heartrate-game}{Heart Rate Game}
     example, which is basically the client-side counterpart to this application.
 
     \note On Linux, advertising requires privileged access, so you need to run

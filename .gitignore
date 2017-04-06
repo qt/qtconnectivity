@@ -39,7 +39,6 @@ examples/bluetooth/btchat/btchat
 examples/bluetooth/btfiletransfer/btfiletransfer
 examples/bluetooth/btscanner/btscanner
 examples/bluetooth/chat/qml_chat
-examples/bluetooth/heartlistener/heartlistener
 examples/bluetooth/heartrate-game/heartrate-game
 examples/bluetooth/heartrate-server/heartrate-server
 examples/bluetooth/lowenergyscanner/lowenergyscanner
