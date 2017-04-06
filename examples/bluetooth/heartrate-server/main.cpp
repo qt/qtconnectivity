@@ -49,11 +49,13 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtimer.h>
 
 int main(int argc, char *argv[])
 {
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QCoreApplication app(argc, argv);
 
     //! [Advertising Data]
