@@ -138,6 +138,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                         This value was introduced by Qt 5.5.
     \value AdvertisingError             The attempt to start advertising failed.
                                         This value was introduced by Qt 5.7.
+    \value RemoteHostClosedError        The remote device closed the connection.
+                                        This value was introduced by Qt 5.10.
 */
 
 /*!
@@ -298,6 +300,9 @@ void QLowEnergyControllerPrivate::setError(
         break;
     case QLowEnergyController::AdvertisingError:
         errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
+        break;
+    case QLowEnergyController::RemoteHostClosedError:
+        errorString = QLowEnergyController::tr("Remote device closed the connection");
         break;
     case QLowEnergyController::NoError:
         return;
