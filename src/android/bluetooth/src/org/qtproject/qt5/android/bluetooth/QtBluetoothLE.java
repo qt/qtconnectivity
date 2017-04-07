@@ -193,6 +193,12 @@ public class QtBluetoothLE {
                 case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
                     Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");
                     errorCode = 5; break; //QLowEnergyController::ConnectionError
+                case 19: // BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION
+                case 20: // BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_LOW_RESOURCES
+                case 21: // BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF
+                    Log.w(TAG, "The remote host closed the connection");
+                    errorCode = 7; //QLowEnergyController::RemoteHostClosedError
+                    break;
                 default:
                     Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status + " " + newState);
                     errorCode = status; break; //TODO deal with all errors
