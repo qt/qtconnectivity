@@ -1,6 +1,5 @@
 TARGET = QtBluetooth
 QT = core core-private
-QT_PRIVATE = concurrent
 
 
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
@@ -79,6 +78,7 @@ SOURCES += \
     qlowenergyserviceprivate.cpp
 
 qtConfig(bluez) {
+    QT_PRIVATE = concurrent
     QT_FOR_PRIVATE += dbus
 
     include(bluez/bluez.pri)
@@ -134,6 +134,7 @@ qtConfig(bluez) {
         qlowenergycontroller_android.cpp
 
 } else:osx {
+    QT_PRIVATE = concurrent
     DEFINES += QT_OSX_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework IOBluetooth
 
