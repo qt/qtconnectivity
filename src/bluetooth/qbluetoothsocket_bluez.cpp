@@ -185,7 +185,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         // only Linux (of all platforms supported by this library) supports this type
         // of socket.
 
-#if defined(QT_BLUEZ_BLUETOOTH) && !defined(QT_BLUEZ_NO_BTLE)
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
         if (lowEnergySocketType) {
             addr.l2_cid = htobs(port);
             addr.l2_bdaddr_type = lowEnergySocketType;
@@ -251,8 +251,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
                 break;
             default:
                 // every other case returns error
-                errorString = QBluetoothSocket::tr("Network Error: %1");
-                errorString.arg(qt_error_string(errno));
+                errorString = QBluetoothSocket::tr("Network Error: %1").arg(qt_error_string(errno)) ;
                 q->setSocketError(QBluetoothSocket::NetworkError);
                 break;
             }
@@ -507,8 +506,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
                 sz = 0;
                 break;
             default:
-                errorString = QBluetoothSocket::tr("Network Error: %1");
-                errorString.arg(qt_error_string(errno));
+                errorString = QBluetoothSocket::tr("Network Error: %1").arg(qt_error_string(errno));
                 q->setSocketError(QBluetoothSocket::NetworkError);
             }
         }

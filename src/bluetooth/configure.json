@@ -29,8 +29,8 @@
     "features": {
         "bluez": {
             "label": "BlueZ",
-            "condition": "libs.bluez",
-            "output": [ "privateFeature" ]
+            "condition": "libs.bluez && features.dbus",
+            "output": [ "publicFeature" ]
         },
         "bluez_le": {
             "label": "BlueZ Low Energy",

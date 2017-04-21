@@ -54,7 +54,7 @@
 #include "qlowenergyadvertisingdata.h"
 #include "qlowenergyadvertisingparameters.h"
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 #include "bluez/bluez_data_p.h"
 #endif
 
@@ -94,7 +94,7 @@ private:
 };
 
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 struct AdvData;
 struct AdvParams;
 class HciManager;
@@ -147,7 +147,7 @@ private:
     bool m_sendPowerLevel;
     bool m_disableCommandFinished;
 };
-#endif // QT_BLUEZ_BLUETOOTH
+#endif // QT_CONFIG(bluez)
 
 QT_END_NAMESPACE
 

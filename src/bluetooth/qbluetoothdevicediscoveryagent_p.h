@@ -63,7 +63,7 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothLocalDevice>
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 #include "bluez/bluez5_helper_p.h"
 
 class OrgBluezManagerInterface;
@@ -103,7 +103,7 @@ public:
     void stop();
     bool isActive() const;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     void _q_deviceFound(const QString &address, const QVariantMap &dict);
     void _q_propertyChanged(const QString &name, const QDBusVariant &value);
     void _q_InterfacesAdded(const QDBusObjectPath &object_path,
@@ -141,7 +141,7 @@ private:
     QTimer *leScanTimeout;
 
     bool pendingCancel, pendingStart;
-#elif defined(QT_BLUEZ_BLUETOOTH)
+#elif QT_CONFIG(bluez)
     QBluetoothAddress m_adapterAddress;
     bool pendingCancel;
     bool pendingStart;

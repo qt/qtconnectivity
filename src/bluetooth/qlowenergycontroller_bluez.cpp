@@ -2889,7 +2889,10 @@ void QLowEnergyControllerPrivate::handleConnectionRequest()
             QBluetoothSocket::ConnectedState, QIODevice::ReadWrite | QIODevice::Unbuffered);
     restoreClientConfigurations();
     loadSigningDataIfNecessary(RemoteSigningKey);
+
+    Q_Q(QLowEnergyController);
     setState(QLowEnergyController::ConnectedState);
+    emit q->connected();
 }
 
 void QLowEnergyControllerPrivate::closeServerSocket()

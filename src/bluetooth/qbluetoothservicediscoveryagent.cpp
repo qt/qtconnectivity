@@ -313,7 +313,7 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 
     if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
             && d->error != InvalidBluetoothAdapterError) {
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
         // done to avoid repeated parsing for adapter address
         // on Bluez5
         d->foundHostAdapterPath.clear();
@@ -426,7 +426,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     if (!deviceDiscoveryAgent) {
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
         deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(m_deviceAdapterAddress, q);
 #else
         deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(q);

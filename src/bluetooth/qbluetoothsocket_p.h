@@ -226,7 +226,7 @@ private slots:
     void handleError(QBluetoothSocket::SocketError error);
 #endif // QT_WINRT_BLUETOOTH
 
-#if defined(QT_BLUEZ_BLUETOOTH)
+#if QT_CONFIG(bluez)
 private slots:
     void _q_readNotify();
     void _q_writeNotify();
@@ -241,7 +241,7 @@ private:
     HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action, ABI::Windows::Foundation::AsyncStatus status);
 #endif
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 public:
     quint8 lowEnergySocketType;
 #endif

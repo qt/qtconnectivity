@@ -96,7 +96,7 @@ tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
 {
 }
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 // This section was adopted from tst_qloggingcategory.cpp
 QString logMessage;
 
@@ -133,7 +133,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
     qRegisterMetaType<QBluetoothDeviceInfo>();
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>();
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     // To distinguish Bluez 4 and 5 we peek into the debug output
     // of first Bluetooth ctor. It executes a runtime test and prints the result
     // as logging output. This avoids more complex runtime detection logic within this unit test.
@@ -495,7 +495,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
     agent.setLowEnergyDiscoveryTimeout(20000);
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
-#elif defined(QT_BLUEZ_BLUETOOTH)
+#elif QT_CONFIG(bluez)
     if (isBluez5Runtime) {
         QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
         agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored

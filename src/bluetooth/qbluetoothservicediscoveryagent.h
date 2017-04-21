@@ -48,7 +48,7 @@
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QBluetoothDeviceDiscoveryAgent>
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 #include <QtCore/qprocess.h>
 #endif
 
@@ -117,7 +117,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error))
     Q_PRIVATE_SLOT(d_func(), void _q_serviceDiscoveryFinished())
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     Q_PRIVATE_SLOT(d_func(), void _q_discoveredServices(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_createdDevice(QDBusPendingCallWatcher*))
     Q_PRIVATE_SLOT(d_func(), void _q_foundDevice(QDBusPendingCallWatcher*))
