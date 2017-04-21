@@ -110,7 +110,7 @@ qtConfig(bluez) {
             qlowenergycontroller_p.cpp
     }
 
-} else:android {
+} else:android:!android-embedded {
     include(android/android.pri)
     DEFINES += QT_ANDROID_BLUETOOTH
     QT_FOR_PRIVATE += core-private androidextras

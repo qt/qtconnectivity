@@ -79,7 +79,7 @@ linux:!android:qtHaveModule(dbus) {
 
     include(neard/neard.pri)
 
-} else:android {
+} else:android:!android-embedded {
     NFC_BACKEND_AVAILABLE = yes
     DEFINES += QT_ANDROID_NFC
     ANDROID_PERMISSIONS = \
