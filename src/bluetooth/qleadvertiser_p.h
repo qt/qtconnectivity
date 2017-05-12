@@ -145,7 +145,6 @@ private:
 
     quint8 m_powerLevel;
     bool m_sendPowerLevel;
-    bool m_disableCommandFinished;
 };
 #endif // QT_CONFIG(bluez)
 
