@@ -114,6 +114,7 @@ void QLeAdvertiserBluez::doStartAdvertising()
 void QLeAdvertiserBluez::doStopAdvertising()
 {
     toggleAdvertising(false);
+    sendNextCommand();
 }
 
 void QLeAdvertiserBluez::queueCommand(OpCodeCommandField ocf, const QByteArray &data)
