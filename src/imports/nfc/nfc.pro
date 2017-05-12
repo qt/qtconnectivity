@@ -1,3 +1,5 @@
+TARGETPATH = QtNfc
+
 QT = core qml nfc
 
 # Input

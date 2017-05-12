@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -45,19 +51,18 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h!
-#include "corebluetoothwrapper_p.h"
-
-@class CBUUID;
 
 QT_BEGIN_NAMESPACE
 
+class QLowEnergyCharacteristicData;
+class QBluetoothAddress;
 class QBluetoothUuid;
 
 namespace OSXBluetooth {
@@ -94,8 +99,7 @@ public:
     }
 };
 
-typedef ObjCScopedPointer<NSAutoreleasePool> AutoreleasePool;
-#define QT_BT_MAC_AUTORELEASEPOOL const OSXBluetooth::AutoreleasePool pool([[NSAutoreleasePool alloc] init])
+#define QT_BT_MAC_AUTORELEASEPOOL const QMacAutoReleasePool pool;
 
 template<class T>
 class ObjCStrongReference {
@@ -277,7 +281,7 @@ QString qt_address(NSString *address);
 
 #ifndef QT_IOS_BLUETOOTH
 
-class QBluetoothAddress qt_address(const BluetoothDeviceAddress *address);
+QBluetoothAddress qt_address(const BluetoothDeviceAddress *address);
 BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
 
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);
@@ -293,22 +297,14 @@ bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid);
 bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid);
 QByteArray qt_bytearray(NSData *data);
 QByteArray qt_bytearray(NSObject *data);
-ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData);
 
-inline QSysInfo::MacVersion qt_OS_limit(QSysInfo::MacVersion osxVersion, QSysInfo::MacVersion iosVersion)
-{
-#ifdef Q_OS_OSX
-    Q_UNUSED(iosVersion)
-    return osxVersion;
-#else
-    Q_UNUSED(osxVersion)
-    return iosVersion;
-#endif
-}
+ObjCStrongReference<NSData> data_from_bytearray(const QByteArray &qtData);
+ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray &qtData);
 
 dispatch_queue_t qt_LE_queue();
-// LE scan, in seconds.
-unsigned qt_LE_deviceInquiryLength();
+
+extern const int defaultLEScanTimeoutMS;
+extern const int maxValueLength;
 
 } // namespace OSXBluetooth
 

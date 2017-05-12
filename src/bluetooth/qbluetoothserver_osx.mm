@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -42,6 +48,7 @@
 
 #include "qbluetoothlocaldevice.h"
 #include "osx/osxbtutility_p.h"
+#include "osx/osxbluetooth_p.h"
 #include "qbluetoothserver.h"
 #include "qbluetoothsocket.h"
 
@@ -53,8 +60,6 @@
 
 // Import, since Obj-C headers do not have inclusion guards.
 #include <Foundation/Foundation.h>
-// Only after Foundation.h
-#include "osx/corebluetoothwrapper_p.h"
 
 #include <limits>
 
@@ -90,7 +95,7 @@ QBluetoothServerPrivate::QBluetoothServerPrivate(QSInfo::Protocol type, QBluetoo
 {
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
     if (serverType == QSInfo::UnknownProtocol)
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "unknown protocol";
+        qCWarning(QT_BT_OSX) << "unknown protocol";
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
@@ -111,7 +116,7 @@ bool QBluetoothServerPrivate::startListener(quint16 realPort)
     Q_ASSERT_X(realPort, Q_FUNC_INFO, "invalid port");
 
     if (serverType == QSInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
         return false;
     }
 
@@ -212,7 +217,7 @@ void QBluetoothServerPrivate::registerServer(QBluetoothServerPrivate *server, qu
         Q_ASSERT_X(!psmIsBusy(port), Q_FUNC_INFO, "port is busy");
         busyPSMs()[port] = server;
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "can not register a server "
+        qCWarning(QT_BT_OSX) << "can not register a server "
                                 "with unknown protocol type";
     }
 }
@@ -229,7 +234,7 @@ QBluetoothServerPrivate *QBluetoothServerPrivate::registeredServer(quint16 port,
         if (it != busyPSMs().end())
             return it.value();
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
     }
 
     return Q_NULLPTR;
@@ -246,17 +251,17 @@ void QBluetoothServerPrivate::unregisterServer(QBluetoothServerPrivate *server)
         if (it != busyChannels().end()) {
             busyChannels().erase(it);
         } else {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "server is not registered";
+            qCWarning(QT_BT_OSX) << "server is not registered";
         }
     } else if (type == QSInfo::L2capProtocol) {
         ServerMapIterator it = busyPSMs().find(port);
         if (it != busyPSMs().end()) {
             busyPSMs().erase(it);
         } else {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "server is not registered";
+            qCWarning(QT_BT_OSX) << "server is not registered";
         }
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
     }
 }
 
@@ -287,16 +292,15 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     typedef QBluetoothServerPrivate::ObjCListener ObjCListener;
 
     if (d_ptr->listener) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "already in listen mode, "
-                                "close server first";
+        qCWarning(QT_BT_OSX) << "already in listen mode, close server first";
         return false;
     }
 
     const QBluetoothLocalDevice device(address);
     if (!device.isValid()) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "device does not support Bluetooth or "
+        qCWarning(QT_BT_OSX) << "device does not support Bluetooth or"
                              << address.toString()
-                             << " is not a valid local adapter";
+                             << "is not a valid local adapter";
         d_ptr->lastError = UnknownError;
         emit error(UnknownError);
         return false;
@@ -304,7 +308,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
     const QBluetoothLocalDevice::HostMode hostMode = device.hostMode();
     if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "Bluetooth device is powered off";
+        qCWarning(QT_BT_OSX) << "Bluetooth device is powered off";
         d_ptr->lastError = PoweredOffError;
         emit error(PoweredOffError);
         return false;
@@ -313,7 +317,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     const QSInfo::Protocol type = d_ptr->serverType;
 
     if (type == QSInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid protocol";
+        qCWarning(QT_BT_OSX) << "invalid protocol";
         d_ptr->lastError = UnsupportedProtocolError;
         emit error(d_ptr->lastError);
         return false;
@@ -327,14 +331,14 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (port) {
         if (type == QSInfo::RfcommProtocol) {
             if (d_ptr->channelIsBusy(port)) {
-                qCWarning(QT_BT_OSX) << Q_FUNC_INFO <<"server port: "
-                                     << port << "already registered";
+                qCWarning(QT_BT_OSX) << "server port:" << port
+                                     << "already registered";
                 d_ptr->lastError = ServiceAlreadyRegisteredError;
             }
         } else {
             if (d_ptr->psmIsBusy(port)) {
-                qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "server port: "
-                                     << port << "already registered";
+                qCWarning(QT_BT_OSX) << "server port:" << port
+                                     << "already registered";
                 d_ptr->lastError = ServiceAlreadyRegisteredError;
             }
         }
@@ -349,7 +353,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     }
 
     if (!port) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "all ports are busy";
+        qCWarning(QT_BT_OSX) << "all ports are busy";
         d_ptr->lastError = ServiceAlreadyRegisteredError;
         emit error(d_ptr->lastError);
         return false;

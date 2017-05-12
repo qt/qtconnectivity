@@ -340,7 +340,8 @@ static QBluetoothServiceInfo findFirstService(LPHANDLE hSearch, const QBluetooth
     return findNextService(*hSearch, systemError);
 }
 
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
+        QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
     :  error(QBluetoothServiceDiscoveryAgent::NoError),
       state(Inactive),
       deviceDiscoveryAgent(0),
@@ -350,7 +351,8 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(c
       pendingStop(false),
       pendingFinish(false),
       searchWatcher(Q_NULLPTR),
-      hSearch(INVALID_HANDLE_VALUE)
+      hSearch(INVALID_HANDLE_VALUE),
+      q_ptr(qp)
 {
     Q_UNUSED(deviceAdapter);
     resolveFunctions(bluetoothapis());

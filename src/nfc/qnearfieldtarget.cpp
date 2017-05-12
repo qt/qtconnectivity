@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -105,7 +111,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \enum QNearFieldTarget::Error
 
-    This enum describes the error codes that that a near field target reports.
+    This enum describes the error codes that a near field target reports.
 
     \value NoError                  No error has occurred.
     \value UnknownError             An unidentified error occurred.
@@ -117,17 +123,10 @@ QT_BEGIN_NAMESPACE
     \value InvalidParametersError   Invalid parameters were passed to a tag type specific function.
     \value NdefReadError            Failed to read NDEF messages from the target.
     \value NdefWriteError           Failed to write NDEF messages to the target.
+    \value CommandError             Failed to send a command to the target.
 */
 
-// Copied from qbytearray.cpp
-// Modified to initialize the crc with 0x6363 instead of 0xffff and to not invert the final result.
-static const quint16 crc_tbl[16] = {
-    0x0000, 0x1081, 0x2102, 0x3183,
-    0x4204, 0x5285, 0x6306, 0x7387,
-    0x8408, 0x9489, 0xa50a, 0xb58b,
-    0xc60c, 0xd68d, 0xe70e, 0xf78f
-};
-
+#if QT_DEPRECATED_SINCE(5, 9)
 /*!
     \relates QNearFieldTarget
 
@@ -135,17 +134,9 @@ static const quint16 crc_tbl[16] = {
 */
 quint16 qNfcChecksum(const char *data, uint len)
 {
-    register quint16 crc = 0x6363;
-    uchar c;
-    const uchar *p = reinterpret_cast<const uchar *>(data);
-    while (len--) {
-        c = *p++;
-        crc = ((crc >> 4) & 0x0fff) ^ crc_tbl[((crc ^ c) & 15)];
-        c >>= 4;
-        crc = ((crc >> 4) & 0x0fff) ^ crc_tbl[((crc ^ c) & 15)];
-    }
-    return crc;
+    return qChecksum(data, len, Qt::ChecksumItuV41);
 }
+#endif
 
 /*!
     \fn void QNearFieldTarget::disconnected()
@@ -270,7 +261,7 @@ QNearFieldTarget::RequestId &QNearFieldTarget::RequestId::operator=(const Reques
     Constructs a new near field target with \a parent.
 */
 QNearFieldTarget::QNearFieldTarget(QObject *parent)
-:   QObject(parent), d_ptr(new QNearFieldTargetPrivate)
+:   QObject(parent), d_ptr(new QNearFieldTargetPrivate(this))
 {
     qRegisterMetaType<QNearFieldTarget::RequestId>();
     qRegisterMetaType<QNearFieldTarget::Error>();
@@ -310,6 +301,53 @@ QUrl QNearFieldTarget::url() const
 
     Returns the access methods support by this near field target.
 */
+
+/*!
+    \since 5.9
+
+    Returns true if this feature is enabled.
+
+    \sa setKeepConnection(), disconnect()
+*/
+bool QNearFieldTarget::keepConnection() const
+{
+    return d_ptr->keepConnection();
+}
+
+/*!
+    \since 5.9
+
+    Preserves the connection to the target device after processing a command or
+    reading/writing NDEF messages if \a isPersistent is \c true.
+    By default, this behavior is not enabled.
+
+    Returns \c true if enabling this feature was successful. A possible
+    reason for a failure is the lack of support on the used platform.
+
+    Enabling this feature requires to use the disconnect() function too, to close the
+    connection manually and enable communication with the target from a different instance.
+    Disabling this feature will also close an open connection.
+
+    \sa keepConnection(), disconnect()
+*/
+bool QNearFieldTarget::setKeepConnection(bool isPersistent)
+{
+    return d_ptr->setKeepConnection(isPersistent);
+}
+
+/*!
+    \since 5.9
+
+    Closes the connection to the target.
+
+    Returns true only if an existing connection was successfully closed.
+
+    \sa keepConnection(), setKeepConnection()
+*/
+bool QNearFieldTarget::disconnect()
+{
+    return d_ptr->disconnect();
+}
 
 /*!
     Returns true if the target is processing commands; otherwise returns false.
@@ -355,6 +393,19 @@ QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNde
     Q_UNUSED(messages);
 
     return RequestId();
+}
+
+/*!
+    \since 5.9
+
+    Returns the maximum number of bytes that can be sent with sendCommand. 0 will
+    be returned if the target does not support sending tag type specific commands.
+
+    \sa sendCommand(), sendCommands()
+*/
+int QNearFieldTarget::maxCommandLength() const
+{
+    return d_ptr->maxCommandLength();
 }
 
 /*!

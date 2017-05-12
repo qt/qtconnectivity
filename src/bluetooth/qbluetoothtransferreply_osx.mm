@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -171,7 +177,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     errorString.clear();
 
     if (device.isNull() || !channelID) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid device address or port";
+        qCWarning(QT_BT_OSX) << "invalid device address or port";
         setReplyError(QBluetoothTransferReply::HostNotFoundError,
                       QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
         return;
@@ -180,7 +186,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     OBEXSession newSession([[ObjCOBEXSession alloc] initWithDelegate:this
                             remoteDevice:device channelID:channelID]);
     if (!newSession) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "failed to allocate OSXBTOBEXSession object";
+        qCWarning(QT_BT_OSX) << "failed to allocate OSXBTOBEXSession object";
 
         setReplyError(QBluetoothTransferReply::UnknownError,
                       QCoreApplication::translate(TRANSFER_REPLY, TR_SESSION_NO_START));
@@ -195,7 +201,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
         if ([session isConnected])
             sendPut();// Connected, send a PUT request.
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "OBEXConnect failed";
+        qCWarning(QT_BT_OSX) << "OBEXConnect failed";
 
         if (error == QBluetoothTransferReply::NoError) {
             // The error is not set yet.
@@ -349,7 +355,7 @@ QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(QIODevice *input,
     if (input) {
         QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid input stream (null)";
+        qCWarning(QT_BT_OSX) << "invalid input stream (null)";
         osx_d_ptr->requestComplete = true;
         osx_d_ptr->errorString = QCoreApplication::translate(TRANSFER_REPLY, TR_INVALID_DEVICE);
         osx_d_ptr->error = FileNotFoundError;
@@ -410,7 +416,7 @@ bool QBluetoothTransferReplyOSX::start()
     if (!osx_d_ptr->isActive()) {
         // Step 0: find a channelID.
         if (request().address().isNull()) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid device address";
+            qCWarning(QT_BT_OSX) << "invalid device address";
             osx_d_ptr->setReplyError(HostNotFoundError,
                                      QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
             return false;
@@ -449,7 +455,8 @@ void QBluetoothTransferReplyOSX::serviceDiscoveryFinished()
 
 void QBluetoothTransferReplyOSX::serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error errorCode)
 {
-    Q_ASSERT_X(osx_d_ptr->agent.data(), Q_FUNC_INFO, "invalid service discovery agent (null)");
+    Q_ASSERT_X(osx_d_ptr->agent.data(), Q_FUNC_INFO,
+               "invalid service discovery agent (null)");
 
     if (errorCode == QBluetoothServiceDiscoveryAgent::PoweredOffError) {
         // There's nothing else we can do.

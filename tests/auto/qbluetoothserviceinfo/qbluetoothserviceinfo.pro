@@ -6,6 +6,6 @@ QT = core concurrent bluetooth testlib
 osx:QT += widgets
 
 
-android:!android-no-sdk {
+android:!android-embedded {
     DEFINES += QT_ANDROID_BLUETOOTH
 }

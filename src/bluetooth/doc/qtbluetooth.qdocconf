@@ -4,7 +4,7 @@ project                 = QtBluetooth
 description             = Qt Bluetooth Reference Documentation
 version                 = $QT_VERSION
 
-examplesinstallpath     = qtconnectivity/bluetooth
+examplesinstallpath     = bluetooth
 
 qhp.projects            = QtBluetooth
 
@@ -47,6 +47,7 @@ exampledirs += ../../../examples/bluetooth \
                snippets/ \
                ../
 
+manifestmeta.thumbnail.names = "QtBluetooth/Bluetooth Low Energy Heart Rate Server Example"
 
 imagedirs   += images
 

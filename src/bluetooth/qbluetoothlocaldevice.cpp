@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -93,7 +99,7 @@ QT_BEGIN_NAMESPACE
      only made discoverable for a limited period of time. This can speed up discovery between gaming devices,
      as service discovery can be skipped on devices not in LimitedInquiry mode. In this mode, the device will
      be connectable and powered on, if required. This mode is is not supported on Android.
-     On OS X, it is not possible to set the \l hostMode() to HostConnectable or HostPoweredOff.
+     On \macos, it is not possible to set the \l hostMode() to HostConnectable or HostPoweredOff.
 
 */
 
@@ -147,7 +153,7 @@ bool QBluetoothLocalDevice::isValid() const
     \note Due to varying security policies on the supported platforms, this method may have
     differing behaviors on the various platforms. For example the system may ask the user for
     confirmation before turning Bluetooth on or off and not all host modes may be supported.
-    On OS X, it is not possbile to programmatically change the \l hostMode().
+    On \macos, it is not possbile to programmatically change the \l hostMode().
     A user can only switch Bluetooth on/off in the System Preferences.
     Please refer to the platform specific Bluetooth documentation for details.
 */
@@ -155,7 +161,7 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
     \fn QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 
-    Returns the current host mode of this local Bluetooth device. On OS X, it is either
+    Returns the current host mode of this local Bluetooth device. On \macos, it is either
     HostPoweredOff or HostConnectable.
 */
 
@@ -169,12 +175,16 @@ bool QBluetoothLocalDevice::isValid() const
     \fn QBluetoothLocalDevice::address() const
 
     Returns the MAC address of this Bluetooth device.
+
+    \note On Android, this function always returns the constant
+    value \c {02:00:00:00:00:00} as local address starting with Android 6.0.
+    The programmatic access to the device's local MAC address was removed.
 */
 
 /*!
     \fn QList<QBluetoothLocalDevice> QBluetoothLocalDevice::allDevices()
 
-    Returns a list of all available local Bluetooth devices. On OS X, there is
+    Returns a list of all available local Bluetooth devices. On \macos, there is
     only the "default" local device.
 */
 
@@ -186,7 +196,7 @@ bool QBluetoothLocalDevice::isValid() const
   \note Due to varying security policies on the supported platforms, this method may have
   differing behaviors on the various platforms. For example
   the system may ask the user for confirmation before turning Bluetooth on or off.
-  On OS X it is not possible to power on/off Bluetooth.
+  On \macos it is not possible to power on/off Bluetooth.
   Please refer to the platform specific Bluetooth documentation for details.
 */
 
@@ -227,7 +237,7 @@ bool QBluetoothLocalDevice::isValid() const
   Returns the list of connected devices. This list is different from the list of currently
   paired devices.
 
-  On Android and OS X, it is not possible to retrieve a list of connected devices. It is only possible to
+  On Android and \macos, it is not possible to retrieve a list of connected devices. It is only possible to
   listen to (dis)connect changes. For convenience, this class monitors all connect
   and disconnect events since its instanciation and returns the current list when calling this function.
   Therefore it is possible that this function returns an empty list shortly after creating an
@@ -250,7 +260,7 @@ bool QBluetoothLocalDevice::isValid() const
   must be called to indicate if the user accepts or rejects the displayed pin.
 
   This signal is only emitted for pairing requests issues by calling \l requestPairing().
-  On OS X, this method never gets called - there is a callback with a PIN (IOBluetooth),
+  On \macos, this method never gets called - there is a callback with a PIN (IOBluetooth),
   but it expects immediate reply yes/no - and there is no time to show any dialog or compare PINs.
 
   \sa pairingConfirmation()
@@ -278,9 +288,9 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 
   Set the \a pairing status with \a address.  The results are returned by the signal, pairingFinished().
-  On Android and OS X, AuthorizedPaired is not possible and will have the same behavior as Paired.
+  On Android and \macos, AuthorizedPaired is not possible and will have the same behavior as Paired.
 
-  On OS X, it is not possible to unpair a device. If Unpaired is requested, \l pairingFinished()
+  On \macos, it is not possible to unpair a device. If Unpaired is requested, \l pairingFinished()
   is immediately emitted although the device remains paired. It is possible to request the pairing
   for a previously unpaired device. In addition \l AuthorizedPaired has the same behavior as \l Paired.
 

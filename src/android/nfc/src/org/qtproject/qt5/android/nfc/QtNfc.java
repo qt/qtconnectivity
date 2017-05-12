@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Centria research and development
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 Centria research and development
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -56,17 +62,25 @@ public class QtNfc
     static public NfcAdapter m_adapter = null;
     static public PendingIntent m_pendingIntent = null;
     static public IntentFilter[] m_filters;
-    static public Activity m_activity;
+    static public Context m_context = null;
+    static public Activity m_activity = null;
 
-    static public void setActivity(Activity activity, Object activityDelegate)
+    static public void setContext(Context context)
     {
-        //Log.d(TAG, "setActivity " + activity);
-        m_activity = activity;
-        m_adapter = NfcAdapter.getDefaultAdapter(m_activity);
+        m_context = context;
+        if (context instanceof Activity) m_activity = (Activity) context;
+        m_adapter = NfcAdapter.getDefaultAdapter(context);
+
+        if (m_activity == null) {
+            Log.w(TAG, "New NFC tags will only be recognized with Android activities and not with Android services.");
+            return;
+        }
+
         if (m_adapter == null) {
             //Log.e(TAG, "No NFC available");
             return;
         }
+
         m_pendingIntent = PendingIntent.getActivity(
             m_activity,
             0,
@@ -75,7 +89,7 @@ public class QtNfc
 
         //Log.d(TAG, "Pending intent:" + m_pendingIntent);
 
-        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
 
         m_filters = new IntentFilter[]{
             filter
@@ -92,22 +106,26 @@ public class QtNfc
 
     static public boolean start()
     {
-        if (m_adapter == null) return false;
+        if (m_adapter == null || m_activity == null) return false;
+
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Enabling NFC");
-                IntentFilter[] filters = new IntentFilter[2];
+                IntentFilter[] filters = new IntentFilter[3];
                 filters[0] = new IntentFilter();
-                filters[0].addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+                filters[0].addAction(NfcAdapter.ACTION_TAG_DISCOVERED);
                 filters[0].addCategory(Intent.CATEGORY_DEFAULT);
+                filters[1] = new IntentFilter();
+                filters[1].addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+                filters[1].addCategory(Intent.CATEGORY_DEFAULT);
                 try {
-                    filters[0].addDataType("*/*");
+                    filters[1].addDataType("*/*");
                 } catch (MalformedMimeTypeException e) {
                     throw new RuntimeException("Check your mime type.");
                 }
                 // some tags will report as tech, even if they are ndef formated/formatable.
-                filters[1] = new IntentFilter();
-                filters[1].addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
+                filters[2] = new IntentFilter();
+                filters[2].addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
                 String[][] techList = new String[][]{
                         {"android.nfc.tech.Ndef"},
                         {"android.nfc.tech.NdefFormatable"}
@@ -125,7 +143,8 @@ public class QtNfc
 
     static public boolean stop()
     {
-        if (m_adapter == null) return false;
+        if (m_adapter == null || m_activity == null) return false;
+
         m_activity.runOnUiThread(new Runnable() {
             public void run() {
                 //Log.d(TAG, "Disabling NFC");
@@ -142,11 +161,11 @@ public class QtNfc
 
     static public boolean isAvailable()
     {
-        m_adapter = NfcAdapter.getDefaultAdapter(m_activity);
         if (m_adapter == null) {
             //Log.e(TAG, "No NFC available (Adapter is null)");
             return false;
         }
+
         return m_adapter.isEnabled();
     }
 
@@ -154,6 +173,7 @@ public class QtNfc
     {
         Log.d(TAG, "getStartIntent");
         if (m_activity == null) return null;
+
         Intent intent = m_activity.getIntent();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction()) ||
                 NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) ||

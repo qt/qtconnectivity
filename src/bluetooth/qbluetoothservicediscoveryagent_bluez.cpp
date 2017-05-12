@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -52,20 +58,12 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-static inline void convertAddress(quint64 from, quint8 (&to)[6])
-{
-    to[0] = (from >> 0) & 0xff;
-    to[1] = (from >> 8) & 0xff;
-    to[2] = (from >> 16) & 0xff;
-    to[3] = (from >> 24) & 0xff;
-    to[4] = (from >> 32) & 0xff;
-    to[5] = (from >> 40) & 0xff;
-}
-
-QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(const QBluetoothAddress &deviceAdapter)
+QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
+    QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
-    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0)
+    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0),
+    q_ptr(qp)
 {
     if (isBluez5()) {
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
@@ -194,7 +192,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
  * done out-of-process to avoid license issues. At this stage Bluez uses GPLv2.
  */
 void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
-        const QBluetoothAddress &remoteAddress, const QBluetoothAddress localAddress)
+        const QBluetoothAddress &remoteAddress, const QBluetoothAddress &localAddress)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
@@ -212,14 +210,22 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
 
         sdpScannerProcess = new QProcess(q);
         sdpScannerProcess->setReadChannel(QProcess::StandardOutput);
+        if (QT_BT_BLUEZ().isDebugEnabled())
+            sdpScannerProcess->setProcessChannelMode(QProcess::ForwardedErrorChannel);
         sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
         q->connect(sdpScannerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
                    q, SLOT(_q_sdpScannerDone(int,QProcess::ExitStatus)));
-
     }
 
     QStringList arguments;
     arguments << remoteAddress.toString() << localAddress.toString();
+
+    // No filter implies PUBLIC_BROWSE_GROUP based SDP scan
+    if (!uuidFilter.isEmpty()) {
+        arguments << QLatin1String("-u"); // cmd line option for list of uuids
+        foreach (const QBluetoothUuid& uuid, uuidFilter)
+            arguments << uuid.toString();
+    }
 
     sdpScannerProcess->setArguments(arguments);
     sdpScannerProcess->start();
@@ -426,7 +432,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
     discoverServices(deviceObjectPath.value().path());
 }
 
-void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString deviceObjectPath)
+void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &deviceObjectPath)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 

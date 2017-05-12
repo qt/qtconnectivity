@@ -34,10 +34,11 @@ Low Energy devices.
 
 \tableofcontents
 
-    The Qt Bluetooth Low Energy API was introduced by Qt 5.4. Since Qt 5.5 the API
-    is final and a compatibility guarantee is given for future releases.
-    At the moment, Qt supports the Bluetooth Low Energy central role.
-    For more details on this limitation see below.
+    The Qt Bluetooth Low Energy API for the central role was introduced by Qt 5.4.
+    Since Qt 5.5 that part of the API is final and a compatibility guarantee is given for
+    future releases.
+    Since Qt 5.7, additional API supporting the peripheral role was added as a Technology Preview,
+    with the backend implemented for Linux/BlueZ, iOS and macOS.
 
     \section1 What Is Bluetooth Low Energy
 
@@ -159,10 +160,13 @@ Low Energy devices.
 
     \section1 Using Qt Bluetooth Low Energy API
 
-    This section describes how to use the Bluetooth Low Energy API provided by Qt. Currently the API
-    permits creating connections to peripheral devices, discovering their services, as well as reading
-    and writing data stored on the device. The example code below is taken from the
-    \l {heartlistener}{Heart Listener} example.
+    This section describes how to use the Bluetooth Low Energy API provided by Qt.
+    On the client side, the API permits creating connections to peripheral devices, discovering
+    their services, as well as reading and writing data stored on the device.
+    On the server side, it allows to set up services, advertise them, and get notified when the
+    client writes characteristics.
+    The example code below is taken from the \l {heartrate-game}{Heart Rate Game} and
+    \l {heartrate-server}{Heart Rate Server} examples.
 
     \section2 Establishing a Connection
 
@@ -172,15 +176,15 @@ Low Energy devices.
     \l QBluetoothDeviceDiscoveryAgent class. We connect to its \l {QBluetoothDeviceDiscoveryAgent::deviceDiscovered()}
     signal and start the search with \l {QBluetoothDeviceDiscoveryAgent::start()}{start()}:
 
-    \snippet heartlistener/heartrate.cpp devicediscovery-1
-    \snippet heartlistener/heartrate.cpp devicediscovery-2
+    \snippet heartrate-game/devicefinder.cpp devicediscovery-1
+    \snippet heartrate-game/devicefinder.cpp devicediscovery-2
 
     Since we are only interested in Low Energy devices we filter the device type within the
     receiving slot. The device type can be ascertained using the \l QBluetoothDeviceInfo::coreConfigurations()
     flag:
 
-    \snippet heartlistener/heartrate.cpp devicediscovery-3
-    \snippet heartlistener/heartrate.cpp devicediscovery-4
+    \snippet heartrate-game/devicefinder.cpp devicediscovery-3
+    \snippet heartrate-game/devicefinder.cpp devicediscovery-4
 
     Once the address of the peripheral device is known we use the \l QLowEnergyController class.
     This class is the entry point for all Bluetooth Low Energy development. The  constructor of the class
@@ -188,20 +192,20 @@ Low Energy devices.
     directly connect to the device using
     \l {QLowEnergyController::connectToDevice()}{connectToDevice()}:
 
-    \snippet heartlistener/heartrate.cpp Connect signals
+    \snippet heartrate-game/devicehandler.cpp Connect-Signals-1
+    \snippet heartrate-game/devicehandler.cpp Connect-Signals-2
 
     \section2 Service Search
 
-    As soon as the connection is established we initiate the service discovery:
-
-    \snippet heartlistener/heartrate.cpp Connecting to service
+    The above code snippet how the application initiates the service discovery once the connection has
+    been established.
 
     The \c serviceDiscovered() slot below is triggered as a result of the
     \l {QLowEnergyController::serviceDiscovered()} signal and provides an intermittent progress report.
     Since we are talking about the heart listener app which monitors HeartRate devices in the vicinity
     we ignore any service that is not of type \l QBluetoothUuid::HeartRate.
 
-    \snippet heartlistener/heartrate.cpp Filter HeartRate service 1
+    \snippet heartrate-game/devicehandler.cpp Filter HeartRate service 1
 
     Eventually the \l {QLowEnergyController::discoveryFinished()} signal is emitted to indicate
     the successful completion of the service discovery. Provided a HeartRate service was found,
@@ -209,14 +213,14 @@ Low Energy devices.
     provides the required signals for update notifications and the discovery of service details
     is triggered using \l QLowEnergyService::discoverDetails():
 
-    \snippet heartlistener/heartrate.cpp Filter HeartRate service 2
+    \snippet heartrate-game/devicehandler.cpp Filter HeartRate service 2
 
     During the detail search the service's \l {QLowEnergyService::state()}{state()} transitions
     from \l {QLowEnergyService::DiscoveryRequired}{DiscoveryRequired} to
     \l {QLowEnergyService::DiscoveringServices}{DiscoveringServices} and eventually ends with
     \l {QLowEnergyService::ServiceDiscovered}{ServiceDiscovered}:
 
-    \snippet heartlistener/heartrate.cpp Find HRM characteristic
+    \snippet heartrate-game/devicehandler.cpp Find HRM characteristic
 
     \section2 Interaction with the Peripheral Device
 
@@ -231,8 +235,7 @@ Low Energy devices.
 
     Finally, we process the value of the HeartRate characteristic, as per Bluetooth Low Energy standard:
 
-    \snippet heartlistener/heartrate.cpp Reading value 1
-    \snippet heartlistener/heartrate.cpp Reading value 2
+    \snippet heartrate-game/devicehandler.cpp Reading value
 
     In general a characteristic value is a series of bytes. The precise interpretation of
     those bytes depends on the characteristic type and value structure.
@@ -240,4 +243,47 @@ Low Energy devices.
     \l {https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx}{Bluetooth SIG} whereas others
     may follow a custom protocol. The above code snippet demonstrates how to the read the standardized
     HeartRate value.
+
+    \section2 Advertising Services
+
+    If we are implementing a GATT server application on a peripheral device, we need to define the
+    services we want to offer to central devices and advertise them:
+
+    \snippet heartrate-server/main.cpp Advertising Data
+    \snippet heartrate-server/main.cpp Start Advertising
+
+    Now potential clients can connect to our device, discover the provided service and
+    register themselves to get notified of changes to the characteristic value.
+    This part of the API was already covered by the above sections.
+
+    \section2 Implementing a Service on the Peripheral Device
+
+    The first step is to define the service, its characteristics and descriptors. This is achieved
+    using the \l QLowEnergyServiceData, \l QLowEnergyCharacteristicData and
+    \l QLowEnergyDescriptorData classes. These classes act as containers or building blocks for the
+    essential information that comprises the to-be-defined Bluetooth Low Energy service.
+    The code snippet below defines a simple HeartRate service which publishes
+    the measured beats per minute. An example where such a service could be used is a wrist watch.
+
+    \snippet heartrate-server/main.cpp Service Data
+
+    The resulting \c serviceData object can be published as described in the
+    \l {Advertising Services} section above. Despite the partial information overlap between the
+    information wrapped by \l QLowEnergyServiceData and \l QLowEnergyAdvertisingData the two classes
+    serve two very different tasks. The advertising data is published to nearby devices and often
+    limited in scope due to its size restriction of 29 bytes. Therefore they are not always 100%
+    complete. By comparison the service data contained inside of \l QLowEnergyServiceData provides
+    the complete set of service data and only becomes visible to the connecting client when a
+    connection with an active service discovery has been performed.
+
+    The next section demonstrates how the service can update the heart rate value. Depending on the
+    nature of the service it may have to comply with the official service definition
+    as defined on \l {https://www.bluetooth.org}. Other services may be completely custom. The
+    heart rate service was adopted and its specification can be found under
+    \l {https://www.bluetooth.com/specifications/adopted-specifications}.
+
+    \snippet heartrate-server/main.cpp Provide Heartbeat
+
+    In general characteristic and descriptor value updates on the peripheral device use the same
+    methods as connecting Bluetooth Low Energy devices.
 */

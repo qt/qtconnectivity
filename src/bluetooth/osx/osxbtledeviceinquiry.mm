@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -33,20 +39,18 @@
 
 #include "osxbtledeviceinquiry_p.h"
 #include "qbluetoothdeviceinfo.h"
+#include "osxbtnotifier_p.h"
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qdebug.h>
 
-#include "corebluetoothwrapper_p.h"
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
-
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_6_0)
 
 QBluetoothUuid qt_uuid(NSUUID *nsUuid)
 {
@@ -60,62 +64,74 @@ QBluetoothUuid qt_uuid(NSUUID *nsUuid)
     return QBluetoothUuid(qtUuidData);
 }
 
-#endif
+const int timeStepMS = 100;
 
-QBluetoothUuid qt_uuid(CFUUIDRef uuid)
+const int powerOffTimeoutMS = 30000;
+const qreal powerOffTimeStepS = 30. / 100.;
+
+struct AdvertisementData {
+    // That's what CoreBluetooth has:
+    // CBAdvertisementDataLocalNameKey
+    // CBAdvertisementDataTxPowerLevelKey
+    // CBAdvertisementDataServiceUUIDsKey
+    // CBAdvertisementDataServiceDataKey
+    // CBAdvertisementDataManufacturerDataKey
+    // CBAdvertisementDataOverflowServiceUUIDsKey
+    // CBAdvertisementDataIsConnectable
+    // CBAdvertisementDataSolicitedServiceUUIDsKey
+
+    // For now, we "parse":
+    QString localName;
+    QList<QBluetoothUuid> serviceUuids;
+    // TODO: other keys probably?
+    AdvertisementData(NSDictionary *AdvertisementData);
+};
+
+AdvertisementData::AdvertisementData(NSDictionary *advertisementData)
 {
-    if (!uuid)
-        return QBluetoothUuid();
+    if (!advertisementData)
+        return;
 
-    const CFUUIDBytes data = CFUUIDGetUUIDBytes(uuid);
-    quint128 qtUuidData = {{data.byte0, data.byte1, data.byte2, data.byte3,
-                           data.byte4, data.byte5, data.byte6, data.byte7,
-                           data.byte8, data.byte9, data.byte10, data.byte11,
-                           data.byte12, data.byte13, data.byte14, data.byte15}};
+    // ... constant CBAdvertisementDataLocalNameKey ...
+    // NSString containing the local name of a peripheral.
+    NSObject *value = [advertisementData objectForKey:CBAdvertisementDataLocalNameKey];
+    if (value && [value isKindOfClass:[NSString class]])
+        localName = QString::fromNSString(static_cast<NSString *>(value));
 
-    return QBluetoothUuid(qtUuidData);
-}
+    // ... constant CBAdvertisementDataServiceUUIDsKey ...
+    // A list of one or more CBUUID objects, representing CBService UUIDs.
 
-typedef ObjCStrongReference<NSString> StringStrongReference;
-
-StringStrongReference uuid_as_nsstring(CFUUIDRef uuid)
-{
-    // We use the UUDI's string representation as a key in a dictionary.
-    if (!uuid)
-        return StringStrongReference();
-
-    CFStringRef cfStr = CFUUIDCreateString(kCFAllocatorDefault, uuid);
-    if (!cfStr)
-        return StringStrongReference();
-
-    // Imporant: with ARC this will require a different cast/ownership!
-    return StringStrongReference((NSString *)cfStr, false);
+    value = [advertisementData objectForKey:CBAdvertisementDataServiceUUIDsKey];
+    if (value && [value isKindOfClass:[NSArray class]]) {
+        NSArray *uuids = static_cast<NSArray *>(value);
+        for (CBUUID *cbUuid in uuids)
+            serviceUuids << qt_uuid(cbUuid);
+    }
 }
 
 }
-
 
 QT_END_NAMESPACE
 
-#ifdef QT_NAMESPACE
-
-using namespace QT_NAMESPACE;
-
-#endif
+QT_USE_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) (PrivateAPI) <CBCentralManagerDelegate>
+// These two methods are scheduled with a small time step
+// within a given timeout, they either re-schedule
+// themselves or emit a signal/stop some operation.
 - (void)stopScan;
 - (void)handlePoweredOff;
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
 
-- (id)init
+-(id)initWithNotifier:(LECBManagerNotifier *)aNotifier
 {
     if (self = [super init]) {
-        uuids.reset([[NSMutableSet alloc] init]);
+        Q_ASSERT(aNotifier);
+        notifier = aNotifier;
         internalState = InquiryStarting;
-        state.store(int(internalState));
+        inquiryTimeoutMS = OSXBluetooth::defaultLEScanTimeoutMS;
     }
 
     return self;
@@ -129,27 +145,36 @@ using namespace QT_NAMESPACE;
             [manager stopScan];
     }
 
+    if (notifier) {
+        notifier->disconnect();
+        notifier->deleteLater();
+    }
+
     [super dealloc];
 }
 
 - (void)stopScan
 {
-    // Scan's "timeout" - we consider LE device
-    // discovery finished.
     using namespace OSXBluetooth;
 
+    // We never schedule stopScan if there is no timeout:
+    Q_ASSERT(inquiryTimeoutMS > 0);
+
     if (internalState == InquiryActive) {
-        if (scanTimer.elapsed() >= qt_LE_deviceInquiryLength() * 1000) {
-            // We indeed stop now:
+        const int elapsed = scanTimer.elapsed();
+        if (elapsed >= inquiryTimeoutMS) {
             [manager stopScan];
             [manager setDelegate:nil];
             internalState = InquiryFinished;
-            state.store(int(internalState));
+            Q_ASSERT(notifier);
+            emit notifier->discoveryFinished();
         } else {
+            // Re-schedule 'stopScan':
             dispatch_queue_t leQueue(qt_LE_queue());
             Q_ASSERT(leQueue);
+            const int timeChunkMS = std::min(inquiryTimeoutMS - elapsed, timeStepMS);
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         int64_t(qt_LE_deviceInquiryLength() / 100. * NSEC_PER_SEC)),
+                                         int64_t(timeChunkMS / 1000. * NSEC_PER_SEC)),
                                          leQueue,
                                          ^{
                                                [self stopScan];
@@ -164,30 +189,32 @@ using namespace QT_NAMESPACE;
     // the system shows an alert asking to enable
     // Bluetooth in the 'Settings' app. If not done yet (after 30
     // seconds) - we consider it an error.
+    using namespace OSXBluetooth;
+
     if (internalState == InquiryStarting) {
-        if (errorTimer.elapsed() >= 30000) {
+        if (errorTimer.elapsed() >= powerOffTimeoutMS) {
             [manager setDelegate:nil];
             internalState = ErrorPoweredOff;
-            state.store(int(internalState));
+            Q_ASSERT(notifier);
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         } else {
-            dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+            dispatch_queue_t leQueue(qt_LE_queue());
             Q_ASSERT(leQueue);
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         (int64_t)(30 / 100. * NSEC_PER_SEC)),
+                                         (int64_t)(powerOffTimeStepS * NSEC_PER_SEC)),
                                          leQueue,
                                          ^{
                                               [self handlePoweredOff];
                                           });
-
         }
     }
 }
 
-- (void)start
+- (void)startWithTimeout:(int)timeout
 {
     dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
-
     Q_ASSERT(leQueue);
+    inquiryTimeoutMS = timeout;
     manager.reset([[CBCentralManager alloc] initWithDelegate:self queue:leQueue]);
 }
 
@@ -199,48 +226,73 @@ using namespace QT_NAMESPACE;
     if (internalState != InquiryActive && internalState != InquiryStarting)
         return;
 
+    Q_ASSERT(notifier);
+
     using namespace OSXBluetooth;
 
     dispatch_queue_t leQueue(qt_LE_queue());
     Q_ASSERT(leQueue);
 
-    const CBCentralManagerState cbState(central.state);
-    if (cbState == CBCentralManagerStatePoweredOn) {
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    const CBManagerState state(central.state);
+    if (state == CBManagerStatePoweredOn) {
+#else
+    const CBCentralManagerState state(central.state);
+    if (state == CBCentralManagerStatePoweredOn) {
+#endif
         if (internalState == InquiryStarting) {
             internalState = InquiryActive;
-            // Scan time is actually 10 seconds. Having a block with such delay can prevent
-            // 'self' from being deleted in time, which is not good. So we split this
-            // 10 s. timeout into smaller 'chunks'.
-            scanTimer.start();
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         int64_t(qt_LE_deviceInquiryLength() / 100. * NSEC_PER_SEC)),
-                                         leQueue,
-                                         ^{
-                                               [self stopScan];
-                                          });
+
+            if (inquiryTimeoutMS > 0) {
+                // We have a finite-length discovery, schedule stopScan,
+                // with a smaller time step, otherwise it can prevent
+                // 'self' from being deleted in time, which is not good
+                // (the block will retain 'self', waiting for timeout).
+                scanTimer.start();
+                const int timeChunkMS = std::min(timeStepMS, inquiryTimeoutMS);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                             int64_t(timeChunkMS / 1000. * NSEC_PER_SEC)),
+                                             leQueue,
+                                             ^{
+                                                   [self stopScan];
+                                              });
+            }
+
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
+#else
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
+#endif
         if (internalState == InquiryActive) {
             [manager stopScan];
-            // Not sure how this is possible at all, probably, can never happen.
+            // Not sure how this is possible at all,
+            // probably, can never happen.
             internalState = ErrorPoweredOff;
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         } else {
             internalState = ErrorLENotSupported;
+            emit notifier->LEnotSupported();
         }
 
         [manager setDelegate:nil];
-    } else if (cbState == CBCentralManagerStatePoweredOff) {
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    } else if (state == CBManagerStatePoweredOff) {
+#else
+    } else if (state == CBCentralManagerStatePoweredOff) {
+#endif
         if (internalState == InquiryStarting) {
 #ifndef Q_OS_OSX
-            // On iOS a user can see at this point an alert asking to enable
-            // Bluetooth in the "Settings" app. If a user does,
+            // On iOS a user can see at this point an alert asking to
+            // enable Bluetooth in the "Settings" app. If a user does,
             // we'll receive 'PoweredOn' state update later.
-            // No change in state. Wait for 30 seconds (we split it into 'chunks' not
-            // to retain 'self' for too long ) ...
+            // No change in internalState. Wait for 30 seconds
+            // (we split it into smaller steps not to retain 'self' for
+            // too long ) ...
             errorTimer.start();
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                         (int64_t)(30 / 100. * NSEC_PER_SEC)),
+                                         (int64_t)(powerOffTimeStepS * NSEC_PER_SEC)),
                                          leQueue,
                                          ^{
                                               [self handlePoweredOff];
@@ -248,9 +300,10 @@ using namespace QT_NAMESPACE;
             return;
 #endif
             internalState = ErrorPoweredOff;
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         } else {
-            internalState = ErrorPoweredOff;
             [manager stopScan];
+            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
         }
 
         [manager setDelegate:nil];
@@ -266,8 +319,6 @@ using namespace QT_NAMESPACE;
         // lost; an update is imminent. "
         // Wait for this imminent update.
     }
-
-    state.store(int(internalState));
 }
 
 - (void)stop
@@ -277,14 +328,17 @@ using namespace QT_NAMESPACE;
 
     [manager setDelegate:nil];
     internalState = InquiryCancelled;
-    state.store(int(internalState));
+
+    notifier->disconnect();
+    notifier->deleteLater();
+    notifier = nullptr;
 }
 
-- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral
-        advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
+- (void)centralManager:(CBCentralManager *)central
+        didDiscoverPeripheral:(CBPeripheral *)peripheral
+        advertisementData:(NSDictionary *)advertisementData
+        RSSI:(NSNumber *)RSSI
 {
-    Q_UNUSED(advertisementData);
-
     using namespace OSXBluetooth;
 
     if (central != manager)
@@ -293,73 +347,41 @@ using namespace QT_NAMESPACE;
     if (internalState != InquiryActive)
         return;
 
+    if (!notifier)
+        return;
+
     QBluetoothUuid deviceUuid;
 
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_9, __IPHONE_7_0)
-    if (QSysInfo::MacintoshVersion >= qt_OS_limit(QSysInfo::MV_10_9, QSysInfo::MV_IOS_7_0)) {
-        if (!peripheral.identifier) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without NSUUID";
-            return;
-        }
-
-        if ([uuids containsObject:peripheral.identifier]) {
-            // We already know this peripheral ...
-            return;
-        }
-
-        [uuids addObject:peripheral.identifier];
-        deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
-    }
-#endif
-    // Either SDK or the target is below 10.9/7.0:
-    // The property UUID was finally removed in iOS 9, we have
-    // to avoid compilation errors ...
-    if (deviceUuid.isNull()) {
-        CFUUIDRef cfUUID = Q_NULLPTR;
-
-        if ([peripheral respondsToSelector:@selector(UUID)]) {
-            // This will require a bridged cast if we switch to ARC ...
-            cfUUID = reinterpret_cast<CFUUIDRef>([peripheral performSelector:@selector(UUID)]);
-        }
-
-        if (!cfUUID) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "peripheral without CFUUID";
-            return;
-        }
-
-        StringStrongReference key(uuid_as_nsstring(cfUUID));
-        if ([uuids containsObject:key.data()])
-            return; // We've seen this peripheral before ...
-        [uuids addObject:key.data()];
-        deviceUuid = OSXBluetooth::qt_uuid(cfUUID);
-    }
-
-    if (deviceUuid.isNull()) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "no way to address peripheral, QBluetoothUuid is null";
+    if (!peripheral.identifier) {
+        qCWarning(QT_BT_OSX) << "peripheral without NSUUID";
         return;
     }
 
-    QString name;
-    if (peripheral.name)
+    deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
+
+    if (deviceUuid.isNull()) {
+        qCWarning(QT_BT_OSX) << "no way to address peripheral, QBluetoothUuid is null";
+        return;
+    }
+
+    const AdvertisementData qtAdvData(advertisementData);
+    QString name(qtAdvData.localName);
+    if (!name.size() && peripheral.name)
         name = QString::fromNSString(peripheral.name);
 
     // TODO: fix 'classOfDevice' (0 for now).
     QBluetoothDeviceInfo newDeviceInfo(deviceUuid, name, 0);
     if (RSSI)
         newDeviceInfo.setRssi([RSSI shortValue]);
+
+    if (qtAdvData.serviceUuids.size()) {
+        newDeviceInfo.setServiceUuids(qtAdvData.serviceUuids,
+                                      QBluetoothDeviceInfo::DataIncomplete);
+    }
+
     // CoreBluetooth scans only for LE devices.
     newDeviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    devices.append(newDeviceInfo);
-}
-
-- (LEInquiryState) inquiryState
-{
-    return LEInquiryState(state.load());
-}
-
-- (const QList<QBluetoothDeviceInfo> &)discoveredDevices
-{
-    return devices;
+    emit notifier->deviceDiscovered(newDeviceInfo);
 }
 
 @end

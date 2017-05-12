@@ -1,31 +1,26 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
-**
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -125,7 +120,7 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
     if (remoteDevice.isNull()
         || QBluetoothLocalDevice::allDevices().isEmpty()) {
         qWarning("No remote device or local adapter found.");
@@ -147,7 +142,7 @@ void tst_QLowEnergyController::initTestCase()
     QVERIFY(finishedSpy.isEmpty());
 
     bool deviceFound = false;
-    devAgent->start();
+    devAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0, 30000);
     foreach (const QBluetoothDeviceInfo &info, devAgent->discoveredDevices()) {
 #ifndef Q_OS_MAC
@@ -189,7 +184,7 @@ void tst_QLowEnergyController::initTestCase()
  */
 void tst_QLowEnergyController::init()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS) || defined(Q_OS_TVOS)
     /*
      * Add a delay to give Android/iOS stack time to catch up in between
      * the multiple connect/disconnects within each test function.
@@ -249,14 +244,16 @@ void tst_QLowEnergyController::tst_connect()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
 
-#ifdef Q_OS_IOS
-    if (remoteDeviceInfo.isValid())
+#if defined(Q_OS_IOS) || defined(Q_OS_TVOS) || defined(Q_OS_WINRT)
+    if (!remoteDeviceInfo.isValid())
 #else
     if (localAdapters.isEmpty() || !remoteDeviceInfo.isValid())
 #endif
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
     QLowEnergyController control(remoteDeviceInfo);
+    QCOMPARE(remoteDeviceInfo.deviceUuid(), control.remoteDeviceUuid());
+    QCOMPARE(control.role(), QLowEnergyController::CentralRole);
     QSignalSpy connectedSpy(&control, SIGNAL(connected()));
     QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
     if (remoteDeviceInfo.name().isEmpty())
@@ -264,7 +261,7 @@ void tst_QLowEnergyController::tst_connect()
     else
         QCOMPARE(control.remoteName(), remoteDeviceInfo.name());
 
-#ifndef Q_OS_IOS
+#if !defined(Q_OS_IOS) && !defined(Q_OS_TVOS) && !defined(Q_OS_WINRT)
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
     QCOMPARE(control.localAddress(), localAdapter);
     QVERIFY(!control.localAddress().isNull());
@@ -349,7 +346,7 @@ void tst_QLowEnergyController::tst_connect()
 
         // initiate characteristic discovery
         foreach (QLowEnergyService *service, savedReferences) {
-            qDebug() << "Discoverying" << service->serviceUuid();
+            qDebug() << "Discovering" << service->serviceUuid();
             QSignalSpy stateSpy(service,
                                 SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
             QSignalSpy errorSpy(service, SIGNAL(error(QLowEnergyService::ServiceError)));
@@ -407,7 +404,7 @@ void tst_QLowEnergyController::tst_connect()
 
 void tst_QLowEnergyController::tst_concurrentDiscovery()
 {
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -444,7 +441,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
                       30000);
         }
 
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_WINRT)
         QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
         QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
         control2.disconnectFromDevice();
@@ -615,8 +612,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
         temp = QString("00002a02-0000-1000-8000-00805f9b34fb");
         QCOMPARE(chars[2].uuid(), QBluetoothUuid(temp));
         HANDLE_COMPARE(chars[2].handle(), QLowEnergyHandle(0x7));
-        QCOMPARE(chars[2].properties(),
-                 (QLowEnergyCharacteristic::Read|QLowEnergyCharacteristic::Write));
+        QVERIFY(chars[2].properties() & QLowEnergyCharacteristic::Read);
         QCOMPARE(chars[2].value(), QByteArray::fromHex("00"));
         QVERIFY(chars[2].isValid());
         QCOMPARE(chars[2].descriptors().count(), 0);
@@ -1647,7 +1643,7 @@ void tst_QLowEnergyController::tst_defaultBehavior()
 
 void tst_QLowEnergyController::tst_writeCharacteristic()
 {
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -1821,7 +1817,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
 void tst_QLowEnergyController::tst_readWriteDescriptor()
 {
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -2244,7 +2240,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
  */
 void tst_QLowEnergyController::tst_errorCases()
 {
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -2466,7 +2462,7 @@ void tst_QLowEnergyController::tst_errorCases()
  */
 void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 {
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");

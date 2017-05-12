@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -310,7 +316,7 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, con
     Constructs a QBluetoothDeviceInfo object with unique \a uuid, device name
     \a name and the encoded class of device \a classOfDevice.
 
-    This constructor is required for Low Energy devices on OS X and iOS. CoreBluetooth
+    This constructor is required for Low Energy devices on \macos and iOS. CoreBluetooth
     API hides addresses and provides unique UUIDs to identify a device. This UUID is
     not the same thing as a service UUID and is required to work later with CoreBluetooth API
     and discovered devices.
@@ -454,7 +460,7 @@ bool QBluetoothDeviceInfo::operator!=(const QBluetoothDeviceInfo &other) const
 /*!
     Returns the address of the device.
 
-    \note On iOS and OS X this address is invalid. Instead \l deviceUuid() should be used.
+    \note On iOS and \macos this address is invalid. Instead \l deviceUuid() should be used.
     Those two platforms do not expose Bluetooth addresses for found Bluetooth devices
     and utilize unique device identifiers.
 
@@ -498,7 +504,12 @@ QBluetoothDeviceInfo::MajorDeviceClass QBluetoothDeviceInfo::majorDeviceClass() 
 }
 
 /*!
-    Returns the minor device class of the device.
+    Returns the minor device class of the device. The actual information
+    is context dependent on the value of \l majorDeviceClass().
+
+    \sa MinorAudioVideoClass, MinorComputerClass, MinorHealthClass, MinorImagingClass,
+    MinorMiscellaneousClass, MinorNetworkClass, MinorPeripheralClass, MinorPhoneClass,
+    MinorToyClass, MinorWearableClass
 */
 quint8 QBluetoothDeviceInfo::minorDeviceClass() const
 {
@@ -602,7 +613,7 @@ void QBluetoothDeviceInfo::setCached(bool cached)
 
 /*!
    Sets the unique identifier \a uuid for Bluetooth devices, that do not have addresses.
-   This happens on OS X and iOS, where the CoreBluetooth API hides addresses, but provides
+   This happens on \macos and iOS, where the CoreBluetooth API hides addresses, but provides
    UUIDs to identify devices/peripherals.
 
    This uuid is invalid on any other platform.
@@ -620,7 +631,7 @@ void QBluetoothDeviceInfo::setDeviceUuid(const QBluetoothUuid &uuid)
 /*!
    Returns a unique identifier for a Bluetooth device without an address.
 
-   In general, this uuid is invalid on every platform but OS X and iOS.
+   In general, this uuid is invalid on every platform but \macos and iOS.
    It is used as a workaround for those two platforms as they do not
    provide Bluetooth addresses for found Bluetooth Low Energy devices.
    Every other platform uses \l address() instead.

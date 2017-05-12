@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -666,6 +672,11 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     connectDeviceChanges();
 }
 
+bool objectPathIsForThisDevice(const QString &adapterPath, const QString &objectPath)
+{
+    return (!adapterPath.isEmpty() && objectPath.startsWith(adapterPath));
+}
+
 void QBluetoothLocalDevicePrivate::connectDeviceChanges()
 {
     if (adapter) { // invalid QBluetoothLocalDevice due to wrong local adapter address
@@ -689,6 +700,10 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
         for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
             const QDBusObjectPath &path = it.key();
             const InterfaceList &ifaceList = it.value();
+
+            // don't track connected devices from other adapters but the current
+            if (!objectPathIsForThisDevice(deviceAdapterPath, path.path()))
+                continue;
 
             for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
                 const QString &iface = jt.key();
@@ -811,6 +826,7 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
     if (!ok || adapterPath.isEmpty())
         return;
 
+    deviceAdapterPath = adapterPath;
     adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
                                                    adapterPath,
                                                    QDBusConnection::systemBus(), this);
@@ -895,19 +911,22 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
     if (interfaces_and_properties.contains(QStringLiteral("org.bluez.Device1"))
         && !deviceChangeMonitors.contains(object_path.path())) {
         // a new device was added which we need to add to list of known devices
-        OrgFreedesktopDBusPropertiesInterface *monitor = new OrgFreedesktopDBusPropertiesInterface(
-                                           QStringLiteral("org.bluez"),
-                                           object_path.path(),
-                                           QDBusConnection::systemBus());
-        connect(monitor, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
-                SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
-        deviceChangeMonitors.insert(object_path.path(), monitor);
 
-        const QVariantMap ifaceValues = interfaces_and_properties.value(QStringLiteral("org.bluez.Device1"));
-        if (ifaceValues.value(QStringLiteral("Connected"), false).toBool()) {
-            QBluetoothAddress address(ifaceValues.value(QStringLiteral("Address")).toString());
-            connectedDevicesSet.insert(address);
-            emit q_ptr->deviceConnected(address);
+        if (objectPathIsForThisDevice(deviceAdapterPath, object_path.path())) {
+            OrgFreedesktopDBusPropertiesInterface *monitor = new OrgFreedesktopDBusPropertiesInterface(
+                                               QStringLiteral("org.bluez"),
+                                               object_path.path(),
+                                               QDBusConnection::systemBus());
+            connect(monitor, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
+                    SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
+            deviceChangeMonitors.insert(object_path.path(), monitor);
+
+            const QVariantMap ifaceValues = interfaces_and_properties.value(QStringLiteral("org.bluez.Device1"));
+            if (ifaceValues.value(QStringLiteral("Connected"), false).toBool()) {
+                QBluetoothAddress address(ifaceValues.value(QStringLiteral("Address")).toString());
+                connectedDevicesSet.insert(address);
+                emit q_ptr->deviceConnected(address);
+            }
         }
     }
 
@@ -927,17 +946,19 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
     if (deviceChangeMonitors.contains(object_path.path())
             && interfaces.contains(QLatin1String("org.bluez.Device1"))) {
 
-        //a device was removed
-        delete deviceChangeMonitors.take(object_path.path());
+        if (objectPathIsForThisDevice(deviceAdapterPath, object_path.path())) {
+            //a device was removed
+            delete deviceChangeMonitors.take(object_path.path());
 
-        //the path contains the address (e.g.: /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX)
-        //-> use it to update current list of connected devices
-        QString addressString = object_path.path().right(17);
-        addressString.replace(QStringLiteral("_"), QStringLiteral(":"));
-        const QBluetoothAddress address(addressString);
-        bool found = connectedDevicesSet.remove(address);
-        if (found)
-            emit q_ptr->deviceDisconnected(address);
+            //the path contains the address (e.g.: /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX)
+            //-> use it to update current list of connected devices
+            QString addressString = object_path.path().right(17);
+            addressString.replace(QStringLiteral("_"), QStringLiteral(":"));
+            const QBluetoothAddress address(addressString);
+            bool found = connectedDevicesSet.remove(address);
+            if (found)
+                emit q_ptr->deviceDisconnected(address);
+        }
     }
 
     if (adapterBluez5
@@ -1143,7 +1164,7 @@ QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
     Q_Q(QBluetoothLocalDevice);
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path();
     // seeded in constructor, 6 digit pin
-    QString pin = QString::fromLatin1("%1").arg(qrand()&1000000);
+    QString pin = QString::fromLatin1("%1").arg(qrand() % 1000000);
     pin = QString::fromLatin1("%1").arg(pin, 6, QLatin1Char('0'));
 
     emit q->pairingDisplayPinCode(address, pin);
@@ -1255,7 +1276,7 @@ uint QBluetoothLocalDevicePrivate::RequestPasskey(const QDBusObjectPath &in0)
 {
     Q_UNUSED(in0);
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
-    return qrand()&0x1000000;
+    return (qrand() % 1000000);
 }
 
 // Bluez 4

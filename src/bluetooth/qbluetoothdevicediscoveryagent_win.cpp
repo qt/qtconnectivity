@@ -326,8 +326,16 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     return active;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
+    // FIXME: Add required discovery method!
+    return QBluetoothDeviceDiscoveryAgent::NoMethod;
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
+{
+    Q_UNUSED(methods);
+
     if (pendingCancel == true) {
         pendingStart = true;
         return;
@@ -393,7 +401,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::taskFinished()
     } else if (pendingStart) {
         closeClassicSearch(&hSearch);
         pendingStart = pendingCancel = false;
-        start();
+        // FIXME: Add required discovery method!
+        start(QBluetoothDeviceDiscoveryAgent::NoMethod);
     } else {
         if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
                 closeClassicSearch(&hSearch);

@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -62,10 +68,12 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     adapterBluez5(0),
     discoveryTimer(0),
     useExtendedDiscovery(false),
+    lowEnergySearchTimeout(-1), // remains -1 on BlueZ 4 -> timeout not supported
     q_ptr(parent)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (isBluez5()) {
+        lowEnergySearchTimeout = 20000;
         managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
                                            QStringLiteral("org.bluez"),
                                            QStringLiteral("/"),
@@ -92,18 +100,34 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
     delete adapterBluez5;
 }
 
+//TODO: Qt6 remove the pendingCancel/pendingStart logic as it is cumbersome.
+//      It is a behavior change across all platforms and was initially done
+//      for Bluez. The behavior should be similar to QBluetoothServiceDiscoveryAgent
+//      PendingCancel creates issues whereby the agent is still shutting down
+//      but isActive() below already returns false. This means the isActive() is
+//      out of sync with the finished() and cancel() signal.
+
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 {
     if (pendingStart)
         return true;
     if (pendingCancel)
-        return false;
+        return false; //TODO Qt6: remove pending[Cancel|Start] logic (see comment above)
 
     return (adapter || adapterBluez5);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start()
+QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
+    return (ClassicMethod | LowEnergyMethod);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods /*methods*/)
+{
+    // Currently both BlueZ backends do not distinguish discovery methods.
+    // The DBus API's always return both device types. Therefore we ignore
+    // the passed in methods.
+
     if (pendingCancel == true) {
         pendingStart = true;
         return;
@@ -195,8 +219,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start()
         errorString = discoveryReply.error().message();
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
-        emit q->error(lastError);
         qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "ERROR: " << errorString;
+        emit q->error(lastError);
         return;
     }
 }
@@ -260,16 +284,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
         }
     }
 
-    // wait 20s and sum up what was found
+    // wait interval and sum up what was found
     if (!discoveryTimer) {
         discoveryTimer = new QTimer(q);
         discoveryTimer->setSingleShot(true);
-        discoveryTimer->setInterval(20000); // 20s
         QObject::connect(discoveryTimer, SIGNAL(timeout()),
                          q, SLOT(_q_discoveryFinished()));
     }
 
-    discoveryTimer->start();
+    if (lowEnergySearchTimeout > 0) { // otherwise no timeout and stop() required
+        discoveryTimer->setInterval(lowEnergySearchTimeout);
+        discoveryTimer->start();
+    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -415,16 +441,22 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
                 adapter->deleteLater();
                 adapter = 0;
 
-                emit q->canceled();
                 pendingCancel = false;
+                emit q->canceled();
             } else if (pendingStart) {
                 adapter->deleteLater();
                 adapter = 0;
 
                 pendingStart = false;
                 pendingCancel = false;
-                start();
+                // start parameter ignored since Bluez 4 doesn't distinguish them
+                start(QBluetoothDeviceDiscoveryAgent::ClassicMethod
+                      | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
             } else {
+                 // happens when agent is created while other agent called StopDiscovery()
+                if (!adapter)
+                    return;
+
                 if (useExtendedDiscovery) {
                     useExtendedDiscovery = false;
                     /* We don't use the Start/StopDiscovery combo here
@@ -492,12 +524,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryFinished()
     adapterBluez5 = 0;
 
     if (pendingCancel && !pendingStart) {
-        emit q->canceled();
         pendingCancel = false;
+        emit q->canceled();
     } else if (pendingStart) {
         pendingStart = false;
         pendingCancel = false;
-        start();
+        start(QBluetoothDeviceDiscoveryAgent::ClassicMethod
+              | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     } else {
         emit q->finished();
     }
@@ -511,7 +544,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
         return;
 
     if (path == adapterBluez5->path()) {
-        qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes";
+        qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes from another process.";
 
         if (discoveryTimer)
             discoveryTimer->stop();

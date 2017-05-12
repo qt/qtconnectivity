@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -34,8 +40,11 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
 /*!
     \class QBluetoothDeviceDiscoveryAgent
@@ -64,6 +73,8 @@ QT_BEGIN_NAMESPACE
     of devices. However not every platform can detect both types of devices.
     On platforms with this limitation (for example iOS only suports Low Energy discovery),
     the discovery process will limit the search to the type which is supported.
+
+    \note Since Android 6.0 the ability to detect devices requires ACCESS_COARSE_LOCATION.
 */
 
 /*!
@@ -80,6 +91,8 @@ QT_BEGIN_NAMESPACE
                                     platform. The error is set in response to a call to \l start().
                                     An example for such cases are iOS versions below 5.0 which do not support
                                     Bluetooth device search at all. This value was introduced by Qt 5.5.
+    \value UnsupportedDiscoveryMethod   One of the requested discovery methods is not supported by
+                                        the current platform. This value was introduced by Qt 5.8.
     \value UnknownError     An unknown error has occurred.
 */
 
@@ -99,6 +112,22 @@ QT_BEGIN_NAMESPACE
     The phone scans for devices in LimitedInquiry and Service Discovery is done on one or two devices
     to speed up the service scan. After the game has connected to the device it intended to,
     the device returns to GeneralUnlimitedInquiry.
+*/
+
+/*!
+    \enum QBluetoothDeviceDiscoveryAgent::DiscoveryMethod
+
+    This enum descibes the type of discovery method employed by the QBluetoothDeviceDiscoveryAgent.
+
+    \value NoMethod             The discovery is not possible. None of the available
+                                methods are supported.
+    \value ClassicMethod        The discovery process searches for Bluetooth Classic
+                                (BaseRate) devices.
+    \value LowEnergyMethod      The discovery process searches for Bluetooth Low Energy
+                                devices.
+
+    \sa supportedDiscoveryMethods()
+    \since 5.8
 */
 
 /*!
@@ -224,16 +253,106 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
 }
 
 /*!
+    Sets the maximum search time for Bluetooth Low Energy device search to
+    \a timeout in milliseconds. If \a timeout is \c 0 the discovery runs
+    until \l stop() is called.
+
+    This reflects the fact that the discovery process for Bluetooth Low Energy devices
+    is mostly open ended. The platform continues to look for more devices until the search is
+    manually stopped. The timeout ensures that the search is aborted after \a timeout milliseconds.
+    Of course, it is still possible to manually abort the discovery by calling \l stop().
+
+    The new timeout value does not take effect until the device search is restarted.
+    In addition the timeout does not affect the classic Bluetooth device search. Depending on
+    the platform the classic search may add more time to the total discovery process
+    beyond \a timeout.
+
+    \sa lowEnergyDiscoveryTimeout()
+    \since 5.8
+ */
+void QBluetoothDeviceDiscoveryAgent::setLowEnergyDiscoveryTimeout(int timeout)
+{
+    Q_D(QBluetoothDeviceDiscoveryAgent);
+
+    // cannot deliberately turn it off
+    if (d->lowEnergySearchTimeout < 0 || timeout < 0) {
+        qCDebug(QT_BT) << "The Bluetooth Low Energy device discovery timeout cannot be negative "
+                          "or set on a backend which does not support this feature.";
+        return;
+    }
+
+    d->lowEnergySearchTimeout = timeout;
+}
+
+/*!
+    Returns a timeout in milliseconds that is applied to the Bluetooth Low Energy device search.
+    A value of \c -1 implies that the platform does not support this property and the timeout for
+    the device search cannot be adjusted. A return value of \c 0
+    implies a never-ending search which must be manually stopped via \l stop().
+
+    \sa setLowEnergyDiscoveryTimeout()
+    \since 5.8
+ */
+int QBluetoothDeviceDiscoveryAgent::lowEnergyDiscoveryTimeout() const
+{
+    Q_D(const QBluetoothDeviceDiscoveryAgent);
+    return d->lowEnergySearchTimeout;
+}
+
+/*!
+    \fn QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
+
+    This function returns the discovery methods supported by the current platform.
+    It can be used to limit the scope of the device discovery.
+
+    \since 5.8
+*/
+
+/*!
     Starts Bluetooth device discovery, if it is not already started.
 
     The deviceDiscovered() signal is emitted as each device is discovered. The finished() signal
-    is emitted once device discovery is complete.
+    is emitted once device discovery is complete. The discovery utilizes the maximum set of
+    supported discovery methods on the platform.
+
+    \sa supportedDiscoveryMethods()
 */
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
     if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
-        d->start();
+        d->start(supportedDiscoveryMethods());
+}
+
+/*!
+    Start Bluetooth device discovery, if it is not already started and the provided
+    \a methods are supported.
+    The discovery \a methods limit the scope of the device search.
+    For example, if the target service or device is a Bluetooth Low Energy device,
+    this function could be used to limit the search to Bluetooth Low Energy devices and
+    thereby reduces the discovery time significantly.
+
+    \since 5.8
+*/
+void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
+{
+    if (methods == NoMethod)
+        return;
+
+    DiscoveryMethods supported =
+            QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods();
+
+    Q_D(QBluetoothDeviceDiscoveryAgent);
+    if (!((supported & methods) == methods)) {
+        d->lastError = UnsupportedDiscoveryMethod;
+        d->errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
+                                                            "are not supported on this platform");
+        emit error(d->lastError);
+        return;
+    }
+
+    if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
+        d->start(methods);
 }
 
 /*!

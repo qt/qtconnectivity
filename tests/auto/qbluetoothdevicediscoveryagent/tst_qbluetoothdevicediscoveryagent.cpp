@@ -1,31 +1,26 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
-**
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -82,8 +77,13 @@ private slots:
 
     void tst_deviceDiscovery_data();
     void tst_deviceDiscovery();
+
+    void tst_discoveryTimeout();
+
+    void tst_discoveryMethods();
 private:
     int noOfLocalDevices;
+    bool isBluez5Runtime = false;
 };
 
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
@@ -96,12 +96,59 @@ tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
 {
 }
 
+#if QT_CONFIG(bluez)
+// This section was adopted from tst_qloggingcategory.cpp
+QString logMessage;
+
+QByteArray qMyMessageFormatString(QtMsgType type, const QMessageLogContext &context,
+                                              const QString &str)
+{
+    QByteArray message;
+    message.append(context.category);
+    switch (type) {
+    case QtDebugMsg:   message.append(".debug"); break;
+    case QtInfoMsg:    message.append(".info"); break;
+    case QtWarningMsg: message.append(".warning"); break;
+    case QtCriticalMsg:message.append(".critical"); break;
+    case QtFatalMsg:   message.append(".fatal"); break;
+    }
+    message.append(": ");
+    message.append(qPrintable(str));
+
+    return message.simplified();
+}
+
+static void myCustomMessageHandler(QtMsgType type,
+                                   const QMessageLogContext &context,
+                                   const QString &msg)
+{
+    logMessage = qMyMessageFormatString(type, context, msg);
+}
+#endif
+
+
+
 void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 {
     qRegisterMetaType<QBluetoothDeviceInfo>();
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>();
 
+#if QT_CONFIG(bluez)
+    // To distinguish Bluez 4 and 5 we peek into the debug output
+    // of first Bluetooth ctor. It executes a runtime test and prints the result
+    // as logging output. This avoids more complex runtime detection logic within this unit test.
+    QtMessageHandler oldMessageHandler;
+    oldMessageHandler = qInstallMessageHandler(myCustomMessageHandler);
+
     noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();
+    qInstallMessageHandler(oldMessageHandler);
+    isBluez5Runtime = logMessage.contains(QStringLiteral("Bluez 5"));
+    if (isBluez5Runtime)
+        qDebug() << "BlueZ 5 runtime detected.";
+#else
+    noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();
+#endif
+
     if (!noOfLocalDevices)
         return;
 
@@ -424,15 +471,174 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
                 }
             }
         }
-#ifdef Q_OS_IOS
-        //On iOS, we do not have access to the local device/adapter, numberOfAdapters is 0,
+#if defined(Q_OS_IOS) || defined(Q_OS_WINRT)
+        //On iOS/WinRT, we do not have access to the local device/adapter, numberOfAdapters is 0,
         //so we skip this test at all.
-        QSKIP("iOS: no local Bluetooth device available. Skipping remaining part of test.");
+        QSKIP("iOS/WinRT: no local Bluetooth device available. Skipping remaining part of test.");
 #endif
 
         //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry.
         if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
             QVERIFY((numberOfAdapters-1) == counter);
+    }
+}
+
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
+{
+    QBluetoothDeviceDiscoveryAgent agent;
+
+    // check default values
+#if defined(Q_OS_OSX) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_WINRT)
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
+    agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
+    agent.setLowEnergyDiscoveryTimeout(20000);
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
+#elif QT_CONFIG(bluez)
+    if (isBluez5Runtime) {
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
+        agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
+        agent.setLowEnergyDiscoveryTimeout(25000);
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
+    } else {
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+        agent.setLowEnergyDiscoveryTimeout(20000); // feature not supported -> ignored
+        QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+    }
+#else
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+    agent.setLowEnergyDiscoveryTimeout(20000); // feature not supported -> ignored
+    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
+#endif
+}
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
+{
+    const QBluetoothLocalDevice localDevice;
+    if (localDevice.allDevices().size() != 1) {
+        // On iOS it returns 0 but we still have working BT.
+#ifndef Q_OS_IOS
+        QSKIP("This test expects exactly one local device working");
+#endif
+    }
+
+    const QBluetoothDeviceDiscoveryAgent::DiscoveryMethods
+        supportedMethods = QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods();
+
+    QVERIFY(supportedMethods != QBluetoothDeviceDiscoveryAgent::NoMethod);
+
+    QBluetoothDeviceDiscoveryAgent::DiscoveryMethod
+        unsupportedMethods = QBluetoothDeviceDiscoveryAgent::NoMethod;
+    QBluetoothDeviceInfo::CoreConfiguration
+        expectedConfiguration = QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration;
+
+    if (supportedMethods == QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
+        unsupportedMethods = QBluetoothDeviceDiscoveryAgent::LowEnergyMethod;
+        expectedConfiguration = QBluetoothDeviceInfo::BaseRateCoreConfiguration;
+    } else if (supportedMethods == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
+        unsupportedMethods = QBluetoothDeviceDiscoveryAgent::ClassicMethod;
+        expectedConfiguration = QBluetoothDeviceInfo::LowEnergyCoreConfiguration;
+    }
+
+    QBluetoothDeviceDiscoveryAgent agent;
+    QSignalSpy finishedSpy(&agent, SIGNAL(finished()));
+    QSignalSpy errorSpy(&agent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QSignalSpy discoveredSpy(&agent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)));
+
+    // NoMethod - should just immediately return:
+    agent.start(QBluetoothDeviceDiscoveryAgent::NoMethod);
+    QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
+    QVERIFY(!agent.isActive());
+    QCOMPARE(finishedSpy.size(), 0);
+    QCOMPARE(errorSpy.size(), 0);
+    QCOMPARE(discoveredSpy.size(), 0);
+
+    if (unsupportedMethods != QBluetoothDeviceDiscoveryAgent::NoMethod) {
+        agent.start(unsupportedMethods);
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+        QVERIFY(!agent.isActive());
+        QVERIFY(finishedSpy.isEmpty());
+        QCOMPARE(errorSpy.size(), 1);
+        errorSpy.clear();
+        QVERIFY(discoveredSpy.isEmpty());
+    }
+
+    // Start discovery, probably both Classic and LE methods:
+    agent.start(supportedMethods);
+    QVERIFY(agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+
+
+#define RUN_DISCOVERY(maxTimeout, step, condition) \
+    for (int scanTime = maxTimeout; (condition) && scanTime > 0; scanTime -= step) \
+        QTest::qWait(step);
+
+    // Wait for up to MaxScanTime for the scan to finish
+    const int timeStep = 15000;
+    RUN_DISCOVERY(MaxScanTime, timeStep, finishedSpy.isEmpty())
+
+    QVERIFY(!agent.isActive());
+    QVERIFY(errorSpy.size() <= 1);
+
+    if (errorSpy.size()) {
+        // For example, old iOS device could report it supports LE method,
+        // but it actually does not.
+        QVERIFY(supportedMethods == QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+    } else {
+        QVERIFY(finishedSpy.count() == 1);
+        QVERIFY(agent.error() == QBluetoothDeviceDiscoveryAgent::NoError);
+        QVERIFY(agent.errorString().isEmpty());
+
+        while (!discoveredSpy.isEmpty()) {
+            const QBluetoothDeviceInfo info =
+                qvariant_cast<QBluetoothDeviceInfo>(discoveredSpy.takeFirst().at(0));
+            QVERIFY(info.isValid());
+            QVERIFY(info.coreConfigurations() & expectedConfiguration);
+        }
+    }
+
+    if (unsupportedMethods != QBluetoothDeviceDiscoveryAgent::NoMethod)
+        return;
+
+    // Both methods were reported as supported. We already tested them
+    // above, now let's test first Classic then LE.
+    finishedSpy.clear();
+    errorSpy.clear();
+    discoveredSpy.clear();
+
+    agent.start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
+    QVERIFY(agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+    QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
+
+    RUN_DISCOVERY(MaxScanTime, timeStep, finishedSpy.isEmpty())
+
+    QVERIFY(!agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+    QCOMPARE(finishedSpy.size(), 1);
+
+    finishedSpy.clear();
+    discoveredSpy.clear();
+
+    agent.start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    QVERIFY(agent.isActive());
+    QVERIFY(errorSpy.isEmpty());
+
+    RUN_DISCOVERY(MaxScanTime, timeStep, finishedSpy.isEmpty() && errorSpy.isEmpty())
+
+    QVERIFY(!agent.isActive());
+    QVERIFY(errorSpy.size() <= 1);
+
+    if (errorSpy.size()) {
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+        qDebug() << "QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods is inaccurate"
+                    " on your platform/with your device, LowEnergyMethod is not supported";
+    } else {
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
+        QCOMPARE(finishedSpy.size(), 1);
     }
 }
 

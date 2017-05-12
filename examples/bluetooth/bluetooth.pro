@@ -1,4 +1,7 @@
 TEMPLATE = subdirs
+
+SUBDIRS += heartrate-server
+
 qtHaveModule(widgets) {
     SUBDIRS += btchat \
                btscanner \
@@ -9,5 +12,5 @@ qtHaveModule(quick): SUBDIRS += scanner \
                                 picturetransfer \
                                 pingpong \
                                 lowenergyscanner \
-                                heartlistener \
+                                heartrate-game \
                                 chat

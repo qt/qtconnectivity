@@ -1,32 +1,38 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 BlackBerry Limited. All rights reserved.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -96,7 +102,10 @@ public:
         m_discoveryMode(QDeclarativeBluetoothDiscoveryModel::MinimalServiceDiscovery),
         m_running(false),
         m_runningRequested(true),
-        m_componentCompleted(false)
+        m_componentCompleted(false),
+        m_currentState(QDeclarativeBluetoothDiscoveryModel::IdleAction),
+        m_nextState(QDeclarativeBluetoothDiscoveryModel::IdleAction),
+        m_wasDirectDeviceAgentCancel(false)
     {
     }
     ~QDeclarativeBluetoothDiscoveryModelPrivate()
@@ -122,12 +131,33 @@ public:
     bool m_runningRequested;
     bool m_componentCompleted;
     QString m_remoteAddress;
+
+    QDeclarativeBluetoothDiscoveryModel::Action m_currentState;
+    QDeclarativeBluetoothDiscoveryModel::Action m_nextState;
+    bool m_wasDirectDeviceAgentCancel;
 };
 
 QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject *parent) :
     QAbstractListModel(parent),
     d(new QDeclarativeBluetoothDiscoveryModelPrivate)
 {
+    d->m_deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
+    connect(d->m_deviceAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
+            this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
+    connect(d->m_deviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
+    connect(d->m_deviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
+    connect(d->m_deviceAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
+            this, SLOT(errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error)));
+    d->m_deviceAgent->setObjectName("DeviceDiscoveryAgent");
+
+    d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
+    connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
+            this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
+    connect(d->m_serviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
+    connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
+    connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
+            this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
+    d->m_serviceAgent->setObjectName("ServiceDiscoveryAgent");
 
     QHash<int, QByteArray> roleNames;
     roleNames = QAbstractItemModel::roleNames();
@@ -174,8 +204,8 @@ void QDeclarativeBluetoothDiscoveryModel::errorDeviceDiscovery(QBluetoothDeviceD
 
     //QBluetoothDeviceDiscoveryAgent::finished() signal is not emitted in case of an error
     //Note that this behavior is different from QBluetoothServiceDiscoveryAgent.
-    //This reset the models running flag.
-    setRunning(false);
+    //This resets the models running flag.
+    finishedDiscovery();
 }
 
 void QDeclarativeBluetoothDiscoveryModel::clearModel()
@@ -314,7 +344,7 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
   \qmlsignal BluetoothDiscoveryModel::deviceDiscovered(string device)
 
   This signal is emitted when a new device is discovered. \a device contains
-  the Bluetooth address of the discovred device.
+  the Bluetooth address of the discovered device.
 
   The corresponding handler is \c onDeviceDiscovered.
   */
@@ -331,7 +361,35 @@ void QDeclarativeBluetoothDiscoveryModel::deviceDiscovered(const QBluetoothDevic
 
 void QDeclarativeBluetoothDiscoveryModel::finishedDiscovery()
 {
-    setRunning(false);
+    QDeclarativeBluetoothDiscoveryModel::Action previous = d->m_currentState;
+    d->m_currentState = IdleAction;
+
+    switch (previous) {
+    case IdleAction:
+        // last transition didn't even start
+        // can happen when start() or stop() immediately returned
+        // usually this happens within a current transitionToNextAction call
+        break;
+    case StopAction:
+        qCDebug(QT_BT_QML) << "Agent cancel detected";
+        transitionToNextAction();
+        break;
+    default: // all other
+        qCDebug(QT_BT_QML) << "Discovery finished" << sender()->objectName();
+
+        //TODO Qt6 This hack below is once again due to the pendingCancel logic
+        //         because QBluetoothDeviceDiscoveryAgent::isActive() is not reliable.
+        //         In toggleStartStop() we need to know whether the stop() is delayed or immediate.
+        //         isActive() cannot be used. Hence we have to wait for the canceled() signal.
+        //         Android, WinRT and Bluez5 are immediate, Bluez4 is always delayed.
+        //         The immediate case is what we catch here.
+        if (sender() == d->m_deviceAgent && d->m_nextState == StopAction) {
+            d->m_wasDirectDeviceAgentCancel = true;
+            return;
+        }
+        setRunning(false);
+        break;
+    }
 }
 
 /*!
@@ -361,11 +419,136 @@ void QDeclarativeBluetoothDiscoveryModel::setDiscoveryMode(DiscoveryMode discove
     emit discoveryModeChanged();
 }
 
+
+void QDeclarativeBluetoothDiscoveryModel::updateNextAction(Action action)
+{
+    qCDebug(QT_BT_QML) << "New action queue:"
+                       << d->m_currentState << d->m_nextState << action;
+
+    if (action == IdleAction)
+        return;
+
+    switch (d->m_nextState) {
+    case IdleAction:
+        d->m_nextState = action;
+        return;
+    case StopAction:
+        qWarning() << "Invalid Stop state when processing new action" << action;
+        return;
+    case DeviceDiscoveryAction:
+    case MinimalServiceDiscoveryAction:
+    case FullServiceDiscoveryAction:
+        if (action == StopAction) // cancel out previous start call
+            d->m_nextState = IdleAction;
+        else
+            qWarning() << "Ignoring new DMF state while another DMF state is scheduled.";
+        return;
+    }
+}
+
+void QDeclarativeBluetoothDiscoveryModel::transitionToNextAction()
+{
+    qCDebug(QT_BT_QML) << "Before transition change:" << d->m_currentState << d->m_nextState;
+    bool isRunning;
+    switch (d->m_currentState) {
+    case IdleAction:
+        switch (d->m_nextState) {
+        case IdleAction: break; // nothing to do
+        case StopAction: d->m_nextState = IdleAction; break; // clear, nothing to do
+        case DeviceDiscoveryAction:
+        case MinimalServiceDiscoveryAction:
+        case FullServiceDiscoveryAction:
+            Action temp = d->m_nextState;
+            clearModel();
+            isRunning = toggleStartStop(d->m_nextState);
+            d->m_nextState = IdleAction;
+            if (isRunning) {
+                d->m_currentState = temp;
+            } else {
+                if (temp != DeviceDiscoveryAction )
+                    errorDiscovery(d->m_serviceAgent->error());
+                d->m_running = false;
+            }
+        }
+        break;
+    case StopAction:
+        break; // do nothing, StopAction cleared by finished()/cancelled()/error() handlers
+    case DeviceDiscoveryAction:
+    case MinimalServiceDiscoveryAction:
+    case FullServiceDiscoveryAction:
+        switch (d->m_nextState) {
+        case IdleAction: break;
+        case StopAction:
+            isRunning = toggleStartStop(StopAction);
+            (isRunning) ? d->m_currentState = StopAction : d->m_currentState = IdleAction;
+            d->m_nextState = IdleAction;
+            break;
+         default:
+            Q_ASSERT(false); // should never happen
+            break;
+        }
+
+        break;
+    }
+
+    qCDebug(QT_BT_QML) << "After transition change:" << d->m_currentState << d->m_nextState;
+}
+
+// Returns true if the agent is active
+// this can be used to detect whether the agent still needs time to
+// perform the requested action.
+bool QDeclarativeBluetoothDiscoveryModel::toggleStartStop(Action action)
+{
+    Q_ASSERT(action != IdleAction);
+    switch (action) {
+    case DeviceDiscoveryAction:
+        Q_ASSERT(!d->m_deviceAgent->isActive() && !d->m_serviceAgent->isActive());
+        d->m_deviceAgent->start();
+        return d->m_deviceAgent->isActive();
+    case MinimalServiceDiscoveryAction:
+    case FullServiceDiscoveryAction:
+        Q_ASSERT(!d->m_deviceAgent->isActive() && !d->m_serviceAgent->isActive());
+        d->m_serviceAgent->setRemoteAddress(QBluetoothAddress(d->m_remoteAddress));
+        d->m_serviceAgent->clear();
+
+        if (!d->m_uuid.isEmpty())
+            d->m_serviceAgent->setUuidFilter(QBluetoothUuid(d->m_uuid));
+
+        if (action == FullServiceDiscoveryAction)  {
+            qCDebug(QT_BT_QML) << "Full Discovery";
+            d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+        } else {
+            qCDebug(QT_BT_QML) << "Minimal Discovery";
+            d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
+        }
+        return d->m_serviceAgent->isActive();
+    case StopAction:
+        Q_ASSERT(d->m_currentState != StopAction && d->m_currentState != IdleAction);
+        if (d->m_currentState == DeviceDiscoveryAction) {
+            d->m_deviceAgent->stop();
+
+            // TODO Qt6 Crude hack below
+            // cannot use isActive() below due to pendingCancel logic
+            // we always wait for canceled() signal coming through or check
+            // for directly invoked cancel() response caused by stop() above
+            bool stillActive = !d->m_wasDirectDeviceAgentCancel;
+            d->m_wasDirectDeviceAgentCancel = false;
+            return stillActive;
+        } else {
+            d->m_serviceAgent->stop();
+            return d->m_serviceAgent->isActive();
+        }
+    default:
+        return true;
+    }
+}
+
+
 /*!
   \qmlproperty bool BluetoothDiscoveryModel::running
 
   This property starts or stops discovery. A restart of the discovery process
-  requires setting this property to \c false and subsequemtly to \c true again.
+  requires setting this property to \c false and subsequently to \c true again.
 
 */
 
@@ -386,55 +569,23 @@ void QDeclarativeBluetoothDiscoveryModel::setRunning(bool running)
 
     d->m_running = running;
 
-    if (!running) {
-        if (d->m_deviceAgent)
-            d->m_deviceAgent->stop();
-        if (d->m_serviceAgent)
-            d->m_serviceAgent->stop();
+    Action nextAction = IdleAction;
+    if (running) {
+        if (discoveryMode() == MinimalServiceDiscovery)
+            nextAction = MinimalServiceDiscoveryAction;
+        else if (discoveryMode() == FullServiceDiscovery)
+            nextAction = FullServiceDiscoveryAction;
+        else
+            nextAction = DeviceDiscoveryAction;
     } else {
-        clearModel();
-        d->m_error = NoError;
-        if (d->m_discoveryMode == DeviceDiscovery) {
-            if (!d->m_deviceAgent) {
-                d->m_deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
-                connect(d->m_deviceAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)), this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
-                connect(d->m_deviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
-                connect(d->m_deviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
-                connect(d->m_deviceAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)), this, SLOT(errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error)));
-            }
-            d->m_deviceAgent->start();
-        } else {
-            if (!d->m_serviceAgent) {
-                d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
-                connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-                connect(d->m_serviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
-                connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
-                connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
-            }
-
-            d->m_serviceAgent->setRemoteAddress(QBluetoothAddress(d->m_remoteAddress));
-            d->m_serviceAgent->clear();
-
-            if (!d->m_uuid.isEmpty())
-                d->m_serviceAgent->setUuidFilter(QBluetoothUuid(d->m_uuid));
-
-            if (discoveryMode() == FullServiceDiscovery)  {
-                //qDebug() << "Full Discovery";
-                d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
-            } else {
-                //qDebug() << "Minimal Discovery";
-                d->m_serviceAgent->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
-            }
-
-            // we could not start service discovery
-            if (!d->m_serviceAgent->isActive()) {
-                d->m_running = false;
-                errorDiscovery(d->m_serviceAgent->error());
-                return;
-            }
-        }
+        nextAction = StopAction;
     }
 
+    Q_ASSERT(nextAction != IdleAction);
+    updateNextAction(nextAction);
+    transitionToNextAction();
+
+    qCDebug(QT_BT_QML) << "Running state:" << d->m_running;
     emit runningChanged();
 }
 

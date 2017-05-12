@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -73,9 +79,6 @@ QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port,
                                                QIODevice::OpenMode mode)
 {
-    // We have readwrite channels with IOBluetooth's channels.
-    Q_UNUSED(openMode)
-
     Q_ASSERT_X(state == QBluetoothSocket::ServiceLookupState
                || state == QBluetoothSocket::UnconnectedState,
                Q_FUNC_INFO, "invalid state");
@@ -86,7 +89,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     txBuffer.clear();
 
     IOReturn status = kIOReturnError;
-    // Set socket state on q_ptr will emit a signal,
+    // Setting socket state on q_ptr will emit a signal,
     // we'd like to avoid any signal until this function completes.
     const QBluetoothSocket::SocketState oldState = state;
     // To prevent other connectToService calls (from QBluetoothSocket):
@@ -440,8 +443,16 @@ qint64 QBluetoothSocket::bytesToWrite() const
 
 void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
+    // Report this problem early, potentially avoid device discovery:
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (state() != UnconnectedState && state() != ServiceLookupState) {
-        qCWarning(QT_BT_OSX)  << Q_FUNC_INFO << "called on a busy socket";
+        qCWarning(QT_BT_OSX)  << "called on a busy socket";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(OperationError);
         return;
@@ -457,8 +468,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     } else {
         // Try service discovery.
         if (service.serviceUuid().isNull()) {
-            qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "No port, "
-                                    "no PSM, and no UUID provided, unable to connect";
+            qCWarning(QT_BT_OSX) << "No port, no PSM, and no "
+                                    "UUID provided, unable to connect";
             return;
         }
 
@@ -469,8 +480,16 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                                         OpenMode openMode)
 {
+    // Report this problem early, avoid device discovery:
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
+        qCWarning(QT_BT_OSX) << "called on a busy socket";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(QBluetoothSocket::OperationError);
         return;
@@ -486,8 +505,15 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port,
                                         OpenMode openMode)
 {
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
+        d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "called on a busy socket";
+        qCWarning(QT_BT_OSX) << "called on a busy socket";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         setSocketError(OperationError);
         return;
@@ -528,7 +554,7 @@ void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
         // We can register for L2CAP/RFCOMM open notifications,
         // that's different from 'listen' and is implemented
         // in QBluetoothServer.
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "listening sockets are not supported";
+        qCWarning(QT_BT_OSX) << "listening sockets are not supported";
     }
 }
 

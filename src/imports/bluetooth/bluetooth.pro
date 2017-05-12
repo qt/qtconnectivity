@@ -1,3 +1,5 @@
+TARGETPATH = QtBluetooth
+
 QT = core quick bluetooth
 
 HEADERS += \

@@ -1,31 +1,37 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -51,6 +57,10 @@
 #include <QtBluetooth/QBluetoothUuid>
 
 QT_BEGIN_NAMESPACE
+
+#define ATTRIBUTE_CHANNEL_ID 4
+#define SIGNALING_CHANNEL_ID 5
+#define SECURITY_CHANNEL_ID 6
 
 #define BTPROTO_L2CAP   0
 #define BTPROTO_HCI     1
@@ -134,22 +144,6 @@ struct sockaddr_rc {
 
 // Bt Low Energy related
 
-#define bt_get_unaligned(ptr)           \
-({                                      \
-    struct __attribute__((packed)) {    \
-        __typeof__(*(ptr)) __v;         \
-    } *__p = (__typeof__(__p)) (ptr);   \
-    __p->__v;                           \
-})
-
-#define bt_put_unaligned(val, ptr)      \
-do {                                    \
-    struct __attribute__((packed)) {    \
-        __typeof__(*(ptr)) __v;         \
-    } *__p = (__typeof__(__p)) (ptr);   \
-    __p->__v = (val);                   \
-} while (0)
-
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
@@ -165,15 +159,7 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
         dst->data[15 - i] = src->data[i];
 }
 
-static inline quint16 bt_get_le16(const void *ptr)
-{
-    return bt_get_unaligned((const quint16 *) ptr);
-}
 #elif __BYTE_ORDER == __BIG_ENDIAN
-static inline quint16 bt_get_le16(const void *ptr)
-{
-    return qbswap(bt_get_unaligned((const quint16 *) ptr));
-}
 
 static inline void btoh128(const quint128 *src, quint128 *dst)
 {
@@ -191,6 +177,25 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #error "Unknown byte order"
 #endif
 
+template<typename T> inline T getBtData(const void *ptr)
+{
+    return qFromLittleEndian<T>(reinterpret_cast<const uchar *>(ptr));
+}
+
+static inline quint16 bt_get_le16(const void *ptr)
+{
+    return getBtData<quint16>(ptr);
+}
+
+template<typename T> inline void putBtData(T src, void *dst)
+{
+    qToLittleEndian(src, reinterpret_cast<uchar *>(dst));
+}
+template<> inline void putBtData(quint128 src, void *dst)
+{
+    btoh128(&src, reinterpret_cast<quint128 *>(dst));
+}
+
 #define hton128(x, y) ntoh128(x, y)
 
 // HCI related
@@ -203,11 +208,14 @@ static inline void ntoh128(const quint128 *src, quint128 *dst)
 #define HCI_FILTER 2
 
 // HCI packet types
+#define HCI_COMMAND_PKT 0x01
+#define HCI_ACL_PKT     0x02
 #define HCI_EVENT_PKT   0x04
 #define HCI_VENDOR_PKT  0xff
 
 #define HCI_FLT_TYPE_BITS  31
 #define HCI_FLT_EVENT_BITS 63
+
 
 struct sockaddr_hci {
     sa_family_t hci_family;
@@ -332,6 +340,49 @@ typedef struct {
     quint8  encrypt;
 } __attribute__ ((packed)) evt_encrypt_change;
 #define EVT_ENCRYPT_CHANGE_SIZE 4
+
+#define EVT_CMD_COMPLETE                0x0E
+struct evt_cmd_complete {
+    quint8 ncmd;
+    quint16 opcode;
+} __attribute__ ((packed));
+
+struct AclData {
+    quint16 handle: 12;
+    quint16 pbFlag: 2;
+    quint16 bcFlag: 2;
+    quint16 dataLen;
+};
+
+struct L2CapHeader {
+    quint16 length;
+    quint16 channelId;
+};
+
+struct hci_command_hdr {
+    quint16 opcode;         /* OCF & OGF */
+    quint8 plen;
+} __attribute__ ((packed));
+
+enum OpCodeGroupField {
+    OgfLinkControl = 0x8,
+};
+
+enum OpCodeCommandField {
+    OcfLeSetAdvParams = 0x6,
+    OcfLeReadTxPowerLevel = 0x7,
+    OcfLeSetAdvData = 0x8,
+    OcfLeSetScanResponseData = 0x9,
+    OcfLeSetAdvEnable = 0xa,
+    OcfLeClearWhiteList = 0x10,
+    OcfLeAddToWhiteList = 0x11,
+    OcfLeConnectionUpdate = 0x13,
+};
+
+/* Command opcode pack/unpack */
+#define opCodePack(ogf, ocf) (quint16(((ocf) & 0x03ff)|((ogf) << 10)))
+#define ogfFromOpCode(op) ((op) >> 10)
+#define ocfFromOpCode(op) ((op) & 0x03ff)
 
 QT_END_NAMESPACE
 

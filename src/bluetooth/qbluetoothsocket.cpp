@@ -1,32 +1,38 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2016 BlackBerry Limited. All rights reserved.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL21$
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 or version 3 as published by the Free
-** Software Foundation and appearing in the file LICENSE.LGPLv21 and
-** LICENSE.LGPLv3 included in the packaging of this file. Please review the
-** following information to ensure the GNU Lesser General Public License
-** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
 **
-** As a special exception, The Qt Company gives you certain additional
-** rights. These rights are described in The Qt Company LGPL Exception
-** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -201,7 +207,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On Android and OS X, this feature is not supported and returns 0.
+    On Android and \macos, this feature is not supported and returns 0.
 */
 
 /*!
@@ -332,6 +338,22 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     }
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
 #else
+#if defined(QT_WINRT_BLUETOOTH)
+    // Report these problems early:
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+#endif // QT_WINRT_BLUETOOTH
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (service.protocolServiceMultiplexer() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
             d->errorString = tr("Unknown socket error");
@@ -348,7 +370,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         d->connectToService(service.device().address(), service.serverChannel(), openMode);
     } else {
         // try doing service discovery to see if we can find the socket
-        if(service.serviceUuid().isNull()){
+        if (service.serviceUuid().isNull()
+                && !service.serviceClassUuids().contains(QBluetoothUuid::SerialPort)) {
             qCWarning(QT_BT) << "No port, no PSM, and no UUID provided, unable to connect";
             return;
         }
@@ -400,6 +423,22 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
     }
     d->connectToService(address, uuid, openMode);
 #else
+#if defined(QT_WINRT_BLUETOOTH)
+    // Report these problems early, prevent device discovery:
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+#endif // QT_WINRT_BLUETOOTH
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     QBluetoothServiceInfo service;
     QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::MiscellaneousDevice);
     service.setDevice(device);
@@ -437,6 +476,22 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
     setSocketError(QBluetoothSocket::ServiceNotFoundError);
     qCWarning(QT_BT) << "Connecting to port is not supported";
 #else
+#if defined(QT_WINRT_BLUETOOTH)
+    // Report these problems early
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+#endif // QT_WINRT_BLUETOOTH
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (state() != QBluetoothSocket::UnconnectedState) {
         qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
         d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
@@ -497,7 +552,7 @@ QString QBluetoothSocket::errorString() const
 
     On Bluez this property is set to QBluetooth::Authorization by default.
 
-    On OS X, this value is ignored as the platform does not permit access
+    On \macos, this value is ignored as the platform does not permit access
     to the security parameter of the socket. By default the platform prefers
     secure/encrypted connections though and therefore this function always
     returns \l QBluetooth::Secure.
@@ -531,7 +586,7 @@ void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags
     during or after the connection has been established. If such a change happens
     it is not reflected in the value of this flag.
 
-    On OS X, this flag is always set to \l QBluetooth::Secure.
+    On \macos, this flag is always set to \l QBluetooth::Secure.
 
     \sa setPreferredSecurityFlags()
 
@@ -593,7 +648,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     Q_D(QBluetoothSocket);
 
     setSocketState(QBluetoothSocket::ServiceLookupState);
-    qCDebug(QT_BT) << "Starting discovery";
+    qCDebug(QT_BT) << "Starting Bluetooth Socket discovery";
 
     if(d->discoveryAgent) {
         d->discoveryAgent->stop();
@@ -610,11 +665,12 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
 
     d->openMode = openMode;
 
+    QList<QBluetoothUuid> filterUuids = service.serviceClassUuids();
     if(!service.serviceUuid().isNull())
-        d->discoveryAgent->setUuidFilter(service.serviceUuid());
+        filterUuids.append(service.serviceUuid());
 
-    if(!service.serviceClassUuids().isEmpty())
-        d->discoveryAgent->setUuidFilter(service.serviceClassUuids());
+    if (!filterUuids.isEmpty())
+        d->discoveryAgent->setUuidFilter(filterUuids);
 
     // we have to ID the service somehow
     Q_ASSERT(!d->discoveryAgent->uuidFilter().isEmpty());

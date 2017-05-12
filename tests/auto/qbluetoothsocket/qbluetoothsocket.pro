@@ -3,7 +3,7 @@ TARGET = tst_qbluetoothsocket
 CONFIG += testcase
 testcase.timeout = 250 # this test is slow
 
-QT = core concurrent network bluetooth testlib
+QT = core concurrent network bluetooth-private testlib
 osx:QT += widgets
 
 OTHER_FILES += \
@@ -11,8 +11,6 @@ OTHER_FILES += \
 
 osx {
     DEFINES += QT_OSX_BLUETOOTH
-} else:android:!android-no-sdk {
+} else:android:!android-embedded {
     DEFINES += QT_ANDROID_BLUETOOTH
-} config_bluez:qtHaveModule(dbus) {
-    DEFINES += QT_BLUEZ_BLUETOOTH
 }

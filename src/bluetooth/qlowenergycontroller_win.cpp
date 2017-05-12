@@ -640,6 +640,11 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
 }
 
+void QLowEnergyControllerPrivate::init()
+{
+    Q_UNIMPLEMENTED();
+}
+
 void QLowEnergyControllerPrivate::connectToDevice()
 {
     // required to pass unit test on default backend
@@ -884,6 +889,21 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
     servicePrivate->setState(QLowEnergyService::ServiceDiscovered);
 }
 
+void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &, const QLowEnergyAdvertisingData &, const QLowEnergyAdvertisingData &)
+{
+    Q_UNIMPLEMENTED();
+}
+
+void QLowEnergyControllerPrivate::stopAdvertising()
+{
+    Q_UNIMPLEMENTED();
+}
+
+void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
+{
+    Q_UNIMPLEMENTED();
+}
+
 void QLowEnergyControllerPrivate::readCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle)
@@ -938,7 +958,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
-        bool writeWithResponse)
+        QLowEnergyService::WriteMode mode)
 {
     Q_ASSERT(!service.isNull());
     if (!service->characteristicList.contains(charHandle))
@@ -962,7 +982,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
                 service->startHandle, charHandle, charDetails);
 
-    const DWORD flags = writeWithResponse
+    const DWORD flags = (mode == QLowEnergyService::WriteWithResponse)
             ? BLUETOOTH_GATT_FLAG_NONE
             : BLUETOOTH_GATT_FLAG_WRITE_WITHOUT_RESPONSE;
 
@@ -983,7 +1003,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
 
     updateValueOfCharacteristic(charHandle, newValue, false);
 
-    if (writeWithResponse) {
+    if (mode == QLowEnergyService::WriteWithResponse) {
         QLowEnergyCharacteristic ch(service, charHandle);
         emit service->characteristicWritten(ch, newValue);
     }
@@ -1129,6 +1149,11 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 
     QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
     emit service->descriptorWritten(dscr, newValue);
+}
+
+void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
+{
+    Q_UNIMPLEMENTED();
 }
 
 QT_END_NAMESPACE
