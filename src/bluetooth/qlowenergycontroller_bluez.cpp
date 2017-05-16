@@ -527,6 +527,17 @@ void QLowEnergyControllerPrivate::connectToDevice()
     if (l2cpSocket)
         delete l2cpSocket;
 
+    // check for active running connections
+    // BlueZ 5.37+ (maybe even earlier versions) can have pending BTLE connections
+    // Only one active L2CP socket to CID 0x4 possible at a time
+    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    if (!activeHandles.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot connect due to pending active LE connections";
+        setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    }
+
     l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, SIGNAL(connected()), this, SLOT(l2cpConnected()));
     connect(l2cpSocket, SIGNAL(disconnected()), this, SLOT(l2cpDisconnected()));
