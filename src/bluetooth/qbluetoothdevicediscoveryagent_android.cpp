@@ -165,7 +165,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
             {
                 qCWarning(QT_BT_ANDROID) << "Search not possible due to missing permission (ACCESS_COARSE_LOCATION)";
                 lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
-                errorString = QBluetoothDeviceDiscoveryAgent::tr("Missing Location permission. Search is not possible");
+                errorString = QBluetoothDeviceDiscoveryAgent::tr("Missing Location permission. Search is not possible.");
                 emit q->error(lastError);
                 return;
             }
