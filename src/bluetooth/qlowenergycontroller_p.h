@@ -100,6 +100,7 @@ class QTimer;
 class HciManager;
 class LeCmacCalculator;
 class QSocketNotifier;
+class RemoteDeviceManager;
 #elif defined(QT_ANDROID_BLUETOOTH)
 class LowEnergyNotificationHub;
 #endif
@@ -279,6 +280,7 @@ private:
     QLeAdvertiser *advertiser;
     QSocketNotifier *serverSocketNotifier;
     QTimer *requestTimer = nullptr;
+    RemoteDeviceManager* device1Manager = nullptr;
 
     /*
       Defines the maximum number of milliseconds the implementation will
@@ -413,6 +415,7 @@ private:
             const QByteArray &newValue);
 
     void restartRequestTimer();
+    void establishL2cpClientSocket();
 
 private slots:
     void l2cpConnected();
@@ -421,6 +424,7 @@ private slots:
     void l2cpReadyRead();
     void encryptionChangedEvent(const QBluetoothAddress&, bool);
     void handleGattRequestTimeout();
+    void activeConnectionTerminationDone();
 #elif defined(QT_ANDROID_BLUETOOTH)
     LowEnergyNotificationHub *hub;
 
