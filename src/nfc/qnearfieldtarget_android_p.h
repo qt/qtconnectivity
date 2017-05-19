@@ -75,8 +75,12 @@ public:
     virtual QByteArray uid() const;
     virtual Type type() const;
     virtual AccessMethods accessMethods() const;
+    bool keepConnection() const;
+    bool setKeepConnection(bool isPersistent);
+    bool disconnect();
     virtual bool hasNdefMessage();
     virtual RequestId readNdefMessages();
+    int maxCommandLength() const;
     virtual RequestId sendCommand(const QByteArray &command);
     virtual RequestId sendCommands(const QList<QByteArray> &commands);
     virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
@@ -98,6 +102,8 @@ protected:
     void setupTargetCheckTimer();
     void handleTargetLost();
     QAndroidJniObject getTagTechnology(const QString &tech) const;
+    bool setTagTechnology(const QStringList &techList);
+    bool connect();
     QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray) const;
     bool catchJavaExceptions(bool verbose = true) const;
 
@@ -107,6 +113,9 @@ protected:
     QStringList m_techList;
     Type m_type;
     QTimer *m_targetCheckTimer;
+    QString m_tech;
+    QAndroidJniObject m_tagTech;
+    bool m_keepConnection;
 };
 
 QT_END_NAMESPACE

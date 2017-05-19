@@ -190,10 +190,12 @@ static void QtBluetoothInputStreamThread_readyData(JNIEnv */*env*/, jobject /*ja
     reinterpret_cast<InputStreamThread*>(qtObject)->javaReadyRead(buffer, bufferLength);
 }
 
-void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject, jobject bluetoothDevice, jint rssi)
+void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject, jobject bluetoothDevice,
+                                jint rssi, jbyteArray scanRecord)
 {
     reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceiveLeScan(
-                                                                env, bluetoothDevice, rssi);
+                                                                env, bluetoothDevice, rssi,
+                                                                scanRecord);
 }
 
 
@@ -203,7 +205,7 @@ static JNINativeMethod methods[] = {
 };
 
 static JNINativeMethod methods_le[] = {
-    {"leScanResult", "(JLandroid/bluetooth/BluetoothDevice;I)V",
+    {"leScanResult", "(JLandroid/bluetooth/BluetoothDevice;I[B)V",
                 (void *) QtBluetoothLE_leScanResult},
     {"leConnectionStateChange", "(JII)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
@@ -223,6 +225,17 @@ static JNINativeMethod methods_le[] = {
                 (void *) LowEnergyNotificationHub::lowEnergy_characteristicChanged},
     {"leServiceError", "(JII)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_serviceError},
+};
+
+static JNINativeMethod methods_leServer[] = {
+    {"leServerConnectionStateChange", "(JII)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
+    {"leServerAdvertisementError", "(JI)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_advertisementError},
+    {"leServerCharacteristicChanged", "(JLandroid/bluetooth/BluetoothGattCharacteristic;[B)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_serverCharacteristicChanged},
+    {"leServerDescriptorWritten", "(JLandroid/bluetooth/BluetoothGattDescriptor;[B)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_serverDescriptorWritten},
 };
 
 static JNINativeMethod methods_server[] = {
@@ -265,6 +278,11 @@ static bool registerNatives(JNIEnv *env)
         return false;
     }
 
+    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothLEServer");
+    if (env->RegisterNatives(clazz, methods_leServer, sizeof(methods_leServer) / sizeof(methods_leServer[0])) < 0) {
+        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for QBLuetoothLEServer failed");
+        return false;
+    }
 
     FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothSocketServer");
     if (env->RegisterNatives(clazz, methods_server, sizeof(methods_server) / sizeof(methods_server[0])) < 0) {
@@ -284,6 +302,11 @@ static bool registerNatives(JNIEnv *env)
 
 Q_BLUETOOTH_EXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
 {
+    static bool initialized = false;
+    if (initialized)
+        return JNI_VERSION_1_6;
+    initialized = true;
+
     typedef union {
         JNIEnv *nativeEnvironment;
         void *venv;

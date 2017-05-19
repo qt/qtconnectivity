@@ -44,9 +44,6 @@
 
 #include <QtCore/QDebug>
 
-// Implementation of qNfcChecksum
-#include "qnearfieldtarget.h"
-
 QT_BEGIN_NAMESPACE
 
 TagBase::TagBase()
@@ -157,7 +154,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
         QByteArray uid = command.mid(3, 4);
 
         // check checksum
-        if (qNfcChecksum(command.constData(), command.length()) != 0)
+        if (qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41) != 0)
             return QByteArray();
 
         // check UID
@@ -226,7 +223,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
         QByteArray uid = command.mid(10, 4);
 
         // check checksum
-        if (qNfcChecksum(command.constData(), command.length()) != 0)
+        if (qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41) != 0)
             return QByteArray();
 
         // check UID
@@ -280,7 +277,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
     }
 
     if (!response.isEmpty()) {
-        quint16 crc = qNfcChecksum(response.constData(), response.length());
+        quint16 crc = qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41);
         response.append(quint8(crc & 0xff));
         response.append(quint8(crc >> 8));
     }
@@ -324,7 +321,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     QByteArray response;
 
     // check checksum
-    if (qNfcChecksum(command.constData(), command.length()) != 0)
+    if (qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41) != 0)
         return QByteArray();
 
     if (expectPacket2) {
@@ -381,7 +378,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     }
 
     if (!response.isEmpty()) {
-        quint16 crc = qNfcChecksum(response.constData(), response.length());
+        quint16 crc = qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41);
         response.append(quint8(crc & 0xff));
         response.append(quint8(crc >> 8));
     }

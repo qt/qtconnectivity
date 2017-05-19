@@ -218,7 +218,7 @@ QByteArray QLowEnergyCharacteristic::value() const
     or \c 0 if the handle cannot be accessed on the platform or
     if the characteristic is invalid.
 
-    \note On OS X and iOS handles can differ from 0, but these
+    \note On \macos and iOS handles can differ from 0, but these
     values have no special meaning outside of internal/private API.
 */
 QLowEnergyHandle QLowEnergyCharacteristic::handle() const
@@ -320,7 +320,7 @@ bool QLowEnergyCharacteristic::isValid() const
     \c 0 if the handle cannot be accessed on the platform or if the
     characteristic is invalid.
 
-    \note On OS X and iOS handles can differ from 0, but these
+    \note On \macos and iOS handles can differ from 0, but these
     values have no special meaning outside of internal/private API.
 
     \sa isValid()

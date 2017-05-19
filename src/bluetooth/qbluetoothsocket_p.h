@@ -61,6 +61,26 @@
 class WorkerThread;
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <wrl.h>
+
+namespace ABI {
+    namespace Windows {
+        namespace Networking {
+            namespace Sockets {
+                struct IStreamSocket;
+            }
+        }
+        namespace Foundation {
+            struct IAsyncAction;
+            enum class AsyncStatus;
+        }
+    }
+}
+
+class SocketWorker;
+#endif // QT_WINRT_BLUETOOTH
+
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
 #define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)
 #endif
@@ -134,6 +154,11 @@ public:
     bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
+#elif defined(QT_WINRT_BLUETOOTH)
+    bool setSocketDescriptor(Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> socket,
+                             QBluetoothServiceInfo::Protocol socketType,
+                             QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
 #endif
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
@@ -183,7 +208,25 @@ signals:
 
 #endif
 
-#if defined(QT_BLUEZ_BLUETOOTH)
+#ifdef QT_WINRT_BLUETOOTH
+    SocketWorker *m_worker;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> m_socketObject;
+    Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IAsyncAction> m_connectOp;
+
+    QMutex m_readMutex;
+
+    // Protected by m_readMutex. Written in addToPendingData (native callback)
+    QVector<QByteArray> m_pendingData;
+
+    Q_INVOKABLE void addToPendingData(const QVector<QByteArray> &data);
+
+private slots:
+    void handleNewData(const QVector<QByteArray> &data);
+    void handleError(QBluetoothSocket::SocketError error);
+#endif // QT_WINRT_BLUETOOTH
+
+#if QT_CONFIG(bluez)
 private slots:
     void _q_readNotify();
     void _q_writeNotify();
@@ -194,7 +237,11 @@ protected:
 
 private:
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#ifdef QT_WINRT_BLUETOOTH
+    HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action, ABI::Windows::Foundation::AsyncStatus status);
+#endif
+
+#if QT_CONFIG(bluez)
 public:
     quint8 lowEnergySocketType;
 #endif

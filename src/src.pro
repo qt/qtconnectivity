@@ -21,6 +21,10 @@ qtHaveModule(quick) {
     SUBDIRS += imports
 }
 
-config_bluez:qtHaveModule(dbus) {
-    SUBDIRS += tools/sdpscanner
+include($$OUT_PWD/bluetooth/qtbluetooth-config.pri)
+QT_FOR_CONFIG += bluetooth
+qtConfig(bluez) {
+    sdpscanner.subdir = tools/sdpscanner
+    sdpscanner.depends = bluetooth
+    SUBDIRS += sdpscanner
 }

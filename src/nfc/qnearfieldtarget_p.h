@@ -57,6 +57,9 @@
 
 #include <QtCore/QMap>
 #include <QtCore/QSharedData>
+#include <QtCore/QVariant>
+
+#define NEARFIELDTARGET_Q() NearFieldTarget * const q = reinterpret_cast<NearFieldTarget *>(q_ptr)
 
 QT_BEGIN_NAMESPACE
 
@@ -66,8 +69,18 @@ class QNearFieldTarget::RequestIdPrivate : public QSharedData
 
 class QNearFieldTargetPrivate
 {
+    QNearFieldTarget *q_ptr;
+    Q_DECLARE_PUBLIC(QNearFieldTarget)
+
 public:
+    QNearFieldTargetPrivate(QNearFieldTarget *q) : q_ptr(q) {}
+
     QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
+
+    bool keepConnection() const;
+    bool setKeepConnection(bool isPersistent);
+    bool disconnect();
+    int maxCommandLength() const;
 };
 
 QT_END_NAMESPACE

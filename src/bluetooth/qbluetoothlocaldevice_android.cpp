@@ -87,18 +87,36 @@ QAndroidJniObject *QBluetoothLocalDevicePrivate::adapter()
     return obj;
 }
 
-void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
+static QAndroidJniObject getDefaultAdapter()
 {
-    QAndroidJniEnvironment env;
-
     QAndroidJniObject adapter = QAndroidJniObject::callStaticObjectMethod(
                                     "android/bluetooth/BluetoothAdapter", "getDefaultAdapter",
                                     "()Landroid/bluetooth/BluetoothAdapter;");
     if (!adapter.isValid()) {
+        QAndroidJniEnvironment env;
         if (env->ExceptionCheck()) {
             env->ExceptionDescribe();
             env->ExceptionClear();
         }
+
+        // workaround stupid bt implementations where first call of BluetoothAdapter.getDefaultAdapter() always fails
+        adapter = QAndroidJniObject::callStaticObjectMethod(
+                                            "android/bluetooth/BluetoothAdapter", "getDefaultAdapter",
+                                            "()Landroid/bluetooth/BluetoothAdapter;");
+        if (!adapter.isValid()) {
+            if (env->ExceptionCheck()) {
+                env->ExceptionDescribe();
+                env->ExceptionClear();
+            }
+        }
+    }
+    return adapter;
+}
+
+void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
+{
+    QAndroidJniObject adapter = getDefaultAdapter();
+    if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) <<  "Device does not support Bluetooth";
         return;
     }
@@ -304,33 +322,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     // Android only supports max of one device (so far)
     QList<QBluetoothHostInfo> localDevices;
 
-    QAndroidJniEnvironment env;
-    jclass btAdapterClass = env->FindClass("android/bluetooth/BluetoothAdapter");
-    if (btAdapterClass == NULL) {
-        qCWarning(QT_BT_ANDROID)
-            << "Native registration unable to find class android/bluetooth/BluetoothAdapter";
-        return localDevices;
-    }
-
-    jmethodID getDefaultAdapterID
-        = env->GetStaticMethodID(btAdapterClass, "getDefaultAdapter",
-                                 "()Landroid/bluetooth/BluetoothAdapter;");
-    if (getDefaultAdapterID == NULL) {
-        qCWarning(QT_BT_ANDROID)
-            << "Native registration unable to get method ID: " \
-               "getDefaultAdapter of android/bluetooth/BluetoothAdapter";
-        env->DeleteLocalRef(btAdapterClass);
-        return localDevices;
-    }
-
-    jobject btAdapterObject = env->CallStaticObjectMethod(btAdapterClass, getDefaultAdapterID);
-    if (btAdapterObject == NULL) {
-        qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
-        env->DeleteLocalRef(btAdapterClass);
-        return localDevices;
-    }
-
-    QAndroidJniObject o(btAdapterObject);
+    QAndroidJniObject o = getDefaultAdapter();
     if (o.isValid()) {
         QBluetoothHostInfo info;
         info.setName(o.callObjectMethod("getName", "()Ljava/lang/String;").toString());
@@ -338,10 +330,6 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
                                                              "()Ljava/lang/String;").toString()));
         localDevices.append(info);
     }
-
-    env->DeleteLocalRef(btAdapterObject);
-    env->DeleteLocalRef(btAdapterClass);
-
     return localDevices;
 }
 

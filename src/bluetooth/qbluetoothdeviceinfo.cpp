@@ -316,7 +316,7 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, con
     Constructs a QBluetoothDeviceInfo object with unique \a uuid, device name
     \a name and the encoded class of device \a classOfDevice.
 
-    This constructor is required for Low Energy devices on OS X and iOS. CoreBluetooth
+    This constructor is required for Low Energy devices on \macos and iOS. CoreBluetooth
     API hides addresses and provides unique UUIDs to identify a device. This UUID is
     not the same thing as a service UUID and is required to work later with CoreBluetooth API
     and discovered devices.
@@ -460,7 +460,7 @@ bool QBluetoothDeviceInfo::operator!=(const QBluetoothDeviceInfo &other) const
 /*!
     Returns the address of the device.
 
-    \note On iOS and OS X this address is invalid. Instead \l deviceUuid() should be used.
+    \note On iOS and \macos this address is invalid. Instead \l deviceUuid() should be used.
     Those two platforms do not expose Bluetooth addresses for found Bluetooth devices
     and utilize unique device identifiers.
 
@@ -504,7 +504,12 @@ QBluetoothDeviceInfo::MajorDeviceClass QBluetoothDeviceInfo::majorDeviceClass() 
 }
 
 /*!
-    Returns the minor device class of the device.
+    Returns the minor device class of the device. The actual information
+    is context dependent on the value of \l majorDeviceClass().
+
+    \sa MinorAudioVideoClass, MinorComputerClass, MinorHealthClass, MinorImagingClass,
+    MinorMiscellaneousClass, MinorNetworkClass, MinorPeripheralClass, MinorPhoneClass,
+    MinorToyClass, MinorWearableClass
 */
 quint8 QBluetoothDeviceInfo::minorDeviceClass() const
 {
@@ -608,7 +613,7 @@ void QBluetoothDeviceInfo::setCached(bool cached)
 
 /*!
    Sets the unique identifier \a uuid for Bluetooth devices, that do not have addresses.
-   This happens on OS X and iOS, where the CoreBluetooth API hides addresses, but provides
+   This happens on \macos and iOS, where the CoreBluetooth API hides addresses, but provides
    UUIDs to identify devices/peripherals.
 
    This uuid is invalid on any other platform.
@@ -626,7 +631,7 @@ void QBluetoothDeviceInfo::setDeviceUuid(const QBluetoothUuid &uuid)
 /*!
    Returns a unique identifier for a Bluetooth device without an address.
 
-   In general, this uuid is invalid on every platform but OS X and iOS.
+   In general, this uuid is invalid on every platform but \macos and iOS.
    It is used as a workaround for those two platforms as they do not
    provide Bluetooth addresses for found Bluetooth Low Energy devices.
    Every other platform uses \l address() instead.

@@ -57,7 +57,7 @@ QT_USE_NAMESPACE
 class QBluetoothQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
     QBluetoothQmlPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri)
@@ -81,9 +81,9 @@ public:
         qmlRegisterType<QDeclarativeBluetoothService        >(uri, major, minor, "BluetoothService");
         qmlRegisterType<QDeclarativeBluetoothSocket         >(uri, major, minor, "BluetoothSocket");
 
-        // Register the 5.7 types
-        // introduces 5.7 version, other existing 5.2 exports become automatically available under 5.2-5.6
-        minor = 7;
+        // Register the 5.9 types
+        // introduces 5.9 version, other existing 5.2 exports become automatically available under 5.2-5.8
+        minor = 9;
         qmlRegisterType<QDeclarativeBluetoothDiscoveryModel >(uri, major, minor, "BluetoothDiscoveryModel");
     }
 };

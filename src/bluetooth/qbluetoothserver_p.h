@@ -57,7 +57,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetooth.h"
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
 
@@ -67,6 +67,12 @@ QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #include <QtBluetooth/QBluetoothUuid>
 
 class ServerAcceptanceThread;
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+#include <wrl.h>
+// No forward declares because QBluetoothServerPrivate::listener does not work with them
+#include <windows.networking.sockets.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -86,7 +92,7 @@ public:
     QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol serverType);
     ~QBluetoothServerPrivate();
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     void _q_newConnection();
     void setSocketSecurityLevel(QBluetooth::SecurityFlags requestedSecLevel, int *errnoCode);
     QBluetooth::SecurityFlags socketSecurityLevel() const;
@@ -104,7 +110,7 @@ protected:
 
 private:
     QBluetoothServer::Error m_lastError;
-#if defined(QT_BLUEZ_BLUETOOTH)
+#if QT_CONFIG(bluez)
     QSocketNotifier *socketNotifier;
 #elif defined(QT_ANDROID_BLUETOOTH)
     ServerAcceptanceThread *thread;
@@ -114,7 +120,21 @@ public:
     bool isListening() const;
     bool initiateActiveListening(const QBluetoothUuid& uuid, const QString &serviceName);
     bool deactivateActiveListening();
+#elif defined(QT_WINRT_BLUETOOTH)
+    EventRegistrationToken connectionToken {-1};
 
+    mutable QMutex pendingConnectionsMutex;
+    QVector<Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket>> pendingConnections;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocketListener> socketListener;
+    HRESULT handleClientConnection(ABI::Windows::Networking::Sockets::IStreamSocketListener *listener,
+                                   ABI::Windows::Networking::Sockets::IStreamSocketListenerConnectionReceivedEventArgs *args);
+
+public:
+    bool isListening() const;
+    Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocketListener> listener() { return socketListener; }
+    bool initiateActiveListening(const QString &serviceName);
+    bool deactivateActiveListening();
 #endif
 };
 

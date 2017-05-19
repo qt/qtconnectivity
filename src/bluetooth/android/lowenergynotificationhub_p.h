@@ -67,7 +67,7 @@ class LowEnergyNotificationHub : public QObject
 {
     Q_OBJECT
 public:
-    explicit LowEnergyNotificationHub(const QBluetoothAddress &remote,
+    explicit LowEnergyNotificationHub(const QBluetoothAddress &remote, bool isPeripheral,
                                       QObject *parent = 0);
     ~LowEnergyNotificationHub();
 
@@ -91,10 +91,16 @@ public:
     static void lowEnergy_descriptorWritten(JNIEnv *, jobject, jlong qtObject,
                                             jint descHandle, jbyteArray data,
                                             jint errorCode);
+    static void lowEnergy_serverDescriptorWritten(JNIEnv *, jobject, jlong qtObject,
+                                                  jobject descriptor, jbyteArray newValue);
     static void lowEnergy_characteristicChanged(JNIEnv *, jobject, jlong qtObject,
                                                 jint charHandle, jbyteArray data);
+    static void lowEnergy_serverCharacteristicChanged(JNIEnv *, jobject, jlong qtObject,
+                                                jobject characteristic, jbyteArray newValue);
     static void lowEnergy_serviceError(JNIEnv *, jobject, jlong qtObject,
                                        jint attributeHandle, int errorCode);
+    static void lowEnergy_advertisementError(JNIEnv *, jobject, jlong qtObject,
+                                               jint status);
 
     QAndroidJniObject javaObject()
     {
@@ -116,8 +122,11 @@ signals:
                                QLowEnergyService::ServiceError errorCode);
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
+    void serverDescriptorWritten(const QAndroidJniObject &descriptor, const QByteArray &newValue);
     void characteristicChanged(int charHandle, const QByteArray &data);
+    void serverCharacteristicChanged(const QAndroidJniObject &characteristic, const QByteArray &newValue);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
+    void advertisementError(int status);
 
 public slots:
 private:

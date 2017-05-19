@@ -40,9 +40,10 @@
 #ifndef QNEARFIELDTARGET_H
 #define QNEARFIELDTARGET_H
 
-#include <QtCore/QObject>
+#include <QtCore/QByteArray>
 #include <QtCore/QList>
 #include <QtCore/QMetaType>
+#include <QtCore/QObject>
 #include <QtCore/QSharedDataPointer>
 #include <QtNfc/qnfcglobal.h>
 
@@ -91,7 +92,8 @@ public:
         ChecksumMismatchError,
         InvalidParametersError,
         NdefReadError,
-        NdefWriteError
+        NdefWriteError,
+        CommandError
     };
     Q_ENUM(Error)
 
@@ -125,6 +127,10 @@ public:
     virtual Type type() const = 0;
     virtual AccessMethods accessMethods() const = 0;
 
+    bool keepConnection() const;
+    bool setKeepConnection(bool isPersistent);
+    bool disconnect();
+
     bool isProcessingCommand() const;
 
     // NdefAccess
@@ -133,6 +139,7 @@ public:
     virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
 
     // TagTypeSpecificAccess
+    int maxCommandLength() const;
     virtual RequestId sendCommand(const QByteArray &command);
     virtual RequestId sendCommands(const QList<QByteArray> &commands);
 
@@ -160,7 +167,9 @@ private:
     QNearFieldTargetPrivate *d_ptr;
 };
 
+#if QT_DEPRECATED_SINCE(5, 9)
 Q_NFC_EXPORT quint16 qNfcChecksum(const char * data, uint len);
+#endif
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldTarget::AccessMethods)
 

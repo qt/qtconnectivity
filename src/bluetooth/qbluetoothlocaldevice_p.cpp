@@ -51,7 +51,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(0)
 {
-#ifndef QT_IOS_BLUETOOTH
+#if !defined(QT_IOS_BLUETOOTH) && !defined(QT_WINRT_BLUETOOTH)
     printDummyWarning();
 #endif
     registerQBluetoothLocalDeviceMetaType();
@@ -85,7 +85,11 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 {
+#ifdef QT_WINRT_BLUETOOTH
+    return HostConnectable;
+#else
     return HostPoweredOff;
+#endif
 }
 
 QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
@@ -103,13 +107,20 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 {
     Q_UNUSED(address);
     Q_UNUSED(pairing);
+    QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+                              Q_ARG(QBluetoothLocalDevice::Error,
+                                    QBluetoothLocalDevice::PairingError));
 }
 
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     const QBluetoothAddress &address) const
 {
     Q_UNUSED(address);
+#ifdef QT_WINRT_BLUETOOTH
+    return Paired;
+#else
     return Unpaired;
+#endif
 }
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)

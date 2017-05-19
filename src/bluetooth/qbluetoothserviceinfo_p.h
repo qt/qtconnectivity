@@ -62,6 +62,22 @@
 class OrgBluezServiceInterface;
 class OrgBluezProfileManager1Interface;
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <wrl.h>
+
+namespace ABI {
+    namespace Windows {
+        namespace Devices {
+            namespace Bluetooth {
+                namespace Rfcomm {
+                    struct IRfcommServiceProvider;
+                }
+            }
+        }
+    }
+}
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
@@ -88,7 +104,7 @@ public:
     QBluetoothServiceInfo::Sequence protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const;
     int serverChannel() const;
 private:
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     bool ensureSdpConnection(const QBluetoothAddress &localAdapter = QBluetoothAddress());
 
     OrgBluezServiceInterface *service;
@@ -96,6 +112,12 @@ private:
     quint32 serviceRecord;
     QBluetoothAddress currentLocalAdapter;
     QString profilePath;
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::Rfcomm::IRfcommServiceProvider> serviceProvider;
+
+    bool writeSdpAttributes();
 #endif
 
     mutable bool registered;

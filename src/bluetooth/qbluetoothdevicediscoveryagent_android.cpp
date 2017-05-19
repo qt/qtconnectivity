@@ -45,6 +45,7 @@
 #include <QtCore/private/qjnihelpers_p.h>
 #include "android/devicediscoverybroadcastreceiver_p.h"
 #include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroid>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,9 +70,17 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     lowEnergySearchTimeout(25000),
     q_ptr(parent)
 {
+    QAndroidJniEnvironment env;
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
+    if (!adapter.isValid()) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+        qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
+    }
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -137,6 +146,34 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
+    // check Android v23+ permissions
+    // -> BTLE search requires android.permission.ACCESS_COARSE_LOCATION
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod
+        && QtAndroid::androidSdkVersion() >= 23)
+    {
+        QString permission(QLatin1String("android.permission.ACCESS_COARSE_LOCATION"));
+
+        // do we have required permission already, if so nothing to do
+        if (QtAndroidPrivate::checkPermission(permission) == QtAndroidPrivate::PermissionsResult::Denied) {
+            qCWarning(QT_BT_ANDROID) << "Requesting ACCESS_COARSE_LOCATION permission";
+
+            QAndroidJniEnvironment env;
+            const QHash<QString, QtAndroidPrivate::PermissionsResult> results =
+                    QtAndroidPrivate::requestPermissionsSync(env, QStringList() << permission);
+            if (!results.contains(permission)
+                || results[permission] == QtAndroidPrivate::PermissionsResult::Denied)
+            {
+                qCWarning(QT_BT_ANDROID) << "Search not possible due to missing permission (ACCESS_COARSE_LOCATION)";
+                lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+                errorString = QBluetoothDeviceDiscoveryAgent::tr("Missing Location permission. Search is not possible");
+                emit q->error(lastError);
+                return;
+            }
+        }
+
+        qCWarning(QT_BT_ANDROID) << "ACCESS_COARSE_LOCATION permission available";
+    }
+
     // install Java BroadcastReceiver
     if (!receiver) {
         // SDP based device discovery
@@ -149,18 +186,35 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     discoveredDevices.clear();
 
-    const bool success = adapter.callMethod<jboolean>("startDiscovery");
-    if (!success) {
-        lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be started");
-        emit q->error(lastError);
-        return;
+    // by arbitrary definition we run classic search first
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
+        const bool success = adapter.callMethod<jboolean>("startDiscovery");
+        if (!success) {
+            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
+            emit q->error(lastError);
+            return;
+        }
+
+        m_active = SDPScanActive;
+        qCDebug(QT_BT_ANDROID)
+            << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Classic search successfully started.";
+    } else {
+        // LE search only requested
+        Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+
+        if (QtAndroidPrivate::androidSdkVersion() < 18) {
+            qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan due to"
+                                      "insufficient Android version.";
+            m_active = NoScanActive;
+            lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Low Energy Discovery not supported");
+            emit q->error(lastError);
+            return;
+        }
+
+        startLowEnergyScan();
     }
-
-    m_active = SDPScanActive;
-
-    qCDebug(QT_BT_ANDROID)
-        << "QBluetoothDeviceDiscoveryAgentPrivate::start() - successfully executed.";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -213,6 +267,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
             return;
         }
 
+        // no BTLE scan requested
+        if (!(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)) {
+            m_active = NoScanActive;
+            emit q->finished();
+            return;
+        }
+
         // start LE scan if supported
         if (QtAndroidPrivate::androidSdkVersion() < 18) {
             qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan";
@@ -236,6 +297,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
 
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
+    // Android Classic scan and LE scan can find the same device under different names
+    // The classic name finds the SDP based device name, the LE scan finds the name in
+    // the advertisement package.
+    // If address is same but name different then we keep both entries.
+
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == info.address()) {
             if (discoveredDevices[i] == info) {
@@ -244,11 +310,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
                 return;
             }
 
-            // same device found -> avoid duplicates and update core configuration
-            discoveredDevices[i].setCoreConfigurations(discoveredDevices[i].coreConfigurations() | info.coreConfigurations());
-
-            emit q->deviceDiscovered(info);
-            return;
+            if (discoveredDevices.at(i).name() == info.name()) {
+                qCDebug(QT_BT_ANDROID) << "Almost Duplicate "<< info.address()
+                                       << info.name() << "- replacing in place";
+                discoveredDevices.replace(i, info);
+                emit q->deviceDiscovered(info);
+                return;
+            }
         }
     }
 
@@ -299,6 +367,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         leScanTimeout->setInterval(lowEnergySearchTimeout);
         leScanTimeout->start();
     }
+
+    qCDebug(QT_BT_ANDROID)
+        << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Low Energy search successfully started.";
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()

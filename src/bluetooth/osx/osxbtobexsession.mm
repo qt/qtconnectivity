@@ -405,11 +405,7 @@ bool check_abort_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &
 
 QT_END_NAMESPACE
 
-#ifdef QT_NAMESPACE
-
-using namespace QT_NAMESPACE;
-
-#endif
+QT_USE_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTOBEXSession) (PrivateAPI)
 

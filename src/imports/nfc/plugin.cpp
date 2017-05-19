@@ -59,7 +59,7 @@ QT_USE_NAMESPACE
 class QNfcQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
     QNfcQmlPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
@@ -98,8 +98,8 @@ public:
         minor = 5;
         qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
 
-        // Register the 5.6 - 5.7 types
-        minor = 7;
+        // Register the 5.6 - 5.9 types
+        minor = 9;
         qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
 
     }

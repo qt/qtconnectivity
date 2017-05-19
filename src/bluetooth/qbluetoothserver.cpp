@@ -64,6 +64,7 @@ QT_BEGIN_NAMESPACE
     Call serverPort() to get the channel number that is being used.
 
     If the \l QBluetoothServiceInfo::Protocol is not supported by a platform, \l listen() will return \c false.
+    Android and WinRT only support RFCOMM for example.
 
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
@@ -257,7 +258,7 @@ bool QBluetoothServer::isListening() const
 {
     Q_D(const QBluetoothServer);
 
-#ifdef QT_ANDROID_BLUETOOTH
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH)
     return d->isListening();
 #endif
 
@@ -286,7 +287,7 @@ int QBluetoothServer::maxPendingConnections() const
     \l QBluetooth::NoSecurity the server object will not employ any authentication or encryption.
     Any other security flag combination will trigger a secure Bluetooth connection.
 
-    On OS X, security flags are not supported and will be ignored.
+    On \macos, security flags are not supported and will be ignored.
 */
 
 /*!

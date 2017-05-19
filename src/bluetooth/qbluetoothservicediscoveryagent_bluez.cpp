@@ -58,16 +58,6 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-static inline void convertAddress(quint64 from, quint8 (&to)[6])
-{
-    to[0] = (from >> 0) & 0xff;
-    to[1] = (from >> 8) & 0xff;
-    to[2] = (from >> 16) & 0xff;
-    to[3] = (from >> 24) & 0xff;
-    to[4] = (from >> 32) & 0xff;
-    to[5] = (from >> 40) & 0xff;
-}
-
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
 :   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),

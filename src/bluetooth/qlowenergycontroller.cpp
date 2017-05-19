@@ -359,7 +359,12 @@ void QLowEnergyControllerPrivate::invalidateServices()
 QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivate::serviceForHandle(
         QLowEnergyHandle handle)
 {
-    foreach (QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values())
+    ServiceDataMap &currentList = serviceList;
+    if (role == QLowEnergyController::PeripheralRole)
+        currentList = localServices;
+
+    const QList<QSharedPointer<QLowEnergyServicePrivate>> values = currentList.values();
+    for (auto service: values)
         if (service->startHandle <= handle && handle <= service->endHandle)
             return service;
 
@@ -635,6 +640,23 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
 }
 
 /*!
+    Returns the unique identifier of the remote Bluetooth Low Energy device.
+
+    On macOS/iOS/tvOS CoreBluetooth does not expose/accept hardware addresses for
+    LE devices; instead developers are supposed to use unique 128-bit UUIDs, generated
+    by CoreBluetooth. These UUIDS will stay constant for the same central <-> peripheral
+    pair and we use them when connecting to a remote device. For a controller in the
+    \l CentralRole, this value will always be the one passed in when the controller
+    object was created. For a controller in the \l PeripheralRole, this value is invalid.
+
+    \since 5.8
+ */
+QBluetoothUuid QLowEnergyController::remoteDeviceUuid() const
+{
+    return  QBluetoothUuid();
+}
+
+/*!
     Returns the name of the remote Bluetooth Low Energy device, if the controller is in the
     \l CentralRole. Otherwise the result is unspecified.
 
@@ -694,6 +716,11 @@ void QLowEnergyController::connectToDevice()
 {
     Q_D(QLowEnergyController);
 
+    if (role() != CentralRole) {
+        qCWarning(QT_BT) << "Connection can only be established while in central role";
+        return;
+    }
+
     if (!d->isValidLocalAdapter()) {
         d->setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
@@ -714,6 +741,10 @@ void QLowEnergyController::connectToDevice()
     controller object reconnects.
 
     This function does nothing if the controller is in the \l UnconnectedState.
+
+    If the controller is in the peripheral role, it stops advertising too.
+    The application must restart the advertising mode by calling
+    \l startAdvertising().
 
     \sa connectToDevice()
  */
@@ -820,7 +851,10 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
    also starts listening for incoming client connections.
 
    Providing \a scanResponseData is not required, as it is not applicable for certain
-   configurations of \c parameters.
+   configurations of \c parameters. \a advertisingData and \a scanResponseData are limited
+   to 31 byte user data. If, for example, several 128bit uuids are added to \a advertisingData,
+   the advertised packets may not contain all uuids. The existing limit may have caused the truncation
+   of uuids. In such cases \a scanResponseData may be used for additional information.
 
    If this object is currently not in the \l UnconnectedState, nothing happens.
    \note Advertising will stop automatically once a client connects to the local device.
@@ -934,19 +968,35 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
 /*!
   Requests the controller to update the connection according to \a parameters.
   If the request is successful, the \l connectionUpdated() signal will be emitted
-  with the actual new parameters.
-  See the  \l QLowEnergyConnectionParameters class for more information on connection parameters.
-  \note Currently, this functionality is only implemented on Linux.
+  with the actual new parameters. See the  \l QLowEnergyConnectionParameters class for more
+  information on connection parameters.
 
+  Android only indirectly permits the adjustment of this parameter set.
+  The connection parameters are separated into three categories (high, low & balanced priority).
+  Each category implies a pre-configured set of values for
+  \l QLowEnergyConnectionParameters::minimumInterval(),
+  \l QLowEnergyConnectionParameters::maximumInterval() and
+  \l QLowEnergyConnectionParameters::latency(). Although the connection request is an asynchronous
+  operation, Android does not provide a callback stating the result of the request. This is
+  an acknowledged Android bug. Due to this bug Android does not emit the \l connectionUpdated()
+  signal.
+
+  \note Currently, this functionality is only implemented on Linux and Android.
+
+  \sa connectionUpdated()
   \since 5.7
  */
 void QLowEnergyController::requestConnectionUpdate(const QLowEnergyConnectionParameters &parameters)
 {
-    if (state() != ConnectedState) {
+    switch (state()) {
+    case ConnectedState:
+    case DiscoveredState:
+    case DiscoveringState:
+        d_ptr->requestConnectionUpdate(parameters);
+        break;
+    default:
         qCWarning(QT_BT) << "Connection update request only possible in connected state";
-        return;
     }
-    d_ptr->requestConnectionUpdate(parameters);
 }
 
 /*!

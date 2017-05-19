@@ -51,14 +51,13 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h:
-#include "corebluetoothwrapper_p.h"
 
 @class QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel);
-@class IOBluetoothDevice;
 
 QT_BEGIN_NAMESPACE
 

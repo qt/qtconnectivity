@@ -444,6 +444,49 @@ void QLowEnergyControllerPrivateOSX::_q_descriptorWritten(QLowEnergyHandle dHand
     emit service->descriptorWritten(qtDescriptor, value);
 }
 
+void QLowEnergyControllerPrivateOSX::_q_notificationEnabled(QLowEnergyHandle charHandle,
+                                                            bool enabled)
+{
+    // CoreBluetooth in peripheral role does not allow mutable descriptors,
+    // in central we can only call setNotification:enabled/disabled.
+    // But from Qt API's point of view, a central has to write into
+    // client characteristic configuration descriptor. So here we emulate
+    // such a write (we cannot say if it's a notification or indication and
+    // report as both).
+
+    Q_ASSERT_X(role == QLowEnergyController::PeripheralRole, Q_FUNC_INFO,
+               "controller has an invalid role, 'peripheral' expected");
+    Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
+
+    const QLowEnergyCharacteristic qtChar(characteristicForHandle(charHandle));
+    if (!qtChar.isValid()) {
+        qCWarning(QT_BT_OSX) << "unknown characteristic" << charHandle;
+        return;
+    }
+
+    const QLowEnergyDescriptor qtDescriptor =
+        qtChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+    if (!qtDescriptor.isValid()) {
+        qCWarning(QT_BT_OSX) << "characteristic" << charHandle
+                             << "does not have a client characteristic "
+                                "descriptor";
+        return;
+    }
+
+    ServicePrivate service(serviceForHandle(charHandle));
+    if (service.data()) {
+        // It's a 16-bit value, the least significant bit is for notifications,
+        // the next one - for indications (thus 1 means notifications enabled,
+        // 2 - indications enabled).
+        // 3 is the maximum value and it means both enabled.
+        QByteArray value(2, 0);
+        if (enabled)
+            value[0] = 3;
+        updateValueOfDescriptor(charHandle, qtDescriptor.handle(), value, false);
+        emit service->descriptorWritten(qtDescriptor, value);
+    }
+}
+
 void QLowEnergyControllerPrivateOSX::_q_LEnotSupported()
 {
     // Report as an error. But this should not be possible
@@ -713,7 +756,7 @@ void QLowEnergyControllerPrivateOSX::writeCharacteristic(QSharedPointer<QLowEner
             [manager write:newValueCopy charHandle:charHandle];
         });
 #else
-            qCWarning(QT_BT_OSX) << "peripheral role is not supported on your platform";
+        qCWarning(QT_BT_OSX) << "peripheral role is not supported on your platform";
 #endif
     }
 }
@@ -950,6 +993,8 @@ bool QLowEnergyControllerPrivateOSX::connectSlots(OSXBluetooth::LECBManagerNotif
                        this, &QLowEnergyControllerPrivateOSX::_q_descriptorRead);
     ok = ok && connect(notifier, &LECBManagerNotifier::descriptorWritten,
                        this, &QLowEnergyControllerPrivateOSX::_q_descriptorWritten);
+    ok = ok && connect(notifier, &LECBManagerNotifier::notificationEnabled,
+                       this, &QLowEnergyControllerPrivateOSX::_q_notificationEnabled);
     ok = ok && connect(notifier, &LECBManagerNotifier::LEnotSupported,
                        this, &QLowEnergyControllerPrivateOSX::_q_LEnotSupported);
     ok = ok && connect(notifier, SIGNAL(CBManagerError(QLowEnergyController::Error)),
@@ -1053,6 +1098,13 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
     return osx_d_ptr->remoteAddress;
 }
 
+QBluetoothUuid QLowEnergyController::remoteDeviceUuid() const
+{
+    OSX_D_PTR;
+
+    return osx_d_ptr->deviceUuid;
+}
+
 QString QLowEnergyController::remoteName() const
 {
    OSX_D_PTR;
@@ -1113,9 +1165,11 @@ void QLowEnergyController::disconnectFromDevice()
 
     OSX_D_PTR;
 
-    if (role() != CentralRole) {
-        qCWarning(QT_BT_OSX) << "can not disconnect while in central role";
-        return osx_d_ptr->_q_CBManagerError(ConnectionError);
+    if (role() == PeripheralRole) {
+        // CoreBluetooth API intentionally does not provide any way of closing
+        // a connection. All we can do here is to stop the advertisement.
+        stopAdvertising();
+        return;
     }
 
     if (osx_d_ptr->isValid()) {
@@ -1257,7 +1311,7 @@ void QLowEnergyController::stopAdvertising()
         return osx_d_ptr->_q_CBManagerError(UnknownError);
 
     if (state() != AdvertisingState) {
-        qCDebug(QT_BT_OSX) << "called in state" << state();
+        qCDebug(QT_BT_OSX) << "cannot stop advertising, called in state" << state();
         return;
     }
 

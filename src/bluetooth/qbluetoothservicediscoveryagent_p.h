@@ -59,7 +59,7 @@
 #include <QStack>
 #include <QStringList>
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
@@ -70,6 +70,10 @@ QT_BEGIN_NAMESPACE
 class QDBusPendingCallWatcher;
 class QXmlStreamReader;
 QT_END_NAMESPACE
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+class QWinRTBluetoothServiceDiscoveryWorker;
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -83,7 +87,13 @@ class LocalDeviceBroadcastReceiver;
 #endif
 
 class QBluetoothServiceDiscoveryAgentPrivate
+#if defined QT_WINRT_BLUETOOTH
+        : public QObject
 {
+    Q_OBJECT
+#else
+{
+#endif
     Q_DECLARE_PUBLIC(QBluetoothServiceDiscoveryAgent)
 
 public:
@@ -112,7 +122,7 @@ public:
     void _q_deviceDiscovered(const QBluetoothDeviceInfo &info);
     void _q_serviceDiscoveryFinished();
     void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error);
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
     void _q_createdDevice(QDBusPendingCallWatcher *watcher);
     void _q_foundDevice(QDBusPendingCallWatcher *watcher);
@@ -141,7 +151,7 @@ private:
     void stop();
     bool isDuplicatedService(const QBluetoothServiceInfo &serviceInfo) const;
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     void startBluez5(const QBluetoothAddress &address);
     void runExternalSdpScan(const QBluetoothAddress &remoteAddress,
                     const QBluetoothAddress &localAddress);
@@ -169,7 +179,7 @@ private:
     QBluetoothServiceDiscoveryAgent::DiscoveryMode mode;
 
     bool singleDevice;
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     QString foundHostAdapterPath;
     OrgBluezManagerInterface *manager;
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5;
@@ -184,6 +194,17 @@ private:
 
     QAndroidJniObject btAdapter;
     QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
+#endif
+
+#ifdef QT_WINRT_BLUETOOTH
+private slots:
+    void processFoundService(quint64 deviceAddress, const QBluetoothServiceInfo &info);
+    void onScanFinished(quint64 deviceAddress);
+    void onScanCanceled();
+    void onError();
+
+private:
+    QPointer<QWinRTBluetoothServiceDiscoveryWorker> worker;
 #endif
 
 protected:

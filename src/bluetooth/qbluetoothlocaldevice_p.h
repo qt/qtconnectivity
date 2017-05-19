@@ -55,7 +55,7 @@
 
 #include "qbluetoothlocaldevice.h"
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
 #include <QObject>
 #include <QDBusContext>
 #include <QDBusObjectPath>
@@ -128,7 +128,7 @@ public:
     QList<QBluetoothAddress> connectedDevices;
 };
 
-#elif defined(QT_BLUEZ_BLUETOOTH)
+#elif QT_CONFIG(bluez)
 class QBluetoothLocalDevicePrivate : public QObject, protected QDBusContext
 {
     Q_OBJECT
@@ -200,11 +200,36 @@ private:
 
     QDBusMessage msgConfirmation;
     QDBusConnection *msgConnection;
+    QString deviceAdapterPath;
 
     QBluetoothLocalDevice *q_ptr;
 
     void initializeAdapter();
     void initializeAdapterBluez5();
+};
+#elif defined(QT_WINRT_BLUETOOTH)
+class QBluetoothLocalDevicePrivate : public QObject
+{
+public:
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
+                                 QBluetoothAddress localAddress = QBluetoothAddress())
+        : q_ptr(q)
+    {
+        Q_UNUSED(localAddress);
+    }
+
+    ~QBluetoothLocalDevicePrivate()
+    {
+    }
+
+
+    bool isValid() const
+    {
+        return true;
+    }
+
+private:
+    QBluetoothLocalDevice *q_ptr;
 };
 #elif !defined(QT_OSX_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject

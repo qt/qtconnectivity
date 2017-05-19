@@ -164,6 +164,8 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
     \l InvalidBluetoothAdapterError. Therefore it is recommended to test the error flag immediately after
     using this constructor.
 
+    \note On WinRT the passed adapter address will be ignored.
+
     \sa error()
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
@@ -311,7 +313,7 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 
     if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
             && d->error != InvalidBluetoothAdapterError) {
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
         // done to avoid repeated parsing for adapter address
         // on Bluez5
         d->foundHostAdapterPath.clear();
@@ -424,7 +426,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     if (!deviceDiscoveryAgent) {
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
         deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(m_deviceAdapterAddress, q);
 #else
         deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(q);

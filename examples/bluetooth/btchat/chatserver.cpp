@@ -85,7 +85,6 @@ void ChatServer::startServer(const QBluetoothAddress& localAdapter)
     classId.prepend(QVariant::fromValue(QBluetoothUuid(serviceUuid)));
 
     serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
-    serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,classId);
     //! [Class Uuuid must contain at least 1 entry]
 
 

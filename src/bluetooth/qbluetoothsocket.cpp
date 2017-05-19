@@ -207,7 +207,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On Android and OS X, this feature is not supported and returns 0.
+    On Android and \macos, this feature is not supported and returns 0.
 */
 
 /*!
@@ -338,6 +338,22 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     }
     d->connectToService(service.device().address(), service.serviceUuid(), openMode);
 #else
+#if defined(QT_WINRT_BLUETOOTH)
+    // Report these problems early:
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+#endif // QT_WINRT_BLUETOOTH
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (service.protocolServiceMultiplexer() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
             d->errorString = tr("Unknown socket error");
@@ -407,6 +423,22 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
     }
     d->connectToService(address, uuid, openMode);
 #else
+#if defined(QT_WINRT_BLUETOOTH)
+    // Report these problems early, prevent device discovery:
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+#endif // QT_WINRT_BLUETOOTH
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     QBluetoothServiceInfo service;
     QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::MiscellaneousDevice);
     service.setDevice(device);
@@ -444,6 +476,22 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
     setSocketError(QBluetoothSocket::ServiceNotFoundError);
     qCWarning(QT_BT) << "Connecting to port is not supported";
 #else
+#if defined(QT_WINRT_BLUETOOTH)
+    // Report these problems early
+    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+#endif // QT_WINRT_BLUETOOTH
+    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
+                            "connect with 'UnknownProtocol' type";
+        d->errorString = tr("Socket type not supported");
+        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
     if (state() != QBluetoothSocket::UnconnectedState) {
         qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
         d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
@@ -504,7 +552,7 @@ QString QBluetoothSocket::errorString() const
 
     On Bluez this property is set to QBluetooth::Authorization by default.
 
-    On OS X, this value is ignored as the platform does not permit access
+    On \macos, this value is ignored as the platform does not permit access
     to the security parameter of the socket. By default the platform prefers
     secure/encrypted connections though and therefore this function always
     returns \l QBluetooth::Secure.
@@ -538,7 +586,7 @@ void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags
     during or after the connection has been established. If such a change happens
     it is not reflected in the value of this flag.
 
-    On OS X, this flag is always set to \l QBluetooth::Secure.
+    On \macos, this flag is always set to \l QBluetooth::Secure.
 
     \sa setPreferredSecurityFlags()
 

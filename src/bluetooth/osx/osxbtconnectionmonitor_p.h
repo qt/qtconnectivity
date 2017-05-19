@@ -52,14 +52,13 @@
 //
 
 #include "qbluetoothaddress.h"
+#include "osxbluetooth_p.h"
 
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
 
 @class QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor);
-@class IOBluetoothUserNotification;
-@class IOBluetoothDevice;
 
 QT_BEGIN_NAMESPACE
 

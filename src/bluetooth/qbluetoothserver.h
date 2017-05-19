@@ -105,7 +105,7 @@ protected:
 private:
     Q_DECLARE_PRIVATE(QBluetoothServer)
 
-#ifdef QT_BLUEZ_BLUETOOTH
+#if QT_CONFIG(bluez)
     Q_PRIVATE_SLOT(d_func(), void _q_newConnection())
 #endif
 };

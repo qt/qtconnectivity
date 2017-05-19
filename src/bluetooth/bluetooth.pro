@@ -1,6 +1,5 @@
 TARGET = QtBluetooth
 QT = core core-private
-QT_PRIVATE = concurrent
 
 
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
@@ -78,9 +77,9 @@ SOURCES += \
     qlowenergycontroller.cpp \
     qlowenergyserviceprivate.cpp
 
-config_bluez:qtHaveModule(dbus) {
+qtConfig(bluez) {
+    QT_PRIVATE = concurrent
     QT_FOR_PRIVATE += dbus
-    DEFINES += QT_BLUEZ_BLUETOOTH
 
     include(bluez/bluez.pri)
 
@@ -98,23 +97,20 @@ config_bluez:qtHaveModule(dbus) {
 
 
     # old versions of Bluez do not have the required BTLE symbols
-    config_bluez_le {
+    qtConfig(bluez_le) {
         SOURCES +=  \
             qleadvertiser_bluez.cpp \
             qlowenergycontroller_bluez.cpp \
             lecmaccalculator.cpp
-        config_linux_crypto_api:DEFINES += CONFIG_LINUX_CRYPTO_API
-        else:message("Linux crypto API not present, signed writes will not work.")
+        qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
-        message("Bluez version is too old to support Bluetooth Low Energy.")
-        message("Only classic Bluetooth will be available.")
         DEFINES += QT_BLUEZ_NO_BTLE
         include(dummy/dummy.pri)
         SOURCES += \
             qlowenergycontroller_p.cpp
     }
 
-} else:android {
+} else:android:!android-embedded {
     include(android/android.pri)
     DEFINES += QT_ANDROID_BLUETOOTH
     QT_FOR_PRIVATE += core-private androidextras
@@ -138,6 +134,7 @@ config_bluez:qtHaveModule(dbus) {
         qlowenergycontroller_android.cpp
 
 } else:osx {
+    QT_PRIVATE = concurrent
     DEFINES += QT_OSX_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework IOBluetooth
 
@@ -193,21 +190,25 @@ config_bluez:qtHaveModule(dbus) {
     SOURCES -= qlowenergycontroller_p.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
-} else:winphone {
+} else:winrt {
     DEFINES += QT_WINRT_BLUETOOTH
     QT += core-private
-
-    # remove dummy warning once platform port is complete
-    include(dummy/dummy.pri)
 
     SOURCES += \
         qbluetoothdevicediscoveryagent_winrt.cpp \
         qbluetoothlocaldevice_p.cpp \
-        qbluetoothserver_p.cpp \
-        qbluetoothservicediscoveryagent_p.cpp \
-        qbluetoothserviceinfo_p.cpp \
-        qbluetoothsocket_p.cpp \
+        qbluetoothserver_winrt.cpp \
+        qbluetoothservicediscoveryagent_winrt.cpp \
+        qbluetoothserviceinfo_winrt.cpp \
+        qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
+
+    WINRT_SDK_VERSION_STRING = $$(UCRTVersion)
+    WINRT_SDK_VERSION = $$member($$list($$split(WINRT_SDK_VERSION_STRING, .)), 2)
+    lessThan(WINRT_SDK_VERSION, 14393) {
+        DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
+        DEFINES += QT_UCRTVERSION=$$WINRT_SDK_VERSION
+    }
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers available.")
@@ -220,6 +221,12 @@ config_bluez:qtHaveModule(dbus) {
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
+}
+
+winrt-*-msvc2015 {
+    MODULE_WINRT_CAPABILITIES_DEVICE += \
+        bluetooth.genericAttributeProfile \
+        bluetooth.rfcomm
 }
 
 OTHER_FILES +=

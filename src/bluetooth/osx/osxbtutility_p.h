@@ -51,15 +51,13 @@
 // We mean it.
 //
 
+#include "osxbluetooth_p.h"
+
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
-// Only after Foundation.h!
-#include "corebluetoothwrapper_p.h"
-
-@class CBUUID;
 
 QT_BEGIN_NAMESPACE
 
@@ -299,11 +297,14 @@ bool equal_uuids(const QBluetoothUuid &qtUuid, CBUUID *cbUuid);
 bool equal_uuids(CBUUID *cbUuid, const QBluetoothUuid &qtUuid);
 QByteArray qt_bytearray(NSData *data);
 QByteArray qt_bytearray(NSObject *data);
-ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData);
+
+ObjCStrongReference<NSData> data_from_bytearray(const QByteArray &qtData);
+ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray &qtData);
 
 dispatch_queue_t qt_LE_queue();
 
 extern const int defaultLEScanTimeoutMS;
+extern const int maxValueLength;
 
 } // namespace OSXBluetooth
 
