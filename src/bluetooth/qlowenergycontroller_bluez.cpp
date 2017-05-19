@@ -1768,8 +1768,10 @@ bool QLowEnergyControllerPrivate::setSecurityLevel(int level)
     switch (level) { // fall through intendeds
         case BT_SECURITY_HIGH:
             optval |= L2CAP_LM_SECURE;
+            Q_FALLTHROUGH();
         case BT_SECURITY_MEDIUM:
             optval |= L2CAP_LM_ENCRYPT;
+            Q_FALLTHROUGH();
         case BT_SECURITY_LOW:
             optval |= L2CAP_LM_AUTH;
             break;

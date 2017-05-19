@@ -11,6 +11,6 @@ OTHER_FILES += \
 
 osx {
     DEFINES += QT_OSX_BLUETOOTH
-} else: android {
+} else:android:!android-embedded {
     DEFINES += QT_ANDROID_BLUETOOTH
 }

@@ -1261,12 +1261,24 @@ public class QtBluetoothLE {
         boolean result;
         switch (nextJob.entry.type) {
             case Characteristic:
-                result = mBluetoothGatt.readCharacteristic(nextJob.entry.characteristic);
+                try {
+                    result = mBluetoothGatt.readCharacteristic(nextJob.entry.characteristic);
+                } catch (java.lang.SecurityException se) {
+                    // QTBUG-59917 -> HID services cause problems since Android 5.1
+                    se.printStackTrace();
+                    result = false;
+                }
                 if (!result)
                     return true; // skip
                 break;
             case Descriptor:
-                result = mBluetoothGatt.readDescriptor(nextJob.entry.descriptor);
+                try {
+                    result = mBluetoothGatt.readDescriptor(nextJob.entry.descriptor);
+                } catch (java.lang.SecurityException se) {
+                    // QTBUG-59917 -> HID services cause problems since Android 5.1
+                    se.printStackTrace();
+                    result = false;
+                }
                 if (!result)
                     return true; // skip
                 break;
