@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -691,6 +691,19 @@ QLowEnergyController::RemoteAddressType QLowEnergyController::remoteAddressType(
 /*!
     Sets the remote address \a type. The type is required to connect
     to the remote Bluetooth Low Energy device.
+
+    This attribute is only required to be set on Linux/BlueZ systems with older
+    Linux kernels (v3.3 or lower), or if CAP_NET_ADMIN is not set for the executable.
+    The default value of the attribute is \l RandomAddress.
+
+    \note All other platforms handle this flag transparently and therefore applications
+    can ignore it entirely. On Linux, the address type flag is not directly exposed
+    by BlueZ although some use cases do require this information. The only way to detect
+    the flag is via the Linux kernel's Bluetooth Management API (kernel
+    version 3.4+ required). This API requires CAP_NET_ADMIN capabilities though. If the
+    local QtBluetooth process has this capability set QtBluetooth will use the API. This
+    assumes that \l QBluetoothDeviceDiscoveryAgent was used prior to calling
+    \l QLowEnergyController::connectToDevice().
  */
 void QLowEnergyController::setRemoteAddressType(
                     QLowEnergyController::RemoteAddressType type)

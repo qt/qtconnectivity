@@ -19,7 +19,8 @@ HEADERS += bluez/manager_p.h \
            bluez/obex_transfer1_bluez5_p.h \
            bluez/bluez_data_p.h \
            bluez/hcimanager_p.h \
-           bluez/remotedevicemanager_p.h
+           bluez/remotedevicemanager_p.h \
+           bluez/bluetoothmanagement_p.h
 
 SOURCES += bluez/manager.cpp \
            bluez/adapter.cpp \
@@ -41,4 +42,5 @@ SOURCES += bluez/manager.cpp \
            bluez/obex_objectpush1_bluez5.cpp \
            bluez/obex_transfer1_bluez5.cpp \
            bluez/hcimanager.cpp \
-           bluez/remotedevicemanager.cpp
+           bluez/remotedevicemanager.cpp \
+           bluez/bluetoothmanagement.cpp

@@ -46,6 +46,7 @@
 #include "bluez/hcimanager_p.h"
 #include "bluez/remotedevicemanager_p.h"
 #include "bluez/bluez5_helper_p.h"
+#include "bluez/bluetoothmanagement_p.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
@@ -598,10 +599,20 @@ void QLowEnergyControllerPrivate::establishL2cpClientSocket()
             this, SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
     connect(l2cpSocket, SIGNAL(readyRead()), this, SLOT(l2cpReadyRead()));
 
-    if (addressType == QLowEnergyController::PublicAddress)
-        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_PUBLIC;
-    else if (addressType == QLowEnergyController::RandomAddress)
-        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_RANDOM;
+    quint32 addressTypeToUse = (addressType == QLowEnergyController::PublicAddress)
+                                    ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
+    if (BluetoothManagement::instance()->isMonitoringEnabled()) {
+        // if monitoring is possible and it's private then we force it to the relevant option
+        if (BluetoothManagement::instance()->isAddressRandom(remoteDevice)) {
+            addressTypeToUse = BDADDR_LE_RANDOM;
+        }
+    }
+
+    qCDebug(QT_BT_BLUEZ) << "addresstypeToUse:"
+                         << (addressTypeToUse == BDADDR_LE_RANDOM
+                                 ? QStringLiteral("Random") : QStringLiteral("Public"));
+
+    l2cpSocket->d_ptr->lowEnergySocketType = addressTypeToUse;
 
     int sockfd = l2cpSocket->socketDescriptor();
     if (sockfd < 0) {

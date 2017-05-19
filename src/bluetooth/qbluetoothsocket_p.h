@@ -265,7 +265,7 @@ public slots:
 
 #endif // QT_OSX_BLUETOOTH
 
-static inline void convertAddress(quint64 from, quint8 (&to)[6])
+static inline void convertAddress(const quint64 from, quint8 (&to)[6])
 {
     to[0] = (from >> 0) & 0xff;
     to[1] = (from >> 8) & 0xff;
@@ -275,7 +275,7 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
     to[5] = (from >> 40) & 0xff;
 }
 
-static inline quint64 convertAddress(quint8 (&from)[6], quint64 *to = 0)
+static inline quint64 convertAddress(const quint8 (&from)[6], quint64 *to = 0)
 {
     const quint64 result = (quint64(from[0]) << 0) |
          (quint64(from[1]) << 8) |

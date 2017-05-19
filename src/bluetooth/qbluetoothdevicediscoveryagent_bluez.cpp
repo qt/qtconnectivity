@@ -51,6 +51,7 @@
 #include "bluez/adapter1_bluez5_p.h"
 #include "bluez/device1_bluez5_p.h"
 #include "bluez/properties_p.h"
+#include "bluez/bluetoothmanagement_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,8 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                          SIGNAL(InterfacesAdded(QDBusObjectPath,InterfaceList)),
                          q, SLOT(_q_InterfacesAdded(QDBusObjectPath,InterfaceList)));
 
+        // start private address monitoring
+        BluetoothManagement::instance();
     } else {
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus(), parent);
