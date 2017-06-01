@@ -938,6 +938,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
 
     const QByteArray characteristicValue = getGattCharacteristicValue(
             hService, &gattCharacteristic, &systemErrorCode);
+    closeSystemDevice(hService);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to get value for characteristic"
@@ -991,6 +992,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     // with use QFutureWatcher.
     setGattCharacteristicValue(hService, &gattCharacteristic,
                                newValue, flags, &systemErrorCode);
+    closeSystemDevice(hService);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to set value for characteristic"
@@ -1044,9 +1046,9 @@ void QLowEnergyControllerPrivate::readDescriptor(
     const QByteArray value = getGattDescriptorValue(
                 hService, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
                     &gattDescriptor), &systemErrorCode);
+    closeSystemDevice(hService);
 
     if (systemErrorCode != NO_ERROR) {
-        closeSystemDevice(hService);
         qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
                                  << dscrDetails.uuid.toString()
                                  << "for characteristic"
@@ -1132,8 +1134,9 @@ void QLowEnergyControllerPrivate::writeDescriptor(
             }
         }
 
+        closeSystemDevice(hService);
+
         if (systemErrorCode != NO_ERROR) {
-            closeSystemDevice(hService);
             qCWarning(QT_BT_WINDOWS) << "Unable to subscribe events for descriptor"
                                      << dscrDetails.uuid.toString()
                                      << "for characteristic"
@@ -1143,6 +1146,8 @@ void QLowEnergyControllerPrivate::writeDescriptor(
             service->setError(QLowEnergyService::DescriptorWriteError);
             return;
         }
+    } else {
+        closeSystemDevice(hService);
     }
 
     updateValueOfDescriptor(charHandle, descriptorHandle, newValue, false);
