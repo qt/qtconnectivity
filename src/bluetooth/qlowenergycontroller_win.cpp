@@ -38,6 +38,7 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QIODevice> // for open modes
 #include <QtCore/QEvent>
+#include <QtCore/QMutex>
 
 #include <algorithm> // for std::max
 
@@ -50,6 +51,9 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
+
+Q_GLOBAL_STATIC(QVector<QLowEnergyControllerPrivate *>, qControllers)
+static QMutex controllersGuard(QMutex::NonRecursive);
 
 const QEvent::Type CharactericticValueEventType = static_cast<QEvent::Type>(QEvent::User + 1);
 
@@ -474,10 +478,15 @@ static void WINAPI eventChangedCallbackEntry(
     if ((eventType != CharacteristicValueChangedEvent) || !eventOutParameter || !context)
         return;
 
+    QMutexLocker locker(&controllersGuard);
+    const auto target = static_cast<QLowEnergyControllerPrivate *>(context);
+    if (!qControllers->contains(target))
+        return;
+
     CharactericticValueEvent *e = new CharactericticValueEvent(
                 reinterpret_cast<const PBLUETOOTH_GATT_VALUE_CHANGED_EVENT>(eventOutParameter));
 
-    QCoreApplication::postEvent(static_cast<QLowEnergyControllerPrivate *>(context), e);
+    QCoreApplication::postEvent(target, e);
 }
 
 static HANDLE registerEvent(
@@ -645,6 +654,9 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     , state(QLowEnergyController::UnconnectedState)
     , error(QLowEnergyController::NoError)
 {
+    QMutexLocker locker(&controllersGuard);
+    qControllers()->append(this);
+
     gattFunctionsResolved = resolveFunctions(bluetoothapis());
     if (!gattFunctionsResolved) {
         qCWarning(QT_BT_WINDOWS) << "LE is not supported on this OS";
@@ -654,6 +666,8 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
 
 QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
+    QMutexLocker locker(&controllersGuard);
+    qControllers()->removeAll(this);
 }
 
 void QLowEnergyControllerPrivate::init()
