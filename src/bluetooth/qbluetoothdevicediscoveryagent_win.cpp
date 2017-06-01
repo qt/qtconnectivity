@@ -356,15 +356,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 
     // Check for the local adapter address.
-    bool foundLocalAdapter = false;
-    foreach (const QBluetoothHostInfo &adapterInfo, foundLocalAdapters) {
-        if (adapterAddress == QBluetoothAddress() || adapterAddress == adapterInfo.address()) {
-            foundLocalAdapter = true;
-            break;
-        }
-    }
-
-    if (!foundLocalAdapter) {
+    auto equals = [this](const QBluetoothHostInfo &adapterInfo) {
+        return adapterAddress == QBluetoothAddress()
+                || adapterAddress == adapterInfo.address();
+    };
+    const auto end = foundLocalAdapters.cend();
+    const auto it = std::find_if(foundLocalAdapters.cbegin(), end, equals);
+    if (it == end) {
         qCWarning(QT_BT_WINDOWS) << "Incorrect local adapter passed.";
         lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Passed address is not a local device.");
