@@ -615,12 +615,12 @@ void QLowEnergyControllerPrivate::customEvent(QEvent *e)
     updateValueOfCharacteristic(characteristicEvent->m_handle,
                                 characteristicEvent->m_value, false);
 
-    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(
+    const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(
                 characteristicEvent->m_handle);
     if (service.isNull())
         return;
 
-    QLowEnergyCharacteristic ch(service, characteristicEvent->m_handle);
+    const QLowEnergyCharacteristic ch(service, characteristicEvent->m_handle);
     emit service->characteristicChanged(ch, characteristicEvent->m_value);
 }
 
@@ -753,7 +753,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         return;
     }
 
-    QSharedPointer<QLowEnergyServicePrivate> servicePrivate =
+    const QSharedPointer<QLowEnergyServicePrivate> servicePrivate =
                 serviceList.value(service);
 
     int systemErrorCode = NO_ERROR;
@@ -950,7 +950,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
 
     updateValueOfCharacteristic(charHandle, characteristicValue, false);
 
-    QLowEnergyCharacteristic ch(service, charHandle);
+    const QLowEnergyCharacteristic ch(service, charHandle);
     emit service->characteristicRead(ch, characteristicValue);
 }
 
@@ -1004,7 +1004,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     updateValueOfCharacteristic(charHandle, newValue, false);
 
     if (mode == QLowEnergyService::WriteWithResponse) {
-        QLowEnergyCharacteristic ch(service, charHandle);
+        const QLowEnergyCharacteristic ch(service, charHandle);
         emit service->characteristicWritten(ch, newValue);
     }
 }
@@ -1147,7 +1147,7 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 
     updateValueOfDescriptor(charHandle, descriptorHandle, newValue, false);
 
-    QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
+    const QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
     emit service->descriptorWritten(dscr, newValue);
 }
 

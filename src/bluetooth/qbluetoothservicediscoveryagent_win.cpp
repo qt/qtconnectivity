@@ -62,7 +62,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 static inline QFunctionPointer resolveFunction(QLibrary *library, const char *func)
 {
-    QFunctionPointer symbolFunctionPointer = library->resolve(func);
+    const QFunctionPointer symbolFunctionPointer = library->resolve(func);
     if (!symbolFunctionPointer)
         qWarning("Cannot resolve '%s' in '%s'.", func, qPrintable(library->fileName()));
     return symbolFunctionPointer;
@@ -156,29 +156,29 @@ static QVariant spdElementToVariant(const SDP_ELEMENT_DATA &element)
         break;
     }
     case SDP_TYPE_STRING: {
-        QByteArray stringBuffer(reinterpret_cast<const char*>(element.data.string.value), element.data.string.length);
+        const QByteArray stringBuffer(reinterpret_cast<const char*>(element.data.string.value), element.data.string.length);
         variant = QVariant::fromValue<QString>(QString::fromLocal8Bit(stringBuffer));
         break;
     }
     case SDP_TYPE_URL: {
-        QString urlString = QString::fromLocal8Bit(reinterpret_cast<const char*>(element.data.url.value),
+        const QString urlString = QString::fromLocal8Bit(reinterpret_cast<const char*>(element.data.url.value),
                                                    (int)element.data.url.length);
-        QUrl url(urlString);
+        const QUrl url(urlString);
         if (url.isValid())
             variant = QVariant::fromValue<QUrl>(url);
         break;
     }
     case SDP_TYPE_SEQUENCE: {
-        QList<QVariant> sequenceList = spdContainerToVariantList(element.data.sequence.value,
+        const QList<QVariant> sequenceList = spdContainerToVariantList(element.data.sequence.value,
                                                                  element.data.sequence.length);
-        QBluetoothServiceInfo::Sequence sequence(sequenceList);
+        const QBluetoothServiceInfo::Sequence sequence(sequenceList);
         variant = QVariant::fromValue(sequence);
         break;
     }
     case SDP_TYPE_ALTERNATIVE: {
-        QList<QVariant> alternativeList = spdContainerToVariantList(element.data.alternative.value,
+        const QList<QVariant> alternativeList = spdContainerToVariantList(element.data.alternative.value,
                                                                     element.data.alternative.length);
-        QBluetoothServiceInfo::Alternative alternative(alternativeList);
+        const QBluetoothServiceInfo::Alternative alternative(alternativeList);
         variant = QVariant::fromValue(alternative);
         break;
     }
@@ -202,7 +202,7 @@ static QList<QVariant> spdContainerToVariantList(LPBYTE containerStream, ULONG c
     QList<QVariant> sequence;
 
     for (;;) {
-        DWORD result = BluetoothSdpGetContainerElementData(containerStream,
+        const DWORD result = BluetoothSdpGetContainerElementData(containerStream,
                                                            containerLength,
                                                            &iter,
                                                            &element);
