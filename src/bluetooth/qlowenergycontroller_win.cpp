@@ -84,7 +84,17 @@ enum { UseNotifications = 0x1, UseIndications = 0x2 };
 
 static bool gattFunctionsResolved = false;
 
-static QString getServiceSystemPath(const QBluetoothUuid &serviceUuid, int *systemErrorCode)
+static QBluetoothAddress getDeviceAddress(const QString &servicePath)
+{
+    const int firstbound = servicePath.indexOf(QStringLiteral("_"));
+    const int lastbound = servicePath.indexOf(QLatin1Char('#'), firstbound);
+    const QString hex = servicePath.mid(firstbound + 1, lastbound - firstbound - 1);
+    bool ok = false;
+    return QBluetoothAddress(hex.toULongLong(&ok, 16));
+}
+
+static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
+                                    const QBluetoothUuid &serviceUuid, int *systemErrorCode)
 {
     const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(
                 reinterpret_cast<const GUID *>(&serviceUuid),
@@ -154,9 +164,15 @@ static QString getServiceSystemPath(const QBluetoothUuid &serviceUuid, int *syst
             break;
         }
 
-        foundSystemPath = QString::fromWCharArray(deviceInterfaceDetailData->DevicePath);
-        *systemErrorCode = NO_ERROR;
-        break;
+        // We need to check on required device address which contains in a
+        // system path. As it is not enough to use only service UUID for this.
+        const auto candidateSystemPath = QString::fromWCharArray(deviceInterfaceDetailData->DevicePath);
+        const auto candidateDeviceAddress = getDeviceAddress(candidateSystemPath);
+        if (candidateDeviceAddress == deviceAddress) {
+            foundSystemPath = candidateSystemPath;
+            *systemErrorCode = NO_ERROR;
+            break;
+        }
     }
 
     ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
@@ -193,11 +209,11 @@ static HANDLE openSystemDevice(
     return hDevice;
 }
 
-static HANDLE openSystemService(
+static HANDLE openSystemService(const QBluetoothAddress &deviceAddress,
         const QBluetoothUuid &service, QIODevice::OpenMode openMode, int *systemErrorCode)
 {
     const QString serviceSystemPath = getServiceSystemPath(
-                service, systemErrorCode);
+                deviceAddress, service, systemErrorCode);
 
     if (*systemErrorCode != NO_ERROR)
         return INVALID_HANDLE_VALUE;
@@ -759,7 +775,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
     int systemErrorCode = NO_ERROR;
 
     const HANDLE hService = openSystemService(
-                service, QIODevice::ReadOnly, &systemErrorCode);
+                remoteDevice, service, QIODevice::ReadOnly, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service.toString()
@@ -924,7 +940,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
     int systemErrorCode = NO_ERROR;
 
     const HANDLE hService = openSystemService(
-                service->uuid, QIODevice::ReadOnly, &systemErrorCode);
+                remoteDevice, service->uuid, QIODevice::ReadOnly, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
@@ -968,7 +984,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     int systemErrorCode = NO_ERROR;
 
     const HANDLE hService = openSystemService(
-                service->uuid, QIODevice::ReadWrite, &systemErrorCode);
+                remoteDevice, service->uuid, QIODevice::ReadWrite, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
@@ -1028,7 +1044,7 @@ void QLowEnergyControllerPrivate::readDescriptor(
     int systemErrorCode = NO_ERROR;
 
     const HANDLE hService = openSystemService(
-                service->uuid, QIODevice::ReadOnly, &systemErrorCode);
+                remoteDevice, service->uuid, QIODevice::ReadOnly, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
@@ -1083,7 +1099,7 @@ void QLowEnergyControllerPrivate::writeDescriptor(
     int systemErrorCode = NO_ERROR;
 
     const HANDLE hService = openSystemService(
-                service->uuid, QIODevice::ReadWrite, &systemErrorCode);
+                remoteDevice, service->uuid, QIODevice::ReadWrite, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
