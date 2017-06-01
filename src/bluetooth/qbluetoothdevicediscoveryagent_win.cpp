@@ -406,10 +406,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::taskFinished()
         if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
                 closeClassicSearch(&hSearch);
                 // Enumerate LE devices.
-                const QList<QBluetoothDeviceInfo> foundDevices =
-                        enumerateLeDevices(&systemErrorCode);
+                const QList<QBluetoothDeviceInfo> foundDevices = enumerateLeDevices(&systemErrorCode);
                 if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
-                    foreach (const QBluetoothDeviceInfo &foundDevice, foundDevices)
+                    for (const QBluetoothDeviceInfo &foundDevice : foundDevices)
                         processDiscoveredDevice(foundDevice);
                     active = false;
                     emit q->finished();

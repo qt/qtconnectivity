@@ -723,7 +723,7 @@ void QLowEnergyControllerPrivate::discoverServices()
 
     Q_Q(QLowEnergyController);
 
-    foreach (const BTH_LE_GATT_SERVICE &service, foundServices) {
+    for (const BTH_LE_GATT_SERVICE &service : foundServices) {
         const QBluetoothUuid uuid = qtBluetoothUuidFromNativeLeUuid(
                     service.ServiceUuid);
         qCDebug(QT_BT_WINDOWS) << "Found uuid:" << uuid;
@@ -784,7 +784,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
         return;
     }
 
-    foreach (const BTH_LE_GATT_CHARACTERISTIC &gattCharacteristic, foundCharacteristics) {
+    for (const BTH_LE_GATT_CHARACTERISTIC &gattCharacteristic : foundCharacteristics) {
         const QLowEnergyHandle characteristicHandle = gattCharacteristic.AttributeHandle;
 
         QLowEnergyServicePrivate::CharData detailsData;
@@ -850,7 +850,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
             }
         }
 
-        foreach (const BTH_LE_GATT_DESCRIPTOR &gattDescriptor, foundDescriptors) {
+        for (const BTH_LE_GATT_DESCRIPTOR &gattDescriptor : foundDescriptors) {
             const QLowEnergyHandle descriptorHandle = gattDescriptor.AttributeHandle;
 
             QLowEnergyServicePrivate::DescData data;

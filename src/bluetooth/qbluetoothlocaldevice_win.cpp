@@ -199,7 +199,8 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 {
     Q_Q(QBluetoothLocalDevice);
 
-    foreach (const QBluetoothHostInfo &adapterInfo, QBluetoothLocalDevicePrivate::localAdapters()) {
+    const QList<QBluetoothHostInfo> adapterInfos = QBluetoothLocalDevicePrivate::localAdapters();
+    for (const QBluetoothHostInfo &adapterInfo : adapterInfos) {
         if (address == QBluetoothAddress()
              || address == adapterInfo.address()) {
             deviceAddress = adapterInfo.address();
