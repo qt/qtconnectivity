@@ -302,6 +302,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     , active(false)
     , systemErrorCode(NO_ERROR)
     , hSearch(0)
+    , lowEnergySearchTimeout(-1) // remains -1 -> timeout not supported
     , q_ptr(parent)
 {
     scanWatcher = new QFutureWatcher<QBluetoothDeviceInfo>(this);
