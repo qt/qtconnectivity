@@ -225,7 +225,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevicePrivate::localAdapters()
 
     HANDLE hRadio = 0;
     if (const HBLUETOOTH_RADIO_FIND hSearch = ::BluetoothFindFirstRadio(&params, &hRadio)) {
-        forever {
+        for (;;) {
             BLUETOOTH_RADIO_INFO radio;
             ::ZeroMemory(&radio, sizeof(radio));
             radio.dwSize = sizeof(radio);

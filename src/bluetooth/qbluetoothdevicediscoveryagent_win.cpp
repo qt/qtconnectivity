@@ -200,7 +200,7 @@ static QList<QBluetoothDeviceInfo> enumerateLeDevices(
 
     QList<LeDeviceEntry> cachedEntries;
 
-    forever {
+    for (;;) {
         SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
         ::ZeroMemory(&deviceInterfaceData, sizeof(deviceInterfaceData));
         deviceInterfaceData.cbSize = sizeof(deviceInterfaceData);

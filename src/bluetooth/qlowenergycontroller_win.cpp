@@ -100,7 +100,7 @@ static QString getServiceSystemPath(const QBluetoothUuid &serviceUuid, int *syst
     QString foundSystemPath;
     DWORD index = 0;
 
-    forever {
+    for (;;) {
         SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
         ::ZeroMemory(&deviceInterfaceData, sizeof(deviceInterfaceData));
         deviceInterfaceData.cbSize = sizeof(deviceInterfaceData);
@@ -227,7 +227,7 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
 
     QVector<BTH_LE_GATT_SERVICE> foundServices;
     USHORT servicesCount = 0;
-    forever {
+    for (;;) {
         const HRESULT hr = ::BluetoothGATTGetServices(
                     hDevice,
                     servicesCount,
@@ -257,7 +257,7 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
 
     QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics;
     USHORT characteristicsCount = 0;
-    forever {
+    for (;;) {
         const HRESULT hr = ::BluetoothGATTGetCharacteristics(
                     hService,
                     gattService,
@@ -288,7 +288,7 @@ static QByteArray getGattCharacteristicValue(
 
     QByteArray valueBuffer;
     USHORT valueBufferSize = 0;
-    forever {
+    for (;;) {
         const HRESULT hr = ::BluetoothGATTGetCharacteristicValue(
                     hService,
                     gattCharacteristic,
@@ -351,7 +351,7 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
 
     QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors;
     USHORT descriptorsCount = 0;
-    forever {
+    for (;;) {
         const HRESULT hr = ::BluetoothGATTGetDescriptors(
                     hService,
                     gattCharacteristic,
@@ -382,7 +382,7 @@ static QByteArray getGattDescriptorValue(
 
     QByteArray valueBuffer;
     USHORT valueBufferSize = 0;
-    forever {
+    for (;;) {
         const HRESULT hr = ::BluetoothGATTGetDescriptorValue(
                     hService,
                     gattDescriptor,

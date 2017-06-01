@@ -201,7 +201,7 @@ static QList<QVariant> spdContainerToVariantList(LPBYTE containerStream, ULONG c
 
     QList<QVariant> sequence;
 
-    forever {
+    for (;;) {
         DWORD result = BluetoothSdpGetContainerElementData(containerStream,
                                                            containerLength,
                                                            &iter,
