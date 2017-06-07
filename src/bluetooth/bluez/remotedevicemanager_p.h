@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef HCIMANAGER_P_H
-#define HCIMANAGER_P_H
+#ifndef REMOTEDEVICEMANAGER_P_H
+#define REMOTEDEVICEMANAGER_P_H
 
 //
 //  W A R N I N G
@@ -51,68 +51,49 @@
 // We mean it.
 //
 
+#include <deque>
+
+#include <QMutex>
 #include <QObject>
-#include <QtCore/QSet>
-#include <QtCore/QSocketNotifier>
-#include <QtBluetooth/QBluetoothAddress>
 #include <QVector>
-#include "bluez/bluez_data_p.h"
+
+#include <QtBluetooth/qbluetoothaddress.h>
+
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyConnectionParameters;
+// This API is kept a bit more generic in anticipation of further changes in the future.
 
-class HciManager : public QObject
+class RemoteDeviceManager : public QObject
 {
     Q_OBJECT
 public:
-    enum HciEvent {
-        EncryptChangeEvent = EVT_ENCRYPT_CHANGE,
-        CommandCompleteEvent = EVT_CMD_COMPLETE,
-        LeMetaEvent = 0x3e,
+    enum class JobType
+    {
+        JobDisconnectDevice,
     };
 
-    explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = 0);
-    ~HciManager();
+    explicit RemoteDeviceManager(const QBluetoothAddress& localAddress, QObject *parent = 0);
 
-    bool isValid() const;
-    bool monitorEvent(HciManager::HciEvent event);
-    bool monitorAclPackets();
-    bool sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters);
-
-    void stopEvents();
-    QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
-
-    // active connections
-    QVector<quint16> activeLowEnergyConnections() const;
-
-    bool sendConnectionUpdateCommand(quint16 handle, const QLowEnergyConnectionParameters &params);
-    bool sendConnectionParameterUpdateRequest(quint16 handle,
-                                              const QLowEnergyConnectionParameters &params);
+    bool isJobInProgress() const { return jobInProgress; }
+    bool scheduleJob(JobType job, const QVector<QBluetoothAddress>& remoteDevices);
 
 signals:
-    void encryptionChangedEvent(const QBluetoothAddress &address, bool wasSuccess);
-    void commandCompleted(quint16 opCode, quint8 status, const QByteArray &data);
-    void connectionComplete(quint16 handle);
-    void connectionUpdate(quint16 handle, const QLowEnergyConnectionParameters &parameters);
-    void signatureResolvingKeyReceived(quint16 connHandle, bool remoteKey, const quint128 &csrk);
+    void finished();
 
 private slots:
-    void _q_readNotify();
+    void runQueue();
+    void prepareNextJob();
 
 private:
-    int hciForAddress(const QBluetoothAddress &deviceAdapter);
-    void handleHciEventPacket(const quint8 *data, int size);
-    void handleHciAclPacket(const quint8 *data, int size);
-    void handleLeMetaEvent(const quint8 *data);
+    void disconnectDevice(const QBluetoothAddress& remote);
 
-    int hciSocket;
-    int hciDev;
-    quint8 sigPacketIdentifier = 0;
-    QSocketNotifier *notifier;
-    QSet<HciManager::HciEvent> runningEvents;
+    bool jobInProgress = false;
+    QBluetoothAddress localAddress;
+    std::deque<std::pair<JobType, QBluetoothAddress>> jobQueue;
+    QString adapterPath;
 };
 
 QT_END_NAMESPACE
 
-#endif // HCIMANAGER_P_H
+#endif // REMOTEDEVICEMANAGER_P_H

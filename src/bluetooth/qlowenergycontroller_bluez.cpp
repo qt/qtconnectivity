@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Copyright (C) 2016 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: https://www.qt.io/licensing/
 **
@@ -44,6 +44,8 @@
 #include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
+#include "bluez/remotedevicemanager_p.h"
+#include "bluez/bluez5_helper_p.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
@@ -526,6 +528,68 @@ void QLowEnergyControllerPrivate::connectToDevice()
     setState(QLowEnergyController::ConnectingState);
     if (l2cpSocket)
         delete l2cpSocket;
+
+    // check for active running connections
+    // BlueZ 5.37+ (maybe even earlier versions) can have pending BTLE connections
+    // Only one active L2CP socket to CID 0x4 possible at a time
+    // this check is not performed for BlueZ 4 based platforms as bluetoothd
+    // does not support BTLE management
+
+    if (!isBluez5()) {
+        establishL2cpClientSocket();
+        return;
+    }
+
+    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    if (!activeHandles.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot connect due to pending active LE connections";
+
+        if (!device1Manager) {
+            device1Manager = new RemoteDeviceManager(localAdapter, this);
+            connect(device1Manager, &RemoteDeviceManager::finished,
+                    this, &QLowEnergyControllerPrivate::activeConnectionTerminationDone);
+        }
+
+        QVector<QBluetoothAddress> connectedAddresses;
+        for (const auto handle: activeHandles) {
+            const QBluetoothAddress addr = hciManager->addressForConnectionHandle(handle);
+            if (!addr.isNull())
+                connectedAddresses.push_back(addr);
+        }
+        device1Manager->scheduleJob(RemoteDeviceManager::JobType::JobDisconnectDevice, connectedAddresses);
+    } else {
+        establishL2cpClientSocket();
+    }
+}
+
+/*!
+ * Handles outcome of attempts to close external connections.
+ */
+void QLowEnergyControllerPrivate::activeConnectionTerminationDone()
+{
+    if (!device1Manager)
+        return;
+
+    qCDebug(QT_BT_BLUEZ) << "RemoteDeviceManager finished attempting"
+                         << "to close external connections";
+
+    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    if (!activeHandles.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot close pending external BTLE connections. Aborting connect attempt";
+        setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    } else {
+        establishL2cpClientSocket();
+    }
+}
+
+/*!
+ * Establishes the L2CP client socket.
+ */
+void QLowEnergyControllerPrivate::establishL2cpClientSocket()
+{
+    //we are already in Connecting state
 
     l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, SIGNAL(connected()), this, SLOT(l2cpConnected()));

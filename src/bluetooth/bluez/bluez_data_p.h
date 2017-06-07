@@ -99,6 +99,10 @@ struct bt_security {
 #define BDADDR_LE_PUBLIC    0x01
 #define BDADDR_LE_RANDOM    0x02
 
+#define SCO_LINK    0x00
+#define ACL_LINK    0x01
+#define ESCO_LINK   0x02
+#define LE_LINK     0x80    // based on hcitool.c -> no fixed constant available
 
 /* Byte order conversions */
 #if __BYTE_ORDER == __LITTLE_ENDIAN

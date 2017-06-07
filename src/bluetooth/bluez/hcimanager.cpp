@@ -288,6 +288,50 @@ QBluetoothAddress HciManager::addressForConnectionHandle(quint16 handle) const
     return QBluetoothAddress();
 }
 
+QVector<quint16> HciManager::activeLowEnergyConnections() const
+{
+    if (!isValid())
+        return QVector<quint16>();
+
+    hci_conn_info *info;
+    hci_conn_list_req *infoList;
+
+    const int maxNoOfConnections = 20;
+    infoList = (hci_conn_list_req *)
+            malloc(sizeof(hci_conn_list_req) + maxNoOfConnections * sizeof(hci_conn_info));
+
+    if (!infoList)
+        return QVector<quint16>();
+
+    QScopedPointer<hci_conn_list_req, QScopedPointerPodDeleter> p(infoList);
+    p->conn_num = maxNoOfConnections;
+    p->dev_id = hciDev;
+    info = p->conn_info;
+
+    if (ioctl(hciSocket, HCIGETCONNLIST, (void *) infoList) < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot retrieve connection list";
+        return QVector<quint16>();
+    }
+
+    QVector<quint16> activeLowEnergyHandles;
+    for (int i = 0; i < infoList->conn_num; i++) {
+        switch (info[i].type) {
+        case SCO_LINK:
+        case ACL_LINK:
+        case ESCO_LINK:
+            continue;
+        case LE_LINK:
+            activeLowEnergyHandles.append(info[i].handle);
+            break;
+        default:
+            qCWarning(QT_BT_BLUEZ) << "Unknown active connection type:" << hex << info[i].type;
+            break;
+        }
+    }
+
+    return activeLowEnergyHandles;
+}
+
 quint16 forceIntervalIntoRange(double connectionInterval)
 {
     return qMin<double>(qMax<double>(7.5, connectionInterval), 4000) / 1.25;
