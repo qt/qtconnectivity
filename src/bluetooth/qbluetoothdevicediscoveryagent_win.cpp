@@ -48,13 +48,11 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 struct LeDeviceEntry {
-    LeDeviceEntry(const QString &path, const QBluetoothAddress &address)
-        : devicePath(path), deviceAddress(address) {}
     QString devicePath;
     QBluetoothAddress deviceAddress;
 };
 
-Q_GLOBAL_STATIC(QList<LeDeviceEntry>, cachedLeDeviceEntries)
+Q_GLOBAL_STATIC(QVector<LeDeviceEntry>, cachedLeDeviceEntries)
 Q_GLOBAL_STATIC(QMutex, cachedLeDeviceEntriesGuard)
 
 static QString devicePropertyString(
@@ -180,7 +178,7 @@ static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND *hSearch)
     }
 }
 
-static QList<QBluetoothDeviceInfo> enumerateLeDevices(
+static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
         int *systemErrorCode)
 {
     const QUuid deviceInterfaceGuid("781aee18-7733-4ce4-add0-91f41c67b592");
@@ -192,13 +190,13 @@ static QList<QBluetoothDeviceInfo> enumerateLeDevices(
 
     if (hDeviceInfo == INVALID_HANDLE_VALUE) {
         *systemErrorCode = ::GetLastError();
-        return QList<QBluetoothDeviceInfo>();
+        return QVector<QBluetoothDeviceInfo>();
     }
 
-    QList<QBluetoothDeviceInfo> foundDevices;
+    QVector<QBluetoothDeviceInfo> foundDevices;
     DWORD index = 0;
 
-    QList<LeDeviceEntry> cachedEntries;
+    QVector<LeDeviceEntry> cachedEntries;
 
     for (;;) {
         SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
@@ -265,7 +263,7 @@ static QList<QBluetoothDeviceInfo> enumerateLeDevices(
         deviceInfo.setCached(true);
 
         foundDevices << deviceInfo;
-        cachedEntries << LeDeviceEntry(systemPath, address);
+        cachedEntries << LeDeviceEntry{systemPath, address};
     }
 
     QMutexLocker locker(cachedLeDeviceEntriesGuard());
@@ -406,7 +404,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::taskFinished()
         if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
                 closeClassicSearch(&hSearch);
                 // Enumerate LE devices.
-                const QList<QBluetoothDeviceInfo> foundDevices = enumerateLeDevices(&systemErrorCode);
+                const QVector<QBluetoothDeviceInfo> foundDevices = enumerateLeDevices(&systemErrorCode);
                 if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
                     for (const QBluetoothDeviceInfo &foundDevice : foundDevices)
                         processDiscoveredDevice(foundDevice);
