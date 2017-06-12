@@ -1665,9 +1665,9 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
-    quint8 packet[READ_REQUEST_HEADER_SIZE];
 
-    packet[0] = ATT_OP_READ_BLOB_REQUEST;
+    QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    data[0] = ATT_OP_READ_BLOB_REQUEST;
 
     QLowEnergyHandle handleToRead = charHandle;
     if (descriptorHandle) {
@@ -1688,11 +1688,8 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
         }
     }
 
-    putBtData(handleToRead, &packet[1]);
-    putBtData(offset, &packet[3]);
-
-    QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, READ_BLOB_REQUEST_HEADER_SIZE);
+    putBtData(handleToRead, data.data() + 1);
+    putBtData(offset, data.data() + 3);
 
     Request request;
     request.payload = data;
