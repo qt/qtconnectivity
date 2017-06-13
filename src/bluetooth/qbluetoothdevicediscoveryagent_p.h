@@ -168,19 +168,25 @@ private:
 public:
     static QString discoveredLeDeviceSystemPath(const QBluetoothAddress &deviceAddress);
 
-private slots:
-    void taskFinished();
-
 private:
+    void cancelDiscovery();
+    void restartDiscovery();
+    void finishDiscovery(QBluetoothDeviceDiscoveryAgent::Error errorCode, const QString &errorText);
+
+    void startLeDevicesDiscovery();
+    void completeLeDevicesDiscovery();
+    void startClassicDevicesDiscovery(Qt::HANDLE hSearch = nullptr);
+    void completeClassicDevicesDiscovery();
+
     void processDiscoveredDevice(const QBluetoothDeviceInfo &foundDevice);
 
     QBluetoothAddress adapterAddress;
     bool pendingCancel;
     bool pendingStart;
-    QFutureWatcher<QBluetoothDeviceInfo> *scanWatcher;
     bool active;
-    int systemErrorCode;
-    Qt::HANDLE hSearch;
+
+    QFutureWatcher<QVariant> *classicScanWatcher;
+    QFutureWatcher<QVariant> *lowenergyScanWatcher;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH

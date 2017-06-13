@@ -38,6 +38,7 @@
 #include "qbluetoothlocaldevice_p.h"
 
 #include <QtCore/qmutex.h>
+#include <QtConcurrent/QtConcurrent>
 
 #include <qt_windows.h>
 #include <setupapi.h>
@@ -114,13 +115,15 @@ static QBluetoothDeviceInfo createClassicDeviceInfo(const BLUETOOTH_DEVICE_INFO 
                 QString::fromWCharArray(foundDevice.szName),
                 foundDevice.ulClassofDevice);
 
+    deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+
     if (foundDevice.fRemembered)
         deviceInfo.setCached(true);
     return deviceInfo;
 }
 
 static QBluetoothDeviceInfo findFirstClassicDevice(
-        int *systemErrorCode, HBLUETOOTH_DEVICE_FIND *hSearch)
+        DWORD *systemErrorCode, HBLUETOOTH_DEVICE_FIND *hSearch)
 {
     BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams;
     ::ZeroMemory(&searchParams, sizeof(searchParams));
@@ -153,7 +156,7 @@ static QBluetoothDeviceInfo findFirstClassicDevice(
 }
 
 static QBluetoothDeviceInfo findNextClassicDevice(
-        int *systemErrorCode, HBLUETOOTH_DEVICE_FIND hSearch)
+        DWORD *systemErrorCode, HBLUETOOTH_DEVICE_FIND hSearch)
 {
     BLUETOOTH_DEVICE_INFO deviceInfo;
     ::ZeroMemory(&deviceInfo, sizeof(deviceInfo));
@@ -170,16 +173,14 @@ static QBluetoothDeviceInfo findNextClassicDevice(
     return foundDevice;
 }
 
-static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND *hSearch)
+static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND hSearch)
 {
-    if (hSearch && *hSearch) {
-        ::BluetoothFindDeviceClose(*hSearch);
-        *hSearch = 0;
-    }
+    if (hSearch)
+        ::BluetoothFindDeviceClose(hSearch);
 }
 
 static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
-        int *systemErrorCode)
+        DWORD *systemErrorCode)
 {
     const QUuid deviceInterfaceGuid("781aee18-7733-4ce4-add0-91f41c67b592");
     const HDEVINFO hDeviceInfo = ::SetupDiGetClassDevs(
@@ -273,11 +274,39 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
     return foundDevices;
 }
 
+struct DiscoveryResult {
+    QVector<QBluetoothDeviceInfo> devices;
+    DWORD systemErrorCode;
+    HBLUETOOTH_DEVICE_FIND hSearch; // Used only for classic devices
+};
+
+static QVariant discoverLeDevicesStatic()
+{
+    DiscoveryResult result; // Do not use hSearch here!
+    result.systemErrorCode = NO_ERROR;
+    result.devices = enumerateLeDevices(&result.systemErrorCode);
+    return QVariant::fromValue(result);
+}
+
+static QVariant discoverClassicDevicesStatic(HBLUETOOTH_DEVICE_FIND hSearch)
+{
+    DiscoveryResult result;
+    result.hSearch = hSearch;
+    result.systemErrorCode = NO_ERROR;
+
+    const QBluetoothDeviceInfo device = hSearch
+            ? findNextClassicDevice(&result.systemErrorCode, result.hSearch)
+            : findFirstClassicDevice(&result.systemErrorCode, &result.hSearch);
+
+    result.devices.append(device);
+    return QVariant::fromValue(result);
+}
+
 QString QBluetoothDeviceDiscoveryAgentPrivate::discoveredLeDeviceSystemPath(
         const QBluetoothAddress &deviceAddress)
 {
     // update LE devices cache
-    int dummyErrorCode;
+    DWORD dummyErrorCode;
     enumerateLeDevices(&dummyErrorCode);
 
     QMutexLocker locker(cachedLeDeviceEntriesGuard());
@@ -296,24 +325,18 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     , adapterAddress(deviceAdapter)
     , pendingCancel(false)
     , pendingStart(false)
-    , scanWatcher(Q_NULLPTR)
     , active(false)
-    , systemErrorCode(NO_ERROR)
-    , hSearch(0)
+    , classicScanWatcher(nullptr)
+    , lowenergyScanWatcher(nullptr)
     , lowEnergySearchTimeout(-1) // remains -1 -> timeout not supported
     , q_ptr(parent)
 {
-    scanWatcher = new QFutureWatcher<QBluetoothDeviceInfo>(this);
-    connect(scanWatcher, &QFutureWatcher<QBluetoothDeviceInfo>::finished,
-            this, &QBluetoothDeviceDiscoveryAgentPrivate::taskFinished);
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     if (active)
         stop();
-
-    scanWatcher->waitForFinished();
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -327,13 +350,12 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
 {
-    // FIXME: Add required discovery method!
-    return QBluetoothDeviceDiscoveryAgent::NoMethod;
+    return (LowEnergyMethod | ClassicMethod);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
-    Q_UNUSED(methods);
+    requestedMethods = methods;
 
     if (pendingCancel == true) {
         pendingStart = true;
@@ -371,10 +393,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     discoveredDevices.clear();
     active = true;
 
-    // Start scan for first classic device.
-    const QFuture<QBluetoothDeviceInfo> future = QtConcurrent::run(
-                findFirstClassicDevice, &systemErrorCode, &hSearch);
-    scanWatcher->setFuture(future);
+    // We run LE search first, as it is fast on windows.
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
+        startLeDevicesDiscovery();
+    else if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod)
+        startClassicDevicesDiscovery();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
@@ -386,54 +409,112 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
     pendingStart = false;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::taskFinished()
+void QBluetoothDeviceDiscoveryAgentPrivate::cancelDiscovery()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
+    active = false;
+    pendingCancel = false;
+    emit q->canceled();
+}
 
+void QBluetoothDeviceDiscoveryAgentPrivate::restartDiscovery()
+{
+    pendingStart = false;
+    pendingCancel = false;
+    start(requestedMethods);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::finishDiscovery(QBluetoothDeviceDiscoveryAgent::Error errorCode, const QString &errorText)
+{
+    active = false;
+    pendingStart = false;
+    pendingCancel = false;
+    lastError = errorCode;
+    errorString = errorText;
+
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    if (errorCode == QBluetoothDeviceDiscoveryAgent::NoError)
+        emit q->finished();
+    else
+        emit q->error(lastError);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::startLeDevicesDiscovery()
+{
+    if (!lowenergyScanWatcher) {
+        lowenergyScanWatcher = new QFutureWatcher<QVariant>(this);
+        connect(lowenergyScanWatcher, &QFutureWatcher<QVariant>::finished,
+                this, &QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery);
+    }
+    const QFuture<QVariant> future = QtConcurrent::run(discoverLeDevicesStatic);
+    lowenergyScanWatcher->setFuture(future);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery()
+{
     if (pendingCancel && !pendingStart) {
-        closeClassicSearch(&hSearch);
-        active = false;
-        pendingCancel = false;
-        emit q->canceled();
+        cancelDiscovery();
     } else if (pendingStart) {
-        closeClassicSearch(&hSearch);
-        pendingStart = pendingCancel = false;
-        // FIXME: Add required discovery method!
-        start(QBluetoothDeviceDiscoveryAgent::NoMethod);
+        restartDiscovery();
     } else {
-        if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
-                closeClassicSearch(&hSearch);
-                // Enumerate LE devices.
-                const QVector<QBluetoothDeviceInfo> foundDevices = enumerateLeDevices(&systemErrorCode);
-                if (systemErrorCode == ERROR_NO_MORE_ITEMS) {
-                    for (const QBluetoothDeviceInfo &foundDevice : foundDevices)
-                        processDiscoveredDevice(foundDevice);
-                    active = false;
-                    emit q->finished();
-                } else {
-                    pendingStart = pendingCancel = false;
-                    active = false;
-                    lastError = (systemErrorCode == ERROR_INVALID_HANDLE) ?
-                                QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError
-                              : QBluetoothDeviceDiscoveryAgent::InputOutputError;
-                    errorString = qt_error_string(systemErrorCode);
-                    emit q->error(lastError);
-                }
-        } else if (systemErrorCode == NO_ERROR) {
-            processDiscoveredDevice(scanWatcher->result());
-            // Start scan for next classic device.
-            const QFuture<QBluetoothDeviceInfo> future = QtConcurrent::run(
-                        findNextClassicDevice, &systemErrorCode, hSearch);
-            scanWatcher->setFuture(future);
+        const DiscoveryResult result = lowenergyScanWatcher->result().value<DiscoveryResult>();
+        if (result.systemErrorCode == NO_ERROR || result.systemErrorCode == ERROR_NO_MORE_ITEMS) {
+            for (const QBluetoothDeviceInfo &device : result.devices)
+                processDiscoveredDevice(device);
+
+            // We run classic search at second, as it is slow on windows.
+            if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod)
+                startClassicDevicesDiscovery();
+            else
+                finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, qt_error_string(NO_ERROR));
         } else {
-            closeClassicSearch(&hSearch);
-            pendingStart = pendingCancel = false;
-            active = false;
-            lastError = (systemErrorCode == ERROR_INVALID_HANDLE) ?
-                        QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError
-                      : QBluetoothDeviceDiscoveryAgent::InputOutputError;
-            errorString = qt_error_string(systemErrorCode);
-            emit q->error(lastError);
+            const QBluetoothDeviceDiscoveryAgent::Error error = (result.systemErrorCode == ERROR_INVALID_HANDLE)
+                    ? QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError
+                    : QBluetoothDeviceDiscoveryAgent::InputOutputError;
+            finishDiscovery(error, qt_error_string(result.systemErrorCode));
+        }
+    }
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::startClassicDevicesDiscovery(Qt::HANDLE hSearch)
+{
+    if (!classicScanWatcher) {
+        classicScanWatcher = new QFutureWatcher<QVariant>(this);
+        connect(classicScanWatcher, &QFutureWatcher<QVariant>::finished,
+                this, &QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery);
+    }
+    const QFuture<QVariant> future = QtConcurrent::run(discoverClassicDevicesStatic, hSearch);
+    classicScanWatcher->setFuture(future);
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery()
+{
+    const DiscoveryResult result = classicScanWatcher->result().value<DiscoveryResult>();
+    if (pendingCancel && !pendingStart) {
+        closeClassicSearch(result.hSearch);
+        cancelDiscovery();
+    } else if (pendingStart) {
+        closeClassicSearch(result.hSearch);
+        restartDiscovery();
+    } else {
+        if (result.systemErrorCode == ERROR_NO_MORE_ITEMS) {
+            closeClassicSearch(result.hSearch);
+            finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, qt_error_string(NO_ERROR));
+        } else if (result.systemErrorCode == NO_ERROR) {
+            if (result.hSearch) {
+                for (const QBluetoothDeviceInfo &device : result.devices)
+                    processDiscoveredDevice(device);
+
+                startClassicDevicesDiscovery(result.hSearch);
+            } else {
+                finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, qt_error_string(NO_ERROR));
+            }
+        } else {
+            closeClassicSearch(result.hSearch);
+            const QBluetoothDeviceDiscoveryAgent::Error error = (result.systemErrorCode == ERROR_INVALID_HANDLE)
+                    ? QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError
+                    : QBluetoothDeviceDiscoveryAgent::InputOutputError;
+            finishDiscovery(error, qt_error_string(result.systemErrorCode));
         }
     }
 }
@@ -480,3 +561,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevice(
 }
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(DiscoveryResult)
