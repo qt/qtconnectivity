@@ -127,6 +127,7 @@ public:
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     bool fallBackConnect(QAndroidJniObject uuid, int channel);
+    bool fallBackReversedConnect(const QBluetoothUuid &uuid);
 #endif
 
 
@@ -197,7 +198,8 @@ public:
 public slots:
     void socketConnectSuccess(const QAndroidJniObject &socket);
     void defaultSocketConnectFailed(const QAndroidJniObject & socket,
-                                    const QAndroidJniObject &targetUuid);
+                                    const QAndroidJniObject &targetUuid,
+                                    const QBluetoothUuid &qtTargetUuid);
     void fallbackSocketConnectFailed(const QAndroidJniObject &socket,
                                      const QAndroidJniObject &targetUuid);
     void inputThreadError(int errorCode);
@@ -285,6 +287,15 @@ static inline quint64 convertAddress(quint8 (&from)[6], quint64 *to = 0)
         *to = result;
     return result;
 }
+
+#ifdef Q_OS_ANDROID
+// QTBUG-61392 related
+// Private API to disable the silent behavior to reverse a remote service's
+// UUID. In rare cases the workaround behavior might not be desirable as
+// it may lead to connects to incorrect services.
+extern bool useReverseUuidWorkAroundConnect;
+
+#endif
 
 QT_END_NAMESPACE
 
