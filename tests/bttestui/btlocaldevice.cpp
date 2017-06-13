@@ -29,12 +29,18 @@
 #include "btlocaldevice.h"
 #include <QDebug>
 #include <QTimer>
+#ifdef Q_OS_ANDROID
+#include <QtAndroidExtras/QtAndroid>
+#endif
 #include <QtBluetooth/QBluetoothServiceInfo>
 
 #define BTCHAT_DEVICE_ADDR "00:15:83:38:17:C3"
 
 //same uuid as examples/bluetooth/btchat
+//the reverse UUID is only used on Android to counter
+//https://issuetracker.google.com/issues/37076498 (tracked via QTBUG-61392)
 #define TEST_SERVICE_UUID "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
+#define TEST_REVERSE_SERVICE_UUID "c8e96402-0102-cf9c-274b-701a950fe1e8"
 
 #define SOCKET_PROTOCOL QBluetoothServiceInfo::RfcommProtocol
 //#define SOCKET_PROTOCOL QBluetoothServiceInfo::L2capProtocol
@@ -328,7 +334,15 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
     qDebug() << "$$ Found new service" << info.device().address().toString()
              << info.serviceUuid() << info.serviceName() << info.serviceDescription() << classIds;
 
-    if (info.serviceUuid() == QBluetoothUuid(QString(TEST_SERVICE_UUID))
+    bool matchingService =
+            (info.serviceUuid() == QBluetoothUuid(QString(TEST_SERVICE_UUID)));
+#ifdef Q_OS_ANDROID
+    if (QtAndroid::androidSdkVersion() >= 23) //bug introduced by Android 6.0.1
+        matchingService = matchingService
+            || (info.serviceUuid() == QBluetoothUuid(QString(TEST_REVERSE_SERVICE_UUID)));
+#endif
+
+    if (matchingService
             || info.serviceClassUuids().contains(QBluetoothUuid(QString(TEST_SERVICE_UUID))))
     {
         //This is here to detect the test server for SPP testing later on
