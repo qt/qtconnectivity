@@ -46,6 +46,7 @@
 #include <QtCore/QTime>
 #include <QtCore/private/qjni_p.h>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroid>
 
 QT_BEGIN_NAMESPACE
 
@@ -329,7 +330,8 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
  * 3. if threaded connect succeeds call socketConnectSuccess() via signals
  *      -> done
  * 4. if threaded connect fails call defaultSocketConnectFailed() via signals
- * 5. call fallBackConnect()
+ * 5. call fallBackConnect() if Android version 22 or below
+ *     -> Android 23+ complete failure of entire connectToService()
  * 6. if threaded connect on fallback channel succeeds call socketConnectSuccess()
  *    via signals
  *      -> done
@@ -489,7 +491,9 @@ void QBluetoothSocketPrivate::defaultSocketConnectFailed(
     if (socket != socketObject)
         return;
 
-    bool success = fallBackConnect(targetUuid, FALLBACK_CHANNEL);
+    bool success = false;
+    if (QtAndroid::androidSdkVersion() <= 22)
+        success = fallBackConnect(targetUuid, FALLBACK_CHANNEL);
     if (!success) {
         errorString = QBluetoothSocket::tr("Connection to service failed");
         socketObject = remoteDevice = QAndroidJniObject();
