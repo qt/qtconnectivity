@@ -442,7 +442,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 
     setDiscoveryState(DeviceDiscovery);
 
-    deviceDiscoveryAgent->start();
+    deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
 }
 
 /*!
