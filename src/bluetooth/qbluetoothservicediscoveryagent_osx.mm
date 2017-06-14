@@ -141,7 +141,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
     state = DeviceDiscovery;
 
     setupDeviceDiscoveryAgent();
-    deviceDiscoveryAgent->start();
+    deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
