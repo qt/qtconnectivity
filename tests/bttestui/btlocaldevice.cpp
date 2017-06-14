@@ -276,7 +276,7 @@ void BtLocalDevice::startDiscovery()
 {
     if (deviceAgent) {
         qDebug() << "###### Starting device discovery process";
-        deviceAgent->start();
+        deviceAgent->start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
     }
 }
 
