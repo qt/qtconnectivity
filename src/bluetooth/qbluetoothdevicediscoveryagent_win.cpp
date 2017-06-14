@@ -524,40 +524,34 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevice(
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
-    for (int i = 0; i < discoveredDevices.size(); i++) {
-        QBluetoothDeviceInfo mergedDevice = discoveredDevices[i];
+    auto equalAddress = [foundDevice](const QBluetoothDeviceInfo &targetDevice) {
+        return foundDevice.address() == targetDevice.address(); };
+    auto end = discoveredDevices.end();
+    auto deviceIt = std::find_if(discoveredDevices.begin(), end, equalAddress);
+    if (deviceIt == end) {
+        qCDebug(QT_BT_WINDOWS) << "Emit: " << foundDevice.address();
+        discoveredDevices.append(foundDevice);
+        emit q->deviceDiscovered(foundDevice);
+    } else if (*deviceIt == foundDevice
+               || deviceIt->coreConfigurations() == foundDevice.coreConfigurations()) {
+        qCDebug(QT_BT_WINDOWS) << "Duplicate: " << foundDevice.address();
+    } else {
+        // We assume that if the existing device it is low energy, it means that
+        // the found device should be as classic, because it is impossible to get
+        // same low energy device.
+        if (deviceIt->coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
+            *deviceIt = foundDevice;
 
-        if (mergedDevice.address() == foundDevice.address()) {
-            if (mergedDevice == foundDevice
-                    || mergedDevice.coreConfigurations() == foundDevice.coreConfigurations()) {
-                qCDebug(QT_BT_WINDOWS) << "Duplicate: " << foundDevice.address();
-                return;
-            }
+        // We assume that it is impossible to have multiple devices with same core
+        // configurations, which have one address. This possible only in case a device
+        // provided both low energy and classic features at the same time.
+        deviceIt->setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+        deviceIt->setCached(foundDevice.isCached());
 
-            // We assume that if the existing device it is low energy, it means that
-            // the found device should be as classic, because it is impossible to get
-            // same low energy device.
-            if (mergedDevice.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-                mergedDevice = foundDevice;
-
-            // We assume that it is impossible to have multiple devices with same core
-            // configurations, which have one address. This possible only in case a device
-            // provided both low energy and classic features at the same time.
-            mergedDevice.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
-            mergedDevice.setCached(foundDevice.isCached());
-
-            discoveredDevices.replace(i, mergedDevice);
-            Q_Q(QBluetoothDeviceDiscoveryAgent);
-            qCDebug(QT_BT_WINDOWS) << "Updated: " << mergedDevice.address();
-
-            emit q->deviceDiscovered(mergedDevice);
-            return;
-        }
+        Q_Q(QBluetoothDeviceDiscoveryAgent);
+        qCDebug(QT_BT_WINDOWS) << "Updated: " << deviceIt->address();
+        emit q->deviceDiscovered(*deviceIt);
     }
-
-    qCDebug(QT_BT_WINDOWS) << "Emit: " << foundDevice.address();
-    discoveredDevices.append(foundDevice);
-    emit q->deviceDiscovered(foundDevice);
 }
 
 QT_END_NAMESPACE
