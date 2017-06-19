@@ -107,6 +107,7 @@ Item {
         }
     //! [BluetoothSocket-4]
     //! [BluetoothSocket-2]
+        //...
     }
     //! [BluetoothSocket-2]
 
