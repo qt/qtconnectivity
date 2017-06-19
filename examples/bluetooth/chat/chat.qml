@@ -91,8 +91,24 @@ Item {
         connected: true
 
         onSocketStateChanged: {
-            console.log("Connected to server")
-            top.state = "chatActive"
+            switch (socketState) {
+                case BluetoothSocket.Unconnected:
+                case BluetoothSocket.NoServiceSet:
+                    searchBox.animationRunning = false;
+                    searchBox.setText("\nNo connection. \n\nPlease restart app.");
+                    top.state = "begin";
+                    break;
+                case BluetoothSocket.Connected:
+                    console.log("Connected to server ");
+                    top.state = "chatActive"; // move to chat UI
+                    break;
+                case BluetoothSocket.Connecting:
+                case BluetoothSocket.ServiceLookup:
+                case BluetoothSocket.Closing:
+                case BluetoothSocket.Listening:
+                case BluetoothSocket.Bound:
+                    break;
+            }
         }
     //! [BluetoothSocket-1]
     //! [BluetoothSocket-3]
