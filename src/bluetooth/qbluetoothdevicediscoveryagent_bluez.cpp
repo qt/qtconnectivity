@@ -400,17 +400,33 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
 
     // read information
     QBluetoothDeviceInfo deviceInfo(btAddress, btName, btClass);
-
-    if (!btClass)
-        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    else
-        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
-
     deviceInfo.setRssi(device.rSSI());
+
     QList<QBluetoothUuid> uuids;
-    foreach (const QString &u, device.uUIDs())
-        uuids.append(QBluetoothUuid(u));
+    bool foundLikelyLowEnergyUuid = false;
+    for (const auto &u: device.uUIDs()) {
+        const QBluetoothUuid id(u);
+        if (id.isNull())
+            continue;
+
+        if (!foundLikelyLowEnergyUuid) {
+            //once we found one BTLE service we are done
+            bool ok = false;
+            quint16 shortId = id.toUInt16(&ok);
+            if (ok && ((shortId & QBluetoothUuid::GenericAccess) == QBluetoothUuid::GenericAccess))
+                foundLikelyLowEnergyUuid = true;
+        }
+        uuids.append(id);
+    }
     deviceInfo.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+
+    if (!btClass) {
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    } else {
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        if (foundLikelyLowEnergyUuid)
+            deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+    }
 
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {
