@@ -189,6 +189,7 @@ public:
     };
     Q_DECLARE_FLAGS(ServiceClasses, ServiceClass)
 
+    //TODO Qt6 Remove DataCompleteness -> it serves no purpose
     enum DataCompleteness {
         DataComplete,
         DataIncomplete,
