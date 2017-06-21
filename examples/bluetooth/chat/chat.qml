@@ -53,7 +53,7 @@ Item {
     BluetoothDiscoveryModel {
         id: btModel
         running: true
-        discoveryMode: BluetoothDiscoveryModel.MinimalServiceDiscovery
+        discoveryMode: BluetoothDiscoveryModel.FullServiceDiscovery
     //! [BtDiscoveryModel-1]
         onRunningChanged : {
             if (!btModel.running && top.state == "begin" && !serviceFound) {
@@ -81,7 +81,7 @@ Item {
         }
     //! [BtDiscoveryModel-2]
     //! [BtDiscoveryModel-3]
-        uuidFilter: "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
+        uuidFilter: targetUuid //e8e10f95-1a70-4b27-9ccf-02010264e9c8
     }
     //! [BtDiscoveryModel-3]
 
