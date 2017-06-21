@@ -20,10 +20,6 @@
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
 
-/* Temporary hack to merge branches until Bluez headers are removed
- * from bluez5_helpers_p.h.
- */
-#define NO_BLUEZ_INCLUDES
 #include "bluez5_helper_p.h"
 
 /*
