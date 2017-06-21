@@ -530,6 +530,8 @@ void QLowEnergyControllerPrivate::connectToDevice()
     if (l2cpSocket)
         delete l2cpSocket;
 
+    createServicesForCentralIfRequired();
+
     // check for active running connections
     // BlueZ 5.37+ (maybe even earlier versions) can have pending BTLE connections
     // Only one active L2CP socket to CID 0x4 possible at a time
@@ -642,6 +644,72 @@ void QLowEnergyControllerPrivate::establishL2cpClientSocket()
     l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID,
                                  QIODevice::ReadWrite | QIODevice::Unbuffered);
     loadSigningDataIfNecessary(LocalSigningKey);
+}
+
+void QLowEnergyControllerPrivate::createServicesForCentralIfRequired()
+{
+    //only enable when requested
+    //for now we use env variable to activate the feature
+    if (Q_LIKELY(!qEnvironmentVariableIsSet("QT_DEFAULT_CENTRAL_SERVICES")))
+        return; //nothing to do
+
+    //do not add the services each time we start a connection
+    if (localServices.contains(QBluetoothUuid(QBluetoothUuid::GenericAccess)))
+        return;
+
+    qCDebug(QT_BT_BLUEZ) << "Creating default GAP/GATT services";
+
+    //populate Generic Access service
+    //for now the values are static
+    QLowEnergyServiceData gapServiceData;
+    gapServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+    gapServiceData.setUuid(QBluetoothUuid::GenericAccess);
+
+    QLowEnergyCharacteristicData gapDeviceName;
+    gapDeviceName.setUuid(QBluetoothUuid::DeviceName);
+    gapDeviceName.setProperties(QLowEnergyCharacteristic::Read);
+
+    QBluetoothLocalDevice mainAdapter;
+    gapDeviceName.setValue(mainAdapter.name().toLatin1()); //static name
+
+    QLowEnergyCharacteristicData gapAppearance;
+    gapAppearance.setUuid(QBluetoothUuid::Appearance);
+    gapAppearance.setProperties(QLowEnergyCharacteristic::Read);
+    gapAppearance.setValue(QByteArray::fromHex("80")); // Generic Computer (0x80)
+
+    QLowEnergyCharacteristicData gapPrivacyFlag;
+    gapPrivacyFlag.setUuid(QBluetoothUuid::PeripheralPrivacyFlag);
+    gapPrivacyFlag.setProperties(QLowEnergyCharacteristic::Read);
+    gapPrivacyFlag.setValue(QByteArray::fromHex("00")); // disable privacy
+
+    gapServiceData.addCharacteristic(gapDeviceName);
+    gapServiceData.addCharacteristic(gapAppearance);
+    gapServiceData.addCharacteristic(gapPrivacyFlag);
+
+    Q_Q(QLowEnergyController);
+    QLowEnergyService *service = addServiceHelper(gapServiceData);
+    if (service)
+        service->setParent(q);
+
+    QLowEnergyServiceData gattServiceData;
+    gattServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+    gattServiceData.setUuid(QBluetoothUuid::GenericAttribute);
+
+    QLowEnergyCharacteristicData serviceChangedChar;
+    serviceChangedChar.setUuid(QBluetoothUuid::ServiceChanged);
+    serviceChangedChar.setProperties(QLowEnergyCharacteristic::Indicate);
+    //arbitrary range of 2 bit handle range (1-4
+    serviceChangedChar.setValue(QByteArray::fromHex("0104"));
+
+    const QLowEnergyDescriptorData clientConfig(
+                        QBluetoothUuid::ClientCharacteristicConfiguration,
+                        QByteArray(2, 0));
+    serviceChangedChar.addDescriptor(clientConfig);
+    gattServiceData.addCharacteristic(serviceChangedChar);
+
+    service = addServiceHelper(gattServiceData);
+    if (service)
+        service->setParent(q);
 }
 
 void QLowEnergyControllerPrivate::l2cpConnected()
