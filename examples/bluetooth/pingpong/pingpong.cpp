@@ -40,6 +40,9 @@
 
 #include "pingpong.h"
 #include <QDebug>
+#ifdef Q_OS_ANDROID
+#include <QtAndroid>
+#endif
 
 PingPong::PingPong():
     m_serverInfo(0), socket(0), discoveryAgent(0), interval(5), m_resultLeft(0), m_resultRight(0),
@@ -253,8 +256,16 @@ void PingPong::startClient()
     connect(discoveryAgent, SIGNAL(finished()), this, SLOT(done()));
     connect(discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
             this, SLOT(serviceScanError(QBluetoothServiceDiscoveryAgent::Error)));
+#ifdef Q_OS_ANDROID //see QTBUG-61392
+    if (QtAndroid::androidSdkVersion() >= 23)
+        discoveryAgent->setUuidFilter(QBluetoothUuid(androidUuid));
+    else
+        discoveryAgent->setUuidFilter(QBluetoothUuid(serviceUuid));
+#else
     discoveryAgent->setUuidFilter(QBluetoothUuid(serviceUuid));
+#endif
     discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+
     //! [Searching for the service]
     setMessage(QStringLiteral("Starting server discovery. You are the right player"));
     // m_role is set to 2 if it is a client
