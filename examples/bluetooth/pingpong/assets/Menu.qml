@@ -47,17 +47,18 @@ Rectangle {
 
     Rectangle {
         width: parent.width
-        height: 70
+        height: headerText.implicitHeight *1.2
         border.width: 1
         border.color: "#363636"
         radius: 5
 
         Text {
+            id: headerText
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             anchors.fill: parent
             text: "Welcome to PingPong Game \n Please select an option"
-            font.pixelSize: 20
+            font.pointSize: 20
             elide: Text.ElideMiddle
             color: "#363636"
         }
@@ -67,10 +68,11 @@ Rectangle {
         id: startServer
         anchors.centerIn: parent
         width: parent.width/2
-        height: parent.height/5
+        height: startServerText.implicitHeight*5
         color: "#363636"
 
         Text {
+            id: startServerText
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             anchors.fill: parent
@@ -95,10 +97,11 @@ Rectangle {
         anchors.top: startServer.bottom
         anchors.topMargin: 10
         width: parent.width/2
-        height: parent.height/5
+        height: startClientText.implicitHeight*5
         color: "#363636"
 
         Text {
+            id: startClientText
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             anchors.fill: parent
