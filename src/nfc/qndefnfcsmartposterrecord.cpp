@@ -720,7 +720,7 @@ QNdefNfcSmartPosterRecord::Action QNdefNfcActRecord::action() const
             QNdefNfcSmartPosterRecord::UnspecifiedAction;
 
     if (!p.isEmpty())
-        value = QNdefNfcSmartPosterRecord::Action(p[0]);
+        value = QNdefNfcSmartPosterRecord::Action(static_cast<signed char>(p[0]));
 
     return value;
 }
