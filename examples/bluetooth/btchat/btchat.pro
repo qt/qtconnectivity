@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET = btchat
 
 QT = core bluetooth widgets
+android: QT += androidextras
 
 SOURCES = \
     main.cpp \
