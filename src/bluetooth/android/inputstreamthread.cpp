@@ -77,6 +77,12 @@ qint64 InputStreamThread::bytesAvailable() const
     return m_socket_p->buffer.size();
 }
 
+bool InputStreamThread::canReadLine() const
+{
+    QMutexLocker locker(&m_mutex);
+    return m_socket_p->buffer.canReadLine();
+}
+
 qint64 InputStreamThread::readData(char *data, qint64 maxSize)
 {
     QMutexLocker locker(&m_mutex);

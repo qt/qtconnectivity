@@ -569,6 +569,11 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return buffer.size();
 }
 
+bool QBluetoothSocketPrivate::canReadLine() const
+{
+    return buffer.canReadLine();
+}
+
 void QBluetoothSocketPrivate::handleNewData(const QVector<QByteArray> &data)
 {
     // Defer putting the data into the list until the next event loop iteration

@@ -166,6 +166,7 @@ public:
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
 
     qint64 bytesAvailable() const;
+    bool canReadLine() const;
 
 public:
     QPrivateLinearBuffer buffer;

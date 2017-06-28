@@ -879,6 +879,15 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return 0;
 }
 
+bool QBluetoothSocketPrivate::canReadLine() const
+{
+    // We cannot access buffer directly as it is part of different thread
+    if (inputThread)
+        return inputThread->canReadLine();
+
+    return false;
+}
+
 QT_END_NAMESPACE
 
 #include <qbluetoothsocket_android.moc>
