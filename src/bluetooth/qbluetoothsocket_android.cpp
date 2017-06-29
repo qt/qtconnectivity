@@ -722,7 +722,6 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     env->SetByteArrayRegion(nativeData, 0, (qint32)maxSize, reinterpret_cast<const jbyte*>(data));
     outputStream.callMethod<void>("write", "([BII)V", nativeData, 0, (qint32)maxSize);
     env->DeleteLocalRef(nativeData);
-    emit q->bytesWritten(maxSize);
 
     if (env->ExceptionCheck()) {
         qCWarning(QT_BT_ANDROID) << "Error while writing";
@@ -733,6 +732,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
         return -1;
     }
 
+    emit q->bytesWritten(maxSize);
     return maxSize;
 }
 
