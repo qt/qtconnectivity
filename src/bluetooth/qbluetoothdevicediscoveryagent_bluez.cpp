@@ -417,7 +417,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
 
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {
-            if (discoveredDevices[i] == deviceInfo) {
+            if (discoveredDevices[i] == deviceInfo && lowEnergySearchTimeout > 0) {
                 qCDebug(QT_BT_BLUEZ) << "Duplicate: " << btAddress.toString();
                 return;
             }
