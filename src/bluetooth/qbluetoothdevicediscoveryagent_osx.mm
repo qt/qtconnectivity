@@ -525,7 +525,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QBluetoothDeviceIn
     for (int i = 0, e = discoveredDevices.size(); i < e; ++i) {
         if (isLE ? discoveredDevices[i].deviceUuid() == newDeviceInfo.deviceUuid():
                    discoveredDevices[i].address() == newDeviceInfo.address()) {
-            if (discoveredDevices[i] == newDeviceInfo)
+            if (discoveredDevices[i] == newDeviceInfo && (!isLE || lowEnergySearchTimeout > 0))
                 return;
 
             discoveredDevices.replace(i, newDeviceInfo);
