@@ -163,4 +163,9 @@ bool QBluetoothSocketPrivate::canReadLine() const
     return false;
 }
 
+qint64 QBluetoothSocketPrivate::bytesToWrite() const
+{
+    return 0;
+}
+
 QT_END_NAMESPACE

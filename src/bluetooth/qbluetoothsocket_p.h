@@ -167,6 +167,7 @@ public:
 
     qint64 bytesAvailable() const;
     bool canReadLine() const;
+    qint64 bytesToWrite() const;
 
 public:
     QPrivateLinearBuffer buffer;

@@ -569,6 +569,11 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return buffer.size();
 }
 
+qint64 QBluetoothSocketPrivate::bytesToWrite() const
+{
+    return 0; // nothing because always unbuffered
+}
+
 bool QBluetoothSocketPrivate::canReadLine() const
 {
     return buffer.canReadLine();

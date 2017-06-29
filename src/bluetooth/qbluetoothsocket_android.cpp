@@ -879,6 +879,11 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return 0;
 }
 
+qint64 QBluetoothSocketPrivate::bytesToWrite() const
+{
+    return 0; // nothing because always unbuffered
+}
+
 bool QBluetoothSocketPrivate::canReadLine() const
 {
     // We cannot access buffer directly as it is part of different thread
