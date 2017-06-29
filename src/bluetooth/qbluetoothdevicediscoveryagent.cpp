@@ -143,7 +143,15 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     information via \l discoveredDevices() once the discovery has finished. This
     will yield the most recent RSSI information.
 
-    \sa QBluetoothDeviceInfo::rssi()
+    If \l lowEnergyDiscoveryTimeout() is larger than 0 the signal is only ever
+    emitted when at least one attribute of \a info changes. This reflects the desire to
+    receive updates as more precise information becomes available. The exception to this
+    behavior is the case when \l lowEnergyDiscoveryTimeout is set to \c 0. A timeout of \c 0
+    expresses the desire to monitor the appearance and disappearance of Low Energy devices
+    over time. Under this condition the \l deviceDiscovered() signal is emitted even if
+    \a info has not changed since the last signal emission.
+
+    \sa QBluetoothDeviceInfo::rssi(), lowEnergyDiscoveryTimeout()
 */
 
 /*!
