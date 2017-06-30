@@ -42,6 +42,14 @@
 #define Q_OS_WINRT
 #include <QtCore/qfunctions_winrt.h>
 
+#include <wrl.h>
+#include <windows.devices.bluetooth.h>
+
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+using namespace ABI::Windows::Devices::Bluetooth;
+using namespace ABI::Windows::Foundation;
+
 QT_BEGIN_NAMESPACE
 
 #pragma warning (push)
@@ -52,5 +60,35 @@ HRESULT QEventDispatcherWinRT::runOnXamlThread(const std::function<HRESULT()> &d
     return delegate();
 }
 #pragma warning (pop)
+
+extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
+{
+    switch (reason)
+    {
+    case DLL_PROCESS_ATTACH: {
+        // Check if we are running on a recent enough Windows
+        HRESULT  hr = OleInitialize(NULL);
+        if (FAILED(hr)) {
+            MessageBox(NULL, (LPCWSTR)L"OleInitialize failed.", (LPCWSTR)L"Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+            exit(-1);
+        }
+        ComPtr<IBluetoothDeviceStatics> deviceStatics;
+        hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &deviceStatics);
+        if (hr == REGDB_E_CLASSNOTREG) {
+            QString error ("This Windows version (" + QSysInfo::kernelVersion() + ") does not "
+                "support the required Bluetooth API. Consider updating to a more recent Windows "
+                "(10.0.10586 or above).");
+            MessageBox(NULL, (LPCWSTR)error.constData(), (LPCWSTR)L"Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+            CoUninitialize();
+            exit(-1);
+        }
+        break;
+    }
+    case DLL_PROCESS_DETACH:
+        CoUninitialize();
+    }
+
+    return TRUE;
+}
 
 QT_END_NAMESPACE

@@ -199,7 +199,7 @@ qtConfig(bluez) {
     !winrt {
         SOURCES += qbluetoothutils_win.cpp
         DEFINES += CLASSIC_APP_BUILD
-        LIBS += runtimeobject.lib
+        LIBS += runtimeobject.lib user32.lib
     }
 
     QT += core-private
