@@ -46,6 +46,9 @@ Rectangle {
     function appendText(newText) {
         searchText.text += newText
     }
+    function setText(newText) {
+        searchText.text = newText
+    }
 
     width: searchText.width + 40;
     height: searchText.height + bluetoothImage.height + 40;

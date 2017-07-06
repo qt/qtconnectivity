@@ -147,6 +147,8 @@ public:
             QLowEnergyHandle handle);
     QLowEnergyDescriptor descriptorForHandle(
             QLowEnergyHandle handle);
+    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service);
+
 
     quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                      const QByteArray &value,
@@ -416,6 +418,7 @@ private:
 
     void restartRequestTimer();
     void establishL2cpClientSocket();
+    void createServicesForCentralIfRequired();
 
 private slots:
     void l2cpConnected();

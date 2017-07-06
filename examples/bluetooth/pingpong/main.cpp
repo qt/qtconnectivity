@@ -41,10 +41,13 @@
 #include <QQmlContext>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QLoggingCategory>
 #include "pingpong.h"
+
 
 int main(int argc, char *argv[])
 {
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication app(argc, argv);
     PingPong pingPong;
     QQmlApplicationEngine engine;

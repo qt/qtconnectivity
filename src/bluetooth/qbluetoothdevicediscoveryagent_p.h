@@ -163,7 +163,6 @@ private:
 private slots:
     void registerDevice(const QBluetoothDeviceInfo &info);
     void onScanFinished();
-    void onScanCanceled();
 
 private:
     void disconnectAndClearWorker();

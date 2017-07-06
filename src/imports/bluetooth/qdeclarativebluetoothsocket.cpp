@@ -297,7 +297,9 @@ void QDeclarativeBluetoothSocket::socket_state(QBluetoothSocket::SocketState sta
         \li \c{Bound}
     \endlist
 
-    The states are derived from \l QBluetoothSocket::SocketState. This property is read-only.
+    The states (except \c{NoServiceSet}) are derived from \l QBluetoothSocket::SocketState. This property is read-only.
+    \c{NoServiceSet} indicates that the socket state is not yet available due to the \l service not being
+    set yet.
 */
 QDeclarativeBluetoothSocket::SocketState QDeclarativeBluetoothSocket::state() const
 {

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -204,7 +204,10 @@ template<> inline void putBtData(quint128 src, void *dst)
 
 // HCI related
 
-#define HCI_MAX_DEV 16
+#define HCI_MAX_DEV     16
+#define HCI_DEV_NONE    0xffff
+
+#define HCI_CHANNEL_CONTROL     0x3
 
 #define HCI_MAX_EVENT_SIZE 260
 

@@ -127,6 +127,7 @@ public:
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     bool fallBackConnect(QAndroidJniObject uuid, int channel);
+    bool fallBackReversedConnect(const QBluetoothUuid &uuid);
 #endif
 
 
@@ -165,6 +166,8 @@ public:
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
 
     qint64 bytesAvailable() const;
+    bool canReadLine() const;
+    qint64 bytesToWrite() const;
 
 public:
     QPrivateLinearBuffer buffer;
@@ -197,7 +200,8 @@ public:
 public slots:
     void socketConnectSuccess(const QAndroidJniObject &socket);
     void defaultSocketConnectFailed(const QAndroidJniObject & socket,
-                                    const QAndroidJniObject &targetUuid);
+                                    const QAndroidJniObject &targetUuid,
+                                    const QBluetoothUuid &qtTargetUuid);
     void fallbackSocketConnectFailed(const QAndroidJniObject &socket,
                                      const QAndroidJniObject &targetUuid);
     void inputThreadError(int errorCode);
@@ -263,7 +267,7 @@ public slots:
 
 #endif // QT_OSX_BLUETOOTH
 
-static inline void convertAddress(quint64 from, quint8 (&to)[6])
+static inline void convertAddress(const quint64 from, quint8 (&to)[6])
 {
     to[0] = (from >> 0) & 0xff;
     to[1] = (from >> 8) & 0xff;
@@ -273,7 +277,7 @@ static inline void convertAddress(quint64 from, quint8 (&to)[6])
     to[5] = (from >> 40) & 0xff;
 }
 
-static inline quint64 convertAddress(quint8 (&from)[6], quint64 *to = 0)
+static inline quint64 convertAddress(const quint8 (&from)[6], quint64 *to = 0)
 {
     const quint64 result = (quint64(from[0]) << 0) |
          (quint64(from[1]) << 8) |
@@ -285,6 +289,15 @@ static inline quint64 convertAddress(quint8 (&from)[6], quint64 *to = 0)
         *to = result;
     return result;
 }
+
+#ifdef Q_OS_ANDROID
+// QTBUG-61392 related
+// Private API to disable the silent behavior to reverse a remote service's
+// UUID. In rare cases the workaround behavior might not be desirable as
+// it may lead to connects to incorrect services.
+extern bool useReverseUuidWorkAroundConnect;
+
+#endif
 
 QT_END_NAMESPACE
 

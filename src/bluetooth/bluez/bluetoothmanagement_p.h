@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Lauri Laanmets (Proekspert AS) <lauri.laanmets@eesti.ee>
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -38,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef INPUTSTREAMTHREAD_H
-#define INPUTSTREAMTHREAD_H
+#ifndef BLUETOOTHMANAGEMENT_P_H
+#define BLUETOOTHMANAGEMENT_P_H
 
 //
 //  W A R N I N G
@@ -52,42 +51,48 @@
 // We mean it.
 //
 
-#include <QtCore/QObject>
-#include <QtCore/QMutex>
-#include <QtAndroidExtras/QAndroidJniObject>
-#include <jni.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qobject.h>
+
+#include <QtBluetooth/qbluetoothaddress.h>
+
+#ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
+#define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)
+#endif
+#include "../qprivatelinearbuffer_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothSocketPrivate;
+class QSocketNotifier;
 
-class InputStreamThread : public QObject
+class BluetoothManagement : public QObject
 {
     Q_OBJECT
+
 public:
-    explicit InputStreamThread(QBluetoothSocketPrivate *socket_p);
+    explicit BluetoothManagement(QObject *parent = nullptr);
+    static BluetoothManagement *instance();
 
-    qint64 bytesAvailable() const;
-    bool canReadLine() const;
-    bool run();
+    bool isAddressRandom(const QBluetoothAddress &address) const;
+    bool isMonitoringEnabled() const;
 
-    qint64 readData(char *data, qint64 maxSize);
-    void javaThreadErrorOccurred(int errorCode);
-    void javaReadyRead(jbyteArray buffer, int bufferLength);
-
-    void prepareForClosure();
-
-signals:
-    void dataAvailable();
-    void error(int errorCode);
+private slots:
+    void _q_readNotifier();
+    void processRandomAddressFlagInformation(const QBluetoothAddress &address);
+    void cleanupOldAddressFlags();
 
 private:
-    QBluetoothSocketPrivate *m_socket_p;
-    QAndroidJniObject javaInputStreamThread;
-    mutable QMutex m_mutex;
-    bool expectClosure;
+    void readyRead();
+
+    int fd = -1;
+    QSocketNotifier* notifier;
+    QPrivateLinearBuffer buffer;
+    QHash<QBluetoothAddress, QDateTime> privateFlagAddresses;
+    mutable QMutex accessLock;
 };
+
 
 QT_END_NAMESPACE
 
-#endif // INPUTSTREAMTHREAD_H
+#endif // BLUETOOTHMANAGEMENT_P_H

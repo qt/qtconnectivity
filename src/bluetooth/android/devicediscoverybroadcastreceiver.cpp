@@ -237,7 +237,7 @@ static const MinorClassJavaToQtMapping minorMappings[] = {
     { Q_NULLPTR, 0 }, // index 64 & separator
 };
 
-/*! Advertising Data Type (AD type) for LE scan records, as defined in Bluetooth CSS v6. */
+/* Advertising Data Type (AD type) for LE scan records, as defined in Bluetooth CSS v6. */
 enum ADType {
     ADType16BitUuidIncomplete = 0x02,
     ADType16BitUuidComplete = 0x03,

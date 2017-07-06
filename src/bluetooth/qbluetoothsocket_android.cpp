@@ -46,6 +46,7 @@
 #include <QtCore/QTime>
 #include <QtCore/private/qjni_p.h>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroid>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,6 +57,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 Q_DECLARE_METATYPE(QAndroidJniObject)
 
+Q_BLUETOOTH_EXPORT bool useReverseUuidWorkAroundConnect = true;
 
 /* BluetoothSocket.connect() can block up to 10s. Therefore it must be
  * in a separate thread. Unfortunately if BluetoothSocket.close() is
@@ -78,10 +80,12 @@ class SocketConnectWorker : public QObject
     Q_OBJECT
 public:
     SocketConnectWorker(const QAndroidJniObject& socket,
-                        const QAndroidJniObject& targetUuid)
+                        const QAndroidJniObject& targetUuid,
+                        const QBluetoothUuid& qtTargetUuid)
         : QObject(),
           mSocketObject(socket),
-          mTargetUuid(targetUuid)
+          mTargetUuid(targetUuid),
+          mQtTargetUuid(qtTargetUuid)
     {
         static int t = qRegisterMetaType<QAndroidJniObject>();
         Q_UNUSED(t);
@@ -90,7 +94,8 @@ public:
 signals:
     void socketConnectDone(const QAndroidJniObject &socket);
     void socketConnectFailed(const QAndroidJniObject &socket,
-                             const QAndroidJniObject &targetUuid);
+                             const QAndroidJniObject &targetUuid,
+                             const QBluetoothUuid &qtUuid);
 public slots:
     void connectSocket()
     {
@@ -102,7 +107,7 @@ public slots:
             env->ExceptionDescribe();
             env->ExceptionClear();
 
-            emit socketConnectFailed(mSocketObject, mTargetUuid);
+            emit socketConnectFailed(mSocketObject, mTargetUuid, mQtTargetUuid);
             QThread::currentThread()->quit();
             return;
         }
@@ -130,6 +135,8 @@ public slots:
 private:
     QAndroidJniObject mSocketObject;
     QAndroidJniObject mTargetUuid;
+    // same as mTargetUuid above - just the Qt C++ version rather than jni uuid
+    QBluetoothUuid mQtTargetUuid;
 };
 
 class WorkerThread: public QThread
@@ -143,10 +150,11 @@ public:
 
     // Runs in same thread as QBluetoothSocketPrivate
     void setupWorker(QBluetoothSocketPrivate* d_ptr, const QAndroidJniObject& socketObject,
-                     const QAndroidJniObject& uuidObject, bool useFallback)
+                     const QAndroidJniObject& uuidObject, bool useFallback,
+                     const QBluetoothUuid& qtUuid = QBluetoothUuid())
     {
         SocketConnectWorker* worker = new SocketConnectWorker(
-                                            socketObject, uuidObject);
+                                            socketObject, uuidObject, qtUuid);
         worker->moveToThread(this);
 
         connect(this, &QThread::finished, worker, &QObject::deleteLater);
@@ -171,6 +179,30 @@ public:
 private:
     QPointer<SocketConnectWorker> workerPointer;
 };
+
+/*
+ * This function is part of a workaround for QTBUG-61392
+ *
+ * Returns null uuid if the given \a serviceUuid is not a uuid
+ * derived from the Bluetooth base uuid.
+ */
+static QBluetoothUuid reverseUuid(const QBluetoothUuid &serviceUuid)
+{
+    if (serviceUuid.isNull())
+        return QBluetoothUuid();
+
+    bool isBaseUuid = false;
+    serviceUuid.toUInt32(&isBaseUuid);
+    if (isBaseUuid)
+        return QBluetoothUuid();
+
+    const quint128 original = serviceUuid.toUInt128();
+    quint128 reversed;
+    for (int i = 0; i < 16; i++)
+        reversed.data[15-i] = original.data[i];
+
+    return QBluetoothUuid(reversed);
+}
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
   : socket(-1),
@@ -206,7 +238,7 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
 
 bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channel)
 {
-    qCWarning(QT_BT_ANDROID) << "Falling back to workaround.";
+    qCWarning(QT_BT_ANDROID) << "Falling back to getServiceChannel() workaround.";
 
     QAndroidJniEnvironment env;
 
@@ -320,6 +352,60 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
     return true;
 }
 
+/*
+ * Workaround for QTBUG-61392
+ */
+bool QBluetoothSocketPrivate::fallBackReversedConnect(const QBluetoothUuid &uuid)
+{
+    Q_Q(QBluetoothSocket);
+
+    qCWarning(QT_BT_ANDROID) << "Falling back to reverse uuid workaround.";
+    const QBluetoothUuid reverse = reverseUuid(uuid);
+    if (reverse.isNull())
+        return false;
+
+    //cut leading { and trailing } {xxx-xxx}
+    QString tempUuid = reverse.toString();
+    tempUuid.chop(1); //remove trailing '}'
+    tempUuid.remove(0, 1); //remove first '{'
+
+    QAndroidJniEnvironment env;
+    const QAndroidJniObject inputString = QAndroidJniObject::fromString(tempUuid);
+    const QAndroidJniObject uuidObject = QAndroidJniObject::callStaticObjectMethod("java/util/UUID", "fromString",
+                                                                       "(Ljava/lang/String;)Ljava/util/UUID;",
+                                                                       inputString.object<jstring>());
+
+    if (secFlags == QBluetooth::NoSecurity) {
+        qCDebug(QT_BT_ANDROID) << "Connnecting via insecure rfcomm";
+        socketObject = remoteDevice.callObjectMethod("createInsecureRfcommSocketToServiceRecord",
+                                                 "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",
+                                                 uuidObject.object<jobject>());
+    } else {
+        qCDebug(QT_BT_ANDROID) << "Connnecting via secure rfcomm";
+        socketObject = remoteDevice.callObjectMethod("createRfcommSocketToServiceRecord",
+                                                 "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",
+                                                 uuidObject.object<jobject>());
+    }
+
+    if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+
+        socketObject = remoteDevice = QAndroidJniObject();
+        errorString = QBluetoothSocket::tr("Cannot connect to %1",
+                                           "%1 = uuid").arg(reverse.toString());
+        q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        return false;
+    }
+
+    WorkerThread *workerThread = new WorkerThread();
+    workerThread->setupWorker(this, socketObject, uuidObject, USE_FALLBACK);
+    workerThread->start();
+    emit connectJavaSocket();
+
+    return true;
+}
 
 /*
  * The call order during a connectToService() is as follows:
@@ -329,11 +415,14 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
  * 3. if threaded connect succeeds call socketConnectSuccess() via signals
  *      -> done
  * 4. if threaded connect fails call defaultSocketConnectFailed() via signals
- * 5. call fallBackConnect()
- * 6. if threaded connect on fallback channel succeeds call socketConnectSuccess()
+ * 5. call fallBackConnect() if Android version 22 or below
+ *     -> Android 23+ complete failure of entire connectToService()
+ * 6. call fallBackReversedConnect() if Android version 23 or above
+ *     -> if failure entire connectToService() fails
+ * 7. if threaded connect on one of above fallbacks succeeds call socketConnectSuccess()
  *    via signals
  *      -> done
- * 7. if threaded connect on fallback channel fails call fallbackSocketConnectFailed()
+ * 8. if threaded connect on fallback channel fails call fallbackSocketConnectFailed()
  *      -> complete failure of entire connectToService()
  * */
 void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
@@ -414,7 +503,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     }
 
     WorkerThread *workerThread = new WorkerThread();
-    workerThread->setupWorker(this, socketObject, uuidObject, !USE_FALLBACK);
+    workerThread->setupWorker(this, socketObject, uuidObject, !USE_FALLBACK, uuid);
     workerThread->start();
     emit connectJavaSocket();
 }
@@ -480,7 +569,8 @@ void QBluetoothSocketPrivate::socketConnectSuccess(const QAndroidJniObject &sock
 }
 
 void QBluetoothSocketPrivate::defaultSocketConnectFailed(
-        const QAndroidJniObject &socket, const QAndroidJniObject &targetUuid)
+        const QAndroidJniObject &socket, const QAndroidJniObject &targetUuid,
+        const QBluetoothUuid &qtTargetUuid)
 {
     Q_Q(QBluetoothSocket);
 
@@ -489,7 +579,12 @@ void QBluetoothSocketPrivate::defaultSocketConnectFailed(
     if (socket != socketObject)
         return;
 
-    bool success = fallBackConnect(targetUuid, FALLBACK_CHANNEL);
+    bool success = false;
+    if (QtAndroid::androidSdkVersion() <= 22)
+        success = fallBackConnect(targetUuid, FALLBACK_CHANNEL);
+    else if (useReverseUuidWorkAroundConnect) // version 23+ has Android bug (see QTBUG-61392)
+        success = fallBackReversedConnect(qtTargetUuid);
+
     if (!success) {
         errorString = QBluetoothSocket::tr("Connection to service failed");
         socketObject = remoteDevice = QAndroidJniObject();
@@ -627,7 +722,6 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     env->SetByteArrayRegion(nativeData, 0, (qint32)maxSize, reinterpret_cast<const jbyte*>(data));
     outputStream.callMethod<void>("write", "([BII)V", nativeData, 0, (qint32)maxSize);
     env->DeleteLocalRef(nativeData);
-    emit q->bytesWritten(maxSize);
 
     if (env->ExceptionCheck()) {
         qCWarning(QT_BT_ANDROID) << "Error while writing";
@@ -638,6 +732,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
         return -1;
     }
 
+    emit q->bytesWritten(maxSize);
     return maxSize;
 }
 
@@ -782,6 +877,20 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
         return inputThread->bytesAvailable();
 
     return 0;
+}
+
+qint64 QBluetoothSocketPrivate::bytesToWrite() const
+{
+    return 0; // nothing because always unbuffered
+}
+
+bool QBluetoothSocketPrivate::canReadLine() const
+{
+    // We cannot access buffer directly as it is part of different thread
+    if (inputThread)
+        return inputThread->canReadLine();
+
+    return false;
 }
 
 QT_END_NAMESPACE

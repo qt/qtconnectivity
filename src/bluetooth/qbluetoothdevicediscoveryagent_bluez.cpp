@@ -51,6 +51,7 @@
 #include "bluez/adapter1_bluez5_p.h"
 #include "bluez/device1_bluez5_p.h"
 #include "bluez/properties_p.h"
+#include "bluez/bluetoothmanagement_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,8 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                          SIGNAL(InterfacesAdded(QDBusObjectPath,InterfaceList)),
                          q, SLOT(_q_InterfacesAdded(QDBusObjectPath,InterfaceList)));
 
+        // start private address monitoring
+        BluetoothManagement::instance();
     } else {
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus(), parent);
@@ -430,7 +433,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
 
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {
-            if (discoveredDevices[i] == deviceInfo) {
+            if (discoveredDevices[i] == deviceInfo && lowEnergySearchTimeout > 0) {
                 qCDebug(QT_BT_BLUEZ) << "Duplicate: " << btAddress.toString();
                 return;
             }

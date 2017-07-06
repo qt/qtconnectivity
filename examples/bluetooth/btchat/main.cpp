@@ -51,7 +51,11 @@ int main(int argc, char *argv[])
     Chat d;
     QObject::connect(&d, SIGNAL(accepted()), &app, SLOT(quit()));
 
+#ifdef Q_OS_ANDROID
+    d.showMaximized();
+#else
     d.show();
+#endif
 
     app.exec();
 

@@ -187,6 +187,8 @@ public class QtBluetoothLE {
             switch (status) {
                 case BluetoothGatt.GATT_SUCCESS:
                     errorCode = 0; break; //QLowEnergyController::NoError
+                case BluetoothGatt.GATT_FAILURE: // Android's equivalent of "do not know what error it is"
+                    errorCode = 1; break; //QLowEnergyController::UnknownError
                 case 8:  // BLE_HCI_CONNECTION_TIMEOUT
                 case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
                     Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");

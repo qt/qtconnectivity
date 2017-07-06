@@ -69,7 +69,7 @@
     of the Bluetooth device offering the chat server. It is passed to the \l BluetoothSocket
     to establish the connection.
 
-    Once the connection is established the chat information is:
+    Once the connection is established the socket's state is managed as follows:
     \snippet chat/chat.qml BluetoothSocket-1
     \snippet chat/chat.qml BluetoothSocket-2
 

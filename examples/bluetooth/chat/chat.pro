@@ -1,4 +1,5 @@
 QT = core bluetooth quick
+android: QT += androidextras #see QTBUG-61392
 SOURCES += qmlchat.cpp
 
 TARGET = qml_chat
