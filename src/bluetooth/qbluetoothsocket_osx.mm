@@ -770,6 +770,9 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketError error)
     case QBluetoothSocket::NetworkError:
         debug << "QBluetoothSocket::NetworkError";
         break;
+    case QBluetoothSocket::UnsupportedProtocolError:
+        debug << "QBluetoothSocket::UnsupportedProtocolError";
+        break;
     default:
         debug << "QBluetoothSocket::SocketError(" << (int)error << ")";
     }
