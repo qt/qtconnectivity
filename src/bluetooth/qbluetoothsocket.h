@@ -79,6 +79,7 @@ public:
     enum SocketError {
         NoSocketError = -2,
         UnknownSocketError = QAbstractSocket::UnknownSocketError, //-1
+        RemoteHostClosedError = QAbstractSocket::RemoteHostClosedError, //1
         HostNotFoundError = QAbstractSocket::HostNotFoundError, //2
         ServiceNotFoundError = QAbstractSocket::SocketAddressNotAvailableError, //9
         NetworkError = QAbstractSocket::NetworkError, //7

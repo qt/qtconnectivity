@@ -244,6 +244,7 @@ void QDeclarativeBluetoothSocket::setConnected(bool connected)
         \li \c{ServiceNotFoundError}
         \li \c{NetworkError}
         \li \c{UnsupportedProtocolError}
+        \li \c{RemoteHostClosedError}
     \endlist
 
     The errors are derived from \l QBluetoothSocket::SocketError. This property is read-only.
