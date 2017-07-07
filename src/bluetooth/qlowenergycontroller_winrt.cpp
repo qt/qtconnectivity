@@ -338,6 +338,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 emit q->connected();
             } else if (state == QLowEnergyController::ConnectedState
                        && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
+                setError(QLowEnergyController::RemoteHostClosedError);
                 setState(QLowEnergyController::UnconnectedState);
                 emit q->disconnected();
             }
@@ -419,6 +420,10 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
+    if (mDevice && mStatusChangedToken.value) {
+        mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
+        mStatusChangedToken.value = 0;
+    }
 }
 
 ComPtr<IGattDeviceService> QLowEnergyControllerPrivate::getNativeService(const QBluetoothUuid &serviceUuid)
