@@ -753,6 +753,10 @@ void QLowEnergyControllerPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError
         setError(QLowEnergyController::NetworkError);
         qCDebug(QT_BT_BLUEZ) << "Network IO error while talking to LE device";
         break;
+    case QBluetoothSocket::RemoteHostClosedError:
+        setError(QLowEnergyController::RemoteHostClosedError);
+        qCDebug(QT_BT_BLUEZ) << "Remote host closed the connection";
+        break;
     case QBluetoothSocket::UnknownSocketError:
     case QBluetoothSocket::UnsupportedProtocolError:
     case QBluetoothSocket::OperationError:
