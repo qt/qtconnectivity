@@ -223,7 +223,7 @@ public:
         // the closing of the socket won't be communicated to the caller. So only the error is set. The
         // actual socket close happens inside of read.
         if (!bufferLength) {
-            emit socketErrorOccured(QBluetoothSocket::NetworkError);
+            emit socketErrorOccured(QBluetoothSocket::RemoteHostClosedError);
             return S_OK;
         }
 
@@ -593,6 +593,9 @@ void QBluetoothSocketPrivate::handleError(QBluetoothSocket::SocketError error)
     switch (error) {
     case QBluetoothSocket::NetworkError:
         errorString = QBluetoothSocket::tr("Network error");
+        break;
+    case QBluetoothSocket::RemoteHostClosedError:
+        errorString = QBluetoothSocket::tr("Remote host closed connection");
         break;
     default:
         errorString = QBluetoothSocket::tr("Unknown socket error");
