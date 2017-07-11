@@ -233,11 +233,10 @@ QT_USE_NAMESPACE
     dispatch_queue_t leQueue(qt_LE_queue());
     Q_ASSERT(leQueue);
 
+    const auto state = central.state;
 #if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
-    const CBManagerState state(central.state);
     if (state == CBManagerStatePoweredOn) {
 #else
-    const CBCentralManagerState state(central.state);
     if (state == CBCentralManagerStatePoweredOn) {
 #endif
         if (internalState == InquiryStarting) {

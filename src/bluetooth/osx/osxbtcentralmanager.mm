@@ -1032,12 +1032,7 @@ QT_END_NAMESPACE
 {
     using namespace OSXBluetooth;
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
-    const CBManagerState state = central.state;
-#else
-    const CBCentralManagerState state = central.state;
-#endif
-
+    const auto state = central.state;
 #if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
     if (state == CBManagerStateUnknown
         || state == CBManagerStateResetting) {
