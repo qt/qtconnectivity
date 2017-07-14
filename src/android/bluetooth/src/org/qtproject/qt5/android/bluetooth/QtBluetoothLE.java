@@ -1258,15 +1258,16 @@ public class QtBluetoothLE {
                             break;
                         case CharacteristicValue:
                             // for more details see scheduleServiceDetailDiscovery(int)
-                            // ignore and continue unless last entry
-                            GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-                            if (serviceEntry.endHandle == handle)
-                                finishCurrentServiceDiscovery(entry.associatedServiceHandle);
                             break;
                         case Service:
                             Log.w(TAG, "Scheduling of Service Gatt entry for service discovery should never happen.");
                             break;
                     }
+
+                    // last entry of current discovery run?
+                    GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+                    if (serviceEntry.endHandle == handle)
+                        finishCurrentServiceDiscovery(entry.associatedServiceHandle);
                 } else {
                     int errorCode = 0;
 
