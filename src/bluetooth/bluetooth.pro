@@ -183,11 +183,9 @@ qtConfig(bluez) {
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_p.cpp \
-        qbluetoothserver_p.cpp \
-        qlowenergycontroller_p.cpp
+        qbluetoothserver_p.cpp
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
-    SOURCES -= qlowenergycontroller_p.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
 } else:winrt {
