@@ -648,9 +648,9 @@ void QLowEnergyControllerPrivate::establishL2cpClientSocket()
 
 void QLowEnergyControllerPrivate::createServicesForCentralIfRequired()
 {
-    //only enable when requested
-    //for now we use env variable to activate the feature
-    if (Q_LIKELY(!qEnvironmentVariableIsSet("QT_DEFAULT_CENTRAL_SERVICES")))
+    bool ok = false;
+    int value = qEnvironmentVariableIntValue("QT_DEFAULT_CENTRAL_SERVICES", &ok);
+    if (Q_UNLIKELY(ok && value == 0))
         return; //nothing to do
 
     //do not add the services each time we start a connection
