@@ -333,12 +333,18 @@ void QBluetoothDeviceDiscoveryAgent::start()
 }
 
 /*!
-    Start Bluetooth device discovery, if it is not already started and the provided
+    Starts Bluetooth device discovery, if it is not already started and the provided
     \a methods are supported.
     The discovery \a methods limit the scope of the device search.
     For example, if the target service or device is a Bluetooth Low Energy device,
     this function could be used to limit the search to Bluetooth Low Energy devices and
     thereby reduces the discovery time significantly.
+
+    \note \a methods only determines the type of discovery and does not imply
+    the filtering of the results. For example, the search may still contain classic bluetooth devices
+    despite \a methods being set to \l {QBluetoothDeviceDiscoveryAgent::LowEnergyMethod}
+    {LowEnergyMethod} only. This may happen due to previously cached search results
+    which may be incorporated into the search results.
 
     \since 5.8
 */

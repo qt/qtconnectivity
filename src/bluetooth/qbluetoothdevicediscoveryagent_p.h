@@ -153,7 +153,7 @@ private:
     QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
 
     void deviceFoundBluez5(const QString& devicePath);
-    void startBluez5();
+    void startBluez5(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods);
 
     bool useExtendedDiscovery;
     QTimer extendedDiscoveryTimer;
