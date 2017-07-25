@@ -77,8 +77,6 @@ namespace ABI {
         }
     }
 }
-
-class SocketWorker;
 #endif // QT_WINRT_BLUETOOTH
 
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
@@ -91,6 +89,10 @@ class SocketWorker;
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 
 QT_BEGIN_NAMESPACE
+
+#ifdef QT_WINRT_BLUETOOTH
+class SocketWorker;
+#endif
 
 class QBluetoothServiceDiscoveryAgent;
 
