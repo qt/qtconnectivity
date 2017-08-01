@@ -302,8 +302,8 @@ int main(int argc, char **argv)
     }
 
     std::vector<uuid_t> uuids;
-    for (std::vector<std::string>::const_iterator iter = targetServices.cbegin();
-         iter != targetServices.cend(); ++iter) {
+    for (std::vector<std::string>::const_iterator iter = targetServices.begin();
+         iter != targetServices.end(); ++iter) {
 
         uint128_t temp128;
         uint16_t field1, field2, field3, field5;
