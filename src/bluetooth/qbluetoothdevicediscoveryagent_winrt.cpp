@@ -41,6 +41,10 @@
 #include "qbluetoothdevicediscoveryagent_p.h"
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
+
+#ifdef CLASSIC_APP_BUILD
+#define Q_OS_WINRT
+#endif
 #include "qfunctions_winrt.h"
 
 #include <QtCore/QLoggingCategory>

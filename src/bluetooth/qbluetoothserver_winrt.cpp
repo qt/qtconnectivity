@@ -44,6 +44,9 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qeventdispatcher_winrt_p.h>
+#ifdef CLASSIC_APP_BUILD
+#define Q_OS_WINRT
+#endif
 #include <qfunctions_winrt.h>
 
 #include <windows.networking.h>

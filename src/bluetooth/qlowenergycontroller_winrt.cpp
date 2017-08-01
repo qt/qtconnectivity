@@ -39,6 +39,9 @@
 
 #include "qlowenergycontroller_p.h"
 
+#ifdef CLASSIC_APP_BUILD
+#define Q_OS_WINRT
+#endif
 #include <QtCore/qfunctions_winrt.h>
 #include <QtCore/QLoggingCategory>
 #include <private/qeventdispatcher_winrt_p.h>

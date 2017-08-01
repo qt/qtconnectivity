@@ -77,6 +77,11 @@ SOURCES += \
     qlowenergycontroller.cpp \
     qlowenergyserviceprivate.cpp
 
+win32 {
+    WINDOWS_SDK_VERSION_STRING = $$(WindowsSDKVersion)
+    WINDOWS_SDK_VERSION = $$member($$list($$split(WINDOWS_SDK_VERSION_STRING, .)), 2)
+}
+
 qtConfig(bluez) {
     QT_PRIVATE = concurrent
     QT_FOR_PRIVATE += dbus
@@ -188,8 +193,14 @@ qtConfig(bluez) {
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
-} else:winrt {
+} else: qtConfig(winrt_bt) {
     DEFINES += QT_WINRT_BLUETOOTH
+    !winrt {
+        SOURCES += qbluetoothutils_win.cpp
+        DEFINES += CLASSIC_APP_BUILD
+        LIBS += runtimeobject.lib
+    }
+
     QT += core-private
 
     SOURCES += \
@@ -201,11 +212,9 @@ qtConfig(bluez) {
         qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
-    WINRT_SDK_VERSION_STRING = $$(UCRTVersion)
-    WINRT_SDK_VERSION = $$member($$list($$split(WINRT_SDK_VERSION_STRING, .)), 2)
-    lessThan(WINRT_SDK_VERSION, 14393) {
+    lessThan(WINDOWS_SDK_VERSION, 14393) {
         DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
-        DEFINES += QT_UCRTVERSION=$$WINRT_SDK_VERSION
+        DEFINES += QT_UCRTVERSION=$$WINDOWS_SDK_VERSION
     }
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
