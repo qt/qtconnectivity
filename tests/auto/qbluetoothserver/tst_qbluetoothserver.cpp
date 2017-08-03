@@ -217,7 +217,9 @@ void tst_QBluetoothServer::tst_receive()
 
     QVERIFY(result);
 
+#ifndef Q_OS_WINRT
     QVERIFY(QBluetoothLocalDevice::allDevices().count());
+#endif
     QCOMPARE(server.error(), QBluetoothServer::NoError);
     QCOMPARE(server.serverAddress(), address);
     QCOMPARE(server.serverPort(), quint16(20));
