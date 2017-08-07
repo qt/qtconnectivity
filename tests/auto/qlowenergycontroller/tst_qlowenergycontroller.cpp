@@ -117,9 +117,13 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MAC)
     if (remoteDevice.isNull()
+#ifndef Q_OS_WINRT
         || QBluetoothLocalDevice::allDevices().isEmpty()) {
+#else
+        ) {
+#endif
         qWarning("No remote device or local adapter found.");
         return;
     }

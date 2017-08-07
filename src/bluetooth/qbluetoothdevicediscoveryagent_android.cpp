@@ -225,6 +225,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
         return;
 
     if (m_active == SDPScanActive) {
+        if (pendingCancel)
+            return;
+
         pendingCancel = true;
         pendingStart = false;
         bool success = adapter.callMethod<jboolean>("cancelDiscovery");

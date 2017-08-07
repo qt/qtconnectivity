@@ -422,6 +422,9 @@ QString QBluetoothSocketPrivate::localName() const
 
 QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
 {
+    if (!m_socketObject)
+        return QBluetoothAddress();
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -437,6 +440,9 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
 
 quint16 QBluetoothSocketPrivate::localPort() const
 {
+    if (!m_socketObject)
+        return 0;
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -449,6 +455,9 @@ quint16 QBluetoothSocketPrivate::localPort() const
 
 QString QBluetoothSocketPrivate::peerName() const
 {
+    if (!m_socketObject)
+        return QString();
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -464,6 +473,9 @@ QString QBluetoothSocketPrivate::peerName() const
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
 {
+    if (!m_socketObject)
+        return QBluetoothAddress();
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -479,6 +491,9 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
 
 quint16 QBluetoothSocketPrivate::peerPort() const
 {
+    if (!m_socketObject)
+        return 0;
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
