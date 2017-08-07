@@ -133,6 +133,9 @@ QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(QBlue
 {
     qRegisterMetaType<QBluetoothDeviceInfo>();
 
+#ifdef CLASSIC_APP_BUILD
+    CoInitialize(NULL);
+#endif
     HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &m_deviceStatics);
     Q_ASSERT_SUCCEEDED(hr);
     hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &m_leDeviceStatics);
@@ -142,6 +145,9 @@ QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(QBlue
 QWinRTBluetoothDeviceDiscoveryWorker::~QWinRTBluetoothDeviceDiscoveryWorker()
 {
     stop();
+#ifdef CLASSIC_APP_BUILD
+    CoUninitialize();
+#endif
 }
 
 void QWinRTBluetoothDeviceDiscoveryWorker::start()
