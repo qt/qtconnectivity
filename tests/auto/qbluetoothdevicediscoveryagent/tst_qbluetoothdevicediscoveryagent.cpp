@@ -33,6 +33,7 @@
 #include <QList>
 #include <QLoggingCategory>
 
+#include <private/qtbluetoothglobal_p.h>
 #include <qbluetoothaddress.h>
 #include <qbluetoothdevicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
@@ -471,7 +472,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
                 }
             }
         }
-#if defined(Q_OS_IOS) || defined(Q_OS_WINRT)
+#if defined(Q_OS_IOS) || defined(Q_OS_TVOS) || QT_CONFIG(winrt_bt)
         //On iOS/WinRT, we do not have access to the local device/adapter, numberOfAdapters is 0,
         //so we skip this test at all.
         QSKIP("iOS/WinRT: no local Bluetooth device available. Skipping remaining part of test.");
@@ -489,7 +490,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
     QBluetoothDeviceDiscoveryAgent agent;
 
     // check default values
-#if defined(Q_OS_OSX) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_WINRT)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || QT_CONFIG(winrt_bt)
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
     agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);

@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <QVariant>
 
+#include <private/qtbluetoothglobal_p.h>
 #include <qbluetoothaddress.h>
 #include <qbluetoothlocaldevice.h>
 
@@ -236,7 +237,7 @@ void tst_QBluetoothLocalDevice::tst_name()
 }
 void tst_QBluetoothLocalDevice::tst_isValid()
 {
-#ifdef Q_OS_OSX
+#if defined(Q_OS_MACOS) || QT_CONFIG(winrt_bt)
     // On OS X we can have a valid device (device.isValid() == true),
     // that has neither a name nor a valid address - this happens
     // if a Bluetooth adapter is OFF.
@@ -270,7 +271,7 @@ void tst_QBluetoothLocalDevice::tst_isValid()
     QVERIFY(!invalidLocalDevice.isValid());
     QCOMPARE(invalidLocalDevice.address(), QBluetoothAddress());
     QCOMPARE(invalidLocalDevice.name(), QString());
-#ifndef Q_OS_WINRT
+#if !QT_CONFIG(winrt_bt)
     QCOMPARE(invalidLocalDevice.pairingStatus(QBluetoothAddress()), QBluetoothLocalDevice::Unpaired );
     QCOMPARE(invalidLocalDevice.hostMode(), QBluetoothLocalDevice::HostPoweredOff);
 #else
@@ -393,7 +394,7 @@ void tst_QBluetoothLocalDevice::tst_pairingStatus_data()
     QTest::addColumn<QBluetoothAddress>("deviceAddress");
     QTest::addColumn<QBluetoothLocalDevice::Pairing>("pairingExpected");
 
-#ifndef Q_OS_WINRT
+#if !QT_CONFIG(winrt_bt)
     QTest::newRow("UnPaired Device: DUMMY") << QBluetoothAddress("11:00:00:00:00:00")
             << QBluetoothLocalDevice::Unpaired;
     QTest::newRow("Invalid device") << QBluetoothAddress() << QBluetoothLocalDevice::Unpaired;
@@ -410,6 +411,9 @@ void tst_QBluetoothLocalDevice::tst_pairingStatus()
 {
     QFETCH(QBluetoothAddress, deviceAddress);
     QFETCH(QBluetoothLocalDevice::Pairing, pairingExpected);
+
+    if (!QBluetoothLocalDevice::allDevices().count())
+        QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
     QCOMPARE(pairingExpected, localDevice.pairingStatus(deviceAddress));
