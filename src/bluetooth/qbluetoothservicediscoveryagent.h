@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHSERVICEDISCOVERYAGENT_H
 #define QBLUETOOTHSERVICEDISCOVERYAGENT_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QObject>
 

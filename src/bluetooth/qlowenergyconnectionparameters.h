@@ -40,7 +40,7 @@
 #ifndef QLOWENERGYCONNECTIONPARAMETERS_H
 #define QLOWENERGYCONNECTIONPARAMETERS_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 #include <QtCore/qmetatype.h>
 #include <QtCore/qshareddata.h>
 

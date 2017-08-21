@@ -43,7 +43,6 @@
 
 #include "ui_device.h"
 
-#include <qbluetoothglobal.h>
 #include <qbluetoothlocaldevice.h>
 
 #include <QDialog>

@@ -6,7 +6,7 @@ QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
 PUBLIC_HEADERS += \
-    qbluetoothglobal.h \
+    qtbluetoothglobal.h \
     qbluetoothaddress.h\
     qbluetoothhostinfo.h \
     qbluetoothuuid.h\

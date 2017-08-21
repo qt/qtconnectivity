@@ -60,7 +60,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothdevicediscoveryagent.h>
 
-#include <qbluetoothglobal.h>
+#include <qtbluetoothglobal.h>
 
 #include "qdeclarativebluetoothservice_p.h"
 

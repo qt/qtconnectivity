@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHSOCKET_H
 #define QBLUETOOTHSOCKET_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qbluetoothaddress.h>

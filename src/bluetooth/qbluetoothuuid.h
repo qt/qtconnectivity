@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHUUID_H
 #define QBLUETOOTHUUID_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QMetaType>
