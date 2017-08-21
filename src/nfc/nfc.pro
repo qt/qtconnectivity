@@ -19,6 +19,7 @@ PUBLIC_HEADERS += \
     qnearfieldsharetarget.h
 
 PRIVATE_HEADERS += \
+    qtnfcglobal_p.h \
     qllcpsocket_p.h \
     qllcpserver_p.h \
     qndefrecord_p.h \
