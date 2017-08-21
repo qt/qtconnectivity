@@ -42,8 +42,6 @@
 #ifndef MIMEIMAGERECORDEDITOR_H
 #define MIMEIMAGERECORDEDITOR_H
 
-#include <qnfcglobal.h>
-
 #include <QWidget>
 
 #include <qndefrecord.h>

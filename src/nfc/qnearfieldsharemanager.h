@@ -41,7 +41,7 @@
 #define QNEARFIELDSHAREMANAGER_H
 
 #include <QtCore/QObject>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 
 QT_BEGIN_NAMESPACE
 

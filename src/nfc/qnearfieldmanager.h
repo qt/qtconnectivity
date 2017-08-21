@@ -41,7 +41,7 @@
 #define QNEARFIELDMANAGER_H
 
 #include <QtCore/QObject>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 #include <QtNfc/QNearFieldTarget>
 #include <QtNfc/QNdefRecord>
 #include <QtNfc/QNdefFilter>

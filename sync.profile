@@ -7,6 +7,9 @@
 %deprecatedheaders = (
     "QtBluetooth" => {
         "qbluetoothglobal.h" => "QtBluetooth/qtbluetoothglobal.h"
+    },
+    "QtNfc" => {
+        "qnfcglobal.h" => "QtNfc/qtnfcglobal.h"
     }
 );
 

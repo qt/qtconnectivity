@@ -5,7 +5,7 @@ QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
 PUBLIC_HEADERS += \
-    qnfcglobal.h \
+    qtnfcglobal.h \
     qnearfieldmanager.h \
     qnearfieldtarget.h \
     qndefrecord.h \
