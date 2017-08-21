@@ -33,6 +33,7 @@ PUBLIC_HEADERS += \
     qlowenergycontroller.h
 
 PRIVATE_HEADERS += \
+    qtbluetoothglobal_p.h \
     qbluetoothaddress_p.h\
     qbluetoothhostinfo_p.h \
     qbluetoothdeviceinfo_p.h\
