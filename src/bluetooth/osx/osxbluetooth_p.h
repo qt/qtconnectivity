@@ -54,23 +54,10 @@
 
 #include <QtCore/qglobal.h>
 
-#ifndef QT_OSX_BLUETOOTH
-
 #include <CoreBluetooth/CoreBluetooth.h>
 
-#else
-
-#if QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12)
-
-#include <CoreBluetooth/CoreBluetooth.h>
+#ifdef Q_OS_MACOS
 #include <IOBluetooth/IOBluetooth.h>
+#endif
 
-#else
-
-// In SDK below 10.12 IOBluetooth.h includes CoreBluetooth.h.
-#include <IOBluetooth/IOBluetooth.h>
-
-#endif // SDK
-
-#endif // QT_OSX_BLUETOOTH
 #endif // OSXBLUETOOTH_P_H
