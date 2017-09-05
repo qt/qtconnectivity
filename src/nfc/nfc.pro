@@ -86,8 +86,6 @@ linux:!android:qtHaveModule(dbus) {
     ANDROID_PERMISSIONS = \
         android.permission.NFC
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
-        jar/QtNfc-bundled.jar:org.qtproject.qt5.android.nfc.QtNfc
-    ANDROID_JAR_DEPENDENCIES = \
         jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
     DEFINES += ANDROID_NFC
     QT_PRIVATE += core-private gui androidextras
