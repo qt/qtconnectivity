@@ -88,8 +88,8 @@ public:
 
 private:
     // SDPInquiryDelegate:
-    void SDPInquiryFinished(IOBluetoothDevice *device) Q_DECL_OVERRIDE;
-    void SDPInquiryError(IOBluetoothDevice *device, IOReturn errorCode) Q_DECL_OVERRIDE;
+    void SDPInquiryFinished(IOBluetoothDevice *device) override;
+    void SDPInquiryError(IOBluetoothDevice *device, IOReturn errorCode) override;
 
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
     void setupDeviceDiscoveryAgent();

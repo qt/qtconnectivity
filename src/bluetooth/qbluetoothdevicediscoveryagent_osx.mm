@@ -90,7 +90,7 @@ public:
     QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress & address,
                                           QBluetoothDeviceDiscoveryAgent *q);
 
-    ~QBluetoothDeviceDiscoveryAgentPrivate() Q_DECL_OVERRIDE;
+    ~QBluetoothDeviceDiscoveryAgentPrivate() override;
 
     bool isValid() const;
     bool isActive() const;
@@ -108,9 +108,9 @@ private:
     };
 
     // DeviceInquiryDelegate:
-    void inquiryFinished(IOBluetoothDeviceInquiry *inq) Q_DECL_OVERRIDE;
-    void error(IOBluetoothDeviceInquiry *inq, IOReturn error) Q_DECL_OVERRIDE;
-    void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) Q_DECL_OVERRIDE;
+    void inquiryFinished(IOBluetoothDeviceInquiry *inq) override;
+    void error(IOBluetoothDeviceInquiry *inq, IOReturn error) override;
+    void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) override;
 
     void LEinquiryFinished();
     void LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error);

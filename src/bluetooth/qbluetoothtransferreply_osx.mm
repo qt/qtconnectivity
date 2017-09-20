@@ -75,14 +75,14 @@ public:
 
 private:
     // OBEX session delegate:
-    void OBEXConnectError(OBEXError errorCode, OBEXOpCode response) Q_DECL_OVERRIDE;
-    void OBEXConnectSuccess() Q_DECL_OVERRIDE;
+    void OBEXConnectError(OBEXError errorCode, OBEXOpCode response) override;
+    void OBEXConnectSuccess() override;
 
-    void OBEXAbortSuccess() Q_DECL_OVERRIDE;
+    void OBEXAbortSuccess() override;
 
-    void OBEXPutDataSent(quint32 current, quint32 total) Q_DECL_OVERRIDE;
-    void OBEXPutSuccess() Q_DECL_OVERRIDE;
-    void OBEXPutError(OBEXError error, OBEXOpCode response) Q_DECL_OVERRIDE;
+    void OBEXPutDataSent(quint32 current, quint32 total) override;
+    void OBEXPutSuccess() override;
+    void OBEXPutError(OBEXError error, OBEXOpCode response) override;
 
     QBluetoothTransferReplyOSX *q_ptr;
 
