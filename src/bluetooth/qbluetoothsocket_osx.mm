@@ -60,7 +60,7 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-  : q_ptr(Q_NULLPTR),
+  : q_ptr(nullptr),
     writeChunk(std::numeric_limits<UInt16>::max()),
     openMode(QIODevice::NotOpen), // That's what is set in public class' ctors.
     state(QBluetoothSocket::UnconnectedState),

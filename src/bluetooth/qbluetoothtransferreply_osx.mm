@@ -394,7 +394,7 @@ bool QBluetoothTransferReplyOSX::abort()
     // Reset a delegate.
     [osx_d_ptr->session closeSession];
     // Should never be called from an OBEX callback!
-    osx_d_ptr->session.reset(Q_NULLPTR);
+    osx_d_ptr->session.reset(nullptr);
 
     // Not setReplyError, we emit finished only!
     osx_d_ptr->requestComplete = true;

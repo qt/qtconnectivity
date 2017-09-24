@@ -850,7 +850,7 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
 {
     Q_D(QLowEnergyController);
 
-    QLowEnergyService *service = Q_NULLPTR;
+    QLowEnergyService *service = nullptr;
 
     ServiceDataMap::const_iterator it = d->serviceList.constFind(serviceUuid);
     if (it != d->serviceList.constEnd()) {

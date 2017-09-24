@@ -383,8 +383,8 @@ public:
 
     int minimumSize() const;
 
-    quint16 toUInt16(bool *ok = Q_NULLPTR) const;
-    quint32 toUInt32(bool *ok = Q_NULLPTR) const;
+    quint16 toUInt16(bool *ok = nullptr) const;
+    quint32 toUInt32(bool *ok = nullptr) const;
     quint128 toUInt128() const;
 
     static QString serviceClassToString(ServiceClassUuid uuid);

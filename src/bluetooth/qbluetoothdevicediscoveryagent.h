@@ -85,9 +85,9 @@ public:
     Q_DECLARE_FLAGS(DiscoveryMethods, DiscoveryMethod)
     Q_FLAG(DiscoveryMethods)
 
-    explicit QBluetoothDeviceDiscoveryAgent(QObject *parent = Q_NULLPTR);
+    explicit QBluetoothDeviceDiscoveryAgent(QObject *parent = nullptr);
     explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter,
-                                            QObject *parent = Q_NULLPTR);
+                                            QObject *parent = nullptr);
     ~QBluetoothDeviceDiscoveryAgent();
 
     // TODO Remove inquiry type in Qt 6 -> not really used anywhere
