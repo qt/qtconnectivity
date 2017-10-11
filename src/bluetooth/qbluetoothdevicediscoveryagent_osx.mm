@@ -245,6 +245,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startClassic()
     Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod);
     Q_ASSERT(agentState == NonActive);
 
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     if (!inquiry) {
         // The first Classic scan for this DDA.
         inquiry.reset([[DeviceInquiryObjC alloc]initWithDelegate:this]);
