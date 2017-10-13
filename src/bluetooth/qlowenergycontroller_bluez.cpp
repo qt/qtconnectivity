@@ -527,8 +527,10 @@ void QLowEnergyControllerPrivate::connectToDevice()
     }
 
     setState(QLowEnergyController::ConnectingState);
-    if (l2cpSocket)
+    if (l2cpSocket) {
         delete l2cpSocket;
+        l2cpSocket = nullptr;
+    }
 
     createServicesForCentralIfRequired();
 
@@ -581,6 +583,7 @@ void QLowEnergyControllerPrivate::activeConnectionTerminationDone()
         qCWarning(QT_BT_BLUEZ) << "Cannot close pending external BTLE connections. Aborting connect attempt";
         setError(QLowEnergyController::ConnectionError);
         setState(QLowEnergyController::UnconnectedState);
+        l2cpDisconnected();
         return;
     } else {
         establishL2cpClientSocket();
@@ -726,8 +729,16 @@ void QLowEnergyControllerPrivate::l2cpConnected()
 void QLowEnergyControllerPrivate::disconnectFromDevice()
 {
     setState(QLowEnergyController::ClosingState);
-    l2cpSocket->close();
+    if (l2cpSocket)
+        l2cpSocket->close();
     resetController();
+
+    // this may happen when RemoteDeviceManager::JobType::JobDisconnectDevice
+    // is pending.
+    if (!l2cpSocket) {
+        qWarning(QT_BT_BLUEZ) << "Unexpected closure of device. Cleaning up internal states.";
+        l2cpDisconnected();
+    }
 }
 
 void QLowEnergyControllerPrivate::l2cpDisconnected()
