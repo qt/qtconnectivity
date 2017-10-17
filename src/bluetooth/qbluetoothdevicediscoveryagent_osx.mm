@@ -90,7 +90,7 @@ public:
     QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress & address,
                                           QBluetoothDeviceDiscoveryAgent *q);
 
-    ~QBluetoothDeviceDiscoveryAgentPrivate() Q_DECL_OVERRIDE;
+    ~QBluetoothDeviceDiscoveryAgentPrivate() override;
 
     bool isValid() const;
     bool isActive() const;
@@ -108,9 +108,9 @@ private:
     };
 
     // DeviceInquiryDelegate:
-    void inquiryFinished(IOBluetoothDeviceInquiry *inq) Q_DECL_OVERRIDE;
-    void error(IOBluetoothDeviceInquiry *inq, IOReturn error) Q_DECL_OVERRIDE;
-    void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) Q_DECL_OVERRIDE;
+    void inquiryFinished(IOBluetoothDeviceInquiry *inq) override;
+    void error(IOBluetoothDeviceInquiry *inq, IOReturn error) override;
+    void deviceFound(IOBluetoothDeviceInquiry *inq, IOBluetoothDevice *device) override;
 
     void LEinquiryFinished();
     void LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error);
@@ -168,7 +168,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
 {
     registerQDeviceDiscoveryMetaType();
 
-    Q_ASSERT_X(q != Q_NULLPTR, Q_FUNC_INFO, "invalid q_ptr (null)");
+    Q_ASSERT_X(q != nullptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     HostController controller([[IOBluetoothHostController defaultController] retain]);
     if (!controller || [controller powerState] != kBluetoothHCIPowerStateON) {
@@ -244,6 +244,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startClassic()
     Q_ASSERT(lastError == QBluetoothDeviceDiscoveryAgent::NoError);
     Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod);
     Q_ASSERT(agentState == NonActive);
+
+    OSXBluetooth::qt_test_iobluetooth_runloop();
 
     if (!inquiry) {
         // The first Classic scan for this DDA.
@@ -525,7 +527,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QBluetoothDeviceIn
     for (int i = 0, e = discoveredDevices.size(); i < e; ++i) {
         if (isLE ? discoveredDevices[i].deviceUuid() == newDeviceInfo.deviceUuid():
                    discoveredDevices[i].address() == newDeviceInfo.address()) {
-            if (discoveredDevices[i] == newDeviceInfo)
+            if (discoveredDevices[i] == newDeviceInfo && (!isLE || lowEnergySearchTimeout > 0))
                 return;
 
             discoveredDevices.replace(i, newDeviceInfo);

@@ -41,7 +41,7 @@
 #define QNEARFIELDMANAGER_H
 
 #include <QtCore/QObject>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 #include <QtNfc/QNearFieldTarget>
 #include <QtNfc/QNdefRecord>
 #include <QtNfc/QNdefFilter>
@@ -65,8 +65,8 @@ public:
     Q_ENUM(TargetAccessMode)
     Q_DECLARE_FLAGS(TargetAccessModes, TargetAccessMode)
 
-    explicit QNearFieldManager(QObject *parent = Q_NULLPTR);
-    explicit QNearFieldManager(QNearFieldManagerPrivate *backend, QObject *parent = Q_NULLPTR);
+    explicit QNearFieldManager(QObject *parent = nullptr);
+    explicit QNearFieldManager(QNearFieldManagerPrivate *backend, QObject *parent = nullptr);
     ~QNearFieldManager();
 
     bool isAvailable() const;

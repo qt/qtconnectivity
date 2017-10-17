@@ -43,8 +43,6 @@
 
 #include <QMainWindow>
 
-#include <qnfcglobal.h>
-
 #include <qnearfieldtarget.h>
 
 QT_BEGIN_NAMESPACE

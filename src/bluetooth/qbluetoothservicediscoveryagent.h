@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHSERVICEDISCOVERYAGENT_H
 #define QBLUETOOTHSERVICEDISCOVERYAGENT_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QObject>
 
@@ -80,8 +80,8 @@ public:
     };
     Q_ENUM(DiscoveryMode)
 
-    explicit QBluetoothServiceDiscoveryAgent(QObject *parent = Q_NULLPTR);
-    explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = Q_NULLPTR);
+    explicit QBluetoothServiceDiscoveryAgent(QObject *parent = nullptr);
+    explicit QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent = nullptr);
     ~QBluetoothServiceDiscoveryAgent();
 
     bool isActive() const;

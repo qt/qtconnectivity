@@ -39,6 +39,9 @@
 
 #include "qlowenergycontroller_p.h"
 
+#ifdef CLASSIC_APP_BUILD
+#define Q_OS_WINRT
+#endif
 #include <QtCore/qfunctions_winrt.h>
 #include <QtCore/QLoggingCategory>
 #include <private/qeventdispatcher_winrt_p.h>
@@ -338,6 +341,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
                 emit q->connected();
             } else if (state == QLowEnergyController::ConnectedState
                        && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
+                setError(QLowEnergyController::RemoteHostClosedError);
                 setState(QLowEnergyController::UnconnectedState);
                 emit q->disconnected();
             }
@@ -419,6 +423,10 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
+    if (mDevice && mStatusChangedToken.value) {
+        mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
+        mStatusChangedToken.value = 0;
+    }
 }
 
 ComPtr<IGattDeviceService> QLowEnergyControllerPrivate::getNativeService(const QBluetoothUuid &serviceUuid)

@@ -68,6 +68,7 @@ public:
     explicit InputStreamThread(QBluetoothSocketPrivate *socket_p);
 
     qint64 bytesAvailable() const;
+    bool canReadLine() const;
     bool run();
 
     qint64 readData(char *data, qint64 maxSize);

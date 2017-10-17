@@ -85,8 +85,6 @@ QT_END_NAMESPACE
 #elif defined(QT_WINRT_BLUETOOTH)
 #include <wrl.h>
 #include <windows.devices.bluetooth.h>
-
-class QWinRTLowEnergyServiceHandler;
 #endif
 
 #include <functional>
@@ -100,8 +98,11 @@ class QTimer;
 class HciManager;
 class LeCmacCalculator;
 class QSocketNotifier;
+class RemoteDeviceManager;
 #elif defined(QT_ANDROID_BLUETOOTH)
 class LowEnergyNotificationHub;
+#elif defined(QT_WINRT_BLUETOOTH)
+class QWinRTLowEnergyServiceHandler;
 #endif
 
 extern void registerQLowEnergyControllerMetaType();
@@ -146,6 +147,8 @@ public:
             QLowEnergyHandle handle);
     QLowEnergyDescriptor descriptorForHandle(
             QLowEnergyHandle handle);
+    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service);
+
 
     quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                      const QByteArray &value,
@@ -279,6 +282,7 @@ private:
     QLeAdvertiser *advertiser;
     QSocketNotifier *serverSocketNotifier;
     QTimer *requestTimer = nullptr;
+    RemoteDeviceManager* device1Manager = nullptr;
 
     /*
       Defines the maximum number of milliseconds the implementation will
@@ -413,6 +417,8 @@ private:
             const QByteArray &newValue);
 
     void restartRequestTimer();
+    void establishL2cpClientSocket();
+    void createServicesForCentralIfRequired();
 
 private slots:
     void l2cpConnected();
@@ -421,6 +427,7 @@ private slots:
     void l2cpReadyRead();
     void encryptionChangedEvent(const QBluetoothAddress&, bool);
     void handleGattRequestTimeout();
+    void activeConnectionTerminationDone();
 #elif defined(QT_ANDROID_BLUETOOTH)
     LowEnergyNotificationHub *hub;
 
@@ -489,11 +496,6 @@ private:
 Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivate::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
-
-#ifdef QT_WINRT_BLUETOOTH
-Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
-Q_DECLARE_METATYPE(QLowEnergyDescriptor)
-#endif // QT_WINRT_BLUETOOTH
 
 #endif // QT_OSX_BLUETOOTH || QT_IOS_BLUETOOTH
 

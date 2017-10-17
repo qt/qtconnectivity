@@ -57,8 +57,10 @@
 
 typedef QMap<QString, QVariantMap> InterfaceList;
 typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
+typedef QMap<quint16, QDBusVariant> ManufacturerDataList;
 
 Q_DECLARE_METATYPE(InterfaceList)
+Q_DECLARE_METATYPE(ManufacturerDataList)
 Q_DECLARE_METATYPE(ManagedObjectList)
 
 QT_BEGIN_NAMESPACE

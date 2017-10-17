@@ -210,7 +210,7 @@ QT_USE_NAMESPACE
 - (BluetoothDeviceAddress)peerAddress
 {
     const BluetoothDeviceAddress *const addr = device ? [device getAddress]
-                                                      : Q_NULLPTR;
+                                                      : nullptr;
     if (addr)
         return *addr;
 
@@ -245,7 +245,7 @@ QT_USE_NAMESPACE
     Q_ASSERT_X(length, Q_FUNC_INFO, "invalid data size");
     Q_ASSERT_X(connected && channel, Q_FUNC_INFO, "invalid L2CAP channel");
 
-    return [channel writeAsync:data length:length refcon:Q_NULLPTR];
+    return [channel writeAsync:data length:length refcon:nullptr];
 }
 
 

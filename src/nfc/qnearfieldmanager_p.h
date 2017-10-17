@@ -55,7 +55,7 @@
 #include "qnearfieldtarget.h"
 #include "qndefrecord.h"
 
-#include "qnfcglobal.h"
+#include "qtnfcglobal.h"
 
 #include <QtCore/QObject>
 

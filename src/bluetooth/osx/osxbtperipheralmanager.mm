@@ -391,7 +391,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     if (peripheral != manager || !notifier)
         return;
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (peripheral.state == CBManagerStatePoweredOn) {
 #else
     if (peripheral.state == CBPeripheralManagerStatePoweredOn) {
@@ -426,7 +426,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
      explicitly added again."
     */
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (peripheral.state == CBManagerStateUnauthorized ||
         peripheral.state == CBManagerStateUnsupported) {
 #else

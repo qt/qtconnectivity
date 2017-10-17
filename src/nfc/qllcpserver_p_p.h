@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include "qnfcglobal.h"
+#include "qtnfcglobal.h"
 
 #include "qllcpserver_p.h"
 

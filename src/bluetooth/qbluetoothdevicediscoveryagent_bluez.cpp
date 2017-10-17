@@ -51,6 +51,7 @@
 #include "bluez/adapter1_bluez5_p.h"
 #include "bluez/device1_bluez5_p.h"
 #include "bluez/properties_p.h"
+#include "bluez/bluetoothmanagement_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -82,6 +83,8 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                          SIGNAL(InterfacesAdded(QDBusObjectPath,InterfaceList)),
                          q, SLOT(_q_InterfacesAdded(QDBusObjectPath,InterfaceList)));
 
+        // start private address monitoring
+        BluetoothManagement::instance();
     } else {
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus(), parent);
@@ -122,7 +125,7 @@ QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent:
     return (ClassicMethod | LowEnergyMethod);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods /*methods*/)
+void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
     // Currently both BlueZ backends do not distinguish discovery methods.
     // The DBus API's always return both device types. Therefore we ignore
@@ -136,7 +139,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     discoveredDevices.clear();
 
     if (managerBluez5) {
-        startBluez5();
+        startBluez5(methods);
         return;
     }
 
@@ -225,10 +228,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
+void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
-
 
     bool ok = false;
     const QString adapterPath = findAdapterForAddress(m_adapterAddress, &ok);
@@ -254,6 +256,33 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5()
         return;
     }
 
+    QVariantMap map;
+    if (methods == (QBluetoothDeviceDiscoveryAgent::LowEnergyMethod|QBluetoothDeviceDiscoveryAgent::ClassicMethod))
+        map.insert(QStringLiteral("Transport"), QStringLiteral("auto"));
+    else if (methods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
+        map.insert(QStringLiteral("Transport"), QStringLiteral("le"));
+    else
+        map.insert(QStringLiteral("Transport"), QStringLiteral("bredr"));
+
+    // older BlueZ 5.x versions don't have this function
+    // filterReply returns UnknownMethod which we ignore
+    QDBusPendingReply<> filterReply = adapterBluez5->SetDiscoveryFilter(map);
+    filterReply.waitForFinished();
+    if (filterReply.isError()) {
+        if (filterReply.error().type() == QDBusError::Other
+                    && filterReply.error().name() == QStringLiteral("org.bluez.Error.Failed")) {
+            qCDebug(QT_BT_BLUEZ) << "Discovery method" << methods << "not supported";
+            lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
+                                                             "are not supported on this platform");
+            delete adapterBluez5;
+            adapterBluez5 = 0;
+            emit q->error(lastError);
+            return;
+        } else if (filterReply.error().type() != QDBusError::UnknownMethod) {
+            qCDebug(QT_BT_BLUEZ) << "SetDiscoveryFilter failed:" << filterReply.error();
+        }
+    }
 
     QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapterBluez5->path());
     QObject::connect(QtBluezDiscoveryManager::instance(), SIGNAL(discoveryInterrupted(QString)),
@@ -400,21 +429,37 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
 
     // read information
     QBluetoothDeviceInfo deviceInfo(btAddress, btName, btClass);
-
-    if (!btClass)
-        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    else
-        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
-
     deviceInfo.setRssi(device.rSSI());
+
     QList<QBluetoothUuid> uuids;
-    foreach (const QString &u, device.uUIDs())
-        uuids.append(QBluetoothUuid(u));
+    bool foundLikelyLowEnergyUuid = false;
+    for (const auto &u: device.uUIDs()) {
+        const QBluetoothUuid id(u);
+        if (id.isNull())
+            continue;
+
+        if (!foundLikelyLowEnergyUuid) {
+            //once we found one BTLE service we are done
+            bool ok = false;
+            quint16 shortId = id.toUInt16(&ok);
+            if (ok && ((shortId & QBluetoothUuid::GenericAccess) == QBluetoothUuid::GenericAccess))
+                foundLikelyLowEnergyUuid = true;
+        }
+        uuids.append(id);
+    }
     deviceInfo.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+
+    if (!btClass) {
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    } else {
+        deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        if (foundLikelyLowEnergyUuid)
+            deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
+    }
 
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {
-            if (discoveredDevices[i] == deviceInfo) {
+            if (discoveredDevices[i] == deviceInfo && lowEnergySearchTimeout > 0) {
                 qCDebug(QT_BT_BLUEZ) << "Duplicate: " << btAddress.toString();
                 return;
             }

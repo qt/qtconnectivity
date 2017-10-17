@@ -69,6 +69,7 @@ bool isBluez5()
 
         qDBusRegisterMetaType<InterfaceList>();
         qDBusRegisterMetaType<ManagedObjectList>();
+        qDBusRegisterMetaType<ManufacturerDataList>();
 
         QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
         reply.waitForFinished();

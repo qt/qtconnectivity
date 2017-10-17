@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtNfc module of the Qt Toolkit.
+** This file is part of the QtWidgets module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,23 +37,23 @@
 **
 ****************************************************************************/
 
-#ifndef QTNFC_H
-#define QTNFC_H
+#ifndef QTNFCGLOBAL_P_H
+#define QTNFCGLOBAL_P_H
 
-#include <QtCore/qglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-QT_BEGIN_NAMESPACE
+#include <QtCore/private/qglobal_p.h>
 
-#ifndef QT_STATIC
-#    if defined(QT_BUILD_NFC_LIB)
-#      define Q_NFC_EXPORT Q_DECL_EXPORT
-#    else
-#      define Q_NFC_EXPORT Q_DECL_IMPORT
-#    endif
-#else
-#    define Q_NFC_EXPORT
-#endif
+#include <QtNfc/qtnfcglobal.h>
+#include <QtNfc/private/qtnfc-config_p.h>
 
-QT_END_NAMESPACE
-
-#endif // QTNFC_H
+#endif // QTNFCGLOBAL_P_H

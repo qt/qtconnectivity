@@ -30,6 +30,7 @@
 
 #include <QDebug>
 
+#include <private/qtbluetoothglobal_p.h>
 #include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
 #include <qbluetoothlocaldevice.h>
@@ -217,7 +218,9 @@ void tst_QBluetoothServer::tst_receive()
 
     QVERIFY(result);
 
+#if !QT_CONFIG(winrt_bt)
     QVERIFY(QBluetoothLocalDevice::allDevices().count());
+#endif
     QCOMPARE(server.error(), QBluetoothServer::NoError);
     QCOMPARE(server.serverAddress(), address);
     QCOMPARE(server.serverPort(), quint16(20));

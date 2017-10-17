@@ -41,7 +41,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <QtCore/QLoggingCategory>
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 #include "android/jni_android_p.h"
 #include "android/androidbroadcastreceiver_p.h"
 #include "android/serveracceptancethread_p.h"

@@ -82,7 +82,7 @@ public:
     // add a default ctor??? This will make the semantics more
     // transparent + will simplify the future transition to ARC
     // (if it will ever happen).
-    explicit ObjCScopedPointer(T *ptr = Q_NULLPTR) : QScopedPointer(ptr){}
+    explicit ObjCScopedPointer(T *ptr = nullptr) : QScopedPointer(ptr){}
     operator T*() const
     {
         return data();
@@ -196,7 +196,7 @@ template<class T>
 class CFStrongReference {
 public:
     CFStrongReference()
-        : m_ptr(Q_NULLPTR)
+        : m_ptr(nullptr)
     {
     }
 
@@ -230,13 +230,13 @@ public:
     CFStrongReference(CFStrongReference &&xval)
     {
         m_ptr = xval.m_ptr;
-        xval.m_ptr = Q_NULLPTR;
+        xval.m_ptr = nullptr;
     }
 
     CFStrongReference &operator = (CFStrongReference &&xval)
     {
         m_ptr = xval.m_ptr;
-        xval.m_ptr = Q_NULLPTR;
+        xval.m_ptr = nullptr;
         return *this;
     }
 #endif
@@ -270,7 +270,7 @@ public:
     T take()
     {
         T p = m_ptr;
-        m_ptr = Q_NULLPTR;
+        m_ptr = nullptr;
         return p;
     }
 private:
@@ -287,8 +287,9 @@ BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);
 QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid);
 QString qt_error_string(IOReturn errorCode);
+void qt_test_iobluetooth_runloop();
 
-#endif
+#endif // !QT_IOS_BLUETOOTH
 
 QBluetoothUuid qt_uuid(CBUUID *uuid);
 CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid);
@@ -312,5 +313,24 @@ extern const int maxValueLength;
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_OSX)
 
 QT_END_NAMESPACE
+
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(101300) && QT_MACOS_DEPLOYMENT_TARGET_BELOW(101300)
+
+ // In the macOS 10.13 SDK, the identifier property was moved from the CBPeripheral
+ // and CBCentral classes to a new CBPeer base class. Because CBPeer is only available
+ // on macOS 10.13 and above, the same is true for -[CBPeer identifier]. However,
+ // since we know that the derived classes have always had this property,
+ // we'll explicitly mark its availability here. This will not adversely affect
+ // using the identifier through the CBPeer base class, which will still require macOS 10.13.
+
+@interface CBPeripheral (UnguardedWorkaround)
+@property (readonly, nonatomic) NSUUID *identifier NS_AVAILABLE(10_7, 5_0);
+@end
+
+@interface CBCentral (UnguardedWorkaround)
+@property (readonly, nonatomic) NSUUID *identifier NS_AVAILABLE(10_7, 5_0);
+@end
+
+#endif
 
 #endif

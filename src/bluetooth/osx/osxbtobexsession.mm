@@ -489,11 +489,11 @@ QT_USE_NAMESPACE
 
     const OBEXError status = [session OBEXConnect:kOBEXConnectFlagNone
                                       maxPacketLength:[QT_MANGLE_NAMESPACE(OSXBTOBEXSession) maxPacketLength]
-                                      optionalHeaders:Q_NULLPTR
+                                      optionalHeaders:nullptr
                                       optionalHeadersLength:0
                                       eventSelector:@selector(OBEXConnectHandler:)
                                       selectorTarget:self
-                                      refCon:Q_NULLPTR];
+                                      refCon:nullptr];
 
     if (status != kOBEXSuccess) {
         currentRequest = OSXBluetooth::OBEXNoop;
@@ -572,11 +572,11 @@ QT_USE_NAMESPACE
             return kOBEXSessionNotConnectedError;
 
         currentRequest = OBEXAbort;
-        const OBEXError status = [session OBEXAbort:Q_NULLPTR
+        const OBEXError status = [session OBEXAbort:nullptr
                                           optionalHeadersLength:0
                                           eventSelector:@selector(OBEXAbortHandler:)
                                           selectorTarget:self
-                                          refCon:Q_NULLPTR];
+                                          refCon:nullptr];
         if (status != kOBEXSuccess)
             currentRequest = OBEXNoop;
 
@@ -677,7 +677,7 @@ QT_USE_NAMESPACE
                                       bodyDataLength:[chunk length]
                                       eventSelector:@selector(OBEXPutHandler:)
                                       selectorTarget:self
-                                      refCon:Q_NULLPTR];
+                                      refCon:nullptr];
 
     if (status == kOBEXSuccess) {
         if (delegate && fileSize && !input->isSequential())
@@ -737,16 +737,16 @@ QT_USE_NAMESPACE
             return;
         }
 
-        void *dataPtr = chunk ? [chunk mutableBytes] : Q_NULLPTR;
+        void *dataPtr = chunk ? [chunk mutableBytes] : nullptr;
         const NSUInteger dataSize = chunk ? [chunk length] : 0;
         const OBEXError status = [session OBEXPut:lastChunk
-                                          headersData:Q_NULLPTR
+                                          headersData:nullptr
                                           headersDataLength:0
                                           bodyData:dataPtr
                                           bodyDataLength:dataSize
                                           eventSelector:@selector(OBEXPutHandler:)
                                           selectorTarget:self
-                                          refCon:Q_NULLPTR];
+                                          refCon:nullptr];
 
         if (status != kOBEXSuccess) {
             qCWarning(QT_BT_OSX) << "failed to send the next memory chunk";
@@ -778,11 +778,11 @@ QT_USE_NAMESPACE
 
     currentRequest = OSXBluetooth::OBEXDisconnect;
 
-    [session OBEXDisconnect:Q_NULLPTR
+    [session OBEXDisconnect:nullptr
              optionalHeadersLength:0
              eventSelector:@selector(OBEXDisconnectHandler:)
              selectorTarget:self
-             refCon:Q_NULLPTR];
+             refCon:nullptr];
 }
 
 - (void)OBEXDisconnectHandler:(const OBEXSessionEvent*)event
@@ -806,7 +806,7 @@ QT_USE_NAMESPACE
     // Clear the delegate and reset the request,
     // do not try any of OBEX commands - the session will be deleted
     // immediately.
-    delegate = Q_NULLPTR;
+    delegate = nullptr;
     // This will stop any handler (callback) preventing
     // any read/write to potentially deleted objects.
     currentRequest = OSXBluetooth::OBEXNoop;
