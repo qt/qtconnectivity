@@ -112,6 +112,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                     supported on this platform.
     \value OperationError           An operation was attempted while the socket was in a state
                                     that did not permit it.
+    \value RemoteHostClosedError    The remote host closed the connection. This value was
+                                    introduced by Qt 5.10.
 */
 
 /*!
@@ -300,7 +302,7 @@ qint64 QBluetoothSocket::bytesAvailable() const
 qint64 QBluetoothSocket::bytesToWrite() const
 {
     Q_D(const QBluetoothSocket);
-    return d->txBuffer.size();
+    return d->bytesToWrite();
 }
 
 /*!
@@ -624,7 +626,7 @@ void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
 bool QBluetoothSocket::canReadLine() const
 {
     Q_D(const QBluetoothSocket);
-    return d->buffer.canReadLine() || QIODevice::canReadLine();
+    return d->canReadLine();
 }
 
 /*!
@@ -854,11 +856,17 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketError error)
     case QBluetoothSocket::HostNotFoundError:
         debug << "QBluetoothSocket::HostNotFoundError";
         break;
+    case QBluetoothSocket::RemoteHostClosedError:
+        debug << "QBluetoothSocket::RemoteHostClosedError";
+        break;
     case QBluetoothSocket::ServiceNotFoundError:
         debug << "QBluetoothSocket::ServiceNotFoundError";
         break;
     case QBluetoothSocket::NetworkError:
         debug << "QBluetoothSocket::NetworkError";
+        break;
+    case QBluetoothSocket::UnsupportedProtocolError:
+        debug << "QBluetoothSocket::UnsupportedProtocolError";
         break;
     default:
         debug << "QBluetoothSocket::SocketError(" << (int)error << ")";

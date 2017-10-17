@@ -342,7 +342,7 @@ bool QBluetoothServiceInfo::unregisterService()
     Construct a new invalid QBluetoothServiceInfo;
 */
 QBluetoothServiceInfo::QBluetoothServiceInfo()
-    : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>(new QBluetoothServiceInfoPrivate))
+    : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>::create())
 {
 }
 

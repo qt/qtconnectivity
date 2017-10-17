@@ -6,6 +6,8 @@ SOURCES += main.cpp \
 
 QT += quick bluetooth
 
+android: QT += androidextras
+
 OTHER_FILES += main.qml \
     Button.qml
 

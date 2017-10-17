@@ -74,18 +74,18 @@ public:
 private:
 
     // PairingDelegate:
-    void connecting(ObjCPairingRequest *pair) Q_DECL_OVERRIDE;
-    void requestPIN(ObjCPairingRequest *pair) Q_DECL_OVERRIDE;
+    void connecting(ObjCPairingRequest *pair) override;
+    void requestPIN(ObjCPairingRequest *pair) override;
     void requestUserConfirmation(ObjCPairingRequest *pair,
-                                 BluetoothNumericValue) Q_DECL_OVERRIDE;
+                                 BluetoothNumericValue) override;
     void passkeyNotification(ObjCPairingRequest *pair,
-                             BluetoothPasskey passkey) Q_DECL_OVERRIDE;
-    void error(ObjCPairingRequest *pair, IOReturn errorCode) Q_DECL_OVERRIDE;
-    void pairingFinished(ObjCPairingRequest *pair) Q_DECL_OVERRIDE;
+                             BluetoothPasskey passkey) override;
+    void error(ObjCPairingRequest *pair, IOReturn errorCode) override;
+    void pairingFinished(ObjCPairingRequest *pair) override;
 
     // ConnectionMonitor
-    void deviceConnected(const QBluetoothAddress &deviceAddress) Q_DECL_OVERRIDE;
-    void deviceDisconnected(const QBluetoothAddress &deviceAddress) Q_DECL_OVERRIDE;
+    void deviceConnected(const QBluetoothAddress &deviceAddress) override;
+    void deviceDisconnected(const QBluetoothAddress &deviceAddress) override;
 
     void emitPairingFinished(const QBluetoothAddress &deviceAddress, Pairing pairing, bool queued);
     void emitError(QBluetoothLocalDevice::Error error, bool queued);
@@ -463,6 +463,8 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         d_ptr->emitError(PairingError, true);
         return;
     }
+
+    OSXBluetooth::qt_test_iobluetooth_runloop();
 
     return d_ptr->requestPairing(address, pairing);
 }

@@ -48,7 +48,8 @@
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothservicediscoveryagent.h>
 
-static const QString serviceUuid(QStringLiteral("e8e10f95-1a70-4b27-9ccf-02010264e9c9"));
+static QString serviceUuid(QStringLiteral("e8e10f95-1a70-4b27-9ccf-02010264e9c9"));
+static QString androidUuid(QStringLiteral("c9e96402-0102-cf9c-274b-701a950fe1e8"));
 
 class PingPong: public QObject
 {

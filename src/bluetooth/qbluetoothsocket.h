@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHSOCKET_H
 #define QBLUETOOTHSOCKET_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qbluetoothaddress.h>
@@ -79,6 +79,7 @@ public:
     enum SocketError {
         NoSocketError = -2,
         UnknownSocketError = QAbstractSocket::UnknownSocketError, //-1
+        RemoteHostClosedError = QAbstractSocket::RemoteHostClosedError, //1
         HostNotFoundError = QAbstractSocket::HostNotFoundError, //2
         ServiceNotFoundError = QAbstractSocket::SocketAddressNotAvailableError, //9
         NetworkError = QAbstractSocket::NetworkError, //7
@@ -88,8 +89,8 @@ public:
     };
     Q_ENUM(SocketError)
 
-    explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = Q_NULLPTR);   // create socket of type socketType
-    explicit QBluetoothSocket(QObject *parent = Q_NULLPTR);  // create a blank socket
+    explicit QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent = nullptr);   // create socket of type socketType
+    explicit QBluetoothSocket(QObject *parent = nullptr);  // create a blank socket
     virtual ~QBluetoothSocket();
 
     void abort();

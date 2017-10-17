@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include <QtCore/QLoggingCategory>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 
 QT_BEGIN_NAMESPACE
 

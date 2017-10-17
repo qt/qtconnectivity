@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtBluetooth module of the Qt Toolkit.
+** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -36,24 +36,24 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QTBLUETOOTH_H
-#define QTBLUETOOTH_H
+
+#ifndef QTNFC_H
+#define QTNFC_H
 
 #include <QtCore/qglobal.h>
-#include <QtBluetooth/qtbluetooth-config.h> // for feature detection
 
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_STATIC
-#    if defined(QT_BUILD_BLUETOOTH_LIB)
-#      define Q_BLUETOOTH_EXPORT Q_DECL_EXPORT
+#    if defined(QT_BUILD_NFC_LIB)
+#      define Q_NFC_EXPORT Q_DECL_EXPORT
 #    else
-#      define Q_BLUETOOTH_EXPORT Q_DECL_IMPORT
+#      define Q_NFC_EXPORT Q_DECL_IMPORT
 #    endif
 #else
-#    define Q_BLUETOOTH_EXPORT
+#    define Q_NFC_EXPORT
 #endif
 
 QT_END_NAMESPACE
 
-#endif // QTBLUETOOTH_H
+#endif // QTNFC_H

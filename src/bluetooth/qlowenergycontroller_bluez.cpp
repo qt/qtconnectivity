@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Copyright (C) 2016 Javier S. Pedro <maemo@javispedro.com>
 ** Contact: https://www.qt.io/licensing/
 **
@@ -44,6 +44,9 @@
 #include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
+#include "bluez/remotedevicemanager_p.h"
+#include "bluez/bluez5_helper_p.h"
+#include "bluez/bluetoothmanagement_p.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
@@ -527,6 +530,70 @@ void QLowEnergyControllerPrivate::connectToDevice()
     if (l2cpSocket)
         delete l2cpSocket;
 
+    createServicesForCentralIfRequired();
+
+    // check for active running connections
+    // BlueZ 5.37+ (maybe even earlier versions) can have pending BTLE connections
+    // Only one active L2CP socket to CID 0x4 possible at a time
+    // this check is not performed for BlueZ 4 based platforms as bluetoothd
+    // does not support BTLE management
+
+    if (!isBluez5()) {
+        establishL2cpClientSocket();
+        return;
+    }
+
+    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    if (!activeHandles.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot connect due to pending active LE connections";
+
+        if (!device1Manager) {
+            device1Manager = new RemoteDeviceManager(localAdapter, this);
+            connect(device1Manager, &RemoteDeviceManager::finished,
+                    this, &QLowEnergyControllerPrivate::activeConnectionTerminationDone);
+        }
+
+        QVector<QBluetoothAddress> connectedAddresses;
+        for (const auto handle: activeHandles) {
+            const QBluetoothAddress addr = hciManager->addressForConnectionHandle(handle);
+            if (!addr.isNull())
+                connectedAddresses.push_back(addr);
+        }
+        device1Manager->scheduleJob(RemoteDeviceManager::JobType::JobDisconnectDevice, connectedAddresses);
+    } else {
+        establishL2cpClientSocket();
+    }
+}
+
+/*!
+ * Handles outcome of attempts to close external connections.
+ */
+void QLowEnergyControllerPrivate::activeConnectionTerminationDone()
+{
+    if (!device1Manager)
+        return;
+
+    qCDebug(QT_BT_BLUEZ) << "RemoteDeviceManager finished attempting"
+                         << "to close external connections";
+
+    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    if (!activeHandles.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot close pending external BTLE connections. Aborting connect attempt";
+        setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    } else {
+        establishL2cpClientSocket();
+    }
+}
+
+/*!
+ * Establishes the L2CP client socket.
+ */
+void QLowEnergyControllerPrivate::establishL2cpClientSocket()
+{
+    //we are already in Connecting state
+
     l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, SIGNAL(connected()), this, SLOT(l2cpConnected()));
     connect(l2cpSocket, SIGNAL(disconnected()), this, SLOT(l2cpDisconnected()));
@@ -534,10 +601,20 @@ void QLowEnergyControllerPrivate::connectToDevice()
             this, SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
     connect(l2cpSocket, SIGNAL(readyRead()), this, SLOT(l2cpReadyRead()));
 
-    if (addressType == QLowEnergyController::PublicAddress)
-        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_PUBLIC;
-    else if (addressType == QLowEnergyController::RandomAddress)
-        l2cpSocket->d_ptr->lowEnergySocketType = BDADDR_LE_RANDOM;
+    quint32 addressTypeToUse = (addressType == QLowEnergyController::PublicAddress)
+                                    ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
+    if (BluetoothManagement::instance()->isMonitoringEnabled()) {
+        // if monitoring is possible and it's private then we force it to the relevant option
+        if (BluetoothManagement::instance()->isAddressRandom(remoteDevice)) {
+            addressTypeToUse = BDADDR_LE_RANDOM;
+        }
+    }
+
+    qCDebug(QT_BT_BLUEZ) << "addresstypeToUse:"
+                         << (addressTypeToUse == BDADDR_LE_RANDOM
+                                 ? QStringLiteral("Random") : QStringLiteral("Public"));
+
+    l2cpSocket->d_ptr->lowEnergySocketType = addressTypeToUse;
 
     int sockfd = l2cpSocket->socketDescriptor();
     if (sockfd < 0) {
@@ -567,6 +644,72 @@ void QLowEnergyControllerPrivate::connectToDevice()
     l2cpSocket->connectToService(remoteDevice, ATTRIBUTE_CHANNEL_ID,
                                  QIODevice::ReadWrite | QIODevice::Unbuffered);
     loadSigningDataIfNecessary(LocalSigningKey);
+}
+
+void QLowEnergyControllerPrivate::createServicesForCentralIfRequired()
+{
+    bool ok = false;
+    int value = qEnvironmentVariableIntValue("QT_DEFAULT_CENTRAL_SERVICES", &ok);
+    if (Q_UNLIKELY(ok && value == 0))
+        return; //nothing to do
+
+    //do not add the services each time we start a connection
+    if (localServices.contains(QBluetoothUuid(QBluetoothUuid::GenericAccess)))
+        return;
+
+    qCDebug(QT_BT_BLUEZ) << "Creating default GAP/GATT services";
+
+    //populate Generic Access service
+    //for now the values are static
+    QLowEnergyServiceData gapServiceData;
+    gapServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+    gapServiceData.setUuid(QBluetoothUuid::GenericAccess);
+
+    QLowEnergyCharacteristicData gapDeviceName;
+    gapDeviceName.setUuid(QBluetoothUuid::DeviceName);
+    gapDeviceName.setProperties(QLowEnergyCharacteristic::Read);
+
+    QBluetoothLocalDevice mainAdapter;
+    gapDeviceName.setValue(mainAdapter.name().toLatin1()); //static name
+
+    QLowEnergyCharacteristicData gapAppearance;
+    gapAppearance.setUuid(QBluetoothUuid::Appearance);
+    gapAppearance.setProperties(QLowEnergyCharacteristic::Read);
+    gapAppearance.setValue(QByteArray::fromHex("80")); // Generic Computer (0x80)
+
+    QLowEnergyCharacteristicData gapPrivacyFlag;
+    gapPrivacyFlag.setUuid(QBluetoothUuid::PeripheralPrivacyFlag);
+    gapPrivacyFlag.setProperties(QLowEnergyCharacteristic::Read);
+    gapPrivacyFlag.setValue(QByteArray::fromHex("00")); // disable privacy
+
+    gapServiceData.addCharacteristic(gapDeviceName);
+    gapServiceData.addCharacteristic(gapAppearance);
+    gapServiceData.addCharacteristic(gapPrivacyFlag);
+
+    Q_Q(QLowEnergyController);
+    QLowEnergyService *service = addServiceHelper(gapServiceData);
+    if (service)
+        service->setParent(q);
+
+    QLowEnergyServiceData gattServiceData;
+    gattServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+    gattServiceData.setUuid(QBluetoothUuid::GenericAttribute);
+
+    QLowEnergyCharacteristicData serviceChangedChar;
+    serviceChangedChar.setUuid(QBluetoothUuid::ServiceChanged);
+    serviceChangedChar.setProperties(QLowEnergyCharacteristic::Indicate);
+    //arbitrary range of 2 bit handle range (1-4
+    serviceChangedChar.setValue(QByteArray::fromHex("0104"));
+
+    const QLowEnergyDescriptorData clientConfig(
+                        QBluetoothUuid::ClientCharacteristicConfiguration,
+                        QByteArray(2, 0));
+    serviceChangedChar.addDescriptor(clientConfig);
+    gattServiceData.addCharacteristic(serviceChangedChar);
+
+    service = addServiceHelper(gattServiceData);
+    if (service)
+        service->setParent(q);
 }
 
 void QLowEnergyControllerPrivate::l2cpConnected()
@@ -609,6 +752,10 @@ void QLowEnergyControllerPrivate::l2cpErrorChanged(QBluetoothSocket::SocketError
     case QBluetoothSocket::NetworkError:
         setError(QLowEnergyController::NetworkError);
         qCDebug(QT_BT_BLUEZ) << "Network IO error while talking to LE device";
+        break;
+    case QBluetoothSocket::RemoteHostClosedError:
+        setError(QLowEnergyController::RemoteHostClosedError);
+        qCDebug(QT_BT_BLUEZ) << "Remote host closed the connection";
         break;
     case QBluetoothSocket::UnknownSocketError:
     case QBluetoothSocket::UnsupportedProtocolError:
@@ -1601,9 +1748,9 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
-    quint8 packet[READ_REQUEST_HEADER_SIZE];
 
-    packet[0] = ATT_OP_READ_BLOB_REQUEST;
+    QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
+    data[0] = ATT_OP_READ_BLOB_REQUEST;
 
     QLowEnergyHandle handleToRead = charHandle;
     if (descriptorHandle) {
@@ -1624,11 +1771,8 @@ void QLowEnergyControllerPrivate::readServiceValuesByOffset(
         }
     }
 
-    putBtData(handleToRead, &packet[1]);
-    putBtData(offset, &packet[3]);
-
-    QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
-    memcpy(data.data(), packet, READ_BLOB_REQUEST_HEADER_SIZE);
+    putBtData(handleToRead, data.data() + 1);
+    putBtData(offset, data.data() + 3);
 
     Request request;
     request.payload = data;
@@ -1768,8 +1912,10 @@ bool QLowEnergyControllerPrivate::setSecurityLevel(int level)
     switch (level) { // fall through intendeds
         case BT_SECURITY_HIGH:
             optval |= L2CAP_LM_SECURE;
+            Q_FALLTHROUGH();
         case BT_SECURITY_MEDIUM:
             optval |= L2CAP_LM_ENCRYPT;
+            Q_FALLTHROUGH();
         case BT_SECURITY_LOW:
             optval |= L2CAP_LM_AUTH;
             break;

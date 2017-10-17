@@ -44,7 +44,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QList>
 #include <QtCore/QMetaType>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 
 QT_BEGIN_NAMESPACE

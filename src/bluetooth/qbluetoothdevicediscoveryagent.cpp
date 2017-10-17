@@ -143,7 +143,15 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     information via \l discoveredDevices() once the discovery has finished. This
     will yield the most recent RSSI information.
 
-    \sa QBluetoothDeviceInfo::rssi()
+    If \l lowEnergyDiscoveryTimeout() is larger than 0 the signal is only ever
+    emitted when at least one attribute of \a info changes. This reflects the desire to
+    receive updates as more precise information becomes available. The exception to this
+    behavior is the case when \l lowEnergyDiscoveryTimeout is set to \c 0. A timeout of \c 0
+    expresses the desire to monitor the appearance and disappearance of Low Energy devices
+    over time. Under this condition the \l deviceDiscovered() signal is emitted even if
+    \a info has not changed since the last signal emission.
+
+    \sa QBluetoothDeviceInfo::rssi(), lowEnergyDiscoveryTimeout()
 */
 
 /*!
@@ -325,12 +333,18 @@ void QBluetoothDeviceDiscoveryAgent::start()
 }
 
 /*!
-    Start Bluetooth device discovery, if it is not already started and the provided
+    Starts Bluetooth device discovery, if it is not already started and the provided
     \a methods are supported.
     The discovery \a methods limit the scope of the device search.
     For example, if the target service or device is a Bluetooth Low Energy device,
     this function could be used to limit the search to Bluetooth Low Energy devices and
     thereby reduces the discovery time significantly.
+
+    \note \a methods only determines the type of discovery and does not imply
+    the filtering of the results. For example, the search may still contain classic bluetooth devices
+    despite \a methods being set to \l {QBluetoothDeviceDiscoveryAgent::LowEnergyMethod}
+    {LowEnergyMethod} only. This may happen due to previously cached search results
+    which may be incorporated into the search results.
 
     \since 5.8
 */

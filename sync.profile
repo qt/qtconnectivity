@@ -4,6 +4,14 @@
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
+%deprecatedheaders = (
+    "QtBluetooth" => {
+        "qbluetoothglobal.h" => "QtBluetooth/qtbluetoothglobal.h"
+    },
+    "QtNfc" => {
+        "qnfcglobal.h" => "QtNfc/qtnfcglobal.h"
+    }
+);
 
 @ignore_for_include_check = (
 

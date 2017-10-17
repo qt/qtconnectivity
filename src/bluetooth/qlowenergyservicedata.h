@@ -40,7 +40,7 @@
 #ifndef QLOWENERGYSERVICEDATA_H
 #define QLOWENERGYSERVICEDATA_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 #include <QtCore/qshareddata.h>
 
 QT_BEGIN_NAMESPACE

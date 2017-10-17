@@ -136,7 +136,7 @@ private:
     friend class QLowEnergyController;
     friend class QLowEnergyControllerPrivate;
     QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
-                      QObject *parent = Q_NULLPTR);
+                      QObject *parent = nullptr);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyService::ServiceTypes)

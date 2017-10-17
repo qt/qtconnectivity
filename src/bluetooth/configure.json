@@ -23,6 +23,11 @@
             "label": "Linux Crypto API",
             "type": "compile",
             "test": "linux_crypto_api"
+        },
+        "winrt_bt": {
+            "label": "WinRT Bluetooth API",
+            "type": "compile",
+            "test": "winrt_bt"
         }
     },
 
@@ -40,6 +45,11 @@
         "linux_crypto_api": {
             "label": "Linux Crypto API",
             "condition": "features.bluez_le && tests.linux_crypto_api",
+            "output": [ "privateFeature" ]
+        },
+        "winrt_bt": {
+            "label": "WinRT Bluetooth API (desktop & UWP)",
+            "condition": "config.win32 && tests.winrt_bt",
             "output": [ "privateFeature" ]
         }
     },
@@ -64,7 +74,8 @@ Only classic Bluetooth will be available."
             "entries": [
                 "bluez",
                 "bluez_le",
-                "linux_crypto_api"
+                "linux_crypto_api",
+                "winrt_bt"
             ]
         }
     ]

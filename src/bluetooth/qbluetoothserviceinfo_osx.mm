@@ -127,7 +127,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     const QSInfo::Protocol type = q_ptr->socketProtocol();
     quint16 realPort = 0;
-    QBluetoothServerPrivate *server = Q_NULLPTR;
+    QBluetoothServerPrivate *server = nullptr;
     bool configured = false;
 
     if (type == QBluetoothServiceInfo::L2capProtocol) {
@@ -179,7 +179,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     serviceRecord.reset(nil);
 
     const QSInfo::Protocol type = q_ptr->socketProtocol();
-    QBluetoothServerPrivate *server = Q_NULLPTR;
+    QBluetoothServerPrivate *server = nullptr;
 
     const QMutexLocker lock(&QBluetoothServerPrivate::channelMapMutex());
     if (type == QSInfo::RfcommProtocol)

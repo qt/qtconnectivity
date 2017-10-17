@@ -41,7 +41,7 @@
 
 #include <QtCore/QHash>
 #include <QtCore/QLoggingCategory>
-#include <QtCore/QTime>
+#include <QtCore/QRandomGenerator>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 
 QT_BEGIN_NAMESPACE
@@ -81,11 +81,10 @@ LowEnergyNotificationHub::LowEnergyNotificationHub(const QBluetoothAddress &remo
     }
 
     // register C++ class pointer in Java
-    qsrand(QTime::currentTime().msec());
     lock.lockForWrite();
 
     while (true) {
-        javaToCtoken = qrand();
+        javaToCtoken = QRandomGenerator::get32();
         if (!hubMap()->contains(javaToCtoken))
             break;
     }

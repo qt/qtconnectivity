@@ -48,8 +48,6 @@
 #include <algorithm>
 #include <limits>
 
-Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
-Q_DECLARE_METATYPE(QLowEnergyDescriptor)
 Q_DECLARE_METATYPE(QLowEnergyHandle)
 
 QT_BEGIN_NAMESPACE
@@ -1032,13 +1030,8 @@ QT_END_NAMESPACE
 {
     using namespace OSXBluetooth;
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
-    const CBManagerState state = central.state;
-#else
-    const CBCentralManagerState state = central.state;
-#endif
-
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+    const auto state = central.state;
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStateUnknown
         || state == CBManagerStateResetting) {
 #else
@@ -1054,7 +1047,7 @@ QT_END_NAMESPACE
     }
 
     // Let's check some states we do not like first:
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
 #else
     if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
@@ -1074,7 +1067,7 @@ QT_END_NAMESPACE
         return;
     }
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStatePoweredOff) {
 #else
     if (state == CBCentralManagerStatePoweredOff) {
@@ -1093,7 +1086,7 @@ QT_END_NAMESPACE
         return;
     }
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStatePoweredOn) {
 #else
     if (state == CBCentralManagerStatePoweredOn) {

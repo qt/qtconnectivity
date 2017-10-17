@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHDEVICEINFO_H
 #define QBLUETOOTHDEVICEINFO_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qmetatype.h>
@@ -189,6 +189,7 @@ public:
     };
     Q_DECLARE_FLAGS(ServiceClasses, ServiceClass)
 
+    //TODO Qt6 Remove DataCompleteness -> it serves no purpose
     enum DataCompleteness {
         DataComplete,
         DataIncomplete,
@@ -231,7 +232,7 @@ public:
     void setRssi(qint16 signal);
 
     void setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness);
-    QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = Q_NULLPTR) const;
+    QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const;
     DataCompleteness serviceUuidsCompleteness() const;
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);

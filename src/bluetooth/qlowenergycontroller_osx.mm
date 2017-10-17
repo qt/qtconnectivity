@@ -962,7 +962,7 @@ void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::E
 void QLowEnergyControllerPrivateOSX::invalidateServices()
 {
     foreach (const QSharedPointer<QLowEnergyServicePrivate> service, discoveredServices.values()) {
-        service->setController(Q_NULLPTR);
+        service->setController(nullptr);
         service->setState(QLowEnergyService::InvalidService);
     }
 
@@ -1228,7 +1228,7 @@ QLowEnergyService *QLowEnergyController::createServiceObject(const QBluetoothUui
 {
     OSX_D_PTR;
 
-    QLowEnergyService *service = Q_NULLPTR;
+    QLowEnergyService *service = nullptr;
 
     QLowEnergyControllerPrivateOSX::ServiceMap::const_iterator it = osx_d_ptr->discoveredServices.constFind(serviceUuid);
     if (it != osx_d_ptr->discoveredServices.constEnd()) {

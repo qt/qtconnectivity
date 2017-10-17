@@ -40,13 +40,16 @@
 
 #include "pingpong.h"
 #include <QDebug>
+#ifdef Q_OS_ANDROID
+#include <QtAndroid>
+#endif
 
 PingPong::PingPong():
     m_serverInfo(0), socket(0), discoveryAgent(0), interval(5), m_resultLeft(0), m_resultRight(0),
     m_showDialog(false), m_role(0), m_proportionX(0), m_proportionY(0), m_serviceFound(false)
 {
     m_timer = new QTimer(this);
-    connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(m_timer, &QTimer::timeout, this, &PingPong::update);
 }
 
 PingPong::~PingPong()
@@ -230,9 +233,10 @@ void PingPong::startServer()
     setMessage(QStringLiteral("Starting the server"));
     //! [Starting the server]
     m_serverInfo = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
-    connect(m_serverInfo, SIGNAL(newConnection()), this, SLOT(clientConnected()));
-    connect(m_serverInfo, SIGNAL(error(QBluetoothServer::Error)),
-            this, SLOT(serverError(QBluetoothServer::Error)));
+    connect(m_serverInfo, &QBluetoothServer::newConnection,
+            this, &PingPong::clientConnected);
+    connect(m_serverInfo, QOverload<QBluetoothServer::Error>::of(&QBluetoothServer::error),
+            this, &PingPong::serverError);
     const QBluetoothUuid uuid(serviceUuid);
 
     m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
@@ -248,13 +252,22 @@ void PingPong::startClient()
     //! [Searching for the service]
     discoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress());
 
-    connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(addService(QBluetoothServiceInfo)));
-    connect(discoveryAgent, SIGNAL(finished()), this, SLOT(done()));
-    connect(discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
-            this, SLOT(serviceScanError(QBluetoothServiceDiscoveryAgent::Error)));
+    connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+            this, &PingPong::addService);
+    connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
+            this, &PingPong::done);
+    connect(discoveryAgent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
+            this, &PingPong::serviceScanError);
+#ifdef Q_OS_ANDROID //see QTBUG-61392
+    if (QtAndroid::androidSdkVersion() >= 23)
+        discoveryAgent->setUuidFilter(QBluetoothUuid(androidUuid));
+    else
+        discoveryAgent->setUuidFilter(QBluetoothUuid(serviceUuid));
+#else
     discoveryAgent->setUuidFilter(QBluetoothUuid(serviceUuid));
+#endif
     discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+
     //! [Searching for the service]
     setMessage(QStringLiteral("Starting server discovery. You are the right player"));
     // m_role is set to 2 if it is a client
@@ -273,10 +286,13 @@ void PingPong::clientConnected()
     if (!socket)
         return;
     socket->setParent(this);
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(clientDisconnected()));
-    connect(socket, SIGNAL(error(QBluetoothSocket::SocketError)),
-            this, SLOT(socketError(QBluetoothSocket::SocketError)));
+    connect(socket, &QBluetoothSocket::readyRead,
+            this, &PingPong::readSocket);
+    connect(socket, &QBluetoothSocket::disconnected,
+            this, &PingPong::clientDisconnected);
+    connect(socket, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
+            this, &PingPong::socketError);
+
     //! [Initiating server socket]
     setMessage(QStringLiteral("Client connected."));
 
@@ -323,9 +339,9 @@ void PingPong::addService(const QBluetoothServiceInfo &service)
     socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     socket->connectToService(service);
 
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
-    connect(socket, SIGNAL(connected()), this, SLOT(serverConnected()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(serverDisconnected()));
+    connect(socket, &QBluetoothSocket::readyRead, this, &PingPong::readSocket);
+    connect(socket, &QBluetoothSocket::connected, this, &PingPong::serverConnected);
+    connect(socket, &QBluetoothSocket::disconnected, this, &PingPong::serverDisconnected);
     //! [Connecting the socket]
     m_serviceFound = true;
 }

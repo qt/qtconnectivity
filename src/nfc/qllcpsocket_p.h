@@ -53,7 +53,7 @@
 
 #include <QtCore/QIODevice>
 #include <QtNetwork/QAbstractSocket>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 
 QT_BEGIN_NAMESPACE
 

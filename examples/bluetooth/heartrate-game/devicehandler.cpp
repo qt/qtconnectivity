@@ -42,6 +42,7 @@
 #include "devicehandler.h"
 #include "deviceinfo.h"
 #include <QtEndian>
+#include <QRandomGenerator>
 
 DeviceHandler::DeviceHandler(QObject *parent) :
     BluetoothBaseClass(parent),
@@ -248,11 +249,11 @@ void DeviceHandler::updateDemoHR()
 {
     int randomValue = 0;
     if (m_currentValue < 30) { // Initial value
-        randomValue = 55 + qrand()%30;
+        randomValue = 55 + QRandomGenerator::bounded(30);
     } else if (!m_measuring) { // Value when relax
-        randomValue = qBound(55, m_currentValue - 2 + qrand()%5, 75);
+        randomValue = qBound(55, m_currentValue - 2 + QRandomGenerator::bounded(5), 75);
     } else { // Measuring
-        randomValue = m_currentValue + qrand()%10 - 2;
+        randomValue = m_currentValue + QRandomGenerator::bounded(10) - 2;
     }
 
     addMeasurement(randomValue);

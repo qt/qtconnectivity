@@ -88,8 +88,8 @@ public:
 
 private:
     // SDPInquiryDelegate:
-    void SDPInquiryFinished(IOBluetoothDevice *device) Q_DECL_OVERRIDE;
-    void SDPInquiryError(IOBluetoothDevice *device, IOReturn errorCode) Q_DECL_OVERRIDE;
+    void SDPInquiryFinished(IOBluetoothDevice *device) override;
+    void SDPInquiryError(IOBluetoothDevice *device, IOReturn errorCode) override;
 
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
     void setupDeviceDiscoveryAgent();
@@ -141,7 +141,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
     state = DeviceDiscovery;
 
     setupDeviceDiscoveryAgent();
-    deviceDiscoveryAgent->start();
+    deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
@@ -152,7 +152,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
     Q_ASSERT_X(state == DeviceDiscovery, Q_FUNC_INFO, "invalid state");
 
     deviceDiscoveryAgent->stop();
-    deviceDiscoveryAgent.reset(Q_NULLPTR);
+    deviceDiscoveryAgent.reset(nullptr);
     state = Inactive;
 
     emit q_ptr->canceled();
@@ -268,7 +268,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
     errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
 
     deviceDiscoveryAgent->stop();
-    deviceDiscoveryAgent.reset(Q_NULLPTR);
+    deviceDiscoveryAgent.reset(nullptr);
 
     state = QBluetoothServiceDiscoveryAgentPrivate::Inactive;
     emit q_ptr->error(error);
@@ -283,12 +283,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
         //Forward the device discovery error
         error = static_cast<QBluetoothServiceDiscoveryAgent::Error>(deviceDiscoveryAgent->error());
         errorString = deviceDiscoveryAgent->errorString();
-        deviceDiscoveryAgent.reset(Q_NULLPTR);
+        deviceDiscoveryAgent.reset(nullptr);
         state = Inactive;
         emit q_ptr->error(error);
         emit q_ptr->finished();
     } else {
-        deviceDiscoveryAgent.reset(Q_NULLPTR);
+        deviceDiscoveryAgent.reset(nullptr);
         startServiceDiscovery();
     }
 }
@@ -526,6 +526,8 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
 
 void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 {
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     if (d_ptr->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
         && d_ptr->error != InvalidBluetoothAdapterError)
     {

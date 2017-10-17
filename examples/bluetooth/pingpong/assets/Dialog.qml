@@ -42,7 +42,7 @@ import QtQuick 2.0
 
 Rectangle {
     width: parent.width/2
-    height: 100
+    height: message.implicitHeight*2
     z: 50
     border.width: 2
     border.color: "#363636"

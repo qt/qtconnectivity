@@ -27,6 +27,8 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
+
+#include <private/qtbluetoothglobal_p.h>
 #include <QBluetoothAddress>
 #include <QBluetoothLocalDevice>
 #include <QBluetoothDeviceDiscoveryAgent>
@@ -91,9 +93,6 @@ private:
     QList<QBluetoothUuid> foundServices;
 };
 
-Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
-Q_DECLARE_METATYPE(QLowEnergyDescriptor)
-
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
     qRegisterMetaType<QLowEnergyCharacteristic>();
@@ -120,9 +119,13 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MAC)
     if (remoteDevice.isNull()
+#if !QT_CONFIG(winrt_bt)
         || QBluetoothLocalDevice::allDevices().isEmpty()) {
+#else
+        ) {
+#endif
         qWarning("No remote device or local adapter found.");
         return;
     }
@@ -244,7 +247,7 @@ void tst_QLowEnergyController::tst_connect()
 {
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
 
-#if defined(Q_OS_IOS) || defined(Q_OS_TVOS) || defined(Q_OS_WINRT)
+#if defined(Q_OS_IOS) || defined(Q_OS_TVOS) || QT_CONFIG(winrt_bt)
     if (!remoteDeviceInfo.isValid())
 #else
     if (localAdapters.isEmpty() || !remoteDeviceInfo.isValid())
@@ -261,7 +264,7 @@ void tst_QLowEnergyController::tst_connect()
     else
         QCOMPARE(control.remoteName(), remoteDeviceInfo.name());
 
-#if !defined(Q_OS_IOS) && !defined(Q_OS_TVOS) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_IOS) && !defined(Q_OS_TVOS) && !QT_CONFIG(winrt_bt)
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
     QCOMPARE(control.localAddress(), localAdapter);
     QVERIFY(!control.localAddress().isNull());
@@ -404,7 +407,7 @@ void tst_QLowEnergyController::tst_connect()
 
 void tst_QLowEnergyController::tst_concurrentDiscovery()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MACOS) && !QT_CONFIG(winrt_bt)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -441,7 +444,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
                       30000);
         }
 
-#if defined(Q_OS_ANDROID) || defined(Q_OS_WINRT)
+#if defined(Q_OS_ANDROID) || QT_CONFIG(winrt_bt)
         QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
         QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
         control2.disconnectFromDevice();
@@ -1643,7 +1646,7 @@ void tst_QLowEnergyController::tst_defaultBehavior()
 
 void tst_QLowEnergyController::tst_writeCharacteristic()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MACOS) && !QT_CONFIG(winrt_bt)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -1817,7 +1820,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
 void tst_QLowEnergyController::tst_readWriteDescriptor()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MACOS) && !QT_CONFIG(winrt_bt)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -2240,7 +2243,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
  */
 void tst_QLowEnergyController::tst_errorCases()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MACOS) && !QT_CONFIG(winrt_bt)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");
@@ -2462,7 +2465,7 @@ void tst_QLowEnergyController::tst_errorCases()
  */
 void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 {
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)
+#if !defined(Q_OS_MACOS) && !QT_CONFIG(winrt_bt)
     QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty())
         QSKIP("No local Bluetooth device found. Skipping test.");

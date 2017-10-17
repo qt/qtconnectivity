@@ -45,7 +45,7 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
 #include <QtCore/QSharedDataPointer>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -118,7 +118,7 @@ public:
         QSharedDataPointer<RequestIdPrivate> d;
     };
 
-    explicit QNearFieldTarget(QObject *parent = Q_NULLPTR);
+    explicit QNearFieldTarget(QObject *parent = nullptr);
     virtual ~QNearFieldTarget();
 
     virtual QByteArray uid() const = 0;

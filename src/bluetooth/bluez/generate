@@ -1,5 +1,6 @@
 #!/bin/sh
 
+#Bluez 4
 qdbusxml2cpp -p manager_p.h:manager.cpp org.bluez.Manager.xml org.bluez.Manager
 qdbusxml2cpp -p adapter_p.h:adapter.cpp org.bluez.all.xml org.bluez.Adapter
 qdbusxml2cpp -i servicemap_p.h -p device_p.h:device.cpp org.bluez.Device.xml org.bluez.Device
@@ -9,8 +10,13 @@ qdbusxml2cpp -p obex_manager_p.h:obex_manager.cpp org.openobex.all.xml org.openo
 qdbusxml2cpp -p obex_client_p.h:obex_client.cpp org.openobex.client.xml org.openobex.Client
 qdbusxml2cpp -p obex_transfer_p.h:obex_transfer.cpp org.openobex.transfer.xml org.openobex.Transfer
 qdbusxml2cpp -a obex_agent_p.h:obex_agent.cpp org.openobex.agent.xml org.openobex.Agent
-#qdbusxml2cpp -p serialproxymanager_p.h:serialproxymanager.cpp org.bluez.all.xml org.bluez.SerialProxyManager
-#qdbusxml2cpp -p networkpeer_p.h:networkpeer.cpp org.bluez.all.xml org.bluez.NetworkPeer
-#qdbusxml2cpp -p networkhub_p.h:networkhub.cpp org.bluez.all.xml org.bluez.NetworkHub
-#qdbusxml2cpp -p networkrouter_p.h:networkrouter.cpp org.bluez.all.xml org.bluez.NetworkRouter
 
+#Bluez 5
+qdbusxml2cpp -p adapter1_bluez5_p.h:adapter1_bluez5.cpp org.bluez.Adapter1.xml
+qdbusxml2cpp -p device1_bluez5_p.h:device1_bluez5.cpp org.bluez.Device1.xml
+qdbusxml2cpp -p profile1_p.h:profile1.cpp org.bluez.ProfileManager1.xml
+qdbusxml2cpp -p objectmanager_p.h:objectmanager.cpp org.freedesktop.dbus.objectmanager.xml
+qdbusxml2cpp -p properties_p.h:properties.cpp org.freedesktop.dbus.properties.xml
+qdbusxml2cpp -p obex_client1_bluez5_p.h:obex_client1_bluez5_p.h org.bluez.Client1.xml
+qdbusxml2cpp -p obex_objectpush1_bluez5_p.h:obex_objectpush1_bluez5.cpp org.bluez.obex.ObjectPush1.xml
+qdbusxml2cpp -p obex_transfer1_bluez5_p.h:obex_transfer1_bluez5_p.h org.bluez.obex.Transfer1.xml

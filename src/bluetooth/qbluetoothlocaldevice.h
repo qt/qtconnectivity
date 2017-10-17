@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHLOCALDEVICE_H
 #define QBLUETOOTHLOCALDEVICE_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
@@ -79,8 +79,8 @@ public:
     };
     Q_ENUM(Error)
 
-    explicit QBluetoothLocalDevice(QObject *parent = Q_NULLPTR);
-    explicit QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent = Q_NULLPTR);
+    explicit QBluetoothLocalDevice(QObject *parent = nullptr);
+    explicit QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent = nullptr);
     virtual ~QBluetoothLocalDevice();
 
     bool isValid() const;

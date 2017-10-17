@@ -42,7 +42,6 @@
 #define PROGRESS_H
 
 #include <QDialog>
-#include <qbluetoothglobal.h>
 #include <QTime>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothTransferReply)
