@@ -3,11 +3,13 @@
     <interface name="org.bluez.GattCharacteristic1">
         <method name="ReadValue">
             <arg name="options" type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
             <arg name="value" type="ay" direction="out"/>
         </method>
         <method name="WriteValue">
             <arg name="value" type="ay" direction="in"/>
             <arg name="options" type="a{sv}" direction="in"/>
+            <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
         </method>
         <method name="StartNotify"></method>
         <method name="StopNotify"></method>
