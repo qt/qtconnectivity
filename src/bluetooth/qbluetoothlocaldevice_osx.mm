@@ -464,6 +464,8 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         return;
     }
 
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     return d_ptr->requestPairing(address, pairing);
 }
 

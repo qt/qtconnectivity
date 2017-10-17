@@ -291,6 +291,8 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     typedef QBluetoothServerPrivate::ObjCListener ObjCListener;
 
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     if (d_ptr->listener) {
         qCWarning(QT_BT_OSX) << "already in listen mode, close server first";
         return false;

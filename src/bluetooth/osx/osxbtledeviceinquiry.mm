@@ -234,7 +234,7 @@ QT_USE_NAMESPACE
     Q_ASSERT(leQueue);
 
     const auto state = central.state;
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStatePoweredOn) {
 #else
     if (state == CBCentralManagerStatePoweredOn) {
@@ -259,7 +259,7 @@ QT_USE_NAMESPACE
 
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
 #else
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
@@ -276,7 +276,7 @@ QT_USE_NAMESPACE
         }
 
         [manager setDelegate:nil];
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0)
+#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     } else if (state == CBManagerStatePoweredOff) {
 #else
     } else if (state == CBCentralManagerStatePoweredOff) {

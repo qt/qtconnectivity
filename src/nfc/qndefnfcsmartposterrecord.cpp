@@ -141,12 +141,10 @@ void QNdefNfcSmartPosterRecord::setPayload(const QByteArray &payload)
 
     if (!payload.isEmpty()) {
         // Create new structure
-        QNdefMessage message = QNdefMessage::fromByteArray(payload);
+        const QNdefMessage message = QNdefMessage::fromByteArray(payload);
 
         // Iterate through all the records contained in the payload's message.
-        for (QList<QNdefRecord>::const_iterator iter = message.begin(); iter != message.end(); iter++) {
-            QNdefRecord record = *iter;
-
+        for (const QNdefRecord& record : message) {
             // Title
             if (record.isRecordType<QNdefNfcTextRecord>()) {
                 addTitleInternal(record);
