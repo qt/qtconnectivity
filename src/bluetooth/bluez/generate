@@ -20,3 +20,7 @@ qdbusxml2cpp -p properties_p.h:properties.cpp org.freedesktop.dbus.properties.xm
 qdbusxml2cpp -p obex_client1_bluez5_p.h:obex_client1_bluez5_p.h org.bluez.Client1.xml
 qdbusxml2cpp -p obex_objectpush1_bluez5_p.h:obex_objectpush1_bluez5.cpp org.bluez.obex.ObjectPush1.xml
 qdbusxml2cpp -p obex_transfer1_bluez5_p.h:obex_transfer1_bluez5_p.h org.bluez.obex.Transfer1.xml
+qdbusxml2cpp -p gattchar1_p.h:gattchar1.cpp org.bluez.GattCharacteristic1.xml
+qdbusxml2cpp -p gattdesc1_p.h:gattdesc1.cpp org.bluez.GattDescriptor1.xml
+qdbusxml2cpp -p gattservice1_p.h:gattservice1.cpp org.bluez.GattService1.xml
+
