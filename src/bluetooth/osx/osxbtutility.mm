@@ -48,6 +48,7 @@
 #ifndef QT_IOS_BLUETOOTH
 
 #import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
+#import <CoreFoundation/CoreFoundation.h>
 #if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
 #import <CoreBluetooth/CBUUID.h>
 #endif
@@ -164,7 +165,19 @@ QString qt_error_string(IOReturn errorCode)
     }
 }
 
-#endif
+void qt_test_iobluetooth_runloop()
+{
+    // IOBluetooth heavily relies on a CFRunLoop machinery in a way it dispatches
+    // its callbacks. Technically, having a QThread with CFRunLoop-based event
+    // dispatcher would suffice. At the moment of writing we do not have such
+    // event dispatcher, so we only can work on the main thread.
+    if (CFRunLoopGetMain() != CFRunLoopGetCurrent()) {
+        qCWarning(QT_BT_OSX) << "IOBluetooth works only on the main thread or a"
+                             << "thread with a running CFRunLoop";
+    }
+}
+
+#endif // !QT_IOS_BLUETOOTH
 
 
 // Apple has: CBUUID, NSUUID, CFUUID, IOBluetoothSDPUUID

@@ -287,8 +287,9 @@ BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &address);
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid);
 QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid);
 QString qt_error_string(IOReturn errorCode);
+void qt_test_iobluetooth_runloop();
 
-#endif
+#endif // !QT_IOS_BLUETOOTH
 
 QBluetoothUuid qt_uuid(CBUUID *uuid);
 CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid);

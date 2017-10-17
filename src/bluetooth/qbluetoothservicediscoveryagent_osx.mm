@@ -526,6 +526,8 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
 
 void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 {
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     if (d_ptr->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
         && d_ptr->error != InvalidBluetoothAdapterError)
     {

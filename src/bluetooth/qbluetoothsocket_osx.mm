@@ -443,6 +443,8 @@ qint64 QBluetoothSocket::bytesToWrite() const
 
 void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     // Report this problem early, potentially avoid device discovery:
     if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
@@ -480,6 +482,8 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                                         OpenMode openMode)
 {
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     // Report this problem early, avoid device discovery:
     if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
@@ -505,6 +509,8 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port,
                                         OpenMode openMode)
 {
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
         d_ptr->errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
@@ -571,6 +577,8 @@ void QBluetoothSocket::setSocketError(QBluetoothSocket::SocketError socketError)
 
 void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+
     setSocketState(ServiceLookupState);
 
     if (d_ptr->discoveryAgent)
