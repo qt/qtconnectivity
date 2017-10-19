@@ -228,7 +228,7 @@ QQmlNdefRecord *qNewDeclarativeNdefRecordForNdefRecord(const QNdefRecord &record
             continue;
 
         return static_cast<QQmlNdefRecord *>(metaObject->newInstance(
-            Q_ARG(QNdefRecord, record), Q_ARG(QObject *, 0)));
+            Q_ARG(QNdefRecord, record), Q_ARG(QObject*, 0)));
     }
 
     return new QQmlNdefRecord(record);
