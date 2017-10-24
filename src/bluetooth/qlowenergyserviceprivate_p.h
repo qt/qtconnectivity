@@ -63,7 +63,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyControllerPrivate;
+class QLowEnergyControllerPrivateBase;
 
 class QLowEnergyServicePrivate : public QObject
 {
@@ -92,7 +92,7 @@ public:
         Characteristic = 0x2803
     };
 
-    void setController(QLowEnergyControllerPrivate* control);
+    void setController(QLowEnergyControllerPrivateBase* control);
     void setError(QLowEnergyService::ServiceError newError);
     void setState(QLowEnergyService::ServiceState newState);
 
@@ -122,7 +122,7 @@ public:
 
     QHash<QLowEnergyHandle, CharData> characteristicList;
 
-    QPointer<QLowEnergyControllerPrivate> controller;
+    QPointer<QLowEnergyControllerPrivateBase> controller;
 
 #if defined(QT_ANDROID_BLUETOOTH)
     // reference to the BluetoothGattService object

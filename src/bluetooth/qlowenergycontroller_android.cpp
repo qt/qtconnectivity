@@ -70,9 +70,7 @@ static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
 }
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError),
+    : QLowEnergyControllerPrivateBase(),
       hub(0)
 {
     registerQLowEnergyControllerMetaType();

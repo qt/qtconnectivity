@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 class QLowEnergyAdvertisingParameters;
 class QLowEnergyConnectionParameters;
-class QLowEnergyControllerPrivate;
+class QLowEnergyControllerPrivateBase;
 class QLowEnergyServiceData;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyController : public QObject
@@ -152,7 +152,7 @@ private:
     explicit QLowEnergyController(QObject *parent = nullptr); // For the peripheral role.
 
     Q_DECLARE_PRIVATE(QLowEnergyController)
-    QLowEnergyControllerPrivate *d_ptr;
+    QLowEnergyControllerPrivateBase *d_ptr;
 };
 
 QT_END_NAMESPACE

@@ -97,6 +97,12 @@ bool isBluez5()
     return (*bluezVersion() == BluezVersion5);
 }
 
+bool isBluez5DbusGatt()
+{
+    //TODO implement
+    return false;
+}
+
 struct AdapterData
 {
 public:

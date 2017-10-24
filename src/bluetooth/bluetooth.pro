@@ -47,6 +47,7 @@ PRIVATE_HEADERS += \
     qprivatelinearbuffer_p.h \
     qbluetoothlocaldevice_p.h \
     qlowenergycontroller_p.h \
+    qlowenergycontrollerbase_p.h \
     qlowenergyserviceprivate_p.h \
     qleadvertiser_p.h \
     lecmaccalculator_p.h
@@ -76,6 +77,7 @@ SOURCES += \
     qlowenergydescriptor.cpp \
     qlowenergydescriptordata.cpp \
     qlowenergycontroller.cpp \
+    qlowenergycontrollerbase.cpp \
     qlowenergyserviceprivate.cpp
 
 win32 {
@@ -107,7 +109,11 @@ qtConfig(bluez) {
         SOURCES +=  \
             qleadvertiser_bluez.cpp \
             qlowenergycontroller_bluez.cpp \
-            lecmaccalculator.cpp
+            lecmaccalculator.cpp \
+            qlowenergycontroller_bluezdbus.cpp
+
+        PRIVATE_HEADERS += qlowenergycontroller_bluezdbus_p.h
+
         qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
         DEFINES += QT_BLUEZ_NO_BTLE
@@ -160,6 +166,8 @@ qtConfig(bluez) {
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_osx_p.h
 
+    PRIVATE_HEADERS -= qlowenergycontrollerbase_p.h
+
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
@@ -169,6 +177,7 @@ qtConfig(bluez) {
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
     SOURCES -= qlowenergycontroller_p.cpp
+    SOURCES -= qlowenergycontrollerbase.cpp
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework CoreBluetooth
@@ -181,6 +190,8 @@ qtConfig(bluez) {
     PRIVATE_HEADERS += \
         qlowenergycontroller_osx_p.h
 
+    PRIVATE_HEADERS -= qlowenergycontrollerbase_p.h
+
     include(osx/osxbt.pri)
     SOURCES += \
         qbluetoothlocaldevice_p.cpp \
@@ -192,6 +203,7 @@ qtConfig(bluez) {
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
+    SOURCES -= qlowenergycontrollerbase.cpp
 } else: qtConfig(winrt_bt) {
     DEFINES += QT_WINRT_BLUETOOTH
     !winrt {

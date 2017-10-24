@@ -75,7 +75,7 @@ QT_END_NAMESPACE
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"
-#include "qlowenergyserviceprivate_p.h"
+#include "qlowenergycontrollerbase_p.h"
 
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
 #include <QtBluetooth/QBluetoothSocket>
@@ -107,47 +107,39 @@ class QWinRTLowEnergyServiceHandler;
 
 extern void registerQLowEnergyControllerMetaType();
 
-typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 class QLeAdvertiser;
 
-class QLowEnergyControllerPrivate : public QObject
+class QLowEnergyControllerPrivate : public QLowEnergyControllerPrivateBase
 {
     Q_OBJECT
-    Q_DECLARE_PUBLIC(QLowEnergyController)
 public:
     QLowEnergyControllerPrivate();
     ~QLowEnergyControllerPrivate();
 
-    void init();
+    void init() override;
 
-    void setError(QLowEnergyController::Error newError);
-    bool isValidLocalAdapter();
+    void connectToDevice() override;
+    void disconnectFromDevice() override;
 
-    void setState(QLowEnergyController::ControllerState newState);
-
-    void connectToDevice();
-    void disconnectFromDevice();
-
-    void discoverServices();
+    void discoverServices() override;
     void invalidateServices();
 
-    void discoverServiceDetails(const QBluetoothUuid &service);
+    void discoverServiceDetails(const QBluetoothUuid &service) override;
 
     void startAdvertising(const QLowEnergyAdvertisingParameters &params,
                           const QLowEnergyAdvertisingData &advertisingData,
-                          const QLowEnergyAdvertisingData &scanResponseData);
-    void stopAdvertising();
+                          const QLowEnergyAdvertisingData &scanResponseData) override;
+    void stopAdvertising() override;
 
-    void requestConnectionUpdate(const QLowEnergyConnectionParameters &params);
+    void requestConnectionUpdate(const QLowEnergyConnectionParameters &params) override;
 
     // misc helpers
-    QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(
-            QLowEnergyHandle handle);
+
     QLowEnergyCharacteristic characteristicForHandle(
             QLowEnergyHandle handle);
     QLowEnergyDescriptor descriptorForHandle(
             QLowEnergyHandle handle);
-    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service);
+    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
 
 
     quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
@@ -160,39 +152,25 @@ public:
 
     // read data
     void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
-                            const QLowEnergyHandle charHandle);
+                            const QLowEnergyHandle charHandle) override;
     void readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
                         const QLowEnergyHandle charHandle,
-                        const QLowEnergyHandle descriptorHandle);
+                        const QLowEnergyHandle descriptorHandle) override;
 
     // write data
     void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                              const QLowEnergyHandle charHandle,
-                             const QByteArray &newValue, QLowEnergyService::WriteMode mode);
+                             const QByteArray &newValue, QLowEnergyService::WriteMode mode) override;
     void writeDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
                          const QLowEnergyHandle charHandle,
                          const QLowEnergyHandle descriptorHandle,
-                         const QByteArray &newValue);
+                         const QByteArray &newValue) override;
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
-                                   QLowEnergyHandle startHandle);
+                                   QLowEnergyHandle startHandle) override;
 
-    QBluetoothAddress remoteDevice;
-    QBluetoothAddress localAdapter;
-    QLowEnergyController::Role role;
-
-    QString remoteName;
-
-    QLowEnergyController::ControllerState state;
-    QLowEnergyController::Error error;
-    QString errorString;
-
-    // list of all found service uuids on remote device
-    ServiceDataMap serviceList;
 
     QLowEnergyHandle lastLocalHandle;
-    // list of all service uuids on local peripheral device
-    ServiceDataMap localServices;
 
     struct Attribute {
         Attribute() : handle(0) {}
@@ -208,8 +186,6 @@ public:
         int maxLength;
     };
     QVector<Attribute> localAttributes;
-
-    QLowEnergyController::RemoteAddressType addressType;
 
 private:
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
@@ -488,8 +464,6 @@ private:
     void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
 #endif
-private:
-    QLowEnergyController *q_ptr;
 
 };
 

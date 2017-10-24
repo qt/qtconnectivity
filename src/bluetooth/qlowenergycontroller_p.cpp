@@ -45,9 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError),
+    : QLowEnergyControllerPrivateBase(),
       lastLocalHandle(0)
 {
 #ifndef QT_IOS_BLUETOOTH

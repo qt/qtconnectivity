@@ -275,9 +275,7 @@ signals:
 };
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError)
+    : QLowEnergyControllerPrivateBase()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
 

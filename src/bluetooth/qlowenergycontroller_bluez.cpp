@@ -264,9 +264,7 @@ template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
 }
 
 QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError),
+    : QLowEnergyControllerPrivateBase(),
       lastLocalHandle(0),
       l2cpSocket(0), requestPending(false),
       mtuSize(ATT_DEFAULT_LE_MTU),

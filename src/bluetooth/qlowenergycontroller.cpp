@@ -48,6 +48,12 @@
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtCore/QLoggingCategory>
 
+
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+#include "bluez/bluez5_helper_p.h"
+#include "qlowenergycontroller_bluezdbus_p.h"
+#endif
+
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -278,79 +284,6 @@ void registerQLowEnergyControllerMetaType()
     }
 }
 
-
-void QLowEnergyControllerPrivate::setError(
-        QLowEnergyController::Error newError)
-{
-    Q_Q(QLowEnergyController);
-    error = newError;
-
-    switch (newError) {
-    case QLowEnergyController::UnknownRemoteDeviceError:
-        errorString = QLowEnergyController::tr("Remote device cannot be found");
-        break;
-    case QLowEnergyController::InvalidBluetoothAdapterError:
-        errorString = QLowEnergyController::tr("Cannot find local adapter");
-        break;
-    case QLowEnergyController::NetworkError:
-        errorString = QLowEnergyController::tr("Error occurred during connection I/O");
-        break;
-    case QLowEnergyController::ConnectionError:
-        errorString = QLowEnergyController::tr("Error occurred trying to connect to remote device.");
-        break;
-    case QLowEnergyController::AdvertisingError:
-        errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
-        break;
-    case QLowEnergyController::RemoteHostClosedError:
-        errorString = QLowEnergyController::tr("Remote device closed the connection");
-        break;
-    case QLowEnergyController::NoError:
-        return;
-    default:
-    case QLowEnergyController::UnknownError:
-        errorString = QLowEnergyController::tr("Unknown Error");
-        break;
-    }
-
-    emit q->error(newError);
-}
-
-bool QLowEnergyControllerPrivate::isValidLocalAdapter()
-{
-#ifdef QT_WINRT_BLUETOOTH
-    return true;
-#endif
-    if (localAdapter.isNull())
-        return false;
-
-    const QList<QBluetoothHostInfo> foundAdapters = QBluetoothLocalDevice::allDevices();
-    bool adapterFound = false;
-
-    foreach (const QBluetoothHostInfo &info, foundAdapters) {
-        if (info.address() == localAdapter) {
-            adapterFound = true;
-            break;
-        }
-    }
-
-    return adapterFound;
-}
-
-void QLowEnergyControllerPrivate::setState(
-        QLowEnergyController::ControllerState newState)
-{
-    Q_Q(QLowEnergyController);
-    if (state == newState)
-        return;
-
-    state = newState;
-    if (state == QLowEnergyController::UnconnectedState
-            && role == QLowEnergyController::PeripheralRole) {
-        remoteDevice.clear();
-    }
-    emit q->stateChanged(state);
-}
-
 void QLowEnergyControllerPrivate::invalidateServices()
 {
     foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values()) {
@@ -361,20 +294,6 @@ void QLowEnergyControllerPrivate::invalidateServices()
     serviceList.clear();
 }
 
-QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivate::serviceForHandle(
-        QLowEnergyHandle handle)
-{
-    ServiceDataMap &currentList = serviceList;
-    if (role == QLowEnergyController::PeripheralRole)
-        currentList = localServices;
-
-    const QList<QSharedPointer<QLowEnergyServicePrivate>> values = currentList.values();
-    for (auto service: values)
-        if (service->startHandle <= handle && handle <= service->endHandle)
-            return service;
-
-    return QSharedPointer<QLowEnergyServicePrivate>();
-}
 
 /*!
     Returns a valid characteristic if the given handle is the
@@ -497,9 +416,19 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
                             QObject *parent)
-    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+    : QObject(parent)
 {
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+    if (isBluez5DbusGatt())
+        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
+    else
+        d_ptr = new QLowEnergyControllerPrivate();
+#else
+    d_ptr = new QLowEnergyControllerPrivate();
+#endif
+
     Q_D(QLowEnergyController);
+
     d->q_ptr = this;
     d->role = CentralRole;
     d->remoteDevice = remoteDevice;
@@ -524,8 +453,17 @@ QLowEnergyController::QLowEnergyController(
 QLowEnergyController::QLowEnergyController(
                             const QBluetoothDeviceInfo &remoteDeviceInfo,
                             QObject *parent)
-    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+    : QObject(parent)
 {
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+    if (isBluez5DbusGatt())
+        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
+    else
+        d_ptr = new QLowEnergyControllerPrivate();
+#else
+    d_ptr = new QLowEnergyControllerPrivate();
+#endif
+
     Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->role = CentralRole;
@@ -555,8 +493,17 @@ QLowEnergyController::QLowEnergyController(
                             const QBluetoothAddress &remoteDevice,
                             const QBluetoothAddress &localDevice,
                             QObject *parent)
-    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+    : QObject(parent)
 {
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+    if (isBluez5DbusGatt())
+        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
+    else
+        d_ptr = new QLowEnergyControllerPrivate();
+#else
+    d_ptr = new QLowEnergyControllerPrivate();
+#endif
+
     Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->role = CentralRole;
@@ -598,8 +545,17 @@ QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
 }
 
 QLowEnergyController::QLowEnergyController(QObject *parent)
-    : QObject(parent), d_ptr(new QLowEnergyControllerPrivate())
+    : QObject(parent)
 {
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+    if (isBluez5DbusGatt())
+        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
+    else
+        d_ptr = new QLowEnergyControllerPrivate();
+#else
+    d_ptr = new QLowEnergyControllerPrivate();
+#endif
+
     Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->role = PeripheralRole;
