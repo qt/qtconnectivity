@@ -52,7 +52,7 @@
 // We mean it.
 //
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 
 #include "qbluetoothlocaldevice.h"
 

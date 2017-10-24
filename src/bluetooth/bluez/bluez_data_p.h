@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -99,6 +99,10 @@ struct bt_security {
 #define BDADDR_LE_PUBLIC    0x01
 #define BDADDR_LE_RANDOM    0x02
 
+#define SCO_LINK    0x00
+#define ACL_LINK    0x01
+#define ESCO_LINK   0x02
+#define LE_LINK     0x80    // based on hcitool.c -> no fixed constant available
 
 /* Byte order conversions */
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -200,7 +204,10 @@ template<> inline void putBtData(quint128 src, void *dst)
 
 // HCI related
 
-#define HCI_MAX_DEV 16
+#define HCI_MAX_DEV     16
+#define HCI_DEV_NONE    0xffff
+
+#define HCI_CHANNEL_CONTROL     0x3
 
 #define HCI_MAX_EVENT_SIZE 260
 

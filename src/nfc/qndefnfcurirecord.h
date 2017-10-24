@@ -40,7 +40,7 @@
 #ifndef QNDEFNFCURIRECORD_H
 #define QNDEFNFCURIRECORD_H
 
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 
 QT_FORWARD_DECLARE_CLASS(QUrl)

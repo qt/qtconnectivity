@@ -49,11 +49,18 @@
 #include <qbluetoothdeviceinfo.h>
 #include <qbluetoothlocaldevice.h>
 
+#ifdef Q_OS_ANDROID
+#include <QtAndroidExtras/QtAndroid>
+#endif
+
 #include <QTimer>
 
 #include <QDebug>
 
 static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
+#ifdef Q_OS_ANDROID
+static const QLatin1String reverseUuid("c8e96402-0102-cf9c-274b-701a950fe1e8");
+#endif
 
 Chat::Chat(QWidget *parent)
     : QDialog(parent),  currentAdapterIndex(0), ui(new Ui_Chat)
@@ -170,7 +177,14 @@ void Chat::connectClicked()
                                            localAdapters.at(currentAdapterIndex).address();
 
     RemoteSelector remoteSelector(adapter);
+#ifdef Q_OS_ANDROID
+    if (QtAndroid::androidSdkVersion() >= 23)
+        remoteSelector.startDiscovery(QBluetoothUuid(reverseUuid));
+    else
+        remoteSelector.startDiscovery(QBluetoothUuid(serviceUuid));
+#else
     remoteSelector.startDiscovery(QBluetoothUuid(serviceUuid));
+#endif
     if (remoteSelector.exec() == QDialog::Accepted) {
         QBluetoothServiceInfo service = remoteSelector.service();
 

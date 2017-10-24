@@ -30,5 +30,11 @@
 
 int main()
 {
+#ifdef BDADDR_NONE
+    bacmp(BDADDR_ANY, BDADDR_NONE);
+#else
+    bacmp(BDADDR_ANY, BDADDR_LOCAL);
+#endif
+
     return 0;
 }

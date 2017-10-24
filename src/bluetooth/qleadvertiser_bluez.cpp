@@ -102,7 +102,6 @@ void QLeAdvertiserBluez::doStartAdvertising()
         return;
     }
 
-    m_disableCommandFinished = false;
     m_sendPowerLevel = advertisingData().includePowerLevel()
             || scanResponseData().includePowerLevel();
     if (m_sendPowerLevel)
@@ -115,6 +114,7 @@ void QLeAdvertiserBluez::doStartAdvertising()
 void QLeAdvertiserBluez::doStopAdvertising()
 {
     toggleAdvertising(false);
+    sendNextCommand();
 }
 
 void QLeAdvertiserBluez::queueCommand(OpCodeCommandField ocf, const QByteArray &data)
@@ -408,14 +408,17 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
     if (m_pendingCommands.isEmpty())
         return;
     const quint16 ocf = ocfFromOpCode(opCode);
-    if (m_pendingCommands.first().ocf != ocf)
+    const Command currentCmd = m_pendingCommands.first();
+    if (currentCmd.ocf != ocf)
         return; // Not one of our commands.
     m_pendingCommands.takeFirst();
     if (status != 0) {
         qCDebug(QT_BT_BLUEZ) << "command" << ocf << "failed with status" << status;
-        if (ocf == OcfLeSetAdvEnable && !m_disableCommandFinished && status == 0xc) {
-            qCDebug(QT_BT_BLUEZ) << "initial advertising disable failed, ignoring";
-            m_disableCommandFinished = true;
+        if (ocf == OcfLeSetAdvEnable && status == 0xc && currentCmd.data == QByteArray(1, '\0')) {
+            // we ignore OcfLeSetAdvEnable if it tries to disable an active advertisement
+            // it seems the platform often automatically turns off advertisements
+            // subsequently the explicit stopAdvertisement call fails when re-issued
+            qCDebug(QT_BT_BLUEZ) << "Advertising disable failed, ignoring";
             sendNextCommand();
             return;
         }
@@ -438,10 +441,6 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
             qCDebug(QT_BT_BLUEZ) << "TX power level is" << m_powerLevel;
         }
         queueAdvertisingCommands();
-        break;
-    case OcfLeSetAdvEnable:
-        if (!m_disableCommandFinished)
-            m_disableCommandFinished = true;
         break;
     default:
         break;

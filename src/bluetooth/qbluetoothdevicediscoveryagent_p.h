@@ -83,11 +83,11 @@ QT_END_NAMESPACE
 #include <QtConcurrent>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 #ifdef QT_WINRT_BLUETOOTH
 class QWinRTBluetoothDeviceDiscoveryWorker;
 #endif
-
-QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgentPrivate
 #if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH) || defined(QT_WIN_BLUETOOTH)
@@ -158,7 +158,7 @@ private:
     QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
 
     void deviceFoundBluez5(const QString& devicePath);
-    void startBluez5();
+    void startBluez5(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods);
 
     bool useExtendedDiscovery;
     QTimer extendedDiscoveryTimer;
@@ -193,7 +193,6 @@ private:
 private slots:
     void registerDevice(const QBluetoothDeviceInfo &info);
     void onScanFinished();
-    void onScanCanceled();
 
 private:
     void disconnectAndClearWorker();

@@ -52,7 +52,7 @@
 //
 
 #include <QtCore/QObject>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 #include "qllcpsocket_p.h"
 
 QT_BEGIN_NAMESPACE

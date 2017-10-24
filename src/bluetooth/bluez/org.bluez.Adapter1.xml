@@ -7,6 +7,10 @@
     <method name="RemoveDevice">
       <arg name="device" type="o" direction="in"/>
     </method>
+    <method name="SetDiscoveryFilter">
+        <arg name="properties" type="a{sv}" direction="in"/>
+        <annotation name="org.qtproject.QtDBus.QtTypeName.In0" value="QVariantMap"/>
+    </method>
     <property name="Address" type="s" access="read"></property>
     <property name="Name" type="s" access="read"></property>
     <property name="Alias" type="s" access="readwrite"></property>

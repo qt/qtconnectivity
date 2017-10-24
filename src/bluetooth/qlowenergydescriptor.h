@@ -89,4 +89,6 @@ protected:
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QLowEnergyDescriptor)
+
 #endif // QLOWENERGYDESCRIPTOR_H

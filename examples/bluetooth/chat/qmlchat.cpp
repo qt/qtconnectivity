@@ -44,9 +44,14 @@
 #include <QtQml/QQmlContext>
 #include <QDebug>
 #include <QBluetoothLocalDevice>
+#include <QtCore/QLoggingCategory>
+#ifdef Q_OS_ANDROID
+#include <QtAndroidExtras/QtAndroid>
+#endif
 
 int main(int argc, char *argv[])
 {
+    //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication application(argc, argv);
 
     QList<QBluetoothHostInfo> infos = QBluetoothLocalDevice::allDevices();
@@ -56,6 +61,19 @@ int main(int argc, char *argv[])
 
     const QString mainQmlApp = QLatin1String("qrc:/chat.qml");
     QQuickView view;
+
+#ifdef Q_OS_ANDROID
+    //workaround for Android's SDP discovery bug (see QTBUG-61392)
+    QString uuid;
+    if (QtAndroid::androidSdkVersion() >= 23)
+        uuid = QStringLiteral("c8e96402-0102-cf9c-274b-701a950fe1e8");
+    else
+        uuid = QStringLiteral("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
+#else
+    const QString uuid(QStringLiteral("e8e10f95-1a70-4b27-9ccf-02010264e9c8"));
+#endif
+
+    view.engine()->rootContext()->setContextProperty(QStringLiteral("targetUuid"), uuid);
     view.setSource(QUrl(mainQmlApp));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     // Qt.quit() called in embedded .qml by default only emits

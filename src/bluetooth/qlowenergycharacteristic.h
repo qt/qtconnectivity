@@ -107,4 +107,6 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyCharacteristic::PropertyTypes)
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QLowEnergyCharacteristic)
+
 #endif // QLOWENERGYCHARACTERISTIC_H

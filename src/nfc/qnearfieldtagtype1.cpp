@@ -174,7 +174,7 @@ void QNearFieldTagType1Private::progressToNextNdefReadMessageState()
         delete m_tlvReader;
         m_tlvReader = new QTlvReader(q);
 
-        // fall through
+        Q_FALLTHROUGH(); // fall through
     }
     case NdefReadReadingTlv:
         Q_ASSERT(m_tlvReader);
@@ -252,7 +252,7 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
         delete m_tlvReader;
         m_tlvReader = new QTlvReader(q);
 
-        // fall through
+        Q_FALLTHROUGH(); // fall through
     }
     case NdefWriteReadingTlv:
         Q_ASSERT(m_tlvReader);

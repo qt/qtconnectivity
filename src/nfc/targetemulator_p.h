@@ -53,7 +53,7 @@
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QByteArray>
-#include <QtNfc/qnfcglobal.h>
+#include <QtNfc/qtnfcglobal.h>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 

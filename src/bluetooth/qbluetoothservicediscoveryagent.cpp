@@ -442,7 +442,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 
     setDiscoveryState(DeviceDiscovery);
 
-    deviceDiscoveryAgent->start();
+    deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
 }
 
 /*!
@@ -450,6 +450,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
 */
 void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
 {
+    // disconnect to avoid recursion during stop() - QTBUG-60131
+    // we don't care about a potential signals from device discovery agent anymore
+    deviceDiscoveryAgent->disconnect();
+
     deviceDiscoveryAgent->stop();
     delete deviceDiscoveryAgent;
     deviceDiscoveryAgent = 0;
@@ -496,6 +500,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
 {
     error = static_cast<QBluetoothServiceDiscoveryAgent::Error>(newError);
     errorString = deviceDiscoveryAgent->errorString();
+
+    // disconnect to avoid recursion during stop() - QTBUG-60131
+    // we don't care about a potential signals from device discovery agent anymore
+    deviceDiscoveryAgent->disconnect();
 
     deviceDiscoveryAgent->stop();
     delete deviceDiscoveryAgent;

@@ -1,4 +1,4 @@
-QT = core bluetooth testlib
+QT = core bluetooth-private testlib
 
 # Android requires GUI application when running test
 android: QT += widgets

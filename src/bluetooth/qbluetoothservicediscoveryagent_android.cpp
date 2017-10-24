@@ -244,6 +244,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
 
     //could not find any service for the current address/device -> go to next one
     if (address.isNull() || uuids.isEmpty()) {
+        if (discoveredDevices.count() == 1) {
+            Q_Q(QBluetoothServiceDiscoveryAgent);
+            QTimer::singleShot(4000, q, SLOT(_q_fetchUuidsTimeout()));
+        }
         _q_serviceDiscoveryFinished();
         return;
     }

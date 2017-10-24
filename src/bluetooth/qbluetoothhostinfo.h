@@ -40,7 +40,7 @@
 #ifndef QBLUETOOTHHOSTINFO_H
 #define QBLUETOOTHHOSTINFO_H
 
-#include <QtBluetooth/qbluetoothglobal.h>
+#include <QtBluetooth/qtbluetoothglobal.h>
 #include <QtBluetooth/QBluetoothAddress>
 
 QT_BEGIN_NAMESPACE

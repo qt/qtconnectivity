@@ -41,7 +41,6 @@
 #ifndef ANNOTATEDURL_H
 #define ANNOTATEDURL_H
 
-#include <qnfcglobal.h>
 #include <QNdefMessage>
 
 #include <QtCore/QObject>

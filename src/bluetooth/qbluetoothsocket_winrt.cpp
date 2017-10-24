@@ -40,6 +40,9 @@
 #include "qbluetoothsocket.h"
 #include "qbluetoothsocket_p.h"
 
+#ifdef CLASSIC_APP_BUILD
+#define Q_OS_WINRT
+#endif
 #include <qfunctions_winrt.h>
 
 #include <private/qeventdispatcher_winrt_p.h>
@@ -223,7 +226,7 @@ public:
         // the closing of the socket won't be communicated to the caller. So only the error is set. The
         // actual socket close happens inside of read.
         if (!bufferLength) {
-            emit socketErrorOccured(QBluetoothSocket::NetworkError);
+            emit socketErrorOccured(QBluetoothSocket::RemoteHostClosedError);
             return S_OK;
         }
 
@@ -422,6 +425,9 @@ QString QBluetoothSocketPrivate::localName() const
 
 QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
 {
+    if (!m_socketObject)
+        return QBluetoothAddress();
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -437,6 +443,9 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
 
 quint16 QBluetoothSocketPrivate::localPort() const
 {
+    if (!m_socketObject)
+        return 0;
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -449,6 +458,9 @@ quint16 QBluetoothSocketPrivate::localPort() const
 
 QString QBluetoothSocketPrivate::peerName() const
 {
+    if (!m_socketObject)
+        return QString();
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -464,6 +476,9 @@ QString QBluetoothSocketPrivate::peerName() const
 
 QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
 {
+    if (!m_socketObject)
+        return QBluetoothAddress();
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -479,6 +494,9 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
 
 quint16 QBluetoothSocketPrivate::peerPort() const
 {
+    if (!m_socketObject)
+        return 0;
+
     HRESULT hr;
     ComPtr<IStreamSocketInformation> info;
     hr = m_socketObject->get_Information(&info);
@@ -569,6 +587,16 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return buffer.size();
 }
 
+qint64 QBluetoothSocketPrivate::bytesToWrite() const
+{
+    return 0; // nothing because always unbuffered
+}
+
+bool QBluetoothSocketPrivate::canReadLine() const
+{
+    return buffer.canReadLine();
+}
+
 void QBluetoothSocketPrivate::handleNewData(const QVector<QByteArray> &data)
 {
     // Defer putting the data into the list until the next event loop iteration
@@ -583,6 +611,9 @@ void QBluetoothSocketPrivate::handleError(QBluetoothSocket::SocketError error)
     switch (error) {
     case QBluetoothSocket::NetworkError:
         errorString = QBluetoothSocket::tr("Network error");
+        break;
+    case QBluetoothSocket::RemoteHostClosedError:
+        errorString = QBluetoothSocket::tr("Remote host closed connection");
         break;
     default:
         errorString = QBluetoothSocket::tr("Unknown socket error");

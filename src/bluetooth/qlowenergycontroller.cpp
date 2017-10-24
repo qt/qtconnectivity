@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -138,6 +138,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                         This value was introduced by Qt 5.5.
     \value AdvertisingError             The attempt to start advertising failed.
                                         This value was introduced by Qt 5.7.
+    \value RemoteHostClosedError        The remote device closed the connection.
+                                        This value was introduced by Qt 5.10.
 */
 
 /*!
@@ -298,6 +300,9 @@ void QLowEnergyControllerPrivate::setError(
         break;
     case QLowEnergyController::AdvertisingError:
         errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
+        break;
+    case QLowEnergyController::RemoteHostClosedError:
+        errorString = QLowEnergyController::tr("Remote device closed the connection");
         break;
     case QLowEnergyController::NoError:
         return;
@@ -691,6 +696,19 @@ QLowEnergyController::RemoteAddressType QLowEnergyController::remoteAddressType(
 /*!
     Sets the remote address \a type. The type is required to connect
     to the remote Bluetooth Low Energy device.
+
+    This attribute is only required to be set on Linux/BlueZ systems with older
+    Linux kernels (v3.3 or lower), or if CAP_NET_ADMIN is not set for the executable.
+    The default value of the attribute is \l RandomAddress.
+
+    \note All other platforms handle this flag transparently and therefore applications
+    can ignore it entirely. On Linux, the address type flag is not directly exposed
+    by BlueZ although some use cases do require this information. The only way to detect
+    the flag is via the Linux kernel's Bluetooth Management API (kernel
+    version 3.4+ required). This API requires CAP_NET_ADMIN capabilities though. If the
+    local QtBluetooth process has this capability set QtBluetooth will use the API. This
+    assumes that \l QBluetoothDeviceDiscoveryAgent was used prior to calling
+    \l QLowEnergyController::connectToDevice().
  */
 void QLowEnergyController::setRemoteAddressType(
                     QLowEnergyController::RemoteAddressType type)
@@ -832,7 +850,7 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
 {
     Q_D(QLowEnergyController);
 
-    QLowEnergyService *service = Q_NULLPTR;
+    QLowEnergyService *service = nullptr;
 
     ServiceDataMap::const_iterator it = d->serviceList.constFind(serviceUuid);
     if (it != d->serviceList.constEnd()) {
@@ -918,13 +936,24 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
         return nullptr;
     }
 
+    Q_D(QLowEnergyController);
+    QLowEnergyService *newService = d->addServiceHelper(service);
+    if (newService)
+        newService->setParent(parent);
+
+    return newService;
+}
+
+QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
+                            const QLowEnergyServiceData &service)
+{
     // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).
     // Since this is not mandatory, we ignore it here and let the caller take responsibility
     // for it.
 
     const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
     servicePrivate->state = QLowEnergyService::LocalService;
-    servicePrivate->setController(d_ptr);
+    servicePrivate->setController(this);
     servicePrivate->uuid = service.uuid();
     servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
             ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
@@ -934,13 +963,13 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     }
 
     // Spec v4.2, Vol 3, Part G, Section 3.
-    const QLowEnergyHandle oldLastHandle = d_ptr->lastLocalHandle;
-    servicePrivate->startHandle = ++d_ptr->lastLocalHandle; // Service declaration.
-    d_ptr->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
+    const QLowEnergyHandle oldLastHandle = this->lastLocalHandle;
+    servicePrivate->startHandle = ++this->lastLocalHandle; // Service declaration.
+    this->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
     foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
-        const QLowEnergyHandle declHandle = ++d_ptr->lastLocalHandle;
+        const QLowEnergyHandle declHandle = ++this->lastLocalHandle;
         QLowEnergyServicePrivate::CharData charData;
-        charData.valueHandle = ++d_ptr->lastLocalHandle;
+        charData.valueHandle = ++this->lastLocalHandle;
         charData.uuid = cd.uuid();
         charData.properties = cd.properties();
         charData.value = cd.value();
@@ -948,21 +977,21 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
             QLowEnergyServicePrivate::DescData descData;
             descData.uuid = dd.uuid();
             descData.value = dd.value();
-            charData.descriptorList.insert(++d_ptr->lastLocalHandle, descData);
+            charData.descriptorList.insert(++this->lastLocalHandle, descData);
         }
         servicePrivate->characteristicList.insert(declHandle, charData);
     }
-    servicePrivate->endHandle = d_ptr->lastLocalHandle;
-    const bool handleOverflow = d_ptr->lastLocalHandle <= oldLastHandle;
+    servicePrivate->endHandle = this->lastLocalHandle;
+    const bool handleOverflow = this->lastLocalHandle <= oldLastHandle;
     if (handleOverflow) {
         qCWarning(QT_BT) << "Not enough attribute handles left to create this service";
-        d_ptr->lastLocalHandle = oldLastHandle;
+        this->lastLocalHandle = oldLastHandle;
         return nullptr;
     }
 
-    d_ptr->localServices.insert(servicePrivate->uuid, servicePrivate);
-    d_ptr->addToGenericAttributeList(service, servicePrivate->startHandle);
-    return new QLowEnergyService(servicePrivate, parent);
+    this->localServices.insert(servicePrivate->uuid, servicePrivate);
+    this->addToGenericAttributeList(service, servicePrivate->startHandle);
+    return new QLowEnergyService(servicePrivate);
 }
 
 /*!

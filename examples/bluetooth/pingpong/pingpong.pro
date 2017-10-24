@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET = pingpong
 
 QT += quick bluetooth
+android: QT += androidextras
 
 # Input
 SOURCES += main.cpp \

@@ -237,7 +237,7 @@ QBluetoothServerPrivate *QBluetoothServerPrivate::registeredServer(quint16 port,
         qCWarning(QT_BT_OSX) << "invalid protocol";
     }
 
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QBluetoothServerPrivate::unregisterServer(QBluetoothServerPrivate *server)
@@ -290,6 +290,8 @@ void QBluetoothServer::close()
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     typedef QBluetoothServerPrivate::ObjCListener ObjCListener;
+
+    OSXBluetooth::qt_test_iobluetooth_runloop();
 
     if (d_ptr->listener) {
         qCWarning(QT_BT_OSX) << "already in listen mode, close server first";
@@ -441,7 +443,7 @@ bool QBluetoothServer::hasPendingConnections() const
 QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 {
     if (!d_ptr->pendingConnections.size())
-        return Q_NULLPTR;
+        return nullptr;
 
     QScopedPointer<QBluetoothSocket> newSocket(new QBluetoothSocket);
     QBluetoothServerPrivate::PendingConnection channel(d_ptr->pendingConnections.front());
@@ -451,10 +453,10 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 
     if (d_ptr->serverType == QSInfo::RfcommProtocol) {
         if (!newSocket->d_ptr->setChannel(static_cast<IOBluetoothRFCOMMChannel *>(channel)))
-            return Q_NULLPTR;
+            return nullptr;
     } else {
         if (!newSocket->d_ptr->setChannel(static_cast<IOBluetoothL2CAPChannel *>(channel)))
-            return Q_NULLPTR;
+            return nullptr;
     }
 
     return newSocket.take();
