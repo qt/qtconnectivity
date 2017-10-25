@@ -84,7 +84,7 @@ LowEnergyNotificationHub::LowEnergyNotificationHub(const QBluetoothAddress &remo
     lock.lockForWrite();
 
     while (true) {
-        javaToCtoken = QRandomGenerator::get32();
+        javaToCtoken = QRandomGenerator::global()->generate();
         if (!hubMap()->contains(javaToCtoken))
             break;
     }
