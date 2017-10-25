@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceDataMap;
 
-class QLowEnergyControllerPrivateBase : public QObject
+class QLowEnergyControllerPrivate : public QObject
 {
     Q_OBJECT
 public:
@@ -72,8 +72,8 @@ public:
     // Bluez has a low level ATT protocol stack implementation and a DBus
     // implementation.
 
-    QLowEnergyControllerPrivateBase();
-    virtual ~QLowEnergyControllerPrivateBase();
+    QLowEnergyControllerPrivate();
+    virtual ~QLowEnergyControllerPrivate();
 
     // interface definition
     virtual void init() = 0;

@@ -305,9 +305,9 @@ QLowEnergyController::QLowEnergyController(
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivate();
+        d_ptr = new QLowEnergyControllerPrivateCommon();
 #else
-    d_ptr = new QLowEnergyControllerPrivate();
+    d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
 
     Q_D(QLowEnergyController);
@@ -342,9 +342,9 @@ QLowEnergyController::QLowEnergyController(
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivate();
+        d_ptr = new QLowEnergyControllerPrivateCommon();
 #else
-    d_ptr = new QLowEnergyControllerPrivate();
+    d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
 
     Q_D(QLowEnergyController);
@@ -382,9 +382,9 @@ QLowEnergyController::QLowEnergyController(
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivate();
+        d_ptr = new QLowEnergyControllerPrivateCommon();
 #else
-    d_ptr = new QLowEnergyControllerPrivate();
+    d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
 
     Q_D(QLowEnergyController);
@@ -434,9 +434,9 @@ QLowEnergyController::QLowEnergyController(QObject *parent)
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivate();
+        d_ptr = new QLowEnergyControllerPrivateCommon();
 #else
-    d_ptr = new QLowEnergyControllerPrivate();
+    d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
 
     Q_D(QLowEnergyController);
@@ -783,7 +783,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     return newService;
 }
 
-QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
+QLowEnergyService *QLowEnergyControllerPrivateCommon::addServiceHelper(
                             const QLowEnergyServiceData &service)
 {
     // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).

@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
-class QLowEnergyControllerPrivate;
+class QLowEnergyControllerPrivateCommon;
 class Q_BLUETOOTH_EXPORT QLowEnergyService : public QObject
 {
     Q_OBJECT
@@ -134,7 +134,7 @@ private:
 
     // QLowEnergyController is the factory for this class
     friend class QLowEnergyController;
-    friend class QLowEnergyControllerPrivate;
+    friend class QLowEnergyControllerPrivateCommon;
     QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                       QObject *parent = nullptr);
 };

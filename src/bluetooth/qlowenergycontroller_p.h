@@ -109,12 +109,12 @@ extern void registerQLowEnergyControllerMetaType();
 
 class QLeAdvertiser;
 
-class QLowEnergyControllerPrivate : public QLowEnergyControllerPrivateBase
+class QLowEnergyControllerPrivateCommon : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivate();
-    ~QLowEnergyControllerPrivate();
+    QLowEnergyControllerPrivateCommon();
+    ~QLowEnergyControllerPrivateCommon();
 
     void init() override;
 
@@ -451,7 +451,7 @@ private:
 
 };
 
-Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivate::Attribute, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateCommon::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 

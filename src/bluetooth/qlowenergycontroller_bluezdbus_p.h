@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyControllerPrivateBluezDBus : public QLowEnergyControllerPrivateBase
+class QLowEnergyControllerPrivateBluezDBus : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:

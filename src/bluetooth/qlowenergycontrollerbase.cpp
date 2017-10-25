@@ -44,16 +44,16 @@
 
 QT_BEGIN_NAMESPACE
 
-QLowEnergyControllerPrivateBase::QLowEnergyControllerPrivateBase()
+QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     : QObject()
 {
 }
 
-QLowEnergyControllerPrivateBase::~QLowEnergyControllerPrivateBase()
+QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 {
 }
 
-bool QLowEnergyControllerPrivateBase::isValidLocalAdapter()
+bool QLowEnergyControllerPrivate::isValidLocalAdapter()
 {
 #ifdef QT_WINRT_BLUETOOTH
     return true;
@@ -75,7 +75,7 @@ bool QLowEnergyControllerPrivateBase::isValidLocalAdapter()
 }
 
 
-void QLowEnergyControllerPrivateBase::setError(
+void QLowEnergyControllerPrivate::setError(
         QLowEnergyController::Error newError)
 {
     Q_Q(QLowEnergyController);
@@ -111,7 +111,7 @@ void QLowEnergyControllerPrivateBase::setError(
     emit q->error(newError);
 }
 
-void QLowEnergyControllerPrivateBase::setState(
+void QLowEnergyControllerPrivate::setState(
         QLowEnergyController::ControllerState newState)
 {
     Q_Q(QLowEnergyController);
@@ -126,7 +126,7 @@ void QLowEnergyControllerPrivateBase::setState(
     emit q->stateChanged(state);
 }
 
-QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivateBase::serviceForHandle(
+QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivate::serviceForHandle(
         QLowEnergyHandle handle)
 {
     ServiceDataMap &currentList = serviceList;
@@ -145,7 +145,7 @@ QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivateBase::servic
     Returns a valid characteristic if the given handle is the
     handle of the characteristic itself or one of its descriptors
  */
-QLowEnergyCharacteristic QLowEnergyControllerPrivateBase::characteristicForHandle(
+QLowEnergyCharacteristic QLowEnergyControllerPrivate::characteristicForHandle(
         QLowEnergyHandle handle)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(handle);
@@ -176,7 +176,7 @@ QLowEnergyCharacteristic QLowEnergyControllerPrivateBase::characteristicForHandl
     Returns a valid descriptor if \a handle belongs to a descriptor;
     otherwise an invalid one.
  */
-QLowEnergyDescriptor QLowEnergyControllerPrivateBase::descriptorForHandle(
+QLowEnergyDescriptor QLowEnergyControllerPrivate::descriptorForHandle(
         QLowEnergyHandle handle)
 {
     const QLowEnergyCharacteristic matchingChar = characteristicForHandle(handle);
@@ -196,7 +196,7 @@ QLowEnergyDescriptor QLowEnergyControllerPrivateBase::descriptorForHandle(
 /*!
     Returns the length of the updated characteristic value.
  */
-quint16 QLowEnergyControllerPrivateBase::updateValueOfCharacteristic(
+quint16 QLowEnergyControllerPrivate::updateValueOfCharacteristic(
         QLowEnergyHandle charHandle,const QByteArray &value, bool appendValue)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
@@ -220,7 +220,7 @@ quint16 QLowEnergyControllerPrivateBase::updateValueOfCharacteristic(
 /*!
     Returns the length of the updated descriptor value.
  */
-quint16 QLowEnergyControllerPrivateBase::updateValueOfDescriptor(
+quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
         QLowEnergyHandle charHandle, QLowEnergyHandle descriptorHandle,
         const QByteArray &value, bool appendValue)
 {
@@ -247,7 +247,7 @@ quint16 QLowEnergyControllerPrivateBase::updateValueOfDescriptor(
     return 0;
 }
 
-void QLowEnergyControllerPrivateBase::invalidateServices()
+void QLowEnergyControllerPrivate::invalidateServices()
 {
     foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values()) {
         service->setController(0);

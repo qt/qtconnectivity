@@ -44,8 +44,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QLowEnergyControllerPrivateBase(),
+QLowEnergyControllerPrivateCommon::QLowEnergyControllerPrivateCommon()
+    : QLowEnergyControllerPrivate(),
       lastLocalHandle(0)
 {
 #ifndef QT_IOS_BLUETOOTH
@@ -54,15 +54,15 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     registerQLowEnergyControllerMetaType();
 }
 
-QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivateCommon::~QLowEnergyControllerPrivateCommon()
 {
 }
 
-void QLowEnergyControllerPrivate::init()
+void QLowEnergyControllerPrivateCommon::init()
 {
 }
 
-void QLowEnergyControllerPrivate::connectToDevice()
+void QLowEnergyControllerPrivateCommon::connectToDevice()
 {
     // required to pass unit test on default backend
     if (remoteDevice.isNull()) {
@@ -71,39 +71,39 @@ void QLowEnergyControllerPrivate::connectToDevice()
         return;
     }
 
-    qWarning() << "QLowEnergyControllerPrivate::connectToDevice(): Not implemented";
+    qWarning() << "QLowEnergyControllerPrivateCommon::connectToDevice(): Not implemented";
     setError(QLowEnergyController::UnknownError);
 }
 
-void QLowEnergyControllerPrivate::disconnectFromDevice()
+void QLowEnergyControllerPrivateCommon::disconnectFromDevice()
 {
 
 }
 
-void QLowEnergyControllerPrivate::discoverServices()
+void QLowEnergyControllerPrivateCommon::discoverServices()
 {
 
 }
 
-void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+void QLowEnergyControllerPrivateCommon::discoverServiceDetails(const QBluetoothUuid &/*service*/)
 {
 
 }
 
-void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+void QLowEnergyControllerPrivateCommon::readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
                         const QLowEnergyHandle /*charHandle*/)
 {
 
 }
 
-void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+void QLowEnergyControllerPrivateCommon::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
                     const QLowEnergyHandle /*charHandle*/,
                     const QLowEnergyHandle /*descriptorHandle*/)
 {
 
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
+void QLowEnergyControllerPrivateCommon::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
         const QLowEnergyHandle /*charHandle*/,
         const QByteArray &/*newValue*/,
         QLowEnergyService::WriteMode /*writeMode*/)
@@ -111,7 +111,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowE
 
 }
 
-void QLowEnergyControllerPrivate::writeDescriptor(
+void QLowEnergyControllerPrivateCommon::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
         const QLowEnergyHandle /*charHandle*/,
         const QLowEnergyHandle /*descriptorHandle*/,
@@ -120,21 +120,21 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 
 }
 
-void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &/* params */,
+void QLowEnergyControllerPrivateCommon::startAdvertising(const QLowEnergyAdvertisingParameters &/* params */,
         const QLowEnergyAdvertisingData &/* advertisingData */,
         const QLowEnergyAdvertisingData &/* scanResponseData */)
 {
 }
 
-void QLowEnergyControllerPrivate::stopAdvertising()
+void QLowEnergyControllerPrivateCommon::stopAdvertising()
 {
 }
 
-void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters & /* params */)
+void QLowEnergyControllerPrivateCommon::requestConnectionUpdate(const QLowEnergyConnectionParameters & /* params */)
 {
 }
 
-void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &/* service */,
+void QLowEnergyControllerPrivateCommon::addToGenericAttributeList(const QLowEnergyServiceData &/* service */,
                                                             QLowEnergyHandle /* startHandle */)
 {
 }
