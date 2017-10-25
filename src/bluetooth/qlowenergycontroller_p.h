@@ -122,8 +122,6 @@ public:
     void disconnectFromDevice() override;
 
     void discoverServices() override;
-    void invalidateServices();
-
     void discoverServiceDetails(const QBluetoothUuid &service) override;
 
     void startAdvertising(const QLowEnergyAdvertisingParameters &params,
@@ -134,21 +132,7 @@ public:
     void requestConnectionUpdate(const QLowEnergyConnectionParameters &params) override;
 
     // misc helpers
-
-    QLowEnergyCharacteristic characteristicForHandle(
-            QLowEnergyHandle handle);
-    QLowEnergyDescriptor descriptorForHandle(
-            QLowEnergyHandle handle);
     QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
-
-
-    quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
-                                     const QByteArray &value,
-                                     bool appendValue);
-    quint16 updateValueOfDescriptor(QLowEnergyHandle charHandle,
-                                 QLowEnergyHandle descriptorHandle,
-                                 const QByteArray &value,
-                                 bool appendValue);
 
     // read data
     void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,

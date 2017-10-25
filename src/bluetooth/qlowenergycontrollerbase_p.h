@@ -134,10 +134,17 @@ public:
     ServiceDataMap localServices;
 
     //common helper functions
-
     QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(QLowEnergyHandle handle);
-
-
+    QLowEnergyCharacteristic characteristicForHandle(QLowEnergyHandle handle);
+    QLowEnergyDescriptor descriptorForHandle(QLowEnergyHandle handle);
+    quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
+                                 const QByteArray &value,
+                                 bool appendValue);
+    quint16 updateValueOfDescriptor(QLowEnergyHandle charHandle,
+                                 QLowEnergyHandle descriptorHandle,
+                                 const QByteArray &value,
+                                 bool appendValue);
+    void invalidateServices();
 
 protected:
     QLowEnergyController::ControllerState state = QLowEnergyController::UnconnectedState;
