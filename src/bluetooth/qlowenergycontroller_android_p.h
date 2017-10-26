@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCONTROLLERPRIVATE_P_H
-#define QLOWENERGYCONTROLLERPRIVATE_P_H
+#ifndef QLOWENERGYCONTROLLERPRIVATEANDROID_P_H
+#define QLOWENERGYCONTROLLERPRIVATEANDROID_P_H
 
 //
 //  W A R N I N G
@@ -51,23 +51,6 @@
 // We mean it.
 //
 
-#if defined(QT_OSX_BLUETOOTH) || defined(QT_IOS_BLUETOOTH)
-
-#include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
-
-QT_BEGIN_NAMESPACE
-
-class QLowEnergyControllerPrivate : public QObject
-{
-public:
-    // This class is required to make shared pointer machinery and
-    // moc (== Obj-C syntax) happy on both OS X and iOS.
-};
-
-QT_END_NAMESPACE
-
-#else
 
 #include <qglobal.h>
 #include <QtCore/QQueue>
@@ -77,7 +60,12 @@ QT_END_NAMESPACE
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
-#if defined(QT_WINRT_BLUETOOTH)
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+#include <QtBluetooth/QBluetoothSocket>
+#elif defined(QT_ANDROID_BLUETOOTH)
+#include <QtAndroidExtras/QAndroidJniObject>
+#include "android/lowenergynotificationhub_p.h"
+#elif defined(QT_WINRT_BLUETOOTH)
 #include <wrl.h>
 #include <windows.devices.bluetooth.h>
 #endif
@@ -89,14 +77,27 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyServiceData;
 class QTimer;
 
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+class HciManager;
+class LeCmacCalculator;
+class QSocketNotifier;
+class RemoteDeviceManager;
+#elif defined(QT_ANDROID_BLUETOOTH)
+class LowEnergyNotificationHub;
+#elif defined(QT_WINRT_BLUETOOTH)
+class QWinRTLowEnergyServiceHandler;
+#endif
+
 extern void registerQLowEnergyControllerMetaType();
 
-class QLowEnergyControllerPrivateCommon : public QLowEnergyControllerPrivate
+class QLeAdvertiser;
+
+class QLowEnergyControllerPrivateAndroid : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivateCommon();
-    ~QLowEnergyControllerPrivateCommon();
+    QLowEnergyControllerPrivateAndroid();
+    ~QLowEnergyControllerPrivateAndroid();
 
     void init() override;
 
@@ -135,62 +136,40 @@ public:
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
 
-
     QLowEnergyHandle lastLocalHandle;
-
-    struct Attribute {
-        Attribute() : handle(0) {}
-
-        QLowEnergyHandle handle;
-        QLowEnergyHandle groupEndHandle;
-        QLowEnergyCharacteristic::PropertyTypes properties;
-        QBluetooth::AttAccessConstraints readConstraints;
-        QBluetooth::AttAccessConstraints writeConstraints;
-        QBluetoothUuid type;
-        QByteArray value;
-        int minLength;
-        int maxLength;
-    };
-    QVector<Attribute> localAttributes;
-
 private:
 
-#if defined(QT_WINRT_BLUETOOTH)
+    LowEnergyNotificationHub *hub;
+
 private slots:
+    void connectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
+    void servicesDiscovered(QLowEnergyController::Error errorCode,
+                            const QString &foundServices);
+    void serviceDetailsDiscoveryFinished(const QString& serviceUuid,
+                                         int startHandle, int endHandle);
+    void characteristicRead(const QBluetoothUuid &serviceUuid, int handle,
+                            const QBluetoothUuid &charUuid, int properties,
+                            const QByteArray& data);
+    void descriptorRead(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
+                        int handle, const QBluetoothUuid &descUuid, const QByteArray &data);
+    void characteristicWritten(int charHandle, const QByteArray &data,
+                               QLowEnergyService::ServiceError errorCode);
+    void descriptorWritten(int descHandle, const QByteArray &data,
+                           QLowEnergyService::ServiceError errorCode);
+    void serverDescriptorWritten(const QAndroidJniObject &jniDesc, const QByteArray &newValue);
     void characteristicChanged(int charHandle, const QByteArray &data);
+    void serverCharacteristicChanged(const QAndroidJniObject &jniChar, const QByteArray &newValue);
+    void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
+    void advertisementError(int errorCode);
 
 private:
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
-    EventRegistrationToken mStatusChangedToken;
-    struct ValueChangedEntry {
-        ValueChangedEntry() {}
-        ValueChangedEntry(Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> c,
-                          EventRegistrationToken t)
-            : characteristic(c)
-            , token(t)
-        {
-        }
-
-        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> characteristic;
-        EventRegistrationToken token;
-    };
-    QVector<ValueChangedEntry> mValueChangedTokens;
-
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
-
-    void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
-
-    void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
-        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
-#endif
-
+    void peripheralConnectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
+    void centralConnectionUpdated(QLowEnergyController::ControllerState newState,
+                           QLowEnergyController::Error errorCode);
 };
-
-Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateCommon::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QT_OSX_BLUETOOTH || QT_IOS_BLUETOOTH
-
-#endif // QLOWENERGYCONTROLLERPRIVATE_P_H
+#endif // QLOWENERGYCONTROLLERPRIVATEANDROID_P_H

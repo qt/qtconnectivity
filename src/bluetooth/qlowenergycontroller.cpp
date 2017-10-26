@@ -52,6 +52,8 @@
 #include "bluez/bluez5_helper_p.h"
 #include "qlowenergycontroller_bluezdbus_p.h"
 #include "qlowenergycontroller_bluez_p.h"
+#elif defined(QT_ANDROID_BLUETOOTH)
+#include "qlowenergycontroller_android_p.h"
 #else
 #include "qlowenergycontroller_p.h"
 #endif
@@ -308,6 +310,8 @@ QLowEnergyController::QLowEnergyController(
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
         d_ptr = new QLowEnergyControllerPrivateBluez();
+#elif defined(QT_ANDROID_BLUETOOTH)
+    d_ptr = new QLowEnergyControllerPrivateAndroid();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -345,6 +349,8 @@ QLowEnergyController::QLowEnergyController(
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
         d_ptr = new QLowEnergyControllerPrivateBluez();
+#elif defined(QT_ANDROID_BLUETOOTH)
+    d_ptr = new QLowEnergyControllerPrivateAndroid();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -385,6 +391,8 @@ QLowEnergyController::QLowEnergyController(
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
         d_ptr = new QLowEnergyControllerPrivateBluez();
+#elif defined(QT_ANDROID_BLUETOOTH)
+    d_ptr = new QLowEnergyControllerPrivateAndroid();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -437,6 +445,8 @@ QLowEnergyController::QLowEnergyController(QObject *parent)
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
         d_ptr = new QLowEnergyControllerPrivateBluez();
+#elif defined(QT_ANDROID_BLUETOOTH)
+    d_ptr = new QLowEnergyControllerPrivateAndroid();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
