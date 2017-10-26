@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 #include "lecmaccalculator_p.h"
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontroller_bluez_p.h"
 #include "qbluetoothsocket_p.h"
 #include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
@@ -263,7 +263,7 @@ template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
     dst += value.count();
 }
 
-QLowEnergyControllerPrivateCommon::QLowEnergyControllerPrivateCommon()
+QLowEnergyControllerPrivateBluez::QLowEnergyControllerPrivateBluez()
     : QLowEnergyControllerPrivate(),
       lastLocalHandle(0),
       l2cpSocket(0), requestPending(false),
@@ -278,7 +278,7 @@ QLowEnergyControllerPrivateCommon::QLowEnergyControllerPrivateCommon()
     qRegisterMetaType<QList<QLowEnergyHandle> >();
 }
 
-void QLowEnergyControllerPrivateCommon::init()
+void QLowEnergyControllerPrivateBluez::init()
 {
     hciManager = new HciManager(localAdapter, this);
     if (!hciManager->isValid())
@@ -329,12 +329,12 @@ void QLowEnergyControllerPrivateCommon::init()
             requestTimer->setSingleShot(true);
             requestTimer->setInterval(gattRequestTimeout);
             connect(requestTimer, &QTimer::timeout,
-                    this, &QLowEnergyControllerPrivateCommon::handleGattRequestTimeout);
+                    this, &QLowEnergyControllerPrivateBluez::handleGattRequestTimeout);
         }
     }
 }
 
-void QLowEnergyControllerPrivateCommon::handleGattRequestTimeout()
+void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
 {
     // antyhing open that might require cancellation or a warning?
     if (encryptionChangePending) {
@@ -409,7 +409,7 @@ void QLowEnergyControllerPrivateCommon::handleGattRequestTimeout()
     }
 }
 
-QLowEnergyControllerPrivateCommon::~QLowEnergyControllerPrivateCommon()
+QLowEnergyControllerPrivateBluez::~QLowEnergyControllerPrivateBluez()
 {
     closeServerSocket();
     delete cmacCalculator;
@@ -465,7 +465,7 @@ private:
 };
 
 
-void QLowEnergyControllerPrivateCommon::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+void QLowEnergyControllerPrivateBluez::startAdvertising(const QLowEnergyAdvertisingParameters &params,
         const QLowEnergyAdvertisingData &advertisingData,
         const QLowEnergyAdvertisingData &scanResponseData)
 {
@@ -474,7 +474,7 @@ void QLowEnergyControllerPrivateCommon::startAdvertising(const QLowEnergyAdverti
         advertiser = new QLeAdvertiserBluez(params, advertisingData, scanResponseData, *hciManager,
                                             this);
         connect(advertiser, &QLeAdvertiser::errorOccurred, this,
-                &QLowEnergyControllerPrivateCommon::handleAdvertisingError);
+                &QLowEnergyControllerPrivateBluez::handleAdvertisingError);
     }
     setState(QLowEnergyController::AdvertisingState);
     advertiser->startAdvertising();
@@ -495,16 +495,16 @@ void QLowEnergyControllerPrivateCommon::startAdvertising(const QLowEnergyAdverti
     const int socketFd = serverSocket.takeSocket();
     serverSocketNotifier = new QSocketNotifier(socketFd, QSocketNotifier::Read, this);
     connect(serverSocketNotifier, &QSocketNotifier::activated, this,
-            &QLowEnergyControllerPrivateCommon::handleConnectionRequest);
+            &QLowEnergyControllerPrivateBluez::handleConnectionRequest);
 }
 
-void QLowEnergyControllerPrivateCommon::stopAdvertising()
+void QLowEnergyControllerPrivateBluez::stopAdvertising()
 {
     setState(QLowEnergyController::UnconnectedState);
     advertiser->stopAdvertising();
 }
 
-void QLowEnergyControllerPrivateCommon::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+void QLowEnergyControllerPrivateBluez::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
 {
     // The spec says that the connection update command can be used by both slave and master
     // devices, but BlueZ allows it only for master devices. So for slave devices, we have to use a
@@ -516,7 +516,7 @@ void QLowEnergyControllerPrivateCommon::requestConnectionUpdate(const QLowEnergy
         hciManager->sendConnectionParameterUpdateRequest(connectionHandle, params);
 }
 
-void QLowEnergyControllerPrivateCommon::connectToDevice()
+void QLowEnergyControllerPrivateBluez::connectToDevice()
 {
     if (remoteDevice.isNull()) {
         qCWarning(QT_BT_BLUEZ) << "Invalid/null remote device address";
@@ -548,7 +548,7 @@ void QLowEnergyControllerPrivateCommon::connectToDevice()
         if (!device1Manager) {
             device1Manager = new RemoteDeviceManager(localAdapter, this);
             connect(device1Manager, &RemoteDeviceManager::finished,
-                    this, &QLowEnergyControllerPrivateCommon::activeConnectionTerminationDone);
+                    this, &QLowEnergyControllerPrivateBluez::activeConnectionTerminationDone);
         }
 
         QVector<QBluetoothAddress> connectedAddresses;
@@ -566,7 +566,7 @@ void QLowEnergyControllerPrivateCommon::connectToDevice()
 /*!
  * Handles outcome of attempts to close external connections.
  */
-void QLowEnergyControllerPrivateCommon::activeConnectionTerminationDone()
+void QLowEnergyControllerPrivateBluez::activeConnectionTerminationDone()
 {
     if (!device1Manager)
         return;
@@ -588,7 +588,7 @@ void QLowEnergyControllerPrivateCommon::activeConnectionTerminationDone()
 /*!
  * Establishes the L2CP client socket.
  */
-void QLowEnergyControllerPrivateCommon::establishL2cpClientSocket()
+void QLowEnergyControllerPrivateBluez::establishL2cpClientSocket()
 {
     //we are already in Connecting state
 
@@ -644,7 +644,7 @@ void QLowEnergyControllerPrivateCommon::establishL2cpClientSocket()
     loadSigningDataIfNecessary(LocalSigningKey);
 }
 
-void QLowEnergyControllerPrivateCommon::createServicesForCentralIfRequired()
+void QLowEnergyControllerPrivateBluez::createServicesForCentralIfRequired()
 {
     bool ok = false;
     int value = qEnvironmentVariableIntValue("QT_DEFAULT_CENTRAL_SERVICES", &ok);
@@ -710,7 +710,7 @@ void QLowEnergyControllerPrivateCommon::createServicesForCentralIfRequired()
         service->setParent(q);
 }
 
-void QLowEnergyControllerPrivateCommon::l2cpConnected()
+void QLowEnergyControllerPrivateBluez::l2cpConnected()
 {
     Q_Q(QLowEnergyController);
 
@@ -721,14 +721,14 @@ void QLowEnergyControllerPrivateCommon::l2cpConnected()
     emit q->connected();
 }
 
-void QLowEnergyControllerPrivateCommon::disconnectFromDevice()
+void QLowEnergyControllerPrivateBluez::disconnectFromDevice()
 {
     setState(QLowEnergyController::ClosingState);
     l2cpSocket->close();
     resetController();
 }
 
-void QLowEnergyControllerPrivateCommon::l2cpDisconnected()
+void QLowEnergyControllerPrivateBluez::l2cpDisconnected()
 {
     Q_Q(QLowEnergyController);
 
@@ -740,7 +740,7 @@ void QLowEnergyControllerPrivateCommon::l2cpDisconnected()
     emit q->disconnected();
 }
 
-void QLowEnergyControllerPrivateCommon::l2cpErrorChanged(QBluetoothSocket::SocketError e)
+void QLowEnergyControllerPrivateBluez::l2cpErrorChanged(QBluetoothSocket::SocketError e)
 {
     switch (e) {
     case QBluetoothSocket::HostNotFoundError:
@@ -773,7 +773,7 @@ void QLowEnergyControllerPrivateCommon::l2cpErrorChanged(QBluetoothSocket::Socke
 }
 
 
-void QLowEnergyControllerPrivateCommon::resetController()
+void QLowEnergyControllerPrivateBluez::resetController()
 {
     openRequests.clear();
     openPrepareWriteRequests.clear();
@@ -790,7 +790,7 @@ void QLowEnergyControllerPrivateCommon::resetController()
         advertiser->stopAdvertising();
 }
 
-void QLowEnergyControllerPrivateCommon::restartRequestTimer()
+void QLowEnergyControllerPrivateBluez::restartRequestTimer()
 {
     if (!requestTimer)
         return;
@@ -799,7 +799,7 @@ void QLowEnergyControllerPrivateCommon::restartRequestTimer()
         requestTimer->start(gattRequestTimeout);
 }
 
-void QLowEnergyControllerPrivateCommon::l2cpReadyRead()
+void QLowEnergyControllerPrivateBluez::l2cpReadyRead()
 {
     const QByteArray incomingPacket = l2cpSocket->readAll();
     qCDebug(QT_BT_BLUEZ) << "Received size:" << incomingPacket.size() << "data:"
@@ -897,7 +897,7 @@ void QLowEnergyControllerPrivateCommon::l2cpReadyRead()
  * callback is called. The first pending request in the queue is the request
  * that triggered the encryption request.
  */
-void QLowEnergyControllerPrivateCommon::encryptionChangedEvent(
+void QLowEnergyControllerPrivateBluez::encryptionChangedEvent(
         const QBluetoothAddress &address, bool wasSuccess)
 {
     if (!encryptionChangePending) // somebody else caused change event
@@ -946,7 +946,7 @@ void QLowEnergyControllerPrivateCommon::encryptionChangedEvent(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivateCommon::sendPacket(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::sendPacket(const QByteArray &packet)
 {
     qint64 result = l2cpSocket->write(packet.constData(),
                                       packet.size());
@@ -965,7 +965,7 @@ void QLowEnergyControllerPrivateCommon::sendPacket(const QByteArray &packet)
 
 }
 
-void QLowEnergyControllerPrivateCommon::sendNextPendingRequest()
+void QLowEnergyControllerPrivateBluez::sendNextPendingRequest()
 {
     if (openRequests.isEmpty() || requestPending || encryptionChangePending)
         return;
@@ -1030,7 +1030,7 @@ QLowEnergyHandle parseReadByTypeIncludeDiscovery(
     return attributeHandle;
 }
 
-void QLowEnergyControllerPrivateCommon::processReply(
+void QLowEnergyControllerPrivateBluez::processReply(
         const Request &request, const QByteArray &response)
 {
     Q_Q(QLowEnergyController);
@@ -1568,12 +1568,12 @@ void QLowEnergyControllerPrivateCommon::processReply(
     }
 }
 
-void QLowEnergyControllerPrivateCommon::discoverServices()
+void QLowEnergyControllerPrivateBluez::discoverServices()
 {
     sendReadByGroupRequest(0x0001, 0xFFFF, GATT_PRIMARY_SERVICE);
 }
 
-void QLowEnergyControllerPrivateCommon::sendReadByGroupRequest(
+void QLowEnergyControllerPrivateBluez::sendReadByGroupRequest(
         QLowEnergyHandle start, QLowEnergyHandle end, quint16 type)
 {
     //call for primary and secondary services
@@ -1598,7 +1598,7 @@ void QLowEnergyControllerPrivateCommon::sendReadByGroupRequest(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivateCommon::discoverServiceDetails(const QBluetoothUuid &service)
+void QLowEnergyControllerPrivateBluez::discoverServiceDetails(const QBluetoothUuid &service)
 {
     if (!serviceList.contains(service)) {
         qCWarning(QT_BT_BLUEZ) << "Discovery of unknown service" << service.toString()
@@ -1611,7 +1611,7 @@ void QLowEnergyControllerPrivateCommon::discoverServiceDetails(const QBluetoothU
     sendReadByTypeRequest(serviceData, serviceData->startHandle, GATT_INCLUDED_SERVICE);
 }
 
-void QLowEnergyControllerPrivateCommon::sendReadByTypeRequest(
+void QLowEnergyControllerPrivateBluez::sendReadByTypeRequest(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         QLowEnergyHandle nextHandle, quint16 attributeType)
 {
@@ -1647,7 +1647,7 @@ void QLowEnergyControllerPrivateCommon::sendReadByTypeRequest(
     \a readCharacteristics determines whether we intend to read a characteristic;
     otherwise we read a descriptor.
  */
-void QLowEnergyControllerPrivateCommon::readServiceValues(
+void QLowEnergyControllerPrivateBluez::readServiceValues(
         const QBluetoothUuid &serviceUuid, bool readCharacteristics)
 {
     quint8 packet[READ_REQUEST_HEADER_SIZE];
@@ -1741,7 +1741,7 @@ void QLowEnergyControllerPrivateCommon::readServiceValues(
     open requests to finish the current value read up before
     starting the next read request.
  */
-void QLowEnergyControllerPrivateCommon::readServiceValuesByOffset(
+void QLowEnergyControllerPrivateBluez::readServiceValuesByOffset(
         uint handleData, quint16 offset, bool isLastValue)
 {
     const QLowEnergyHandle charHandle = (handleData & 0xffff);
@@ -1780,7 +1780,7 @@ void QLowEnergyControllerPrivateCommon::readServiceValuesByOffset(
     openRequests.prepend(request);
 }
 
-void QLowEnergyControllerPrivateCommon::discoverServiceDescriptors(
+void QLowEnergyControllerPrivateBluez::discoverServiceDescriptors(
         const QBluetoothUuid &serviceUuid)
 {
     qCDebug(QT_BT_BLUEZ) << "Discovering descriptor values for"
@@ -1800,7 +1800,7 @@ void QLowEnergyControllerPrivateCommon::discoverServiceDescriptors(
     discoverNextDescriptor(service, keys, keys[0]);
 }
 
-void QLowEnergyControllerPrivateCommon::processUnsolicitedReply(const QByteArray &payload)
+void QLowEnergyControllerPrivateBluez::processUnsolicitedReply(const QByteArray &payload)
 {
     const char *data = payload.constData();
     bool isNotification = (data[0] == ATT_OP_HANDLE_VAL_NOTIFICATION);
@@ -1824,7 +1824,7 @@ void QLowEnergyControllerPrivateCommon::processUnsolicitedReply(const QByteArray
     }
 }
 
-void QLowEnergyControllerPrivateCommon::exchangeMTU()
+void QLowEnergyControllerPrivateBluez::exchangeMTU()
 {
     qCDebug(QT_BT_BLUEZ) << "Exchanging MTU";
 
@@ -1843,7 +1843,7 @@ void QLowEnergyControllerPrivateCommon::exchangeMTU()
     sendNextPendingRequest();
 }
 
-int QLowEnergyControllerPrivateCommon::securityLevel() const
+int QLowEnergyControllerPrivateBluez::securityLevel() const
 {
     int socket = l2cpSocket->socketDescriptor();
     if (socket < 0) {
@@ -1882,7 +1882,7 @@ int QLowEnergyControllerPrivateCommon::securityLevel() const
     return -1;
 }
 
-bool QLowEnergyControllerPrivateCommon::setSecurityLevel(int level)
+bool QLowEnergyControllerPrivateBluez::setSecurityLevel(int level)
 {
     if (level > BT_SECURITY_HIGH || level < BT_SECURITY_LOW)
         return false;
@@ -1929,7 +1929,7 @@ bool QLowEnergyControllerPrivateCommon::setSecurityLevel(int level)
     return false;
 }
 
-void QLowEnergyControllerPrivateCommon::discoverNextDescriptor(
+void QLowEnergyControllerPrivateBluez::discoverNextDescriptor(
         QSharedPointer<QLowEnergyServicePrivate> serviceData,
         const QList<QLowEnergyHandle> pendingCharHandles,
         const QLowEnergyHandle startingHandle)
@@ -1966,7 +1966,7 @@ void QLowEnergyControllerPrivateCommon::discoverNextDescriptor(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivateCommon::sendNextPrepareWriteRequest(
+void QLowEnergyControllerPrivateBluez::sendNextPrepareWriteRequest(
         const QLowEnergyHandle handle, const QByteArray &newValue,
         quint16 offset)
 {
@@ -2021,7 +2021,7 @@ void QLowEnergyControllerPrivateCommon::sendNextPrepareWriteRequest(
     Otherwise this function sends an execute request for all pending prepare
     write requests.
  */
-void QLowEnergyControllerPrivateCommon::sendExecuteWriteRequest(
+void QLowEnergyControllerPrivateBluez::sendExecuteWriteRequest(
         const QLowEnergyHandle attrHandle, const QByteArray &newValue,
         bool isCancelation)
 {
@@ -2053,7 +2053,7 @@ void QLowEnergyControllerPrivateCommon::sendExecuteWriteRequest(
 
     TODO Reliable/prepare write across multiple characteristics is not supported
  */
-void QLowEnergyControllerPrivateCommon::writeCharacteristic(
+void QLowEnergyControllerPrivateBluez::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
@@ -2071,7 +2071,7 @@ void QLowEnergyControllerPrivateCommon::writeCharacteristic(
         writeCharacteristicForCentral(service, charHandle, charData.valueHandle, newValue, mode);
 }
 
-void QLowEnergyControllerPrivateCommon::writeDescriptor(
+void QLowEnergyControllerPrivateBluez::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle,
@@ -2090,7 +2090,7 @@ void QLowEnergyControllerPrivateCommon::writeDescriptor(
 
     Reads the value of one specific characteristic.
  */
-void QLowEnergyControllerPrivateCommon::readCharacteristic(
+void QLowEnergyControllerPrivateBluez::readCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle)
 {
@@ -2128,7 +2128,7 @@ void QLowEnergyControllerPrivateCommon::readCharacteristic(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivateCommon::readDescriptor(
+void QLowEnergyControllerPrivateBluez::readDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle)
@@ -2167,7 +2167,7 @@ void QLowEnergyControllerPrivateCommon::readDescriptor(
  * Returns true if the encryption change was successfully requested.
  * The request is triggered if we got a related ATT error.
  */
-bool QLowEnergyControllerPrivateCommon::increaseEncryptLevelfRequired(quint8 errorCode)
+bool QLowEnergyControllerPrivateBluez::increaseEncryptLevelfRequired(quint8 errorCode)
 {
     if (securityLevelValue == BT_SECURITY_HIGH)
         return false;
@@ -2195,14 +2195,14 @@ bool QLowEnergyControllerPrivateCommon::increaseEncryptLevelfRequired(quint8 err
     return false;
 }
 
-void QLowEnergyControllerPrivateCommon::handleAdvertisingError()
+void QLowEnergyControllerPrivateBluez::handleAdvertisingError()
 {
     qCWarning(QT_BT_BLUEZ) << "received advertising error";
     setError(QLowEnergyController::AdvertisingError);
     setState(QLowEnergyController::UnconnectedState);
 }
 
-bool QLowEnergyControllerPrivateCommon::checkPacketSize(const QByteArray &packet, int minSize,
+bool QLowEnergyControllerPrivateBluez::checkPacketSize(const QByteArray &packet, int minSize,
                                                   int maxSize)
 {
     if (maxSize == -1)
@@ -2215,7 +2215,7 @@ bool QLowEnergyControllerPrivateCommon::checkPacketSize(const QByteArray &packet
     return false;
 }
 
-bool QLowEnergyControllerPrivateCommon::checkHandle(const QByteArray &packet, QLowEnergyHandle handle)
+bool QLowEnergyControllerPrivateBluez::checkHandle(const QByteArray &packet, QLowEnergyHandle handle)
 {
     if (handle != 0 && handle <= lastLocalHandle)
         return true;
@@ -2223,7 +2223,7 @@ bool QLowEnergyControllerPrivateCommon::checkHandle(const QByteArray &packet, QL
     return false;
 }
 
-bool QLowEnergyControllerPrivateCommon::checkHandlePair(quint8 request, QLowEnergyHandle startingHandle,
+bool QLowEnergyControllerPrivateBluez::checkHandlePair(quint8 request, QLowEnergyHandle startingHandle,
                                                   QLowEnergyHandle endingHandle)
 {
     if (startingHandle == 0 || startingHandle > endingHandle) {
@@ -2234,7 +2234,7 @@ bool QLowEnergyControllerPrivateCommon::checkHandlePair(quint8 request, QLowEner
     return true;
 }
 
-void QLowEnergyControllerPrivateCommon::handleExchangeMtuRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleExchangeMtuRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.2
 
@@ -2261,7 +2261,7 @@ void QLowEnergyControllerPrivateCommon::handleExchangeMtuRequest(const QByteArra
     qCDebug(QT_BT_BLUEZ) << "Sending server RX MTU" << ATT_MAX_LE_MTU;
 }
 
-void QLowEnergyControllerPrivateCommon::handleFindInformationRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleFindInformationRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.3.1-2
 
@@ -2294,7 +2294,7 @@ void QLowEnergyControllerPrivateCommon::handleFindInformationRequest(const QByte
 
 }
 
-void QLowEnergyControllerPrivateCommon::handleFindByTypeValueRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleFindByTypeValueRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.3.3-4
 
@@ -2329,7 +2329,7 @@ void QLowEnergyControllerPrivateCommon::handleFindByTypeValueRequest(const QByte
     sendListResponse(responsePrefix, elemSize, results, elemWriter);
 }
 
-void QLowEnergyControllerPrivateCommon::handleReadByTypeRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.4.1-2
 
@@ -2382,7 +2382,7 @@ void QLowEnergyControllerPrivateCommon::handleReadByTypeRequest(const QByteArray
     sendListResponse(responsePrefix, elementSize, results, elemWriter);
 }
 
-void QLowEnergyControllerPrivateCommon::handleReadRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleReadRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.4.3-4
 
@@ -2409,7 +2409,7 @@ void QLowEnergyControllerPrivateCommon::handleReadRequest(const QByteArray &pack
     sendPacket(response);
 }
 
-void QLowEnergyControllerPrivateCommon::handleReadBlobRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleReadBlobRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.4.5-6
 
@@ -2448,7 +2448,7 @@ void QLowEnergyControllerPrivateCommon::handleReadBlobRequest(const QByteArray &
     sendPacket(response);
 }
 
-void QLowEnergyControllerPrivateCommon::handleReadMultipleRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleReadMultipleRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.4.7-8
 
@@ -2484,7 +2484,7 @@ void QLowEnergyControllerPrivateCommon::handleReadMultipleRequest(const QByteArr
     sendPacket(response);
 }
 
-void QLowEnergyControllerPrivateCommon::handleReadByGroupTypeRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.4.9-10
 
@@ -2543,7 +2543,7 @@ void QLowEnergyControllerPrivateCommon::handleReadByGroupTypeRequest(const QByte
     sendListResponse(responsePrefix, elementSize, results, elemWriter);
 }
 
-void QLowEnergyControllerPrivateCommon::updateLocalAttributeValue(
+void QLowEnergyControllerPrivateBluez::updateLocalAttributeValue(
         QLowEnergyHandle handle,
         const QByteArray &value,
         QLowEnergyCharacteristic &characteristic,
@@ -2577,7 +2577,7 @@ void QLowEnergyControllerPrivateCommon::updateLocalAttributeValue(
 static bool isNotificationEnabled(quint16 clientConfigValue) { return clientConfigValue & 0x1; }
 static bool isIndicationEnabled(quint16 clientConfigValue) { return clientConfigValue & 0x2; }
 
-void QLowEnergyControllerPrivateCommon::writeCharacteristicForPeripheral(
+void QLowEnergyControllerPrivateBluez::writeCharacteristicForPeripheral(
         QLowEnergyServicePrivate::CharData &charData,
         const QByteArray &newValue)
 {
@@ -2634,7 +2634,7 @@ void QLowEnergyControllerPrivateCommon::writeCharacteristicForPeripheral(
     }
 }
 
-void QLowEnergyControllerPrivateCommon::writeCharacteristicForCentral(const QSharedPointer<QLowEnergyServicePrivate> &service,
+void QLowEnergyControllerPrivateBluez::writeCharacteristicForCentral(const QSharedPointer<QLowEnergyServicePrivate> &service,
         QLowEnergyHandle charHandle,
         QLowEnergyHandle valueHandle,
         const QByteArray &newValue,
@@ -2708,7 +2708,7 @@ void QLowEnergyControllerPrivateCommon::writeCharacteristicForCentral(const QSha
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivateCommon::writeDescriptorForPeripheral(
+void QLowEnergyControllerPrivateBluez::writeDescriptorForPeripheral(
         const QSharedPointer<QLowEnergyServicePrivate> &service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle,
@@ -2725,7 +2725,7 @@ void QLowEnergyControllerPrivateCommon::writeDescriptorForPeripheral(
     service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
 }
 
-void QLowEnergyControllerPrivateCommon::writeDescriptorForCentral(
+void QLowEnergyControllerPrivateBluez::writeDescriptorForCentral(
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle,
         const QByteArray &newValue)
@@ -2758,7 +2758,7 @@ void QLowEnergyControllerPrivateCommon::writeDescriptorForCentral(
     sendNextPendingRequest();
 }
 
-void QLowEnergyControllerPrivateCommon::handleWriteRequestOrCommand(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.5.1-3
 
@@ -2852,7 +2852,7 @@ void QLowEnergyControllerPrivateCommon::handleWriteRequestOrCommand(const QByteA
     }
 }
 
-void QLowEnergyControllerPrivateCommon::handlePrepareWriteRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handlePrepareWriteRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.6.1
 
@@ -2883,7 +2883,7 @@ void QLowEnergyControllerPrivateCommon::handlePrepareWriteRequest(const QByteArr
     sendPacket(response);
 }
 
-void QLowEnergyControllerPrivateCommon::handleExecuteWriteRequest(const QByteArray &packet)
+void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArray &packet)
 {
     // Spec v4.2, Vol 3, Part F, 3.4.6.3
 
@@ -2931,7 +2931,7 @@ void QLowEnergyControllerPrivateCommon::handleExecuteWriteRequest(const QByteArr
         emit descriptor.d_ptr->descriptorWritten(descriptor, descriptor.value());
 }
 
-void QLowEnergyControllerPrivateCommon::sendErrorResponse(quint8 request, quint16 handle, quint8 code)
+void QLowEnergyControllerPrivateBluez::sendErrorResponse(quint8 request, quint16 handle, quint8 code)
 {
     // An ATT command never receives an error response.
     if (request == ATT_OP_WRITE_COMMAND || request == ATT_OP_SIGNED_WRITE_COMMAND)
@@ -2947,7 +2947,7 @@ void QLowEnergyControllerPrivateCommon::sendErrorResponse(quint8 request, quint1
     sendPacket(packet);
 }
 
-void QLowEnergyControllerPrivateCommon::sendListResponse(const QByteArray &packetStart, int elemSize,
+void QLowEnergyControllerPrivateBluez::sendListResponse(const QByteArray &packetStart, int elemSize,
         const QVector<Attribute> &attributes, const ElemWriter &elemWriter)
 {
     const int offset = packetStart.count();
@@ -2963,19 +2963,19 @@ void QLowEnergyControllerPrivateCommon::sendListResponse(const QByteArray &packe
     sendPacket(response);
 }
 
-void QLowEnergyControllerPrivateCommon::sendNotification(QLowEnergyHandle handle)
+void QLowEnergyControllerPrivateBluez::sendNotification(QLowEnergyHandle handle)
 {
     sendNotificationOrIndication(ATT_OP_HANDLE_VAL_NOTIFICATION, handle);
 }
 
-void QLowEnergyControllerPrivateCommon::sendIndication(QLowEnergyHandle handle)
+void QLowEnergyControllerPrivateBluez::sendIndication(QLowEnergyHandle handle)
 {
     Q_ASSERT(!indicationInFlight);
     indicationInFlight = true;
     sendNotificationOrIndication(ATT_OP_HANDLE_VAL_INDICATION, handle);
 }
 
-void QLowEnergyControllerPrivateCommon::sendNotificationOrIndication(
+void QLowEnergyControllerPrivateBluez::sendNotificationOrIndication(
         quint8 opCode,
         QLowEnergyHandle handle)
 {
@@ -2991,13 +2991,13 @@ void QLowEnergyControllerPrivateCommon::sendNotificationOrIndication(
     sendPacket(packet);
 }
 
-void QLowEnergyControllerPrivateCommon::sendNextIndication()
+void QLowEnergyControllerPrivateBluez::sendNextIndication()
 {
     if (!scheduledIndications.isEmpty())
         sendIndication(scheduledIndications.takeFirst());
 }
 
-void QLowEnergyControllerPrivateCommon::handleConnectionRequest()
+void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
 {
     if (state != QLowEnergyController::AdvertisingState) {
         qCWarning(QT_BT_BLUEZ) << "Incoming connection request in unexpected state" << state;
@@ -3023,10 +3023,10 @@ void QLowEnergyControllerPrivateCommon::handleConnectionRequest()
     closeServerSocket();
     l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, &QBluetoothSocket::disconnected,
-            this, &QLowEnergyControllerPrivateCommon::l2cpDisconnected);
+            this, &QLowEnergyControllerPrivateBluez::l2cpDisconnected);
     connect(l2cpSocket, static_cast<void (QBluetoothSocket::*)(QBluetoothSocket::SocketError)>
-            (&QBluetoothSocket::error), this, &QLowEnergyControllerPrivateCommon::l2cpErrorChanged);
-    connect(l2cpSocket, &QIODevice::readyRead, this, &QLowEnergyControllerPrivateCommon::l2cpReadyRead);
+            (&QBluetoothSocket::error), this, &QLowEnergyControllerPrivateBluez::l2cpErrorChanged);
+    connect(l2cpSocket, &QIODevice::readyRead, this, &QLowEnergyControllerPrivateBluez::l2cpReadyRead);
     l2cpSocket->d_ptr->lowEnergySocketType = addressType == QLowEnergyController::PublicAddress
             ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
     l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol,
@@ -3039,7 +3039,7 @@ void QLowEnergyControllerPrivateCommon::handleConnectionRequest()
     emit q->connected();
 }
 
-void QLowEnergyControllerPrivateCommon::closeServerSocket()
+void QLowEnergyControllerPrivateBluez::closeServerSocket()
 {
     if (!serverSocketNotifier)
         return;
@@ -3049,7 +3049,7 @@ void QLowEnergyControllerPrivateCommon::closeServerSocket()
     serverSocketNotifier = nullptr;
 }
 
-bool QLowEnergyControllerPrivateCommon::isBonded() const
+bool QLowEnergyControllerPrivateBluez::isBonded() const
 {
     // Pairing does not necessarily imply bonding, but we don't know whether the
     // bonding flag was set in the original pairing request.
@@ -3057,7 +3057,7 @@ bool QLowEnergyControllerPrivateCommon::isBonded() const
             != QBluetoothLocalDevice::Unpaired;
 }
 
-QVector<QLowEnergyControllerPrivateCommon::TempClientConfigurationData> QLowEnergyControllerPrivateCommon::gatherClientConfigData()
+QVector<QLowEnergyControllerPrivateBluez::TempClientConfigurationData> QLowEnergyControllerPrivateBluez::gatherClientConfigData()
 {
     QVector<TempClientConfigurationData> data;
     foreach (const auto &service, localServices) {
@@ -3078,7 +3078,7 @@ QVector<QLowEnergyControllerPrivateCommon::TempClientConfigurationData> QLowEner
     return data;
 }
 
-void QLowEnergyControllerPrivateCommon::storeClientConfigurations()
+void QLowEnergyControllerPrivateBluez::storeClientConfigurations()
 {
     if (!isBonded()) {
         clientConfigData.remove(remoteDevice.toUInt64());
@@ -3097,7 +3097,7 @@ void QLowEnergyControllerPrivateCommon::storeClientConfigurations()
     clientConfigData.insert(remoteDevice.toUInt64(), clientConfigs);
 }
 
-void QLowEnergyControllerPrivateCommon::restoreClientConfigurations()
+void QLowEnergyControllerPrivateBluez::restoreClientConfigurations()
 {
     const QVector<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
     const QVector<ClientConfigurationData> &restoredClientConfigs = isBonded()
@@ -3131,7 +3131,7 @@ void QLowEnergyControllerPrivateCommon::restoreClientConfigurations()
     sendNextIndication();
 }
 
-void QLowEnergyControllerPrivateCommon::loadSigningDataIfNecessary(SigningKeyType keyType)
+void QLowEnergyControllerPrivateBluez::loadSigningDataIfNecessary(SigningKeyType keyType)
 {
     const auto signingDataIt = signingData.constFind(remoteDevice.toUInt64());
     if (signingDataIt != signingData.constEnd())
@@ -3163,7 +3163,7 @@ void QLowEnergyControllerPrivateCommon::loadSigningDataIfNecessary(SigningKeyTyp
     signingData.insert(remoteDevice.toUInt64(), SigningData(csrk, counter - 1));
 }
 
-void QLowEnergyControllerPrivateCommon::storeSignCounter(SigningKeyType keyType) const
+void QLowEnergyControllerPrivateBluez::storeSignCounter(SigningKeyType keyType) const
 {
     const auto signingDataIt = signingData.constFind(remoteDevice.toUInt64());
     if (signingDataIt == signingData.constEnd())
@@ -3184,12 +3184,12 @@ void QLowEnergyControllerPrivateCommon::storeSignCounter(SigningKeyType keyType)
     settings.setValue(counterKey, counterValue);
 }
 
-QString QLowEnergyControllerPrivateCommon::signingKeySettingsGroup(SigningKeyType keyType) const
+QString QLowEnergyControllerPrivateBluez::signingKeySettingsGroup(SigningKeyType keyType) const
 {
     return QLatin1String(keyType == LocalSigningKey ? "LocalSignatureKey" : "RemoteSignatureKey");
 }
 
-QString QLowEnergyControllerPrivateCommon::keySettingsFilePath() const
+QString QLowEnergyControllerPrivateBluez::keySettingsFilePath() const
 {
     return QString::fromLatin1("/var/lib/bluetooth/%1/%2/info")
             .arg(localAdapter.toString(), remoteDevice.toString());
@@ -3211,7 +3211,7 @@ static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
     return ba;
 }
 
-void QLowEnergyControllerPrivateCommon::addToGenericAttributeList(const QLowEnergyServiceData &service,
+void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnergyServiceData &service,
                                                             QLowEnergyHandle startHandle)
 {
     // Construct generic attribute data for the service with handles as keys.
@@ -3321,7 +3321,7 @@ void QLowEnergyControllerPrivateCommon::addToGenericAttributeList(const QLowEner
     localAttributes[serviceAttribute.handle] = serviceAttribute;
 }
 
-void QLowEnergyControllerPrivateCommon::ensureUniformAttributes(QVector<Attribute> &attributes,
+void QLowEnergyControllerPrivateBluez::ensureUniformAttributes(QVector<Attribute> &attributes,
         const std::function<int (const Attribute &)> &getSize)
 {
     if (attributes.isEmpty())
@@ -3334,19 +3334,19 @@ void QLowEnergyControllerPrivateCommon::ensureUniformAttributes(QVector<Attribut
 
 }
 
-void QLowEnergyControllerPrivateCommon::ensureUniformUuidSizes(QVector<Attribute> &attributes)
+void QLowEnergyControllerPrivateBluez::ensureUniformUuidSizes(QVector<Attribute> &attributes)
 {
     ensureUniformAttributes(attributes,
                             [](const Attribute &attr) { return getUuidSize(attr.type); });
 }
 
-void QLowEnergyControllerPrivateCommon::ensureUniformValueSizes(QVector<Attribute> &attributes)
+void QLowEnergyControllerPrivateBluez::ensureUniformValueSizes(QVector<Attribute> &attributes)
 {
     ensureUniformAttributes(attributes,
                             [](const Attribute &attr) { return attr.value.count(); });
 }
 
-QVector<QLowEnergyControllerPrivateCommon::Attribute> QLowEnergyControllerPrivateCommon::getAttributes(QLowEnergyHandle startHandle,
+QVector<QLowEnergyControllerPrivateBluez::Attribute> QLowEnergyControllerPrivateBluez::getAttributes(QLowEnergyHandle startHandle,
         QLowEnergyHandle endHandle, const AttributePredicate &attributePredicate)
 {
     QVector<Attribute> results;
@@ -3365,7 +3365,7 @@ QVector<QLowEnergyControllerPrivateCommon::Attribute> QLowEnergyControllerPrivat
     return results;
 }
 
-int QLowEnergyControllerPrivateCommon::checkPermissions(const Attribute &attr,
+int QLowEnergyControllerPrivateBluez::checkPermissions(const Attribute &attr,
                                                   QLowEnergyCharacteristic::PropertyType type)
 {
     const bool isReadAccess = type == QLowEnergyCharacteristic::Read;
@@ -3399,12 +3399,12 @@ int QLowEnergyControllerPrivateCommon::checkPermissions(const Attribute &attr,
     return 0;
 }
 
-int QLowEnergyControllerPrivateCommon::checkReadPermissions(const Attribute &attr)
+int QLowEnergyControllerPrivateBluez::checkReadPermissions(const Attribute &attr)
 {
     return checkPermissions(attr, QLowEnergyCharacteristic::Read);
 }
 
-int QLowEnergyControllerPrivateCommon::checkReadPermissions(QVector<Attribute> &attributes)
+int QLowEnergyControllerPrivateBluez::checkReadPermissions(QVector<Attribute> &attributes)
 {
     if (attributes.isEmpty())
         return 0;
@@ -3424,7 +3424,7 @@ int QLowEnergyControllerPrivateCommon::checkReadPermissions(QVector<Attribute> &
     return 0;
 }
 
-bool QLowEnergyControllerPrivateCommon::verifyMac(const QByteArray &message, const quint128 &csrk,
+bool QLowEnergyControllerPrivateBluez::verifyMac(const QByteArray &message, const quint128 &csrk,
                                              quint32 signCounter, quint64 expectedMac)
 {
     if (!cmacCalculator)
@@ -3432,5 +3432,56 @@ bool QLowEnergyControllerPrivateCommon::verifyMac(const QByteArray &message, con
     return cmacCalculator->verify(LeCmacCalculator::createFullMessage(message, signCounter), csrk,
                                 expectedMac);
 }
+
+QLowEnergyService *QLowEnergyControllerPrivateBluez::addServiceHelper(
+                            const QLowEnergyServiceData &service)
+{
+    // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).
+    // Since this is not mandatory, we ignore it here and let the caller take responsibility
+    // for it.
+
+    const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
+    servicePrivate->state = QLowEnergyService::LocalService;
+    servicePrivate->setController(this);
+    servicePrivate->uuid = service.uuid();
+    servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
+            ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
+    foreach (QLowEnergyService * const includedService, service.includedServices()) {
+        servicePrivate->includedServices << includedService->serviceUuid();
+        includedService->d_ptr->type |= QLowEnergyService::IncludedService;
+    }
+
+    // Spec v4.2, Vol 3, Part G, Section 3.
+    const QLowEnergyHandle oldLastHandle = this->lastLocalHandle;
+    servicePrivate->startHandle = ++this->lastLocalHandle; // Service declaration.
+    this->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
+    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+        const QLowEnergyHandle declHandle = ++this->lastLocalHandle;
+        QLowEnergyServicePrivate::CharData charData;
+        charData.valueHandle = ++this->lastLocalHandle;
+        charData.uuid = cd.uuid();
+        charData.properties = cd.properties();
+        charData.value = cd.value();
+        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+            QLowEnergyServicePrivate::DescData descData;
+            descData.uuid = dd.uuid();
+            descData.value = dd.value();
+            charData.descriptorList.insert(++this->lastLocalHandle, descData);
+        }
+        servicePrivate->characteristicList.insert(declHandle, charData);
+    }
+    servicePrivate->endHandle = this->lastLocalHandle;
+    const bool handleOverflow = this->lastLocalHandle <= oldLastHandle;
+    if (handleOverflow) {
+        qCWarning(QT_BT_BLUEZ) << "Not enough attribute handles left to create this service";
+        this->lastLocalHandle = oldLastHandle;
+        return nullptr;
+    }
+
+    this->localServices.insert(servicePrivate->uuid, servicePrivate);
+    this->addToGenericAttributeList(service, servicePrivate->startHandle);
+    return new QLowEnergyService(servicePrivate);
+}
+
 
 QT_END_NAMESPACE

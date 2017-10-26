@@ -78,8 +78,9 @@ protected:
 
     friend class QLowEnergyCharacteristic;
     friend class QLowEnergyService;
-    friend class QLowEnergyControllerPrivateCommon;
     friend class QLowEnergyControllerPrivate;
+    friend class QLowEnergyControllerPrivateBluez;
+    friend class QLowEnergyControllerPrivateCommon;
     friend class QLowEnergyControllerPrivateOSX;
     QLowEnergyDescriptorPrivate *data;
 

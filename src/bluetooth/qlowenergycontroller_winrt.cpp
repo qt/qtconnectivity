@@ -39,6 +39,9 @@
 
 #include "qlowenergycontroller_p.h"
 
+#include <QtBluetooth/QLowEnergyCharacteristicData>
+#include <QtBluetooth/QLowEnergyDescriptorData>
+
 #ifdef CLASSIC_APP_BUILD
 #define Q_OS_WINRT
 #endif
@@ -1102,6 +1105,56 @@ void QLowEnergyControllerPrivateCommon::characteristicChanged(
         updateValueOfCharacteristic(characteristic.attributeHandle(),
                                 data, false);
     emit service->characteristicChanged(characteristic, data);
+}
+
+QLowEnergyService *QLowEnergyControllerPrivateCommon::addServiceHelper(
+                            const QLowEnergyServiceData &service)
+{
+    // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).
+    // Since this is not mandatory, we ignore it here and let the caller take responsibility
+    // for it.
+
+    const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
+    servicePrivate->state = QLowEnergyService::LocalService;
+    servicePrivate->setController(this);
+    servicePrivate->uuid = service.uuid();
+    servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
+            ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
+    foreach (QLowEnergyService * const includedService, service.includedServices()) {
+        servicePrivate->includedServices << includedService->serviceUuid();
+        includedService->d_ptr->type |= QLowEnergyService::IncludedService;
+    }
+
+    // Spec v4.2, Vol 3, Part G, Section 3.
+    const QLowEnergyHandle oldLastHandle = this->lastLocalHandle;
+    servicePrivate->startHandle = ++this->lastLocalHandle; // Service declaration.
+    this->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
+    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+        const QLowEnergyHandle declHandle = ++this->lastLocalHandle;
+        QLowEnergyServicePrivate::CharData charData;
+        charData.valueHandle = ++this->lastLocalHandle;
+        charData.uuid = cd.uuid();
+        charData.properties = cd.properties();
+        charData.value = cd.value();
+        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+            QLowEnergyServicePrivate::DescData descData;
+            descData.uuid = dd.uuid();
+            descData.value = dd.value();
+            charData.descriptorList.insert(++this->lastLocalHandle, descData);
+        }
+        servicePrivate->characteristicList.insert(declHandle, charData);
+    }
+    servicePrivate->endHandle = this->lastLocalHandle;
+    const bool handleOverflow = this->lastLocalHandle <= oldLastHandle;
+    if (handleOverflow) {
+        qCWarning(QT_BT_WINRT) << "Not enough attribute handles left to create this service";
+        this->lastLocalHandle = oldLastHandle;
+        return nullptr;
+    }
+
+    this->localServices.insert(servicePrivate->uuid, servicePrivate);
+    this->addToGenericAttributeList(service, servicePrivate->startHandle);
+    return new QLowEnergyService(servicePrivate);
 }
 
 QT_END_NAMESPACE

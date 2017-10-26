@@ -139,4 +139,11 @@ void QLowEnergyControllerPrivateCommon::addToGenericAttributeList(const QLowEner
 {
 }
 
+QLowEnergyService *QLowEnergyControllerPrivateCommon::addServiceHelper(
+                            const QLowEnergyServiceData &/*service*/)
+{
+    return nullptr;
+}
+
+
 QT_END_NAMESPACE

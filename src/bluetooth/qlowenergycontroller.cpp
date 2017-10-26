@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qlowenergycontroller.h"
-#include "qlowenergycontroller_p.h"
 
 #include "qlowenergycharacteristicdata.h"
 #include "qlowenergyconnectionparameters.h"
@@ -52,6 +51,9 @@
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
 #include "bluez/bluez5_helper_p.h"
 #include "qlowenergycontroller_bluezdbus_p.h"
+#include "qlowenergycontroller_bluez_p.h"
+#else
+#include "qlowenergycontroller_p.h"
 #endif
 
 #include <algorithm>
@@ -305,7 +307,7 @@ QLowEnergyController::QLowEnergyController(
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivateCommon();
+        d_ptr = new QLowEnergyControllerPrivateBluez();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -342,7 +344,7 @@ QLowEnergyController::QLowEnergyController(
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivateCommon();
+        d_ptr = new QLowEnergyControllerPrivateBluez();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -382,7 +384,7 @@ QLowEnergyController::QLowEnergyController(
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivateCommon();
+        d_ptr = new QLowEnergyControllerPrivateBluez();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -434,7 +436,7 @@ QLowEnergyController::QLowEnergyController(QObject *parent)
     if (isBluez5DbusGatt())
         d_ptr = new QLowEnergyControllerPrivateBluezDBus();
     else
-        d_ptr = new QLowEnergyControllerPrivateCommon();
+        d_ptr = new QLowEnergyControllerPrivateBluez();
 #else
     d_ptr = new QLowEnergyControllerPrivateCommon();
 #endif
@@ -783,55 +785,6 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     return newService;
 }
 
-QLowEnergyService *QLowEnergyControllerPrivateCommon::addServiceHelper(
-                            const QLowEnergyServiceData &service)
-{
-    // Spec says services "should" be grouped by uuid length (16-bit first, then 128-bit).
-    // Since this is not mandatory, we ignore it here and let the caller take responsibility
-    // for it.
-
-    const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
-    servicePrivate->state = QLowEnergyService::LocalService;
-    servicePrivate->setController(this);
-    servicePrivate->uuid = service.uuid();
-    servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
-            ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
-    foreach (QLowEnergyService * const includedService, service.includedServices()) {
-        servicePrivate->includedServices << includedService->serviceUuid();
-        includedService->d_ptr->type |= QLowEnergyService::IncludedService;
-    }
-
-    // Spec v4.2, Vol 3, Part G, Section 3.
-    const QLowEnergyHandle oldLastHandle = this->lastLocalHandle;
-    servicePrivate->startHandle = ++this->lastLocalHandle; // Service declaration.
-    this->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
-    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
-        const QLowEnergyHandle declHandle = ++this->lastLocalHandle;
-        QLowEnergyServicePrivate::CharData charData;
-        charData.valueHandle = ++this->lastLocalHandle;
-        charData.uuid = cd.uuid();
-        charData.properties = cd.properties();
-        charData.value = cd.value();
-        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
-            QLowEnergyServicePrivate::DescData descData;
-            descData.uuid = dd.uuid();
-            descData.value = dd.value();
-            charData.descriptorList.insert(++this->lastLocalHandle, descData);
-        }
-        servicePrivate->characteristicList.insert(declHandle, charData);
-    }
-    servicePrivate->endHandle = this->lastLocalHandle;
-    const bool handleOverflow = this->lastLocalHandle <= oldLastHandle;
-    if (handleOverflow) {
-        qCWarning(QT_BT) << "Not enough attribute handles left to create this service";
-        this->lastLocalHandle = oldLastHandle;
-        return nullptr;
-    }
-
-    this->localServices.insert(servicePrivate->uuid, servicePrivate);
-    this->addToGenericAttributeList(service, servicePrivate->startHandle);
-    return new QLowEnergyService(servicePrivate);
-}
 
 /*!
   Requests the controller to update the connection according to \a parameters.

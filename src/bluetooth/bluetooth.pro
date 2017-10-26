@@ -112,7 +112,10 @@ qtConfig(bluez) {
             lecmaccalculator.cpp \
             qlowenergycontroller_bluezdbus.cpp
 
-        PRIVATE_HEADERS += qlowenergycontroller_bluezdbus_p.h
+        PRIVATE_HEADERS += qlowenergycontroller_bluezdbus_p.h \
+                           qlowenergycontroller_bluez_p.h
+
+        PRIVATE_HEADERS -= qlowenergycontroller_p.h
 
         qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
