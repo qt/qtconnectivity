@@ -229,6 +229,9 @@ qtConfig(bluez) {
         qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
+    PRIVATE_HEADERS -= qlowenergycontroller_p.h
+    PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h
+
     lessThan(WINDOWS_SDK_VERSION, 14393) {
         DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
         DEFINES += QT_UCRTVERSION=$$WINDOWS_SDK_VERSION

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCONTROLLERPRIVATE_P_H
-#define QLOWENERGYCONTROLLERPRIVATE_P_H
+#ifndef QLOWENERGYCONTROLLERPRIVATEWINRT_P_H
+#define QLOWENERGYCONTROLLERPRIVATEWINRT_P_H
 
 //
 //  W A R N I N G
@@ -51,31 +51,17 @@
 // We mean it.
 //
 
-#if defined(QT_OSX_BLUETOOTH) || defined(QT_IOS_BLUETOOTH)
-
-#include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
-
-QT_BEGIN_NAMESPACE
-
-class QLowEnergyControllerPrivate : public QObject
-{
-public:
-    // This class is required to make shared pointer machinery and
-    // moc (== Obj-C syntax) happy on both OS X and iOS.
-};
-
-QT_END_NAMESPACE
-
-#else
-
 #include <qglobal.h>
 #include <QtCore/QQueue>
 #include <QtCore/QVector>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
+#include <QtBluetooth/qlowenergyservicedata.h>
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
+
+#include <wrl.h>
+#include <windows.devices.bluetooth.h>
 
 #include <functional>
 
@@ -83,15 +69,16 @@ QT_BEGIN_NAMESPACE
 
 class QLowEnergyServiceData;
 class QTimer;
+class QWinRTLowEnergyServiceHandler;
 
 extern void registerQLowEnergyControllerMetaType();
 
-class QLowEnergyControllerPrivateCommon : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateWinRT : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivateCommon();
-    ~QLowEnergyControllerPrivateCommon();
+    QLowEnergyControllerPrivateWinRT();
+    ~QLowEnergyControllerPrivateWinRT();
 
     void init() override;
 
@@ -147,12 +134,39 @@ public:
         int maxLength;
     };
     QVector<Attribute> localAttributes;
+
+private slots:
+    void characteristicChanged(int charHandle, const QByteArray &data);
+
+private:
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
+    EventRegistrationToken mStatusChangedToken;
+    struct ValueChangedEntry {
+        ValueChangedEntry() {}
+        ValueChangedEntry(Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> c,
+                          EventRegistrationToken t)
+            : characteristic(c)
+            , token(t)
+        {
+        }
+
+        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> characteristic;
+        EventRegistrationToken token;
+    };
+    QVector<ValueChangedEntry> mValueChangedTokens;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
+
+    void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
+
+    void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
+        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
+
 };
 
-Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateCommon::Attribute, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateWinRT::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QT_OSX_BLUETOOTH || QT_IOS_BLUETOOTH
-
-#endif // QLOWENERGYCONTROLLERPRIVATE_P_H
+#endif // QLOWENERGYCONTROLLERPRIVATEWINRT_P_H
