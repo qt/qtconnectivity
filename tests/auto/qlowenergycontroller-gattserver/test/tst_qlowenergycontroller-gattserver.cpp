@@ -245,9 +245,6 @@ void TestQLowEnergyControllerGattServer::advertisedData()
 
 void TestQLowEnergyControllerGattServer::serverCommunication()
 {
-    qRegisterMetaType<QLowEnergyCharacteristic>();
-    qRegisterMetaType<QLowEnergyDescriptor>();
-
     if (m_serverAddress.isNull())
         QSKIP("No server address provided");
     m_leController.reset(QLowEnergyController::createCentral(m_serverInfo));

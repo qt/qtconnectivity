@@ -282,8 +282,7 @@ QLowEnergyControllerPrivateWinRT::QLowEnergyControllerPrivateWinRT()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
 
-    qRegisterMetaType<QLowEnergyCharacteristic>();
-    qRegisterMetaType<QLowEnergyDescriptor>();
+    registerQLowEnergyControllerMetaType();
 }
 
 QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()

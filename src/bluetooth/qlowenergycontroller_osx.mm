@@ -72,6 +72,8 @@ static void registerQLowEnergyControllerMetaType()
         qRegisterMetaType<QLowEnergyController::Error>();
         qRegisterMetaType<QLowEnergyHandle>("QLowEnergyHandle");
         qRegisterMetaType<QSharedPointer<QLowEnergyServicePrivate> >();
+        qRegisterMetaType<QLowEnergyCharacteristic>();
+        qRegisterMetaType<QLowEnergyDescriptor>();
         initDone = true;
     }
 }

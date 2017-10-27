@@ -286,6 +286,8 @@ void registerQLowEnergyControllerMetaType()
         qRegisterMetaType<QLowEnergyController::ControllerState>();
         qRegisterMetaType<QLowEnergyController::Error>();
         qRegisterMetaType<QLowEnergyConnectionParameters>();
+        qRegisterMetaType<QLowEnergyCharacteristic>();
+        qRegisterMetaType<QLowEnergyDescriptor>();
         initDone = true;
     }
 }
