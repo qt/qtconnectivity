@@ -46,7 +46,6 @@ PRIVATE_HEADERS += \
     qbluetoothtransferrequest_p.h \
     qprivatelinearbuffer_p.h \
     qbluetoothlocaldevice_p.h \
-    qlowenergycontroller_p.h \
     qlowenergycontrollerbase_p.h \
     qlowenergyserviceprivate_p.h \
     qleadvertiser_p.h \
@@ -115,14 +114,14 @@ qtConfig(bluez) {
         PRIVATE_HEADERS += qlowenergycontroller_bluezdbus_p.h \
                            qlowenergycontroller_bluez_p.h
 
-        PRIVATE_HEADERS -= qlowenergycontroller_p.h
-
         qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
         DEFINES += QT_BLUEZ_NO_BTLE
         include(dummy/dummy.pri)
         SOURCES += \
             qlowenergycontroller_p.cpp
+
+        PRIVATE_HEADERS += qlowenergycontroller_p.h
     }
 
 } else:android:!android-embedded {
@@ -146,7 +145,6 @@ qtConfig(bluez) {
         qbluetoothserver_android.cpp \
         qlowenergycontroller_android.cpp
 
-    PRIVATE_HEADERS -= qlowenergycontroller_p.h
     PRIVATE_HEADERS += qlowenergycontroller_android_p.h
 
 } else:osx {
@@ -172,8 +170,6 @@ qtConfig(bluez) {
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_osx_p.h
 
-    PRIVATE_HEADERS -= qlowenergycontrollerbase_p.h
-
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
@@ -182,7 +178,6 @@ qtConfig(bluez) {
     SOURCES -= qlowenergyservice_p.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
-    SOURCES -= qlowenergycontroller_p.cpp
     SOURCES -= qlowenergycontrollerbase.cpp
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
@@ -195,8 +190,6 @@ qtConfig(bluez) {
 
     PRIVATE_HEADERS += \
         qlowenergycontroller_osx_p.h
-
-    PRIVATE_HEADERS -= qlowenergycontrollerbase_p.h
 
     include(osx/osxbt.pri)
     SOURCES += \
@@ -229,7 +222,6 @@ qtConfig(bluez) {
         qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
-    PRIVATE_HEADERS -= qlowenergycontroller_p.h
     PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h
 
     lessThan(WINDOWS_SDK_VERSION, 14393) {
@@ -248,6 +240,8 @@ qtConfig(bluez) {
         qbluetoothsocket_p.cpp \
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
+
+    PRIVATE_HEADERS += qlowenergycontroller_p.h
 }
 
 winrt-*-msvc2015 {

@@ -51,24 +51,6 @@
 // We mean it.
 //
 
-#if defined(QT_OSX_BLUETOOTH) || defined(QT_IOS_BLUETOOTH)
-
-#include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
-
-QT_BEGIN_NAMESPACE
-
-class QLowEnergyControllerPrivate : public QObject
-{
-public:
-    // This class is required to make shared pointer machinery and
-    // moc (== Obj-C syntax) happy on both OS X and iOS.
-};
-
-QT_END_NAMESPACE
-
-#else
-
 #include <qglobal.h>
 #include <QtCore/QQueue>
 #include <QtCore/QVector>
@@ -129,7 +111,5 @@ public:
 };
 
 QT_END_NAMESPACE
-
-#endif // QT_OSX_BLUETOOTH || QT_IOS_BLUETOOTH
 
 #endif // QLOWENERGYCONTROLLERPRIVATE_P_H
