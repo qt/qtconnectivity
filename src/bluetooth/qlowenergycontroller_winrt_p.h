@@ -120,21 +120,6 @@ public:
 
     QLowEnergyHandle lastLocalHandle;
 
-    struct Attribute {
-        Attribute() : handle(0) {}
-
-        QLowEnergyHandle handle;
-        QLowEnergyHandle groupEndHandle;
-        QLowEnergyCharacteristic::PropertyTypes properties;
-        QBluetooth::AttAccessConstraints readConstraints;
-        QBluetooth::AttAccessConstraints writeConstraints;
-        QBluetoothUuid type;
-        QByteArray value;
-        int minLength;
-        int maxLength;
-    };
-    QVector<Attribute> localAttributes;
-
 private slots:
     void characteristicChanged(int charHandle, const QByteArray &data);
 
@@ -164,8 +149,6 @@ private:
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
 
 };
-
-Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateWinRT::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 

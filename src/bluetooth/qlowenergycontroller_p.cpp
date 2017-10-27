@@ -45,8 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 QLowEnergyControllerPrivateCommon::QLowEnergyControllerPrivateCommon()
-    : QLowEnergyControllerPrivate(),
-      lastLocalHandle(0)
+    : QLowEnergyControllerPrivate()
 {
 #ifndef QT_IOS_BLUETOOTH
     printDummyWarning();

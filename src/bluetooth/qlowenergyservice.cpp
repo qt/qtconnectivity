@@ -44,7 +44,7 @@
 
 #include <algorithm>
 
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontrollerbase_p.h"
 #include "qlowenergyserviceprivate_p.h"
 
 QT_BEGIN_NAMESPACE

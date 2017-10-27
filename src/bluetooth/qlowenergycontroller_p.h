@@ -77,12 +77,9 @@ QT_END_NAMESPACE
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
-#include <functional>
-
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServiceData;
-class QTimer;
 
 extern void registerQLowEnergyControllerMetaType();
 
@@ -129,27 +126,7 @@ public:
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
-
-
-    QLowEnergyHandle lastLocalHandle;
-
-    struct Attribute {
-        Attribute() : handle(0) {}
-
-        QLowEnergyHandle handle;
-        QLowEnergyHandle groupEndHandle;
-        QLowEnergyCharacteristic::PropertyTypes properties;
-        QBluetooth::AttAccessConstraints readConstraints;
-        QBluetooth::AttAccessConstraints writeConstraints;
-        QBluetoothUuid type;
-        QByteArray value;
-        int minLength;
-        int maxLength;
-    };
-    QVector<Attribute> localAttributes;
 };
-
-Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateCommon::Attribute, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
