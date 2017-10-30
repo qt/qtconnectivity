@@ -106,6 +106,7 @@ void RemoteDeviceManager::prepareNextJob()
     jobQueue.pop_front();
     jobInProgress = false;
 
+    qDebug(QT_BT_BLUEZ) << "RemoteDeviceManager job queue status:" << jobQueue.empty();
     if (jobQueue.empty())
         emit finished();
     else
@@ -163,8 +164,10 @@ void RemoteDeviceManager::disconnectDevice(const QBluetoothAddress &remote)
         }
     }
 
-    if (!jobStarted)
+    if (!jobStarted) {
+        qDebug(QT_BT_BLUEZ) << "RemoteDeviceManager JobDisconnectDevice failed";
         QTimer::singleShot(0, this, [this](){ prepareNextJob(); });
+    }
 }
 
 QT_END_NAMESPACE

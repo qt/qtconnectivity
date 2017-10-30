@@ -43,6 +43,7 @@
 #define Q_OS_WINRT
 #endif
 #include <QtCore/qfunctions_winrt.h>
+#include <QtCore/QtEndian>
 #include <QtCore/QLoggingCategory>
 #include <private/qeventdispatcher_winrt_p.h>
 

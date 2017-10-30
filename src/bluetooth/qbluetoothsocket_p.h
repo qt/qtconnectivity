@@ -62,6 +62,8 @@ class WorkerThread;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH
+#include <QtCore/QMutex>
+
 #include <wrl.h>
 
 namespace ABI {

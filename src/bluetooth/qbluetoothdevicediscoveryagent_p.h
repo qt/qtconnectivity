@@ -78,6 +78,11 @@ class QDBusVariant;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <QtCore/QPointer>
+#include <QtCore/QTimer>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 #ifdef QT_WINRT_BLUETOOTH

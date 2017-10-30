@@ -72,6 +72,10 @@ class QXmlStreamReader;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <QtCore/QPointer>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
