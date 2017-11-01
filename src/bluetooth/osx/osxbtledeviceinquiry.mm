@@ -220,6 +220,9 @@ QT_USE_NAMESPACE
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+
     if (central != manager)
         return;
 
@@ -318,6 +321,8 @@ QT_USE_NAMESPACE
         // lost; an update is imminent. "
         // Wait for this imminent update.
     }
+
+#pragma clang diagnostic pop
 }
 
 - (void)stop
