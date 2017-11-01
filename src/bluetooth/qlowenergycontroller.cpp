@@ -292,6 +292,25 @@ void registerQLowEnergyControllerMetaType()
     }
 }
 
+static QLowEnergyControllerPrivate *privateController()
+{
+#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
+    if (isBluez5DbusGatt()) {
+        qCWarning(QT_BT) << "Using BlueZ DBus API";
+        return new QLowEnergyControllerPrivateBluezDBus();
+    } else {
+        qCWarning(QT_BT) << "Using BlueZ kernel ATT interface";
+        return new QLowEnergyControllerPrivateBluez();
+    }
+#elif defined(QT_ANDROID_BLUETOOTH)
+    return new QLowEnergyControllerPrivateAndroid();
+#elif defined(QT_WINRT_BLUETOOTH)
+    return new QLowEnergyControllerPrivateWinRT();
+#else
+    return new QLowEnergyControllerPrivateCommon();
+#endif
+}
+
 /*!
     Constructs a new instance of this class with \a parent.
 
@@ -309,21 +328,9 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    if (isBluez5DbusGatt())
-        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
-    else
-        d_ptr = new QLowEnergyControllerPrivateBluez();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateWinRT();
-#else
-    d_ptr = new QLowEnergyControllerPrivateCommon();
-#endif
+    d_ptr = privateController();
 
     Q_D(QLowEnergyController);
-
     d->q_ptr = this;
     d->role = CentralRole;
     d->remoteDevice = remoteDevice;
@@ -350,18 +357,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    if (isBluez5DbusGatt())
-        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
-    else
-        d_ptr = new QLowEnergyControllerPrivateBluez();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateWinRT();
-#else
-    d_ptr = new QLowEnergyControllerPrivateCommon();
-#endif
+        d_ptr = privateController();
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -394,18 +390,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    if (isBluez5DbusGatt())
-        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
-    else
-        d_ptr = new QLowEnergyControllerPrivateBluez();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateWinRT();
-#else
-    d_ptr = new QLowEnergyControllerPrivateCommon();
-#endif
+    d_ptr = privateController();
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -450,18 +435,7 @@ QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
 QLowEnergyController::QLowEnergyController(QObject *parent)
     : QObject(parent)
 {
-#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    if (isBluez5DbusGatt())
-        d_ptr = new QLowEnergyControllerPrivateBluezDBus();
-    else
-        d_ptr = new QLowEnergyControllerPrivateBluez();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QLowEnergyControllerPrivateWinRT();
-#else
-    d_ptr = new QLowEnergyControllerPrivateCommon();
-#endif
+    d_ptr = privateController();
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
