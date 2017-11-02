@@ -66,7 +66,7 @@ Q_DECLARE_METATYPE(ManagedObjectList)
 QT_BEGIN_NAMESPACE
 
 bool isBluez5();
-bool isBluez5DbusGatt();
+QVersionNumber bluetoothdVersion();
 
 QString sanitizeNameForDBus(const QString& text);
 

@@ -295,8 +295,9 @@ void registerQLowEnergyControllerMetaType()
 static QLowEnergyControllerPrivate *privateController()
 {
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    if (isBluez5DbusGatt()) {
-        qCWarning(QT_BT) << "Using BlueZ DBus API";
+    // for now Bluez DBus disabled
+    if (false && bluetoothdVersion() >= QVersionNumber(5, 42)) {
+        qCWarning(QT_BT) << "Using BlueZ LE DBus API";
         return new QLowEnergyControllerPrivateBluezDBus();
     } else {
         qCWarning(QT_BT) << "Using BlueZ kernel ATT interface";

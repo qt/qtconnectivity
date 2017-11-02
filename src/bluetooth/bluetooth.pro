@@ -88,6 +88,9 @@ qtConfig(bluez) {
     QT_PRIVATE = concurrent
     QT_FOR_PRIVATE += dbus
 
+    # do not link against QtNetwork but use inline qt_safe_* functions
+    INCLUDEPATH += $$QT.network_private.includes
+
     include(bluez/bluez.pri)
 
     PRIVATE_HEADERS += \
