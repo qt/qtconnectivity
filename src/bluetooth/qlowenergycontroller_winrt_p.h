@@ -95,9 +95,6 @@ public:
 
     void requestConnectionUpdate(const QLowEnergyConnectionParameters &params) override;
 
-    // misc helpers
-    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
-
     // read data
     void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                             const QLowEnergyHandle charHandle) override;
@@ -116,9 +113,6 @@ public:
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
-
-
-    QLowEnergyHandle lastLocalHandle;
 
 private slots:
     void characteristicChanged(int charHandle, const QByteArray &data);

@@ -116,8 +116,6 @@ public:
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
-    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
-
 
     struct Attribute {
         Attribute() : handle(0) {}
@@ -133,7 +131,6 @@ public:
         int maxLength;
     };
     QVector<Attribute> localAttributes;
-    QLowEnergyHandle lastLocalHandle;
 
 private:
     quint16 connectionHandle = 0;

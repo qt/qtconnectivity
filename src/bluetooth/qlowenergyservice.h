@@ -134,10 +134,9 @@ private:
 
     // QLowEnergyController is the factory for this class
     friend class QLowEnergyController;
-    friend class QLowEnergyControllerPrivateAndroid;
+    friend class QLowEnergyControllerPrivate;
     friend class QLowEnergyControllerPrivateBluez;
-    friend class QLowEnergyControllerPrivateCommon;
-    friend class QLowEnergyControllerPrivateWinRT;
+    friend class QLowEnergyControllerPrivateAndroid;
     QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
                       QObject *parent = nullptr);
 };

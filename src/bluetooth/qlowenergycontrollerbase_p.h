@@ -133,7 +133,7 @@ public:
 
 
     virtual QLowEnergyService *addServiceHelper(
-                        const QLowEnergyServiceData &service) = 0;
+                        const QLowEnergyServiceData &service);
 
 
     // common backend methods
@@ -171,6 +171,7 @@ protected:
     QBluetoothAddress remoteDevice;
     QBluetoothAddress localAdapter;
 
+    QLowEnergyHandle lastLocalHandle{};
 
     QString remoteName; // device name of the remote
 

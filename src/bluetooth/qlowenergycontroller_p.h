@@ -87,9 +87,6 @@ public:
 
     void requestConnectionUpdate(const QLowEnergyConnectionParameters &params) override;
 
-    // misc helpers
-    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
-
     // read data
     void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                             const QLowEnergyHandle charHandle) override;
