@@ -662,8 +662,10 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
 
     //qDebug() << "Got agent";
 
-    connect(d->discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-    connect(d->discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
+    connect(d->discoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+            this, &QBluetoothSocket::serviceDiscovered);
+    connect(d->discoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
+            this, &QBluetoothSocket::discoveryFinished);
 
     d->openMode = openMode;
 

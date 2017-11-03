@@ -142,21 +142,29 @@ QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject
     d(new QDeclarativeBluetoothDiscoveryModelPrivate)
 {
     d->m_deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
-    connect(d->m_deviceAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
-            this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
-    connect(d->m_deviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
-    connect(d->m_deviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
-    connect(d->m_deviceAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
-            this, SLOT(errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error)));
+    connect(d->m_deviceAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+            this, QOverload<const QBluetoothDeviceInfo&>::of(&QDeclarativeBluetoothDiscoveryModel::deviceDiscovered));
+    connect(d->m_deviceAgent, &QBluetoothDeviceDiscoveryAgent::finished,
+            this, &QDeclarativeBluetoothDiscoveryModel::finishedDiscovery);
+    connect(d->m_deviceAgent, &QBluetoothDeviceDiscoveryAgent::canceled,
+            this, &QDeclarativeBluetoothDiscoveryModel::finishedDiscovery);
+    connect(d->m_deviceAgent,
+            QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+            this,
+            &QDeclarativeBluetoothDiscoveryModel::errorDeviceDiscovery);
     d->m_deviceAgent->setObjectName(QStringLiteral("DeviceDiscoveryAgent"));
 
     d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
-    connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-    connect(d->m_serviceAgent, SIGNAL(finished()), this, SLOT(finishedDiscovery()));
-    connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
-    connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
-            this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
+    connect(d->m_serviceAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+            this, QOverload<const QBluetoothServiceInfo&>::of(&QDeclarativeBluetoothDiscoveryModel::serviceDiscovered));
+    connect(d->m_serviceAgent, &QBluetoothServiceDiscoveryAgent::finished,
+            this, &QDeclarativeBluetoothDiscoveryModel::finishedDiscovery);
+    connect(d->m_serviceAgent, &QBluetoothServiceDiscoveryAgent::canceled,
+            this, &QDeclarativeBluetoothDiscoveryModel::finishedDiscovery);
+    connect(d->m_serviceAgent,
+            QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
+            this,
+            &QDeclarativeBluetoothDiscoveryModel::errorDiscovery);
     d->m_serviceAgent->setObjectName(QStringLiteral("ServiceDiscoveryAgent"));
 
     QHash<int, QByteArray> roleNames;
