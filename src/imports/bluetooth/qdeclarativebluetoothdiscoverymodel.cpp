@@ -148,7 +148,7 @@ QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject
     connect(d->m_deviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
     connect(d->m_deviceAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
             this, SLOT(errorDeviceDiscovery(QBluetoothDeviceDiscoveryAgent::Error)));
-    d->m_deviceAgent->setObjectName("DeviceDiscoveryAgent");
+    d->m_deviceAgent->setObjectName(QStringLiteral("DeviceDiscoveryAgent"));
 
     d->m_serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
     connect(d->m_serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
@@ -157,7 +157,7 @@ QDeclarativeBluetoothDiscoveryModel::QDeclarativeBluetoothDiscoveryModel(QObject
     connect(d->m_serviceAgent, SIGNAL(canceled()), this, SLOT(finishedDiscovery()));
     connect(d->m_serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
             this, SLOT(errorDiscovery(QBluetoothServiceDiscoveryAgent::Error)));
-    d->m_serviceAgent->setObjectName("ServiceDiscoveryAgent");
+    d->m_serviceAgent->setObjectName(QStringLiteral("ServiceDiscoveryAgent"));
 
     QHash<int, QByteArray> roleNames;
     roleNames = QAbstractItemModel::roleNames();

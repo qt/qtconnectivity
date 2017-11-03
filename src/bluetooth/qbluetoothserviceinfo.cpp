@@ -625,7 +625,7 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
     QDebugStateSaver saver(dbg);
     dbg.noquote() << "\n";
     foreach (quint16 id, info.attributes()) {
-        dumpAttributeVariant(dbg, info.attribute(id), QString::fromLatin1("(%1)\t").arg(id));
+        dumpAttributeVariant(dbg, info.attribute(id), QStringLiteral("(%1)\t").arg(id));
     }
     return dbg;
 }
