@@ -149,7 +149,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     if (!m_intent.isValid()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -157,7 +157,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     if (!setTagTechnology({NDEFTECHNOLOGY})) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnsupportedError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -165,7 +165,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     if (!connect()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -176,7 +176,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     if (!ndefMessage.isValid()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefReadError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -192,12 +192,12 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
     QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                              Q_ARG(const QNdefMessage&, qNdefMessage));
+                              Q_ARG(QNdefMessage&, qNdefMessage));
     QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                              Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                              Q_ARG(QNearFieldTarget::RequestId&, requestId));
     QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                              Q_ARG(const QNdefMessage&, qNdefMessage),
-                              Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                              Q_ARG(QNdefMessage&, qNdefMessage),
+                              Q_ARG(QNearFieldTarget::RequestId&, requestId));
     return requestId;
 }
 
@@ -247,7 +247,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     if (!connect()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -261,7 +261,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::CommandError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
     QByteArray result = jbyteArrayToQByteArray(myNewVal.object<jbyteArray>());
@@ -274,7 +274,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
         disconnect();   // IOException at this point does not matter anymore.
     }
     QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                              Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                              Q_ARG(QNearFieldTarget::RequestId&, requestId));
 
     return requestId;
 }
@@ -313,7 +313,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     if (!connect()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -326,7 +326,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
@@ -335,7 +335,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefWriteError),
-                                  Q_ARG(const QNearFieldTarget::RequestId&, requestId));
+                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
         return requestId;
     }
 
