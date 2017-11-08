@@ -489,7 +489,9 @@ void QLowEnergyControllerPrivate::obtainIncludedServices(QSharedPointer<QLowEner
     Q_ASSERT_SUCCEEDED(hr);
     ComPtr<IVectorView<GattDeviceService *>> includedServices;
     hr = service2->GetAllIncludedServices(&includedServices);
-    Q_ASSERT_SUCCEEDED(hr);
+    // Some devices return ERROR_ACCESS_DISABLED_BY_POLICY
+    if (FAILED(hr))
+        return;
 
     uint count;
     hr = includedServices->get_Size(&count);
@@ -588,7 +590,12 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
     Q_ASSERT_SUCCEEDED(hr);
     ComPtr<IVectorView<GattDeviceService *>> deviceServices;
     hr = deviceService2->GetAllIncludedServices(&deviceServices);
-    Q_ASSERT_SUCCEEDED(hr);
+    if (FAILED(hr)) { // ERROR_ACCESS_DISABLED_BY_POLICY
+        qCDebug(QT_BT_WINRT) << "Could not obtain included services list for" << service;
+        pointer->setError(QLowEnergyService::UnknownError);
+        pointer->setState(QLowEnergyService::InvalidService);
+        return;
+    }
     uint serviceCount;
     hr = deviceServices->get_Size(&serviceCount);
     Q_ASSERT_SUCCEEDED(hr);
