@@ -164,7 +164,7 @@ protected:
     QBluetoothSocketPrivate *d_ptr;
 
 private:
-    friend class QLowEnergyControllerPrivate;
+    friend class QLowEnergyControllerPrivateBluez;
 };
 
 #ifndef QT_NO_DEBUG_STREAM

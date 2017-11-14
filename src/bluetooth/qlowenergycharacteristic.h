@@ -97,7 +97,12 @@ protected:
 
     friend class QLowEnergyService;
     friend class QLowEnergyControllerPrivate;
+    friend class QLowEnergyControllerPrivateAndroid;
+    friend class QLowEnergyControllerPrivateBluez;
+    friend class QLowEnergyControllerPrivateCommon;
     friend class QLowEnergyControllerPrivateOSX;
+    friend class QLowEnergyControllerPrivateWin32;
+    friend class QLowEnergyControllerPrivateWinRT;
     QLowEnergyCharacteristicPrivate *data;
     QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle handle);

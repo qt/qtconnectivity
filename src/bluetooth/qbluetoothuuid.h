@@ -381,6 +381,8 @@ public:
     bool operator==(const QBluetoothUuid &other) const;
     bool operator!=(const QBluetoothUuid &other) const { return !operator==(other); }
 
+    QBluetoothUuid &operator=(const QBluetoothUuid &other) = default;
+
     int minimumSize() const;
 
     quint16 toUInt16(bool *ok = nullptr) const;

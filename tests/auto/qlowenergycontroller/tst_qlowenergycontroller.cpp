@@ -95,9 +95,6 @@ private:
 
 tst_QLowEnergyController::tst_QLowEnergyController()
 {
-    qRegisterMetaType<QLowEnergyCharacteristic>();
-    qRegisterMetaType<QLowEnergyDescriptor>();
-
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
 #ifndef Q_OS_MAC
     // Core Bluetooth (OS X and iOS) does not work with addresses,

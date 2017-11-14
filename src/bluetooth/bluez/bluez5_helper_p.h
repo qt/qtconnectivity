@@ -66,6 +66,7 @@ Q_DECLARE_METATYPE(ManagedObjectList)
 QT_BEGIN_NAMESPACE
 
 bool isBluez5();
+bool isBluez5DbusGatt();
 
 QString sanitizeNameForDBus(const QString& text);
 

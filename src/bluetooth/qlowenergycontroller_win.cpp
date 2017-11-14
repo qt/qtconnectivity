@@ -32,7 +32,7 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontroller_win_p.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
 
 #include <QtCore/QLoggingCategory>
@@ -52,7 +52,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 
-Q_GLOBAL_STATIC(QVector<QLowEnergyControllerPrivate *>, qControllers)
+Q_GLOBAL_STATIC(QVector<QLowEnergyControllerPrivateWin32 *>, qControllers)
 static QMutex controllersGuard(QMutex::NonRecursive);
 
 const QEvent::Type CharactericticValueEventType = static_cast<QEvent::Type>(QEvent::User + 1);
@@ -479,7 +479,7 @@ static void WINAPI eventChangedCallbackEntry(
         return;
 
     QMutexLocker locker(&controllersGuard);
-    const auto target = static_cast<QLowEnergyControllerPrivate *>(context);
+    const auto target = static_cast<QLowEnergyControllerPrivateWin32 *>(context);
     if (!qControllers->contains(target))
         return;
 
@@ -629,7 +629,7 @@ static BTH_LE_GATT_DESCRIPTOR recoverNativeLeGattDescriptor(
     return gattDescriptor;
 }
 
-void QLowEnergyControllerPrivate::customEvent(QEvent *e)
+void QLowEnergyControllerPrivateWin32::customEvent(QEvent *e)
 {
     if (e->type() != CharactericticValueEventType)
         return;
@@ -649,10 +649,8 @@ void QLowEnergyControllerPrivate::customEvent(QEvent *e)
     emit service->characteristicChanged(ch, characteristicEvent->m_value);
 }
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject()
-    , state(QLowEnergyController::UnconnectedState)
-    , error(QLowEnergyController::NoError)
+QLowEnergyControllerPrivateWin32::QLowEnergyControllerPrivateWin32()
+    : QLowEnergyControllerPrivate()
 {
     QMutexLocker locker(&controllersGuard);
     qControllers()->append(this);
@@ -664,18 +662,18 @@ QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
     }
 }
 
-QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivateWin32::~QLowEnergyControllerPrivateWin32()
 {
     QMutexLocker locker(&controllersGuard);
     qControllers()->removeAll(this);
 }
 
-void QLowEnergyControllerPrivate::init()
+void QLowEnergyControllerPrivateWin32::init()
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::connectToDevice()
+void QLowEnergyControllerPrivateWin32::connectToDevice()
 {
     // required to pass unit test on default backend
     if (remoteDevice.isNull()) {
@@ -708,7 +706,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
     emit q->connected();
 }
 
-void QLowEnergyControllerPrivate::disconnectFromDevice()
+void QLowEnergyControllerPrivateWin32::disconnectFromDevice()
 {
     if (deviceSystemPath.isEmpty()) {
         qCDebug(QT_BT_WINDOWS) << "Already is disconnected";
@@ -723,7 +721,7 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
     emit q->disconnected();
 }
 
-void QLowEnergyControllerPrivate::discoverServices()
+void QLowEnergyControllerPrivateWin32::discoverServices()
 {
     int systemErrorCode = NO_ERROR;
 
@@ -774,7 +772,7 @@ void QLowEnergyControllerPrivate::discoverServices()
     emit q->discoveryFinished();
 }
 
-void QLowEnergyControllerPrivate::discoverServiceDetails(
+void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
         const QBluetoothUuid &service)
 {
     if (!serviceList.contains(service)) {
@@ -919,22 +917,22 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(
     servicePrivate->setState(QLowEnergyService::ServiceDiscovered);
 }
 
-void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &, const QLowEnergyAdvertisingData &, const QLowEnergyAdvertisingData &)
+void QLowEnergyControllerPrivateWin32::startAdvertising(const QLowEnergyAdvertisingParameters &, const QLowEnergyAdvertisingData &, const QLowEnergyAdvertisingData &)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::stopAdvertising()
+void QLowEnergyControllerPrivateWin32::stopAdvertising()
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
+void QLowEnergyControllerPrivateWin32::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::readCharacteristic(
+void QLowEnergyControllerPrivateWin32::readCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle)
 {
@@ -985,7 +983,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
     emit service->characteristicRead(ch, characteristicValue);
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(
+void QLowEnergyControllerPrivateWin32::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
@@ -1041,7 +1039,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
     }
 }
 
-void QLowEnergyControllerPrivate::readDescriptor(
+void QLowEnergyControllerPrivateWin32::readDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle)
@@ -1095,7 +1093,7 @@ void QLowEnergyControllerPrivate::readDescriptor(
     emit service->descriptorRead(dscr, value);
 }
 
-void QLowEnergyControllerPrivate::writeDescriptor(
+void QLowEnergyControllerPrivateWin32::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descriptorHandle,
@@ -1186,7 +1184,7 @@ void QLowEnergyControllerPrivate::writeDescriptor(
     emit service->descriptorWritten(dscr, newValue);
 }
 
-void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
+void QLowEnergyControllerPrivateWin32::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
 {
     Q_UNIMPLEMENTED();
 }

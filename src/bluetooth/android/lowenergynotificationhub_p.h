@@ -56,10 +56,11 @@
 #include <QtCore/private/qjnihelpers_p.h>
 #include <QtAndroidExtras/QAndroidJniObject>
 #include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/QLowEnergyController>
+#include <QtBluetooth/QLowEnergyService>
 #include <jni.h>
 
 #include <QtBluetooth/QLowEnergyCharacteristic>
-#include "qlowenergycontroller_p.h"
 
 QT_BEGIN_NAMESPACE
 

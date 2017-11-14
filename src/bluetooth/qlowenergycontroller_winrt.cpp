@@ -37,7 +37,10 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontroller_winrt_p.h"
+
+#include <QtBluetooth/QLowEnergyCharacteristicData>
+#include <QtBluetooth/QLowEnergyDescriptorData>
 
 #ifdef CLASSIC_APP_BUILD
 #define Q_OS_WINRT
@@ -274,18 +277,15 @@ signals:
                           QLowEnergyHandle startHandle, QLowEnergyHandle endHandle);
 };
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError)
+QLowEnergyControllerPrivateWinRT::QLowEnergyControllerPrivateWinRT()
+    : QLowEnergyControllerPrivate()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
 
-    qRegisterMetaType<QLowEnergyCharacteristic>();
-    qRegisterMetaType<QLowEnergyDescriptor>();
+    registerQLowEnergyControllerMetaType();
 }
 
-QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
 {
     if (mDevice && mStatusChangedToken.value)
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
@@ -295,11 +295,11 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
         entry.characteristic->remove_ValueChanged(entry.token);
 }
 
-void QLowEnergyControllerPrivate::init()
+void QLowEnergyControllerPrivateWinRT::init()
 {
 }
 
-void QLowEnergyControllerPrivate::connectToDevice()
+void QLowEnergyControllerPrivateWinRT::connectToDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     Q_Q(QLowEnergyController);
@@ -417,7 +417,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
     }
 }
 
-void QLowEnergyControllerPrivate::disconnectFromDevice()
+void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     Q_Q(QLowEnergyController);
@@ -429,7 +429,7 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
     }
 }
 
-ComPtr<IGattDeviceService> QLowEnergyControllerPrivate::getNativeService(const QBluetoothUuid &serviceUuid)
+ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRT::getNativeService(const QBluetoothUuid &serviceUuid)
 {
     ComPtr<IGattDeviceService> deviceService;
     HRESULT hr;
@@ -439,7 +439,7 @@ ComPtr<IGattDeviceService> QLowEnergyControllerPrivate::getNativeService(const Q
     return deviceService;
 }
 
-ComPtr<IGattCharacteristic> QLowEnergyControllerPrivate::getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid)
+ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRT::getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid)
 {
     ComPtr<IGattDeviceService> service = getNativeService(serviceUuid);
     if (!service)
@@ -454,7 +454,7 @@ ComPtr<IGattCharacteristic> QLowEnergyControllerPrivate::getNativeCharacteristic
     return characteristic;
 }
 
-void QLowEnergyControllerPrivate::registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid)
+void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid)
 {
     qCDebug(QT_BT_WINRT) << "Registering characteristic" << charUuid << "in service"
                          << serviceUuid << "for value changes";
@@ -487,7 +487,7 @@ void QLowEnergyControllerPrivate::registerForValueChanges(const QBluetoothUuid &
         << serviceUuid << "registered for value changes";
 }
 
-void QLowEnergyControllerPrivate::obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
+void QLowEnergyControllerPrivateWinRT::obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
     ComPtr<IGattDeviceService> service)
 {
     Q_Q(QLowEnergyController);
@@ -529,7 +529,7 @@ void QLowEnergyControllerPrivate::obtainIncludedServices(QSharedPointer<QLowEner
     }
 }
 
-void QLowEnergyControllerPrivate::discoverServices()
+void QLowEnergyControllerPrivateWinRT::discoverServices()
 {
     Q_Q(QLowEnergyController);
 
@@ -571,7 +571,7 @@ void QLowEnergyControllerPrivate::discoverServices()
     emit q->discoveryFinished();
 }
 
-void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &service)
+void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUuid &service)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service;
     if (!serviceList.contains(service)) {
@@ -656,22 +656,22 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
     thread->start();
 }
 
-void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &, const QLowEnergyAdvertisingData &, const QLowEnergyAdvertisingData &)
+void QLowEnergyControllerPrivateWinRT::startAdvertising(const QLowEnergyAdvertisingParameters &, const QLowEnergyAdvertisingData &, const QLowEnergyAdvertisingData &)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::stopAdvertising()
+void QLowEnergyControllerPrivateWinRT::stopAdvertising()
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
+void QLowEnergyControllerPrivateWinRT::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+void QLowEnergyControllerPrivateWinRT::readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                         const QLowEnergyHandle charHandle)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle;
@@ -729,7 +729,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(const QSharedPointer<QLowEn
     Q_ASSERT_SUCCEEDED(hr);
 }
 
-void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+void QLowEnergyControllerPrivateWinRT::readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
                     const QLowEnergyHandle charHandle,
                     const QLowEnergyHandle descHandle)
 {
@@ -854,7 +854,7 @@ void QLowEnergyControllerPrivate::readDescriptor(const QSharedPointer<QLowEnergy
     Q_ASSERT_SUCCEEDED(hr);
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+void QLowEnergyControllerPrivateWinRT::writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
         QLowEnergyService::WriteMode mode)
@@ -937,7 +937,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(const QSharedPointer<QLowE
     Q_ASSERT_SUCCEEDED(hr);
 }
 
-void QLowEnergyControllerPrivate::writeDescriptor(
+void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descHandle,
@@ -1076,12 +1076,12 @@ void QLowEnergyControllerPrivate::writeDescriptor(
 }
 
 
-void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
+void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivate::characteristicChanged(
+void QLowEnergyControllerPrivateWinRT::characteristicChanged(
         int charHandle, const QByteArray &data)
 {
     QSharedPointer<QLowEnergyServicePrivate> service =

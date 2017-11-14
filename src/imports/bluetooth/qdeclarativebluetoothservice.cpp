@@ -297,7 +297,8 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
     }
 
     d->m_server = server;
-    connect(d->m_server, SIGNAL(newConnection()), this, SLOT(new_connection()));
+    connect(d->m_server, &QBluetoothServer::newConnection,
+            this, &QDeclarativeBluetoothService::new_connection);
 
     d->m_service->setAttribute(QBluetoothServiceInfo::ServiceRecordHandle, (uint)0x00010010);
 

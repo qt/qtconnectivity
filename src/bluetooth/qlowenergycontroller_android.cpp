@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontroller_android_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 #include <QtBluetooth/QLowEnergyServiceData>
@@ -69,16 +69,14 @@ static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
     return javaUuid;
 }
 
-QLowEnergyControllerPrivate::QLowEnergyControllerPrivate()
-    : QObject(),
-      state(QLowEnergyController::UnconnectedState),
-      error(QLowEnergyController::NoError),
+QLowEnergyControllerPrivateAndroid::QLowEnergyControllerPrivateAndroid()
+    : QLowEnergyControllerPrivate(),
       hub(0)
 {
     registerQLowEnergyControllerMetaType();
 }
 
-QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivateAndroid::~QLowEnergyControllerPrivateAndroid()
 {
     if (role == QLowEnergyController::PeripheralRole) {
         if (hub)
@@ -86,7 +84,7 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
     }
 }
 
-void QLowEnergyControllerPrivate::init()
+void QLowEnergyControllerPrivateAndroid::init()
 {
     // Android Central/Client support starts with v18
     // Peripheral/Server support requires Android API v21
@@ -106,13 +104,13 @@ void QLowEnergyControllerPrivate::init()
         // we only connect to the peripheral role specific signals
         // TODO add connections as they get added later on
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
-                this, &QLowEnergyControllerPrivate::connectionUpdated);
+                this, &QLowEnergyControllerPrivateAndroid::connectionUpdated);
         connect(hub, &LowEnergyNotificationHub::advertisementError,
-                this, &QLowEnergyControllerPrivate::advertisementError);
+                this, &QLowEnergyControllerPrivateAndroid::advertisementError);
         connect(hub, &LowEnergyNotificationHub::serverCharacteristicChanged,
-                this, &QLowEnergyControllerPrivate::serverCharacteristicChanged);
+                this, &QLowEnergyControllerPrivateAndroid::serverCharacteristicChanged);
         connect(hub, &LowEnergyNotificationHub::serverDescriptorWritten,
-                this, &QLowEnergyControllerPrivate::serverDescriptorWritten);
+                this, &QLowEnergyControllerPrivateAndroid::serverDescriptorWritten);
     } else {
         if (version < 18) {
             qWarning() << "Qt Bluetooth LE Central/Client support not available"
@@ -123,25 +121,25 @@ void QLowEnergyControllerPrivate::init()
         hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
         // we only connect to the central role specific signals
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
-                this, &QLowEnergyControllerPrivate::connectionUpdated);
+                this, &QLowEnergyControllerPrivateAndroid::connectionUpdated);
         connect(hub, &LowEnergyNotificationHub::servicesDiscovered,
-                this, &QLowEnergyControllerPrivate::servicesDiscovered);
+                this, &QLowEnergyControllerPrivateAndroid::servicesDiscovered);
         connect(hub, &LowEnergyNotificationHub::serviceDetailsDiscoveryFinished,
-                this, &QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished);
+                this, &QLowEnergyControllerPrivateAndroid::serviceDetailsDiscoveryFinished);
         connect(hub, &LowEnergyNotificationHub::characteristicRead,
-                this, &QLowEnergyControllerPrivate::characteristicRead);
+                this, &QLowEnergyControllerPrivateAndroid::characteristicRead);
         connect(hub, &LowEnergyNotificationHub::descriptorRead,
-                this, &QLowEnergyControllerPrivate::descriptorRead);
+                this, &QLowEnergyControllerPrivateAndroid::descriptorRead);
         connect(hub, &LowEnergyNotificationHub::characteristicWritten,
-                this, &QLowEnergyControllerPrivate::characteristicWritten);
+                this, &QLowEnergyControllerPrivateAndroid::characteristicWritten);
         connect(hub, &LowEnergyNotificationHub::descriptorWritten,
-                this, &QLowEnergyControllerPrivate::descriptorWritten);
+                this, &QLowEnergyControllerPrivateAndroid::descriptorWritten);
         connect(hub, &LowEnergyNotificationHub::characteristicChanged,
-                this, &QLowEnergyControllerPrivate::characteristicChanged);
+                this, &QLowEnergyControllerPrivateAndroid::characteristicChanged);
     }
 }
 
-void QLowEnergyControllerPrivate::connectToDevice()
+void QLowEnergyControllerPrivateAndroid::connectToDevice()
 {
     if (!hub)
         return; // Android version below v18
@@ -170,7 +168,7 @@ void QLowEnergyControllerPrivate::connectToDevice()
     }
 }
 
-void QLowEnergyControllerPrivate::disconnectFromDevice()
+void QLowEnergyControllerPrivateAndroid::disconnectFromDevice()
 {
     /* Catch an Android timeout bug. If the device is connecting but cannot
      * physically connect it seems to ignore the disconnect call below.
@@ -188,7 +186,7 @@ void QLowEnergyControllerPrivate::disconnectFromDevice()
         setState(QLowEnergyController::UnconnectedState);
 }
 
-void QLowEnergyControllerPrivate::discoverServices()
+void QLowEnergyControllerPrivateAndroid::discoverServices()
 {
     if (hub && hub->javaObject().callMethod<jboolean>("discoverServices")) {
         qCDebug(QT_BT_ANDROID) << "Service discovery initiated";
@@ -199,7 +197,7 @@ void QLowEnergyControllerPrivate::discoverServices()
     }
 }
 
-void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &service)
+void QLowEnergyControllerPrivateAndroid::discoverServiceDetails(const QBluetoothUuid &service)
 {
     if (!serviceList.contains(service)) {
         qCWarning(QT_BT_ANDROID) << "Discovery of unknown service" << service.toString()
@@ -234,7 +232,7 @@ void QLowEnergyControllerPrivate::discoverServiceDetails(const QBluetoothUuid &s
     qCDebug(QT_BT_ANDROID) << "Discovery of" << service << "started";
 }
 
-void QLowEnergyControllerPrivate::writeCharacteristic(
+void QLowEnergyControllerPrivateAndroid::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
@@ -288,7 +286,7 @@ void QLowEnergyControllerPrivate::writeCharacteristic(
         service->setError(QLowEnergyService::CharacteristicWriteError);
 }
 
-void QLowEnergyControllerPrivate::writeDescriptor(
+void QLowEnergyControllerPrivateAndroid::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descHandle,
@@ -339,7 +337,7 @@ void QLowEnergyControllerPrivate::writeDescriptor(
         service->setError(QLowEnergyService::DescriptorWriteError);
 }
 
-void QLowEnergyControllerPrivate::readCharacteristic(
+void QLowEnergyControllerPrivateAndroid::readCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle)
 {
@@ -367,7 +365,7 @@ void QLowEnergyControllerPrivate::readCharacteristic(
         service->setError(QLowEnergyService::CharacteristicReadError);
 }
 
-void QLowEnergyControllerPrivate::readDescriptor(
+void QLowEnergyControllerPrivateAndroid::readDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle /*charHandle*/,
         const QLowEnergyHandle descriptorHandle)
@@ -393,7 +391,7 @@ void QLowEnergyControllerPrivate::readDescriptor(
         service->setError(QLowEnergyService::DescriptorReadError);
 }
 
-void QLowEnergyControllerPrivate::connectionUpdated(
+void QLowEnergyControllerPrivateAndroid::connectionUpdated(
         QLowEnergyController::ControllerState newState,
         QLowEnergyController::Error errorCode)
 {
@@ -409,7 +407,7 @@ void QLowEnergyControllerPrivate::connectionUpdated(
 }
 
 // called if server/peripheral
-void QLowEnergyControllerPrivate::peripheralConnectionUpdated(
+void QLowEnergyControllerPrivateAndroid::peripheralConnectionUpdated(
         QLowEnergyController::ControllerState newState,
         QLowEnergyController::Error errorCode)
 {
@@ -439,7 +437,7 @@ void QLowEnergyControllerPrivate::peripheralConnectionUpdated(
 }
 
 // called if client/central
-void QLowEnergyControllerPrivate::centralConnectionUpdated(
+void QLowEnergyControllerPrivateAndroid::centralConnectionUpdated(
         QLowEnergyController::ControllerState newState,
         QLowEnergyController::Error errorCode)
 {
@@ -484,7 +482,7 @@ void QLowEnergyControllerPrivate::centralConnectionUpdated(
     }
 }
 
-void QLowEnergyControllerPrivate::servicesDiscovered(
+void QLowEnergyControllerPrivateAndroid::servicesDiscovered(
         QLowEnergyController::Error errorCode, const QString &foundServices)
 {
     Q_Q(QLowEnergyController);
@@ -515,7 +513,7 @@ void QLowEnergyControllerPrivate::servicesDiscovered(
     }
 }
 
-void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
+void QLowEnergyControllerPrivateAndroid::serviceDetailsDiscoveryFinished(
         const QString &serviceUuid, int startHandle, int endHandle)
 {
     const QBluetoothUuid service(serviceUuid);
@@ -563,7 +561,7 @@ void QLowEnergyControllerPrivate::serviceDetailsDiscoveryFinished(
     pointer->setState(QLowEnergyService::ServiceDiscovered);
 }
 
-void QLowEnergyControllerPrivate::characteristicRead(
+void QLowEnergyControllerPrivateAndroid::characteristicRead(
         const QBluetoothUuid &serviceUuid, int handle,
         const QBluetoothUuid &charUuid, int properties, const QByteArray &data)
 {
@@ -594,7 +592,7 @@ void QLowEnergyControllerPrivate::characteristicRead(
     }
 }
 
-void QLowEnergyControllerPrivate::descriptorRead(
+void QLowEnergyControllerPrivateAndroid::descriptorRead(
         const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
         int descHandle, const QBluetoothUuid &descUuid, const QByteArray &data)
 {
@@ -635,7 +633,7 @@ void QLowEnergyControllerPrivate::descriptorRead(
     }
 }
 
-void QLowEnergyControllerPrivate::characteristicWritten(
+void QLowEnergyControllerPrivateAndroid::characteristicWritten(
         int charHandle, const QByteArray &data, QLowEnergyService::ServiceError errorCode)
 {
     QSharedPointer<QLowEnergyServicePrivate> service =
@@ -664,7 +662,7 @@ void QLowEnergyControllerPrivate::characteristicWritten(
     emit service->characteristicWritten(characteristic, data);
 }
 
-void QLowEnergyControllerPrivate::descriptorWritten(
+void QLowEnergyControllerPrivateAndroid::descriptorWritten(
         int descHandle, const QByteArray &data, QLowEnergyService::ServiceError errorCode)
 {
     QSharedPointer<QLowEnergyServicePrivate> service =
@@ -691,7 +689,7 @@ void QLowEnergyControllerPrivate::descriptorWritten(
     emit service->descriptorWritten(descriptor, data);
 }
 
-void QLowEnergyControllerPrivate::serverDescriptorWritten(
+void QLowEnergyControllerPrivateAndroid::serverDescriptorWritten(
         const QAndroidJniObject &jniDesc, const QByteArray &newValue)
 {
     qCDebug(QT_BT_ANDROID) << "Server descriptor change notification" << newValue.toHex();
@@ -756,7 +754,7 @@ void QLowEnergyControllerPrivate::serverDescriptorWritten(
     }
 }
 
-void QLowEnergyControllerPrivate::characteristicChanged(
+void QLowEnergyControllerPrivateAndroid::characteristicChanged(
         int charHandle, const QByteArray &data)
 {
     QSharedPointer<QLowEnergyServicePrivate> service =
@@ -781,7 +779,7 @@ void QLowEnergyControllerPrivate::characteristicChanged(
     emit service->characteristicChanged(characteristic, data);
 }
 
-void QLowEnergyControllerPrivate::serverCharacteristicChanged(
+void QLowEnergyControllerPrivateAndroid::serverCharacteristicChanged(
         const QAndroidJniObject &characteristic, const QByteArray &newValue)
 {
     qCDebug(QT_BT_ANDROID) << "Server characteristic change notification" << newValue.toHex();
@@ -830,7 +828,7 @@ void QLowEnergyControllerPrivate::serverCharacteristicChanged(
                 QLowEnergyCharacteristic(servicePrivate, foundHandle), newValue);
 }
 
-void QLowEnergyControllerPrivate::serviceError(
+void QLowEnergyControllerPrivateAndroid::serviceError(
         int attributeHandle, QLowEnergyService::ServiceError errorCode)
 {
     // ignore call if it isn't really an error
@@ -846,7 +844,7 @@ void QLowEnergyControllerPrivate::serviceError(
     service->setError(errorCode);
 }
 
-void QLowEnergyControllerPrivate::advertisementError(int errorCode)
+void QLowEnergyControllerPrivateAndroid::advertisementError(int errorCode)
 {
     Q_Q(QLowEnergyController);
 
@@ -997,7 +995,7 @@ static QAndroidJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertising
 }
 
 
-void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingParameters &params,
+void QLowEnergyControllerPrivateAndroid::startAdvertising(const QLowEnergyAdvertisingParameters &params,
         const QLowEnergyAdvertisingData &advertisingData,
         const QLowEnergyAdvertisingData &scanResponseData)
 {
@@ -1024,13 +1022,13 @@ void QLowEnergyControllerPrivate::startAdvertising(const QLowEnergyAdvertisingPa
     }
 }
 
-void QLowEnergyControllerPrivate::stopAdvertising()
+void QLowEnergyControllerPrivateAndroid::stopAdvertising()
 {
     setState(QLowEnergyController::UnconnectedState);
     hub->javaObject().callMethod<void>("stopAdvertising");
 }
 
-void QLowEnergyControllerPrivate::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
+void QLowEnergyControllerPrivateAndroid::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
 {
     // Possible since Android v21
     // Android does not permit specification of specific latency or min/max
@@ -1169,7 +1167,7 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
     return permissions;
 }
 
-void QLowEnergyControllerPrivate::addToGenericAttributeList(const QLowEnergyServiceData &serviceData,
+void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEnergyServiceData &serviceData,
                                                             QLowEnergyHandle startHandle)
 {
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(startHandle);
