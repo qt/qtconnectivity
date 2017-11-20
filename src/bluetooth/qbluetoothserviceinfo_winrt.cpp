@@ -340,7 +340,12 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     hr = providerStatics->CreateAsync(serviceId.Get(), &op);
     Q_ASSERT_SUCCEEDED(hr);
     hr = QWinRTFunctions::await(op, serviceProvider.GetAddressOf());
-    Q_ASSERT_SUCCEEDED(hr);
+    if (hr == HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE)) {
+        qCWarning(QT_BT_WINRT) << Q_FUNC_INFO << "No bluetooth adapter available.";
+        return false;
+    } else {
+        Q_ASSERT_SUCCEEDED(hr);
+    }
 
     ComPtr<IStreamSocketListener> listener = sPriv->listener();
     if (!listener) {
