@@ -297,7 +297,6 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
 
     QAndroidJniEnvironment env;
     const char *writeMethod;
-    QAndroidJniObject tagTechnology;
 
     if (!setTagTechnology({NDEFFORMATABLETECHNOLOGY, NDEFTECHNOLOGY}))
         return QNearFieldTarget::RequestId();
@@ -331,7 +330,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     }
 
     // Writing
-    tagTechnology.callMethod<void>(writeMethod, "(Landroid/nfc/NdefMessage;)V", jmessage.object<jobject>());
+    m_tagTech.callMethod<void>(writeMethod, "(Landroid/nfc/NdefMessage;)V", jmessage.object<jobject>());
     if (catchJavaExceptions()) {
         QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                   Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefWriteError),
