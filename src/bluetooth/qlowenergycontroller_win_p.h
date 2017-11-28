@@ -59,7 +59,46 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
+#include <windows/qwinlowenergybluetooth_p.h>
+
 QT_BEGIN_NAMESPACE
+
+class QThread;
+class QLowEnergyControllerPrivateWin32;
+
+class ThreadWorkerJob
+{
+public:
+     enum Operation { WriteChar, ReadChar, WriteDescr, ReadDescr };
+     Operation operation;
+     QVariant data;
+};
+
+Q_DECLARE_METATYPE(ThreadWorkerJob)
+
+struct WriteCharData
+{
+    QByteArray newValue;
+    QLowEnergyService::WriteMode mode;
+    HANDLE hService;
+    DWORD flags;
+    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic;
+    int systemErrorCode;
+};
+
+Q_DECLARE_METATYPE(WriteCharData)
+
+class ThreadWorker : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void putJob(const ThreadWorkerJob &job);
+    Q_INVOKABLE void runPendingJob();
+signals:
+    void jobFinished(const ThreadWorkerJob &job);
+private:
+    QVector<ThreadWorkerJob> m_jobs;
+};
 
 class QLowEnergyServiceData;
 
@@ -105,9 +144,13 @@ public:
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
+public slots:
+    void jobFinished(const ThreadWorkerJob &job);
 protected:
     void customEvent(QEvent *e);
 private:
+    QThread *thread = nullptr;
+    ThreadWorker *threadWorker = nullptr;
     QString deviceSystemPath;
 };
 

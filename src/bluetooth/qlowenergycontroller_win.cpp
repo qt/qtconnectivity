@@ -45,10 +45,9 @@
 #include <QtCore/QIODevice> // for open modes
 #include <QtCore/QEvent>
 #include <QtCore/QMutex>
+#include <QtCore/QThread>
 
 #include <algorithm> // for std::max
-
-#include <windows/qwinlowenergybluetooth_p.h>
 
 #include <setupapi.h>
 
@@ -690,12 +689,22 @@ QLowEnergyControllerPrivateWin32::QLowEnergyControllerPrivateWin32()
         qCWarning(QT_BT_WINDOWS) << "LE is not supported on this OS";
         return;
     }
+
+    thread = new QThread;
+    threadWorker = new ThreadWorker;
+    threadWorker->moveToThread(thread);
+    connect(threadWorker, &ThreadWorker::jobFinished, this, &QLowEnergyControllerPrivateWin32::jobFinished);
+    connect(thread, &QThread::finished, threadWorker, &ThreadWorker::deleteLater);
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    thread->start();
 }
 
 QLowEnergyControllerPrivateWin32::~QLowEnergyControllerPrivateWin32()
 {
     QMutexLocker locker(&controllersGuard);
     qControllers()->removeAll(this);
+    if (thread)
+        thread->quit();
 }
 
 void QLowEnergyControllerPrivateWin32::init()
@@ -1020,17 +1029,20 @@ void QLowEnergyControllerPrivateWin32::writeCharacteristic(
         QLowEnergyService::WriteMode mode)
 {
     Q_ASSERT(!service.isNull());
-    if (!service->characteristicList.contains(charHandle))
+
+    if (!service->characteristicList.contains(charHandle)) {
+        service->setError(QLowEnergyService::CharacteristicWriteError);
         return;
+    }
 
-    int systemErrorCode = NO_ERROR;
+    WriteCharData data;
+    data.systemErrorCode = NO_ERROR;
+    data.hService = openSystemService(
+                remoteDevice, service->uuid, QIODevice::ReadWrite, &data.systemErrorCode);
 
-    const HANDLE hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadWrite, &systemErrorCode);
-
-    if (systemErrorCode != NO_ERROR) {
+    if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
-                                 << ":" << qt_error_string(systemErrorCode);
+                                 << ":" << qt_error_string(data.systemErrorCode);
         service->setError(QLowEnergyService::CharacteristicWriteError);
         return;
     }
@@ -1038,35 +1050,58 @@ void QLowEnergyControllerPrivateWin32::writeCharacteristic(
     const QLowEnergyServicePrivate::CharData &charDetails
             = service->characteristicList[charHandle];
 
-    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
+    data.gattCharacteristic = recoverNativeLeGattCharacteristic(
                 service->startHandle, charHandle, charDetails);
 
-    const DWORD flags = (mode == QLowEnergyService::WriteWithResponse)
+    data.flags = (mode == QLowEnergyService::WriteWithResponse)
             ? BLUETOOTH_GATT_FLAG_NONE
             : BLUETOOTH_GATT_FLAG_WRITE_WITHOUT_RESPONSE;
 
-    // TODO: If a device is not connected, this function will block
-    // for some time. So, need to re-implement of writeCharacteristic()
-    // with use QFutureWatcher.
-    setGattCharacteristicValue(hService, &gattCharacteristic,
-                               newValue, flags, &systemErrorCode);
-    closeSystemDevice(hService);
+    ThreadWorkerJob job;
+    job.operation = ThreadWorkerJob::WriteChar;
+    data.newValue = newValue;
+    data.mode = mode;
+    job.data = QVariant::fromValue(data);
 
-    if (systemErrorCode != NO_ERROR) {
-        qCWarning(QT_BT_WINDOWS) << "Unable to set value for characteristic"
-                                 << charDetails.uuid.toString()
-                                 << "of the service" << service->uuid.toString()
-                                 << ":" << qt_error_string(systemErrorCode);
-        service->setError(QLowEnergyService::CharacteristicWriteError);
-        return;
+    QMetaObject::invokeMethod(threadWorker, "putJob", Qt::QueuedConnection,
+                              Q_ARG(ThreadWorkerJob, job));
+}
+
+void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
+{
+    switch (job.operation) {
+    case ThreadWorkerJob::WriteChar:
+    {
+        const WriteCharData data = job.data.value<WriteCharData>();
+        closeSystemDevice(data.hService);
+        const QLowEnergyHandle charHandle = static_cast<QLowEnergyHandle>(data.gattCharacteristic.AttributeHandle);
+        const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+
+        if (data.systemErrorCode != NO_ERROR) {
+            const QLowEnergyServicePrivate::CharData &charDetails = service->characteristicList[charHandle];
+            qCWarning(QT_BT_WINDOWS) << "Unable to set value for characteristic"
+                                     << charDetails.uuid.toString()
+                                     << "of the service" << service->uuid.toString()
+                                     << ":" << qt_error_string(data.systemErrorCode);
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+            return;
+        }
+
+        updateValueOfCharacteristic(charHandle, data.newValue, false);
+
+        if (data.mode == QLowEnergyService::WriteWithResponse) {
+            const QLowEnergyCharacteristic ch = characteristicForHandle(charHandle);
+            emit service->characteristicWritten(ch, data.newValue);
+        }
+    }
+        break;
+    case ThreadWorkerJob::ReadChar:
+    case ThreadWorkerJob::WriteDescr:
+    case ThreadWorkerJob::ReadDescr:
+        break;
     }
 
-    updateValueOfCharacteristic(charHandle, newValue, false);
-
-    if (mode == QLowEnergyService::WriteWithResponse) {
-        const QLowEnergyCharacteristic ch(service, charHandle);
-        emit service->characteristicWritten(ch, newValue);
-    }
+    QMetaObject::invokeMethod(threadWorker, "runPendingJob", Qt::QueuedConnection);
 }
 
 void QLowEnergyControllerPrivateWin32::readDescriptor(
@@ -1217,6 +1252,39 @@ void QLowEnergyControllerPrivateWin32::writeDescriptor(
 void QLowEnergyControllerPrivateWin32::addToGenericAttributeList(const QLowEnergyServiceData &, QLowEnergyHandle)
 {
     Q_UNIMPLEMENTED();
+}
+
+void ThreadWorker::putJob(const ThreadWorkerJob &job)
+{
+    m_jobs.append(job);
+    if (m_jobs.count() == 1)
+        runPendingJob();
+}
+
+void ThreadWorker::runPendingJob()
+{
+    if (!m_jobs.count())
+        return;
+
+    ThreadWorkerJob job = m_jobs.first();
+
+    switch (job.operation) {
+    case ThreadWorkerJob::WriteChar:
+    {
+        WriteCharData data = job.data.value<WriteCharData>();
+        setGattCharacteristicValue(data.hService, &data.gattCharacteristic,
+                                   data.newValue, data.flags, &data.systemErrorCode);
+        job.data = QVariant::fromValue(data);
+    }
+        break;
+    case ThreadWorkerJob::ReadChar:
+    case ThreadWorkerJob::WriteDescr:
+    case ThreadWorkerJob::ReadDescr:
+        break;
+    }
+
+    m_jobs.removeFirst();
+    emit jobFinished(job);
 }
 
 QT_END_NAMESPACE
