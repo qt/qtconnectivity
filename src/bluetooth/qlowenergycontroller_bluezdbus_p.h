@@ -55,6 +55,13 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
+#include <QtDBus/QDBusObjectPath>
+
+class OrgBluezAdapter1Interface;
+class OrgBluezDevice1Interface;
+class OrgFreedesktopDBusObjectManagerInterface;
+class OrgFreedesktopDBusPropertiesInterface;
+
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyControllerPrivateBluezDBus : public QLowEnergyControllerPrivate
@@ -104,8 +111,25 @@ public:
 
     QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
 
-    QLowEnergyController::ControllerState state;
-    QLowEnergyController::Error error;
+
+private:
+    void connectToDeviceHelper();
+    void resetController();
+
+private slots:
+    void devicePropertiesChanged(const QString &interface, const QVariantMap &changedProperties,
+                           const QStringList &/*invalidatedProperties*/);
+    void interfacesRemoved(const QDBusObjectPath &objectPath, const QStringList &interfaces);
+
+private:
+    OrgBluezAdapter1Interface* adapter{};
+    OrgBluezDevice1Interface* device{};
+    OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
+    OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
+
+    bool pendingConnect = false;
+    bool pendingDisconnect = false;
+    bool disconnectSignalRequired = false;
 };
 
 QT_END_NAMESPACE
