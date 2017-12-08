@@ -41,6 +41,7 @@
 #include "bluez/adapter1_bluez5_p.h"
 #include "bluez/bluez5_helper_p.h"
 #include "bluez/device1_bluez5_p.h"
+#include "bluez/gattservice1_p.h"
 #include "bluez/objectmanager_p.h"
 #include "bluez/properties_p.h"
 
@@ -308,7 +309,54 @@ void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
 
 void QLowEnergyControllerPrivateBluezDBus::discoverServices()
 {
+    QDBusPendingReply<ManagedObjectList> reply = managerBluez->GetManagedObjects();
+    reply.waitForFinished();
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot discover services";
+        setError(QLowEnergyController::UnknownError);
+        setState(QLowEnergyController::DiscoveredState);
+        return;
+    }
 
+    Q_Q(QLowEnergyController);
+
+    const ManagedObjectList managedObjectList = reply.value();
+    const QString servicePathPrefix = device->path().append(QStringLiteral("/service"));
+    for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+        const InterfaceList &ifaceList = it.value();
+        if (!it.key().path().startsWith(servicePathPrefix))
+            continue;
+
+        for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+            const QString &iface = jt.key();
+
+            if (iface == QStringLiteral("org.bluez.GattService1")) {
+                QScopedPointer<OrgBluezGattService1Interface> service(new OrgBluezGattService1Interface(
+                                    QStringLiteral("org.bluez"),it.key().path(),
+                                    QDBusConnection::systemBus(), this));
+
+                QSharedPointer<QLowEnergyServicePrivate> priv = QSharedPointer<QLowEnergyServicePrivate>::create();
+                priv->uuid = QBluetoothUuid(service->uUID());
+
+                //no handles available
+                //priv->startHandle = start;
+                //priv->endHandle = end;
+                service->primary()
+                        ? priv->type = QLowEnergyService::PrimaryService
+                        : priv->type = QLowEnergyService::IncludedService;
+                priv->setController(this);
+
+                serviceList.insert(priv->uuid, priv);
+                //TODO enable once discoverServiceDetails() is implemented
+                //foundServices.insert(priv->uuid, service);
+
+                emit q->serviceDiscovered(priv->uuid);
+            }
+        }
+    }
+
+    setState(QLowEnergyController::DiscoveredState);
+    emit q->discoveryFinished();
 }
 
 void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(const QBluetoothUuid &/*service*/)

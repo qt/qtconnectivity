@@ -197,7 +197,7 @@ QVersionNumber bluetoothdVersion()
     if (bluezDaemonVersion()->isNull()) {
         qCDebug(QT_BT_BLUEZ) << "Detecting bluetoothd version";
         //Order of matching
-        // 1. Pick whatever the user decides via BLUETOOTH_BLUEZ_DBUS_LE
+        // 1. Pick whatever the user decides via BLUETOOTH_USE_BLUEZ_DBUS_LE
         const QString version = qEnvironmentVariable("BLUETOOTH_USE_BLUEZ_DBUS_LE");
         if (!version.isNull()) {
             const QVersionNumber vn = QVersionNumber::fromString(version);
