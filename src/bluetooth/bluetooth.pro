@@ -223,7 +223,7 @@ qtConfig(bluez) {
         qlowenergycontroller_p.cpp
 }
 
-winrt-*-msvc2015 {
+winrt {
     MODULE_WINRT_CAPABILITIES_DEVICE += \
         bluetooth.genericAttributeProfile \
         bluetooth.rfcomm
