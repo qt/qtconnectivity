@@ -400,7 +400,17 @@ void QLowEnergyControllerPrivate::connectToDevice()
             Q_ASSERT_SUCCEEDED(hr);
             ComPtr<IGattReadResult> result;
             hr = QWinRTFunctions::await(op, result.GetAddressOf());
-            Q_ASSERT_SUCCEEDED(hr);
+            if (hr == E_INVALIDARG) {
+                // E_INVALIDARG happens when user tries to connect to a device that was paired
+                // before but is not available.
+                qCDebug(QT_BT_WINRT) << "Could not obtain characteristic read result that triggers"
+                                        "device connection. Is the device reachable?";
+                setError(QLowEnergyController::ConnectionError);
+                setState(QLowEnergyController::UnconnectedState);
+                return;
+            } else {
+                Q_ASSERT_SUCCEEDED(hr);
+            }
             ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
             hr = result->get_Value(&buffer);
             Q_ASSERT_SUCCEEDED(hr);
