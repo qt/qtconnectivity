@@ -42,6 +42,9 @@
 #include "bluez/bluez5_helper_p.h"
 #include "bluez/device1_bluez5_p.h"
 #include "bluez/gattservice1_p.h"
+
+#include "bluez/gattchar1_p.h"
+#include "bluez/gattdesc1_p.h"
 #include "bluez/objectmanager_p.h"
 #include "bluez/properties_p.h"
 
@@ -158,7 +161,12 @@ void QLowEnergyControllerPrivateBluezDBus::resetController()
         deviceMonitor = nullptr;
     }
 
+    dbusServices.clear();
+    jobs.clear();
+    invalidateServices();
+
     pendingConnect = pendingDisconnect = disconnectSignalRequired = false;
+    jobPending = false;
 }
 
 void QLowEnergyControllerPrivateBluezDBus::connectToDeviceHelper()
@@ -337,18 +345,16 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
 
                 QSharedPointer<QLowEnergyServicePrivate> priv = QSharedPointer<QLowEnergyServicePrivate>::create();
                 priv->uuid = QBluetoothUuid(service->uUID());
-
-                //no handles available
-                //priv->startHandle = start;
-                //priv->endHandle = end;
                 service->primary()
                         ? priv->type = QLowEnergyService::PrimaryService
                         : priv->type = QLowEnergyService::IncludedService;
                 priv->setController(this);
 
+                GattService serviceContainer;
+                serviceContainer.servicePath = it.key().path();
+
                 serviceList.insert(priv->uuid, priv);
-                //TODO enable once discoverServiceDetails() is implemented
-                //foundServices.insert(priv->uuid, service);
+                dbusServices.insert(priv->uuid, serviceContainer);
 
                 emit q->serviceDiscovered(priv->uuid);
             }
@@ -359,9 +365,353 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
     emit q->discoveryFinished();
 }
 
-void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(const QBluetoothUuid &service)
 {
+    if (!serviceList.contains(service) || !dbusServices.contains(service)) {
+        qCWarning(QT_BT_BLUEZ) << "Discovery of unknown service" << service.toString()
+                               << "not possible";
+        return;
+    }
 
+    //clear existing service data and run new discovery
+    QSharedPointer<QLowEnergyServicePrivate> serviceData = serviceList.value(service);
+    serviceData->characteristicList.clear();
+
+    GattService &dbusData = dbusServices[service];
+    dbusData.characteristics.clear();
+
+    QDBusPendingReply<ManagedObjectList> reply = managerBluez->GetManagedObjects();
+    reply.waitForFinished();
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot discover services";
+        setError(QLowEnergyController::UnknownError);
+        setState(QLowEnergyController::DiscoveredState);
+        return;
+    }
+
+    QStringList descriptorPaths;
+    const ManagedObjectList managedObjectList = reply.value();
+    for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+        const InterfaceList &ifaceList = it.value();
+        if (!it.key().path().startsWith(dbusData.servicePath))
+            continue;
+
+        for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+            const QString &iface = jt.key();
+            if (iface == QStringLiteral("org.bluez.GattCharacteristic1")) {
+                auto charInterface = QSharedPointer<OrgBluezGattCharacteristic1Interface>::create(
+                                            QStringLiteral("org.bluez"), it.key().path(),
+                                            QDBusConnection::systemBus());
+                GattCharacteristic dbusCharData;
+                dbusCharData.characteristic = charInterface;
+                dbusData.characteristics.append(dbusCharData);
+            } else if (iface == QStringLiteral("org.bluez.GattDescriptor1")) {
+                auto descInterface = QSharedPointer<OrgBluezGattDescriptor1Interface>::create(
+                                            QStringLiteral("org.bluez"), it.key().path(),
+                                            QDBusConnection::systemBus());
+                bool found = false;
+                for (GattCharacteristic &dbusCharData : dbusData.characteristics) {
+                    if (!descInterface->path().startsWith(
+                                dbusCharData.characteristic->path()))
+                        continue;
+
+                    found = true;
+                    dbusCharData.descriptors.append(descInterface);
+                    break;
+                }
+
+                Q_ASSERT(found);
+                if (!found)
+                    qCWarning(QT_BT_BLUEZ) << "Descriptor discovery error";
+            }
+        }
+    }
+
+    //populate servicePrivate based on dbus data
+    serviceData->startHandle = runningHandle++;
+    for (const GattCharacteristic &dbusChar : qAsConst(dbusData.characteristics)) {
+        const QLowEnergyHandle indexHandle = runningHandle++;
+        QLowEnergyServicePrivate::CharData charData;
+
+        // characteristic data
+        charData.valueHandle = runningHandle++;
+        const QStringList properties = dbusChar.characteristic->flags();
+
+        for (const auto &entry : properties) {
+            if (entry == QStringLiteral("broadcast"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::Broadcasting, true);
+            else if (entry == QStringLiteral("read"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::Read, true);
+            else if (entry == QStringLiteral("write-without-response"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::WriteNoResponse, true);
+            else if (entry == QStringLiteral("write"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::Write, true);
+            else if (entry == QStringLiteral("notify"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::Notify, true);
+            else if (entry == QStringLiteral("indicate"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::Indicate, true);
+            else if (entry == QStringLiteral("authenticated-signed-writes"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::WriteSigned, true);
+            else if (entry == QStringLiteral("reliable-write"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::ExtendedProperty, true);
+            else if (entry == QStringLiteral("writable-auxiliaries"))
+                charData.properties.setFlag(QLowEnergyCharacteristic::ExtendedProperty, true);
+            //all others ignored - not relevant for this API
+        }
+
+        charData.uuid = QBluetoothUuid(dbusChar.characteristic->uUID());
+
+        // schedule read for initial char value
+        if (charData.properties.testFlag(QLowEnergyCharacteristic::Read)) {
+            GattJob job;
+            job.flags = GattJob::JobFlags({GattJob::CharRead, GattJob::ServiceDiscovery});
+            job.service = serviceData;
+            job.handle = indexHandle;
+            jobs.append(job);
+        }
+
+        // descriptor data
+        for (const auto &descEntry : qAsConst(dbusChar.descriptors)) {
+            const QLowEnergyHandle descriptorHandle = runningHandle++;
+            QLowEnergyServicePrivate::DescData descData;
+            descData.uuid = QBluetoothUuid(descEntry->uUID());
+            charData.descriptorList.insert(descriptorHandle, descData);
+
+            // schedule read for initial descriptor value
+            GattJob job;
+            job.flags = GattJob::JobFlags({GattJob::DescRead, GattJob::ServiceDiscovery});
+            job.service = serviceData;
+            job.handle = descriptorHandle;
+            jobs.append(job);
+        }
+
+        serviceData->characteristicList[indexHandle] = charData;
+    }
+
+    serviceData->endHandle = runningHandle++;
+
+    // last job is last step of service discovery
+    GattJob &lastJob = jobs.last();
+    lastJob.flags.setFlag(GattJob::LastServiceDiscovery, true);
+
+    scheduleNextJob();
+}
+
+void QLowEnergyControllerPrivateBluezDBus::prepareNextJob()
+{
+    jobs.takeFirst(); // finish last job
+    jobPending = false;
+
+    scheduleNextJob(); // continue with next job - if available
+}
+
+void QLowEnergyControllerPrivateBluezDBus::onCharReadFinished(QDBusPendingCallWatcher *call)
+{
+    Q_ASSERT(jobPending);
+    Q_ASSERT(!jobs.isEmpty());
+
+    const GattJob nextJob = jobs.constFirst();
+    Q_ASSERT(nextJob.flags.testFlag(GattJob::CharRead));
+
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(nextJob.handle);
+    if (service.isNull() || !dbusServices.contains(service->uuid)) {
+        qCWarning(QT_BT_BLUEZ) << "onCharReadFinished: Invalid GATT job. Skipping.";
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+    const QLowEnergyServicePrivate::CharData &charData =
+                        service->characteristicList.value(nextJob.handle);
+
+    bool isServiceDiscovery = nextJob.flags.testFlag(GattJob::ServiceDiscovery);
+    QDBusPendingReply<QByteArray> reply = *call;
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot initiate reading of" << charData.uuid
+                               << "of service" << service->uuid
+                               << reply.error().name() << reply.error().message();
+        if (!isServiceDiscovery)
+            service->setError(QLowEnergyService::CharacteristicReadError);
+    } else {
+        qCDebug(QT_BT_BLUEZ) << "Read Char:" << charData.uuid << reply.value().toHex();
+        updateValueOfCharacteristic(nextJob.handle, reply.value(), false);
+
+        if (isServiceDiscovery) {
+            if (nextJob.flags.testFlag(GattJob::LastServiceDiscovery))
+                service->setState(QLowEnergyService::ServiceDiscovered);
+        } else {
+            QLowEnergyCharacteristic ch(service, nextJob.handle);
+            emit service->characteristicRead(ch, reply.value());
+        }
+    }
+
+    call->deleteLater();
+    prepareNextJob();
+}
+
+
+void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWatcher *call)
+{
+    Q_ASSERT(jobPending);
+    Q_ASSERT(!jobs.isEmpty());
+
+    const GattJob nextJob = jobs.constFirst();
+    Q_ASSERT(nextJob.flags.testFlag(GattJob::DescRead));
+
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(nextJob.handle);
+    if (service.isNull() || !dbusServices.contains(service->uuid)) {
+        qCWarning(QT_BT_BLUEZ) << "onDescReadFinished: Invalid GATT job. Skipping.";
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+
+    QLowEnergyCharacteristic ch = characteristicForHandle(nextJob.handle);
+    if (!ch.isValid()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot find char for desc read (onDescReadFinished 1).";
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+
+    const QLowEnergyServicePrivate::CharData &charData =
+                        service->characteristicList.value(ch.attributeHandle());
+
+    if (!charData.descriptorList.contains(nextJob.handle)) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot find descriptor (onDescReadFinished 2).";
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+
+    bool isServiceDiscovery = nextJob.flags.testFlag(GattJob::ServiceDiscovery);
+    const QBluetoothUuid descUuid = charData.descriptorList[nextJob.handle].uuid;
+
+    QDBusPendingReply<QByteArray> reply = *call;
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot read descriptor (onDescReadFinished 3): "
+                             << charData.descriptorList[nextJob.handle].uuid
+                             << charData.uuid
+                             << reply.error().name() << reply.error().message();
+        if (!isServiceDiscovery)
+            service->setError(QLowEnergyService::DescriptorReadError);
+    } else {
+        qCDebug(QT_BT_BLUEZ) << "Read Desc:" << reply.value();
+        updateValueOfDescriptor(ch.attributeHandle(), nextJob.handle, reply.value(), false);
+
+        if (isServiceDiscovery) {
+            if (nextJob.flags.testFlag(GattJob::LastServiceDiscovery))
+                service->setState(QLowEnergyService::ServiceDiscovered);
+        } else {
+            QLowEnergyDescriptor desc(service, ch.attributeHandle(), nextJob.handle);
+            emit service->descriptorRead(desc, reply.value());
+        }
+    }
+
+    call->deleteLater();
+    prepareNextJob();
+}
+
+void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
+{
+    if (jobPending || jobs.isEmpty())
+        return;
+
+    jobPending = true;
+
+    const GattJob nextJob = jobs.constFirst();
+    QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(nextJob.handle);
+    if (service.isNull() || !dbusServices.contains(service->uuid)) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleReadChar). Skipping.";
+        prepareNextJob();
+        return;
+    }
+
+    const GattService &dbusServiceData = dbusServices[service->uuid];
+
+    if (nextJob.flags.testFlag(GattJob::CharRead)) {
+        // characteristic reading ***************************************
+        if (!service->characteristicList.contains(nextJob.handle)) {
+            qCWarning(QT_BT_BLUEZ) << "Invalid Char handle when reading. Skipping.";
+            prepareNextJob();
+            return;
+        }
+
+        const QLowEnergyServicePrivate::CharData &charData =
+                            service->characteristicList.value(nextJob.handle);
+        bool foundChar = false;
+        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+            if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
+                continue;
+
+            QDBusPendingReply<QByteArray> reply = gattChar.characteristic->ReadValue(QVariantMap());
+            QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
+            connect(watcher, &QDBusPendingCallWatcher::finished,
+                    this, &QLowEnergyControllerPrivateBluezDBus::onCharReadFinished);
+
+            foundChar = true;
+            break;
+        }
+
+        if (!foundChar) {
+            qCWarning(QT_BT_BLUEZ) << "Cannot find char for reading. Skipping.";
+            prepareNextJob();
+            return;
+        }
+    } else if (nextJob.flags.testFlag(GattJob::CharWrite)) {
+        //TODO implement CharWrite ***************************************
+    } else if (nextJob.flags.testFlag(GattJob::DescRead)) {
+        // descriptor reading ***************************************
+        QLowEnergyCharacteristic ch = characteristicForHandle(nextJob.handle);
+        if (!ch.isValid()) {
+            qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleReadDesc 1). Skipping.";
+            prepareNextJob();
+            return;
+        }
+
+        const QLowEnergyServicePrivate::CharData &charData =
+                                service->characteristicList.value(ch.attributeHandle());
+        qCDebug(QT_BT_BLUEZ) << "###########" << ch.handle() << nextJob.handle
+                             << charData.descriptorList.keys()
+                             << service->characteristicList.keys();
+        if (!charData.descriptorList.contains(nextJob.handle)) {
+            qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleReadDesc 2). Skipping.";
+            prepareNextJob();
+            return;
+        }
+
+        const QBluetoothUuid descUuid = charData.descriptorList[nextJob.handle].uuid;
+        bool foundDesc = false;
+        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+            if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
+                continue;
+
+            for (const auto &gattDesc : qAsConst(gattChar.descriptors)) {
+                if (descUuid != QBluetoothUuid(gattDesc->uUID()))
+                    continue;
+
+                QDBusPendingReply<QByteArray> reply = gattDesc->ReadValue(QVariantMap());
+                QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
+                connect(watcher, &QDBusPendingCallWatcher::finished,
+                        this, &QLowEnergyControllerPrivateBluezDBus::onDescReadFinished);
+                foundDesc = true;
+                break;
+            }
+
+            if (foundDesc)
+                break;
+        }
+
+        if (!foundDesc) {
+            qCWarning(QT_BT_BLUEZ) << "Cannot find descriptor for reading. Skipping.";
+            prepareNextJob();
+            return;
+        }
+    } else if (nextJob.flags.testFlag(GattJob::DescWrite)) {
+        //TODO implement DescWrite ***************************************
+    } else {
+        qCWarning(QT_BT_BLUEZ) << "Unknown gatt job type. Skipping.";
+        prepareNextJob();
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::readCharacteristic(
