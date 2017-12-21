@@ -66,7 +66,8 @@ Item {
         Text {
             anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 10}
             text: name;
-            font.pixelSize: 30; font.bold: true; color: "white"
+            font { pixelSize: 30; bold: true }
+            color: "white"
             style: Text.Outline; styleColor: "black"
         }
 
@@ -75,8 +76,8 @@ Item {
             Item {
                 id: stickyPage
 
-                x: Math.random() * (listView.width-listView.width*0.30) + listView.width*0.10
-                y: Math.random() * (listView.height-listView.height*0.30) + listView.height*0.10
+                x: ListView.width * (0.7 * Math.random() + 0.1)
+                y: ListView.height * (0.7 * Math.random() + 0.1)
 
                 rotation: -listView.horizontalVelocity / 200;
                 Behavior on rotation {
