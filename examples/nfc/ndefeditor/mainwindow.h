@@ -51,16 +51,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <QtNfc/qnearfieldtarget.h>
 
-#include <qnearfieldtarget.h>
+#include <QtWidgets/QMainWindow>
 
-QT_BEGIN_NAMESPACE
-class QNearFieldManager;
-class QNdefMessage;
-QT_END_NAMESPACE
-
-QT_USE_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
+QT_FORWARD_DECLARE_CLASS(QNdefMessage)
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
