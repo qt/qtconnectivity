@@ -76,6 +76,10 @@ private:
     QBluetoothAddress m_serverAddress;
     QBluetoothDeviceInfo m_serverInfo;
     QScopedPointer<QLowEnergyController> m_leController;
+
+#if defined(CHECK_CMAC_SUPPORT)
+    bool checkCmacSupport(const quint128& csrkMsb);
+#endif
 };
 
 
@@ -169,6 +173,13 @@ void TestQLowEnergyControllerGattServer::cmacVerifier()
     };
     QFETCH(QByteArray, message);
     QFETCH(quint64, expectedMac);
+
+#if defined(CHECK_CMAC_SUPPORT)
+    if (!checkCmacSupport(csrk)) {
+        QSKIP("Needed socket options not available. Running qemu?");
+    }
+#endif
+
     const bool success = LeCmacCalculator().verify(message, csrk, expectedMac);
     QVERIFY(success);
 #else // CONFIG_LINUX_CRYPTO_API
@@ -176,6 +187,44 @@ void TestQLowEnergyControllerGattServer::cmacVerifier()
           "with BlueZ and crypto API");
 #endif // Q_OS_LINUX
 }
+
+#if defined(CHECK_CMAC_SUPPORT)
+#include <sys/socket.h>
+#include <linux/if_alg.h>
+#include <unistd.h>
+
+bool TestQLowEnergyControllerGattServer::checkCmacSupport(const quint128& csrk)
+{
+    bool retval = false;
+#if defined(CONFIG_LINUX_CRYPTO_API) && defined(QT_BUILD_INTERNAL) && defined(CONFIG_BLUEZ_LE)
+    quint128 csrkMsb;
+    std::reverse_copy(std::begin(csrk.data), std::end(csrk.data), std::begin(csrkMsb.data));
+
+    int testSocket = socket(AF_ALG, SOCK_SEQPACKET, 0);
+    if (testSocket != -1) {
+        sockaddr_alg sa;
+        using namespace std;
+        memset(&sa, 0, sizeof sa);
+        sa.salg_family = AF_ALG;
+        strcpy(reinterpret_cast<char *>(sa.salg_type), "hash");
+        strcpy(reinterpret_cast<char *>(sa.salg_name), "cmac(aes)");
+        if (::bind(testSocket, reinterpret_cast<sockaddr *>(&sa), sizeof sa) != -1) {
+            if (setsockopt(testSocket, 279 /* SOL_ALG */, ALG_SET_KEY, csrkMsb.data, sizeof csrkMsb) != -1) {
+                 retval = true;
+            } else {
+                 QWARN("Needed socket options (SOL_ALG) not available");
+            }
+        } else {
+            QWARN("bind() failed for crypto socket:");
+        }
+        close(testSocket);
+    } else {
+         QWARN("Unable to create test socket");
+    }
+#endif
+    return retval;
+}
+#endif
 
 void TestQLowEnergyControllerGattServer::cmacVerifier_data()
 {
