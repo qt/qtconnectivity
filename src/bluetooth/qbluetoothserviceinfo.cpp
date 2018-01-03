@@ -105,6 +105,8 @@ QT_BEGIN_NAMESPACE
     service info object share the same data as they do not detach upon changing them. This
     ensures that two copies can (de)register the same Bluetooth service.
 
+    On iOS, this class cannot be used because the platform does not expose
+    an API which may permit access to QBluetoothServiceInfo related features.
 */
 
 /*!

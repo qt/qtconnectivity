@@ -55,6 +55,9 @@ QT_BEGIN_NAMESPACE
 
     QBluetoothLocalDevice provides functions for getting and setting the state of local Bluetooth
     devices.
+
+    On iOS, this class cannot be used because the platform does not expose
+    any data or API which may provide information on the local Bluetooth device.
 */
 
 /*!
