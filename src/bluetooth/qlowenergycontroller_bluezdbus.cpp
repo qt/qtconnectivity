@@ -611,6 +611,43 @@ void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWa
     prepareNextJob();
 }
 
+void QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished(QDBusPendingCallWatcher *call)
+{
+    Q_ASSERT(jobPending);
+    Q_ASSERT(!jobs.isEmpty());
+
+    const GattJob nextJob = jobs.constFirst();
+    Q_ASSERT(nextJob.flags.testFlag(GattJob::CharWrite));
+
+    QSharedPointer<QLowEnergyServicePrivate> service = nextJob.service;
+    if (!dbusServices.contains(service->uuid)) {
+        qCWarning(QT_BT_BLUEZ) << "onCharWriteFinished: Invalid GATT job. Skipping.";
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+
+    const QLowEnergyServicePrivate::CharData &charData =
+                        service->characteristicList.value(nextJob.handle);
+
+    QDBusPendingReply<> reply = *call;
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot initiate writing of" << charData.uuid
+                               << "of service" << service->uuid
+                               << reply.error().name() << reply.error().message();
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+    } else {
+        qCDebug(QT_BT_BLUEZ) << "Write Char:" << charData.uuid << nextJob.value.toHex();
+        updateValueOfCharacteristic(nextJob.handle, nextJob.value, false);
+
+        QLowEnergyCharacteristic ch(service, nextJob.handle);
+        emit service->characteristicWritten(ch, nextJob.value);
+    }
+
+    call->deleteLater();
+    prepareNextJob();
+}
+
 void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
 {
     if (jobPending || jobs.isEmpty())
@@ -658,7 +695,34 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
             return;
         }
     } else if (nextJob.flags.testFlag(GattJob::CharWrite)) {
-        //TODO implement CharWrite ***************************************
+        // characteristic writing ***************************************
+        if (!service->characteristicList.contains(nextJob.handle)) {
+            qCWarning(QT_BT_BLUEZ) << "Invalid Char handle when writing. Skipping.";
+            prepareNextJob();
+            return;
+        }
+
+        const QLowEnergyServicePrivate::CharData &charData =
+                            service->characteristicList.value(nextJob.handle);
+        bool foundChar = false;
+        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+            if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
+                continue;
+
+            QDBusPendingReply<> reply = gattChar.characteristic->WriteValue(nextJob.value, QVariantMap());
+            QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
+            connect(watcher, &QDBusPendingCallWatcher::finished,
+                    this, &QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished);
+
+            foundChar = true;
+            break;
+        }
+
+        if (!foundChar) {
+            qCWarning(QT_BT_BLUEZ) << "Cannot find char for writing. Skipping.";
+            prepareNextJob();
+            return;
+        }
     } else if (nextJob.flags.testFlag(GattJob::DescRead)) {
         // descriptor reading ***************************************
         QLowEnergyCharacteristic ch = characteristicForHandle(nextJob.handle);
@@ -715,10 +779,32 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
 }
 
 void QLowEnergyControllerPrivateBluezDBus::readCharacteristic(
-                    const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                    const QLowEnergyHandle /*charHandle*/)
+                    const QSharedPointer<QLowEnergyServicePrivate> service,
+                    const QLowEnergyHandle charHandle)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle)) {
+        qCWarning(QT_BT_BLUEZ) << "Read characteristic does not belong to service"
+                               << service->uuid;
+        return;
+    }
 
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!(charDetails.properties & QLowEnergyCharacteristic::Read)) {
+        // if this succeeds the device has a bug, char is advertised as
+        // non-readable. We try to be permissive and let the remote
+        // device answer to the read attempt
+        qCWarning(QT_BT_BLUEZ) << "Reading non-readable char" << charHandle;
+    }
+
+    GattJob job;
+    job.flags = GattJob::JobFlags({GattJob::CharRead});
+    job.service = service;
+    job.handle = charHandle;
+    jobs.append(job);
+
+    scheduleNextJob();
 }
 
 void QLowEnergyControllerPrivateBluezDBus::readDescriptor(
@@ -730,12 +816,32 @@ void QLowEnergyControllerPrivateBluezDBus::readDescriptor(
 }
 
 void QLowEnergyControllerPrivateBluezDBus::writeCharacteristic(
-                    const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                    const QLowEnergyHandle /*charHandle*/,
-                    const QByteArray &/*newValue*/,
-                    QLowEnergyService::WriteMode /*writeMode*/)
-            {
+                    const QSharedPointer<QLowEnergyServicePrivate> service,
+                    const QLowEnergyHandle charHandle,
+                    const QByteArray &newValue,
+                    QLowEnergyService::WriteMode writeMode)
+{
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle)) {
+        qCWarning(QT_BT_BLUEZ) << "Write characteristic does not belong to service"
+                               << service->uuid;
+        return;
+    }
 
+    if (role == QLowEnergyController::CentralRole) {
+        GattJob job;
+        job.flags = GattJob::JobFlags({GattJob::CharWrite});
+        job.service = service;
+        job.handle = charHandle;
+        job.value = newValue;
+        job.writeMode = writeMode;
+        jobs.append(job);
+
+        scheduleNextJob();
+    } else {
+        qWarning(QT_BT_BLUEZ) << "writeCharacteristic() not implemented for DBus Bluez GATT";
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::writeDescriptor(

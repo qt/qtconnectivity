@@ -130,6 +130,7 @@ private slots:
 
     void onCharReadFinished(QDBusPendingCallWatcher *call);
     void onDescReadFinished(QDBusPendingCallWatcher *call);
+    void onCharWriteFinished(QDBusPendingCallWatcher *call);
 private:
     OrgBluezAdapter1Interface* adapter{};
     OrgBluezDevice1Interface* device{};
@@ -169,6 +170,8 @@ private:
 
         JobFlags flags = GattJob::Unset;
         QLowEnergyHandle handle;
+        QByteArray value;
+        QLowEnergyService::WriteMode writeMode = QLowEnergyService::WriteWithResponse;
         QSharedPointer<QLowEnergyServicePrivate> service;
     };
 
