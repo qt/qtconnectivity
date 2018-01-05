@@ -1244,9 +1244,9 @@ void QLowEnergyControllerPrivate::processReply(
             } else if (!isServiceDiscoveryRun) {
                 // not encryption problem -> abort readCharacteristic()/readDescriptor() run
                 if (!descriptorHandle)
-                    emit service->error(QLowEnergyService::CharacteristicReadError);
+                    service->setError(QLowEnergyService::CharacteristicReadError);
                 else
-                    emit service->error(QLowEnergyService::DescriptorReadError);
+                    service->setError(QLowEnergyService::DescriptorReadError);
             }
         } else {
             if (!descriptorHandle)
