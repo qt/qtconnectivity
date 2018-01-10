@@ -548,7 +548,6 @@ void QLowEnergyControllerPrivateBluezDBus::onCharReadFinished(QDBusPendingCallWa
     prepareNextJob();
 }
 
-
 void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWatcher *call)
 {
     Q_ASSERT(jobPending);
@@ -648,6 +647,50 @@ void QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished(QDBusPendingCallW
     prepareNextJob();
 }
 
+void QLowEnergyControllerPrivateBluezDBus::onDescWriteFinished(QDBusPendingCallWatcher *call)
+{
+    Q_ASSERT(jobPending);
+    Q_ASSERT(!jobs.isEmpty());
+
+    const GattJob nextJob = jobs.constFirst();
+    Q_ASSERT(nextJob.flags.testFlag(GattJob::DescWrite));
+
+    QSharedPointer<QLowEnergyServicePrivate> service = nextJob.service;
+    if (!dbusServices.contains(service->uuid)) {
+        qCWarning(QT_BT_BLUEZ) << "onDescWriteFinished: Invalid GATT job. Skipping.";
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+
+    const QLowEnergyCharacteristic associatedChar = characteristicForHandle(nextJob.handle);
+    const QLowEnergyDescriptor descriptor = descriptorForHandle(nextJob.handle);
+    if (!associatedChar.isValid() || !descriptor.isValid()) {
+        qCWarning(QT_BT_BLUEZ) << "onDescWriteFinished: Cannot find associated char/desc: "
+                               << associatedChar.isValid();
+        call->deleteLater();
+        prepareNextJob();
+        return;
+    }
+
+    QDBusPendingReply<> reply = *call;
+    if (reply.isError()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot initiate writing of" << descriptor.uuid()
+                               << "of char" << associatedChar.uuid()
+                               << "of service" << service->uuid
+                               << reply.error().name() << reply.error().message();
+        service->setError(QLowEnergyService::DescriptorWriteError);
+    } else {
+        qCDebug(QT_BT_BLUEZ) << "Write Desc:" << descriptor.uuid() << nextJob.value.toHex();
+        updateValueOfDescriptor(associatedChar.attributeHandle(), nextJob.handle,
+                                nextJob.value, false);
+        emit service->descriptorWritten(descriptor, nextJob.value);
+    }
+
+    call->deleteLater();
+    prepareNextJob();
+}
+
 void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
 {
     if (jobPending || jobs.isEmpty())
@@ -734,9 +777,6 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
 
         const QLowEnergyServicePrivate::CharData &charData =
                                 service->characteristicList.value(ch.attributeHandle());
-        qCDebug(QT_BT_BLUEZ) << "###########" << ch.handle() << nextJob.handle
-                             << charData.descriptorList.keys()
-                             << service->characteristicList.keys();
         if (!charData.descriptorList.contains(nextJob.handle)) {
             qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleReadDesc 2). Skipping.";
             prepareNextJob();
@@ -771,7 +811,49 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
             return;
         }
     } else if (nextJob.flags.testFlag(GattJob::DescWrite)) {
-        //TODO implement DescWrite ***************************************
+        // descriptor writing ***************************************
+        const QLowEnergyCharacteristic ch = characteristicForHandle(nextJob.handle);
+        if (!ch.isValid()) {
+            qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleWriteDesc 1). Skipping.";
+            prepareNextJob();
+            return;
+        }
+
+        const QLowEnergyServicePrivate::CharData &charData =
+                                service->characteristicList.value(ch.attributeHandle());
+        if (!charData.descriptorList.contains(nextJob.handle)) {
+            qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleWriteDesc 2). Skipping.";
+            prepareNextJob();
+            return;
+        }
+
+        const QBluetoothUuid descUuid = charData.descriptorList[nextJob.handle].uuid;
+        bool foundDesc = false;
+        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+            if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
+                continue;
+
+            for (const auto &gattDesc : qAsConst(gattChar.descriptors)) {
+                if (descUuid != QBluetoothUuid(gattDesc->uUID()))
+                    continue;
+
+                QDBusPendingReply<> reply = gattDesc->WriteValue(nextJob.value, QVariantMap());
+                QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
+                connect(watcher, &QDBusPendingCallWatcher::finished,
+                        this, &QLowEnergyControllerPrivateBluezDBus::onDescWriteFinished);
+                foundDesc = true;
+                break;
+            }
+
+            if (foundDesc)
+                break;
+        }
+
+        if (!foundDesc) {
+            qCWarning(QT_BT_BLUEZ) << "Cannot find descriptor for writing. Skipping.";
+            prepareNextJob();
+            return;
+        }
     } else {
         qCWarning(QT_BT_BLUEZ) << "Unknown gatt job type. Skipping.";
         prepareNextJob();
@@ -808,11 +890,26 @@ void QLowEnergyControllerPrivateBluezDBus::readCharacteristic(
 }
 
 void QLowEnergyControllerPrivateBluezDBus::readDescriptor(
-                    const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                    const QLowEnergyHandle /*charHandle*/,
-                    const QLowEnergyHandle /*descriptorHandle*/)
+                    const QSharedPointer<QLowEnergyServicePrivate> service,
+                    const QLowEnergyHandle charHandle,
+                    const QLowEnergyHandle descriptorHandle)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
 
+    const QLowEnergyServicePrivate::CharData &charDetails
+            = service->characteristicList[charHandle];
+    if (!charDetails.descriptorList.contains(descriptorHandle))
+        return;
+
+    GattJob job;
+    job.flags = GattJob::JobFlags({GattJob::DescRead});
+    job.service = service;
+    job.handle = descriptorHandle;
+    jobs.append(job);
+
+    scheduleNextJob();
 }
 
 void QLowEnergyControllerPrivateBluezDBus::writeCharacteristic(
@@ -845,12 +942,28 @@ void QLowEnergyControllerPrivateBluezDBus::writeCharacteristic(
 }
 
 void QLowEnergyControllerPrivateBluezDBus::writeDescriptor(
-                    const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                    const QLowEnergyHandle /*charHandle*/,
-                    const QLowEnergyHandle /*descriptorHandle*/,
-                    const QByteArray &/*newValue*/)
+                    const QSharedPointer<QLowEnergyServicePrivate> service,
+                    const QLowEnergyHandle charHandle,
+                    const QLowEnergyHandle descriptorHandle,
+                    const QByteArray &newValue)
 {
+    Q_ASSERT(!service.isNull());
+    if (!service->characteristicList.contains(charHandle))
+        return;
 
+    if (role == QLowEnergyController::CentralRole) {
+        GattJob job;
+        job.flags = GattJob::JobFlags({GattJob::DescWrite});
+        job.service = service;
+        job.handle = descriptorHandle;
+        job.value = newValue;
+        jobs.append(job);
+
+        scheduleNextJob();
+    } else {
+        qWarning(QT_BT_BLUEZ) << "writeDescriptor() peripheral not implemented for DBus Bluez GATT";
+        service->setError(QLowEnergyService::CharacteristicWriteError);
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::startAdvertising(

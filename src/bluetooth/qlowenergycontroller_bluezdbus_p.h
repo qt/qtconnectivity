@@ -131,6 +131,7 @@ private slots:
     void onCharReadFinished(QDBusPendingCallWatcher *call);
     void onDescReadFinished(QDBusPendingCallWatcher *call);
     void onCharWriteFinished(QDBusPendingCallWatcher *call);
+    void onDescWriteFinished(QDBusPendingCallWatcher *call);
 private:
     OrgBluezAdapter1Interface* adapter{};
     OrgBluezDevice1Interface* device{};
