@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET = btfiletransfer
 
 QT = core bluetooth widgets
+requires(qtConfig(filedialog))
 
 SOURCES = \
     main.cpp \
