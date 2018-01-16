@@ -1,6 +1,6 @@
 SOURCES += osx/uistrings.cpp osx/osxbtnotifier.cpp
 PRIVATE_HEADERS += osx/uistrings_p.h
-//QMAKE_CXXFLAGS_WARN_ON += -Wno-nullability-completeness
+#QMAKE_CXXFLAGS_WARN_ON += -Wno-nullability-completeness
 
 CONFIG(osx) {
     PRIVATE_HEADERS += osx/osxbtutility_p.h \
