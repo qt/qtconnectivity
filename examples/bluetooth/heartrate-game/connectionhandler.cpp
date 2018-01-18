@@ -51,6 +51,7 @@
 #include "heartrate-global.h"
 #include "connectionhandler.h"
 #include <QtBluetooth/qtbluetooth-config.h>
+#include <QtCore/qsystemdetection.h>
 
 ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)
 {
@@ -60,7 +61,7 @@ ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)
 
 bool ConnectionHandler::alive() const
 {
-#ifdef SIMULATOR
+#if defined(SIMULATOR) || defined(QT_PLATFORM_UIKIT)
     return true;
 #else
     return m_localDevice.isValid() && m_localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff;
