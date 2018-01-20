@@ -85,6 +85,9 @@ QT_BEGIN_NAMESPACE
     Energy services, it is likely to not advertise them via SDP. The \l QLowEnergyController class
     should be utilized to perform the service discovery on Low Energy devices.
 
+    On iOS, this class cannot be used because the platform does not expose
+    an API which may permit access to QBluetoothServiceDiscoveryAgent related features.
+
     \sa QBluetoothDeviceDiscoveryAgent, QLowEnergyController
 */
 

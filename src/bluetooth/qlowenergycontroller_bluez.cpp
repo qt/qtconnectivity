@@ -343,8 +343,8 @@ void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
     }
 
     if (!openRequests.isEmpty() && requestPending) {
-        requestPending = false; // reset pending flag
         const Request currentRequest = openRequests.dequeue();
+        requestPending = false; // reset pending flag
 
         qCWarning(QT_BT_BLUEZ).nospace() << "****** Request type 0x" << hex << currentRequest.command
                            << " to server/peripheral timed out";
@@ -369,7 +369,6 @@ void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
         case ATT_OP_EXCHANGE_MTU_REQUEST:  // MTU change request
             // never received reply to MTU request
             // it is safe to skip and go to next request
-            sendNextPendingRequest();
             break;
         case ATT_OP_READ_BY_GROUP_REQUEST: // primary or secondary service discovery
         case ATT_OP_READ_BY_TYPE_REQUEST:  // characteristic or included service discovery
@@ -403,8 +402,13 @@ void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
             break;
         default:
             // not a command used by central role implementation
-            return;
+            qCWarning(QT_BT_BLUEZ) << "Missing response for ATT peripheral command: "
+                                   << hex << command;
+            break;
         }
+
+        // spin openRequest queue further
+        sendNextPendingRequest();
     }
 }
 
@@ -1241,9 +1245,9 @@ void QLowEnergyControllerPrivateBluez::processReply(
             } else if (!isServiceDiscoveryRun) {
                 // not encryption problem -> abort readCharacteristic()/readDescriptor() run
                 if (!descriptorHandle)
-                    emit service->error(QLowEnergyService::CharacteristicReadError);
+                    service->setError(QLowEnergyService::CharacteristicReadError);
                 else
-                    emit service->error(QLowEnergyService::DescriptorReadError);
+                    service->setError(QLowEnergyService::DescriptorReadError);
             }
         } else {
             if (!descriptorHandle)
