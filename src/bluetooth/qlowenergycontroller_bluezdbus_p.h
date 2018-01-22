@@ -126,6 +126,9 @@ private:
 private slots:
     void devicePropertiesChanged(const QString &interface, const QVariantMap &changedProperties,
                            const QStringList &/*invalidatedProperties*/);
+    void characteristicPropertiesChanged(QLowEnergyHandle charHandle, const QString &interface,
+                                    const QVariantMap &changedProperties,
+                                    const QStringList &invalidatedProperties);
     void interfacesRemoved(const QDBusObjectPath &objectPath, const QStringList &interfaces);
 
     void onCharReadFinished(QDBusPendingCallWatcher *call);
@@ -145,6 +148,7 @@ private:
     struct GattCharacteristic
     {
         QSharedPointer<OrgBluezGattCharacteristic1Interface> characteristic;
+        QSharedPointer<OrgFreedesktopDBusPropertiesInterface> charMonitor;
         QVector<QSharedPointer<OrgBluezGattDescriptor1Interface>> descriptors;
     };
 
