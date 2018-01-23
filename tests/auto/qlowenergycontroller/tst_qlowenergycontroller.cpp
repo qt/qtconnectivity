@@ -92,6 +92,7 @@ private slots:
     void tst_errorCases();
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
+    bool verifyClientCharacteristicValue(const QByteArray& value);
 
     QBluetoothDeviceDiscoveryAgent *devAgent;
     QBluetoothAddress remoteDevice;
@@ -708,7 +709,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
     } else if (info->serviceUuid() ==
                 QBluetoothUuid(QString("0000180a-0000-1000-8000-00805f9b34fb"))) {
@@ -841,7 +842,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -928,7 +929,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -968,7 +969,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                  QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                  QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1055,7 +1056,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1143,7 +1144,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                  QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                  QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1230,7 +1231,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1299,7 +1300,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                     QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
             QCOMPARE(calibration.descriptors().at(0).type(),
                     QBluetoothUuid::ClientCharacteristicConfiguration);
-            QCOMPARE(calibration.descriptors().at(0).value(), QByteArray::fromHex("0000"));
+            QVERIFY(verifyClientCharacteristicValue(calibration.descriptors().at(0).value()));
             QVERIFY(info->contains(calibration.descriptors().at(0)));
 
             QCOMPARE(calibration.descriptors().at(1).isValid(), true);
@@ -1365,7 +1366,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0000"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1503,8 +1504,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        // value different in other revisions and test may fail
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0100"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1582,8 +1582,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        // value different in other revisions and test may fail
-        QCOMPARE(chars[0].descriptors().at(0).value(), QByteArray::fromHex("0100"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
@@ -1617,8 +1616,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
         QCOMPARE(chars[1].descriptors().at(0).type(),
                 QBluetoothUuid::ClientCharacteristicConfiguration);
-        // value different in other revisions and test may fail
-        QCOMPARE(chars[1].descriptors().at(0).value(), QByteArray::fromHex("0100"));
+        QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
 
         QCOMPARE(chars[1].descriptors().at(1).isValid(), true);
@@ -1634,6 +1632,29 @@ void tst_QLowEnergyController::verifyServiceProperties(
     } else {
         QFAIL(QString("Service not found" + info->serviceUuid().toString()).toUtf8().constData());
     }
+}
+
+/*
+ * CCC descriptors can have one of three distinct values:
+ *      0000 - notifications and indications are off
+ *      0100 - notifications enabled
+ *      0200 - indications enabled
+ *
+ * The exact value is managed by the BTLE peripheral for each central
+ * that connects. The value of this field is session based and may be retained
+ * during multiple connections.
+ *
+ * This function returns \c true if the CCC value has a valid range.
+ * */
+bool tst_QLowEnergyController::verifyClientCharacteristicValue(const QByteArray &value)
+{
+    if (value == QByteArray::fromHex("0000")
+            || value == QByteArray::fromHex("0100")
+            || value == QByteArray::fromHex("0200") )
+        return true;
+
+    qWarning() << "Found incorrect CC value" << value.toHex();
+    return false;
 }
 
 void tst_QLowEnergyController::tst_defaultBehavior()
