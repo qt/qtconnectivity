@@ -387,6 +387,14 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 }
 
 /*!
+  \fn void QBluetoothSocket::connectToService(const QBluetoothAddress &address, QBluetoothUuid::ServiceClassUuid uuid, OpenMode openMode = ReadWrite)
+
+  \internal
+
+  Exists to avoid QTBUG-65831.
+*/
+
+/*!
     Attempts to make a connection to the service identified by \a uuid on the device with address
     \a address.
 
