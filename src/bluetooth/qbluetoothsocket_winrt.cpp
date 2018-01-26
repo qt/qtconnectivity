@@ -126,6 +126,9 @@ public:
 
     ~SocketWorker()
     {
+    }
+    void close()
+    {
         if (Q_UNLIKELY(m_initialReadOp)) {
             ComPtr<IAsyncInfo> info;
             HRESULT hr = m_initialReadOp.As(&info);
@@ -402,6 +405,7 @@ void QBluetoothSocketPrivate::abort()
         this, &QBluetoothSocketPrivate::handleNewData);
     disconnect(m_worker, &SocketWorker::socketErrorOccured,
         this, &QBluetoothSocketPrivate::handleError);
+    m_worker->close();
     m_worker->deleteLater();
 
     if (socket != -1) {
