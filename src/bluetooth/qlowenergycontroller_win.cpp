@@ -261,14 +261,17 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
                     &servicesCount,
                     BLUETOOTH_GATT_FLAG_NONE);
 
-        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
-            foundServices.resize(servicesCount);
-        } else if (hr == S_OK) {
+        if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
             return foundServices;
         } else {
-            *systemErrorCode = ::GetLastError();
-            return QVector<BTH_LE_GATT_SERVICE>();
+            const DWORD error = WIN32_FROM_HRESULT(hr);
+            if (error == ERROR_MORE_DATA) {
+                foundServices.resize(servicesCount);
+            } else {
+                *systemErrorCode = error;
+                return QVector<BTH_LE_GATT_SERVICE>();
+            }
         }
     }
 }
@@ -292,14 +295,17 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
                     &characteristicsCount,
                     BLUETOOTH_GATT_FLAG_NONE);
 
-        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
-            foundCharacteristics.resize(characteristicsCount);
-        } else if (hr == S_OK) {
+        if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
             return foundCharacteristics;
         } else {
-            *systemErrorCode = ::GetLastError();
-            return QVector<BTH_LE_GATT_CHARACTERISTIC>();
+            const DWORD error = WIN32_FROM_HRESULT(hr);
+            if (error == ERROR_MORE_DATA) {
+                foundCharacteristics.resize(characteristicsCount);
+            } else {
+                *systemErrorCode = error;
+                return QVector<BTH_LE_GATT_CHARACTERISTIC>();
+            }
         }
     }
 }
@@ -323,17 +329,19 @@ static QByteArray getGattCharacteristicValue(
                     &valueBufferSize,
                     BLUETOOTH_GATT_FLAG_NONE);
 
-        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
-            valueBuffer.resize(valueBufferSize);
-        } else if (hr == S_OK) {
+        if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
             const PBTH_LE_GATT_CHARACTERISTIC_VALUE value = reinterpret_cast<
                     PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data());
-
             return QByteArray(reinterpret_cast<const char *>(&value->Data[0]), value->DataSize);
         } else {
-            *systemErrorCode = ::GetLastError();
-            return QByteArray();
+            const DWORD error = WIN32_FROM_HRESULT(hr);
+            if (error == ERROR_MORE_DATA) {
+                valueBuffer.resize(valueBufferSize);
+            } else {
+                *systemErrorCode = error;
+                return QByteArray();
+            }
         }
     }
 }
@@ -355,16 +363,17 @@ static void setGattCharacteristicValue(
 
     BTH_LE_GATT_RELIABLE_WRITE_CONTEXT reliableWriteContext = 0;
 
-    if (::BluetoothGATTSetCharacteristicValue(
+    const HRESULT hr = ::BluetoothGATTSetCharacteristicValue(
                 hService,
                 gattCharacteristic,
                 reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data()),
                 reliableWriteContext,
-                flags) != S_OK) {
-        *systemErrorCode = ::GetLastError();
-    } else {
+                flags);
+
+    if (SUCCEEDED(hr))
         *systemErrorCode = NO_ERROR;
-    }
+    else
+        *systemErrorCode = WIN32_FROM_HRESULT(hr);
 }
 
 static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
@@ -386,14 +395,17 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
                     &descriptorsCount,
                     BLUETOOTH_GATT_FLAG_NONE);
 
-        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
-            foundDescriptors.resize(descriptorsCount);
-        } else if (hr == S_OK) {
+        if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
             return foundDescriptors;
         } else {
-            *systemErrorCode = ::GetLastError();
-            return QVector<BTH_LE_GATT_DESCRIPTOR>();
+            const DWORD error = WIN32_FROM_HRESULT(hr);
+            if (error == ERROR_MORE_DATA) {
+                foundDescriptors.resize(descriptorsCount);
+            } else {
+                *systemErrorCode = error;
+                return QVector<BTH_LE_GATT_DESCRIPTOR>();
+            }
         }
     }
 }
@@ -417,17 +429,20 @@ static QByteArray getGattDescriptorValue(
                     &valueBufferSize,
                     BLUETOOTH_GATT_FLAG_NONE);
 
-        if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA)) {
-            valueBuffer.resize(valueBufferSize);
-        } else if (hr == S_OK) {
+        if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
             const PBTH_LE_GATT_DESCRIPTOR_VALUE value = reinterpret_cast<
                     PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data());
 
             return QByteArray(reinterpret_cast<const char *>(&value->Data[0]), value->DataSize);
         } else {
-            *systemErrorCode = ::GetLastError();
-            return QByteArray();
+            const DWORD error = WIN32_FROM_HRESULT(hr);
+            if (error == ERROR_MORE_DATA) {
+                valueBuffer.resize(valueBufferSize);
+            } else {
+                *systemErrorCode = error;
+                return QByteArray();
+            }
         }
     }
 }
@@ -466,16 +481,16 @@ static void setGattDescriptorValue(
     gattValue->DataSize = ULONG(value.size());
     ::memcpy(gattValue->Data, value.constData(), value.size());
 
-    if (::BluetoothGATTSetDescriptorValue(
+    const HRESULT hr = ::BluetoothGATTSetDescriptorValue(
                 hService,
                 gattDescriptor,
                 gattValue,
-                BLUETOOTH_GATT_FLAG_NONE) != S_OK) {
-        *systemErrorCode = ::GetLastError();
-        return;
-    }
+                BLUETOOTH_GATT_FLAG_NONE);
 
-    *systemErrorCode = NO_ERROR;
+    if (SUCCEEDED(hr))
+        *systemErrorCode = NO_ERROR;
+    else
+        *systemErrorCode = WIN32_FROM_HRESULT(hr);
 }
 
 static void WINAPI eventChangedCallbackEntry(
@@ -510,18 +525,20 @@ static HANDLE registerEvent(
     ::ZeroMemory(&registration, sizeof(registration));
     registration.NumCharacteristics = 1;
     registration.Characteristics[0] = gattCharacteristic;
-    if (::BluetoothGATTRegisterEvent(
+
+    const HRESULT hr = ::BluetoothGATTRegisterEvent(
                 hService,
                 CharacteristicValueChangedEvent,
                 &registration,
                 eventChangedCallbackEntry,
                 context,
                 &hEvent,
-                BLUETOOTH_GATT_FLAG_NONE) != S_OK) {
-        *systemErrorCode = ::GetLastError();
-    } else {
+                BLUETOOTH_GATT_FLAG_NONE);
+
+    if (SUCCEEDED(hr))
         *systemErrorCode = NO_ERROR;
-    }
+    else
+        *systemErrorCode = WIN32_FROM_HRESULT(hr);
 
     return hEvent;
 }
@@ -533,13 +550,14 @@ static void unregisterEvent(HANDLE hEvent, int *systemErrorCode)
         return;
     }
 
-    if (::BluetoothGATTUnregisterEvent(
+    const HRESULT hr = ::BluetoothGATTUnregisterEvent(
                 hEvent,
-                BLUETOOTH_GATT_FLAG_NONE) != S_OK) {
-        *systemErrorCode = ::GetLastError();
-    } else {
+                BLUETOOTH_GATT_FLAG_NONE);
+
+    if (SUCCEEDED(hr))
         *systemErrorCode = NO_ERROR;
-    }
+    else
+        *systemErrorCode = WIN32_FROM_HRESULT(hr);
 }
 
 static QBluetoothUuid qtBluetoothUuidFromNativeLeUuid(const BTH_LE_UUID &uuid)
