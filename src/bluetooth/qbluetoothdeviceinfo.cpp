@@ -405,6 +405,7 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
     d->cached = other.d_func()->cached;
     d->serviceUuidsCompleteness = other.d_func()->serviceUuidsCompleteness;
     d->serviceUuids = other.d_func()->serviceUuids;
+    d->manufacturerData = other.d_func()->manufacturerData;
     d->rssi = other.d_func()->rssi;
     d->deviceCoreConfiguration = other.d_func()->deviceCoreConfiguration;
     d->deviceUuid = other.d_func()->deviceUuid;
@@ -438,6 +439,8 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
     if (d->serviceUuids.count() != other.d_func()->serviceUuids.count())
         return false;
     if (d->serviceUuids != other.d_func()->serviceUuids)
+        return false;
+    if (d->manufacturerData != other.d_func()->manufacturerData)
         return false;
     if (d->deviceCoreConfiguration != other.d_func()->deviceCoreConfiguration)
         return false;
@@ -557,8 +560,58 @@ QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids(DataCompleteness *compl
 QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsCompleteness() const
 {
     Q_D(const QBluetoothDeviceInfo);
-
     return d->serviceUuidsCompleteness;
+}
+
+
+/*!
+    Returns all manufacturer ids attached to this device information.
+
+    \sa manufacturerData(), setManufacturerData()
+
+    \since 5.12
+ */
+QVector<quint16> QBluetoothDeviceInfo::manufactuerIds() const
+{
+    Q_D(const QBluetoothDeviceInfo);
+    return d->manufacturerData.keys().toVector();
+}
+
+/*!
+    Returns the data associated with the given \a manufacturerId.
+
+    Manufacturer data is defined by
+    the Supplement to the Bluetooth Core Specification and consists of two segments:
+
+    \list
+    \li Manufacturer specific identifier code from the
+    \l {https://www.bluetooth.com/specifications/assigned-numbers} {Assigned Numbers}
+    Company Identifiers document
+    \li Sequence of arbitrary data octets
+    \endlist
+
+    The interpretation of the data octets is defined by the manufacturer
+    specified by the company identifier.
+
+    \sa manufacturerIds(), setManufacturerData()
+    \since 5.12
+ */
+QByteArray QBluetoothDeviceInfo::manufacturerData(quint16 manufacturerId) const
+{
+    Q_D(const QBluetoothDeviceInfo);
+    return d->manufacturerData.value(manufacturerId);
+}
+
+/*!
+    Sets the advertised manufacturer \a data for the given \a manufacturerId.
+
+    \sa manufacturerData,
+    \since 5.12
+*/
+void QBluetoothDeviceInfo::setManufacturerData(quint16 manufacturerId, const QByteArray &data)
+{
+    Q_D(QBluetoothDeviceInfo);
+    d->manufacturerData.insert(manufacturerId, data);
 }
 
 /*!

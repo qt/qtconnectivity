@@ -44,6 +44,8 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qmetatype.h>
+#include <QtCore/qbytearray.h>
+#include <QtCore/qvector.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -234,6 +236,10 @@ public:
     void setServiceUuids(const QList<QBluetoothUuid> &uuids, DataCompleteness completeness);
     QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const;
     DataCompleteness serviceUuidsCompleteness() const;
+
+    QVector<quint16> manufactuerIds() const;
+    QByteArray manufacturerData(quint16 manufacturerId) const;
+    void setManufacturerData(quint16 manufacturerId, const QByteArray &data);
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);
     QBluetoothDeviceInfo::CoreConfigurations coreConfigurations() const;

@@ -420,7 +420,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << btAddress.toString() << btName
                          << "Num UUIDs" << device.uUIDs().count()
                          << "total device" << discoveredDevices.count() << "cached"
-                         << "RSSI" << device.rSSI() << "Class" << btClass;
+                         << "RSSI" << device.rSSI() << "Class" << btClass
+                         << "Num ManufacturerData" << device.manufacturerData().size();
 
     OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
@@ -458,6 +459,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
         if (foundLikelyLowEnergyUuid)
             deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
     }
+
+    const ManufacturerDataList deviceManufacturerData = device.manufacturerData();
+    const QList<quint16> keys = deviceManufacturerData.keys();
+    for (quint16 key : keys)
+        deviceInfo.setManufacturerData(
+                    key, deviceManufacturerData.value(key).variant().toByteArray());
 
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {
@@ -615,7 +622,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (interface == QStringLiteral("org.bluez.Device1")
-            && changed_properties.contains(QStringLiteral("RSSI"))) {
+            && (changed_properties.contains(QStringLiteral("RSSI"))
+                || changed_properties.contains(QStringLiteral("ManufacturerData")))) {
         OrgFreedesktopDBusPropertiesInterface *props =
                 qobject_cast<OrgFreedesktopDBusPropertiesInterface *>(q->sender());
         if (!props)
@@ -625,10 +633,23 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &
                                             QDBusConnection::systemBus());
         for (int i = 0; i < discoveredDevices.size(); i++) {
             if (discoveredDevices[i].address().toString() == device.address()) {
-                qCDebug(QT_BT_BLUEZ) << "Updating RSSI for" << device.address()
-                         << changed_properties.value(QStringLiteral("RSSI"));
-                discoveredDevices[i].setRssi(
-                            changed_properties.value(QStringLiteral("RSSI")).toInt());
+                if (changed_properties.contains(QStringLiteral("RSSI"))) {
+                    qCDebug(QT_BT_BLUEZ) << "Updating RSSI for" << device.address()
+                                         << changed_properties.value(QStringLiteral("RSSI"));
+                    discoveredDevices[i].setRssi(
+                                changed_properties.value(QStringLiteral("RSSI")).toInt());
+                }
+                if (changed_properties.contains(QStringLiteral("ManufacturerData"))) {
+                    qCDebug(QT_BT_BLUEZ) << "Updating ManufacturerData for" << device.address();
+
+                    QVector<QPair<quint16,QByteArray>> manufacturerData;
+                    ManufacturerDataList changedManufacturerData =
+                            qvariant_cast< ManufacturerDataList >(changed_properties.value(QStringLiteral("ManufacturerData")));
+
+                    const QList<quint16> keys = changedManufacturerData.keys();
+                    for (quint16 key : keys)
+                        discoveredDevices[i].setManufacturerData(key, changedManufacturerData.value(key).variant().toByteArray());
+                }
                 return;
             }
         }
