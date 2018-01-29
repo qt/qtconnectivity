@@ -321,19 +321,22 @@ static QByteArray getGattCharacteristicValue(
     QByteArray valueBuffer;
     USHORT valueBufferSize = 0;
     for (;;) {
+        const auto valuePtr = valueBuffer.isEmpty()
+                ? NULL
+                : reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data());
+
         const HRESULT hr = ::BluetoothGATTGetCharacteristicValue(
                     hService,
                     gattCharacteristic,
                     valueBufferSize,
-                    valueBuffer.isEmpty() ? NULL : reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data()),
+                    valuePtr,
                     &valueBufferSize,
                     BLUETOOTH_GATT_FLAG_NONE);
 
         if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
-            const PBTH_LE_GATT_CHARACTERISTIC_VALUE value = reinterpret_cast<
-                    PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data());
-            return QByteArray(reinterpret_cast<const char *>(&value->Data[0]), value->DataSize);
+            return QByteArray(reinterpret_cast<const char *>(&valuePtr->Data[0]),
+                    valuePtr->DataSize);
         } else {
             const DWORD error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
@@ -421,20 +424,22 @@ static QByteArray getGattDescriptorValue(
     QByteArray valueBuffer;
     USHORT valueBufferSize = 0;
     for (;;) {
+        const auto valuePtr = valueBuffer.isEmpty()
+                ? NULL
+                : reinterpret_cast<PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data());
+
         const HRESULT hr = ::BluetoothGATTGetDescriptorValue(
                     hService,
                     gattDescriptor,
                     valueBufferSize,
-                    valueBuffer.isEmpty() ? NULL : reinterpret_cast<PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data()),
+                    valuePtr,
                     &valueBufferSize,
                     BLUETOOTH_GATT_FLAG_NONE);
 
         if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
-            const PBTH_LE_GATT_DESCRIPTOR_VALUE value = reinterpret_cast<
-                    PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data());
-
-            return QByteArray(reinterpret_cast<const char *>(&value->Data[0]), value->DataSize);
+            return QByteArray(reinterpret_cast<const char *>(&valuePtr->Data[0]),
+                    valuePtr->DataSize);
         } else {
             const DWORD error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
