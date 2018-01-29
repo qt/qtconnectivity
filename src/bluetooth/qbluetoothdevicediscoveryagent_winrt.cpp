@@ -47,6 +47,8 @@
 #endif
 #include "qfunctions_winrt.h"
 
+#include <QtBluetooth/private/qtbluetoothglobal_p.h>
+#include <QtBluetooth/private/qbluetoothutils_winrt_p.h>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qeventdispatcher_winrt_p.h>
 
@@ -105,7 +107,10 @@ private:
         CheckForPairing,
         OmitPairingCheck
     };
-    HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device, PairingCheck pairingCheck = CheckForPairing);
+    HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device, PairingCheck pairingCheck);
+#if QT_CONFIG(winrt_btle_no_pairing)
+    HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device);
+#endif
 
 public slots:
     void finishDiscovery();
@@ -120,6 +125,10 @@ public:
 private:
     ComPtr<IBluetoothLEAdvertisementWatcher> m_leWatcher;
     EventRegistrationToken m_leDeviceAddedToken;
+#if QT_CONFIG(winrt_btle_no_pairing)
+    QMutex m_foundDevicesMutex;
+    QMap<quint64, QVector<QBluetoothUuid>> m_foundLEDevicesMap;
+#endif
     QVector<quint64> m_foundLEDevices;
     int m_pendingPairedDevices;
 
@@ -249,15 +258,64 @@ void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
 {
     HRESULT hr = RoActivateInstance(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_Advertisement_BluetoothLEAdvertisementWatcher).Get(), &m_leWatcher);
     Q_ASSERT_SUCCEEDED(hr);
+#if QT_CONFIG(winrt_btle_no_pairing)
+    if (supportsNewLEApi()) {
+        hr = m_leWatcher->put_ScanningMode(BluetoothLEScanningMode_Active);
+        Q_ASSERT_SUCCEEDED(hr);
+    }
+#endif // winrt_btle_no_pairing
     hr = m_leWatcher->add_Received(Callback<ITypedEventHandler<BluetoothLEAdvertisementWatcher *, BluetoothLEAdvertisementReceivedEventArgs *>>([this](IBluetoothLEAdvertisementWatcher *, IBluetoothLEAdvertisementReceivedEventArgs *args) {
         quint64 address;
         HRESULT hr;
         hr = args->get_BluetoothAddress(&address);
         Q_ASSERT_SUCCEEDED(hr);
-        if (m_foundLEDevices.contains(address))
-            return S_OK;
+#if QT_CONFIG(winrt_btle_no_pairing)
+        if (supportsNewLEApi()) {
+            ComPtr<IBluetoothLEAdvertisement> ad;
+            hr = args->get_Advertisement(&ad);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<IVector<GUID>> guids;
+            hr = ad->get_ServiceUuids(&guids);
+            Q_ASSERT_SUCCEEDED(hr);
+            quint32 size;
+            hr = guids->get_Size(&size);
+            Q_ASSERT_SUCCEEDED(hr);
+            QVector<QBluetoothUuid> serviceUuids;
+            for (quint32 i = 0; i < size; ++i) {
+                GUID guid;
+                hr = guids->GetAt(i, &guid);
+                Q_ASSERT_SUCCEEDED(hr);
+                QBluetoothUuid uuid(guid);
+                serviceUuids.append(uuid);
+            }
+            QMutexLocker locker(&m_foundDevicesMutex);
+            // Merge newly found services with list of currently found ones
+            if (m_foundLEDevicesMap.contains(address)) {
+                if (size == 0)
+                    return S_OK;
+                QVector<QBluetoothUuid> foundServices = m_foundLEDevicesMap.value(address);
+                bool newServiceAdded = false;
+                for (const QBluetoothUuid &uuid : qAsConst(serviceUuids)) {
+                    if (!foundServices.contains(uuid)) {
+                        foundServices.append(uuid);
+                        newServiceAdded = true;
+                    }
+                }
+                if (!newServiceAdded)
+                    return S_OK;
+                m_foundLEDevicesMap[address] = foundServices;
+            } else {
+                m_foundLEDevicesMap.insert(address, serviceUuids);
+            }
 
-        m_foundLEDevices.append(address);
+            locker.unlock();
+        } else
+#endif
+        {
+            if (m_foundLEDevices.contains(address))
+                return S_OK;
+            m_foundLEDevices.append(address);
+        }
         leBluetoothInfoFromAddressAsync(address);
         return S_OK;
     }).Get(), &m_leDeviceAddedToken);
@@ -431,7 +489,12 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedBluetoothLEDeviceFoundAsyn
     HRESULT hr;
     hr = op->GetResults(&device);
     Q_ASSERT_SUCCEEDED(hr);
-    return onBluetoothLEDeviceFound(device, OmitPairingCheck);
+#if QT_CONFIG(winrt_btle_no_pairing)
+    if (supportsNewLEApi())
+        return onBluetoothLEDeviceFound(device);
+    else
+#endif
+        return onBluetoothLEDeviceFound(device, OmitPairingCheck);
 }
 
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFoundAsync(IAsyncOperation<BluetoothLEDevice *> *op, AsyncStatus status)
@@ -443,7 +506,12 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFoundAsync(IAsy
     HRESULT hr;
     hr = op->GetResults(&device);
     Q_ASSERT_SUCCEEDED(hr);
-    return onBluetoothLEDeviceFound(device, PairingCheck::CheckForPairing);
+#if QT_CONFIG(winrt_btle_no_pairing)
+    if (supportsNewLEApi())
+        return onBluetoothLEDeviceFound(device);
+    else
+#endif
+        return onBluetoothLEDeviceFound(device, PairingCheck::CheckForPairing);
 }
 
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device, PairingCheck pairingCheck)
@@ -544,6 +612,78 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                               Q_ARG(QBluetoothDeviceInfo, info));
     return S_OK;
 }
+
+#if QT_CONFIG(winrt_btle_no_pairing)
+HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device)
+{
+    if (!device) {
+        qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: No device given";
+        return S_OK;
+    }
+
+    UINT64 address;
+    HString name;
+    HRESULT hr = device->get_BluetoothAddress(&address);
+    Q_ASSERT_SUCCEEDED(hr);
+    hr = device->get_Name(name.GetAddressOf());
+    Q_ASSERT_SUCCEEDED(hr);
+    const QString btName = QString::fromWCharArray(WindowsGetStringRawBuffer(name.Get(), nullptr));
+
+    ComPtr<IBluetoothLEDevice2> device2;
+    hr = device.As(&device2);
+    Q_ASSERT_SUCCEEDED(hr);
+    ComPtr<IDeviceInformation> deviceInfo;
+    hr = device2->get_DeviceInformation(&deviceInfo);
+    Q_ASSERT_SUCCEEDED(hr);
+    if (!deviceInfo) {
+        qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: Could not obtain device information";
+        return S_OK;
+    }
+    ComPtr<IDeviceInformation2> deviceInfo2;
+    hr = deviceInfo.As(&deviceInfo2);
+    Q_ASSERT_SUCCEEDED(hr);
+    ComPtr<IDeviceInformationPairing> pairing;
+    hr = deviceInfo2->get_Pairing(&pairing);
+    Q_ASSERT_SUCCEEDED(hr);
+    boolean isPaired;
+    hr = pairing->get_IsPaired(&isPaired);
+    Q_ASSERT_SUCCEEDED(hr);
+    QList<QBluetoothUuid> uuids;
+
+    // Use the services obtained from the advertisement data if the device is not paired
+    if (!isPaired) {
+        uuids = m_foundLEDevicesMap.value(address).toList();
+    } else {
+        IVectorView <GenericAttributeProfile::GattDeviceService *> *deviceServices;
+        hr = device->get_GattServices(&deviceServices);
+        Q_ASSERT_SUCCEEDED(hr);
+        uint serviceCount;
+        hr = deviceServices->get_Size(&serviceCount);
+        Q_ASSERT_SUCCEEDED(hr);
+        for (uint i = 0; i < serviceCount; ++i) {
+            ComPtr<GenericAttributeProfile::IGattDeviceService> service;
+            hr = deviceServices->GetAt(i, &service);
+            Q_ASSERT_SUCCEEDED(hr);
+            GUID uuid;
+            hr = service->get_Uuid(&uuid);
+            Q_ASSERT_SUCCEEDED(hr);
+            uuids.append(QBluetoothUuid(uuid));
+        }
+    }
+
+    qCDebug(QT_BT_WINRT) << "Discovered BTLE device: " << QString::number(address) << btName
+        << "Num UUIDs" << uuids.count();
+
+    QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, 0);
+    info.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    info.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+    info.setCached(true);
+
+    QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
+                              Q_ARG(QBluetoothDeviceInfo, info));
+    return S_OK;
+}
+#endif // QT_CONFIG(winrt_btle_no_pairing)
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 const QBluetoothAddress &deviceAdapter,
