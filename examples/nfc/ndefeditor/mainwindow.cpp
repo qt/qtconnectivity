@@ -143,10 +143,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     //! [QNearFieldManager init]
     m_manager = new QNearFieldManager(this);
-    connect(m_manager, SIGNAL(targetDetected(QNearFieldTarget*)),
-            this, SLOT(targetDetected(QNearFieldTarget*)));
-    connect(m_manager, SIGNAL(targetLost(QNearFieldTarget*)),
-            this, SLOT(targetLost(QNearFieldTarget*)));
+    connect(m_manager, &QNearFieldManager::targetDetected,
+            this, &MainWindow::targetDetected);
+    connect(m_manager, &QNearFieldManager::targetLost,
+            this, &MainWindow::targetLost);
     //! [QNearFieldManager init]
 }
 
