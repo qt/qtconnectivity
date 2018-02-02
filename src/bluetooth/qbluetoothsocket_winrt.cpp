@@ -129,6 +129,9 @@ public:
 
     ~SocketWorker()
     {
+    }
+    void close()
+    {
         if (Q_UNLIKELY(m_initialReadOp)) {
             ComPtr<IAsyncInfo> info;
             HRESULT hr = m_initialReadOp.As(&info);
@@ -312,6 +315,7 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       socketType(QBluetoothServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
       socketError(QBluetoothSocket::NoSocketError),
+      discoveryAgent(0),
       secFlags(QBluetooth::NoSecurity),
       m_worker(new SocketWorker())
 {
@@ -404,6 +408,7 @@ void QBluetoothSocketPrivate::abort()
         this, &QBluetoothSocketPrivate::handleNewData);
     disconnect(m_worker, &SocketWorker::socketErrorOccured,
         this, &QBluetoothSocketPrivate::handleError);
+    m_worker->close();
     m_worker->deleteLater();
 
     if (socket != -1) {
