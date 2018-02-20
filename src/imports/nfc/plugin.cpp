@@ -98,10 +98,9 @@ public:
         minor = 5;
         qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
 
-        // Register the 5.6 - 5.9 types
-        minor = 9;
-        qmlRegisterType<QDeclarativeNearField, 1>(uri, major, minor, "NearField");
 
+        // Register the latest Qt version as QML type version
+        qmlRegisterModule(uri, QT_VERSION_MAJOR, QT_VERSION_MINOR);
     }
 };
 

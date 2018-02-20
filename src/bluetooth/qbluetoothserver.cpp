@@ -66,6 +66,9 @@ QT_BEGIN_NAMESPACE
     If the \l QBluetoothServiceInfo::Protocol is not supported by a platform, \l listen() will return \c false.
     Android and WinRT only support RFCOMM for example.
 
+    On iOS, this class cannot be used because the platform does not expose
+    an API which may permit access to QBluetoothServer related features.
+
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
 

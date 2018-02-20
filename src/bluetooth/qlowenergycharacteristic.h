@@ -99,6 +99,7 @@ protected:
     friend class QLowEnergyControllerPrivate;
     friend class QLowEnergyControllerPrivateAndroid;
     friend class QLowEnergyControllerPrivateBluez;
+    friend class QLowEnergyControllerPrivateBluezDBus;
     friend class QLowEnergyControllerPrivateCommon;
     friend class QLowEnergyControllerPrivateOSX;
     friend class QLowEnergyControllerPrivateWin32;

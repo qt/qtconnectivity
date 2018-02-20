@@ -74,6 +74,8 @@ QT_END_NAMESPACE
 
 #ifdef QT_WIN_BLUETOOTH
 #include <QFutureWatcher>
+#elif defined(QT_WINRT_BLUETOOTH)
+#include <QtCore/QPointer>
 #endif
 
 QT_BEGIN_NAMESPACE

@@ -70,6 +70,8 @@ class ServerAcceptanceThread;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH
+#include <QtCore/QMutex>
+
 #include <wrl.h>
 // No forward declares because QBluetoothServerPrivate::listener does not work with them
 #include <windows.networking.sockets.h>

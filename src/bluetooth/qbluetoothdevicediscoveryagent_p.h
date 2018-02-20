@@ -81,6 +81,9 @@ QT_END_NAMESPACE
 
 #ifdef QT_WIN_BLUETOOTH
 #include <QtConcurrent>
+#elif defined(QT_WINRT_BLUETOOTH)
+#include <QtCore/QPointer>
+#include <QtCore/QTimer>
 #endif
 
 QT_BEGIN_NAMESPACE

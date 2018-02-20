@@ -388,6 +388,9 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
 - (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+
     if (peripheral != manager || !notifier)
         return;
 
@@ -436,6 +439,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         emit notifier->LEnotSupported();
         state = PeripheralState::idle;
     }
+
+#pragma clang diagnostic pop
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral

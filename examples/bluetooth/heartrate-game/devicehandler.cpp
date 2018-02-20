@@ -1,12 +1,22 @@
 /***************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -249,11 +259,11 @@ void DeviceHandler::updateDemoHR()
 {
     int randomValue = 0;
     if (m_currentValue < 30) { // Initial value
-        randomValue = 55 + QRandomGenerator::bounded(30);
+        randomValue = 55 + QRandomGenerator::global()->bounded(30);
     } else if (!m_measuring) { // Value when relax
-        randomValue = qBound(55, m_currentValue - 2 + QRandomGenerator::bounded(5), 75);
+        randomValue = qBound(55, m_currentValue - 2 + QRandomGenerator::global()->bounded(5), 75);
     } else { // Measuring
-        randomValue = m_currentValue + QRandomGenerator::bounded(10) - 2;
+        randomValue = m_currentValue + QRandomGenerator::global()->bounded(10) - 2;
     }
 
     addMeasurement(randomValue);

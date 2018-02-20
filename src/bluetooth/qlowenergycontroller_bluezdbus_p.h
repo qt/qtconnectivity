@@ -55,7 +55,19 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
+#include <QtDBus/QDBusObjectPath>
+
+class OrgBluezAdapter1Interface;
+class OrgBluezDevice1Interface;
+class OrgBluezGattCharacteristic1Interface;
+class OrgBluezGattDescriptor1Interface;
+class OrgBluezGattService1Interface;
+class OrgFreedesktopDBusObjectManagerInterface;
+class OrgFreedesktopDBusPropertiesInterface;
+
 QT_BEGIN_NAMESPACE
+
+class QDBusPendingCallWatcher;
 
 class QLowEnergyControllerPrivateBluezDBus : public QLowEnergyControllerPrivate
 {
@@ -104,8 +116,74 @@ public:
 
     QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
 
-    QLowEnergyController::ControllerState state;
-    QLowEnergyController::Error error;
+
+private:
+    void connectToDeviceHelper();
+    void resetController();
+
+    void scheduleNextJob();
+
+private slots:
+    void devicePropertiesChanged(const QString &interface, const QVariantMap &changedProperties,
+                           const QStringList &/*invalidatedProperties*/);
+    void characteristicPropertiesChanged(QLowEnergyHandle charHandle, const QString &interface,
+                                    const QVariantMap &changedProperties,
+                                    const QStringList &invalidatedProperties);
+    void interfacesRemoved(const QDBusObjectPath &objectPath, const QStringList &interfaces);
+
+    void onCharReadFinished(QDBusPendingCallWatcher *call);
+    void onDescReadFinished(QDBusPendingCallWatcher *call);
+    void onCharWriteFinished(QDBusPendingCallWatcher *call);
+    void onDescWriteFinished(QDBusPendingCallWatcher *call);
+private:
+    OrgBluezAdapter1Interface* adapter{};
+    OrgBluezDevice1Interface* device{};
+    OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
+    OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
+
+    bool pendingConnect = false;
+    bool pendingDisconnect = false;
+    bool disconnectSignalRequired = false;
+
+    struct GattCharacteristic
+    {
+        QSharedPointer<OrgBluezGattCharacteristic1Interface> characteristic;
+        QSharedPointer<OrgFreedesktopDBusPropertiesInterface> charMonitor;
+        QVector<QSharedPointer<OrgBluezGattDescriptor1Interface>> descriptors;
+    };
+
+    struct GattService
+    {
+        QString servicePath;
+        QVector<GattCharacteristic> characteristics;
+    };
+
+    QHash<QBluetoothUuid, GattService> dbusServices;
+    QLowEnergyHandle runningHandle = 1;
+
+    struct GattJob {
+        enum JobFlag {
+            Unset                   = 0x00,
+            CharRead                = 0x01,
+            CharWrite               = 0x02,
+            DescRead                = 0x04,
+            DescWrite               = 0x08,
+            ServiceDiscovery        = 0x10,
+            LastServiceDiscovery    = 0x20
+        };
+        Q_DECLARE_FLAGS(JobFlags, JobFlag)
+
+        JobFlags flags = GattJob::Unset;
+        QLowEnergyHandle handle;
+        QByteArray value;
+        QLowEnergyService::WriteMode writeMode = QLowEnergyService::WriteWithResponse;
+        QSharedPointer<QLowEnergyServicePrivate> service;
+    };
+
+    QVector<GattJob> jobs;
+    bool jobPending = false;
+
+    void prepareNextJob();
 };
 
 QT_END_NAMESPACE

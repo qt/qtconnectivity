@@ -54,6 +54,7 @@
 #include <QtCore/QObject>
 #include <QtDBus/QtDBus>
 #include <QtBluetooth/QBluetoothAddress>
+#include <QtBluetooth/private/qtbluetoothglobal_p.h>
 
 typedef QMap<QString, QVariantMap> InterfaceList;
 typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
@@ -66,7 +67,9 @@ Q_DECLARE_METATYPE(ManagedObjectList)
 QT_BEGIN_NAMESPACE
 
 bool isBluez5();
-bool isBluez5DbusGatt();
+
+// exported for unit test purposes
+Q_BLUETOOTH_PRIVATE_EXPORT QVersionNumber bluetoothdVersion();
 
 QString sanitizeNameForDBus(const QString& text);
 

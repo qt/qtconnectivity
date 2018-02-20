@@ -40,7 +40,10 @@
 #include <QtCore/QGlobalStatic>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QMap>
+#include <QtCore/QVersionNumber>
+#include <QtNetwork/private/qnet_unix_p.h>
 #include "bluez5_helper_p.h"
+#include "bluez_data_p.h"
 #include "objectmanager_p.h"
 #include "properties_p.h"
 #include "adapter1_bluez5_p.h"
@@ -59,6 +62,7 @@ typedef enum Bluez5TestResultType
 } Bluez5TestResult;
 
 Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown));
+Q_GLOBAL_STATIC_WITH_ARGS(QVersionNumber, bluezDaemonVersion, (QVersionNumber()));
 
 bool isBluez5()
 {
@@ -97,10 +101,181 @@ bool isBluez5()
     return (*bluezVersion() == BluezVersion5);
 }
 
-bool isBluez5DbusGatt()
+/*
+    Checks that the mandatory Bluetooth HCI ioctls are offered
+    by Linux kernel. Returns \c true if the ictls are available; otherwise \c false.
+
+    Mandatory ioctls:
+            - HCIGETCONNLIST
+            - HCIGETDEVINFO
+            - HCIGETDEVLIST
+ */
+bool mandatoryHciIoctlsAvailable()
 {
-    //TODO implement
-    return false;
+    // open hci socket
+    int hciSocket = ::qt_safe_socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI);
+    if (hciSocket < 0) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot open HCI socket:" << qt_error_string(errno);
+        return false;
+    }
+
+    // check HCIGETDEVLIST & HCIGETDEVLIST
+    struct hci_dev_req *devRequest = 0;
+    struct hci_dev_list_req *devRequestList = 0;
+    struct hci_dev_info devInfo;
+    const int devListSize = sizeof(struct hci_dev_list_req)
+                        + HCI_MAX_DEV * sizeof(struct hci_dev_req);
+
+    devRequestList = (hci_dev_list_req *) malloc(devListSize);
+    if (!devRequestList) {
+        qt_safe_close(hciSocket);
+        return false; // if we cannot malloc nothing will help anyway
+    }
+
+    QScopedPointer<hci_dev_list_req, QScopedPointerPodDeleter> pDevList(devRequestList);
+    memset(pDevList.data(), 0, devListSize);
+    pDevList->dev_num = HCI_MAX_DEV;
+    devRequest = pDevList->dev_req;
+
+    if (qt_safe_ioctl(hciSocket, HCIGETDEVLIST, devRequestList) < 0) {
+        qt_safe_close(hciSocket);
+        qCWarning(QT_BT_BLUEZ) << "HCI icotl HCIGETDEVLIST:" << qt_error_string(errno);
+        return false;
+    }
+
+    if (devRequestList->dev_num > 0) {
+        devInfo.dev_id = devRequest->dev_id;
+        if (qt_safe_ioctl(hciSocket, HCIGETDEVINFO, &devInfo) < 0) {
+            qt_safe_close(hciSocket);
+            qCWarning(QT_BT_BLUEZ) << "HCI icotl HCIGETDEVINFO:" << qt_error_string(errno);
+            return false;
+        }
+    }
+
+    // check HCIGETCONNLIST
+    const int maxNoOfConnections = 20;
+    hci_conn_list_req *infoList = nullptr;
+    infoList = (hci_conn_list_req *)
+            malloc(sizeof(hci_conn_list_req) + maxNoOfConnections * sizeof(hci_conn_info));
+
+    if (!infoList) {
+        qt_safe_close(hciSocket);
+        return false;
+    }
+
+    QScopedPointer<hci_conn_list_req, QScopedPointerPodDeleter> pInfoList(infoList);
+    pInfoList->conn_num = maxNoOfConnections;
+    pInfoList->dev_id = devInfo.dev_id;
+
+    if (qt_safe_ioctl(hciSocket, HCIGETCONNLIST, (void *) infoList) < 0) {
+        qCWarning(QT_BT_BLUEZ) << "HCI icotl HCIGETCONNLIST:" << qt_error_string(errno);
+        qt_safe_close(hciSocket);
+        return false;
+    }
+
+    qt_safe_close(hciSocket);
+    return true;
+}
+
+/*!
+ * This function returns the version of bluetoothd in use on the system.
+ * This is required to determine which QLEControllerPrivate implementation
+ * is required. The following version tags are of significance:
+ *
+ * Version < 4.0 -> QLEControllerPrivateCommon
+ * Version < 5.42 -> QLEControllerPrivateBluez
+ * Version >= 5.42 -> QLEControllerPrivateBluezDBus
+ *
+ * This function utilizes a singleton pattern. It always returns a cached
+ * version tag which is determined on first call. This is necessary to
+ * avoid continuesly running the somewhat expensive tests.
+ *
+ * The function must never return a null QVersionNumber.
+ */
+QVersionNumber bluetoothdVersion()
+{
+    if (bluezDaemonVersion()->isNull()) {
+        qCDebug(QT_BT_BLUEZ) << "Detecting bluetoothd version";
+        //Order of matching
+        // 1. Pick whatever the user decides via BLUETOOTH_USE_BLUEZ_DBUS_LE
+        const QString version = qEnvironmentVariable("BLUETOOTH_USE_BLUEZ_DBUS_LE");
+        if (!version.isNull()) {
+            const QVersionNumber vn = QVersionNumber::fromString(version);
+            if (!vn.isNull()) {
+                *bluezDaemonVersion() = vn;
+                qCDebug(QT_BT_BLUEZ) << "Forcing Bluez LE API selection:"
+                                     << bluezDaemonVersion()->toString();
+            }
+        }
+
+        // 2. Find bluetoothd binary and check "bluetoothd --version"
+        if (bluezDaemonVersion()->isNull() && qt_haveLinuxProcfs()) {
+            QDBusConnection session = QDBusConnection::systemBus();
+            qint64 pid = session.interface()->servicePid(QStringLiteral("org.bluez")).value();
+            QByteArray buffer;
+
+            auto determineBinaryVersion = [](const QString &binary) -> QVersionNumber {
+                QProcess process;
+                process.start(binary, {QStringLiteral("--version")});
+                process.waitForFinished();
+
+                const QString version = QString::fromLocal8Bit(process.readAll());
+                const QVersionNumber vn = QVersionNumber::fromString(version);
+                if (!vn.isNull())
+                    qCDebug(QT_BT_BLUEZ) << "Detected bluetoothd version" << vn;
+                return vn;
+            };
+
+            //try reading /proc/<pid>/exe first -> requires process owner
+            qCDebug(QT_BT_BLUEZ) << "Using /proc/<pid>/exe";
+            const QString procExe = QStringLiteral("/proc/%1/exe").arg(pid);
+            const QVersionNumber vn = determineBinaryVersion(procExe);
+            if (!vn.isNull())
+                *bluezDaemonVersion() = vn;
+
+            if (bluezDaemonVersion()->isNull()) {
+                qCDebug(QT_BT_BLUEZ) << "Using /proc/<pid>/cmdline";
+                //try to reading /proc/<pid>/cmdline (does not require additional process rights)
+                QFile procFile(QStringLiteral("/proc/%1/cmdline").arg(pid));
+                if (procFile.open(QIODevice::ReadOnly|QIODevice::Text)) {
+                    buffer = procFile.readAll();
+                    procFile.close();
+
+                    // cmdline params separated by character \0 -> first is bluetoothd binary
+                    const QString binary = QString::fromLocal8Bit(buffer.split('\0').at(0));
+                    QFileInfo info(binary);
+                    if (info.isExecutable())
+                        *bluezDaemonVersion() = determineBinaryVersion(binary);
+                    else
+                        qCDebug(QT_BT_BLUEZ) << "Cannot determine bluetoothd version via cmdline:"
+                                             << binary;
+                }
+            }
+        }
+
+        // 3. Fall back to custom ATT backend, if possible?
+        if (bluezDaemonVersion()->isNull()) {
+            // Check mandatory HCI ioctls are available
+            if (mandatoryHciIoctlsAvailable()) {
+                // default 4.0 for now -> implies custom (G)ATT implementation
+                *bluezDaemonVersion() = QVersionNumber(4, 0);
+            }
+        }
+
+        // 4. Ultimate fallback -> enable dummy backend
+        if (bluezDaemonVersion()->isNull()) {
+            // version 3 represents disabled BTLE
+            // bluezDaemonVersion should not be null to avoid repeated version tests
+            *bluezDaemonVersion() = QVersionNumber(3, 0);
+            qCWarning(QT_BT_BLUEZ) << "Cannot determine bluetoothd version and required Bluetooth HCI ioctols";
+            qCWarning(QT_BT_BLUEZ) << "Disabling Qt Bluetooth LE feature";
+        }
+
+        qCDebug(QT_BT_BLUEZ) << "Bluetoothd:" << bluezDaemonVersion()->toString();
+    }
+
+    Q_ASSERT(!bluezDaemonVersion()->isNull());
+    return *bluezDaemonVersion();
 }
 
 struct AdapterData

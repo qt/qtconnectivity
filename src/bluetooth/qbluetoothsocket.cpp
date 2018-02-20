@@ -81,6 +81,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \note QBluetoothSocket does not support synchronous read and write operations. Functions such
     as \l waitForReadyRead() and \l waitForBytesWritten() are not implemented. I/O operations should be
     performed using \l readyRead(), \l read() and \l write().
+
+    On iOS, this class cannot be used because the platform does not expose
+    an API which may permit access to QBluetoothSocket related features.
 */
 
 /*!
@@ -382,6 +385,14 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     }
 #endif
 }
+
+/*!
+  \fn void QBluetoothSocket::connectToService(const QBluetoothAddress &address, QBluetoothUuid::ServiceClassUuid uuid, OpenMode openMode = ReadWrite)
+
+  \internal
+
+  Exists to avoid QTBUG-65831.
+*/
 
 /*!
     Attempts to make a connection to the service identified by \a uuid on the device with address

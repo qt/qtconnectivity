@@ -53,10 +53,6 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-#define HCIGETCONNLIST  _IOR('H', 212, int)
-#define HCIGETDEVINFO   _IOR('H', 211, int)
-#define HCIGETDEVLIST   _IOR('H', 210, int)
-
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
