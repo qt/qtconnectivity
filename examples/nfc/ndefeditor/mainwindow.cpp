@@ -55,21 +55,18 @@
 #include "urirecordeditor.h"
 #include "mimeimagerecordeditor.h"
 
-#include <QtCore/QTime>
-#include <QMenu>
-#include <QVBoxLayout>
-#include <QFrame>
-#include <QLabel>
-#include <QFileDialog>
+#include <QtNfc/qndefnfcurirecord.h>
+#include <QtNfc/qndefnfctextrecord.h>
+#include <QtNfc/qndefrecord.h>
+#include <QtNfc/qndefmessage.h>
+#include <QtNfc/qnearfieldmanager.h>
+#include <QtNfc/qnearfieldtarget.h>
 
-#include <qnearfieldmanager.h>
-#include <qnearfieldtarget.h>
-#include <qndefrecord.h>
-#include <qndefnfctextrecord.h>
-#include <qndefnfcurirecord.h>
-#include <qndefmessage.h>
-
-#include <QtCore/QDebug>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFrame>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QFileDialog>
 
 class EmptyRecordLabel : public QLabel
 {
@@ -239,19 +236,16 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
     case NoAction:
         break;
     case ReadNdef:
-        connect(target, SIGNAL(ndefMessageRead(QNdefMessage)),
-                this, SLOT(ndefMessageRead(QNdefMessage)));
-        connect(target, SIGNAL(error(QNearFieldTarget::Error,QNearFieldTarget::RequestId)),
-                this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
+        connect(target, &QNearFieldTarget::ndefMessageRead, this, &MainWindow::ndefMessageRead);
+        connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
 
         m_request = target->readNdefMessages();
         if (!m_request.isValid()) // cannot read messages
             targetError(QNearFieldTarget::NdefReadError, m_request);
         break;
     case WriteNdef:
-        connect(target, SIGNAL(ndefMessagesWritten()), this, SLOT(ndefMessageWritten()));
-        connect(target, SIGNAL(error(QNearFieldTarget::Error,QNearFieldTarget::RequestId)),
-                this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
+        connect(target, &QNearFieldTarget::ndefMessagesWritten, this, &MainWindow::ndefMessageWritten);
+        connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
 
         m_request = target->writeNdefMessages(QList<QNdefMessage>() << ndefMessage());
         if (!m_request.isValid()) // cannot write messages

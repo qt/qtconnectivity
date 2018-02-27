@@ -129,7 +129,12 @@ public:
 
     ~SocketWorker()
     {
+    }
+    void close()
+    {
+        m_shuttingDown = true;
         if (Q_UNLIKELY(m_initialReadOp)) {
+            onReadyRead(m_initialReadOp.Get(), Canceled);
             ComPtr<IAsyncInfo> info;
             HRESULT hr = m_initialReadOp.As(&info);
             Q_ASSERT_SUCCEEDED(hr);
@@ -139,9 +144,11 @@ public:
                 hr = info->Close();
                 Q_ASSERT_SUCCEEDED(hr);
             }
+            m_initialReadOp.Reset();
         }
 
         if (m_readOp) {
+            onReadyRead(m_readOp.Get(), Canceled);
             ComPtr<IAsyncInfo> info;
             HRESULT hr = m_readOp.As(&info);
             Q_ASSERT_SUCCEEDED(hr);
@@ -151,6 +158,7 @@ public:
                 hr = info->Close();
                 Q_ASSERT_SUCCEEDED(hr);
             }
+            m_readOp.Reset();
         }
     }
 
@@ -190,6 +198,9 @@ public:
 
     HRESULT onReadyRead(IAsyncBufferOperation *asyncInfo, AsyncStatus status)
     {
+        if (m_shuttingDown)
+            return S_OK;
+
         if (asyncInfo == m_initialReadOp.Get()) {
             m_initialReadOp.Reset();
         } else if (asyncInfo == m_readOp.Get()) {
@@ -299,6 +310,7 @@ public:
 private:
     ComPtr<IStreamSocket> m_socket;
     QVector<QByteArray> m_pendingData;
+    bool m_shuttingDown = false;
 
     // Protects pendingData/pendingDatagrams which are accessed from native callbacks
     QMutex m_mutex;
@@ -312,6 +324,7 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
       socketType(QBluetoothServiceInfo::UnknownProtocol),
       state(QBluetoothSocket::UnconnectedState),
       socketError(QBluetoothSocket::NoSocketError),
+      discoveryAgent(0),
       secFlags(QBluetooth::NoSecurity),
       m_worker(new SocketWorker())
 {
@@ -404,6 +417,7 @@ void QBluetoothSocketPrivate::abort()
         this, &QBluetoothSocketPrivate::handleNewData);
     disconnect(m_worker, &SocketWorker::socketErrorOccured,
         this, &QBluetoothSocketPrivate::handleError);
+    m_worker->close();
     m_worker->deleteLater();
 
     if (socket != -1) {

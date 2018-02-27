@@ -270,9 +270,9 @@ bool QBluetoothLocalDevice::isValid() const
 */
 
 /*!
-  \fn QBluetoothLocalDevice::pairingConfirmation(bool accept)
+  \fn QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
-  To be called after getting a pairingDisplayConfirmation().  The \a accept parameter either
+  To be called after getting a pairingDisplayConfirmation().  The \a confirmation parameter either
   accepts the pairing or rejects it.
 
   Accepting a pairing always refers to the last pairing request issued via \l requestPairing().

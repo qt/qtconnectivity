@@ -110,15 +110,14 @@ Rectangle {
         ListElement {
             name: "Work"
             notes: [
-                //ListElement { noteText: "To write a tag, click the red flag of a note and then touch a tag" },
-                ListElement { noteText: "https://www.qt.io" }
+                ListElement { noteText: "https://www.qt.io" },
+                ListElement { noteText: "To write a tag, click the red flag of a note and then touch a tag" }
             ]
         }
     }
 
     ListView {
         id: listView
-
         anchors.fill: parent
         orientation: ListView.Horizontal
         snapMode: ListView.SnapOneItem

@@ -51,9 +51,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QtCore/QUrl>
-#include <QtGui/QMouseEvent>
 #include <QtGui/QDesktopServices>
+#include <QtGui/QMouseEvent>
+#include <QtCore/QUrl>
 
 MainWindow::MainWindow(QWidget *parent)
 :   QMainWindow(parent), ui(new Ui::MainWindow)

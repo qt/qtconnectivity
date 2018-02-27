@@ -51,26 +51,21 @@
 #include "annotatedurl.h"
 #include "mainwindow.h"
 
-#include <qnearfieldmanager.h>
-#include <qndefnfctextrecord.h>
-#include <qndefnfcurirecord.h>
+#include <QtNfc/qnearfieldmanager.h>
+#include <QtNfc/qndefnfctextrecord.h>
+#include <QtNfc/qndefnfcurirecord.h>
 
-#include <QtCore/QLocale>
-
-#include <QApplication>
-
+#include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
 {
-    //QLocale::setDefault(QLocale(QLocale::Japanese));
-
     QApplication a(argc, argv);
     MainWindow mainWindow;
 
     AnnotatedUrl annotatedUrl;
 
-    QObject::connect(&annotatedUrl, SIGNAL(annotatedUrl(QUrl,QString,QPixmap)),
-                     &mainWindow, SLOT(displayAnnotatedUrl(QUrl,QString,QPixmap)));
+    QObject::connect(&annotatedUrl, &AnnotatedUrl::annotatedUrl,
+                     &mainWindow, &MainWindow::displayAnnotatedUrl);
 
     mainWindow.show();
 

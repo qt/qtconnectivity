@@ -48,13 +48,12 @@
 **
 ****************************************************************************/
 
-
 #ifndef URIRECORDEDITOR_H
 #define URIRECORDEDITOR_H
 
-#include <QWidget>
+#include <QtNfc/qndefnfcurirecord.h>
 
-#include <qndefnfcurirecord.h>
+#include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

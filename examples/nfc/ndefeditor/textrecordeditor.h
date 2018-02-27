@@ -51,9 +51,9 @@
 #ifndef TEXTRECORDEDITOR_H
 #define TEXTRECORDEDITOR_H
 
-#include <QWidget>
+#include <QtNfc/qndefnfctextrecord.h>
 
-#include <qndefnfctextrecord.h>
+#include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

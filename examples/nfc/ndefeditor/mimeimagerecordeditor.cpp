@@ -51,9 +51,9 @@
 #include "mimeimagerecordeditor.h"
 #include "ui_mimeimagerecordeditor.h"
 
-#include <QBuffer>
-#include <QFileDialog>
-#include <QImageReader>
+#include <QtGui/QImageReader>
+#include <QtWidgets/QFileDialog>
+#include <QtCore/QBuffer>
 
 static QString imageFormatToMimeType(const QByteArray &format)
 {
