@@ -143,8 +143,9 @@ static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
                     deviceInterfaceDetailDataSize,
                     &deviceInterfaceDetailDataSize,
                     NULL)) {
-            if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-                *systemErrorCode = ::GetLastError();
+            const DWORD error = ::GetLastError();
+            if (error != ERROR_INSUFFICIENT_BUFFER) {
+                *systemErrorCode = error;
                 break;
             }
         }
