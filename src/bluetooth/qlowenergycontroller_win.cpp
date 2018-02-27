@@ -96,7 +96,7 @@ static bool gattFunctionsResolved = false;
 
 static QBluetoothAddress getDeviceAddress(const QString &servicePath)
 {
-    const int firstbound = servicePath.indexOf(QStringLiteral("_"));
+    const int firstbound = servicePath.lastIndexOf(QStringLiteral("_"));
     const int lastbound = servicePath.indexOf(QLatin1Char('#'), firstbound);
     const QString hex = servicePath.mid(firstbound + 1, lastbound - firstbound - 1);
     bool ok = false;
