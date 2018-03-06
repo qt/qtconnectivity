@@ -796,6 +796,7 @@ void QLowEnergyControllerPrivateBluez::resetController()
     requestPending = false;
     encryptionChangePending = false;
     receivedMtuExchangeRequest = false;
+    mtuSize = ATT_DEFAULT_LE_MTU;
     securityLevelValue = -1;
     connectionHandle = 0;
 
