@@ -88,6 +88,16 @@ struct WriteCharData
 
 Q_DECLARE_METATYPE(WriteCharData)
 
+struct ReadCharData
+{
+    QByteArray value;
+    HANDLE hService;
+    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic;
+    int systemErrorCode;
+};
+
+Q_DECLARE_METATYPE(ReadCharData)
+
 class ThreadWorker : public QObject
 {
     Q_OBJECT

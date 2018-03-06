@@ -988,38 +988,27 @@ void QLowEnergyControllerPrivateWin32::readCharacteristic(
         qCWarning(QT_BT_WINDOWS) << "Reading non-readable char" << charHandle;
     }
 
-    int systemErrorCode = NO_ERROR;
+    ReadCharData data;
+    data.systemErrorCode = NO_ERROR;
+    data.hService = openSystemService(
+                remoteDevice, service->uuid, QIODevice::ReadOnly, &data.systemErrorCode);
 
-    const HANDLE hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadOnly, &systemErrorCode);
-
-    if (systemErrorCode != NO_ERROR) {
+    if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
-                                 << ":" << qt_error_string(systemErrorCode);
+                                 << ":" << qt_error_string(data.systemErrorCode);
         service->setError(QLowEnergyService::CharacteristicReadError);
         return;
     }
 
-    BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
+    data.gattCharacteristic = recoverNativeLeGattCharacteristic(
                 service->startHandle, charHandle, charDetails);
 
-    const QByteArray characteristicValue = getGattCharacteristicValue(
-            hService, &gattCharacteristic, &systemErrorCode);
-    closeSystemDevice(hService);
+    ThreadWorkerJob job;
+    job.operation = ThreadWorkerJob::ReadChar;
+    job.data = QVariant::fromValue(data);
 
-    if (systemErrorCode != NO_ERROR) {
-        qCWarning(QT_BT_WINDOWS) << "Unable to get value for characteristic"
-                                 << charDetails.uuid.toString()
-                                 << "of the service" << service->uuid.toString()
-                                 << ":" << qt_error_string(systemErrorCode);
-        service->setError(QLowEnergyService::CharacteristicReadError);
-        return;
-    }
-
-    updateValueOfCharacteristic(charHandle, characteristicValue, false);
-
-    const QLowEnergyCharacteristic ch(service, charHandle);
-    emit service->characteristicRead(ch, characteristicValue);
+    QMetaObject::invokeMethod(threadWorker, "putJob", Qt::QueuedConnection,
+                              Q_ARG(ThreadWorkerJob, job));
 }
 
 void QLowEnergyControllerPrivateWin32::writeCharacteristic(
@@ -1096,6 +1085,27 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
     }
         break;
     case ThreadWorkerJob::ReadChar:
+    {
+        const ReadCharData data = job.data.value<ReadCharData>();
+        closeSystemDevice(data.hService);
+        const QLowEnergyHandle charHandle = static_cast<QLowEnergyHandle>(data.gattCharacteristic.AttributeHandle);
+        const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+
+        if (data.systemErrorCode != NO_ERROR) {
+            const QLowEnergyServicePrivate::CharData &charDetails = service->characteristicList[charHandle];
+            qCWarning(QT_BT_WINDOWS) << "Unable to get value for characteristic"
+                                     << charDetails.uuid.toString()
+                                     << "of the service" << service->uuid.toString()
+                                     << ":" << qt_error_string(data.systemErrorCode);
+            service->setError(QLowEnergyService::CharacteristicReadError);
+            return;
+        }
+
+        updateValueOfCharacteristic(charHandle, data.value, false);
+
+        const QLowEnergyCharacteristic ch(service, charHandle);
+        emit service->characteristicRead(ch, data.value);
+    }
     case ThreadWorkerJob::WriteDescr:
     case ThreadWorkerJob::ReadDescr:
         break;
@@ -1278,6 +1288,12 @@ void ThreadWorker::runPendingJob()
     }
         break;
     case ThreadWorkerJob::ReadChar:
+    {
+        ReadCharData data = job.data.value<ReadCharData>();
+        data.value = getGattCharacteristicValue(
+                    data.hService, &data.gattCharacteristic, &data.systemErrorCode);
+        job.data = QVariant::fromValue(data);
+    }
     case ThreadWorkerJob::WriteDescr:
     case ThreadWorkerJob::ReadDescr:
         break;
