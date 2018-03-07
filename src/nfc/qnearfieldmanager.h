@@ -70,6 +70,7 @@ public:
     ~QNearFieldManager();
 
     bool isAvailable() const;
+    bool isSupported() const;
 
     void setTargetAccessModes(TargetAccessModes accessModes);
     TargetAccessModes targetAccessModes() const;

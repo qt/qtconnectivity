@@ -176,6 +176,11 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
     return AndroidNfc::isAvailable();
 }
 
+bool QNearFieldManagerPrivateImpl::isSupported() const
+{
+    return AndroidNfc::isSupported();
+}
+
 bool QNearFieldManagerPrivateImpl::startTargetDetection()
 {
     if (m_detecting)

@@ -201,7 +201,10 @@ QNearFieldManager::~QNearFieldManager()
 }
 
 /*!
-    Returns true if NFC functionality is available; otherwise returns false.
+    Returns \c true if the device has a NFC adapter and
+    it is turned on; otherwise returns \c false.
+
+    \sa isSupported()
 */
 bool QNearFieldManager::isAvailable() const
 {
@@ -210,6 +213,17 @@ bool QNearFieldManager::isAvailable() const
     return d->isAvailable();
 }
 
+/*!
+    Returns \c true if the underlying device has a NFC adapter; otherwise returns \c false.
+
+    \sa isAvailable()
+*/
+bool QNearFieldManager::isSupported() const
+{
+    Q_D(const QNearFieldManager);
+
+    return d->isSupported();
+}
 /*!
     \fn bool QNearFieldManager::startTargetDetection()
 

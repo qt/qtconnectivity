@@ -114,6 +114,21 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
     return false;
 }
 
+bool QNearFieldManagerPrivateImpl::isSupported() const
+{
+    if (m_adapterPath.isEmpty()) {
+        qCWarning(QT_NFC_NEARD) << "no adapter found, neard daemon running?";
+        return false;
+    }
+
+    if (!m_neardHelper->dbusObjectManager()->isValid() || m_adapterPath.isNull()) {
+        qCWarning(QT_NFC_NEARD) << "dbus object manager invalid or adapter path invalid";
+        return false;
+    }
+
+    return true;
+}
+
 bool QNearFieldManagerPrivateImpl::startTargetDetection()
 {
     qCDebug(QT_NFC_NEARD) << "starting target detection";

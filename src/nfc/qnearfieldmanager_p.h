@@ -82,6 +82,11 @@ public:
         return false;
     }
 
+    virtual bool isSupported() const
+    {
+        return false;
+    }
+
     virtual bool startTargetDetection()
     {
         return false;
