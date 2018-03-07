@@ -292,11 +292,13 @@ void registerQLowEnergyControllerMetaType()
     }
 }
 
-static QLowEnergyControllerPrivate *privateController()
+static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role role)
 {
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    // for now Bluez DBus disabled
-    if (false && bluetoothdVersion() >= QVersionNumber(5, 42)) {
+    // The new DBUS implementation only supports Central role for now
+    // For Peripheral role support see QTBUG-66909
+    if (role == QLowEnergyController::CentralRole
+            && bluetoothdVersion() >= QVersionNumber(5, 42)) {
         qCWarning(QT_BT) << "Using BlueZ LE DBus API";
         return new QLowEnergyControllerPrivateBluezDBus();
     } else {
@@ -329,7 +331,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController();
+    d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -358,7 +360,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-        d_ptr = privateController();
+        d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -391,7 +393,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController();
+    d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -436,7 +438,7 @@ QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
 QLowEnergyController::QLowEnergyController(QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController();
+    d_ptr = privateController(PeripheralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
