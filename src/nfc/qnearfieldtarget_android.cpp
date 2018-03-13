@@ -192,12 +192,12 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
     QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                              Q_ARG(QNdefMessage&, qNdefMessage));
+                              Q_ARG(QNdefMessage, qNdefMessage));
     QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                              Q_ARG(QNearFieldTarget::RequestId&, requestId));
+                              Q_ARG(QNearFieldTarget::RequestId, requestId));
     QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                              Q_ARG(QNdefMessage&, qNdefMessage),
-                              Q_ARG(QNearFieldTarget::RequestId&, requestId));
+                              Q_ARG(QNdefMessage, qNdefMessage),
+                              Q_ARG(QNearFieldTarget::RequestId, requestId));
     return requestId;
 }
 
