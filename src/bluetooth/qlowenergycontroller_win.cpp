@@ -1106,6 +1106,7 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
         const QLowEnergyCharacteristic ch(service, charHandle);
         emit service->characteristicRead(ch, data.value);
     }
+        break;
     case ThreadWorkerJob::WriteDescr:
     {
         WriteDescData data = job.data.value<WriteDescData>();
@@ -1170,7 +1171,33 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
         const QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
         emit service->descriptorWritten(dscr, data.newValue);
     }
+        break;
     case ThreadWorkerJob::ReadDescr:
+    {
+        ReadDescData data = job.data.value<ReadDescData>();
+        const QLowEnergyHandle descriptorHandle = static_cast<QLowEnergyHandle>(data.gattDescriptor.AttributeHandle);
+        const QLowEnergyHandle charHandle = static_cast<QLowEnergyHandle>(data.gattDescriptor.CharacteristicHandle);
+        const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
+        QLowEnergyServicePrivate::CharData &charDetails = service->characteristicList[charHandle];
+        const QLowEnergyServicePrivate::DescData &dscrDetails = charDetails.descriptorList[descriptorHandle];
+        closeSystemDevice(data.hService);
+
+        if (data.systemErrorCode != NO_ERROR) {
+            qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
+                                     << dscrDetails.uuid.toString()
+                                     << "for characteristic"
+                                     << charDetails.uuid.toString()
+                                     << "of the service" << service->uuid.toString()
+                                     << ":" << qt_error_string(data.systemErrorCode);
+            service->setError(QLowEnergyService::DescriptorReadError);
+            return;
+        }
+
+        updateValueOfDescriptor(charHandle, descriptorHandle, data.value, false);
+
+        QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
+        emit service->descriptorRead(dscr, data.value);
+    }
         break;
     }
 
@@ -1191,14 +1218,14 @@ void QLowEnergyControllerPrivateWin32::readDescriptor(
     if (!charDetails.descriptorList.contains(descriptorHandle))
         return;
 
-    int systemErrorCode = NO_ERROR;
+    ReadDescData data;
+    data.systemErrorCode = NO_ERROR;
+    data.hService = openSystemService(
+                remoteDevice, service->uuid, QIODevice::ReadOnly, &data.systemErrorCode);
 
-    const HANDLE hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadOnly, &systemErrorCode);
-
-    if (systemErrorCode != NO_ERROR) {
+    if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
-                                 << ":" << qt_error_string(systemErrorCode);
+                                 << ":" << qt_error_string(data.systemErrorCode);
         service->setError(QLowEnergyService::DescriptorReadError);
         return;
     }
@@ -1206,29 +1233,15 @@ void QLowEnergyControllerPrivateWin32::readDescriptor(
     const QLowEnergyServicePrivate::DescData &dscrDetails
             = charDetails.descriptorList[descriptorHandle];
 
-    BTH_LE_GATT_DESCRIPTOR gattDescriptor = recoverNativeLeGattDescriptor(
+    data.gattDescriptor = recoverNativeLeGattDescriptor(
                 service->startHandle, charHandle, descriptorHandle, dscrDetails);
 
-    const QByteArray value = getGattDescriptorValue(
-                hService, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
-                    &gattDescriptor), &systemErrorCode);
-    closeSystemDevice(hService);
+    ThreadWorkerJob job;
+    job.operation = ThreadWorkerJob::ReadDescr;
+    job.data = QVariant::fromValue(data);
 
-    if (systemErrorCode != NO_ERROR) {
-        qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
-                                 << dscrDetails.uuid.toString()
-                                 << "for characteristic"
-                                 << charDetails.uuid.toString()
-                                 << "of the service" << service->uuid.toString()
-                                 << ":" << qt_error_string(systemErrorCode);
-        service->setError(QLowEnergyService::DescriptorReadError);
-        return;
-    }
-
-    updateValueOfDescriptor(charHandle, descriptorHandle, value, false);
-
-    QLowEnergyDescriptor dscr(service, charHandle, descriptorHandle);
-    emit service->descriptorRead(dscr, value);
+    QMetaObject::invokeMethod(threadWorker, "putJob", Qt::QueuedConnection,
+                              Q_ARG(ThreadWorkerJob, job));
 }
 
 void QLowEnergyControllerPrivateWin32::writeDescriptor(
@@ -1316,7 +1329,16 @@ void ThreadWorker::runPendingJob()
                                data.newValue, &data.systemErrorCode);
         job.data = QVariant::fromValue(data);
     }
+        break;
     case ThreadWorkerJob::ReadDescr:
+    {
+        ReadDescData data = job.data.value<ReadDescData>();
+        data.value = getGattDescriptorValue(
+                    data.hService,
+                    const_cast<PBTH_LE_GATT_DESCRIPTOR>(&data.gattDescriptor),
+                    &data.systemErrorCode);
+        job.data = QVariant::fromValue(data);
+    }
         break;
     }
 
