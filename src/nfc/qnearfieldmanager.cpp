@@ -214,6 +214,8 @@ bool QNearFieldManager::isAvailable() const
 }
 
 /*!
+    \since 5.12
+
     Returns \c true if the underlying device has a NFC adapter; otherwise returns \c false.
 
     \sa isAvailable()
