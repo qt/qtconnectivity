@@ -107,9 +107,9 @@ public:
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode = ReadWrite);
     void connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode = ReadWrite);
     inline void connectToService(const QBluetoothAddress &address, QBluetoothUuid::ServiceClassUuid uuid,
-                                 OpenMode openMode = ReadWrite)
+                                 OpenMode mode = ReadWrite)
     {
-        connectToService(address, QBluetoothUuid(uuid), openMode);
+        connectToService(address, QBluetoothUuid(uuid), mode);
     }
     void disconnectFromService();
 
