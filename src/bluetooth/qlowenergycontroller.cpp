@@ -306,10 +306,13 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
         return new QLowEnergyControllerPrivateBluez();
     }
 #elif defined(QT_ANDROID_BLUETOOTH)
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateWinRT();
 #else
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateCommon();
 #endif
 }
