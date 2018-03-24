@@ -387,7 +387,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 }
 
 /*!
-  \fn void QBluetoothSocket::connectToService(const QBluetoothAddress &address, QBluetoothUuid::ServiceClassUuid uuid, OpenMode openMode = ReadWrite)
+  \fn void QBluetoothSocket::connectToService(const QBluetoothAddress &address, QBluetoothUuid::ServiceClassUuid uuid, OpenMode mode = ReadWrite)
 
   \internal
 
