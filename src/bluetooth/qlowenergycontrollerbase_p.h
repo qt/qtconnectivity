@@ -95,7 +95,7 @@ public:
     // interface definition
     virtual void init() = 0;
     virtual void connectToDevice() = 0;
-    virtual void disconnectFromDevice() = 0;
+    virtual void disconnectFromDevice(bool refreshGattCache) = 0;
 
     virtual void discoverServices() = 0;
     virtual void discoverServiceDetails(const QBluetoothUuid &/*service*/) = 0;

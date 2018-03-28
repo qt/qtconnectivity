@@ -102,7 +102,7 @@ public:
     void init() override;
 
     void connectToDevice() override;
-    void disconnectFromDevice() override;
+    void disconnectFromDevice(bool refreshGattCache) override;
 
     void discoverServices() override;
     void discoverServiceDetails(const QBluetoothUuid &service) override;

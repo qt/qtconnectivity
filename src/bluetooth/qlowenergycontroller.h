@@ -118,7 +118,7 @@ public:
     void setRemoteAddressType(RemoteAddressType type);
 
     void connectToDevice();
-    void disconnectFromDevice();
+    void disconnectFromDevice(bool refreshGattCache = false);
 
     void discoverServices();
     QList<QBluetoothUuid> services() const;

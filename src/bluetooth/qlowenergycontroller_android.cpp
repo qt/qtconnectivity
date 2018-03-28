@@ -168,7 +168,7 @@ void QLowEnergyControllerPrivateAndroid::connectToDevice()
     }
 }
 
-void QLowEnergyControllerPrivateAndroid::disconnectFromDevice()
+void QLowEnergyControllerPrivateAndroid::disconnectFromDevice(bool refreshGattCache)
 {
     /* Catch an Android timeout bug. If the device is connecting but cannot
      * physically connect it seems to ignore the disconnect call below.
@@ -179,8 +179,13 @@ void QLowEnergyControllerPrivateAndroid::disconnectFromDevice()
     QLowEnergyController::ControllerState oldState = state;
     setState(QLowEnergyController::ClosingState);
 
+    if(refreshGattCache)
+	jboolean refresh = true;
+    else
+        jboolean refresh = false;
+
     if (hub)
-        hub->javaObject().callMethod<void>("disconnect");
+        hub->javaObject().callObjectMethod("disconnect","(Z)V",refresh);
 
     if (oldState == QLowEnergyController::ConnectingState)
         setState(QLowEnergyController::UnconnectedState);
