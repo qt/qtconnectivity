@@ -604,7 +604,7 @@ void QLowEnergyController::connectToDevice()
 
     \sa connectToDevice()
  */
-void QLowEnergyController::disconnectFromDevice()
+void QLowEnergyController::disconnectFromDevice(bool refreshGattCache)
 {
     Q_D(QLowEnergyController);
 
@@ -612,7 +612,7 @@ void QLowEnergyController::disconnectFromDevice()
         return;
 
     d->invalidateServices();
-    d->disconnectFromDevice();
+    d->disconnectFromDevice(refreshGattCache);
 }
 
 /*!
