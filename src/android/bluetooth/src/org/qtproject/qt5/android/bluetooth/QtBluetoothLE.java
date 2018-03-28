@@ -559,11 +559,29 @@ public class QtBluetoothLE {
         return mBluetoothGatt != null;
     }
 
-    public void disconnect() {
+    public void disconnect(boolean refreshCache) {
         if (mBluetoothGatt == null)
             return;
 
         mBluetoothGatt.disconnect();
+
+	if(refreshCache == false)
+            return;
+
+	try
+	{
+	    Method refreshMethod = mBluetoothGatt.getClass().getMethod("refresh",null);
+	    if(refreshMethod != null)
+	    {
+	         boolean refreshedCache = ((Boolean) refreshMethod.invoke(mBluetoothGatt, null)).booleanValue();
+
+		 logMsg("BT Gatt cache refreshed successful: %b", refreshedCache);
+	    }
+	}
+	catch(Exception ex)
+	{
+	    logMsg("Exception refreshing BT Gatt cache: %s", ex.toString());	
+	}     
     }
 
     public boolean discoverServices()
