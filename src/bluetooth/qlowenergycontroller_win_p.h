@@ -74,8 +74,6 @@ public:
      QVariant data;
 };
 
-Q_DECLARE_METATYPE(ThreadWorkerJob)
-
 struct WriteCharData
 {
     QByteArray newValue;
@@ -86,8 +84,6 @@ struct WriteCharData
     int systemErrorCode;
 };
 
-Q_DECLARE_METATYPE(WriteCharData)
-
 struct ReadCharData
 {
     QByteArray value;
@@ -95,8 +91,6 @@ struct ReadCharData
     BTH_LE_GATT_CHARACTERISTIC gattCharacteristic;
     int systemErrorCode;
 };
-
-Q_DECLARE_METATYPE(ReadCharData)
 
 struct WriteDescData
 {
@@ -106,8 +100,6 @@ struct WriteDescData
     int systemErrorCode;
 };
 
-Q_DECLARE_METATYPE(WriteDescData)
-
 struct ReadDescData
 {
     QByteArray value;
@@ -115,8 +107,6 @@ struct ReadDescData
     BTH_LE_GATT_DESCRIPTOR gattDescriptor;
     int systemErrorCode;
 };
-
-Q_DECLARE_METATYPE(ReadDescData)
 
 class ThreadWorker : public QObject
 {
@@ -185,5 +175,11 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(ThreadWorkerJob)
+Q_DECLARE_METATYPE(WriteCharData)
+Q_DECLARE_METATYPE(ReadCharData)
+Q_DECLARE_METATYPE(WriteDescData)
+Q_DECLARE_METATYPE(ReadDescData)
 
 #endif // QLOWENERGYCONTROLLERPRIVATE_WIN32__P_H
