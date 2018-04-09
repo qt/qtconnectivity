@@ -40,6 +40,7 @@
 #include "qlowenergycontroller_android_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
 #include <QtBluetooth/QLowEnergyServiceData>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
