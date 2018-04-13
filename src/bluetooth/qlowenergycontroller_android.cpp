@@ -180,8 +180,12 @@ void QLowEnergyControllerPrivateAndroid::disconnectFromDevice()
     QLowEnergyController::ControllerState oldState = state;
     setState(QLowEnergyController::ClosingState);
 
-    if (hub)
-        hub->javaObject().callMethod<void>("disconnect");
+    if (hub) {
+        if (role == QLowEnergyController::PeripheralRole)
+            hub->javaObject().callMethod<void>("disconnectServer");
+        else
+            hub->javaObject().callMethod<void>("disconnect");
+    }
 
     if (oldState == QLowEnergyController::ConnectingState)
         setState(QLowEnergyController::UnconnectedState);
