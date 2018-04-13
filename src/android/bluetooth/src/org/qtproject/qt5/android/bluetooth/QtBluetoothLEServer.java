@@ -82,6 +82,12 @@ public class QtBluetoothLEServer {
     private BluetoothGattServer mGattServer = null;
     private BluetoothLeAdvertiser mLeAdvertiser = null;
 
+    private String mRemoteName = "";
+    public String remoteName() { return mRemoteName; }
+
+    private String mRemoteAddress = "";
+    public String remoteAddress() { return mRemoteAddress; }
+
     /*
         As per Bluetooth specification each connected device can have individual and persistent
         Client characteristic configurations (see Bluetooth Spec 5.0 Vol 3 Part G 3.3.3.3)
@@ -237,6 +243,9 @@ public class QtBluetoothLEServer {
                     qtControllerState = 2; // QLowEnergyController::ConnectedState
                     break;
             }
+
+            mRemoteName = device.getName();
+            mRemoteAddress = device.getAddress();
 
             int qtErrorCode;
             switch (status) {
