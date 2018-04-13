@@ -537,8 +537,12 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(const QBluetoo
     serviceData->endHandle = runningHandle++;
 
     // last job is last step of service discovery
-    GattJob &lastJob = jobs.last();
-    lastJob.flags.setFlag(GattJob::LastServiceDiscovery, true);
+    if (!jobs.isEmpty()) {
+        GattJob &lastJob = jobs.last();
+        lastJob.flags.setFlag(GattJob::LastServiceDiscovery, true);
+    } else {
+        serviceData->setState(QLowEnergyService::ServiceDiscovered);
+    }
 
     scheduleNextJob();
 }
