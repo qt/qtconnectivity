@@ -779,6 +779,7 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
 
     q->setSocketState(QBluetoothSocket::UnconnectedState);
     q->setOpenMode(QIODevice::NotOpen);
+    emit q->readChannelFinished();
     emit q->disconnected();
 }
 

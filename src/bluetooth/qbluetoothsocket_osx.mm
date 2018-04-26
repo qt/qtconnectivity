@@ -351,6 +351,7 @@ void QBluetoothSocketPrivate::channelClosed()
     if (!isConnecting) {
         q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
         q_ptr->setOpenMode(QIODevice::NotOpen);
+        emit q_ptr->readChannelFinished();
         emit q_ptr->disconnected();
     } else {
         state = QBluetoothSocket::UnconnectedState;
@@ -638,6 +639,7 @@ void QBluetoothSocket::abort()
     d_ptr->abort();
 
     setSocketState(QBluetoothSocket::UnconnectedState);
+    emit readChannelFinished();
     emit disconnected();
 }
 
@@ -726,6 +728,7 @@ void QBluetoothSocket::close()
     d_ptr->close();
 
     setSocketState(UnconnectedState);
+    emit readChannelFinished();
     emit disconnected();
 }
 
