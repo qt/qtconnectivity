@@ -119,6 +119,19 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \enum QNearFieldManager::AdapterState
+
+    \since 5.12
+
+    This enum describes the different states a NFC adapter can have.
+
+    \value Offline      The nfc adapter is offline.
+    \value TurningOn    The nfc adapter is turning on.
+    \value Online       The nfc adapter is online.
+    \value TurningOff   The nfc adapter is turning off.
+*/
+
+/*!
     \enum QNearFieldManager::TargetAccessMode
 
     This enum describes the different access modes an application can have.
@@ -130,6 +143,16 @@ QT_BEGIN_NAMESPACE
                                     QNearFieldTarget::writeNdefMessages().
     \value TagTypeSpecificTargetAccess  The application can access targets using raw commands by
                                         calling QNearFieldTarget::sendCommand().
+*/
+
+/*!
+    \fn void QNearFieldManager::adapterStateChanged(AdapterState state)
+
+    \since 5.12
+
+    This signal is emitted whenever the state of the NFC adapter changed.
+
+    \note Currently, this signal is only emitted on Android.
 */
 
 /*!
@@ -169,6 +192,10 @@ QT_BEGIN_NAMESPACE
 QNearFieldManager::QNearFieldManager(QObject *parent)
 :   QObject(parent), d_ptr(new QNearFieldManagerPrivateImpl)
 {
+    qRegisterMetaType<AdapterState>();
+
+    connect(d_ptr, &QNearFieldManagerPrivate::adapterStateChanged,
+            this, &QNearFieldManager::adapterStateChanged);
     connect(d_ptr, SIGNAL(targetDetected(QNearFieldTarget*)),
             this, SIGNAL(targetDetected(QNearFieldTarget*)));
     connect(d_ptr, SIGNAL(targetLost(QNearFieldTarget*)),
@@ -186,6 +213,10 @@ QNearFieldManager::QNearFieldManager(QObject *parent)
 QNearFieldManager::QNearFieldManager(QNearFieldManagerPrivate *backend, QObject *parent)
 :   QObject(parent), d_ptr(backend)
 {
+    qRegisterMetaType<AdapterState>();
+
+    connect(d_ptr, &QNearFieldManagerPrivate::adapterStateChanged,
+            this, &QNearFieldManager::adapterStateChanged);
     connect(d_ptr, SIGNAL(targetDetected(QNearFieldTarget*)),
             this, SIGNAL(targetDetected(QNearFieldTarget*)));
     connect(d_ptr, SIGNAL(targetLost(QNearFieldTarget*)),

@@ -48,22 +48,52 @@
 #include "qdebug.h"
 #include "qlist.h"
 
+#include <QScopedPointer>
 #include <QtCore/QMetaType>
 #include <QtCore/QMetaMethod>
+#include <QtCore/private/qjnihelpers_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_GLOBAL_STATIC(QAndroidJniObject, broadcastReceiver)
+Q_GLOBAL_STATIC(QList<QNearFieldManagerPrivateImpl *>, broadcastListener)
+
+extern "C"
+{
+    JNIEXPORT void JNICALL Java_org_qtproject_qt5_android_nfc_QtNfcBroadcastReceiver_jniOnReceive(
+        JNIEnv */*env*/, jobject /*javaObject*/, jint state)
+    {
+        QNearFieldManager::AdapterState adapterState = static_cast<QNearFieldManager::AdapterState>((int) state);
+
+        for (const auto listener : *broadcastListener) {
+            Q_EMIT listener->adapterStateChanged(adapterState);
+        }
+    }
+}
 
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     m_detecting(false), m_handlerID(0)
 {
     qRegisterMetaType<QAndroidJniObject>("QAndroidJniObject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
+
+    if (!broadcastReceiver->isValid()) {
+        *broadcastReceiver = QAndroidJniObject("org/qtproject/qt5/android/nfc/QtNfcBroadcastReceiver",
+                                               "(Landroid/content/Context;)V", QtAndroidPrivate::context());
+    }
+    broadcastListener->append(this);
+
     connect(this, SIGNAL(targetDetected(QNearFieldTarget*)), this, SLOT(handlerTargetDetected(QNearFieldTarget*)));
     connect(this, SIGNAL(targetLost(QNearFieldTarget*)), this, SLOT(handlerTargetLost(QNearFieldTarget*)));
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 {
+    broadcastListener->removeOne(this);
+    if (broadcastListener->isEmpty()) {
+        broadcastReceiver->callMethod<void>("unregisterReceiver");
+        *broadcastReceiver = QAndroidJniObject();
+    }
 }
 
 void QNearFieldManagerPrivateImpl::handlerTargetDetected(QNearFieldTarget *target)

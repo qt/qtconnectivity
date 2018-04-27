@@ -129,6 +129,7 @@ public:
     }
 
 signals:
+    void adapterStateChanged(QNearFieldManager::AdapterState state);
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
 
