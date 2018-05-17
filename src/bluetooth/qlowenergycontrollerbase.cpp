@@ -261,6 +261,8 @@ void QLowEnergyControllerPrivate::invalidateServices()
     }
 
     serviceList.clear();
+    localServices.clear();
+    lastLocalHandle = {};
 }
 
 QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
@@ -308,7 +310,12 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
         return nullptr;
     }
 
+    if (localServices.contains(servicePrivate->uuid)) {
+        qWarning() << "Overriding existing local service with uuid"
+                   << servicePrivate->uuid;
+    }
     this->localServices.insert(servicePrivate->uuid, servicePrivate);
+
     this->addToGenericAttributeList(service, servicePrivate->startHandle);
     return new QLowEnergyService(servicePrivate);
 }

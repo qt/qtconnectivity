@@ -603,9 +603,10 @@ void QLowEnergyController::connectToDevice()
 
     This function does nothing if the controller is in the \l UnconnectedState.
 
-    If the controller is in the peripheral role, it stops advertising too.
-    The application must restart the advertising mode by calling
-    \l startAdvertising().
+    If the controller is in the peripheral role, it stops advertising and removes
+    all services which have previously been added via \l addService().
+    To reuse the QLowEnergyController instance the application must re-add services
+    and restart the advertising mode by calling \l startAdvertising().
 
     \sa connectToDevice()
  */
@@ -742,6 +743,9 @@ void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameter
 /*!
    Stops advertising, if this object is currently in the advertising state.
 
+   The controller has to be in the \l PeripheralRole for this function to work.
+   It does not invalidate services which have previously been added via \l addService().
+
    \since 5.7
    \sa startAdvertising()
  */
@@ -760,8 +764,15 @@ void QLowEnergyController::stopAdvertising()
   The controller must be in the \l PeripheralRole and in the \l UnconnectedState. The \a service
   object must be valid.
 
+  \note Once the peripheral instance is disconnected from the remote central device or
+  if \l disconnectFromDevice() is manually called, every service definition that was
+  previously added via this function is removed from the peripheral. Therefore this function
+  must be called again before re-advertising this peripheral controller instance. The described
+  behavior is connection specific and therefore not dependent on whether \l stopAdvertising()
+  was called.
+
   \since 5.7
-  \sa QLowEnergyServiceData::addIncludedService
+  \sa stopAdvertising(), disconnectFromDevice(), QLowEnergyServiceData::addIncludedService
  */
 QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
                                                     QObject *parent)
