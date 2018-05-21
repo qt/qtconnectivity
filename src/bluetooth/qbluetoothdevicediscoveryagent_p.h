@@ -80,7 +80,28 @@ QT_END_NAMESPACE
 #endif
 
 #ifdef QT_WIN_BLUETOOTH
-#include <QtConcurrent>
+QT_BEGIN_NAMESPACE
+class QThread;
+
+class ThreadWorkerLE : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void discover();
+signals:
+    void discoveryCompleted(const QVariant res);
+};
+
+class ThreadWorkerClassic : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void discover(QVariant hSearch);
+signals:
+    void discoveryCompleted(const QVariant res);
+};
+QT_END_NAMESPACE
+
 #elif defined(QT_WINRT_BLUETOOTH)
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
@@ -177,9 +198,9 @@ private:
     void finishDiscovery(QBluetoothDeviceDiscoveryAgent::Error errorCode, const QString &errorText);
 
     void startLeDevicesDiscovery();
-    void completeLeDevicesDiscovery();
+    void completeLeDevicesDiscovery(const QVariant res);
     void startClassicDevicesDiscovery(Qt::HANDLE hSearch = nullptr);
-    void completeClassicDevicesDiscovery();
+    void completeClassicDevicesDiscovery(const QVariant res);
 
     void processDiscoveredDevice(const QBluetoothDeviceInfo &foundDevice);
 
@@ -188,8 +209,10 @@ private:
     bool pendingStart;
     bool active;
 
-    QFutureWatcher<QVariant> *classicScanWatcher;
-    QFutureWatcher<QVariant> *lowenergyScanWatcher;
+    QThread *threadLE = nullptr;
+    QThread *threadClassic = nullptr;
+    ThreadWorkerLE *threadWorkerLE = nullptr;
+    ThreadWorkerClassic *threadWorkerClassic = nullptr;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH

@@ -44,7 +44,8 @@
 #include "qbluetoothlocaldevice_p.h"
 
 #include <QtCore/qmutex.h>
-#include <QtConcurrent/QtConcurrent>
+#include <QtCore/QThread>
+#include <QtCore/QLoggingCategory>
 
 #include <qt_windows.h>
 #include <setupapi.h>
@@ -332,17 +333,34 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     , pendingCancel(false)
     , pendingStart(false)
     , active(false)
-    , classicScanWatcher(nullptr)
-    , lowenergyScanWatcher(nullptr)
     , lowEnergySearchTimeout(-1) // remains -1 -> timeout not supported
     , q_ptr(parent)
 {
+    threadLE = new QThread;
+    threadWorkerLE = new ThreadWorkerLE;
+    threadWorkerLE->moveToThread(threadLE);
+    connect(threadWorkerLE, &ThreadWorkerLE::discoveryCompleted, this, &QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery);
+    connect(threadLE, &QThread::finished, threadWorkerLE, &ThreadWorkerLE::deleteLater);
+    connect(threadLE, &QThread::finished, threadLE, &QThread::deleteLater);
+    threadLE->start();
+
+    threadClassic = new QThread;
+    threadWorkerClassic = new ThreadWorkerClassic;
+    threadWorkerClassic->moveToThread(threadClassic);
+    connect(threadWorkerClassic, &ThreadWorkerClassic::discoveryCompleted, this, &QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery);
+    connect(threadClassic, &QThread::finished, threadWorkerClassic, &ThreadWorkerClassic::deleteLater);
+    connect(threadClassic, &QThread::finished, threadClassic, &QThread::deleteLater);
+    threadClassic->start();
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     if (active)
         stop();
+    if (threadLE)
+        threadLE->quit();
+    if (threadClassic)
+        threadClassic->quit();
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
@@ -447,23 +465,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::finishDiscovery(QBluetoothDeviceDisc
 
 void QBluetoothDeviceDiscoveryAgentPrivate::startLeDevicesDiscovery()
 {
-    if (!lowenergyScanWatcher) {
-        lowenergyScanWatcher = new QFutureWatcher<QVariant>(this);
-        connect(lowenergyScanWatcher, &QFutureWatcher<QVariant>::finished,
-                this, &QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery);
-    }
-    const QFuture<QVariant> future = QtConcurrent::run(discoverLeDevicesStatic);
-    lowenergyScanWatcher->setFuture(future);
+    QMetaObject::invokeMethod(threadWorkerLE, "discover", Qt::QueuedConnection);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery()
+void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery(const QVariant res)
 {
     if (pendingCancel && !pendingStart) {
         cancelDiscovery();
     } else if (pendingStart) {
         restartDiscovery();
     } else {
-        const DiscoveryResult result = lowenergyScanWatcher->result().value<DiscoveryResult>();
+        const DiscoveryResult result = res.value<DiscoveryResult>();
         if (result.systemErrorCode == NO_ERROR || result.systemErrorCode == ERROR_NO_MORE_ITEMS) {
             for (const QBluetoothDeviceInfo &device : result.devices)
                 processDiscoveredDevice(device);
@@ -484,18 +496,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::startClassicDevicesDiscovery(Qt::HANDLE hSearch)
 {
-    if (!classicScanWatcher) {
-        classicScanWatcher = new QFutureWatcher<QVariant>(this);
-        connect(classicScanWatcher, &QFutureWatcher<QVariant>::finished,
-                this, &QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery);
-    }
-    const QFuture<QVariant> future = QtConcurrent::run(discoverClassicDevicesStatic, hSearch);
-    classicScanWatcher->setFuture(future);
+    QMetaObject::invokeMethod(threadWorkerClassic, "discover", Qt::QueuedConnection,
+                              Q_ARG(QVariant, QVariant::fromValue(hSearch)));
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery()
+void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery(const QVariant res)
 {
-    const DiscoveryResult result = classicScanWatcher->result().value<DiscoveryResult>();
+    const DiscoveryResult result = res.value<DiscoveryResult>();
     if (pendingCancel && !pendingStart) {
         closeClassicSearch(result.hSearch);
         cancelDiscovery();
@@ -558,6 +565,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevice(
         qCDebug(QT_BT_WINDOWS) << "Updated: " << deviceIt->address();
         emit q->deviceDiscovered(*deviceIt);
     }
+}
+
+
+void ThreadWorkerLE::discover()
+{
+    const QVariant res = discoverLeDevicesStatic();
+    emit discoveryCompleted(res);
+}
+
+void ThreadWorkerClassic::discover(QVariant search)
+{
+    Qt::HANDLE hSearch = search.value<Qt::HANDLE>();
+    const QVariant res = discoverClassicDevicesStatic(hSearch);
+    emit discoveryCompleted(res);
 }
 
 QT_END_NAMESPACE

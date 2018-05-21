@@ -46,6 +46,8 @@
 #include <QtCore/QEvent>
 #include <QtCore/QMutex>
 #include <QtCore/QThread>
+#include <QtCore/QDataStream>
+#include <QtCore/QCoreApplication>
 
 #include <algorithm> // for std::max
 
