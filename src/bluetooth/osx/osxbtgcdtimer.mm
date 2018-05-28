@@ -105,6 +105,7 @@
 - (void)cancelTimer
 {
     cancelled = true;
+    timeoutHandler = nil;
 }
 
 @end
