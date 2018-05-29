@@ -73,7 +73,22 @@ QT_END_NAMESPACE
 #endif
 
 #ifdef QT_WIN_BLUETOOTH
-#include <QFutureWatcher>
+#include <QtCore/QVariant>
+
+QT_BEGIN_NAMESPACE
+class QThread;
+
+class ThreadWorkerFind : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void findFirst(const QVariant data);
+    Q_INVOKABLE void findNext(const QVariant data);
+signals:
+    void findFinished(QVariant result);
+};
+QT_END_NAMESPACE
+
 #elif defined(QT_WINRT_BLUETOOTH)
 #include <QtCore/QPointer>
 #endif
@@ -93,7 +108,7 @@ class QWinRTBluetoothServiceDiscoveryWorker;
 #endif
 
 class QBluetoothServiceDiscoveryAgentPrivate
-#if defined QT_WINRT_BLUETOOTH
+#if defined QT_WINRT_BLUETOOTH || defined QT_WIN_BLUETOOTH
         : public QObject
 {
     Q_OBJECT
@@ -152,7 +167,7 @@ public:
     void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
 #endif
 #ifdef QT_WIN_BLUETOOTH
-    void _q_nextSdpScan();
+    void _q_nextSdpScan(QVariant input);
 #endif
 
 private:
@@ -207,13 +222,11 @@ private:
 
 #ifdef QT_WIN_BLUETOOTH
 private:
-    int systemError;
     bool pendingStop;
     bool pendingFinish;
 
-    QFutureWatcher<QBluetoothServiceInfo> *searchWatcher;
-
-    Qt::HANDLE hSearch;
+    QThread *threadFind = nullptr;
+    ThreadWorkerFind *threadWorkerFind = nullptr;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH

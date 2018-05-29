@@ -41,7 +41,10 @@
 #include "qbluetoothservicediscoveryagent_p.h"
 
 #include <QtCore/QByteArray>
-#include <QtConcurrent>
+#include <QtCore/QLibrary>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QThread>
+#include <QtCore/QUrl>
 
 #include <initguid.h>
 #include <WinSock2.h>
@@ -63,6 +66,18 @@ Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 DEFINEFUNC(DWORD, BluetoothSdpGetElementData, LPBYTE, ULONG, PSDP_ELEMENT_DATA)
 
 QT_BEGIN_NAMESPACE
+
+struct FindServiceArguments {
+    QBluetoothAddress address;
+    Qt::HANDLE hSearch;
+    int systemError;
+};
+
+struct FindServiceResult {
+    QBluetoothServiceInfo info;
+    Qt::HANDLE hSearch;
+    int systemError;
+};
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
@@ -276,9 +291,11 @@ enum {
           | LUP_RETURN_COMMENT
 };
 
-static QBluetoothServiceInfo findNextService(HANDLE hSearch, int *systemError)
+static FindServiceResult findNextService(HANDLE hSearch, int systemError)
 {
-    QBluetoothServiceInfo result;
+    FindServiceResult result;
+    result.systemError = systemError;
+    result.hSearch = INVALID_HANDLE_VALUE;
 
     QByteArray resultBuffer(2048, 0);
     WSAQUERYSET *resultQuery = reinterpret_cast<WSAQUERYSET*>(resultBuffer.data());
@@ -289,34 +306,36 @@ static QBluetoothServiceInfo findNextService(HANDLE hSearch, int *systemError)
                                                 resultQuery);
 
     if (resultCode == SOCKET_ERROR) {
-        *systemError = ::WSAGetLastError();
-        if (*systemError == WSA_E_NO_MORE)
+        result.systemError = ::WSAGetLastError();
+        if (result.systemError == WSA_E_NO_MORE)
             cleanupServiceDiscovery(hSearch);
-        return QBluetoothServiceInfo();
+        return result;
      }
 
     if (resultQuery->lpBlob
             && BluetoothSdpEnumAttributes(resultQuery->lpBlob->pBlobData,
                                           resultQuery->lpBlob->cbSize,
                                           bluetoothSdpCallback,
-                                          &result)) {
+                                          &result.info)) {
         return result;
     } else {
-        *systemError = GetLastError();
+        result.systemError = GetLastError();
     }
-
     return result;
 }
 
-static QBluetoothServiceInfo findFirstService(LPHANDLE hSearch, const QBluetoothAddress &address, int *systemError)
+static FindServiceResult findFirstService(HANDLE hSearch, const QBluetoothAddress &address)
 {
     //### should we try for 2.2 on all platforms ??
     WSAData wsadata;
+    FindServiceResult result;
+    result.systemError = NO_ERROR;
+    result.hSearch = INVALID_HANDLE_VALUE;
 
     // IPv6 requires Winsock v2.0 or better.
     if (WSAStartup(MAKEWORD(2, 0), &wsadata) != 0) {
-        *systemError = ::WSAGetLastError();
-        return QBluetoothServiceInfo();
+        result.systemError = ::WSAGetLastError();
+        return result;
     }
 
     const QString addressAsString = QStringLiteral("(%1)").arg(address.toString());
@@ -336,14 +355,14 @@ static QBluetoothServiceInfo findFirstService(LPHANDLE hSearch, const QBluetooth
 
     const int resultCode = WSALookupServiceBegin(&serviceQuery,
                                                  WSAControlFlags,
-                                                 hSearch);
+                                                 &hSearch);
     if (resultCode == SOCKET_ERROR) {
-        *systemError = ::WSAGetLastError();
-        cleanupServiceDiscovery(hSearch);
-        return QBluetoothServiceInfo();
+        result.systemError = ::WSAGetLastError();
+        cleanupServiceDiscovery(&hSearch);
+        return result;
     }
-    *systemError = NO_ERROR;
-    return findNextService(*hSearch, systemError);
+    result.systemError = NO_ERROR;
+    return findNextService(hSearch, result.systemError);
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
@@ -353,41 +372,43 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
       deviceDiscoveryAgent(0),
       mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
       singleDevice(false),
-      systemError(NO_ERROR),
       pendingStop(false),
       pendingFinish(false),
-      searchWatcher(Q_NULLPTR),
-      hSearch(INVALID_HANDLE_VALUE),
       q_ptr(qp)
 {
     Q_UNUSED(deviceAdapter);
+
     resolveFunctions(bluetoothapis());
-    searchWatcher = new QFutureWatcher<QBluetoothServiceInfo>();
+
+    threadFind = new QThread;
+    threadWorkerFind = new ThreadWorkerFind;
+    threadWorkerFind->moveToThread(threadFind);
+    connect(threadWorkerFind, &ThreadWorkerFind::findFinished, this, &QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan);
+    connect(threadFind, &QThread::finished, threadWorkerFind, &ThreadWorkerFind::deleteLater);
+    connect(threadFind, &QThread::finished, threadFind, &QThread::deleteLater);
+    threadFind->start();
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
 {
     if (pendingFinish) {
         stop();
-        searchWatcher->waitForFinished();
     }
-    delete searchWatcher;
+    if (threadFind)
+        threadFind->quit();
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
 {
-    Q_Q(QBluetoothServiceDiscoveryAgent);
     if (!pendingFinish) {
         pendingFinish = true;
         pendingStop = false;
 
-        QObject::connect(searchWatcher, SIGNAL(finished()), q, SLOT(_q_nextSdpScan()), Qt::UniqueConnection);
-        const QFuture<QBluetoothServiceInfo> future =
-                QtConcurrent::run(&findFirstService,
-                                  &hSearch,
-                                  address,
-                                  &systemError);
-        searchWatcher->setFuture(future);
+        FindServiceArguments data;
+        data.address = address;
+        data.hSearch = INVALID_HANDLE_VALUE;
+        QMetaObject::invokeMethod(threadWorkerFind, "findFirst", Qt::QueuedConnection,
+                                  Q_ARG(QVariant, QVariant::fromValue(data)));
     }
 }
 
@@ -396,42 +417,62 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     pendingStop = true;
 }
 
-void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan()
+void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(QVariant input)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
+    auto result = input.value<FindServiceResult>();
 
     if (pendingStop) {
         pendingStop = false;
         pendingFinish = false;
         emit q->canceled();
     } else {
-        if (systemError == WSA_E_NO_MORE) {
-            systemError = NO_ERROR;
-        } else if (systemError != NO_ERROR) {
-            error = (systemError == ERROR_INVALID_HANDLE) ?
+        if (result.systemError == WSA_E_NO_MORE) {
+            result.systemError = NO_ERROR;
+        } else if (result.systemError != NO_ERROR) {
+            error = (result.systemError == ERROR_INVALID_HANDLE) ?
                         QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError
                       : QBluetoothServiceDiscoveryAgent::InputOutputError;
-            errorString = qt_error_string(systemError);
+            errorString = qt_error_string(result.systemError);
             qCWarning(QT_BT_WINDOWS) << errorString;
             emit q->error(this->error);
         } else {
-            QBluetoothServiceInfo serviceInfo = searchWatcher->result();
-            serviceInfo.setDevice(discoveredDevices.at(0));
-            if (serviceInfo.isValid()) {
-                if (!isDuplicatedService(serviceInfo)) {
-                    discoveredServices.append(serviceInfo);
-                    emit q->serviceDiscovered(serviceInfo);
+            result.info.setDevice(discoveredDevices.at(0));
+            if (result.info.isValid()) {
+                if (!isDuplicatedService(result.info)) {
+                    discoveredServices.append(result.info);
+                    emit q->serviceDiscovered(result.info);
                 }
             }
-            const QFuture<QBluetoothServiceInfo> future =
-                    QtConcurrent::run(&findNextService, hSearch, &systemError);
-            searchWatcher->setFuture(future);
+            FindServiceArguments data;
+            data.hSearch = result.hSearch;
+            data.systemError = result.systemError;
+            QMetaObject::invokeMethod(threadWorkerFind, "findNext", Qt::QueuedConnection,
+                                      Q_ARG(QVariant, QVariant::fromValue(data)));
             return;
         }
-        hSearch = INVALID_HANDLE_VALUE;
         pendingFinish = false;
         _q_serviceDiscoveryFinished();
     }
 }
 
+void ThreadWorkerFind::findFirst(const QVariant data)
+{
+    auto args = data.value<FindServiceArguments>();
+    FindServiceResult result = findFirstService(args.hSearch, args.address);
+    result.hSearch = args.hSearch;
+    emit findFinished(QVariant::fromValue(result));
+}
+
+ void ThreadWorkerFind::findNext(const QVariant data)
+{
+    auto args = data.value<FindServiceArguments>();
+    FindServiceResult result = findNextService(args.hSearch, args.systemError);
+    result.hSearch = args.hSearch;
+    emit findFinished(QVariant::fromValue(result));
+}
+
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(FindServiceArguments)
+Q_DECLARE_METATYPE(FindServiceResult)

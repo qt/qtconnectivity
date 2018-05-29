@@ -43,6 +43,7 @@
 #include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QObject>
+#include <QtCore/QVariant>
 
 #include <QtBluetooth/QBluetoothServiceInfo>
 #include <QtBluetooth/QBluetoothUuid>
@@ -130,7 +131,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state))
 #endif
 #ifdef QT_WIN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_nextSdpScan())
+    Q_PRIVATE_SLOT(d_func(), void _q_nextSdpScan(QVariant input))
 #endif
 };
 
