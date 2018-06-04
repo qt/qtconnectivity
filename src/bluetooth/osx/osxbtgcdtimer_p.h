@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTLEDEVICEINQUIRY_P_H
-#define OSXBTLEDEVICEINQUIRY_P_H
+#ifndef OSXBTGCDTIMER_P_H
+#define OSXBTGCDTIMER_P_H
 
 //
 //  W A R N I N G
@@ -51,63 +51,44 @@
 // We mean it.
 //
 
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qbluetoothdeviceinfo.h"
-#include "osxbtgcdtimer_p.h"
 #include "osxbtutility_p.h"
-#include "osxbluetooth_p.h"
 
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
-#include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
 
+@protocol QT_MANGLE_NAMESPACE(GCDTimerDelegate)
+@required
+- (void)timeout;
+@end
+
+@interface QT_MANGLE_NAMESPACE(OSXBTGCDTimer) : NSObject {
+@private
+    qint64 timeoutMS;
+    qint64 timeoutStepMS;
+    QT_PREPEND_NAMESPACE(QElapsedTimer) timer;
+    id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)> timeoutHandler;
+    bool cancelled;
+}
+
+- (instancetype)initWithDelegate:(id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)>)delegate;
+- (void)startWithTimeout:(qint64)ms step:(qint64)stepMS;
+- (void)handleTimeout;
+- (void)cancelTimer;
+
+@end
+
 QT_BEGIN_NAMESPACE
 
-class QBluetoothUuid;
+namespace OSXBluetooth {
 
-namespace OSXBluetooth
-{
-
-class LECBManagerNotifier;
+using GCDTimerObjC = QT_MANGLE_NAMESPACE(OSXBTGCDTimer);
+using GCDTimer = ObjCScopedPointer<GCDTimerObjC>;
 
 }
 
 QT_END_NAMESPACE
 
-using QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier;
-using QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer;
+#endif // OSXBTGCDTIMER_P_H
 
-enum LEInquiryState
-{
-    InquiryStarting,
-    InquiryActive,
-    InquiryFinished,
-    InquiryCancelled,
-    ErrorPoweredOff,
-    ErrorLENotSupported
-};
-
-@interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject<CBCentralManagerDelegate, QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
-{
-    LECBManagerNotifier *notifier;
-    ObjCScopedPointer<CBCentralManager> manager;
-
-    QList<QBluetoothDeviceInfo> devices;
-    LEInquiryState internalState;
-    int inquiryTimeoutMS;
-
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer elapsedTimer;
-}
-
-- (id)initWithNotifier:(LECBManagerNotifier *)aNotifier;
-- (void)dealloc;
-
-// IMPORTANT: both 'startWithTimeout' and 'stop' MUST be executed on the "Qt's
-// LE queue".
-- (void)startWithTimeout:(int)timeout;
-- (void)stop;
-
-@end
-
-#endif

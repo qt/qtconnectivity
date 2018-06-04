@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,77 +37,75 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTLEDEVICEINQUIRY_P_H
-#define OSXBTLEDEVICEINQUIRY_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qbluetoothdeviceinfo.h"
 #include "osxbtgcdtimer_p.h"
 #include "osxbtutility_p.h"
-#include "osxbluetooth_p.h"
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qlist.h>
+#include <QtCore/qdebug.h>
 
-#include <Foundation/Foundation.h>
+#include <algorithm>
 
-QT_BEGIN_NAMESPACE
+@implementation QT_MANGLE_NAMESPACE(OSXBTGCDTimer)
 
-class QBluetoothUuid;
-
-namespace OSXBluetooth
+- (instancetype)initWithDelegate:(id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)>)delegate
 {
-
-class LECBManagerNotifier;
-
+    if (self = [super init]) {
+        timeoutHandler = delegate;
+        timeoutMS = 0;
+        timeoutStepMS = 0;
+        cancelled = false;
+    }
+    return self;
 }
 
-QT_END_NAMESPACE
-
-using QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier;
-using QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer;
-
-enum LEInquiryState
+- (void)startWithTimeout:(qint64)ms step:(qint64)stepMS
 {
-    InquiryStarting,
-    InquiryActive,
-    InquiryFinished,
-    InquiryCancelled,
-    ErrorPoweredOff,
-    ErrorLENotSupported
-};
+    Q_ASSERT(!timeoutMS && !timeoutStepMS);
+    Q_ASSERT(!cancelled);
 
-@interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject<CBCentralManagerDelegate, QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
-{
-    LECBManagerNotifier *notifier;
-    ObjCScopedPointer<CBCentralManager> manager;
+    if (!timeoutHandler) {
+        // Nobody to report timeout to, no need to start any task then.
+        return;
+    }
 
-    QList<QBluetoothDeviceInfo> devices;
-    LEInquiryState internalState;
-    int inquiryTimeoutMS;
+    if (ms <= 0 || stepMS <= 0) {
+        qCWarning(QT_BT_OSX, "Invalid timeout/step parameters");
+        return;
+    }
 
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer elapsedTimer;
+    timeoutMS = ms;
+    timeoutStepMS = stepMS;
+    timer.start();
+
+    [self handleTimeout];
 }
 
-- (id)initWithNotifier:(LECBManagerNotifier *)aNotifier;
-- (void)dealloc;
+- (void)handleTimeout
+{
+    if (cancelled)
+        return;
 
-// IMPORTANT: both 'startWithTimeout' and 'stop' MUST be executed on the "Qt's
-// LE queue".
-- (void)startWithTimeout:(int)timeout;
-- (void)stop;
+    const qint64 elapsed = timer.elapsed();
+    if (elapsed >= timeoutMS) {
+        [timeoutHandler timeout];
+    } else {
+        using namespace QT_PREPEND_NAMESPACE(OSXBluetooth);
+        // Re-schedule:
+        dispatch_queue_t leQueue(qt_LE_queue());
+        Q_ASSERT(leQueue);
+        const qint64 timeChunkMS = std::min(timeoutMS - elapsed, timeoutStepMS);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                     int64_t(timeChunkMS / 1000. * NSEC_PER_SEC)),
+                                     leQueue,
+                                     ^{
+                                           [self handleTimeout];
+                                      });
+    }
+}
+
+- (void)cancelTimer
+{
+    cancelled = true;
+    timeoutHandler = nil;
+}
 
 @end
-
-#endif

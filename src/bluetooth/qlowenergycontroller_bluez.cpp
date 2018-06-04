@@ -809,9 +809,12 @@ void QLowEnergyControllerPrivateBluez::resetController()
     securityLevelValue = -1;
     connectionHandle = 0;
 
-    // public API behavior requires stop of advertisement
-    if (role == QLowEnergyController::PeripheralRole && advertiser)
-        advertiser->stopAdvertising();
+    if (role == QLowEnergyController::PeripheralRole) {
+        // public API behavior requires stop of advertisement
+        if (advertiser)
+            advertiser->stopAdvertising();
+        localAttributes.clear();
+    }
 }
 
 void QLowEnergyControllerPrivateBluez::restartRequestTimer()
