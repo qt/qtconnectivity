@@ -289,7 +289,10 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDevice()
     if (device->connected() && device->servicesResolved()) {
         //connectToDevice is noop
         disconnectSignalRequired = true;
+
         setState(QLowEnergyController::ConnectedState);
+        Q_Q(QLowEnergyController);
+        emit q->connected();
         return;
     }
 
