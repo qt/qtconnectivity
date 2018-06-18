@@ -95,7 +95,8 @@ enum class OperationTimeout
     characteristicsDiscovery,
     characteristicRead,
     descriptorsDiscovery,
-    descriptorRead
+    descriptorRead,
+    characteristicWrite
 };
 
 // In Qt we work with handles and UUIDs. Core Bluetooth

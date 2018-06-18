@@ -229,6 +229,9 @@ QT_END_NAMESPACE
         qCWarning(QT_BT_OSX, "Timeout while reading a descriptor");
         [self peripheral:peripheral didUpdateValueForDescriptor:objectUnderWatch error:nsError];
         break;
+    case OperationTimeout::characteristicWrite:
+        qCWarning(QT_BT_OSX, "Timeout while writing a characteristic with response");
+        [self peripheral:peripheral didWriteValueForCharacteristic:objectUnderWatch error:nsError];
     default:;
     }
 }
@@ -751,6 +754,7 @@ QT_END_NAMESPACE
                     return [self performNextRequest];
 
                 requestPending = true;
+                [self watchAfter:characteristic timeout:OperationTimeout::characteristicWrite];
                 [peripheral writeValue:data.data() forCharacteristic:characteristic
                             type:CBCharacteristicWriteWithResponse];
             } else {
@@ -1621,6 +1625,10 @@ QT_END_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
+    if (characteristic != objectUnderWatch)
+        return;
+
+    [self stopWatchdog];
     requestPending = false;
 
 
