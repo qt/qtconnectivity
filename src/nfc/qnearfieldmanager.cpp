@@ -196,10 +196,10 @@ QNearFieldManager::QNearFieldManager(QObject *parent)
 
     connect(d_ptr, &QNearFieldManagerPrivate::adapterStateChanged,
             this, &QNearFieldManager::adapterStateChanged);
-    connect(d_ptr, SIGNAL(targetDetected(QNearFieldTarget*)),
-            this, SIGNAL(targetDetected(QNearFieldTarget*)));
-    connect(d_ptr, SIGNAL(targetLost(QNearFieldTarget*)),
-            this, SIGNAL(targetLost(QNearFieldTarget*)));
+    connect(d_ptr, &QNearFieldManagerPrivate::targetDetected,
+            this, &QNearFieldManager::targetDetected);
+    connect(d_ptr, &QNearFieldManagerPrivate::targetLost,
+            this, &QNearFieldManager::targetLost);
 }
 
 /*!
@@ -217,10 +217,10 @@ QNearFieldManager::QNearFieldManager(QNearFieldManagerPrivate *backend, QObject 
 
     connect(d_ptr, &QNearFieldManagerPrivate::adapterStateChanged,
             this, &QNearFieldManager::adapterStateChanged);
-    connect(d_ptr, SIGNAL(targetDetected(QNearFieldTarget*)),
-            this, SIGNAL(targetDetected(QNearFieldTarget*)));
-    connect(d_ptr, SIGNAL(targetLost(QNearFieldTarget*)),
-            this, SIGNAL(targetLost(QNearFieldTarget*)));
+    connect(d_ptr, &QNearFieldManagerPrivate::targetDetected,
+            this, &QNearFieldManager::targetDetected);
+    connect(d_ptr, &QNearFieldManagerPrivate::targetLost,
+            this, &QNearFieldManager::targetLost);
 }
 
 /*!

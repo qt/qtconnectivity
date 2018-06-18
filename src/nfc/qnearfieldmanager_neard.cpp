@@ -80,10 +80,10 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     if (!found) {
         qCWarning(QT_NFC_NEARD) << "no adapter found, neard daemon running?";
     } else {
-        connect(m_neardHelper, SIGNAL(tagFound(QDBusObjectPath)),
-                this,          SLOT(handleTagFound(QDBusObjectPath)));
-        connect(m_neardHelper, SIGNAL(tagRemoved(QDBusObjectPath)),
-                this,          SLOT(handleTagRemoved(QDBusObjectPath)));
+        connect(m_neardHelper, &NeardHelper::tagFound,
+                this,          &QNearFieldManagerPrivateImpl::handleTagFound);
+        connect(m_neardHelper, &NeardHelper::tagRemoved,
+                this,          &QNearFieldManagerPrivateImpl::handleTagRemoved);
     }
 }
 
