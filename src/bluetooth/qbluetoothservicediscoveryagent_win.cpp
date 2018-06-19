@@ -67,12 +67,6 @@ DEFINEFUNC(DWORD, BluetoothSdpGetElementData, LPBYTE, ULONG, PSDP_ELEMENT_DATA)
 
 QT_BEGIN_NAMESPACE
 
-struct FindServiceArguments {
-    QBluetoothAddress address;
-    Qt::HANDLE hSearch;
-    int systemError;
-};
-
 struct FindServiceResult {
     QBluetoothServiceInfo info;
     Qt::HANDLE hSearch;
@@ -275,13 +269,6 @@ static BOOL SDP_CALLBACK bluetoothSdpCallback(ULONG attributeId, LPBYTE valueStr
     return true;
 }
 
-static void cleanupServiceDiscovery(HANDLE hSearch)
-{
-    if (hSearch != INVALID_HANDLE_VALUE)
-        WSALookupServiceEnd(hSearch);
-    WSACleanup();
-}
-
 enum {
     WSAControlFlags = LUP_FLUSHCACHE
           | LUP_RETURN_NAME
@@ -291,11 +278,11 @@ enum {
           | LUP_RETURN_COMMENT
 };
 
-static FindServiceResult findNextService(HANDLE hSearch, int systemError)
+static FindServiceResult findNextService(HANDLE hSearch)
 {
     FindServiceResult result;
-    result.systemError = systemError;
-    result.hSearch = INVALID_HANDLE_VALUE;
+    result.systemError = NO_ERROR;
+    result.hSearch = hSearch;
 
     QByteArray resultBuffer(2048, 0);
     WSAQUERYSET *resultQuery = reinterpret_cast<WSAQUERYSET*>(resultBuffer.data());
@@ -308,7 +295,7 @@ static FindServiceResult findNextService(HANDLE hSearch, int systemError)
     if (resultCode == SOCKET_ERROR) {
         result.systemError = ::WSAGetLastError();
         if (result.systemError == WSA_E_NO_MORE)
-            cleanupServiceDiscovery(hSearch);
+            WSALookupServiceEnd(hSearch);
         return result;
      }
 
@@ -324,12 +311,11 @@ static FindServiceResult findNextService(HANDLE hSearch, int systemError)
     return result;
 }
 
-static FindServiceResult findFirstService(HANDLE hSearch, const QBluetoothAddress &address)
+static FindServiceResult findFirstService(const QBluetoothAddress &address)
 {
     //### should we try for 2.2 on all platforms ??
     WSAData wsadata;
     FindServiceResult result;
-    result.systemError = NO_ERROR;
     result.hSearch = INVALID_HANDLE_VALUE;
 
     // IPv6 requires Winsock v2.0 or better.
@@ -352,16 +338,16 @@ static FindServiceResult findFirstService(HANDLE hSearch, const QBluetoothAddres
     serviceQuery.dwNumberOfCsAddrs = 0;  //As specified by the windows documentation
     serviceQuery.lpszContext = addressAsWChar.data(); //The remote address that query will run on
 
+    HANDLE hSearch;
     const int resultCode = WSALookupServiceBegin(&serviceQuery,
                                                  WSAControlFlags,
                                                  &hSearch);
     if (resultCode == SOCKET_ERROR) {
         result.systemError = ::WSAGetLastError();
-        cleanupServiceDiscovery(&hSearch);
+        WSALookupServiceEnd(hSearch);
         return result;
     }
-    result.systemError = NO_ERROR;
-    return findNextService(hSearch, result.systemError);
+    return findNextService(hSearch);
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
@@ -403,11 +389,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         pendingFinish = true;
         pendingStop = false;
 
-        FindServiceArguments data;
-        data.address = address;
-        data.hSearch = INVALID_HANDLE_VALUE;
         QMetaObject::invokeMethod(threadWorkerFind, "findFirst", Qt::QueuedConnection,
-                                  Q_ARG(QVariant, QVariant::fromValue(data)));
+                                  Q_ARG(QVariant, QVariant::fromValue(address)));
     }
 }
 
@@ -422,6 +405,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
     auto result = input.value<FindServiceResult>();
 
     if (pendingStop) {
+        WSALookupServiceEnd(result.hSearch);
         pendingStop = false;
         pendingFinish = false;
         emit q->canceled();
@@ -429,6 +413,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
         if (result.systemError == WSA_E_NO_MORE) {
             result.systemError = NO_ERROR;
         } else if (result.systemError != NO_ERROR) {
+            if (result.hSearch != INVALID_HANDLE_VALUE)
+                WSALookupServiceEnd(result.hSearch);
             error = (result.systemError == ERROR_INVALID_HANDLE) ?
                         QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError
                       : QBluetoothServiceDiscoveryAgent::InputOutputError;
@@ -443,11 +429,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
                     emit q->serviceDiscovered(result.info);
                 }
             }
-            FindServiceArguments data;
-            data.hSearch = result.hSearch;
-            data.systemError = result.systemError;
             QMetaObject::invokeMethod(threadWorkerFind, "findNext", Qt::QueuedConnection,
-                                      Q_ARG(QVariant, QVariant::fromValue(data)));
+                                      Q_ARG(QVariant, QVariant::fromValue(result.hSearch)));
             return;
         }
         pendingFinish = false;
@@ -457,21 +440,19 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
 
 void ThreadWorkerFind::findFirst(const QVariant &data)
 {
-    auto args = data.value<FindServiceArguments>();
-    FindServiceResult result = findFirstService(args.hSearch, args.address);
-    result.hSearch = args.hSearch;
+    auto address = data.value<QBluetoothAddress>();
+    FindServiceResult result = findFirstService(address);
     emit findFinished(QVariant::fromValue(result));
 }
 
  void ThreadWorkerFind::findNext(const QVariant &data)
 {
-    auto args = data.value<FindServiceArguments>();
-    FindServiceResult result = findNextService(args.hSearch, args.systemError);
-    result.hSearch = args.hSearch;
+    auto hSearch = data.value<Qt::HANDLE>();
+    FindServiceResult result = findNextService(hSearch);
     emit findFinished(QVariant::fromValue(result));
 }
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(FindServiceArguments)
+Q_DECLARE_METATYPE(Qt::HANDLE)
 Q_DECLARE_METATYPE(FindServiceResult)
