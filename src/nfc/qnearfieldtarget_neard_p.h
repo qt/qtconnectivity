@@ -355,8 +355,9 @@ private:
                 QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
                                           Q_ARG(QNdefMessage, newNdefMessage));
                 // the request id in requestCompleted has to match the one created in readNdefMessages
-                QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                                        Q_ARG(QNearFieldTarget::RequestId, m_currentReadRequestId));
+                QMetaObject::invokeMethod(this, [this]() {
+                    Q_EMIT this->requestCompleted(this->m_currentReadRequestId);
+                }, Qt::QueuedConnection);
             } else {
                 QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
                                           Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
@@ -394,8 +395,9 @@ private:
             }
 
             QMetaObject::invokeMethod(this, "ndefMessagesWritten", Qt::QueuedConnection);
-            QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                                      Q_ARG(QNearFieldTarget::RequestId, m_currentWriteRequestId));
+            QMetaObject::invokeMethod(this, [this]() {
+                Q_EMIT this->requestCompleted(this->m_currentWriteRequestId);
+            }, Qt::QueuedConnection);
         }
 
         // invalidate current write request
