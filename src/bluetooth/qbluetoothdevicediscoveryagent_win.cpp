@@ -77,7 +77,7 @@ static QString devicePropertyString(
                deviceInfoData,
                registryProperty,
                &propertyRegDataType,
-               propertyBuffer.isEmpty() ? NULL : reinterpret_cast<PBYTE>(propertyBuffer.data()),
+               propertyBuffer.isEmpty() ? nullptr : reinterpret_cast<PBYTE>(propertyBuffer.data()),
                propertyBuffer.size(),
                &propertyBufferSize)) {
 
@@ -132,8 +132,7 @@ static QBluetoothDeviceInfo createClassicDeviceInfo(const BLUETOOTH_DEVICE_INFO 
 static QBluetoothDeviceInfo findFirstClassicDevice(
         DWORD *systemErrorCode, HBLUETOOTH_DEVICE_FIND *hSearch)
 {
-    BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams;
-    ::ZeroMemory(&searchParams, sizeof(searchParams));
+    BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams = {0};
     searchParams.dwSize = sizeof(searchParams);
     searchParams.cTimeoutMultiplier = 10; // 12.8 sec
     searchParams.fIssueInquiry = TRUE;
@@ -141,10 +140,9 @@ static QBluetoothDeviceInfo findFirstClassicDevice(
     searchParams.fReturnConnected = TRUE;
     searchParams.fReturnRemembered = TRUE;
     searchParams.fReturnUnknown = TRUE;
-    searchParams.hRadio = NULL;
+    searchParams.hRadio = nullptr;
 
-    BLUETOOTH_DEVICE_INFO deviceInfo;
-    ::ZeroMemory(&deviceInfo, sizeof(deviceInfo));
+    BLUETOOTH_DEVICE_INFO deviceInfo = {0};
     deviceInfo.dwSize = sizeof(deviceInfo);
 
     const HBLUETOOTH_DEVICE_FIND hFind = ::BluetoothFindFirstDevice(
@@ -165,8 +163,7 @@ static QBluetoothDeviceInfo findFirstClassicDevice(
 static QBluetoothDeviceInfo findNextClassicDevice(
         DWORD *systemErrorCode, HBLUETOOTH_DEVICE_FIND hSearch)
 {
-    BLUETOOTH_DEVICE_INFO deviceInfo;
-    ::ZeroMemory(&deviceInfo, sizeof(deviceInfo));
+    BLUETOOTH_DEVICE_INFO deviceInfo = {0};
     deviceInfo.dwSize = sizeof(deviceInfo);
 
     QBluetoothDeviceInfo foundDevice;
@@ -192,8 +189,8 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
     const QUuid deviceInterfaceGuid("781aee18-7733-4ce4-add0-91f41c67b592");
     const HDEVINFO hDeviceInfo = ::SetupDiGetClassDevs(
                 reinterpret_cast<const GUID *>(&deviceInterfaceGuid),
-                NULL,
-                0,
+                nullptr,
+                nullptr,
                 DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 
     if (hDeviceInfo == INVALID_HANDLE_VALUE) {
@@ -207,13 +204,12 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
     QVector<LeDeviceEntry> cachedEntries;
 
     for (;;) {
-        SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
-        ::ZeroMemory(&deviceInterfaceData, sizeof(deviceInterfaceData));
+        SP_DEVICE_INTERFACE_DATA deviceInterfaceData = {0};
         deviceInterfaceData.cbSize = sizeof(deviceInterfaceData);
 
         if (!::SetupDiEnumDeviceInterfaces(
                     hDeviceInfo,
-                    NULL,
+                    nullptr,
                     reinterpret_cast<const GUID *>(&deviceInterfaceGuid),
                     index++,
                     &deviceInterfaceData)) {
@@ -225,18 +221,17 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
         if (!::SetupDiGetDeviceInterfaceDetail(
                     hDeviceInfo,
                     &deviceInterfaceData,
-                    NULL,
+                    nullptr,
                     deviceInterfaceDetailDataSize,
                     &deviceInterfaceDetailDataSize,
-                    NULL)) {
+                    nullptr)) {
             if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
                 *systemErrorCode = ::GetLastError();
                 break;
             }
         }
 
-        SP_DEVINFO_DATA deviceInfoData;
-        ::ZeroMemory(&deviceInfoData, sizeof(deviceInfoData));
+        SP_DEVINFO_DATA deviceInfoData = {0};
         deviceInfoData.cbSize = sizeof(deviceInfoData);
 
         QByteArray deviceInterfaceDetailDataBuffer(
@@ -317,9 +312,9 @@ QString QBluetoothDeviceDiscoveryAgentPrivate::discoveredLeDeviceSystemPath(
     enumerateLeDevices(&dummyErrorCode);
 
     QMutexLocker locker(cachedLeDeviceEntriesGuard());
-    for (int i = 0; i < cachedLeDeviceEntries()->count(); ++i) {
-        if (cachedLeDeviceEntries()->at(i).deviceAddress == deviceAddress)
-            return cachedLeDeviceEntries()->at(i).devicePath;
+    for (const LeDeviceEntry &e: *cachedLeDeviceEntries) {
+        if (e.deviceAddress == deviceAddress)
+            return e.devicePath;
     }
     return QString();
 }
@@ -468,7 +463,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLeDevicesDiscovery()
     QMetaObject::invokeMethod(threadWorkerLE, "discover", Qt::QueuedConnection);
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery(const QVariant res)
+void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery(const QVariant &res)
 {
     if (pendingCancel && !pendingStart) {
         cancelDiscovery();
@@ -500,7 +495,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startClassicDevicesDiscovery(Qt::HAN
                               Q_ARG(QVariant, QVariant::fromValue(hSearch)));
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery(const QVariant res)
+void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery(const QVariant &res)
 {
     const DiscoveryResult result = res.value<DiscoveryResult>();
     if (pendingCancel && !pendingStart) {
@@ -574,7 +569,7 @@ void ThreadWorkerLE::discover()
     emit discoveryCompleted(res);
 }
 
-void ThreadWorkerClassic::discover(QVariant search)
+void ThreadWorkerClassic::discover(const QVariant &search)
 {
     Qt::HANDLE hSearch = search.value<Qt::HANDLE>();
     const QVariant res = discoverClassicDevicesStatic(hSearch);

@@ -82,8 +82,8 @@ class ThreadWorkerFind : public QObject
 {
     Q_OBJECT
 public:
-    Q_INVOKABLE void findFirst(const QVariant data);
-    Q_INVOKABLE void findNext(const QVariant data);
+    Q_INVOKABLE void findFirst(const QVariant &data);
+    Q_INVOKABLE void findNext(const QVariant &data);
 signals:
     void findFinished(QVariant result);
 };
@@ -167,7 +167,7 @@ public:
     void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
 #endif
 #ifdef QT_WIN_BLUETOOTH
-    void _q_nextSdpScan(QVariant input);
+    void _q_nextSdpScan(const QVariant &input);
 #endif
 
 private:

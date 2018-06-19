@@ -96,7 +96,7 @@ class ThreadWorkerClassic : public QObject
 {
     Q_OBJECT
 public:
-    Q_INVOKABLE void discover(QVariant hSearch);
+    Q_INVOKABLE void discover(const QVariant &hSearch);
 signals:
     void discoveryCompleted(const QVariant res);
 };
@@ -198,9 +198,9 @@ private:
     void finishDiscovery(QBluetoothDeviceDiscoveryAgent::Error errorCode, const QString &errorText);
 
     void startLeDevicesDiscovery();
-    void completeLeDevicesDiscovery(const QVariant res);
+    void completeLeDevicesDiscovery(const QVariant &res);
     void startClassicDevicesDiscovery(Qt::HANDLE hSearch = nullptr);
-    void completeClassicDevicesDiscovery(const QVariant res);
+    void completeClassicDevicesDiscovery(const QVariant &res);
 
     void processDiscoveredDevice(const QBluetoothDeviceInfo &foundDevice);
 

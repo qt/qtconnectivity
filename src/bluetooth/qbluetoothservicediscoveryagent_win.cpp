@@ -345,8 +345,7 @@ static FindServiceResult findFirstService(HANDLE hSearch, const QBluetoothAddres
 
     GUID protocol = L2CAP_PROTOCOL_UUID; //Search for L2CAP and RFCOMM services
 
-    WSAQUERYSET serviceQuery;
-    ::ZeroMemory(&serviceQuery, sizeof(serviceQuery));
+    WSAQUERYSET serviceQuery = {0};
     serviceQuery.dwSize = sizeof(WSAQUERYSET); //As specified by the windows documentation
     serviceQuery.lpServiceClassId = &protocol; //The protocal of the service what is being queried
     serviceQuery.dwNameSpace = NS_BTH; //As specified by the windows documentation
@@ -417,7 +416,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     pendingStop = true;
 }
 
-void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(QVariant input)
+void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &input)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
     auto result = input.value<FindServiceResult>();
@@ -456,7 +455,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(QVariant input)
     }
 }
 
-void ThreadWorkerFind::findFirst(const QVariant data)
+void ThreadWorkerFind::findFirst(const QVariant &data)
 {
     auto args = data.value<FindServiceArguments>();
     FindServiceResult result = findFirstService(args.hSearch, args.address);
@@ -464,7 +463,7 @@ void ThreadWorkerFind::findFirst(const QVariant data)
     emit findFinished(QVariant::fromValue(result));
 }
 
- void ThreadWorkerFind::findNext(const QVariant data)
+ void ThreadWorkerFind::findNext(const QVariant &data)
 {
     auto args = data.value<FindServiceArguments>();
     FindServiceResult result = findNextService(args.hSearch, args.systemError);
