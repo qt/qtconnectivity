@@ -507,7 +507,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery(cons
     } else {
         if (result.systemErrorCode == ERROR_NO_MORE_ITEMS) {
             closeClassicSearch(result.hSearch);
-            finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, qt_error_string(NO_ERROR));
+            finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, QString());
         } else if (result.systemErrorCode == NO_ERROR) {
             if (result.hSearch) {
                 for (const QBluetoothDeviceInfo &device : result.devices)
@@ -515,7 +515,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery(cons
 
                 startClassicDevicesDiscovery(result.hSearch);
             } else {
-                finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, qt_error_string(NO_ERROR));
+                finishDiscovery(QBluetoothDeviceDiscoveryAgent::NoError, QString());
             }
         } else {
             closeClassicSearch(result.hSearch);
