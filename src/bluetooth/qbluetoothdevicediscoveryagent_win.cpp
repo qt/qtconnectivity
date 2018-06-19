@@ -282,28 +282,6 @@ struct DiscoveryResult {
     HBLUETOOTH_DEVICE_FIND hSearch; // Used only for classic devices
 };
 
-static QVariant discoverLeDevicesStatic()
-{
-    DiscoveryResult result; // Do not use hSearch here!
-    result.systemErrorCode = NO_ERROR;
-    result.devices = enumerateLeDevices(&result.systemErrorCode);
-    return QVariant::fromValue(result);
-}
-
-static QVariant discoverClassicDevicesStatic(HBLUETOOTH_DEVICE_FIND hSearch)
-{
-    DiscoveryResult result;
-    result.hSearch = hSearch;
-    result.systemErrorCode = NO_ERROR;
-
-    const QBluetoothDeviceInfo device = hSearch
-            ? findNextClassicDevice(&result.systemErrorCode, result.hSearch)
-            : findFirstClassicDevice(&result.systemErrorCode, &result.hSearch);
-
-    result.devices.append(device);
-    return QVariant::fromValue(result);
-}
-
 QString QBluetoothDeviceDiscoveryAgentPrivate::discoveredLeDeviceSystemPath(
         const QBluetoothAddress &deviceAddress)
 {
@@ -332,18 +310,18 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     , q_ptr(parent)
 {
     threadLE = new QThread;
-    threadWorkerLE = new ThreadWorkerLE;
+    threadWorkerLE = new ThreadWorkerDeviceDiscovery;
     threadWorkerLE->moveToThread(threadLE);
-    connect(threadWorkerLE, &ThreadWorkerLE::discoveryCompleted, this, &QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery);
-    connect(threadLE, &QThread::finished, threadWorkerLE, &ThreadWorkerLE::deleteLater);
+    connect(threadWorkerLE, &ThreadWorkerDeviceDiscovery::discoveryCompleted, this, &QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery);
+    connect(threadLE, &QThread::finished, threadWorkerLE, &ThreadWorkerDeviceDiscovery::deleteLater);
     connect(threadLE, &QThread::finished, threadLE, &QThread::deleteLater);
     threadLE->start();
 
     threadClassic = new QThread;
-    threadWorkerClassic = new ThreadWorkerClassic;
+    threadWorkerClassic = new ThreadWorkerDeviceDiscovery;
     threadWorkerClassic->moveToThread(threadClassic);
-    connect(threadWorkerClassic, &ThreadWorkerClassic::discoveryCompleted, this, &QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery);
-    connect(threadClassic, &QThread::finished, threadWorkerClassic, &ThreadWorkerClassic::deleteLater);
+    connect(threadWorkerClassic, &ThreadWorkerDeviceDiscovery::discoveryCompleted, this, &QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery);
+    connect(threadClassic, &QThread::finished, threadWorkerClassic, &ThreadWorkerDeviceDiscovery::deleteLater);
     connect(threadClassic, &QThread::finished, threadClassic, &QThread::deleteLater);
     threadClassic->start();
 }
@@ -460,7 +438,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::finishDiscovery(QBluetoothDeviceDisc
 
 void QBluetoothDeviceDiscoveryAgentPrivate::startLeDevicesDiscovery()
 {
-    QMetaObject::invokeMethod(threadWorkerLE, "discover", Qt::QueuedConnection);
+    const auto threadWorker = threadWorkerLE;
+    QMetaObject::invokeMethod(threadWorkerLE, [threadWorker]()
+    {
+        DiscoveryResult result; // Do not use hSearch here!
+        result.systemErrorCode = NO_ERROR;
+        result.devices = enumerateLeDevices(&result.systemErrorCode);
+        emit threadWorker->discoveryCompleted(QVariant::fromValue(result));
+    }, Qt::QueuedConnection);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery(const QVariant &res)
@@ -491,8 +476,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::completeLeDevicesDiscovery(const QVa
 
 void QBluetoothDeviceDiscoveryAgentPrivate::startClassicDevicesDiscovery(Qt::HANDLE hSearch)
 {
-    QMetaObject::invokeMethod(threadWorkerClassic, "discover", Qt::QueuedConnection,
-                              Q_ARG(QVariant, QVariant::fromValue(hSearch)));
+    const auto threadWorker = threadWorkerClassic;
+    QMetaObject::invokeMethod(threadWorker, [threadWorker, hSearch]()
+    {
+        DiscoveryResult result;
+        result.hSearch = hSearch;
+        result.systemErrorCode = NO_ERROR;
+
+        const QBluetoothDeviceInfo device = hSearch
+                ? findNextClassicDevice(&result.systemErrorCode, result.hSearch)
+                : findFirstClassicDevice(&result.systemErrorCode, &result.hSearch);
+
+        result.devices.append(device);
+        emit threadWorker->discoveryCompleted(QVariant::fromValue(result));
+    }, Qt::QueuedConnection);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::completeClassicDevicesDiscovery(const QVariant &res)
@@ -560,20 +557,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevice(
         qCDebug(QT_BT_WINDOWS) << "Updated: " << deviceIt->address();
         emit q->deviceDiscovered(*deviceIt);
     }
-}
-
-
-void ThreadWorkerLE::discover()
-{
-    const QVariant res = discoverLeDevicesStatic();
-    emit discoveryCompleted(res);
-}
-
-void ThreadWorkerClassic::discover(const QVariant &search)
-{
-    Qt::HANDLE hSearch = search.value<Qt::HANDLE>();
-    const QVariant res = discoverClassicDevicesStatic(hSearch);
-    emit discoveryCompleted(res);
 }
 
 QT_END_NAMESPACE

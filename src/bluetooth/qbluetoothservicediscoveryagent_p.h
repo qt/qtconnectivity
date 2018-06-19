@@ -81,9 +81,6 @@ class QThread;
 class ThreadWorkerFind : public QObject
 {
     Q_OBJECT
-public:
-    Q_INVOKABLE void findFirst(const QVariant &data);
-    Q_INVOKABLE void findNext(const QVariant &data);
 signals:
     void findFinished(QVariant result);
 };

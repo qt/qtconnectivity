@@ -389,8 +389,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         pendingFinish = true;
         pendingStop = false;
 
-        QMetaObject::invokeMethod(threadWorkerFind, "findFirst", Qt::QueuedConnection,
-                                  Q_ARG(QVariant, QVariant::fromValue(address)));
+        const auto threadWorker = threadWorkerFind;
+        QMetaObject::invokeMethod(threadWorkerFind, [threadWorker, address]()
+        {
+            FindServiceResult result = findFirstService(address);
+            emit threadWorker->findFinished(QVariant::fromValue(result));
+        }, Qt::QueuedConnection);
     }
 }
 
@@ -429,8 +433,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
                     emit q->serviceDiscovered(result.info);
                 }
             }
-            QMetaObject::invokeMethod(threadWorkerFind, "findNext", Qt::QueuedConnection,
-                                      Q_ARG(QVariant, QVariant::fromValue(result.hSearch)));
+            const auto threadWorker = threadWorkerFind;
+            const auto hSearch = result.hSearch;
+            QMetaObject::invokeMethod(threadWorkerFind, [threadWorker, hSearch]()
+            {
+                FindServiceResult result = findNextService(hSearch);
+                emit threadWorker->findFinished(QVariant::fromValue(result));
+            }, Qt::QueuedConnection);
             return;
         }
         pendingFinish = false;
@@ -438,21 +447,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
     }
 }
 
-void ThreadWorkerFind::findFirst(const QVariant &data)
-{
-    auto address = data.value<QBluetoothAddress>();
-    FindServiceResult result = findFirstService(address);
-    emit findFinished(QVariant::fromValue(result));
-}
-
- void ThreadWorkerFind::findNext(const QVariant &data)
-{
-    auto hSearch = data.value<Qt::HANDLE>();
-    FindServiceResult result = findNextService(hSearch);
-    emit findFinished(QVariant::fromValue(result));
-}
-
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(Qt::HANDLE)
 Q_DECLARE_METATYPE(FindServiceResult)

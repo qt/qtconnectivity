@@ -83,23 +83,13 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE
 class QThread;
 
-class ThreadWorkerLE : public QObject
+class ThreadWorkerDeviceDiscovery : public QObject
 {
     Q_OBJECT
-public:
-    Q_INVOKABLE void discover();
 signals:
     void discoveryCompleted(const QVariant res);
 };
 
-class ThreadWorkerClassic : public QObject
-{
-    Q_OBJECT
-public:
-    Q_INVOKABLE void discover(const QVariant &hSearch);
-signals:
-    void discoveryCompleted(const QVariant res);
-};
 QT_END_NAMESPACE
 
 #elif defined(QT_WINRT_BLUETOOTH)
@@ -211,8 +201,8 @@ private:
 
     QThread *threadLE = nullptr;
     QThread *threadClassic = nullptr;
-    ThreadWorkerLE *threadWorkerLE = nullptr;
-    ThreadWorkerClassic *threadWorkerClassic = nullptr;
+    ThreadWorkerDeviceDiscovery *threadWorkerLE = nullptr;
+    ThreadWorkerDeviceDiscovery *threadWorkerClassic = nullptr;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH
