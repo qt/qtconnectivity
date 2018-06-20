@@ -147,25 +147,19 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     // Making sure that target is still in range
     QNearFieldTarget::RequestId requestId(new QNearFieldTarget::RequestIdPrivate);
     if (!m_intent.isValid()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
         return requestId;
     }
 
     // Getting Ndef technology object
     if (!setTagTechnology({NDEFTECHNOLOGY})) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnsupportedError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::UnsupportedError, requestId);
         return requestId;
     }
 
     // Connect
     if (!connect()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
         return requestId;
     }
 
@@ -174,9 +168,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     if (catchJavaExceptions())
         ndefMessage = QAndroidJniObject();
     if (!ndefMessage.isValid()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefReadError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::NdefReadError, requestId);
         return requestId;
     }
 
@@ -246,9 +238,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     // Connecting
     QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
     if (!connect()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
         return requestId;
     }
 
@@ -260,9 +250,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     // Writing
     QAndroidJniObject myNewVal = m_tagTech.callObjectMethod("transceive", "([B)[B", jba);
     if (catchJavaExceptions()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::CommandError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::CommandError, requestId);
         return requestId;
     }
     QByteArray result = jbyteArrayToQByteArray(myNewVal.object<jbyteArray>());
@@ -312,9 +300,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     // Connecting
     QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
     if (!connect()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::TargetOutOfRangeError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
         return requestId;
     }
 
@@ -325,18 +311,14 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
     env->SetByteArrayRegion(jba.object<jbyteArray>(), 0, ba.size(), reinterpret_cast<jbyte*>(ba.data()));
     QAndroidJniObject jmessage = QAndroidJniObject("android/nfc/NdefMessage", "([B)V", jba.object<jbyteArray>());
     if (catchJavaExceptions()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::UnknownError, requestId);
         return requestId;
     }
 
     // Writing
     m_tagTech.callMethod<void>(writeMethod, "(Landroid/nfc/NdefMessage;)V", jmessage.object<jobject>());
     if (catchJavaExceptions()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::NdefWriteError),
-                                  Q_ARG(QNearFieldTarget::RequestId&, requestId));
+        reportError(QNearFieldTarget::NdefWriteError, requestId);
         return requestId;
     }
 

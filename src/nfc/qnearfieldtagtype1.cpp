@@ -440,9 +440,7 @@ QNearFieldTarget::RequestId QNearFieldTagType1::readNdefMessages()
     if (d->m_readNdefMessageState == QNearFieldTagType1Private::NotReadingNdefMessage) {
         d->progressToNextNdefReadMessageState();
     } else {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, NdefReadError),
-                                  Q_ARG(QNearFieldTarget::RequestId, d->m_readNdefRequestId));
+        reportError(QNearFieldTarget::NdefReadError, d->m_readNdefRequestId);
     }
 
     return d->m_readNdefRequestId;
@@ -462,9 +460,7 @@ QNearFieldTarget::RequestId QNearFieldTagType1::writeNdefMessages(const QList<QN
         d->m_ndefWriteMessages = messages;
         d->progressToNextNdefWriteMessageState();
     } else {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                  Q_ARG(QNearFieldTarget::Error, NdefWriteError),
-                                  Q_ARG(QNearFieldTarget::RequestId, d->m_readNdefRequestId));
+        reportError(QNearFieldTarget::NdefWriteError, d->m_readNdefRequestId);
     }
 
     return d->m_writeNdefRequestId;

@@ -359,9 +359,7 @@ private:
                     Q_EMIT this->requestCompleted(this->m_currentReadRequestId);
                 }, Qt::QueuedConnection);
             } else {
-                QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                          Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
-                                          Q_ARG(QNearFieldTarget::RequestId, m_currentReadRequestId));
+                this->reportError(QNearFieldTarget::UnknownError, m_currentReadRequestId);
             }
 
             m_readRequested = false;
@@ -389,9 +387,7 @@ private:
             reply.waitForFinished();
             if (reply.isError()) {
                 qCWarning(QT_NFC_NEARD) << "Error writing to NFC tag" << reply.error();
-                QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                          Q_ARG(QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
-                                          Q_ARG(QNearFieldTarget::RequestId, m_currentWriteRequestId));
+                this->reportError(QNearFieldTarget::UnknownError, m_currentWriteRequestId);
             }
 
             QMetaObject::invokeMethod(this, "ndefMessagesWritten", Qt::QueuedConnection);
