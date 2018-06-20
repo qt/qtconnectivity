@@ -103,7 +103,7 @@ protected:
     void setupTargetCheckTimer();
     void handleTargetLost();
     QAndroidJniObject getTagTechnology(const QString &tech) const;
-    bool setTagTechnology(const QStringList &techList);
+    bool setTagTechnology(const QStringList &technologies);
     bool connect();
     QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray) const;
     bool catchJavaExceptions(bool verbose = true) const;

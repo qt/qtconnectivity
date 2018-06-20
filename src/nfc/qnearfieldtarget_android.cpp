@@ -463,9 +463,9 @@ QAndroidJniObject QNearFieldTargetPrivateImpl::getTagTechnology(const QString &t
     return tagTech;
 }
 
-bool QNearFieldTargetPrivateImpl::setTagTechnology(const QStringList &techList)
+bool QNearFieldTargetPrivateImpl::setTagTechnology(const QStringList &technologies)
 {
-    for (const QString &tech : techList) {
+    for (const QString &tech : technologies) {
         if (techList.contains(tech)) {
             if (selectedTech == tech) {
                 return true;
