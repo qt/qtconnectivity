@@ -193,8 +193,9 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
     QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
                               Q_ARG(QNdefMessage, qNdefMessage));
-    QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                              Q_ARG(QNearFieldTarget::RequestId, requestId));
+    QMetaObject::invokeMethod(this, [this, requestId]() {
+        Q_EMIT this->requestCompleted(requestId);
+    }, Qt::QueuedConnection);
     QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
                               Q_ARG(QNdefMessage, qNdefMessage),
                               Q_ARG(QNearFieldTarget::RequestId, requestId));
@@ -273,8 +274,9 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
         // Closing connection
         disconnect();   // IOException at this point does not matter anymore.
     }
-    QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                              Q_ARG(QNearFieldTarget::RequestId&, requestId));
+    QMetaObject::invokeMethod(this, [this, requestId]() {
+        Q_EMIT this->requestCompleted(requestId);
+    }, Qt::QueuedConnection);
 
     return requestId;
 }
