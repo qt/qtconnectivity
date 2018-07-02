@@ -340,13 +340,13 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 #else
 #if defined(QT_WINRT_BLUETOOTH)
     // Report these problems early:
-    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
+    if (service.socketProtocol() != QBluetoothServiceInfo::RfcommProtocol) {
         d->errorString = tr("Socket type not supported");
         setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
 #endif // QT_WINRT_BLUETOOTH
-    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+    if (service.socketProtocol() == QBluetoothServiceInfo::UnknownProtocol) {
         qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
                             "connect with 'UnknownProtocol' type";
         d->errorString = tr("Socket type not supported");
