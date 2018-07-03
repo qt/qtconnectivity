@@ -560,8 +560,12 @@ void QLowEnergyControllerPrivateBluezDBus::prepareNextJob()
 
 void QLowEnergyControllerPrivateBluezDBus::onCharReadFinished(QDBusPendingCallWatcher *call)
 {
-    Q_ASSERT(jobPending);
-    Q_ASSERT(!jobs.isEmpty());
+    if (!jobPending || jobs.isEmpty()) {
+        // this may happen when service disconnects before dbus watcher returns later on
+        qCWarning(QT_BT_BLUEZ) << "Aborting onCharReadFinished due to disconnect";
+        Q_ASSERT(state == QLowEnergyController::UnconnectedState);
+        return;
+    }
 
     const GattJob nextJob = jobs.constFirst();
     Q_ASSERT(nextJob.flags.testFlag(GattJob::CharRead));
@@ -604,8 +608,12 @@ void QLowEnergyControllerPrivateBluezDBus::onCharReadFinished(QDBusPendingCallWa
 
 void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWatcher *call)
 {
-    Q_ASSERT(jobPending);
-    Q_ASSERT(!jobs.isEmpty());
+    if (!jobPending || jobs.isEmpty()) {
+        // this may happen when service disconnects before dbus watcher returns later on
+        qCWarning(QT_BT_BLUEZ) << "Aborting onDescReadFinished due to disconnect";
+        Q_ASSERT(state == QLowEnergyController::UnconnectedState);
+        return;
+    }
 
     const GattJob nextJob = jobs.constFirst();
     Q_ASSERT(nextJob.flags.testFlag(GattJob::DescRead));
@@ -666,8 +674,12 @@ void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWa
 
 void QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished(QDBusPendingCallWatcher *call)
 {
-    Q_ASSERT(jobPending);
-    Q_ASSERT(!jobs.isEmpty());
+    if (!jobPending || jobs.isEmpty()) {
+        // this may happen when service disconnects before dbus watcher returns later on
+        qCWarning(QT_BT_BLUEZ) << "Aborting onCharWriteFinished due to disconnect";
+        Q_ASSERT(state == QLowEnergyController::UnconnectedState);
+        return;
+    }
 
     const GattJob nextJob = jobs.constFirst();
     Q_ASSERT(nextJob.flags.testFlag(GattJob::CharWrite));
@@ -707,8 +719,12 @@ void QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished(QDBusPendingCallW
 
 void QLowEnergyControllerPrivateBluezDBus::onDescWriteFinished(QDBusPendingCallWatcher *call)
 {
-    Q_ASSERT(jobPending);
-    Q_ASSERT(!jobs.isEmpty());
+    if (!jobPending || jobs.isEmpty()) {
+        // this may happen when service disconnects before dbus watcher returns later on
+        qCWarning(QT_BT_BLUEZ) << "Aborting onDescWriteFinished due to disconnect";
+        Q_ASSERT(state == QLowEnergyController::UnconnectedState);
+        return;
+    }
 
     const GattJob nextJob = jobs.constFirst();
     Q_ASSERT(nextJob.flags.testFlag(GattJob::DescWrite));
