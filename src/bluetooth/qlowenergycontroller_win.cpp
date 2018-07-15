@@ -691,22 +691,12 @@ QLowEnergyControllerPrivateWin32::QLowEnergyControllerPrivateWin32()
         qCWarning(QT_BT_WINDOWS) << "LE is not supported on this OS";
         return;
     }
-
-    thread = new QThread;
-    threadWorker = new ThreadWorker;
-    threadWorker->moveToThread(thread);
-    connect(threadWorker, &ThreadWorker::jobFinished, this, &QLowEnergyControllerPrivateWin32::jobFinished);
-    connect(thread, &QThread::finished, threadWorker, &ThreadWorker::deleteLater);
-    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
-    thread->start();
 }
 
 QLowEnergyControllerPrivateWin32::~QLowEnergyControllerPrivateWin32()
 {
     QMutexLocker locker(&controllersGuard);
     qControllers()->removeAll(this);
-    if (thread)
-        thread->quit();
 }
 
 void QLowEnergyControllerPrivateWin32::init()
@@ -743,6 +733,14 @@ void QLowEnergyControllerPrivateWin32::connectToDevice()
 
     setState(QLowEnergyController::ConnectedState);
 
+    thread = new QThread;
+    threadWorker = new ThreadWorker;
+    threadWorker->moveToThread(thread);
+    connect(threadWorker, &ThreadWorker::jobFinished, this, &QLowEnergyControllerPrivateWin32::jobFinished);
+    connect(thread, &QThread::finished, threadWorker, &ThreadWorker::deleteLater);
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    thread->start();
+
     Q_Q(QLowEnergyController);
     emit q->connected();
 }
@@ -757,6 +755,15 @@ void QLowEnergyControllerPrivateWin32::disconnectFromDevice()
     setState(QLowEnergyController::ClosingState);
     deviceSystemPath.clear();
     setState(QLowEnergyController::UnconnectedState);
+
+    if (thread) {
+        disconnect(threadWorker, &ThreadWorker::jobFinished, this, &QLowEnergyControllerPrivateWin32::jobFinished);
+        thread->quit();
+        thread = nullptr;
+    }
+
+    for (const QSharedPointer<QLowEnergyServicePrivate> servicePrivate: serviceList)
+        closeSystemDevice(servicePrivate->hService);
 
     Q_Q(QLowEnergyController);
     emit q->disconnected();
@@ -827,8 +834,12 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
 
     int systemErrorCode = NO_ERROR;
 
-    const HANDLE hService = openSystemService(
-                remoteDevice, service, QIODevice::ReadOnly, &systemErrorCode);
+    // Only open a service once and close it in the QLowEnergyServicePrivate destructor
+    if (!servicePrivate->hService || servicePrivate->hService == INVALID_HANDLE_VALUE) {
+        servicePrivate->hService = openSystemService(remoteDevice, service,
+                                                     QIODevice::ReadOnly | QIODevice::WriteOnly,
+                                                     &systemErrorCode);
+    }
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service.toString()
@@ -842,10 +853,9 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
     servicePrivate->endHandle = servicePrivate->startHandle;
 
     const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
-            enumerateGattCharacteristics(hService, NULL, &systemErrorCode);
+            enumerateGattCharacteristics(servicePrivate->hService, NULL, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
-        closeSystemDevice(hService);
         qCWarning(QT_BT_WINDOWS) << "Unable to get characteristics for service" << service.toString()
                                  << ":" << qt_error_string(systemErrorCode);
         servicePrivate->setError(QLowEnergyService::CharacteristicReadError);
@@ -884,7 +894,7 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
 
         detailsData.properties = properties;
         detailsData.value = getGattCharacteristicValue(
-                    hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
+                    servicePrivate->hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
                         &gattCharacteristic), &systemErrorCode);
 
         if (systemErrorCode != NO_ERROR) {
@@ -903,12 +913,11 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
                     QLowEnergyHandle(gattCharacteristic.AttributeHandle + 1));
 
         const QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors = enumerateGattDescriptors(
-                    hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
+                    servicePrivate->hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
                         &gattCharacteristic), &systemErrorCode);
 
         if (systemErrorCode != NO_ERROR) {
             if (systemErrorCode != ERROR_NOT_FOUND) {
-                closeSystemDevice(hService);
                 qCWarning(QT_BT_WINDOWS) << "Unable to get descriptor for characteristic"
                                          << detailsData.uuid.toString()
                                          << "of the service" << service.toString()
@@ -926,11 +935,10 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
             data.uuid = qtBluetoothUuidFromNativeLeUuid(
                         gattDescriptor.DescriptorUuid);
 
-            data.value = getGattDescriptorValue(hService, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
+            data.value = getGattDescriptorValue(servicePrivate->hService, const_cast<PBTH_LE_GATT_DESCRIPTOR>(
                                                     &gattDescriptor), &systemErrorCode);
 
             if (systemErrorCode != NO_ERROR) {
-                closeSystemDevice(hService);
                 qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
                                          << data.uuid.toString()
                                          << "for characteristic"
@@ -952,8 +960,6 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
 
         servicePrivate->characteristicList.insert(characteristicHandle, detailsData);
     }
-
-    closeSystemDevice(hService);
 
     servicePrivate->setState(QLowEnergyService::ServiceDiscovered);
 }
@@ -992,8 +998,7 @@ void QLowEnergyControllerPrivateWin32::readCharacteristic(
 
     ReadCharData data;
     data.systemErrorCode = NO_ERROR;
-    data.hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadOnly, &data.systemErrorCode);
+    data.hService = service->hService;
 
     if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
@@ -1028,8 +1033,7 @@ void QLowEnergyControllerPrivateWin32::writeCharacteristic(
 
     WriteCharData data;
     data.systemErrorCode = NO_ERROR;
-    data.hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadWrite, &data.systemErrorCode);
+    data.hService = service->hService;
 
     if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
@@ -1064,7 +1068,6 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
     case ThreadWorkerJob::WriteChar:
     {
         const WriteCharData data = job.data.value<WriteCharData>();
-        closeSystemDevice(data.hService);
         const QLowEnergyHandle charHandle = static_cast<QLowEnergyHandle>(data.gattCharacteristic.AttributeHandle);
         const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
 
@@ -1089,7 +1092,6 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
     case ThreadWorkerJob::ReadChar:
     {
         const ReadCharData data = job.data.value<ReadCharData>();
-        closeSystemDevice(data.hService);
         const QLowEnergyHandle charHandle = static_cast<QLowEnergyHandle>(data.gattCharacteristic.AttributeHandle);
         const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
 
@@ -1119,7 +1121,6 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
         const QLowEnergyServicePrivate::DescData &dscrDetails = charDetails.descriptorList[descriptorHandle];
 
         if (data.systemErrorCode != NO_ERROR) {
-            closeSystemDevice(data.hService);
             qCWarning(QT_BT_WINDOWS) << "Unable to set value for descriptor"
                                      << dscrDetails.uuid.toString()
                                      << "for characteristic"
@@ -1142,6 +1143,7 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
                     BTH_LE_GATT_CHARACTERISTIC gattCharacteristic = recoverNativeLeGattCharacteristic(
                                 service->startHandle, charHandle, charDetails);
 
+                    // note: if the service handle is closed the event registration is no longer valid.
                     charDetails.hValueChangeEvent = registerEvent(
                                 data.hService, gattCharacteristic, this, &data.systemErrorCode);
                 }
@@ -1151,8 +1153,6 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
                     charDetails.hValueChangeEvent = NULL;
                 }
             }
-
-            closeSystemDevice(data.hService);
 
             if (data.systemErrorCode != NO_ERROR) {
                 qCWarning(QT_BT_WINDOWS) << "Unable to subscribe events for descriptor"
@@ -1164,8 +1164,6 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
                 service->setError(QLowEnergyService::DescriptorWriteError);
                 return;
             }
-        } else {
-            closeSystemDevice(data.hService);
         }
 
         updateValueOfDescriptor(charHandle, descriptorHandle, data.newValue, false);
@@ -1182,7 +1180,6 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
         const QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
         QLowEnergyServicePrivate::CharData &charDetails = service->characteristicList[charHandle];
         const QLowEnergyServicePrivate::DescData &dscrDetails = charDetails.descriptorList[descriptorHandle];
-        closeSystemDevice(data.hService);
 
         if (data.systemErrorCode != NO_ERROR) {
             qCWarning(QT_BT_WINDOWS) << "Unable to get value for descriptor"
@@ -1222,8 +1219,7 @@ void QLowEnergyControllerPrivateWin32::readDescriptor(
 
     ReadDescData data;
     data.systemErrorCode = NO_ERROR;
-    data.hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadOnly, &data.systemErrorCode);
+    data.hService = service->hService;
 
     if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
@@ -1264,8 +1260,7 @@ void QLowEnergyControllerPrivateWin32::writeDescriptor(
     WriteDescData data;
     data.systemErrorCode = NO_ERROR;
     data.newValue = newValue;
-    data.hService = openSystemService(
-                remoteDevice, service->uuid, QIODevice::ReadWrite, &data.systemErrorCode);
+    data.hService = service->hService;
 
     if (data.systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to open service" << service->uuid.toString()
