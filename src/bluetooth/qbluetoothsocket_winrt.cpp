@@ -320,14 +320,9 @@ private:
 };
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-    : socket(-1),
-      socketType(QBluetoothServiceInfo::UnknownProtocol),
-      state(QBluetoothSocket::UnconnectedState),
-      socketError(QBluetoothSocket::NoSocketError),
-      discoveryAgent(0),
-      secFlags(QBluetooth::NoSecurity),
-      m_worker(new SocketWorker())
+    : m_worker(new SocketWorker())
 {
+    secFlags = QBluetooth::NoSecurity;
     connect(m_worker, &SocketWorker::newDataReceived,
             this, &QBluetoothSocketPrivate::handleNewData, Qt::QueuedConnection);
     connect(m_worker, &SocketWorker::socketErrorOccured,

@@ -205,15 +205,10 @@ static QBluetoothUuid reverseUuid(const QBluetoothUuid &serviceUuid)
 }
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-  : socket(-1),
-    socketType(QBluetoothServiceInfo::UnknownProtocol),
-    state(QBluetoothSocket::UnconnectedState),
-    socketError(QBluetoothSocket::NoSocketError),
-    connecting(false),
-    discoveryAgent(0),
-    secFlags(QBluetooth::Secure),
+  :
     inputThread(0)
 {
+    secFlags = QBluetooth::Secure;
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
                                                         "()Landroid/bluetooth/BluetoothAdapter;");

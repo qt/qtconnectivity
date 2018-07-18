@@ -63,17 +63,9 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-    : socket(-1),
-      socketType(QBluetoothServiceInfo::UnknownProtocol),
-      state(QBluetoothSocket::UnconnectedState),
-      socketError(QBluetoothSocket::NoSocketError),
-      readNotifier(0),
-      connectWriteNotifier(0),
-      connecting(false),
-      discoveryAgent(0),
-      secFlags(QBluetooth::Authorization),
-      lowEnergySocketType(0)
+    : QBluetoothSocketBasePrivate()
 {
+    secFlags = QBluetooth::Authorization;
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()

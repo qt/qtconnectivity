@@ -46,13 +46,8 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-    : socket(-1),
-      socketType(QBluetoothServiceInfo::UnknownProtocol),
-      state(QBluetoothSocket::UnconnectedState),
-      socketError(QBluetoothSocket::NoSocketError),
-      discoveryAgent(0),
-      secFlags(QBluetooth::NoSecurity)
 {
+    secFlags = QBluetooth::NoSecurity;
 #ifndef QT_IOS_BLUETOOTH
     printDummyWarning();
 #endif

@@ -41,6 +41,7 @@ PRIVATE_HEADERS += \
     qbluetoothdevicediscoveryagent_p.h\
     qbluetoothservicediscoveryagent_p.h\
     qbluetoothsocket_p.h\
+    qbluetoothsocketbase_p.h \
     qbluetoothserver_p.h\
     qbluetoothtransferreply_p.h \
     qbluetoothtransferrequest_p.h \
@@ -60,6 +61,7 @@ SOURCES += \
     qbluetoothdevicediscoveryagent.cpp\
     qbluetoothservicediscoveryagent.cpp\
     qbluetoothsocket.cpp\
+    qbluetoothsocketbase.cpp \
     qbluetoothserver.cpp \
     qbluetoothlocaldevice.cpp \
     qbluetooth.cpp \
@@ -173,10 +175,13 @@ qtConfig(bluez) {
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_osx_p.h
 
+    PRIVATE_HEADERS -= qbluetoothsocket_p.h
+
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
     SOURCES -= qbluetoothsocket.cpp
+    SOURCES -= qbluetoothsocketbase.cpp
     SOURCES -= qbluetoothserver.cpp
     SOURCES -= qlowenergyservice_p.cpp
     SOURCES -= qlowenergyservice.cpp

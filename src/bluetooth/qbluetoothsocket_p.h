@@ -52,82 +52,41 @@
 //
 
 #include "qbluetoothsocket.h"
+#include "qbluetoothsocketbase_p.h"
+#include <QtGlobal>
 
-#ifdef QT_ANDROID_BLUETOOTH
+#if defined(QT_ANDROID_BLUETOOTH)
 #include <QtAndroidExtras/QAndroidJniObject>
 #include <QtCore/QPointer>
 #include "android/inputstreamthread_p.h"
 #include <jni.h>
-class WorkerThread;
-#endif
-
-#ifdef QT_WINRT_BLUETOOTH
-#include <QtCore/QMutex>
-
-#include <wrl.h>
-
-namespace ABI {
-    namespace Windows {
-        namespace Networking {
-            namespace Sockets {
-                struct IStreamSocket;
-            }
-        }
-        namespace Foundation {
-            struct IAsyncAction;
-            enum class AsyncStatus;
-        }
-    }
-}
-#endif // QT_WINRT_BLUETOOTH
-
-#ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
-#define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)
-#endif
-#include "qprivatelinearbuffer_p.h"
-
-#include <QtGlobal>
+#endif // QT_ANDROID_BLUETOOTH
 
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 
-QT_BEGIN_NAMESPACE
-
 #ifdef QT_WINRT_BLUETOOTH
-class SocketWorker;
+QT_FORWARD_DECLARE_CLASS(SocketWorker)
 #endif
 
-class QBluetoothServiceDiscoveryAgent;
+QT_BEGIN_NAMESPACE
 
-class QSocketServerPrivate
-{
-public:
-    QSocketServerPrivate();
-    ~QSocketServerPrivate();
-};
-
-
-
-class QBluetoothSocket;
-class QBluetoothServiceDiscoveryAgent;
-
-#ifndef QT_OSX_BLUETOOTH
-class QBluetoothSocketPrivate : public QObject
+class QBluetoothSocketPrivate : public QBluetoothSocketBasePrivate
 {
     Q_OBJECT
-    Q_DECLARE_PUBLIC(QBluetoothSocket)
     friend class QBluetoothServerPrivate;
 
 public:
-
     QBluetoothSocketPrivate();
-    ~QBluetoothSocketPrivate();
+    ~QBluetoothSocketPrivate() override;
 
 //On Android we connect using the uuid not the port
 #if defined(QT_ANDROID_BLUETOOTH)
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
-                          QIODevice::OpenMode openMode);
+                          QIODevice::OpenMode openMode) override;
 #else
-    void connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode);
+    void connectToService(const QBluetoothAddress &address,
+                          quint16 port,
+                          QIODevice::OpenMode openMode) override;
 #endif
 #ifdef QT_ANDROID_BLUETOOTH
     bool fallBackConnect(QAndroidJniObject uuid, int channel);
@@ -135,63 +94,39 @@ public:
 #endif
 
 
-    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type);
+    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;
 
-    QString localName() const;
-    QBluetoothAddress localAddress() const;
-    quint16 localPort() const;
+    QString localName() const override;
+    QBluetoothAddress localAddress() const override;
+    quint16 localPort() const override;
 
-    QString peerName() const;
-    QBluetoothAddress peerAddress() const;
-    quint16 peerPort() const;
-    //QBluetoothServiceInfo peerService() const;
+    QString peerName() const override;
+    QBluetoothAddress peerAddress() const override;
+    quint16 peerPort() const override;
 
-    void abort();
-    void close();
+    void abort() override;
+    void close() override;
 
-    //qint64 readBufferSize() const;
-    //void setReadBufferSize(qint64 size);
-
-    qint64 writeData(const char *data, qint64 maxSize);
-    qint64 readData(char *data, qint64 maxSize);
+    qint64 writeData(const char *data, qint64 maxSize) override;
+    qint64 readData(char *data, qint64 maxSize) override;
 
 #ifdef QT_ANDROID_BLUETOOTH
     bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
-                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
 #elif defined(QT_WINRT_BLUETOOTH)
     bool setSocketDescriptor(Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> socket,
                              QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
-                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
 #endif
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
-                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
 
-    qint64 bytesAvailable() const;
-    bool canReadLine() const;
-    qint64 bytesToWrite() const;
-
-public:
-    QPrivateLinearBuffer buffer;
-    QPrivateLinearBuffer txBuffer;
-    int socket;
-    QBluetoothServiceInfo::Protocol socketType;
-    QBluetoothSocket::SocketState state;
-    QBluetoothSocket::SocketError socketError;
-    QSocketNotifier *readNotifier;
-    QSocketNotifier *connectWriteNotifier;
-    bool connecting;
-
-    QBluetoothServiceDiscoveryAgent *discoveryAgent;
-    QBluetoothSocket::OpenMode openMode;
-    QBluetooth::SecurityFlags secFlags;
-
-
-//    QByteArray rxBuffer;
-//    qint64 rxOffset;
-    QString errorString;
+    qint64 bytesAvailable() const override;
+    bool canReadLine() const override;
+    qint64 bytesToWrite() const override;
 
 #ifdef QT_ANDROID_BLUETOOTH
     QAndroidJniObject adapter;
@@ -213,7 +148,6 @@ public slots:
 signals:
     void connectJavaSocket();
     void closeJavaSocket();
-
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH
@@ -240,36 +174,15 @@ private slots:
     void _q_writeNotify();
 #endif
 
-protected:
-    QBluetoothSocket *q_ptr;
-
 private:
 
 #ifdef QT_WINRT_BLUETOOTH
-    HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action, ABI::Windows::Foundation::AsyncStatus status);
+    HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action,
+                                    ABI::Windows::Foundation::AsyncStatus status);
 #endif
 
-#if QT_CONFIG(bluez)
-public:
-    quint8 lowEnergySocketType;
-#endif
+
 };
-
-#else // QT_OSX_BLUETOOTH
-
-// QBluetoothSocketPrivate on OS X can not contain
-// Q_OBJECT (moc does not parse Objective-C syntax).
-// But QBluetoothSocket still requires QMetaObject::invokeMethod
-// to work. Here's the trick:
-class QBluetoothSocketPrivateBase : public QObject
-{
-// The most important part of it:
-    Q_OBJECT
-public slots:
-    virtual void _q_writeNotify() = 0;
-};
-
-#endif // QT_OSX_BLUETOOTH
 
 static inline void convertAddress(const quint64 from, quint8 (&to)[6])
 {
