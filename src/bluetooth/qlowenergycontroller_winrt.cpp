@@ -937,7 +937,7 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(const QSharedPointer<
         GattWriteOption option = writeWithResponse ? GattWriteOption_WriteWithResponse : GattWriteOption_WriteWithoutResponse;
         hr = characteristic->WriteValueWithOptionAsync(buffer.Get(), option, &writeOp);
         Q_ASSERT_SUCCEEDED(hr);
-        auto writeCompletedLambda =[charData, charHandle, newValue, service, this]
+        auto writeCompletedLambda =[charData, charHandle, newValue, service, writeWithResponse, this]
                 (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
         {
             if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
@@ -963,7 +963,8 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(const QSharedPointer<
             // empty.
             if (charData.properties & QLowEnergyCharacteristic::Read)
                 updateValueOfCharacteristic(charHandle, newValue, false);
-            emit service->characteristicWritten(QLowEnergyCharacteristic(service, charHandle), newValue);
+            if (writeWithResponse)
+                emit service->characteristicWritten(QLowEnergyCharacteristic(service, charHandle), newValue);
             return S_OK;
         };
         hr = writeOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus>>(writeCompletedLambda).Get());
