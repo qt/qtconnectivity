@@ -55,13 +55,6 @@
 #include "qbluetoothsocketbase_p.h"
 #include <QtGlobal>
 
-#if defined(QT_ANDROID_BLUETOOTH)
-#include <QtAndroidExtras/QAndroidJniObject>
-#include <QtCore/QPointer>
-#include "android/inputstreamthread_p.h"
-#include <jni.h>
-#endif // QT_ANDROID_BLUETOOTH
-
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 
 #ifdef QT_WINRT_BLUETOOTH
@@ -79,21 +72,9 @@ public:
     QBluetoothSocketPrivate();
     ~QBluetoothSocketPrivate() override;
 
-//On Android we connect using the uuid not the port
-#if defined(QT_ANDROID_BLUETOOTH)
-    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
-                          QIODevice::OpenMode openMode) override;
-#else
     void connectToService(const QBluetoothAddress &address,
                           quint16 port,
                           QIODevice::OpenMode openMode) override;
-#endif
-#ifdef QT_ANDROID_BLUETOOTH
-    bool fallBackConnect(QAndroidJniObject uuid, int channel);
-    bool fallBackReversedConnect(const QBluetoothUuid &uuid);
-#endif
-
-
     bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;
 
     QString localName() const override;
@@ -110,11 +91,7 @@ public:
     qint64 writeData(const char *data, qint64 maxSize) override;
     qint64 readData(char *data, qint64 maxSize) override;
 
-#ifdef QT_ANDROID_BLUETOOTH
-    bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
-                             QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
-                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
-#elif defined(QT_WINRT_BLUETOOTH)
+#if defined(QT_WINRT_BLUETOOTH)
     bool setSocketDescriptor(Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> socket,
                              QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
@@ -127,28 +104,6 @@ public:
     qint64 bytesAvailable() const override;
     bool canReadLine() const override;
     qint64 bytesToWrite() const override;
-
-#ifdef QT_ANDROID_BLUETOOTH
-    QAndroidJniObject adapter;
-    QAndroidJniObject socketObject;
-    QAndroidJniObject remoteDevice;
-    QAndroidJniObject inputStream;
-    QAndroidJniObject outputStream;
-    InputStreamThread *inputThread;
-
-public slots:
-    void socketConnectSuccess(const QAndroidJniObject &socket);
-    void defaultSocketConnectFailed(const QAndroidJniObject & socket,
-                                    const QAndroidJniObject &targetUuid,
-                                    const QBluetoothUuid &qtTargetUuid);
-    void fallbackSocketConnectFailed(const QAndroidJniObject &socket,
-                                     const QAndroidJniObject &targetUuid);
-    void inputThreadError(int errorCode);
-
-signals:
-    void connectJavaSocket();
-    void closeJavaSocket();
-#endif
 
 #ifdef QT_WINRT_BLUETOOTH
     SocketWorker *m_worker;
@@ -175,16 +130,6 @@ private:
                                     ABI::Windows::Foundation::AsyncStatus status);
 #endif
 };
-
-
-#ifdef Q_OS_ANDROID
-// QTBUG-61392 related
-// Private API to disable the silent behavior to reverse a remote service's
-// UUID. In rare cases the workaround behavior might not be desirable as
-// it may lead to connects to incorrect services.
-extern bool useReverseUuidWorkAroundConnect;
-
-#endif
 
 QT_END_NAMESPACE
 

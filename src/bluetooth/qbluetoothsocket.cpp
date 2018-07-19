@@ -41,6 +41,8 @@
 #include "qbluetoothsocket.h"
 #if QT_CONFIG(bluez)
 #include "qbluetoothsocket_bluez_p.h"
+#elif defined(QT_ANDROID_BLUETOOTH)
+#include "qbluetoothsocket_android_p.h"
 #else
 #include "qbluetoothsocket_p.h"
 #endif
@@ -258,6 +260,8 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 {
 #if QT_CONFIG(bluez)
     d_ptr = new QBluetoothSocketPrivateBluez();
+#elif defined(QT_ANDROID_BLUETOOTH)
+    d_ptr = new QBluetoothSocketPrivateAndroid();
 #else
     d_ptr = new QBluetoothSocketPrivate();
 #endif
@@ -277,6 +281,8 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
 {
 #if QT_CONFIG(bluez)
     d_ptr = new QBluetoothSocketPrivateBluez();
+#elif defined(QT_ANDROID_BLUETOOTH)
+    d_ptr = new QBluetoothSocketPrivateAndroid();
 #else
     d_ptr = new QBluetoothSocketPrivate();
 #endif

@@ -155,8 +155,10 @@ qtConfig(bluez) {
         qbluetoothserver_android.cpp \
         qlowenergycontroller_android.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_android_p.h
+    PRIVATE_HEADERS += qlowenergycontroller_android_p.h \
+                       qbluetoothsocket_android_p.h
 
+    PRIVATE_HEADERS -= qbluetoothsocket_p.h
 } else:osx {
     QT_PRIVATE = concurrent
     DEFINES += QT_OSX_BLUETOOTH

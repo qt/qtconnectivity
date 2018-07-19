@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 #include "qbluetoothsocket.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_android_p.h"
 #include "qbluetoothaddress.h"
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QThread>
@@ -148,8 +148,8 @@ public:
     {
     }
 
-    // Runs in same thread as QBluetoothSocketPrivate
-    void setupWorker(QBluetoothSocketPrivate* d_ptr, const QAndroidJniObject& socketObject,
+    // Runs in same thread as QBluetoothSocketPrivateAndroid
+    void setupWorker(QBluetoothSocketPrivateAndroid* d_ptr, const QAndroidJniObject& socketObject,
                      const QAndroidJniObject& uuidObject, bool useFallback,
                      const QBluetoothUuid& qtUuid = QBluetoothUuid())
     {
@@ -159,18 +159,18 @@ public:
 
         connect(this, &QThread::finished, worker, &QObject::deleteLater);
         connect(this, &QThread::finished, this, &QObject::deleteLater);
-        connect(d_ptr, &QBluetoothSocketPrivate::connectJavaSocket,
+        connect(d_ptr, &QBluetoothSocketPrivateAndroid::connectJavaSocket,
                 worker, &SocketConnectWorker::connectSocket);
-        connect(d_ptr, &QBluetoothSocketPrivate::closeJavaSocket,
+        connect(d_ptr, &QBluetoothSocketPrivateAndroid::closeJavaSocket,
                 worker, &SocketConnectWorker::closeSocket);
         connect(worker, &SocketConnectWorker::socketConnectDone,
-                d_ptr, &QBluetoothSocketPrivate::socketConnectSuccess);
+                d_ptr, &QBluetoothSocketPrivateAndroid::socketConnectSuccess);
         if (useFallback) {
             connect(worker, &SocketConnectWorker::socketConnectFailed,
-                    d_ptr, &QBluetoothSocketPrivate::fallbackSocketConnectFailed);
+                    d_ptr, &QBluetoothSocketPrivateAndroid::fallbackSocketConnectFailed);
         } else {
             connect(worker, &SocketConnectWorker::socketConnectFailed,
-                d_ptr, &QBluetoothSocketPrivate::defaultSocketConnectFailed);
+                d_ptr, &QBluetoothSocketPrivateAndroid::defaultSocketConnectFailed);
         }
 
         workerPointer = worker;
@@ -204,7 +204,7 @@ static QBluetoothUuid reverseUuid(const QBluetoothUuid &serviceUuid)
     return QBluetoothUuid(reversed);
 }
 
-QBluetoothSocketPrivate::QBluetoothSocketPrivate()
+QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
   :
     inputThread(0)
 {
@@ -216,13 +216,13 @@ QBluetoothSocketPrivate::QBluetoothSocketPrivate()
     qRegisterMetaType<QBluetoothSocket::SocketState>();
 }
 
-QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
+QBluetoothSocketPrivateAndroid::~QBluetoothSocketPrivateAndroid()
 {
     if (state != QBluetoothSocket::UnconnectedState)
         emit closeJavaSocket();
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
+bool QBluetoothSocketPrivateAndroid::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     socketType = type;
     if (socketType == QBluetoothServiceInfo::RfcommProtocol)
@@ -231,7 +231,7 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     return false;
 }
 
-bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channel)
+bool QBluetoothSocketPrivateAndroid::fallBackConnect(QAndroidJniObject uuid, int channel)
 {
     qCWarning(QT_BT_ANDROID) << "Falling back to getServiceChannel() workaround.";
 
@@ -350,7 +350,7 @@ bool QBluetoothSocketPrivate::fallBackConnect(QAndroidJniObject uuid, int channe
 /*
  * Workaround for QTBUG-61392
  */
-bool QBluetoothSocketPrivate::fallBackReversedConnect(const QBluetoothUuid &uuid)
+bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUuid &uuid)
 {
     Q_Q(QBluetoothSocket);
 
@@ -420,7 +420,7 @@ bool QBluetoothSocketPrivate::fallBackReversedConnect(const QBluetoothUuid &uuid
  * 8. if threaded connect on fallback channel fails call fallbackSocketConnectFailed()
  *      -> complete failure of entire connectToService()
  * */
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
+void QBluetoothSocketPrivateAndroid::connectToService(const QBluetoothAddress &address,
                                                const QBluetoothUuid &uuid,
                                                QIODevice::OpenMode openMode)
 {
@@ -503,7 +503,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     emit connectJavaSocket();
 }
 
-void QBluetoothSocketPrivate::socketConnectSuccess(const QAndroidJniObject &socket)
+void QBluetoothSocketPrivateAndroid::socketConnectSuccess(const QAndroidJniObject &socket)
 {
     Q_Q(QBluetoothSocket);
     QAndroidJniEnvironment env;
@@ -563,7 +563,7 @@ void QBluetoothSocketPrivate::socketConnectSuccess(const QAndroidJniObject &sock
     emit q->connected();
 }
 
-void QBluetoothSocketPrivate::defaultSocketConnectFailed(
+void QBluetoothSocketPrivateAndroid::defaultSocketConnectFailed(
         const QAndroidJniObject &socket, const QAndroidJniObject &targetUuid,
         const QBluetoothUuid &qtTargetUuid)
 {
@@ -592,7 +592,7 @@ void QBluetoothSocketPrivate::defaultSocketConnectFailed(
     }
 }
 
-void QBluetoothSocketPrivate::fallbackSocketConnectFailed(
+void QBluetoothSocketPrivateAndroid::fallbackSocketConnectFailed(
         const QAndroidJniObject &socket, const QAndroidJniObject &targetUuid)
 {
     Q_UNUSED(targetUuid);
@@ -611,7 +611,7 @@ void QBluetoothSocketPrivate::fallbackSocketConnectFailed(
     q->setSocketState(QBluetoothSocket::UnconnectedState);
 }
 
-void QBluetoothSocketPrivate::abort()
+void QBluetoothSocketPrivateAndroid::abort()
 {
     if (state == QBluetoothSocket::UnconnectedState)
         return;
@@ -624,7 +624,7 @@ void QBluetoothSocketPrivate::abort()
          * thread because inputStream.read() throws IOException
          * In turn the thread stops and throws an error which sets
          * new state, error and emits relevant signals.
-         * See QBluetoothSocketPrivate::inputThreadError() for details
+         * See QBluetoothSocketPrivateAndroid::inputThreadError() for details
          */
 
         if (inputThread)
@@ -653,7 +653,7 @@ void QBluetoothSocketPrivate::abort()
     }
 }
 
-QString QBluetoothSocketPrivate::localName() const
+QString QBluetoothSocketPrivateAndroid::localName() const
 {
     if (adapter.isValid())
         return adapter.callObjectMethod<jstring>("getName").toString();
@@ -661,7 +661,7 @@ QString QBluetoothSocketPrivate::localName() const
     return QString();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
+QBluetoothAddress QBluetoothSocketPrivateAndroid::localAddress() const
 {
     QString result;
     if (adapter.isValid())
@@ -670,13 +670,13 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
     return QBluetoothAddress(result);
 }
 
-quint16 QBluetoothSocketPrivate::localPort() const
+quint16 QBluetoothSocketPrivateAndroid::localPort() const
 {
     // Impossible to get channel number with current Android API (Levels 5 to 19)
     return 0;
 }
 
-QString QBluetoothSocketPrivate::peerName() const
+QString QBluetoothSocketPrivateAndroid::peerName() const
 {
     if (!remoteDevice.isValid())
         return QString();
@@ -684,7 +684,7 @@ QString QBluetoothSocketPrivate::peerName() const
     return remoteDevice.callObjectMethod("getName", "()Ljava/lang/String;").toString();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
+QBluetoothAddress QBluetoothSocketPrivateAndroid::peerAddress() const
 {
     if (!remoteDevice.isValid())
         return QBluetoothAddress();
@@ -695,13 +695,13 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
     return QBluetoothAddress(address);
 }
 
-quint16 QBluetoothSocketPrivate::peerPort() const
+quint16 QBluetoothSocketPrivateAndroid::peerPort() const
 {
     // Impossible to get channel number with current Android API (Levels 5 to 13)
     return 0;
 }
 
-qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateAndroid::writeData(const char *data, qint64 maxSize)
 {
     //TODO implement buffered behavior (so far only unbuffered)
     Q_Q(QBluetoothSocket);
@@ -731,7 +731,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     return maxSize;
 }
 
-qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateAndroid::readData(char *data, qint64 maxSize)
 {
     Q_Q(QBluetoothSocket);
     if (state != QBluetoothSocket::ConnectedState || !inputThread) {
@@ -744,7 +744,7 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
     return inputThread->readData(data, maxSize);
 }
 
-void QBluetoothSocketPrivate::inputThreadError(int errorCode)
+void QBluetoothSocketPrivateAndroid::inputThreadError(int errorCode)
 {
     Q_Q(QBluetoothSocket);
 
@@ -778,7 +778,7 @@ void QBluetoothSocketPrivate::inputThreadError(int errorCode)
     emit q->disconnected();
 }
 
-void QBluetoothSocketPrivate::close()
+void QBluetoothSocketPrivateAndroid::close()
 {
     /* This function is called by QBluetoothSocket::close and softer version
        QBluetoothSocket::disconnectFromService() which difference I do not quite fully understand.
@@ -787,7 +787,7 @@ void QBluetoothSocketPrivate::close()
     abort();
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
+bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                          QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_UNUSED(socketDescriptor);
@@ -798,7 +798,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     return false;
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType_,
+bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType_,
                          QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
@@ -866,7 +866,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(const QAndroidJniObject &socke
     return true;
 }
 
-qint64 QBluetoothSocketPrivate::bytesAvailable() const
+qint64 QBluetoothSocketPrivateAndroid::bytesAvailable() const
 {
     //We cannot access buffer directly as it is part of different thread
     if (inputThread)
@@ -875,12 +875,12 @@ qint64 QBluetoothSocketPrivate::bytesAvailable() const
     return 0;
 }
 
-qint64 QBluetoothSocketPrivate::bytesToWrite() const
+qint64 QBluetoothSocketPrivateAndroid::bytesToWrite() const
 {
     return 0; // nothing because always unbuffered
 }
 
-bool QBluetoothSocketPrivate::canReadLine() const
+bool QBluetoothSocketPrivateAndroid::canReadLine() const
 {
     // We cannot access buffer directly as it is part of different thread
     if (inputThread)
