@@ -168,6 +168,29 @@ public:
 #endif
 };
 
+static inline void convertAddress(const quint64 from, quint8 (&to)[6])
+{
+    to[0] = (from >> 0) & 0xff;
+    to[1] = (from >> 8) & 0xff;
+    to[2] = (from >> 16) & 0xff;
+    to[3] = (from >> 24) & 0xff;
+    to[4] = (from >> 32) & 0xff;
+    to[5] = (from >> 40) & 0xff;
+}
+
+static inline quint64 convertAddress(const quint8 (&from)[6], quint64 *to = nullptr)
+{
+    const quint64 result = (quint64(from[0]) << 0) |
+         (quint64(from[1]) << 8) |
+         (quint64(from[2]) << 16) |
+         (quint64(from[3]) << 24) |
+         (quint64(from[4]) << 32) |
+         (quint64(from[5]) << 40);
+    if (to)
+        *to = result;
+    return result;
+}
+
 #else // QT_OSX_BLUETOOTH
 
 // QBluetoothSocketPrivate on macOS can not contain

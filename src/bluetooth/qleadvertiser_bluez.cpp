@@ -41,7 +41,7 @@
 
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocketbase_p.h"
 
 #include <QtCore/qloggingcategory.h>
 

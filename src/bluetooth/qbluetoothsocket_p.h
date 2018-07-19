@@ -168,44 +168,14 @@ private slots:
     void handleError(QBluetoothSocket::SocketError error);
 #endif // QT_WINRT_BLUETOOTH
 
-#if QT_CONFIG(bluez)
-private slots:
-    void _q_readNotify();
-    void _q_writeNotify();
-#endif
-
 private:
 
 #ifdef QT_WINRT_BLUETOOTH
     HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action,
                                     ABI::Windows::Foundation::AsyncStatus status);
 #endif
-
-
 };
 
-static inline void convertAddress(const quint64 from, quint8 (&to)[6])
-{
-    to[0] = (from >> 0) & 0xff;
-    to[1] = (from >> 8) & 0xff;
-    to[2] = (from >> 16) & 0xff;
-    to[3] = (from >> 24) & 0xff;
-    to[4] = (from >> 32) & 0xff;
-    to[5] = (from >> 40) & 0xff;
-}
-
-static inline quint64 convertAddress(const quint8 (&from)[6], quint64 *to = 0)
-{
-    const quint64 result = (quint64(from[0]) << 0) |
-         (quint64(from[1]) << 8) |
-         (quint64(from[2]) << 16) |
-         (quint64(from[3]) << 24) |
-         (quint64(from[4]) << 32) |
-         (quint64(from[5]) << 40);
-    if (to)
-        *to = result;
-    return result;
-}
 
 #ifdef Q_OS_ANDROID
 // QTBUG-61392 related
@@ -217,6 +187,5 @@ extern bool useReverseUuidWorkAroundConnect;
 #endif
 
 QT_END_NAMESPACE
-
 
 #endif

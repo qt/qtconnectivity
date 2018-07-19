@@ -39,7 +39,11 @@
 ****************************************************************************/
 
 #include "qbluetoothsocket.h"
+#if QT_CONFIG(bluez)
+#include "qbluetoothsocket_bluez_p.h"
+#else
 #include "qbluetoothsocket_p.h"
+#endif
 
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserviceinfo.h"
@@ -252,7 +256,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent)
 : QIODevice(parent)
 {
+#if QT_CONFIG(bluez)
+    d_ptr = new QBluetoothSocketPrivateBluez();
+#else
     d_ptr = new QBluetoothSocketPrivate();
+#endif
     d_ptr->q_ptr = this;
 
     Q_D(QBluetoothSocketBase);
@@ -267,7 +275,11 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent)
 {
+#if QT_CONFIG(bluez)
+    d_ptr = new QBluetoothSocketPrivateBluez();
+#else
     d_ptr = new QBluetoothSocketPrivate();
+#endif
     d_ptr->q_ptr = this;
     setOpenMode(QIODevice::NotOpen);
 }

@@ -96,13 +96,18 @@ qtConfig(bluez) {
     include(bluez/bluez.pri)
 
     PRIVATE_HEADERS += \
-        qbluetoothtransferreply_bluez_p.h
+        qbluetoothtransferreply_bluez_p.h \
+        qbluetoothsocket_bluez_p.h \
+        qbluetoothsocket_bluezdbus_p.h
+
+    PRIVATE_HEADERS -= qbluetoothsocket_p.h
 
     SOURCES += \
         qbluetoothserviceinfo_bluez.cpp \
         qbluetoothdevicediscoveryagent_bluez.cpp\
         qbluetoothservicediscoveryagent_bluez.cpp \
         qbluetoothsocket_bluez.cpp \
+        qbluetoothsocket_bluezdbus.cpp \
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
         qbluetoothtransferreply_bluez.cpp \

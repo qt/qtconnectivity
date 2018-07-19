@@ -40,7 +40,7 @@
 
 #include "hcimanager_p.h"
 
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocketbase_p.h"
 #include "qlowenergyconnectionparameters.h"
 
 #include <QtCore/qloggingcategory.h>

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qbluetoothsocket.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_bluez_p.h"
 
 #include "bluez/manager_p.h"
 #include "bluez/adapter_p.h"
@@ -62,30 +62,30 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-QBluetoothSocketPrivate::QBluetoothSocketPrivate()
+QBluetoothSocketPrivateBluez::QBluetoothSocketPrivateBluez()
     : QBluetoothSocketBasePrivate()
 {
     secFlags = QBluetooth::Authorization;
 }
 
-QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
+QBluetoothSocketPrivateBluez::~QBluetoothSocketPrivateBluez()
 {
     delete readNotifier;
-    readNotifier = 0;
+    readNotifier = nullptr;
     delete connectWriteNotifier;
-    connectWriteNotifier = 0;
+    connectWriteNotifier = nullptr;
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
+bool QBluetoothSocketPrivateBluez::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     if (socket != -1) {
         if (socketType == type)
             return true;
 
         delete readNotifier;
-        readNotifier = 0;
+        readNotifier = nullptr;
         delete connectWriteNotifier;
-        connectWriteNotifier = 0;
+        connectWriteNotifier = nullptr;
         QT_CLOSE(socket);
     }
 
@@ -121,7 +121,7 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     return true;
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateBluez::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
     int result = -1;
@@ -206,7 +206,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     }
 }
 
-void QBluetoothSocketPrivate::_q_writeNotify()
+void QBluetoothSocketPrivateBluez::_q_writeNotify()
 {
     Q_Q(QBluetoothSocket);
     if(connecting && state == QBluetoothSocket::ConnectingState){
@@ -267,7 +267,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
     }
 }
 
-void QBluetoothSocketPrivate::_q_readNotify()
+void QBluetoothSocketPrivateBluez::_q_readNotify()
 {
     Q_Q(QBluetoothSocket);
     char *writePointer = buffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
@@ -294,7 +294,7 @@ void QBluetoothSocketPrivate::_q_readNotify()
     }
 }
 
-void QBluetoothSocketPrivate::abort()
+void QBluetoothSocketPrivateBluez::abort()
 {
     delete readNotifier;
     readNotifier = 0;
@@ -308,7 +308,7 @@ void QBluetoothSocketPrivate::abort()
     socket = -1;
 }
 
-QString QBluetoothSocketPrivate::localName() const
+QString QBluetoothSocketPrivateBluez::localName() const
 {
     const QBluetoothAddress address = localAddress();
     if (address.isNull())
@@ -318,7 +318,7 @@ QString QBluetoothSocketPrivate::localName() const
     return device.name();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
+QBluetoothAddress QBluetoothSocketPrivateBluez::localAddress() const
 {
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
@@ -337,7 +337,7 @@ QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
     return QBluetoothAddress();
 }
 
-quint16 QBluetoothSocketPrivate::localPort() const
+quint16 QBluetoothSocketPrivateBluez::localPort() const
 {
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
@@ -356,7 +356,7 @@ quint16 QBluetoothSocketPrivate::localPort() const
     return 0;
 }
 
-QString QBluetoothSocketPrivate::peerName() const
+QString QBluetoothSocketPrivateBluez::peerName() const
 {
     quint64 bdaddr;
 
@@ -444,7 +444,7 @@ QString QBluetoothSocketPrivate::peerName() const
     }
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
+QBluetoothAddress QBluetoothSocketPrivateBluez::peerAddress() const
 {
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
@@ -463,7 +463,7 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
     return QBluetoothAddress();
 }
 
-quint16 QBluetoothSocketPrivate::peerPort() const
+quint16 QBluetoothSocketPrivateBluez::peerPort() const
 {
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         sockaddr_rc addr;
@@ -482,7 +482,7 @@ quint16 QBluetoothSocketPrivate::peerPort() const
     return 0;
 }
 
-qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateBluez::writeData(const char *data, qint64 maxSize)
 {
     Q_Q(QBluetoothSocket);
 
@@ -527,7 +527,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     }
 }
 
-qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateBluez::readData(char *data, qint64 maxSize)
 {
     Q_Q(QBluetoothSocket);
 
@@ -545,7 +545,7 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
     return 0;
 }
 
-void QBluetoothSocketPrivate::close()
+void QBluetoothSocketPrivateBluez::close()
 {
     if (txBuffer.size() > 0)
         connectWriteNotifier->setEnabled(true);
@@ -553,7 +553,7 @@ void QBluetoothSocketPrivate::close()
         abort();
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType_,
+bool QBluetoothSocketPrivateBluez::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType_,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
@@ -581,17 +581,17 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     return true;
 }
 
-qint64 QBluetoothSocketPrivate::bytesAvailable() const
+qint64 QBluetoothSocketPrivateBluez::bytesAvailable() const
 {
     return buffer.size();
 }
 
-qint64 QBluetoothSocketPrivate::bytesToWrite() const
+qint64 QBluetoothSocketPrivateBluez::bytesToWrite() const
 {
     return txBuffer.size();
 }
 
-bool QBluetoothSocketPrivate::canReadLine() const
+bool QBluetoothSocketPrivateBluez::canReadLine() const
 {
     return buffer.canReadLine();
 }

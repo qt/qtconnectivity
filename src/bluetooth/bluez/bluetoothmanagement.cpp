@@ -43,7 +43,7 @@
 
 #include "bluetoothmanagement_p.h"
 #include "bluez_data_p.h"
-#include "../qbluetoothsocket_p.h"
+#include "../qbluetoothsocketbase_p.h"
 
 #include <unistd.h>
 #include <sys/prctl.h>
