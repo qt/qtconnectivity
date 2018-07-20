@@ -267,7 +267,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 #elif defined(QT_WINRT_BLUETOOTH)
     d_ptr = new QBluetoothSocketPrivateWinRT();
 #else
-    d_ptr = new QBluetoothSocketPrivate();
+    d_ptr = new QBluetoothSocketPrivateDummy();
 #endif
     d_ptr->q_ptr = this;
 
@@ -290,7 +290,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
 #elif defined(QT_WINRT_BLUETOOTH)
     d_ptr = new QBluetoothSocketPrivateWinRT();
 #else
-    d_ptr = new QBluetoothSocketPrivate();
+    d_ptr = new QBluetoothSocketPrivateDummy();
 #endif
     d_ptr->q_ptr = this;
     setOpenMode(QIODevice::NotOpen);

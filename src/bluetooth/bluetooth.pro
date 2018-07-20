@@ -40,7 +40,6 @@ PRIVATE_HEADERS += \
     qbluetoothserviceinfo_p.h\
     qbluetoothdevicediscoveryagent_p.h\
     qbluetoothservicediscoveryagent_p.h\
-    qbluetoothsocket_p.h\
     qbluetoothsocketbase_p.h \
     qbluetoothserver_p.h\
     qbluetoothtransferreply_p.h \
@@ -100,8 +99,6 @@ qtConfig(bluez) {
         qbluetoothsocket_bluez_p.h \
         qbluetoothsocket_bluezdbus_p.h
 
-    PRIVATE_HEADERS -= qbluetoothsocket_p.h
-
     SOURCES += \
         qbluetoothserviceinfo_bluez.cpp \
         qbluetoothdevicediscoveryagent_bluez.cpp\
@@ -110,7 +107,7 @@ qtConfig(bluez) {
         qbluetoothsocket_bluezdbus.cpp \
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
-        qbluetoothtransferreply_bluez.cpp \
+        qbluetoothtransferreply_bluez.cpp
 
 
     # old versions of Bluez do not have the required BTLE symbols
@@ -157,8 +154,6 @@ qtConfig(bluez) {
 
     PRIVATE_HEADERS += qlowenergycontroller_android_p.h \
                        qbluetoothsocket_android_p.h
-
-    PRIVATE_HEADERS -= qbluetoothsocket_p.h
 } else:osx {
     QT_PRIVATE = concurrent
     DEFINES += QT_OSX_BLUETOOTH
@@ -182,8 +177,6 @@ qtConfig(bluez) {
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_osx_p.h
 
-    PRIVATE_HEADERS -= qbluetoothsocket_p.h
-
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
@@ -204,7 +197,8 @@ qtConfig(bluez) {
         qlowenergyservice_osx.mm
 
     PRIVATE_HEADERS += \
-        qlowenergycontroller_osx_p.h
+        qlowenergycontroller_osx_p.h \
+        qbluetoothsocket_p.h
 
     include(osx/osxbt.pri)
     SOURCES += \
@@ -240,8 +234,6 @@ qtConfig(bluez) {
     PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h \
                        qbluetoothsocket_winrt_p.h
 
-    PRIVATE_HEADERS -= qbluetoothsocket_p.h
-
     lessThan(WINDOWS_SDK_VERSION, 14393) {
         DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
         DEFINES += QT_UCRTVERSION=$$WINDOWS_SDK_VERSION
@@ -259,7 +251,8 @@ qtConfig(bluez) {
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_p.h
+    PRIVATE_HEADERS += qlowenergycontroller_p.h \
+                       qbluetoothsocket_p.h
 }
 
 winrt {
