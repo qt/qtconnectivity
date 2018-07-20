@@ -74,6 +74,7 @@ class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
     friend class QBluetoothSocketPrivateAndroid;
     friend class QBluetoothSocketPrivateBluez;
     friend class QBluetoothSocketPrivateBluezDBus;
+    friend class QBluetoothSocketPrivateWinRT;
 
 public:
 

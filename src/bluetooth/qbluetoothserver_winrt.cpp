@@ -40,7 +40,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_winrt_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qeventdispatcher_winrt_p.h>

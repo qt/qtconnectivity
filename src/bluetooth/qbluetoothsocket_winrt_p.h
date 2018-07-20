@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHSOCKET_P_H
-#define QBLUETOOTHSOCKET_P_H
+#ifndef QBLUETOOTHSOCKET_WINRT_P_H
+#define QBLUETOOTHSOCKET_WINRT_P_H
 
 //
 //  W A R N I N G
@@ -55,43 +55,70 @@
 #include "qbluetoothsocketbase_p.h"
 #include <QtGlobal>
 
+QT_FORWARD_DECLARE_CLASS(SocketWorker)
+
 QT_BEGIN_NAMESPACE
 
-class QBluetoothSocketPrivate : public QBluetoothSocketBasePrivate
+class QBluetoothSocketPrivateWinRT final: public QBluetoothSocketBasePrivate
 {
     Q_OBJECT
     friend class QBluetoothServerPrivate;
 
 public:
-    QBluetoothSocketPrivate();
-    ~QBluetoothSocketPrivate() override;
+    QBluetoothSocketPrivateWinRT();
+    ~QBluetoothSocketPrivateWinRT();
 
     void connectToService(const QBluetoothAddress &address,
                           quint16 port,
-                          QIODevice::OpenMode openMode) override;
-    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;
+                          QIODevice::OpenMode openMode);
+    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type);
 
-    QString localName() const override;
-    QBluetoothAddress localAddress() const override;
-    quint16 localPort() const override;
+    QString localName() const;
+    QBluetoothAddress localAddress() const;
+    quint16 localPort() const;
 
-    QString peerName() const override;
-    QBluetoothAddress peerAddress() const override;
-    quint16 peerPort() const override;
+    QString peerName() const;
+    QBluetoothAddress peerAddress() const;
+    quint16 peerPort() const;
 
-    void abort() override;
-    void close() override;
+    void abort();
+    void close();
 
-    qint64 writeData(const char *data, qint64 maxSize) override;
-    qint64 readData(char *data, qint64 maxSize) override;
+    qint64 writeData(const char *data, qint64 maxSize);
+    qint64 readData(char *data, qint64 maxSize);
+
+    bool setSocketDescriptor(Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> socket,
+                             QBluetoothServiceInfo::Protocol socketType,
+                             QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
 
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
-                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
 
-    qint64 bytesAvailable() const override;
-    bool canReadLine() const override;
-    qint64 bytesToWrite() const override;
+    qint64 bytesAvailable() const;
+    bool canReadLine() const;
+    qint64 bytesToWrite() const;
+
+    SocketWorker *m_worker;
+
+    Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> m_socketObject;
+    Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IAsyncAction> m_connectOp;
+
+    QMutex m_readMutex;
+
+    // Protected by m_readMutex. Written in addToPendingData (native callback)
+    QVector<QByteArray> m_pendingData;
+
+    Q_INVOKABLE void addToPendingData(const QVector<QByteArray> &data);
+
+private slots:
+    void handleNewData(const QVector<QByteArray> &data);
+    void handleError(QBluetoothSocket::SocketError error);
+
+private:
+    HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action,
+                                    ABI::Windows::Foundation::AsyncStatus status);
 };
 
 QT_END_NAMESPACE
