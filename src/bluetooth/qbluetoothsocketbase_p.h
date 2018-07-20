@@ -123,10 +123,10 @@ public:
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) = 0;
 
 #if defined(QT_ANDROID_BLUETOOTH)
-    virtual void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+    virtual void connectToServiceHelper(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                           QIODevice::OpenMode openMode) = 0;
 #else
-    virtual void connectToService(const QBluetoothAddress &address, quint16 port,
+    virtual void connectToServiceHelper(const QBluetoothAddress &address, quint16 port,
                                   QIODevice::OpenMode openMode) = 0;
 #endif
 

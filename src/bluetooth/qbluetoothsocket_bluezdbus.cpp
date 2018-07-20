@@ -56,7 +56,7 @@ bool QBluetoothSocketPrivateBluezDBus::ensureNativeSocket(QBluetoothServiceInfo:
     return false;
 }
 
-void QBluetoothSocketPrivateBluezDBus::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_UNUSED(openMode);
     Q_UNUSED(address);

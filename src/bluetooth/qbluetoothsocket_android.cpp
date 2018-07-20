@@ -403,31 +403,31 @@ bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUui
 }
 
 /*
- * The call order during a connectToService() is as follows:
+ * The call order during a connectToServiceHelper() is as follows:
  *
- * 1. call connectToService()
+ * 1. call connectToServiceHelper()
  * 2. wait for execution of SocketConnectThread::run()
  * 3. if threaded connect succeeds call socketConnectSuccess() via signals
  *      -> done
  * 4. if threaded connect fails call defaultSocketConnectFailed() via signals
  * 5. call fallBackConnect() if Android version 22 or below
- *     -> Android 23+ complete failure of entire connectToService()
+ *     -> Android 23+ complete failure of entire connectToServiceHelper()
  * 6. call fallBackReversedConnect() if Android version 23 or above
- *     -> if failure entire connectToService() fails
+ *     -> if failure entire connectToServiceHelper() fails
  * 7. if threaded connect on one of above fallbacks succeeds call socketConnectSuccess()
  *    via signals
  *      -> done
  * 8. if threaded connect on fallback channel fails call fallbackSocketConnectFailed()
- *      -> complete failure of entire connectToService()
+ *      -> complete failure of entire connectToServiceHelper()
  * */
-void QBluetoothSocketPrivateAndroid::connectToService(const QBluetoothAddress &address,
+void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddress &address,
                                                const QBluetoothUuid &uuid,
                                                QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
     Q_UNUSED(openMode);
 
-    qCDebug(QT_BT_ANDROID) << "connectToService()" << address.toString() << uuid.toString();
+    qCDebug(QT_BT_ANDROID) << "connectToServiceHelper()" << address.toString() << uuid.toString();
 
     q->setSocketState(QBluetoothSocket::ConnectingState);
 

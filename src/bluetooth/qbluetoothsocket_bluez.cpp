@@ -121,7 +121,7 @@ bool QBluetoothSocketPrivateBluez::ensureNativeSocket(QBluetoothServiceInfo::Pro
     return true;
 }
 
-void QBluetoothSocketPrivateBluez::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateBluez::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
     int result = -1;

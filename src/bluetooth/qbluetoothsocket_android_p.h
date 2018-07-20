@@ -71,7 +71,7 @@ public:
     ~QBluetoothSocketPrivateAndroid();
 
     //On Android we connect using the uuid not the port
-    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+    void connectToServiceHelper(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                           QIODevice::OpenMode openMode);
 
     bool fallBackConnect(QAndroidJniObject uuid, int channel);

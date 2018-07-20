@@ -367,7 +367,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
         setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
-    d->connectToService(service.device().address(), service.serviceUuid(), openMode);
+    d->connectToServiceHelper(service.device().address(), service.serviceUuid(), openMode);
 #else
 #if defined(QT_WINRT_BLUETOOTH)
     // Report these problems early:
@@ -391,14 +391,14 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
             setSocketError(UnknownSocketError);
             return;
         }
-        d->connectToService(service.device().address(), service.protocolServiceMultiplexer(), openMode);
+        d->connectToServiceHelper(service.device().address(), service.protocolServiceMultiplexer(), openMode);
     } else if (service.serverChannel() > 0) {
         if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
             d->errorString = tr("Unknown socket error");
             setSocketError(UnknownSocketError);
             return;
         }
-        d->connectToService(service.device().address(), service.serverChannel(), openMode);
+        d->connectToServiceHelper(service.device().address(), service.serverChannel(), openMode);
     } else {
         // try doing service discovery to see if we can find the socket
         if (service.serviceUuid().isNull()
@@ -460,7 +460,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
         setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
-    d->connectToService(address, uuid, openMode);
+    d->connectToServiceHelper(address, uuid, openMode);
 #else
 #if defined(QT_WINRT_BLUETOOTH)
     // Report these problems early, prevent device discovery:
@@ -539,7 +539,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint1
     }
 
     setOpenMode(openMode);
-    d->connectToService(address, port, openMode);
+    d->connectToServiceHelper(address, port, openMode);
 #endif
 }
 

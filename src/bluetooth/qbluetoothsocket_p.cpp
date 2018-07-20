@@ -63,7 +63,7 @@ bool QBluetoothSocketPrivateDummy::ensureNativeSocket(QBluetoothServiceInfo::Pro
     return false;
 }
 
-void QBluetoothSocketPrivateDummy::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateDummy::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_UNUSED(openMode);
     Q_UNUSED(address);

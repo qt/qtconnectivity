@@ -63,7 +63,7 @@ public:
     QBluetoothSocketPrivateBluezDBus();
     ~QBluetoothSocketPrivateBluezDBus();
 
-    void connectToService(const QBluetoothAddress &address,
+    void connectToServiceHelper(const QBluetoothAddress &address,
                           quint16 port,
                           QIODevice::OpenMode openMode);
 
