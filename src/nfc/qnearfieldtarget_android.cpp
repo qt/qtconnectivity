@@ -183,14 +183,17 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
 
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
-    QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                              Q_ARG(QNdefMessage, qNdefMessage));
+    QMetaObject::invokeMethod(this, [this, qNdefMessage]() {
+        Q_EMIT this->QNearFieldTarget::ndefMessageRead(qNdefMessage);
+    }, Qt::QueuedConnection);
     QMetaObject::invokeMethod(this, [this, requestId]() {
         Q_EMIT this->requestCompleted(requestId);
     }, Qt::QueuedConnection);
-    QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                              Q_ARG(QNdefMessage, qNdefMessage),
-                              Q_ARG(QNearFieldTarget::RequestId, requestId));
+    QMetaObject::invokeMethod(this, [this, qNdefMessage, requestId]() {
+        //TODO This is an Android specific signal in NearFieldTarget.
+        //     We need to check if it is still necessary.
+        Q_EMIT this->ndefMessageRead(qNdefMessage, requestId);
+    }, Qt::QueuedConnection);
     return requestId;
 }
 
