@@ -661,7 +661,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     Q_D(QBluetoothSocket);
 
     setSocketState(QBluetoothSocket::ServiceLookupState);
-    qCDebug(QT_BT) << "Starting Bluetooth Socket discovery";
+    qCDebug(QT_BT) << "Starting Bluetooth service discovery";
 
     if(d->discoveryAgent) {
         d->discoveryAgent->stop();
