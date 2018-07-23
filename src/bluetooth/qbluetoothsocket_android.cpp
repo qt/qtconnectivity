@@ -41,6 +41,8 @@
 #include "qbluetoothsocket.h"
 #include "qbluetoothsocket_android_p.h"
 #include "qbluetoothaddress.h"
+#include "qbluetoothdeviceinfo.h"
+#include "qbluetoothserviceinfo.h"
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QThread>
 #include <QtCore/QTime>
@@ -501,6 +503,70 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
     workerThread->setupWorker(this, socketObject, uuidObject, !USE_FALLBACK, uuid);
     workerThread->start();
     emit connectJavaSocket();
+}
+
+void QBluetoothSocketPrivateAndroid::connectToService(
+        const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
+{
+    Q_Q(QBluetoothSocket);
+
+    if (q->state() != QBluetoothSocket::UnconnectedState
+            && q->state() != QBluetoothSocket::ServiceLookupState) {
+        qCWarning(QT_BT_ANDROID) << "QBluetoothSocketPrivateAndroid::connectToService called on busy socket";
+        errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
+        q->setSocketError(QBluetoothSocket::OperationError);
+        return;
+    }
+
+    if (!ensureNativeSocket(service.socketProtocol())) {
+        errorString = QBluetoothSocket::tr("Socket type not supported");
+        q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+    connectToServiceHelper(service.device().address(), service.serviceUuid(), openMode);
+}
+
+void QBluetoothSocketPrivateAndroid::connectToService(
+        const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+        QIODevice::OpenMode openMode)
+{
+    Q_Q(QBluetoothSocket);
+
+    if (q->state() != QBluetoothSocket::UnconnectedState) {
+        qCWarning(QT_BT_ANDROID) << "QBluetoothSocketPrivateAndroid::connectToService called on busy socket";
+        errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
+        q->setSocketError(QBluetoothSocket::OperationError);
+        return;
+    }
+
+    if (q->socketType() == QBluetoothServiceInfo::UnknownProtocol) {
+        qCWarning(QT_BT_ANDROID) << "QBluetoothSocketPrivateAndroid::connectToService cannot "
+                                  "connect with 'UnknownProtocol' (type provided by given service)";
+        errorString = QBluetoothSocket::tr("Socket type not supported");
+        q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+
+    if (!ensureNativeSocket(q->socketType())) {
+        errorString = QBluetoothSocket::tr("Socket type not supported");
+        q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        return;
+    }
+    connectToServiceHelper(address, uuid, openMode);
+}
+
+void QBluetoothSocketPrivateAndroid::connectToService(
+        const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(port);
+    Q_UNUSED(openMode);
+    Q_UNUSED(address);
+
+    Q_Q(QBluetoothSocket);
+
+    errorString = tr("Connecting to port is not supported");
+    q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+    qCWarning(QT_BT_ANDROID) << "Connecting to port is not supported";
 }
 
 void QBluetoothSocketPrivateAndroid::socketConnectSuccess(const QAndroidJniObject &socket)

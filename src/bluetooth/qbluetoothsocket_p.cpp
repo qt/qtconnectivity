@@ -70,6 +70,47 @@ void QBluetoothSocketPrivateDummy::connectToServiceHelper(const QBluetoothAddres
     Q_UNUSED(port);
 }
 
+void QBluetoothSocketPrivateDummy::connectToService(
+        const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(service);
+    Q_UNUSED(openMode);
+
+    Q_Q(QBluetoothSocket);
+
+    qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
+    errorString = QBluetoothSocket::tr("Socket type not supported");
+    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+}
+
+void QBluetoothSocketPrivateDummy::connectToService(
+        const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(address);
+    Q_UNUSED(uuid);
+    Q_UNUSED(openMode);
+
+    Q_Q(QBluetoothSocket);
+
+    qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
+    errorString = QBluetoothSocket::tr("Socket type not supported");
+    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+}
+
+void QBluetoothSocketPrivateDummy::connectToService(
+        const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(address);
+    Q_UNUSED(port);
+    Q_UNUSED(openMode);
+
+    Q_Q(QBluetoothSocket);
+
+    qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
+    errorString = QBluetoothSocket::tr("Socket type not supported");
+    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+}
+
 void QBluetoothSocketPrivateDummy::abort()
 {
 }

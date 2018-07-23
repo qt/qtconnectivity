@@ -49,10 +49,7 @@
 #include "qbluetoothsocket_p.h"
 #endif
 
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothserviceinfo.h"
 #include "qbluetoothservicediscoveryagent.h"
-
 
 #include <QtCore/QLoggingCategory>
 #include <QSocketNotifier>
@@ -354,62 +351,7 @@ qint64 QBluetoothSocket::bytesToWrite() const
 void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, OpenMode openMode)
 {
     Q_D(QBluetoothSocketBase);
-
-    if (state() != QBluetoothSocket::UnconnectedState && state() != QBluetoothSocket::ServiceLookupState) {
-        qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
-        d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
-        setSocketError(QBluetoothSocket::OperationError);
-        return;
-    }
-#if defined(QT_ANDROID_BLUETOOTH)
-    if (!d->ensureNativeSocket(service.socketProtocol())) {
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-    d->connectToServiceHelper(service.device().address(), service.serviceUuid(), openMode);
-#else
-#if defined(QT_WINRT_BLUETOOTH)
-    // Report these problems early:
-    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-#endif // QT_WINRT_BLUETOOTH
-    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
-                            "connect with 'UnknownProtocol' type";
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-
-    if (service.protocolServiceMultiplexer() > 0) {
-        if (!d->ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
-            d->errorString = tr("Unknown socket error");
-            setSocketError(UnknownSocketError);
-            return;
-        }
-        d->connectToServiceHelper(service.device().address(), service.protocolServiceMultiplexer(), openMode);
-    } else if (service.serverChannel() > 0) {
-        if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
-            d->errorString = tr("Unknown socket error");
-            setSocketError(UnknownSocketError);
-            return;
-        }
-        d->connectToServiceHelper(service.device().address(), service.serverChannel(), openMode);
-    } else {
-        // try doing service discovery to see if we can find the socket
-        if (service.serviceUuid().isNull()
-                && !service.serviceClassUuids().contains(QBluetoothUuid::SerialPort)) {
-            qCWarning(QT_BT) << "No port, no PSM, and no UUID provided, unable to connect";
-            return;
-        }
-        qCDebug(QT_BT) << "Need a port/psm, doing discovery";
-        doDeviceDiscovery(service, openMode);
-    }
-#endif
+    d->connectToService(service, openMode);
 }
 
 /*!
@@ -429,10 +371,10 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     For BlueZ, the socket first enters the \l ServiceLookupState and queries the connection parameters for
     \a uuid. If the service parameters are successfully retrieved the socket enters
     ConnectingState, and attempts to connect to \a address. If a connection is established,
-    QBluetoothSocket enters Connected State and emits connected().
+    QBluetoothSocket enters \l ConnectedState and emits connected().
 
     On Android, the service connection can directly be established
-    using the UUID of the remote service. Therefore the platforms does not require
+    using the UUID of the remote service. Therefore the platform does not require
     the \l ServiceLookupState and \l socketType() is always set to
     \l QBluetoothServiceInfo::RfcommProtocol.
 
@@ -446,44 +388,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode)
 {
     Q_D(QBluetoothSocketBase);
-
-    if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
-        d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
-        setSocketError(QBluetoothSocket::OperationError);
-        return;
-    }
-
-#if defined(QT_ANDROID_BLUETOOTH)
-    if (!d->ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-    d->connectToServiceHelper(address, uuid, openMode);
-#else
-#if defined(QT_WINRT_BLUETOOTH)
-    // Report these problems early, prevent device discovery:
-    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-#endif // QT_WINRT_BLUETOOTH
-    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
-                            "connect with 'UnknownProtocol' type";
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-
-    QBluetoothServiceInfo service;
-    QBluetoothDeviceInfo device(address, QString(), QBluetoothDeviceInfo::MiscellaneousDevice);
-    service.setDevice(device);
-    service.setServiceUuid(uuid);
-    doDeviceDiscovery(service, openMode);
-#endif
+    d->connectToService(address, uuid, openMode);
 }
 
 /*!
@@ -497,7 +402,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
     At any point, the socket can emit error() to signal that an error occurred.
 
     On Android, a connection to a service can not be established using a port. Calling this function
-    will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}
+    will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}.
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
     the connection process may fail.
@@ -507,40 +412,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 void QBluetoothSocket::connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode)
 {
     Q_D(QBluetoothSocketBase);
-#if defined(QT_ANDROID_BLUETOOTH)
-    Q_UNUSED(port);
-    Q_UNUSED(openMode);
-    Q_UNUSED(address);
-    d->errorString = tr("Connecting to port is not supported");
-    setSocketError(QBluetoothSocket::ServiceNotFoundError);
-    qCWarning(QT_BT) << "Connecting to port is not supported";
-#else
-#if defined(QT_WINRT_BLUETOOTH)
-    // Report these problems early
-    if (socketType() != QBluetoothServiceInfo::RfcommProtocol) {
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-#endif // QT_WINRT_BLUETOOTH
-    if (socketType() == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT) << "QBluetoothSocket::connectToService cannot "
-                            "connect with 'UnknownProtocol' type";
-        d->errorString = tr("Socket type not supported");
-        setSocketError(QBluetoothSocket::UnsupportedProtocolError);
-        return;
-    }
-
-    if (state() != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT)  << "QBluetoothSocket::connectToService called on busy socket";
-        d->errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
-        setSocketError(QBluetoothSocket::OperationError);
-        return;
-    }
-
-    setOpenMode(openMode);
-    d->connectToServiceHelper(address, port, openMode);
-#endif
+    d->connectToService(address, port, openMode);
 }
 
 /*!

@@ -122,6 +122,7 @@ public:
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) = 0;
 
+
 #if defined(QT_ANDROID_BLUETOOTH)
     virtual void connectToServiceHelper(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                           QIODevice::OpenMode openMode) = 0;
@@ -129,6 +130,12 @@ public:
     virtual void connectToServiceHelper(const QBluetoothAddress &address, quint16 port,
                                   QIODevice::OpenMode openMode) = 0;
 #endif
+    virtual void connectToService(const QBluetoothServiceInfo &service,
+                                  QIODevice::OpenMode openMode) = 0;
+    virtual void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+                                  QIODevice::OpenMode openMode) = 0;
+    virtual void connectToService(const QBluetoothAddress &address, quint16 port,
+                                  QIODevice::OpenMode openMode) = 0;
 
 #ifdef QT_ANDROID_BLUETOOTH
     virtual bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,

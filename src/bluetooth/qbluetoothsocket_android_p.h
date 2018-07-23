@@ -74,6 +74,13 @@ public:
     void connectToServiceHelper(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                           QIODevice::OpenMode openMode);
 
+    void connectToService(const QBluetoothServiceInfo &service,
+                          QIODevice::OpenMode openMode);
+    void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+                          QIODevice::OpenMode openMode);
+    void connectToService(const QBluetoothAddress &address, quint16 port,
+                          QIODevice::OpenMode openMode);
+
     bool fallBackConnect(QAndroidJniObject uuid, int channel);
     bool fallBackReversedConnect(const QBluetoothUuid &uuid);
 

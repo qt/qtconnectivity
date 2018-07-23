@@ -63,6 +63,29 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(const QBluetoothAd
     Q_UNUSED(port);
 }
 
+void QBluetoothSocketPrivateBluezDBus::connectToService(
+        const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(openMode);
+    Q_UNUSED(service);
+}
+
+void QBluetoothSocketPrivateBluezDBus::connectToService(
+        const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(openMode);
+    Q_UNUSED(address);
+    Q_UNUSED(uuid);
+}
+
+void QBluetoothSocketPrivateBluezDBus::connectToService(
+        const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(openMode);
+    Q_UNUSED(address);
+    Q_UNUSED(port);
+}
+
 void QBluetoothSocketPrivateBluezDBus::abort()
 {
 }
