@@ -92,12 +92,12 @@ extern void registerQLowEnergyControllerMetaType();
 
 class QLeAdvertiser;
 
-class QLowEnergyControllerPrivateAndroid : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateAndroid final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
     QLowEnergyControllerPrivateAndroid();
-    ~QLowEnergyControllerPrivateAndroid();
+    ~QLowEnergyControllerPrivateAndroid() override;
 
     void init() override;
 

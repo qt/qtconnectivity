@@ -76,12 +76,12 @@ extern void registerQLowEnergyControllerMetaType();
 
 class QLeAdvertiser;
 
-class QLowEnergyControllerPrivateBluez : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateBluez final: public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
     QLowEnergyControllerPrivateBluez();
-    ~QLowEnergyControllerPrivateBluez();
+    ~QLowEnergyControllerPrivateBluez() override;
 
     void init() override;
 
