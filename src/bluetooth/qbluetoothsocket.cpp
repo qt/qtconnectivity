@@ -46,7 +46,7 @@
 #elif defined(QT_WINRT_BLUETOOTH)
 #include "qbluetoothsocket_winrt_p.h"
 #else
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_dummy_p.h"
 #endif
 
 #include "qbluetoothservicediscoveryagent.h"

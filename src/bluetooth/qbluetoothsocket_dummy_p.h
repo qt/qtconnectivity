@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHSOCKET_P_H
-#define QBLUETOOTHSOCKET_P_H
+#ifndef QBLUETOOTHSOCKET_DUMMY_H
+#define QBLUETOOTHSOCKET_DUMMY_H
 
 //
 //  W A R N I N G
@@ -102,6 +102,6 @@ public:
     qint64 bytesToWrite() const override;
 };
 
-QT_END_NAMESPACE
+QT_END_NAMESPACE // QBLUETOOTHSOCKET_DUMMY_H
 
 #endif

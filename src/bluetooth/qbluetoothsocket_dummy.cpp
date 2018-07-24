@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qbluetoothsocket.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_dummy_p.h"
 #ifndef QT_IOS_BLUETOOTH
 #include "dummy/dummy_helper_p.h"
 #endif
