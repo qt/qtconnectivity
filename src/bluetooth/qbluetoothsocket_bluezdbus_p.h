@@ -61,44 +61,43 @@ class QBluetoothSocketPrivateBluezDBus final: public QBluetoothSocketBasePrivate
 
 public:
     QBluetoothSocketPrivateBluezDBus();
-    ~QBluetoothSocketPrivateBluezDBus();
+    ~QBluetoothSocketPrivateBluezDBus() override;
 
     void connectToServiceHelper(const QBluetoothAddress &address,
                           quint16 port,
-                          QIODevice::OpenMode openMode);
+                          QIODevice::OpenMode openMode) override;
 
     void connectToService(const QBluetoothServiceInfo &service,
-                          QIODevice::OpenMode openMode);
+                          QIODevice::OpenMode openMode) override;
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
-                          QIODevice::OpenMode openMode);
+                          QIODevice::OpenMode openMode) override;
     void connectToService(const QBluetoothAddress &address, quint16 port,
-                          QIODevice::OpenMode openMode);
+                          QIODevice::OpenMode openMode) override;
 
-    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type);
+    bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;
 
-    QString localName() const;
-    QBluetoothAddress localAddress() const;
-    quint16 localPort() const;
+    QString localName() const override;
+    QBluetoothAddress localAddress() const override;
+    quint16 localPort() const override;
 
-    QString peerName() const;
-    QBluetoothAddress peerAddress() const;
-    quint16 peerPort() const;
+    QString peerName() const override;
+    QBluetoothAddress peerAddress() const override;
+    quint16 peerPort() const override;
 
-    void abort();
-    void close();
+    void abort() override;
+    void close() override;
 
-    qint64 writeData(const char *data, qint64 maxSize);
-    qint64 readData(char *data, qint64 maxSize);
+    qint64 writeData(const char *data, qint64 maxSize) override;
+    qint64 readData(char *data, qint64 maxSize) override;
 
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
-                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite);
+                             QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
 
-    qint64 bytesAvailable() const;
-    bool canReadLine() const;
-    qint64 bytesToWrite() const;
+    qint64 bytesAvailable() const override;
+    bool canReadLine() const override;
+    qint64 bytesToWrite() const override;
 };
-
 
 QT_END_NAMESPACE
 
