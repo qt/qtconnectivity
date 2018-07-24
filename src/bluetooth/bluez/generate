@@ -14,7 +14,7 @@ qdbusxml2cpp -a obex_agent_p.h:obex_agent.cpp org.openobex.agent.xml org.openobe
 #Bluez 5
 qdbusxml2cpp -p adapter1_bluez5_p.h:adapter1_bluez5.cpp org.bluez.Adapter1.xml
 qdbusxml2cpp -i bluez5_helper_p.h -p device1_bluez5_p.h:device1_bluez5.cpp org.bluez.Device1.xml
-qdbusxml2cpp -p profile1_p.h:profile1.cpp org.bluez.ProfileManager1.xml
+qdbusxml2cpp -p profilemanager1_p.h:profilemanager1.cpp org.bluez.ProfileManager1.xml
 qdbusxml2cpp -i bluez5_helper_p.h -p objectmanager_p.h:objectmanager.cpp org.freedesktop.dbus.objectmanager.xml
 qdbusxml2cpp -p properties_p.h:properties.cpp org.freedesktop.dbus.properties.xml
 qdbusxml2cpp -p obex_client1_bluez5_p.h:obex_client1_bluez5_p.h org.bluez.Client1.xml

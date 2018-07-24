@@ -43,7 +43,7 @@
 #include "bluez/manager_p.h"
 #include "bluez/service_p.h"
 #include "bluez/bluez5_helper_p.h"
-#include "bluez/profile1_p.h"
+#include "bluez/profilemanager1_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QXmlStreamWriter>
