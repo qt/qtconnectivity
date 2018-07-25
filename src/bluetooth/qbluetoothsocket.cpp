@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Copyright (C) 2016 BlackBerry Limited. All rights reserved.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -41,6 +41,7 @@
 #include "qbluetoothsocket.h"
 #if QT_CONFIG(bluez)
 #include "qbluetoothsocket_bluez_p.h"
+#include "qbluetoothsocket_bluezdbus_p.h"
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include "qbluetoothsocket_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
@@ -259,6 +260,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 {
 #if QT_CONFIG(bluez)
     d_ptr = new QBluetoothSocketPrivateBluez();
+    //d_ptr = new QBluetoothSocketPrivateBluezDBus();
 #elif defined(QT_ANDROID_BLUETOOTH)
     d_ptr = new QBluetoothSocketPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
@@ -282,6 +284,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
 {
 #if QT_CONFIG(bluez)
     d_ptr = new QBluetoothSocketPrivateBluez();
+    //d_ptr = new QBluetoothSocketPrivateBluezDBus();
 #elif defined(QT_ANDROID_BLUETOOTH)
     d_ptr = new QBluetoothSocketPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
@@ -724,6 +727,7 @@ void QBluetoothSocket::close()
     d->close();
 
 #ifndef QT_ANDROID_BLUETOOTH
+    // TODO Add return type to d->close() & d->abort() to detect when to emit below signals
     //Android closes when the Java event loop comes around
     setSocketState(UnconnectedState);
     emit readChannelFinished();

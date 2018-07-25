@@ -53,7 +53,16 @@
 
 #include "qbluetoothsocketbase_p.h"
 
+#include <QtDBus/qdbusunixfiledescriptor.h>
+
+#include <QtNetwork/qlocalsocket.h>
+
+class OrgBluezProfileManager1Interface;
+
 QT_BEGIN_NAMESPACE
+
+class QLocalSocket;
+class OrgBluezProfile1ContextInterface;
 
 class QBluetoothSocketPrivateBluezDBus final: public QBluetoothSocketBasePrivate
 {
@@ -66,6 +75,9 @@ public:
     void connectToServiceHelper(const QBluetoothAddress &address,
                           quint16 port,
                           QIODevice::OpenMode openMode) override;
+    void connectToServiceHelper(const QBluetoothAddress &address,
+                                const QBluetoothUuid &uuid,
+                                QIODevice::OpenMode openMode);
 
     void connectToService(const QBluetoothServiceInfo &service,
                           QIODevice::OpenMode openMode) override;
@@ -97,6 +109,20 @@ public:
     qint64 bytesAvailable() const override;
     bool canReadLine() const override;
     qint64 bytesToWrite() const override;
+
+private:
+    void remoteConnected(const QDBusUnixFileDescriptor &fd);
+    void socketStateChanged(QLocalSocket::LocalSocketState newState);
+
+    void clearSocket();
+
+private:
+    OrgBluezProfileManager1Interface *profileManager = nullptr;
+    OrgBluezProfile1ContextInterface *profileContext = nullptr;
+    QString remoteDevicePath;
+    QString profileUuid;
+    QString profilePath;
+    QLocalSocket *localSocket = nullptr;
 };
 
 QT_END_NAMESPACE

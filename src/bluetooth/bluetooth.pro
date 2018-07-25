@@ -87,7 +87,7 @@ win32 {
 
 qtConfig(bluez) {
     QT_PRIVATE = concurrent
-    QT_FOR_PRIVATE += dbus
+    QT_FOR_PRIVATE += dbus network
 
     # do not link against QtNetwork but use inline qt_safe_* functions
     INCLUDEPATH += $$QT.network_private.includes
