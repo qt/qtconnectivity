@@ -14,6 +14,7 @@ HEADERS += bluez/manager_p.h \
            bluez/adapter1_bluez5_p.h \
            bluez/device1_bluez5_p.h \
            bluez/profilemanager1_p.h \
+           bluez/profile1_p.h \
            bluez/obex_client1_bluez5_p.h \
            bluez/obex_objectpush1_bluez5_p.h \
            bluez/obex_transfer1_bluez5_p.h \
@@ -41,6 +42,7 @@ SOURCES += bluez/manager.cpp \
            bluez/device1_bluez5.cpp \
            bluez/bluez5_helper.cpp \
            bluez/profilemanager1.cpp \
+           bluez/profile1.cpp \
            bluez/obex_client1_bluez5.cpp \
            bluez/obex_objectpush1_bluez5.cpp \
            bluez/obex_transfer1_bluez5.cpp \
