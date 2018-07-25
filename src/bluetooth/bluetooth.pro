@@ -257,8 +257,8 @@ qtConfig(bluez) {
         qbluetoothserver_win.cpp \
         qlowenergycontroller_win.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_win_p.h
-
+    PRIVATE_HEADERS += qlowenergycontroller_win_p.h \
+                       qbluetoothsocket_win_p.h
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers available.")

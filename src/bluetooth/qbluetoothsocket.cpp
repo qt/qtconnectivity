@@ -45,6 +45,8 @@
 #include "qbluetoothsocket_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
 #include "qbluetoothsocket_winrt_p.h"
+#elif defined(QT_WIN_BLUETOOTH)
+#include "qbluetoothsocket_win_p.h"
 #else
 #include "qbluetoothsocket_dummy_p.h"
 #endif
@@ -263,6 +265,8 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
     d_ptr = new QBluetoothSocketPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
     d_ptr = new QBluetoothSocketPrivateWinRT();
+#elif defined(QT_WIN_BLUETOOTH)
+    d_ptr = new QBluetoothSocketPrivateWin();
 #else
     d_ptr = new QBluetoothSocketPrivateDummy();
 #endif
@@ -286,6 +290,8 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
     d_ptr = new QBluetoothSocketPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
     d_ptr = new QBluetoothSocketPrivateWinRT();
+#elif defined(QT_WIN_BLUETOOTH)
+    d_ptr = new QBluetoothSocketPrivateWin();
 #else
     d_ptr = new QBluetoothSocketPrivateDummy();
 #endif
