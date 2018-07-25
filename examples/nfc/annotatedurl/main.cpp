@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -41,26 +51,21 @@
 #include "annotatedurl.h"
 #include "mainwindow.h"
 
-#include <qnearfieldmanager.h>
-#include <qndefnfctextrecord.h>
-#include <qndefnfcurirecord.h>
+#include <QtNfc/qnearfieldmanager.h>
+#include <QtNfc/qndefnfctextrecord.h>
+#include <QtNfc/qndefnfcurirecord.h>
 
-#include <QtCore/QLocale>
-
-#include <QApplication>
-
+#include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
 {
-    //QLocale::setDefault(QLocale(QLocale::Japanese));
-
     QApplication a(argc, argv);
     MainWindow mainWindow;
 
     AnnotatedUrl annotatedUrl;
 
-    QObject::connect(&annotatedUrl, SIGNAL(annotatedUrl(QUrl,QString,QPixmap)),
-                     &mainWindow, SLOT(displayAnnotatedUrl(QUrl,QString,QPixmap)));
+    QObject::connect(&annotatedUrl, &AnnotatedUrl::annotatedUrl,
+                     &mainWindow, &MainWindow::displayAnnotatedUrl);
 
     mainWindow.show();
 

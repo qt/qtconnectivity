@@ -58,6 +58,7 @@ struct quint128
 class Q_BLUETOOTH_EXPORT QBluetoothUuid : public QUuid
 {
 public:
+    //TODO Qt 6: Convert enums to scoped enums (see QTBUG-65831)
     enum ProtocolUuid {
         Sdp = 0x0001,
         Udp = 0x0002,
@@ -380,6 +381,8 @@ public:
 
     bool operator==(const QBluetoothUuid &other) const;
     bool operator!=(const QBluetoothUuid &other) const { return !operator==(other); }
+
+    QBluetoothUuid &operator=(const QBluetoothUuid &other) = default;
 
     int minimumSize() const;
 

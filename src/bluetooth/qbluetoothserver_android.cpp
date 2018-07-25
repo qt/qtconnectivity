@@ -41,7 +41,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_android_p.h"
 #include "qbluetoothlocaldevice.h"
 #include "android/serveracceptancethread_p.h"
 

@@ -40,7 +40,7 @@
 
 #include "hcimanager_p.h"
 
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocketbase_p.h"
 #include "qlowenergyconnectionparameters.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -52,10 +52,6 @@
 #include <sys/ioctl.h>
 #include <sys/uio.h>
 #include <unistd.h>
-
-#define HCIGETCONNLIST  _IOR('H', 212, int)
-#define HCIGETDEVINFO   _IOR('H', 211, int)
-#define HCIGETDEVLIST   _IOR('H', 210, int)
 
 QT_BEGIN_NAMESPACE
 

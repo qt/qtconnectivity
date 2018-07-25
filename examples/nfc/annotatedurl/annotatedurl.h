@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -41,7 +51,7 @@
 #ifndef ANNOTATEDURL_H
 #define ANNOTATEDURL_H
 
-#include <QNdefMessage>
+#include <QtNfc/QNdefMessage>
 
 #include <QtCore/QObject>
 
@@ -50,8 +60,7 @@ QT_FORWARD_DECLARE_CLASS(QPixmap)
 QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
 QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)
 
-QT_USE_NAMESPACE
-
+//! [0]
 class AnnotatedUrl : public QObject
 {
     Q_OBJECT
@@ -71,5 +80,6 @@ public slots:
 private:
     QNearFieldManager *manager;
 };
+//! [0]
 
 #endif // ANNOTATEDURL_H

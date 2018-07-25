@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -118,11 +128,9 @@ Rectangle {
 
     Text {
         id: touchText
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
+        anchors { horizontalCenter: parent.horizontalCenter; horizontalCenterOffset: parent.verticalCenter }
         text: "Touch an NFC tag with at least one Text and one URI record."
-        font.bold: true
-        font.pointSize: 18
+        font { italic: true; pointSize: 18 }
         wrapMode: Text.WordWrap
         width: root.width*0.75
         horizontalAlignment: Text.AlignHCenter
@@ -140,27 +148,22 @@ Rectangle {
 
     Text {
         id: posterText
-        anchors.horizontalCenter: parent.right
-        anchors.horizontalCenterOffset: - parent.width / 4
         y: -height
-        font.bold: true
-        font.pointSize: 18
+        anchors { horizontalCenter: parent.right; horizontalCenterOffset: - parent.width / 4 }
+        font { italic: true; pointSize: 18 }
     }
 
     Text {
         id: posterUrl
-        anchors.horizontalCenter: parent.right
-        anchors.horizontalCenterOffset: - parent.width / 4
         y: parent.height
-        font.italic: true
-        font.pointSize: 14
+        anchors { horizontalCenter: parent.right; horizontalCenterOffset: - parent.width / 4 }
+        font { italic: true; pointSize: 14 }
     }
 
     MouseArea {
         id: openMouseArea
         anchors.fill: parent
         enabled: root.state == "show"
-
         onClicked: Qt.openUrlExternally(posterUrl.text)
 
         Rectangle {
@@ -169,14 +172,10 @@ Rectangle {
             height: 50
             color: "lightsteelblue"
             opacity: 0.3
-            anchors.top:  parent.top
-            anchors.right: close.left
-            anchors.rightMargin: 10
-
+            anchors { top:  parent.top; right: close.left; rightMargin: 10 }
             MouseArea {
                 id: touchMouseArea
                 anchors.fill: parent
-
                 onClicked: {
                     if (root.state == "") {
                         root.state = "show";
@@ -194,34 +193,26 @@ Rectangle {
             color: "black"
             radius: 0
             opacity: 0.3
-            anchors.top: parent.top
-            anchors.topMargin: 0
-            anchors.right: parent.right
-            anchors.rightMargin: 0
-
+            anchors { top: parent.top; topMargin: 0; right: parent.right; rightMargin: 0 }
             MouseArea {
                 id: closeMouseArea
                 anchors.fill: parent
-
                 onClicked: Qt.quit();
             }
         }
     }
 
-    states: [
-        State {
-            name: "show"
-            PropertyChanges { target: posterText; y: root.height / 3 }
-            PropertyChanges { target: posterUrl; y: 2 * root.height / 3 }
-            PropertyChanges { target: posterImage; x: root.width / 20 }
-            PropertyChanges { target: touchText; opacity: 0 }
-        }
-    ]
+    states: State {
+        name: "show"
+        PropertyChanges { target: posterText; y: root.height / 3 }
+        PropertyChanges { target: posterUrl; y: 2 * root.height / 3 }
+        PropertyChanges { target: posterImage; x: root.width / 20 }
+        PropertyChanges { target: touchText; opacity: 0 }
+    }
 
-    transitions: [
-        Transition {
-            PropertyAnimation { easing.type: Easing.OutQuad; properties: "x,y" }
-            PropertyAnimation { property: "opacity"; duration: 125 }
-        }
-    ]
+
+    transitions: Transition {
+        PropertyAnimation { easing.type: Easing.OutQuad; properties: "x,y" }
+        PropertyAnimation { property: "opacity"; duration: 125 }
+    }
 }

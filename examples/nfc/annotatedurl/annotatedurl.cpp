@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -37,24 +47,22 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 #include "annotatedurl.h"
 
-#include <qnearfieldmanager.h>
-#include <qnearfieldtarget.h>
-#include <qndefmessage.h>
-#include <qndefrecord.h>
-#include <qndefnfctextrecord.h>
-#include <qndefnfcurirecord.h>
+#include <QtNfc/qnearfieldmanager.h>
+#include <QtNfc/qnearfieldtarget.h>
+#include <QtNfc/qndefmessage.h>
+#include <QtNfc/qndefrecord.h>
+#include <QtNfc/qndefnfctextrecord.h>
+#include <QtNfc/qndefnfcurirecord.h>
 
-#include <QtCore/QUrl>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QLabel>
+#include <QtGui/QMouseEvent>
+#include <QtGui/QDesktopServices>
+#include <QtCore/QDebug>
 #include <QtCore/QLocale>
-
-#include <QGridLayout>
-#include <QLabel>
-#include <QMouseEvent>
-#include <QDesktopServices>
-#include <QDebug>
+#include <QtCore/QUrl>
 
 AnnotatedUrl::AnnotatedUrl(QObject *parent)
 :   QObject(parent)
@@ -81,10 +89,10 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
         qWarning() << "Platform does not support NDEF message handler registration";
 
     manager->startTargetDetection();
-    connect(manager, SIGNAL(targetDetected(QNearFieldTarget*)),
-            this, SLOT(targetDetected(QNearFieldTarget*)));
-    connect(manager, SIGNAL(targetLost(QNearFieldTarget*)),
-            this, SLOT(targetLost(QNearFieldTarget*)));
+    connect(manager, &QNearFieldManager::targetDetected,
+            this, &AnnotatedUrl::targetDetected);
+    connect(manager, &QNearFieldManager::targetLost,
+            this, &AnnotatedUrl::targetLost);
 }
 
 AnnotatedUrl::~AnnotatedUrl()
@@ -97,8 +105,8 @@ void AnnotatedUrl::targetDetected(QNearFieldTarget *target)
     if (!target)
         return;
 
-    connect(target, SIGNAL(ndefMessageRead(QNdefMessage)),
-            this, SLOT(handlePolledNdefMessage(QNdefMessage)));
+    connect(target, &QNearFieldTarget::ndefMessageRead,
+            this, &AnnotatedUrl::handlePolledNdefMessage);
     target->readNdefMessages();
 }
 
@@ -160,12 +168,12 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
             QNdefNfcUriRecord uriRecord(record);
 
             url = uriRecord.uri();
-//! [handleMessage 3]
         } else if (record.typeNameFormat() == QNdefRecord::Mime &&
                    record.type().startsWith("image/")) {
             pixmap = QPixmap::fromImage(QImage::fromData(record.payload()));
-//! [handleMessage 4]
         }
+//! [handleMessage 3]
+//! [handleMessage 4]
     }
 
     emit annotatedUrl(url, title, pixmap);

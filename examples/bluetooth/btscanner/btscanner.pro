@@ -1,6 +1,7 @@
 TARGET = btscanner
 
 QT = core bluetooth widgets
+requires(qtConfig(listwidget))
 TEMPLATE = app
 
 SOURCES = \

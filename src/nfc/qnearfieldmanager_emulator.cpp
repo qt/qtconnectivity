@@ -53,8 +53,8 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
 
     tagActivator->initialize();
 
-    connect(tagActivator, SIGNAL(tagActivated(TagBase*)), this, SLOT(tagActivated(TagBase*)));
-    connect(tagActivator, SIGNAL(tagDeactivated(TagBase*)), this, SLOT(tagDeactivated(TagBase*)));
+    connect(tagActivator, &TagActivator::tagActivated, this, &QNearFieldManagerPrivateImpl::tagActivated);
+    connect(tagActivator, &TagActivator::tagDeactivated, this, &QNearFieldManagerPrivateImpl::tagDeactivated);
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()

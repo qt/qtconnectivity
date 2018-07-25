@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -45,21 +55,18 @@
 #include "urirecordeditor.h"
 #include "mimeimagerecordeditor.h"
 
-#include <QtCore/QTime>
-#include <QMenu>
-#include <QVBoxLayout>
-#include <QFrame>
-#include <QLabel>
-#include <QFileDialog>
+#include <QtNfc/qndefnfcurirecord.h>
+#include <QtNfc/qndefnfctextrecord.h>
+#include <QtNfc/qndefrecord.h>
+#include <QtNfc/qndefmessage.h>
+#include <QtNfc/qnearfieldmanager.h>
+#include <QtNfc/qnearfieldtarget.h>
 
-#include <qnearfieldmanager.h>
-#include <qnearfieldtarget.h>
-#include <qndefrecord.h>
-#include <qndefnfctextrecord.h>
-#include <qndefnfcurirecord.h>
-#include <qndefmessage.h>
-
-#include <QtCore/QDebug>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFrame>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QFileDialog>
 
 class EmptyRecordLabel : public QLabel
 {
@@ -136,10 +143,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     //! [QNearFieldManager init]
     m_manager = new QNearFieldManager(this);
-    connect(m_manager, SIGNAL(targetDetected(QNearFieldTarget*)),
-            this, SLOT(targetDetected(QNearFieldTarget*)));
-    connect(m_manager, SIGNAL(targetLost(QNearFieldTarget*)),
-            this, SLOT(targetLost(QNearFieldTarget*)));
+    connect(m_manager, &QNearFieldManager::targetDetected,
+            this, &MainWindow::targetDetected);
+    connect(m_manager, &QNearFieldManager::targetLost,
+            this, &MainWindow::targetLost);
     //! [QNearFieldManager init]
 }
 
@@ -229,19 +236,16 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
     case NoAction:
         break;
     case ReadNdef:
-        connect(target, SIGNAL(ndefMessageRead(QNdefMessage)),
-                this, SLOT(ndefMessageRead(QNdefMessage)));
-        connect(target, SIGNAL(error(QNearFieldTarget::Error,QNearFieldTarget::RequestId)),
-                this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
+        connect(target, &QNearFieldTarget::ndefMessageRead, this, &MainWindow::ndefMessageRead);
+        connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
 
         m_request = target->readNdefMessages();
         if (!m_request.isValid()) // cannot read messages
             targetError(QNearFieldTarget::NdefReadError, m_request);
         break;
     case WriteNdef:
-        connect(target, SIGNAL(ndefMessagesWritten()), this, SLOT(ndefMessageWritten()));
-        connect(target, SIGNAL(error(QNearFieldTarget::Error,QNearFieldTarget::RequestId)),
-                this, SLOT(targetError(QNearFieldTarget::Error,QNearFieldTarget::RequestId)));
+        connect(target, &QNearFieldTarget::ndefMessagesWritten, this, &MainWindow::ndefMessageWritten);
+        connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
 
         m_request = target->writeNdefMessages(QList<QNdefMessage>() << ndefMessage());
         if (!m_request.isValid()) // cannot write messages

@@ -353,14 +353,13 @@ private:
 
             if (!newNdefMessage.isEmpty()) {
                 QMetaObject::invokeMethod(this, "ndefMessageRead", Qt::QueuedConnection,
-                                          Q_ARG(const QNdefMessage, newNdefMessage));
+                                          Q_ARG(QNdefMessage, newNdefMessage));
                 // the request id in requestCompleted has to match the one created in readNdefMessages
-                QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                                        Q_ARG(const QNearFieldTarget::RequestId, m_currentReadRequestId));
+                QMetaObject::invokeMethod(this, [this]() {
+                    Q_EMIT this->requestCompleted(this->m_currentReadRequestId);
+                }, Qt::QueuedConnection);
             } else {
-                QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                          Q_ARG(const QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
-                                          Q_ARG(const QNearFieldTarget::RequestId, m_currentReadRequestId));
+                this->reportError(QNearFieldTarget::UnknownError, m_currentReadRequestId);
             }
 
             m_readRequested = false;
@@ -388,14 +387,13 @@ private:
             reply.waitForFinished();
             if (reply.isError()) {
                 qCWarning(QT_NFC_NEARD) << "Error writing to NFC tag" << reply.error();
-                QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
-                                          Q_ARG(const QNearFieldTarget::Error, QNearFieldTarget::UnknownError),
-                                          Q_ARG(const QNearFieldTarget::RequestId, m_currentWriteRequestId));
+                this->reportError(QNearFieldTarget::UnknownError, m_currentWriteRequestId);
             }
 
             QMetaObject::invokeMethod(this, "ndefMessagesWritten", Qt::QueuedConnection);
-            QMetaObject::invokeMethod(this, "requestCompleted", Qt::QueuedConnection,
-                                      Q_ARG(const QNearFieldTarget::RequestId, m_currentWriteRequestId));
+            QMetaObject::invokeMethod(this, [this]() {
+                Q_EMIT this->requestCompleted(this->m_currentWriteRequestId);
+            }, Qt::QueuedConnection);
         }
 
         // invalidate current write request

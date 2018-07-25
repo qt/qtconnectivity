@@ -79,10 +79,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothServiceDiscoveryAgent;
 class QBluetoothAddress;
 
-class QBluetoothSocketPrivate : public QBluetoothSocketPrivateBase, public OSXBluetooth::ChannelDelegate
+class QBluetoothSocketPrivate : public QBluetoothSocketBasePrivate, public OSXBluetooth::ChannelDelegate
 {
     friend class QBluetoothSocket;
     friend class QBluetoothServer;
@@ -120,8 +119,6 @@ private:
 
     qint64 writeData(const char *data, qint64 maxSize);
     qint64 readData(char *data, qint64 maxSize);
-
-    QBluetoothSocket *q_ptr;
 
     QScopedPointer<QBluetoothServiceDiscoveryAgent> discoveryAgent;
 

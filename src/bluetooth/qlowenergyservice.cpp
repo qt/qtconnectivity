@@ -44,7 +44,7 @@
 
 #include <algorithm>
 
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontrollerbase_p.h"
 #include "qlowenergyserviceprivate_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -75,7 +75,7 @@ QT_BEGIN_NAMESPACE
 
     \image peripheral-structure.png Structure of a generic peripheral
 
-    A characteristic is the principle information carrier. It has a
+    A characteristic is the principal information carrier. It has a
     \l {QLowEnergyCharacteristic::value()}{value()} and
     \l {QLowEnergyCharacteristic::value()}{properties()}
     describing the access permissions for the value. The general purpose
@@ -380,23 +380,21 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
     qRegisterMetaType<QLowEnergyService::ServiceError>();
     qRegisterMetaType<QLowEnergyService::ServiceType>();
     qRegisterMetaType<QLowEnergyService::WriteMode>();
-    qRegisterMetaType<QLowEnergyCharacteristic>();
-    qRegisterMetaType<QLowEnergyDescriptor>();
 
-    connect(p.data(), SIGNAL(error(QLowEnergyService::ServiceError)),
-            this, SIGNAL(error(QLowEnergyService::ServiceError)));
-    connect(p.data(), SIGNAL(stateChanged(QLowEnergyService::ServiceState)),
-            this, SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
-    connect(p.data(), SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)),
-            this, SIGNAL(characteristicChanged(QLowEnergyCharacteristic,QByteArray)));
-    connect(p.data(), SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)),
-            this, SIGNAL(characteristicWritten(QLowEnergyCharacteristic,QByteArray)));
-    connect(p.data(), SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)),
-            this, SIGNAL(descriptorWritten(QLowEnergyDescriptor,QByteArray)));
-    connect(p.data(), SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)),
-            this, SIGNAL(characteristicRead(QLowEnergyCharacteristic,QByteArray)));
-    connect(p.data(), SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)),
-            this, SIGNAL(descriptorRead(QLowEnergyDescriptor,QByteArray)));
+    connect(p.data(), &QLowEnergyServicePrivate::error,
+            this, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error));
+    connect(p.data(), &QLowEnergyServicePrivate::stateChanged,
+            this, &QLowEnergyService::stateChanged);
+    connect(p.data(), &QLowEnergyServicePrivate::characteristicChanged,
+            this, &QLowEnergyService::characteristicChanged);
+    connect(p.data(), &QLowEnergyServicePrivate::characteristicWritten,
+            this, &QLowEnergyService::characteristicWritten);
+    connect(p.data(), &QLowEnergyServicePrivate::descriptorWritten,
+            this, &QLowEnergyService::descriptorWritten);
+    connect(p.data(), &QLowEnergyServicePrivate::characteristicRead,
+            this, &QLowEnergyService::characteristicRead);
+    connect(p.data(), &QLowEnergyServicePrivate::descriptorRead,
+            this, &QLowEnergyService::descriptorRead);
 }
 
 /*!

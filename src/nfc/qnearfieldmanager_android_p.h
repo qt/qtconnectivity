@@ -76,6 +76,7 @@ public:
     ~QNearFieldManagerPrivateImpl();
 
     virtual bool isAvailable() const;
+    bool isSupported() const override;
     virtual bool startTargetDetection();
     virtual void stopTargetDetection();
     virtual int registerNdefMessageHandler(QObject *object, const QMetaMethod &method);

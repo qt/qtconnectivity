@@ -80,10 +80,10 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     if (!found) {
         qCWarning(QT_NFC_NEARD) << "no adapter found, neard daemon running?";
     } else {
-        connect(m_neardHelper, SIGNAL(tagFound(QDBusObjectPath)),
-                this,          SLOT(handleTagFound(QDBusObjectPath)));
-        connect(m_neardHelper, SIGNAL(tagRemoved(QDBusObjectPath)),
-                this,          SLOT(handleTagRemoved(QDBusObjectPath)));
+        connect(m_neardHelper, &NeardHelper::tagFound,
+                this,          &QNearFieldManagerPrivateImpl::handleTagFound);
+        connect(m_neardHelper, &NeardHelper::tagRemoved,
+                this,          &QNearFieldManagerPrivateImpl::handleTagRemoved);
     }
 }
 
@@ -112,6 +112,21 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
     }
 
     return false;
+}
+
+bool QNearFieldManagerPrivateImpl::isSupported() const
+{
+    if (m_adapterPath.isEmpty()) {
+        qCWarning(QT_NFC_NEARD) << "no adapter found, neard daemon running?";
+        return false;
+    }
+
+    if (!m_neardHelper->dbusObjectManager()->isValid() || m_adapterPath.isNull()) {
+        qCWarning(QT_NFC_NEARD) << "dbus object manager invalid or adapter path invalid";
+        return false;
+    }
+
+    return true;
 }
 
 bool QNearFieldManagerPrivateImpl::startTargetDetection()

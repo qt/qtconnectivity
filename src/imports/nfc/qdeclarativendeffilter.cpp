@@ -78,7 +78,7 @@
 /*!
     \qmlproperty QQmlNdefRecord::TypeNameFormat NdefFilter::typeNameFormat
 
-    This property holds the NDEF record name format type \enum QQmlNdefRecord::TypeNameFormat.
+    This property holds the NDEF record name format type \l QQmlNdefRecord::TypeNameFormat.
 */
 
 /*!

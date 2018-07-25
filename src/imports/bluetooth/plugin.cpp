@@ -45,13 +45,6 @@
 #include "qdeclarativebluetoothservice_p.h"
 #include "qdeclarativebluetoothsocket_p.h"
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtBluetooth);
-#endif
-}
-
 QT_USE_NAMESPACE
 
 class QBluetoothQmlPlugin : public QQmlExtensionPlugin
@@ -59,7 +52,7 @@ class QBluetoothQmlPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QBluetoothQmlPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QBluetoothQmlPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri)
     {
         // @uri QtBluetooth
@@ -81,10 +74,8 @@ public:
         qmlRegisterType<QDeclarativeBluetoothService        >(uri, major, minor, "BluetoothService");
         qmlRegisterType<QDeclarativeBluetoothSocket         >(uri, major, minor, "BluetoothSocket");
 
-        // Register the 5.9 types
-        // introduces 5.9 version, other existing 5.2 exports become automatically available under 5.2-5.8
-        minor = 9;
-        qmlRegisterType<QDeclarativeBluetoothDiscoveryModel >(uri, major, minor, "BluetoothDiscoveryModel");
+        // Register the latest Qt version as QML type version
+        qmlRegisterModule(uri, QT_VERSION_MAJOR, QT_VERSION_MINOR);
     }
 };
 

@@ -7,3 +7,6 @@ qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
 qtConfig(bluez_le): DEFINES += CONFIG_BLUEZ_LE
 
 SOURCES += tst_qlowenergycontroller-gattserver.cpp
+
+# qemu doesn't support all the needed socket operations
+boot2qt: DEFINES += CHECK_CMAC_SUPPORT

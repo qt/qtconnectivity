@@ -1,4 +1,5 @@
 QT += nfc widgets
+requires(qtConfig(filedialog))
 
 TARGET = ndefeditor
 TEMPLATE = app

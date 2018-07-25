@@ -43,7 +43,7 @@
 // The order is important: a workround for
 // a private header included by private header
 // (incorrectly handled dependencies).
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocketbase_p.h"
 #include "qbluetoothsocket_osx_p.h"
 
 #include "qbluetoothlocaldevice.h"

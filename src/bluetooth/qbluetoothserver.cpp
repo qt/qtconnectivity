@@ -66,6 +66,9 @@ QT_BEGIN_NAMESPACE
     If the \l QBluetoothServiceInfo::Protocol is not supported by a platform, \l listen() will return \c false.
     Android and WinRT only support RFCOMM for example.
 
+    On iOS, this class cannot be used because the platform does not expose
+    an API which may permit access to QBluetoothServer related features.
+
     \sa QBluetoothServiceInfo, QBluetoothSocket
 */
 
@@ -186,7 +189,7 @@ QBluetoothServer::~QBluetoothServer()
     required to call \l QBluetoothServiceInfo::unregisterService() and \l close() on this
     server object.
 
-    Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
+    Returns a registered QBluetoothServiceInfo instance if successful otherwise an
     invalid QBluetoothServiceInfo. This function always assumes that the default Bluetooth adapter
     should be used.
 
