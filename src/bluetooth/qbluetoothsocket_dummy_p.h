@@ -102,6 +102,7 @@ public:
     qint64 bytesToWrite() const override;
 };
 
-QT_END_NAMESPACE // QBLUETOOTHSOCKET_DUMMY_H
+QT_END_NAMESPACE
 
-#endif
+#endif // QBLUETOOTHSOCKET_DUMMY_H
+
