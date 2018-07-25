@@ -73,12 +73,12 @@ class QWinRTLowEnergyServiceHandler;
 
 extern void registerQLowEnergyControllerMetaType();
 
-class QLowEnergyControllerPrivateWinRT : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateWinRT final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
     QLowEnergyControllerPrivateWinRT();
-    ~QLowEnergyControllerPrivateWinRT();
+    ~QLowEnergyControllerPrivateWinRT() override;
 
     void init() override;
 

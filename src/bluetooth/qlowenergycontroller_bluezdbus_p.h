@@ -69,12 +69,12 @@ QT_BEGIN_NAMESPACE
 
 class QDBusPendingCallWatcher;
 
-class QLowEnergyControllerPrivateBluezDBus : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateBluezDBus final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
     QLowEnergyControllerPrivateBluezDBus();
-    ~QLowEnergyControllerPrivateBluezDBus();
+    ~QLowEnergyControllerPrivateBluezDBus() override;
 
     void init() override;
     void connectToDevice() override;

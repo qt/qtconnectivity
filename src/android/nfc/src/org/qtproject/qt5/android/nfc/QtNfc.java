@@ -169,6 +169,11 @@ public class QtNfc
         return m_adapter.isEnabled();
     }
 
+    static public boolean isSupported()
+    {
+        return (m_adapter != null);
+    }
+
     static public Intent getStartIntent()
     {
         Log.d(TAG, "getStartIntent");

@@ -41,9 +41,7 @@
 // The order is important (the first header contains
 // the base class for a private socket) - workaround for
 // dependencies problem.
-#include "qbluetoothsocket_p.h"
-#include "qbluetoothsocket_osx_p.h"
-//
+#include "qbluetoothsocketbase_p.h"
 #include "qbluetoothsocket_osx_p.h"
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothdeviceinfo.h"
@@ -60,14 +58,14 @@
 QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-  : q_ptr(nullptr),
-    writeChunk(std::numeric_limits<UInt16>::max()),
+  : writeChunk(std::numeric_limits<UInt16>::max()),
     openMode(QIODevice::NotOpen), // That's what is set in public class' ctors.
     state(QBluetoothSocket::UnconnectedState),
     socketType(QBluetoothServiceInfo::UnknownProtocol),
     socketError(QBluetoothSocket::NoSocketError),
     isConnecting(false)
 {
+    q_ptr = nullptr;
 }
 
 QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
@@ -351,6 +349,7 @@ void QBluetoothSocketPrivate::channelClosed()
     if (!isConnecting) {
         q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
         q_ptr->setOpenMode(QIODevice::NotOpen);
+        emit q_ptr->readChannelFinished();
         emit q_ptr->disconnected();
     } else {
         state = QBluetoothSocket::UnconnectedState;
@@ -638,6 +637,7 @@ void QBluetoothSocket::abort()
     d_ptr->abort();
 
     setSocketState(QBluetoothSocket::UnconnectedState);
+    emit readChannelFinished();
     emit disconnected();
 }
 
@@ -726,6 +726,7 @@ void QBluetoothSocket::close()
     d_ptr->close();
 
     setSocketState(UnconnectedState);
+    emit readChannelFinished();
     emit disconnected();
 }
 

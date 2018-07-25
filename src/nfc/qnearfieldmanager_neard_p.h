@@ -75,6 +75,8 @@ public:
 
     bool isAvailable() const;
 
+    bool isSupported() const override;
+
     bool startTargetDetection();
 
     void stopTargetDetection();

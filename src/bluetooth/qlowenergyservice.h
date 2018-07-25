@@ -47,7 +47,6 @@
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
-class QLowEnergyControllerPrivateCommon;
 class Q_BLUETOOTH_EXPORT QLowEnergyService : public QObject
 {
     Q_OBJECT

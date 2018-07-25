@@ -65,12 +65,12 @@ class QLowEnergyServiceData;
 
 extern void registerQLowEnergyControllerMetaType();
 
-class QLowEnergyControllerPrivateCommon : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateCommon final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
     QLowEnergyControllerPrivateCommon();
-    ~QLowEnergyControllerPrivateCommon();
+    ~QLowEnergyControllerPrivateCommon() override;
 
     void init() override;
 

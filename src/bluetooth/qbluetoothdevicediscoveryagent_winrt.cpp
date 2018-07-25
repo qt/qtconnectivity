@@ -92,7 +92,7 @@ private:
                                    QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode);
     void gatherDeviceInformation(IDeviceInformation *deviceInfo,
                                  QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode);
-    void gatherMultipleDeviceInformation(IVectorView<DeviceInformation *> *devices,
+    void gatherMultipleDeviceInformation(quint32 deviceCount, IVectorView<DeviceInformation *> *devices,
                                          QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode);
     void setupLEDeviceWatcher();
     void classicBluetoothInfoFromDeviceIdAsync(HSTRING deviceId);
@@ -207,7 +207,20 @@ void QWinRTBluetoothDeviceDiscoveryWorker::onDeviceDiscoveryFinished(IAsyncOpera
     HRESULT hr;
     hr = op->GetResults(&devices);
     Q_ASSERT_SUCCEEDED(hr);
-    gatherMultipleDeviceInformation(devices.Get(), mode);
+    quint32 deviceCount;
+    hr = devices->get_Size(&deviceCount);
+    Q_ASSERT_SUCCEEDED(hr);
+
+    // For classic discovery only paired devices will be found. If we only do classic disovery and
+    // no device is found, the scan is finished.
+    if (requestedModes == QBluetoothDeviceDiscoveryAgent::ClassicMethod &&
+        deviceCount == 0) {
+        finishDiscovery();
+        return;
+    }
+
+    m_pendingPairedDevices += deviceCount;
+    gatherMultipleDeviceInformation(deviceCount, devices.Get(), mode);
 }
 
 void QWinRTBluetoothDeviceDiscoveryWorker::gatherDeviceInformation(IDeviceInformation *deviceInfo, QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
@@ -222,15 +235,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::gatherDeviceInformation(IDeviceInform
         classicBluetoothInfoFromDeviceIdAsync(deviceId.Get());
 }
 
-void QWinRTBluetoothDeviceDiscoveryWorker::gatherMultipleDeviceInformation(IVectorView<DeviceInformation *> *devices, QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
+void QWinRTBluetoothDeviceDiscoveryWorker::gatherMultipleDeviceInformation(quint32 deviceCount, IVectorView<DeviceInformation *> *devices, QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
 {
-    quint32 deviceCount;
-    HRESULT hr = devices->get_Size(&deviceCount);
-    Q_ASSERT_SUCCEEDED(hr);
-    m_pendingPairedDevices += deviceCount;
     for (quint32 i = 0; i < deviceCount; ++i) {
         ComPtr<IDeviceInformation> device;
-        hr = devices->GetAt(i, &device);
+        HRESULT hr = devices->GetAt(i, &device);
         Q_ASSERT_SUCCEEDED(hr);
         gatherDeviceInformation(device.Get(), mode);
     }
@@ -374,34 +383,39 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
     Q_ASSERT_SUCCEEDED(hr);
     IVectorView <Rfcomm::RfcommDeviceService *> *deviceServices;
     hr = device->get_RfcommServices(&deviceServices);
-    Q_ASSERT_SUCCEEDED(hr);
-    uint serviceCount;
-    hr = deviceServices->get_Size(&serviceCount);
-    Q_ASSERT_SUCCEEDED(hr);
-    QList<QBluetoothUuid> uuids;
-    for (uint i = 0; i < serviceCount; ++i) {
-        ComPtr<Rfcomm::IRfcommDeviceService> service;
-        hr = deviceServices->GetAt(i, &service);
+    if (hr == E_ACCESSDENIED) {
+        qCWarning(QT_BT_WINRT) << "Could not obtain device services. Please check you have "
+                                  "permission to access the device.";
+    } else {
         Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<Rfcomm::IRfcommServiceId> id;
-        hr = service->get_ServiceId(&id);
+        uint serviceCount;
+        hr = deviceServices->get_Size(&serviceCount);
         Q_ASSERT_SUCCEEDED(hr);
-        GUID uuid;
-        hr = id->get_Uuid(&uuid);
-        Q_ASSERT_SUCCEEDED(hr);
-        uuids.append(QBluetoothUuid(uuid));
+        QList<QBluetoothUuid> uuids;
+        for (uint i = 0; i < serviceCount; ++i) {
+            ComPtr<Rfcomm::IRfcommDeviceService> service;
+            hr = deviceServices->GetAt(i, &service);
+            Q_ASSERT_SUCCEEDED(hr);
+            ComPtr<Rfcomm::IRfcommServiceId> id;
+            hr = service->get_ServiceId(&id);
+            Q_ASSERT_SUCCEEDED(hr);
+            GUID uuid;
+            hr = id->get_Uuid(&uuid);
+            Q_ASSERT_SUCCEEDED(hr);
+            uuids.append(QBluetoothUuid(uuid));
+        }
+
+        qCDebug(QT_BT_WINRT) << "Discovered BT device: " << QString::number(address) << btName
+            << "Num UUIDs" << uuids.count();
+
+        QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, classOfDeviceInt);
+        info.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
+        info.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+        info.setCached(true);
+
+        QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
+                                  Q_ARG(QBluetoothDeviceInfo, info));
     }
-
-    qCDebug(QT_BT_WINRT) << "Discovered BT device: " << QString::number(address) << btName
-        << "Num UUIDs" << uuids.count();
-
-    QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, classOfDeviceInt);
-    info.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
-    info.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
-    info.setCached(true);
-
-    QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
-                              Q_ARG(QBluetoothDeviceInfo, info));
     if (!m_pendingPairedDevices && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
         finishDiscovery();
     return S_OK;

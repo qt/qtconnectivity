@@ -52,15 +52,30 @@
 
 QT_BEGIN_NAMESPACE
 
+#ifndef QT_OSX_BLUETOOTH
+class QBluetoothSocketBasePrivate;
+#else
 class QBluetoothSocketPrivate;
+#endif
 
 class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 {
     Q_OBJECT
+#ifndef QT_OSX_BLUETOOTH
+    Q_DECLARE_PRIVATE(QBluetoothSocketBase)
+#else
     Q_DECLARE_PRIVATE(QBluetoothSocket)
+#endif
+
 
     friend class QBluetoothServer;
     friend class QBluetoothServerPrivate;
+    friend class QBluetoothSocketPrivate;
+    friend class QBluetoothSocketPrivateAndroid;
+    friend class QBluetoothSocketPrivateBluez;
+    friend class QBluetoothSocketPrivateBluezDBus;
+    friend class QBluetoothSocketPrivateDummy;
+    friend class QBluetoothSocketPrivateWinRT;
 
 public:
 
@@ -107,9 +122,9 @@ public:
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode = ReadWrite);
     void connectToService(const QBluetoothAddress &address, quint16 port, OpenMode openMode = ReadWrite);
     inline void connectToService(const QBluetoothAddress &address, QBluetoothUuid::ServiceClassUuid uuid,
-                                 OpenMode openMode = ReadWrite)
+                                 OpenMode mode = ReadWrite)
     {
-        connectToService(address, QBluetoothUuid(uuid), openMode);
+        connectToService(address, QBluetoothUuid(uuid), mode);
     }
     void disconnectFromService();
 
@@ -166,7 +181,11 @@ private Q_SLOTS:
 
 
 protected:
+#ifndef QT_OSX_BLUETOOTH
+    QBluetoothSocketBasePrivate *d_ptr;
+#else
     QBluetoothSocketPrivate *d_ptr;
+#endif
 
 private:
     friend class QLowEnergyControllerPrivateBluez;

@@ -71,7 +71,7 @@ void QLlcpSocketPrivate::connectToService(QNearFieldTarget *target, const QStrin
     QNXNFCManager::instance()->registerLLCPConnection(m_conListener, this);
 
     qQNXNFCDebug() << "Connecting client socket" << serviceUri << m_conListener;
-    connect(QNXNFCManager::instance(), SIGNAL(llcpDisconnected()), this, SLOT(disconnectFromService()));*/
+    connect(QNXNFCManager::instance(), &QNXNFCManager::llcpDisconnected, this, &QLlcpSocketPrivate::disconnectFromService);*/
 }
 
 void QLlcpSocketPrivate::disconnectFromService()
@@ -83,7 +83,7 @@ void QLlcpSocketPrivate::disconnectFromService()
         qWarning() << Q_FUNC_INFO << "Error when trying to close LLCP socket";
     }
     QNXNFCManager::instance()->unregisterLLCPConnection(m_conListener);
-    disconnect(QNXNFCManager::instance(), SIGNAL(llcpDisconnected()), this, SLOT(disconnectFromService()));
+    disconnect(QNXNFCManager::instance(), &QNXNFCManager::llcpDisconnected, this, &QLlcpSocketPrivate::disconnectFromService);
 
     q->disconnected();
     m_conListener = 0;
@@ -96,7 +96,7 @@ bool QLlcpSocketPrivate::bind(quint8 port)
 
     /*m_state = QLlcpSocket::ConnectedState;
     m_server = true;
-    connect(QNXNFCManager::instance(), SIGNAL(llcpDisconnected()), this, SLOT(disconnectFromService()));
+    connect(QNXNFCManager::instance(), &QNXNFCManager::llcpDisconnected, this, &QLlcpSocketPrivate::disconnectFromService);
     connected(QNXNFCManager::instance()->getLastTarget());*/
 
     return true;

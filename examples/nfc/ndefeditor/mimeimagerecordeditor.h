@@ -52,9 +52,9 @@
 #ifndef MIMEIMAGERECORDEDITOR_H
 #define MIMEIMAGERECORDEDITOR_H
 
-#include <QWidget>
+#include <QtNfc/qndefrecord.h>
 
-#include <qndefrecord.h>
+#include <QtWidgets/QWidget>
 
 QT_USE_NAMESPACE
 
@@ -64,7 +64,7 @@ namespace Ui {
 }
 QT_END_NAMESPACE
 
-
+//! [0]
 class MimeImageRecordEditor : public QWidget
 {
     Q_OBJECT
@@ -83,5 +83,5 @@ private:
 private slots:
     void on_mimeImageOpen_clicked();
 };
-
+//! [0]
 #endif // MIMEIMAGERECORDEDITOR_H

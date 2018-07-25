@@ -56,6 +56,13 @@ class Q_NFC_EXPORT QNearFieldManager : public QObject
     Q_DECLARE_PRIVATE(QNearFieldManager)
 
 public:
+    enum class AdapterState {
+        Offline = 1,
+        TurningOn = 2,
+        Online = 3,
+        TurningOff = 4
+    };
+    Q_ENUM(AdapterState)
     enum TargetAccessMode {
         NoTargetAccess = 0x00,
         NdefReadTargetAccess = 0x01,
@@ -70,6 +77,7 @@ public:
     ~QNearFieldManager();
 
     bool isAvailable() const;
+    bool isSupported() const;
 
     void setTargetAccessModes(TargetAccessModes accessModes);
     TargetAccessModes targetAccessModes() const;
@@ -91,6 +99,7 @@ public:
     bool unregisterNdefMessageHandler(int handlerId);
 
 Q_SIGNALS:
+    void adapterStateChanged(AdapterState state);
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
 

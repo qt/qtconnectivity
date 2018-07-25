@@ -75,7 +75,7 @@ QT_BEGIN_NAMESPACE
 
     \image peripheral-structure.png Structure of a generic peripheral
 
-    A characteristic is the principle information carrier. It has a
+    A characteristic is the principal information carrier. It has a
     \l {QLowEnergyCharacteristic::value()}{value()} and
     \l {QLowEnergyCharacteristic::value()}{properties()}
     describing the access permissions for the value. The general purpose

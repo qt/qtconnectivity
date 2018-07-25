@@ -40,7 +40,7 @@ PRIVATE_HEADERS += \
     qbluetoothserviceinfo_p.h\
     qbluetoothdevicediscoveryagent_p.h\
     qbluetoothservicediscoveryagent_p.h\
-    qbluetoothsocket_p.h\
+    qbluetoothsocketbase_p.h \
     qbluetoothserver_p.h\
     qbluetoothtransferreply_p.h \
     qbluetoothtransferrequest_p.h \
@@ -60,6 +60,7 @@ SOURCES += \
     qbluetoothdevicediscoveryagent.cpp\
     qbluetoothservicediscoveryagent.cpp\
     qbluetoothsocket.cpp\
+    qbluetoothsocketbase.cpp \
     qbluetoothserver.cpp \
     qbluetoothlocaldevice.cpp \
     qbluetooth.cpp \
@@ -94,16 +95,19 @@ qtConfig(bluez) {
     include(bluez/bluez.pri)
 
     PRIVATE_HEADERS += \
-        qbluetoothtransferreply_bluez_p.h
+        qbluetoothtransferreply_bluez_p.h \
+        qbluetoothsocket_bluez_p.h \
+        qbluetoothsocket_bluezdbus_p.h
 
     SOURCES += \
         qbluetoothserviceinfo_bluez.cpp \
         qbluetoothdevicediscoveryagent_bluez.cpp\
         qbluetoothservicediscoveryagent_bluez.cpp \
         qbluetoothsocket_bluez.cpp \
+        qbluetoothsocket_bluezdbus.cpp \
         qbluetoothserver_bluez.cpp \
         qbluetoothlocaldevice_bluez.cpp \
-        qbluetoothtransferreply_bluez.cpp \
+        qbluetoothtransferreply_bluez.cpp
 
 
     # old versions of Bluez do not have the required BTLE symbols
@@ -148,8 +152,8 @@ qtConfig(bluez) {
         qbluetoothserver_android.cpp \
         qlowenergycontroller_android.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_android_p.h
-
+    PRIVATE_HEADERS += qlowenergycontroller_android_p.h \
+                       qbluetoothsocket_android_p.h
 } else:osx {
     QT_PRIVATE = concurrent
     DEFINES += QT_OSX_BLUETOOTH
@@ -177,6 +181,7 @@ qtConfig(bluez) {
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
     SOURCES -= qbluetoothsocket.cpp
+    SOURCES -= qbluetoothsocketbase.cpp
     SOURCES -= qbluetoothserver.cpp
     SOURCES -= qlowenergyservice_p.cpp
     SOURCES -= qlowenergyservice.cpp
@@ -192,14 +197,15 @@ qtConfig(bluez) {
         qlowenergyservice_osx.mm
 
     PRIVATE_HEADERS += \
-        qlowenergycontroller_osx_p.h
+        qlowenergycontroller_osx_p.h \
+        qbluetoothsocket_dummy_p.h
 
     include(osx/osxbt.pri)
     SOURCES += \
         qbluetoothlocaldevice_p.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
-        qbluetoothsocket_p.cpp \
+        qbluetoothsocket_dummy.cpp \
         qbluetoothserver_p.cpp
 
     SOURCES -= qbluetoothdevicediscoveryagent.cpp
@@ -225,7 +231,8 @@ qtConfig(bluez) {
         qbluetoothsocket_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h
+    PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h \
+                       qbluetoothsocket_winrt_p.h
 
     lessThan(WINDOWS_SDK_VERSION, 14393) {
         DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
@@ -261,11 +268,12 @@ qtConfig(bluez) {
         qbluetoothlocaldevice_p.cpp \
         qbluetoothserviceinfo_p.cpp \
         qbluetoothservicediscoveryagent_p.cpp \
-        qbluetoothsocket_p.cpp \
+        qbluetoothsocket_dummy.cpp \
         qbluetoothserver_p.cpp \
         qlowenergycontroller_p.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_p.h
+    PRIVATE_HEADERS += qlowenergycontroller_p.h \
+                       qbluetoothsocket_dummy_p.h
 }
 
 winrt {

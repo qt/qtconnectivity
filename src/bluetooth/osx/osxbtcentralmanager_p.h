@@ -53,6 +53,7 @@
 
 #include "qlowenergycontroller.h"
 #include "qlowenergyservice.h"
+#include "osxbtgcdtimer_p.h"
 #include "qbluetoothuuid.h"
 #include "osxbtutility_p.h"
 #include "osxbluetooth_p.h"
@@ -84,6 +85,18 @@ enum CentralManagerState
     CentralManagerConnecting,
     CentralManagerDiscovering,
     CentralManagerDisconnecting
+};
+
+enum class OperationTimeout
+{
+    none,
+    serviceDiscovery,
+    includedServicesDiscovery,
+    characteristicsDiscovery,
+    characteristicRead,
+    descriptorsDiscovery,
+    descriptorRead,
+    characteristicWrite
 };
 
 // In Qt we work with handles and UUIDs. Core Bluetooth
@@ -132,7 +145,9 @@ typedef QHash<NSObject *, QByteArray> ValueHash;
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate, CBPeripheralDelegate>
+@interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate,
+                                                               CBPeripheralDelegate,
+                                                               QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
 {
 @private
     CBCentralManager *manager;
@@ -166,6 +181,12 @@ QT_END_NAMESPACE
     QT_PREPEND_NAMESPACE(QLowEnergyHandle) currentReadHandle;
 
     QT_PREPEND_NAMESPACE(OSXBluetooth)::ValueHash valuesToWrite;
+
+    qint64 timeoutMS;
+    id objectUnderWatch;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::OperationTimeout timeoutType;
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer timeoutWatchdog;
+
 @public
     CBPeripheral *peripheral;
 }

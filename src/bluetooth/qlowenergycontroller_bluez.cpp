@@ -40,13 +40,19 @@
 
 #include "lecmaccalculator_p.h"
 #include "qlowenergycontroller_bluez_p.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocketbase_p.h"
 #include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
+#include "bluez/objectmanager_p.h"
 #include "bluez/remotedevicemanager_p.h"
 #include "bluez/bluez5_helper_p.h"
 #include "bluez/bluetoothmanagement_p.h"
+
+// Bluez 4
+#include "bluez/adapter_p.h"
+#include "bluez/device_p.h"
+#include "bluez/manager_p.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
@@ -746,8 +752,11 @@ void QLowEnergyControllerPrivateBluez::l2cpDisconnected()
 {
     Q_Q(QLowEnergyController);
 
-    if (role == QLowEnergyController::PeripheralRole)
+    if (role == QLowEnergyController::PeripheralRole) {
         storeClientConfigurations();
+        remoteDevice.clear();
+        remoteName.clear();
+    }
     invalidateServices();
     resetController();
     setState(QLowEnergyController::UnconnectedState);
@@ -796,12 +805,16 @@ void QLowEnergyControllerPrivateBluez::resetController()
     requestPending = false;
     encryptionChangePending = false;
     receivedMtuExchangeRequest = false;
+    mtuSize = ATT_DEFAULT_LE_MTU;
     securityLevelValue = -1;
     connectionHandle = 0;
 
-    // public API behavior requires stop of advertisement
-    if (role == QLowEnergyController::PeripheralRole && advertiser)
-        advertiser->stopAdvertising();
+    if (role == QLowEnergyController::PeripheralRole) {
+        // public API behavior requires stop of advertisement
+        if (advertiser)
+            advertiser->stopAdvertising();
+        localAttributes.clear();
+    }
 }
 
 void QLowEnergyControllerPrivateBluez::restartRequestTimer()
@@ -3011,6 +3024,69 @@ void QLowEnergyControllerPrivateBluez::sendNextIndication()
         sendIndication(scheduledIndications.takeFirst());
 }
 
+static QString nameOfRemoteCentral(const QBluetoothAddress &peerAddress, const QBluetoothAddress &localAdapter)
+{
+    const QString peerAddressString = peerAddress.toString();
+    if (isBluez5()) {
+        OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
+                                                         QStringLiteral("/"),
+                                                         QDBusConnection::systemBus());
+        QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
+        reply.waitForFinished();
+        if (reply.isError())
+            return QString();
+
+        ManagedObjectList managedObjectList = reply.value();
+        for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
+            const InterfaceList &ifaceList = it.value();
+
+            for (InterfaceList::const_iterator jt = ifaceList.constBegin(); jt != ifaceList.constEnd(); ++jt) {
+                const QString &iface = jt.key();
+                const QVariantMap &ifaceValues = jt.value();
+
+                if (iface == QStringLiteral("org.bluez.Device1")) {
+                    if (ifaceValues.value(QStringLiteral("Address")).toString() == peerAddressString)
+                        return ifaceValues.value(QStringLiteral("Alias")).toString();
+                }
+            }
+        }
+        return QString();
+    } else {
+        OrgBluezManagerInterface manager(QStringLiteral("org.bluez"), QStringLiteral("/"),
+                                         QDBusConnection::systemBus());
+
+        QDBusPendingReply<QDBusObjectPath> reply = manager.FindAdapter(localAdapter.toString());
+        reply.waitForFinished();
+        if (reply.isError())
+            return QString();
+
+        OrgBluezAdapterInterface adapter(QStringLiteral("org.bluez"), reply.value().path(),
+                                         QDBusConnection::systemBus());
+
+        QDBusPendingReply<QDBusObjectPath> deviceObjectPath = adapter.FindDevice(peerAddressString);
+        deviceObjectPath.waitForFinished();
+        if (deviceObjectPath.isError()) {
+            if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.DoesNotExist"))
+                return QString();
+
+            deviceObjectPath = adapter.CreateDevice(peerAddressString);
+            deviceObjectPath.waitForFinished();
+            if (deviceObjectPath.isError())
+                return QString();
+        }
+
+        OrgBluezDeviceInterface device(QStringLiteral("org.bluez"), deviceObjectPath.value().path(),
+                                       QDBusConnection::systemBus());
+
+        QDBusPendingReply<QVariantMap> properties = device.GetProperties();
+        properties.waitForFinished();
+        if (properties.isError())
+            return QString();
+
+        return properties.value().value(QStringLiteral("Alias")).toString();
+    }
+}
+
 void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
 {
     if (state != QLowEnergyController::AdvertisingState) {
@@ -3029,8 +3105,11 @@ void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
         serverSocketNotifier->setEnabled(true);
         return;
     }
+
     remoteDevice = QBluetoothAddress(convertAddress(clientAddr.l2_bdaddr.b));
-    qCDebug(QT_BT_BLUEZ) << "GATT connection from device" << remoteDevice;
+    remoteName = nameOfRemoteCentral(remoteDevice, localAdapter);
+    qCDebug(QT_BT_BLUEZ) << "GATT connection from device" << remoteDevice << remoteName;
+
     if (connectionHandle == 0)
         qCWarning(QT_BT_BLUEZ) << "Received client connection, but no connection complete event";
 

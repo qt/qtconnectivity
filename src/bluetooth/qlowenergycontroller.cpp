@@ -294,11 +294,13 @@ void registerQLowEnergyControllerMetaType()
     }
 }
 
-static QLowEnergyControllerPrivate *privateController()
+static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role role)
 {
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    // for now Bluez DBus disabled
-    if (false && bluetoothdVersion() >= QVersionNumber(5, 42)) {
+    // The new DBUS implementation only supports Central role for now
+    // For Peripheral role support see QTBUG-66909
+    if (role == QLowEnergyController::CentralRole
+            && bluetoothdVersion() >= QVersionNumber(5, 42)) {
         qCWarning(QT_BT) << "Using BlueZ LE DBus API";
         return new QLowEnergyControllerPrivateBluezDBus();
     } else {
@@ -306,12 +308,15 @@ static QLowEnergyControllerPrivate *privateController()
         return new QLowEnergyControllerPrivateBluez();
     }
 #elif defined(QT_ANDROID_BLUETOOTH)
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateWinRT();
 #elif defined(QT_WIN_BLUETOOTH)
     return new QLowEnergyControllerPrivateWin32();
 #else
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateCommon();
 #endif
 }
@@ -333,7 +338,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController();
+    d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -362,7 +367,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-        d_ptr = privateController();
+        d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -395,7 +400,7 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController();
+    d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -440,7 +445,7 @@ QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
 QLowEnergyController::QLowEnergyController(QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController();
+    d_ptr = privateController(PeripheralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
@@ -602,9 +607,10 @@ void QLowEnergyController::connectToDevice()
 
     This function does nothing if the controller is in the \l UnconnectedState.
 
-    If the controller is in the peripheral role, it stops advertising too.
-    The application must restart the advertising mode by calling
-    \l startAdvertising().
+    If the controller is in the peripheral role, it stops advertising and removes
+    all services which have previously been added via \l addService().
+    To reuse the QLowEnergyController instance the application must re-add services
+    and restart the advertising mode by calling \l startAdvertising().
 
     \sa connectToDevice()
  */
@@ -741,6 +747,9 @@ void QLowEnergyController::startAdvertising(const QLowEnergyAdvertisingParameter
 /*!
    Stops advertising, if this object is currently in the advertising state.
 
+   The controller has to be in the \l PeripheralRole for this function to work.
+   It does not invalidate services which have previously been added via \l addService().
+
    \since 5.7
    \sa startAdvertising()
  */
@@ -759,8 +768,15 @@ void QLowEnergyController::stopAdvertising()
   The controller must be in the \l PeripheralRole and in the \l UnconnectedState. The \a service
   object must be valid.
 
+  \note Once the peripheral instance is disconnected from the remote central device or
+  if \l disconnectFromDevice() is manually called, every service definition that was
+  previously added via this function is removed from the peripheral. Therefore this function
+  must be called again before re-advertising this peripheral controller instance. The described
+  behavior is connection specific and therefore not dependent on whether \l stopAdvertising()
+  was called.
+
   \since 5.7
-  \sa QLowEnergyServiceData::addIncludedService
+  \sa stopAdvertising(), disconnectFromDevice(), QLowEnergyServiceData::addIncludedService
  */
 QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData &service,
                                                     QObject *parent)

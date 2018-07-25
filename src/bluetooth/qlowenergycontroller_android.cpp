@@ -40,6 +40,7 @@
 #include "qlowenergycontroller_android_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtAndroidExtras/QAndroidJniObject>
 #include <QtBluetooth/QLowEnergyServiceData>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -179,8 +180,12 @@ void QLowEnergyControllerPrivateAndroid::disconnectFromDevice()
     QLowEnergyController::ControllerState oldState = state;
     setState(QLowEnergyController::ClosingState);
 
-    if (hub)
-        hub->javaObject().callMethod<void>("disconnect");
+    if (hub) {
+        if (role == QLowEnergyController::PeripheralRole)
+            hub->javaObject().callMethod<void>("disconnectServer");
+        else
+            hub->javaObject().callMethod<void>("disconnect");
+    }
 
     if (oldState == QLowEnergyController::ConnectingState)
         setState(QLowEnergyController::UnconnectedState);
@@ -429,9 +434,15 @@ void QLowEnergyControllerPrivateAndroid::peripheralConnectionUpdated(
     Q_Q(QLowEnergyController);
     if (oldState == QLowEnergyController::ConnectedState
             && newState != QLowEnergyController::ConnectedState) {
+        remoteDevice.clear();
+        remoteName.clear();
         emit q->disconnected();
     } else if (newState == QLowEnergyController::ConnectedState
                  && oldState != QLowEnergyController::ConnectedState) {
+        if (hub) {
+            remoteDevice = QBluetoothAddress(hub->javaObject().callObjectMethod<jstring>("remoteAddress").toString());
+            remoteName = hub->javaObject().callObjectMethod<jstring>("remoteName").toString();
+        }
         emit q->connected();
     }
 }

@@ -529,16 +529,20 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
     switch (target) {
     case QBluetoothLocalDevice::Unpaired: {
         delete pairingTarget;
-        pairingTarget = 0;
+        pairingTarget = nullptr;
 
         QDBusPendingReply<> removeReply = adapterBluez5->RemoveDevice(QDBusObjectPath(objectPath));
-        removeReply.waitForFinished();
+        auto watcher = new QDBusPendingCallWatcher(removeReply, this);
+        connect(watcher, &QDBusPendingCallWatcher::finished,
+                this, [q, targetAddress](QDBusPendingCallWatcher* watcher){
+            QDBusPendingReply<> reply = *watcher;
+            if (reply.isError())
+                emit q->error(QBluetoothLocalDevice::PairingError);
+            else
+                emit q->pairingFinished(targetAddress, QBluetoothLocalDevice::Unpaired);
 
-        if (removeReply.isError())
-            emit q->error(QBluetoothLocalDevice::PairingError);
-        else
-            emit q->pairingFinished(targetAddress, QBluetoothLocalDevice::Unpaired);
-
+            watcher->deleteLater();
+        });
         break;
     }
     case QBluetoothLocalDevice::Paired:

@@ -28,7 +28,7 @@
 
 /*!
 
-\qmlmodule QtBluetooth 5.2
+\qmlmodule QtBluetooth 5.11
 \title Qt Bluetooth QML Types
 \ingroup qmlmodules
 \brief Provides QML types for basic Bluetooth operations on devices.

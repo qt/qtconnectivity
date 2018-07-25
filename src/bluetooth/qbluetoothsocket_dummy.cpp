@@ -38,77 +38,114 @@
 ****************************************************************************/
 
 #include "qbluetoothsocket.h"
-#include "qbluetoothsocket_p.h"
+#include "qbluetoothsocket_dummy_p.h"
 #ifndef QT_IOS_BLUETOOTH
 #include "dummy/dummy_helper_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothSocketPrivate::QBluetoothSocketPrivate()
-    : socket(-1),
-      socketType(QBluetoothServiceInfo::UnknownProtocol),
-      state(QBluetoothSocket::UnconnectedState),
-      socketError(QBluetoothSocket::NoSocketError),
-      secFlags(QBluetooth::NoSecurity)
+QBluetoothSocketPrivateDummy::QBluetoothSocketPrivateDummy()
 {
+    secFlags = QBluetooth::NoSecurity;
 #ifndef QT_IOS_BLUETOOTH
     printDummyWarning();
 #endif
 }
 
-QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
+QBluetoothSocketPrivateDummy::~QBluetoothSocketPrivateDummy()
 {
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
+bool QBluetoothSocketPrivateDummy::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     socketType = type;
     return false;
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateDummy::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
 {
     Q_UNUSED(openMode);
     Q_UNUSED(address);
     Q_UNUSED(port);
 }
 
-void QBluetoothSocketPrivate::abort()
+void QBluetoothSocketPrivateDummy::connectToService(
+        const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(service);
+    Q_UNUSED(openMode);
+
+    Q_Q(QBluetoothSocket);
+
+    qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
+    errorString = QBluetoothSocket::tr("Socket type not supported");
+    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+}
+
+void QBluetoothSocketPrivateDummy::connectToService(
+        const QBluetoothAddress &address, const QBluetoothUuid &uuid, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(address);
+    Q_UNUSED(uuid);
+    Q_UNUSED(openMode);
+
+    Q_Q(QBluetoothSocket);
+
+    qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
+    errorString = QBluetoothSocket::tr("Socket type not supported");
+    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+}
+
+void QBluetoothSocketPrivateDummy::connectToService(
+        const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+{
+    Q_UNUSED(address);
+    Q_UNUSED(port);
+    Q_UNUSED(openMode);
+
+    Q_Q(QBluetoothSocket);
+
+    qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
+    errorString = QBluetoothSocket::tr("Socket type not supported");
+    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+}
+
+void QBluetoothSocketPrivateDummy::abort()
 {
 }
 
-QString QBluetoothSocketPrivate::localName() const
+QString QBluetoothSocketPrivateDummy::localName() const
 {
     return QString();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
+QBluetoothAddress QBluetoothSocketPrivateDummy::localAddress() const
 {
     return QBluetoothAddress();
 }
 
-quint16 QBluetoothSocketPrivate::localPort() const
+quint16 QBluetoothSocketPrivateDummy::localPort() const
 {
     return 0;
 }
 
-QString QBluetoothSocketPrivate::peerName() const
+QString QBluetoothSocketPrivateDummy::peerName() const
 {
     return QString();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
+QBluetoothAddress QBluetoothSocketPrivateDummy::peerAddress() const
 {
     return QBluetoothAddress();
 }
 
-quint16 QBluetoothSocketPrivate::peerPort() const
+quint16 QBluetoothSocketPrivateDummy::peerPort() const
 {
     return 0;
 }
 
-qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateDummy::writeData(const char *data, qint64 maxSize)
 {
     Q_UNUSED(data);
     Q_UNUSED(maxSize);
@@ -123,7 +160,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     return -1;
 }
 
-qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateDummy::readData(char *data, qint64 maxSize)
 {
     Q_UNUSED(data);
     Q_UNUSED(maxSize);
@@ -139,11 +176,11 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
     return -1;
 }
 
-void QBluetoothSocketPrivate::close()
+void QBluetoothSocketPrivateDummy::close()
 {
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
+bool QBluetoothSocketPrivateDummy::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_UNUSED(socketDescriptor);
@@ -153,17 +190,17 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     return false;
 }
 
-qint64 QBluetoothSocketPrivate::bytesAvailable() const
+qint64 QBluetoothSocketPrivateDummy::bytesAvailable() const
 {
     return 0;
 }
 
-bool QBluetoothSocketPrivate::canReadLine() const
+bool QBluetoothSocketPrivateDummy::canReadLine() const
 {
     return false;
 }
 
-qint64 QBluetoothSocketPrivate::bytesToWrite() const
+qint64 QBluetoothSocketPrivateDummy::bytesToWrite() const
 {
     return 0;
 }

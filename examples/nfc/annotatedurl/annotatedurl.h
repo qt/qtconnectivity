@@ -51,7 +51,7 @@
 #ifndef ANNOTATEDURL_H
 #define ANNOTATEDURL_H
 
-#include <QNdefMessage>
+#include <QtNfc/QNdefMessage>
 
 #include <QtCore/QObject>
 
@@ -60,8 +60,7 @@ QT_FORWARD_DECLARE_CLASS(QPixmap)
 QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
 QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)
 
-QT_USE_NAMESPACE
-
+//! [0]
 class AnnotatedUrl : public QObject
 {
     Q_OBJECT
@@ -81,5 +80,6 @@ public slots:
 private:
     QNearFieldManager *manager;
 };
+//! [0]
 
 #endif // ANNOTATEDURL_H

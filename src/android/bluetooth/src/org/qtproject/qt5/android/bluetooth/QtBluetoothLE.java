@@ -1141,16 +1141,24 @@ public class QtBluetoothLE {
         if (handle == HANDLE_FOR_MTU_EXCHANGE)
             return;
 
-        GattEntry entry = entries.get(handle);
-        if (entry == null)
-            return;
-        if (entry.valueKnown)
-            return;
-        entry.valueKnown = true;
+        try {
+            synchronized (this) {
 
-        GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-        if (serviceEntry != null && serviceEntry.endHandle == handle)
-            finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+                GattEntry entry = entries.get(handle);
+                if (entry == null)
+                    return;
+                if (entry.valueKnown)
+                    return;
+                entry.valueKnown = true;
+
+                GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+                if (serviceEntry != null && serviceEntry.endHandle == handle)
+                    finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+            }
+        } catch (IndexOutOfBoundsException outOfBounds) {
+            Log.w(TAG, "interruptCurrentIO(): Unknown gatt entry, index: "
+                    + handle + " size: " + entries.size());
+        }
     }
 
     /*
@@ -1271,9 +1279,16 @@ public class QtBluetoothLE {
                     }
 
                     // last entry of current discovery run?
-                    GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-                    if (serviceEntry.endHandle == handle)
-                        finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+                    synchronized (this) {
+                        try {
+                            GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+                            if (serviceEntry.endHandle == handle)
+                                finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+                        } catch (IndexOutOfBoundsException outOfBounds) {
+                            Log.w(TAG, "performNextIO(): Unknown service for entry, index: "
+                                            + entry.associatedServiceHandle + " size: " + entries.size());
+                        }
+                    }
                 } else {
                     int errorCode = 0;
 

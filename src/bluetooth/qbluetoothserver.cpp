@@ -189,7 +189,7 @@ QBluetoothServer::~QBluetoothServer()
     required to call \l QBluetoothServiceInfo::unregisterService() and \l close() on this
     server object.
 
-    Returns a registered QBluetoothServiceInfo instance if sucessful otherwise an
+    Returns a registered QBluetoothServiceInfo instance if successful otherwise an
     invalid QBluetoothServiceInfo. This function always assumes that the default Bluetooth adapter
     should be used.
 

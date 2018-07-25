@@ -51,8 +51,6 @@
 #include "textrecordeditor.h"
 #include "ui_textrecordeditor.h"
 
-#include <QtCore/QDebug>
-
 TextRecordEditor::TextRecordEditor(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::TextRecordEditor)

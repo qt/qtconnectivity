@@ -153,6 +153,8 @@ protected:
     Q_INVOKABLE virtual bool handleResponse(const QNearFieldTarget::RequestId &id,
                                             const QByteArray &response);
 
+    void reportError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
+
 Q_SIGNALS:
     void disconnected();
 
