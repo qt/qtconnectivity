@@ -171,7 +171,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
         convertAddress(address.toUInt64(), addr.rc_bdaddr.b);
 
         connectWriteNotifier->setEnabled(true);
-        readNotifier->setEnabled(true);QString();
+        readNotifier->setEnabled(true);
 
         result = ::connect(socket, (sockaddr *)&addr, sizeof(addr));
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
