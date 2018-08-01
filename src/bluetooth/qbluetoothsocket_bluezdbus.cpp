@@ -337,10 +337,15 @@ void QBluetoothSocketPrivateBluezDBus::abort()
 {
     if (localSocket) {
         localSocket->close();
-        //TODO delayed disconnected() not yet implemented
+        // delayed disconnected signal emission when localSocket closes
     } else {
-        // delayed disconnected not needed
+        Q_Q(QBluetoothSocket);
+
         clearSocket();
+        q->setOpenMode(QIODevice::NotOpen);
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        emit q->readChannelFinished();
+        emit q->disconnected();
     }
 }
 
@@ -551,7 +556,7 @@ void QBluetoothSocketPrivateBluezDBus::socketStateChanged(QLocalSocket::LocalSoc
     case QLocalSocket::UnconnectedState:
         clearSocket();
         q->setSocketState(QBluetoothSocket::UnconnectedState);
-
+        q->setOpenMode(QIODevice::NotOpen);
         emit q->readChannelFinished();
         emit q->disconnected();
         break;

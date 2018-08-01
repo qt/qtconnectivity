@@ -715,6 +715,9 @@ void QBluetoothSocketPrivateAndroid::abort()
             // Unconnected (now) in advance
             Q_Q(QBluetoothSocket);
             q->setSocketState(QBluetoothSocket::UnconnectedState);
+            q->setOpenMode(QIODevice::NotOpen);
+            emit q->readChannelFinished();
+            emit q->disconnected();
         }
     }
 }

@@ -393,7 +393,7 @@ void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddres
     Q_ASSERT_SUCCEEDED(hr);
 
     q->setSocketState(QBluetoothSocket::ConnectingState);
-    q->setOpenMode(openMode);
+    requestedOpenMode = openMode;
     QEventDispatcherWinRT::runOnXamlThread([this]() {
         HRESULT hr;
         hr = m_connectOp->put_Completed(Callback<IAsyncActionCompletedHandler>(
@@ -517,7 +517,14 @@ void QBluetoothSocketPrivateWinRT::abort()
         m_socketObject = nullptr;
         socket = -1;
     }
+
+    const bool wasConnected = q->state() == QBluetoothSocket::ConnectedState;
     q->setSocketState(QBluetoothSocket::UnconnectedState);
+    if (wasConnected) {
+        q->setOpenMode(QIODevice::NotOpen);
+        emit q->readChannelFinished();
+        emit q->disconnected();
+    }
 }
 
 QString QBluetoothSocketPrivateWinRT::localName() const
@@ -727,7 +734,13 @@ void QBluetoothSocketPrivateWinRT::handleError(QBluetoothSocket::SocketError err
     }
 
     q->setSocketError(error);
+    const bool wasConnected = q->state() == QBluetoothSocket::ConnectedState;
     q->setSocketState(QBluetoothSocket::UnconnectedState);
+    if (wasConnected) {
+        q->setOpenMode(QIODevice::NotOpen);
+        emit q->readChannelFinished();
+        emit q->disconnected();
+    }
 }
 
 void QBluetoothSocketPrivateWinRT::addToPendingData(const QVector<QByteArray> &data)
@@ -794,6 +807,7 @@ HRESULT QBluetoothSocketPrivateWinRT::handleConnectOpFinished(ABI::Windows::Foun
         Q_ASSERT_SUCCEEDED(hr);
     }
 
+    q->setOpenMode(requestedOpenMode);
     q->setSocketState(QBluetoothSocket::ConnectedState);
     m_worker->startReading();
     emit q->connected();
