@@ -42,6 +42,7 @@
 #if QT_CONFIG(bluez)
 #include "qbluetoothsocket_bluez_p.h"
 #include "qbluetoothsocket_bluezdbus_p.h"
+#include "bluez/bluez5_helper_p.h"
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include "qbluetoothsocket_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
@@ -252,22 +253,32 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \reimp
 */
 
+static QBluetoothSocketBasePrivate *createSocketPrivate()
+{
+#if QT_CONFIG(bluez)
+    if (bluetoothdVersion() >= QVersionNumber(5, 46)) {
+        qCDebug(QT_BT) << "Using Bluetooth dbus socket implementation";
+        return new QBluetoothSocketPrivateBluezDBus();
+    } else {
+        qCDebug(QT_BT) << "Using Bluetooth raw socket implementation";
+        return new QBluetoothSocketPrivateBluez();
+    }
+#elif defined(QT_ANDROID_BLUETOOTH)
+    return new QBluetoothSocketPrivateAndroid();
+#elif defined(QT_WINRT_BLUETOOTH)
+    return new QBluetoothSocketPrivateWinRT();
+#else
+    return new QBluetoothSocketPrivateDummy();
+#endif
+}
+
 /*!
     Constructs a Bluetooth socket of \a socketType type, with \a parent.
 */
 QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent)
 : QIODevice(parent)
 {
-#if QT_CONFIG(bluez)
-    d_ptr = new QBluetoothSocketPrivateBluez();
-    //d_ptr = new QBluetoothSocketPrivateBluezDBus();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateWinRT();
-#else
-    d_ptr = new QBluetoothSocketPrivateDummy();
-#endif
+    d_ptr = createSocketPrivate();
     d_ptr->q_ptr = this;
 
     Q_D(QBluetoothSocketBase);
@@ -282,16 +293,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent)
 {
-#if QT_CONFIG(bluez)
-    d_ptr = new QBluetoothSocketPrivateBluez();
-    //d_ptr = new QBluetoothSocketPrivateBluezDBus();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateWinRT();
-#else
-    d_ptr = new QBluetoothSocketPrivateDummy();
-#endif
+    d_ptr = createSocketPrivate();
     d_ptr->q_ptr = this;
     setOpenMode(QIODevice::NotOpen);
 }
