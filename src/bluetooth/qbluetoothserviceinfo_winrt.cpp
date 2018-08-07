@@ -153,21 +153,21 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::Void";
         return nullptr;
     case QMetaType::UChar:
-        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UChar";
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UChar:" << attribute.value<quint8>();
         hr = writer->WriteByte(TYPE_UINT8);
         Q_ASSERT_SUCCEEDED(hr);
         hr = writer->WriteByte(attribute.value<quint8>());
         Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::UShort:
-        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UShort";
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UShort:" << attribute.value<quint16>();
         hr = writer->WriteByte(TYPE_UINT16);
         Q_ASSERT_SUCCEEDED(hr);
         hr = writer->WriteUInt16(attribute.value<quint16>());
         Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::UInt:
-        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UInt";
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UInt:" << attribute.value<quint32>();
         hr = writer->WriteByte(TYPE_UINT32);
         Q_ASSERT_SUCCEEDED(hr);
         hr = writer->WriteByte(attribute.value<quint32>());
@@ -186,7 +186,7 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         return nullptr;
         break;
     case QMetaType::QString: {
-        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::QString";
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::QString:" << attribute.value<QString>();
         hr = writer->WriteByte(TYPE_STRING);
         Q_ASSERT_SUCCEEDED(hr);
         const QString stringValue = attribute.value<QString>();
@@ -220,7 +220,7 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
                 return nullptr;
                 break;
             case 2:
-                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 2" << uuid;
+                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 2:" << uuid;
                 hr = writer->WriteByte(TYPE_SHORT_UUID);
                 Q_ASSERT_SUCCEEDED(hr);
                 hr = writer->WriteUInt16(uuid.toUInt16());
@@ -231,14 +231,14 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
                 return nullptr;
                 break;
             case 16:
-                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 16";
+                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 16:" << uuid;
                 hr = writer->WriteByte(TYPE_LONG_UUID);
                 Q_ASSERT_SUCCEEDED(hr);
                 hr = writer->WriteGuid(uuid);
                 Q_ASSERT_SUCCEEDED(hr);
                 break;
             default:
-                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute";
+                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute:" << uuid;
                 hr = writer->WriteByte(TYPE_LONG_UUID);
                 Q_ASSERT_SUCCEEDED(hr);
                 hr = writer->WriteGuid(uuid);
@@ -286,7 +286,7 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         }
         break;
     default:
-        qCWarning(QT_BT_WINRT) << "Unknown variant type", attribute.userType();
+        qCWarning(QT_BT_WINRT) << "Unknown variant type" << attribute.userType();
         return nullptr;
     }
     ComPtr<IBuffer> buffer;
@@ -374,8 +374,10 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
     result = writeSdpAttributes();
     if (!result) {
+        qCWarning(QT_BT_WINRT) << "Could not write SDP attributes.";
         return false;
     }
+    qCDebug(QT_BT_WINRT) << "SDP attributes written.";
 
     ComPtr<IRfcommServiceProvider2> serviceProvider2;
     hr = serviceProvider.As(&serviceProvider2);
@@ -464,6 +466,7 @@ bool QBluetoothServiceInfoPrivate::writeSdpAttributes()
         hr = rawAttributes->Insert(key, buffer.Get(), &replaced);
         Q_ASSERT_SUCCEEDED(hr);
         Q_ASSERT(!replaced);
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registered attribute" << QString::number(key, 16).rightJustified(4, '0') << "with value" << attribute;
     }
     return true;
 }
