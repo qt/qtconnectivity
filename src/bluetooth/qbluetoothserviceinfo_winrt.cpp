@@ -68,13 +68,22 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
-#define TYPE_UINT8 8
-#define TYPE_UINT16 9
-#define TYPE_UINT32 10
-#define TYPE_SHORT_UUID 25
-#define TYPE_LONG_UUID 28
-#define TYPE_STRING 37
-#define TYPE_SEQUENCE 53
+#define TYPE_VOID              0
+#define TYPE_UINT8             8
+#define TYPE_UINT16            9
+#define TYPE_UINT32           10
+#define TYPE_UINT64           11
+//#define TYPE_UINT128          12
+#define TYPE_INT8             16
+#define TYPE_INT16            17
+#define TYPE_INT32            18
+#define TYPE_INT64            19
+//#define TYPE_INT128           20
+#define TYPE_SHORT_UUID       25
+#define TYPE_LONG_UUID        28
+#define TYPE_STRING           37
+#define TYPE_BOOLEAN          40
+#define TYPE_SEQUENCE         53
 
 extern QHash<QBluetoothServerPrivate *, int> __fakeServerPorts;
 
@@ -150,8 +159,10 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
 
     switch (int(attribute.type())) {
     case QMetaType::Void:
-        qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::Void";
-        return nullptr;
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::Void:";
+        hr = writer->WriteByte(TYPE_VOID);
+        Q_ASSERT_SUCCEEDED(hr);
+        break;
     case QMetaType::UChar:
         qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UChar:" << attribute.value<quint8>();
         hr = writer->WriteByte(TYPE_UINT8);
@@ -170,20 +181,43 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::UInt:" << attribute.value<quint32>();
         hr = writer->WriteByte(TYPE_UINT32);
         Q_ASSERT_SUCCEEDED(hr);
-        hr = writer->WriteByte(attribute.value<quint32>());
+        hr = writer->WriteUInt32(attribute.value<quint32>());
+        Q_ASSERT_SUCCEEDED(hr);
+        break;
+    case QMetaType::ULongLong:
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::ULongLong:" << attribute.value<quint64>();
+        hr = writer->WriteByte(TYPE_UINT64);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteUInt64(attribute.value<quint64>());
         Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::Char:
-        qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::Char";
-        return nullptr;
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::Char:" << attribute.value<qint8>();
+        hr = writer->WriteByte(TYPE_INT8);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteByte(attribute.value<qint8>());
+        Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::Short:
-        qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::Short";
-        return nullptr;
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::Short:" << attribute.value<qint16>();
+        hr = writer->WriteByte(TYPE_INT16);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteInt16(attribute.value<qint16>());
+        Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::Int:
-        qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::Int";
-        return nullptr;
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::Int:" << attribute.value<qint32>();
+        hr = writer->WriteByte(TYPE_INT32);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteInt32(attribute.value<qint32>());
+        Q_ASSERT_SUCCEEDED(hr);
+        break;
+    case QMetaType::LongLong:
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::LongLong:" << attribute.value<qint64>();
+        hr = writer->WriteByte(TYPE_INT64);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteInt64(attribute.value<qint64>());
+        Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::QString: {
         qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::QString:" << attribute.value<QString>();
@@ -203,8 +237,11 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         break;
     }
     case QMetaType::Bool:
-        qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::Bool";
-        return nullptr;
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::Bool:" << attribute.value<bool>();
+        hr = writer->WriteByte(TYPE_BOOLEAN);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = writer->WriteByte(attribute.value<bool>());
+        Q_ASSERT_SUCCEEDED(hr);
         break;
     case QMetaType::QUrl:
         qCWarning(QT_BT_WINRT) << "Don't know how to register QMetaType::QUrl";
