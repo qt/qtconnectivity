@@ -79,8 +79,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 #define TYPE_INT32            18
 #define TYPE_INT64            19
 //#define TYPE_INT128           20
-#define TYPE_SHORT_UUID       25
-#define TYPE_LONG_UUID        28
+#define TYPE_UUID16           25
+#define TYPE_UUID32           26
+#define TYPE_UUID128          28
 #define TYPE_STRING           37
 #define TYPE_BOOLEAN          40
 #define TYPE_SEQUENCE         53
@@ -113,7 +114,7 @@ bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
     hr = reader->ReadByte(&type);
     Q_ASSERT_SUCCEEDED(hr);
     // We have to "repair" the structure if the outer sequence contains a uuid directly
-    if (type == TYPE_SHORT_UUID && length == 4) {
+    if (type == TYPE_UUID16 && length == 4) {
         qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Repairing profile descriptor list";
         quint16 uuid;
         hr = reader->ReadUInt16(&uuid);
@@ -133,7 +134,7 @@ bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
         Q_ASSERT_SUCCEEDED(hr);
         hr = writer->WriteByte(7);
         Q_ASSERT_SUCCEEDED(hr);
-        hr = writer->WriteByte(TYPE_SHORT_UUID);
+        hr = writer->WriteByte(TYPE_UUID16);
         Q_ASSERT_SUCCEEDED(hr);
         hr = writer->WriteUInt16(uuid);
         Q_ASSERT_SUCCEEDED(hr);
@@ -258,25 +259,22 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
                 break;
             case 2:
                 qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 2:" << uuid;
-                hr = writer->WriteByte(TYPE_SHORT_UUID);
+                hr = writer->WriteByte(TYPE_UUID16);
                 Q_ASSERT_SUCCEEDED(hr);
                 hr = writer->WriteUInt16(uuid.toUInt16());
                 Q_ASSERT_SUCCEEDED(hr);
                 break;
             case 4:
-                qCWarning(QT_BT_WINRT) << "Don't know how to register Uuid of length 4";
-                return nullptr;
+                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 4:" << uuid;
+                hr = writer->WriteByte(TYPE_UUID32);
+                Q_ASSERT_SUCCEEDED(hr);
+                hr = writer->WriteUInt32(uuid.toUInt32());
+                Q_ASSERT_SUCCEEDED(hr);
                 break;
             case 16:
-                qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 16:" << uuid;
-                hr = writer->WriteByte(TYPE_LONG_UUID);
-                Q_ASSERT_SUCCEEDED(hr);
-                hr = writer->WriteGuid(uuid);
-                Q_ASSERT_SUCCEEDED(hr);
-                break;
             default:
                 qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute:" << uuid;
-                hr = writer->WriteByte(TYPE_LONG_UUID);
+                hr = writer->WriteByte(TYPE_UUID128);
                 Q_ASSERT_SUCCEEDED(hr);
                 hr = writer->WriteGuid(uuid);
                 Q_ASSERT_SUCCEEDED(hr);
