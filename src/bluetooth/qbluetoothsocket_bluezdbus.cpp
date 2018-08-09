@@ -540,6 +540,7 @@ void QBluetoothSocketPrivateBluezDBus::remoteConnected(const QDBusUnixFileDescri
         connect(localSocket, &QLocalSocket::stateChanged,
                 this, &QBluetoothSocketPrivateBluezDBus::socketStateChanged);
 
+        socket = descriptor;
         q->setSocketState(QBluetoothSocket::ConnectedState);
         emit q->connected();
     }
@@ -581,6 +582,8 @@ void QBluetoothSocketPrivateBluezDBus::clearSocket()
         localSocket->deleteLater();
         localSocket = nullptr;
     }
+
+    socket = -1;
 
     if (q->state() == QBluetoothSocket::ConnectedState) {
         OrgBluezDevice1Interface device(QStringLiteral("org.bluez"), remoteDevicePath,
