@@ -188,7 +188,7 @@ using namespace OSXBluetooth;
             return kIOReturnError;
         }
 
-        foreach (const QBluetoothUuid &qUuid, qtFilters) {
+        for (const QBluetoothUuid &qUuid : qtFilters) {
             ObjCStrongReference<IOBluetoothSDPUUID> uuid(iobluetooth_uuid(qUuid));
             if (uuid)
                 [array addObject:uuid];

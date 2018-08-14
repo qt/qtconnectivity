@@ -266,7 +266,7 @@ void MainWindow::ndefMessageRead(const QNdefMessage &message)
 {
     clearMessage();
 
-    foreach (const QNdefRecord &record, message) {
+    for (const QNdefRecord &record : message) {
         if (record.isRecordType<QNdefNfcTextRecord>()) {
             addRecord<TextRecordEditor>(ui, record);
         } else if (record.isRecordType<QNdefNfcUriRecord>()) {

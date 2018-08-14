@@ -427,7 +427,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_fetchUuidsTimeout()
 
     QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > pair;
     const QList<QBluetoothAddress> keys = sdpCache.keys();
-    foreach (const QBluetoothAddress &key, keys) {
+    for (const QBluetoothAddress &key : keys) {
         pair = sdpCache.take(key);
         populateDiscoveredServices(pair.first, pair.second);
     }

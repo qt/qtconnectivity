@@ -331,7 +331,8 @@ QtBluezDiscoveryManager::~QtBluezDiscoveryManager()
 {
     qCDebug(QT_BT_BLUEZ) << "Destroying QtBluezDiscoveryManager";
 
-    foreach (const QString &adapterPath, d->references.keys()) {
+    const QList<QString> adapterPaths = d->references.keys();
+    for (const QString &adapterPath : adapterPaths) {
         AdapterData *data = d->references.take(adapterPath);
         delete data->propteryListener;
 
@@ -416,7 +417,8 @@ void QtBluezDiscoveryManager::unregisterDiscoveryInterest(const QString &adapter
 //    if (d->references.isEmpty()) {
 //        qCDebug(QT_BT_BLUEZ) << "No running registration";
 //    } else {
-//        foreach (const QString &path, d->references.keys()) {
+//        const QList<QString> paths = d->references.keys();
+//        for (const QString &path : paths) {
 //            qCDebug(QT_BT_BLUEZ) << path << "->" << d->references[path]->reference;
 //        }
 //    }
@@ -536,7 +538,7 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
     if (wantedAddress.isNull())
         return localAdapters.front().first; // -> return first found adapter
 
-    foreach (const AddressForPathType &pair, localAdapters) {
+    for (const AddressForPathType &pair : qAsConst(localAdapters)) {
         if (pair.second == wantedAddress)
             return pair.first; // -> found local adapter with wanted address
     }

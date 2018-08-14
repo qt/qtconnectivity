@@ -360,7 +360,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
     if (dict.value(QStringLiteral("RSSI")).isValid())
         device.setRssi(dict.value(QStringLiteral("RSSI")).toInt());
     QList<QBluetoothUuid> uuids;
-    foreach (const QString &u, dict.value(QLatin1String("UUIDs")).toStringList())
+    const QStringList uuidStrings
+            = dict.value(QLatin1String("UUIDs")).toStringList();
+    for (const QString &u : uuidStrings)
         uuids.append(QBluetoothUuid(u));
     device.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
     device.setCached(dict.value(QStringLiteral("Cached")).toBool());

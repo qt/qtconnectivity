@@ -158,13 +158,13 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
             stream->writeStartElement(QStringLiteral("sequence"));
             const QBluetoothServiceInfo::Sequence *sequence =
                     static_cast<const QBluetoothServiceInfo::Sequence *>(attribute.data());
-            foreach (const QVariant &v, *sequence)
+            for (const QVariant &v : *sequence)
                 writeAttribute(stream, v);
             stream->writeEndElement();
         } else if (attribute.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             const QBluetoothServiceInfo::Alternative *alternative =
                     static_cast<const QBluetoothServiceInfo::Alternative *>(attribute.data());
-            foreach (const QVariant &v, *alternative)
+            for (const QVariant &v : *alternative)
                 writeAttribute(stream, v);
             stream->writeEndElement();
         }

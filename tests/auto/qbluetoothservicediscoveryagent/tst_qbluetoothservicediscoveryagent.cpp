@@ -186,12 +186,12 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
     if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
         qDebug("%sSequence", indent.toLocal8Bit().constData());
         const QBluetoothServiceInfo::Sequence *sequence = static_cast<const QBluetoothServiceInfo::Sequence *>(var.data());
-        foreach (const QVariant &v, *sequence)
+        for (const QVariant &v : *sequence)
             dumpAttributeVariant(v, indent + '\t');
     } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
         qDebug("%sAlternative", indent.toLocal8Bit().constData());
         const QBluetoothServiceInfo::Alternative *alternative = static_cast<const QBluetoothServiceInfo::Alternative *>(var.data());
-        foreach (const QVariant &v, *alternative)
+        for (const QVariant &v : *alternative)
             dumpAttributeVariant(v, indent + '\t');
     } else if (var.userType() == qMetaTypeId<QBluetoothUuid>()) {
         QBluetoothUuid uuid = var.value<QBluetoothUuid>();
@@ -237,7 +237,8 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
 
 static inline void dumpServiceInfoAttributes(const QBluetoothServiceInfo &info)
 {
-    foreach (quint16 id, info.attributes()) {
+    const QList<quint16> attributes = info.attributes();
+    for (quint16 id : attributes) {
         dumpAttributeVariant(info.attribute(id), QString("\t"));
     }
 }
@@ -254,7 +255,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
 
     // Only need to test the first 5 live devices
     int max = 5;
-    foreach (const QBluetoothDeviceInfo &info, devices) {
+    for (const QBluetoothDeviceInfo &info : qAsConst(devices)) {
         if (info.isCached())
             continue;
         QTest::newRow("default filter") << info << QList<QBluetoothUuid>()

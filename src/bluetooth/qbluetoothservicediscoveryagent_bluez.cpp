@@ -223,7 +223,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
     // No filter implies PUBLIC_BROWSE_GROUP based SDP scan
     if (!uuidFilter.isEmpty()) {
         arguments << QLatin1String("-u"); // cmd line option for list of uuids
-        foreach (const QBluetoothUuid& uuid, uuidFilter)
+        for (const QBluetoothUuid& uuid : qAsConst(uuidFilter))
             arguments << uuid.toString();
     }
 
@@ -286,14 +286,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
         errorString = errorDescription;
         emit q->error(error);
     } else if (!xmlRecords.isEmpty() && discoveryState() != Inactive) {
-        foreach (const QString &record, xmlRecords) {
+        for (const QString &record : xmlRecords) {
             const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
             //apply uuidFilter
             if (!uuidFilter.isEmpty()) {
                 bool serviceNameMatched = uuidFilter.contains(serviceInfo.serviceUuid());
                 bool serviceClassMatched = false;
-                foreach (const QBluetoothUuid &id, serviceInfo.serviceClassUuids()) {
+                const QList<QBluetoothUuid> serviceClassUuids
+                        = serviceInfo.serviceClassUuids();
+                for (const QBluetoothUuid &id : serviceClassUuids) {
                     if (uuidFilter.contains(id)) {
                         serviceClassMatched = true;
                         break;
@@ -519,7 +521,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
         _q_serviceDiscoveryFinished();
     } else {
         QString pattern;
-        foreach (const QBluetoothUuid &uuid, uuidFilter)
+        for (const QBluetoothUuid &uuid : qAsConst(uuidFilter))
             pattern += uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}')) + QLatin1Char(' ');
 
         pattern = pattern.trimmed();
@@ -558,13 +560,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         return;
     }
 
-    ServiceMap map = reply.value();
+    const ServiceMap map = reply.value();
 
     qCDebug(QT_BT_BLUEZ) << "Parsing xml" << discoveredDevices.at(0).address().toString() << discoveredDevices.count() << map.count();
 
 
 
-    foreach (const QString &record, reply.value()) {
+    for (const QString &record : map) {
         QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
         if (!serviceInfo.isValid())
@@ -578,7 +580,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         // to our own naming resolution.
         if (serviceInfo.serviceName().isEmpty()
             && !serviceInfo.serviceClassUuids().isEmpty()) {
-            foreach (const QBluetoothUuid &classUuid, serviceInfo.serviceClassUuids()) {
+            const QList<QBluetoothUuid> classUuids = serviceInfo.serviceClassUuids();
+            for (const QBluetoothUuid &classUuid : classUuids) {
                 bool ok = false;
                 QBluetoothUuid::ServiceClassUuid clsId
                     = static_cast<QBluetoothUuid::ServiceClassUuid>(classUuid.toUInt16(&ok));

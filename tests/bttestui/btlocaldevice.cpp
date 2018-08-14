@@ -329,7 +329,8 @@ void BtLocalDevice::stopServiceDiscovery()
 void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
 {
     QStringList classIds;
-    foreach (const QBluetoothUuid &uuid, info.serviceClassUuids())
+    const QList<QBluetoothUuid> uuids = info.serviceClassUuids();
+    for (const QBluetoothUuid &uuid : uuids)
         classIds.append(uuid.toString());
     qDebug() << "$$ Found new service" << info.device().address().toString()
              << info.serviceUuid() << info.serviceName() << info.serviceDescription() << classIds;
@@ -347,7 +348,7 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
     {
         //This is here to detect the test server for SPP testing later on
         bool alreadyKnown = false;
-        foreach (const QBluetoothServiceInfo& found, foundTestServers) {
+        for (const QBluetoothServiceInfo& found : qAsConst(foundTestServers)) {
             if (found.device().address() == info.device().address()) {
                 alreadyKnown = true;
                 break;
@@ -384,24 +385,24 @@ void BtLocalDevice::dumpServiceDiscovery()
     if (deviceAgent) {
         qDebug() << "Device Discovery active:" << deviceAgent->isActive();
         qDebug() << "Error:" << deviceAgent->error() << deviceAgent->errorString();
-        QList<QBluetoothDeviceInfo> list = deviceAgent->discoveredDevices();
+        const QList<QBluetoothDeviceInfo> list = deviceAgent->discoveredDevices();
         qDebug() << "Discovered Devices:" << list.count();
 
-        foreach (const QBluetoothDeviceInfo &info, list)
+        for (const QBluetoothDeviceInfo &info : list)
             qDebug() << info.name() << info.address().toString() << info.rssi();
     }
     if (serviceAgent) {
         qDebug() << "Service Discovery active:" << serviceAgent->isActive();
         qDebug() << "Error:" << serviceAgent->error() << serviceAgent->errorString();
-        QList<QBluetoothServiceInfo> list = serviceAgent->discoveredServices();
+        const QList<QBluetoothServiceInfo> list = serviceAgent->discoveredServices();
         qDebug() << "Discovered Services:" << list.count();
 
-        foreach (const QBluetoothServiceInfo &i, list) {
+        for (const QBluetoothServiceInfo &i : list) {
             qDebug() << i.device().address().toString() << i.device().name() << i.serviceName();
         }
 
         qDebug() << "###### TestServer offered by:";
-        foreach (const QBluetoothServiceInfo& found, foundTestServers) {
+        for (const QBluetoothServiceInfo& found : qAsConst(foundTestServers)) {
             qDebug() << found.device().name() << found.device().address().toString();
         }
     }
@@ -449,7 +450,7 @@ void BtLocalDevice::closeSocket()
 
     if (!serverSockets.isEmpty()) {
         qDebug() << "###### Closing server sockets";
-        foreach (QBluetoothSocket *s, serverSockets)
+        for (QBluetoothSocket *s : serverSockets)
             s->close();
     }
 }
@@ -463,7 +464,7 @@ void BtLocalDevice::abortSocket()
 
     if (!serverSockets.isEmpty()) {
         qDebug() << "###### Closing server sockets";
-        foreach (QBluetoothSocket *s, serverSockets)
+        for (QBluetoothSocket *s : serverSockets)
             s->abort();
     }
 }
@@ -526,7 +527,7 @@ void BtLocalDevice::writeData()
     if (socket && socket->state() == QBluetoothSocket::ConnectedState) {
         socket->write(testData);
     }
-    foreach (QBluetoothSocket* client, serverSockets) {
+    for (QBluetoothSocket* client : serverSockets) {
         client->write(testData);
     }
 }
@@ -728,7 +729,7 @@ void BtLocalDevice::dumpServerInformation()
 
         //server->setSecurityFlags(secFlag);
 
-        foreach (const QBluetoothSocket *client, serverSockets) {
+        for (const QBluetoothSocket *client : qAsConst(serverSockets)) {
             qDebug() << "##" << client->localAddress().toString()
                      << client->localName() << client->localPort();
             qDebug() << "##" << client->peerAddress().toString()
@@ -756,9 +757,9 @@ void BtLocalDevice::dumpInformation()
 {
     qDebug() << "###### default local device";
     dumpLocalDevice(localDevice);
-    QList<QBluetoothHostInfo> list = QBluetoothLocalDevice::allDevices();
+    const QList<QBluetoothHostInfo> list = QBluetoothLocalDevice::allDevices();
     qDebug() << "Found local devices: "  << list.count();
-    foreach (const QBluetoothHostInfo &info, list) {
+    for (const QBluetoothHostInfo &info : list) {
         qDebug() << "    " << info.address().toString() << " " <<info.name();
     }
 
@@ -778,13 +779,17 @@ void BtLocalDevice::dumpInformation()
     qDebug() << "###### Bonding state with" << address.toString() << ": " << localDevice->pairingStatus(address);
 
     qDebug() << "###### Connected Devices";
-    foreach (const QBluetoothAddress &addr, localDevice->connectedDevices())
+    const QList<QBluetoothAddress> connectedDevices = localDevice->connectedDevices();
+    for (const QBluetoothAddress &addr : connectedDevices)
         qDebug() << "    " << addr.toString();
 
     qDebug() << "###### Discovered Devices";
-    if (deviceAgent)
-        foreach (const QBluetoothDeviceInfo &info, deviceAgent->discoveredDevices())
+    if (deviceAgent) {
+        const QList<QBluetoothDeviceInfo> devices = deviceAgent->discoveredDevices();
+        for (const QBluetoothDeviceInfo &info : devices) {
             deviceDiscovered(info);
+        }
+    }
 
     QBluetoothDeviceDiscoveryAgent invalidAgent(QBluetoothAddress("11:22:33:44:55:66"));
     invalidAgent.start();

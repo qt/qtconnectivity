@@ -210,7 +210,7 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(
 {
     if (!deviceAdapter.isNull()) {
         const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
-        foreach (const QBluetoothHostInfo &hostInfo, localDevices) {
+        for (const QBluetoothHostInfo &hostInfo : localDevices) {
             if (hostInfo.address() == deviceAdapter)
                 return;
         }

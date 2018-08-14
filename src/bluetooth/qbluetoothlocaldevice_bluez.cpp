@@ -249,7 +249,8 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
         if (reply.isError())
             return localDevices;
 
-        foreach (const QDBusObjectPath &path, reply.value()) {
+        const QList<QDBusObjectPath> paths = reply.value();
+        for (const QDBusObjectPath &path : paths) {
             QBluetoothHostInfo hostinfo;
             OrgBluezAdapterInterface adapter(QStringLiteral("org.bluez"), path.path(),
                                              QDBusConnection::systemBus());
@@ -770,7 +771,8 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
         if (reply.isError())
             return;
 
-        foreach (const QDBusObjectPath &path, reply.value()) {
+        const QList<QDBusObjectPath> paths = reply.value();
+        for (const QDBusObjectPath &path : paths) {
             OrgBluezAdapterInterface *tmpAdapter
                 = new OrgBluezAdapterInterface(QStringLiteral("org.bluez"),
                                                path.path(), QDBusConnection::systemBus());
@@ -1067,7 +1069,7 @@ void QBluetoothLocalDevicePrivate::_q_deviceCreated(const QDBusObjectPath &devic
 
 void QBluetoothLocalDevicePrivate::_q_deviceRemoved(const QDBusObjectPath &device)
 {
-    foreach (OrgBluezDeviceInterface *deviceInterface, devices) {
+    for (OrgBluezDeviceInterface *deviceInterface : qAsConst(devices)) {
         if (deviceInterface->path() == device.path()) {
             devices.remove(deviceInterface);
             delete deviceInterface; // deviceDisconnected is already emitted by _q_devicePropertyChanged
@@ -1113,7 +1115,8 @@ void QBluetoothLocalDevicePrivate::createCache()
         qCWarning(QT_BT_BLUEZ) << reply.error().message();
         return;
     }
-    foreach (const QDBusObjectPath &device, reply.value()) {
+    const QList<QDBusObjectPath> knownDevices = reply.value();
+    for (const QDBusObjectPath &device : knownDevices) {
         OrgBluezDeviceInterface *deviceInterface =
                 new OrgBluezDeviceInterface(QStringLiteral("org.bluez"),
                                             device.path(),

@@ -154,7 +154,7 @@ void ChatServer::sendMessage(const QString &message)
 {
     QByteArray text = message.toUtf8() + '\n';
 
-    foreach (QBluetoothSocket *socket, clientSockets)
+    for (QBluetoothSocket *socket : qAsConst(clientSockets))
         socket->write(text);
 }
 //! [sendMessage]

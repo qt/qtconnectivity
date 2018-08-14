@@ -256,7 +256,7 @@ void Device::connectToService(const QString &uuid)
 
     //discovery already done
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    foreach (const QLowEnergyCharacteristic &ch, chars) {
+    for (const QLowEnergyCharacteristic &ch : chars) {
         CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }
@@ -326,7 +326,7 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
 
     //! [les-chars]
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
-    foreach (const QLowEnergyCharacteristic &ch, chars) {
+    for (const QLowEnergyCharacteristic &ch : chars) {
         CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }

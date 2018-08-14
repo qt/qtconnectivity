@@ -348,7 +348,7 @@ private:
         if (m_readRequested) {
             qCDebug(QT_NFC_NEARD) << "creating Ndef message, reading" << m_recordPaths.length() << "record paths";
             QNdefMessage newNdefMessage;
-            foreach (const QDBusObjectPath &recordPath, m_recordPaths)
+            for (const QDBusObjectPath &recordPath : qAsConst(m_recordPaths))
                 newNdefMessage.append(readRecord(recordPath));
 
             if (!newNdefMessage.isEmpty()) {

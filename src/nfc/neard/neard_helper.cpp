@@ -80,7 +80,8 @@ OrgFreedesktopDBusObjectManagerInterface *NeardHelper::dbusObjectManager()
 
 void NeardHelper::interfacesAdded(const QDBusObjectPath &path, InterfaceList interfaceList)
 {
-    foreach (const QString &key, interfaceList.keys()) {
+    const QList<QString> keys = interfaceList.keys();
+    for (const QString &key : keys) {
         if (key == QStringLiteral("org.neard.Tag")) {
             emit tagFound(path);
             break;

@@ -380,7 +380,7 @@ QList<QLowEnergyDescriptor> QLowEnergyCharacteristic::descriptors() const
 
     std::sort(descriptorKeys.begin(), descriptorKeys.end());
 
-    foreach (const QLowEnergyHandle descHandle, descriptorKeys) {
+    for (const QLowEnergyHandle descHandle : qAsConst(descriptorKeys)) {
         QLowEnergyDescriptor descriptor(d_ptr, data->handle, descHandle);
         result.append(descriptor);
     }

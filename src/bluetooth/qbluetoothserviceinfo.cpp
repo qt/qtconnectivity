@@ -606,12 +606,12 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
         } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
             dbg << QString::asprintf("%sSequence\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Sequence *sequence = static_cast<const QBluetoothServiceInfo::Sequence *>(var.data());
-            foreach (const QVariant &v, *sequence)
+            for (const QVariant &v : *sequence)
                 dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
         } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             dbg << QString::asprintf("%sAlternative\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Alternative *alternative = static_cast<const QBluetoothServiceInfo::Alternative *>(var.data());
-            foreach (const QVariant &v, *alternative)
+            for (const QVariant &v : *alternative)
                 dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
         }
         break;
@@ -626,7 +626,8 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
 {
     QDebugStateSaver saver(dbg);
     dbg.noquote() << "\n";
-    foreach (quint16 id, info.attributes()) {
+    QList<quint16> attributes = info.attributes();
+    for (quint16 id : attributes) {
         dumpAttributeVariant(dbg, info.attribute(id), QStringLiteral("(%1)\t").arg(id));
     }
     return dbg;
@@ -637,7 +638,9 @@ QBluetoothServiceInfo::Sequence QBluetoothServiceInfoPrivate::protocolDescriptor
     if (!attributes.contains(QBluetoothServiceInfo::ProtocolDescriptorList))
         return QBluetoothServiceInfo::Sequence();
 
-    foreach (const QVariant &v, attributes.value(QBluetoothServiceInfo::ProtocolDescriptorList).value<QBluetoothServiceInfo::Sequence>()) {
+    const QBluetoothServiceInfo::Sequence sequence
+            = attributes.value(QBluetoothServiceInfo::ProtocolDescriptorList).value<QBluetoothServiceInfo::Sequence>();
+    for (const QVariant &v : sequence) {
         QBluetoothServiceInfo::Sequence parameters = v.value<QBluetoothServiceInfo::Sequence>();
         if (parameters.empty())
             continue;

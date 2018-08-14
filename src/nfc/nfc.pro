@@ -1,5 +1,6 @@
 TARGET = QtNfc
 QT = core
+DEFINES += QT_NO_FOREACH
 
 QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator

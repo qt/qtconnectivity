@@ -1215,7 +1215,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 lastHandle = parseReadByTypeIncludeDiscovery(
                             &includedServices, &data[offset], elementLength);
                 p->includedServices = includedServices;
-                foreach (const QBluetoothUuid &uuid, includedServices) {
+                for (const QBluetoothUuid &uuid : qAsConst(includedServices)) {
                     if (serviceList.contains(uuid))
                         serviceList[uuid]->type |= QLowEnergyService::IncludedService;
                 }
@@ -2495,7 +2495,7 @@ void QLowEnergyControllerPrivateBluez::handleReadMultipleRequest(const QByteArra
     }
     const QVector<Attribute> results = getAttributes(handles.first(), handles.last());
     QByteArray response(1, ATT_OP_READ_MULTIPLE_RESPONSE);
-    foreach (const Attribute &attr, results) {
+    for (const Attribute &attr : results) {
         const int error = checkReadPermissions(attr);
         if (error) {
             sendErrorResponse(packet.at(0), attr.handle, error);
@@ -2577,7 +2577,7 @@ void QLowEnergyControllerPrivateBluez::updateLocalAttributeValue(
         QLowEnergyDescriptor &descriptor)
 {
     localAttributes[handle].value = value;
-    foreach (const auto &service, localServices) {
+    for (const auto &service : qAsConst(localServices)) {
         if (handle < service->startHandle || handle > service->endHandle)
             continue;
         for (auto charIt = service->characteristicList.begin();
@@ -2623,7 +2623,7 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForPeripheral(
             = attribute.properties & QLowEnergyCharacteristic::Indicate;
     if (!hasNotifyProperty && !hasIndicateProperty)
         return;
-    foreach (const QLowEnergyServicePrivate::DescData &desc, charData.descriptorList) {
+    for (const QLowEnergyServicePrivate::DescData &desc : qAsConst(charData.descriptorList)) {
         if (desc.uuid != QBluetoothUuid::ClientCharacteristicConfiguration)
             continue;
 
@@ -2925,7 +2925,7 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
     QVector<QLowEnergyCharacteristic> characteristics;
     QVector<QLowEnergyDescriptor> descriptors;
     if (!cancel) {
-        foreach (const WriteRequest &request, requests) {
+        for (const WriteRequest &request : qAsConst(requests)) {
             Attribute &attribute = localAttributes[request.handle];
             if (request.valueOffset > attribute.value.count()) {
                 sendErrorResponse(packet.at(0), request.handle, ATT_ERROR_INVALID_OFFSET);
@@ -2952,9 +2952,9 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
 
     sendPacket(QByteArray(1, ATT_OP_EXECUTE_WRITE_RESPONSE));
 
-    foreach (const QLowEnergyCharacteristic &characteristic, characteristics)
+    for (const QLowEnergyCharacteristic &characteristic : qAsConst(characteristics))
         emit characteristic.d_ptr->characteristicChanged(characteristic, characteristic.value());
-    foreach (const QLowEnergyDescriptor &descriptor, descriptors)
+    for (const QLowEnergyDescriptor &descriptor : qAsConst(descriptors))
         emit descriptor.d_ptr->descriptorWritten(descriptor, descriptor.value());
 }
 
@@ -3153,7 +3153,7 @@ bool QLowEnergyControllerPrivateBluez::isBonded() const
 QVector<QLowEnergyControllerPrivateBluez::TempClientConfigurationData> QLowEnergyControllerPrivateBluez::gatherClientConfigData()
 {
     QVector<TempClientConfigurationData> data;
-    foreach (const auto &service, localServices) {
+    for (const auto &service : qAsConst(localServices)) {
         for (auto charIt = service->characteristicList.begin();
              charIt != service->characteristicList.end(); ++charIt) {
             QLowEnergyServicePrivate::CharData &charData = charIt.value();
@@ -3179,7 +3179,7 @@ void QLowEnergyControllerPrivateBluez::storeClientConfigurations()
     }
     QVector<ClientConfigurationData> clientConfigs;
     const QVector<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
-    foreach (const auto &tempConfigData, tempConfigList) {
+    for (const auto &tempConfigData : tempConfigList) {
         Q_ASSERT(tempConfigData.descData->value.count() == 2);
         const quint16 value = bt_get_le16(tempConfigData.descData->value.constData());
         if (value != 0) {
@@ -3196,9 +3196,9 @@ void QLowEnergyControllerPrivateBluez::restoreClientConfigurations()
     const QVector<ClientConfigurationData> &restoredClientConfigs = isBonded()
             ? clientConfigData.value(remoteDevice.toUInt64()) : QVector<ClientConfigurationData>();
     QVector<QLowEnergyHandle> notifications;
-    foreach (const auto &tempConfigData, tempConfigList) {
+    for (const auto &tempConfigData : tempConfigList) {
         bool wasRestored = false;
-        foreach (const auto &restoredData, restoredClientConfigs) {
+        for (const auto &restoredData : restoredClientConfigs) {
             if (restoredData.charValueHandle == tempConfigData.charValueHandle) {
                 Q_ASSERT(tempConfigData.descData->value.count() == 2);
                 putBtData(restoredData.configValue, tempConfigData.descData->value.data());
@@ -3219,7 +3219,7 @@ void QLowEnergyControllerPrivateBluez::restoreClientConfigurations()
         localAttributes[tempConfigData.configHandle].value = tempConfigData.descData->value;
     }
 
-    foreach (const QLowEnergyHandle handle, notifications)
+    for (const QLowEnergyHandle handle : qAsConst(notifications))
         sendNotification(handle);
     sendNextIndication();
 }
@@ -3318,7 +3318,8 @@ void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnerg
     serviceAttribute.properties = QLowEnergyCharacteristic::Read;
     serviceAttribute.value = uuidToByteArray(service.uuid());
     QLowEnergyHandle currentHandle = startHandle;
-    foreach (const QLowEnergyService * const service, service.includedServices()) {
+    const QList<QLowEnergyService *> includedServices = service.includedServices();
+    for (const QLowEnergyService * const service : includedServices) {
         Attribute attribute;
         attribute.handle = ++currentHandle;
         attribute.type = QBluetoothUuid(GATT_INCLUDED_SERVICE);
@@ -3332,7 +3333,8 @@ void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnerg
             putDataAndIncrement(service->serviceUuid(), valueData);
         localAttributes[attribute.handle] = attribute;
     }
-    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+    const QList<QLowEnergyCharacteristicData> characteristics = service.characteristics();
+    for (const QLowEnergyCharacteristicData &cd : characteristics) {
         Attribute attribute;
 
         // Characteristic declaration;
@@ -3359,7 +3361,8 @@ void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnerg
         attribute.maxLength = cd.maximumValueLength();
         localAttributes[attribute.handle] = attribute;
 
-        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+        const QList<QLowEnergyDescriptorData> descriptors = cd.descriptors();
+        for (const QLowEnergyDescriptorData &dd : descriptors) {
             attribute.handle = ++currentHandle;
             attribute.groupEndHandle = attribute.handle;
             attribute.type = dd.uuid();

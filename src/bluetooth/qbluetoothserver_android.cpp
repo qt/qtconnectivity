@@ -142,7 +142,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
 
     if (!localAdapter.isNull()) {
         bool found = false;
-        foreach (const QBluetoothHostInfo &hostInfo, localDevices) {
+        for (const QBluetoothHostInfo &hostInfo : localDevices) {
             if (hostInfo.address() == localAdapter) {
                 found = true;
                 break;

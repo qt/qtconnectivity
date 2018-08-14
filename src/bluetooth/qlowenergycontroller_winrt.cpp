@@ -292,7 +292,7 @@ QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
 
     qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
-    for (const ValueChangedEntry &entry : mValueChangedTokens)
+    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens))
         entry.characteristic->remove_ValueChanged(entry.token);
 }
 
@@ -469,7 +469,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
 {
     qCDebug(QT_BT_WINRT) << "Registering characteristic" << charUuid << "in service"
                          << serviceUuid << "for value changes";
-    for (const ValueChangedEntry &entry : mValueChangedTokens) {
+    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
         GUID guuid;
         HRESULT hr;
         hr = entry.characteristic->get_Uuid(&guuid);
@@ -662,7 +662,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
 
         HRESULT hr;
         hr = QEventDispatcherWinRT::runOnXamlThread([indicateChars, service, this]() {
-            for (const QBluetoothUuid &indicateChar : indicateChars)
+            for (const QBluetoothUuid &indicateChar : qAsConst(indicateChars))
                 registerForValueChanges(service, indicateChar);
             return S_OK;
         });

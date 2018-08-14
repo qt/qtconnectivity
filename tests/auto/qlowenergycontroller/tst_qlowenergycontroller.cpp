@@ -159,7 +159,8 @@ void tst_QLowEnergyController::initTestCase()
     bool deviceFound = false;
     devAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0, 30000);
-    foreach (const QBluetoothDeviceInfo &info, devAgent->discoveredDevices()) {
+    const QList<QBluetoothDeviceInfo> infos = devAgent->discoveredDevices();
+    for (const QBluetoothDeviceInfo &info : infos) {
 #ifndef Q_OS_MAC
         if (info.address() == remoteDevice) {
 #else
@@ -343,7 +344,7 @@ void tst_QLowEnergyController::tst_connect()
             listing.append(v.value<QBluetoothUuid>());
         }
 
-        foreach (const QBluetoothUuid &uuid, foundServices) {
+        for (const QBluetoothUuid &uuid : qAsConst(foundServices)) {
             QVERIFY2(listing.contains(uuid),
                      uuid.toString().toLatin1());
 
@@ -361,7 +362,7 @@ void tst_QLowEnergyController::tst_connect()
         QVERIFY(!control.createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceName)));
 
         // initiate characteristic discovery
-        foreach (QLowEnergyService *service, savedReferences) {
+        for (QLowEnergyService *service : qAsConst(savedReferences)) {
             qDebug() << "Discovering" << service->serviceUuid();
             QSignalSpy stateSpy(service,
                                 SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
@@ -378,7 +379,7 @@ void tst_QLowEnergyController::tst_connect()
         }
 
         // ensure that related service objects share same state
-        foreach (QLowEnergyService* originalService, savedReferences) {
+        for (QLowEnergyService* originalService : qAsConst(savedReferences)) {
             QLowEnergyService *newService = control.createServiceObject(
                         originalService->serviceUuid());
             QVERIFY(newService);
@@ -398,7 +399,7 @@ void tst_QLowEnergyController::tst_connect()
     } else {
         QCOMPARE(disconnectedSpy.count(), 1);
         // after disconnect all service references must be invalid
-        foreach (const QLowEnergyService *entry, savedReferences) {
+        for (const QLowEnergyService *entry : qAsConst(savedReferences)) {
             const QBluetoothUuid &uuid = entry->serviceUuid();
             QVERIFY2(entry->state() == QLowEnergyService::InvalidService,
                      uuid.toString().toLatin1());
@@ -1208,7 +1209,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
     } else if (info->serviceUuid() ==
                QBluetoothUuid(QString("f000aa40-0451-4000-b000-000000000000"))) {
         qDebug() << "Verifying Pressure";
-        QList<QLowEnergyCharacteristic> chars = info->characteristics();
+        const QList<QLowEnergyCharacteristic> chars = info->characteristics();
         QVERIFY(chars.count() >= 3);
 
         // Pressure Data
@@ -1271,7 +1272,7 @@ void tst_QLowEnergyController::verifyServiceProperties(
 
         //calibration and period characteristic are swapped, ensure we don't depend on their order
         QLowEnergyCharacteristic calibration, period;
-        foreach (const QLowEnergyCharacteristic &ch, chars) {
+        for (const QLowEnergyCharacteristic &ch : chars) {
             //find calibration characteristic
             if (ch.uuid() == QBluetoothUuid(QString("f000aa43-0451-4000-b000-000000000000")))
                 calibration = ch;
@@ -1660,7 +1661,8 @@ bool tst_QLowEnergyController::verifyClientCharacteristicValue(const QByteArray 
 void tst_QLowEnergyController::tst_defaultBehavior()
 {
     QList<QBluetoothAddress> foundAddresses;
-    foreach (const QBluetoothHostInfo &info, QBluetoothLocalDevice::allDevices())
+    const QList<QBluetoothHostInfo> infos = QBluetoothLocalDevice::allDevices();
+    for (const QBluetoothHostInfo &info : infos)
         foundAddresses.append(info.address());
     const QBluetoothAddress randomAddress("11:22:33:44:55:66");
 
