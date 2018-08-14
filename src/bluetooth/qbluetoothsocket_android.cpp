@@ -929,7 +929,7 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject
     workerThread->setupWorker(this, socketObject, QAndroidJniObject(), !USE_FALLBACK);
     workerThread->start();
 
-    if (openMode == QBluetoothSocket::ConnectedState)
+    if (socketState == QBluetoothSocket::ConnectedState)
         emit q->connected();
 
     return true;
