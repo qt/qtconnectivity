@@ -50,16 +50,15 @@
 
 #include "chatserver.h"
 
-#include <qbluetoothserver.h>
-#include <qbluetoothsocket.h>
-#include <qbluetoothlocaldevice.h>
+#include <QtBluetooth/qbluetoothserver.h>
+#include <QtBluetooth/qbluetoothsocket.h>
 
 //! [Service UUID]
 static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
 //! [Service UUID]
 
 ChatServer::ChatServer(QObject *parent)
-:   QObject(parent), rfcommServer(0)
+    :   QObject(parent)
 {
 }
 
@@ -75,7 +74,8 @@ void ChatServer::startServer(const QBluetoothAddress& localAdapter)
 
     //! [Create the server]
     rfcommServer = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
-    connect(rfcommServer, SIGNAL(newConnection()), this, SLOT(clientConnected()));
+    connect(rfcommServer, &QBluetoothServer::newConnection,
+            this, QOverload<>::of(&ChatServer::clientConnected));
     bool result = rfcommServer->listen(localAdapter);
     if (!result) {
         qWarning() << "Cannot bind chat server to" << localAdapter.toString();
@@ -145,7 +145,7 @@ void ChatServer::stopServer()
 
     // Close server
     delete rfcommServer;
-    rfcommServer = 0;
+    rfcommServer = nullptr;
 }
 //! [stopServer]
 
@@ -166,8 +166,8 @@ void ChatServer::clientConnected()
     if (!socket)
         return;
 
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(clientDisconnected()));
+    connect(socket, &QBluetoothSocket::readyRead, this, &ChatServer::readSocket);
+    connect(socket, &QBluetoothSocket::disconnected, this, QOverload<>::of(&ChatServer::clientDisconnected));
     clientSockets.append(socket);
     emit clientConnected(socket->peerName());
 }
