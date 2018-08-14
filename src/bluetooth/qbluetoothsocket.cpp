@@ -518,10 +518,20 @@ QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
 void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
 {
     Q_D(QBluetoothSocketBase);
-    SocketState old = d->state;
+    const SocketState old = d->state;
+    if (state == old)
+        return;
+
     d->state = state;
     if(old != d->state)
         emit stateChanged(state);
+    if (state == QBluetoothSocket::ConnectedState) {
+        emit connected();
+    } else if ((old == QBluetoothSocket::ConnectedState
+                || old == QBluetoothSocket::ClosingState)
+               && state == QBluetoothSocket::UnconnectedState) {
+        emit disconnected();
+    }
     if(state == ListeningState){
         // TODO: look at this, is this really correct?
         // if we're a listening socket we can't handle connects?

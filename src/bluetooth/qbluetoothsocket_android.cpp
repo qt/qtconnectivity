@@ -626,7 +626,6 @@ void QBluetoothSocketPrivateAndroid::socketConnectSuccess(const QAndroidJniObjec
     q->setOpenMode(QIODevice::ReadWrite|QIODevice::Unbuffered);
 
     q->setSocketState(QBluetoothSocket::ConnectedState);
-    emit q->connected();
 }
 
 void QBluetoothSocketPrivateAndroid::defaultSocketConnectFailed(
@@ -714,10 +713,9 @@ void QBluetoothSocketPrivateAndroid::abort()
             // close() without further feedback. Therefore we have to set
             // Unconnected (now) in advance
             Q_Q(QBluetoothSocket);
-            q->setSocketState(QBluetoothSocket::UnconnectedState);
             q->setOpenMode(QIODevice::NotOpen);
+            q->setSocketState(QBluetoothSocket::UnconnectedState);
             emit q->readChannelFinished();
-            emit q->disconnected();
         }
     }
 }
@@ -841,10 +839,9 @@ void QBluetoothSocketPrivateAndroid::inputThreadError(int errorCode)
         }
     }
 
-    q->setSocketState(QBluetoothSocket::UnconnectedState);
     q->setOpenMode(QIODevice::NotOpen);
+    q->setSocketState(QBluetoothSocket::UnconnectedState);
     emit q->readChannelFinished();
-    emit q->disconnected();
 }
 
 void QBluetoothSocketPrivateAndroid::close()
@@ -917,10 +914,6 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject
                      this, SLOT(inputThreadError(int)), Qt::QueuedConnection);
     inputThread->run();
 
-
-    q->setSocketState(socketState);
-    q->setOpenMode(openMode | QIODevice::Unbuffered);
-
     // WorkerThread manages all sockets for us
     // When we come through here the socket was already connected by
     // server socket listener (see QBluetoothServer)
@@ -929,8 +922,8 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject
     workerThread->setupWorker(this, socketObject, QAndroidJniObject(), !USE_FALLBACK);
     workerThread->start();
 
-    if (socketState == QBluetoothSocket::ConnectedState)
-        emit q->connected();
+    q->setOpenMode(openMode | QIODevice::Unbuffered);
+    q->setSocketState(socketState);
 
     return true;
 }

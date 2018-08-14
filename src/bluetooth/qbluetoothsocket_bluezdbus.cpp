@@ -345,7 +345,6 @@ void QBluetoothSocketPrivateBluezDBus::abort()
         q->setOpenMode(QIODevice::NotOpen);
         q->setSocketState(QBluetoothSocket::UnconnectedState);
         emit q->readChannelFinished();
-        emit q->disconnected();
     }
 }
 
@@ -542,7 +541,6 @@ void QBluetoothSocketPrivateBluezDBus::remoteConnected(const QDBusUnixFileDescri
 
         socket = descriptor;
         q->setSocketState(QBluetoothSocket::ConnectedState);
-        emit q->connected();
     }
 }
 
@@ -556,10 +554,9 @@ void QBluetoothSocketPrivateBluezDBus::socketStateChanged(QLocalSocket::LocalSoc
         break;
     case QLocalSocket::UnconnectedState:
         clearSocket();
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
         q->setOpenMode(QIODevice::NotOpen);
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
         emit q->readChannelFinished();
-        emit q->disconnected();
         break;
     default:
         // ConnectingState and ConnectedState not mapped

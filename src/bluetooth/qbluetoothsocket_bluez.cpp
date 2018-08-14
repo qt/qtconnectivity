@@ -325,7 +325,6 @@ void QBluetoothSocketPrivateBluez::_q_writeNotify()
         }
 
         q->setSocketState(QBluetoothSocket::ConnectedState);
-        emit q->connected();
 
         connectWriteNotifier->setEnabled(false);
         connecting = false;

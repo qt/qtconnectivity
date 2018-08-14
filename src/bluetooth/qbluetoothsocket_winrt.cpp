@@ -523,7 +523,6 @@ void QBluetoothSocketPrivateWinRT::abort()
     if (wasConnected) {
         q->setOpenMode(QIODevice::NotOpen);
         emit q->readChannelFinished();
-        emit q->disconnected();
     }
 }
 
@@ -739,7 +738,6 @@ void QBluetoothSocketPrivateWinRT::handleError(QBluetoothSocket::SocketError err
     if (wasConnected) {
         q->setOpenMode(QIODevice::NotOpen);
         emit q->readChannelFinished();
-        emit q->disconnected();
     }
 }
 
@@ -810,7 +808,6 @@ HRESULT QBluetoothSocketPrivateWinRT::handleConnectOpFinished(ABI::Windows::Foun
     q->setOpenMode(requestedOpenMode);
     q->setSocketState(QBluetoothSocket::ConnectedState);
     m_worker->startReading();
-    emit q->connected();
 
     return S_OK;
 }
