@@ -394,13 +394,14 @@ void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddres
 
     q->setSocketState(QBluetoothSocket::ConnectingState);
     requestedOpenMode = openMode;
-    QEventDispatcherWinRT::runOnXamlThread([this]() {
+    hr = QEventDispatcherWinRT::runOnXamlThread([this]() {
         HRESULT hr;
         hr = m_connectOp->put_Completed(Callback<IAsyncActionCompletedHandler>(
                                          this, &QBluetoothSocketPrivateWinRT::handleConnectOpFinished).Get());
         RETURN_HR_IF_FAILED("connectToHostByName: Could not register \"connectOp\" callback");
         return S_OK;
     });
+    Q_ASSERT_SUCCEEDED(hr);
 }
 
 void QBluetoothSocketPrivateWinRT::connectToService(
