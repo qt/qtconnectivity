@@ -324,7 +324,6 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
             case 0:
                 qCWarning(QT_BT_WINRT) << "Don't know how to register Uuid of length 0";
                 return nullptr;
-                break;
             case 2:
                 qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering Uuid attribute with length 2:" << uuid;
                 hr = writer->WriteByte(TYPE_UUID16);
@@ -402,7 +401,7 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
             qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registered sequence attribute with length" << length;
         } else if (attribute.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             qCWarning(QT_BT_WINRT) << "Don't know how to register user type Alternative";
-            return false;
+            return nullptr;
         }
         break;
     default:
