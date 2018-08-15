@@ -87,7 +87,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 #define TYPE_SEQUENCE_BASE    48
 #define TYPE_ALTERNATIVE_BASE 56
 #define TYPE_URL_BASE         64
-#define TYPE_SEQUENCE         53
 
 extern QHash<QBluetoothServerPrivate *, int> __fakeServerPorts;
 
@@ -183,15 +182,12 @@ bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
     BYTE type;
     hr = reader->ReadByte(&type);
     Q_ASSERT_SUCCEEDED(hr);
-    if (type != TYPE_SEQUENCE) {
+    if (!typeIsOfBase(type, TYPE_SEQUENCE_BASE)) {
         qCWarning(QT_BT_WINRT) << Q_FUNC_INFO << "Malformed profile descriptor list read";
         return false;
     }
 
-    quint8 length;
-    hr = reader->ReadByte(&length);
-    Q_ASSERT_SUCCEEDED(hr);
-
+    qint64 length = getLengthForBaseType(type, reader);
     hr = reader->ReadByte(&type);
     Q_ASSERT_SUCCEEDED(hr);
     // We have to "repair" the structure if the outer sequence contains a uuid directly
@@ -206,12 +202,12 @@ bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
             &writer);
         Q_ASSERT_SUCCEEDED(hr);
 
-        hr = writer->WriteByte(TYPE_SEQUENCE);
+        hr = writer->WriteByte(TYPE_SEQUENCE_BASE + 5);
         Q_ASSERT_SUCCEEDED(hr);
         // 8 == length of nested sequence (outer sequence -> inner sequence -> uuid and version)
         hr = writer->WriteByte(8);
         Q_ASSERT_SUCCEEDED(hr);
-        hr = writer->WriteByte(TYPE_SEQUENCE);
+        hr = writer->WriteByte(TYPE_SEQUENCE_BASE + 5);
         Q_ASSERT_SUCCEEDED(hr);
         hr = writer->WriteByte(7);
         Q_ASSERT_SUCCEEDED(hr);
@@ -354,8 +350,6 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
             }
         } else if (attribute.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
             qCDebug(QT_BT_WINRT) << "Registering sequence attribute";
-            hr = writer->WriteByte(TYPE_SEQUENCE);
-            Q_ASSERT_SUCCEEDED(hr);
             const QBluetoothServiceInfo::Sequence *sequence =
                     static_cast<const QBluetoothServiceInfo::Sequence *>(attribute.data());
             ComPtr<IDataWriter> tmpWriter;
@@ -381,8 +375,27 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
             quint32 length;
             tmpBuffer->get_Length(&length);
             Q_ASSERT_SUCCEEDED(hr);
-            hr = writer->WriteByte(length + 1);
-            Q_ASSERT_SUCCEEDED(hr);
+            unsigned char type = TYPE_SEQUENCE_BASE;
+            length += 1;
+            if (length <= 0xff) {
+                type += 5;
+                hr = writer->WriteByte(type);
+                Q_ASSERT_SUCCEEDED(hr);
+                hr = writer->WriteByte(length);
+                Q_ASSERT_SUCCEEDED(hr);
+            } else if (length <= 0xffff) {
+                type += 6;
+                hr = writer->WriteByte(type);
+                Q_ASSERT_SUCCEEDED(hr);
+                hr = writer->WriteUInt16(length);
+                Q_ASSERT_SUCCEEDED(hr);
+            } else {
+                type += 7;
+                hr = writer->WriteByte(type);
+                Q_ASSERT_SUCCEEDED(hr);
+                hr = writer->WriteUInt32(length);
+                Q_ASSERT_SUCCEEDED(hr);
+            }
             // write sequence data
             hr = writer->WriteBuffer(tmpBuffer.Get());
             Q_ASSERT_SUCCEEDED(hr);
