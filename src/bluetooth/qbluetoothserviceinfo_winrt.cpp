@@ -82,11 +82,54 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 #define TYPE_UUID16           25
 #define TYPE_UUID32           26
 #define TYPE_UUID128          28
-#define TYPE_STRING           37
+#define TYPE_STRING_BASE      32
 #define TYPE_BOOLEAN          40
+#define TYPE_SEQUENCE_BASE    48
+#define TYPE_ALTERNATIVE_BASE 56
+#define TYPE_URL_BASE         64
 #define TYPE_SEQUENCE         53
 
 extern QHash<QBluetoothServerPrivate *, int> __fakeServerPorts;
+
+inline bool typeIsOfBase(unsigned char type, unsigned char baseType)
+{
+    return ((type & baseType) == baseType);
+}
+
+qint64 getLengthForBaseType(unsigned char type, ComPtr<IDataReader> &reader)
+{
+    const bool isOfBase = (typeIsOfBase(type, TYPE_STRING_BASE)
+                           || typeIsOfBase(type, TYPE_SEQUENCE_BASE)
+                           || typeIsOfBase(type, TYPE_ALTERNATIVE_BASE)
+                           || typeIsOfBase(type, TYPE_URL_BASE));
+    if (!isOfBase)
+        return -1;
+
+    HRESULT hr;
+    // For these types, the first 5 bits are the base type followed by 3 bits
+    // describing the size index. This index decides how many additional bits
+    // have to be read to get the type's length.
+    const unsigned char sizeIndex = (type & 0x7);
+    switch (sizeIndex) {
+    case 5: {
+        quint8 length;
+        hr = reader->ReadByte(&length);
+        RETURN_IF_FAILED("Could not read length from buffer", return -1);
+        return length;
+    } case 6: {
+        quint16 length;
+        hr = reader->ReadUInt16(&length);
+        RETURN_IF_FAILED("Could not read length from buffer", return -1);
+        return length;
+    } case 7: {
+        quint32 length;
+        hr = reader->ReadUInt32(&length);
+        RETURN_IF_FAILED("Could not read length from buffer", return -1);
+        return length;
+    }
+    }
+    return -1;
+}
 
 bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
 {
