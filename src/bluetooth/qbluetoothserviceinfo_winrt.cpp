@@ -131,6 +131,44 @@ qint64 getLengthForBaseType(unsigned char type, ComPtr<IDataReader> &reader)
     return -1;
 }
 
+bool writeStringHelper(const QString &string, ComPtr<IDataWriter> writer)
+{
+    HRESULT hr;
+    const int stringLength = string.length();
+    unsigned char type = TYPE_STRING_BASE;
+    if (stringLength < 0) {
+        qCWarning(QT_BT_WINRT) << "Can not write invalid string value to buffer";
+        return false;
+    } if (stringLength <= 0xff) {
+        type += 5;
+        hr = writer->WriteByte(type);
+        RETURN_FALSE_IF_FAILED("Could not write string type data.");
+        hr = writer->WriteByte(stringLength);
+        RETURN_FALSE_IF_FAILED("Could not write string length.");
+    } else if (stringLength <= 0xffff) {
+        type += 6;
+        hr = writer->WriteByte(type);
+        RETURN_FALSE_IF_FAILED("Could not write string type data.");
+        hr = writer->WriteUInt16(stringLength);
+        RETURN_FALSE_IF_FAILED("Could not write string length.");
+    } else {
+        type += 7;
+        hr = writer->WriteByte(type);
+        RETURN_FALSE_IF_FAILED("Could not write string type data.");
+        hr = writer->WriteUInt32(stringLength);
+        RETURN_FALSE_IF_FAILED("Could not write string length.");
+    }
+    HStringReference stringRef(reinterpret_cast<LPCWSTR>(string.utf16()));
+    quint32 bytesWritten;
+    hr = writer->WriteString(stringRef.Get(), &bytesWritten);
+    RETURN_FALSE_IF_FAILED("Could not write string to buffer.");
+    if (bytesWritten != string.length()) {
+        qCWarning(QT_BT_WINRT) << "Did not write full value to buffer";
+        return false;
+    }
+    return true;
+}
+
 bool repairProfileDescriptorListIfNeeded(ComPtr<IBuffer> &buffer)
 {
     ComPtr<IDataReaderStatics> dataReaderStatics;
@@ -265,19 +303,10 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         break;
     case QMetaType::QString: {
         qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::QString:" << attribute.value<QString>();
-        hr = writer->WriteByte(TYPE_STRING);
-        Q_ASSERT_SUCCEEDED(hr);
         const QString stringValue = attribute.value<QString>();
-        hr = writer->WriteByte(stringValue.length());
-        Q_ASSERT_SUCCEEDED(hr);
-        HStringReference stringRef(reinterpret_cast<LPCWSTR>(stringValue.utf16()));
-        quint32 bytesWritten;
-        hr = writer->WriteString(stringRef.Get(), &bytesWritten);
-        if (bytesWritten != stringValue.length()) {
-            qCWarning(QT_BT_WINRT) << "Did not write full value to buffer";
+        const bool writeSucces = writeStringHelper(stringValue, writer);
+        if (!writeSucces)
             return nullptr;
-        }
-        Q_ASSERT_SUCCEEDED(hr);
         break;
     }
     case QMetaType::Bool:
