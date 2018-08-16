@@ -98,6 +98,8 @@ public:
     void _q_newConnection();
     void setSocketSecurityLevel(QBluetooth::SecurityFlags requestedSecLevel, int *errnoCode);
     QBluetooth::SecurityFlags socketSecurityLevel() const;
+    static QBluetoothSocket *createSocketForServer(
+                QBluetoothServiceInfo::Protocol socketType = QBluetoothServiceInfo::RfcommProtocol);
 #endif
 
 public:

@@ -40,6 +40,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
+#include "qbluetoothsocket_bluez_p.h"
 #include "qbluetoothlocaldevice.h"
 #include "bluez/bluez_data_p.h"
 
@@ -52,14 +53,17 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-static inline void convertAddress(quint64 from, quint8 (&to)[6])
+QBluetoothSocket *QBluetoothServerPrivate::createSocketForServer(
+                        QBluetoothServiceInfo::Protocol socketType)
 {
-    to[0] = (from >> 0) & 0xff;
-    to[1] = (from >> 8) & 0xff;
-    to[2] = (from >> 16) & 0xff;
-    to[3] = (from >> 24) & 0xff;
-    to[4] = (from >> 32) & 0xff;
-    to[5] = (from >> 40) & 0xff;
+    // QBluetoothServer does not work with the BluetoothSocket implementation for DBus.
+    // Fall back to the raw socket implementation.
+    // Usually the private implementation is picked based on detected BlueZ version.
+
+    // ownership of these objects is taken care of inside QBluetoothSocket and QBluetoothServer
+    QBluetoothSocketPrivateBluez *rawSocketPrivate = new QBluetoothSocketPrivateBluez();
+    QBluetoothSocket *socket = new QBluetoothSocket(rawSocketPrivate, socketType);
+    return socket;
 }
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
@@ -67,9 +71,9 @@ QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol
         m_lastError(QBluetoothServer::NoError), socketNotifier(0)
 {
     if (sType == QBluetoothServiceInfo::RfcommProtocol)
-        socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+        socket = createSocketForServer(QBluetoothServiceInfo::RfcommProtocol);
     else
-        socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+        socket = createSocketForServer(QBluetoothServiceInfo::L2capProtocol);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
@@ -185,9 +189,9 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
         delete d->socket;
         if (serverType() == QBluetoothServiceInfo::RfcommProtocol)
-            d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
+            d->socket = QBluetoothServerPrivate::createSocketForServer(QBluetoothServiceInfo::RfcommProtocol);
         else
-            d->socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+            d->socket = QBluetoothServerPrivate::createSocketForServer(QBluetoothServiceInfo::L2capProtocol);
 
         sock = d->socket->socketDescriptor();
         if (sock < 0) {
@@ -294,7 +298,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     }
 
     if (pending >= 0) {
-        QBluetoothSocket *newSocket = new QBluetoothSocket;
+        QBluetoothSocket *newSocket = QBluetoothServerPrivate::createSocketForServer();
         if (d->serverType == QBluetoothServiceInfo::RfcommProtocol)
             newSocket->setSocketDescriptor(pending, QBluetoothServiceInfo::RfcommProtocol);
         else

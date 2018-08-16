@@ -296,6 +296,27 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
     setOpenMode(QIODevice::NotOpen);
 }
 
+#if QT_CONFIG(bluez)
+
+/*!
+  \internal
+*/
+QBluetoothSocket::QBluetoothSocket(QBluetoothSocketBasePrivate *dPrivate,
+                          QBluetoothServiceInfo::Protocol socketType,
+                          QObject *parent)
+    : QIODevice(parent)
+{
+    d_ptr = dPrivate;
+    d_ptr->q_ptr = this;
+
+    Q_D(QBluetoothSocketBase);
+    d->ensureNativeSocket(socketType);
+
+    setOpenMode(QIODevice::NotOpen);
+}
+
+#endif
+
 /*!
     Destroys the Bluetooth socket.
 */
