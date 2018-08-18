@@ -393,10 +393,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             serviceInfo.setServiceUuid(uuids.at(i));
         }
 
-        //Check if the UUID is in the uuidFilter
-        if (!uuidFilter.isEmpty() && !uuidFilter.contains(serviceInfo.serviceUuid()))
-            continue;
-
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
                                  QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
@@ -409,6 +405,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             QBluetoothUuid::ServiceClassUuid clsId
                 = static_cast<QBluetoothUuid::ServiceClassUuid>(uuids.at(i).toUInt16());
             serviceInfo.setServiceName(QBluetoothUuid::serviceClassToString(clsId));
+        }
+
+        //Check if the service is in the uuidFilter
+        if (!uuidFilter.isEmpty()) {
+            bool match = uuidFilter.contains(serviceInfo.serviceUuid());
+            for (const auto &uuid : qAsConst(uuidFilter))
+                match |= serviceInfo.serviceClassUuids().contains(uuid);
+
+            if (!match)
+                continue;
         }
 
         //don't include the service if we already discovered it before
