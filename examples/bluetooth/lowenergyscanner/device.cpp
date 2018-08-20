@@ -179,7 +179,7 @@ void Device::scanServices(const QString &address)
     //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
-        controller = new QLowEnergyController(currentDevice.getDevice());
+        controller = QLowEnergyController::createCentral(currentDevice.getDevice());
         connect(controller, &QLowEnergyController::connected,
                 this, &Device::deviceConnected);
         connect(controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
