@@ -237,7 +237,7 @@ public:
     QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const;
     DataCompleteness serviceUuidsCompleteness() const;
 
-    QVector<quint16> manufactuerIds() const;
+    QVector<quint16> manufacturerIds() const;
     QByteArray manufacturerData(quint16 manufacturerId) const;
     void setManufacturerData(quint16 manufacturerId, const QByteArray &data);
 

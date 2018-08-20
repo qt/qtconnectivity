@@ -571,7 +571,7 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
 
     \since 5.12
  */
-QVector<quint16> QBluetoothDeviceInfo::manufactuerIds() const
+QVector<quint16> QBluetoothDeviceInfo::manufacturerIds() const
 {
     Q_D(const QBluetoothDeviceInfo);
     return d->manufacturerData.keys().toVector();
