@@ -633,23 +633,27 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &
                                             QDBusConnection::systemBus());
         for (int i = 0; i < discoveredDevices.size(); i++) {
             if (discoveredDevices[i].address().toString() == device.address()) {
+                QBluetoothDeviceInfo::Fields updatedFields = QBluetoothDeviceInfo::Field::None;
                 if (changed_properties.contains(QStringLiteral("RSSI"))) {
                     qCDebug(QT_BT_BLUEZ) << "Updating RSSI for" << device.address()
                                          << changed_properties.value(QStringLiteral("RSSI"));
                     discoveredDevices[i].setRssi(
                                 changed_properties.value(QStringLiteral("RSSI")).toInt());
+                    updatedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
                 }
                 if (changed_properties.contains(QStringLiteral("ManufacturerData"))) {
                     qCDebug(QT_BT_BLUEZ) << "Updating ManufacturerData for" << device.address();
-
-                    QVector<QPair<quint16,QByteArray>> manufacturerData;
                     ManufacturerDataList changedManufacturerData =
-                            qvariant_cast< ManufacturerDataList >(changed_properties.value(QStringLiteral("ManufacturerData")));
+                            qdbus_cast< ManufacturerDataList >(changed_properties.value(QStringLiteral("ManufacturerData")));
 
                     const QList<quint16> keys = changedManufacturerData.keys();
-                    for (quint16 key : keys)
-                        discoveredDevices[i].setManufacturerData(key, changedManufacturerData.value(key).variant().toByteArray());
+                    for (quint16 key : keys) {
+                        if (discoveredDevices[i].setManufacturerData(key, changedManufacturerData.value(key).variant().toByteArray()))
+                            updatedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
+                    }
                 }
+                if (!updatedFields.testFlag(QBluetoothDeviceInfo::Field::None))
+                    emit q->deviceUpdated(discoveredDevices[i], updatedFields);
                 return;
             }
         }
