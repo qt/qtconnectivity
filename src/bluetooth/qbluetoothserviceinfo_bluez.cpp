@@ -175,7 +175,7 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 }
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
-:   service(0), serviceBluez5(0), serviceRecord(0), registered(false)
+:   serviceRecord(0), registered(false)
 {
     if (isBluez5()) {
         serviceBluez5  = new OrgBluezProfileManager1Interface(

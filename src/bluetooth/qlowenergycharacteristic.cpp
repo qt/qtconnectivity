@@ -104,7 +104,7 @@ struct QLowEnergyCharacteristicPrivate
     \sa isValid()
 */
 QLowEnergyCharacteristic::QLowEnergyCharacteristic():
-    d_ptr(0), data(0)
+    d_ptr(nullptr)
 {
 
 }
@@ -116,7 +116,7 @@ QLowEnergyCharacteristic::QLowEnergyCharacteristic():
     upon write.
 */
 QLowEnergyCharacteristic::QLowEnergyCharacteristic(const QLowEnergyCharacteristic &other):
-    d_ptr(other.d_ptr), data(0)
+    d_ptr(other.d_ptr)
 {
     if (other.data) {
         data = new QLowEnergyCharacteristicPrivate();
@@ -241,7 +241,7 @@ QLowEnergyCharacteristic &QLowEnergyCharacteristic::operator=(const QLowEnergyCh
     if (!other.data) {
         if (data) {
             delete data;
-            data = 0;
+            data = nullptr;
         }
     } else {
         if (!data)

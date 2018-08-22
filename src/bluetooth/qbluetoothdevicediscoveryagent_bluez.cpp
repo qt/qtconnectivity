@@ -63,11 +63,6 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     m_adapterAddress(deviceAdapter),
     pendingCancel(false),
     pendingStart(false),
-    manager(0),
-    adapter(0),
-    managerBluez5(0),
-    adapterBluez5(0),
-    discoveryTimer(0),
     useExtendedDiscovery(false),
     lowEnergySearchTimeout(-1), // remains -1 on BlueZ 4 -> timeout not supported
     q_ptr(parent)
@@ -174,12 +169,12 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (propertiesReply.isError()) {
         errorString = propertiesReply.error().message();
         delete adapter;
-        adapter = 0;
+        adapter = nullptr;
         qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "ERROR: " << errorString;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
         delete adapter;
-        adapter = 0;
+        adapter = nullptr;
         emit q->error(lastError);
         return;
     }
@@ -189,7 +184,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         delete adapter;
-        adapter = 0;
+        adapter = nullptr;
         emit q->error(lastError);
         return;
     }
@@ -218,7 +213,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     discoveryReply.waitForFinished();
     if (discoveryReply.isError()) {
         delete adapter;
-        adapter = 0;
+        adapter = nullptr;
         errorString = discoveryReply.error().message();
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
@@ -251,7 +246,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         delete adapterBluez5;
-        adapterBluez5 = 0;
+        adapterBluez5 = nullptr;
         emit q->error(lastError);
         return;
     }
@@ -276,7 +271,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
             errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
                                                              "are not supported on this platform");
             delete adapterBluez5;
-            adapterBluez5 = 0;
+            adapterBluez5 = nullptr;
             emit q->error(lastError);
             return;
         } else if (filterReply.error().type() != QDBusError::UnknownMethod) {
@@ -493,13 +488,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
             Q_Q(QBluetoothDeviceDiscoveryAgent);
             if (pendingCancel && !pendingStart) {
                 adapter->deleteLater();
-                adapter = 0;
+                adapter = nullptr;
 
                 pendingCancel = false;
                 emit q->canceled();
             } else if (pendingStart) {
                 adapter->deleteLater();
-                adapter = 0;
+                adapter = nullptr;
 
                 pendingStart = false;
                 pendingCancel = false;
@@ -523,7 +518,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_propertyChanged(const QString &na
                 QDBusPendingReply<> reply = adapter->StopDiscovery();
                 reply.waitForFinished();
                 adapter->deleteLater();
-                adapter = 0;
+                adapter = nullptr;
                 emit q->finished();
             }
         } else {
@@ -538,7 +533,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_extendedDeviceDiscoveryTimeout()
 
     if (adapter) {
         adapter->deleteLater();
-        adapter = 0;
+        adapter = nullptr;
     }
     if (isActive()) {
         Q_Q(QBluetoothDeviceDiscoveryAgent);
@@ -575,7 +570,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryFinished()
     propertyMonitors.clear();
 
     delete adapterBluez5;
-    adapterBluez5 = 0;
+    adapterBluez5 = nullptr;
 
     if (pendingCancel && !pendingStart) {
         pendingCancel = false;
@@ -608,7 +603,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
         // does this automatically when emitting discoveryInterrupted(QString) signal
 
         delete adapterBluez5;
-        adapterBluez5 = 0;
+        adapterBluez5 = nullptr;
 
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;

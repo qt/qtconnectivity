@@ -459,7 +459,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stopDeviceDiscovery()
 
     deviceDiscoveryAgent->stop();
     delete deviceDiscoveryAgent;
-    deviceDiscoveryAgent = 0;
+    deviceDiscoveryAgent = nullptr;
 
     setDiscoveryState(Inactive);
 
@@ -484,7 +484,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
     }
 
     delete deviceDiscoveryAgent;
-    deviceDiscoveryAgent = 0;
+    deviceDiscoveryAgent = nullptr;
 
     startServiceDiscovery();
 }
@@ -510,7 +510,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
 
     deviceDiscoveryAgent->stop();
     delete deviceDiscoveryAgent;
-    deviceDiscoveryAgent = 0;
+    deviceDiscoveryAgent = nullptr;
 
     setDiscoveryState(Inactive);
     Q_Q(QBluetoothServiceDiscoveryAgent);

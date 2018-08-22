@@ -87,9 +87,7 @@ class QDeclarativeBluetoothServicePrivate
 {
 public:
     QDeclarativeBluetoothServicePrivate()
-        : m_componentComplete(false),
-          m_service(0),
-          m_server(0)
+        : m_componentComplete(false)
     {
 
     }
@@ -100,9 +98,9 @@ public:
     }
 
     bool m_componentComplete;
-    QBluetoothServiceInfo *m_service;
+    QBluetoothServiceInfo *m_service = nullptr;
     QDeclarativeBluetoothService::Protocol m_protocol;
-    QBluetoothServer *m_server;
+    QBluetoothServer *m_server = nullptr;
 };
 
 QDeclarativeBluetoothService::QDeclarativeBluetoothService(QObject *parent) :
@@ -275,7 +273,7 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
     }
 
     delete d->m_server;
-    d->m_server = 0;
+    d->m_server = nullptr;
 
     if (!registered) {
         d->m_service->unregisterService();
@@ -354,14 +352,14 @@ QDeclarativeBluetoothSocket *QDeclarativeBluetoothService::nextClient()
     if (server) {
         if (server->hasPendingConnections()) {
             QBluetoothSocket *socket = server->nextPendingConnection();
-            return new QDeclarativeBluetoothSocket(socket, this, 0);
+            return new QDeclarativeBluetoothSocket(socket, this, nullptr);
         }
         else {
             qCWarning(QT_BT_QML) << "Socket has no pending connection, failing";
-            return 0;
+            return nullptr;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void QDeclarativeBluetoothService::assignNextClient(QDeclarativeBluetoothSocket *dbs)

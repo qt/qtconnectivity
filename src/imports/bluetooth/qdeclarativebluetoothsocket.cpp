@@ -79,7 +79,7 @@ class QDeclarativeBluetoothSocketPrivate
 {
 public:
     QDeclarativeBluetoothSocketPrivate(QDeclarativeBluetoothSocket *bs)
-        : m_dbs(bs), m_service(0), m_socket(0),
+        : m_dbs(bs),
           m_error(QDeclarativeBluetoothSocket::NoError),
           m_state(QDeclarativeBluetoothSocket::NoServiceSet),
           m_componentCompleted(false),
@@ -125,8 +125,8 @@ public:
     }
 
     QDeclarativeBluetoothSocket *m_dbs;
-    QDeclarativeBluetoothService *m_service;
-    QBluetoothSocket *m_socket;
+    QDeclarativeBluetoothService *m_service = nullptr;
+    QBluetoothSocket *m_socket = nullptr;
     QDeclarativeBluetoothSocket::Error m_error;
     QDeclarativeBluetoothSocket::SocketState m_state;
     bool m_componentCompleted;
@@ -269,7 +269,7 @@ void QDeclarativeBluetoothSocket::socket_connected()
 void QDeclarativeBluetoothSocket::socket_disconnected()
 {
     d->m_socket->deleteLater();
-    d->m_socket = 0;
+    d->m_socket = nullptr;
     emit connectedChanged();
 }
 

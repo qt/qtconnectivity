@@ -61,7 +61,7 @@ class LocalDeviceBroadcastReceiver : public AndroidBroadcastReceiver
 {
     Q_OBJECT
 public:
-    explicit LocalDeviceBroadcastReceiver(QObject *parent = 0);
+    explicit LocalDeviceBroadcastReceiver(QObject *parent = nullptr);
     virtual ~LocalDeviceBroadcastReceiver() {}
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
     virtual void onReceiveLeScan(JNIEnv *, jobject, jint, jbyteArray) {}

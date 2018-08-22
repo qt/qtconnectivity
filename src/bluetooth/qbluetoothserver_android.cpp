@@ -70,7 +70,7 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
     __fakeServerPorts.remove(this);
 
     thread->deleteLater();
-    thread = 0;
+    thread = nullptr;
 }
 
 bool QBluetoothServerPrivate::initiateActiveListening(
@@ -254,7 +254,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     bool success = newSocket->d_ptr->setSocketDescriptor(socket, d->serverType);
     if (!success) {
         delete newSocket;
-        newSocket = 0;
+        newSocket = nullptr;
     }
 
     return newSocket;

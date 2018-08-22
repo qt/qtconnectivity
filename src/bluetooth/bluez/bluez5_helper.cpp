@@ -120,8 +120,8 @@ bool mandatoryHciIoctlsAvailable()
     }
 
     // check HCIGETDEVLIST & HCIGETDEVLIST
-    struct hci_dev_req *devRequest = 0;
-    struct hci_dev_list_req *devRequestList = 0;
+    struct hci_dev_req *devRequest = nullptr;
+    struct hci_dev_list_req *devRequestList = nullptr;
     struct hci_dev_info devInfo;
     const int devListSize = sizeof(struct hci_dev_list_req)
                         + HCI_MAX_DEV * sizeof(struct hci_dev_req);
@@ -282,18 +282,18 @@ QVersionNumber bluetoothdVersion()
 struct AdapterData
 {
 public:
-    AdapterData() : reference(1), wasListeningAlready(false), propteryListener(0) {}
+    AdapterData() : reference(1), wasListeningAlready(false) {}
 
     int reference;
     bool wasListeningAlready;
-    OrgFreedesktopDBusPropertiesInterface *propteryListener;
+    OrgFreedesktopDBusPropertiesInterface *propteryListener = nullptr;
 };
 
 class QtBluezDiscoveryManagerPrivate
 {
 public:
     QMap<QString, AdapterData *> references;
-    OrgFreedesktopDBusObjectManagerInterface *manager;
+    OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
 };
 
 Q_GLOBAL_STATIC(QtBluezDiscoveryManager, discoveryManager)
@@ -355,7 +355,7 @@ QtBluezDiscoveryManager *QtBluezDiscoveryManager::instance()
         return discoveryManager();
 
     Q_ASSERT(false);
-    return 0;
+    return nullptr;
 }
 
 bool QtBluezDiscoveryManager::registerDiscoveryInterest(const QString &adapterPath)
@@ -491,7 +491,7 @@ void QtBluezDiscoveryManager::removeAdapterFromMonitoring(const QString &dbusPat
     If \a ok is false the lookup was aborted due to a dbus error and this function
     returns an empty string.
  */
-QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok = 0)
+QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok = nullptr)
 {
     OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
                                                      QStringLiteral("/"),

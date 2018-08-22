@@ -275,12 +275,12 @@ static inline OrgBluezDeviceInterface *getDevice(const QBluetoothAddress &addres
                                                  QBluetoothLocalDevicePrivate *d_ptr)
 {
     if (!d_ptr || !d_ptr->adapter)
-        return 0;
+        return nullptr;
     QDBusPendingReply<QDBusObjectPath> reply = d_ptr->adapter->FindDevice(address.toString());
     reply.waitForFinished();
     if (reply.isError()) {
         qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << "reply failed" << reply.error();
-        return 0;
+        return nullptr;
     }
 
     QDBusObjectPath path = reply.value();
@@ -311,7 +311,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                 QDBusPendingReply<> cancelReply = d_ptr->pairingTarget->CancelPairing();
                 cancelReply.waitForFinished();
                 delete d_ptr->pairingTarget;
-                d_ptr->pairingTarget = 0;
+                d_ptr->pairingTarget = nullptr;
             }
 
         }
@@ -446,7 +446,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
 
     if (pairingTarget) {
         delete pairingTarget;
-        pairingTarget = 0;
+        pairingTarget = nullptr;
     }
 
     // pairing implies that the device was found
@@ -567,7 +567,7 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
             pairingTarget->setTrusted(false);
 
         delete pairingTarget;
-        pairingTarget = 0;
+        pairingTarget = nullptr;
 
         emit q->pairingFinished(targetAddress, target);
 
@@ -655,17 +655,8 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
                                                            QBluetoothAddress address) :
-        adapter(0),
-        adapterBluez5(0),
-        adapterProperties(0),
-        managerBluez5(0),
-        agent(0),
-        manager(0),
         localAddress(address),
-        pairingTarget(0),
-        pairingDiscoveryTimer(0),
         pendingHostModeChange(-1),
-        msgConnection(0),
         q_ptr(q)
 {
     registerQBluetoothLocalDeviceMetaType();
@@ -700,7 +691,7 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
         if (reply.isError())
             return;
 
-        OrgFreedesktopDBusPropertiesInterface *monitor = 0;
+        OrgFreedesktopDBusPropertiesInterface *monitor = nullptr;
 
         ManagedObjectList managedObjectList = reply.value();
         for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
@@ -973,14 +964,14 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
         qCDebug(QT_BT_BLUEZ) << "Adapter" << adapterBluez5->path() << "was removed";
         // current adapter was removed -> invalidate the instance
         delete adapterBluez5;
-        adapterBluez5 = 0;
+        adapterBluez5 = nullptr;
         managerBluez5->deleteLater();
-        managerBluez5 = 0;
+        managerBluez5 = nullptr;
         delete adapterProperties;
-        adapterProperties = 0;
+        adapterProperties = nullptr;
 
         delete pairingTarget;
-        pairingTarget = 0;
+        pairingTarget = nullptr;
 
         // turn  off connectivity monitoring
         qDeleteAll(deviceChangeMonitors);
@@ -1007,19 +998,19 @@ void QBluetoothLocalDevicePrivate::adapterRemoved(const QDBusObjectPath &deviceP
                          << "was removed. Invalidating object.";
     // the current adapter was removed
     delete adapter;
-    adapter = 0;
+    adapter = nullptr;
     manager->deleteLater();
-    manager = 0;
+    manager = nullptr;
 
     // stop all pairing related activities
     if (agent) {
         QDBusConnection::systemBus().unregisterObject(agent_path);
         delete agent;
-        agent = 0;
+        agent = nullptr;
     }
 
     delete msgConnection;
-    msgConnection = 0;
+    msgConnection = nullptr;
 
     // stop all connectivity monitoring
     qDeleteAll(devices);
@@ -1162,7 +1153,7 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
         d_ptr->msgConnection->send(error);
     }
     delete d_ptr->msgConnection;
-    d_ptr->msgConnection = 0;
+    d_ptr->msgConnection = nullptr;
 }
 
 QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
@@ -1235,7 +1226,7 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
             pairingTarget->setTrusted(false);
 
         delete pairingTarget;
-        pairingTarget = 0;
+        pairingTarget = nullptr;
 
         emit q->pairingFinished(targetAddress, pairing);
     }

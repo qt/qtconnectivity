@@ -80,7 +80,7 @@ class QtBluezDiscoveryManager : public QObject
 {
     Q_OBJECT
 public:
-    QtBluezDiscoveryManager(QObject* parent = 0);
+    QtBluezDiscoveryManager(QObject* parent = nullptr);
     ~QtBluezDiscoveryManager();
     static QtBluezDiscoveryManager *instance();
 

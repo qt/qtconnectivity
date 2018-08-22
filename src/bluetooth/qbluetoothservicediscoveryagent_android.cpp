@@ -56,9 +56,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
         QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &/*deviceAdapter*/)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
-      state(Inactive), deviceDiscoveryAgent(0),
+      state(Inactive),
       mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
-      singleDevice(false), receiver(0), localDeviceReceiver(0),
+      singleDevice(false),
       q_ptr(qp)
 
 {
@@ -213,7 +213,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
             //kill receiver to limit load of signals
             receiver->unregisterReceiver();
             receiver->deleteLater();
-            receiver = 0;
+            receiver = nullptr;
             qCWarning(QT_BT_ANDROID) << "Cannot start dynamic fetch.";
             _q_serviceDiscoveryFinished();
         }
@@ -228,7 +228,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     //kill receiver to limit load of signals
     receiver->unregisterReceiver();
     receiver->deleteLater();
-    receiver = 0;
+    receiver = nullptr;
 
     Q_Q(QBluetoothServiceDiscoveryAgent);
     emit q->canceled();
@@ -443,7 +443,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_fetchUuidsTimeout()
     //kill receiver to limit load of signals
     receiver->unregisterReceiver();
     receiver->deleteLater();
-    receiver = 0;
+    receiver = nullptr;
     _q_serviceDiscoveryFinished();
 }
 
@@ -460,7 +460,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_hostModeStateChanged(QBluetoothL
         //kill receiver to limit load of signals
         receiver->unregisterReceiver();
         receiver->deleteLater();
-        receiver = 0;
+        receiver = nullptr;
 
         Q_Q(QBluetoothServiceDiscoveryAgent);
         emit q->error(error);

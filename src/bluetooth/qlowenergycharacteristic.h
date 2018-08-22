@@ -103,7 +103,7 @@ protected:
     friend class QLowEnergyControllerPrivateCommon;
     friend class QLowEnergyControllerPrivateOSX;
     friend class QLowEnergyControllerPrivateWinRT;
-    QLowEnergyCharacteristicPrivate *data;
+    QLowEnergyCharacteristicPrivate *data = nullptr;
     QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle handle);
 };
