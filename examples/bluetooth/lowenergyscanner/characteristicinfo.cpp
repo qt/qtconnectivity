@@ -53,10 +53,6 @@
 #include "qbluetoothuuid.h"
 #include <QByteArray>
 
-CharacteristicInfo::CharacteristicInfo()
-{
-}
-
 CharacteristicInfo::CharacteristicInfo(const QLowEnergyCharacteristic &characteristic):
     m_characteristic(characteristic)
 {
@@ -131,7 +127,7 @@ QString CharacteristicInfo::getHandle() const
 QString CharacteristicInfo::getPermission() const
 {
     QString properties = "( ";
-    int permission = m_characteristic.properties();
+    uint permission = m_characteristic.properties();
     if (permission & QLowEnergyCharacteristic::Read)
         properties += QStringLiteral(" Read");
     if (permission & QLowEnergyCharacteristic::Write)

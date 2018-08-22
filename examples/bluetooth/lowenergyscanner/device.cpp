@@ -60,8 +60,7 @@
 #include <QList>
 #include <QTimer>
 
-Device::Device():
-    connected(false), controller(0), m_deviceScanState(false), randomAddress(false)
+Device::Device()
 {
     //! [les-devicediscovery-1]
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
@@ -109,7 +108,7 @@ void Device::startDeviceDiscovery()
 void Device::addDevice(const QBluetoothDeviceInfo &info)
 {
     if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
-        DeviceInfo *d = new DeviceInfo(info);
+        auto d = new DeviceInfo(info);
         devices.append(d);
         setUpdate("Last device added: " + d->getName());
     }
@@ -151,9 +150,13 @@ void Device::scanServices(const QString &address)
 {
     // We need the current device for service discovery.
 
-    for (int i = 0; i < devices.size(); i++) {
-        if (((DeviceInfo*)devices.at(i))->getAddress() == address )
-            currentDevice.setDevice(((DeviceInfo*)devices.at(i))->getDevice());
+    for (auto d: qAsConst(devices)) {
+        auto device = qobject_cast<DeviceInfo *>(d);
+        if (!device)
+            continue;
+
+        if (device->getAddress() == address )
+            currentDevice.setDevice(device->getDevice());
     }
 
     if (!currentDevice.getDevice().isValid()) {
@@ -173,7 +176,7 @@ void Device::scanServices(const QString &address)
     if (controller && m_previousAddress != currentDevice.getAddress()) {
         controller->disconnectFromDevice();
         delete controller;
-        controller = 0;
+        controller = nullptr;
     }
 
     //! [les-controller-1]
@@ -211,7 +214,7 @@ void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)
         return;
     }
     //! [les-service-1]
-    ServiceInfo *serv = new ServiceInfo(service);
+    auto serv = new ServiceInfo(service);
     m_services.append(serv);
 
     emit servicesUpdated();
@@ -228,9 +231,12 @@ void Device::serviceScanDone()
 
 void Device::connectToService(const QString &uuid)
 {
-    QLowEnergyService *service = 0;
-    for (int i = 0; i < m_services.size(); i++) {
-        ServiceInfo *serviceInfo = (ServiceInfo*)m_services.at(i);
+    QLowEnergyService *service = nullptr;
+    for (auto s: qAsConst(m_services)) {
+        auto serviceInfo = qobject_cast<ServiceInfo *>(s);
+        if (!serviceInfo)
+            continue;
+
         if (serviceInfo->getUuid() == uuid) {
             service = serviceInfo->service();
             break;
@@ -257,7 +263,7 @@ void Device::connectToService(const QString &uuid)
     //discovery already done
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
     for (const QLowEnergyCharacteristic &ch : chars) {
-        CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
+        auto cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }
 
@@ -279,7 +285,7 @@ void Device::errorReceived(QLowEnergyController::Error /*error*/)
     setUpdate(QString("Back\n(%1)").arg(controller->errorString()));
 }
 
-void Device::setUpdate(QString message)
+void Device::setUpdate(const QString &message)
 {
     m_message = message;
     emit updateChanged();
@@ -318,7 +324,7 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
         return;
     }
 
-    QLowEnergyService *service = qobject_cast<QLowEnergyService *>(sender());
+    auto service = qobject_cast<QLowEnergyService *>(sender());
     if (!service)
         return;
 
@@ -327,7 +333,7 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
     //! [les-chars]
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
     for (const QLowEnergyCharacteristic &ch : chars) {
-        CharacteristicInfo *cInfo = new CharacteristicInfo(ch);
+        auto cInfo = new CharacteristicInfo(ch);
         m_characteristics.append(cInfo);
     }
     //! [les-chars]
@@ -356,9 +362,7 @@ bool Device::state()
 
 bool Device::hasControllerError() const
 {
-    if (controller && controller->error() != QLowEnergyController::NoError)
-        return true;
-    return false;
+    return (controller && controller->error() != QLowEnergyController::NoError);
 }
 
 bool Device::isRandomAddress() const
