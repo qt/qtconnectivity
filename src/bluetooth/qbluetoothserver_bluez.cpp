@@ -252,7 +252,10 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (!d->socketNotifier) {
         d->socketNotifier = new QSocketNotifier(d->socket->socketDescriptor(),
                                                 QSocketNotifier::Read);
-        connect(d->socketNotifier, SIGNAL(activated(int)), this, SLOT(_q_newConnection()));
+        connect(d->socketNotifier, &QSocketNotifier::activated,
+                [d](){
+            d->_q_newConnection();
+        });
     }
 
     return true;

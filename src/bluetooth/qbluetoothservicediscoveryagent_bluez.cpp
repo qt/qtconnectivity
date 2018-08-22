@@ -128,8 +128,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(deviceObjectPath, q);
     watcher->setProperty("_q_BTaddress", QVariant::fromValue(address));
-    QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                     q, SLOT(_q_foundDevice(QDBusPendingCallWatcher*)));
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
+                     [this](QDBusPendingCallWatcher *watcher){
+        this->_q_foundDevice(watcher);
+    });
 }
 
 // Bluez 5
@@ -212,8 +214,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
         if (QT_BT_BLUEZ().isDebugEnabled())
             sdpScannerProcess->setProcessChannelMode(QProcess::ForwardedErrorChannel);
         sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
-        q->connect(sdpScannerProcess, SIGNAL(finished(int,QProcess::ExitStatus)),
-                   q, SLOT(_q_sdpScannerDone(int,QProcess::ExitStatus)));
+        q->connect(sdpScannerProcess,
+                   QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                   [this](int exitCode, QProcess::ExitStatus status){
+            this->_q_sdpScannerDone(exitCode, status);
+        });
     }
 
     QStringList arguments;
@@ -326,7 +331,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
 {
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "Stop called";
     if (device) {
-        //we are waiting for _q_discoveredServices() slot to be called
+        //we are waiting for _q_discoveredServices() to be called
         // adapter is already 0
         QDBusPendingReply<> reply = device->CancelDiscovery();
         reply.waitForFinished();
@@ -335,7 +340,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
         device = nullptr;
         Q_ASSERT(!adapter);
     } else if (adapter) {
-        //we are waiting for _q_createdDevice() slot to be called
+        //we are waiting for _q_createdDevice() to be called
         adapter->deleteLater();
         adapter = nullptr;
         Q_ASSERT(!device);
@@ -390,8 +395,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_foundDevice(QDBusPendingCallWatc
         deviceObjectPath = adapter->CreateDevice(address.toString());
         watcher = new QDBusPendingCallWatcher(deviceObjectPath, q);
         watcher->setProperty("_q_BTaddress",  QVariant::fromValue(address));
-        QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                         q, SLOT(_q_createdDevice(QDBusPendingCallWatcher*)));
+        QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
+                         [this](QDBusPendingCallWatcher *watcher){
+            this->_q_createdDevice(watcher);
+        });
+
         return;
     }
 
@@ -528,8 +536,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
 
         QDBusPendingReply<ServiceMap> discoverReply = device->DiscoverServices(pattern);
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(discoverReply, q);
-        QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                         q, SLOT(_q_discoveredServices(QDBusPendingCallWatcher*)));
+        QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
+                         [this](QDBusPendingCallWatcher *watcher){
+            this->_q_discoveredServices(watcher);
+        });
     }
 }
 
