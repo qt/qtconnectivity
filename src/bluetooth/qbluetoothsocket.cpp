@@ -325,7 +325,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothSocketBasePrivate *dPrivate,
 QBluetoothSocket::~QBluetoothSocket()
 {
     delete d_ptr;
-    d_ptr = 0;
+    d_ptr = nullptr;
 }
 
 /*!
@@ -636,7 +636,7 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
     if (service.protocolServiceMultiplexer() > 0 || service.serverChannel() > 0) {
         connectToService(service, d->openMode);
         d->discoveryAgent->deleteLater();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     } else {
         qCDebug(QT_BT) << "Could not find port/psm for potential remote service";
     }
@@ -652,7 +652,7 @@ void QBluetoothSocket::discoveryFinished()
         setSocketError(ServiceNotFoundError);
         setSocketState(QBluetoothSocket::UnconnectedState);
         d->discoveryAgent->deleteLater();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     }
 }
 
@@ -667,7 +667,7 @@ void QBluetoothSocket::abort()
     if (state() == ServiceLookupState && d->discoveryAgent) {
         d->discoveryAgent->disconnect();
         d->discoveryAgent->stop();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     }
 
     setSocketState(ClosingState);
@@ -745,7 +745,7 @@ void QBluetoothSocket::close()
     if (state() == ServiceLookupState && d->discoveryAgent) {
         d->discoveryAgent->disconnect();
         d->discoveryAgent->stop();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     }
 
     setSocketState(ClosingState);

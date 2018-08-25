@@ -134,7 +134,7 @@ public:
 
 private:
     quint16 connectionHandle = 0;
-    QBluetoothSocket *l2cpSocket;
+    QBluetoothSocket *l2cpSocket = nullptr;
     struct Request {
         quint8 command;
         QByteArray payload;
@@ -198,9 +198,9 @@ private:
     bool encryptionChangePending;
     bool receivedMtuExchangeRequest = false;
 
-    HciManager *hciManager;
-    QLeAdvertiser *advertiser;
-    QSocketNotifier *serverSocketNotifier;
+    HciManager *hciManager = nullptr;
+    QLeAdvertiser *advertiser = nullptr;
+    QSocketNotifier *serverSocketNotifier = nullptr;
     QTimer *requestTimer = nullptr;
     RemoteDeviceManager* device1Manager = nullptr;
 

@@ -69,7 +69,7 @@ class LowEnergyNotificationHub : public QObject
     Q_OBJECT
 public:
     explicit LowEnergyNotificationHub(const QBluetoothAddress &remote, bool isPeripheral,
-                                      QObject *parent = 0);
+                                      QObject *parent = nullptr);
     ~LowEnergyNotificationHub();
 
     static void lowEnergy_connectionChange(JNIEnv*, jobject, jlong qtObject,

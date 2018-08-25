@@ -112,6 +112,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
+    void deviceUpdated(const QBluetoothDeviceInfo &info, QBluetoothDeviceInfo::Fields updatedFields);
     void finished();
     void error(QBluetoothDeviceDiscoveryAgent::Error error);
     void canceled();

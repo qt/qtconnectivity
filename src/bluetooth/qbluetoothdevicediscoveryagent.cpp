@@ -155,6 +155,26 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 */
 
 /*!
+    \fn void QBluetoothDeviceDiscoveryAgent::deviceUpdated(const QBluetoothDeviceInfo &info, QBluetoothDeviceInfo::Fields updatedFields)
+
+    This signal is emitted when the agent receives additional information about
+    the Bluetooth device described by \a info. The \l updatedFields flags tell
+    which information has been updated.
+
+    During discovery, some information can change dynamically, such as
+    \l {signal strength}{QBluetoothDeviceInfo::rssi()} and
+    \l {manufacturerData}{QBluetoothDeviceInfo::manufacturerData()}.
+    This signal informs you that if your application is displaying this data, it
+    can be updated, rather than waiting until the discovery has finished.
+
+    \note This signal is only emitted on Android and BlueZ 5.x.
+
+    \sa QBluetoothDeviceInfo::rssi(), lowEnergyDiscoveryTimeout()
+*/
+
+// TODO deviceUpdated() signal not implemented on WinRT and Apple platforms
+
+/*!
     \fn void QBluetoothDeviceDiscoveryAgent::finished()
 
     This signal is emitted when Bluetooth device discovery completes.

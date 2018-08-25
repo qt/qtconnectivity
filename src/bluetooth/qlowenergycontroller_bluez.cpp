@@ -271,13 +271,10 @@ template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
 
 QLowEnergyControllerPrivateBluez::QLowEnergyControllerPrivateBluez()
     : QLowEnergyControllerPrivate(),
-      l2cpSocket(0), requestPending(false),
+      requestPending(false),
       mtuSize(ATT_DEFAULT_LE_MTU),
       securityLevelValue(-1),
-      encryptionChangePending(false),
-      hciManager(0),
-      advertiser(0),
-      serverSocketNotifier(0)
+      encryptionChangePending(false)
 {
     registerQLowEnergyControllerMetaType();
     qRegisterMetaType<QList<QLowEnergyHandle> >();

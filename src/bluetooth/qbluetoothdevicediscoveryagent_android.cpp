@@ -317,11 +317,28 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
 
     for (int i = 0; i < discoveredDevices.size(); i++) {
         if (discoveredDevices[i].address() == info.address()) {
-            if (discoveredDevices[i] == info && lowEnergySearchTimeout > 0) {
-                qCDebug(QT_BT_ANDROID) << "Duplicate: " << info.address()
-                                       << "isLeScanResult:" << isLeResult;
+            QBluetoothDeviceInfo::Fields updatedFields = QBluetoothDeviceInfo::Field::None;
+            if (discoveredDevices[i].rssi() != info.rssi()) {
+                qCDebug(QT_BT_ANDROID) << "Updating RSSI for" << info.address()
+                                       << info.rssi();
+                discoveredDevices[i].setRssi(info.rssi());
+                updatedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
+            }
+            if (discoveredDevices[i].manufacturerData() != info.manufacturerData()) {
+                qCDebug(QT_BT_ANDROID) << "Updating manufacturer data for" << info.address();
+                const QVector<quint16> keys = info.manufacturerIds();
+                for (auto key: keys)
+                    discoveredDevices[i].setManufacturerData(key, info.manufacturerData(key));
+                updatedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
+            }
+
+            if (!updatedFields.testFlag(QBluetoothDeviceInfo::Field::None)) {
+                emit q->deviceUpdated(discoveredDevices[i], updatedFields);
                 return;
             }
+
+            if (discoveredDevices[i] == info)
+                return;
 
             if (discoveredDevices.at(i).name() == info.name()) {
                 qCDebug(QT_BT_ANDROID) << "Almost Duplicate "<< info.address()

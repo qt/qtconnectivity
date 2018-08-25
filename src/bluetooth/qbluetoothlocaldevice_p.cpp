@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
-    d_ptr(0)
+    d_ptr(nullptr)
 {
 #if !defined(QT_IOS_BLUETOOTH) && !defined(QT_WINRT_BLUETOOTH)
     printDummyWarning();
@@ -59,7 +59,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &, QObject *parent) :
     QObject(parent),
-    d_ptr(0)
+    d_ptr(nullptr)
 {
     registerQBluetoothLocalDeviceMetaType();
 }

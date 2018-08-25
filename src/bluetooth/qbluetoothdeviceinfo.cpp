@@ -72,6 +72,20 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \enum QBluetoothDeviceInfo::Field
+
+    This enum is used in conjuntion with the \l deviceUpdated() signal and indicates the field
+    that changed.
+
+    \value None             None of the values changed.
+    \value RSSI             The \l rssi() value of the device changed.
+    \value ManufacturerData The \l manufacturerData() field changed
+    \value All              Matches every possible field.
+
+    \since 5.12
+*/
+
+/*!
     \enum QBluetoothDeviceInfo::MinorMiscellaneousClass
 
     This enum describes the minor device classes for miscellaneous Bluetooth devices.
@@ -571,7 +585,7 @@ QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsComplet
 
     \since 5.12
  */
-QVector<quint16> QBluetoothDeviceInfo::manufactuerIds() const
+QVector<quint16> QBluetoothDeviceInfo::manufacturerIds() const
 {
     Q_D(const QBluetoothDeviceInfo);
     return d->manufacturerData.keys().toVector();
@@ -598,20 +612,38 @@ QVector<quint16> QBluetoothDeviceInfo::manufactuerIds() const
  */
 QByteArray QBluetoothDeviceInfo::manufacturerData(quint16 manufacturerId) const
 {
+    // TODO Currently not implemented on WinRT
     Q_D(const QBluetoothDeviceInfo);
     return d->manufacturerData.value(manufacturerId);
 }
 
 /*!
     Sets the advertised manufacturer \a data for the given \a manufacturerId.
+    Returns true if it was inserted or changed, false if it was already known.
 
     \sa manufacturerData,
     \since 5.12
 */
-void QBluetoothDeviceInfo::setManufacturerData(quint16 manufacturerId, const QByteArray &data)
+bool QBluetoothDeviceInfo::setManufacturerData(quint16 manufacturerId, const QByteArray &data)
 {
     Q_D(QBluetoothDeviceInfo);
+    const auto it = d->manufacturerData.find(manufacturerId);
+    if (it != d->manufacturerData.end() && *it == data)
+        return false;
     d->manufacturerData.insert(manufacturerId, data);
+    return true;
+}
+
+/*!
+    Returns the complete set of all manufacturer data.
+
+    \sa setManufacturerData
+    \since 5.12
+*/
+QHash<quint16, QByteArray> QBluetoothDeviceInfo::manufacturerData() const
+{
+    Q_D(const QBluetoothDeviceInfo);
+    return d->manufacturerData;
 }
 
 /*!

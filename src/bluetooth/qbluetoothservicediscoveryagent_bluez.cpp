@@ -60,9 +60,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
-:   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive), deviceDiscoveryAgent(0),
+:   error(QBluetoothServiceDiscoveryAgent::NoError), m_deviceAdapterAddress(deviceAdapter), state(Inactive),
     mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery), singleDevice(false),
-    manager(0), managerBluez5(0), adapter(0), device(0), sdpScannerProcess(0),
     q_ptr(qp)
 {
     if (isBluez5()) {
@@ -333,12 +332,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
         reply.waitForFinished();
 
         device->deleteLater();
-        device = 0;
+        device = nullptr;
         Q_ASSERT(!adapter);
     } else if (adapter) {
         //we are waiting for _q_createdDevice() slot to be called
         adapter->deleteLater();
-        adapter = 0;
+        adapter = nullptr;
         Q_ASSERT(!device);
     }
 
@@ -378,7 +377,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_foundDevice(QDBusPendingCallWatc
         if (deviceObjectPath.error().name() != QStringLiteral("org.bluez.Error.DoesNotExist")) {
             qCDebug(QT_BT_BLUEZ) << "Find device failed Error: " << error << deviceObjectPath.error().name();
             delete adapter;
-            adapter = 0;
+            adapter = nullptr;
             if (singleDevice) {
                 error = QBluetoothServiceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
@@ -419,7 +418,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
         if (deviceObjectPath.error().name() != QLatin1String("org.bluez.Error.AlreadyExists")) {
             qCDebug(QT_BT_BLUEZ) << "Create device failed Error: " << error << deviceObjectPath.error().name();
             delete adapter;
-            adapter = 0;
+            adapter = nullptr;
             if (singleDevice) {
                 error = QBluetoothServiceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
@@ -442,7 +441,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
                                          deviceObjectPath,
                                          QDBusConnection::systemBus());
     delete adapter;
-    adapter = 0;
+    adapter = nullptr;
 
     QVariantMap deviceProperties;
     QString classType;
@@ -469,7 +468,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
     if (classType.isEmpty()) { //is BLE device or device properties above not retrievable
         qCDebug(QT_BT_BLUEZ) << "Discovered BLE-only device. Normal service discovery skipped.";
         delete device;
-        device = 0;
+        device = nullptr;
 
         const QStringList deviceUuids = deviceProperties.value(QStringLiteral("UUIDs")).toStringList();
         for (int i = 0; i < deviceUuids.size(); i++) {
@@ -555,7 +554,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
             emit q->error(error);
         }
         delete device;
-        device = 0;
+        device = nullptr;
         _q_serviceDiscoveryFinished();
         return;
     }
@@ -606,7 +605,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
 
     watcher->deleteLater();
     delete device;
-    device = 0;
+    device = nullptr;
 
     _q_serviceDiscoveryFinished();
 }
@@ -625,7 +624,7 @@ QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
         if (xml.tokenType() == QXmlStreamReader::StartElement &&
             xml.name() == QLatin1String("attribute")) {
             quint16 attributeId =
-                xml.attributes().value(QLatin1String("id")).toString().toUShort(0, 0);
+                xml.attributes().value(QLatin1String("id")).toString().toUShort(nullptr, 0);
 
             if (xml.readNextStartElement()) {
                 const QVariant value = readAttributeValue(xml);
@@ -748,19 +747,19 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         xml.skipCurrentElement();
         return value == QLatin1String("true");
     } else if (xml.name() == QLatin1String("uint8")) {
-        quint8 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(0, 0);
+        quint8 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(nullptr, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint16")) {
-        quint16 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(0, 0);
+        quint16 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(nullptr, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint32")) {
-        quint32 value = xml.attributes().value(QStringLiteral("value")).toString().toUInt(0, 0);
+        quint32 value = xml.attributes().value(QStringLiteral("value")).toString().toUInt(nullptr, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint64")) {
-        quint64 value = xml.attributes().value(QStringLiteral("value")).toString().toULongLong(0, 0);
+        quint64 value = xml.attributes().value(QStringLiteral("value")).toString().toULongLong(nullptr, 0);
         xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uuid")) {
@@ -768,10 +767,10 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         const QString value = xml.attributes().value(QStringLiteral("value")).toString();
         if (value.startsWith(QStringLiteral("0x"))) {
             if (value.length() == 6) {
-                quint16 v = value.toUShort(0, 0);
+                quint16 v = value.toUShort(nullptr, 0);
                 uuid = QBluetoothUuid(v);
             } else if (value.length() == 10) {
-                quint32 v = value.toUInt(0, 0);
+                quint32 v = value.toUInt(nullptr, 0);
                 uuid = QBluetoothUuid(v);
             }
         } else {

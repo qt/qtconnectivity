@@ -401,9 +401,9 @@ void QBluetoothSocketPrivateBluez::_q_readNotify()
 void QBluetoothSocketPrivateBluez::abort()
 {
     delete readNotifier;
-    readNotifier = 0;
+    readNotifier = nullptr;
     delete connectWriteNotifier;
-    connectWriteNotifier = 0;
+    connectWriteNotifier = nullptr;
 
     // We don't transition through Closing for abort, so
     // we don't call disconnectFromService or
@@ -669,9 +669,9 @@ bool QBluetoothSocketPrivateBluez::setSocketDescriptor(int socketDescriptor, QBl
 {
     Q_Q(QBluetoothSocket);
     delete readNotifier;
-    readNotifier = 0;
+    readNotifier = nullptr;
     delete connectWriteNotifier;
-    connectWriteNotifier = 0;
+    connectWriteNotifier = nullptr;
 
     socketType = socketType_;
     socket = socketDescriptor;

@@ -77,7 +77,7 @@ struct QLowEnergyDescriptorPrivate
     of this class is always invalid.
 */
 QLowEnergyDescriptor::QLowEnergyDescriptor():
-    d_ptr(0), data(0)
+    d_ptr(nullptr)
 {
 }
 
@@ -88,7 +88,7 @@ QLowEnergyDescriptor::QLowEnergyDescriptor():
     upon write.
 */
 QLowEnergyDescriptor::QLowEnergyDescriptor(const QLowEnergyDescriptor &other):
-    d_ptr(other.d_ptr), data(0)
+    d_ptr(other.d_ptr)
 {
     if (other.data) {
         data = new QLowEnergyDescriptorPrivate();
@@ -131,7 +131,7 @@ QLowEnergyDescriptor &QLowEnergyDescriptor::operator=(const QLowEnergyDescriptor
     if (!other.data) {
         if (data) {
             delete data;
-            data = 0;
+            data = nullptr;
         }
     } else {
         if (!data)

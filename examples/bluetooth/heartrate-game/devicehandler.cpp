@@ -115,7 +115,7 @@ void DeviceHandler::setDevice(DeviceInfo *device)
 
         // Make connections
         //! [Connect-Signals-1]
-        m_control = new QLowEnergyController(m_currentDevice->getDevice(), this);
+        m_control = QLowEnergyController::createCentral(m_currentDevice->getDevice(), this);
         //! [Connect-Signals-1]
         m_control->setRemoteAddressType(m_addressType);
         //! [Connect-Signals-2]
