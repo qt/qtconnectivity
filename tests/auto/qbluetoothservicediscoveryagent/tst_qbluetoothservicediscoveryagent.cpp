@@ -91,7 +91,6 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
 #endif
 
     qRegisterMetaType<QBluetoothDeviceInfo>();
-    qRegisterMetaType<QBluetoothServiceInfo>();
     qRegisterMetaType<QList<QBluetoothUuid> >();
     qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>();
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();

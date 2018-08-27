@@ -346,6 +346,7 @@ bool QBluetoothServiceInfo::unregisterService()
 QBluetoothServiceInfo::QBluetoothServiceInfo()
     : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>::create())
 {
+    qRegisterMetaType<QBluetoothServiceInfo>();
 }
 
 /*!
