@@ -1372,6 +1372,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
 
     if (const auto servicePrivate = [osx_d_ptr->peripheralManager addService:data]) {
         servicePrivate->setController(osx_d_ptr);
+        servicePrivate->state = QLowEnergyService::LocalService;
         osx_d_ptr->discoveredServices.insert(servicePrivate->uuid, servicePrivate);
         return new QLowEnergyService(servicePrivate, parent);
     }

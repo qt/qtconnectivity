@@ -255,10 +255,11 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 
 void QLowEnergyControllerPrivate::invalidateServices()
 {
-    for (QSharedPointer<QLowEnergyServicePrivate> service : serviceList.values()) {
+    for (QSharedPointer<QLowEnergyServicePrivate> service : serviceList.values())
         service->setController(nullptr);
-        service->setState(QLowEnergyService::InvalidService);
-    }
+
+    for (QSharedPointer<QLowEnergyServicePrivate> service : localServices.values())
+        service->setController(nullptr);
 
     serviceList.clear();
     localServices.clear();
@@ -273,8 +274,8 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
     // for it.
 
     const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
-    servicePrivate->state = QLowEnergyService::LocalService;
     servicePrivate->setController(this);
+    servicePrivate->state = QLowEnergyService::LocalService;
     servicePrivate->uuid = service.uuid();
     servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
             ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
