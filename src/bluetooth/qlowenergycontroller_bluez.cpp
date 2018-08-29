@@ -41,6 +41,7 @@
 #include "lecmaccalculator_p.h"
 #include "qlowenergycontroller_bluez_p.h"
 #include "qbluetoothsocketbase_p.h"
+#include "qbluetoothsocket_bluez_p.h"
 #include "qleadvertiser_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
@@ -3111,7 +3112,10 @@ void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
         qCWarning(QT_BT_BLUEZ) << "Received client connection, but no connection complete event";
 
     closeServerSocket();
-    l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
+
+    QBluetoothSocketPrivateBluez *rawSocketPrivate = new QBluetoothSocketPrivateBluez();
+    l2cpSocket = new QBluetoothSocket(
+                rawSocketPrivate, QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, &QBluetoothSocket::disconnected,
             this, &QLowEnergyControllerPrivateBluez::l2cpDisconnected);
     connect(l2cpSocket, static_cast<void (QBluetoothSocket::*)(QBluetoothSocket::SocketError)>
