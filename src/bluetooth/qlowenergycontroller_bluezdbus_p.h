@@ -58,6 +58,7 @@
 #include <QtDBus/QDBusObjectPath>
 
 class OrgBluezAdapter1Interface;
+class OrgBluezBattery1Interface;
 class OrgBluezDevice1Interface;
 class OrgBluezGattCharacteristic1Interface;
 class OrgBluezGattDescriptor1Interface;
@@ -155,6 +156,9 @@ private:
     {
         QString servicePath;
         QVector<GattCharacteristic> characteristics;
+
+        bool hasBatteryService = false;
+        QSharedPointer<OrgBluezBattery1Interface> batteryInterface;
     };
 
     QHash<QBluetoothUuid, GattService> dbusServices;
@@ -183,6 +187,8 @@ private:
     bool jobPending = false;
 
     void prepareNextJob();
+    void discoverBatteryServiceDetails(GattService &dbusData,
+                                       QSharedPointer<QLowEnergyServicePrivate> serviceData);
 };
 
 QT_END_NAMESPACE
