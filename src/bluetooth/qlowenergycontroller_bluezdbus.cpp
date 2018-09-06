@@ -194,7 +194,7 @@ void QLowEnergyControllerPrivateBluezDBus::resetController()
     jobs.clear();
     invalidateServices();
 
-    pendingConnect = pendingDisconnect = disconnectSignalRequired = false;
+    pendingConnect = disconnectSignalRequired = false;
     jobPending = false;
 }
 
@@ -323,8 +323,6 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDevice()
 void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
 {
     setState(QLowEnergyController::ClosingState);
-
-    pendingDisconnect = true;
 
     QDBusPendingReply<> reply = device->Disconnect();
     QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);

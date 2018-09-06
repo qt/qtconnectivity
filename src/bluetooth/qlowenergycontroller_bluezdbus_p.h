@@ -142,7 +142,6 @@ private:
     OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
 
     bool pendingConnect = false;
-    bool pendingDisconnect = false;
     bool disconnectSignalRequired = false;
 
     struct GattCharacteristic
