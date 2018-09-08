@@ -397,8 +397,8 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                                                      QStringLiteral("NoInputNoOutput"));
 
             QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
-            connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher *)), d_ptr,
-                    SLOT(pairingCompleted(QDBusPendingCallWatcher *)));
+            connect(watcher, &QDBusPendingCallWatcher::finished,
+                    d_ptr, &QBluetoothLocalDevicePrivate::pairingCompleted);
 
             if (reply.isError())
                 qCWarning(QT_BT_BLUEZ) << Q_FUNC_INFO << reply.error() << d_ptr->agent_path;
@@ -492,8 +492,8 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
         pairingDiscoveryTimer = new QTimer(this);
         pairingDiscoveryTimer->setSingleShot(true);
         pairingDiscoveryTimer->setInterval(20000); //20s
-        connect(pairingDiscoveryTimer, SIGNAL(timeout()),
-                SLOT(pairingDiscoveryTimedOut()));
+        connect(pairingDiscoveryTimer, &QTimer::timeout,
+                this, &QBluetoothLocalDevicePrivate::pairingDiscoveryTimedOut);
     }
 
     qCDebug(QT_BT_BLUEZ) << "Initiating discovery for pairing on" << targetAddress.toString();
@@ -555,8 +555,8 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
             //initiate the pairing
             QDBusPendingReply<> pairReply = pairingTarget->Pair();
             QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pairReply, this);
-            connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
-                    SLOT(pairingCompleted(QDBusPendingCallWatcher*)));
+            connect(watcher, &QDBusPendingCallWatcher::finished,
+                    this, &QBluetoothLocalDevicePrivate::pairingCompleted);
             return;
         }
 
@@ -678,12 +678,12 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
 {
     if (adapter) { // invalid QBluetoothLocalDevice due to wrong local adapter address
         createCache();
-        connect(adapter, SIGNAL(PropertyChanged(QString, QDBusVariant)),
-                SLOT(PropertyChanged(QString, QDBusVariant)));
-        connect(adapter, SIGNAL(DeviceCreated(QDBusObjectPath)),
-                SLOT(_q_deviceCreated(QDBusObjectPath)));
-        connect(adapter, SIGNAL(DeviceRemoved(QDBusObjectPath)),
-                SLOT(_q_deviceRemoved(QDBusObjectPath)));
+        connect(adapter, &OrgBluezAdapterInterface::PropertyChanged,
+                this, &QBluetoothLocalDevicePrivate::PropertyChanged);
+        connect(adapter, &OrgBluezAdapterInterface::DeviceCreated,
+                this, &QBluetoothLocalDevicePrivate::_q_deviceCreated);
+        connect(adapter, &OrgBluezAdapterInterface::DeviceRemoved,
+                this, &QBluetoothLocalDevicePrivate::_q_deviceRemoved);
     } else if (adapterBluez5 && managerBluez5) {
         //setup property change notifications for all existing devices
         QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
@@ -710,8 +710,8 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
                     monitor = new OrgFreedesktopDBusPropertiesInterface(QStringLiteral("org.bluez"),
                                                                         path.path(),
                                                                         QDBusConnection::systemBus(), this);
-                    connect(monitor, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
-                            SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
+                    connect(monitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+                            this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
                     deviceChangeMonitors.insert(path.path(), monitor);
 
                     if (ifaceValues.value(QStringLiteral("Connected"), false).toBool()) {
@@ -788,13 +788,13 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
 
     // monitor case when local adapter is removed
     manager = man.take();
-    connect(manager, SIGNAL(AdapterRemoved(QDBusObjectPath)),
-            this, SLOT(adapterRemoved(QDBusObjectPath)));
+    connect(manager, &OrgBluezManagerInterface::AdapterRemoved,
+            this, &QBluetoothLocalDevicePrivate::adapterRemoved);
 
     currentMode = static_cast<QBluetoothLocalDevice::HostMode>(-1);
     if (adapter) {
-        connect(adapter, SIGNAL(PropertyChanged(QString, QDBusVariant)),
-                SLOT(PropertyChanged(QString, QDBusVariant)));
+        connect(adapter, &OrgBluezAdapterInterface::PropertyChanged,
+                this, &QBluetoothLocalDevicePrivate::PropertyChanged);
 
         agent_path = agentPath;
         agent_path.append(QString::fromLatin1("/%1").arg(QRandomGenerator::global()->generate()));
@@ -813,10 +813,10 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
                                                      QStringLiteral("/"),
                                                      QDBusConnection::systemBus(), this);
 
-    connect(managerBluez5, SIGNAL(InterfacesAdded(QDBusObjectPath,InterfaceList)),
-            SLOT(InterfacesAdded(QDBusObjectPath,InterfaceList)));
-    connect(managerBluez5, SIGNAL(InterfacesRemoved(QDBusObjectPath,QStringList)),
-            SLOT(InterfacesRemoved(QDBusObjectPath,QStringList)));
+    connect(managerBluez5, &OrgFreedesktopDBusObjectManagerInterface::InterfacesAdded,
+            this, &QBluetoothLocalDevicePrivate::InterfacesAdded);
+    connect(managerBluez5, &OrgFreedesktopDBusObjectManagerInterface::InterfacesRemoved,
+            this, &QBluetoothLocalDevicePrivate::InterfacesRemoved);
 
     bool ok = true;
     const QString adapterPath = findAdapterForAddress(localAddress, &ok);
@@ -833,8 +833,8 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
         adapterProperties = new OrgFreedesktopDBusPropertiesInterface(
                     QStringLiteral("org.bluez"), adapterBluez5->path(),
                     QDBusConnection::systemBus(), this);
-        connect(adapterProperties, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
-                SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
+        connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+                this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
     }
 
     currentMode = static_cast<QBluetoothLocalDevice::HostMode>(-1);
@@ -914,8 +914,8 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
                                                QStringLiteral("org.bluez"),
                                                object_path.path(),
                                                QDBusConnection::systemBus());
-            connect(monitor, SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),
-                    SLOT(PropertiesChanged(QString,QVariantMap,QStringList)));
+            connect(monitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+                    this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
             deviceChangeMonitors.insert(object_path.path(), monitor);
 
             const QVariantMap ifaceValues = interfaces_and_properties.value(QStringLiteral("org.bluez.Device1"));
@@ -1034,8 +1034,8 @@ void QBluetoothLocalDevicePrivate::_q_deviceCreated(const QDBusObjectPath &devic
         = new OrgBluezDeviceInterface(QStringLiteral("org.bluez"),
                                       device.path(),
                                       QDBusConnection::systemBus(), this);
-    connect(deviceInterface, SIGNAL(PropertyChanged(QString, QDBusVariant)),
-            SLOT(_q_devicePropertyChanged(QString, QDBusVariant)));
+    connect(deviceInterface, &OrgBluezDeviceInterface::PropertyChanged,
+            this, &QBluetoothLocalDevicePrivate::_q_devicePropertyChanged);
     devices << deviceInterface;
     QDBusPendingReply<QVariantMap> properties
         = deviceInterface->asyncCall(QStringLiteral("GetProperties"));
@@ -1112,8 +1112,8 @@ void QBluetoothLocalDevicePrivate::createCache()
                 new OrgBluezDeviceInterface(QStringLiteral("org.bluez"),
                                             device.path(),
                                             QDBusConnection::systemBus(), this);
-        connect(deviceInterface, SIGNAL(PropertyChanged(QString,QDBusVariant)),
-                SLOT(_q_devicePropertyChanged(QString,QDBusVariant)));
+        connect(deviceInterface, &OrgBluezDeviceInterface::PropertyChanged,
+                this, &QBluetoothLocalDevicePrivate::_q_devicePropertyChanged);
         devices << deviceInterface;
 
         QDBusPendingReply<QVariantMap> properties

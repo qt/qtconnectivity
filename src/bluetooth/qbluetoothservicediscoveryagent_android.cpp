@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QTimer>
 #include <QtCore/private/qjnihelpers_p.h>
@@ -198,14 +199,18 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         //Full discovery uses BluetoothDevice.fetchUuidsWithSdp()
         if (!receiver) {
             receiver = new ServiceDiscoveryBroadcastReceiver();
-            QObject::connect(receiver, SIGNAL(uuidFetchFinished(QBluetoothAddress,QList<QBluetoothUuid>)),
-                    q, SLOT(_q_processFetchedUuids(QBluetoothAddress,QList<QBluetoothUuid>)));
+            QObject::connect(receiver, &ServiceDiscoveryBroadcastReceiver::uuidFetchFinished,
+                             [this](const QBluetoothAddress &address, const QList<QBluetoothUuid>& uuids) {
+                this->_q_processFetchedUuids(address, uuids);
+            });
         }
 
         if (!localDeviceReceiver) {
             localDeviceReceiver = new LocalDeviceBroadcastReceiver();
-            QObject::connect(localDeviceReceiver, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)),
-                             q, SLOT(_q_hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
+            QObject::connect(localDeviceReceiver, &LocalDeviceBroadcastReceiver::hostModeStateChanged,
+                             [this](QBluetoothLocalDevice::HostMode state){
+                this->_q_hostModeStateChanged(state);
+            });
         }
 
         jboolean result = remoteDevice.callMethod<jboolean>("fetchUuidsWithSdp");
@@ -245,8 +250,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
     //could not find any service for the current address/device -> go to next one
     if (address.isNull() || uuids.isEmpty()) {
         if (discoveredDevices.count() == 1) {
-            Q_Q(QBluetoothServiceDiscoveryAgent);
-            QTimer::singleShot(4000, q, SLOT(_q_fetchUuidsTimeout()));
+            QTimer::singleShot(4000, qApp, [this]() {
+                this->_q_fetchUuidsTimeout();
+            });
         }
         _q_serviceDiscoveryFinished();
         return;
@@ -295,8 +301,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
         //the discovery on the last device cannot immediately finish
         //we have to grant the 2 seconds timeout delay
         if (discoveredDevices.count() == 1) {
-            Q_Q(QBluetoothServiceDiscoveryAgent);
-            QTimer::singleShot(4000, q, SLOT(_q_fetchUuidsTimeout()));
+            QTimer::singleShot(4000, qApp, [this]() {
+                this->_q_fetchUuidsTimeout();
+            });
             return;
         }
 

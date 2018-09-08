@@ -58,6 +58,7 @@
 #include <qbluetoothservicediscoveryagent.h>
 #include <QDebug>
 #include <QList>
+#include <QMetaEnum>
 #include <QTimer>
 
 Device::Device()
@@ -347,8 +348,11 @@ void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
         setUpdate("The Bluetooth adaptor is powered off, power it on before doing discovery.");
     else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
         setUpdate("Writing or reading from the device resulted in an error.");
-    else
-        setUpdate("An unknown error has occurred.");
+    else {
+        static QMetaEnum qme = discoveryAgent->metaObject()->enumerator(
+                    discoveryAgent->metaObject()->indexOfEnumerator("Error"));
+        setUpdate("Error: " + QLatin1String(qme.valueToKey(error)));
+    }
 
     m_deviceScanState = false;
     emit devicesUpdated();
