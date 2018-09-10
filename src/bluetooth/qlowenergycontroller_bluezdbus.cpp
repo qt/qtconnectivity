@@ -98,19 +98,11 @@ void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
                 case QLowEnergyController::DiscoveredState:
                 case QLowEnergyController::ClosingState:
                 {
-                    bool emitDisconnect = disconnectSignalRequired;
-                    bool emitError = pendingConnect;
+                    QLowEnergyController::Error newError = QLowEnergyController::NoError;
+                    if (pendingConnect)
+                        newError = QLowEnergyController::ConnectionError;
 
-                    resetController();
-
-                    if (emitError)
-                        setError(QLowEnergyController::ConnectionError);
-                    setState(QLowEnergyController::UnconnectedState);
-
-                    if (emitDisconnect) {
-                        Q_Q(QLowEnergyController);
-                        emit q->disconnected();
-                    }
+                    executeClose(newError);
                 }
                     break;
                 case QLowEnergyController::AdvertisingState:
@@ -203,15 +195,11 @@ void QLowEnergyControllerPrivateBluezDBus::interfacesRemoved(
         const QDBusObjectPath &objectPath, const QStringList &/*interfaces*/)
 {
     if (objectPath.path() == device->path()) {
-        resetController();
-        setError(QLowEnergyController::UnknownRemoteDeviceError);
         qCWarning(QT_BT_BLUEZ) << "DBus Device1 was removed";
-        setState(QLowEnergyController::UnconnectedState);
+        executeClose(QLowEnergyController::UnknownRemoteDeviceError);
     } else if (objectPath.path() == adapter->path()) {
-        resetController();
-        setError(QLowEnergyController::InvalidBluetoothAdapterError);
         qCWarning(QT_BT_BLUEZ) << "DBus Adapter was removed";
-        setState(QLowEnergyController::UnconnectedState);
+        executeClose(QLowEnergyController::InvalidBluetoothAdapterError);
     }
 }
 
@@ -354,14 +342,7 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDevice()
             qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::connect() failed"
                                  << reply.reply().errorName()
                                  << reply.reply().errorMessage();
-            bool emitDisconnect = disconnectSignalRequired;
-            resetController();
-            setError(QLowEnergyController::UnknownError);
-            setState(QLowEnergyController::UnconnectedState);
-            if (emitDisconnect) {
-                Q_Q(QLowEnergyController);
-                emit q->disconnected();
-            }
+            executeClose(QLowEnergyController::UnknownError);
         } // else -> connected when Connected property is set to true (see devicePropertiesChanged())
         call->deleteLater();
     });
@@ -380,13 +361,7 @@ void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
             qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::disconnect() failed"
                                  << reply.reply().errorName()
                                  << reply.reply().errorMessage();
-            bool emitDisconnect = disconnectSignalRequired;
-            resetController();
-            setState(QLowEnergyController::UnconnectedState);
-            if (emitDisconnect) {
-                Q_Q(QLowEnergyController);
-                emit q->disconnected();
-            }
+            executeClose(QLowEnergyController::NoError);
         }
         call->deleteLater();
     });
@@ -520,6 +495,21 @@ void QLowEnergyControllerPrivateBluezDBus::discoverBatteryServiceDetails(
     serviceData->endHandle = runningHandle++;
 
     serviceData->setState(QLowEnergyService::ServiceDiscovered);
+}
+
+void QLowEnergyControllerPrivateBluezDBus::executeClose(QLowEnergyController::Error newError)
+{
+    const bool emitDisconnect = disconnectSignalRequired;
+
+    resetController();
+    if (newError != QLowEnergyController::NoError)
+        setError(newError);
+
+    setState(QLowEnergyController::UnconnectedState);
+    if (emitDisconnect) {
+        Q_Q(QLowEnergyController);
+        emit q->disconnected();
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(const QBluetoothUuid &service)

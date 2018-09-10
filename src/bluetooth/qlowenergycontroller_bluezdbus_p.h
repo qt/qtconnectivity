@@ -189,6 +189,7 @@ private:
     void prepareNextJob();
     void discoverBatteryServiceDetails(GattService &dbusData,
                                        QSharedPointer<QLowEnergyServicePrivate> serviceData);
+    void executeClose(QLowEnergyController::Error newError);
 };
 
 QT_END_NAMESPACE
