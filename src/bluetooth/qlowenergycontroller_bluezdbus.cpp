@@ -896,7 +896,7 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
     const GattJob nextJob = jobs.constFirst();
     QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(nextJob.handle);
     if (service.isNull() || !dbusServices.contains(service->uuid)) {
-        qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleReadChar). Skipping.";
+        qCWarning(QT_BT_BLUEZ) << "Invalid GATT job (scheduleNextJob). Skipping.";
         prepareNextJob();
         return;
     }
