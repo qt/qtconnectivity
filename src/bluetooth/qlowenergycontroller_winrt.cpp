@@ -413,7 +413,11 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
                 setState(QLowEnergyController::UnconnectedState);
                 return;
             } else {
-                Q_ASSERT_SUCCEEDED(hr);
+                qCWarning(QT_BT_WINRT) << "Connecting to device failed: "
+                                       << qt_error_string(hr);
+                setError(QLowEnergyController::ConnectionError);
+                setState(QLowEnergyController::UnconnectedState);
+                return;
             }
             ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
             hr = result->get_Value(&buffer);
