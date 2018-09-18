@@ -74,8 +74,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \enum QBluetoothDeviceInfo::Field
 
-    This enum is used in conjuntion with the \l deviceUpdated() signal and indicates the field
-    that changed.
+    This enum is used in conjuntion with the \l QBluetoothDeviceDiscoveryAgent::deviceUpdated() signal
+    and indicates the field that changed.
 
     \value None             None of the values changed.
     \value RSSI             The \l rssi() value of the device changed.
@@ -621,7 +621,7 @@ QByteArray QBluetoothDeviceInfo::manufacturerData(quint16 manufacturerId) const
     Sets the advertised manufacturer \a data for the given \a manufacturerId.
     Returns true if it was inserted or changed, false if it was already known.
 
-    \sa manufacturerData,
+    \sa manufacturerData
     \since 5.12
 */
 bool QBluetoothDeviceInfo::setManufacturerData(quint16 manufacturerId, const QByteArray &data)
