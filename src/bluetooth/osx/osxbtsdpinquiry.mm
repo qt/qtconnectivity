@@ -112,9 +112,9 @@ void extract_service_record(IOBluetoothSDPServiceRecord *record, QBluetoothServi
     }
 }
 
-QList<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
+QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
 {
-    QList<QBluetoothUuid> uuids;
+    QVector<QBluetoothUuid> uuids;
 
     // All "temporary" obj-c objects are autoreleased.
     QT_BT_MAC_AUTORELEASEPOOL;

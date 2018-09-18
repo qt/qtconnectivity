@@ -466,7 +466,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
         uint serviceCount;
         hr = deviceServices->get_Size(&serviceCount);
         Q_ASSERT_SUCCEEDED(hr);
-        QList<QBluetoothUuid> uuids;
+        QVector<QBluetoothUuid> uuids;
         for (uint i = 0; i < serviceCount; ++i) {
             ComPtr<Rfcomm::IRfcommDeviceService> service;
             hr = deviceServices->GetAt(i, &service);
@@ -485,7 +485,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
 
         QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, classOfDeviceInt);
         info.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
-        info.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+        info.setServiceUuids(uuids);
         info.setCached(true);
 
         QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
@@ -605,7 +605,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     uint serviceCount;
     hr = deviceServices->get_Size(&serviceCount);
     Q_ASSERT_SUCCEEDED(hr);
-    QList<QBluetoothUuid> uuids;
+    QVector<QBluetoothUuid> uuids;
     for (uint i = 0; i < serviceCount; ++i) {
         ComPtr<GenericAttributeProfile::IGattDeviceService> service;
         hr = deviceServices->GetAt(i, &service);
@@ -622,7 +622,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
 
     QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, 0);
     info.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    info.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+    info.setServiceUuids(uuids);
     info.setCached(true);
 
     QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
@@ -782,7 +782,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDevic
             uuids.append(info.serviceUuids());
             const QSet<QBluetoothUuid> uuidSet = uuids.toSet();
             if (iter->serviceUuids().count() != uuidSet.count())
-                iter->setServiceUuids(uuidSet.toList(), QBluetoothDeviceInfo::DataIncomplete);
+                iter->setServiceUuids(uuidSet.toList().toVector());
             if (iter->coreConfigurations() != info.coreConfigurations())
                 iter->setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
             return;

@@ -423,8 +423,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(IOBluetoothDeviceInquiry
     deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
     deviceInfo.setRssi(device.RSSI);
 
-    const QList<QBluetoothUuid> uuids(OSXBluetooth::extract_services_uuids(device));
-    deviceInfo.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+    const QVector<QBluetoothUuid> uuids(OSXBluetooth::extract_services_uuids(device));
+    deviceInfo.setServiceUuids(uuids);
 
     deviceFound(deviceInfo);
 }

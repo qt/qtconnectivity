@@ -536,6 +536,8 @@ quint8 QBluetoothDeviceInfo::minorDeviceClass() const
 }
 
 /*!
+    \deprecated
+
     Sets the list of service UUIDs to \a uuids and the completeness of the data to \a completeness.
 */
 void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids,
@@ -543,9 +545,36 @@ void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids,
 {
     Q_D(QBluetoothDeviceInfo);
 
-    d->serviceUuids = uuids;
+    d->serviceUuids = uuids.toVector();
     d->serviceUuidsCompleteness = completeness;
 }
+
+/*!
+    Sets the list of service UUIDs to \a uuids.
+    \since 5.13
+ */
+void QBluetoothDeviceInfo::setServiceUuids(const QVector<QBluetoothUuid> &uuids)
+{
+    Q_D(QBluetoothDeviceInfo);
+    d->serviceUuids = uuids;
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+/*!
+    Returns the list of service UUIDS supported by the device. Most commonly this
+    list of uuids represents custom uuids or a uuid value specified by
+    \l QBluetoothUuid::ServiceClassUuid.
+
+    \sa serviceUuids()
+    \since 6.0
+*/
+QVector<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids() const
+{
+    Q_D(const QBluetoothDeviceInfo);
+    return d->serviceUuids;
+}
+
+#else
 
 /*!
     Returns the list of service UUIDS supported by the device. If \a completeness is not 0 it will
@@ -562,10 +591,13 @@ QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids(DataCompleteness *compl
     if (completeness)
         *completeness = d->serviceUuidsCompleteness;
 
-    return d->serviceUuids;
+    return d->serviceUuids.toList();
 }
+#endif //QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 
 /*!
+    \deprecated
+
     Returns the completeness of the service UUID list.  If DataComplete is returned,
     serviceUuids() returns the complete list of service UUIDs supported by the device, otherwise
     only the partial or empty list of service UUIDs. To get a list
