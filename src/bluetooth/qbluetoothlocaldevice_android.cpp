@@ -73,6 +73,8 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(
             this, SLOT(processConnectDeviceChanges(QBluetoothAddress, bool)));
     connect(receiver, SIGNAL(pairingDisplayConfirmation(QBluetoothAddress, QString)),
             this, SLOT(processDisplayConfirmation(QBluetoothAddress, QString)));
+    connect(receiver, &LocalDeviceBroadcastReceiver::pairingDisplayPinCode,
+            this, &QBluetoothLocalDevicePrivate::processDisplayPinCode);
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
@@ -215,6 +217,15 @@ void QBluetoothLocalDevicePrivate::processDisplayConfirmation(const QBluetoothAd
         return;
 
     emit q_ptr->pairingDisplayConfirmation(address, pin);
+}
+
+void QBluetoothLocalDevicePrivate::processDisplayPinCode(const QBluetoothAddress &address, const QString &pin)
+{
+    // only send pairing notification for pairing requests issued by
+    // this QBluetoothLocalDevice instance
+    if (pendingPairing(address) == -1)
+        return;
+
     emit q_ptr->pairingDisplayPinCode(address, pin);
 }
 

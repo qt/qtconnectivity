@@ -39,6 +39,7 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qjnihelpers_p.h>
+#include <QtCore/qrandom.h>
 #include "localdevicebroadcastreceiver_p.h"
 #include "android/jni_android_p.h"
 
@@ -186,6 +187,46 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
         switch (variant) {
         case -1: //ignore -> no pairing variant set
             return;
+        case 0: //BluetoothDevice.PAIRING_VARIANT_PIN
+        {
+            //generate a random key
+            const QString pin = QStringLiteral("%1").arg(QRandomGenerator::global()->bounded(1000000),
+                                                         6, 10, QLatin1Char('0'));
+            const QAndroidJniObject javaPin = QAndroidJniObject::fromString(pin);
+
+            //get BluetoothDevice
+            keyExtra = valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ExtraDevice);
+            QAndroidJniObject bluetoothDevice =
+                    intentObject.callObjectMethod("getParcelableExtra",
+                                                  "(Ljava/lang/String;)Landroid/os/Parcelable;",
+                                                  keyExtra.object<jstring>());
+            if (!bluetoothDevice.isValid())
+                return;
+
+            QAndroidJniObject bytePin = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothDevice",
+                                                                                  "convertPinToBytes",
+                                                                                  "(Ljava/lang/String;)[B",
+                                                                                  javaPin.object<jstring>());
+            if (!bytePin.isValid()) {
+                if (env->ExceptionCheck()) {
+                    env->ExceptionDescribe();
+                    env->ExceptionClear();
+                }
+                return;
+            }
+
+            jboolean result = bluetoothDevice.callMethod<jboolean>("setPin", "([B)Z", bytePin.object<jbyteArray>());
+            if (!result) {
+                if (env->ExceptionCheck()) {
+                    env->ExceptionDescribe();
+                    env->ExceptionClear();
+                }
+                return;
+            }
+
+            const QBluetoothAddress address(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
+            emit pairingDisplayPinCode(address, pin);
+        }
         case 2: //BluetoothDevice.PAIRING_VARIANT_PASSKEY_CONFIRMATION
         {
             keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
