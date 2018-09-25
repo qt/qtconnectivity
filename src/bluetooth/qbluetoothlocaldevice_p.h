@@ -117,13 +117,13 @@ private slots:
 
 private:
     QBluetoothLocalDevice *q_ptr;
-    QAndroidJniObject *obj;
+    QAndroidJniObject *obj = nullptr;
 
     int pendingPairing(const QBluetoothAddress &address);
 
 public:
     LocalDeviceBroadcastReceiver *receiver;
-    bool pendingHostModeTransition;
+    bool pendingHostModeTransition = false;
     QList<QPair<QBluetoothAddress, bool> > pendingPairings;
 
     QList<QBluetoothAddress> connectedDevices;
