@@ -61,6 +61,8 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
             this, SLOT(disconnected(QBluetoothAddress)));
     connect(localDevice, SIGNAL(pairingDisplayConfirmation(QBluetoothAddress,QString)),
             this, SLOT(pairingDisplayConfirmation(QBluetoothAddress,QString)));
+    connect(localDevice, &QBluetoothLocalDevice::pairingDisplayPinCode,
+            this, &BtLocalDevice::pairingDisplayPinCode);
 
     if (localDevice->isValid()) {
         deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
@@ -199,9 +201,13 @@ void BtLocalDevice::disconnected(const QBluetoothAddress &addr)
 
 void BtLocalDevice::pairingDisplayConfirmation(const QBluetoothAddress &address, const QString &pin)
 {
-    Q_UNUSED(pin);
-    Q_UNUSED(address);
+    qDebug() << "PairingDisplayConfirmation" << address << pin;
     QTimer::singleShot(3000, this, SLOT(confirmPairing()));
+}
+
+void BtLocalDevice::pairingDisplayPinCode(const QBluetoothAddress &address, const QString &pin)
+{
+    qDebug() << "PairingDisplayPinCode" << address << pin;
 }
 
 void BtLocalDevice::confirmPairing()
