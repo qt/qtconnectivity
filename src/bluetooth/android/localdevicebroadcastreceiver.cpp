@@ -225,8 +225,18 @@ bool LocalDeviceBroadcastReceiver::pairingConfirmation(bool accept)
     if (!pairingDevice.isValid())
         return false;
 
+    // setPairingConfirmation() is likely to throw SecurityException for BLUETOOTH_PRIVILEGED
+    // as this permission is not obtainable for 3rdparties
+    // Note: Normally it would not have been added to Qt API but it used to be BLUETOOTH_ADMIN
+    QAndroidJniEnvironment env;
     bool success = pairingDevice.callMethod<jboolean>("setPairingConfirmation",
                                               "(Z)Z", accept);
+    if (success) {
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+    }
     pairingDevice = QAndroidJniObject();
     return success;
 }
