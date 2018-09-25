@@ -244,6 +244,9 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
                                                   "(Ljava/lang/String;)Landroid/os/Parcelable;",
                                                   keyExtra.object<jstring>());
 
+            if (!bluetoothDevice.isValid())
+                return;
+
             //we need to keep a reference around in case the user confirms later on
             pairingDevice = bluetoothDevice;
 
