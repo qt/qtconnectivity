@@ -412,7 +412,7 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
                 setError(QLowEnergyController::ConnectionError);
                 setState(QLowEnergyController::UnconnectedState);
                 return;
-            } else {
+            } else if (hr != S_OK) {
                 qCWarning(QT_BT_WINRT) << "Connecting to device failed: "
                                        << qt_error_string(hr);
                 setError(QLowEnergyController::ConnectionError);
