@@ -47,7 +47,7 @@
 #include <QtCore/QUrl>
 
 #include <initguid.h>
-#include <WinSock2.h>
+#include <winsock2.h>
 #include <qt_windows.h>
 #include <bluetoothapis.h>
 #include <ws2bth.h>
