@@ -200,9 +200,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::startDeviceDiscovery(QBluetoothDevice
     ComPtr<IAsyncOperation<DeviceInformationCollection *>> op;
     hr = deviceInformationStatics->FindAllAsyncAqsFilter(deviceSelector.Get(), &op);
     WARN_AND_RETURN_IF_FAILED("Could not start bluetooth device discovery operation", return);
+    QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
     hr = op->put_Completed(
-        Callback<IAsyncOperationCompletedHandler<DeviceInformationCollection *>>([this, mode](IAsyncOperation<DeviceInformationCollection *> *op, AsyncStatus) {
-        onDeviceDiscoveryFinished(op, mode);
+        Callback<IAsyncOperationCompletedHandler<DeviceInformationCollection *>>([thisPointer, mode](IAsyncOperation<DeviceInformationCollection *> *op, AsyncStatus status) {
+        if (status == Completed && thisPointer)
+            thisPointer->onDeviceDiscoveryFinished(op, mode);
         return S_OK;
     }).Get());
     WARN_AND_RETURN_IF_FAILED("Could not add callback to bluetooth device discovery operation", return);
@@ -346,9 +348,14 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
             qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from id";
             return S_OK;
         }
-
+        QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
         hr = deviceFromIdOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothDevice *>>
-                                                  (this, &QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoundAsync).Get());
+                                                  ([thisPointer](IAsyncOperation<BluetoothDevice *> *op, AsyncStatus status)
+        {
+            if (status == Completed && thisPointer)
+                thisPointer->onPairedClassicBluetoothDeviceFoundAsync(op, status);
+            return S_OK;
+        }).Get());
         if (FAILED(hr)) {
             --m_pendingPairedDevices;
             if (!m_pendingPairedDevices
@@ -375,9 +382,14 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTR
             qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from id";
             return S_OK;
         }
-
+        QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
         hr = deviceFromIdOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothLEDevice *>>
-                                                  (this, &QWinRTBluetoothDeviceDiscoveryWorker::onPairedBluetoothLEDeviceFoundAsync).Get());
+                                                  ([thisPointer] (IAsyncOperation<BluetoothLEDevice *> *op, AsyncStatus status)
+        {
+            if (status == Completed && thisPointer)
+                thisPointer->onPairedBluetoothLEDeviceFoundAsync(op, status);
+            return S_OK;
+        }).Get());
         if (FAILED(hr)) {
             --m_pendingPairedDevices;
             qCWarning(QT_BT_WINRT) << "Could not register device found callback";
@@ -401,9 +413,14 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromAddressAsync(quint
             qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from address";
             return S_OK;
         }
-
+        QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
         hr = deviceFromAddressOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothLEDevice *>>
-            (this, &QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFoundAsync).Get());
+                                                       ([thisPointer](IAsyncOperation<BluetoothLEDevice *> *op, AsyncStatus status)
+        {
+            if (status == Completed && thisPointer)
+                thisPointer->onBluetoothLEDeviceFoundAsync(op, status);
+            return S_OK;
+        }).Get());
         if (FAILED(hr)) {
             qCWarning(QT_BT_WINRT) << "Could not register device found callback";
             return S_OK;
