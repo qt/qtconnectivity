@@ -564,7 +564,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
             QPointer<QWinRTBluetoothDeviceDiscoveryWorker> tPointer(this);
             hr = pairing.Get()->PairAsync(&pairingOp);
             Q_ASSERT_SUCCEEDED(hr);
-            pairingOp.Get()->put_Completed(
+            pairingOp->put_Completed(
                 Callback<IAsyncOperationCompletedHandler<DevicePairingResult *>>([device, tPointer](IAsyncOperation<DevicePairingResult *> *op, AsyncStatus status) {
                 if (!tPointer)
                     return S_OK;
