@@ -222,7 +222,7 @@ public slots:
                     GattCharacteristicProperties properties;
                     hr = characteristic->get_CharacteristicProperties(&properties);
                     Q_ASSERT_SUCCEEDED(hr);
-                    charData.properties = QLowEnergyCharacteristic::PropertyTypes(properties);
+                    charData.properties = QLowEnergyCharacteristic::PropertyTypes(properties & 0xff);
                     if (charData.properties & QLowEnergyCharacteristic::Read) {
                         ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                         hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached,
