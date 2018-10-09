@@ -83,8 +83,6 @@ public:
     void _q_deviceDiscovered(const QBluetoothDeviceInfo &info);
     void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error);
     void _q_deviceDiscoveryFinished();
-    void _q_serviceDiscoveryFinished();
-
 
 private:
     // SDPInquiryDelegate:
@@ -293,11 +291,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
     }
 }
 
-void QBluetoothServiceDiscoveryAgentPrivate::_q_serviceDiscoveryFinished()
-{
-    // See SDPInquiryFinished.
-}
-
 void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(IOBluetoothDevice *device)
 {
     Q_ASSERT_X(device, Q_FUNC_INFO, "invalid IOBluetoothDevice (nil)");
@@ -397,12 +390,14 @@ void QBluetoothServiceDiscoveryAgentPrivate::setupDeviceDiscoveryAgent()
 
     deviceDiscoveryAgent.reset(new QBluetoothDeviceDiscoveryAgent(localAdapterAddress, q_ptr));
 
-    QObject::connect(deviceDiscoveryAgent.data(), SIGNAL(deviceDiscovered(const QBluetoothDeviceInfo &)),
-                     q_ptr, SLOT(_q_deviceDiscovered(const QBluetoothDeviceInfo &)));
-    QObject::connect(deviceDiscoveryAgent.data(), SIGNAL(finished()),
-                     q_ptr, SLOT(_q_deviceDiscoveryFinished()));
-    QObject::connect(deviceDiscoveryAgent.data(), SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
-                     q_ptr, SLOT(_q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error)));
+    QObject::connect(deviceDiscoveryAgent.data(), &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+                     this, &QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered);
+    QObject::connect(deviceDiscoveryAgent.data(), &QBluetoothDeviceDiscoveryAgent::finished,
+                     this, &QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished);
+    QObject::connect(deviceDiscoveryAgent.data(),
+                     QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+                     this,
+                     &QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError);
 }
 
 bool QBluetoothServiceDiscoveryAgentPrivate::isDuplicatedService(const QBluetoothServiceInfo &serviceInfo) const
