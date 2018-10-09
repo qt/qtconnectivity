@@ -810,8 +810,11 @@ void QLowEnergyControllerPrivateBluez::resetController()
 
     if (role == QLowEnergyController::PeripheralRole) {
         // public API behavior requires stop of advertisement
-        if (advertiser)
+        if (advertiser) {
             advertiser->stopAdvertising();
+            delete advertiser;
+            advertiser = nullptr;
+        }
         localAttributes.clear();
     }
 }
