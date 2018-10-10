@@ -94,6 +94,8 @@ private:
     bool isDuplicatedService(const QBluetoothServiceInfo &serviceInfo) const;
     void serviceDiscoveryFinished();
 
+    bool serviceHasMathingUuid(const QBluetoothServiceInfo &serviceInfo) const;
+
     QBluetoothServiceDiscoveryAgent *q_ptr;
 
     QBluetoothServiceDiscoveryAgent::Error error;
@@ -369,7 +371,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
             if (!serviceInfo.isValid())
                 continue;
 
-            if (!uuidFilter.isEmpty() && !uuidFilter.contains(serviceInfo.serviceUuid()))
+            if (!uuidFilter.isEmpty() && !serviceHasMathingUuid(serviceInfo))
                 continue;
 
             if (!isDuplicatedService(serviceInfo)) {
@@ -422,6 +424,17 @@ void QBluetoothServiceDiscoveryAgentPrivate::serviceDiscoveryFinished()
 
     if (state == ServiceDiscovery)
         startServiceDiscovery();
+}
+
+bool QBluetoothServiceDiscoveryAgentPrivate::serviceHasMathingUuid(const QBluetoothServiceInfo &serviceInfo) const
+{
+    for (const auto &requestedUuid : uuidFilter) {
+        if (serviceInfo.serviceUuid() == requestedUuid)
+            return true;
+        if (serviceInfo.serviceClassUuids().contains(requestedUuid))
+            return true;
+    }
+    return false;
 }
 
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent)
