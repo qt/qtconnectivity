@@ -85,13 +85,17 @@ void ChatServer::startServer(const QBluetoothAddress& localAdapter)
 
     //serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceRecordHandle, (uint)0x00010010);
 
+    QBluetoothServiceInfo::Sequence profileSequence;
     QBluetoothServiceInfo::Sequence classId;
-
     classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+    classId << QVariant::fromValue(quint16(0x100));
+    profileSequence.append(QVariant::fromValue(classId));
     serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                             classId);
+                             profileSequence);
 
-    classId.prepend(QVariant::fromValue(QBluetoothUuid(serviceUuid)));
+    classId.clear();
+    classId << QVariant::fromValue(QBluetoothUuid(serviceUuid));
+    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
 
     serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 

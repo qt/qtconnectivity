@@ -370,12 +370,18 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
                      << QVariant::fromValue(0);
             protocolDescriptorList.append(QVariant::fromValue(protocol));
 
-            //set SPP service class uuid
+            QBluetoothServiceInfo::Sequence profileSequence;
             QBluetoothServiceInfo::Sequence classId;
             classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+            classId << QVariant::fromValue(quint16(0x100));
+            profileSequence.append(QVariant::fromValue(classId));
             serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                                     classId);
-            classId.prepend(QVariant::fromValue(uuids.at(i)));
+                                     profileSequence);
+
+            classId.clear();
+            //set SPP service class uuid
+            classId << QVariant::fromValue(uuids.at(i));
+            classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
@@ -387,10 +393,13 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
                      << QVariant::fromValue(0);
             protocolDescriptorList.append(QVariant::fromValue(protocol));
 
+            QBluetoothServiceInfo::Sequence profileSequence;
             QBluetoothServiceInfo::Sequence classId;
             classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+            classId << QVariant::fromValue(quint16(0x100));
+            profileSequence.append(QVariant::fromValue(classId));
             serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                                     classId);
+                                     profileSequence);
 
             //also we need to set the custom uuid to the SPP uuid
             //otherwise QBluetoothSocket::connectToService() would fail due to a missing service uuid

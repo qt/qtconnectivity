@@ -576,12 +576,17 @@ void BtLocalDevice::serverListenPort()
         if (!ret)
             return;
 
+        QBluetoothServiceInfo::Sequence profileSequence;
         QBluetoothServiceInfo::Sequence classId;
         classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        classId << QVariant::fromValue(quint16(0x100));
+        profileSequence.append(QVariant::fromValue(classId));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                                 classId);
+                                 profileSequence);
 
-        classId.prepend(QVariant::fromValue(QBluetoothUuid(QString(TEST_SERVICE_UUID))));
+        classId.clear();
+        classId << QVariant::fromValue(QBluetoothUuid(QString(TEST_SERVICE_UUID)));
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
         serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
         // Service name, description and provider
