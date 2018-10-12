@@ -410,8 +410,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         }
 
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
-        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                                 QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        QBluetoothServiceInfo::Sequence publicBrowse;
+        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
 
         if (!customUuids.contains(i)) {
             //if we don't have custom uuid use it as class id as well

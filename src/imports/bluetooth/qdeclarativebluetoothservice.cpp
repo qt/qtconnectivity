@@ -306,8 +306,9 @@ void QDeclarativeBluetoothService::setRegistered(bool registered)
 
     //qDebug() << "name/uuid" << d->m_name << d->m_uuid << d->m_port;
 
-    d->m_service->setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                               QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+    QBluetoothServiceInfo::Sequence publicBrowse;
+    publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+    d->m_service->setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
 
     QBluetoothServiceInfo::Sequence protocolDescriptorList;
     QBluetoothServiceInfo::Sequence protocol;
