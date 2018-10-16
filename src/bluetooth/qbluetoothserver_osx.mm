@@ -380,11 +380,16 @@ QBluetoothServiceInfo QBluetoothServer::listen(const QBluetoothUuid &uuid, const
     serviceInfo.setAttribute(QSInfo::BrowseGroupList,
                              QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
 
+    QSInfo::Sequence profileSequence;
     QSInfo::Sequence classId;
     classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-    serviceInfo.setAttribute(QSInfo::BluetoothProfileDescriptorList, classId);
+    classId << QVariant::fromValue(quint16(0x100));
+    profileSequence.append(QVariant::fromValue(classId));
+    serviceInfo.setAttribute(QSInfo::BluetoothProfileDescriptorList, profileSequence);
 
-    classId.prepend(QVariant::fromValue(uuid));
+    classId.clear();
+    classId << QVariant::fromValue(uuid);
+    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
     serviceInfo.setAttribute(QSInfo::ServiceClassIds, classId);
     serviceInfo.setServiceUuid(uuid);
 

@@ -289,11 +289,13 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
                                  QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
 
+        QBluetoothServiceInfo::Sequence profileSequence;
         QBluetoothServiceInfo::Sequence classId;
         classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-        serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
+        classId << QVariant::fromValue(quint16(0x100));
+        profileSequence.append(QVariant::fromValue(classId));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                                 classId);
+                                 profileSequence);
 
         serviceInfo.setServiceUuid(uuid);
 
