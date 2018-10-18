@@ -138,10 +138,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     The signal is emitted as soon as the most important device information
     has been collected. However, as long as the \l finished() signal has not
     been emitted the information collection continues even for already discovered
-    devices. This is particularly true for signal strength information (RSSI). If
-    signal strength information is required it is advisable to retrieve the device
-    information via \l discoveredDevices() once the discovery has finished. This
-    will yield the most recent RSSI information.
+    devices. This is particularly true for signal strength information (RSSI) and
+    manufacturer data updates. If the use case requires continuous manufacturer data
+    or RSSI updates it is advisable to retrieve the device information via
+    \l discoveredDevices() once the discovery has finished or listen to the
+    \l deviceUpdated() signal.
 
     If \l lowEnergyDiscoveryTimeout() is larger than 0 the signal is only ever
     emitted when at least one attribute of \a info changes. This reflects the desire to
