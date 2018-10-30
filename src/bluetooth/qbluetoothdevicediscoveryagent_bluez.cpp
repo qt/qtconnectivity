@@ -431,7 +431,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
     OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
     QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
-                     [this](const QString &interface, const QVariantMap &changedProperties,
+                     q, [this](const QString &interface, const QVariantMap &changedProperties,
                             const QStringList &invalidatedProperties) {
         this->_q_PropertiesChanged(interface, changedProperties, invalidatedProperties);
     });
