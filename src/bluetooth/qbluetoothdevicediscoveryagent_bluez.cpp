@@ -75,6 +75,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                                            QDBusConnection::systemBus(), parent);
         QObject::connect(managerBluez5,
                          &OrgFreedesktopDBusObjectManagerInterface::InterfacesAdded,
+                         q_ptr,
                          [this](const QDBusObjectPath &objectPath, InterfaceList interfacesAndProperties) {
             this->_q_InterfacesAdded(objectPath, interfacesAndProperties);
         });
@@ -85,7 +86,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         manager = new OrgBluezManagerInterface(QStringLiteral("org.bluez"), QStringLiteral("/"),
                                            QDBusConnection::systemBus(), parent);
         QObject::connect(&extendedDiscoveryTimer,
-                         &QTimer::timeout, [this]() {
+                         &QTimer::timeout, q_ptr, [this]() {
             this->_q_extendedDeviceDiscoveryTimeout();
         });
         extendedDiscoveryTimer.setInterval(10000);
@@ -162,11 +163,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     Q_Q(QBluetoothDeviceDiscoveryAgent);
     QObject::connect(adapter, &OrgBluezAdapterInterface::DeviceFound,
-                     [this](const QString &address, const QVariantMap &dict) {
+                     q, [this](const QString &address, const QVariantMap &dict) {
         this->_q_deviceFound(address, dict);
     });
     QObject::connect(adapter, &OrgBluezAdapterInterface::PropertyChanged,
-                     [this](const QString &name, const QDBusVariant &value) {
+                     q, [this](const QString &name, const QDBusVariant &value) {
         this->_q_propertyChanged(name, value);
     });
 
@@ -287,7 +288,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
 
     QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapterBluez5->path());
     QObject::connect(QtBluezDiscoveryManager::instance(), &QtBluezDiscoveryManager::discoveryInterrupted,
-                     [this](const QString &path){
+                     q, [this](const QString &path){
         this->_q_discoveryInterrupted(path);
     });
 
@@ -321,7 +322,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
         discoveryTimer = new QTimer(q);
         discoveryTimer->setSingleShot(true);
         QObject::connect(discoveryTimer, &QTimer::timeout,
-                         [this]() {
+                         q, [this]() {
             this->_q_discoveryFinished();
         });
     }
@@ -431,7 +432,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString& dev
     OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
     QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
-                     [this](const QString &interface, const QVariantMap &changedProperties,
+                     q, [this](const QString &interface, const QVariantMap &changedProperties,
                             const QStringList &invalidatedProperties) {
         this->_q_PropertiesChanged(interface, changedProperties, invalidatedProperties);
     });

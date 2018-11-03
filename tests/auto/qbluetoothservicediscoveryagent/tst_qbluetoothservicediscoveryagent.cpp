@@ -286,8 +286,9 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
         server.listen(addresses[0]);
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, "serviceName");
-        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                                 QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        QBluetoothServiceInfo::Sequence publicBrowse;
+        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
 
         QBluetoothServiceInfo::Sequence profileSequence;
         QBluetoothServiceInfo::Sequence classId;

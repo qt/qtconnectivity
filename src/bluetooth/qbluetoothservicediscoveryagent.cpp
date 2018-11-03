@@ -435,16 +435,16 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
         deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(q);
 #endif
         QObject::connect(deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
-                         [this](){
+                         q, [this](){
             this->_q_deviceDiscoveryFinished();
         });
         QObject::connect(deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
-                         [this](const QBluetoothDeviceInfo &info){
+                         q, [this](const QBluetoothDeviceInfo &info){
             this->_q_deviceDiscovered(info);
         });
         QObject::connect(deviceDiscoveryAgent,
                          QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-                         [this](QBluetoothDeviceDiscoveryAgent::Error newError){
+                         q, [this](QBluetoothDeviceDiscoveryAgent::Error newError){
             this->_q_deviceDiscoveryError(newError);
         });
     }

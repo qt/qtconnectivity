@@ -129,7 +129,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(deviceObjectPath, q);
     watcher->setProperty("_q_BTaddress", QVariant::fromValue(address));
     QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
-                     [this](QDBusPendingCallWatcher *watcher){
+                     q, [this](QDBusPendingCallWatcher *watcher){
         this->_q_foundDevice(watcher);
     });
 }
@@ -216,7 +216,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
         sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
         q->connect(sdpScannerProcess,
                    QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                   [this](int exitCode, QProcess::ExitStatus status){
+                   q, [this](int exitCode, QProcess::ExitStatus status){
             this->_q_sdpScannerDone(exitCode, status);
         });
     }
@@ -396,7 +396,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_foundDevice(QDBusPendingCallWatc
         watcher = new QDBusPendingCallWatcher(deviceObjectPath, q);
         watcher->setProperty("_q_BTaddress",  QVariant::fromValue(address));
         QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
-                         [this](QDBusPendingCallWatcher *watcher){
+                         q, [this](QDBusPendingCallWatcher *watcher){
             this->_q_createdDevice(watcher);
         });
 
@@ -537,7 +537,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
         QDBusPendingReply<ServiceMap> discoverReply = device->DiscoverServices(pattern);
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(discoverReply, q);
         QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
-                         [this](QDBusPendingCallWatcher *watcher){
+                         q, [this](QDBusPendingCallWatcher *watcher){
             this->_q_discoveredServices(watcher);
         });
     }

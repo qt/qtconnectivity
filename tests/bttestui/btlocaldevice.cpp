@@ -600,8 +600,9 @@ void BtLocalDevice::serverListenPort()
 
 
         // Service Discoverability
-        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                                 QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        QBluetoothServiceInfo::Sequence browseSequence;
+        browseSequence << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, browseSequence);
 
         // Protocol descriptor list
         QBluetoothServiceInfo::Sequence protocolDescriptorList;

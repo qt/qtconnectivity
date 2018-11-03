@@ -200,7 +200,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         if (!receiver) {
             receiver = new ServiceDiscoveryBroadcastReceiver();
             QObject::connect(receiver, &ServiceDiscoveryBroadcastReceiver::uuidFetchFinished,
-                             [this](const QBluetoothAddress &address, const QList<QBluetoothUuid>& uuids) {
+                             q, [this](const QBluetoothAddress &address, const QList<QBluetoothUuid>& uuids) {
                 this->_q_processFetchedUuids(address, uuids);
             });
         }
@@ -208,7 +208,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         if (!localDeviceReceiver) {
             localDeviceReceiver = new LocalDeviceBroadcastReceiver();
             QObject::connect(localDeviceReceiver, &LocalDeviceBroadcastReceiver::hostModeStateChanged,
-                             [this](QBluetoothLocalDevice::HostMode state){
+                             q, [this](QBluetoothLocalDevice::HostMode state){
                 this->_q_hostModeStateChanged(state);
             });
         }
@@ -250,7 +250,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
     //could not find any service for the current address/device -> go to next one
     if (address.isNull() || uuids.isEmpty()) {
         if (discoveredDevices.count() == 1) {
-            QTimer::singleShot(4000, qApp, [this]() {
+            Q_Q(QBluetoothServiceDiscoveryAgent);
+            QTimer::singleShot(4000, q, [this]() {
                 this->_q_fetchUuidsTimeout();
             });
         }
@@ -301,7 +302,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
         //the discovery on the last device cannot immediately finish
         //we have to grant the 2 seconds timeout delay
         if (discoveredDevices.count() == 1) {
-            QTimer::singleShot(4000, qApp, [this]() {
+            Q_Q(QBluetoothServiceDiscoveryAgent);
+            QTimer::singleShot(4000, q, [this]() {
                 this->_q_fetchUuidsTimeout();
             });
             return;
@@ -410,8 +412,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         }
 
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
-        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                                 QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        QBluetoothServiceInfo::Sequence publicBrowse;
+        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
 
         if (!customUuids.contains(i)) {
             //if we don't have custom uuid use it as class id as well
