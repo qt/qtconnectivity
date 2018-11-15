@@ -75,6 +75,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     the discovery process will limit the search to the type which is supported.
 
     \note Since Android 6.0 the ability to detect devices requires ACCESS_COARSE_LOCATION.
+
+    \note Due to API limitations it is only possible to find devices that have been paired using
+    Windows' settings on Windows.
 */
 
 /*!
