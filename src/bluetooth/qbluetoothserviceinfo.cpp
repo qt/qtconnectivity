@@ -134,6 +134,10 @@ QT_BEGIN_NAMESPACE
     \value ServiceName              Name of the Bluetooth service in the primary language.
     \value ServiceDescription       Description of the Bluetooth service in the primary language.
     \value ServiceProvider          Name of the company / entity that provides the Bluetooth service primary language.
+
+    \note On Windows ServiceClassIds and ProtocolDescriptorList are automatically set to default
+    values when a service is created. Manually setting values for these attributes will not work and
+    might lead to unexpected results on this platform.
 */
 
 /*!
