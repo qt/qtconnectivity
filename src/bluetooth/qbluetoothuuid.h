@@ -396,6 +396,18 @@ public:
     static QString descriptorToString(DescriptorType uuid);
 };
 
+#ifndef QT_NO_DATASTREAM
+inline QDataStream &operator<<(QDataStream &s, const QBluetoothUuid &uuid)
+{
+    return s << static_cast<const QUuid &>(uuid);
+}
+
+inline QDataStream &operator>>(QDataStream &s, QBluetoothUuid &uuid)
+{
+    return s >> static_cast<QUuid &>(uuid);
+}
+#endif
+
 #ifndef QT_NO_DEBUG_STREAM
 /// TODO: Move implementation to .cpp, uninline and add Q_BLUETOOTH_EXPORT for Qt 6
 inline QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)

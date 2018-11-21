@@ -537,14 +537,14 @@ QT_USE_NAMESPACE
     const OBEXConnectCommandResponseData *const response = &event->u.connectCommandResponseData;
     if (response->headerDataPtr && response->headerDataLength >= 2) {
         // 2 == 1 byte headerID + at least 1 byte headerValue ...
-        QList<OBEXHeader> headers(qt_bluetooth_headers(static_cast<const uint8_t *>(response->headerDataPtr),
+        const QList<OBEXHeader> headers(qt_bluetooth_headers(static_cast<const uint8_t *>(response->headerDataPtr),
                                   response->headerDataLength));
         // ConnectionID is used when multiplexing OBEX connections
         // to identify which particular connection this object is
         // being sent on. When used, this _must_ be the first
         // header sent.
 
-        foreach (const OBEXHeader &header, headers) {
+        for (const OBEXHeader &header : headers) {
             if (header.headerID == kOBEXHeaderIDConnectionID) {
                 connectionID = header.value.value<quint32>();
                 connectionIDFound = true;

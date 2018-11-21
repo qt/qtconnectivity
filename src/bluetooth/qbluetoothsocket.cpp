@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Copyright (C) 2016 BlackBerry Limited. All rights reserved.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -41,6 +41,8 @@
 #include "qbluetoothsocket.h"
 #if QT_CONFIG(bluez)
 #include "qbluetoothsocket_bluez_p.h"
+#include "qbluetoothsocket_bluezdbus_p.h"
+#include "bluez/bluez5_helper_p.h"
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include "qbluetoothsocket_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
@@ -253,23 +255,34 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \reimp
 */
 
+static QBluetoothSocketBasePrivate *createSocketPrivate()
+{
+#if QT_CONFIG(bluez)
+    if (bluetoothdVersion() >= QVersionNumber(5, 46)) {
+        qCDebug(QT_BT) << "Using Bluetooth dbus socket implementation";
+        return new QBluetoothSocketPrivateBluezDBus();
+    } else {
+        qCDebug(QT_BT) << "Using Bluetooth raw socket implementation";
+        return new QBluetoothSocketPrivateBluez();
+    }
+#elif defined(QT_ANDROID_BLUETOOTH)
+    return new QBluetoothSocketPrivateAndroid();
+#elif defined(QT_WINRT_BLUETOOTH)
+    return new QBluetoothSocketPrivateWinRT();
+#elif defined(QT_WIN_BLUETOOTH)
+    return new QBluetoothSocketPrivateWin();
+#else
+    return new QBluetoothSocketPrivateDummy();
+#endif
+}
+
 /*!
     Constructs a Bluetooth socket of \a socketType type, with \a parent.
 */
 QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent)
 : QIODevice(parent)
 {
-#if QT_CONFIG(bluez)
-    d_ptr = new QBluetoothSocketPrivateBluez();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateWinRT();
-#elif defined(QT_WIN_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateWin();
-#else
-    d_ptr = new QBluetoothSocketPrivateDummy();
-#endif
+    d_ptr = createSocketPrivate();
     d_ptr->q_ptr = this;
 
     Q_D(QBluetoothSocketBase);
@@ -284,20 +297,31 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent)
 {
-#if QT_CONFIG(bluez)
-    d_ptr = new QBluetoothSocketPrivateBluez();
-#elif defined(QT_ANDROID_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateAndroid();
-#elif defined(QT_WINRT_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateWinRT();
-#elif defined(QT_WIN_BLUETOOTH)
-    d_ptr = new QBluetoothSocketPrivateWin();
-#else
-    d_ptr = new QBluetoothSocketPrivateDummy();
-#endif
+    d_ptr = createSocketPrivate();
     d_ptr->q_ptr = this;
     setOpenMode(QIODevice::NotOpen);
 }
+
+#if QT_CONFIG(bluez)
+
+/*!
+  \internal
+*/
+QBluetoothSocket::QBluetoothSocket(QBluetoothSocketBasePrivate *dPrivate,
+                          QBluetoothServiceInfo::Protocol socketType,
+                          QObject *parent)
+    : QIODevice(parent)
+{
+    d_ptr = dPrivate;
+    d_ptr->q_ptr = this;
+
+    Q_D(QBluetoothSocketBase);
+    d->ensureNativeSocket(socketType);
+
+    setOpenMode(QIODevice::NotOpen);
+}
+
+#endif
 
 /*!
     Destroys the Bluetooth socket.
@@ -305,7 +329,7 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
 QBluetoothSocket::~QBluetoothSocket()
 {
     delete d_ptr;
-    d_ptr = 0;
+    d_ptr = nullptr;
 }
 
 /*!
@@ -521,10 +545,20 @@ QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
 void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
 {
     Q_D(QBluetoothSocketBase);
-    SocketState old = d->state;
+    const SocketState old = d->state;
+    if (state == old)
+        return;
+
     d->state = state;
     if(old != d->state)
         emit stateChanged(state);
+    if (state == QBluetoothSocket::ConnectedState) {
+        emit connected();
+    } else if ((old == QBluetoothSocket::ConnectedState
+                || old == QBluetoothSocket::ClosingState)
+               && state == QBluetoothSocket::UnconnectedState) {
+        emit disconnected();
+    }
     if(state == ListeningState){
         // TODO: look at this, is this really correct?
         // if we're a listening socket we can't handle connects?
@@ -606,7 +640,7 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
     if (service.protocolServiceMultiplexer() > 0 || service.serverChannel() > 0) {
         connectToService(service, d->openMode);
         d->discoveryAgent->deleteLater();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     } else {
         qCDebug(QT_BT) << "Could not find port/psm for potential remote service";
     }
@@ -622,7 +656,7 @@ void QBluetoothSocket::discoveryFinished()
         setSocketError(ServiceNotFoundError);
         setSocketState(QBluetoothSocket::UnconnectedState);
         d->discoveryAgent->deleteLater();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     }
 }
 
@@ -637,18 +671,11 @@ void QBluetoothSocket::abort()
     if (state() == ServiceLookupState && d->discoveryAgent) {
         d->discoveryAgent->disconnect();
         d->discoveryAgent->stop();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     }
 
     setSocketState(ClosingState);
     d->abort();
-
-#ifndef QT_ANDROID_BLUETOOTH
-    //Android closes when the Java event loop comes around
-    setSocketState(QBluetoothSocket::UnconnectedState);
-    emit readChannelFinished();
-    emit disconnected();
-#endif
 }
 
 void QBluetoothSocket::disconnectFromService()
@@ -722,19 +749,12 @@ void QBluetoothSocket::close()
     if (state() == ServiceLookupState && d->discoveryAgent) {
         d->discoveryAgent->disconnect();
         d->discoveryAgent->stop();
-        d->discoveryAgent = 0;
+        d->discoveryAgent = nullptr;
     }
 
     setSocketState(ClosingState);
 
     d->close();
-
-#ifndef QT_ANDROID_BLUETOOTH
-    //Android closes when the Java event loop comes around
-    setSocketState(UnconnectedState);
-    emit readChannelFinished();
-    emit disconnected();
-#endif
 }
 
 /*!

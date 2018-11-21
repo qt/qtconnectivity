@@ -132,7 +132,7 @@ void tst_QBluetoothServiceInfo::tst_construction()
         QCOMPARE(serviceInfo.serverChannel(), -1);
         QCOMPARE(serviceInfo.protocolServiceMultiplexer(), -1);
 
-        foreach (QBluetoothUuid::ProtocolUuid u, protUuids)
+        for (QBluetoothUuid::ProtocolUuid u : qAsConst(protUuids))
             QCOMPARE(serviceInfo.protocolDescriptor(u).count(), 0);
     }
 
@@ -166,9 +166,9 @@ void tst_QBluetoothServiceInfo::tst_construction()
         QCOMPARE(copyInfo.device().address(), alternatedeviceInfo.address());
         QCOMPARE(serviceInfo.device().address(), alternatedeviceInfo.address());
 
-        foreach (QBluetoothUuid::ProtocolUuid u, protUuids)
+        for (QBluetoothUuid::ProtocolUuid u : qAsConst(protUuids))
             QCOMPARE(serviceInfo.protocolDescriptor(u).count(), 0);
-        foreach (QBluetoothUuid::ProtocolUuid u, protUuids)
+        for (QBluetoothUuid::ProtocolUuid u : qAsConst(protUuids))
             QCOMPARE(copyInfo.protocolDescriptor(u).count(), 0);
     }
 }

@@ -86,7 +86,8 @@ protected:
     friend class QLowEnergyControllerPrivateOSX;
     friend class QLowEnergyControllerPrivateWin32;
     friend class QLowEnergyControllerPrivateWinRT;
-    QLowEnergyDescriptorPrivate *data;
+    friend class QLowEnergyControllerPrivateWinRTNew;
+    QLowEnergyDescriptorPrivate *data = nullptr;
 
     QLowEnergyDescriptor(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle charHandle,

@@ -65,7 +65,7 @@ extern "C"
     {
         QNearFieldManager::AdapterState adapterState = static_cast<QNearFieldManager::AdapterState>((int) state);
 
-        for (const auto listener : *broadcastListener) {
+        for (const auto listener : qAsConst(*broadcastListener)) {
             Q_EMIT listener->adapterStateChanged(adapterState);
         }
     }
@@ -153,7 +153,7 @@ void QNearFieldManagerPrivateImpl::handlerNdefMessageRead(const QNdefMessage &me
             filterRecords.append(vr);
         }
 
-        foreach (const QNdefRecord &record, message) {
+        for (const QNdefRecord &record : message) {
             for (int j = 0; matched && (j < filterRecords.count()); ++j) {
                 VerifyRecord &vr = filterRecords[j];
 

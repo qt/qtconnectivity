@@ -1,6 +1,6 @@
 TARGET = QtBluetooth
 QT = core core-private
-
+DEFINES += QT_NO_FOREACH
 
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
@@ -87,7 +87,7 @@ win32 {
 
 qtConfig(bluez) {
     QT_PRIVATE = concurrent
-    QT_FOR_PRIVATE += dbus
+    QT_FOR_PRIVATE += dbus network
 
     # do not link against QtNetwork but use inline qt_safe_* functions
     INCLUDEPATH += $$QT.network_private.includes
@@ -229,10 +229,17 @@ qtConfig(bluez) {
         qbluetoothservicediscoveryagent_winrt.cpp \
         qbluetoothserviceinfo_winrt.cpp \
         qbluetoothsocket_winrt.cpp \
+        qbluetoothutils_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
     PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h \
-                       qbluetoothsocket_winrt_p.h
+                       qbluetoothsocket_winrt_p.h \
+                       qbluetoothutils_winrt_p.h
+
+    qtConfig(winrt_btle_no_pairing) {
+        SOURCES += qlowenergycontroller_winrt_new.cpp
+        PRIVATE_HEADERS += qlowenergycontroller_winrt_new_p.h
+    }
 
     lessThan(WINDOWS_SDK_VERSION, 14393) {
         DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY

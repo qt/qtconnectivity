@@ -96,8 +96,7 @@ class QDeclarativeBluetoothDiscoveryModelPrivate
 {
 public:
     QDeclarativeBluetoothDiscoveryModelPrivate()
-        : m_serviceAgent(0),
-        m_deviceAgent(0),
+        :
         m_error(QDeclarativeBluetoothDiscoveryModel::NoError),
         m_discoveryMode(QDeclarativeBluetoothDiscoveryModel::MinimalServiceDiscovery),
         m_running(false),
@@ -119,8 +118,8 @@ public:
         qDeleteAll(m_services);
     }
 
-    QBluetoothServiceDiscoveryAgent *m_serviceAgent;
-    QBluetoothDeviceDiscoveryAgent *m_deviceAgent;
+    QBluetoothServiceDiscoveryAgent *m_serviceAgent = nullptr;
+    QBluetoothDeviceDiscoveryAgent *m_deviceAgent = nullptr;
 
     QDeclarativeBluetoothDiscoveryModel::Error m_error;
     QList<QDeclarativeBluetoothService *> m_services;
@@ -331,7 +330,7 @@ void QDeclarativeBluetoothDiscoveryModel::serviceDiscovered(const QBluetoothServ
     //qDebug() << "service discovered";
 
     QDeclarativeBluetoothService *bs = new QDeclarativeBluetoothService(service, this);
-    QDeclarativeBluetoothService *current = 0;
+    QDeclarativeBluetoothService *current = nullptr;
     for (int i = 0; i < d->m_services.count(); i++) {
         current = d->m_services.at(i);
         if (bs->deviceAddress() == current->deviceAddress()

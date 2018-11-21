@@ -245,6 +245,7 @@ enum ADType {
     ADType32BitUuidComplete = 0x05,
     ADType128BitUuidIncomplete = 0x06,
     ADType128BitUuidComplete = 0x07,
+    ADTypeManufacturerSpecificData = 0xff,
     // .. more will be added when required
 };
 
@@ -547,6 +548,12 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
             case ADType128BitUuidComplete:
                 foundService =
                     QBluetoothUuid(qToBigEndian<quint128>(qFromLittleEndian<quint128>(dataPtr)));
+                break;
+            case ADTypeManufacturerSpecificData:
+                if (nBytes >= 3) {
+                    info.setManufacturerData(qFromLittleEndian<quint16>(dataPtr),
+                                              QByteArray(dataPtr + 2, nBytes - 3));
+                }
                 break;
             default:
                 // no other types supported yet and therefore skipped

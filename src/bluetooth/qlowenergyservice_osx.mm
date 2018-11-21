@@ -129,7 +129,7 @@ QList<QLowEnergyCharacteristic> QLowEnergyService::characteristics() const
 
     std::sort(handles.begin(), handles.end());
 
-    foreach (const QLowEnergyHandle &handle, handles) {
+    for (const QLowEnergyHandle &handle : qAsConst(handles)) {
         QLowEnergyCharacteristic characteristic(d_ptr, handle);
         result.append(characteristic);
     }

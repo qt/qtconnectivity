@@ -164,7 +164,7 @@ void QBluetoothSocketPrivateBluez::connectToServiceHelper(const QBluetoothAddres
         convertAddress(address.toUInt64(), addr.rc_bdaddr.b);
 
         connectWriteNotifier->setEnabled(true);
-        readNotifier->setEnabled(true);QString();
+        readNotifier->setEnabled(true);
 
         result = ::connect(socket, (sockaddr *)&addr, sizeof(addr));
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
@@ -325,7 +325,6 @@ void QBluetoothSocketPrivateBluez::_q_writeNotify()
         }
 
         q->setSocketState(QBluetoothSocket::ConnectedState);
-        emit q->connected();
 
         connectWriteNotifier->setEnabled(false);
         connecting = false;
@@ -402,15 +401,22 @@ void QBluetoothSocketPrivateBluez::_q_readNotify()
 void QBluetoothSocketPrivateBluez::abort()
 {
     delete readNotifier;
-    readNotifier = 0;
+    readNotifier = nullptr;
     delete connectWriteNotifier;
-    connectWriteNotifier = 0;
+    connectWriteNotifier = nullptr;
 
     // We don't transition through Closing for abort, so
     // we don't call disconnectFromService or
     // QBluetoothSocket::close
     QT_CLOSE(socket);
     socket = -1;
+
+    Q_Q(QBluetoothSocket);
+
+    q->setOpenMode(QIODevice::NotOpen);
+    q->setSocketState(QBluetoothSocket::UnconnectedState);
+    emit q->readChannelFinished();
+    emit q->disconnected();
 }
 
 QString QBluetoothSocketPrivateBluez::localName() const
@@ -663,9 +669,9 @@ bool QBluetoothSocketPrivateBluez::setSocketDescriptor(int socketDescriptor, QBl
 {
     Q_Q(QBluetoothSocket);
     delete readNotifier;
-    readNotifier = 0;
+    readNotifier = nullptr;
     delete connectWriteNotifier;
-    connectWriteNotifier = 0;
+    connectWriteNotifier = nullptr;
 
     socketType = socketType_;
     socket = socketDescriptor;

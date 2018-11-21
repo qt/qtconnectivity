@@ -134,6 +134,10 @@ QT_BEGIN_NAMESPACE
     \value ServiceName              Name of the Bluetooth service in the primary language.
     \value ServiceDescription       Description of the Bluetooth service in the primary language.
     \value ServiceProvider          Name of the company / entity that provides the Bluetooth service primary language.
+
+    \note On Windows ServiceClassIds and ProtocolDescriptorList are automatically set to default
+    values when a service is created. Manually setting values for these attributes will not work and
+    might lead to unexpected results on this platform.
 */
 
 /*!
@@ -346,6 +350,7 @@ bool QBluetoothServiceInfo::unregisterService()
 QBluetoothServiceInfo::QBluetoothServiceInfo()
     : d_ptr(QSharedPointer<QBluetoothServiceInfoPrivate>::create())
 {
+    qRegisterMetaType<QBluetoothServiceInfo>();
 }
 
 /*!
@@ -606,12 +611,12 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
         } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
             dbg << QString::asprintf("%sSequence\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Sequence *sequence = static_cast<const QBluetoothServiceInfo::Sequence *>(var.data());
-            foreach (const QVariant &v, *sequence)
+            for (const QVariant &v : *sequence)
                 dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
         } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             dbg << QString::asprintf("%sAlternative\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Alternative *alternative = static_cast<const QBluetoothServiceInfo::Alternative *>(var.data());
-            foreach (const QVariant &v, *alternative)
+            for (const QVariant &v : *alternative)
                 dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
         }
         break;
@@ -626,7 +631,8 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
 {
     QDebugStateSaver saver(dbg);
     dbg.noquote() << "\n";
-    foreach (quint16 id, info.attributes()) {
+    QList<quint16> attributes = info.attributes();
+    for (quint16 id : attributes) {
         dumpAttributeVariant(dbg, info.attribute(id), QStringLiteral("(%1)\t").arg(id));
     }
     return dbg;
@@ -637,7 +643,9 @@ QBluetoothServiceInfo::Sequence QBluetoothServiceInfoPrivate::protocolDescriptor
     if (!attributes.contains(QBluetoothServiceInfo::ProtocolDescriptorList))
         return QBluetoothServiceInfo::Sequence();
 
-    foreach (const QVariant &v, attributes.value(QBluetoothServiceInfo::ProtocolDescriptorList).value<QBluetoothServiceInfo::Sequence>()) {
+    const QBluetoothServiceInfo::Sequence sequence
+            = attributes.value(QBluetoothServiceInfo::ProtocolDescriptorList).value<QBluetoothServiceInfo::Sequence>();
+    for (const QVariant &v : sequence) {
         QBluetoothServiceInfo::Sequence parameters = v.value<QBluetoothServiceInfo::Sequence>();
         if (parameters.empty())
             continue;

@@ -238,7 +238,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     bool success = newSocket->d_ptr->setSocketDescriptor(socket, d->serverType);
     if (!success) {
         delete newSocket;
-        newSocket = 0;
+        newSocket = nullptr;
     }
 
     return newSocket;

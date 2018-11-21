@@ -43,7 +43,7 @@
 #include "bluez/manager_p.h"
 #include "bluez/service_p.h"
 #include "bluez/bluez5_helper_p.h"
-#include "bluez/profile1_p.h"
+#include "bluez/profilemanager1_p.h"
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QXmlStreamWriter>
@@ -158,13 +158,13 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
             stream->writeStartElement(QStringLiteral("sequence"));
             const QBluetoothServiceInfo::Sequence *sequence =
                     static_cast<const QBluetoothServiceInfo::Sequence *>(attribute.data());
-            foreach (const QVariant &v, *sequence)
+            for (const QVariant &v : *sequence)
                 writeAttribute(stream, v);
             stream->writeEndElement();
         } else if (attribute.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             const QBluetoothServiceInfo::Alternative *alternative =
                     static_cast<const QBluetoothServiceInfo::Alternative *>(attribute.data());
-            foreach (const QVariant &v, *alternative)
+            for (const QVariant &v : *alternative)
                 writeAttribute(stream, v);
             stream->writeEndElement();
         }
@@ -175,7 +175,7 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 }
 
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
-:   service(0), serviceBluez5(0), serviceRecord(0), registered(false)
+:   serviceRecord(0), registered(false)
 {
     if (isBluez5()) {
         serviceBluez5  = new OrgBluezProfileManager1Interface(

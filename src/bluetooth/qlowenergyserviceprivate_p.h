@@ -72,7 +72,7 @@ class QLowEnergyServicePrivate : public QObject
 {
     Q_OBJECT
 public:
-    explicit QLowEnergyServicePrivate(QObject *parent = 0);
+    explicit QLowEnergyServicePrivate(QObject *parent = nullptr);
     ~QLowEnergyServicePrivate();
 
     struct DescData {

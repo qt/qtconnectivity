@@ -674,7 +674,7 @@ void TestQLowEnergyControllerGattServer::serviceData()
     const auto inUuids = QSet<QBluetoothUuid>() << descData.uuid() << descData2.uuid()
                                                 << descData3.uuid();
     QSet<QBluetoothUuid> outUuids;
-    foreach (const QLowEnergyDescriptor &desc, descriptors)
+    for (const QLowEnergyDescriptor &desc : descriptors)
         outUuids << desc.uuid();
     QCOMPARE(inUuids, outUuids);
 

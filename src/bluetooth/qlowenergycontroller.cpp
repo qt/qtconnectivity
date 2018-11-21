@@ -55,7 +55,11 @@
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include "qlowenergycontroller_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
+#include "qtbluetoothglobal_p.h"
 #include "qlowenergycontroller_winrt_p.h"
+#if QT_CONFIG(winrt_btle_no_pairing)
+#include "qlowenergycontroller_winrt_new_p.h"
+#endif
 #elif defined(QT_WIN_BLUETOOTH)
 #include "qlowenergycontroller_win_p.h"
 #else
@@ -67,6 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
 /*!
     \class QLowEnergyController
@@ -312,7 +317,12 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
     return new QLowEnergyControllerPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
     Q_UNUSED(role);
+#if QT_CONFIG(winrt_btle_no_pairing)
+    return createWinRTLowEnergyController();
+#else
+    qCDebug(QT_BT_WINRT) << "Using pre 15063 low energy controller";
     return new QLowEnergyControllerPrivateWinRT();
+#endif
 #elif defined(QT_WIN_BLUETOOTH)
     return new QLowEnergyControllerPrivateWin32();
 #else

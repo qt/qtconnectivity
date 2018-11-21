@@ -114,6 +114,7 @@ public:
 
     ControllerState state() const;
 
+    // TODO Qt6 remove this property. It is not longer needed when using Bluez DBus backend
     RemoteAddressType remoteAddressType() const;
     void setRemoteAddressType(RemoteAddressType type);
 

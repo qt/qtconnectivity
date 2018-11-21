@@ -45,6 +45,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qendian.h>
 
 #include <algorithm>
 
@@ -80,7 +81,8 @@ struct AdvertisementData {
 
     // For now, we "parse":
     QString localName;
-    QList<QBluetoothUuid> serviceUuids;
+    QVector<QBluetoothUuid> serviceUuids;
+    QHash<quint16, QByteArray> manufacturerData;
     // TODO: other keys probably?
     AdvertisementData(NSDictionary *AdvertisementData);
 };
@@ -104,6 +106,12 @@ AdvertisementData::AdvertisementData(NSDictionary *advertisementData)
         NSArray *uuids = static_cast<NSArray *>(value);
         for (CBUUID *cbUuid in uuids)
             serviceUuids << qt_uuid(cbUuid);
+    }
+
+    value = [advertisementData objectForKey:CBAdvertisementDataManufacturerDataKey];
+    if (value && [value isKindOfClass:[NSData class]]) {
+        QByteArray data = QByteArray::fromNSData(static_cast<NSData *>(value));
+        manufacturerData.insert(qFromLittleEndian<quint16>(data.constData()), data.mid(2));
     }
 }
 
@@ -316,10 +324,12 @@ QT_USE_NAMESPACE
     if (RSSI)
         newDeviceInfo.setRssi([RSSI shortValue]);
 
-    if (qtAdvData.serviceUuids.size()) {
-        newDeviceInfo.setServiceUuids(qtAdvData.serviceUuids,
-                                      QBluetoothDeviceInfo::DataIncomplete);
-    }
+    if (qtAdvData.serviceUuids.size())
+        newDeviceInfo.setServiceUuids(qtAdvData.serviceUuids);
+
+    const QList<quint16> keys = qtAdvData.manufacturerData.keys();
+    for (quint16 key : keys)
+        newDeviceInfo.setManufacturerData(key, qtAdvData.manufacturerData.value(key));
 
     // CoreBluetooth scans only for LE devices.
     newDeviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);

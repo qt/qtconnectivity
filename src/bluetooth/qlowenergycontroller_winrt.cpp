@@ -185,7 +185,7 @@ public slots:
             GattCharacteristicProperties properties;
             hr = characteristic->get_CharacteristicProperties(&properties);
             Q_ASSERT_SUCCEEDED(hr);
-            charData.properties = QLowEnergyCharacteristic::PropertyTypes(properties);
+            charData.properties = QLowEnergyCharacteristic::PropertyTypes(properties & 0xff);
             if (charData.properties & QLowEnergyCharacteristic::Read) {
                 ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                 hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
@@ -292,7 +292,7 @@ QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
 
     qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
-    for (const ValueChangedEntry &entry : mValueChangedTokens)
+    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens))
         entry.characteristic->remove_ValueChanged(entry.token);
 }
 
@@ -412,8 +412,12 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
                 setError(QLowEnergyController::ConnectionError);
                 setState(QLowEnergyController::UnconnectedState);
                 return;
-            } else {
-                Q_ASSERT_SUCCEEDED(hr);
+            } else if (hr != S_OK) {
+                qCWarning(QT_BT_WINRT) << "Connecting to device failed: "
+                                       << qt_error_string(hr);
+                setError(QLowEnergyController::ConnectionError);
+                setState(QLowEnergyController::UnconnectedState);
+                return;
             }
             ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
             hr = result->get_Value(&buffer);
@@ -469,7 +473,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
 {
     qCDebug(QT_BT_WINRT) << "Registering characteristic" << charUuid << "in service"
                          << serviceUuid << "for value changes";
-    for (const ValueChangedEntry &entry : mValueChangedTokens) {
+    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
         GUID guuid;
         HRESULT hr;
         hr = entry.characteristic->get_Uuid(&guuid);
@@ -662,7 +666,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
 
         HRESULT hr;
         hr = QEventDispatcherWinRT::runOnXamlThread([indicateChars, service, this]() {
-            for (const QBluetoothUuid &indicateChar : indicateChars)
+            for (const QBluetoothUuid &indicateChar : qAsConst(indicateChars))
                 registerForValueChanges(service, indicateChar);
             return S_OK;
         });

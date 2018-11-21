@@ -279,11 +279,11 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
         m_tlvWriter = new QTlvWriter(q);
 
         // write old TLVs
-        foreach (const Tlv &tlv, m_tlvs)
+        for (const Tlv &tlv : qAsConst(m_tlvs))
             m_tlvWriter->writeTlv(tlv.first, tlv.second);
 
         // write new NDEF message TLVs
-        foreach (const QNdefMessage &message, m_ndefWriteMessages)
+        for (const QNdefMessage &message : qAsConst(m_ndefWriteMessages))
             m_tlvWriter->writeTlv(0x03, message.toByteArray());
 
         // write terminator TLV

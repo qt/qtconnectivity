@@ -880,7 +880,9 @@ quint16 QLowEnergyControllerPrivateOSX::updateValueOfDescriptor(QLowEnergyHandle
 
 QSharedPointer<QLowEnergyServicePrivate> QLowEnergyControllerPrivateOSX::serviceForHandle(QLowEnergyHandle handle)
 {
-    foreach (QSharedPointer<QLowEnergyServicePrivate> service, discoveredServices.values()) {
+    const QList<QSharedPointer<QLowEnergyServicePrivate>> services
+            = discoveredServices.values();
+    for (QSharedPointer<QLowEnergyServicePrivate> service : services) {
         if (service->startHandle <= handle && handle <= service->endHandle)
             return service;
     }
@@ -963,7 +965,9 @@ void QLowEnergyControllerPrivateOSX::setErrorDescription(QLowEnergyController::E
 
 void QLowEnergyControllerPrivateOSX::invalidateServices()
 {
-    foreach (const QSharedPointer<QLowEnergyServicePrivate> service, discoveredServices.values()) {
+    const QList<QSharedPointer<QLowEnergyServicePrivate>> services
+            = discoveredServices.values();
+    for (const QSharedPointer<QLowEnergyServicePrivate> service : services) {
         service->setController(nullptr);
         service->setState(QLowEnergyService::InvalidService);
     }
@@ -1368,6 +1372,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
 
     if (const auto servicePrivate = [osx_d_ptr->peripheralManager addService:data]) {
         servicePrivate->setController(osx_d_ptr);
+        servicePrivate->state = QLowEnergyService::LocalService;
         osx_d_ptr->discoveredServices.insert(servicePrivate->uuid, servicePrivate);
         return new QLowEnergyService(servicePrivate, parent);
     }

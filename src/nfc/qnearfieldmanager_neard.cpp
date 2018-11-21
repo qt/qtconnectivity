@@ -62,9 +62,11 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     }
 
     bool found = false;
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
+    const QList<QDBusObjectPath> paths = reply.value().keys();
+    for (const QDBusObjectPath &path : paths) {
         const InterfaceList ifaceList = reply.value().value(path);
-        foreach (const QString &iface, ifaceList.keys()) {
+        const QStringList ifaces = ifaceList.keys();
+        for (const QString &iface : ifaces) {
             if (iface == QStringLiteral("org.neard.Adapter")) {
                 found = true;
                 m_adapterPath = path.path();
@@ -106,7 +108,8 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
         return false;
     }
 
-    foreach (const QDBusObjectPath &path, reply.value().keys()) {
+    const QList<QDBusObjectPath> paths = reply.value().keys();
+    for (const QDBusObjectPath &path : paths) {
         if (m_adapterPath == path.path())
             return true;
     }

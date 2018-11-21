@@ -501,7 +501,7 @@ void QLowEnergyControllerPrivateAndroid::servicesDiscovered(
     if (errorCode == QLowEnergyController::NoError) {
         //Android delivers all services in one go
         const QStringList list = foundServices.split(QStringLiteral(" "), QString::SkipEmptyParts);
-        foreach (const QString &entry, list) {
+        for (const QString &entry : list) {
             const QBluetoothUuid service(entry);
             if (service.isNull())
                 return;
@@ -550,7 +550,7 @@ void QLowEnergyControllerPrivateAndroid::serviceDetailsDiscoveryFinished(
             const QStringList list = javaIncludes.toString()
                                                  .split(QStringLiteral(" "),
                                                         QString::SkipEmptyParts);
-            foreach (const QString &entry, list) {
+            for (const QString &entry : list) {
                 const QBluetoothUuid service(entry);
                 if (service.isNull())
                     return;

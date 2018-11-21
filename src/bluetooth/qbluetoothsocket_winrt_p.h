@@ -127,6 +127,8 @@ private slots:
 private:
     HRESULT handleConnectOpFinished(ABI::Windows::Foundation::IAsyncAction *action,
                                     ABI::Windows::Foundation::AsyncStatus status);
+
+    QIODevice::OpenMode requestedOpenMode = QIODevice::NotOpen;
 };
 
 QT_END_NAMESPACE

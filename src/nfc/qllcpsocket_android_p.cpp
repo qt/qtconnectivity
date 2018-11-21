@@ -208,7 +208,7 @@ qint64 QLlcpSocketPrivate::writeData(const char *data, qint64 len)
 qint64 QLlcpSocketPrivate::bytesAvailable() const
 {
     /*qint64 available = 0;
-    foreach (const QByteArray &datagram, m_receivedDatagrams)
+    for (const QByteArray &datagram : qAsConst(m_receivedDatagrams))
         available += datagram.length();
 
     return available;*/
@@ -217,7 +217,7 @@ qint64 QLlcpSocketPrivate::bytesAvailable() const
 
 bool QLlcpSocketPrivate::canReadLine() const
 {
-    /*foreach (const QByteArray &datagram, m_receivedDatagrams) {
+    /*for (const QByteArray &datagram : qAsConst(m_receivedDatagrams)) {
         if (datagram.contains('\n'))
             return true;
     }*/

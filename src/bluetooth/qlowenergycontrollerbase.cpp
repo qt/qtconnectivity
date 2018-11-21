@@ -70,7 +70,7 @@ bool QLowEnergyControllerPrivate::isValidLocalAdapter()
     const QList<QBluetoothHostInfo> foundAdapters = QBluetoothLocalDevice::allDevices();
     bool adapterFound = false;
 
-    foreach (const QBluetoothHostInfo &info, foundAdapters) {
+    for (const QBluetoothHostInfo &info : foundAdapters) {
         if (info.address() == localAdapter) {
             adapterFound = true;
             break;
@@ -255,10 +255,11 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 
 void QLowEnergyControllerPrivate::invalidateServices()
 {
-    foreach (const QSharedPointer<QLowEnergyServicePrivate> service, serviceList.values()) {
-        service->setController(0);
-        service->setState(QLowEnergyService::InvalidService);
-    }
+    for (QSharedPointer<QLowEnergyServicePrivate> service : serviceList.values())
+        service->setController(nullptr);
+
+    for (QSharedPointer<QLowEnergyServicePrivate> service : localServices.values())
+        service->setController(nullptr);
 
     serviceList.clear();
     localServices.clear();
@@ -273,12 +274,13 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
     // for it.
 
     const auto servicePrivate = QSharedPointer<QLowEnergyServicePrivate>::create();
-    servicePrivate->state = QLowEnergyService::LocalService;
     servicePrivate->setController(this);
+    servicePrivate->state = QLowEnergyService::LocalService;
     servicePrivate->uuid = service.uuid();
     servicePrivate->type = service.type() == QLowEnergyServiceData::ServiceTypePrimary
             ? QLowEnergyService::PrimaryService : QLowEnergyService::IncludedService;
-    foreach (QLowEnergyService * const includedService, service.includedServices()) {
+    const QList<QLowEnergyService *> includedServices = service.includedServices();
+    for (QLowEnergyService * const includedService : includedServices) {
         servicePrivate->includedServices << includedService->serviceUuid();
         includedService->d_ptr->type |= QLowEnergyService::IncludedService;
     }
@@ -287,14 +289,16 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
     const QLowEnergyHandle oldLastHandle = this->lastLocalHandle;
     servicePrivate->startHandle = ++this->lastLocalHandle; // Service declaration.
     this->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
-    foreach (const QLowEnergyCharacteristicData &cd, service.characteristics()) {
+    const QList<QLowEnergyCharacteristicData> characteristics = service.characteristics();
+    for (const QLowEnergyCharacteristicData &cd : characteristics) {
         const QLowEnergyHandle declHandle = ++this->lastLocalHandle;
         QLowEnergyServicePrivate::CharData charData;
         charData.valueHandle = ++this->lastLocalHandle;
         charData.uuid = cd.uuid();
         charData.properties = cd.properties();
         charData.value = cd.value();
-        foreach (const QLowEnergyDescriptorData &dd, cd.descriptors()) {
+        const QList<QLowEnergyDescriptorData> descriptors = cd.descriptors();
+        for (const QLowEnergyDescriptorData &dd : descriptors) {
             QLowEnergyServicePrivate::DescData descData;
             descData.uuid = dd.uuid();
             descData.value = dd.value();

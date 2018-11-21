@@ -21,7 +21,7 @@
     "obex_client_p.h", "obex_manager_p.h", "obex_objectpush1_bluez5_p.h",
     "obex_transfer1_bluez5_p.h", "obex_transfer_p.h", "objectmanager_p.h",
     "profile1_p.h", "properties_p.h", "service_p.h", "gattchar1_p.h",
-    "gattdesc1_p.h", "gattservice1_p.h",
+    "gattdesc1_p.h", "gattservice1_p.h", "profilemanager1_p.h", "battery1_p.h",
     # NFC auto-generated headers
     # Note: "adapter_p.h", "agent_p.h" and "manager_p.h" are duplicated here
     "dbusobjectmanager_p.h", "dbusproperties_p.h", "tag_p.h");

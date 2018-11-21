@@ -143,7 +143,7 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
     QPixmap pixmap;
 
 //! [handleMessage 2]
-    foreach (const QNdefRecord &record, message) {
+    for (const QNdefRecord &record : message) {
         if (record.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord textRecord(record);
 
