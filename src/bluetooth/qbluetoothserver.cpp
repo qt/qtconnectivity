@@ -167,9 +167,8 @@ QT_BEGIN_NAMESPACE
     Constructs a bluetooth server with \a parent and \a serverType.
 */
 QBluetoothServer::QBluetoothServer(QBluetoothServiceInfo::Protocol serverType, QObject *parent)
-    : QObject(parent), d_ptr(new QBluetoothServerPrivate(serverType))
+    : QObject(parent), d_ptr(new QBluetoothServerPrivate(serverType, this))
 {
-    d_ptr->q_ptr = this;
 }
 
 /*!

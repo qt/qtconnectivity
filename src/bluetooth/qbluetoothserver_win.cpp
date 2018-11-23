@@ -40,35 +40,134 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
+#include "qbluetoothlocaldevice.h"
+
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QSocketNotifier>
+
+#include <winsock2.h>
+#include <ws2bth.h>
+#include <bluetoothapis.h>
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType)
-    : maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
+
+QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType,
+                                                 QBluetoothServer *parent)
+    : maxPendingConnections(1), serverType(sType), q_ptr(parent),
+      m_lastError(QBluetoothServer::NoError)
 {
-    if (sType == QBluetoothServiceInfo::RfcommProtocol)
-        socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
-    else
-        socket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol);
+    Q_Q(QBluetoothServer);
+    Q_ASSERT(sType == QBluetoothServiceInfo::RfcommProtocol);
+    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, q);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
 {
-    delete socket;
+}
+
+void QBluetoothServerPrivate::_q_newConnection()
+{
+    // disable socket notifier until application calls nextPendingConnection().
+    socketNotifier->setEnabled(false);
+
+    emit q_ptr->newConnection();
 }
 
 void QBluetoothServer::close()
 {
+    Q_D(QBluetoothServer);
+
+    delete d->socketNotifier;
+    d->socketNotifier = nullptr;
+
+    d->socket->close();
 }
 
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
-    Q_UNUSED(address);
-    Q_UNUSED(port);
     Q_D(QBluetoothServer);
-    d->m_lastError = UnsupportedProtocolError;
-    emit error(d->m_lastError);
-    return false;
+
+    if (d->serverType != QBluetoothServiceInfo::RfcommProtocol) {
+        qCWarning(QT_BT_WINDOWS) << "Protocol is not supported.";
+        d->m_lastError = QBluetoothServer::UnsupportedProtocolError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    if (d->socket->state() == QBluetoothSocket::ListeningState) {
+        qCWarning(QT_BT_WINDOWS) << "Socket already in listen mode, close server first";
+        return false;
+    }
+
+    const QBluetoothLocalDevice device(address);
+    if (!device.isValid()) {
+        qCWarning(QT_BT_WINDOWS) << "Device does not support Bluetooth or"
+                                 << address.toString() << "is not a valid local adapter";
+        d->m_lastError = QBluetoothServer::UnknownError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    const QBluetoothLocalDevice::HostMode hostMode = device.hostMode();
+    if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
+        d->m_lastError = QBluetoothServer::PoweredOffError;
+        emit error(d->m_lastError);
+        qCWarning(QT_BT_WINDOWS) << "Bluetooth device is powered off";
+        return false;
+    }
+
+    int sock = d->socket->socketDescriptor();
+    if (sock < 0) {
+        /* Negative socket descriptor is not always an error case.
+         * Another cause could be a call to close()/abort().
+         * Check whether we can recover by re-creating the socket.
+         */
+        delete d->socket;
+        d->socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+        sock = d->socket->socketDescriptor();
+        if (sock < 0) {
+            d->m_lastError = InputOutputError;
+            emit error(d->m_lastError);
+            return false;
+        }
+    }
+
+    if (sock < 0)
+        return false;
+
+    SOCKADDR_BTH addr = {};
+    addr.addressFamily = AF_BTH;
+    addr.port = (port == 0) ? BT_PORT_ANY : port;
+    addr.btAddr = address.toUInt64();
+
+    if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(SOCKADDR_BTH)) < 0) {
+        if (errno == EADDRINUSE)
+            d->m_lastError = ServiceAlreadyRegisteredError;
+        else
+            d->m_lastError = InputOutputError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    if (::listen(sock, d->maxPendingConnections) < 0) {
+        d->m_lastError = InputOutputError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    d->socket->setSocketState(QBluetoothSocket::ListeningState);
+
+    if (!d->socketNotifier) {
+        d->socketNotifier = new QSocketNotifier(d->socket->socketDescriptor(),
+                                                QSocketNotifier::Read, this);
+        connect(d->socketNotifier, &QSocketNotifier::activated, this, [d](){
+            d->_q_newConnection();
+        });
+    }
+
+    return true;
 }
 
 void QBluetoothServer::setMaxPendingConnections(int numConnections)
@@ -78,22 +177,53 @@ void QBluetoothServer::setMaxPendingConnections(int numConnections)
 
 bool QBluetoothServer::hasPendingConnections() const
 {
-    return false;
+    Q_D(const QBluetoothServer);
+
+    if (!d || !d->socketNotifier)
+        return false;
+
+    // if the socket notifier is disabled there is a pending connection waiting for us to accept.
+    return !d->socketNotifier->isEnabled();
 }
 
 QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 {
-    return 0;
+    Q_D(QBluetoothServer);
+
+    if (!hasPendingConnections())
+        return nullptr;
+
+    if (d->serverType != QBluetoothServiceInfo::RfcommProtocol)
+        return nullptr;
+
+    SOCKADDR_BTH addr = {};
+    int length = sizeof(SOCKADDR_BTH);
+    int pending = ::accept(d->socket->socketDescriptor(),
+                           reinterpret_cast<sockaddr *>(&addr), &length);
+
+    QBluetoothSocket *newSocket = nullptr;
+
+    if (pending >= 0) {
+        newSocket = new QBluetoothSocket();
+        newSocket->setSocketDescriptor(pending, QBluetoothServiceInfo::RfcommProtocol);
+    }
+
+    d->socketNotifier->setEnabled(true);
+    return newSocket;
 }
 
 QBluetoothAddress QBluetoothServer::serverAddress() const
 {
-    return QBluetoothAddress();
+    Q_D(const QBluetoothServer);
+
+    return d->socket->localAddress();
 }
 
 quint16 QBluetoothServer::serverPort() const
 {
-    return 0;
+    Q_D(const QBluetoothServer);
+
+    return d->socket->localPort();
 }
 
 void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)

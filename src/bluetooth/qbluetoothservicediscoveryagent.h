@@ -111,10 +111,6 @@ Q_SIGNALS:
 
 private:
     QBluetoothServiceDiscoveryAgentPrivate *d_ptr;
-
-#ifdef QT_WIN_BLUETOOTH
-    Q_PRIVATE_SLOT(d_func(), void _q_nextSdpScan(QVariant input))
-#endif
 };
 
 QT_END_NAMESPACE

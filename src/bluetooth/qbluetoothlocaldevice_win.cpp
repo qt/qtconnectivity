@@ -100,39 +100,34 @@ void QBluetoothLocalDevice::setHostMode(
         return;
 
     if (requestedMode == QBluetoothLocalDevice::HostPoweredOff) {
-        if (::BluetoothIsDiscoverable(NULL)
-                && !::BluetoothEnableDiscovery(NULL, FALSE)) {
+        if (::BluetoothIsDiscoverable(nullptr)
+                && !::BluetoothEnableDiscovery(nullptr, FALSE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to disable the discoverable mode";
             emit error(QBluetoothLocalDevice::UnknownError);
             return;
         }
-        if (::BluetoothIsConnectable(NULL)
-                && !::BluetoothEnableIncomingConnections(NULL, FALSE)) {
+        if (::BluetoothIsConnectable(nullptr)
+                && !::BluetoothEnableIncomingConnections(nullptr, FALSE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to disable the connectable mode";
             emit error(QBluetoothLocalDevice::UnknownError);
             return;
         }
     } else if (requestedMode == QBluetoothLocalDevice::HostConnectable) {
-        if (::BluetoothIsDiscoverable(NULL)) {
-            if (!::BluetoothEnableDiscovery(NULL, FALSE)) {
-                qCWarning(QT_BT_WINDOWS) << "Unable to disable the discoverable mode";
-                emit error(QBluetoothLocalDevice::UnknownError);
-                return;
-            }
-        } else if (!::BluetoothEnableIncomingConnections(NULL, TRUE)) {
+        if (!::BluetoothIsConnectable(nullptr)
+                && !::BluetoothEnableIncomingConnections(nullptr, TRUE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to enable the connectable mode";
             emit error(QBluetoothLocalDevice::UnknownError);
             return;
         }
     } else if (requestedMode == QBluetoothLocalDevice::HostDiscoverable
                || requestedMode == QBluetoothLocalDevice::HostDiscoverableLimitedInquiry) {
-        if (!::BluetoothIsConnectable(NULL)
-                && !::BluetoothEnableIncomingConnections(NULL, TRUE)) {
+        if (!::BluetoothIsConnectable(nullptr)
+                && !::BluetoothEnableIncomingConnections(nullptr, TRUE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to enable the connectable mode";
             emit error(QBluetoothLocalDevice::UnknownError);
             return;
         }
-        if (!::BluetoothEnableDiscovery(NULL, TRUE)) {
+        if (!::BluetoothEnableDiscovery(nullptr, TRUE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to enable the discoverable mode";
             emit error(QBluetoothLocalDevice::UnknownError);
             return;
@@ -149,9 +144,9 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
         return HostPoweredOff;
     }
 
-    if (::BluetoothIsDiscoverable(NULL))
+    if (::BluetoothIsDiscoverable(nullptr))
         return HostDiscoverable;
-    if (::BluetoothIsConnectable(NULL))
+    if (::BluetoothIsConnectable(nullptr))
         return HostConnectable;
     return HostPoweredOff;
 }
@@ -170,18 +165,21 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 {
     Q_UNUSED(address);
     Q_UNUSED(pairing);
+    Q_UNIMPLEMENTED();
 }
 
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     const QBluetoothAddress &address) const
 {
     Q_UNUSED(address);
+    Q_UNIMPLEMENTED();
     return Unpaired;
 }
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 {
     Q_UNUSED(confirmation);
+    Q_UNIMPLEMENTED();
 }
 
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(
@@ -230,7 +228,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevicePrivate::localAdapters()
 
     QList<QBluetoothHostInfo> foundAdapters;
 
-    HANDLE hRadio = 0;
+    HANDLE hRadio = nullptr;
     if (const HBLUETOOTH_RADIO_FIND hSearch = ::BluetoothFindFirstRadio(&params, &hRadio)) {
         for (;;) {
             BLUETOOTH_RADIO_INFO radio;

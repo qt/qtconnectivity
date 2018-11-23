@@ -165,6 +165,7 @@ public:
 #endif
 #ifdef QT_WIN_BLUETOOTH
     void _q_nextSdpScan(const QVariant &input);
+    bool serviceMatches(const QBluetoothServiceInfo &info);
 #endif
 
 private:

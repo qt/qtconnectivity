@@ -104,7 +104,6 @@ public:
                          const QByteArray &newValue) override;
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
-
                                    QLowEnergyHandle startHandle) override;
 };
 

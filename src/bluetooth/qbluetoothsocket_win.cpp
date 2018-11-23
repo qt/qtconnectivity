@@ -57,6 +57,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 QBluetoothSocketPrivateWin::QBluetoothSocketPrivateWin()
     : QBluetoothSocketBasePrivate()
 {
+    WSAData wsadata = {};
+    ::WSAStartup(MAKEWORD(2, 0), &wsadata);
 }
 
 QBluetoothSocketPrivateWin::~QBluetoothSocketPrivateWin()
@@ -73,19 +75,16 @@ bool QBluetoothSocketPrivateWin::ensureNativeSocket(QBluetoothServiceInfo::Proto
             return true;
         abort();
     }
-
     socketType = type;
 
-    switch (type) {
-    case QBluetoothServiceInfo::RfcommProtocol:
-        socket = ::socket(AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM);
-        break;
-    default:
-        socket = INVALID_SOCKET;
+    if (type != QBluetoothServiceInfo::RfcommProtocol) {
+        socket = int(INVALID_SOCKET);
         errorString = QBluetoothSocket::tr("Unsupported protocol. Win32 only supports RFCOMM sockets");
         q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return false;
     }
+
+    socket = ::socket(AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM);
 
     if (static_cast<SOCKET>(socket) == INVALID_SOCKET) {
         const int error = ::WSAGetLastError();
@@ -157,27 +156,14 @@ void QBluetoothSocketPrivateWin::connectToService(
 
     // we are checking the service protocol and not socketType()
     // socketType will change in ensureNativeSocket()
-    if (service.socketProtocol() == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT_WINDOWS) << "QBluetoothSocket::connectToService cannot "
-                                  "connect with 'UnknownProtocol' (type provided by given service)";
+    if (service.socketProtocol() != QBluetoothServiceInfo::RfcommProtocol) {
+        qCWarning(QT_BT_WINDOWS) << "QBluetoothSocket::connectToService called with unsupported protocol";
         errorString = QBluetoothSocket::tr("Socket type not supported");
         q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
 
-    if (service.protocolServiceMultiplexer() > 0) {
-        Q_ASSERT(service.socketProtocol() == QBluetoothServiceInfo::L2capProtocol);
-
-        if (!ensureNativeSocket(QBluetoothServiceInfo::L2capProtocol)) {
-            errorString = QBluetoothSocket::tr("Unknown socket error");
-            q->setSocketError(QBluetoothSocket::UnknownSocketError);
-            return;
-        }
-        connectToServiceHelper(service.device().address(), service.protocolServiceMultiplexer(),
-                               openMode);
-    } else if (service.serverChannel() > 0) {
-        Q_ASSERT(service.socketProtocol() == QBluetoothServiceInfo::RfcommProtocol);
-
+    if (service.serverChannel() > 0) {
         if (!ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
             errorString = QBluetoothSocket::tr("Unknown socket error");
             q->setSocketError(QBluetoothSocket::UnknownSocketError);
@@ -195,14 +181,13 @@ void QBluetoothSocketPrivateWin::connectToService(
         q->doDeviceDiscovery(service, openMode);
     }
 }
+
 void QBluetoothSocketPrivateWin::_q_writeNotify()
 {
     Q_Q(QBluetoothSocket);
 
     if (state == QBluetoothSocket::ConnectingState) {
-        updateAddressesAndPorts();
         q->setSocketState(QBluetoothSocket::ConnectedState);
-        emit q->connected();
         connectWriteNotifier->setEnabled(false);
     } else {
         if (txBuffer.isEmpty()) {
@@ -220,7 +205,7 @@ void QBluetoothSocketPrivateWin::_q_writeNotify()
             q->setSocketError(QBluetoothSocket::NetworkError);
         } else if (writtenBytes <= size) {
             // add remainder back to buffer
-            char *remainder = &buf[writtenBytes];
+            const char *remainder = &buf[writtenBytes];
             txBuffer.ungetBlock(remainder, size - writtenBytes);
             if (writtenBytes > 0)
                 emit q->bytesWritten(writtenBytes);
@@ -264,6 +249,9 @@ void QBluetoothSocketPrivateWin::_q_readNotify()
         }
 
         q->disconnectFromService();
+    } else if (bytesRead == 0) {
+        q->setSocketError(QBluetoothSocket::RemoteHostClosedError);
+        q->setSocketState(QBluetoothSocket::UnconnectedState);
     } else {
         const int unusedBytes = QPRIVATELINEARBUFFER_BUFFERSIZE -  bytesRead;
         buffer.chop(unusedBytes);
@@ -280,11 +268,8 @@ void QBluetoothSocketPrivateWin::_q_exceptNotify()
     errorString = qt_error_string(error);
     q->setSocketError(QBluetoothSocket::UnknownSocketError);
 
-    if (state == QBluetoothSocket::ConnectingState) {
+    if (state == QBluetoothSocket::ConnectingState)
         abort();
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
-        emit q->disconnected();
-    }
 }
 
 void QBluetoothSocketPrivateWin::connectToService(
@@ -348,55 +333,104 @@ void QBluetoothSocketPrivateWin::abort()
     delete exceptNotifier;
     exceptNotifier = nullptr;
 
-    m_localAddress.clear();
-    m_localPort = 0;
-    m_peerAddress.clear();
-    m_peerPort = 0;
-
     // We don't transition through Closing for abort, so
     // we don't call disconnectFromService or QBluetoothSocket::close
     ::closesocket(socket);
-    socket = INVALID_SOCKET;
+    socket = int(INVALID_SOCKET);
+
+    Q_Q(QBluetoothSocket);
+
+    const bool wasConnected = q->state() == QBluetoothSocket::ConnectedState;
+    q->setSocketState(QBluetoothSocket::UnconnectedState);
+    if (wasConnected) {
+        q->setOpenMode(QIODevice::NotOpen);
+        emit q->readChannelFinished();
+    }
 }
 
 QString QBluetoothSocketPrivateWin::localName() const
 {
-    const QBluetoothLocalDevice device(m_localAddress);
+    const QBluetoothAddress localAddr = localAddress();
+    if (localAddr == QBluetoothAddress())
+        return {};
+    const QBluetoothLocalDevice device(localAddr);
     return device.name();
 }
 
 QBluetoothAddress QBluetoothSocketPrivateWin::localAddress() const
 {
-    return m_localAddress;
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET)
+        return {};
+    SOCKADDR_BTH localAddr = {};
+    int localAddrLength = sizeof(localAddr);
+    const int localResult = ::getsockname(socket, reinterpret_cast<sockaddr *>(&localAddr), &localAddrLength);
+    if (localResult == SOCKET_ERROR) {
+        const int error = ::WSAGetLastError();
+        qCWarning(QT_BT_WINDOWS) << "Error getting local address" << error << qt_error_string(error);
+        return {};
+    }
+    return QBluetoothAddress(localAddr.btAddr);
 }
 
 quint16 QBluetoothSocketPrivateWin::localPort() const
 {
-    return m_localPort;
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET)
+        return {};
+    SOCKADDR_BTH localAddr = {};
+    int localAddrLength = sizeof(localAddr);
+    const int localResult = ::getsockname(socket, reinterpret_cast<sockaddr *>(&localAddr), &localAddrLength);
+    if (localResult == SOCKET_ERROR) {
+        const int error = ::WSAGetLastError();
+        qCWarning(QT_BT_WINDOWS) << "Error getting local port" << error << qt_error_string(error);
+        return {};
+    }
+    return localAddr.port;
 }
 
 QString QBluetoothSocketPrivateWin::peerName() const
 {
-    if (static_cast<SOCKET>(socket) == INVALID_SOCKET)
+    const QBluetoothAddress peerAddr = peerAddress();
+    if (peerAddr == QBluetoothAddress())
         return {};
     BLUETOOTH_DEVICE_INFO bdi = {};
     bdi.dwSize = sizeof(bdi);
-    bdi.Address.ullLong = m_peerAddress.toUInt64();
+    bdi.Address.ullLong = peerAddr.toUInt64();
     const DWORD res = ::BluetoothGetDeviceInfo(nullptr, &bdi);
-    if (res == ERROR_SUCCESS)
-        return QString::fromWCharArray(&bdi.szName[0]);
-    qCWarning(QT_BT_WINDOWS) << "Error calling BluetoothGetDeviceInfo" << res << qt_error_string(res);
-    return {};
+    if (res != ERROR_SUCCESS) {
+        qCWarning(QT_BT_WINDOWS) << "Error calling BluetoothGetDeviceInfo" << res << qt_error_string(res);
+        return {};
+    }
+    return QString::fromWCharArray(&bdi.szName[0]);
 }
 
 QBluetoothAddress QBluetoothSocketPrivateWin::peerAddress() const
 {
-    return m_peerAddress;
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET)
+        return {};
+    SOCKADDR_BTH peerAddr = {};
+    int peerAddrLength = sizeof(peerAddr);
+    const int peerResult = ::getpeername(socket, reinterpret_cast<sockaddr *>(&peerAddr), &peerAddrLength);
+    if (peerResult == SOCKET_ERROR) {
+        const int error = ::WSAGetLastError();
+        qCWarning(QT_BT_WINDOWS) << "Error getting peer address and port" << error << qt_error_string(error);
+        return {};
+    }
+    return QBluetoothAddress(peerAddr.btAddr);
 }
 
 quint16 QBluetoothSocketPrivateWin::peerPort() const
 {
-    return m_peerPort;
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET)
+        return {};
+    SOCKADDR_BTH peerAddr = {};
+    int peerAddrLength = sizeof(peerAddr);
+    const int peerResult = ::getpeername(socket, reinterpret_cast<sockaddr *>(&peerAddr), &peerAddrLength);
+    if (peerResult == SOCKET_ERROR) {
+        const int error = ::WSAGetLastError();
+        qCWarning(QT_BT_WINDOWS) << "Error getting peer address and port" << error << qt_error_string(error);
+        return {};
+    }
+    return peerAddr.port;
 }
 
 qint64 QBluetoothSocketPrivateWin::writeData(const char *data, qint64 maxSize)
@@ -427,8 +461,10 @@ qint64 QBluetoothSocketPrivateWin::writeData(const char *data, qint64 maxSize)
         if (!connectWriteNotifier)
             return -1;
 
-        if (txBuffer.isEmpty())
+        if (txBuffer.isEmpty()) {
             connectWriteNotifier->setEnabled(true);
+            QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
+        }
 
         char *txbuf = txBuffer.reserve(maxSize);
         ::memcpy(txbuf, data, maxSize);
@@ -459,19 +495,20 @@ void QBluetoothSocketPrivateWin::close()
         connectWriteNotifier->setEnabled(true);
 }
 
-bool QBluetoothSocketPrivateWin::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType_,
-                                           QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
+bool QBluetoothSocketPrivateWin::setSocketDescriptor(int socketDescriptor,
+                                                     QBluetoothServiceInfo::Protocol protocol,
+                                                     QBluetoothSocket::SocketState socketState,
+                                                     QBluetoothSocket::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
 
     abort();
 
-    socketType = socketType_;
+    socketType = protocol;
     socket = socketDescriptor;
 
     if (!createNotifiers())
         return false;
-    updateAddressesAndPorts();
     q->setSocketState(socketState);
     q->setOpenMode(openMode);
     if (socketState == QBluetoothSocket::ConnectedState) {
@@ -524,33 +561,6 @@ bool QBluetoothSocketPrivateWin::createNotifiers()
     readNotifier->setEnabled(false);
     exceptNotifier->setEnabled(false);
     return true;
-}
-
-void QBluetoothSocketPrivateWin::updateAddressesAndPorts()
-{
-    SOCKADDR_BTH localAddr = {};
-    int localAddrLength = sizeof(localAddr);
-    const int localResult = ::getsockname(socket, reinterpret_cast<sockaddr *>(&localAddr), &localAddrLength);
-    if (localResult != SOCKET_ERROR) {
-        m_localAddress = QBluetoothAddress(localAddr.btAddr);
-        m_localPort = localAddr.port;
-    } else {
-        const int error = ::WSAGetLastError();
-        qCWarning(QT_BT_WINDOWS) << "Error getting local address and port" << error << qt_error_string(error);
-        errorString = QBluetoothSocket::tr("Cannot get socket's local address and port");
-    }
-
-    SOCKADDR_BTH peerAddr = {};
-    int peerAddrLength = sizeof(peerAddr);
-    const int peerResult = ::getpeername(socket, reinterpret_cast<sockaddr *>(&peerAddr), &peerAddrLength);
-    if (peerResult != SOCKET_ERROR) {
-        m_peerAddress = QBluetoothAddress(peerAddr.btAddr);
-        m_peerPort = peerAddr.port;
-    } else {
-        const int error = ::WSAGetLastError();
-        qCWarning(QT_BT_WINDOWS) << "Error getting peer address and port" << error << qt_error_string(error);
-        errorString = QBluetoothSocket::tr("Cannot get socket's peer address and port");
-    }
 }
 
 bool QBluetoothSocketPrivateWin::configureSecurity()

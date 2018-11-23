@@ -252,9 +252,6 @@ qtConfig(bluez) {
 
     include(windows/windows.pri)
 
-    # remove dummy warning once platform port is complete
-    include(dummy/dummy.pri)
-
     SOURCES += \
         qbluetoothdevicediscoveryagent_win.cpp \
         qbluetoothlocaldevice_win.cpp \

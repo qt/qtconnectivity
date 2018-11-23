@@ -108,14 +108,9 @@ private slots:
 
 private:
     bool createNotifiers();
-    void updateAddressesAndPorts();
     bool configureSecurity();
 
     QSocketNotifier *exceptNotifier = nullptr;
-    QBluetoothAddress m_localAddress;
-    quint16 m_localPort = 0;
-    QBluetoothAddress m_peerAddress;
-    quint16 m_peerPort = 0;
 };
 
 QT_END_NAMESPACE

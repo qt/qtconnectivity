@@ -51,7 +51,7 @@
 
 #include <algorithm> // for std::max
 
-#include <setupapi.h>
+#include <SetupAPI.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,7 +81,7 @@ public:
             return;
 
         m_value = QByteArray(reinterpret_cast<const char *>(&gattValue->Data[0]),
-                gattValue->DataSize);
+                int(gattValue->DataSize));
     }
 
     QByteArray m_value;
@@ -109,12 +109,12 @@ static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
 {
     const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(
                 reinterpret_cast<const GUID *>(&serviceUuid),
-                NULL,
-                0,
+                nullptr,
+                nullptr,
                 DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 
     if (deviceInfoSet == INVALID_HANDLE_VALUE) {
-        *systemErrorCode = ::GetLastError();
+        *systemErrorCode = int(::GetLastError());
         return QString();
     }
 
@@ -128,11 +128,11 @@ static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
 
         if (!::SetupDiEnumDeviceInterfaces(
                     deviceInfoSet,
-                    NULL,
+                    nullptr,
                     reinterpret_cast<const GUID *>(&serviceUuid),
                     index++,
                     &deviceInterfaceData)) {
-            *systemErrorCode = ::GetLastError();
+            *systemErrorCode = int(::GetLastError());
             break;
         }
 
@@ -140,11 +140,11 @@ static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
         if (!::SetupDiGetDeviceInterfaceDetail(
                     deviceInfoSet,
                     &deviceInterfaceData,
-                    NULL,
+                    nullptr,
                     deviceInterfaceDetailDataSize,
                     &deviceInterfaceDetailDataSize,
-                    NULL)) {
-            const DWORD error = ::GetLastError();
+                    nullptr)) {
+            const int error = int(::GetLastError());
             if (error != ERROR_INSUFFICIENT_BUFFER) {
                 *systemErrorCode = error;
                 break;
@@ -156,7 +156,7 @@ static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
         deviceInfoData.cbSize = sizeof(deviceInfoData);
 
         QByteArray deviceInterfaceDetailDataBuffer(
-                    deviceInterfaceDetailDataSize, 0);
+                    int(deviceInterfaceDetailDataSize), 0);
 
         PSP_INTERFACE_DEVICE_DETAIL_DATA deviceInterfaceDetailData =
                 reinterpret_cast<PSP_INTERFACE_DEVICE_DETAIL_DATA>
@@ -169,10 +169,10 @@ static QString getServiceSystemPath(const QBluetoothAddress &deviceAddress,
                     deviceInfoSet,
                     &deviceInterfaceData,
                     deviceInterfaceDetailData,
-                    deviceInterfaceDetailDataBuffer.size(),
+                    DWORD(deviceInterfaceDetailDataBuffer.size()),
                     &deviceInterfaceDetailDataSize,
                     &deviceInfoData)) {
-            *systemErrorCode = ::GetLastError();
+            *systemErrorCode = int(::GetLastError());
             break;
         }
 
@@ -195,29 +195,28 @@ static HANDLE openSystemDevice(
         const QString &systemPath, QIODevice::OpenMode openMode, int *systemErrorCode)
 {
     DWORD desiredAccess = 0;
-    DWORD shareMode = 0;
+    DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
     if (openMode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
-        shareMode |= FILE_SHARE_READ;
     }
 
     if (openMode & QIODevice::WriteOnly) {
         desiredAccess |= GENERIC_WRITE;
-        shareMode |= FILE_SHARE_WRITE;
+        shareMode &= ~DWORD(FILE_SHARE_WRITE);
     }
 
     const HANDLE hDevice = ::CreateFile(
                 reinterpret_cast<const wchar_t *>(systemPath.utf16()),
                 desiredAccess,
                 shareMode,
-                NULL,
+                nullptr,
                 OPEN_EXISTING,
                 0,
-                NULL);
+                nullptr);
 
     *systemErrorCode = (INVALID_HANDLE_VALUE == hDevice)
-            ? ::GetLastError() : NO_ERROR;
+            ? int(::GetLastError()) : NO_ERROR;
     return hDevice;
 }
 
@@ -259,7 +258,7 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
         const HRESULT hr = ::BluetoothGATTGetServices(
                     hDevice,
                     servicesCount,
-                    foundServices.isEmpty() ? NULL : &foundServices[0],
+                    foundServices.isEmpty() ? nullptr : &foundServices[0],
                     &servicesCount,
                     BLUETOOTH_GATT_FLAG_NONE);
 
@@ -267,7 +266,7 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
             *systemErrorCode = NO_ERROR;
             return foundServices;
         } else {
-            const DWORD error = WIN32_FROM_HRESULT(hr);
+            const int error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
                 foundServices.resize(servicesCount);
             } else {
@@ -293,7 +292,7 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
                     hService,
                     gattService,
                     characteristicsCount,
-                    foundCharacteristics.isEmpty() ? NULL : &foundCharacteristics[0],
+                    foundCharacteristics.isEmpty() ? nullptr : &foundCharacteristics[0],
                     &characteristicsCount,
                     BLUETOOTH_GATT_FLAG_NONE);
 
@@ -301,7 +300,7 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
             *systemErrorCode = NO_ERROR;
             return foundCharacteristics;
         } else {
-            const DWORD error = WIN32_FROM_HRESULT(hr);
+            const int error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
                 foundCharacteristics.resize(characteristicsCount);
             } else {
@@ -324,7 +323,7 @@ static QByteArray getGattCharacteristicValue(
     USHORT valueBufferSize = 0;
     for (;;) {
         const auto valuePtr = valueBuffer.isEmpty()
-                ? NULL
+                ? nullptr
                 : reinterpret_cast<PBTH_LE_GATT_CHARACTERISTIC_VALUE>(valueBuffer.data());
 
         const HRESULT hr = ::BluetoothGATTGetCharacteristicValue(
@@ -338,11 +337,12 @@ static QByteArray getGattCharacteristicValue(
         if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
             return QByteArray(reinterpret_cast<const char *>(&valuePtr->Data[0]),
-                    valuePtr->DataSize);
+                    int(valuePtr->DataSize));
         } else {
-            const DWORD error = WIN32_FROM_HRESULT(hr);
+            const int error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
                 valueBuffer.resize(valueBufferSize);
+                valueBuffer.fill(0);
             } else {
                 *systemErrorCode = error;
                 return QByteArray();
@@ -362,7 +362,7 @@ static void setGattCharacteristicValue(
 
     QByteArray valueBuffer;
     QDataStream out(&valueBuffer, QIODevice::WriteOnly);
-    ULONG dataSize = value.size();
+    ULONG dataSize = ULONG(value.size());
     out.writeRawData(reinterpret_cast<const char *>(&dataSize), sizeof(dataSize));
     out.writeRawData(value.constData(), value.size());
 
@@ -396,7 +396,7 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
                     hService,
                     gattCharacteristic,
                     descriptorsCount,
-                    foundDescriptors.isEmpty() ? NULL : &foundDescriptors[0],
+                    foundDescriptors.isEmpty() ? nullptr : &foundDescriptors[0],
                     &descriptorsCount,
                     BLUETOOTH_GATT_FLAG_NONE);
 
@@ -404,7 +404,7 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
             *systemErrorCode = NO_ERROR;
             return foundDescriptors;
         } else {
-            const DWORD error = WIN32_FROM_HRESULT(hr);
+            const int error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
                 foundDescriptors.resize(descriptorsCount);
             } else {
@@ -427,7 +427,7 @@ static QByteArray getGattDescriptorValue(
     USHORT valueBufferSize = 0;
     for (;;) {
         const auto valuePtr = valueBuffer.isEmpty()
-                ? NULL
+                ? nullptr
                 : reinterpret_cast<PBTH_LE_GATT_DESCRIPTOR_VALUE>(valueBuffer.data());
 
         const HRESULT hr = ::BluetoothGATTGetDescriptorValue(
@@ -440,12 +440,18 @@ static QByteArray getGattDescriptorValue(
 
         if (SUCCEEDED(hr)) {
             *systemErrorCode = NO_ERROR;
+            if (gattDescriptor->DescriptorType == CharacteristicUserDescription) {
+                QString valueString = QString::fromUtf16(reinterpret_cast<const ushort *>(&valuePtr->Data[0]),
+                        valuePtr->DataSize/2);
+                return valueString.toUtf8();
+            }
             return QByteArray(reinterpret_cast<const char *>(&valuePtr->Data[0]),
-                    valuePtr->DataSize);
+                    int(valuePtr->DataSize));
         } else {
-            const DWORD error = WIN32_FROM_HRESULT(hr);
+            const int error = WIN32_FROM_HRESULT(hr);
             if (error == ERROR_MORE_DATA) {
                 valueBuffer.resize(valueBufferSize);
+                valueBuffer.fill(0);
             } else {
                 *systemErrorCode = error;
                 return QByteArray();
@@ -463,7 +469,7 @@ static void setGattDescriptorValue(
         return;
     }
 
-    const int requiredValueBufferSize = sizeof(BTH_LE_GATT_DESCRIPTOR_VALUE)
+    const int requiredValueBufferSize = int(sizeof(BTH_LE_GATT_DESCRIPTOR_VALUE))
                 + value.size();
 
     QByteArray valueBuffer(requiredValueBufferSize, 0);
@@ -486,7 +492,7 @@ static void setGattDescriptorValue(
     }
 
     gattValue->DataSize = ULONG(value.size());
-    ::memcpy(gattValue->Data, value.constData(), value.size());
+    ::memcpy(gattValue->Data, value.constData(), size_t(value.size()));
 
     const HRESULT hr = ::BluetoothGATTSetDescriptorValue(
                 hService,
@@ -579,7 +585,7 @@ static BTH_LE_UUID nativeLeUuidFromQtBluetoothUuid(const QBluetoothUuid &uuid)
     ::ZeroMemory(&gattUuid, sizeof(gattUuid));
     if (uuid.minimumSize() == 2) {
         gattUuid.IsShortUuid = TRUE;
-        gattUuid.Value.ShortUuid = uuid.data1; // other fields should be empty!
+        gattUuid.Value.ShortUuid = USHORT(uuid.data1); // other fields should be empty!
     } else {
         gattUuid.Value.LongUuid = uuid;
     }
@@ -701,7 +707,6 @@ QLowEnergyControllerPrivateWin32::~QLowEnergyControllerPrivateWin32()
 
 void QLowEnergyControllerPrivateWin32::init()
 {
-    Q_UNIMPLEMENTED();
 }
 
 void QLowEnergyControllerPrivateWin32::connectToDevice()
@@ -762,7 +767,7 @@ void QLowEnergyControllerPrivateWin32::disconnectFromDevice()
         thread = nullptr;
     }
 
-    for (const QSharedPointer<QLowEnergyServicePrivate> servicePrivate: serviceList)
+    for (const auto &servicePrivate: serviceList)
         closeSystemDevice(servicePrivate->hService);
 
     Q_Q(QLowEnergyController);
@@ -839,6 +844,11 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
         servicePrivate->hService = openSystemService(remoteDevice, service,
                                                      QIODevice::ReadOnly | QIODevice::WriteOnly,
                                                      &systemErrorCode);
+        if (systemErrorCode != NO_ERROR) {
+            servicePrivate->hService = openSystemService(remoteDevice, service,
+                                                         QIODevice::ReadOnly,
+                                                         &systemErrorCode);
+        }
     }
 
     if (systemErrorCode != NO_ERROR) {
@@ -853,7 +863,7 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
     servicePrivate->endHandle = servicePrivate->startHandle;
 
     const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
-            enumerateGattCharacteristics(servicePrivate->hService, NULL, &systemErrorCode);
+            enumerateGattCharacteristics(servicePrivate->hService, nullptr, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
         qCWarning(QT_BT_WINDOWS) << "Unable to get characteristics for service" << service.toString()
@@ -868,7 +878,7 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
 
         QLowEnergyServicePrivate::CharData detailsData;
 
-        detailsData.hValueChangeEvent = NULL;
+        detailsData.hValueChangeEvent = nullptr;
 
         detailsData.uuid = qtBluetoothUuidFromNativeLeUuid(
                     gattCharacteristic.CharacteristicUuid);
@@ -1150,7 +1160,7 @@ void QLowEnergyControllerPrivateWin32::jobFinished(const ThreadWorkerJob &job)
             } else {
                 if (charDetails.hValueChangeEvent) {
                     unregisterEvent(charDetails.hValueChangeEvent, &data.systemErrorCode);
-                    charDetails.hValueChangeEvent = NULL;
+                    charDetails.hValueChangeEvent = nullptr;
                 }
             }
 

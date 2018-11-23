@@ -49,54 +49,29 @@
 #include <initguid.h>
 #include <winsock2.h>
 #include <qt_windows.h>
-#include <bluetoothapis.h>
+
+#if defined(Q_CC_MINGW)
+// Workaround for MinGW headers declaring BluetoothSdpGetElementData incorrectly.
+# define BluetoothSdpGetElementData _BluetoothSdpGetElementData_notok
+# include <bluetoothapis.h>
+# undef BluetoothSdpGetElementData
+  extern "C" DWORD WINAPI BluetoothSdpGetElementData(LPBYTE, ULONG, PSDP_ELEMENT_DATA);
+#else
+# include <bluetoothapis.h>
+#endif
+
 #include <ws2bth.h>
-
-Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
-
-#define DEFINEFUNC(ret, func, ...) \
-    typedef ret (WINAPI *fp_##func)(__VA_ARGS__); \
-    static fp_##func p##func;
-
-#define RESOLVEFUNC(func) \
-    p##func = (fp_##func)resolveFunction(library, #func); \
-    if (!p##func) \
-        return false;
-
-DEFINEFUNC(DWORD, BluetoothSdpGetElementData, LPBYTE, ULONG, PSDP_ELEMENT_DATA)
+#include <iostream>
 
 QT_BEGIN_NAMESPACE
 
 struct FindServiceResult {
     QBluetoothServiceInfo info;
-    Qt::HANDLE hSearch;
-    int systemError;
+    Qt::HANDLE hSearch = INVALID_HANDLE_VALUE;
+    int systemError = NO_ERROR;
 };
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
-
-static inline QFunctionPointer resolveFunction(QLibrary *library, const char *func)
-{
-    const QFunctionPointer symbolFunctionPointer = library->resolve(func);
-    if (!symbolFunctionPointer)
-        qWarning("Cannot resolve '%s' in '%s'.", func, qPrintable(library->fileName()));
-    return symbolFunctionPointer;
-}
-
-static inline bool resolveFunctions(QLibrary *library)
-{
-    if (!library->isLoaded()) {
-        library->setFileName(QStringLiteral("bluetoothapis"));
-        if (!library->load()) {
-            qWarning("Unable to load '%s' library.", qPrintable(library->fileName()));
-            return false;
-        }
-    }
-
-    RESOLVEFUNC(BluetoothSdpGetElementData)
-
-    return true;
-}
 
 static QList<QVariant> spdContainerToVariantList(LPBYTE containerStream, ULONG containerLength);
 
@@ -152,19 +127,15 @@ static QVariant spdElementToVariant(const SDP_ELEMENT_DATA &element)
     }
     case SDP_TYPE_UUID: {
         switch (element.specificType) {
-        case SDP_ST_UUID128: {
-            //Not sure if this will work, might be evil
-            Q_ASSERT(sizeof(element.data.uuid128) == sizeof(quint128));
-
-            quint128 uuid128;
-            memcpy(&uuid128, &(element.data.uuid128), sizeof(quint128));
-
-            variant = QVariant::fromValue(QBluetoothUuid(uuid128));
-        }
+        case SDP_ST_UUID128:
+            variant = QVariant::fromValue(QBluetoothUuid(element.data.uuid128));
+            break;
         case SDP_ST_UUID32:
             variant = QVariant::fromValue(QBluetoothUuid(quint32(element.data.uuid32)));
+            break;
         case SDP_ST_UUID16:
             variant = QVariant::fromValue(QBluetoothUuid(quint16(element.data.uuid16)));
+            break;
         default:
             break;
         }
@@ -177,7 +148,7 @@ static QVariant spdElementToVariant(const SDP_ELEMENT_DATA &element)
     }
     case SDP_TYPE_URL: {
         const QString urlString = QString::fromLocal8Bit(reinterpret_cast<const char*>(element.data.url.value),
-                                                   (int)element.data.url.length);
+                                                   int(element.data.url.length));
         const QUrl url(urlString);
         if (url.isValid())
             variant = QVariant::fromValue<QUrl>(url);
@@ -198,7 +169,7 @@ static QVariant spdElementToVariant(const SDP_ELEMENT_DATA &element)
         break;
     }
     case SDP_TYPE_BOOLEAN:
-        variant = QVariant::fromValue<bool>((bool)element.data.booleanVal);
+        variant = QVariant::fromValue<bool>(bool(element.data.booleanVal));
         break;
     case SDP_TYPE_NIL:
         break;
@@ -211,13 +182,13 @@ static QVariant spdElementToVariant(const SDP_ELEMENT_DATA &element)
 
 static QList<QVariant> spdContainerToVariantList(LPBYTE containerStream, ULONG containerLength)
 {
-    HBLUETOOTH_CONTAINER_ELEMENT iter = NULL;
-    SDP_ELEMENT_DATA element;
+    HBLUETOOTH_CONTAINER_ELEMENT iter = nullptr;
+    SDP_ELEMENT_DATA element = {};
 
     QList<QVariant> sequence;
 
     for (;;) {
-        const DWORD result = BluetoothSdpGetContainerElementData(containerStream,
+        const DWORD result = ::BluetoothSdpGetContainerElementData(containerStream,
                                                            containerLength,
                                                            &iter,
                                                            &element);
@@ -244,9 +215,9 @@ static BOOL SDP_CALLBACK bluetoothSdpCallback(ULONG attributeId, LPBYTE valueStr
 {
     QBluetoothServiceInfo *result = static_cast<QBluetoothServiceInfo*>(param);
 
-    SDP_ELEMENT_DATA element;
+    SDP_ELEMENT_DATA element = {};
 
-    if (pBluetoothSdpGetElementData(valueStream, streamSize, &element) == ERROR_SUCCESS)
+    if (::BluetoothSdpGetElementData(valueStream, streamSize, &element) == ERROR_SUCCESS) {
         switch (element.type) {
         case SDP_TYPE_UINT:
         case SDP_TYPE_INT:
@@ -257,6 +228,7 @@ static BOOL SDP_CALLBACK bluetoothSdpCallback(ULONG attributeId, LPBYTE valueStr
         case SDP_TYPE_SEQUENCE:
         case SDP_TYPE_ALTERNATIVE: {
             const QVariant variant = spdElementToVariant(element);
+
             result->setAttribute(attributeId, variant);
             break;
         }
@@ -265,7 +237,7 @@ static BOOL SDP_CALLBACK bluetoothSdpCallback(ULONG attributeId, LPBYTE valueStr
         default:
             break;
         }
-
+    }
     return true;
 }
 
@@ -281,13 +253,12 @@ enum {
 static FindServiceResult findNextService(HANDLE hSearch)
 {
     FindServiceResult result;
-    result.systemError = NO_ERROR;
     result.hSearch = hSearch;
 
     QByteArray resultBuffer(2048, 0);
     WSAQUERYSET *resultQuery = reinterpret_cast<WSAQUERYSET*>(resultBuffer.data());
     DWORD resultBufferSize = DWORD(resultBuffer.size());
-    const int resultCode = WSALookupServiceNext(hSearch,
+    const int resultCode = ::WSALookupServiceNext(hSearch,
                                                 WSAControlFlags,
                                                 &resultBufferSize,
                                                 resultQuery);
@@ -295,12 +266,12 @@ static FindServiceResult findNextService(HANDLE hSearch)
     if (resultCode == SOCKET_ERROR) {
         result.systemError = ::WSAGetLastError();
         if (result.systemError == WSA_E_NO_MORE)
-            WSALookupServiceEnd(hSearch);
+            ::WSALookupServiceEnd(hSearch);
         return result;
      }
 
     if (resultQuery->lpBlob
-            && BluetoothSdpEnumAttributes(resultQuery->lpBlob->pBlobData,
+            && ::BluetoothSdpEnumAttributes(resultQuery->lpBlob->pBlobData,
                                           resultQuery->lpBlob->cbSize,
                                           bluetoothSdpCallback,
                                           &result.info)) {
@@ -313,38 +284,35 @@ static FindServiceResult findNextService(HANDLE hSearch)
 
 static FindServiceResult findFirstService(const QBluetoothAddress &address)
 {
-    //### should we try for 2.2 on all platforms ??
-    WSAData wsadata;
+    WSAData wsadata = {};
     FindServiceResult result;
-    result.hSearch = INVALID_HANDLE_VALUE;
 
     // IPv6 requires Winsock v2.0 or better.
-    if (WSAStartup(MAKEWORD(2, 0), &wsadata) != 0) {
+    if (::WSAStartup(MAKEWORD(2, 0), &wsadata) != 0) {
         result.systemError = ::WSAGetLastError();
         return result;
     }
 
     const QString addressAsString = QStringLiteral("(%1)").arg(address.toString());
-
-    QVector<WCHAR> addressAsWChar(addressAsString.size());
+    QVector<WCHAR> addressAsWChar(addressAsString.size() + 1);
     addressAsString.toWCharArray(addressAsWChar.data());
 
     GUID protocol = L2CAP_PROTOCOL_UUID; //Search for L2CAP and RFCOMM services
 
     WSAQUERYSET serviceQuery = {};
-    serviceQuery.dwSize = sizeof(WSAQUERYSET); //As specified by the windows documentation
-    serviceQuery.lpServiceClassId = &protocol; //The protocal of the service what is being queried
-    serviceQuery.dwNameSpace = NS_BTH; //As specified by the windows documentation
-    serviceQuery.dwNumberOfCsAddrs = 0;  //As specified by the windows documentation
-    serviceQuery.lpszContext = addressAsWChar.data(); //The remote address that query will run on
+    serviceQuery.dwSize = sizeof(WSAQUERYSET);
+    serviceQuery.lpServiceClassId = &protocol;
+    serviceQuery.dwNameSpace = NS_BTH;
+    serviceQuery.dwNumberOfCsAddrs = 0;
+    serviceQuery.lpszContext = addressAsWChar.data();
 
-    HANDLE hSearch;
-    const int resultCode = WSALookupServiceBegin(&serviceQuery,
+    HANDLE hSearch = nullptr;
+    const int resultCode = ::WSALookupServiceBegin(&serviceQuery,
                                                  WSAControlFlags,
                                                  &hSearch);
     if (resultCode == SOCKET_ERROR) {
         result.systemError = ::WSAGetLastError();
-        WSALookupServiceEnd(hSearch);
+        ::WSALookupServiceEnd(hSearch);
         return result;
     }
     return findNextService(hSearch);
@@ -363,8 +331,6 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
 {
     Q_UNUSED(deviceAdapter);
 
-    resolveFunctions(bluetoothapis());
-
     threadFind = new QThread;
     threadWorkerFind = new ThreadWorkerFind;
     threadWorkerFind->moveToThread(threadFind);
@@ -376,9 +342,8 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
 {
-    if (pendingFinish) {
+    if (pendingFinish)
         stop();
-    }
     if (threadFind)
         threadFind->quit();
 }
@@ -392,7 +357,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         const auto threadWorker = threadWorkerFind;
         QMetaObject::invokeMethod(threadWorkerFind, [threadWorker, address]()
         {
-            FindServiceResult result = findFirstService(address);
+            const FindServiceResult result = findFirstService(address);
             emit threadWorker->findFinished(QVariant::fromValue(result));
         }, Qt::QueuedConnection);
     }
@@ -403,13 +368,29 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     pendingStop = true;
 }
 
+bool QBluetoothServiceDiscoveryAgentPrivate::serviceMatches(const QBluetoothServiceInfo &info)
+{
+    if (uuidFilter.isEmpty())
+        return true;
+
+    if (uuidFilter.contains(info.serviceUuid()))
+        return true;
+
+    const QList<QBluetoothUuid> serviceClassUuids = info.serviceClassUuids();
+    for (const QBluetoothUuid &uuid : serviceClassUuids)
+        if (uuidFilter.contains(uuid))
+            return true;
+
+    return false;
+}
+
 void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &input)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
     auto result = input.value<FindServiceResult>();
 
     if (pendingStop) {
-        WSALookupServiceEnd(result.hSearch);
+        ::WSALookupServiceEnd(result.hSearch);
         pendingStop = false;
         pendingFinish = false;
         emit q->canceled();
@@ -418,7 +399,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
             result.systemError = NO_ERROR;
         } else if (result.systemError != NO_ERROR) {
             if (result.hSearch != INVALID_HANDLE_VALUE)
-                WSALookupServiceEnd(result.hSearch);
+                ::WSALookupServiceEnd(result.hSearch);
             error = (result.systemError == ERROR_INVALID_HANDLE) ?
                         QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError
                       : QBluetoothServiceDiscoveryAgent::InputOutputError;
@@ -426,13 +407,17 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
             qCWarning(QT_BT_WINDOWS) << errorString;
             emit q->error(this->error);
         } else {
-            result.info.setDevice(discoveredDevices.at(0));
-            if (result.info.isValid()) {
-                if (!isDuplicatedService(result.info)) {
-                    discoveredServices.append(result.info);
-                    emit q->serviceDiscovered(result.info);
+
+            if (serviceMatches(result.info)) {
+                result.info.setDevice(discoveredDevices.at(0));
+                if (result.info.isValid()) {
+                    if (!isDuplicatedService(result.info)) {
+                        discoveredServices.append(result.info);
+                        emit q->serviceDiscovered(result.info);
+                    }
                 }
             }
+
             const auto threadWorker = threadWorkerFind;
             const auto hSearch = result.hSearch;
             QMetaObject::invokeMethod(threadWorkerFind, [threadWorker, hSearch]()

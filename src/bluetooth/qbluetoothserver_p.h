@@ -57,7 +57,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetooth.h"
 
-#if QT_CONFIG(bluez)
+#if QT_CONFIG(bluez) || defined(QT_WIN_BLUETOOTH)
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
 
@@ -81,7 +81,6 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
 class QBluetoothSocket;
-
 class QBluetoothServer;
 
 #ifndef QT_OSX_BLUETOOTH
@@ -91,7 +90,7 @@ class QBluetoothServerPrivate
     Q_DECLARE_PUBLIC(QBluetoothServer)
 
 public:
-    QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol serverType);
+    QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol serverType, QBluetoothServer *parent);
     ~QBluetoothServerPrivate();
 
 #if QT_CONFIG(bluez)
@@ -100,6 +99,9 @@ public:
     QBluetooth::SecurityFlags socketSecurityLevel() const;
     static QBluetoothSocket *createSocketForServer(
                 QBluetoothServiceInfo::Protocol socketType = QBluetoothServiceInfo::RfcommProtocol);
+#endif
+#if defined(QT_WIN_BLUETOOTH)
+    void _q_newConnection();
 #endif
 
 public:
@@ -114,7 +116,7 @@ protected:
 
 private:
     QBluetoothServer::Error m_lastError;
-#if QT_CONFIG(bluez)
+#if QT_CONFIG(bluez) || defined(QT_WIN_BLUETOOTH)
     QSocketNotifier *socketNotifier = nullptr;
 #elif defined(QT_ANDROID_BLUETOOTH)
     ServerAcceptanceThread *thread;

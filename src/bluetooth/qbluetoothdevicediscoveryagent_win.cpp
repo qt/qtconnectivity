@@ -154,7 +154,7 @@ static QBluetoothDeviceInfo findFirstClassicDevice(
         *systemErrorCode = NO_ERROR;
         foundDevice = createClassicDeviceInfo(deviceInfo);
     } else {
-        *systemErrorCode = ::GetLastError();
+        *systemErrorCode = int(::GetLastError());
     }
 
     return foundDevice;
@@ -168,7 +168,7 @@ static QBluetoothDeviceInfo findNextClassicDevice(
 
     QBluetoothDeviceInfo foundDevice;
     if (!::BluetoothFindNextDevice(hSearch, &deviceInfo)) {
-        *systemErrorCode = ::GetLastError();
+        *systemErrorCode = int(::GetLastError());
     } else {
         *systemErrorCode = NO_ERROR;
         foundDevice = createClassicDeviceInfo(deviceInfo);
@@ -186,6 +186,7 @@ static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND hSearch)
 static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
         DWORD *systemErrorCode)
 {
+    // GUID_BLUETOOTHLE_DEVICE_INTERFACE
     const QUuid deviceInterfaceGuid("781aee18-7733-4ce4-add0-91f41c67b592");
     const HDEVINFO hDeviceInfo = ::SetupDiGetClassDevs(
                 reinterpret_cast<const GUID *>(&deviceInterfaceGuid),
@@ -194,7 +195,7 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
                 DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 
     if (hDeviceInfo == INVALID_HANDLE_VALUE) {
-        *systemErrorCode = ::GetLastError();
+        *systemErrorCode = int(::GetLastError());
         return QVector<QBluetoothDeviceInfo>();
     }
 
@@ -213,7 +214,7 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
                     reinterpret_cast<const GUID *>(&deviceInterfaceGuid),
                     index++,
                     &deviceInterfaceData)) {
-            *systemErrorCode = ::GetLastError();
+            *systemErrorCode = int(::GetLastError());
             break;
         }
 
@@ -226,7 +227,7 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
                     &deviceInterfaceDetailDataSize,
                     nullptr)) {
             if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-                *systemErrorCode = ::GetLastError();
+                *systemErrorCode = int(::GetLastError());
                 break;
             }
         }
@@ -251,7 +252,7 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
                     deviceInterfaceDetailDataBuffer.size(),
                     &deviceInterfaceDetailDataSize,
                     &deviceInfoData)) {
-            *systemErrorCode = ::GetLastError();
+            *systemErrorCode = int(::GetLastError());
             break;
         }
 
@@ -534,28 +535,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevice(
     auto end = discoveredDevices.end();
     auto deviceIt = std::find_if(discoveredDevices.begin(), end, equalAddress);
     if (deviceIt == end) {
-        qCDebug(QT_BT_WINDOWS) << "Emit: " << foundDevice.address();
+        qCDebug(QT_BT_WINDOWS) << "Found device: " << foundDevice.name() << foundDevice.address();
         discoveredDevices.append(foundDevice);
         emit q->deviceDiscovered(foundDevice);
-    } else if (*deviceIt == foundDevice
-               || deviceIt->coreConfigurations() == foundDevice.coreConfigurations()) {
-        qCDebug(QT_BT_WINDOWS) << "Duplicate: " << foundDevice.address();
     } else {
-        // We assume that if the existing device it is low energy, it means that
-        // the found device should be as classic, because it is impossible to get
-        // same low energy device.
-        if (deviceIt->coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-            *deviceIt = foundDevice;
-
-        // We assume that it is impossible to have multiple devices with same core
-        // configurations, which have one address. This possible only in case a device
-        // provided both low energy and classic features at the same time.
-        deviceIt->setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
-        deviceIt->setCached(foundDevice.isCached());
-
-        Q_Q(QBluetoothDeviceDiscoveryAgent);
-        qCDebug(QT_BT_WINDOWS) << "Updated: " << deviceIt->address();
-        emit q->deviceDiscovered(*deviceIt);
+        qCDebug(QT_BT_WINDOWS) << "Updating device:" << deviceIt->name() << deviceIt->address();
+        // merge service uuids
+        QList<QBluetoothUuid> uuids = deviceIt->serviceUuids();
+        uuids.append(foundDevice.serviceUuids());
+        const QSet<QBluetoothUuid> uuidSet = uuids.toSet();
+        if (deviceIt->serviceUuids().count() != uuidSet.count())
+            deviceIt->setServiceUuids(uuidSet.toList().toVector());
+        if (deviceIt->coreConfigurations() != foundDevice.coreConfigurations())
+            deviceIt->setCoreConfigurations(
+                        QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
     }
 }
 

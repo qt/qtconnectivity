@@ -324,6 +324,7 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
     return new QLowEnergyControllerPrivateWinRT();
 #endif
 #elif defined(QT_WIN_BLUETOOTH)
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateWin32();
 #else
     Q_UNUSED(role);
