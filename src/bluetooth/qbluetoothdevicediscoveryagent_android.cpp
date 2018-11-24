@@ -332,21 +332,29 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
                 updatedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
             }
 
-            if (!updatedFields.testFlag(QBluetoothDeviceInfo::Field::None)) {
+            if (lowEnergySearchTimeout > 0) {
+                if (discoveredDevices[i] != info) {
+                    if (discoveredDevices.at(i).name() == info.name()) {
+                        qCDebug(QT_BT_ANDROID) << "Almost Duplicate " << info.address()
+                                               << info.name() << "- replacing in place";
+                        discoveredDevices.replace(i, info);
+                        emit q->deviceDiscovered(info);
+                    }
+                } else {
+                    if (!updatedFields.testFlag(QBluetoothDeviceInfo::Field::None))
+                        emit q->deviceUpdated(discoveredDevices[i], updatedFields);
+                }
+
+                return;
+            }
+
+            discoveredDevices.replace(i, info);
+            emit q->deviceDiscovered(info);
+
+            if (!updatedFields.testFlag(QBluetoothDeviceInfo::Field::None))
                 emit q->deviceUpdated(discoveredDevices[i], updatedFields);
-                return;
-            }
 
-            if (discoveredDevices[i] == info)
-                return;
-
-            if (discoveredDevices.at(i).name() == info.name()) {
-                qCDebug(QT_BT_ANDROID) << "Almost Duplicate "<< info.address()
-                                       << info.name() << "- replacing in place";
-                discoveredDevices.replace(i, info);
-                emit q->deviceDiscovered(info);
-                return;
-            }
+            return;
         }
     }
 
