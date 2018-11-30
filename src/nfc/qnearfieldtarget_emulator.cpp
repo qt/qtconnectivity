@@ -201,7 +201,11 @@ void TagActivator::initialize()
     if (!tagMap.isEmpty())
         return;
 
+#ifndef BUILTIN_TESTDATA
     QDirIterator nfcTargets(QDir::currentPath(), QStringList(QStringLiteral("*.nfc")), QDir::Files);
+#else
+    QDirIterator nfcTargets(":/nfcdata", QStringList(QStringLiteral("*.nfc")), QDir::Files);
+#endif
     while (nfcTargets.hasNext()) {
         const QString targetFilename = nfcTargets.next();
 
