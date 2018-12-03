@@ -186,7 +186,6 @@ protected:
     explicit QBluetoothSocket(QBluetoothSocketBasePrivate *d,
                               QBluetoothServiceInfo::Protocol socketType,
                               QObject *parent = nullptr);
-    friend class QBluetoothServerPrivate;
 #endif
 #ifndef QT_OSX_BLUETOOTH
     QBluetoothSocketBasePrivate *d_ptr;
