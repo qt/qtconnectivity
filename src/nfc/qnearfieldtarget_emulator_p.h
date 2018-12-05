@@ -122,6 +122,8 @@ private:
     int timerId;
 };
 
+Q_GLOBAL_STATIC(TagActivator, globalTagActivator);
+
 QT_END_NAMESPACE
 
 #endif // QNEARFIELDTARGET_EMULATOR_P_H
