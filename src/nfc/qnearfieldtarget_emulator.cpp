@@ -51,7 +51,6 @@ QT_BEGIN_NAMESPACE
 
 static QMutex tagMutex;
 static QMap<TagBase *, bool> tagMap;
-static TagActivator tagActivator;
 
 TagType1::TagType1(TagBase *tag, QObject *parent)
 :   QNearFieldTagType1(parent), m_tag(tag)
@@ -201,7 +200,11 @@ void TagActivator::initialize()
     if (!tagMap.isEmpty())
         return;
 
+#ifndef BUILTIN_TESTDATA
     QDirIterator nfcTargets(QDir::currentPath(), QStringList(QStringLiteral("*.nfc")), QDir::Files);
+#else
+    QDirIterator nfcTargets(":/nfcdata", QStringList(QStringLiteral("*.nfc")), QDir::Files);
+#endif
     while (nfcTargets.hasNext()) {
         const QString targetFilename = nfcTargets.next();
 
@@ -242,11 +245,6 @@ void TagActivator::reset()
 
     qDeleteAll(tagMap.keys());
     tagMap.clear();
-}
-
-TagActivator *TagActivator::instance()
-{
-    return &tagActivator;
 }
 
 void TagActivator::timerEvent(QTimerEvent *e)
