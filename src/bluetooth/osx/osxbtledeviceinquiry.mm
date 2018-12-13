@@ -151,8 +151,10 @@ QT_USE_NAMESPACE
     [super dealloc];
 }
 
-- (void)timeout
+- (void)timeout:(id)sender
 {
+    Q_UNUSED(sender)
+
     if (internalState == InquiryActive) {
         [manager stopScan];
         [manager setDelegate:nil];

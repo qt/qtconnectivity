@@ -197,8 +197,10 @@ QT_END_NAMESPACE
     timeoutType = OSXBluetooth::OperationTimeout::none;
 }
 
-- (void)timeout
+- (void)timeout:(id)sender
 {
+    Q_UNUSED(sender)
+
     using namespace OSXBluetooth;
 
     Q_ASSERT(objectUnderWatch);

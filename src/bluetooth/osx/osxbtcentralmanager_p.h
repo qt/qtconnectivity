@@ -87,18 +87,6 @@ enum CentralManagerState
     CentralManagerDisconnecting
 };
 
-enum class OperationTimeout
-{
-    none,
-    serviceDiscovery,
-    includedServicesDiscovery,
-    characteristicsDiscovery,
-    characteristicRead,
-    descriptorsDiscovery,
-    descriptorRead,
-    characteristicWrite
-};
-
 // In Qt we work with handles and UUIDs. Core Bluetooth
 // has NSArrays (and nested NSArrays inside servces/characteristics).
 // To simplify a navigation, I need a simple way to map from a handle

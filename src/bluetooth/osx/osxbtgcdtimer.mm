@@ -44,7 +44,23 @@
 
 #include <algorithm>
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTGCDTimer)
+QT_USE_NAMESPACE
+using namespace OSXBluetooth;
+
+@implementation QT_MANGLE_NAMESPACE(OSXBTGCDTimer) {
+@private
+    qint64 timeoutMS;
+    qint64 timeoutStepMS;
+
+    // Optional:
+    id objectUnderWatch;
+    OperationTimeout timeoutType;
+
+    QElapsedTimer timer;
+    id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)> timeoutHandler;
+
+    bool cancelled;
+}
 
 - (instancetype)initWithDelegate:(id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)>)delegate
 {
@@ -52,9 +68,17 @@
         timeoutHandler = delegate;
         timeoutMS = 0;
         timeoutStepMS = 0;
+        objectUnderWatch = nil;
+        timeoutType  = OperationTimeout::none;
         cancelled = false;
     }
     return self;
+}
+
+- (void)watchAfter:(id)object withTimeoutType:(OperationTimeout)type
+{
+    objectUnderWatch = object;
+    timeoutType = type;
 }
 
 - (void)startWithTimeout:(qint64)ms step:(qint64)stepMS
@@ -86,9 +110,8 @@
 
     const qint64 elapsed = timer.elapsed();
     if (elapsed >= timeoutMS) {
-        [timeoutHandler timeout];
+        [timeoutHandler timeout:self];
     } else {
-        using namespace QT_PREPEND_NAMESPACE(OSXBluetooth);
         // Re-schedule:
         dispatch_queue_t leQueue(qt_LE_queue());
         Q_ASSERT(leQueue);
@@ -106,6 +129,18 @@
 {
     cancelled = true;
     timeoutHandler = nil;
+    objectUnderWatch = nil;
+    timeoutType = OperationTimeout::none;
+}
+
+- (id)objectUnderWatch
+{
+    return objectUnderWatch;
+}
+
+- (OperationTimeout)timeoutType
+{
+    return timeoutType;
 }
 
 @end
