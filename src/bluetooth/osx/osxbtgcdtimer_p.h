@@ -98,7 +98,7 @@ QT_BEGIN_NAMESPACE
 namespace OSXBluetooth {
 
 using GCDTimerObjC = QT_MANGLE_NAMESPACE(OSXBTGCDTimer);
-using GCDTimer = ObjCScopedPointer<GCDTimerObjC>;
+using GCDTimer = ObjCStrongReference<GCDTimerObjC>;
 
 } // namespace OSXBluetooth
 

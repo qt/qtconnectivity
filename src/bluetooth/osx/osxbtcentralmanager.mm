@@ -46,6 +46,7 @@
 #include <QtCore/qdebug.h>
 
 #include <algorithm>
+#include <vector>
 #include <limits>
 
 Q_DECLARE_METATYPE(QLowEnergyHandle)
@@ -92,13 +93,24 @@ ObjCStrongReference<NSError> qt_timeoutNSError(OperationTimeout type)
     return ObjCStrongReference<NSError>(nsError, false /*do not retain, done already*/);
 }
 
+auto qt_find_watchdog(const std::vector<GCDTimer> &watchdogs, id object, OperationTimeout type)
+{
+    return std::find_if(watchdogs.begin(), watchdogs.end(), [object, type](const GCDTimer &other){
+                        return [other objectUnderWatch] == object && [other timeoutType] == type;});
+}
+
 } // namespace OSXBluetooth
 
 QT_END_NAMESPACE
 
+QT_USE_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) (PrivateAPI)
 
+- (void)watchAfter:(id)object timeout:(OSXBluetooth::OperationTimeout)type;
+- (bool)objectIsUnderWatch:(id)object operation:(OSXBluetooth::OperationTimeout)type;
+- (void)stopWatchingAfter:(id)object operation:(OSXBluetooth::OperationTimeout)type;
+- (void)stopWatchers;
 - (void)retrievePeripheralAndConnect;
 - (void)connectToPeripheral;
 - (void)discoverIncludedServices;
@@ -125,6 +137,45 @@ QT_END_NAMESPACE
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTCentralManager)
+{
+@private
+    CBCentralManager *manager;
+    OSXBluetooth::CentralManagerState managerState;
+    bool disconnectPending;
+
+    QBluetoothUuid deviceUuid;
+
+    OSXBluetooth::LECBManagerNotifier *notifier;
+
+    // Quite a verbose service discovery machinery
+    // (a "graph traversal").
+    OSXBluetooth::ObjCStrongReference<NSMutableArray> servicesToVisit;
+    // The service we're discovering now (included services discovery):
+    NSUInteger currentService;
+    // Included services, we'll iterate through at the end of 'servicesToVisit':
+    OSXBluetooth::ObjCStrongReference<NSMutableArray> servicesToVisitNext;
+    // We'd like to avoid loops in a services' topology:
+    OSXBluetooth::ObjCStrongReference<NSMutableSet> visitedServices;
+
+    QList<QBluetoothUuid> servicesToDiscoverDetails;
+
+    OSXBluetooth::ServiceHash serviceMap;
+    OSXBluetooth::CharHash charMap;
+    OSXBluetooth::DescHash descMap;
+
+    QLowEnergyHandle lastValidHandle;
+
+    bool requestPending;
+    OSXBluetooth::RequestQueue requests;
+    QLowEnergyHandle currentReadHandle;
+
+    OSXBluetooth::ValueHash valuesToWrite;
+
+    qint64 timeoutMS;
+    std::vector<OSXBluetooth::GCDTimer> timeoutWatchdogs;
+
+    CBPeripheral *peripheral;
+}
 
 - (id)initWith:(OSXBluetooth::LECBManagerNotifier *)aNotifier
 {
@@ -140,7 +191,6 @@ QT_END_NAMESPACE
         lastValidHandle = 0;
         requestPending = false;
         currentReadHandle = 0;
-        timeoutType = OperationTimeout::none;
 
         if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("BLUETOOTH_GATT_TIMEOUT"))) {
             bool ok = false;
@@ -176,25 +226,44 @@ QT_END_NAMESPACE
     if (notifier)
         notifier->deleteLater();
 
+    [self stopWatchers];
     [super dealloc];
+}
+
+- (CBPeripheral *)peripheral
+{
+    return peripheral;
 }
 
 - (void)watchAfter:(id)object timeout:(OSXBluetooth::OperationTimeout)type
 {
     using namespace OSXBluetooth;
 
-    objectUnderWatch = object;
-    timeoutType = type;
-    [timeoutWatchdog cancelTimer];
-    timeoutWatchdog.reset([[GCDTimerObjC alloc] initWithDelegate:self]);
-    [timeoutWatchdog startWithTimeout:timeoutMS step:200];
+    GCDTimer newWatcher([[GCDTimerObjC alloc] initWithDelegate:self], false /*do not retain*/);
+    [newWatcher watchAfter:object withTimeoutType:type];
+    timeoutWatchdogs.push_back(newWatcher);
+    [newWatcher startWithTimeout:timeoutMS step:200];
 }
 
-- (void)stopWatchdog
+- (bool)objectIsUnderWatch:(id)object operation:(OSXBluetooth::OperationTimeout)type
 {
-    [timeoutWatchdog cancelTimer];
-    objectUnderWatch = nil;
-    timeoutType = OSXBluetooth::OperationTimeout::none;
+    return OSXBluetooth::qt_find_watchdog(timeoutWatchdogs, object, type) != timeoutWatchdogs.end();
+}
+
+- (void)stopWatchingAfter:(id)object operation:(OSXBluetooth::OperationTimeout)type
+{
+    auto pos = OSXBluetooth::qt_find_watchdog(timeoutWatchdogs, object, type);
+    if (pos != timeoutWatchdogs.end()) {
+        [*pos cancelTimer];
+        timeoutWatchdogs.erase(pos);
+    }
+}
+
+- (void)stopWatchers
+{
+    for (auto &watchdog : timeoutWatchdogs)
+        [watchdog cancelTimer];
+    timeoutWatchdogs.clear();
 }
 
 - (void)timeout:(id)sender
@@ -203,37 +272,45 @@ QT_END_NAMESPACE
 
     using namespace OSXBluetooth;
 
-    Q_ASSERT(objectUnderWatch);
-    NSLog(@"Timeout caused by: %@", objectUnderWatch);
-    const ObjCStrongReference<NSError> nsError(qt_timeoutNSError(timeoutType));
-    switch (timeoutType) {
+    GCDTimerObjC *watcher = static_cast<GCDTimerObjC *>(sender);
+    id cbObject = [watcher objectUnderWatch];
+    const OperationTimeout type = [watcher timeoutType];
+
+    Q_ASSERT([self objectIsUnderWatch:cbObject operation:type]);
+
+    NSLog(@"Timeout caused by: %@", cbObject);
+
+    // Note that after this switch the 'watcher' is released (we don't
+    // own it anymore), though GCD is probably still holding a reference.
+    const ObjCStrongReference<NSError> nsError(qt_timeoutNSError(type));
+    switch (type) {
     case OperationTimeout::serviceDiscovery:
         qCWarning(QT_BT_OSX, "Timeout in services discovery");
         [self peripheral:peripheral didDiscoverServices:nsError];
         break;
     case OperationTimeout::includedServicesDiscovery:
         qCWarning(QT_BT_OSX, "Timeout in included services discovery");
-        [self peripheral:peripheral didDiscoverIncludedServicesForService:objectUnderWatch error:nsError];
+        [self peripheral:peripheral didDiscoverIncludedServicesForService:cbObject error:nsError];
         break;
     case OperationTimeout::characteristicsDiscovery:
         qCWarning(QT_BT_OSX, "Timeout in characteristics discovery");
-        [self peripheral:peripheral didDiscoverCharacteristicsForService:objectUnderWatch error:nsError];
+        [self peripheral:peripheral didDiscoverCharacteristicsForService:cbObject error:nsError];
         break;
     case OperationTimeout::characteristicRead:
         qCWarning(QT_BT_OSX, "Timeout while reading a characteristic");
-        [self peripheral:peripheral didUpdateValueForCharacteristic:objectUnderWatch error:nsError];
+        [self peripheral:peripheral didUpdateValueForCharacteristic:cbObject error:nsError];
         break;
     case OperationTimeout::descriptorsDiscovery:
         qCWarning(QT_BT_OSX, "Timeout in descriptors discovery");
-        [self peripheral:peripheral didDiscoverDescriptorsForCharacteristic:objectUnderWatch error:nsError];
+        [self peripheral:peripheral didDiscoverDescriptorsForCharacteristic:cbObject error:nsError];
         break;
     case OperationTimeout::descriptorRead:
         qCWarning(QT_BT_OSX, "Timeout while reading a descriptor");
-        [self peripheral:peripheral didUpdateValueForDescriptor:objectUnderWatch error:nsError];
+        [self peripheral:peripheral didUpdateValueForDescriptor:cbObject error:nsError];
         break;
     case OperationTimeout::characteristicWrite:
         qCWarning(QT_BT_OSX, "Timeout while writing a characteristic with response");
-        [self peripheral:peripheral didWriteValueForCharacteristic:objectUnderWatch error:nsError];
+        [self peripheral:peripheral didWriteValueForCharacteristic:cbObject error:nsError];
     default:;
     }
 }
@@ -1121,7 +1198,7 @@ QT_END_NAMESPACE
     charMap.clear();
     descMap.clear();
     currentReadHandle = 0;
-    [self stopWatchdog];
+    [self stopWatchers];
     // TODO: also serviceToVisit/VisitNext and visitedServices ?
 }
 
@@ -1274,12 +1351,14 @@ QT_END_NAMESPACE
         return;
     }
 
-    if (objectUnderWatch != aPeripheral) {
-        // Timed out.
+    using namespace OSXBluetooth;
+    if (![self objectIsUnderWatch:aPeripheral operation:OperationTimeout::serviceDiscovery]) // Timed out already
         return;
-    }
 
-    [self stopWatchdog];
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    [self stopWatchingAfter:aPeripheral operation:OperationTimeout::serviceDiscovery];
+
     managerState = OSXBluetooth::CentralManagerIdle;
 
     if (error) {
@@ -1305,16 +1384,14 @@ QT_END_NAMESPACE
         return;
     }
 
-    if (service != objectUnderWatch) {
-        // Timed out.
+    if (![self objectIsUnderWatch:service operation:OperationTimeout::includedServicesDiscovery])
         return;
-    }
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
 
-    [self stopWatchdog];
+    [self stopWatchingAfter:service operation:OperationTimeout::includedServicesDiscovery];
     managerState = CentralManagerIdle;
 
     if (error) {
@@ -1382,14 +1459,14 @@ QT_END_NAMESPACE
         return;
     }
 
-    if (service != objectUnderWatch) {
-        // Timed out already?
-        return;
-    }
-
-    [self stopWatchdog];
-
     using namespace OSXBluetooth;
+
+    if (![self objectIsUnderWatch:service operation:OperationTimeout::characteristicsDiscovery])
+        return;
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    [self stopWatchingAfter:service operation:OperationTimeout::characteristicsDiscovery];
 
     Q_ASSERT_X(managerState != CentralManagerUpdating, Q_FUNC_INFO, "invalid state");
 
@@ -1409,21 +1486,21 @@ QT_END_NAMESPACE
 {
     Q_UNUSED(aPeripheral)
 
-    if (!notifier) {
-        // Detached.
+    if (!notifier) // Detached.
         return;
-    }
-
-    const bool readMatch = characteristic == objectUnderWatch;
-    if (readMatch)
-        [self stopWatchdog];
 
     using namespace OSXBluetooth;
+
+    QT_BT_MAC_AUTORELEASEPOOL;
+
+    const bool readMatch = [self objectIsUnderWatch:characteristic operation:OperationTimeout::characteristicRead];
+    if (readMatch)
+        [self stopWatchingAfter:characteristic operation:OperationTimeout::characteristicRead];
 
     Q_ASSERT_X(managerState != CentralManagerUpdating, Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
 
-    QT_BT_MAC_AUTORELEASEPOOL;
+
     // First, let's check if we're discovering a service details now.
     CBService *const service = characteristic.service;
     const QBluetoothUuid qtUuid(qt_uuid(service.UUID));
@@ -1497,12 +1574,12 @@ QT_END_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    if (characteristic != objectUnderWatch)
+    using namespace OSXBluetooth;
+
+    if (![self objectIsUnderWatch:characteristic operation:OperationTimeout::descriptorsDiscovery])
         return;
 
-    [self stopWatchdog];
-
-    using namespace OSXBluetooth;
+    [self stopWatchingAfter:characteristic operation:OperationTimeout::descriptorsDiscovery];
 
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
@@ -1535,12 +1612,12 @@ QT_END_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    if (descriptor != objectUnderWatch)
+    using namespace OSXBluetooth;
+
+    if (![self objectIsUnderWatch:descriptor operation:OperationTimeout::descriptorRead])
         return;
 
-    [self stopWatchdog];
-
-    using namespace OSXBluetooth;
+    [self stopWatchingAfter:descriptor operation:OperationTimeout::descriptorRead];
 
     CBService *const service = descriptor.characteristic.service;
     const QBluetoothUuid qtUuid(qt_uuid(service.UUID));
@@ -1627,12 +1704,11 @@ QT_END_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    if (characteristic != objectUnderWatch)
+    if (![self objectIsUnderWatch:characteristic operation:OperationTimeout::characteristicWrite])
         return;
 
-    [self stopWatchdog];
+    [self stopWatchingAfter:characteristic operation:OperationTimeout::characteristicWrite];
     requestPending = false;
-
 
     // Error or not, but the cached value has to be deleted ...
     const QByteArray valueToReport(valuesToWrite.value(characteristic, QByteArray()));
@@ -1729,7 +1805,7 @@ QT_END_NAMESPACE
         notifier = nullptr;
     }
 
-    [self stopWatchdog];
+    [self stopWatchers];
     [self disconnectFromDevice];
 }
 

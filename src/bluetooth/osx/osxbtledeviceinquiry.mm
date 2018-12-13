@@ -206,7 +206,7 @@ QT_USE_NAMESPACE
 
             if (inquiryTimeoutMS > 0) {
                 [elapsedTimer cancelTimer];
-                elapsedTimer.reset([[GCDTimerObjC alloc] initWithDelegate:self]);
+                elapsedTimer.resetWithoutRetain([[GCDTimerObjC alloc] initWithDelegate:self]);
                 [elapsedTimer startWithTimeout:inquiryTimeoutMS step:timeStepMS];
             }
 
@@ -241,7 +241,7 @@ QT_USE_NAMESPACE
             // we'll receive 'PoweredOn' state update later.
             // No change in internalState. Wait for 30 seconds.
             [elapsedTimer cancelTimer];
-            elapsedTimer.reset([[GCDTimerObjC alloc] initWithDelegate:self]);
+            elapsedTimer.resetWithoutRetain([[GCDTimerObjC alloc] initWithDelegate:self]);
             [elapsedTimer startWithTimeout:powerOffTimeoutMS step:300];
             return;
 #else
