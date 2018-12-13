@@ -45,6 +45,12 @@
 QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel)
+{
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *delegate;
+    IOBluetoothDevice *device;
+    IOBluetoothRFCOMMChannel *channel;
+    bool connected;
+}
 
 - (id)initWithDelegate:(OSXBluetooth::ChannelDelegate *)aDelegate
 {

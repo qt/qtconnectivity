@@ -122,6 +122,16 @@ QT_END_NAMESPACE
 QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
+{
+    LECBManagerNotifier *notifier;
+    ObjCScopedPointer<CBCentralManager> manager;
+
+    QList<QBluetoothDeviceInfo> devices;
+    LEInquiryState internalState;
+    int inquiryTimeoutMS;
+
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer elapsedTimer;
+}
 
 -(id)initWithNotifier:(LECBManagerNotifier *)aNotifier
 {
