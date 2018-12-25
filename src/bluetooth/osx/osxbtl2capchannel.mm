@@ -48,6 +48,12 @@
 QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel)
+{
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::ChannelDelegate *delegate;
+    IOBluetoothDevice *device;
+    IOBluetoothL2CAPChannel *channel;
+    bool connected;
+}
 
 - (id)initWithDelegate:(OSXBluetooth::ChannelDelegate *)aDelegate
 {

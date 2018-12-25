@@ -58,25 +58,39 @@
 
 #include <Foundation/Foundation.h>
 
+QT_BEGIN_NAMESPACE
+
+namespace OSXBluetooth {
+
+enum class OperationTimeout
+{
+    none,
+    serviceDiscovery,
+    includedServicesDiscovery,
+    characteristicsDiscovery,
+    characteristicRead,
+    descriptorsDiscovery,
+    descriptorRead,
+    characteristicWrite
+};
+
+} // namespace OSXBluetooth
+
+QT_END_NAMESPACE
+
 @protocol QT_MANGLE_NAMESPACE(GCDTimerDelegate)
 @required
-- (void)timeout;
+- (void)timeout:(id)sender;
 @end
 
-@interface QT_MANGLE_NAMESPACE(OSXBTGCDTimer) : NSObject {
-@private
-    qint64 timeoutMS;
-    qint64 timeoutStepMS;
-    QT_PREPEND_NAMESPACE(QElapsedTimer) timer;
-    id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)> timeoutHandler;
-    bool cancelled;
-}
-
+@interface QT_MANGLE_NAMESPACE(OSXBTGCDTimer) : NSObject
 - (instancetype)initWithDelegate:(id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)>)delegate;
+- (void)watchAfter:(id)object withTimeoutType:(QT_PREPEND_NAMESPACE(OSXBluetooth)::OperationTimeout)type;
 - (void)startWithTimeout:(qint64)ms step:(qint64)stepMS;
 - (void)handleTimeout;
 - (void)cancelTimer;
-
+- (id)objectUnderWatch;
+- (QT_PREPEND_NAMESPACE(OSXBluetooth)::OperationTimeout)timeoutType;
 @end
 
 QT_BEGIN_NAMESPACE
@@ -84,9 +98,9 @@ QT_BEGIN_NAMESPACE
 namespace OSXBluetooth {
 
 using GCDTimerObjC = QT_MANGLE_NAMESPACE(OSXBTGCDTimer);
-using GCDTimer = ObjCScopedPointer<GCDTimerObjC>;
+using GCDTimer = ObjCStrongReference<GCDTimerObjC>;
 
-}
+} // namespace OSXBluetooth
 
 QT_END_NAMESPACE
 

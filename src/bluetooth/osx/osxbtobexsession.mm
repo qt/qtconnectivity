@@ -418,6 +418,27 @@ QT_USE_NAMESPACE
 @end
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTOBEXSession)
+{
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::OBEXSessionDelegate *delegate;
+    IOBluetoothDevice *device;
+    quint16 channelID;
+    IOBluetoothOBEXSession *session;
+
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::OBEXRequest currentRequest;
+
+    bool connected;
+    bool connectionIDFound;
+    quint32 connectionID;
+
+    QT_PREPEND_NAMESPACE(QIODevice) *inputStream;
+
+    // TODO: switch to scoped pointers or strong reference objects instead.
+    NSMutableData *headersData;
+    NSMutableData *bodyData;
+
+    quint32 bytesSent;
+    bool pendingAbort;
+}
 
 + (OBEXMaxPacketLength) maxPacketLength
 {

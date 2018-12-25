@@ -234,7 +234,7 @@ void QLowEnergyControllerPrivateOSX::_q_serviceDiscoveryFinished()
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    NSArray *const services = centralManager.data()->peripheral.services;
+    NSArray *const services = [centralManager.data() peripheral].services;
     // Now we have to traverse the discovered services tree.
     // Essentially it's an iterative version of more complicated code from the
     // OSXBTCentralManager's code.
