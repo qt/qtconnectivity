@@ -87,18 +87,6 @@ enum CentralManagerState
     CentralManagerDisconnecting
 };
 
-enum class OperationTimeout
-{
-    none,
-    serviceDiscovery,
-    includedServicesDiscovery,
-    characteristicsDiscovery,
-    characteristicRead,
-    descriptorsDiscovery,
-    descriptorRead,
-    characteristicWrite
-};
-
 // In Qt we work with handles and UUIDs. Core Bluetooth
 // has NSArrays (and nested NSArrays inside servces/characteristics).
 // To simplify a navigation, I need a simple way to map from a handle
@@ -148,51 +136,10 @@ QT_END_NAMESPACE
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate,
                                                                CBPeripheralDelegate,
                                                                QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
-{
-@private
-    CBCentralManager *manager;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::CentralManagerState managerState;
-    bool disconnectPending;
-
-    QT_PREPEND_NAMESPACE(QBluetoothUuid) deviceUuid;
-
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *notifier;
-
-    // Quite a verbose service discovery machinery
-    // (a "graph traversal").
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableArray> servicesToVisit;
-    // The service we're discovering now (included services discovery):
-    NSUInteger currentService;
-    // Included services, we'll iterate through at the end of 'servicesToVisit':
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableArray> servicesToVisitNext;
-    // We'd like to avoid loops in a services' topology:
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCStrongReference<NSMutableSet> visitedServices;
-
-    QT_PREPEND_NAMESPACE(QList)<QT_PREPEND_NAMESPACE(QBluetoothUuid)> servicesToDiscoverDetails;
-
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ServiceHash serviceMap;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::CharHash charMap;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::DescHash descMap;
-
-    QT_PREPEND_NAMESPACE(QLowEnergyHandle) lastValidHandle;
-
-    bool requestPending;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::RequestQueue requests;
-    QT_PREPEND_NAMESPACE(QLowEnergyHandle) currentReadHandle;
-
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::ValueHash valuesToWrite;
-
-    qint64 timeoutMS;
-    id objectUnderWatch;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::OperationTimeout timeoutType;
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer timeoutWatchdog;
-
-@public
-    CBPeripheral *peripheral;
-}
-
 - (id)initWith:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *)notifier;
 - (void)dealloc;
+
+- (CBPeripheral *)peripheral;
 
 // IMPORTANT: _all_ these methods are to be executed on qt_LE_queue,
 // when passing parameters - C++ objects _must_ be copied (see the controller's code).

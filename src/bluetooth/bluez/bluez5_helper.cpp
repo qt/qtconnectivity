@@ -195,6 +195,13 @@ bool mandatoryHciIoctlsAvailable()
 QVersionNumber bluetoothdVersion()
 {
     if (bluezDaemonVersion()->isNull()) {
+        // Register DBus specific  meta types (copied from isBluez5())
+        // Not all code paths run through isBluez5() but still need the
+        // registration.
+        qDBusRegisterMetaType<InterfaceList>();
+        qDBusRegisterMetaType<ManagedObjectList>();
+        qDBusRegisterMetaType<ManufacturerDataList>();
+
         qCDebug(QT_BT_BLUEZ) << "Detecting bluetoothd version";
         //Order of matching
         // 1. Pick whatever the user decides via BLUETOOTH_FORCE_DBUS_LE_VERSION

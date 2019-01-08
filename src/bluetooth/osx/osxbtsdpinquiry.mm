@@ -212,6 +212,11 @@ QT_USE_NAMESPACE
 using namespace OSXBluetooth;
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTSDPInquiry)
+{
+    QT_PREPEND_NAMESPACE(OSXBluetooth::SDPInquiryDelegate) *delegate;
+    IOBluetoothDevice *device;
+    bool isActive;
+}
 
 - (id)initWithDelegate:(SDPInquiryDelegate *)aDelegate
 {

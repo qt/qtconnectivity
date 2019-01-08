@@ -122,6 +122,16 @@ QT_END_NAMESPACE
 QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
+{
+    LECBManagerNotifier *notifier;
+    ObjCScopedPointer<CBCentralManager> manager;
+
+    QList<QBluetoothDeviceInfo> devices;
+    LEInquiryState internalState;
+    int inquiryTimeoutMS;
+
+    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer elapsedTimer;
+}
 
 -(id)initWithNotifier:(LECBManagerNotifier *)aNotifier
 {
@@ -151,8 +161,10 @@ QT_USE_NAMESPACE
     [super dealloc];
 }
 
-- (void)timeout
+- (void)timeout:(id)sender
 {
+    Q_UNUSED(sender)
+
     if (internalState == InquiryActive) {
         [manager stopScan];
         [manager setDelegate:nil];
@@ -204,7 +216,7 @@ QT_USE_NAMESPACE
 
             if (inquiryTimeoutMS > 0) {
                 [elapsedTimer cancelTimer];
-                elapsedTimer.reset([[GCDTimerObjC alloc] initWithDelegate:self]);
+                elapsedTimer.resetWithoutRetain([[GCDTimerObjC alloc] initWithDelegate:self]);
                 [elapsedTimer startWithTimeout:inquiryTimeoutMS step:timeStepMS];
             }
 
@@ -239,7 +251,7 @@ QT_USE_NAMESPACE
             // we'll receive 'PoweredOn' state update later.
             // No change in internalState. Wait for 30 seconds.
             [elapsedTimer cancelTimer];
-            elapsedTimer.reset([[GCDTimerObjC alloc] initWithDelegate:self]);
+            elapsedTimer.resetWithoutRetain([[GCDTimerObjC alloc] initWithDelegate:self]);
             [elapsedTimer startWithTimeout:powerOffTimeoutMS step:300];
             return;
 #else
