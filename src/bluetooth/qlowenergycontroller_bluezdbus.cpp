@@ -268,9 +268,13 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDeviceHelper()
             const QVariantMap &ifaceValues = jt.value();
 
             if (iface == QStringLiteral("org.bluez.Device1")) {
-                if (remoteDevice.toString() == ifaceValues.value(QStringLiteral("Address")).toString()) {
-                    devicePath = it.key().path();
-                    break;
+                if (remoteDevice.toString() == ifaceValues.value(QStringLiteral("Address")).toString())
+                {
+                    const QVariant adapterForCurrentDevice = ifaceValues.value(QStringLiteral("Adapter"));
+                    if (qvariant_cast<QDBusObjectPath>(adapterForCurrentDevice).path() == hostAdapterPath) {
+                        devicePath = it.key().path();
+                        break;
+                    }
                 }
             }
         }

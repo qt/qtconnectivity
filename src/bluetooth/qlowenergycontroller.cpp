@@ -432,6 +432,29 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
     return new QLowEnergyController(remoteDevice, parent);
 }
 
+/*!
+    Returns a new instance of this class with \a parent.
+
+    The \a remoteDevice must contain the address of the remote Bluetooth Low
+    Energy device to which this object should attempt to connect later on.
+
+    The connection is established via \a localDevice. If \a localDevice is invalid,
+    the local default device is automatically selected. If \a localDevice specifies
+    a local device that is not a local Bluetooth adapter, \l error() is set to
+    \l InvalidBluetoothAdapterError once \l connectToDevice() is called.
+
+    Note that specifying the local device to be used for the connection is only
+    possible when using BlueZ. All other platforms do not support this feature.
+
+    \since 5.13
+ */
+QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothAddress &remoteDevice,
+                                                          const QBluetoothAddress &localDevice,
+                                                          QObject *parent)
+{
+    return new QLowEnergyController(remoteDevice, localDevice, parent);
+}
+
 
 /*!
    Returns a new object of this class that is in the \l PeripheralRole and has the
