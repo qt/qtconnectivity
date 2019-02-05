@@ -88,6 +88,9 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
     if (m_active != NoScanActive)
         stop();
 
+    if (leScanner.isValid())
+        leScanner.setField<jlong>("qtObject", reinterpret_cast<jlong>(nullptr));
+
     if (receiver) {
         receiver->unregisterReceiver();
         delete receiver;
