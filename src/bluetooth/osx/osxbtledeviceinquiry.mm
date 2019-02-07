@@ -121,6 +121,11 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
+@interface  QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)(PrivateAPI)
+- (void)stopScanSafe;
+- (void)stopNotifier;
+@end
+
 @implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
 {
     LECBManagerNotifier *notifier;
@@ -147,17 +152,10 @@ QT_USE_NAMESPACE
 
 - (void)dealloc
 {
-    if (manager) {
-        [manager setDelegate:nil];
-        if (internalState == InquiryActive)
-            [manager stopScan];
-    }
-
-    if (notifier) {
-        notifier->disconnect();
-        notifier->deleteLater();
-    }
-
+    [self stopScanSafe];
+    [manager setDelegate:nil];
+    [elapsedTimer cancelTimer];
+    [self stopNotifier];
     [super dealloc];
 }
 
@@ -166,7 +164,7 @@ QT_USE_NAMESPACE
     Q_UNUSED(sender)
 
     if (internalState == InquiryActive) {
-        [manager stopScan];
+        [self stopScanSafe];
         [manager setDelegate:nil];
         internalState = InquiryFinished;
         Q_ASSERT(notifier);
@@ -228,7 +226,7 @@ QT_USE_NAMESPACE
     } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
 #endif
         if (internalState == InquiryActive) {
-            [manager stopScan];
+            [self stopScanSafe];
             // Not sure how this is possible at all,
             // probably, can never happen.
             internalState = ErrorPoweredOff;
@@ -244,8 +242,9 @@ QT_USE_NAMESPACE
 #else
     } else if (state == CBCentralManagerStatePoweredOff) {
 #endif
+
+#ifndef Q_OS_MACOS
         if (internalState == InquiryStarting) {
-#ifndef Q_OS_OSX
             // On iOS a user can see at this point an alert asking to
             // enable Bluetooth in the "Settings" app. If a user does so,
             // we'll receive 'PoweredOn' state update later.
@@ -254,17 +253,19 @@ QT_USE_NAMESPACE
             elapsedTimer.resetWithoutRetain([[GCDTimerObjC alloc] initWithDelegate:self]);
             [elapsedTimer startWithTimeout:powerOffTimeoutMS step:300];
             return;
+        }
 #else
             Q_UNUSED(powerOffTimeoutMS)
-#endif
-            internalState = ErrorPoweredOff;
-            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
-        } else {
-            [manager stopScan];
-            emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
-        }
-
+#endif // Q_OS_MACOS
+        [elapsedTimer cancelTimer];
+        [self stopScanSafe];
         [manager setDelegate:nil];
+        internalState = ErrorPoweredOff;
+        // On macOS we report PoweredOffError and our C++ owner will delete us
+        // (here we're kwnon as 'self'). Connection is Qt::QueuedConnection so we
+        // are apparently safe to call -stopNotifier after the signal.
+        emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
+        [self stopNotifier];
     } else {
         // The following two states we ignore (from Apple's docs):
         //"
@@ -281,19 +282,45 @@ QT_USE_NAMESPACE
 #pragma clang diagnostic pop
 }
 
+- (void)stopScanSafe
+{
+    // CoreBluetooth warns about API misused if we call stopScan in a state
+    // other than powered on. Hence this 'Safe' ...
+    if (!manager)
+        return;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+
+    if (internalState == InquiryActive) {
+        const auto state = manager.data().state;
+    #if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
+        if (state == CBManagerStatePoweredOn)
+    #else
+        if (state == CBCentralManagerStatePoweredOn)
+    #endif
+            [manager stopScan];
+    }
+
+#pragma clang diagnostic pop
+}
+
+- (void)stopNotifier
+{
+    if (notifier) {
+        notifier->disconnect();
+        notifier->deleteLater();
+        notifier = nullptr;
+    }
+}
+
 - (void)stop
 {
-    if (internalState == InquiryActive)
-        [manager stopScan];
-
-    [elapsedTimer cancelTimer];
-
+    [self stopScanSafe];
     [manager setDelegate:nil];
+    [elapsedTimer cancelTimer];
+    [self stopNotifier];
     internalState = InquiryCancelled;
-
-    notifier->disconnect();
-    notifier->deleteLater();
-    notifier = nullptr;
 }
 
 - (void)centralManager:(CBCentralManager *)central
