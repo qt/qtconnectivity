@@ -55,21 +55,33 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
-        QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &/*deviceAdapter*/)
+        QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
+      m_deviceAdapterAddress(deviceAdapter),
       state(Inactive),
       mode(QBluetoothServiceDiscoveryAgent::MinimalDiscovery),
       singleDevice(false),
       q_ptr(qp)
 
 {
-    QList<QBluetoothHostInfo> devices = QBluetoothLocalDevice::allDevices();
-    Q_ASSERT(devices.count() <= 1); //Android only supports one device at the moment
+    // If a specific adapter address is requested we need to check it matches
+    // the current local adapter. If it does not match we emit
+    // InvalidBluetoothAdapterError when calling start()
 
-    if (devices.isEmpty()) {
-        error = QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Invalid Bluetooth adapter address");
-        return;
+    bool createAdapter = true;
+    if (!deviceAdapter.isNull()) {
+        const QList<QBluetoothHostInfo> devices = QBluetoothLocalDevice::allDevices();
+        if (devices.isEmpty()) {
+            createAdapter = false;
+        } else {
+            auto match = [deviceAdapter](const QBluetoothHostInfo& info) {
+                return info.address() == deviceAdapter;
+            };
+
+            auto result = std::find_if(devices.begin(), devices.end(), match);
+            if (result == devices.end())
+                createAdapter = false;
+        }
     }
 
     if (QtAndroidPrivate::androidSdkVersion() < 15)
@@ -84,7 +96,8 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
       The logic below must change once there is more than one adapter.
     */
 
-    btAdapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
+    if (createAdapter)
+        btAdapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                            "getDefaultAdapter",
                                                            "()Landroid/bluetooth/BluetoothAdapter;");
     if (!btAdapter.isValid())
@@ -110,8 +123,15 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     if (!btAdapter.isValid()) {
-        error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Platform does not support Bluetooth");
+        if (m_deviceAdapterAddress.isNull()) {
+            error = QBluetoothServiceDiscoveryAgent::UnknownError;
+            errorString = QBluetoothServiceDiscoveryAgent::tr("Platform does not support Bluetooth");
+        } else {
+            // specific adapter was requested which does not match the locally
+            // existing adapter
+            error = QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError;
+            errorString = QBluetoothServiceDiscoveryAgent::tr("Invalid Bluetooth adapter address");
+        }
 
         //abort any outstanding discoveries
         discoveredDevices.clear();
