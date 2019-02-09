@@ -169,6 +169,11 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
 
     \note On WinRT the passed adapter address will be ignored.
 
+    \note On Android passing any \a deviceAdapter address is meaningless as Android 6.0 or later does not publish
+    the local Bluetooth address anymore. Subsequently, the passed adapter address can never be matched
+    against the local adapter address. Therefore the subsequent call to \l start() will always trigger
+    \l InvalidBluetoothAdapterError.
+
     \sa error()
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)

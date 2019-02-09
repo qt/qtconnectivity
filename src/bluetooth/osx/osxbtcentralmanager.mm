@@ -1245,6 +1245,7 @@ QT_USE_NAMESPACE
             if (notifier)
                 emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
         }
+        [self stopWatchers];
         return;
     }
 
@@ -1266,6 +1267,7 @@ QT_USE_NAMESPACE
             if (notifier)
                 emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
         }
+        [self stopWatchers];
         return;
     }
 
@@ -1280,7 +1282,7 @@ QT_USE_NAMESPACE
         }
     } else {
         // We actually handled all known states, but .. Core Bluetooth can change?
-        Q_ASSERT_X(0, Q_FUNC_INFO, "invalid centra's state");
+        Q_ASSERT_X(0, Q_FUNC_INFO, "invalid central's state");
     }
 
 #pragma clang diagnostic pop
