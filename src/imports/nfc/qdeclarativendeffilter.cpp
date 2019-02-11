@@ -104,7 +104,7 @@
 */
 
 QDeclarativeNdefFilter::QDeclarativeNdefFilter(QObject *parent)
-:   QObject(parent), m_minimum(1), m_maximum(UINT_MAX)
+:   QObject(parent), m_minimum(1), m_maximum(INT_MAX)
 {
 }
 

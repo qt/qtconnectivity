@@ -196,7 +196,7 @@ static QBluetoothUuid reverseUuid(const QBluetoothUuid &serviceUuid)
     bool isBaseUuid = false;
     serviceUuid.toUInt32(&isBaseUuid);
     if (isBaseUuid)
-        return QBluetoothUuid();
+        return serviceUuid;
 
     const quint128 original = serviceUuid.toUInt128();
     quint128 reversed;

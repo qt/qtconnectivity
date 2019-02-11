@@ -431,6 +431,6 @@ QString QBluetoothDeviceDiscoveryAgent::errorString() const
     return d->errorString;
 }
 
-#include "moc_qbluetoothdevicediscoveryagent.cpp"
-
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothdevicediscoveryagent.cpp"

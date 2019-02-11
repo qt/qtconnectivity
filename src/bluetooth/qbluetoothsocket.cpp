@@ -431,8 +431,8 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 
     At any point, the socket can emit error() to signal that an error occurred.
 
-    On Android, a connection to a service can not be established using a port. Calling this function
-    will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}.
+    On Android and BlueZ (version 5.46 or above), a connection to a service can not be established using a port.
+    Calling this function will emit a \l {QBluetoothSocket::ServiceNotFoundError}{ServiceNotFoundError}.
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
     the connection process may fail.
@@ -844,6 +844,6 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketState state)
 }
 #endif
 
-#include "moc_qbluetoothsocket.cpp"
-
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothsocket.cpp"

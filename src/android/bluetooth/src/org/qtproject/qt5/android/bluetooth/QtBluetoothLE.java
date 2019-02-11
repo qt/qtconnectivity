@@ -532,7 +532,7 @@ public class QtBluetoothLE {
         }
 
         try {
-            // BluetoothDevice.,connectGatt(Context, boolean, BluetoothGattCallback, int) was
+            // BluetoothDevice.connectGatt(Context, boolean, BluetoothGattCallback, int) was
             // officially introduced by Android API v23. Earlier Android versions have a private
             // implementation already though. Let's check at runtime and use it if possible.
             //
@@ -1126,7 +1126,7 @@ public class QtBluetoothLE {
         return true;
     }
 
-    // Called by TimeoutRunnable if the current I/O job timeoutd out.
+    // Called by TimeoutRunnable if the current I/O job timed out.
     // By the time we reach this point the handleForTimeout counter has already been reset
     // and the regular responses will be blocked off.
     private void interruptCurrentIO(int handle)

@@ -49,12 +49,10 @@ QT_BEGIN_NAMESPACE
 
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
 {
-    TagActivator *tagActivator = TagActivator::instance();
+    globalTagActivator->initialize();
 
-    tagActivator->initialize();
-
-    connect(tagActivator, &TagActivator::tagActivated, this, &QNearFieldManagerPrivateImpl::tagActivated);
-    connect(tagActivator, &TagActivator::tagDeactivated, this, &QNearFieldManagerPrivateImpl::tagDeactivated);
+    connect(globalTagActivator, &TagActivator::tagActivated, this, &QNearFieldManagerPrivateImpl::tagActivated);
+    connect(globalTagActivator, &TagActivator::tagDeactivated, this, &QNearFieldManagerPrivateImpl::tagDeactivated);
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
@@ -68,7 +66,7 @@ bool QNearFieldManagerPrivateImpl::isAvailable() const
 
 void QNearFieldManagerPrivateImpl::reset()
 {
-    TagActivator::instance()->reset();
+    globalTagActivator->reset();
 }
 
 void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)

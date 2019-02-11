@@ -89,17 +89,6 @@ enum LEInquiryState
 };
 
 @interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject<CBCentralManagerDelegate, QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
-{
-    LECBManagerNotifier *notifier;
-    ObjCScopedPointer<CBCentralManager> manager;
-
-    QList<QBluetoothDeviceInfo> devices;
-    LEInquiryState internalState;
-    int inquiryTimeoutMS;
-
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer elapsedTimer;
-}
-
 - (id)initWithNotifier:(LECBManagerNotifier *)aNotifier;
 - (void)dealloc;
 

@@ -291,7 +291,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
         emit q->error(error);
     } else if (!xmlRecords.isEmpty() && discoveryState() != Inactive) {
         for (const QString &record : xmlRecords) {
-            const QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
+            QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
 
             //apply uuidFilter
             if (!uuidFilter.isEmpty()) {
@@ -312,6 +312,22 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
 
             if (!serviceInfo.isValid())
                 continue;
+
+            // Bluez sdpscanner declares custom uuids into the service class uuid list.
+            // Let's move a potential custom uuid from QBluetoothServiceInfo::serviceClassUuids()
+            // to QBluetoothServiceInfo::serviceUuid(). If there is more than one, just move the first uuid
+            const QList<QBluetoothUuid> serviceClassUuids = serviceInfo.serviceClassUuids();
+            for (const QBluetoothUuid &id : serviceClassUuids) {
+                if (id.minimumSize() == 16) {
+                    serviceInfo.setServiceUuid(id);
+                    serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Custom Service"));
+                    QBluetoothServiceInfo::Sequence modSeq =
+                            serviceInfo.attribute(QBluetoothServiceInfo::ServiceClassIds).value<QBluetoothServiceInfo::Sequence>();
+                    modSeq.removeOne(QVariant::fromValue(id));
+                    serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, modSeq);
+                    break;
+                }
+            }
 
             if (!isDuplicatedService(serviceInfo)) {
                 discoveredServices.append(serviceInfo);
