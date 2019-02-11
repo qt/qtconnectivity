@@ -68,7 +68,7 @@ bool QBluetoothSocketPrivateWin::ensureNativeSocket(QBluetoothServiceInfo::Proto
 {
     Q_Q(QBluetoothSocket);
 
-    if (socket != INVALID_SOCKET) {
+    if (static_cast<SOCKET>(socket) != INVALID_SOCKET) {
         if (socketType == type)
             return true;
         abort();
@@ -87,7 +87,7 @@ bool QBluetoothSocketPrivateWin::ensureNativeSocket(QBluetoothServiceInfo::Proto
         return false;
     }
 
-    if (socket == INVALID_SOCKET) {
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET) {
         const int error = ::WSAGetLastError();
         qCWarning(QT_BT_WINDOWS) << "Failed to create socket:" << error << qt_error_string(error);
         errorString = QBluetoothSocket::tr("Failed to create socket");
@@ -105,13 +105,13 @@ void QBluetoothSocketPrivateWin::connectToServiceHelper(const QBluetoothAddress 
 {
     Q_Q(QBluetoothSocket);
 
-    if (socket == INVALID_SOCKET && !ensureNativeSocket(socketType))
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET && !ensureNativeSocket(socketType))
         return;
 
     if (!configureSecurity())
         return;
 
-    SOCKADDR_BTH addr = {0};
+    SOCKADDR_BTH addr = {};
     addr.addressFamily = AF_BTH;
     addr.port = port;
     addr.btAddr = address.toUInt64();
@@ -377,9 +377,9 @@ quint16 QBluetoothSocketPrivateWin::localPort() const
 
 QString QBluetoothSocketPrivateWin::peerName() const
 {
-    if (socket == INVALID_SOCKET)
+    if (static_cast<SOCKET>(socket) == INVALID_SOCKET)
         return {};
-    BLUETOOTH_DEVICE_INFO bdi = {0};
+    BLUETOOTH_DEVICE_INFO bdi = {};
     bdi.dwSize = sizeof(bdi);
     bdi.Address.ullLong = m_peerAddress.toUInt64();
     const DWORD res = ::BluetoothGetDeviceInfo(nullptr, &bdi);
@@ -528,7 +528,7 @@ bool QBluetoothSocketPrivateWin::createNotifiers()
 
 void QBluetoothSocketPrivateWin::updateAddressesAndPorts()
 {
-    SOCKADDR_BTH localAddr = {0};
+    SOCKADDR_BTH localAddr = {};
     int localAddrLength = sizeof(localAddr);
     const int localResult = ::getsockname(socket, reinterpret_cast<sockaddr *>(&localAddr), &localAddrLength);
     if (localResult != SOCKET_ERROR) {
@@ -540,7 +540,7 @@ void QBluetoothSocketPrivateWin::updateAddressesAndPorts()
         errorString = QBluetoothSocket::tr("Cannot get socket's local address and port");
     }
 
-    SOCKADDR_BTH peerAddr = {0};
+    SOCKADDR_BTH peerAddr = {};
     int peerAddrLength = sizeof(peerAddr);
     const int peerResult = ::getpeername(socket, reinterpret_cast<sockaddr *>(&peerAddr), &peerAddrLength);
     if (peerResult != SOCKET_ERROR) {

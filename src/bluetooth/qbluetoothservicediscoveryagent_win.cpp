@@ -331,7 +331,7 @@ static FindServiceResult findFirstService(const QBluetoothAddress &address)
 
     GUID protocol = L2CAP_PROTOCOL_UUID; //Search for L2CAP and RFCOMM services
 
-    WSAQUERYSET serviceQuery = {0};
+    WSAQUERYSET serviceQuery = {};
     serviceQuery.dwSize = sizeof(WSAQUERYSET); //As specified by the windows documentation
     serviceQuery.lpServiceClassId = &protocol; //The protocal of the service what is being queried
     serviceQuery.dwNameSpace = NS_BTH; //As specified by the windows documentation
