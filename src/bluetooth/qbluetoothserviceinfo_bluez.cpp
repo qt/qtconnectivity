@@ -103,17 +103,16 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
                                QString::number(attribute.value<qint32>(), 16));
         //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
+    case QMetaType::QByteArray:
+        stream->writeEmptyElement(QStringLiteral("text"));
+        stream->writeAttribute(QStringLiteral("value"),
+                               QString::fromLatin1(attribute.value<QByteArray>().toHex().constData()));
+        stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("hex"));
+        break;
     case QMetaType::QString:
         stream->writeEmptyElement(QStringLiteral("text"));
-        if (/* require hex encoding */ false) {
-            stream->writeAttribute(QStringLiteral("value"), QString::fromLatin1(
-                                       attribute.value<QString>().toUtf8().toHex().constData()));
-            stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("hex"));
-        } else {
-            stream->writeAttribute(QStringLiteral("value"), attribute.value<QString>());
-            stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("normal"));
-        }
-        //stream->writeAttribute(QStringLiteral("name"), foo);
+        stream->writeAttribute(QStringLiteral("value"), attribute.value<QString>());
+        stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("normal"));
         break;
             case QMetaType::Bool:
         stream->writeEmptyElement(QStringLiteral("boolean"));
