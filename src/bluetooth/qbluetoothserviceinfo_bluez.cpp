@@ -69,39 +69,33 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
         stream->writeAttribute(QStringLiteral("value"),
                                unsignedFormat.arg(attribute.value<quint8>(), 2, 16,
                                                   QLatin1Char('0')));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::UShort:
         stream->writeEmptyElement(QStringLiteral("uint16"));
         stream->writeAttribute(QStringLiteral("value"),
                                unsignedFormat.arg(attribute.value<quint16>(), 4, 16,
                                                   QLatin1Char('0')));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::UInt:
         stream->writeEmptyElement(QStringLiteral("uint32"));
         stream->writeAttribute(QStringLiteral("value"),
                                unsignedFormat.arg(attribute.value<quint32>(), 8, 16,
                                                   QLatin1Char('0')));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::Char:
         stream->writeEmptyElement(QStringLiteral("int8"));
         stream->writeAttribute(QStringLiteral("value"),
                                QString::number(attribute.value<uchar>(), 16));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::Short:
         stream->writeEmptyElement(QStringLiteral("int16"));
         stream->writeAttribute(QStringLiteral("value"),
                                QString::number(attribute.value<qint16>(), 16));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::Int:
         stream->writeEmptyElement(QStringLiteral("int32"));
         stream->writeAttribute(QStringLiteral("value"),
                                QString::number(attribute.value<qint32>(), 16));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
     case QMetaType::QByteArray:
         stream->writeEmptyElement(QStringLiteral("text"));
@@ -114,20 +108,18 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
         stream->writeAttribute(QStringLiteral("value"), attribute.value<QString>());
         stream->writeAttribute(QStringLiteral("encoding"), QStringLiteral("normal"));
         break;
-            case QMetaType::Bool:
+    case QMetaType::Bool:
         stream->writeEmptyElement(QStringLiteral("boolean"));
         if (attribute.value<bool>())
             stream->writeAttribute(QStringLiteral("value"), QStringLiteral("true"));
         else
             stream->writeAttribute(QStringLiteral("value"), QStringLiteral("false"));
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
-            case QMetaType::QUrl:
+    case QMetaType::QUrl:
         stream->writeEmptyElement(QStringLiteral("url"));
         stream->writeAttribute(QStringLiteral("value"), attribute.value<QUrl>().toString());
-        //stream->writeAttribute(QStringLiteral("name"), foo);
         break;
-            case QVariant::UserType:
+    case QVariant::UserType:
         if (attribute.userType() == qMetaTypeId<QBluetoothUuid>()) {
             stream->writeEmptyElement(QStringLiteral("uuid"));
 
