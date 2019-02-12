@@ -85,17 +85,17 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
     case QMetaType::Char:
         stream->writeEmptyElement(QStringLiteral("int8"));
         stream->writeAttribute(QStringLiteral("value"),
-                               QString::number(attribute.value<uchar>(), 16));
+                               QString::number(attribute.value<qint8>()));
         break;
     case QMetaType::Short:
         stream->writeEmptyElement(QStringLiteral("int16"));
         stream->writeAttribute(QStringLiteral("value"),
-                               QString::number(attribute.value<qint16>(), 16));
+                               QString::number(attribute.value<qint16>()));
         break;
     case QMetaType::Int:
         stream->writeEmptyElement(QStringLiteral("int32"));
         stream->writeAttribute(QStringLiteral("value"),
-                               QString::number(attribute.value<qint32>(), 16));
+                               QString::number(attribute.value<qint32>()));
         break;
     case QMetaType::QByteArray:
         stream->writeEmptyElement(QStringLiteral("text"));
