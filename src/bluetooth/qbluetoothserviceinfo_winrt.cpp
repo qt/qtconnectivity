@@ -297,6 +297,14 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         hr = writer->WriteInt64(attribute.value<qint64>());
         Q_ASSERT_SUCCEEDED(hr);
         break;
+    case QMetaType::QByteArray: {
+        qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::QByteArray:" << attribute.value<QString>();
+        const QString stringValue = QString::fromLatin1(attribute.value<QByteArray>().toHex());
+        const bool writeSuccess = writeStringHelper(stringValue, writer);
+        if (!writeSuccess)
+            return nullptr;
+        break;
+    }
     case QMetaType::QString: {
         qCDebug(QT_BT_WINRT) << Q_FUNC_INFO << "Registering attribute of type QMetaType::QString:" << attribute.value<QString>();
         const QString stringValue = attribute.value<QString>();
