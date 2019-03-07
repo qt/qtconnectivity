@@ -167,6 +167,7 @@ private:
 #ifdef QT_WINRT_BLUETOOTH
 private slots:
     void registerDevice(const QBluetoothDeviceInfo &info);
+    void updateDeviceRssi(const QBluetoothAddress &address, qint16 rssi);
     void onScanFinished();
 
 private:
