@@ -942,19 +942,18 @@ void QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::disconnectAndClearWorker()
 {
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
     if (!worker)
         return;
 
     disconnect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::scanFinished,
-        this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished);
+               this, &QBluetoothDeviceDiscoveryAgentPrivate::onScanFinished);
     disconnect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::deviceFound,
-        q, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered);
+               this, &QBluetoothDeviceDiscoveryAgentPrivate::registerDevice);
     disconnect(worker, &QWinRTBluetoothDeviceDiscoveryWorker::deviceDataChanged,
                this, &QBluetoothDeviceDiscoveryAgentPrivate::updateDeviceData);
     if (leScanTimer) {
         disconnect(leScanTimer, &QTimer::timeout,
-            worker, &QWinRTBluetoothDeviceDiscoveryWorker::finishDiscovery);
+                   worker, &QWinRTBluetoothDeviceDiscoveryWorker::finishDiscovery);
     }
     worker.clear();
 }
