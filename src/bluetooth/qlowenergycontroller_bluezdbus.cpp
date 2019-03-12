@@ -354,6 +354,9 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDevice()
 
 void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
 {
+    if (!device)
+        return;
+
     setState(QLowEnergyController::ClosingState);
 
     QDBusPendingReply<> reply = device->Disconnect();
