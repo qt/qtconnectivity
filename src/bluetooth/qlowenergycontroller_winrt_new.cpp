@@ -138,7 +138,7 @@ public:
 public slots:
     void obtainCharList()
     {
-        QVector<QBluetoothUuid> indicateChars;
+        mIndicateChars.clear();
         quint16 startHandle = 0;
         quint16 endHandle = 0;
         qCDebug(QT_BT_WINRT) << __FUNCTION__;
@@ -146,7 +146,7 @@ public slots:
         HRESULT hr = mDeviceService->GetAllCharacteristics(&characteristics);
         Q_ASSERT_SUCCEEDED(hr);
         if (!characteristics) {
-            emit charListObtained(mService, mCharacteristicList, indicateChars, startHandle, endHandle);
+            emit charListObtained(mService, mCharacteristicList, mIndicateChars, startHandle, endHandle);
             QThread::currentThread()->quit();
             return;
         }
@@ -235,7 +235,6 @@ public slots:
                             charData.value = byteArrayFromGattResult(readResult);
                     }
 
-                    QVector<QBluetoothUuid> indicateChars;
                     ComPtr<IVectorView<GattDescriptor *>> descriptors;
 
                     ComPtr<IGattCharacteristic2> characteristic2;
@@ -289,7 +288,7 @@ public slots:
 
                             descData.value = QByteArray(2, Qt::Uninitialized);
                             qToLittleEndian(result, descData.value.data());
-                            indicateChars << charData.uuid;
+                            mIndicateChars << charData.uuid;
                         } else {
                             ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                             hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached,
@@ -309,7 +308,7 @@ public slots:
                     mCharacteristicList.insert(handle, charData);
                     mCharacteristicsCountToBeDiscovered--;
                     if (mCharacteristicsCountToBeDiscovered == 0) {
-                        emit charListObtained(mService, mCharacteristicList, indicateChars,
+                        emit charListObtained(mService, mCharacteristicList, mIndicateChars,
                                               mStartHandle, mEndHandle);
                         QThread::currentThread()->quit();
                     }
@@ -326,6 +325,7 @@ public:
     uint mCharacteristicsCountToBeDiscovered;
     quint16 mStartHandle = 0;
     quint16 mEndHandle = 0;
+    QVector<QBluetoothUuid> mIndicateChars;
 
 signals:
     void charListObtained(const QBluetoothUuid &service, QHash<QLowEnergyHandle,
