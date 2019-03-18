@@ -250,7 +250,8 @@ void QWinRTBluetoothDeviceDiscoveryWorker::gatherMultipleDeviceInformation(quint
 {
     for (quint32 i = 0; i < deviceCount; ++i) {
         ComPtr<IDeviceInformation> device;
-        HRESULT hr = devices->GetAt(i, &device);
+        HRESULT hr;
+        hr = devices->GetAt(i, &device);
         Q_ASSERT_SUCCEEDED(hr);
         gatherDeviceInformation(device.Get(), mode);
     }
