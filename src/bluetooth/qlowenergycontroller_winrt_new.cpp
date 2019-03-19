@@ -200,7 +200,8 @@ public slots:
             Q_ASSERT_SUCCEEDED(hr);
             hr = descAsyncResult->put_Completed(
                 Callback<IAsyncOperationCompletedHandler<GattDescriptorsResult*>>(
-                            [this, characteristic](IAsyncOperation<GattDescriptorsResult*> *, AsyncStatus status) {
+                            [this, characteristic](IAsyncOperation<GattDescriptorsResult *> *op,
+                                                   AsyncStatus status) {
                     if (status != AsyncStatus::Completed) {
                         qCDebug(QT_BT_WINRT) << "Could not obtain descriptors";
                         return S_OK;
@@ -237,13 +238,11 @@ public slots:
 
                     ComPtr<IVectorView<GattDescriptor *>> descriptors;
 
-                    ComPtr<IGattCharacteristic2> characteristic2;
-                    hr = characteristic.As(&characteristic2);
+                    ComPtr<IGattDescriptorsResult> result;
+                    hr = op->GetResults(&result);
                     Q_ASSERT_SUCCEEDED(hr);
-
-                    hr = characteristic2->GetAllDescriptors(&descriptors);
+                    hr = result->get_Descriptors(&descriptors);
                     Q_ASSERT_SUCCEEDED(hr);
-
 
                     uint descriptorCount;
                     hr = descriptors->get_Size(&descriptorCount);
