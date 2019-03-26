@@ -138,7 +138,7 @@ public:
 public slots:
     void obtainCharList()
     {
-        QVector<QBluetoothUuid> indicateChars;
+        mIndicateChars.clear();
         quint16 startHandle = 0;
         quint16 endHandle = 0;
         qCDebug(QT_BT_WINRT) << __FUNCTION__;
@@ -146,7 +146,7 @@ public slots:
         HRESULT hr = mDeviceService->GetAllCharacteristics(&characteristics);
         Q_ASSERT_SUCCEEDED(hr);
         if (!characteristics) {
-            emit charListObtained(mService, mCharacteristicList, indicateChars, startHandle, endHandle);
+            emit charListObtained(mService, mCharacteristicList, mIndicateChars, startHandle, endHandle);
             QThread::currentThread()->quit();
             return;
         }
@@ -200,7 +200,8 @@ public slots:
             Q_ASSERT_SUCCEEDED(hr);
             hr = descAsyncResult->put_Completed(
                 Callback<IAsyncOperationCompletedHandler<GattDescriptorsResult*>>(
-                            [this, characteristic](IAsyncOperation<GattDescriptorsResult*> *, AsyncStatus status) {
+                            [this, characteristic](IAsyncOperation<GattDescriptorsResult *> *op,
+                                                   AsyncStatus status) {
                     if (status != AsyncStatus::Completed) {
                         qCDebug(QT_BT_WINRT) << "Could not obtain descriptors";
                         return S_OK;
@@ -235,16 +236,13 @@ public slots:
                             charData.value = byteArrayFromGattResult(readResult);
                     }
 
-                    QVector<QBluetoothUuid> indicateChars;
                     ComPtr<IVectorView<GattDescriptor *>> descriptors;
 
-                    ComPtr<IGattCharacteristic2> characteristic2;
-                    hr = characteristic.As(&characteristic2);
+                    ComPtr<IGattDescriptorsResult> result;
+                    hr = op->GetResults(&result);
                     Q_ASSERT_SUCCEEDED(hr);
-
-                    hr = characteristic2->GetAllDescriptors(&descriptors);
+                    hr = result->get_Descriptors(&descriptors);
                     Q_ASSERT_SUCCEEDED(hr);
-
 
                     uint descriptorCount;
                     hr = descriptors->get_Size(&descriptorCount);
@@ -289,7 +287,7 @@ public slots:
 
                             descData.value = QByteArray(2, Qt::Uninitialized);
                             qToLittleEndian(result, descData.value.data());
-                            indicateChars << charData.uuid;
+                            mIndicateChars << charData.uuid;
                         } else {
                             ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                             hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached,
@@ -309,7 +307,7 @@ public slots:
                     mCharacteristicList.insert(handle, charData);
                     mCharacteristicsCountToBeDiscovered--;
                     if (mCharacteristicsCountToBeDiscovered == 0) {
-                        emit charListObtained(mService, mCharacteristicList, indicateChars,
+                        emit charListObtained(mService, mCharacteristicList, mIndicateChars,
                                               mStartHandle, mEndHandle);
                         QThread::currentThread()->quit();
                     }
@@ -326,6 +324,7 @@ public:
     uint mCharacteristicsCountToBeDiscovered;
     quint16 mStartHandle = 0;
     quint16 mEndHandle = 0;
+    QVector<QBluetoothUuid> mIndicateChars;
 
 signals:
     void charListObtained(const QBluetoothUuid &service, QHash<QLowEnergyHandle,
@@ -345,9 +344,7 @@ QLowEnergyControllerPrivateWinRTNew::~QLowEnergyControllerPrivateWinRTNew()
     if (mDevice && mStatusChangedToken.value)
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
 
-    qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
-    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens))
-        entry.characteristic->remove_ValueChanged(entry.token);
+    unregisterFromValueChanges();
 }
 
 void QLowEnergyControllerPrivateWinRTNew::init()
@@ -397,7 +394,7 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
                         && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
                     setState(QLowEnergyController::ConnectedState);
                     emit q->connected();
-                } else if (state == QLowEnergyController::ConnectedState
+                } else if (state != QLowEnergyController::UnconnectedState
                            && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
                     setError(QLowEnergyController::RemoteHostClosedError);
                     setState(QLowEnergyController::UnconnectedState);
@@ -522,9 +519,13 @@ void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
-    if (mDevice && mStatusChangedToken.value) {
-        mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
-        mStatusChangedToken.value = 0;
+    unregisterFromValueChanges();
+    if (mDevice) {
+        if (mStatusChangedToken.value) {
+            mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
+            mStatusChangedToken.value = 0;
+        }
+        mDevice = nullptr;
     }
 }
 
@@ -589,6 +590,17 @@ void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoo
     mValueChangedTokens.append(ValueChangedEntry(characteristic, token));
     qCDebug(QT_BT_WINRT) << "Characteristic" << charUuid << "in service"
         << serviceUuid << "registered for value changes";
+}
+
+void QLowEnergyControllerPrivateWinRTNew::unregisterFromValueChanges()
+{
+    qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
+    HRESULT hr;
+    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
+        hr = entry.characteristic->remove_ValueChanged(entry.token);
+        Q_ASSERT_SUCCEEDED(hr);
+    }
+    mValueChangedTokens.clear();
 }
 
 void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(

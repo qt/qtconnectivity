@@ -291,9 +291,7 @@ QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
     if (mDevice && mStatusChangedToken.value)
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
 
-    qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
-    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens))
-        entry.characteristic->remove_ValueChanged(entry.token);
+    unregisterFromValueChanges();
 }
 
 void QLowEnergyControllerPrivateWinRT::init()
@@ -340,7 +338,7 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
                     && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
                 setState(QLowEnergyController::ConnectedState);
                 emit q->connected();
-            } else if (state == QLowEnergyController::ConnectedState
+            } else if (state != QLowEnergyController::UnconnectedState
                        && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
                 setError(QLowEnergyController::RemoteHostClosedError);
                 setState(QLowEnergyController::UnconnectedState);
@@ -438,9 +436,13 @@ void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
-    if (mDevice && mStatusChangedToken.value) {
-        mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
-        mStatusChangedToken.value = 0;
+    unregisterFromValueChanges();
+    if (mDevice) {
+        if (mStatusChangedToken.value) {
+            mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
+            mStatusChangedToken.value = 0;
+        }
+        mDevice = nullptr;
     }
 }
 
@@ -500,6 +502,17 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
     mValueChangedTokens.append(ValueChangedEntry(characteristic, token));
     qCDebug(QT_BT_WINRT) << "Characteristic" << charUuid << "in service"
         << serviceUuid << "registered for value changes";
+}
+
+void QLowEnergyControllerPrivateWinRT::unregisterFromValueChanges()
+{
+    qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
+    HRESULT hr;
+    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
+        hr = entry.characteristic->remove_ValueChanged(entry.token);
+        Q_ASSERT_SUCCEEDED(hr);
+    }
+    mValueChangedTokens.clear();
 }
 
 void QLowEnergyControllerPrivateWinRT::obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
