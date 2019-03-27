@@ -60,15 +60,8 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
-#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-#include <QtBluetooth/QBluetoothSocket>
-#elif defined(QT_ANDROID_BLUETOOTH)
 #include <QtAndroidExtras/QAndroidJniObject>
 #include "android/lowenergynotificationhub_p.h"
-#elif defined(QT_WINRT_BLUETOOTH)
-#include <wrl.h>
-#include <windows.devices.bluetooth.h>
-#endif
 
 #include <functional>
 
@@ -77,16 +70,7 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyServiceData;
 class QTimer;
 
-#if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-class HciManager;
-class LeCmacCalculator;
-class QSocketNotifier;
-class RemoteDeviceManager;
-#elif defined(QT_ANDROID_BLUETOOTH)
 class LowEnergyNotificationHub;
-#elif defined(QT_WINRT_BLUETOOTH)
-class QWinRTLowEnergyServiceHandler;
-#endif
 
 extern void registerQLowEnergyControllerMetaType();
 

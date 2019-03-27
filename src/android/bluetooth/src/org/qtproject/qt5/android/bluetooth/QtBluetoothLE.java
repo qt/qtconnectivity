@@ -839,6 +839,9 @@ public class QtBluetoothLE {
      */
     public String includedServices(String serviceUuid)
     {
+        if (mBluetoothGatt == null)
+            return null;
+
         UUID uuid;
         try {
             uuid = UUID.fromString(serviceUuid);
