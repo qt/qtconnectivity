@@ -99,6 +99,13 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
         ret; \
     }
 
+#define CHECK_HR_AND_SET_SERVICE_ERROR(hr, msg, service, error, ret) \
+    if (FAILED(hr)) { \
+        qCDebug(QT_BT_WINRT) << msg; \
+        service->setError(error); \
+        ret; \
+    }
+
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
 QLowEnergyControllerPrivate *createWinRTLowEnergyController()
@@ -1082,7 +1089,7 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
 
     HRESULT hr;
     hr = QEventDispatcherWinRT::runOnXamlThread([charHandle, descHandle, service, this]() {
-        QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
+        const QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
         ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(service->uuid, charData.uuid);
         if (!characteristic) {
             qCDebug(QT_BT_WINRT) << "Could not obtain native characteristic" << charData.uuid
@@ -1094,12 +1101,14 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
         // Get native descriptor
         if (!charData.descriptorList.contains(descHandle))
             qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "cannot be found in characteristic" << charHandle;
-        QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
-        if (descData.uuid == QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration)) {
+        const QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
+        const QBluetoothUuid descUuid = descData.uuid;
+        if (descUuid == QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration)) {
             ComPtr<IAsyncOperation<ClientCharConfigDescriptorResult *>> readOp;
             HRESULT hr = characteristic->ReadClientCharacteristicConfigurationDescriptorAsync(&readOp);
-            Q_ASSERT_SUCCEEDED(hr);
-            auto readCompletedLambda = [&charData, charHandle, &descData, descHandle, service]
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not read client characteristic configuration",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+            auto readCompletedLambda = [charHandle, descHandle, service]
                     (IAsyncOperation<ClientCharConfigDescriptorResult *> *op, AsyncStatus status)
             {
                 if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
@@ -1110,18 +1119,12 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
                 ComPtr<IClientCharConfigDescriptorResult> iValue;
                 HRESULT hr;
                 hr = op->GetResults(&iValue);
-                if (FAILED(hr)) {
-                    qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
-                    service->setError(QLowEnergyService::DescriptorReadError);
-                    return S_OK;
-                }
+                CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain result for descriptor",
+                                               service, QLowEnergyService::DescriptorReadError, return S_OK)
                 GattClientCharacteristicConfigurationDescriptorValue value;
                 hr = iValue->get_ClientCharacteristicConfigurationDescriptor(&value);
-                if (FAILED(hr)) {
-                    qCDebug(QT_BT_WINRT) << "Could not obtain value for descriptor" << descHandle;
-                    service->setError(QLowEnergyService::DescriptorReadError);
-                    return S_OK;
-                }
+                CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain value for descriptor",
+                                               service, QLowEnergyService::DescriptorReadError, return S_OK)
                 quint16 result = 0;
                 bool correct = false;
                 if (value & GattClientCharacteristicConfigurationDescriptorValue_Indicate) {
@@ -1140,9 +1143,11 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
                     service->setError(QLowEnergyService::DescriptorReadError);
                     return S_OK;
                 }
+                QLowEnergyServicePrivate::DescData descData;
+                descData.uuid = QBluetoothUuid::ClientCharacteristicConfiguration;
                 descData.value = QByteArray(2, Qt::Uninitialized);
                 qToLittleEndian(result, descData.value.data());
-                charData.descriptorList.insert(descHandle, descData);
+                service->characteristicList[charHandle].descriptorList[descHandle] = descData;
                 emit service->descriptorRead(QLowEnergyDescriptor(service, charHandle, descHandle),
                     descData.value);
                 return S_OK;
@@ -1150,19 +1155,56 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
             hr = readOp->put_Completed(
                         Callback<IAsyncOperationCompletedHandler<ClientCharConfigDescriptorResult *>>(
                             readCompletedLambda).Get());
-            Q_ASSERT_SUCCEEDED(hr);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not register descriptor read callback",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
             return S_OK;
         } else {
+            ComPtr<IGattCharacteristic3> characteristic3;
+            HRESULT hr = characteristic.As(&characteristic3);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not cast characteristic",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+            ComPtr<IAsyncOperation<GattDescriptorsResult *>> op;
+            hr = characteristic3->GetDescriptorsForUuidAsync(descData.uuid, &op);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain descriptor for uuid",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+            ComPtr<IGattDescriptorsResult> result;
+            hr = QWinRTFunctions::await(op, result.GetAddressOf(), QWinRTFunctions::ProcessMainThreadEvents, 5000);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not await descritpor read result",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+
+            GattCommunicationStatus commStatus;
+            hr = result->get_Status(&commStatus);
+            if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
+                qErrnoWarning("Could not obtain list of descriptors");
+                service->setError(QLowEnergyService::DescriptorReadError);
+                return S_OK;
+            }
+
             ComPtr<IVectorView<GattDescriptor *>> descriptors;
-            HRESULT hr = characteristic->GetDescriptors(descData.uuid, &descriptors);
-            Q_ASSERT_SUCCEEDED(hr);
+            hr = result->get_Descriptors(&descriptors);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain descriptor list",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+            uint size;
+            hr = descriptors->get_Size(&size);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not await descritpor list's size",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+            if (size == 0) {
+                qCWarning(QT_BT_WINRT) << "No descriptor with uuid" << descData.uuid << "was found.";
+                service->setError(QLowEnergyService::DescriptorReadError);
+                return S_OK;
+            } else if (size > 1) {
+                qCWarning(QT_BT_WINRT) << "There is more than 1 descriptor with uuid" << descData.uuid;
+            }
+
             ComPtr<IGattDescriptor> descriptor;
             hr = descriptors->GetAt(0, &descriptor);
-            Q_ASSERT_SUCCEEDED(hr);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain descritpor from list",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
             ComPtr<IAsyncOperation<GattReadResult*>> readOp;
             hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
-            Q_ASSERT_SUCCEEDED(hr);
-            auto readCompletedLambda = [&charData, charHandle, &descData, descHandle, service]
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not read descriptor value",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
+            auto readCompletedLambda = [charHandle, descHandle, descUuid, service]
                     (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
             {
                 if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
@@ -1178,22 +1220,26 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
                     service->setError(QLowEnergyService::DescriptorReadError);
                     return S_OK;
                 }
+                QLowEnergyServicePrivate::DescData descData;
+                descData.uuid = descUuid;
                 if (descData.uuid == QBluetoothUuid::CharacteristicUserDescription)
                     descData.value = byteArrayFromGattResult(descriptorValue, true);
                 else
                     descData.value = byteArrayFromGattResult(descriptorValue);
-                charData.descriptorList.insert(descHandle, descData);
+                service->characteristicList[charHandle].descriptorList[descHandle] = descData;
                 emit service->descriptorRead(QLowEnergyDescriptor(service, charHandle, descHandle),
                     descData.value);
                 return S_OK;
             };
             hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattReadResult *>>(
                                            readCompletedLambda).Get());
-            Q_ASSERT_SUCCEEDED(hr);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not register descriptor read callback",
+                                           service, QLowEnergyService::DescriptorReadError, return S_OK)
             return S_OK;
         }
     });
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not run registration on Xaml thread",
+                                   service, QLowEnergyService::DescriptorReadError, return)
 }
 
 void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
