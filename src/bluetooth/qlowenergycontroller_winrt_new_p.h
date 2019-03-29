@@ -118,6 +118,7 @@ public:
 
 private slots:
     void characteristicChanged(quint16 charHandle, const QByteArray &data);
+    void handleServiceHandlerError(const QString &error);
 
 private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
