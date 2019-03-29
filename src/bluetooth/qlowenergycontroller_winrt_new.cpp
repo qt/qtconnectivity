@@ -806,31 +806,46 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServices()
 
     ComPtr<IBluetoothLEDevice3> device3;
     HRESULT hr = mDevice.As(&device3);
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return);
     ComPtr<IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *>> asyncResult;
     hr = device3->GetGattServicesAsync(&asyncResult);
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain services", return);
     hr = QEventDispatcherWinRT::runOnXamlThread( [asyncResult, q, this] () {
         HRESULT hr = asyncResult->put_Completed(
             Callback<IAsyncOperationCompletedHandler<GenericAttributeProfile::GattDeviceServicesResult *>>(
-                    [this, q](IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *> *, AsyncStatus status) {
+                    [this, q](IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *> *op,
+                        AsyncStatus status) {
                 if (status != AsyncStatus::Completed) {
                     qCDebug(QT_BT_WINRT) << "Could not obtain services";
                     return S_OK;
                 }
+                ComPtr<IGattDeviceServicesResult> result;
                 ComPtr<IVectorView<GattDeviceService *>> deviceServices;
-                HRESULT hr = mDevice->get_GattServices(&deviceServices);
-                Q_ASSERT_SUCCEEDED(hr);
+                HRESULT hr = op->GetResults(&result);
+                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service discovery result",
+                                                  return S_OK);
+                GattCommunicationStatus commStatus;
+                hr = result->get_Status(&commStatus);
+                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service discovery status",
+                                                  return S_OK);
+                if (commStatus != GattCommunicationStatus_Success)
+                    return S_OK;
+
+                hr = result->get_Services(&deviceServices);
+                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service list",
+                                                  return S_OK);
+
                 uint serviceCount;
                 hr = deviceServices->get_Size(&serviceCount);
-                Q_ASSERT_SUCCEEDED(hr);
+                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service list size",
+                                                  return S_OK);
                 for (uint i = 0; i < serviceCount; ++i) {
                     ComPtr<IGattDeviceService> deviceService;
                     hr = deviceServices->GetAt(i, &deviceService);
-                    Q_ASSERT_SUCCEEDED(hr);
+                    WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service");
                     GUID guuid;
                     hr = deviceService->get_Uuid(&guuid);
-                    Q_ASSERT_SUCCEEDED(hr);
+                    WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service's Uuid");
                     const QBluetoothUuid service(guuid);
 
                     QSharedPointer<QLowEnergyServicePrivate> pointer;
@@ -856,10 +871,12 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServices()
 
                 return S_OK;
             }).Get());
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not register service discovery callback",
+                                          return S_OK)
         return hr;
     });
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not run registration in Xaml thread",
+                                      return)
 }
 
 void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoothUuid &service)
