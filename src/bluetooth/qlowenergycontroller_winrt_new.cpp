@@ -644,9 +644,30 @@ ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRTNew::getNativeCharac
     if (!service)
         return nullptr;
 
-    ComPtr<IVectorView<GattCharacteristic *>> characteristics;
-    HRESULT hr = service->GetCharacteristics(charUuid, &characteristics);
+    ComPtr<IGattDeviceService3> service3;
+    HRESULT hr = service.As(&service3);
+    RETURN_IF_FAILED("Could not cast service", return nullptr);
+
+    ComPtr<IAsyncOperation<GattCharacteristicsResult *>> op;
+    ComPtr<IGattCharacteristicsResult> result;
+    hr = service3->GetCharacteristicsForUuidAsync(charUuid, &op);
     RETURN_IF_FAILED("Could not obtain native characteristics for service", return nullptr);
+    hr = QWinRTFunctions::await(op, result.GetAddressOf(), QWinRTFunctions::ProcessMainThreadEvents, 5000);
+    RETURN_IF_FAILED("Could not await completion of characteristic operation", return nullptr);
+    GattCommunicationStatus status;
+    hr = result->get_Status(&status);
+    if (FAILED(hr) || status != GattCommunicationStatus_Success) {
+        qErrnoWarning(hr, "Native characteristic operation failed.");
+        return nullptr;
+    }
+    ComPtr<IVectorView<GattCharacteristic *>> characteristics;
+    hr = result->get_Characteristics(&characteristics);
+    RETURN_IF_FAILED("Could not obtain characteristic list.", return nullptr);
+    uint size;
+    hr = characteristics->get_Size(&size);
+    RETURN_IF_FAILED("Could not obtain characteristic list's size.", return nullptr);
+    if (size != 1)
+        qErrnoWarning("More than 1 characteristic found.");
     ComPtr<IGattCharacteristic> characteristic;
     hr = characteristics->GetAt(0, &characteristic);
     RETURN_IF_FAILED("Could not obtain first characteristic for service", return nullptr);
