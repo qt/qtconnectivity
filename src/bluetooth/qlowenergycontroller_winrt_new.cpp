@@ -664,6 +664,12 @@ void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoo
             return;
     }
     ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(serviceUuid, charUuid);
+    if (!characteristic) {
+        qCDebug(QT_BT_WINRT).nospace() << "Could not obtain native characteristic " << charUuid
+                             << " from service " << serviceUuid << ". Qt will not be able to signal"
+                             << " changes for this characteristic.";
+        return;
+    }
 
     EventRegistrationToken token;
     HRESULT hr;
@@ -691,8 +697,14 @@ void QLowEnergyControllerPrivateWinRTNew::unregisterFromValueChanges()
     qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
     HRESULT hr;
     for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
+        if (!entry.characteristic) {
+            qCWarning(QT_BT_WINRT) << "Unregistering from value changes for characteristic failed."
+                                   << "Characteristic has been deleted";
+            continue;
+        }
         hr = entry.characteristic->remove_ValueChanged(entry.token);
-        Q_ASSERT_SUCCEEDED(hr);
+        if (FAILED(hr))
+            qCWarning(QT_BT_WINRT) << "Unregistering from value changes for characteristic failed.";
     }
     mValueChangedTokens.clear();
 }
