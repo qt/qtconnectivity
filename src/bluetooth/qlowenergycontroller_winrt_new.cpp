@@ -747,25 +747,36 @@ void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
         ComPtr<IGattDeviceService> service)
 {
     Q_Q(QLowEnergyController);
-    ComPtr<IGattDeviceService2> service2;
-    HRESULT hr = service.As(&service2);
-    Q_ASSERT_SUCCEEDED(hr);
-    ComPtr<IVectorView<GattDeviceService *>> includedServices;
-    hr = service2->GetAllIncludedServices(&includedServices);
+    ComPtr<IGattDeviceService3> service3;
+    HRESULT hr = service.As(&service3);
+    RETURN_IF_FAILED("Could not cast service", return);
+    ComPtr<IAsyncOperation<GattDeviceServicesResult *>> op;
+    hr = service3->GetIncludedServicesAsync(&op);
     // Some devices return ERROR_ACCESS_DISABLED_BY_POLICY
-    if (FAILED(hr))
+    RETURN_IF_FAILED("Could not obtain included services", return);
+    ComPtr<IGattDeviceServicesResult> result;
+    hr = QWinRTFunctions::await(op, result.GetAddressOf(), QWinRTFunctions::ProcessMainThreadEvents, 5000);
+    RETURN_IF_FAILED("Could not await service operation", return);
+    GattCommunicationStatus status;
+    hr = result->get_Status(&status);
+    if (FAILED(hr) || status != GattCommunicationStatus_Success) {
+        qErrnoWarning("Could not obtain list of included services");
         return;
+    }
+    ComPtr<IVectorView<GattDeviceService *>> includedServices;
+    hr = result->get_Services(&includedServices);
+    RETURN_IF_FAILED("Could not obtain service list", return);
 
     uint count;
     hr = includedServices->get_Size(&count);
-    Q_ASSERT_SUCCEEDED(hr);
+    RETURN_IF_FAILED("Could not obtain service list's size", return);
     for (uint i = 0; i < count; ++i) {
         ComPtr<IGattDeviceService> includedService;
         hr = includedServices->GetAt(i, &includedService);
-        Q_ASSERT_SUCCEEDED(hr);
+        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service from list");
         GUID guuid;
         hr = includedService->get_Uuid(&guuid);
-        Q_ASSERT_SUCCEEDED(hr);
+        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain included service's Uuid");
         const QBluetoothUuid includedUuid(guuid);
         QSharedPointer<QLowEnergyServicePrivate> includedPointer;
         if (serviceList.contains(includedUuid)) {
