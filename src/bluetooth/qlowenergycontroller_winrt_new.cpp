@@ -93,6 +93,7 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 #define CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, msg, ret) \
     if (FAILED(hr)) { \
         qCWarning(QT_BT_WINRT) << msg; \
+        unregisterFromStatusChanges(); \
         setError(QLowEnergyController::ConnectionError); \
         setState(QLowEnergyController::UnconnectedState); \
         ret; \
@@ -440,9 +441,7 @@ QLowEnergyControllerPrivateWinRTNew::QLowEnergyControllerPrivateWinRTNew()
 
 QLowEnergyControllerPrivateWinRTNew::~QLowEnergyControllerPrivateWinRTNew()
 {
-    if (mDevice && mStatusChangedToken.value)
-        mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
-
+    unregisterFromStatusChanges();
     unregisterFromValueChanges();
 }
 
@@ -497,6 +496,7 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
                            && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
                     invalidateServices();
                     unregisterFromValueChanges();
+                    unregisterFromStatusChanges();
                     mDevice = nullptr;
                     setError(QLowEnergyController::RemoteHostClosedError);
                     setState(QLowEnergyController::UnconnectedState);
@@ -525,12 +525,14 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
     hr = QWinRTFunctions::await(deviceServicesOp, deviceServicesResult.GetAddressOf(),
                                 QWinRTFunctions::ProcessMainThreadEvents, 5000);
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not await services operation", return)
+
     GattCommunicationStatus commStatus;
     hr = deviceServicesResult->get_Status(&commStatus);
     if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
         qCWarning(QT_BT_WINRT()) << "Service operation failed";
         setError(QLowEnergyController::ConnectionError);
         setState(QLowEnergyController::UnconnectedState);
+        unregisterFromStatusChanges();
         return;
     }
 
@@ -572,6 +574,7 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
                                       "manifest capabilities";
             setState(QLowEnergyController::UnconnectedState);
             setError(QLowEnergyController::ConnectionError);
+            unregisterFromStatusChanges();
             return;
         }
         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain characteristic list");
@@ -606,6 +609,7 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
 
     qCWarning(QT_BT_WINRT) << "Could not obtain characteristic read result that triggers"
                             "device connection. Is the device reachable?";
+    unregisterFromStatusChanges();
     setError(QLowEnergyController::ConnectionError);
     setState(QLowEnergyController::UnconnectedState);
 }
@@ -616,13 +620,8 @@ void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::ClosingState);
     unregisterFromValueChanges();
-    if (mDevice) {
-        if (mStatusChangedToken.value) {
-            mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
-            mStatusChangedToken.value = 0;
-        }
-        mDevice = nullptr;
-    }
+    unregisterFromStatusChanges();
+    mDevice = nullptr;
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
 }
@@ -711,6 +710,15 @@ void QLowEnergyControllerPrivateWinRTNew::unregisterFromValueChanges()
             qCWarning(QT_BT_WINRT) << "Unregistering from value changes for characteristic failed.";
     }
     mValueChangedTokens.clear();
+}
+
+void QLowEnergyControllerPrivateWinRTNew::unregisterFromStatusChanges()
+{
+    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    if (mDevice && mStatusChangedToken.value) {
+        mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
+        mStatusChangedToken.value = 0;
+    }
 }
 
 void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
