@@ -121,15 +121,28 @@ QLowEnergyControllerPrivate *createWinRTLowEnergyController()
 
 static QByteArray byteArrayFromBuffer(const ComPtr<IBuffer> &buffer, bool isWCharString = false)
 {
+    if (!buffer) {
+        qCWarning(QT_BT_WINRT) << "nullptr passed to byteArrayFromBuffer";
+        return QByteArray();
+    }
     ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
     HRESULT hr = buffer.As(&byteAccess);
-    Q_ASSERT_SUCCEEDED(hr);
+    if (FAILED(hr)) {
+        qCWarning(QT_BT_WINRT) << "Could not cast Buffer to ByteAccess";
+        return QByteArray();
+    }
     char *data;
     hr = byteAccess->Buffer(reinterpret_cast<byte **>(&data));
-    Q_ASSERT_SUCCEEDED(hr);
+    if (FAILED(hr)) {
+        qCWarning(QT_BT_WINRT) << "Could not obtain buffer data";
+        return QByteArray();
+    }
     UINT32 size;
     hr = buffer->get_Length(&size);
-    Q_ASSERT_SUCCEEDED(hr);
+    if (FAILED(hr)) {
+        qCWarning(QT_BT_WINRT) << "Could not obtain buffer length";
+        return QByteArray();
+    }
     if (isWCharString) {
         QString valueString = QString::fromUtf16(reinterpret_cast<ushort *>(data)).left(size / 2);
         return valueString.toUtf8();
@@ -143,7 +156,10 @@ static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattRes
     ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
     HRESULT hr;
     hr = gattResult->get_Value(&buffer);
-    Q_ASSERT_SUCCEEDED(hr);
+    if (FAILED(hr) || !buffer) {
+        qCWarning(QT_BT_WINRT) << "Could not obtain buffer from GattReadResult";
+        return QByteArray();
+    }
     return byteArrayFromBuffer(buffer, isWCharString);
 }
 
@@ -690,7 +706,7 @@ void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoo
         GUID guuid;
         HRESULT hr;
         hr = entry.characteristic->get_Uuid(&guuid);
-        Q_ASSERT_SUCCEEDED(hr);
+        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain characteristic's Uuid")
         if (QBluetoothUuid(guuid) == charUuid)
             return;
     }
@@ -710,14 +726,14 @@ void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoo
                     HRESULT hr;
                     quint16 handle;
                     hr = characteristic->get_AttributeHandle(&handle);
-                    Q_ASSERT_SUCCEEDED(hr);
+                    RETURN_IF_FAILED("Could not obtain characteristic's handle", return S_OK)
                     ComPtr<IBuffer> buffer;
                     hr = args->get_CharacteristicValue(&buffer);
-                    Q_ASSERT_SUCCEEDED(hr);
+                    RETURN_IF_FAILED("Could not obtain characteristic's value", return S_OK)
                     characteristicChanged(handle, byteArrayFromBuffer(buffer));
                     return S_OK;
                 }).Get(), &token);
-    Q_ASSERT_SUCCEEDED(hr);
+    RETURN_IF_FAILED("Could not register characteristic for value changes", return)
     mValueChangedTokens.append(ValueChangedEntry(characteristic, token));
     qCDebug(QT_BT_WINRT) << "Characteristic" << charUuid << "in service"
         << serviceUuid << "registered for value changes";
