@@ -49,56 +49,56 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
     QObject(parent), securityFlags(QBluetooth::NoSecurity)
 {
     localDevice = new QBluetoothLocalDevice(this);
-    connect(localDevice, SIGNAL(error(QBluetoothLocalDevice::Error)),
-            this, SIGNAL(error(QBluetoothLocalDevice::Error)));
-    connect(localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)),
-            this, SIGNAL(hostModeStateChanged()));
-    connect(localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)),
-            this, SLOT(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
-    connect(localDevice, SIGNAL(deviceConnected(QBluetoothAddress)),
-            this, SLOT(connected(QBluetoothAddress)));
-    connect(localDevice, SIGNAL(deviceDisconnected(QBluetoothAddress)),
-            this, SLOT(disconnected(QBluetoothAddress)));
-    connect(localDevice, SIGNAL(pairingDisplayConfirmation(QBluetoothAddress,QString)),
-            this, SLOT(pairingDisplayConfirmation(QBluetoothAddress,QString)));
+    connect(localDevice, &QBluetoothLocalDevice::error,
+            this, &BtLocalDevice::error);
+    connect(localDevice, &QBluetoothLocalDevice::hostModeStateChanged,
+            this, &BtLocalDevice::hostModeStateChanged);
+    connect(localDevice, &QBluetoothLocalDevice::pairingFinished,
+            this, &BtLocalDevice::pairingFinished);
+    connect(localDevice, &QBluetoothLocalDevice::deviceConnected,
+            this, &BtLocalDevice::connected);
+    connect(localDevice, &QBluetoothLocalDevice::deviceDisconnected,
+            this, &BtLocalDevice::disconnected);
+    connect(localDevice, &QBluetoothLocalDevice::pairingDisplayConfirmation,
+            this, &BtLocalDevice::pairingDisplayConfirmation);
     connect(localDevice, &QBluetoothLocalDevice::pairingDisplayPinCode,
             this, &BtLocalDevice::pairingDisplayPinCode);
 
     if (localDevice->isValid()) {
         deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
-        connect(deviceAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
-                this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
-        connect(deviceAgent, SIGNAL(finished()),
-                this, SLOT(discoveryFinished()));
-        connect(deviceAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
-                this, SLOT(discoveryError(QBluetoothDeviceDiscoveryAgent::Error)));
-        connect(deviceAgent, SIGNAL(canceled()),
-                this, SLOT(discoveryCanceled()));
+        connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+                this, &BtLocalDevice::deviceDiscovered);
+        connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::finished,
+                this, &BtLocalDevice::discoveryFinished);
+        connect(deviceAgent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+                this, &BtLocalDevice::discoveryError);
+        connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::canceled,
+                this, &BtLocalDevice::discoveryCanceled);
 
         serviceAgent = new QBluetoothServiceDiscoveryAgent(this);
-        connect(serviceAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-                this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-        connect(serviceAgent, SIGNAL(finished()),
-                this, SLOT(serviceDiscoveryFinished()));
-        connect(serviceAgent, SIGNAL(canceled()),
-                this, SLOT(serviceDiscoveryCanceled()));
-        connect(serviceAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
-                this, SLOT(serviceDiscoveryError(QBluetoothServiceDiscoveryAgent::Error)));
+        connect(serviceAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+                this, &BtLocalDevice::serviceDiscovered);
+        connect(serviceAgent, &QBluetoothServiceDiscoveryAgent::finished,
+                this, &BtLocalDevice::serviceDiscoveryFinished);
+        connect(serviceAgent, &QBluetoothServiceDiscoveryAgent::canceled,
+                this, &BtLocalDevice::serviceDiscoveryCanceled);
+        connect(serviceAgent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
+                this, &BtLocalDevice::serviceDiscoveryError);
 
         socket = new QBluetoothSocket(SOCKET_PROTOCOL, this);
-        connect(socket, SIGNAL(stateChanged(QBluetoothSocket::SocketState)),
-                this, SLOT(socketStateChanged(QBluetoothSocket::SocketState)));
-        connect(socket, SIGNAL(error(QBluetoothSocket::SocketError)),
-                this, SLOT(socketError(QBluetoothSocket::SocketError)));
-        connect(socket, SIGNAL(connected()), this, SLOT(socketConnected()));
-        connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
-        connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
+        connect(socket, &QBluetoothSocket::stateChanged,
+                this, &BtLocalDevice::socketStateChanged);
+        connect(socket, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
+                this, &BtLocalDevice::socketError);
+        connect(socket, &QBluetoothSocket::connected, this, &BtLocalDevice::socketConnected);
+        connect(socket, &QBluetoothSocket::disconnected, this, &BtLocalDevice::socketDisconnected);
+        connect(socket, &QIODevice::readyRead, this, &BtLocalDevice::readData);
         setSecFlags(static_cast<int>(socket->preferredSecurityFlags()));
 
         server = new QBluetoothServer(SOCKET_PROTOCOL, this);
-        connect(server, SIGNAL(newConnection()), this, SLOT(serverNewConnection()));
-        connect(server, SIGNAL(error(QBluetoothServer::Error)),
-                this, SLOT(serverError(QBluetoothServer::Error)));
+        connect(server, &QBluetoothServer::newConnection, this, &BtLocalDevice::serverNewConnection);
+        connect(server, QOverload<QBluetoothServer::Error>::of(&QBluetoothServer::error),
+                this, &BtLocalDevice::serverError);
     } else {
         deviceAgent = nullptr;
         serviceAgent = nullptr;
@@ -675,13 +675,13 @@ void BtLocalDevice::serverNewConnection()
     }
 
     client->setParent(this);
-    connect(client, SIGNAL(disconnected()), this, SLOT(clientSocketDisconnected()));
-    connect(client, SIGNAL(readyRead()), this, SLOT(clientSocketReadyRead()));
-    connect(client, SIGNAL(stateChanged(QBluetoothSocket::SocketState)),
-            this, SLOT(socketStateChanged(QBluetoothSocket::SocketState)));
-    connect(client, SIGNAL(error(QBluetoothSocket::SocketError)),
-            this, SLOT(socketError(QBluetoothSocket::SocketError)));
-    connect(client, SIGNAL(connected()), this, SLOT(socketConnected()));
+    connect(client, &QBluetoothSocket::disconnected, this, &BtLocalDevice::clientSocketDisconnected);
+    connect(client, &QIODevice::readyRead, this, &BtLocalDevice::clientSocketReadyRead);
+    connect(client, &QBluetoothSocket::stateChanged,
+            this, &BtLocalDevice::socketStateChanged);
+    connect(client, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
+            this, &BtLocalDevice::socketError);
+    connect(client, &QBluetoothSocket::connected, this, &BtLocalDevice::socketConnected);
     serverSockets.append(client);
 }
 

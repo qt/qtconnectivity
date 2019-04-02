@@ -1755,7 +1755,8 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QTRY_VERIFY_WITH_TIMEOUT(
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
-    //test service described by http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
+    // test service described by
+    // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
 
     QLowEnergyCharacteristic dataChar;
@@ -1929,7 +1930,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
     // Temperature service described by
-    // http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
+    // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
 
     // 1. Find temperature data characteristic
     const QLowEnergyCharacteristic tempData = service->characteristic(

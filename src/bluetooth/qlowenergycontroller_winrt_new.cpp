@@ -396,6 +396,8 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
                     emit q->connected();
                 } else if (state != QLowEnergyController::UnconnectedState
                            && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
+                    invalidateServices();
+                    unregisterFromValueChanges();
                     setError(QLowEnergyController::RemoteHostClosedError);
                     setState(QLowEnergyController::UnconnectedState);
                     emit q->disconnected();
@@ -517,8 +519,7 @@ void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     Q_Q(QLowEnergyController);
-    setState(QLowEnergyController::UnconnectedState);
-    emit q->disconnected();
+    setState(QLowEnergyController::ClosingState);
     unregisterFromValueChanges();
     if (mDevice) {
         if (mStatusChangedToken.value) {
@@ -527,6 +528,8 @@ void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
         }
         mDevice = nullptr;
     }
+    setState(QLowEnergyController::UnconnectedState);
+    emit q->disconnected();
 }
 
 ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRTNew::getNativeService(
