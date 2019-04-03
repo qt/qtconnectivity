@@ -77,34 +77,6 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 
-static QVector<QBluetoothUuid> getIncludedServiceIds(const ComPtr<IGattDeviceService> &service)
-{
-    QVector<QBluetoothUuid> result;
-    ComPtr<IGattDeviceService2> service2;
-    HRESULT hr = service.As(&service2);
-    Q_ASSERT_SUCCEEDED(hr);
-    ComPtr<IVectorView<GattDeviceService *>> includedServices;
-    hr = service2->GetAllIncludedServices(&includedServices);
-    Q_ASSERT_SUCCEEDED(hr);
-
-    uint count;
-    hr = includedServices->get_Size(&count);
-    Q_ASSERT_SUCCEEDED(hr);
-    for (uint i = 0; i < count; ++i) {
-        ComPtr<IGattDeviceService> includedService;
-        hr = includedServices->GetAt(i, &includedService);
-        Q_ASSERT_SUCCEEDED(hr);
-        GUID guuid;
-        hr = includedService->get_Uuid(&guuid);
-        Q_ASSERT_SUCCEEDED(hr);
-        const QBluetoothUuid service(guuid);
-        result << service;
-
-        result << getIncludedServiceIds(includedService);
-    }
-    return result;
-}
-
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult, bool isWCharString = false)
 {
     ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
