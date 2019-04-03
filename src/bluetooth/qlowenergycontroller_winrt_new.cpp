@@ -1283,25 +1283,31 @@ void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
         HRESULT hr = GetActivationFactory(
                     HStringReference(RuntimeClass_Windows_Storage_Streams_Buffer).Get(),
                     &bufferFactory);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain buffer factory",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
         const quint32 length = quint32(newValue.length());
         hr = bufferFactory->Create(length, &buffer);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not create buffer",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         hr = buffer->put_Length(length);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not set buffer length",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
         hr = buffer.As(&byteAccess);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not cast buffer",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         byte *bytes;
         hr = byteAccess->Buffer(&bytes);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not set buffer",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         memcpy(bytes, newValue, length);
         ComPtr<IAsyncOperation<GattCommunicationStatus>> writeOp;
         GattWriteOption option = writeWithResponse ? GattWriteOption_WriteWithResponse
                                                    : GattWriteOption_WriteWithoutResponse;
         hr = characteristic->WriteValueWithOptionAsync(buffer.Get(), option, &writeOp);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could write characteristic",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         auto writeCompletedLambda =[charData, charHandle, newValue, service, writeWithResponse, this]
                 (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
         {
@@ -1319,7 +1325,8 @@ void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
                 service->setError(QLowEnergyService::CharacteristicWriteError);
                 return S_OK;
             }
-            Q_ASSERT_SUCCEEDED(hr);
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain characteristic write result",
+                                           service, QLowEnergyService::CharacteristicWriteError, return S_OK)
             if (result != GattCommunicationStatus_Success) {
                 qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "write operation failed";
                 service->setError(QLowEnergyService::CharacteristicWriteError);
@@ -1337,10 +1344,12 @@ void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
         hr = writeOp->put_Completed(
                     Callback<IAsyncOperationCompletedHandler<GattCommunicationStatus>>(
                         writeCompletedLambda).Get());
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not register characteristic write callback",
+                                       service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         return S_OK;
     });
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not run registration on Xaml thread",
+                                   service, QLowEnergyService::CharacteristicWriteError, return)
 }
 
 void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
