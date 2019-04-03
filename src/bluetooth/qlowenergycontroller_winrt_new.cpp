@@ -905,35 +905,45 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
     QSharedPointer<QLowEnergyServicePrivate> pointer = serviceList.value(service);
 
     pointer->setState(QLowEnergyService::DiscoveringServices);
-    ComPtr<IGattDeviceService2> deviceService2;
-    HRESULT hr = deviceService.As(&deviceService2);
-    Q_ASSERT_SUCCEEDED(hr);
     ComPtr<IGattDeviceService3> deviceService3;
-    hr = deviceService.As(&deviceService3);
-    RETURN_IF_FAILED("Could not cast device service", return);
-    ComPtr<IVectorView<GattDeviceService *>> deviceServices;
-    hr = deviceService2->GetAllIncludedServices(&deviceServices);
-    if (FAILED(hr)) { // ERROR_ACCESS_DISABLED_BY_POLICY
-        qCDebug(QT_BT_WINRT) << "Could not obtain included services list for" << service;
+    HRESULT hr = deviceService.As(&deviceService3);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not cast service",
+                                   pointer, QLowEnergyService::UnknownError, return)
+    ComPtr<IAsyncOperation<GattDeviceServicesResult *>> op;
+    hr = deviceService3->GetIncludedServicesAsync(&op);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain included service list",
+                                   pointer, QLowEnergyService::UnknownError, return)
+    ComPtr<IGattDeviceServicesResult> result;
+    hr = QWinRTFunctions::await(op, result.GetAddressOf());
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not await service operation",
+                                   pointer, QLowEnergyService::UnknownError, return)
+    GattCommunicationStatus status;
+    hr = result->get_Status(&status);
+    if (FAILED(hr) || status != GattCommunicationStatus_Success) {
+        qCDebug(QT_BT_WINRT) << "Obtaining list of included services failed";
         pointer->setError(QLowEnergyService::UnknownError);
-        pointer->setState(QLowEnergyService::InvalidService);
         return;
     }
+    ComPtr<IVectorView<GattDeviceService *>> deviceServices;
+    hr = result->get_Services(&deviceServices);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain service list from result",
+                                   pointer, QLowEnergyService::UnknownError, return)
     uint serviceCount;
     hr = deviceServices->get_Size(&serviceCount);
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain included service list's size",
+                                   pointer, QLowEnergyService::UnknownError, return)
     for (uint i = 0; i < serviceCount; ++i) {
         ComPtr<IGattDeviceService> includedService;
         hr = deviceServices->GetAt(i, &includedService);
-        Q_ASSERT_SUCCEEDED(hr);
+        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service from list")
         GUID guuid;
         hr = includedService->get_Uuid(&guuid);
-        Q_ASSERT_SUCCEEDED(hr);
+        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service Uuid")
 
         const QBluetoothUuid service(guuid);
         if (service.isNull()) {
             qCDebug(QT_BT_WINRT) << "Could not find service";
-            return;
+            continue;
         }
 
         pointer->includedServices.append(service);
@@ -974,7 +984,8 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
                 registerForValueChanges(service, indicateChar);
             return S_OK;
         });
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not register for value changes in Xaml thread",
+                                       pointer, QLowEnergyService::UnknownError, return)
 
         pointer->setState(QLowEnergyService::ServiceDiscovered);
         thread->exit(0);
