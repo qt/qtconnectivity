@@ -1034,7 +1034,8 @@ void QLowEnergyControllerPrivateWinRTNew::readCharacteristic(
         }
         ComPtr<IAsyncOperation<GattReadResult*>> readOp;
         HRESULT hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached, &readOp);
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not read characteristic",
+                                       service, QLowEnergyService::CharacteristicReadError, return S_OK)
         auto readCompletedLambda = [charData, charHandle, service]
                 (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
         {
@@ -1046,11 +1047,8 @@ void QLowEnergyControllerPrivateWinRTNew::readCharacteristic(
             ComPtr<IGattReadResult> characteristicValue;
             HRESULT hr;
             hr = op->GetResults(&characteristicValue);
-            if (FAILED(hr)) {
-                qCDebug(QT_BT_WINRT) << "Could not obtain result for characteristic" << charHandle;
-                service->setError(QLowEnergyService::CharacteristicReadError);
-                return S_OK;
-            }
+            CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain result for characteristic",
+                                           service, QLowEnergyService::CharacteristicReadError, return S_OK)
 
             const QByteArray value = byteArrayFromGattResult(characteristicValue);
             QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
@@ -1061,10 +1059,12 @@ void QLowEnergyControllerPrivateWinRTNew::readCharacteristic(
         };
         hr = readOp->put_Completed(Callback<IAsyncOperationCompletedHandler<GattReadResult *>>(
                                        readCompletedLambda).Get());
-        Q_ASSERT_SUCCEEDED(hr);
+        CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not register characteristic read callback",
+                                       service, QLowEnergyService::CharacteristicReadError, return S_OK)
         return S_OK;
     });
-    Q_ASSERT_SUCCEEDED(hr);
+    CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not run registration on Xaml thread",
+                                   service, QLowEnergyService::CharacteristicReadError, return)
 }
 
 void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
