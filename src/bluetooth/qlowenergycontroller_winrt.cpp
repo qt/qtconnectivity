@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qlowenergycontroller_winrt_p.h"
+#include "qbluetoothutils_winrt_p.h"
 
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -102,24 +103,6 @@ static QVector<QBluetoothUuid> getIncludedServiceIds(const ComPtr<IGattDeviceSer
         result << getIncludedServiceIds(includedService);
     }
     return result;
-}
-
-static QByteArray byteArrayFromBuffer(const ComPtr<IBuffer> &buffer, bool isWCharString = false)
-{
-    ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
-    HRESULT hr = buffer.As(&byteAccess);
-    Q_ASSERT_SUCCEEDED(hr);
-    char *data;
-    hr = byteAccess->Buffer(reinterpret_cast<byte **>(&data));
-    Q_ASSERT_SUCCEEDED(hr);
-    UINT32 size;
-    hr = buffer->get_Length(&size);
-    Q_ASSERT_SUCCEEDED(hr);
-    if (isWCharString) {
-        QString valueString = QString::fromUtf16(reinterpret_cast<ushort *>(data)).left(size / 2);
-        return valueString.toUtf8();
-    }
-    return QByteArray(data, size);
 }
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult, bool isWCharString = false)

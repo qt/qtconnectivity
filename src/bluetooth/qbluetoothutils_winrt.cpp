@@ -42,12 +42,15 @@
 
 #include <QtCore/qfunctions_winrt.h>
 
+#include <robuffer.h>
 #include <wrl.h>
 #include <windows.foundation.metadata.h>
+#include <windows.storage.streams.h>
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::Foundation::Metadata;
+using namespace ABI::Windows::Storage::Streams;
 
 QT_BEGIN_NAMESPACE
 
@@ -74,6 +77,28 @@ bool supportsNewLEApi()
                 valueRef.Get(), 4, &apiPresent);
     apiPresent = SUCCEEDED(hr) && apiPresent;
     return apiPresent;
+}
+
+QByteArray byteArrayFromBuffer(const ComPtr<NativeBuffer> &buffer, bool isWCharString)
+{
+    if (!buffer) {
+        qErrnoWarning("nullptr passed to byteArrayFromBuffer");
+        return QByteArray();
+    }
+    ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
+    HRESULT hr = buffer.As(&byteAccess);
+    RETURN_IF_FAILED("Could not cast buffer", return QByteArray())
+    char *data;
+    hr = byteAccess->Buffer(reinterpret_cast<byte **>(&data));
+    RETURN_IF_FAILED("Could not obtain buffer data", return QByteArray())
+    UINT32 size;
+    hr = buffer->get_Length(&size);
+    RETURN_IF_FAILED("Could not obtain buffer size", return QByteArray())
+    if (isWCharString) {
+        QString valueString = QString::fromUtf16(reinterpret_cast<ushort *>(data)).left(size / 2);
+        return valueString.toUtf8();
+    }
+    return QByteArray(data, qint32(size));
 }
 
 QT_END_NAMESPACE

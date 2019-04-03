@@ -39,6 +39,7 @@
 
 #include "qlowenergycontroller_winrt_new_p.h"
 #include "qlowenergycontroller_winrt_p.h"
+#include "qbluetoothutils_winrt_p.h"
 
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -117,37 +118,6 @@ QLowEnergyControllerPrivate *createWinRTLowEnergyController()
 
     qCDebug(QT_BT_WINRT) << "Using pre 15063 low energy controller";
     return new QLowEnergyControllerPrivateWinRT();
-}
-
-static QByteArray byteArrayFromBuffer(const ComPtr<IBuffer> &buffer, bool isWCharString = false)
-{
-    if (!buffer) {
-        qCWarning(QT_BT_WINRT) << "nullptr passed to byteArrayFromBuffer";
-        return QByteArray();
-    }
-    ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
-    HRESULT hr = buffer.As(&byteAccess);
-    if (FAILED(hr)) {
-        qCWarning(QT_BT_WINRT) << "Could not cast Buffer to ByteAccess";
-        return QByteArray();
-    }
-    char *data;
-    hr = byteAccess->Buffer(reinterpret_cast<byte **>(&data));
-    if (FAILED(hr)) {
-        qCWarning(QT_BT_WINRT) << "Could not obtain buffer data";
-        return QByteArray();
-    }
-    UINT32 size;
-    hr = buffer->get_Length(&size);
-    if (FAILED(hr)) {
-        qCWarning(QT_BT_WINRT) << "Could not obtain buffer length";
-        return QByteArray();
-    }
-    if (isWCharString) {
-        QString valueString = QString::fromUtf16(reinterpret_cast<ushort *>(data)).left(size / 2);
-        return valueString.toUtf8();
-    }
-    return QByteArray(data, int(size));
 }
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult,
