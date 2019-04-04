@@ -182,30 +182,6 @@ private:
     QPointer<SocketConnectWorker> workerPointer;
 };
 
-/*
- * This function is part of a workaround for QTBUG-61392
- *
- * Returns null uuid if the given \a serviceUuid is not a uuid
- * derived from the Bluetooth base uuid.
- */
-static QBluetoothUuid reverseUuid(const QBluetoothUuid &serviceUuid)
-{
-    if (serviceUuid.isNull())
-        return QBluetoothUuid();
-
-    bool isBaseUuid = false;
-    serviceUuid.toUInt32(&isBaseUuid);
-    if (isBaseUuid)
-        return serviceUuid;
-
-    const quint128 original = serviceUuid.toUInt128();
-    quint128 reversed;
-    for (int i = 0; i < 16; i++)
-        reversed.data[15-i] = original.data[i];
-
-    return QBluetoothUuid(reversed);
-}
-
 QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
   :
     inputThread(0)
@@ -940,6 +916,32 @@ qint64 QBluetoothSocketPrivateAndroid::bytesAvailable() const
 qint64 QBluetoothSocketPrivateAndroid::bytesToWrite() const
 {
     return 0; // nothing because always unbuffered
+}
+
+/*
+ * This function is part of a workaround for QTBUG-61392
+ *
+ * Returns null uuid if the given \a serviceUuid is not a uuid
+ * derived from the Bluetooth base uuid.
+ */
+QBluetoothUuid QBluetoothSocketPrivateAndroid::reverseUuid(const QBluetoothUuid &serviceUuid)
+{
+    if (QtAndroid::androidSdkVersion() < 23)
+        return serviceUuid;
+
+    if (serviceUuid.isNull())
+        return QBluetoothUuid();
+
+    bool isBaseUuid = false;
+    serviceUuid.toUInt32(&isBaseUuid);
+    if (isBaseUuid)
+        return serviceUuid;
+
+    const quint128 original = serviceUuid.toUInt128();
+    quint128 reversed;
+    for (int i = 0; i < 16; i++)
+        reversed.data[15-i] = original.data[i];
+    return QBluetoothUuid{reversed};
 }
 
 bool QBluetoothSocketPrivateAndroid::canReadLine() const
