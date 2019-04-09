@@ -390,9 +390,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
     };
 
     for (int i = 0; i < uuids.count(); i++) {
+        const QBluetoothUuid &uuid = uuids.at(i);
+        if (uuid.isNull())
+            continue;
+
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(remoteDevice);
-        const QBluetoothUuid &uuid = uuids.at(i);
 
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         {
