@@ -122,6 +122,10 @@ private slots:
     void handleServiceHandlerError(const QString &error);
 
 private:
+    void connectToPairedDevice();
+    void connectToUnpairedDevice();
+
+    bool mAbortPending = false;
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
     EventRegistrationToken mStatusChangedToken;
     struct ValueChangedEntry {
