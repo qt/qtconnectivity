@@ -336,25 +336,24 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
 
 void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QBluetoothDeviceInfo &remoteDevice, const QList<QBluetoothUuid> &uuids)
 {
-    /* Android doesn't provide decent SDP data. A list of uuids is close to meaning-less
+    /* Android doesn't provide decent SDP data. A flat list of uuids is all we get.
      *
      * The following approach is chosen:
      * - If we see an SPP service class and we see
      * one or more custom uuids we match them up. Such services will always be SPP services.
      * - If we see a custom uuid but no SPP uuid then we return
-     * BluetoothServiceInfo instance with just a servuceUuid (no service class set)
+     * BluetoothServiceInfo instance with just a serviceUuid (no service class set)
      * - Any other service uuid will stand on its own.
      * */
 
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     //find SPP and custom uuid
-    QBluetoothUuid uuid;
     int sppIndex = -1;
     QVector<int> customUuids;
 
     for (int i = 0; i < uuids.count(); i++) {
-        uuid = uuids.at(i);
+        const QBluetoothUuid uuid = uuids.at(i);
 
         if (uuid.isNull())
             continue;
@@ -370,12 +369,29 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             customUuids.append(i);
     }
 
+    auto rfcommProtocolDescriptorList = []() -> QBluetoothServiceInfo::Sequence {
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                     << QVariant::fromValue(0);
+            return protocol;
+    };
+
+    auto sppProfileDescriptorList = []() -> QBluetoothServiceInfo::Sequence {
+        QBluetoothServiceInfo::Sequence profileSequence;
+        QBluetoothServiceInfo::Sequence classId;
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        classId << QVariant::fromValue(quint16(0x100));
+        profileSequence.append(QVariant::fromValue(classId));
+        return profileSequence;
+    };
+
     for (int i = 0; i < uuids.count(); i++) {
         if (i == sppIndex && !customUuids.isEmpty())
             continue;
 
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(remoteDevice);
+        const QBluetoothUuid &uuid = uuids.at(i);
 
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         {
@@ -388,48 +404,34 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             //we have a custom uuid of service class type SPP
 
             //set rfcomm protocol
-            QBluetoothServiceInfo::Sequence protocol;
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
-                     << QVariant::fromValue(0);
-            protocolDescriptorList.append(QVariant::fromValue(protocol));
+            protocolDescriptorList.append(QVariant::fromValue(rfcommProtocolDescriptorList()));
 
-            QBluetoothServiceInfo::Sequence profileSequence;
-            QBluetoothServiceInfo::Sequence classId;
-            classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-            classId << QVariant::fromValue(quint16(0x100));
-            profileSequence.append(QVariant::fromValue(classId));
+            //set SPP profile descriptor list
             serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                                     profileSequence);
+                                     sppProfileDescriptorList());
 
-            classId.clear();
+            QBluetoothServiceInfo::Sequence classId;
             //set SPP service class uuid
-            classId << QVariant::fromValue(uuids.at(i));
+            classId << QVariant::fromValue(uuid);
             classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
-            serviceInfo.setServiceUuid(uuids.at(i));
+            serviceInfo.setServiceUuid(uuid);
         } else if (sppIndex == i && customUuids.isEmpty()) {
             //set rfcomm protocol
-            QBluetoothServiceInfo::Sequence protocol;
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
-                     << QVariant::fromValue(0);
-            protocolDescriptorList.append(QVariant::fromValue(protocol));
+            protocolDescriptorList.append(QVariant::fromValue(rfcommProtocolDescriptorList()));
 
-            QBluetoothServiceInfo::Sequence profileSequence;
-            QBluetoothServiceInfo::Sequence classId;
-            classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-            classId << QVariant::fromValue(quint16(0x100));
-            profileSequence.append(QVariant::fromValue(classId));
+            //set SPP profile descriptor list
             serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
-                                     profileSequence);
+                                     sppProfileDescriptorList());
 
             //also we need to set the custom uuid to the SPP uuid
             //otherwise QBluetoothSocket::connectToService() would fail due to a missing service uuid
-            serviceInfo.setServiceUuid(uuids.at(i));
+            serviceInfo.setServiceUuid(uuid);
         } else if (customUuids.contains(i)) {
             //custom uuid but no serial port
-            serviceInfo.setServiceUuid(uuids.at(i));
+            serviceInfo.setServiceUuid(uuid);
         }
 
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
@@ -440,10 +442,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         if (!customUuids.contains(i)) {
             //if we don't have custom uuid use it as class id as well
             QBluetoothServiceInfo::Sequence classId;
-            classId << QVariant::fromValue(uuids.at(i));
+            classId << QVariant::fromValue(uuid);
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
-            QBluetoothUuid::ServiceClassUuid clsId
-                = static_cast<QBluetoothUuid::ServiceClassUuid>(uuids.at(i).toUInt16());
+            auto clsId = QBluetoothUuid::ServiceClassUuid(uuid.toUInt16());
             serviceInfo.setServiceName(QBluetoothUuid::serviceClassToString(clsId));
         }
 
