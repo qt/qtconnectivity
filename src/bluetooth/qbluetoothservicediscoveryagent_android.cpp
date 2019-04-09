@@ -47,6 +47,7 @@
 #include <QtBluetooth/QBluetoothServiceDiscoveryAgent>
 
 #include "qbluetoothservicediscoveryagent_p.h"
+#include "qbluetoothsocket_android_p.h"
 #include "android/servicediscoverybroadcastreceiver_p.h"
 #include "android/localdevicebroadcastreceiver_p.h"
 
@@ -449,8 +450,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         //Check if the service is in the uuidFilter
         if (!uuidFilter.isEmpty()) {
             bool match = uuidFilter.contains(serviceInfo.serviceUuid());
-            for (const auto &uuid : qAsConst(uuidFilter))
+            match |= uuidFilter.contains(QBluetoothSocketPrivateAndroid::reverseUuid(serviceInfo.serviceUuid()));
+            for (const auto &uuid : qAsConst(uuidFilter)) {
                 match |= serviceInfo.serviceClassUuids().contains(uuid);
+                match |= serviceInfo.serviceClassUuids().contains(QBluetoothSocketPrivateAndroid::reverseUuid(uuid));
+            }
 
             if (!match)
                 continue;
