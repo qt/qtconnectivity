@@ -340,16 +340,21 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
      *
      * The following approach is chosen:
      * - If we see an SPP service class and we see
-     * one or more custom uuids we match them up. Such services will always be SPP services.
+     *   one or more custom uuids we match them up. Such services will always
+     *   be SPP services. There is the chance that a custom uuid is eronously
+     *   mapped as being an SPP service. In addition, the SPP uuid will be mapped as
+     *   standalone SPP service.
      * - If we see a custom uuid but no SPP uuid then we return
-     * BluetoothServiceInfo instance with just a serviceUuid (no service class set)
+     *   BluetoothServiceInfo instance with just a serviceUuid (no service class set)
+     * - If we don't find any custom uuid but the SPP uuid, we return a
+     *   BluetoothServiceInfo instance where classId and serviceUuid() are set to SPP.
      * - Any other service uuid will stand on its own.
      * */
 
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     //find SPP and custom uuid
-    int sppIndex = -1;
+    bool haveSppClass = false;
     QVector<int> customUuids;
 
     for (int i = 0; i < uuids.count(); i++) {
@@ -360,9 +365,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
         //check for SPP protocol
         bool ok = false;
-        quint16 uuid16 = uuid.toUInt16(&ok);
-        if (ok && uuid16 == QBluetoothUuid::SerialPort)
-            sppIndex = i;
+        auto uuid16 = uuid.toUInt16(&ok);
+        haveSppClass |= ok && uuid16 == QBluetoothUuid::SerialPort;
 
         //check for custom uuid
         if (uuid.minimumSize() == 16)
@@ -386,9 +390,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
     };
 
     for (int i = 0; i < uuids.count(); i++) {
-        if (i == sppIndex && !customUuids.isEmpty())
-            continue;
-
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setDevice(remoteDevice);
         const QBluetoothUuid &uuid = uuids.at(i);
@@ -400,7 +401,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }
 
-        if (customUuids.contains(i) && sppIndex > -1) {
+        if (customUuids.contains(i) && haveSppClass) {
             //we have a custom uuid of service class type SPP
 
             //set rfcomm protocol
@@ -418,7 +419,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
             serviceInfo.setServiceUuid(uuid);
-        } else if (sppIndex == i && customUuids.isEmpty()) {
+        } else if (uuid == QBluetoothUuid{QBluetoothUuid::SerialPort}) {
             //set rfcomm protocol
             protocolDescriptorList.append(QVariant::fromValue(rfcommProtocolDescriptorList()));
 
