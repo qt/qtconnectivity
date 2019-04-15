@@ -363,7 +363,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
 
     discoveredDevices.append(info);
     qCDebug(QT_BT_ANDROID) << "Device found: " << info.name() << info.address().toString()
-                           << "isLeScanResult:" << isLeResult;
+                           << "isLeScanResult:" << isLeResult
+                           << "Manufacturer data size:" << info.manufacturerData().size();
     emit q->deviceDiscovered(info);
 }
 
