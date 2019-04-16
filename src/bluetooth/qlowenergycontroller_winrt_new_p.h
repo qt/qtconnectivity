@@ -118,6 +118,7 @@ public:
 
 private slots:
     void characteristicChanged(quint16 charHandle, const QByteArray &data);
+    void handleServiceHandlerError(const QString &error);
 
 private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
@@ -141,6 +142,8 @@ private:
 
     void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
     void unregisterFromValueChanges();
+
+    void unregisterFromStatusChanges();
 
     void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);

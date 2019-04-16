@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qlowenergycontroller_winrt_p.h"
+#include "qbluetoothutils_winrt_p.h"
 
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -75,52 +76,6 @@ typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConf
 typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharConfigDescriptorResult;
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
-
-static QVector<QBluetoothUuid> getIncludedServiceIds(const ComPtr<IGattDeviceService> &service)
-{
-    QVector<QBluetoothUuid> result;
-    ComPtr<IGattDeviceService2> service2;
-    HRESULT hr = service.As(&service2);
-    Q_ASSERT_SUCCEEDED(hr);
-    ComPtr<IVectorView<GattDeviceService *>> includedServices;
-    hr = service2->GetAllIncludedServices(&includedServices);
-    Q_ASSERT_SUCCEEDED(hr);
-
-    uint count;
-    hr = includedServices->get_Size(&count);
-    Q_ASSERT_SUCCEEDED(hr);
-    for (uint i = 0; i < count; ++i) {
-        ComPtr<IGattDeviceService> includedService;
-        hr = includedServices->GetAt(i, &includedService);
-        Q_ASSERT_SUCCEEDED(hr);
-        GUID guuid;
-        hr = includedService->get_Uuid(&guuid);
-        Q_ASSERT_SUCCEEDED(hr);
-        const QBluetoothUuid service(guuid);
-        result << service;
-
-        result << getIncludedServiceIds(includedService);
-    }
-    return result;
-}
-
-static QByteArray byteArrayFromBuffer(const ComPtr<IBuffer> &buffer, bool isWCharString = false)
-{
-    ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
-    HRESULT hr = buffer.As(&byteAccess);
-    Q_ASSERT_SUCCEEDED(hr);
-    char *data;
-    hr = byteAccess->Buffer(reinterpret_cast<byte **>(&data));
-    Q_ASSERT_SUCCEEDED(hr);
-    UINT32 size;
-    hr = buffer->get_Length(&size);
-    Q_ASSERT_SUCCEEDED(hr);
-    if (isWCharString) {
-        QString valueString = QString::fromUtf16(reinterpret_cast<ushort *>(data)).left(size / 2);
-        return valueString.toUtf8();
-    }
-    return QByteArray(data, size);
-}
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult, bool isWCharString = false)
 {

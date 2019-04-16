@@ -494,7 +494,33 @@ void QBluetoothSocketPrivateAndroid::connectToService(
         return;
     }
 
-    if (!ensureNativeSocket(service.socketProtocol())) {
+    // Workaround for QTBUG-75035
+    /* Not all Android devices publish or discover the SPP uuid for serial services.
+     * Also, Android does not permit the detection of the protocol used by a serial
+     * Bluetooth connection.
+     *
+     * Therefore, QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices()
+     * may have to guess what protocol a potential custom uuid uses. The guessing works
+     * reasonably well as long as the SDP discovery finds the SPP uuid. Otherwise
+     * the SPP and rfcomm protocol info is missing in \a service.
+     *
+     * Android only supports RFCOMM (no L2CP). We assume (in favor of user experience)
+     * that a non-RFCOMM protocol implies a missing SPP uuid during discovery but the user
+     * still wanting to connect with the given \a service instance.
+     */
+
+    auto protocol = service.socketProtocol();
+    switch (protocol) {
+    case QBluetoothServiceInfo::L2capProtocol:
+    case QBluetoothServiceInfo::UnknownProtocol:
+        qCWarning(QT_BT_ANDROID) << "Changing socket protocol to RFCOMM";
+        protocol = QBluetoothServiceInfo::RfcommProtocol;
+        break;
+    case QBluetoothServiceInfo::RfcommProtocol:
+        break;
+    }
+
+    if (!ensureNativeSocket(protocol)) {
         errorString = QBluetoothSocket::tr("Socket type not supported");
         q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;

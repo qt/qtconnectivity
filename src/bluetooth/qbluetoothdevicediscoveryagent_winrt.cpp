@@ -87,21 +87,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
         continue; \
     }
 
-static QByteArray byteArrayFromBuffer(const ComPtr<IBuffer> &buffer)
-{
-    ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteAccess;
-    HRESULT hr = buffer.As(&byteAccess);
-    Q_ASSERT_SUCCEEDED(hr);
-    char *data;
-    hr = byteAccess->Buffer(reinterpret_cast<byte **>(&data));
-    Q_ASSERT_SUCCEEDED(hr);
-    UINT32 size;
-    hr = buffer->get_Length(&size);
-    Q_ASSERT_SUCCEEDED(hr);
-    return QByteArray(data, int(size));
-}
-
-
 static ManufacturerData extractManufacturerData(ComPtr<IBluetoothLEAdvertisement> ad)
 {
     ManufacturerData ret;
