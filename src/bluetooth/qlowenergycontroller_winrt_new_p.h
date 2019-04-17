@@ -62,6 +62,7 @@
 
 #include <wrl.h>
 #include <windows.devices.bluetooth.h>
+#include <windows.foundation.collections.h>
 
 #include <functional>
 
@@ -142,6 +143,8 @@ private:
 
     void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
     void unregisterFromValueChanges();
+    HRESULT onValueChange(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic *characteristic,
+                          ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs *args);
 
     bool registerForStatusChanges();
     void unregisterFromStatusChanges();
@@ -149,7 +152,8 @@ private:
 
     void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
-
+    HRESULT onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult *> *op,
+                                       AsyncStatus status);
 };
 
 QT_END_NAMESPACE
