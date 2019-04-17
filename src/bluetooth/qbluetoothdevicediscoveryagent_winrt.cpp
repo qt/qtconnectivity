@@ -758,13 +758,13 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     boolean isPaired;
     hr = pairing->get_IsPaired(&isPaired);
     Q_ASSERT_SUCCEEDED(hr);
-    QList<QBluetoothUuid> uuids;
+    QVector<QBluetoothUuid> uuids;
 
     const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
     const qint16 rssi = adInfo.rssi;
     // Use the services obtained from the advertisement data if the device is not paired
     if (!isPaired) {
-        uuids = adInfo.services.toList();
+        uuids = adInfo.services;
     } else {
         IVectorView <GenericAttributeProfile::GattDeviceService *> *deviceServices;
         hr = device->get_GattServices(&deviceServices);
@@ -790,7 +790,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
 
     QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, 0);
     info.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    info.setServiceUuids(uuids, QBluetoothDeviceInfo::DataIncomplete);
+    info.setServiceUuids(uuids);
     info.setRssi(rssi);
     for (quint16 key : manufacturerData.keys())
         info.setManufacturerData(key, manufacturerData.value(key));
