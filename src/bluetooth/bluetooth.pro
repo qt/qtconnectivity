@@ -224,7 +224,7 @@ qtConfig(bluez) {
 
     SOURCES += \
         qbluetoothdevicediscoveryagent_winrt.cpp \
-        qbluetoothlocaldevice_p.cpp \
+        qbluetoothlocaldevice_winrt.cpp \
         qbluetoothserver_winrt.cpp \
         qbluetoothservicediscoveryagent_winrt.cpp \
         qbluetoothserviceinfo_winrt.cpp \

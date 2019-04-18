@@ -208,7 +208,20 @@ private:
     void initializeAdapter();
     void initializeAdapterBluez5();
 };
-#elif !defined(QT_OSX_BLUETOOTH) // winrt and dummy backend
+#elif defined(QT_WINRT_BLUETOOTH)
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
+public:
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
+                                 QBluetoothAddress = QBluetoothAddress());
+
+    bool isValid() const;
+
+private:
+    QBluetoothLocalDevice *q_ptr;
+};
+#elif !defined(QT_OSX_BLUETOOTH) // dummy backend
 class QBluetoothLocalDevicePrivate : public QObject
 {
 public:
@@ -219,11 +232,7 @@ public:
 
     bool isValid() const
     {
-#ifndef QT_WINRT_BLUETOOTH
         return false;
-#else
-        return true;
-#endif
     }
 };
 #endif

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -41,9 +41,6 @@
 #include "qbluetoothaddress.h"
 
 #include "qbluetoothlocaldevice_p.h"
-#ifndef QT_IOS_BLUETOOTH
-#include "dummy/dummy_helper_p.h"
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -51,9 +48,6 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this, QBluetoothAddress()))
 {
-#if !defined(QT_IOS_BLUETOOTH)
-    printDummyWarning();
-#endif
     registerQBluetoothLocalDeviceMetaType();
 }
 
@@ -64,39 +58,14 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
     registerQBluetoothLocalDeviceMetaType();
 }
 
-QString QBluetoothLocalDevice::name() const
-{
-    return QString();
-}
-
-QBluetoothAddress QBluetoothLocalDevice::address() const
-{
-    return QBluetoothAddress();
-}
-
-void QBluetoothLocalDevice::powerOn()
+QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress)
+    : q_ptr(q)
 {
 }
 
-void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
+bool QBluetoothLocalDevicePrivate::isValid() const
 {
-    Q_UNUSED(mode);
-}
-
-QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
-{
-    return HostPoweredOff;
-}
-
-QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
-{
-    return QList<QBluetoothAddress>();
-}
-
-QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
-{
-    QList<QBluetoothHostInfo> localDevices;
-    return localDevices;
+    return true;
 }
 
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
@@ -112,12 +81,47 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     const QBluetoothAddress &address) const
 {
     Q_UNUSED(address);
-    return Unpaired;
+    return QBluetoothLocalDevice::Unpaired;
 }
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 {
     Q_UNUSED(confirmation);
+}
+
+void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
+{
+    Q_UNUSED(mode);
+}
+
+QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
+{
+    return HostConnectable;
+}
+
+QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
+{
+    return QList<QBluetoothAddress>();
+}
+
+void QBluetoothLocalDevice::powerOn()
+{
+}
+
+QString QBluetoothLocalDevice::name() const
+{
+    return QString();
+}
+
+QBluetoothAddress QBluetoothLocalDevice::address() const
+{
+    return QBluetoothAddress();
+}
+
+QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
+{
+    QList<QBluetoothHostInfo> localDevices;
+    return localDevices;
 }
 
 QT_END_NAMESPACE
