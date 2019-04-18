@@ -42,7 +42,56 @@
 
 #include "qbluetoothlocaldevice_p.h"
 
+#ifdef CLASSIC_APP_BUILD
+#define Q_OS_WINRT
+#endif
+#include <QtCore/qfunctions_winrt.h>
+
+#include <robuffer.h>
+#include <windows.devices.bluetooth.h>
+#include <wrl.h>
+
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::Devices::Bluetooth;
+using namespace ABI::Windows::Devices::Enumeration;
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+
 QT_BEGIN_NAMESPACE
+
+template <class DeviceStatics, class OpResult, class Device, class Device2>
+ComPtr<IDeviceInformationPairing> getPairingInfo(ComPtr<DeviceStatics> deviceStatics,
+                                                  const QBluetoothAddress &address)
+{
+    ComPtr<IAsyncOperation<OpResult *>> op;
+    if (!deviceStatics)
+        return nullptr;
+    HRESULT hr = deviceStatics->FromBluetoothAddressAsync(address.toUInt64(), &op);
+    RETURN_IF_FAILED("Could not obtain device from address", return nullptr);
+    ComPtr<Device> device;
+    hr = QWinRTFunctions::await(op, device.GetAddressOf(),
+                                QWinRTFunctions::ProcessMainThreadEvents, 5000);
+    if (FAILED(hr) || !device) {
+        qErrnoWarning("Could not obtain device from address");
+        return nullptr;
+    }
+    ComPtr<Device2> device2;
+    hr = device.As(&device2);
+    RETURN_IF_FAILED("Could not cast device", return nullptr);
+    ComPtr<IDeviceInformation> deviceInfo;
+    hr = device2->get_DeviceInformation(&deviceInfo);
+    if (FAILED(hr) || !deviceInfo) {
+        qErrnoWarning("Could not obtain device information");
+        return nullptr;
+    }
+    ComPtr<IDeviceInformation2> deviceInfo2;
+    hr = deviceInfo.As(&deviceInfo2);
+    RETURN_IF_FAILED("Could not cast device information", return nullptr);
+    ComPtr<IDeviceInformationPairing> pairingInfo;
+    hr = deviceInfo2->get_Pairing(&pairingInfo);
+    RETURN_IF_FAILED("Could not obtain pairing information", return nullptr);
+    return pairingInfo;
+}
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
@@ -61,11 +110,13 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q, QBluetoothAddress)
     : q_ptr(q)
 {
+    GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &mLEStatics);
+    GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &mStatics);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
 {
-    return true;
+    return (mStatics != nullptr && mLEStatics != nullptr);
 }
 
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
@@ -80,8 +131,32 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     const QBluetoothAddress &address) const
 {
-    Q_UNUSED(address);
-    return QBluetoothLocalDevice::Unpaired;
+    if (!isValid() || address.isNull())
+        return QBluetoothLocalDevice::Unpaired;
+
+    ComPtr<IDeviceInformationPairing> pairingInfo = getPairingInfo<IBluetoothLEDeviceStatics,
+            BluetoothLEDevice, IBluetoothLEDevice, IBluetoothLEDevice2>(d_ptr->mLEStatics, address);
+    if (!pairingInfo)
+        pairingInfo = getPairingInfo<IBluetoothDeviceStatics, BluetoothDevice,
+                IBluetoothDevice, IBluetoothDevice2>(d_ptr->mStatics, address);
+    if (!pairingInfo)
+        return QBluetoothLocalDevice::Unpaired;
+    boolean isPaired;
+    HRESULT hr = pairingInfo->get_IsPaired(&isPaired);
+    RETURN_IF_FAILED("Could not obtain device pairing", return QBluetoothLocalDevice::Unpaired);
+    if (!isPaired)
+        return QBluetoothLocalDevice::Unpaired;
+
+    ComPtr<IDeviceInformationPairing2> pairingInfo2;
+    hr = pairingInfo.As(&pairingInfo2);
+    RETURN_IF_FAILED("Could not cast pairing info", return QBluetoothLocalDevice::Paired);
+    DevicePairingProtectionLevel protection = DevicePairingProtectionLevel_None;
+    hr = pairingInfo2->get_ProtectionLevel(&protection);
+    RETURN_IF_FAILED("Could not obtain pairing protection level", return QBluetoothLocalDevice::Paired);
+    if (protection == DevicePairingProtectionLevel_Encryption
+            || protection == DevicePairingProtectionLevel_EncryptionAndAuthentication)
+        return QBluetoothLocalDevice::AuthorizedPaired;
+    return QBluetoothLocalDevice::Paired;
 }
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
