@@ -60,9 +60,28 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
+namespace ABI {
+    namespace Windows {
+        namespace Devices {
+            namespace Bluetooth {
+                namespace GenericAttributeProfile {
+                    class GattDeviceServicesResult;
+                    struct IGattCharacteristic;
+                    struct IGattDeviceService;
+                    struct IGattValueChangedEventArgs;
+                }
+
+                struct IBluetoothLEDevice;
+            }
+        }
+        namespace Foundation {
+            template <typename T> struct IAsyncOperation;
+            enum class AsyncStatus;
+        }
+    }
+}
+
 #include <wrl.h>
-#include <windows.devices.bluetooth.h>
-#include <windows.foundation.collections.h>
 
 #include <functional>
 
@@ -78,7 +97,6 @@ QLowEnergyControllerPrivate *createWinRTLowEnergyController();
 
 class QLowEnergyControllerPrivateWinRTNew final : public QLowEnergyControllerPrivate
 {
-    Q_OBJECT
 public:
     QLowEnergyControllerPrivateWinRTNew();
     ~QLowEnergyControllerPrivateWinRTNew() override;
@@ -157,7 +175,7 @@ private:
     void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
     HRESULT onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult *> *op,
-                                       AsyncStatus status);
+                                       ABI::Windows::Foundation::AsyncStatus status);
 };
 
 QT_END_NAMESPACE

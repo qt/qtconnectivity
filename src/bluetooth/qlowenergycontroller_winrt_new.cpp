@@ -58,6 +58,7 @@
 #include <robuffer.h>
 #include <windows.devices.enumeration.h>
 #include <windows.devices.bluetooth.h>
+#include <windows.devices.bluetooth.genericattributeprofile.h>
 #include <windows.foundation.collections.h>
 #include <windows.foundation.metadata.h>
 #include <windows.storage.streams.h>
