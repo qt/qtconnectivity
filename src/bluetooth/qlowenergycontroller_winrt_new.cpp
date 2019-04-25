@@ -473,35 +473,12 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
     BluetoothConnectionStatus status;
     hr = mDevice->get_ConnectionStatus(&status);
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain device's connection status", return)
-    hr = QEventDispatcherWinRT::runOnXamlThread([this, q]() {
-        HRESULT hr;
-        hr = mDevice->add_ConnectionStatusChanged(
-            Callback<StatusHandler>([this, q](IBluetoothLEDevice *dev, IInspectable *) {
-                BluetoothConnectionStatus status;
-                HRESULT hr;
-                hr = dev->get_ConnectionStatus(&status);
-                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain connection status", return S_OK)
-                if (state == QLowEnergyController::ConnectingState
-                        && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
-                    setState(QLowEnergyController::ConnectedState);
-                    emit q->connected();
-                } else if (state != QLowEnergyController::UnconnectedState
-                           && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
-                    invalidateServices();
-                    unregisterFromValueChanges();
-                    unregisterFromStatusChanges();
-                    mDevice = nullptr;
-                    setError(QLowEnergyController::RemoteHostClosedError);
-                    setState(QLowEnergyController::UnconnectedState);
-                    emit q->disconnected();
-                }
-                return S_OK;
-            }).Get(), &mStatusChangedToken);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not register connection status callback", return S_OK)
-        return S_OK;
-    });
-    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not add status callback on Xaml thread", return)
-
+    if (!registerForStatusChanges()) {
+        qCWarning(QT_BT_WINRT) << "Could not register status changes";
+        setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    }
     if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
         setState(QLowEnergyController::ConnectedState);
         emit q->connected();
@@ -726,6 +703,26 @@ void QLowEnergyControllerPrivateWinRTNew::unregisterFromValueChanges()
     mValueChangedTokens.clear();
 }
 
+bool QLowEnergyControllerPrivateWinRTNew::registerForStatusChanges()
+{
+    if (!mDevice)
+        return false;
+
+    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+
+    HRESULT hr;
+    hr = QEventDispatcherWinRT::runOnXamlThread([this]() {
+        HRESULT hr;
+        hr = mDevice->add_ConnectionStatusChanged(
+            Callback<StatusHandler>(this, &QLowEnergyControllerPrivateWinRTNew::onStatusChange).Get(),
+                                    &mStatusChangedToken);
+        RETURN_IF_FAILED("Could not register connection status callback", return hr)
+        return S_OK;
+    });
+    RETURN_FALSE_IF_FAILED("Could not add status callback on Xaml thread")
+    return true;
+}
+
 void QLowEnergyControllerPrivateWinRTNew::unregisterFromStatusChanges()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
@@ -733,6 +730,30 @@ void QLowEnergyControllerPrivateWinRTNew::unregisterFromStatusChanges()
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
         mStatusChangedToken.value = 0;
     }
+}
+
+HRESULT QLowEnergyControllerPrivateWinRTNew::onStatusChange(IBluetoothLEDevice *dev, IInspectable *)
+{
+    Q_Q(QLowEnergyController);
+    BluetoothConnectionStatus status;
+    HRESULT hr;
+    hr = dev->get_ConnectionStatus(&status);
+    RETURN_IF_FAILED("Could not obtain connection status", return S_OK)
+    if (state == QLowEnergyController::ConnectingState
+        && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
+        setState(QLowEnergyController::ConnectedState);
+        emit q->connected();
+    } else if (state != QLowEnergyController::UnconnectedState
+        && status == BluetoothConnectionStatus::BluetoothConnectionStatus_Disconnected) {
+        invalidateServices();
+        unregisterFromValueChanges();
+        unregisterFromStatusChanges();
+        mDevice = nullptr;
+        setError(QLowEnergyController::RemoteHostClosedError);
+        setState(QLowEnergyController::UnconnectedState);
+        emit q->disconnected();
+    }
+    return S_OK;
 }
 
 void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
