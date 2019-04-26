@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,69 +37,74 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTNOTIFIER_P_H
-#define OSXBTNOTIFIER_P_H
+#include "btraii_p.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <qdebug.h>
 
+#include <Foundation/Foundation.h>
 
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qlowenergycontroller.h"
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothuuid.h"
-#include "qbluetooth.h"
-
-#include <QtCore/qsharedpointer.h>
-#include <QtCore/qbytearray.h>
-#include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
+#include <utility>
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyServicePrivate;
+namespace DarwinBluetooth {
 
-namespace OSXBluetooth
+StrongReference::StrongReference(void *object, RetainPolicy policy)
+    : objCInstance(object)
 {
-
-class LECBManagerNotifier : public QObject
-{
-    Q_OBJECT
-
-Q_SIGNALS:
-    void deviceDiscovered(QBluetoothDeviceInfo deviceInfo);
-    void discoveryFinished();
-
-    void connected();
-    void disconnected();
-
-    void serviceDiscoveryFinished();
-    void serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
-    void characteristicRead(QLowEnergyHandle charHandle, const QByteArray &value);
-    void characteristicWritten(QLowEnergyHandle charHandle, const QByteArray &value);
-    void characteristicUpdated(QLowEnergyHandle charHandle, const QByteArray &value);
-    void descriptorRead(QLowEnergyHandle descHandle, const QByteArray &value);
-    void descriptorWritten(QLowEnergyHandle descHandle, const QByteArray &value);
-    void notificationEnabled(QLowEnergyHandle charHandle, bool enabled);
-    void servicesWereModified();
-
-    void LEnotSupported();
-    void CBManagerError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void CBManagerError(QLowEnergyController::Error error);
-    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
-    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
-};
-
+    if (policy == RetainPolicy::doInitialRetain)
+        objCInstance = [getAs<NSObject>() retain];
 }
 
-QT_END_NAMESPACE
+StrongReference::StrongReference(const StrongReference &other)
+{
+    objCInstance = [other.getAs<NSObject>() retain];
+}
 
-#endif
+StrongReference::StrongReference(StrongReference &&other)
+{
+    std::swap(objCInstance, other.objCInstance);
+}
+
+StrongReference::~StrongReference()
+{
+    [getAs<NSObject>() release];
+}
+
+StrongReference &StrongReference::operator = (const StrongReference &other) noexcept
+{
+    if (this != &other) {
+        [getAs<NSObject>() release];
+        objCInstance = [other.getAs<NSObject>() retain];
+    }
+
+    return *this;
+}
+
+StrongReference &StrongReference::operator = (StrongReference &&other) noexcept
+{
+    swap(other);
+    return *this;
+}
+
+void StrongReference::reset()
+{
+    [getAs<NSObject>() release];
+    objCInstance = nullptr;
+}
+
+void StrongReference::reset(void *obj, RetainPolicy policy)
+{
+    [getAs<NSObject>() release];
+    objCInstance = obj;
+
+    if (policy == RetainPolicy::doInitialRetain) {
+        auto newInstance = static_cast<NSObject *>(obj);
+        Q_ASSERT(newInstance);
+        objCInstance = [newInstance retain];
+    }
+}
+
+} // namespace DarwinBluetooth
+
+QT_END_NAMESPACE

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTNOTIFIER_P_H
-#define OSXBTNOTIFIER_P_H
+#ifndef BTRAII_P_H
+#define BTRAII_P_H
 
 //
 //  W A R N I N G
@@ -51,55 +51,81 @@
 // We mean it.
 //
 
-
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qlowenergycontroller.h"
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothuuid.h"
-#include "qbluetooth.h"
-
-#include <QtCore/qsharedpointer.h>
-#include <QtCore/qbytearray.h>
 #include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
+
+#include <utility>
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyServicePrivate;
+namespace DarwinBluetooth {
 
-namespace OSXBluetooth
+enum class RetainPolicy
 {
-
-class LECBManagerNotifier : public QObject
-{
-    Q_OBJECT
-
-Q_SIGNALS:
-    void deviceDiscovered(QBluetoothDeviceInfo deviceInfo);
-    void discoveryFinished();
-
-    void connected();
-    void disconnected();
-
-    void serviceDiscoveryFinished();
-    void serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
-    void characteristicRead(QLowEnergyHandle charHandle, const QByteArray &value);
-    void characteristicWritten(QLowEnergyHandle charHandle, const QByteArray &value);
-    void characteristicUpdated(QLowEnergyHandle charHandle, const QByteArray &value);
-    void descriptorRead(QLowEnergyHandle descHandle, const QByteArray &value);
-    void descriptorWritten(QLowEnergyHandle descHandle, const QByteArray &value);
-    void notificationEnabled(QLowEnergyHandle charHandle, bool enabled);
-    void servicesWereModified();
-
-    void LEnotSupported();
-    void CBManagerError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void CBManagerError(QLowEnergyController::Error error);
-    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
-    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
+    noInitialRetain,
+    doInitialRetain
 };
 
-}
+// The class StrongReference and its descendant ScopedGuard
+// are RAII classes dealing with raw pointers to NSObject class
+// and its descendants (and thus hiding Objective-C's retain/
+// release semantics). The header itself is meant to be included
+// into *.cpp files so it's a pure C++ code without any Objective-C
+// syntax. Thus it's a bit clunky - the type information is 'erased'
+// and has to be enforced by the code using these smart pointers.
+// That's because these types are Objective-C classes - thus require
+// Objective-C compiler to work. Member-function template 'getAs' is
+// a convenience shortcut giving the desired pointer type in
+// Objective-C++ files (*.mm).
+
+// TODO: on top of these classes I can build ObjCStrongReference (it's
+// now inside osxbtutils_p.h, a template class that does have type
+// information needed but works only in Objective-C++ environment.
+class StrongReference
+{
+public:
+    StrongReference() = default;
+    StrongReference(void *object, RetainPolicy policy);
+    StrongReference(const StrongReference &other);
+    StrongReference(StrongReference &&other);
+
+    ~StrongReference();
+
+    StrongReference &operator = (const StrongReference &other) noexcept;
+    StrongReference &operator = (StrongReference &&other) noexcept;
+
+    void swap(StrongReference &other) noexcept
+    {
+        std::swap(objCInstance, other.objCInstance);
+    }
+
+    void reset();
+    void reset(void *newInstance, RetainPolicy policy);
+
+    template<class ObjCType>
+    ObjCType *getAs() const
+    {
+        return static_cast<ObjCType *>(objCInstance);
+    }
+
+private:
+    void *objCInstance = nullptr;
+};
+
+class ScopedPointer final : public StrongReference
+{
+public:
+    ScopedPointer() = default;
+    ScopedPointer(void *instance, RetainPolicy policy)
+        : StrongReference(instance, policy)
+    {
+    }
+
+private:
+    Q_DISABLE_COPY_MOVE(ScopedPointer)
+};
+
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
-#endif
+#endif // BTRAII_P_H

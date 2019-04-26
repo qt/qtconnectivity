@@ -21,7 +21,9 @@ CONFIG(osx) {
                        osx/osxbluetooth_p.h \
                        osx/osxbtcentralmanager_p.h \
                        osx/osxbtnotifier_p.h \
-                       osx/osxbtperipheralmanager_p.h
+                       osx/osxbtperipheralmanager_p.h \
+                       osx/btraii_p.h \
+                       osx/btdelegates_p.h
 
     OBJECTIVE_SOURCES += osx/osxbtutility.mm \
                          osx/osxbtdevicepair.mm \
@@ -36,7 +38,9 @@ CONFIG(osx) {
                          osx/osxbtobexsession.mm \
                          osx/osxbtledeviceinquiry.mm \
                          osx/osxbtcentralmanager.mm \
-                         osx/osxbtperipheralmanager.mm
+                         osx/osxbtperipheralmanager.mm \
+                         osx/btraii.mm
+    SOURCES += osx/btdelegates.cpp
 } else {
     PRIVATE_HEADERS += osx/osxbtutility_p.h \
                        osx/osxbtledeviceinquiry_p.h \

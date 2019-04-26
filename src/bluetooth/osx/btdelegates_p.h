@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTNOTIFIER_P_H
-#define OSXBTNOTIFIER_P_H
+#ifndef BTDELEGATES_P_H
+#define BTDELEGATES_P_H
 
 //
 //  W A R N I N G
@@ -51,55 +51,105 @@
 // We mean it.
 //
 
-
 #include "qbluetoothdevicediscoveryagent.h"
 #include "qlowenergycontroller.h"
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothuuid.h"
 #include "qbluetooth.h"
 
 #include <QtCore/qsharedpointer.h>
-#include <QtCore/qbytearray.h>
 #include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#include <IOKit/IOReturn.h>
+#endif
+
+#include <cstdint>
 
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
+class QBluetoothAddress;
+class QByteArray;
 
-namespace OSXBluetooth
+namespace DarwinBluetooth {
+
+#if defined(Q_OS_MACOS)
+
+class DeviceInquiryDelegate
 {
+public:
+    virtual ~DeviceInquiryDelegate();
 
-class LECBManagerNotifier : public QObject
-{
-    Q_OBJECT
-
-Q_SIGNALS:
-    void deviceDiscovered(QBluetoothDeviceInfo deviceInfo);
-    void discoveryFinished();
-
-    void connected();
-    void disconnected();
-
-    void serviceDiscoveryFinished();
-    void serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
-    void characteristicRead(QLowEnergyHandle charHandle, const QByteArray &value);
-    void characteristicWritten(QLowEnergyHandle charHandle, const QByteArray &value);
-    void characteristicUpdated(QLowEnergyHandle charHandle, const QByteArray &value);
-    void descriptorRead(QLowEnergyHandle descHandle, const QByteArray &value);
-    void descriptorWritten(QLowEnergyHandle descHandle, const QByteArray &value);
-    void notificationEnabled(QLowEnergyHandle charHandle, bool enabled);
-    void servicesWereModified();
-
-    void LEnotSupported();
-    void CBManagerError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void CBManagerError(QLowEnergyController::Error error);
-    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
-    void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
+    virtual void inquiryFinished() = 0;
+    virtual void error(IOReturn error) = 0;
+    virtual void deviceFound(void *ioBluetoothDevice) = 0;
 };
 
-}
+class PairingDelegate
+{
+public:
+    using BluetoothNumericValue = uint32_t;
+    using BluetoothPasskey = BluetoothNumericValue;
+
+    virtual ~PairingDelegate();
+
+    virtual void connecting(void *pair) = 0;
+    virtual void requestPIN(void *pair) = 0;
+    virtual void requestUserConfirmation(void *pair,
+                                         BluetoothNumericValue) = 0;
+    virtual void passkeyNotification(void *pair,
+                                     BluetoothPasskey passkey) = 0;
+    virtual void error(void *pair, IOReturn errorCode) = 0;
+    virtual void pairingFinished(void *pair) = 0;
+};
+
+class SDPInquiryDelegate {
+public:
+    virtual ~SDPInquiryDelegate();
+
+    virtual void SDPInquiryFinished(void *ioBluetoothDevice) = 0;
+    virtual void SDPInquiryError(void *ioBluetoothDevice, IOReturn errorCode) = 0;
+};
+
+// L2CAP and RFCOMM.
+class ChannelDelegate
+{
+public:
+    virtual ~ChannelDelegate();
+
+    virtual void setChannelError(IOReturn errorCode) = 0;
+    virtual void channelOpenComplete() = 0;
+    virtual void channelClosed() = 0;
+
+    virtual void readChannelData(void *data, std::size_t size) = 0;
+    virtual void writeComplete() = 0;
+};
+
+class ConnectionMonitor {
+public:
+    virtual ~ConnectionMonitor();
+
+    virtual void deviceConnected(const QBluetoothAddress &address) = 0;
+    virtual void deviceDisconnected(const QBluetoothAddress &address) = 0;
+};
+
+class SocketListener
+{
+public:
+    virtual ~SocketListener();
+
+    virtual void openNotifyRFCOMM(void *rfcommChannel) = 0;
+    virtual void openNotifyL2CAP(void *l2capChannel) = 0;
+};
+
+#else
+
+#error "This header is only for macOS (Bluetooth Classic only)"
+
+#endif // Q_OS_MACOS
+
+
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
-#endif
+#endif // DARWINBTDELEGATES_P_H
