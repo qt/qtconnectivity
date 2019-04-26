@@ -58,6 +58,11 @@
 #include <QtCore/QTimer>
 #endif
 
+#ifdef Q_OS_DARWIN
+#include "osx/btdelegates_p.h"
+#include "osx/btraii_p.h"
+#endif // Q_OS_DARWIN
+
 #include <QtCore/QVariantMap>
 
 #include <QtBluetooth/QBluetoothAddress>
@@ -93,11 +98,14 @@ class QWinRTBluetoothDeviceDiscoveryWorker;
 #endif
 
 class QBluetoothDeviceDiscoveryAgentPrivate
-#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH) || defined(Q_OS_DARWIN)
     : public QObject
+#if defined(Q_OS_MACOS)
+    , public DarwinBluetooth::DeviceInquiryDelegate
+#endif // Q_OS_MACOS
 {
     Q_OBJECT
-#else
+#else // BlueZ
 {
 #endif
     Q_DECLARE_PUBLIC(QBluetoothDeviceDiscoveryAgent)
@@ -179,6 +187,57 @@ private:
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
     QTimer *leScanTimer;
 #endif
+
+#ifdef Q_OS_DARWIN
+
+    void startLE();
+
+#ifdef Q_OS_MACOS
+
+    void startClassic();
+
+    // Classic (IOBluetooth) inquiry delegate's methods:
+    void inquiryFinished() override;
+    void error(IOReturn error) override;
+    void classicDeviceFound(void *device) override;
+    // Classic (IOBluetooth) errors:
+    void setError(IOReturn error, const QString &text = QString());
+
+#endif // Q_OS_MACOS
+
+    // LE scan delegates (CoreBluetooth, all Darwin OSes):
+    void LEinquiryFinished();
+    void LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error);
+    void LEnotSupported();
+
+    // LE errors:
+    void setError(QBluetoothDeviceDiscoveryAgent::Error,
+                  const QString &text = QString());
+
+    // Both LE and Classic devices go there:
+    void deviceFound(const QBluetoothDeviceInfo &newDeviceInfo);
+
+    enum AgentState {
+        NonActive,
+        ClassicScan, // macOS (IOBluetooth) only
+        LEScan
+    } agentState;
+
+    QBluetoothAddress adapterAddress;
+
+    bool startPending;
+    bool stopPending;
+
+#ifdef Q_OS_MACOS
+
+    DarwinBluetooth::ScopedPointer controller;
+    DarwinBluetooth::ScopedPointer inquiry;
+
+#endif // Q_OS_MACOS
+
+    DarwinBluetooth::ScopedPointer inquiryLE;
+
+#endif // Q_OS_DARWIN
 
     int lowEnergySearchTimeout;
     QBluetoothDeviceDiscoveryAgent::DiscoveryMethods requestedMethods;

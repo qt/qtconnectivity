@@ -162,7 +162,7 @@ qtConfig(bluez) {
     include(osx/osxbt.pri)
     OBJECTIVE_SOURCES += \
         qbluetoothlocaldevice_osx.mm \
-        qbluetoothdevicediscoveryagent_osx.mm \
+        qbluetoothdevicediscoveryagent_darwin.mm \
         qbluetoothserviceinfo_osx.mm \
         qbluetoothservicediscoveryagent_osx.mm \
         qbluetoothsocket_osx.mm \
@@ -177,7 +177,6 @@ qtConfig(bluez) {
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_osx_p.h
 
-    SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
     SOURCES -= qbluetoothsocket.cpp
@@ -192,7 +191,7 @@ qtConfig(bluez) {
     LIBS_PRIVATE += -framework Foundation -framework CoreBluetooth
 
     OBJECTIVE_SOURCES += \
-        qbluetoothdevicediscoveryagent_ios.mm \
+        qbluetoothdevicediscoveryagent_darwin.mm \
         qlowenergycontroller_osx.mm \
         qlowenergyservice_osx.mm
 
@@ -208,7 +207,6 @@ qtConfig(bluez) {
         qbluetoothsocket_dummy.cpp \
         qbluetoothserver_p.cpp
 
-    SOURCES -= qbluetoothdevicediscoveryagent.cpp
     SOURCES -= qlowenergyservice.cpp
     SOURCES -= qlowenergycontroller.cpp
     SOURCES -= qlowenergycontrollerbase.cpp

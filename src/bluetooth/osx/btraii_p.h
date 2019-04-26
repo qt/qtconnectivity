@@ -107,6 +107,11 @@ public:
         return static_cast<ObjCType *>(objCInstance);
     }
 
+    operator bool() const
+    {
+        return !!objCInstance;
+    }
+
 private:
     void *objCInstance = nullptr;
 };

@@ -58,9 +58,9 @@
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qglobal.h>
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if defined(Q_OS_MACOS)
+
 #include <IOKit/IOReturn.h>
-#endif
 
 #include <cstdint>
 
@@ -72,8 +72,6 @@ class QByteArray;
 
 namespace DarwinBluetooth {
 
-#if defined(Q_OS_MACOS)
-
 class DeviceInquiryDelegate
 {
 public:
@@ -81,7 +79,7 @@ public:
 
     virtual void inquiryFinished() = 0;
     virtual void error(IOReturn error) = 0;
-    virtual void deviceFound(void *ioBluetoothDevice) = 0;
+    virtual void classicDeviceFound(void *ioBluetoothDevice) = 0;
 };
 
 class PairingDelegate
@@ -141,15 +139,11 @@ public:
     virtual void openNotifyL2CAP(void *l2capChannel) = 0;
 };
 
-#else
-
-#error "This header is only for macOS (Bluetooth Classic only)"
-
-#endif // Q_OS_MACOS
-
 
 } // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
+
+#endif // Q_OS_MACOS
 
 #endif // DARWINBTDELEGATES_P_H

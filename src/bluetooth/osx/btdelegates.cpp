@@ -39,6 +39,8 @@
 
 #include "btdelegates_p.h"
 
+#if defined(Q_OS_MACOS)
+
 QT_BEGIN_NAMESPACE
 
 namespace DarwinBluetooth {
@@ -70,3 +72,5 @@ SocketListener::~SocketListener()
 } // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
+
+#endif
