@@ -83,7 +83,7 @@ protected:
     friend class QLowEnergyControllerPrivateBluez;
     friend class QLowEnergyControllerPrivateBluezDBus;
     friend class QLowEnergyControllerPrivateCommon;
-    friend class QLowEnergyControllerPrivateOSX;
+    friend class QLowEnergyControllerPrivateDarwin;
     friend class QLowEnergyControllerPrivateWinRT;
     friend class QLowEnergyControllerPrivateWinRTNew;
     QLowEnergyDescriptorPrivate *data = nullptr;

@@ -61,7 +61,7 @@ QLowEnergyControllerPrivate::~QLowEnergyControllerPrivate()
 
 bool QLowEnergyControllerPrivate::isValidLocalAdapter()
 {
-#ifdef QT_WINRT_BLUETOOTH
+#if defined(QT_WINRT_BLUETOOTH) || defined(Q_OS_DARWIN)
     return true;
 #endif
     if (localAdapter.isNull())

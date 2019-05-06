@@ -60,6 +60,8 @@
 #if QT_CONFIG(winrt_btle_no_pairing)
 #include "qlowenergycontroller_winrt_new_p.h"
 #endif
+#elif defined(Q_OS_DARWIN)
+#include "qlowenergycontroller_darwin_p.h"
 #else
 #include "qlowenergycontroller_p.h"
 #endif
@@ -321,6 +323,9 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
     qCDebug(QT_BT_WINRT) << "Using pre 15063 low energy controller";
     return new QLowEnergyControllerPrivateWinRT();
 #endif
+#elif defined(Q_OS_DARWIN)
+    Q_UNUSED(role)
+    return new QLowEnergyControllerPrivateDarwin();
 #else
     Q_UNUSED(role);
     return new QLowEnergyControllerPrivateCommon();
@@ -344,6 +349,9 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
+    // Note: a central created using this ctor is useless
+    // on Darwin - no way to use addresses when connecting.
+
     d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
@@ -373,11 +381,12 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
-        d_ptr = privateController(CentralRole);
+    d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->role = CentralRole;
+    d->deviceUuid = remoteDeviceInfo.deviceUuid();
     d->remoteDevice = remoteDeviceInfo.address();
     d->localAdapter = QBluetoothLocalDevice().address();
     d->addressType = QLowEnergyController::PublicAddress;
@@ -406,6 +415,8 @@ QLowEnergyController::QLowEnergyController(
                             QObject *parent)
     : QObject(parent)
 {
+    // Note: a central create using this ctor is useless on
+    // Darwin (CoreBluetooth does not work with addresses).
     d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
@@ -534,7 +545,7 @@ QBluetoothAddress QLowEnergyController::remoteAddress() const
  */
 QBluetoothUuid QLowEnergyController::remoteDeviceUuid() const
 {
-    return  QBluetoothUuid();
+    return d_ptr->deviceUuid;
 }
 
 /*!
