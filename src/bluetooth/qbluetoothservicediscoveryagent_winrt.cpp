@@ -52,6 +52,7 @@
 #include <windows.devices.enumeration.h>
 #include <windows.devices.bluetooth.h>
 #include <windows.foundation.collections.h>
+#include <windows.networking.h>
 #include <windows.storage.streams.h>
 #include <wrl.h>
 
@@ -208,6 +209,14 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
         hr = service->get_ConnectionServiceName(name.GetAddressOf());
         Q_ASSERT_SUCCEEDED(hr);
         const QString serviceName = QString::fromWCharArray(WindowsGetStringRawBuffer(name.Get(), nullptr));
+        ComPtr<ABI::Windows::Networking::IHostName> host;
+        hr = service->get_ConnectionHostName(host.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
+        HString hostName;
+        hr = host->get_RawName(hostName.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
+        const QString qHostName = QString::fromWCharArray(WindowsGetStringRawBuffer(hostName.Get(),
+                                                                                    nullptr));
         ComPtr<IRfcommServiceId> id;
         hr = service->get_ServiceId(&id);
         Q_ASSERT_SUCCEEDED(hr);
@@ -217,6 +226,8 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
         Q_ASSERT_SUCCEEDED(hr);
 
         QBluetoothServiceInfo info;
+        info.setAttribute(0xBEEF, QVariant(qHostName));
+        info.setAttribute(0xBEF0, QVariant(serviceName));
         info.setServiceName(serviceName);
         info.setServiceUuid(uuid);
         ComPtr<IAsyncOperation<IMapView<UINT32, IBuffer *> *>> op;
