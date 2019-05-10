@@ -336,6 +336,17 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
             }
             hr = iterator->MoveNext(&current);
         }
+        // Windows is only able to discover Rfcomm services but the according protocolDescriptor is
+        // not always set in the raw attribute map. If we encounter a service like that we should
+        // fill the protocol descriptor ourselves.
+        if (info.protocolDescriptor(QBluetoothUuid::Rfcomm).isEmpty()) {
+            QBluetoothServiceInfo::Sequence protocolDescriptorList;
+            QBluetoothServiceInfo::Sequence protocol;
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+                     << QVariant::fromValue(0);
+            protocolDescriptorList.append(QVariant::fromValue(protocol));
+            info.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
+        }
         emit serviceFound(address, info);
     }
     emit scanFinished(address);
