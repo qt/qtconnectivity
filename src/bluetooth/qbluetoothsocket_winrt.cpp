@@ -359,10 +359,11 @@ bool QBluetoothSocketPrivateWinRT::ensureNativeSocket(QBluetoothServiceInfo::Pro
     return true;
 }
 
-void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateWinRT::connectToService(Microsoft::WRL::ComPtr<IHostName> hostName,
+                                                    const QString &serviceName,
+                                                    QIODevice::OpenMode openMode)
 {
     Q_Q(QBluetoothSocket);
-    Q_UNUSED(openMode);
 
     if (socket == -1 && !ensureNativeSocket(socketType)) {
         errorString = QBluetoothSocket::tr("Unknown socket error");
@@ -370,20 +371,9 @@ void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddres
         return;
     }
 
-    const QString addressString = address.toString();
-    HStringReference hostNameRef(reinterpret_cast<LPCWSTR>(addressString.utf16()));
-    ComPtr<IHostNameFactory> hostNameFactory;
-    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Networking_HostName).Get(),
-                                      &hostNameFactory);
-    Q_ASSERT_SUCCEEDED(hr);
-    ComPtr<IHostName> remoteHost;
-    hr = hostNameFactory->CreateHostName(hostNameRef.Get(), &remoteHost);
-    RETURN_VOID_IF_FAILED("QBluetoothSocketPrivateWinRT::connectToService: Could not create hostname.");
+    HStringReference serviceNameReference(reinterpret_cast<LPCWSTR>(serviceName.utf16()));
 
-    const QString portString = QString::number(port);
-    HStringReference portReference(reinterpret_cast<LPCWSTR>(portString.utf16()));
-
-    hr = m_socketObject->ConnectAsync(remoteHost.Get(), portReference.Get(), &m_connectOp);
+    HRESULT hr = m_socketObject->ConnectAsync(hostName.Get(), serviceNameReference.Get(), &m_connectOp);
     if (hr == E_ACCESSDENIED) {
         qErrnoWarning(hr, "QBluetoothSocketPrivateWinRT::connectToService: Unable to connect to bluetooth socket."
             "Please check your manifest capabilities.");
@@ -402,6 +392,29 @@ void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddres
         return S_OK;
     });
     Q_ASSERT_SUCCEEDED(hr);
+}
+
+void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)
+{
+    Q_Q(QBluetoothSocket);
+
+    if (socket == -1 && !ensureNativeSocket(socketType)) {
+        errorString = QBluetoothSocket::tr("Unknown socket error");
+        q->setSocketError(QBluetoothSocket::UnknownSocketError);
+        return;
+    }
+
+    const QString addressString = address.toString();
+    HStringReference hostNameRef(reinterpret_cast<LPCWSTR>(addressString.utf16()));
+    ComPtr<IHostNameFactory> hostNameFactory;
+    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Networking_HostName).Get(),
+                                      &hostNameFactory);
+    Q_ASSERT_SUCCEEDED(hr);
+    ComPtr<IHostName> remoteHost;
+    hr = hostNameFactory->CreateHostName(hostNameRef.Get(), &remoteHost);
+    RETURN_VOID_IF_FAILED("QBluetoothSocketPrivateWinRT::connectToService: Could not create hostname.");
+    const QString portString = QString::number(port);
+    connectToService(remoteHost, portString, openMode);
 }
 
 void QBluetoothSocketPrivateWinRT::connectToService(
@@ -425,6 +438,8 @@ void QBluetoothSocketPrivateWinRT::connectToService(
         return;
     }
 
+    const QString connectionHostName = service.attribute(0xBEEF).toString();
+    const QString connectionServiceName = service.attribute(0xBEF0).toString();
     if (service.protocolServiceMultiplexer() > 0) {
         Q_ASSERT(service.socketProtocol() == QBluetoothServiceInfo::L2capProtocol);
 
@@ -434,7 +449,22 @@ void QBluetoothSocketPrivateWinRT::connectToService(
            return;
        }
        connectToServiceHelper(service.device().address(), service.protocolServiceMultiplexer(), openMode);
-   } else if (service.serverChannel() > 0) {
+    } else if (!connectionHostName.isEmpty() && !connectionServiceName.isEmpty()) {
+        Q_ASSERT(service.socketProtocol() == QBluetoothServiceInfo::RfcommProtocol);
+        if (!ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
+            errorString = QBluetoothSocket::tr("Unknown socket error");
+            q->setSocketError(QBluetoothSocket::UnknownSocketError);
+            return;
+        }
+        HStringReference hostNameRef(reinterpret_cast<LPCWSTR>(connectionHostName.utf16()));
+        ComPtr<IHostNameFactory> hostNameFactory;
+        HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Networking_HostName).Get(),
+                                          &hostNameFactory);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IHostName> remoteHost;
+        hr = hostNameFactory->CreateHostName(hostNameRef.Get(), &remoteHost);
+        connectToService(remoteHost, connectionServiceName, openMode);
+    } else if (service.serverChannel() > 0) {
         Q_ASSERT(service.socketProtocol() == QBluetoothServiceInfo::RfcommProtocol);
 
        if (!ensureNativeSocket(QBluetoothServiceInfo::RfcommProtocol)) {
@@ -443,7 +473,7 @@ void QBluetoothSocketPrivateWinRT::connectToService(
            return;
        }
        connectToServiceHelper(service.device().address(), service.serverChannel(), openMode);
-   } else {
+    } else {
        // try doing service discovery to see if we can find the socket
        if (service.serviceUuid().isNull()
                && !service.serviceClassUuids().contains(QBluetoothUuid::SerialPort)) {
