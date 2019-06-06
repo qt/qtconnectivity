@@ -69,7 +69,7 @@ class Progress : public QDialog
     Q_OBJECT
 
 public:
-    explicit Progress(QWidget *parent = 0);
+    explicit Progress(QWidget *parent = nullptr);
     ~Progress();
 
     void setStatus(QString title, QString filename);
