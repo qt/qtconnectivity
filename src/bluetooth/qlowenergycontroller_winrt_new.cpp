@@ -435,6 +435,9 @@ QLowEnergyControllerPrivateWinRTNew::QLowEnergyControllerPrivateWinRTNew()
     : QLowEnergyControllerPrivate()
 {
     registerQLowEnergyControllerMetaType();
+    connect(this, &QLowEnergyControllerPrivateWinRTNew::characteristicChanged,
+            this, &QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged,
+            Qt::QueuedConnection);
 }
 
 QLowEnergyControllerPrivateWinRTNew::~QLowEnergyControllerPrivateWinRTNew()
@@ -613,7 +616,7 @@ HRESULT QLowEnergyControllerPrivateWinRTNew::onValueChange(IGattCharacteristic *
     ComPtr<IBuffer> buffer;
     hr = args->get_CharacteristicValue(&buffer);
     RETURN_IF_FAILED("Could not obtain characteristic's value", return S_OK)
-    characteristicChanged(handle, byteArrayFromBuffer(buffer));
+    emit characteristicChanged(handle, byteArrayFromBuffer(buffer));
     return S_OK;
 }
 
@@ -1487,9 +1490,10 @@ void QLowEnergyControllerPrivateWinRTNew::addToGenericAttributeList(const QLowEn
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::characteristicChanged(
+void QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged(
         quint16 charHandle, const QByteArray &data)
 {
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << charHandle << data;
     QSharedPointer<QLowEnergyServicePrivate> service =
             serviceForHandle(charHandle);
     if (service.isNull())

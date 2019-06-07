@@ -239,6 +239,9 @@ QLowEnergyControllerPrivateWinRT::QLowEnergyControllerPrivateWinRT()
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
 
     registerQLowEnergyControllerMetaType();
+    connect(this, &QLowEnergyControllerPrivateWinRT::characteristicChanged,
+            this, &QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged,
+            Qt::QueuedConnection);
 }
 
 QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
@@ -453,7 +456,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
         ComPtr<IBuffer> buffer;
         hr = args->get_CharacteristicValue(&buffer);
         Q_ASSERT_SUCCEEDED(hr);
-        characteristicChanged(handle, byteArrayFromBuffer(buffer));
+        emit characteristicChanged(handle, byteArrayFromBuffer(buffer));
         return S_OK;
     }).Get(), &token);
     Q_ASSERT_SUCCEEDED(hr);
@@ -1103,9 +1106,10 @@ void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnerg
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRT::characteristicChanged(
-        int charHandle, const QByteArray &data)
+void QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged(
+        quint16 charHandle, const QByteArray &data)
 {
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << charHandle << data;
     QSharedPointer<QLowEnergyServicePrivate> service =
             serviceForHandle(charHandle);
     if (service.isNull())

@@ -64,13 +64,6 @@ namespace ABI {
     namespace Windows {
         namespace Devices {
             namespace Bluetooth {
-                namespace GenericAttributeProfile {
-                    class GattDeviceServicesResult;
-                    struct IGattCharacteristic;
-                    struct IGattDeviceService;
-                    struct IGattValueChangedEventArgs;
-                }
-
                 struct IBluetoothLEDevice;
             }
         }
@@ -82,6 +75,7 @@ namespace ABI {
 }
 
 #include <wrl.h>
+#include <windows.devices.bluetooth.genericattributeprofile.h>
 
 #include <functional>
 
@@ -97,6 +91,7 @@ QLowEnergyControllerPrivate *createWinRTLowEnergyController();
 
 class QLowEnergyControllerPrivateWinRTNew final : public QLowEnergyControllerPrivate
 {
+    Q_OBJECT
 public:
     QLowEnergyControllerPrivateWinRTNew();
     ~QLowEnergyControllerPrivateWinRTNew() override;
@@ -135,8 +130,11 @@ public:
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
 
-private slots:
+signals:
     void characteristicChanged(quint16 charHandle, const QByteArray &data);
+
+private slots:
+    void handleCharacteristicChanged(quint16 charHandle, const QByteArray &data);
     void handleServiceHandlerError(const QString &error);
 
 private:
