@@ -52,7 +52,7 @@
 #define PROGRESS_H
 
 #include <QDialog>
-#include <QTime>
+#include <QElapsedTimer>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothTransferReply)
 
@@ -81,7 +81,7 @@ public Q_SLOTS:
 private:
     Ui::Progress *ui;
 
-    QTime start;
+    QElapsedTimer start;
 };
 
 #endif // PROGRESS_H

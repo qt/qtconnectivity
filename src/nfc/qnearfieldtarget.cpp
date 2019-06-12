@@ -47,7 +47,7 @@
 
 #include <QtCore/QDebug>
 
-#include <QTime>
+#include <QElapsedTimer>
 #include <QCoreApplication>
 
 QT_BEGIN_NAMESPACE
@@ -462,7 +462,7 @@ bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs)
 {
     Q_D(QNearFieldTarget);
 
-    QTime timer;
+    QElapsedTimer timer;
     timer.start();
 
     do {
