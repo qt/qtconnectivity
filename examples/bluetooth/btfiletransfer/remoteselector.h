@@ -95,7 +95,7 @@ private:
     QPointer<pinDisplay> m_pindisplay;
     bool m_pairingError;
 
-    QString addressToName(const QBluetoothAddress &address);
+    QString addressToName(const QBluetoothAddress &address) const;
 
 public Q_SLOTS:
     void startDiscovery();

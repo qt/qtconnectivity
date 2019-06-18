@@ -497,13 +497,12 @@ void QNearFieldTarget::setResponseForRequest(const QNearFieldTarget::RequestId &
 {
     Q_D(QNearFieldTarget);
 
-    QMutableMapIterator<RequestId, QVariant> i(d->m_decodedResponses);
-    while (i.hasNext()) {
-        i.next();
-
+    for (auto i = d->m_decodedResponses.begin(), end = d->m_decodedResponses.end(); i != end; /* erasing */) {
         // no more external references
         if (i.key().refCount() == 1)
-            i.remove();
+            i = d->m_decodedResponses.erase(i);
+        else
+            ++i;
     }
 
     d->m_decodedResponses.insert(id, response);
