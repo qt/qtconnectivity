@@ -84,6 +84,21 @@ QT_END_NAMESPACE
 #include <QtCore/QPair>
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <wrl.h>
+
+namespace ABI {
+    namespace Windows {
+        namespace Devices {
+            namespace Bluetooth {
+                struct IBluetoothDeviceStatics;
+                struct IBluetoothLEDeviceStatics;
+            }
+        }
+    }
+}
+#endif
+
 QT_BEGIN_NAMESPACE
 
 extern void registerQBluetoothLocalDeviceMetaType();
@@ -208,7 +223,22 @@ private:
     void initializeAdapter();
     void initializeAdapterBluez5();
 };
-#elif !defined(QT_OSX_BLUETOOTH) // winrt and dummy backend
+#elif defined(QT_WINRT_BLUETOOTH)
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
+public:
+    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
+                                 QBluetoothAddress = QBluetoothAddress());
+
+    bool isValid() const;
+
+private:
+    QBluetoothLocalDevice *q_ptr;
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothDeviceStatics> mStatics;
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDeviceStatics> mLEStatics;
+};
+#elif !defined(QT_OSX_BLUETOOTH) // dummy backend
 class QBluetoothLocalDevicePrivate : public QObject
 {
 public:
@@ -219,11 +249,7 @@ public:
 
     bool isValid() const
     {
-#ifndef QT_WINRT_BLUETOOTH
         return false;
-#else
-        return true;
-#endif
     }
 };
 #endif
