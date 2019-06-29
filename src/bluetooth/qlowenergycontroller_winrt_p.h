@@ -114,8 +114,11 @@ public:
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
 
+signals:
+    void characteristicChanged(quint16 charHandle, const QByteArray &data);
+
 private slots:
-    void characteristicChanged(int charHandle, const QByteArray &data);
+    void handleCharacteristicChanged(quint16 charHandle, const QByteArray &data);
 
 private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;

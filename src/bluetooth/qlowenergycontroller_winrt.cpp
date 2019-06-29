@@ -76,6 +76,7 @@ typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConf
 typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharConfigDescriptorResult;
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT_SERVICE_THREAD)
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult, bool isWCharString = false)
 {
@@ -239,6 +240,9 @@ QLowEnergyControllerPrivateWinRT::QLowEnergyControllerPrivateWinRT()
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
 
     registerQLowEnergyControllerMetaType();
+    connect(this, &QLowEnergyControllerPrivateWinRT::characteristicChanged,
+            this, &QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged,
+            Qt::QueuedConnection);
 }
 
 QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
@@ -453,7 +457,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
         ComPtr<IBuffer> buffer;
         hr = args->get_CharacteristicValue(&buffer);
         Q_ASSERT_SUCCEEDED(hr);
-        characteristicChanged(handle, byteArrayFromBuffer(buffer));
+        emit characteristicChanged(handle, byteArrayFromBuffer(buffer));
         return S_OK;
     }).Get(), &token);
     Q_ASSERT_SUCCEEDED(hr);
@@ -498,6 +502,9 @@ void QLowEnergyControllerPrivateWinRT::obtainIncludedServices(QSharedPointer<QLo
         Q_ASSERT_SUCCEEDED(hr);
         const QBluetoothUuid includedUuid(guuid);
         QSharedPointer<QLowEnergyServicePrivate> includedPointer;
+        qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__
+                                            << "Changing service pointer from thread"
+                                            << QThread::currentThread();
         if (serviceList.contains(includedUuid)) {
             includedPointer = serviceList.value(includedUuid);
         } else {
@@ -508,6 +515,9 @@ void QLowEnergyControllerPrivateWinRT::obtainIncludedServices(QSharedPointer<QLo
             includedPointer = QSharedPointer<QLowEnergyServicePrivate>(priv);
             serviceList.insert(includedUuid, includedPointer);
         }
+        qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__
+                                            << "Changing service pointer from thread"
+                                            << QThread::currentThread();
         includedPointer->type |= QLowEnergyService::IncludedService;
         servicePointer->includedServices.append(includedUuid);
 
@@ -537,6 +547,9 @@ void QLowEnergyControllerPrivateWinRT::discoverServices()
         Q_ASSERT_SUCCEEDED(hr);
         const QBluetoothUuid service(guuid);
 
+        qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__
+                                            << "Changing service pointer from thread"
+                                            << QThread::currentThread();
         QSharedPointer<QLowEnergyServicePrivate> pointer;
         if (serviceList.contains(service)) {
             pointer = serviceList.value(service);
@@ -576,6 +589,8 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
 
     //update service data
     QSharedPointer<QLowEnergyServicePrivate> pointer = serviceList.value(service);
+    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+                                        << QThread::currentThread();
 
     pointer->setState(QLowEnergyService::DiscoveringServices);
     ComPtr<IGattDeviceService2> deviceService2;
@@ -669,6 +684,8 @@ void QLowEnergyControllerPrivateWinRT::readCharacteristic(const QSharedPointer<Q
                         const QLowEnergyHandle charHandle)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle;
+    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+                                        << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
         service->setError(QLowEnergyService::CharacteristicReadError);
@@ -734,6 +751,8 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(const QSharedPointer<QLowE
                     const QLowEnergyHandle descHandle)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << descHandle;
+    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+                                        << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
         service->setError(QLowEnergyService::DescriptorReadError);
@@ -870,6 +889,8 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(const QSharedPointer<
         QLowEnergyService::WriteMode mode)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << newValue << mode;
+    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+                                        << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
         service->setError(QLowEnergyService::CharacteristicWriteError);
@@ -960,6 +981,8 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         const QByteArray &newValue)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << descHandle << newValue;
+    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+                                        << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
         service->setError(QLowEnergyService::DescriptorWriteError);
@@ -1103,9 +1126,12 @@ void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnerg
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRT::characteristicChanged(
-        int charHandle, const QByteArray &data)
+void QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged(
+        quint16 charHandle, const QByteArray &data)
 {
+    qCDebug(QT_BT_WINRT) << __FUNCTION__ << charHandle << data;
+    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+                                        << QThread::currentThread();
     QSharedPointer<QLowEnergyServicePrivate> service =
             serviceForHandle(charHandle);
     if (service.isNull())
