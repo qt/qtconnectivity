@@ -106,6 +106,9 @@ void QLowEnergyControllerPrivate::setError(
     case QLowEnergyController::RemoteHostClosedError:
         errorString = QLowEnergyController::tr("Remote device closed the connection");
         break;
+    case QLowEnergyController::AuthorizationError:
+        errorString = QLowEnergyController::tr("Failed to authorize on the remote device");
+        break;
     case QLowEnergyController::NoError:
         return;
     default:

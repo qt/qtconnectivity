@@ -66,7 +66,8 @@ public:
         InvalidBluetoothAdapterError,
         ConnectionError,
         AdvertisingError,
-        RemoteHostClosedError
+        RemoteHostClosedError,
+        AuthorizationError
     };
     Q_ENUM(Error)
 

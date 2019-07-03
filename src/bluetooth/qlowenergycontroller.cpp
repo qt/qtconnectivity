@@ -159,6 +159,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
                                         This value was introduced by Qt 5.7.
     \value RemoteHostClosedError        The remote device closed the connection.
                                         This value was introduced by Qt 5.10.
+    \value AuthorizationError           The local Bluetooth device closed the connection due to
+                                        insufficient authorization.
+                                        This value was introduced by Qt 5.14.
 */
 
 /*!
