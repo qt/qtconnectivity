@@ -229,7 +229,6 @@ public class QtBluetoothLE {
                 case BluetoothGatt.GATT_FAILURE: // Android's equivalent of "do not know what error it is"
                     errorCode = 1; break; //QLowEnergyController::UnknownError
                 case 8:  // BLE_HCI_CONNECTION_TIMEOUT
-                case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
                     Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");
                     errorCode = 5; break; //QLowEnergyController::ConnectionError
                 case 19: // BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION
@@ -238,6 +237,9 @@ public class QtBluetoothLE {
                     Log.w(TAG, "The remote host closed the connection");
                     errorCode = 7; //QLowEnergyController::RemoteHostClosedError
                     break;
+                case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
+                    // Internally, Android maps PIN_OR_KEY_MISSING to GATT_CONN_TERMINATE_LOCAL_HOST
+                    errorCode = 8; break; //QLowEnergyController::AuthorizationError
                 default:
                     Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status + " " + newState);
                     errorCode = status; break; //TODO deal with all errors
