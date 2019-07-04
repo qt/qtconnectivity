@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "osx/osxbtservicerecord_p.h"
-#include "qbluetoothserver_osx_p.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothdeviceinfo.h"
+#include "qbluetoothserver_p.h"
 #include "osx/osxbtutility_p.h"
 #include "osx/osxbluetooth_p.h"
 
