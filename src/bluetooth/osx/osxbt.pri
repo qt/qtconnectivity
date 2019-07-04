@@ -20,7 +20,6 @@ CONFIG(osx) {
                        osx/osxbtsdpinquiry_p.h \
                        osx/osxbtrfcommchannel_p.h \
                        osx/osxbtl2capchannel_p.h \
-                       osx/osxbtchanneldelegate_p.h \
                        osx/osxbtservicerecord_p.h \
                        osx/osxbtsocketlistener_p.h \
                        osx/osxbtobexsession_p.h \
@@ -37,7 +36,6 @@ CONFIG(osx) {
                          osx/osxbtsdpinquiry.mm \
                          osx/osxbtrfcommchannel.mm \
                          osx/osxbtl2capchannel.mm \
-                         osx/osxbtchanneldelegate.mm \
                          osx/osxbtservicerecord.mm \
                          osx/osxbtsocketlistener.mm \
                          osx/osxbtobexsession.mm \

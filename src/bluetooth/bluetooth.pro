@@ -176,8 +176,6 @@ qtConfig(bluez) {
 
     SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
-    SOURCES -= qbluetoothsocket.cpp
-    SOURCES -= qbluetoothsocketbase.cpp
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework CoreBluetooth
