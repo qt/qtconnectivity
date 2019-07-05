@@ -174,7 +174,6 @@ qtConfig(bluez) {
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_darwin_p.h
 
-    SOURCES -= qbluetoothserviceinfo.cpp
     SOURCES -= qbluetoothservicediscoveryagent.cpp
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
