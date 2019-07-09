@@ -132,7 +132,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
-    if (inquiryLE) {
+    if (inquiryLE.data()) {
         // We want the LE scan to stop as soon as possible.
         if (dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
             // Local variable to be retained ...
@@ -151,7 +151,7 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     if (stopPending)
         return false;
 
-    return inquiryLE;
+    return !!inquiryLE.data();
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods /*methods*/)
@@ -178,7 +178,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                       this, &QBluetoothDeviceDiscoveryAgentPrivate::LEdeviceFound);
 
     inquiryLE.reset([[LEDeviceInquiryObjC alloc] initWithNotifier:notifier.data()]);
-    if (inquiryLE)
+    if (inquiryLE.data())
         notifier.take(); // Whatever happens next, inquiryLE is already the owner ...
 
     dispatch_queue_t leQueue(qt_LE_queue());
