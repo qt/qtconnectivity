@@ -173,8 +173,6 @@ qtConfig(bluez) {
     PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_darwin_p.h
-
-    SOURCES -= qbluetoothservicediscoveryagent.cpp
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework CoreBluetooth
