@@ -113,7 +113,6 @@ private slots:
                                     QBluetoothLocalDevice::Pairing pairing);
     void processConnectDeviceChanges(const QBluetoothAddress &address, bool isConnectEvent);
     void processDisplayConfirmation(const QBluetoothAddress &address, const QString &pin);
-    void processDisplayPinCode(const QBluetoothAddress &address, const QString &pin);
 
 private:
     QBluetoothLocalDevice *q_ptr;
