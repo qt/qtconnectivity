@@ -1133,7 +1133,7 @@ void QBluetoothLocalDevicePrivate::createCache()
 
 QList<QBluetoothAddress> QBluetoothLocalDevicePrivate::connectedDevices() const
 {
-    return connectedDevicesSet.toList();
+    return connectedDevicesSet.values();
 }
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)

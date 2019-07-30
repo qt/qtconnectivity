@@ -880,11 +880,15 @@ void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDevic
         if (iter->address() == info.address()) {
             qCDebug(QT_BT_WINRT) << "Updating device" << iter->name() << iter->address();
             // merge service uuids
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QVector<QBluetoothUuid> uuids = iter->serviceUuids();
+#else
             QList<QBluetoothUuid> uuids = iter->serviceUuids();
+#endif
             uuids.append(info.serviceUuids());
-            const QSet<QBluetoothUuid> uuidSet = uuids.toSet();
+            const QSet<QBluetoothUuid> uuidSet = QSet<QBluetoothUuid>(uuids.begin(), uuids.end());
             if (iter->serviceUuids().count() != uuidSet.count())
-                iter->setServiceUuids(uuidSet.toList().toVector());
+                iter->setServiceUuids(uuidSet.values().toVector());
             if (iter->coreConfigurations() != info.coreConfigurations())
                 iter->setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
             return;

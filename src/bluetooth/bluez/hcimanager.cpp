@@ -320,7 +320,7 @@ QVector<quint16> HciManager::activeLowEnergyConnections() const
             activeLowEnergyHandles.append(info[i].handle);
             break;
         default:
-            qCWarning(QT_BT_BLUEZ) << "Unknown active connection type:" << hex << info[i].type;
+            qCWarning(QT_BT_BLUEZ) << "Unknown active connection type:" << Qt::hex << info[i].type;
             break;
         }
     }
@@ -467,7 +467,7 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         return;
     }
 
-    qCDebug(QT_BT_BLUEZ) << "HCI event triggered, type:" << hex << header->evt;
+    qCDebug(QT_BT_BLUEZ) << "HCI event triggered, type:" << Qt::hex << header->evt;
 
     switch (header->evt) {
     case EVT_ENCRYPT_CHANGE:
@@ -475,7 +475,7 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         const evt_encrypt_change *event = (evt_encrypt_change *) data;
         qCDebug(QT_BT_BLUEZ) << "HCI Encrypt change, status:"
                              << (event->status == 0 ? "Success" : "Failed")
-                             << "handle:" << hex << event->handle
+                             << "handle:" << Qt::hex << event->handle
                              << "encrypt:" << event->encrypt;
 
         QBluetoothAddress remoteDevice = addressForConnectionHandle(event->handle);

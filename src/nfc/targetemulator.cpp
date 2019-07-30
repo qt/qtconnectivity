@@ -370,7 +370,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
 
         return NACK;
     default:
-        qDebug() << "Unknown opcode for Tag Type 2" << hex << opcode;
+        qDebug() << "Unknown opcode for Tag Type 2" << Qt::hex << opcode;
         qDebug() << "command:" << command.toHex();
 
         return NACK;
