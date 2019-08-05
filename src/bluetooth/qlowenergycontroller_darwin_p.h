@@ -37,8 +37,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QLOWENERGYCONTROLLER_OSX_P_H
-#define QLOWENERGYCONTROLLER_OSX_P_H
+#ifndef QLOWENERGYCONTROLLER_DARWIN_P_H
+#define QLOWENERGYCONTROLLER_DARWIN_P_H
 
 //
 //  W A R N I N G
@@ -51,46 +51,64 @@
 // We mean it.
 //
 
-#include "osx/osxbtperipheralmanager_p.h"
 #include "qlowenergyserviceprivate_p.h"
-#include "osx/osxbtcentralmanager_p.h"
 #include "qlowenergycontrollerbase_p.h"
 #include "qlowenergycontroller.h"
 #include "osx/osxbtnotifier_p.h"
-#include "osx/osxbtutility_p.h"
 #include "qbluetoothaddress.h"
 #include "qbluetoothuuid.h"
+#include "osx/btraii_p.h"
 
 #include <QtCore/qsharedpointer.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qmap.h>
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth
-{
-
-class LECBManagerNotifier;
-
-}
-
 class QByteArray;
 
-// Suffix 'OSX' is a legacy, it's also iOS.
-class QLowEnergyControllerPrivateOSX : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateDarwin : public QLowEnergyControllerPrivate
 {
     friend class QLowEnergyController;
     friend class QLowEnergyService;
 
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivateOSX(QLowEnergyController::Role role, QLowEnergyController *q,
-                                   const QBluetoothDeviceInfo &info = QBluetoothDeviceInfo());
-    ~QLowEnergyControllerPrivateOSX();
+    QLowEnergyControllerPrivateDarwin();
+    ~QLowEnergyControllerPrivateDarwin();
 
-    bool isValid() const;
+    void init() override;
+    void connectToDevice() override;
+    void disconnectFromDevice() override;
+    void discoverServices() override;
+    void discoverServiceDetails(const QBluetoothUuid &serviceUuid) override;
+
+    void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                            const QLowEnergyHandle charHandle) override;
+    void readDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QLowEnergyHandle descriptorHandle) override;
+
+    void writeCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
+                             const QLowEnergyHandle charHandle, const QByteArray &newValue,
+                             QLowEnergyService::WriteMode mode) override;
+    void writeDescriptor(const QSharedPointer<QLowEnergyServicePrivate> service,
+                         const QLowEnergyHandle charHandle,
+                         const QLowEnergyHandle descriptorHandle,
+                         const QByteArray &newValue) override;
+
+
+    void requestConnectionUpdate(const QLowEnergyConnectionParameters &params) override;
+    void addToGenericAttributeList(const QLowEnergyServiceData &service,
+                                   QLowEnergyHandle startHandle) override;
+
+    void startAdvertising(const QLowEnergyAdvertisingParameters &params,
+                          const QLowEnergyAdvertisingData &advertisingData,
+                          const QLowEnergyAdvertisingData &scanResponseData) override;
+    void stopAdvertising()override;
+    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
+    bool isValid() const; // QT6 - delete this logic.
 
 private Q_SLOTS:
     void _q_connected();
@@ -98,6 +116,7 @@ private Q_SLOTS:
 
     void _q_serviceDiscoveryFinished();
     void _q_serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
+    void _q_servicesWereModified();
 
     void _q_characteristicRead(QLowEnergyHandle charHandle, const QByteArray &value);
     void _q_characteristicWritten(QLowEnergyHandle charHandle, const QByteArray &value);
@@ -112,75 +131,30 @@ private Q_SLOTS:
     void _q_CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
 
 private:
-    void connectToDevice();
-    void discoverServices();
-    void discoverServiceDetails(const QBluetoothUuid &serviceUuid);
-
     void setNotifyValue(QSharedPointer<QLowEnergyServicePrivate> service,
                         QLowEnergyHandle charHandle, const QByteArray &newValue);
-
-    void readCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
-                            QLowEnergyHandle charHandle);
-    void writeCharacteristic(QSharedPointer<QLowEnergyServicePrivate> service,
-                             QLowEnergyHandle charHandle, const QByteArray &newValue,
-                             QLowEnergyService::WriteMode mode);
 
     quint16 updateValueOfCharacteristic(QLowEnergyHandle charHandle,
                                         const QByteArray &value,
                                         bool appendValue);
-
-    void readDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
-                        QLowEnergyHandle charHandle);
-    void writeDescriptor(QSharedPointer<QLowEnergyServicePrivate> service,
-                         QLowEnergyHandle descriptorHandle,
-                         const QByteArray &newValue);
-
 
     quint16 updateValueOfDescriptor(QLowEnergyHandle charHandle,
                                     QLowEnergyHandle descHandle,
                                     const QByteArray &value,
                                     bool appendValue);
 
-    // 'Lookup' functions:
-    QSharedPointer<QLowEnergyServicePrivate> serviceForHandle(QLowEnergyHandle serviceHandle);
-    QLowEnergyCharacteristic characteristicForHandle(QLowEnergyHandle charHandle);
-    QLowEnergyDescriptor descriptorForHandle(QLowEnergyHandle descriptorHandle);
-
     void setErrorDescription(QLowEnergyController::Error errorCode);
-    void invalidateServices();
     bool connectSlots(OSXBluetooth::LECBManagerNotifier *notifier);
 
-    QLowEnergyController *q_ptr;
-    QBluetoothUuid deviceUuid;
-    QString deviceName;
-
-    QString errorString;
-    QLowEnergyController::Error lastError;
-
-    QBluetoothAddress localAddress;
-    QBluetoothAddress remoteAddress;
-
-    QLowEnergyController::Role role;
-
-    QLowEnergyController::ControllerState controllerState;
-    QLowEnergyController::RemoteAddressType addressType;
-
-    typedef QT_MANGLE_NAMESPACE(OSXBTCentralManager) ObjCCentralManager;
-    typedef OSXBluetooth::ObjCScopedPointer<ObjCCentralManager> CentralManager;
-    CentralManager centralManager;
+    DarwinBluetooth::ScopedPointer centralManager;
 
 #ifndef Q_OS_TVOS
-    typedef QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) ObjCPeripheralManager;
-    typedef OSXBluetooth::ObjCScopedPointer<ObjCPeripheralManager> PeripheralManager;
-    PeripheralManager peripheralManager;
+    DarwinBluetooth::ScopedPointer peripheralManager;
 #endif
 
-    typedef QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate> > ServiceMap;
-    typedef ServiceMap::const_iterator ConstServiceIterator;
-    typedef ServiceMap::iterator ServiceIterator;
-    ServiceMap discoveredServices;
+    using ServiceMap = QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate>>;
 };
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QLOWENERGYCONTROLLER_DARWIN_P_H

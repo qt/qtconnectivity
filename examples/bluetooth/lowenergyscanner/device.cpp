@@ -152,12 +152,12 @@ void Device::scanServices(const QString &address)
     // We need the current device for service discovery.
 
     for (auto d: qAsConst(devices)) {
-        auto device = qobject_cast<DeviceInfo *>(d);
-        if (!device)
-            continue;
-
-        if (device->getAddress() == address )
-            currentDevice.setDevice(device->getDevice());
+        if (auto device = qobject_cast<DeviceInfo *>(d)) {
+            if (device->getAddress() == address ) {
+                currentDevice.setDevice(device->getDevice());
+                break;
+            }
+        }
     }
 
     if (!currentDevice.getDevice().isValid()) {

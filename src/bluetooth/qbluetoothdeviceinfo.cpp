@@ -647,7 +647,6 @@ QVector<quint16> QBluetoothDeviceInfo::manufacturerIds() const
  */
 QByteArray QBluetoothDeviceInfo::manufacturerData(quint16 manufacturerId) const
 {
-    // TODO Currently not implemented on WinRT
     Q_D(const QBluetoothDeviceInfo);
     return d->manufacturerData.value(manufacturerId);
 }

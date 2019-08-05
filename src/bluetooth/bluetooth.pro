@@ -162,42 +162,27 @@ qtConfig(bluez) {
     include(osx/osxbt.pri)
     OBJECTIVE_SOURCES += \
         qbluetoothlocaldevice_osx.mm \
-        qbluetoothdevicediscoveryagent_osx.mm \
+        qbluetoothdevicediscoveryagent_darwin.mm \
         qbluetoothserviceinfo_osx.mm \
         qbluetoothservicediscoveryagent_osx.mm \
         qbluetoothsocket_osx.mm \
         qbluetoothserver_osx.mm \
         qbluetoothtransferreply_osx.mm \
-        qlowenergycontroller_osx.mm \
-        qlowenergyservice_osx.mm
+        qlowenergycontroller_darwin.mm
 
     PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
-                       qbluetoothserver_osx_p.h \
                        qbluetoothtransferreply_osx_p.h \
-                       qbluetoothtransferreply_osx_p.h \
-                       qlowenergycontroller_osx_p.h
-
-    SOURCES -= qbluetoothdevicediscoveryagent.cpp
-    SOURCES -= qbluetoothserviceinfo.cpp
-    SOURCES -= qbluetoothservicediscoveryagent.cpp
-    SOURCES -= qbluetoothsocket.cpp
-    SOURCES -= qbluetoothsocketbase.cpp
-    SOURCES -= qbluetoothserver.cpp
-    SOURCES -= qlowenergyservice_p.cpp
-    SOURCES -= qlowenergyservice.cpp
-    SOURCES -= qlowenergycontroller.cpp
-    SOURCES -= qlowenergycontrollerbase.cpp
+                       qlowenergycontroller_darwin_p.h
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework CoreBluetooth
 
     OBJECTIVE_SOURCES += \
-        qbluetoothdevicediscoveryagent_ios.mm \
-        qlowenergycontroller_osx.mm \
-        qlowenergyservice_osx.mm
+        qbluetoothdevicediscoveryagent_darwin.mm \
+        qlowenergycontroller_darwin.mm
 
     PRIVATE_HEADERS += \
-        qlowenergycontroller_osx_p.h \
+        qlowenergycontroller_darwin_p.h \
         qbluetoothsocket_dummy_p.h
 
     include(osx/osxbt.pri)
@@ -207,11 +192,6 @@ qtConfig(bluez) {
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_dummy.cpp \
         qbluetoothserver_p.cpp
-
-    SOURCES -= qbluetoothdevicediscoveryagent.cpp
-    SOURCES -= qlowenergyservice.cpp
-    SOURCES -= qlowenergycontroller.cpp
-    SOURCES -= qlowenergycontrollerbase.cpp
 } else: qtConfig(winrt_bt) {
     DEFINES += QT_WINRT_BLUETOOTH
     !winrt {
@@ -224,7 +204,7 @@ qtConfig(bluez) {
 
     SOURCES += \
         qbluetoothdevicediscoveryagent_winrt.cpp \
-        qbluetoothlocaldevice_p.cpp \
+        qbluetoothlocaldevice_winrt.cpp \
         qbluetoothserver_winrt.cpp \
         qbluetoothservicediscoveryagent_winrt.cpp \
         qbluetoothserviceinfo_winrt.cpp \

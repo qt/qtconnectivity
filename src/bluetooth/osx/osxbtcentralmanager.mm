@@ -39,6 +39,7 @@
 
 #include "qlowenergyserviceprivate_p.h"
 #include "qlowenergycharacteristic.h"
+#include "qlowenergycontroller.h"
 #include "osxbtcentralmanager_p.h"
 #include "osxbtnotifier_p.h"
 
@@ -132,6 +133,7 @@ QT_USE_NAMESPACE
 - (CBDescriptor *)descriptor:(const QBluetoothUuid &)dUuid
                   forCharacteristic:(CBCharacteristic *)ch;
 - (bool)cacheWriteValue:(const QByteArray &)value for:(NSObject *)obj;
+- (void)handleReadWriteError:(NSError *)error;
 - (void)reset;
 
 @end
@@ -1202,6 +1204,21 @@ QT_USE_NAMESPACE
     // TODO: also serviceToVisit/VisitNext and visitedServices ?
 }
 
+- (void)handleReadWriteError:(NSError *)error
+{
+    Q_ASSERT(notifier);
+
+    switch (error.code) {
+    case 0x05: // GATT_INSUFFICIENT_AUTHORIZATION
+    case 0x0F: // GATT_INSUFFICIENT_ENCRYPTION
+        emit notifier->CBManagerError(QLowEnergyController::AuthorizationError);
+        [self detach];
+        break;
+    default:
+        break;
+    }
+}
+
 // CBCentralManagerDelegate (the real one).
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
@@ -1245,6 +1262,7 @@ QT_USE_NAMESPACE
             if (notifier)
                 emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
         }
+        [self stopWatchers];
         return;
     }
 
@@ -1266,6 +1284,7 @@ QT_USE_NAMESPACE
             if (notifier)
                 emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
         }
+        [self stopWatchers];
         return;
     }
 
@@ -1280,7 +1299,7 @@ QT_USE_NAMESPACE
         }
     } else {
         // We actually handled all known states, but .. Core Bluetooth can change?
-        Q_ASSERT_X(0, Q_FUNC_INFO, "invalid centra's state");
+        Q_ASSERT_X(0, Q_FUNC_INFO, "invalid central's state");
     }
 
 #pragma clang diagnostic pop
@@ -1371,6 +1390,30 @@ QT_USE_NAMESPACE
     [self discoverIncludedServices];
 }
 
+- (void)peripheral:(CBPeripheral *)aPeripheral
+        didModifyServices:(NSArray<CBService *> *)invalidatedServices
+{
+    Q_UNUSED(aPeripheral)
+    Q_UNUSED(invalidatedServices)
+
+    qCWarning(QT_BT_OSX) << "The peripheral has modified its services.";
+    // "This method is invoked whenever one or more services of a peripheral have changed.
+    // A peripheral’s services have changed if:
+    // * A service is removed from the peripheral’s database
+    // * A new service is added to the peripheral’s database
+    // * A service that was previously removed from the peripheral’s
+    //   database is readded to the database at a different location"
+
+    // In case new services were added - we have to discover them.
+    // In case some were removed - we can end up with dangling pointers
+    // (see our 'watchdogs', for example). To handle the situation
+    // we stop all current operations here, report to QLowEnergyController
+    // so that it can trigger re-discovery.
+    [self reset];
+    managerState = OSXBluetooth::CentralManagerIdle;
+    if (notifier)
+        emit notifier->servicesWereModified();
+}
 
 - (void)peripheral:(CBPeripheral *)aPeripheral didDiscoverIncludedServicesForService:(CBService *)service
         error:(NSError *)error
@@ -1514,6 +1557,7 @@ QT_USE_NAMESPACE
                 currentReadHandle = 0;
                 requestPending = false;
                 emit notifier->CBManagerError(qtUuid, QLowEnergyService::CharacteristicReadError);
+                [self handleReadWriteError:error];
                 [self performNextRequest];
             }
             return;
@@ -1632,6 +1676,7 @@ QT_USE_NAMESPACE
                 currentReadHandle = 0;
                 requestPending = false;
                 emit notifier->CBManagerError(qtUuid, QLowEnergyService::DescriptorReadError);
+                [self handleReadWriteError:error];
                 [self performNextRequest];
             }
             return;
@@ -1721,6 +1766,7 @@ QT_USE_NAMESPACE
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
         emit notifier->CBManagerError(qt_uuid(characteristic.service.UUID),
                                              QLowEnergyService::CharacteristicWriteError);
+        [self handleReadWriteError:error];
     } else {
         const QLowEnergyHandle cHandle = charMap.key(characteristic);
         emit notifier->characteristicWritten(cHandle, valueToReport);
@@ -1755,6 +1801,7 @@ QT_USE_NAMESPACE
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
         emit notifier->CBManagerError(qt_uuid(descriptor.characteristic.service.UUID),
                        QLowEnergyService::DescriptorWriteError);
+        [self handleReadWriteError:error];
     } else {
         const QLowEnergyHandle dHandle = descMap.key(descriptor);
         Q_ASSERT_X(dHandle, Q_FUNC_INFO, "descriptor not found in the descriptors map");

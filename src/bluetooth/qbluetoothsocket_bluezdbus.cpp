@@ -538,6 +538,8 @@ void QBluetoothSocketPrivateBluezDBus::remoteConnected(const QDBusUnixFileDescri
                 q, &QBluetoothSocket::readyRead);
         connect(localSocket, &QLocalSocket::stateChanged,
                 this, &QBluetoothSocketPrivateBluezDBus::socketStateChanged);
+        connect(localSocket, &QLocalSocket::bytesWritten,
+                q, &QBluetoothSocket::bytesWritten);
 
         socket = descriptor;
         q->setSocketState(QBluetoothSocket::ConnectedState);
