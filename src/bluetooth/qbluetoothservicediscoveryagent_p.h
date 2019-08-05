@@ -90,6 +90,11 @@ QT_END_NAMESPACE
 #include <QtCore/QPointer>
 #endif
 
+#ifdef QT_OSX_BLUETOOTH
+#include "osx/btdelegates_p.h"
+#include "osx/btraii_p.h"
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
@@ -109,6 +114,9 @@ class QBluetoothServiceDiscoveryAgentPrivate
         : public QObject
 {
     Q_OBJECT
+#elif defined(QT_OSX_BLUETOOTH)
+        : public QObject, public DarwinBluetooth::SDPInquiryDelegate
+{
 #else
 {
 #endif
@@ -237,6 +245,19 @@ private slots:
 private:
     QPointer<QWinRTBluetoothServiceDiscoveryWorker> worker;
 #endif
+
+#ifdef QT_OSX_BLUETOOTH
+    // SDPInquiryDelegate:
+    void SDPInquiryFinished(void *device) override;
+    void SDPInquiryError(void *device, IOReturn errorCode) override;
+
+    void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
+    //void serviceDiscoveryFinished();
+
+    bool serviceHasMatchingUuid(const QBluetoothServiceInfo &serviceInfo) const;
+
+    DarwinBluetooth::ScopedPointer serviceInquiry;
+#endif // QT_OSX_BLUETOOTH
 
 protected:
     QBluetoothServiceDiscoveryAgent *q_ptr;

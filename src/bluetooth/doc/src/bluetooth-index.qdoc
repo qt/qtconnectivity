@@ -41,7 +41,7 @@ Currently, the API is supported on the following platforms:
     \li \l {Qt for Android}{Android}
     \li \l {Qt for iOS}{iOS}
     \li \l {Qt for Linux/X11}{Linux (BlueZ 4.x/5.x)}
-    \li \l {Qt for OS X}{macOS}
+    \li \l \macos
     \li \l {Qt for WinRT}{WinRT}
     \li \l {Qt for Windows}{Win32}
 \row

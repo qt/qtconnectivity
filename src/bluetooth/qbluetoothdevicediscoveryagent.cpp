@@ -176,8 +176,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \sa QBluetoothDeviceInfo::rssi(), lowEnergyDiscoveryTimeout()
 */
 
-// TODO deviceUpdated() signal not implemented on WinRT
-
 /*!
     \fn void QBluetoothDeviceDiscoveryAgent::finished()
 

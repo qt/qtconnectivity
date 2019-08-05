@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -37,16 +37,40 @@
 **
 ****************************************************************************/
 
-#include "osxbtchanneldelegate_p.h"
+#include "btdelegates_p.h"
+
+#if defined(Q_OS_MACOS)
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
+
+DeviceInquiryDelegate::~DeviceInquiryDelegate()
+{
+}
+
+PairingDelegate::~PairingDelegate()
+{
+}
+
+SDPInquiryDelegate::~SDPInquiryDelegate()
+{
+}
 
 ChannelDelegate::~ChannelDelegate()
 {
 }
 
+ConnectionMonitor::~ConnectionMonitor()
+{
 }
 
+SocketListener::~SocketListener()
+{
+}
+
+} // namespace DarwinBluetooth
+
 QT_END_NAMESPACE
+
+#endif

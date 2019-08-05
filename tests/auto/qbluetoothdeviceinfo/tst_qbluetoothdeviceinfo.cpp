@@ -447,21 +447,15 @@ void tst_QBluetoothDeviceInfo::tst_serviceUuids()
     QBluetoothDeviceInfo deviceInfo;
     QBluetoothDeviceInfo copyInfo = deviceInfo;
 
-    QList<QBluetoothUuid> servicesList;
+    QVector<QBluetoothUuid> servicesList;
     servicesList.append(QBluetoothUuid::L2cap);
     servicesList.append(QBluetoothUuid::Rfcomm);
     QVERIFY(servicesList.count() > 0);
 
-    deviceInfo.setServiceUuids(servicesList.toVector());
+    deviceInfo.setServiceUuids(servicesList);
     QVERIFY(deviceInfo.serviceUuids().count() > 0);
     deviceInfo.setServiceUuids(QVector<QBluetoothUuid>());
     QCOMPARE(deviceInfo.serviceUuids().count(), 0);
-
-    deviceInfo.setServiceUuids(servicesList, QBluetoothDeviceInfo::DataComplete);
-    QVERIFY(deviceInfo.serviceUuids().count() > 0);
-    QVERIFY(deviceInfo != copyInfo);
-
-    QVERIFY(deviceInfo.serviceUuidsCompleteness() == QBluetoothDeviceInfo::DataComplete);
 }
 
 void tst_QBluetoothDeviceInfo::tst_cached()

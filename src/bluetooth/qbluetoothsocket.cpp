@@ -49,6 +49,8 @@
 #include "qbluetoothsocket_winrt_p.h"
 #elif defined(QT_WIN_BLUETOOTH)
 #include "qbluetoothsocket_win_p.h"
+#elif defined(QT_OSX_BLUETOOTH)
+#include "qbluetoothsocket_osx_p.h"
 #else
 #include "qbluetoothsocket_dummy_p.h"
 #endif
@@ -271,6 +273,8 @@ static QBluetoothSocketBasePrivate *createSocketPrivate()
     return new QBluetoothSocketPrivateWinRT();
 #elif defined(QT_WIN_BLUETOOTH)
     return new QBluetoothSocketPrivateWin();
+#elif defined(QT_OSX_BLUETOOTH)
+    return new QBluetoothSocketPrivate();
 #else
     return new QBluetoothSocketPrivateDummy();
 #endif
@@ -364,8 +368,8 @@ qint64 QBluetoothSocket::bytesToWrite() const
 /*!
     Attempts to connect to the service described by \a service.
 
-    The socket is opened in the given \a openMode. The \l socketType() may change
-    depending on the protocol required by \a service.
+    The socket is opened in the given \a openMode. The \l socketType() is ignored
+    if \a service specifies a differing \l QBluetoothServiceInfo::socketProtocol().
 
     The socket first enters ConnectingState and attempts to connect to the device providing
     \a service. If a connection is established, QBluetoothSocket enters ConnectedState and
@@ -375,6 +379,9 @@ qint64 QBluetoothSocket::bytesToWrite() const
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
     the connection process may fail.
+
+    On Android, only RFCOMM connections are possible. This function ignores any socket protocol indicator
+    and assumes RFCOMM.
 
     \sa state(), disconnectFromService()
 */
@@ -514,6 +521,9 @@ QString QBluetoothSocket::errorString() const
 */
 void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags)
 {
+#ifdef QT_OSX_BLUETOOTH
+    return; // not supported on macOS.
+#endif
     Q_D(QBluetoothSocketBase);
     if (d->secFlags != flags)
         d->secFlags = flags;
@@ -535,8 +545,13 @@ void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags
 */
 QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
 {
+#if QT_OSX_BLUETOOTH
+    // not supported on macOS - platform always uses encryption
+    return QBluetooth::Secure;
+#else
     Q_D(const QBluetoothSocketBase);
     return d->secFlags;
+#endif // QT_OSX_BLUETOOTH
 }
 
 /*!
@@ -560,6 +575,9 @@ void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
         emit disconnected();
     }
     if(state == ListeningState){
+#ifdef QT_OSX_BLUETOOTH
+        qCWarning(QT_BT) << "listening socket is not supported by IOBluetooth";
+#endif
         // TODO: look at this, is this really correct?
         // if we're a listening socket we can't handle connects?
         if (d->readNotifier) {
@@ -641,6 +659,13 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
         connectToService(service, d->openMode);
         d->discoveryAgent->deleteLater();
         d->discoveryAgent = nullptr;
+#ifdef QT_WINRT_BLUETOOTH
+    } else if (!service.attribute(0xBEEF).isNull()
+               && !service.attribute(0xBEF0).isNull()) {
+        connectToService(service, d->openMode);
+        d->discoveryAgent->deleteLater();
+        d->discoveryAgent = nullptr;
+#endif
     } else {
         qCDebug(QT_BT) << "Could not find port/psm for potential remote service";
     }

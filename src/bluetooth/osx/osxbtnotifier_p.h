@@ -89,13 +89,13 @@ Q_SIGNALS:
     void descriptorRead(QLowEnergyHandle descHandle, const QByteArray &value);
     void descriptorWritten(QLowEnergyHandle descHandle, const QByteArray &value);
     void notificationEnabled(QLowEnergyHandle charHandle, bool enabled);
+    void servicesWereModified();
 
     void LEnotSupported();
     void CBManagerError(QBluetoothDeviceDiscoveryAgent::Error error);
     void CBManagerError(QLowEnergyController::Error error);
     void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyController::Error error);
     void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
-
 };
 
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
  **
- ** Copyright (C) 2016 The Qt Company Ltd.
+ ** Copyright (C) 2019 The Qt Company Ltd.
  ** Contact: https://www.qt.io/licensing/
  **
  ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -47,6 +47,11 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -90,6 +95,9 @@ public class QtBluetoothLE {
     private final int RUNNABLE_TIMEOUT = 3000; // 3 seconds
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
 
+    /* New BTLE scanner setup since Android SDK v21 */
+    private BluetoothLeScanner mBluetoothLeScanner = null;
+
     private class TimeoutRunnable implements Runnable {
         public TimeoutRunnable(int handle) { pendingJobHandle = handle; }
         @Override
@@ -123,6 +131,7 @@ public class QtBluetoothLE {
     @SuppressWarnings("WeakerAccess")
     public QtBluetoothLE() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
     }
 
     public QtBluetoothLE(final String remoteAddress, Context context) {
@@ -130,7 +139,6 @@ public class QtBluetoothLE {
         qtContext = context;
         mRemoteGattAddress = remoteAddress;
     }
-
 
     /*************************************************************/
     /* Device scan                                               */
@@ -144,27 +152,45 @@ public class QtBluetoothLE {
             return true;
 
         if (isEnabled) {
-            mLeScanRunning = mBluetoothAdapter.startLeScan(leScanCallback);
+            Log.d(TAG, "New BTLE scanning API");
+            ScanSettings.Builder settingsBuilder = new ScanSettings.Builder();
+            settingsBuilder = settingsBuilder.setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+            ScanSettings settings = settingsBuilder.build();
+
+            List<ScanFilter> filterList = new ArrayList<ScanFilter>(2);
+
+            mBluetoothLeScanner.startScan(filterList, settings, leScanCallback21);
+            mLeScanRunning = true;
         } else {
-            mBluetoothAdapter.stopLeScan(leScanCallback);
+            mBluetoothLeScanner.stopScan(leScanCallback21);
             mLeScanRunning = false;
         }
 
         return (mLeScanRunning == isEnabled);
     }
 
-    // Device scan callback
-    private final BluetoothAdapter.LeScanCallback leScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
+    // Device scan callback (SDK v21+)
+    private final ScanCallback leScanCallback21 = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            leScanResult(qtObject, result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
+        }
 
-                @Override
-                public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-                    if (qtObject == 0)
-                        return;
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+            for (ScanResult result : results)
+                leScanResult(qtObject, result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
 
-                    leScanResult(qtObject, device, rssi, scanRecord);
-                }
-            };
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            Log.d(TAG, "BTLE device scan failed with " + errorCode);
+        }
+    };
 
     public native void leScanResult(long qtObject, BluetoothDevice device, int rssi, byte[] scanRecord);
 
@@ -203,7 +229,6 @@ public class QtBluetoothLE {
                 case BluetoothGatt.GATT_FAILURE: // Android's equivalent of "do not know what error it is"
                     errorCode = 1; break; //QLowEnergyController::UnknownError
                 case 8:  // BLE_HCI_CONNECTION_TIMEOUT
-                case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
                     Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");
                     errorCode = 5; break; //QLowEnergyController::ConnectionError
                 case 19: // BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION
@@ -212,6 +237,9 @@ public class QtBluetoothLE {
                     Log.w(TAG, "The remote host closed the connection");
                     errorCode = 7; //QLowEnergyController::RemoteHostClosedError
                     break;
+                case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
+                    // Internally, Android maps PIN_OR_KEY_MISSING to GATT_CONN_TERMINATE_LOCAL_HOST
+                    errorCode = 8; break; //QLowEnergyController::AuthorizationError
                 default:
                     Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status + " " + newState);
                     errorCode = status; break; //TODO deal with all errors
@@ -839,6 +867,9 @@ public class QtBluetoothLE {
      */
     public String includedServices(String serviceUuid)
     {
+        if (mBluetoothGatt == null)
+            return null;
+
         UUID uuid;
         try {
             uuid = UUID.fromString(serviceUuid);

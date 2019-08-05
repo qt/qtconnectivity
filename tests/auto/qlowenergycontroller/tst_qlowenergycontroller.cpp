@@ -451,14 +451,18 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 
     // 2. new controller to same device fails
     {
+#ifdef Q_OS_DARWIN
+        QLowEnergyController control2(remoteDeviceInfo);
+#else
         QLowEnergyController control2(remoteDevice);
+#endif
         control2.connectToDevice();
         {
             QTRY_IMPL(control2.state() != QLowEnergyController::ConnectingState,
                       30000);
         }
 
-#if defined(Q_OS_ANDROID) || QT_CONFIG(winrt_bt)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN) || QT_CONFIG(winrt_bt)
         QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
         QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
         control2.disconnectFromDevice();
@@ -1755,7 +1759,8 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QTRY_VERIFY_WITH_TIMEOUT(
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
-    //test service described by http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
+    // test service described by
+    // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
 
     QLowEnergyCharacteristic dataChar;
@@ -1929,7 +1934,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
     // Temperature service described by
-    // http://processors.wiki.ti.com/index.php/SensorTag_User_Guide
+    // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
 
     // 1. Find temperature data characteristic
     const QLowEnergyCharacteristic tempData = service->characteristic(

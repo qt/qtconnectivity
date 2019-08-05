@@ -104,5 +104,6 @@ Q_LOGGING_CATEGORY(QT_BT_ANDROID, "qt.bluetooth.android")
 Q_LOGGING_CATEGORY(QT_BT_BLUEZ, "qt.bluetooth.bluez")
 Q_LOGGING_CATEGORY(QT_BT_WINDOWS, "qt.bluetooth.windows")
 Q_LOGGING_CATEGORY(QT_BT_WINRT, "qt.bluetooth.winrt")
+Q_LOGGING_CATEGORY(QT_BT_WINRT_SERVICE_THREAD, "qt.bluetooth.winrt.service.thread")
 
 QT_END_NAMESPACE

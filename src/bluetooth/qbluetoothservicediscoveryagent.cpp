@@ -169,6 +169,11 @@ QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(QObject *parent
 
     \note On WinRT the passed adapter address will be ignored.
 
+    \note On Android passing any \a deviceAdapter address is meaningless as Android 6.0 or later does not publish
+    the local Bluetooth address anymore. Subsequently, the passed adapter address can never be matched
+    against the local adapter address. Therefore the subsequent call to \l start() will always trigger
+    \l InvalidBluetoothAdapterError.
+
     \sa error()
 */
 QBluetoothServiceDiscoveryAgent::QBluetoothServiceDiscoveryAgent(const QBluetoothAddress &deviceAdapter, QObject *parent)
@@ -303,6 +308,13 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
         return QBluetoothAddress();
 }
 
+namespace OSXBluetooth {
+
+void qt_test_iobluetooth_runloop();
+
+}
+
+
 /*!
     Starts service discovery. \a mode specifies the type of service discovery to perform.
 
@@ -313,6 +325,10 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
 void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
 {
     Q_D(QBluetoothServiceDiscoveryAgent);
+#ifdef QT_OSX_BLUETOOTH
+    // Make sure we are on the right thread/have a run loop:
+    OSXBluetooth::qt_test_iobluetooth_runloop();
+#endif
 
     if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive
             && d->error != InvalidBluetoothAdapterError) {
@@ -568,7 +584,8 @@ bool QBluetoothServiceDiscoveryAgentPrivate::isDuplicatedService(
         const QBluetoothServiceInfo &info = discoveredServices.at(j);
         if (info.device() == serviceInfo.device()
                 && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
-                && info.serviceUuid() == serviceInfo.serviceUuid()) {
+                && info.serviceUuid() == serviceInfo.serviceUuid()
+                && info.serverChannel() == serviceInfo.serverChannel()) {
             return true;
         }
     }

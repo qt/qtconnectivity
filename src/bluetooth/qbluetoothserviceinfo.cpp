@@ -180,7 +180,12 @@ bool QBluetoothServiceInfo::isRegistered() const
 
 bool QBluetoothServiceInfo::registerService(const QBluetoothAddress &localAdapter)
 {
+#ifdef QT_OSX_BLUETOOTH
+    Q_UNUSED(localAdapter)
+    return d_ptr->registerService(*this);
+#else
     return d_ptr->registerService(localAdapter);
+#endif
 }
 
 /*!
@@ -413,6 +418,9 @@ void QBluetoothServiceInfo::setDevice(const QBluetoothDeviceInfo &device)
     If the service information is already registered with the platform's SDP database,
     the database entry will not be updated until \l registerService() was called again.
 
+    \note If an attribute expectes a byte-encoded value (e.g. Bluetooth HID services),
+    it should be set as QByteArray.
+
     \sa isRegistered(), registerService()
 */
 void QBluetoothServiceInfo::setAttribute(quint16 attributeId, const QVariant &value)
@@ -578,6 +586,10 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
         dbg << QString::asprintf("%sstring %s\n", indent.toUtf8().constData(),
                                  var.toString().toUtf8().constData());
         break;
+    case QMetaType::QByteArray:
+        dbg << QString::asprintf("%sbytearray %s\n", indent.toUtf8().constData(),
+                                 var.toByteArray().toHex().constData());
+        break;
     case QMetaType::Bool:
         dbg << QString::asprintf("%sbool %d\n", indent.toUtf8().constData(), var.toBool());
         break;
@@ -631,7 +643,7 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
 {
     QDebugStateSaver saver(dbg);
     dbg.noquote() << "\n";
-    QList<quint16> attributes = info.attributes();
+    const QList<quint16> attributes = info.attributes();
     for (quint16 id : attributes) {
         dumpAttributeVariant(dbg, info.attribute(id), QStringLiteral("(%1)\t").arg(id));
     }
