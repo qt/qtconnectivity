@@ -255,8 +255,10 @@ public:
 #ifndef Q_QDOC //suppress qdoc warnings
     QVector<QBluetoothUuid> serviceUuids() const;
 #endif // Q_QDOC
-#else
+#elif QT_DEPRECATED_SINCE(5, 13)
     QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const;
+#else
+    QList<QBluetoothUuid> serviceUuids() const;
 #endif
     void setServiceUuids(const QVector<QBluetoothUuid> &uuids);
 
