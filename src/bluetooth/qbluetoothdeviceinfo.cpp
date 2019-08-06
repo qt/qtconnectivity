@@ -669,6 +669,10 @@ QVector<quint16> QBluetoothDeviceInfo::manufacturerIds() const
     The interpretation of the data octets is defined by the manufacturer
     specified by the company identifier.
 
+    \note The remote device may provide multiple data entries per manufacturerId.
+    This function only returns the first entry. If all entries are needed use
+    \l manufacturerData() which returns a multi hash.
+
     \sa manufacturerIds(), setManufacturerData()
     \since 5.12
  */
@@ -680,7 +684,10 @@ QByteArray QBluetoothDeviceInfo::manufacturerData(quint16 manufacturerId) const
 
 /*!
     Sets the advertised manufacturer \a data for the given \a manufacturerId.
-    Returns true if it was inserted or changed, false if it was already known.
+    Returns \c true if it was inserted, \c false if it was already known.
+
+    Since Qt 5.14, different values for \a data and the same \a manufacturerId no longer
+    replace each other but are accumulated for the duration of a device scan.
 
     \sa manufacturerData
     \since 5.12
@@ -688,15 +695,24 @@ QByteArray QBluetoothDeviceInfo::manufacturerData(quint16 manufacturerId) const
 bool QBluetoothDeviceInfo::setManufacturerData(quint16 manufacturerId, const QByteArray &data)
 {
     Q_D(QBluetoothDeviceInfo);
-    const auto it = d->manufacturerData.find(manufacturerId);
-    if (it != d->manufacturerData.end() && *it == data)
-        return false;
-    d->manufacturerData.insert(manufacturerId, data);
+    QHash<quint16, QByteArray>::const_iterator it = d->manufacturerData.find(manufacturerId);
+    while (it != d->manufacturerData.end() && it.key() == manufacturerId) {
+        if (*it == data)
+            return false;
+        it++;
+    }
+
+    d->manufacturerData.insertMulti(manufacturerId, data);
     return true;
 }
 
 /*!
     Returns the complete set of all manufacturer data.
+
+    Some devices may provide multiple manufacturer data entries per manufacturer ID.
+    An example might be a Bluetooth Low Energy device that sends a different manufacturer data via
+    advertisement packets and scan response packets respectively. Therefore the returned hash table
+    may have multiple entries per manufacturer ID or hash key.
 
     \sa setManufacturerData
     \since 5.12

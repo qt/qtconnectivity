@@ -262,6 +262,10 @@ public:
 #endif
     void setServiceUuids(const QVector<QBluetoothUuid> &uuids);
 
+    // TODO Qt6 manufacturerData()
+    // manufacturerData() and manufacturerData(quint16) return types should be modified to
+    // cope with multiple data entires per manufacturer ID. QHash<quint16, QByteArray>
+    // may stay though if it retains insertMulti() in Qt 6.
     QVector<quint16> manufacturerIds() const;
     QByteArray manufacturerData(quint16 manufacturerId) const;
     bool setManufacturerData(quint16 manufacturerId, const QByteArray &data);
