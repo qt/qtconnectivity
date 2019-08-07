@@ -171,8 +171,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     This signal informs you that if your application is displaying this data, it
     can be updated, rather than waiting until the discovery has finished.
 
-    \note This signal is only emitted on Android, iOS, macOS, and BlueZ 5.x.
-
     \sa QBluetoothDeviceInfo::rssi(), lowEnergyDiscoveryTimeout()
 */
 
