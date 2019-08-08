@@ -882,9 +882,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDevic
             // merge service uuids
             QList<QBluetoothUuid> uuids = iter->serviceUuids();
             uuids.append(info.serviceUuids());
-            const QSet<QBluetoothUuid> uuidSet = uuids.toSet();
+            const QSet<QBluetoothUuid> uuidSet(uuids.begin(), uuids.end());
             if (iter->serviceUuids().count() != uuidSet.count())
-                iter->setServiceUuids(uuidSet.toList().toVector());
+                iter->setServiceUuids(uuidSet.values().toVector());
             if (iter->coreConfigurations() != info.coreConfigurations())
                 iter->setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
             return;
