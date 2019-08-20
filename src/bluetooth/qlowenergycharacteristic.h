@@ -101,6 +101,7 @@ protected:
     friend class QLowEnergyControllerPrivateBluez;
     friend class QLowEnergyControllerPrivateBluezDBus;
     friend class QLowEnergyControllerPrivateCommon;
+    friend class QLowEnergyControllerPrivateWin32;
     friend class QLowEnergyControllerPrivateDarwin;
     friend class QLowEnergyControllerPrivateWinRT;
     friend class QLowEnergyControllerPrivateWinRTNew;

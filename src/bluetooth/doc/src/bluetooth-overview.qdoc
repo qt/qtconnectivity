@@ -49,6 +49,11 @@
 
     Note that the Object Push Profile is not supported on Android.
 
+    Note that the Received Signal Strength Indicator (RSSI), as well as
+    the Manufacturer Specific Data advertised by Bluetooth LE devices are
+    not supported by the Win32 backend. Also, it is only possible to find
+    devices that have been previously paired through Windows Settings.
+
     The following sections describe how to use the Qt Bluetooth C++ API classes
     for the above use cases.
 

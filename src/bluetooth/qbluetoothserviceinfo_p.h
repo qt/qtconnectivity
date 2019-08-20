@@ -82,6 +82,11 @@ namespace ABI {
 }
 #endif
 
+#ifdef QT_WIN_BLUETOOTH
+#include <winsock2.h>
+#include <ws2bth.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
@@ -121,6 +126,14 @@ private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::Rfcomm::IRfcommServiceProvider> serviceProvider;
 
     bool writeSdpAttributes();
+#endif
+
+#ifdef QT_WIN_BLUETOOTH
+    SOCKADDR_BTH sockaddr = {};
+    CSADDR_INFO addrinfo = {};
+    WSAQUERYSET regInfo = {};
+    QVector<WCHAR> serviceName;
+    QVector<WCHAR> serviceDescription;
 #endif
 
 #if QT_OSX_BLUETOOTH
