@@ -225,6 +225,24 @@ qtConfig(bluez) {
         DEFINES += QT_WINRT_LIMITED_SERVICEDISCOVERY
         DEFINES += QT_UCRTVERSION=$$WINDOWS_SDK_VERSION
     }
+} else:win32 {
+    QT_PRIVATE = concurrent
+    DEFINES += QT_WIN_BLUETOOTH
+    LIBS += -lbthprops -lws2_32 -lsetupapi
+
+    include(windows/windows.pri)
+
+    SOURCES += \
+        qbluetoothdevicediscoveryagent_win.cpp \
+        qbluetoothlocaldevice_win.cpp \
+        qbluetoothserviceinfo_win.cpp \
+        qbluetoothservicediscoveryagent_win.cpp \
+        qbluetoothsocket_win.cpp \
+        qbluetoothserver_win.cpp \
+        qlowenergycontroller_win.cpp
+
+    PRIVATE_HEADERS += qlowenergycontroller_win_p.h \
+                       qbluetoothsocket_win_p.h
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
     message("Either no Qt D-Bus found or no BlueZ headers available.")

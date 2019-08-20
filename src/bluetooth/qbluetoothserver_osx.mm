@@ -87,12 +87,13 @@ typedef QMap<quint16, QBluetoothServerPrivate *>::iterator ServerMapIterator;
 }
 
 
-QBluetoothServerPrivate::QBluetoothServerPrivate(ServiceInfo::Protocol type)
+QBluetoothServerPrivate::QBluetoothServerPrivate(ServiceInfo::Protocol type,
+                                                 QBluetoothServer *parent)
                             : socket(nullptr),
                               maxPendingConnections(1),
                               securityFlags(QBluetooth::NoSecurity),
                               serverType(type),
-                              q_ptr(nullptr),
+                              q_ptr(parent),
                               m_lastError(QBluetoothServer::NoError),
                               port(0)
 {
