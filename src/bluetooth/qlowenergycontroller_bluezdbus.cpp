@@ -112,6 +112,23 @@ void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
                 }
             }
         }
+
+        if (changedProperties.contains(QStringLiteral("UUIDs"))) {
+            const QStringList newUuidStringList = changedProperties.value(QStringLiteral("UUIDs")).toStringList();
+            QVector<QBluetoothUuid> newUuidList;
+            for (const QString &uuidString : newUuidStringList)
+                newUuidList.append(QBluetoothUuid(uuidString));
+
+            for (const QBluetoothUuid &uuid : serviceList.keys()) {
+                if (!newUuidList.contains(uuid)) {
+                    qCDebug(QT_BT_BLUEZ) << __func__ << "Service" << uuid << "has been removed";
+                    QSharedPointer<QLowEnergyServicePrivate> service = serviceList.take(uuid);
+                    service->setController(nullptr);
+                    dbusServices.remove(uuid);
+                }
+            }
+        }
+
     } else if (interface == QStringLiteral("org.bluez.Battery1")) {
         qCDebug(QT_BT_BLUEZ) << "######" << interface << changedProperties;
         if (changedProperties.contains(QStringLiteral("Percentage"))) {
