@@ -50,7 +50,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <linux/capability.h>
-
+#include <errno.h>
 
 QT_BEGIN_NAMESPACE
 
