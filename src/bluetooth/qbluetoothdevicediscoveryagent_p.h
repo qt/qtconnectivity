@@ -183,11 +183,12 @@ private:
     QTimer *discoveryTimer = nullptr;
     QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
 
-    void deviceFoundBluez5(const QString &devicePath);
+    void deviceFoundBluez5(const QString &devicePath, const QVariantMap &properties);
     void startBluez5(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods);
 
     bool useExtendedDiscovery;
     QTimer extendedDiscoveryTimer;
+    QMap<QString, QVariantMap> devicesProperties;
 #endif
 
 #ifdef QT_WIN_BLUETOOTH
