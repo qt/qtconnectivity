@@ -229,6 +229,7 @@ class QBluetoothLocalDevicePrivate : public QObject
 public:
     QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
                                  QBluetoothAddress = QBluetoothAddress());
+    ~QBluetoothLocalDevicePrivate();
 
     bool isValid() const;
 

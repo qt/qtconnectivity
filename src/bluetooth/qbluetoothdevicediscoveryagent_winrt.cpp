@@ -51,6 +51,7 @@
 #include <QtBluetooth/private/qbluetoothutils_winrt_p.h>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qeventdispatcher_winrt_p.h>
+#include <QtCore/qmutex.h>
 
 #include <robuffer.h>
 #include <wrl.h>
