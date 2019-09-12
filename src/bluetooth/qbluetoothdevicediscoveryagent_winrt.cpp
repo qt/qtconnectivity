@@ -52,6 +52,7 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/qmutex.h>
 #include <QtCore/private/qeventdispatcher_winrt_p.h>
+#include <QtCore/qmutex.h>
 
 #include <robuffer.h>
 #include <wrl.h>
@@ -866,10 +867,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
         disconnectAndClearWorker();
         emit q->canceled();
     }
-    if (leScanTimer) {
+    if (leScanTimer)
         leScanTimer->stop();
-        worker->deleteLater();
-    }
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDeviceInfo &info)
