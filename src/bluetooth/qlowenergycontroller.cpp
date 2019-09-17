@@ -465,7 +465,7 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
     Note that specifying the local device to be used for the connection is only
     possible when using BlueZ. All other platforms do not support this feature.
 
-    \since 5.13
+    \since 5.14
  */
 QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothAddress &remoteDevice,
                                                           const QBluetoothAddress &localDevice,
