@@ -114,6 +114,8 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &mStatics);
 }
 
+QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate() = default;
+
 bool QBluetoothLocalDevicePrivate::isValid() const
 {
     return (mStatics != nullptr && mLEStatics != nullptr);
