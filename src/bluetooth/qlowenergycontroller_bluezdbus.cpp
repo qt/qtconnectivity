@@ -340,7 +340,7 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDevice()
     QDBusPendingReply<> reply = device->Connect();
     QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this,
-            [=](QDBusPendingCallWatcher* call) {
+            [this](QDBusPendingCallWatcher* call) {
         QDBusPendingReply<> reply = *call;
         if (reply.isError()) {
             qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::connect() failed"
@@ -362,7 +362,7 @@ void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
     QDBusPendingReply<> reply = device->Disconnect();
     QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this,
-            [=](QDBusPendingCallWatcher* call) {
+            [this](QDBusPendingCallWatcher* call) {
         QDBusPendingReply<> reply = *call;
         if (reply.isError()) {
             qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::disconnect() failed"
