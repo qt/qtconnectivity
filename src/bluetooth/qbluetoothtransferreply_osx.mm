@@ -58,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothTransferReplyOSXPrivate : OSXBluetooth::OBEXSessionDelegate
+class QBluetoothTransferReplyOSXPrivate : DarwinBluetooth::OBEXSessionDelegate
 {
     friend class QBluetoothTransferReplyOSX;
 public:
@@ -104,7 +104,7 @@ private:
     QScopedPointer<QBluetoothServiceDiscoveryAgent> agent;
 
     // The next step is to create an OBEX session:
-    typedef OSXBluetooth::ObjCScopedPointer<ObjCOBEXSession> OBEXSession;
+    typedef DarwinBluetooth::ObjCScopedPointer<ObjCOBEXSession> OBEXSession;
     OBEXSession session;
 
     // Both success and failure to send - transfer is complete.

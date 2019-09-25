@@ -45,7 +45,7 @@
 #include <algorithm>
 
 QT_USE_NAMESPACE
-using namespace OSXBluetooth;
+using namespace DarwinBluetooth;
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTGCDTimer) {
 @private

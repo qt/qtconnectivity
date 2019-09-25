@@ -144,7 +144,7 @@ private:
                                     bool appendValue);
 
     void setErrorDescription(QLowEnergyController::Error errorCode);
-    bool connectSlots(OSXBluetooth::LECBManagerNotifier *notifier);
+    bool connectSlots(DarwinBluetooth::LECBManagerNotifier *notifier);
 
     DarwinBluetooth::ScopedPointer centralManager;
 

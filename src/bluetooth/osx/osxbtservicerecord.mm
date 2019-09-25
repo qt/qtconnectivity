@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 //
 // Returns a dictionary containing the Bluetooth RFCOMM service definition

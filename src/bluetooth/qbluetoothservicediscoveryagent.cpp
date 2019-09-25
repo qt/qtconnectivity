@@ -308,7 +308,7 @@ QBluetoothAddress QBluetoothServiceDiscoveryAgent::remoteAddress() const
         return QBluetoothAddress();
 }
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 void qt_test_iobluetooth_runloop();
 
@@ -327,7 +327,7 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
     Q_D(QBluetoothServiceDiscoveryAgent);
 #ifdef QT_OSX_BLUETOOTH
     // Make sure we are on the right thread/have a run loop:
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 #endif
 
     if (d->discoveryState() == QBluetoothServiceDiscoveryAgentPrivate::Inactive

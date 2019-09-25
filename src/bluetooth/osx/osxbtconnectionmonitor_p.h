@@ -53,6 +53,7 @@
 
 #include "qbluetoothaddress.h"
 #include "osxbluetooth_p.h"
+#include "btdelegates_p.h"
 
 #include <QtCore/qglobal.h>
 
@@ -62,25 +63,11 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
-
-class ConnectionMonitor {
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor) ObjCConnectionMonitor;
-
-    virtual ~ConnectionMonitor();
-
-    virtual void deviceConnected(const QBluetoothAddress &address) = 0;
-    virtual void deviceDisconnected(const QBluetoothAddress &address) = 0;
-};
-
-}
-
 QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor) : NSObject
 
-- (id)initWithMonitor:(QT_PREPEND_NAMESPACE(OSXBluetooth::ConnectionMonitor) *)monitor;
+- (id)initWithMonitor:(QT_PREPEND_NAMESPACE(DarwinBluetooth::ConnectionMonitor) *)monitor;
 - (void)connectionNotification:(id)notification withDevice:(IOBluetoothDevice *)device;
 - (void)connectionClosedNotification:(id)notification withDevice:(IOBluetoothDevice *)device;
 

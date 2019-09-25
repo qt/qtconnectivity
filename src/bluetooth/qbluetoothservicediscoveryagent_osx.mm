@@ -153,7 +153,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(void *generic)
         Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO, "invalid number of devices");
 
         serviceInfo.setDevice(discoveredDevices.at(0));
-        OSXBluetooth::extract_service_record(record, serviceInfo);
+        DarwinBluetooth::extract_service_record(record, serviceInfo);
 
         if (!serviceInfo.isValid())
             continue;
@@ -194,7 +194,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    const BluetoothDeviceAddress iobtAddress = OSXBluetooth::iobluetooth_address(deviceAddress);
+    const BluetoothDeviceAddress iobtAddress = DarwinBluetooth::iobluetooth_address(deviceAddress);
     IOBluetoothDevice *const device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device || !device.services) {
         if (singleDevice) {
@@ -211,7 +211,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
                        "invalid number of devices");
 
             serviceInfo.setDevice(discoveredDevices.at(0));
-            OSXBluetooth::extract_service_record(record, serviceInfo);
+            DarwinBluetooth::extract_service_record(record, serviceInfo);
 
             if (!serviceInfo.isValid())
                 continue;

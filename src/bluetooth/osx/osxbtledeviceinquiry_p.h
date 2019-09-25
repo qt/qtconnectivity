@@ -66,17 +66,17 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothUuid;
 
-namespace OSXBluetooth
+namespace DarwinBluetooth
 {
 
 class LECBManagerNotifier;
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
-using QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier;
-using QT_PREPEND_NAMESPACE(OSXBluetooth)::ObjCScopedPointer;
+using QT_PREPEND_NAMESPACE(DarwinBluetooth)::LECBManagerNotifier;
+using QT_PREPEND_NAMESPACE(DarwinBluetooth)::ObjCScopedPointer;
 
 enum LEInquiryState
 {

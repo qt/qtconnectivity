@@ -61,11 +61,11 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 ObjCStrongReference<NSMutableDictionary> iobluetooth_service_dictionary(const QBluetoothServiceInfo &serviceInfo);
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 

@@ -54,7 +54,7 @@ Q_DECLARE_METATYPE(QLowEnergyHandle)
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 NSUInteger qt_countGATTEntries(CBService *service)
 {
@@ -100,7 +100,7 @@ auto qt_find_watchdog(const std::vector<GCDTimer> &watchdogs, id object, Operati
                         return [other objectUnderWatch] == object && [other timeoutType] == type;});
 }
 
-} // namespace OSXBluetooth
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
@@ -108,9 +108,9 @@ QT_USE_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) (PrivateAPI)
 
-- (void)watchAfter:(id)object timeout:(OSXBluetooth::OperationTimeout)type;
-- (bool)objectIsUnderWatch:(id)object operation:(OSXBluetooth::OperationTimeout)type;
-- (void)stopWatchingAfter:(id)object operation:(OSXBluetooth::OperationTimeout)type;
+- (void)watchAfter:(id)object timeout:(DarwinBluetooth::OperationTimeout)type;
+- (bool)objectIsUnderWatch:(id)object operation:(DarwinBluetooth::OperationTimeout)type;
+- (void)stopWatchingAfter:(id)object operation:(DarwinBluetooth::OperationTimeout)type;
 - (void)stopWatchers;
 - (void)retrievePeripheralAndConnect;
 - (void)connectToPeripheral;
@@ -142,46 +142,46 @@ QT_USE_NAMESPACE
 {
 @private
     CBCentralManager *manager;
-    OSXBluetooth::CentralManagerState managerState;
+    DarwinBluetooth::CentralManagerState managerState;
     bool disconnectPending;
 
     QBluetoothUuid deviceUuid;
 
-    OSXBluetooth::LECBManagerNotifier *notifier;
+    DarwinBluetooth::LECBManagerNotifier *notifier;
 
     // Quite a verbose service discovery machinery
     // (a "graph traversal").
-    OSXBluetooth::ObjCStrongReference<NSMutableArray> servicesToVisit;
+    DarwinBluetooth::ObjCStrongReference<NSMutableArray> servicesToVisit;
     // The service we're discovering now (included services discovery):
     NSUInteger currentService;
     // Included services, we'll iterate through at the end of 'servicesToVisit':
-    OSXBluetooth::ObjCStrongReference<NSMutableArray> servicesToVisitNext;
+    DarwinBluetooth::ObjCStrongReference<NSMutableArray> servicesToVisitNext;
     // We'd like to avoid loops in a services' topology:
-    OSXBluetooth::ObjCStrongReference<NSMutableSet> visitedServices;
+    DarwinBluetooth::ObjCStrongReference<NSMutableSet> visitedServices;
 
     QList<QBluetoothUuid> servicesToDiscoverDetails;
 
-    OSXBluetooth::ServiceHash serviceMap;
-    OSXBluetooth::CharHash charMap;
-    OSXBluetooth::DescHash descMap;
+    DarwinBluetooth::ServiceHash serviceMap;
+    DarwinBluetooth::CharHash charMap;
+    DarwinBluetooth::DescHash descMap;
 
     QLowEnergyHandle lastValidHandle;
 
     bool requestPending;
-    OSXBluetooth::RequestQueue requests;
+    DarwinBluetooth::RequestQueue requests;
     QLowEnergyHandle currentReadHandle;
 
-    OSXBluetooth::ValueHash valuesToWrite;
+    DarwinBluetooth::ValueHash valuesToWrite;
 
     qint64 timeoutMS;
-    std::vector<OSXBluetooth::GCDTimer> timeoutWatchdogs;
+    std::vector<DarwinBluetooth::GCDTimer> timeoutWatchdogs;
 
     CBPeripheral *peripheral;
 }
 
-- (id)initWith:(OSXBluetooth::LECBManagerNotifier *)aNotifier
+- (id)initWith:(DarwinBluetooth::LECBManagerNotifier *)aNotifier
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (self = [super init]) {
         manager = nil;
@@ -237,9 +237,9 @@ QT_USE_NAMESPACE
     return peripheral;
 }
 
-- (void)watchAfter:(id)object timeout:(OSXBluetooth::OperationTimeout)type
+- (void)watchAfter:(id)object timeout:(DarwinBluetooth::OperationTimeout)type
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     GCDTimer newWatcher([[GCDTimerObjC alloc] initWithDelegate:self], false /*do not retain*/);
     [newWatcher watchAfter:object withTimeoutType:type];
@@ -247,14 +247,14 @@ QT_USE_NAMESPACE
     [newWatcher startWithTimeout:timeoutMS step:200];
 }
 
-- (bool)objectIsUnderWatch:(id)object operation:(OSXBluetooth::OperationTimeout)type
+- (bool)objectIsUnderWatch:(id)object operation:(DarwinBluetooth::OperationTimeout)type
 {
-    return OSXBluetooth::qt_find_watchdog(timeoutWatchdogs, object, type) != timeoutWatchdogs.end();
+    return DarwinBluetooth::qt_find_watchdog(timeoutWatchdogs, object, type) != timeoutWatchdogs.end();
 }
 
-- (void)stopWatchingAfter:(id)object operation:(OSXBluetooth::OperationTimeout)type
+- (void)stopWatchingAfter:(id)object operation:(DarwinBluetooth::OperationTimeout)type
 {
-    auto pos = OSXBluetooth::qt_find_watchdog(timeoutWatchdogs, object, type);
+    auto pos = DarwinBluetooth::qt_find_watchdog(timeoutWatchdogs, object, type);
     if (pos != timeoutWatchdogs.end()) {
         [*pos cancelTimer];
         timeoutWatchdogs.erase(pos);
@@ -272,7 +272,7 @@ QT_USE_NAMESPACE
 {
     Q_UNUSED(sender)
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     GCDTimerObjC *watcher = static_cast<GCDTimerObjC *>(sender);
     id cbObject = [watcher objectUnderWatch];
@@ -325,18 +325,18 @@ QT_USE_NAMESPACE
     if (!manager) {
         // The first time we try to connect, no manager created yet,
         // no status update received.
-        if (const dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
-            managerState = OSXBluetooth::CentralManagerUpdating;
+        if (const dispatch_queue_t leQueue = DarwinBluetooth::qt_LE_queue()) {
+            managerState = DarwinBluetooth::CentralManagerUpdating;
             manager = [[CBCentralManager alloc] initWithDelegate:self queue:leQueue];
         }
 
         if (!manager) {
-            managerState = OSXBluetooth::CentralManagerIdle;
+            managerState = DarwinBluetooth::CentralManagerIdle;
             qCWarning(QT_BT_OSX) << "failed to allocate a central manager";
             if (notifier)
                 emit notifier->CBManagerError(QLowEnergyController::ConnectionError);
         }
-    } else if (managerState != OSXBluetooth::CentralManagerUpdating) {
+    } else if (managerState != DarwinBluetooth::CentralManagerUpdating) {
         [self retrievePeripheralAndConnect];
     }
 }
@@ -344,7 +344,7 @@ QT_USE_NAMESPACE
 - (void)retrievePeripheralAndConnect
 {
     Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid central manager (nil)");
-    Q_ASSERT_X(managerState == OSXBluetooth::CentralManagerIdle,
+    Q_ASSERT_X(managerState == DarwinBluetooth::CentralManagerIdle,
                Q_FUNC_INFO, "invalid state");
 
     if ([self isConnected]) {
@@ -359,7 +359,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     // Retrieve a peripheral first ...
     ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init]);
@@ -399,7 +399,7 @@ QT_USE_NAMESPACE
 
 - (void)connectToPeripheral
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid central manager (nil)");
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
@@ -429,7 +429,7 @@ QT_USE_NAMESPACE
 {
     [self reset];
 
-    if (managerState == OSXBluetooth::CentralManagerUpdating) {
+    if (managerState == DarwinBluetooth::CentralManagerUpdating) {
         disconnectPending = true; // this is for 'didUpdate' method.
         if (notifier) {
             // We were waiting for the first update
@@ -442,9 +442,9 @@ QT_USE_NAMESPACE
     } else {
         disconnectPending = false;
         if ([self isConnected])
-            managerState = OSXBluetooth::CentralManagerDisconnecting;
+            managerState = DarwinBluetooth::CentralManagerDisconnecting;
         else
-            managerState = OSXBluetooth::CentralManagerIdle;
+            managerState = DarwinBluetooth::CentralManagerIdle;
 
         // We have to call -cancelPeripheralConnection: even
         // if not connected (to cancel a pending connect attempt).
@@ -457,7 +457,7 @@ QT_USE_NAMESPACE
 
 - (void)discoverServices
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
     Q_ASSERT_X(managerState == CentralManagerIdle, Q_FUNC_INFO, "invalid state");
@@ -477,7 +477,7 @@ QT_USE_NAMESPACE
 
 - (void)discoverIncludedServices
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(managerState == CentralManagerIdle, Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(manager, Q_FUNC_INFO, "invalid manager (nil)");
@@ -511,7 +511,7 @@ QT_USE_NAMESPACE
     // can be called concurrently (not waiting for the previous
     // discovery to finish).
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(managerState != CentralManagerUpdating, Q_FUNC_INFO, "invalid state");
     Q_ASSERT_X(!serviceUuid.isNull(), Q_FUNC_INFO, "invalid service UUID");
@@ -545,7 +545,7 @@ QT_USE_NAMESPACE
     // have several 'detail discoveries' active.
     Q_ASSERT_X(service, Q_FUNC_INFO, "invalid service (nil)");
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -574,7 +574,7 @@ QT_USE_NAMESPACE
     // several discoveries active.
     Q_ASSERT_X(service, Q_FUNC_INFO, "invalid service (nil)");
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -595,7 +595,7 @@ QT_USE_NAMESPACE
 
 - (void)readDescriptors:(CBService *)service
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(service, Q_FUNC_INFO, "invalid service (nil)");
     Q_ASSERT_X(managerState != CentralManagerUpdating, Q_FUNC_INFO, "invalid state");
@@ -622,7 +622,7 @@ QT_USE_NAMESPACE
 {
     Q_ASSERT_X(service, Q_FUNC_INFO, "invalid service (nil)");
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -706,7 +706,7 @@ QT_USE_NAMESPACE
 
 - (void)performNextRequest
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (requestPending || !requests.size())
         return;
@@ -727,7 +727,7 @@ QT_USE_NAMESPACE
 
 - (void)performNextReadRequest
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
     Q_ASSERT_X(!requestPending, Q_FUNC_INFO, "processing another request");
@@ -765,7 +765,7 @@ QT_USE_NAMESPACE
 
 - (void)performNextWriteRequest
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
     Q_ASSERT_X(!requestPending, Q_FUNC_INFO, "processing another request");
@@ -851,7 +851,7 @@ QT_USE_NAMESPACE
         forCharacteristic:(QLowEnergyHandle)charHandle
         onService:(const QBluetoothUuid &)serviceUuid
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
 
@@ -890,7 +890,7 @@ QT_USE_NAMESPACE
 - (void)readCharacteristic:(QLowEnergyHandle)charHandle
         onService:(const QBluetoothUuid &)serviceUuid
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
 
@@ -919,7 +919,7 @@ QT_USE_NAMESPACE
         onService:(const QBluetoothUuid &)serviceUuid
         withResponse:(bool)withResponse
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(charHandle, Q_FUNC_INFO, "invalid characteristic handle (0)");
 
@@ -947,7 +947,7 @@ QT_USE_NAMESPACE
 - (void)readDescriptor:(QLowEnergyHandle)descHandle
         onService:(const QBluetoothUuid &)serviceUuid
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(descHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
@@ -972,7 +972,7 @@ QT_USE_NAMESPACE
         descHandle:(QLowEnergyHandle)descHandle
         onService:(const QBluetoothUuid &)serviceUuid
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(descHandle, Q_FUNC_INFO, "invalid descriptor handle (0)");
 
@@ -998,7 +998,7 @@ QT_USE_NAMESPACE
 
 - (CBService *)serviceForUUID:(const QBluetoothUuid &)qtUuid
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(!qtUuid.isNull(), Q_FUNC_INFO, "invalid uuid");
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
@@ -1146,7 +1146,7 @@ QT_USE_NAMESPACE
     NSArray *const ds = ch.descriptors;
     if (ds && ds.count) {
         for (CBDescriptor *d in ds) {
-            if (OSXBluetooth::equal_uuids(d.UUID, qtUuid)) {
+            if (DarwinBluetooth::equal_uuids(d.UUID, qtUuid)) {
                 descriptor = d;
                 break;
             }
@@ -1223,7 +1223,7 @@ QT_USE_NAMESPACE
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunguarded-availability-new"
@@ -1310,12 +1310,12 @@ QT_USE_NAMESPACE
     Q_UNUSED(central)
     Q_UNUSED(aPeripheral)
 
-    if (managerState != OSXBluetooth::CentralManagerConnecting) {
+    if (managerState != DarwinBluetooth::CentralManagerConnecting) {
         // We called cancel but before disconnected, managed to connect?
         return;
     }
 
-    managerState = OSXBluetooth::CentralManagerIdle;
+    managerState = DarwinBluetooth::CentralManagerIdle;
     if (notifier)
         emit notifier->connected();
 }
@@ -1327,12 +1327,12 @@ QT_USE_NAMESPACE
     Q_UNUSED(aPeripheral)
     Q_UNUSED(error)
 
-    if (managerState != OSXBluetooth::CentralManagerConnecting) {
+    if (managerState != DarwinBluetooth::CentralManagerConnecting) {
         // Canceled already.
         return;
     }
 
-    managerState = OSXBluetooth::CentralManagerIdle;
+    managerState = DarwinBluetooth::CentralManagerIdle;
     // TODO: better error mapping is required.
     if (notifier)
         notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
@@ -1347,13 +1347,13 @@ QT_USE_NAMESPACE
     // Clear internal caches/data.
     [self reset];
 
-    if (error && managerState == OSXBluetooth::CentralManagerDisconnecting) {
-        managerState = OSXBluetooth::CentralManagerIdle;
+    if (error && managerState == DarwinBluetooth::CentralManagerDisconnecting) {
+        managerState = DarwinBluetooth::CentralManagerIdle;
         qCWarning(QT_BT_OSX) << "failed to disconnect";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
     } else {
-        managerState = OSXBluetooth::CentralManagerIdle;
+        managerState = DarwinBluetooth::CentralManagerIdle;
         if (notifier)
             emit notifier->disconnected();
     }
@@ -1365,12 +1365,13 @@ QT_USE_NAMESPACE
 {
     Q_UNUSED(aPeripheral)
 
-    if (managerState != OSXBluetooth::CentralManagerDiscovering) {
+    using namespace DarwinBluetooth;
+
+    if (managerState != CentralManagerDiscovering) {
         // Canceled by -disconnectFromDevice, or as a result of a timeout.
         return;
     }
 
-    using namespace OSXBluetooth;
     if (![self objectIsUnderWatch:aPeripheral operation:OperationTimeout::serviceDiscovery]) // Timed out already
         return;
 
@@ -1378,7 +1379,7 @@ QT_USE_NAMESPACE
 
     [self stopWatchingAfter:aPeripheral operation:OperationTimeout::serviceDiscovery];
 
-    managerState = OSXBluetooth::CentralManagerIdle;
+    managerState = CentralManagerIdle;
 
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
@@ -1410,7 +1411,7 @@ QT_USE_NAMESPACE
     // we stop all current operations here, report to QLowEnergyController
     // so that it can trigger re-discovery.
     [self reset];
-    managerState = OSXBluetooth::CentralManagerIdle;
+    managerState = DarwinBluetooth::CentralManagerIdle;
     if (notifier)
         emit notifier->servicesWereModified();
 }
@@ -1420,7 +1421,7 @@ QT_USE_NAMESPACE
 {
     Q_UNUSED(aPeripheral)
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (managerState != CentralManagerDiscovering) {
         // Canceled by disconnectFromDevice or -peripheralDidDisconnect...
@@ -1502,7 +1503,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (![self objectIsUnderWatch:service operation:OperationTimeout::characteristicsDiscovery])
         return;
@@ -1532,7 +1533,7 @@ QT_USE_NAMESPACE
     if (!notifier) // Detached.
         return;
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -1618,7 +1619,7 @@ QT_USE_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (![self objectIsUnderWatch:characteristic operation:OperationTimeout::descriptorsDiscovery])
         return;
@@ -1656,7 +1657,7 @@ QT_USE_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (![self objectIsUnderWatch:descriptor operation:OperationTimeout::descriptorRead])
         return;
@@ -1745,7 +1746,7 @@ QT_USE_NAMESPACE
     //  If successful, the error parameter is nil. If unsuccessful,
     //  the error parameter returns the cause of the failure."
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -1786,7 +1787,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -1820,7 +1821,7 @@ QT_USE_NAMESPACE
     if (!notifier)
         return;
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 

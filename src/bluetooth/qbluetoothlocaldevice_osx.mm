@@ -43,6 +43,7 @@
 #include "osx/osxbtdevicepair_p.h"
 #include "osx/osxbtutility_p.h"
 #include "osx/osxbluetooth_p.h"
+#include "osx/btdelegates_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qstring.h>
@@ -57,8 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QBluetoothLocalDevicePrivate : public OSXBluetooth::PairingDelegate,
-                                     public OSXBluetooth::ConnectionMonitor
+class QBluetoothLocalDevicePrivate : public DarwinBluetooth::PairingDelegate,
+                                     public DarwinBluetooth::ConnectionMonitor
 {
     friend class QBluetoothLocalDevice;
 public:
@@ -74,14 +75,14 @@ public:
 private:
 
     // PairingDelegate:
-    void connecting(ObjCPairingRequest *pair) override;
-    void requestPIN(ObjCPairingRequest *pair) override;
-    void requestUserConfirmation(ObjCPairingRequest *pair,
+    void connecting(void *pair) override;
+    void requestPIN(void *pair) override;
+    void requestUserConfirmation(void *pair,
                                  BluetoothNumericValue) override;
-    void passkeyNotification(ObjCPairingRequest *pair,
+    void passkeyNotification(void *pair,
                              BluetoothPasskey passkey) override;
-    void error(ObjCPairingRequest *pair, IOReturn errorCode) override;
-    void pairingFinished(ObjCPairingRequest *pair) override;
+    void error(void *pair, IOReturn errorCode) override;
+    void pairingFinished(void *pair) override;
 
     // ConnectionMonitor
     void deviceConnected(const QBluetoothAddress &deviceAddress) override;
@@ -94,15 +95,16 @@ private:
 
     QBluetoothLocalDevice *q_ptr;
 
-    typedef OSXBluetooth::ObjCScopedPointer<IOBluetoothHostController> HostController;
+    using HostController = DarwinBluetooth::ObjCScopedPointer<IOBluetoothHostController>;
     HostController hostController;
 
-    typedef OSXBluetooth::ObjCStrongReference<ObjCPairingRequest> PairingRequest;
-    typedef QMap<QBluetoothAddress, PairingRequest> RequestMap;
+    using ObjCPairingRequest = QT_MANGLE_NAMESPACE(OSXBTPairing);
+    using PairingRequest = DarwinBluetooth::ObjCStrongReference<ObjCPairingRequest>;
+    using RequestMap = QMap<QBluetoothAddress, PairingRequest>;
 
     RequestMap pairingRequests;
-
-    OSXBluetooth::ObjCScopedPointer<ObjCConnectionMonitor> connectionMonitor;
+    using ObjCConnectionMonitor = QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor);
+    DarwinBluetooth::ObjCScopedPointer<ObjCConnectionMonitor> connectionMonitor;
     QList<QBluetoothAddress> discoveredDevices;
 };
 
@@ -135,7 +137,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
             return;
         }
 
-        if (address != OSXBluetooth::qt_address(&iobtAddress)) {
+        if (address != DarwinBluetooth::qt_address(&iobtAddress)) {
             qCCritical(QT_BT_OSX) << "invalid local device's address";
             return;
         }
@@ -157,8 +159,8 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid local device");
     Q_ASSERT_X(!address.isNull(), Q_FUNC_INFO, "invalid device address");
 
-    using OSXBluetooth::device_with_address;
-    using OSXBluetooth::ObjCStrongReference;
+    using DarwinBluetooth::device_with_address;
+    using DarwinBluetooth::ObjCStrongReference;
 
     // That's a really special case on OS X.
     if (pairing == QBluetoothLocalDevice::Unpaired)
@@ -209,8 +211,8 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevicePrivate::pairingStatus(const
     Q_ASSERT_X(isValid(), Q_FUNC_INFO, "invalid local device");
     Q_ASSERT_X(!address.isNull(), Q_FUNC_INFO, "invalid address");
 
-    using OSXBluetooth::device_with_address;
-    using OSXBluetooth::ObjCStrongReference;
+    using DarwinBluetooth::device_with_address;
+    using DarwinBluetooth::ObjCStrongReference;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -230,30 +232,33 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevicePrivate::pairingStatus(const
     return QBluetoothLocalDevice::Unpaired;
 }
 
-void QBluetoothLocalDevicePrivate::connecting(ObjCPairingRequest *pair)
+void QBluetoothLocalDevicePrivate::connecting(void *pair)
 {
+    // TODO: why unused and if cannot be used - remove?
     Q_UNUSED(pair)
 }
 
-void QBluetoothLocalDevicePrivate::requestPIN(ObjCPairingRequest *pair)
+void QBluetoothLocalDevicePrivate::requestPIN(void *pair)
 {
+    // TODO: why unused and if cannot be used - remove?
     Q_UNUSED(pair)
 }
 
-void QBluetoothLocalDevicePrivate::requestUserConfirmation(ObjCPairingRequest *pair, BluetoothNumericValue intPin)
+void QBluetoothLocalDevicePrivate::requestUserConfirmation(void *pair, BluetoothNumericValue intPin)
 {
+    // TODO: why unused and if cannot be used - remove?
     Q_UNUSED(pair)
     Q_UNUSED(intPin)
 }
 
-void QBluetoothLocalDevicePrivate::passkeyNotification(ObjCPairingRequest *pair,
-                                                       BluetoothPasskey passkey)
+void QBluetoothLocalDevicePrivate::passkeyNotification(void *pair, BluetoothPasskey passkey)
 {
+    // TODO: why unused and if cannot be used - remove?
     Q_UNUSED(pair)
     Q_UNUSED(passkey)
 }
 
-void QBluetoothLocalDevicePrivate::error(ObjCPairingRequest *pair, IOReturn errorCode)
+void QBluetoothLocalDevicePrivate::error(void *pair, IOReturn errorCode)
 {
     Q_UNUSED(pair)
     Q_UNUSED(errorCode)
@@ -261,8 +266,9 @@ void QBluetoothLocalDevicePrivate::error(ObjCPairingRequest *pair, IOReturn erro
     emitError(QBluetoothLocalDevice::PairingError, false);
 }
 
-void QBluetoothLocalDevicePrivate::pairingFinished(ObjCPairingRequest *pair)
+void QBluetoothLocalDevicePrivate::pairingFinished(void *generic)
 {
+    auto pair = static_cast<ObjCPairingRequest *>(generic);
     Q_ASSERT_X(pair, Q_FUNC_INFO, "invalid pairing request (nil)");
 
     const QBluetoothAddress &deviceAddress = [pair targetAddress];
@@ -369,7 +375,7 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 
     if (isValid()) {
         if (NSString *const nsa = [d_ptr->hostController addressAsString])
-            return QBluetoothAddress(OSXBluetooth::qt_address(nsa));
+            return QBluetoothAddress(DarwinBluetooth::qt_address(nsa));
 
         qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to obtain an address";
     } else {
@@ -411,7 +417,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
     NSArray *const pairedDevices = [IOBluetoothDevice pairedDevices];
     for (IOBluetoothDevice *device in pairedDevices) {
         if ([device isConnected]) {
-            const QBluetoothAddress address(OSXBluetooth::qt_address([device getAddress]));
+            const QBluetoothAddress address(DarwinBluetooth::qt_address([device getAddress]));
             if (!address.isNull())
                 connectedDevices.append(address);
         }
@@ -464,7 +470,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         return;
     }
 
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     return d_ptr->requestPairing(address, pairing);
 }

@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 QBluetoothUuid qt_uuid(NSUUID *nsUuid)
 {
@@ -135,7 +135,7 @@ QT_USE_NAMESPACE
     LEInquiryState internalState;
     int inquiryTimeoutMS;
 
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::GCDTimer elapsedTimer;
+    QT_PREPEND_NAMESPACE(DarwinBluetooth)::GCDTimer elapsedTimer;
 }
 
 -(id)initWithNotifier:(LECBManagerNotifier *)aNotifier
@@ -144,7 +144,7 @@ QT_USE_NAMESPACE
         Q_ASSERT(aNotifier);
         notifier = aNotifier;
         internalState = InquiryStarting;
-        inquiryTimeoutMS = OSXBluetooth::defaultLEScanTimeoutMS;
+        inquiryTimeoutMS = DarwinBluetooth::defaultLEScanTimeoutMS;
     }
 
     return self;
@@ -182,7 +182,7 @@ QT_USE_NAMESPACE
 
 - (void)startWithTimeout:(int)timeout
 {
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT(leQueue);
     inquiryTimeoutMS = timeout;
     manager.reset([[CBCentralManager alloc] initWithDelegate:self queue:leQueue]);
@@ -201,7 +201,7 @@ QT_USE_NAMESPACE
 
     Q_ASSERT(notifier);
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     const auto state = central.state;
 #if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
@@ -328,7 +328,7 @@ QT_USE_NAMESPACE
         advertisementData:(NSDictionary *)advertisementData
         RSSI:(NSNumber *)RSSI
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (central != manager)
         return;
@@ -346,7 +346,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-    deviceUuid = OSXBluetooth::qt_uuid(peripheral.identifier);
+    deviceUuid = DarwinBluetooth::qt_uuid(peripheral.identifier);
 
     if (deviceUuid.isNull()) {
         qCWarning(QT_BT_OSX) << "no way to address peripheral, QBluetoothUuid is null";

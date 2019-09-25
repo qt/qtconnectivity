@@ -54,6 +54,7 @@
 #include "qbluetoothaddress.h"
 #include "osxbtutility_p.h"
 #include "osxbluetooth_p.h"
+#include "btdelegates_p.h"
 
 #include <QtCore/qglobal.h>
 
@@ -63,36 +64,18 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
-
-// C++ delegate.
-class PairingDelegate
-{
-public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTPairing) ObjCPairingRequest;
-
-    virtual ~PairingDelegate();
-
-    virtual void connecting(ObjCPairingRequest *pair) = 0;
-    virtual void requestPIN(ObjCPairingRequest *pair) = 0;
-    virtual void requestUserConfirmation(ObjCPairingRequest *pair,
-                                         BluetoothNumericValue) = 0;
-    virtual void passkeyNotification(ObjCPairingRequest *pair,
-                                     BluetoothPasskey passkey) = 0;
-    virtual void error(ObjCPairingRequest *pair, IOReturn errorCode) = 0;
-    virtual void pairingFinished(ObjCPairingRequest *pair) = 0;
-};
+namespace DarwinBluetooth {
 
 ObjCStrongReference<IOBluetoothDevice> device_with_address(const QBluetoothAddress &address);
 
-} // Namespace OSXBluetooth.
+} // Namespace DarwinBluetooth.
 
 QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTPairing) : NSObject<IOBluetoothDevicePairDelegate>
 
 - (id)initWithTarget:(const QBluetoothAddress &)address
-      delegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::PairingDelegate) *)object;
+      delegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::PairingDelegate) *)object;
 
 - (void)dealloc;
 

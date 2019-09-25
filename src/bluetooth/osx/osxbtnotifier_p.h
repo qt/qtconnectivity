@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
 
-namespace OSXBluetooth
+namespace DarwinBluetooth
 {
 
 class LECBManagerNotifier : public QObject
@@ -98,7 +98,7 @@ Q_SIGNALS:
     void CBManagerError(const QBluetoothUuid &serviceUuid, QLowEnergyService::ServiceError error);
 };
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 

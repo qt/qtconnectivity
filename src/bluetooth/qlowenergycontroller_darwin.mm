@@ -80,7 +80,7 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateDarwin *controller,
         return ServicePrivate();
     }
 
-    const QBluetoothUuid qtUuid(OSXBluetooth::qt_uuid(cbUuid));
+    const QBluetoothUuid qtUuid(DarwinBluetooth::qt_uuid(cbUuid));
     if (qtUuid.isNull()) // Conversion error is reported by qt_uuid.
         return ServicePrivate();
 
@@ -114,7 +114,7 @@ UUIDList qt_servicesUuids(NSArray *services)
     UUIDList uuids;
 
     for (CBService *s in services)
-        uuids.append(OSXBluetooth::qt_uuid(s.UUID));
+        uuids.append(DarwinBluetooth::qt_uuid(s.UUID));
 
     return uuids;
 }
@@ -137,7 +137,7 @@ QLowEnergyControllerPrivateDarwin::QLowEnergyControllerPrivateDarwin()
 
 QLowEnergyControllerPrivateDarwin::~QLowEnergyControllerPrivateDarwin()
 {
-    if (const auto leQueue = OSXBluetooth::qt_LE_queue()) {
+    if (const auto leQueue = DarwinBluetooth::qt_LE_queue()) {
         if (role == QLowEnergyController::CentralRole) {
             const auto manager = centralManager.getAs<ObjCCentralManager>();
             dispatch_sync(leQueue, ^{
@@ -165,7 +165,7 @@ bool QLowEnergyControllerPrivateDarwin::isValid() const
 
 void QLowEnergyControllerPrivateDarwin::init()
 {
-    using OSXBluetooth::LECBManagerNotifier;
+    using DarwinBluetooth::LECBManagerNotifier;
 
     QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
     if (role == QLowEnergyController::PeripheralRole) {
@@ -215,7 +215,7 @@ void QLowEnergyControllerPrivateDarwin::connectToDevice()
     Q_ASSERT_X(role != QLowEnergyController::PeripheralRole,
                Q_FUNC_INFO, "invalid role (peripheral)");
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     if (!leQueue) {
         qCWarning(QT_BT_OSX) << "no LE queue found";
         setErrorDescription(QLowEnergyController::UnknownError);
@@ -244,7 +244,7 @@ void QLowEnergyControllerPrivateDarwin::disconnectFromDevice()
     if (isValid()) {
         const auto oldState = state;
 
-        if (dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
+        if (dispatch_queue_t leQueue = DarwinBluetooth::qt_LE_queue()) {
             setState(QLowEnergyController::ClosingState);
             invalidateServices();
 
@@ -274,7 +274,7 @@ void QLowEnergyControllerPrivateDarwin::discoverServices()
     Q_ASSERT_X(role != QLowEnergyController::PeripheralRole,
                Q_FUNC_INFO, "invalid role (peripheral)");
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "LE queue not found");
 
     setState(QLowEnergyController::DiscoveringState);
@@ -298,7 +298,7 @@ void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(const QBluetoothU
         return;
     }
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT(leQueue);
 
     ServicePrivate qtService(serviceList.value(serviceUuid));
@@ -384,7 +384,7 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
     Q_ASSERT_X(state == QLowEnergyController::DiscoveringState,
                Q_FUNC_INFO, "invalid state");
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -739,7 +739,7 @@ void QLowEnergyControllerPrivateDarwin::setNotifyValue(QSharedPointer<QLowEnergy
         return;
     }
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "no LE queue found");
 
     ObjCCentralManager *manager = centralManager.getAs<ObjCCentralManager>();
@@ -774,7 +774,7 @@ void QLowEnergyControllerPrivateDarwin::readCharacteristic(const QSharedPointer<
         return;
     }
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "no LE queue found");
 
     // Attention! We have to copy UUID.
@@ -806,7 +806,7 @@ void QLowEnergyControllerPrivateDarwin::writeCharacteristic(const QSharedPointer
         return;
     }
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "no LE queue found");
     // Attention! We have to copy objects!
     const QByteArray newValueCopy(newValue);
@@ -871,7 +871,7 @@ void QLowEnergyControllerPrivateDarwin::readDescriptor(const QSharedPointer<QLow
         return;
     }
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     if (!leQueue) {
         qCWarning(QT_BT_OSX) << "no LE queue found";
         return;
@@ -908,7 +908,7 @@ void QLowEnergyControllerPrivateDarwin::writeDescriptor(const QSharedPointer<QLo
         return;
     }
 
-    dispatch_queue_t leQueue(OSXBluetooth::qt_LE_queue());
+    dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "no LE queue found");
     // Attention! Copy objects!
     const QBluetoothUuid serviceUuid(service->uuid);
@@ -981,9 +981,9 @@ void QLowEnergyControllerPrivateDarwin::setErrorDescription(QLowEnergyController
     }
 }
 
-bool QLowEnergyControllerPrivateDarwin::connectSlots(OSXBluetooth::LECBManagerNotifier *notifier)
+bool QLowEnergyControllerPrivateDarwin::connectSlots(DarwinBluetooth::LECBManagerNotifier *notifier)
 {
-    using OSXBluetooth::LECBManagerNotifier;
+    using DarwinBluetooth::LECBManagerNotifier;
 
     Q_ASSERT_X(notifier, Q_FUNC_INFO, "invalid notifier object (null)");
 
@@ -1048,7 +1048,7 @@ void QLowEnergyControllerPrivateDarwin::startAdvertising(const QLowEnergyAdverti
         return;
     }
 
-    auto leQueue(OSXBluetooth::qt_LE_queue());
+    auto leQueue(DarwinBluetooth::qt_LE_queue());
     if (!leQueue) {
         qCWarning(QT_BT_OSX) << "no LE queue found";
         setErrorDescription(QLowEnergyController::UnknownError);
@@ -1079,7 +1079,7 @@ void QLowEnergyControllerPrivateDarwin::stopAdvertising()
         return;
     }
 
-    if (const auto leQueue = OSXBluetooth::qt_LE_queue()) {
+    if (const auto leQueue = DarwinBluetooth::qt_LE_queue()) {
         const auto manager = peripheralManager.getAs<ObjCPeripheralManager>();
         dispatch_sync(leQueue, ^{
             [manager stopAdvertising];

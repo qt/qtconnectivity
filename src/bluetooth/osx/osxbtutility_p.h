@@ -65,7 +65,7 @@ class QLowEnergyCharacteristicData;
 class QBluetoothAddress;
 class QBluetoothUuid;
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 struct NSObjectDeleter {
     static void cleanup(NSObject *obj)
@@ -189,7 +189,7 @@ private:
 // The type 'T' is some XXXRef from CoreFoundation and co.
 // In principle, we can do a trick removing a pointer from a type
 // when template is instantiated, but it's quite a lot of ugly pp-tokens
-// like OSXBluetooth::CFStrongReference<OSXBluetooth::remove_pointer<CFUUIDRref> > strongReference;
+// like DarwinBluetooth::CFStrongReference<DarwinBluetooth::remove_pointer<CFUUIDRref>> strongReference;
 // so instead we use 'T' everywhere, not 'T *' as can expected
 // from a smart pointer.
 template<class T>
@@ -307,7 +307,7 @@ dispatch_queue_t qt_LE_queue();
 extern const int defaultLEScanTimeoutMS;
 extern const int maxValueLength;
 
-} // namespace OSXBluetooth
+} // namespace DarwinBluetooth
 
 // Logging category for both OS X and iOS.
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_OSX)
@@ -331,6 +331,6 @@ QT_END_NAMESPACE
 @property (readonly, nonatomic) NSUUID *identifier NS_AVAILABLE(10_7, 5_0);
 @end
 
-#endif
+#endif // QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE
 
-#endif
+#endif // OSXBTUTILITY_P_H

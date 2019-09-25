@@ -135,7 +135,7 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
             addr = [l2capChannel.getAs<ObjCL2CAPChannel>() peerAddress];
     }
 
-    return OSXBluetooth::qt_address(&addr);
+    return DarwinBluetooth::qt_address(&addr);
 }
 
 quint16 QBluetoothSocketPrivate::peerPort() const
@@ -261,7 +261,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &serv
 {
     Q_ASSERT(q_ptr);
 
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     if (state!= QBluetoothSocket::UnconnectedState && state != QBluetoothSocket::ServiceLookupState) {
         qCWarning(QT_BT_OSX)  << "called on a busy socket";
@@ -305,7 +305,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 {
     Q_ASSERT(q_ptr);
 
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     // Report this problem early, avoid device discovery:
     if (socketType == QBluetoothServiceInfo::UnknownProtocol) {
@@ -334,7 +334,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 {
     Q_ASSERT(q_ptr);
 
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     if (socketType == QBluetoothServiceInfo::UnknownProtocol) {
         qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
@@ -410,7 +410,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     } else {
         state = oldState;
         if (status != kIOReturnSuccess)
-            errorString = OSXBluetooth::qt_error_string(status);
+            errorString = DarwinBluetooth::qt_error_string(status);
         q_ptr->setSocketError(QBluetoothSocket::UnknownSocketError);
     }
 }

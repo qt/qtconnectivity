@@ -72,15 +72,11 @@ namespace DarwinBluetooth {
 
 class SDPInquiryDelegate;
 
-}
-
-namespace OSXBluetooth {
-
 void extract_service_record(IOBluetoothSDPServiceRecord *record, QBluetoothServiceInfo &serviceInfo);
 QVariant extract_attribute_value(IOBluetoothSDPDataElement *dataElement);
 QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device);
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 

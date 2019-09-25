@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 ObjCStrongReference<IOBluetoothDevice> device_with_address(const QBluetoothAddress &address)
 {
@@ -57,12 +57,7 @@ ObjCStrongReference<IOBluetoothDevice> device_with_address(const QBluetoothAddre
     return res;
 }
 
-PairingDelegate::~PairingDelegate()
-{
-}
-
-}
-
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
@@ -74,11 +69,11 @@ QT_USE_NAMESPACE
 
     bool m_active;
     IOBluetoothDevicePair *m_pairing; // The real pairing request
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::PairingDelegate *m_object;
+    QT_PREPEND_NAMESPACE(DarwinBluetooth)::PairingDelegate *m_object;
 }
 
 - (id)initWithTarget:(const QBluetoothAddress &)address
-      delegate:(OSXBluetooth::PairingDelegate *)object
+      delegate:(DarwinBluetooth::PairingDelegate *)object
 {
     if (self = [super init]) {
         Q_ASSERT_X(!address.isNull(), Q_FUNC_INFO, "invalid target address");
@@ -108,7 +103,7 @@ QT_USE_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    const BluetoothDeviceAddress &iobtAddress = OSXBluetooth::iobluetooth_address(m_targetAddress);
+    const BluetoothDeviceAddress &iobtAddress = DarwinBluetooth::iobluetooth_address(m_targetAddress);
     // Device is autoreleased.
     IOBluetoothDevice *const device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) {

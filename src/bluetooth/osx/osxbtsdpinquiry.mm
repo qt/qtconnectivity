@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 namespace {
 
@@ -162,7 +162,7 @@ void extract_service_record(IOBluetoothSDPServiceRecord *record, QBluetoothServi
     for (NSNumber *key in keys) {
         const quint16 attributeID = [key unsignedShortValue];
         IOBluetoothSDPDataElement *const element = [attributes objectForKey:key];
-        const QVariant attributeValue = OSXBluetooth::extract_attribute_value(element);
+        const QVariant attributeValue = DarwinBluetooth::extract_attribute_value(element);
         serviceInfo.setAttribute(attributeID, attributeValue);
     }
 
@@ -200,13 +200,13 @@ QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
     return uuids;
 }
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-using namespace OSXBluetooth;
+using namespace DarwinBluetooth;
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTSDPInquiry)
 {

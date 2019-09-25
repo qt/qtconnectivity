@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth
+namespace DarwinBluetooth
 {
 
 OBEXSessionDelegate::~OBEXSessionDelegate()
@@ -401,7 +401,7 @@ bool check_abort_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &
 }
 
 } // Unnamed namespace.
-} // OSXBluetooth.
+} // namespace DarwinBluetooth.
 
 QT_END_NAMESPACE
 
@@ -419,12 +419,12 @@ QT_USE_NAMESPACE
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTOBEXSession)
 {
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::OBEXSessionDelegate *delegate;
+    QT_PREPEND_NAMESPACE(DarwinBluetooth)::OBEXSessionDelegate *delegate;
     IOBluetoothDevice *device;
     quint16 channelID;
     IOBluetoothOBEXSession *session;
 
-    QT_PREPEND_NAMESPACE(OSXBluetooth)::OBEXRequest currentRequest;
+    QT_PREPEND_NAMESPACE(DarwinBluetooth)::OBEXRequest currentRequest;
 
     bool connected;
     bool connectionIDFound;
@@ -448,7 +448,7 @@ QT_USE_NAMESPACE
     return 0x1000;
 }
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::OBEXSessionDelegate) *)aDelegate
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::OBEXSessionDelegate) *)aDelegate
       remoteDevice:(const QBluetoothAddress &)deviceAddress channelID:(quint16)port
 {
     Q_ASSERT_X(aDelegate, Q_FUNC_INFO, "invalid delegate (null)");
@@ -457,11 +457,11 @@ QT_USE_NAMESPACE
 
     if (self = [super init]) {
         connected = false;
-        currentRequest = OSXBluetooth::OBEXNoop;
+        currentRequest = DarwinBluetooth::OBEXNoop;
         connectionID = 0;
         connectionIDFound = false;
 
-        const BluetoothDeviceAddress addr(OSXBluetooth::iobluetooth_address(deviceAddress));
+        const BluetoothDeviceAddress addr(DarwinBluetooth::iobluetooth_address(deviceAddress));
         device = [[IOBluetoothDevice deviceWithAddress:&addr] retain];
         if (!device) {
             qCWarning(QT_BT_OSX) << "failed to create an IOBluetoothDevice";
@@ -500,13 +500,13 @@ QT_USE_NAMESPACE
     }
 
     // That's a "single-shot" operation:
-    Q_ASSERT_X(currentRequest == OSXBluetooth::OBEXNoop, Q_FUNC_INFO,
+    Q_ASSERT_X(currentRequest == DarwinBluetooth::OBEXNoop, Q_FUNC_INFO,
                "can not connect in this state (another request is active)");
 
     connected = false;
     connectionIDFound = false;
     connectionID = 0;
-    currentRequest = OSXBluetooth::OBEXConnect;
+    currentRequest = DarwinBluetooth::OBEXConnect;
 
     const OBEXError status = [session OBEXConnect:kOBEXConnectFlagNone
                                       maxPacketLength:[QT_MANGLE_NAMESPACE(OSXBTOBEXSession) maxPacketLength]
@@ -517,7 +517,7 @@ QT_USE_NAMESPACE
                                       refCon:nullptr];
 
     if (status != kOBEXSuccess) {
-        currentRequest = OSXBluetooth::OBEXNoop;
+        currentRequest = DarwinBluetooth::OBEXNoop;
         // Already connected is still ok for us?
         connected = status == kOBEXSessionAlreadyConnectedError;
     }
@@ -527,7 +527,7 @@ QT_USE_NAMESPACE
 
 - (void)OBEXConnectHandler:(const OBEXSessionEvent*)event
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid session (nil)");
 
@@ -582,7 +582,7 @@ QT_USE_NAMESPACE
 
 - (OBEXError)OBEXAbort
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
@@ -612,7 +612,7 @@ QT_USE_NAMESPACE
 
 - (void)OBEXAbortHandler:(const OBEXSessionEvent*)event
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
@@ -635,7 +635,7 @@ QT_USE_NAMESPACE
 
 - (OBEXError)OBEXPutFile:(QT_PREPEND_NAMESPACE(QIODevice) *)input withName:(const QString &)name
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (!session || ![self isConnected])
         return kOBEXSessionNotConnectedError;
@@ -721,7 +721,7 @@ QT_USE_NAMESPACE
 
 - (void)OBEXPutHandler:(const OBEXSessionEvent*)event
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
@@ -797,7 +797,7 @@ QT_USE_NAMESPACE
 {
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid session (nil)");
 
-    currentRequest = OSXBluetooth::OBEXDisconnect;
+    currentRequest = DarwinBluetooth::OBEXDisconnect;
 
     [session OBEXDisconnect:nullptr
              optionalHeadersLength:0
@@ -830,12 +830,12 @@ QT_USE_NAMESPACE
     delegate = nullptr;
     // This will stop any handler (callback) preventing
     // any read/write to potentially deleted objects.
-    currentRequest = OSXBluetooth::OBEXNoop;
+    currentRequest = DarwinBluetooth::OBEXNoop;
 }
 
 - (bool)hasActiveRequest
 {
-    return currentRequest != OSXBluetooth::OBEXNoop && !pendingAbort;
+    return currentRequest != DarwinBluetooth::OBEXNoop && !pendingAbort;
 }
 
 @end

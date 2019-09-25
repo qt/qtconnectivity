@@ -49,9 +49,7 @@
 
 #import <IOBluetooth/objc/IOBluetoothSDPUUID.h>
 #import <CoreFoundation/CoreFoundation.h>
-#if QT_MAC_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_12, __IPHONE_NA)
 #import <CoreBluetooth/CBUUID.h>
-#endif
 
 #endif
 
@@ -70,7 +68,7 @@ Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.ios")
 
 #endif
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 const int defaultLEScanTimeoutMS = 25000;
 // We use it only on iOS for now:
@@ -381,6 +379,6 @@ dispatch_queue_t qt_LE_queue()
     return leQueue.data();
 }
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE

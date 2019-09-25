@@ -60,7 +60,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 enum class OperationTimeout
 {
@@ -74,7 +74,7 @@ enum class OperationTimeout
     characteristicWrite
 };
 
-} // namespace OSXBluetooth
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
@@ -85,22 +85,22 @@ QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTGCDTimer) : NSObject
 - (instancetype)initWithDelegate:(id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)>)delegate;
-- (void)watchAfter:(id)object withTimeoutType:(QT_PREPEND_NAMESPACE(OSXBluetooth)::OperationTimeout)type;
+- (void)watchAfter:(id)object withTimeoutType:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::OperationTimeout)type;
 - (void)startWithTimeout:(qint64)ms step:(qint64)stepMS;
 - (void)handleTimeout;
 - (void)cancelTimer;
 - (id)objectUnderWatch;
-- (QT_PREPEND_NAMESPACE(OSXBluetooth)::OperationTimeout)timeoutType;
+- (QT_PREPEND_NAMESPACE(DarwinBluetooth)::OperationTimeout)timeoutType;
 @end
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 using GCDTimerObjC = QT_MANGLE_NAMESPACE(OSXBTGCDTimer);
 using GCDTimer = ObjCStrongReference<GCDTimerObjC>;
 
-} // namespace OSXBluetooth
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 

@@ -84,7 +84,7 @@ QMap<quint16, QBluetoothServerPrivate *> &busyChannels()
 
 typedef QMap<quint16, QBluetoothServerPrivate *>::iterator ServerMapIterator;
 
-}
+} // unnamed namespace
 
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(ServiceInfo::Protocol type,
@@ -288,7 +288,7 @@ void QBluetoothServer::close()
 
 bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     if (d_ptr->listener) {
         qCWarning(QT_BT_OSX) << "already in listen mode, close server first";

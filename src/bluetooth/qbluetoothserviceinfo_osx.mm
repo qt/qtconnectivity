@@ -105,12 +105,12 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothServiceInfo &info)
 {
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     if (isRegistered())
         return false;
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     ObjCStrongReference<NSMutableDictionary> serviceDict(iobluetooth_service_dictionary(info));
     if (!serviceDict) {

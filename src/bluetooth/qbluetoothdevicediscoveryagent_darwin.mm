@@ -95,7 +95,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     adapterAddress(adapter),
     startPending(false),
     stopPending(false),
-    lowEnergySearchTimeout(OSXBluetooth::defaultLEScanTimeoutMS),
+    lowEnergySearchTimeout(DarwinBluetooth::defaultLEScanTimeoutMS),
 #ifdef Q_OS_MACOS
     requestedMethods(QBluetoothDeviceDiscoveryAgent::ClassicMethod | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod),
 #else
@@ -121,7 +121,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     if (inquiryLE && agentState != NonActive) {
         // We want the LE scan to stop as soon as possible.
-        if (dispatch_queue_t leQueue = OSXBluetooth::qt_LE_queue()) {
+        if (dispatch_queue_t leQueue = DarwinBluetooth::qt_LE_queue()) {
             // Local variable to be retained ...
             LEInquiryObjC *inq = inquiryLE.getAs<LEInquiryObjC>();
             dispatch_sync(leQueue, ^{
@@ -187,7 +187,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startClassic()
     Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod);
     Q_ASSERT(agentState == NonActive);
 
-    OSXBluetooth::qt_test_iobluetooth_runloop();
+    DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     if (!inquiry) {
         // The first Classic scan for this DDA.
@@ -220,7 +220,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
     Q_ASSERT(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
     Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
     // Connections:
@@ -265,7 +265,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
     Q_ASSERT_X(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError,
                Q_FUNC_INFO, "called with invalid bluetooth adapter");
 
-    using namespace OSXBluetooth;
+    using namespace DarwinBluetooth;
 
     const bool prevStart = startPending;
     startPending = false;
@@ -350,7 +350,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceFound(void *obj)
     QT_BT_MAC_AUTORELEASEPOOL;
 
     // Let's collect some info about this device:
-    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
+    const QBluetoothAddress deviceAddress(DarwinBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull()) {
         qCWarning(QT_BT_OSX) << "invalid Bluetooth address";
         return;
@@ -366,7 +366,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceFound(void *obj)
     deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
     deviceInfo.setRssi(device.RSSI);
 
-    const QVector<QBluetoothUuid> uuids(OSXBluetooth::extract_services_uuids(device));
+    const QVector<QBluetoothUuid> uuids(DarwinBluetooth::extract_services_uuids(device));
     deviceInfo.setServiceUuids(uuids);
 
     deviceFound(deviceInfo);

@@ -55,6 +55,8 @@
 
 #include <Foundation/Foundation.h>
 
+// TODO: all this code must be removed in Qt 6?
+
 @class QT_MANGLE_NAMESPACE(OSXBTOBEXSession);
 
 QT_BEGIN_NAMESPACE
@@ -63,7 +65,7 @@ class QBluetoothAddress;
 class QIODevice;
 class QString;
 
-namespace OSXBluetooth
+namespace DarwinBluetooth
 {
 
 class OBEXSessionDelegate
@@ -93,7 +95,7 @@ enum OBEXRequest {
     OBEXAbort
 };
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
@@ -102,7 +104,7 @@ QT_END_NAMESPACE
 // It either succeeds or fails and tries to cleanup in any case.
 @interface QT_MANGLE_NAMESPACE(OSXBTOBEXSession) : NSObject
 
-- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(OSXBluetooth::OBEXSessionDelegate) *)aDelegate
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::OBEXSessionDelegate) *)aDelegate
       remoteDevice:(const QBluetoothAddress &)deviceAddress channelID:(quint16)port;
 
 - (void)dealloc;

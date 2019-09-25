@@ -44,13 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace OSXBluetooth {
-
-ConnectionMonitor::~ConnectionMonitor()
-{
-}
-
-}
 
 QT_END_NAMESPACE
 
@@ -60,12 +53,12 @@ using namespace QT_NAMESPACE;
 
 @implementation QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor)
 {
-    QT_PREPEND_NAMESPACE(OSXBluetooth::ConnectionMonitor) *monitor;
+    QT_PREPEND_NAMESPACE(DarwinBluetooth::ConnectionMonitor) *monitor;
     IOBluetoothUserNotification *discoveryNotification;
     NSMutableArray *foundConnections;
 }
 
-- (id)initWithMonitor:(OSXBluetooth::ConnectionMonitor *)aMonitor
+- (id)initWithMonitor:(DarwinBluetooth::ConnectionMonitor *)aMonitor
 {
     Q_ASSERT_X(aMonitor, "-initWithMonitor:", "invalid monitor (null)");
 
@@ -106,7 +99,7 @@ using namespace QT_NAMESPACE;
 
     // All Obj-C objects are autoreleased.
 
-    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
+    const QBluetoothAddress deviceAddress(DarwinBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull())
         return;
 
@@ -129,7 +122,7 @@ using namespace QT_NAMESPACE;
     [notification unregister];//?
     [foundConnections removeObject:notification];
 
-    const QBluetoothAddress deviceAddress(OSXBluetooth::qt_address([device getAddress]));
+    const QBluetoothAddress deviceAddress(DarwinBluetooth::qt_address([device getAddress]));
     if (deviceAddress.isNull())
         return;
 

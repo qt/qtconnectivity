@@ -343,7 +343,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     if (manager.data())
         [manager setDelegate:nil];
     manager.reset([[CBPeripheralManager alloc] initWithDelegate:self
-                   queue:OSXBluetooth::qt_LE_queue()]);
+                   queue:DarwinBluetooth::qt_LE_queue()]);
 }
 
 - (void)stopAdvertising
@@ -383,7 +383,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     const auto & range = valueRanges[charHandle];
     if (value.size() < int(range.first) || value.size() > int(range.second)
 #ifdef Q_OS_IOS
-        || value.size() > OSXBluetooth::maxValueLength) {
+        || value.size() > DarwinBluetooth::maxValueLength) {
 #else
        ) {
 #endif
@@ -800,11 +800,12 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         }
 
 #ifdef Q_OS_IOS
-        if (ch.value().length() > OSXBluetooth::maxValueLength) {
+        if (ch.value().length() > DarwinBluetooth::maxValueLength) {
             qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
                                     "value exceeds the maximal permitted "
-                                    "value length (" << OSXBluetooth::maxValueLength
-                                    << "octets) on the platform";
+                                    "value length ("
+                                 << DarwinBluetooth::maxValueLength
+                                 << "octets) on the platform";
             continue;
         }
 #endif

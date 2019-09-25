@@ -77,12 +77,12 @@ QT_BEGIN_NAMESPACE
 
 class QLowEnergyServiceData;
 
-namespace OSXBluetooth
+namespace DarwinBluetooth
 {
 
 class LECBManagerNotifier;
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
@@ -92,7 +92,7 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-using namespace OSXBluetooth;
+using namespace DarwinBluetooth;
 
 
 template<class Type>

@@ -115,7 +115,7 @@ QT_USE_NAMESPACE
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    const BluetoothDeviceAddress iobtAddress = OSXBluetooth::iobluetooth_address(address);
+    const BluetoothDeviceAddress iobtAddress = DarwinBluetooth::iobluetooth_address(address);
     device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) { // TODO: do I always check this BTW??? Apple's docs say nothing about nil.
         qCCritical(QT_BT_OSX) << "failed to create a device";

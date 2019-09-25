@@ -65,13 +65,11 @@
 
 #include <Foundation/Foundation.h>
 
-@class QT_MANGLE_NAMESPACE(OSXBTCentralManager);
-
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyServicePrivate;
 
-namespace OSXBluetooth {
+namespace DarwinBluetooth {
 
 class LECBManagerNotifier;
 
@@ -129,14 +127,14 @@ typedef QQueue<LERequest> RequestQueue;
 // 'NSObject *' will require '__weak' with ARC.
 typedef QHash<NSObject *, QByteArray> ValueHash;
 
-}
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
 @interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate,
                                                                CBPeripheralDelegate,
                                                                QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
-- (id)initWith:(QT_PREPEND_NAMESPACE(OSXBluetooth)::LECBManagerNotifier *)notifier;
+- (id)initWith:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::LECBManagerNotifier *)notifier;
 - (void)dealloc;
 
 - (CBPeripheral *)peripheral;
