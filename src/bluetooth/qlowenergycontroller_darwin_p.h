@@ -54,10 +54,10 @@
 #include "qlowenergyserviceprivate_p.h"
 #include "qlowenergycontrollerbase_p.h"
 #include "qlowenergycontroller.h"
-#include "osx/osxbtnotifier_p.h"
+#include "darwin/btnotifier_p.h"
 #include "qbluetoothaddress.h"
+#include "darwin/btraii_p.h"
 #include "qbluetoothuuid.h"
-#include "osx/btraii_p.h"
 
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qglobal.h>

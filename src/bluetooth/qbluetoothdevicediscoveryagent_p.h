@@ -60,8 +60,8 @@
 #endif
 
 #ifdef Q_OS_DARWIN
-#include "osx/btdelegates_p.h"
-#include "osx/btraii_p.h"
+#include "darwin/btdelegates_p.h"
+#include "darwin/btraii_p.h"
 #endif // Q_OS_DARWIN
 
 #include <QtCore/QVariantMap>

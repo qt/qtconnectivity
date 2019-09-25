@@ -40,21 +40,24 @@
 #include "qbluetoothdevicediscoveryagent_p.h"
 #include "qbluetoothdevicediscoveryagent.h"
 
-#include "osx/osxbtledeviceinquiry_p.h"
+#include "darwin/btledeviceinquiry_p.h"
+
 #ifdef Q_OS_MACOS
-#include "osx/osxbtdeviceinquiry_p.h"
-#include "osx/osxbtsdpinquiry_p.h"
+#include "darwin/btdeviceinquiry_p.h"
+#include "darwin/btsdpinquiry_p.h"
+
+#include <IOBluetooth/IOBluetooth.h>
 #endif // Q_OS_MACOS
+
 #include "qbluetoothdeviceinfo.h"
-#include "osx/osxbtnotifier_p.h"
-#include "osx/osxbtutility_p.h"
-#include "osx/osxbluetooth_p.h"
-#include "osx/uistrings_p.h"
+#include "darwin/btnotifier_p.h"
+#include "darwin/btutility_p.h"
+#include "darwin/uistrings_p.h"
 #include "qbluetoothhostinfo.h"
+#include "darwin/uistrings_p.h"
 #include "qbluetoothaddress.h"
-#include "osx/uistrings_p.h"
+#include "darwin/btraii_p.h"
 #include "qbluetoothuuid.h"
-#include "osx/btraii_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
@@ -64,6 +67,8 @@
 #include <QtCore/qdebug.h>
 
 #include <Foundation/Foundation.h>
+
+#include <CoreBluetooth/CoreBluetooth.h>
 
 QT_BEGIN_NAMESPACE
 

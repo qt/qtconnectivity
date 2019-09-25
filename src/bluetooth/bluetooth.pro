@@ -159,7 +159,7 @@ qtConfig(bluez) {
     DEFINES += QT_OSX_BLUETOOTH
     LIBS_PRIVATE += -framework Foundation -framework IOBluetooth
 
-    include(osx/osxbt.pri)
+    include(darwin/darwinbt.pri)
     OBJECTIVE_SOURCES += \
         qbluetoothlocaldevice_macos.mm \
         qbluetoothdevicediscoveryagent_darwin.mm \
@@ -185,7 +185,7 @@ qtConfig(bluez) {
         qlowenergycontroller_darwin_p.h \
         qbluetoothsocket_dummy_p.h
 
-    include(osx/osxbt.pri)
+    include(darwin/darwinbt.pri)
     SOURCES += \
         qbluetoothlocaldevice_p.cpp \
         qbluetoothserviceinfo_p.cpp \

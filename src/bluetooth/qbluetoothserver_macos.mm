@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "osx/osxbtsocketlistener_p.h"
+#include "darwin/btsocketlistener_p.h"
 #include "qbluetoothserver_p.h"
 
 // The order is important: a workround for
@@ -47,8 +47,7 @@
 #include "qbluetoothsocket_macos_p.h"
 
 #include "qbluetoothlocaldevice.h"
-#include "osx/osxbtutility_p.h"
-#include "osx/osxbluetooth_p.h"
+#include "darwin/btutility_p.h"
 #include "qbluetoothserver.h"
 #include "qbluetoothsocket.h"
 
@@ -59,6 +58,8 @@
 #include <QtCore/qmutex.h>
 
 #include <Foundation/Foundation.h>
+
+#include <IOBluetooth/IOBluetooth.h>
 
 #include <limits>
 

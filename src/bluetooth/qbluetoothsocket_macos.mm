@@ -44,12 +44,12 @@
 #include "qbluetoothsocketbase_p.h"
 #include "qbluetoothsocket_macos_p.h"
 
-#include "osx/osxbtrfcommchannel_p.h"
-#include "osx/osxbtl2capchannel_p.h"
+#include "darwin/btrfcommchannel_p.h"
+#include "darwin/btl2capchannel_p.h"
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothdeviceinfo.h"
-#include "osx/osxbtutility_p.h"
-#include "osx/uistrings_p.h"
+#include "darwin/btutility_p.h"
+#include "darwin/uistrings_p.h"
 #include "qbluetoothsocket.h"
 
 #include <QtCore/qloggingcategory.h>

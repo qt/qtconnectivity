@@ -37,13 +37,12 @@
 **
 ****************************************************************************/
 
-#include "osx/osxbtservicerecord_p.h"
 #include "qbluetoothserviceinfo_p.h"
+#include "darwin/btservicerecord_p.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserver_p.h"
-#include "osx/osxbtutility_p.h"
-#include "osx/osxbluetooth_p.h"
+#include "darwin/btutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qvariant.h>
@@ -53,6 +52,8 @@
 #include <QtCore/qurl.h>
 
 #include <Foundation/Foundation.h>
+
+#include <IOBluetooth/IOBluetooth.h>
 
 QT_BEGIN_NAMESPACE
 

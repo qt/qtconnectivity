@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QBLUETOOTHSERVICEINFO_P_H
-#define QBLUETOOTHSERVICEINFO_P_H
+#ifndef BTSDPINQUIRY_H
+#define BTSDPINQUIRY_H
 
 //
 //  W A R N I N G
@@ -51,105 +51,49 @@
 // We mean it.
 //
 
-#include "qbluetoothuuid.h"
 #include "qbluetoothaddress.h"
-#include "qbluetoothdeviceinfo.h"
-#include "qbluetoothserviceinfo.h"
+#include "qbluetoothuuid.h"
 
-#include <QMap>
-#include <QVariant>
+#include <QtCore/qglobal.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qvector.h>
 
-#ifdef Q_OS_MACOS
-#include "darwin/btraii_p.h"
-#endif
+#include <Foundation/Foundation.h>
 
-class OrgBluezServiceInterface;
-class OrgBluezProfileManager1Interface;
+#include <IOBluetooth/IOBluetooth.h>
 
-#ifdef QT_WINRT_BLUETOOTH
-#include <wrl.h>
-
-namespace ABI {
-    namespace Windows {
-        namespace Devices {
-            namespace Bluetooth {
-                namespace Rfcomm {
-                    struct IRfcommServiceProvider;
-                }
-            }
-        }
-    }
-}
-#endif
-
-#ifdef QT_WIN_BLUETOOTH
-#include <winsock2.h>
-#include <ws2bth.h>
-#endif
+@class QT_MANGLE_NAMESPACE(OSXBTSDPInquiry);
 
 QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
+class QVariant;
 
+namespace DarwinBluetooth {
 
-class QBluetoothServiceInfoPrivate
-    : public QObject
-{
-    Q_OBJECT
-public:
-    QBluetoothServiceInfoPrivate();
-    ~QBluetoothServiceInfoPrivate();
+class SDPInquiryDelegate;
 
-    bool registerService(const QBluetoothAddress &localAdapter = QBluetoothAddress());
+void extract_service_record(IOBluetoothSDPServiceRecord *record, QBluetoothServiceInfo &serviceInfo);
+QVariant extract_attribute_value(IOBluetoothSDPDataElement *dataElement);
+QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device);
 
-    bool isRegistered() const;
-
-    bool unregisterService();
-
-    QBluetoothDeviceInfo deviceInfo;
-    QMap<quint16, QVariant> attributes;
-
-    QBluetoothServiceInfo::Sequence protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const;
-    int serverChannel() const;
-private:
-#if QT_CONFIG(bluez)
-    bool ensureSdpConnection(const QBluetoothAddress &localAdapter = QBluetoothAddress());
-
-    OrgBluezServiceInterface *service = nullptr;
-    OrgBluezProfileManager1Interface *serviceBluez5 = nullptr;
-    quint32 serviceRecord;
-    QBluetoothAddress currentLocalAdapter;
-    QString profilePath;
-#endif
-
-#ifdef QT_WINRT_BLUETOOTH
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::Rfcomm::IRfcommServiceProvider> serviceProvider;
-
-    bool writeSdpAttributes();
-#endif
-
-#ifdef QT_WIN_BLUETOOTH
-    SOCKADDR_BTH sockaddr = {};
-    CSADDR_INFO addrinfo = {};
-    WSAQUERYSET regInfo = {};
-    QVector<WCHAR> serviceName;
-    QVector<WCHAR> serviceDescription;
-#endif
-
-#if QT_OSX_BLUETOOTH
-public:
-    bool registerService(const QBluetoothServiceInfo &info);
-
-private:
-
-    using SDPRecord = DarwinBluetooth::ScopedPointer;
-    SDPRecord serviceRecord;
-    quint32 serviceRecordHandle = 0;
-#endif // QT_OSX_BLUETOOTH
-
-    mutable bool registered = false;
-};
+} // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
-#endif // QBLUETOOTHSERVICEINFO_P_H
+@interface QT_MANGLE_NAMESPACE(OSXBTSDPInquiry) : NSObject
+
+- (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::SDPInquiryDelegate) *)aDelegate;
+- (void)dealloc;
+
+- (IOReturn)performSDPQueryWithDevice:(const QBluetoothAddress &)address;
+- (IOReturn)performSDPQueryWithDevice:(const QBluetoothAddress &)address
+                              filters:(const QList<QBluetoothUuid> &)filters;
+
+- (void)stopSDPQuery;
+
+- (void)sdpQueryComplete:(IOBluetoothDevice *)aDevice status:(IOReturn)status;
+
+@end
+
+#endif

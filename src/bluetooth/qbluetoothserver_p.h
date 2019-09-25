@@ -79,8 +79,8 @@ class ServerAcceptanceThread;
 
 #ifdef QT_OSX_BLUETOOTH
 
-#include "osx/btdelegates_p.h"
-#include "osx/btraii_p.h"
+#include "darwin/btdelegates_p.h"
+#include "darwin/btraii_p.h"
 
 #include <QtCore/qvector.h>
 

@@ -39,10 +39,10 @@
 
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothtransferreply_macos_p.h"
-#include "osx/osxbtobexsession_p.h"
+#include "darwin/btobexsession_p.h"
 #include "qbluetoothserviceinfo.h"
-#include "osx/osxbtutility_p.h"
-#include "osx/uistrings_p.h"
+#include "darwin/btutility_p.h"
+#include "darwin/uistrings_p.h"
 #include "qbluetoothuuid.h"
 
 

@@ -55,9 +55,9 @@
 
 #include "qbluetoothsocketbase_p.h"
 #include "qbluetoothserviceinfo.h"
-#include "osx/btdelegates_p.h"
+#include "darwin/btdelegates_p.h"
 #include "qbluetoothsocket.h"
-#include "osx/btraii_p.h"
+#include "darwin/btraii_p.h"
 
 #ifndef QPRIVATELINEARBUFFER_BUFFERSIZE
 #define QPRIVATELINEARBUFFER_BUFFERSIZE Q_INT64_C(16384)

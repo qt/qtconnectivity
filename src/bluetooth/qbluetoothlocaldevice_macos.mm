@@ -37,13 +37,12 @@
 **
 ****************************************************************************/
 
-#include "osx/osxbtconnectionmonitor_p.h"
+#include "darwin/btconnectionmonitor_p.h"
 #include "qbluetoothlocaldevice_p.h"
 #include "qbluetoothlocaldevice.h"
-#include "osx/osxbtdevicepair_p.h"
-#include "osx/osxbtutility_p.h"
-#include "osx/osxbluetooth_p.h"
-#include "osx/btdelegates_p.h"
+#include "darwin/btdevicepair_p.h"
+#include "darwin/btdelegates_p.h"
+#include "darwin/btutility_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qstring.h>
@@ -53,6 +52,8 @@
 
 
 #include <Foundation/Foundation.h>
+
+#include <IOBluetooth/IOBluetooth.h>
 
 #include <algorithm>
 

@@ -38,16 +38,16 @@
 **
 ****************************************************************************/
 
-#include "osx/osxbtutility_p.h"
-#include "osx/uistrings_p.h"
+#include "darwin/btutility_p.h"
+#include "darwin/uistrings_p.h"
 
 #ifndef Q_OS_TVOS
-#include "osx/osxbtperipheralmanager_p.h"
+#include "darwin/btperipheralmanager_p.h"
 #endif // Q_OS_TVOS
 
 #include "qlowenergycontroller_darwin_p.h"
 #include "qlowenergyserviceprivate_p.h"
-#include "osx/osxbtcentralmanager_p.h"
+#include "darwin/btcentralmanager_p.h"
 
 #include "qlowenergyservicedata.h"
 #include "qbluetoothlocaldevice.h"
