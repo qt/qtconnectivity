@@ -76,7 +76,7 @@ ServicePrivate qt_createLEService(QLowEnergyControllerPrivateDarwin *controller,
 
     CBUUID *const cbUuid = cbService.UUID;
     if (!cbUuid) {
-        qCDebug(QT_BT_OSX) << "invalid service, UUID is nil";
+        qCDebug(QT_BT_DARWIN) << "invalid service, UUID is nil";
         return ServicePrivate();
     }
 
@@ -173,24 +173,24 @@ void QLowEnergyControllerPrivateDarwin::init()
         peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.data()],
                                 DarwinBluetooth::RetainPolicy::noInitialRetain);
         if (!peripheralManager) {
-            qCWarning(QT_BT_OSX) << "failed to create a peripheral manager";
+            qCWarning(QT_BT_DARWIN) << "failed to create a peripheral manager";
             return;
         }
 #else
-        qCWarning(QT_BT_OSX) << "the peripheral role is not supported on your platform";
+        qCWarning(QT_BT_DARWIN) << "the peripheral role is not supported on your platform";
         return;
 #endif // Q_OS_TVOS
     } else {
         centralManager.reset([[ObjCCentralManager alloc] initWith:notifier.data()],
                              DarwinBluetooth::RetainPolicy::noInitialRetain);
         if (!centralManager) {
-            qCWarning(QT_BT_OSX) << "failed to initialize a central manager";
+            qCWarning(QT_BT_DARWIN) << "failed to initialize a central manager";
             return;
         }
     }
 
     if (!connectSlots(notifier.data()))
-        qCWarning(QT_BT_OSX) << "failed to connect to notifier's signal(s)";
+        qCWarning(QT_BT_DARWIN) << "failed to connect to notifier's signal(s)";
 
     // Ownership was taken by central manager.
     notifier.take();
@@ -217,7 +217,7 @@ void QLowEnergyControllerPrivateDarwin::connectToDevice()
 
     dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     if (!leQueue) {
-        qCWarning(QT_BT_OSX) << "no LE queue found";
+        qCWarning(QT_BT_DARWIN) << "no LE queue found";
         setErrorDescription(QLowEnergyController::UnknownError);
         return;
     }
@@ -261,8 +261,8 @@ void QLowEnergyControllerPrivateDarwin::disconnectFromDevice()
                 setState(QLowEnergyController::UnconnectedState);
             }
         } else {
-            qCCritical(QT_BT_OSX) << "qt LE queue is nil, "
-                                     "can not dispatch 'disconnect'";
+            qCCritical(QT_BT_DARWIN) << "qt LE queue is nil, "
+                                        "can not dispatch 'disconnect'";
         }
     }
 }
@@ -288,13 +288,13 @@ void QLowEnergyControllerPrivateDarwin::discoverServices()
 void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(const QBluetoothUuid &serviceUuid)
 {
     if (state != QLowEnergyController::DiscoveredState) {
-        qCWarning(QT_BT_OSX) << "can not discover service details in the current state, "
-                                "QLowEnergyController::DiscoveredState is expected";
+        qCWarning(QT_BT_DARWIN) << "can not discover service details in the current state, "
+                                   "QLowEnergyController::DiscoveredState is expected";
         return;
     }
 
     if (!serviceList.contains(serviceUuid)) {
-        qCWarning(QT_BT_OSX) << "unknown service: " << serviceUuid;
+        qCWarning(QT_BT_DARWIN) << "unknown service: " << serviceUuid;
         return;
     }
 
@@ -315,7 +315,7 @@ void QLowEnergyControllerPrivateDarwin::requestConnectionUpdate(const QLowEnergy
 {
     Q_UNUSED(params);
     // TODO: implement this, if possible.
-    qCWarning(QT_BT_OSX) << "Connection update not implemented on your platform";
+    qCWarning(QT_BT_DARWIN) << "Connection update not implemented on your platform";
 }
 
 void QLowEnergyControllerPrivateDarwin::addToGenericAttributeList(const QLowEnergyServiceData &service,
@@ -332,20 +332,20 @@ QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QL
     // Three checks below should be removed, they are done in the q_ptr's class.
 #ifdef Q_OS_TVOS
     Q_UNUSED(service);
-    qCDebug(QT_BT_OSX, "peripheral role is not supported on tvOS");
+    qCDebug(QT_BT_DARWIN, "peripheral role is not supported on tvOS");
 #else
     if (role != QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_OSX) << "not in peripheral role";
+        qCWarning(QT_BT_DARWIN) << "not in peripheral role";
         return nullptr;
     }
 
     if (state != QLowEnergyController::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << "invalid state";
+        qCWarning(QT_BT_DARWIN) << "invalid state";
         return nullptr;
     }
 
     if (!service.isValid()) {
-        qCWarning(QT_BT_OSX) << "invalid service";
+        qCWarning(QT_BT_DARWIN) << "invalid service";
         return nullptr;
     }
 
@@ -405,7 +405,7 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
                 continue;
             if (serviceList.contains(newService->uuid)) {
                 // It's a bit stupid we first created it ...
-                qCDebug(QT_BT_OSX) << "discovered service with a duplicated UUID"
+                qCDebug(QT_BT_DARWIN) << "discovered service with a duplicated UUID"
                                    << newService->uuid;
                 continue;
             }
@@ -457,7 +457,7 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
             toVisitNext.resetWithoutRetain([[NSMutableArray alloc] init]);
         }
     } else {
-        qCDebug(QT_BT_OSX) << "no services found";
+        qCDebug(QT_BT_DARWIN) << "no services found";
     }
 
     for (ServiceMap::const_iterator it = serviceList.constBegin(); it != serviceList.constEnd(); ++it)
@@ -474,8 +474,8 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDetailsDiscoveryFinished(QShar
     Q_ASSERT(service);
 
     if (!serviceList.contains(service->uuid)) {
-        qCDebug(QT_BT_OSX) << "unknown service uuid:"
-                           << service->uuid;
+        qCDebug(QT_BT_DARWIN) << "unknown service uuid:"
+                              << service->uuid;
         return;
     }
 
@@ -492,7 +492,7 @@ void QLowEnergyControllerPrivateDarwin::_q_servicesWereModified()
 {
     if (!(state == QLowEnergyController::DiscoveringState
           || state == QLowEnergyController::DiscoveredState)) {
-        qCWarning(QT_BT_OSX) << "services were modified while controller is not in Discovered/Discovering state";
+        qCWarning(QT_BT_DARWIN) << "services were modified while controller is not in Discovered/Discovering state";
         return;
     }
 
@@ -514,7 +514,7 @@ void QLowEnergyControllerPrivateDarwin::_q_characteristicRead(QLowEnergyHandle c
 
     QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
     if (!characteristic.isValid()) {
-        qCWarning(QT_BT_OSX) << "unknown characteristic";
+        qCWarning(QT_BT_DARWIN) << "unknown characteristic";
         return;
     }
 
@@ -531,14 +531,14 @@ void QLowEnergyControllerPrivateDarwin::_q_characteristicWritten(QLowEnergyHandl
 
     ServicePrivate service(serviceForHandle(charHandle));
     if (service.isNull()) {
-        qCWarning(QT_BT_OSX) << "can not find service for characteristic handle"
-                             << charHandle;
+        qCWarning(QT_BT_DARWIN) << "can not find service for characteristic handle"
+                                << charHandle;
         return;
     }
 
     QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
     if (!characteristic.isValid()) {
-        qCWarning(QT_BT_OSX) << "unknown characteristic";
+        qCWarning(QT_BT_DARWIN) << "unknown characteristic";
         return;
     }
 
@@ -567,7 +567,7 @@ void QLowEnergyControllerPrivateDarwin::_q_characteristicUpdated(QLowEnergyHandl
 
     QLowEnergyCharacteristic characteristic(characteristicForHandle(charHandle));
     if (!characteristic.isValid()) {
-        qCWarning(QT_BT_OSX) << "unknown characteristic";
+        qCWarning(QT_BT_DARWIN) << "unknown characteristic";
         return;
     }
 
@@ -584,7 +584,7 @@ void QLowEnergyControllerPrivateDarwin::_q_descriptorRead(QLowEnergyHandle dHand
 
     const QLowEnergyDescriptor qtDescriptor(descriptorForHandle(dHandle));
     if (!qtDescriptor.isValid()) {
-        qCWarning(QT_BT_OSX) << "unknown descriptor" << dHandle;
+        qCWarning(QT_BT_DARWIN) << "unknown descriptor" << dHandle;
         return;
     }
 
@@ -600,7 +600,7 @@ void QLowEnergyControllerPrivateDarwin::_q_descriptorWritten(QLowEnergyHandle dH
 
     const QLowEnergyDescriptor qtDescriptor(descriptorForHandle(dHandle));
     if (!qtDescriptor.isValid()) {
-        qCWarning(QT_BT_OSX) << "unknown descriptor" << dHandle;
+        qCWarning(QT_BT_DARWIN) << "unknown descriptor" << dHandle;
         return;
     }
 
@@ -626,16 +626,16 @@ void QLowEnergyControllerPrivateDarwin::_q_notificationEnabled(QLowEnergyHandle 
 
     const QLowEnergyCharacteristic qtChar(characteristicForHandle(charHandle));
     if (!qtChar.isValid()) {
-        qCWarning(QT_BT_OSX) << "unknown characteristic" << charHandle;
+        qCWarning(QT_BT_DARWIN) << "unknown characteristic" << charHandle;
         return;
     }
 
     const QLowEnergyDescriptor qtDescriptor =
         qtChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
     if (!qtDescriptor.isValid()) {
-        qCWarning(QT_BT_OSX) << "characteristic" << charHandle
-                             << "does not have a client characteristic "
-                                "descriptor";
+        qCWarning(QT_BT_DARWIN) << "characteristic" << charHandle
+                                << "does not have a client characteristic "
+                                   "descriptor";
         return;
     }
 
@@ -687,8 +687,8 @@ void QLowEnergyControllerPrivateDarwin::_q_CBManagerError(const QBluetoothUuid &
         ServicePrivate qtService(serviceList.value(serviceUuid));
         qtService->setState(QLowEnergyService::InvalidService);
     } else {
-        qCDebug(QT_BT_OSX) << "error reported for unknown service"
-                           << serviceUuid;
+        qCDebug(QT_BT_DARWIN) << "error reported for unknown service"
+                              << serviceUuid;
     }
 }
 
@@ -696,8 +696,8 @@ void QLowEnergyControllerPrivateDarwin::_q_CBManagerError(const QBluetoothUuid &
                                                           QLowEnergyService::ServiceError errorCode)
 {
     if (!serviceList.contains(serviceUuid)) {
-        qCDebug(QT_BT_OSX) << "unknown service uuid:"
-                           << serviceUuid;
+        qCDebug(QT_BT_DARWIN) << "unknown service uuid:"
+                              << serviceUuid;
         return;
     }
 
@@ -712,7 +712,7 @@ void QLowEnergyControllerPrivateDarwin::setNotifyValue(QSharedPointer<QLowEnergy
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
     if (role == QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_OSX) << "invalid role (peripheral)";
+        qCWarning(QT_BT_DARWIN) << "invalid role (peripheral)";
         service->setError(QLowEnergyService::DescriptorWriteError);
         return;
     }
@@ -722,20 +722,20 @@ void QLowEnergyControllerPrivateDarwin::setNotifyValue(QSharedPointer<QLowEnergy
         // With Core Bluetooth we do not write any descriptor,
         // but instead call a special method. So it's better to
         // intercept wrong data size here:
-        qCWarning(QT_BT_OSX) << "client characteristic configuration descriptor"
-                                "is 2 bytes, but value size is: " << newValue.size();
+        qCWarning(QT_BT_DARWIN) << "client characteristic configuration descriptor"
+                                   "is 2 bytes, but value size is: " << newValue.size();
         service->setError(QLowEnergyService::DescriptorWriteError);
         return;
     }
 
     if (!serviceList.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "no service with uuid:" << service->uuid << "found";
+        qCWarning(QT_BT_DARWIN) << "no service with uuid:" << service->uuid << "found";
         return;
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_OSX) << "no characteristic with handle:"
-                           << charHandle << "found";
+        qCDebug(QT_BT_DARWIN) << "no characteristic with handle:"
+                              << charHandle << "found";
         return;
     }
 
@@ -758,19 +758,19 @@ void QLowEnergyControllerPrivateDarwin::readCharacteristic(const QSharedPointer<
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
     if (role == QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_OSX) << "invalid role (peripheral)";
+        qCWarning(QT_BT_DARWIN) << "invalid role (peripheral)";
         return;
     }
 
     if (!serviceList.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "no service with uuid:"
-                             << service->uuid << "found";
+        qCWarning(QT_BT_DARWIN) << "no service with uuid:"
+                                << service->uuid << "found";
         return;
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_OSX) << "no characteristic with handle:"
-                           << charHandle << "found";
+        qCDebug(QT_BT_DARWIN) << "no characteristic with handle:"
+                              << charHandle << "found";
         return;
     }
 
@@ -795,14 +795,14 @@ void QLowEnergyControllerPrivateDarwin::writeCharacteristic(const QSharedPointer
     // (== created by the given LE controller).
 
     if (!serviceList.contains(service->uuid) && !localServices.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "no service with uuid:"
-                             << service->uuid << " found";
+        qCWarning(QT_BT_DARWIN) << "no service with uuid:"
+                                << service->uuid << " found";
         return;
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_OSX) << "no characteristic with handle:"
-                           << charHandle << " found";
+        qCDebug(QT_BT_DARWIN) << "no characteristic with handle:"
+                              << charHandle << " found";
         return;
     }
 
@@ -826,7 +826,7 @@ void QLowEnergyControllerPrivateDarwin::writeCharacteristic(const QSharedPointer
             [manager write:newValueCopy charHandle:charHandle];
         });
 #else
-        qCWarning(QT_BT_OSX) << "peripheral role is not supported on your platform";
+        qCWarning(QT_BT_DARWIN) << "peripheral role is not supported on your platform";
 #endif
     }
 }
@@ -861,19 +861,19 @@ void QLowEnergyControllerPrivateDarwin::readDescriptor(const QSharedPointer<QLow
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
     if (role == QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_OSX) << "invalid role (peripheral)";
+        qCWarning(QT_BT_DARWIN) << "invalid role (peripheral)";
         return;
     }
 
     if (!serviceList.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "no service with uuid:"
-                             << service->uuid << "found";
+        qCWarning(QT_BT_DARWIN) << "no service with uuid:"
+                                << service->uuid << "found";
         return;
     }
 
     dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     if (!leQueue) {
-        qCWarning(QT_BT_OSX) << "no LE queue found";
+        qCWarning(QT_BT_DARWIN) << "no LE queue found";
         return;
     }
     // Attention! Copy objects!
@@ -895,7 +895,7 @@ void QLowEnergyControllerPrivateDarwin::writeDescriptor(const QSharedPointer<QLo
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
     if (role == QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_OSX) << "invalid role (peripheral)";
+        qCWarning(QT_BT_DARWIN) << "invalid role (peripheral)";
         return;
     }
 
@@ -903,8 +903,8 @@ void QLowEnergyControllerPrivateDarwin::writeDescriptor(const QSharedPointer<QLo
     // (== created by the given LE controller),
     // otherwise we can not write anything at all.
     if (!serviceList.contains(service->uuid)) {
-        qCWarning(QT_BT_OSX) << "no service with uuid:"
-                             << service->uuid << " found";
+        qCWarning(QT_BT_DARWIN) << "no service with uuid:"
+                                << service->uuid << " found";
         return;
     }
 
@@ -1032,25 +1032,25 @@ void QLowEnergyControllerPrivateDarwin::startAdvertising(const QLowEnergyAdverti
     Q_UNUSED(params)
     Q_UNUSED(advertisingData)
     Q_UNUSED(scanResponseData)
-    qCWarning(QT_BT_OSX) << "advertising is not supported on your platform";
+    qCWarning(QT_BT_DARWIN) << "advertising is not supported on your platform";
 #else
 
     if (!isValid())
         return _q_CBManagerError(QLowEnergyController::UnknownError);
 
     if (role != QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_OSX) << "controller is not a peripheral, cannot start advertising";
+        qCWarning(QT_BT_DARWIN) << "controller is not a peripheral, cannot start advertising";
         return;
     }
 
     if (state != QLowEnergyController::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << "invalid state" << state;
+        qCWarning(QT_BT_DARWIN) << "invalid state" << state;
         return;
     }
 
     auto leQueue(DarwinBluetooth::qt_LE_queue());
     if (!leQueue) {
-        qCWarning(QT_BT_OSX) << "no LE queue found";
+        qCWarning(QT_BT_DARWIN) << "no LE queue found";
         setErrorDescription(QLowEnergyController::UnknownError);
         return;
     }
@@ -1069,13 +1069,13 @@ void QLowEnergyControllerPrivateDarwin::startAdvertising(const QLowEnergyAdverti
 void QLowEnergyControllerPrivateDarwin::stopAdvertising()
 {
 #ifdef Q_OS_TVOS
-    qCWarning(QT_BT_OSX) << "advertising is not supported on your platform";
+    qCWarning(QT_BT_DARWIN) << "advertising is not supported on your platform";
 #else
     if (!isValid())
         return _q_CBManagerError(QLowEnergyController::UnknownError);
 
     if (state != QLowEnergyController::AdvertisingState) {
-        qCDebug(QT_BT_OSX) << "cannot stop advertising, called in state" << state;
+        qCDebug(QT_BT_DARWIN) << "cannot stop advertising, called in state" << state;
         return;
     }
 
@@ -1087,7 +1087,7 @@ void QLowEnergyControllerPrivateDarwin::stopAdvertising()
 
         setState(QLowEnergyController::UnconnectedState);
     } else {
-        qCWarning(QT_BT_OSX) << "no LE queue found";
+        qCWarning(QT_BT_DARWIN) << "no LE queue found";
         setErrorDescription(QLowEnergyController::UnknownError);
         return;
     }

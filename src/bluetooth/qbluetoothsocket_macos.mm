@@ -244,7 +244,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     Q_UNUSED(socketState)
     Q_UNUSED(openMode)
 
-    qCWarning(QT_BT_OSX) << "setting a socket descriptor is not supported by IOBluetooth";
+    qCWarning(QT_BT_DARWIN) << "setting a socket descriptor is not supported by IOBluetooth";
     // Noop on macOS.
     return true;
 }
@@ -264,7 +264,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &serv
     DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     if (state!= QBluetoothSocket::UnconnectedState && state != QBluetoothSocket::ServiceLookupState) {
-        qCWarning(QT_BT_OSX)  << "called on a busy socket";
+        qCWarning(QT_BT_DARWIN)  << "called on a busy socket";
         errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         q_ptr->setSocketError(QBluetoothSocket::OperationError);
         return;
@@ -272,7 +272,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &serv
 
     // Report this problem early, potentially avoid device discovery:
     if (service.socketProtocol() == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
         errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
         q_ptr->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
@@ -291,8 +291,8 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &serv
     } else {
         // Try service discovery.
         if (service.serviceUuid().isNull()) {
-            qCWarning(QT_BT_OSX) << "No port, no PSM, and no "
-                                    "UUID provided, unable to connect";
+            qCWarning(QT_BT_DARWIN) << "No port, no PSM, and no "
+                                       "UUID provided, unable to connect";
             return;
         }
 
@@ -309,14 +309,14 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
     // Report this problem early, avoid device discovery:
     if (socketType == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
         errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
         q_ptr->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;
     }
 
     if (state != QBluetoothSocket::UnconnectedState) {
-        qCWarning(QT_BT_OSX) << "called on a busy socket";
+        qCWarning(QT_BT_DARWIN) << "called on a busy socket";
         errorString = QCoreApplication::translate(SOCKET, SOC_CONNECT_IN_PROGRESS);
         q_ptr->setSocketError(QBluetoothSocket::OperationError);
         return;
@@ -337,7 +337,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     DarwinBluetooth::qt_test_iobluetooth_runloop();
 
     if (socketType == QBluetoothServiceInfo::UnknownProtocol) {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "cannot connect with 'UnknownProtocol' type";
         errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
         q_ptr->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
         return;

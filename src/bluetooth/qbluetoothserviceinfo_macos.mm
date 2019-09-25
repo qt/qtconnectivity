@@ -114,7 +114,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothServiceInfo &
 
     ObjCStrongReference<NSMutableDictionary> serviceDict(iobluetooth_service_dictionary(info));
     if (!serviceDict) {
-        qCWarning(QT_BT_OSX) << "failed to create a service dictionary";
+        qCWarning(QT_BT_DARWIN) << "failed to create a service dictionary";
         return false;
     }
 
@@ -125,14 +125,14 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothServiceInfo &
     newRecord.reset([IOBluetoothSDPServiceRecord
                      publishedServiceRecordWithDictionary:serviceDict], RetainPolicy::doInitialRetain);
     if (!newRecord) {
-        qCWarning(QT_BT_OSX) << "failed to register a service record";
+        qCWarning(QT_BT_DARWIN) << "failed to register a service record";
         return false;
     }
 
     BluetoothSDPServiceRecordHandle newRecordHandle = 0;
     auto *ioSDPRecord = newRecord.getAs<IOBluetoothSDPServiceRecord>();
     if ([ioSDPRecord getServiceRecordHandle:&newRecordHandle] != kIOReturnSuccess) {
-        qCWarning(QT_BT_OSX) << "failed to register a service record";
+        qCWarning(QT_BT_DARWIN) << "failed to register a service record";
         [ioSDPRecord removeServiceRecord];
         return false;
     }
@@ -160,7 +160,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothServiceInfo &
 
     if (!configured) {
         [ioSDPRecord removeServiceRecord];
-        qCWarning(QT_BT_OSX) << "failed to register a service record";
+        qCWarning(QT_BT_DARWIN) << "failed to register a service record";
         return false;
     }
 

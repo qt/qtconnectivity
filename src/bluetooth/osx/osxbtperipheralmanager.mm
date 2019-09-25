@@ -107,7 +107,7 @@ ObjCStrongReference<CBMutableDescriptor> create_descriptor(const QLowEnergyDescr
 
     if (data.uuid() != QBluetoothUuid::CharacteristicUserDescription &&
         data.uuid() != QBluetoothUuid::CharacteristicPresentationFormat) {
-        qCWarning(QT_BT_OSX) << "unsupported descriptor" << data.uuid();
+        qCWarning(QT_BT_DARWIN) << "unsupported descriptor" << data.uuid();
         return {};
     }
 
@@ -232,7 +232,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     const auto nEntries = qt_countGATTEntries(data);
     if (!nEntries || nEntries > std::numeric_limits<QLowEnergyHandle>::max() - lastHandle) {
-        qCCritical(QT_BT_OSX) << "addService: not enough handles";
+        qCCritical(QT_BT_DARWIN) << "addService: not enough handles";
         return {};
     }
 
@@ -246,7 +246,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
                      false /*do not retain*/);
 
     if (!newCBService) {
-        qCCritical(QT_BT_OSX) << "addService: failed to create CBMutableService";
+        qCCritical(QT_BT_DARWIN) << "addService: failed to create CBMutableService";
         return {};
     }
 
@@ -294,8 +294,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     advertisementData.reset([[NSMutableDictionary alloc] init]);
     if (!advertisementData) {
-        qCWarning(QT_BT_OSX) << "setParameters: failed to allocate "
-                                "NSMutableDictonary (advertisementData)";
+        qCWarning(QT_BT_DARWIN) << "setParameters: failed to allocate "
+                                   "NSMutableDictonary (advertisementData)";
         return;
     }
 
@@ -313,8 +313,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     const ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init]);
     if (!uuids) {
-        qCWarning(QT_BT_OSX) << "setParameters: failed to allocate "
-                                "NSMutableArray (services uuids)";
+        qCWarning(QT_BT_DARWIN) << "setParameters: failed to allocate "
+                                   "NSMutableArray (services uuids)";
         return;
     }
 
@@ -387,7 +387,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 #else
        ) {
 #endif
-        qCWarning(QT_BT_OSX) << "ignoring value of invalid length" << value.size();
+        qCWarning(QT_BT_DARWIN) << "ignoring value of invalid length" << value.size();
         return;
     }
 
@@ -552,14 +552,14 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     const auto handle = charMap.key(request.characteristic);
     if (!handle || !charValues.contains(handle)) {
-        qCWarning(QT_BT_OSX) << "invalid read request, unknown characteristic";
+        qCWarning(QT_BT_DARWIN) << "invalid read request, unknown characteristic";
         [manager respondToRequest:request withResult:CBATTErrorInvalidHandle];
         return;
     }
 
     const auto &value = charValues[handle];
     if (request.offset > [value length]) {
-        qCWarning(QT_BT_OSX) << "invalid offset in a read request";
+        qCWarning(QT_BT_DARWIN) << "invalid offset in a read request";
         [manager respondToRequest:request withResult:CBATTErrorInvalidOffset];
         return;
     }
@@ -670,9 +670,9 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         if (charMap.contains(request.charHandle)) {
             if ([connectedCentrals count]
                 && maxNotificationValueLength < [request.value length]) {
-                qCWarning(QT_BT_OSX) << "value of length" << [request.value length]
-                                     << "will possibly be truncated to"
-                                     << maxNotificationValueLength;
+                qCWarning(QT_BT_DARWIN) << "value of length" << [request.value length]
+                                        << "will possibly be truncated to"
+                                        << maxNotificationValueLength;
             }
             const BOOL res = [manager updateValue:request.value
                               forCharacteristic:static_cast<CBMutableCharacteristic *>(charMap[request.charHandle])
@@ -755,8 +755,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     ObjCScopedPointer<NSMutableArray> included([[NSMutableArray alloc] init]);
     if (!included) {
-        qCWarning(QT_BT_OSX) << "addIncludedSerivces: failed "
-                                "to allocate NSMutableArray";
+        qCWarning(QT_BT_DARWIN) << "addIncludedSerivces: failed "
+                                   "to allocate NSMutableArray";
         return;
     }
 
@@ -766,8 +766,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
             qtService->includedServices << includedService->serviceUuid();
             ++lastHandle;
         } else {
-            qCWarning(QT_BT_OSX) << "can not use" << includedService->serviceUuid()
-                                 << "as included, it has to be added first";
+            qCWarning(QT_BT_DARWIN) << "can not use" << includedService->serviceUuid()
+                                    << "as included, it has to be added first";
         }
     }
 
@@ -786,41 +786,41 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     ObjCScopedPointer<NSMutableArray> newCBChars([[NSMutableArray alloc] init]);
     if (!newCBChars) {
-        qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
-                                "failed to allocate NSMutableArray "
-                                "(characteristics)";
+        qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
+                                   "failed to allocate NSMutableArray "
+                                   "(characteristics)";
         return;
     }
 
     for (const auto &ch : data.characteristics()) {
         if (!qt_validate_value_range(ch)) {
-            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
-                                    "invalid value size/min-max length";
+            qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
+                                       "invalid value size/min-max length";
             continue;
         }
 
 #ifdef Q_OS_IOS
         if (ch.value().length() > DarwinBluetooth::maxValueLength) {
-            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
-                                    "value exceeds the maximal permitted "
-                                    "value length ("
-                                 << DarwinBluetooth::maxValueLength
-                                 << "octets) on the platform";
+            qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
+                                       "value exceeds the maximal permitted "
+                                       "value length ("
+                                    << DarwinBluetooth::maxValueLength
+                                    << "octets) on the platform";
             continue;
         }
 #endif
 
         const auto cbChar(create_characteristic(ch));
         if (!cbChar) {
-            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
-                                    "failed to allocate a characteristic";
+            qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
+                                       "failed to allocate a characteristic";
             continue;
         }
 
         const auto nsData(mutable_data_from_bytearray(ch.value()));
         if (!nsData) {
-            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
-                                    "addService: failed to allocate NSData (char value)";
+            qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
+                                       "addService: failed to allocate NSData (char value)";
             continue;
         }
 
@@ -840,9 +840,9 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
         const ObjCScopedPointer<NSMutableArray> newCBDescs([[NSMutableArray alloc] init]);
         if (!newCBDescs) {
-            qCWarning(QT_BT_OSX) << "addCharacteristicsAndDescritptors: "
-                                    "failed to allocate NSMutableArray "
-                                    "(descriptors)";
+            qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
+                                       "failed to allocate NSMutableArray "
+                                       "(descriptors)";
             continue;
         }
 

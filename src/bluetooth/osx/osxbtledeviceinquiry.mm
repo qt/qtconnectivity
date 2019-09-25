@@ -342,14 +342,14 @@ QT_USE_NAMESPACE
     QBluetoothUuid deviceUuid;
 
     if (!peripheral.identifier) {
-        qCWarning(QT_BT_OSX) << "peripheral without NSUUID";
+        qCWarning(QT_BT_DARWIN) << "peripheral without NSUUID";
         return;
     }
 
     deviceUuid = DarwinBluetooth::qt_uuid(peripheral.identifier);
 
     if (deviceUuid.isNull()) {
-        qCWarning(QT_BT_OSX) << "no way to address peripheral, QBluetoothUuid is null";
+        qCWarning(QT_BT_DARWIN) << "no way to address peripheral, QBluetoothUuid is null";
         return;
     }
 

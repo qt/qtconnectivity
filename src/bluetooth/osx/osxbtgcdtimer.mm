@@ -92,7 +92,7 @@ using namespace DarwinBluetooth;
     }
 
     if (ms <= 0 || stepMS <= 0) {
-        qCWarning(QT_BT_OSX, "Invalid timeout/step parameters");
+        qCWarning(QT_BT_DARWIN, "Invalid timeout/step parameters");
         return;
     }
 

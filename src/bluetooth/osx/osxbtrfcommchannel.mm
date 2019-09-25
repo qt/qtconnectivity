@@ -103,13 +103,13 @@ QT_USE_NAMESPACE
             withChannelID:(BluetoothRFCOMMChannelID)channelID
 {
     if (address.isNull()) {
-        qCCritical(QT_BT_OSX) << "invalid peer address";
+        qCCritical(QT_BT_DARWIN) << "invalid peer address";
         return kIOReturnNoDevice;
     }
 
     // Can never be called twice.
     if (connected || device || channel) {
-        qCCritical(QT_BT_OSX) << "connection is already active";
+        qCCritical(QT_BT_DARWIN) << "connection is already active";
         return kIOReturnStillOpen;
     }
 
@@ -118,14 +118,14 @@ QT_USE_NAMESPACE
     const BluetoothDeviceAddress iobtAddress = DarwinBluetooth::iobluetooth_address(address);
     device = [IOBluetoothDevice deviceWithAddress:&iobtAddress];
     if (!device) { // TODO: do I always check this BTW??? Apple's docs say nothing about nil.
-        qCCritical(QT_BT_OSX) << "failed to create a device";
+        qCCritical(QT_BT_DARWIN) << "failed to create a device";
         return kIOReturnNoDevice;
     }
 
     const IOReturn status = [device openRFCOMMChannelAsync:&channel
                              withChannelID:channelID delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_OSX) << "failed to open L2CAP channel";
+        qCCritical(QT_BT_DARWIN) << "failed to open L2CAP channel";
         // device is still autoreleased.
         device = nil;
         return status;

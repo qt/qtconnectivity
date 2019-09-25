@@ -58,15 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_IOS_BLUETOOTH
-
-Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.osx")
-
-#else
-
-Q_LOGGING_CATEGORY(QT_BT_OSX, "qt.bluetooth.ios")
-
-#endif
+Q_LOGGING_CATEGORY(QT_BT_DARWIN, "qt.bluetooth.darwin")
 
 namespace DarwinBluetooth {
 
@@ -170,7 +162,7 @@ void qt_test_iobluetooth_runloop()
     // dispatcher would suffice. At the moment of writing we do not have such
     // event dispatcher, so we only can work on the main thread.
     if (CFRunLoopGetMain() != CFRunLoopGetCurrent()) {
-        qCWarning(QT_BT_OSX) << "IOBluetooth works only on the main thread or a"
+        qCWarning(QT_BT_DARWIN) << "IOBluetooth works only on the main thread or a"
                              << "thread with a running CFRunLoop";
     }
 }
@@ -204,15 +196,11 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
         std::copy(source, source + 16, qtUuidData.data);
 
         return QBluetoothUuid(qtUuidData);
-    } else {
-        qCDebug(QT_BT_OSX) << "qt_uuid, invalid CBUUID, 2 or 16 bytes expected, but got "
-                           << uuid.data.length << " bytes length";
-        return QBluetoothUuid();
     }
 
-    if (uuid.data.length != 16) // TODO: warning?
-        return QBluetoothUuid();
-
+    qCDebug(QT_BT_DARWIN) << "qt_uuid, invalid CBUUID, 2 or 16 bytes expected, but got "
+                          << uuid.data.length << " bytes length";
+    return QBluetoothUuid();
 }
 
 CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
@@ -353,8 +341,8 @@ public:
 
         queue = dispatch_queue_create(label, DISPATCH_QUEUE_SERIAL);
         if (!queue) {
-            qCCritical(QT_BT_OSX) << "failed to create dispatch queue with label"
-                                  << label;
+            qCCritical(QT_BT_DARWIN) << "failed to create dispatch queue with label"
+                                     << label;
         }
     }
     ~SerialDispatchQueue()

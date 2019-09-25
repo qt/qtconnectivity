@@ -309,8 +309,7 @@ extern const int maxValueLength;
 
 } // namespace DarwinBluetooth
 
-// Logging category for both OS X and iOS.
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_OSX)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_DARWIN)
 
 QT_END_NAMESPACE
 

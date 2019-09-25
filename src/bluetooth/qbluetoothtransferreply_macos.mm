@@ -177,7 +177,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     errorString.clear();
 
     if (device.isNull() || !channelID) {
-        qCWarning(QT_BT_OSX) << "invalid device address or port";
+        qCWarning(QT_BT_DARWIN) << "invalid device address or port";
         setReplyError(QBluetoothTransferReply::HostNotFoundError,
                       QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
         return;
@@ -186,7 +186,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     OBEXSession newSession([[ObjCOBEXSession alloc] initWithDelegate:this
                             remoteDevice:device channelID:channelID]);
     if (!newSession) {
-        qCWarning(QT_BT_OSX) << "failed to allocate OSXBTOBEXSession object";
+        qCWarning(QT_BT_DARWIN) << "failed to allocate OSXBTOBEXSession object";
 
         setReplyError(QBluetoothTransferReply::UnknownError,
                       QCoreApplication::translate(TRANSFER_REPLY, TR_SESSION_NO_START));
@@ -201,7 +201,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
         if ([session isConnected])
             sendPut();// Connected, send a PUT request.
     } else {
-        qCWarning(QT_BT_OSX) << "OBEXConnect failed";
+        qCWarning(QT_BT_DARWIN) << "OBEXConnect failed";
 
         if (error == QBluetoothTransferReply::NoError) {
             // The error is not set yet.
@@ -355,7 +355,7 @@ QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(QIODevice *input,
     if (input) {
         QMetaObject::invokeMethod(this, "start", Qt::QueuedConnection);
     } else {
-        qCWarning(QT_BT_OSX) << "invalid input stream (null)";
+        qCWarning(QT_BT_DARWIN) << "invalid input stream (null)";
         osx_d_ptr->requestComplete = true;
         osx_d_ptr->errorString = QCoreApplication::translate(TRANSFER_REPLY, TR_INVALID_DEVICE);
         osx_d_ptr->error = FileNotFoundError;
@@ -416,7 +416,7 @@ bool QBluetoothTransferReplyOSX::start()
     if (!osx_d_ptr->isActive()) {
         // Step 0: find a channelID.
         if (request().address().isNull()) {
-            qCWarning(QT_BT_OSX) << "invalid device address";
+            qCWarning(QT_BT_DARWIN) << "invalid device address";
             osx_d_ptr->setReplyError(HostNotFoundError,
                                      QCoreApplication::translate(TRANSFER_REPLY, TR_INVAL_TARGET));
             return false;

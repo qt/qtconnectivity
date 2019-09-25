@@ -120,25 +120,25 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
 
     HostController defaultController([[IOBluetoothHostController defaultController] retain]);
     if (!defaultController) {
-        qCCritical(QT_BT_OSX) << "failed to init a host controller object";
+        qCCritical(QT_BT_DARWIN) << "failed to init a host controller object";
         return;
     }
 
     if (!address.isNull()) {
         NSString *const hciAddress = [defaultController addressAsString];
         if (!hciAddress) {
-            qCCritical(QT_BT_OSX) << "failed to obtain an address";
+            qCCritical(QT_BT_DARWIN) << "failed to obtain an address";
             return;
         }
 
         BluetoothDeviceAddress iobtAddress = {};
         if (IOBluetoothNSStringToDeviceAddress(hciAddress, &iobtAddress) != kIOReturnSuccess) {
-            qCCritical(QT_BT_OSX) << "invalid local device's address";
+            qCCritical(QT_BT_DARWIN) << "invalid local device's address";
             return;
         }
 
         if (address != DarwinBluetooth::qt_address(&iobtAddress)) {
-            qCCritical(QT_BT_OSX) << "invalid local device's address";
+            qCCritical(QT_BT_DARWIN) << "invalid local device's address";
             return;
         }
     }
@@ -181,7 +181,7 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
         if ([device isPaired]) {
             emitPairingFinished(address, pairing, true);
         } else if ([pos.value() start] != kIOReturnSuccess) {
-            qCCritical(QT_BT_OSX) << "failed to start a new pairing request";
+            qCCritical(QT_BT_DARWIN) << "failed to start a new pairing request";
             emitError(QBluetoothLocalDevice::PairingError, true);
         }
         return;
@@ -192,7 +192,7 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
     // it'll just finish with success (skipping any intermediate steps).
     PairingRequest newRequest([[ObjCPairingRequest alloc] initWithTarget:address delegate:this], false);
     if (!newRequest) {
-        qCCritical(QT_BT_OSX) << "failed to allocate a new pairing request";
+        qCCritical(QT_BT_DARWIN) << "failed to allocate a new pairing request";
         emitError(QBluetoothLocalDevice::PairingError, true);
         return;
     }
@@ -201,7 +201,7 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
     const IOReturn result = [newRequest start];
     if (result != kIOReturnSuccess) {
         pairingRequests.erase(pos);
-        qCCritical(QT_BT_OSX) << "failed to start a new pairing request";
+        qCCritical(QT_BT_DARWIN) << "failed to start a new pairing request";
         emitError(QBluetoothLocalDevice::PairingError, true);
     }
 }
@@ -363,7 +363,7 @@ QString QBluetoothLocalDevice::name() const
     if (isValid()) {
         if (NSString *const nsn = [d_ptr->hostController nameAsString])
             return QString::fromNSString(nsn);
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to obtain a name";
+        qCCritical(QT_BT_DARWIN) << Q_FUNC_INFO << "failed to obtain a name";
     }
 
     return QString();
@@ -377,9 +377,9 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
         if (NSString *const nsa = [d_ptr->hostController addressAsString])
             return QBluetoothAddress(DarwinBluetooth::qt_address(nsa));
 
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO << "failed to obtain an address";
+        qCCritical(QT_BT_DARWIN) << Q_FUNC_INFO << "failed to obtain an address";
     } else {
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid local device";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "invalid local device";
     }
 
     return QBluetoothAddress();
@@ -388,7 +388,7 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 void QBluetoothLocalDevice::powerOn()
 {
     if (!isValid())
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid local device";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "invalid local device";
 }
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
@@ -396,7 +396,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
     Q_UNUSED(mode)
 
     if (!isValid())
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid local device";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "invalid local device";
 }
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
@@ -441,7 +441,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 
     QBluetoothLocalDevice defaultAdapter;
     if (!defaultAdapter.isValid() || defaultAdapter.address().isNull()) {
-        qCCritical(QT_BT_OSX) << Q_FUNC_INFO <<"no valid device found";
+        qCCritical(QT_BT_DARWIN) << Q_FUNC_INFO <<"no valid device found";
         return localDevices;
     }
 
@@ -463,7 +463,7 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
     if (!isValid())
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid local device";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "invalid local device";
 
     if (!isValid() || address.isNull()) {
         d_ptr->emitError(PairingError, true);
@@ -478,7 +478,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
 {
     if (!isValid())
-        qCWarning(QT_BT_OSX) << Q_FUNC_INFO << "invalid local device";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "invalid local device";
 
     if (!isValid() || address.isNull())
         return Unpaired;

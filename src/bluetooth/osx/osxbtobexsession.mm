@@ -203,7 +203,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
             break;
         }
         default:
-            qCWarning(QT_BT_OSX) << "invalid header format";
+            qCWarning(QT_BT_DARWIN) << "invalid header format";
             return empty;
         }
 
@@ -358,7 +358,7 @@ bool check_connect_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode
         response = e->u.connectCommandResponseData.serverResponseOpCode;
         return response == kOBEXResponseCodeSuccessWithFinalBit;
     } else {
-        qCWarning(QT_BT_OSX) << "unexpected event type";
+        qCWarning(QT_BT_DARWIN) << "unexpected event type";
         error = kOBEXGeneralError;
         return false;
     }
@@ -378,7 +378,7 @@ bool check_put_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &re
         return response == kOBEXResponseCodeContinueWithFinalBit ||
                response == kOBEXResponseCodeSuccessWithFinalBit;
     } else {
-        qCWarning(QT_BT_OSX) << "unexpected event type";
+        qCWarning(QT_BT_DARWIN) << "unexpected event type";
         error = kOBEXGeneralError;
         return false;
     }
@@ -395,7 +395,7 @@ bool check_abort_event(const OBEXSessionEvent *e, OBEXError &error, OBEXOpCode &
         response = e->u.abortCommandResponseData.serverResponseOpCode;
         return response == kOBEXResponseCodeSuccessWithFinalBit;
     } else {
-        qCWarning(QT_BT_OSX) << "unexpected event type";
+        qCWarning(QT_BT_DARWIN) << "unexpected event type";
         return false;
     }
 }
@@ -464,13 +464,13 @@ QT_USE_NAMESPACE
         const BluetoothDeviceAddress addr(DarwinBluetooth::iobluetooth_address(deviceAddress));
         device = [[IOBluetoothDevice deviceWithAddress:&addr] retain];
         if (!device) {
-            qCWarning(QT_BT_OSX) << "failed to create an IOBluetoothDevice";
+            qCWarning(QT_BT_DARWIN) << "failed to create an IOBluetoothDevice";
             return self;
         }
 
         session = [[IOBluetoothOBEXSession alloc] initWithDevice:device channelID:port];
         if (!session) {
-            qCWarning(QT_BT_OSX) << "failed to create an OBEX session";
+            qCWarning(QT_BT_DARWIN) << "failed to create an OBEX session";
             return self;
         }
 
@@ -495,7 +495,7 @@ QT_USE_NAMESPACE
 - (OBEXError)OBEXConnect
 {
     if (!session) {
-        qCWarning(QT_BT_OSX) << "invalid session (nil)";
+        qCWarning(QT_BT_DARWIN) << "invalid session (nil)";
         return kOBEXGeneralError;
     }
 
@@ -538,8 +538,8 @@ QT_USE_NAMESPACE
     }
 
     if (currentRequest != OBEXConnect) {
-        qCWarning(QT_BT_OSX) << "called while there is no "
-                                "active connect request";
+        qCWarning(QT_BT_DARWIN) << "called while there is no "
+                                   "active connect request";
         return;
     }
 
@@ -617,8 +617,8 @@ QT_USE_NAMESPACE
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
 
     if (currentRequest != OBEXAbort) {
-        qCWarning(QT_BT_OSX) << "called while there "
-                                "is no ABORT request";
+        qCWarning(QT_BT_DARWIN) << "called while there "
+                                   "is no ABORT request";
         return;
     }
 
@@ -649,13 +649,13 @@ QT_USE_NAMESPACE
     // a payload.
     const qint64 fileSize = input->size();
     if (fileSize <= 0 || fileSize >= std::numeric_limits<uint32_t>::max()) {
-        qCWarning(QT_BT_OSX) << "invalid input file size";
+        qCWarning(QT_BT_DARWIN) << "invalid input file size";
         return kOBEXBadArgumentError;
     }
 
     ObjCStrongReference<NSMutableData> headers([[NSMutableData alloc] init], false);
     if (!headers) {
-        qCWarning(QT_BT_OSX) << "failed to allocate headers";
+        qCWarning(QT_BT_DARWIN) << "failed to allocate headers";
         return kOBEXNoResourcesError;
     }
 
@@ -665,14 +665,14 @@ QT_USE_NAMESPACE
 
     if (connectionIDFound) {
         if (!append_four_byte_header(headers, kOBEXHeaderIDConnectionID, connectionID)) {
-            qCWarning(QT_BT_OSX) << "failed to append connection ID header";
+            qCWarning(QT_BT_DARWIN) << "failed to append connection ID header";
             return kOBEXNoResourcesError;
         }
     }
 
     if (name.length()) {
         if (!append_unicode_header(headers, kOBEXHeaderIDName, name)) {
-            qCWarning(QT_BT_OSX) << "failed to append a unicode string";
+            qCWarning(QT_BT_DARWIN) << "failed to append a unicode string";
             return kOBEXNoResourcesError;
         }
     }
@@ -685,7 +685,7 @@ QT_USE_NAMESPACE
     if (!chunk || ![chunk length]) {
         // We do not support PUT-DELETE (?)
         // At least the first chunk is expected to be non-empty.
-        qCWarning(QT_BT_OSX) << "invalid input stream";
+        qCWarning(QT_BT_DARWIN) << "invalid input stream";
         return kOBEXBadArgumentError;
     }
 
@@ -732,8 +732,8 @@ QT_USE_NAMESPACE
     }
 
     if (currentRequest != OBEXPut) {
-        qCWarning(QT_BT_OSX) << "called while the current "
-                                "request is not a put request";
+        qCWarning(QT_BT_DARWIN) << "called while the current "
+                                   "request is not a put request";
         return;
     }
 
@@ -754,7 +754,7 @@ QT_USE_NAMESPACE
         // 0 for the headers length, no more headers.
         ObjCStrongReference<NSMutableData> chunk(next_data_chunk(*inputStream, session, 0, lastChunk));
         if (!chunk && !lastChunk) {
-            qCWarning(QT_BT_OSX) << "failed to allocate the next memory chunk";
+            qCWarning(QT_BT_DARWIN) << "failed to allocate the next memory chunk";
             return;
         }
 
@@ -770,7 +770,7 @@ QT_USE_NAMESPACE
                                           refCon:nullptr];
 
         if (status != kOBEXSuccess) {
-            qCWarning(QT_BT_OSX) << "failed to send the next memory chunk";
+            qCWarning(QT_BT_DARWIN) << "failed to send the next memory chunk";
             currentRequest = OBEXNoop;
             if (delegate) // Response code is not important here.
                 delegate->OBEXPutError(kOBEXNoResourcesError, 0);
