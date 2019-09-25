@@ -50,7 +50,7 @@
 #elif defined(QT_WIN_BLUETOOTH)
 #include "qbluetoothsocket_win_p.h"
 #elif defined(QT_OSX_BLUETOOTH)
-#include "qbluetoothsocket_osx_p.h"
+#include "qbluetoothsocket_macos_p.h"
 #else
 #include "qbluetoothsocket_dummy_p.h"
 #endif

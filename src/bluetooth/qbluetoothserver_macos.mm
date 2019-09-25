@@ -44,7 +44,7 @@
 // a private header included by private header
 // (incorrectly handled dependencies).
 #include "qbluetoothsocketbase_p.h"
-#include "qbluetoothsocket_osx_p.h"
+#include "qbluetoothsocket_macos_p.h"
 
 #include "qbluetoothlocaldevice.h"
 #include "osx/osxbtutility_p.h"

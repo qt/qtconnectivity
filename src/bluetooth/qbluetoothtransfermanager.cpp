@@ -43,7 +43,7 @@
 #if QT_CONFIG(bluez)
 #include "qbluetoothtransferreply_bluez_p.h"
 #elif QT_OSX_BLUETOOTH
-#include "qbluetoothtransferreply_osx_p.h"
+#include "qbluetoothtransferreply_macos_p.h"
 #else
 #if !defined(QT_ANDROID_BLUETOOTH) && !defined(QT_IOS_BLUETOOTH)
 #include "dummy/dummy_helper_p.h"

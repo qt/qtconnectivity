@@ -161,17 +161,17 @@ qtConfig(bluez) {
 
     include(osx/osxbt.pri)
     OBJECTIVE_SOURCES += \
-        qbluetoothlocaldevice_osx.mm \
+        qbluetoothlocaldevice_macos.mm \
         qbluetoothdevicediscoveryagent_darwin.mm \
-        qbluetoothserviceinfo_osx.mm \
-        qbluetoothservicediscoveryagent_osx.mm \
-        qbluetoothsocket_osx.mm \
-        qbluetoothserver_osx.mm \
-        qbluetoothtransferreply_osx.mm \
+        qbluetoothserviceinfo_macos.mm \
+        qbluetoothservicediscoveryagent_macos.mm \
+        qbluetoothsocket_macos.mm \
+        qbluetoothserver_macos.mm \
+        qbluetoothtransferreply_macos.mm \
         qlowenergycontroller_darwin.mm
 
-    PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
-                       qbluetoothtransferreply_osx_p.h \
+    PRIVATE_HEADERS += qbluetoothsocket_macos_p.h \
+                       qbluetoothtransferreply_macos_p.h \
                        qlowenergycontroller_darwin_p.h
 } else:ios|tvos {
     DEFINES += QT_IOS_BLUETOOTH

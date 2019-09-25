@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qbluetoothservicediscoveryagent.h"
-#include "qbluetoothtransferreply_osx_p.h"
+#include "qbluetoothtransferreply_macos_p.h"
 #include "osx/osxbtobexsession_p.h"
 #include "qbluetoothserviceinfo.h"
 #include "osx/osxbtutility_p.h"

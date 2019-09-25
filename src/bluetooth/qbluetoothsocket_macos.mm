@@ -42,7 +42,7 @@
 // the base class for a private socket) - workaround for
 // dependencies problem.
 #include "qbluetoothsocketbase_p.h"
-#include "qbluetoothsocket_osx_p.h"
+#include "qbluetoothsocket_macos_p.h"
 
 #include "osx/osxbtrfcommchannel_p.h"
 #include "osx/osxbtl2capchannel_p.h"
