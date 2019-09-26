@@ -126,9 +126,9 @@ qtConfig(bluez) {
         DEFINES += QT_BLUEZ_NO_BTLE
         include(dummy/dummy.pri)
         SOURCES += \
-            qlowenergycontroller_p.cpp
+            qlowenergycontroller_dummy.cpp
 
-        PRIVATE_HEADERS += qlowenergycontroller_p.h
+        PRIVATE_HEADERS += qlowenergycontroller_dummy_p.h
     }
 
 } else:android:!android-embedded {
@@ -254,9 +254,9 @@ qtConfig(bluez) {
         qbluetoothservicediscoveryagent_p.cpp \
         qbluetoothsocket_dummy.cpp \
         qbluetoothserver_p.cpp \
-        qlowenergycontroller_p.cpp
+        qlowenergycontroller_dummy.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_p.h \
+    PRIVATE_HEADERS += qlowenergycontroller_dummy_p.h \
                        qbluetoothsocket_dummy_p.h
 }
 
