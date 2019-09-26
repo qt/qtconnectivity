@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTRFCOMMCHANNEL_P_H
-#define OSXBTRFCOMMCHANNEL_P_H
+#ifndef BTRFCOMMCHANNEL_P_H
+#define BTRFCOMMCHANNEL_P_H
 
 //
 //  W A R N I N G
@@ -57,8 +57,6 @@
 
 #include <IOBluetooth/IOBluetooth.h>
 
-@class QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel);
-
 QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
@@ -71,7 +69,7 @@ class ChannelDelegate;
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel) : NSObject<IOBluetoothRFCOMMChannelDelegate>
+@interface QT_MANGLE_NAMESPACE(DarwinBTRFCOMMChannel) : NSObject<IOBluetoothRFCOMMChannelDelegate>
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::ChannelDelegate *)aDelegate;
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::ChannelDelegate *)aDelegate

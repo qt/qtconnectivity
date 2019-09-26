@@ -71,7 +71,7 @@ class ChannelDelegate;
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel) : NSObject<IOBluetoothL2CAPChannelDelegate>
+@interface QT_MANGLE_NAMESPACE(DarwinBTL2CAPChannel) : NSObject<IOBluetoothL2CAPChannelDelegate>
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::ChannelDelegate *)aDelegate;
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::ChannelDelegate *)aDelegate

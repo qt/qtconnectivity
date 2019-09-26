@@ -63,7 +63,7 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTPairing)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTClassicPairing)
 {
     QT_PREPEND_NAMESPACE(QBluetoothAddress) m_targetAddress;
 

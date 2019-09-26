@@ -51,7 +51,7 @@ QT_END_NAMESPACE
 using namespace QT_NAMESPACE;
 #endif
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTConnectionMonitor)
 {
     QT_PREPEND_NAMESPACE(DarwinBluetooth::ConnectionMonitor) *monitor;
     IOBluetoothUserNotification *discoveryNotification;

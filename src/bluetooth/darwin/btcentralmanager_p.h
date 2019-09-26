@@ -132,9 +132,9 @@ typedef QHash<NSObject *, QByteArray> ValueHash;
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) : NSObject<CBCentralManagerDelegate,
-                                                               CBPeripheralDelegate,
-                                                               QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
+@interface QT_MANGLE_NAMESPACE(DarwinBTCentralManager) : NSObject<CBCentralManagerDelegate,
+                                                                  CBPeripheralDelegate,
+                                                                  QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
 - (id)initWith:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::LECBManagerNotifier *)notifier;
 - (void)dealloc;
 

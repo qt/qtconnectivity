@@ -106,7 +106,7 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTCentralManager) (PrivateAPI)
+@interface QT_MANGLE_NAMESPACE(DarwinBTCentralManager) (PrivateAPI)
 
 - (void)watchAfter:(id)object timeout:(DarwinBluetooth::OperationTimeout)type;
 - (bool)objectIsUnderWatch:(id)object operation:(DarwinBluetooth::OperationTimeout)type;
@@ -138,7 +138,7 @@ QT_USE_NAMESPACE
 
 @end
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTCentralManager)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTCentralManager)
 {
 @private
     CBCentralManager *manager;

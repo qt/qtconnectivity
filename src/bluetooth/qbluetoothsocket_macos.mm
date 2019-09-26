@@ -63,8 +63,8 @@ QT_BEGIN_NAMESPACE
 namespace {
 
 using DarwinBluetooth::RetainPolicy;
-using ObjCL2CAPChannel = QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel);
-using ObjCRFCOMMChannel = QT_MANGLE_NAMESPACE(OSXBTRFCOMMChannel);
+using ObjCL2CAPChannel = QT_MANGLE_NAMESPACE(DarwinBTL2CAPChannel);
+using ObjCRFCOMMChannel = QT_MANGLE_NAMESPACE(DarwinBTRFCOMMChannel);
 
 } // unnamed namespace
 

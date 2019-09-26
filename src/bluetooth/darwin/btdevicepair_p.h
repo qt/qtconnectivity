@@ -61,8 +61,6 @@
 
 #include <IOBluetooth/IOBluetooth.h>
 
-@class QT_MANGLE_NAMESPACE(OSXBTPairing);
-
 QT_BEGIN_NAMESPACE
 
 namespace DarwinBluetooth {
@@ -73,7 +71,7 @@ ObjCStrongReference<IOBluetoothDevice> device_with_address(const QBluetoothAddre
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTPairing) : NSObject<IOBluetoothDevicePairDelegate>
+@interface QT_MANGLE_NAMESPACE(DarwinBTClassicPairing) : NSObject<IOBluetoothDevicePairDelegate>
 
 - (id)initWithTarget:(const QBluetoothAddress &)address
       delegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::PairingDelegate) *)object;

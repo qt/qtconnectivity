@@ -407,7 +407,7 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTOBEXSession) (PrivateAPI)
+@interface QT_MANGLE_NAMESPACE(DarwinBTOBEXSession) (PrivateAPI)
 
 // OBEXDisconnect returns void - it's considered to be always
 // successful. These methods are "private API" - no need to expose them,
@@ -417,7 +417,7 @@ QT_USE_NAMESPACE
 
 @end
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTOBEXSession)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTOBEXSession)
 {
     QT_PREPEND_NAMESPACE(DarwinBluetooth)::OBEXSessionDelegate *delegate;
     IOBluetoothDevice *device;
@@ -509,7 +509,7 @@ QT_USE_NAMESPACE
     currentRequest = DarwinBluetooth::OBEXConnect;
 
     const OBEXError status = [session OBEXConnect:kOBEXConnectFlagNone
-                                      maxPacketLength:[QT_MANGLE_NAMESPACE(OSXBTOBEXSession) maxPacketLength]
+                                      maxPacketLength:[QT_MANGLE_NAMESPACE(DarwinBTOBEXSession) maxPacketLength]
                                       optionalHeaders:nullptr
                                       optionalHeadersLength:0
                                       eventSelector:@selector(OBEXConnectHandler:)

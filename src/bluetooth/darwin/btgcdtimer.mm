@@ -47,7 +47,7 @@
 QT_USE_NAMESPACE
 using namespace DarwinBluetooth;
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTGCDTimer) {
+@implementation QT_MANGLE_NAMESPACE(DarwinBTGCDTimer) {
 @private
     qint64 timeoutMS;
     qint64 timeoutStepMS;

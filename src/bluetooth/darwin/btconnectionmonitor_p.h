@@ -60,13 +60,7 @@
 
 #include <IOBluetooth/IOBluetooth.h>
 
-@class QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor);
-
-QT_BEGIN_NAMESPACE
-
-QT_END_NAMESPACE
-
-@interface QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor) : NSObject
+@interface QT_MANGLE_NAMESPACE(DarwinBTConnectionMonitor) : NSObject
 
 - (id)initWithMonitor:(QT_PREPEND_NAMESPACE(DarwinBluetooth::ConnectionMonitor) *)monitor;
 - (void)connectionNotification:(id)notification withDevice:(IOBluetoothDevice *)device;

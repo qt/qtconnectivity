@@ -159,7 +159,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
 }
 
-@interface QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) (PrivateAPI)
+@interface QT_MANGLE_NAMESPACE(DarwinBTPeripheralManager) (PrivateAPI)
 
 - (void)addConnectedCentral:(CBCentral *)central;
 - (void)removeConnectedCentral:(CBCentral *)central;
@@ -177,7 +177,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
 @end
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTPeripheralManager)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTPeripheralManager)
 {
     ObjCScopedPointer<CBPeripheralManager> manager;
     LECBManagerNotifier *notifier;

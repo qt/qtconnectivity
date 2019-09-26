@@ -122,10 +122,10 @@ UUIDList qt_servicesUuids(NSArray *services)
 } // unnamed namespace
 
 #ifndef Q_OS_TVOS
-using ObjCPeripheralManager = QT_MANGLE_NAMESPACE(OSXBTPeripheralManager);
+using ObjCPeripheralManager = QT_MANGLE_NAMESPACE(DarwinBTPeripheralManager);
 #endif // Q_OS_TVOS
 
-using ObjCCentralManager = QT_MANGLE_NAMESPACE(OSXBTCentralManager);
+using ObjCCentralManager = QT_MANGLE_NAMESPACE(DarwinBTCentralManager);
 
 QLowEnergyControllerPrivateDarwin::QLowEnergyControllerPrivateDarwin()
 {
@@ -391,7 +391,7 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
     NSArray *const services = [centralManager.getAs<ObjCCentralManager>() peripheral].services;
     // Now we have to traverse the discovered services tree.
     // Essentially it's an iterative version of more complicated code from the
-    // OSXBTCentralManager's code.
+    // DarwinBTCentralManager's code.
     // All Obj-C entities either auto-release, or guarded by ObjCScopedReferences.
     if (services && [services count]) {
         QMap<QBluetoothUuid, CBService *> discoveredCBServices;

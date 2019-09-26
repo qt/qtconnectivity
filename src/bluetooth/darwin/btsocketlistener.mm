@@ -45,7 +45,7 @@
 
 QT_USE_NAMESPACE
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTSocketListener)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTSocketListener)
 {
     IOBluetoothUserNotification *connectionNotification;
     QT_PREPEND_NAMESPACE(DarwinBluetooth::SocketListener) *delegate;

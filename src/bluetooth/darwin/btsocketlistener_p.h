@@ -57,10 +57,6 @@
 
 #include <IOBluetooth/IOBluetooth.h>
 
-// TODO: use the special macros we have to create an
-// alias for a mangled name.
-@class QT_MANGLE_NAMESPACE(OSXBTSocketListener);
-
 QT_BEGIN_NAMESPACE
 
 namespace DarwinBluetooth {
@@ -71,10 +67,10 @@ class SocketListener;
 
 QT_END_NAMESPACE
 
-// A single OSXBTSocketListener can be started only once with
+// A single DarwinBTSocketListener can be started only once with
 // RFCOMM or L2CAP protocol. It must be deleted to stop listening.
 
-@interface QT_MANGLE_NAMESPACE(OSXBTSocketListener) : NSObject
+@interface QT_MANGLE_NAMESPACE(DarwinBTSocketListener) : NSObject
 
 - (id)initWithListener:(QT_PREPEND_NAMESPACE(DarwinBluetooth::SocketListener) *)aDelegate;
 - (void)dealloc;

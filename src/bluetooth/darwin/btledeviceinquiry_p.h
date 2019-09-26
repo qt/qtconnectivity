@@ -89,7 +89,7 @@ enum LEInquiryState
     ErrorLENotSupported
 };
 
-@interface QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry) : NSObject<CBCentralManagerDelegate, QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
+@interface QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry) : NSObject<CBCentralManagerDelegate, QT_MANGLE_NAMESPACE(GCDTimerDelegate)>
 - (id)initWithNotifier:(LECBManagerNotifier *)aNotifier;
 - (void)dealloc;
 

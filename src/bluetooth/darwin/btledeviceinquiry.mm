@@ -121,12 +121,12 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@interface  QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)(PrivateAPI)
+@interface  QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry)(PrivateAPI)
 - (void)stopScanSafe;
 - (void)stopNotifier;
 @end
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry)
 {
     LECBManagerNotifier *notifier;
     ObjCScopedPointer<CBCentralManager> manager;

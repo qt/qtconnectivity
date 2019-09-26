@@ -121,7 +121,7 @@ struct UpdateRequest
 
 using ValueRange = QPair<NSUInteger, NSUInteger>;
 
-@interface QT_MANGLE_NAMESPACE(OSXBTPeripheralManager) : NSObject<CBPeripheralManagerDelegate>
+@interface QT_MANGLE_NAMESPACE(DarwinBTPeripheralManager) : NSObject<CBPeripheralManagerDelegate>
 
 - (id)initWith:(LECBManagerNotifier *)notifier;
 - (void)dealloc;

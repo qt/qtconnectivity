@@ -47,7 +47,7 @@
 
 QT_USE_NAMESPACE
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTL2CAPChannel)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTL2CAPChannel)
 {
     QT_PREPEND_NAMESPACE(DarwinBluetooth)::ChannelDelegate *delegate;
     IOBluetoothDevice *device;

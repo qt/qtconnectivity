@@ -62,7 +62,7 @@
 
 #include <IOBluetooth/IOBluetooth.h>
 
-@class QT_MANGLE_NAMESPACE(OSXBTSDPInquiry);
+@class QT_MANGLE_NAMESPACE(DarwinBTSDPInquiry);
 
 QT_BEGIN_NAMESPACE
 
@@ -81,7 +81,7 @@ QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device);
 
 QT_END_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(OSXBTSDPInquiry) : NSObject
+@interface QT_MANGLE_NAMESPACE(DarwinBTSDPInquiry) : NSObject
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::SDPInquiryDelegate) *)aDelegate;
 - (void)dealloc;

@@ -60,7 +60,7 @@
 
 // TODO: all this code must be removed in Qt 6?
 
-@class QT_MANGLE_NAMESPACE(OSXBTOBEXSession);
+@class QT_MANGLE_NAMESPACE(DarwinBTOBEXSession);
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +74,7 @@ namespace DarwinBluetooth
 class OBEXSessionDelegate
 {
 public:
-    typedef QT_MANGLE_NAMESPACE(OSXBTOBEXSession) ObjCOBEXSession;
+    typedef QT_MANGLE_NAMESPACE(DarwinBTOBEXSession) ObjCOBEXSession;
 
     virtual ~OBEXSessionDelegate();
 
@@ -105,7 +105,7 @@ QT_END_NAMESPACE
 // OBEX Session, it's a "single-shot" operation as our QBluetoothTransferReply is
 // (it does not have an interface to re-send data or re-use the same transfer reply).
 // It either succeeds or fails and tries to cleanup in any case.
-@interface QT_MANGLE_NAMESPACE(OSXBTOBEXSession) : NSObject
+@interface QT_MANGLE_NAMESPACE(DarwinBTOBEXSession) : NSObject
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::OBEXSessionDelegate) *)aDelegate
       remoteDevice:(const QBluetoothAddress &)deviceAddress channelID:(quint16)port;
@@ -136,4 +136,3 @@ QT_END_NAMESPACE
 @end
 
 #endif
-

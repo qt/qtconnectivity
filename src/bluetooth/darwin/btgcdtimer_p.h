@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef OSXBTGCDTIMER_P_H
-#define OSXBTGCDTIMER_P_H
+#ifndef BTGCDTIMER_P_H
+#define BTGCDTIMER_P_H
 
 //
 //  W A R N I N G
@@ -83,7 +83,7 @@ QT_END_NAMESPACE
 - (void)timeout:(id)sender;
 @end
 
-@interface QT_MANGLE_NAMESPACE(OSXBTGCDTimer) : NSObject
+@interface QT_MANGLE_NAMESPACE(DarwinBTGCDTimer) : NSObject
 - (instancetype)initWithDelegate:(id<QT_MANGLE_NAMESPACE(GCDTimerDelegate)>)delegate;
 - (void)watchAfter:(id)object withTimeoutType:(QT_PREPEND_NAMESPACE(DarwinBluetooth)::OperationTimeout)type;
 - (void)startWithTimeout:(qint64)ms step:(qint64)stepMS;
@@ -97,12 +97,12 @@ QT_BEGIN_NAMESPACE
 
 namespace DarwinBluetooth {
 
-using GCDTimerObjC = QT_MANGLE_NAMESPACE(OSXBTGCDTimer);
+using GCDTimerObjC = QT_MANGLE_NAMESPACE(DarwinBTGCDTimer);
 using GCDTimer = ObjCStrongReference<GCDTimerObjC>;
 
 } // namespace DarwinBluetooth
 
 QT_END_NAMESPACE
 
-#endif // OSXBTGCDTIMER_P_H
+#endif // BTGCDTIMER_P_H
 

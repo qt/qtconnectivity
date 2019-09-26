@@ -99,12 +99,12 @@ private:
     using HostController = DarwinBluetooth::ObjCScopedPointer<IOBluetoothHostController>;
     HostController hostController;
 
-    using ObjCPairingRequest = QT_MANGLE_NAMESPACE(OSXBTPairing);
+    using ObjCPairingRequest = QT_MANGLE_NAMESPACE(DarwinBTClassicPairing);
     using PairingRequest = DarwinBluetooth::ObjCStrongReference<ObjCPairingRequest>;
     using RequestMap = QMap<QBluetoothAddress, PairingRequest>;
 
     RequestMap pairingRequests;
-    using ObjCConnectionMonitor = QT_MANGLE_NAMESPACE(OSXBTConnectionMonitor);
+    using ObjCConnectionMonitor = QT_MANGLE_NAMESPACE(DarwinBTConnectionMonitor);
     DarwinBluetooth::ObjCScopedPointer<ObjCConnectionMonitor> connectionMonitor;
     QList<QBluetoothAddress> discoveredDevices;
 };

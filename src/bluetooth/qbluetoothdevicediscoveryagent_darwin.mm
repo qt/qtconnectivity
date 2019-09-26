@@ -85,10 +85,10 @@ void registerQDeviceDiscoveryMetaType()
     }
 }
 #ifdef Q_OS_MACOS
-using InquiryObjC = QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry);
+using InquiryObjC = QT_MANGLE_NAMESPACE(DarwinBTClassicDeviceInquiry);
 #endif // Q_OS_MACOS
 
-using LEInquiryObjC = QT_MANGLE_NAMESPACE(OSXBTLEDeviceInquiry);
+using LEInquiryObjC = QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry);
 
 } //namespace
 

@@ -186,7 +186,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     OBEXSession newSession([[ObjCOBEXSession alloc] initWithDelegate:this
                             remoteDevice:device channelID:channelID]);
     if (!newSession) {
-        qCWarning(QT_BT_DARWIN) << "failed to allocate OSXBTOBEXSession object";
+        qCWarning(QT_BT_DARWIN) << "failed to allocate DarwinBTOBEXSession object";
 
         setReplyError(QBluetoothTransferReply::UnknownError,
                       QCoreApplication::translate(TRANSFER_REPLY, TR_SESSION_NO_START));

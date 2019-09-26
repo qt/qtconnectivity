@@ -60,7 +60,7 @@
 
 #include <IOBluetooth/IOBluetooth.h>
 
-@interface QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry) : NSObject<IOBluetoothDeviceInquiryDelegate>
+@interface QT_MANGLE_NAMESPACE(DarwinBTClassicDeviceInquiry) : NSObject<IOBluetoothDeviceInquiryDelegate>
 
 - (id)initWithDelegate:(QT_PREPEND_NAMESPACE(DarwinBluetooth::DeviceInquiryDelegate) *)delegate;
 - (void)dealloc;

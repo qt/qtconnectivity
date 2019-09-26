@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 namespace {
 
 using DarwinBluetooth::RetainPolicy;
-using ObjCServiceInquiry = QT_MANGLE_NAMESPACE(OSXBTSDPInquiry);
+using ObjCServiceInquiry = QT_MANGLE_NAMESPACE(DarwinBTSDPInquiry);
 
 }
 

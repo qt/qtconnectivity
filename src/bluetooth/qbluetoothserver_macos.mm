@@ -69,7 +69,7 @@ namespace {
 
 using DarwinBluetooth::RetainPolicy;
 using ServiceInfo = QBluetoothServiceInfo;
-using ObjCListener = QT_MANGLE_NAMESPACE(OSXBTSocketListener);
+using ObjCListener = QT_MANGLE_NAMESPACE(DarwinBTSocketListener);
 
 QMap<quint16, QBluetoothServerPrivate *> &busyPSMs()
 {

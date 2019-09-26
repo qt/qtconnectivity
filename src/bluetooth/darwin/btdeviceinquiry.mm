@@ -45,7 +45,7 @@
 
 QT_USE_NAMESPACE
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTDeviceInquiry)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTClassicDeviceInquiry)
 {
     IOBluetoothDeviceInquiry *m_inquiry;
     bool m_active;

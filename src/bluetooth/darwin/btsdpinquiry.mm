@@ -208,7 +208,7 @@ QT_USE_NAMESPACE
 
 using namespace DarwinBluetooth;
 
-@implementation QT_MANGLE_NAMESPACE(OSXBTSDPInquiry)
+@implementation QT_MANGLE_NAMESPACE(DarwinBTSDPInquiry)
 {
     QT_PREPEND_NAMESPACE(DarwinBluetooth::SDPInquiryDelegate) *delegate;
     IOBluetoothDevice *device;
