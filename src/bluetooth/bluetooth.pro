@@ -5,7 +5,7 @@ DEFINES += QT_NO_FOREACH
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
 OTHER_FILES += doc/src/*.qdoc   # show .qdoc files in Qt Creator
 
-PUBLIC_HEADERS += \
+HEADERS += \
     qtbluetoothglobal.h \
     qbluetoothaddress.h\
     qbluetoothhostinfo.h \
@@ -30,9 +30,7 @@ PUBLIC_HEADERS += \
     qlowenergyadvertisingdata.h \
     qlowenergyadvertisingparameters.h \
     qlowenergyconnectionparameters.h \
-    qlowenergycontroller.h
-
-PRIVATE_HEADERS += \
+    qlowenergycontroller.h \
     qtbluetoothglobal_p.h \
     qbluetoothaddress_p.h\
     qbluetoothhostinfo_p.h \
@@ -94,7 +92,7 @@ qtConfig(bluez) {
 
     include(bluez/bluez.pri)
 
-    PRIVATE_HEADERS += \
+    HEADERS += \
         qbluetoothtransferreply_bluez_p.h \
         qbluetoothsocket_bluez_p.h \
         qbluetoothsocket_bluezdbus_p.h
@@ -118,7 +116,7 @@ qtConfig(bluez) {
             lecmaccalculator.cpp \
             qlowenergycontroller_bluezdbus.cpp
 
-        PRIVATE_HEADERS += qlowenergycontroller_bluezdbus_p.h \
+        HEADERS += qlowenergycontroller_bluezdbus_p.h \
                            qlowenergycontroller_bluez_p.h
 
         qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
@@ -128,7 +126,7 @@ qtConfig(bluez) {
         SOURCES += \
             qlowenergycontroller_dummy.cpp
 
-        PRIVATE_HEADERS += qlowenergycontroller_dummy_p.h
+        HEADERS += qlowenergycontroller_dummy_p.h
     }
 
 } else:android:!android-embedded {
@@ -152,7 +150,7 @@ qtConfig(bluez) {
         qbluetoothserver_android.cpp \
         qlowenergycontroller_android.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_android_p.h \
+    HEADERS += qlowenergycontroller_android_p.h \
                        qbluetoothsocket_android_p.h
 } else:osx {
     QT_PRIVATE = concurrent
@@ -170,7 +168,7 @@ qtConfig(bluez) {
         qbluetoothtransferreply_osx.mm \
         qlowenergycontroller_darwin.mm
 
-    PRIVATE_HEADERS += qbluetoothsocket_osx_p.h \
+    HEADERS += qbluetoothsocket_osx_p.h \
                        qbluetoothtransferreply_osx_p.h \
                        qlowenergycontroller_darwin_p.h
 } else:ios|tvos {
@@ -181,7 +179,7 @@ qtConfig(bluez) {
         qbluetoothdevicediscoveryagent_darwin.mm \
         qlowenergycontroller_darwin.mm
 
-    PRIVATE_HEADERS += \
+    HEADERS += \
         qlowenergycontroller_darwin_p.h \
         qbluetoothsocket_dummy_p.h
 
@@ -212,13 +210,13 @@ qtConfig(bluez) {
         qbluetoothutils_winrt.cpp \
         qlowenergycontroller_winrt.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_winrt_p.h \
+    HEADERS += qlowenergycontroller_winrt_p.h \
                        qbluetoothsocket_winrt_p.h \
                        qbluetoothutils_winrt_p.h
 
     qtConfig(winrt_btle_no_pairing) {
         SOURCES += qlowenergycontroller_winrt_new.cpp
-        PRIVATE_HEADERS += qlowenergycontroller_winrt_new_p.h
+        HEADERS += qlowenergycontroller_winrt_new_p.h
     }
 
     lessThan(WINDOWS_SDK_VERSION, 14393) {
@@ -241,7 +239,7 @@ qtConfig(bluez) {
         qbluetoothserver_win.cpp \
         qlowenergycontroller_win.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_win_p.h \
+    HEADERS += qlowenergycontroller_win_p.h \
                        qbluetoothsocket_win_p.h
 } else {
     message("Unsupported Bluetooth platform, will not build a working QtBluetooth library.")
@@ -256,7 +254,7 @@ qtConfig(bluez) {
         qbluetoothserver_p.cpp \
         qlowenergycontroller_dummy.cpp
 
-    PRIVATE_HEADERS += qlowenergycontroller_dummy_p.h \
+    HEADERS += qlowenergycontroller_dummy_p.h \
                        qbluetoothsocket_dummy_p.h
 }
 
@@ -267,7 +265,5 @@ winrt {
 }
 
 OTHER_FILES +=
-
-HEADERS += $$PUBLIC_HEADERS $$PRIVATE_HEADERS
 
 load(qt_module)
