@@ -285,33 +285,33 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
                 hr = dataReader->ReadByte(&value);
                 Q_ASSERT_SUCCEEDED(hr);
                 info.setAttribute(key, value);
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "UINT8" << hex << value;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UINT8" << Qt::hex << value;
             } else if (type == TYPE_UINT16) {
                 quint16 value;
                 hr = dataReader->ReadUInt16(&value);
                 Q_ASSERT_SUCCEEDED(hr);
                 info.setAttribute(key, value);
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "UINT16" << hex << value;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UINT16" << Qt::hex << value;
             } else if (type == TYPE_UINT32) {
                 quint32 value;
                 hr = dataReader->ReadUInt32(&value);
                 Q_ASSERT_SUCCEEDED(hr);
                 info.setAttribute(key, value);
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "UINT32" << hex << value;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UINT32" << Qt::hex << value;
             } else if (type == TYPE_SHORT_UUID) {
                 quint16 value;
                 hr = dataReader->ReadUInt16(&value);
                 Q_ASSERT_SUCCEEDED(hr);
                 const QBluetoothUuid uuid(value);
                 info.setAttribute(key, uuid);
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "UUID" << hex << uuid;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UUID" << Qt::hex << uuid;
             } else if (type == TYPE_LONG_UUID) {
                 GUID value;
                 hr = dataReader->ReadGuid(&value);
                 Q_ASSERT_SUCCEEDED(hr);
                 const QBluetoothUuid uuid(value);
                 info.setAttribute(key, uuid);
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "UUID" << hex << uuid;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UUID" << Qt::hex << uuid;
             } else if (type == TYPE_STRING) {
                 BYTE length;
                 hr = dataReader->ReadByte(&length);
@@ -321,18 +321,18 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
                 Q_ASSERT_SUCCEEDED(hr);
                 const QString str = QString::fromWCharArray(WindowsGetStringRawBuffer(value.Get(), nullptr));
                 info.setAttribute(key, str);
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "STRING" << str;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "STRING" << str;
             } else if (type == TYPE_SEQUENCE) {
                 bool ok;
                 QBluetoothServiceInfo::Sequence sequence = readSequence(dataReader, &ok, nullptr);
                 if (ok) {
                     info.setAttribute(key, sequence);
-                    qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "SEQUENCE" << sequence;
+                    qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "SEQUENCE" << sequence;
                 } else {
-                    qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type << "SEQUENCE ERROR";
+                    qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "SEQUENCE ERROR";
                 }
             } else {
-                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << hex << key << "TYPE" << dec << type;
+                qCDebug(QT_BT_WINRT) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type;
             }
             hr = iterator->MoveNext(&current);
         }

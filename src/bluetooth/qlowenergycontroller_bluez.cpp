@@ -236,7 +236,7 @@ static void dumpErrorInformation(const QByteArray &response)
     }
 
     qCDebug(QT_BT_BLUEZ) << "Error1:" << errorString
-             << "last command:" << hex << lastCommand
+             << "last command:" << Qt::hex << lastCommand
              << "handle:" << handle;
 }
 
@@ -351,7 +351,7 @@ void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
         const Request currentRequest = openRequests.dequeue();
         requestPending = false; // reset pending flag
 
-        qCWarning(QT_BT_BLUEZ).nospace() << "****** Request type 0x" << hex << currentRequest.command
+        qCWarning(QT_BT_BLUEZ).nospace() << "****** Request type 0x" << Qt::hex << currentRequest.command
                            << " to server/peripheral timed out";
         qCWarning(QT_BT_BLUEZ) << "****** Looks like the characteristic or descriptor does NOT act in"
                                <<  "accordance to Bluetooth 4.x spec.";
@@ -408,7 +408,7 @@ void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
         default:
             // not a command used by central role implementation
             qCWarning(QT_BT_BLUEZ) << "Missing response for ATT peripheral command: "
-                                   << hex << command;
+                                   << Qt::hex << command;
             break;
         }
 
@@ -983,7 +983,7 @@ void QLowEnergyControllerPrivateBluez::sendPacket(const QByteArray &packet)
     // This packet is effectively discarded but the controller can still recover
 
     if (result == -1) {
-        qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP packet:" << hex
+        qCDebug(QT_BT_BLUEZ) << "Cannot write L2CP packet:" << Qt::hex
                              << packet.toHex()
                              << l2cpSocket->errorString();
         setError(QLowEnergyController::NetworkError);
@@ -1000,7 +1000,7 @@ void QLowEnergyControllerPrivateBluez::sendNextPendingRequest()
         return;
 
     const Request &request = openRequests.head();
-//    qCDebug(QT_BT_BLUEZ) << "Sending request, type:" << hex << request.command
+//    qCDebug(QT_BT_BLUEZ) << "Sending request, type:" << Qt::hex << request.command
 //             << request.payload.toHex();
 
     requestPending = true;
@@ -1025,7 +1025,7 @@ QLowEnergyHandle parseReadByTypeCharDiscovery(
     else
         charData->uuid = convert_uuid128((quint128 *)&data[5]);
 
-    qCDebug(QT_BT_BLUEZ) << "Found handle:" << hex << attributeHandle
+    qCDebug(QT_BT_BLUEZ) << "Found handle:" << Qt::hex << attributeHandle
              << "properties:" << charData->properties
              << "value handle:" << charData->valueHandle
              << "uuid:" << charData->uuid.toString();
@@ -1053,7 +1053,7 @@ QLowEnergyHandle parseReadByTypeIncludeDiscovery(
     else
         foundServices->append(convert_uuid128((quint128 *) &data[6]));
 
-    qCDebug(QT_BT_BLUEZ) << "Found included service: " << hex
+    qCDebug(QT_BT_BLUEZ) << "Found included service: " << Qt::hex
                          << attributeHandle << "uuid:" << *foundServices;
 
     return attributeHandle;
@@ -1130,7 +1130,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             offset += elementLength;
 
 
-            qCDebug(QT_BT_BLUEZ) << "Found uuid:" << uuid << "start handle:" << hex
+            qCDebug(QT_BT_BLUEZ) << "Found uuid:" << uuid << "start handle:" << Qt::hex
                      << start << "end handle:" << end;
 
             QLowEnergyServicePrivate *priv = new QLowEnergyServicePrivate();
@@ -1437,13 +1437,13 @@ void QLowEnergyControllerPrivateBluez::processReply(
             quint16 shortUuid = uuid.toUInt16(&ok);
             if (ok && shortUuid >= QLowEnergyServicePrivate::PrimaryService
                    && shortUuid <= QLowEnergyServicePrivate::Characteristic){
-                qCDebug(QT_BT_BLUEZ) << "Suppressing primary/characteristic" << hex << shortUuid;
+                qCDebug(QT_BT_BLUEZ) << "Suppressing primary/characteristic" << Qt::hex << shortUuid;
                 continue;
             }
 
             // ignore value handle
             if (descriptorHandle == p->characteristicList[charHandle].valueHandle) {
-                qCDebug(QT_BT_BLUEZ) << "Suppressing char handle" << hex << descriptorHandle;
+                qCDebug(QT_BT_BLUEZ) << "Suppressing char handle" << Qt::hex << descriptorHandle;
                 continue;
             }
 
@@ -1454,7 +1454,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
 
             qCDebug(QT_BT_BLUEZ) << "Descriptor found, uuid:"
                                  << uuid.toString()
-                                 << "descriptor handle:" << hex << descriptorHandle;
+                                 << "descriptor handle:" << Qt::hex << descriptorHandle;
         }
 
         const QLowEnergyHandle nextPotentialHandle = descriptorHandle + 1;
@@ -1615,7 +1615,7 @@ void QLowEnergyControllerPrivateBluez::sendReadByGroupRequest(
 
     QByteArray data(GRP_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  GRP_TYPE_REQ_HEADER_SIZE);
-    qCDebug(QT_BT_BLUEZ) << "Sending read_by_group_type request, startHandle:" << hex
+    qCDebug(QT_BT_BLUEZ) << "Sending read_by_group_type request, startHandle:" << Qt::hex
              << start << "endHandle:" << end << type;
 
     Request request;
@@ -1653,7 +1653,7 @@ void QLowEnergyControllerPrivateBluez::sendReadByTypeRequest(
 
     QByteArray data(READ_BY_TYPE_REQ_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_BY_TYPE_REQ_HEADER_SIZE);
-    qCDebug(QT_BT_BLUEZ) << "Sending read_by_type request, startHandle:" << hex
+    qCDebug(QT_BT_BLUEZ) << "Sending read_by_type request, startHandle:" << Qt::hex
              << nextHandle << "endHandle:" << serviceData->endHandle
              << "type:" << attributeType << "packet:" << data.toHex();
 
@@ -1783,7 +1783,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValuesByOffset(
     if (descriptorHandle) {
         handleToRead = descriptorHandle;
         qCDebug(QT_BT_BLUEZ) << "Reading descriptor via blob request"
-                             << hex << descriptorHandle;
+                             << Qt::hex << descriptorHandle;
     } else {
         //charHandle is not the char's value handle
         QSharedPointer<QLowEnergyServicePrivate> service =
@@ -1792,7 +1792,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValuesByOffset(
                 && service->characteristicList.contains(charHandle)) {
             handleToRead = service->characteristicList[charHandle].valueHandle;
             qCDebug(QT_BT_BLUEZ) << "Reading characteristic via blob request"
-                                 << hex << handleToRead;
+                                 << Qt::hex << handleToRead;
         } else {
             Q_ASSERT(false);
         }
@@ -1837,9 +1837,9 @@ void QLowEnergyControllerPrivateBluez::processUnsolicitedReply(const QByteArray 
 
     if (QT_BT_BLUEZ().isDebugEnabled()) {
         if (isNotification)
-            qCDebug(QT_BT_BLUEZ) << "Change notification for handle" << hex << changedHandle;
+            qCDebug(QT_BT_BLUEZ) << "Change notification for handle" << Qt::hex << changedHandle;
         else
-            qCDebug(QT_BT_BLUEZ) << "Change indication for handle" << hex << changedHandle;
+            qCDebug(QT_BT_BLUEZ) << "Change indication for handle" << Qt::hex << changedHandle;
     }
 
     const QLowEnergyCharacteristic ch = characteristicForHandle(changedHandle);
@@ -1966,7 +1966,7 @@ void QLowEnergyControllerPrivateBluez::discoverNextDescriptor(
     Q_ASSERT(!pendingCharHandles.isEmpty());
     Q_ASSERT(!serviceData.isNull());
 
-    qCDebug(QT_BT_BLUEZ) << "Sending find_info request" << hex
+    qCDebug(QT_BT_BLUEZ) << "Sending find_info request" << Qt::hex
                          << pendingCharHandles << startingHandle;
 
     quint8 packet[FIND_INFO_REQUEST_HEADER_SIZE];
@@ -2019,7 +2019,7 @@ void QLowEnergyControllerPrivateBluez::sendNextPrepareWriteRequest(
     putBtData(offset, &packet[3]); // offset into newValue
 
     qCDebug(QT_BT_BLUEZ) << "Writing long characteristic (prepare):"
-                         << hex << handle;
+                         << Qt::hex << handle;
 
 
     const int maxAvailablePayload = mtuSize - PREPARE_WRITE_HEADER_SIZE;
@@ -2065,7 +2065,7 @@ void QLowEnergyControllerPrivateBluez::sendExecuteWriteRequest(
     memcpy(data.data(), packet, EXECUTE_WRITE_HEADER_SIZE);
 
     qCDebug(QT_BT_BLUEZ) << "Sending Execute Write Request for long characteristic value"
-                         << hex << attrHandle;
+                         << Qt::hex << attrHandle;
 
     Request request;
     request.payload = data;
@@ -2143,7 +2143,7 @@ void QLowEnergyControllerPrivateBluez::readCharacteristic(
     QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
 
-    qCDebug(QT_BT_BLUEZ) << "Targeted reading characteristic" << hex << charHandle;
+    qCDebug(QT_BT_BLUEZ) << "Targeted reading characteristic" << Qt::hex << charHandle;
 
     Request request;
     request.payload = data;
@@ -2178,7 +2178,7 @@ void QLowEnergyControllerPrivateBluez::readDescriptor(
     QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet,  READ_REQUEST_HEADER_SIZE);
 
-    qCDebug(QT_BT_BLUEZ) << "Targeted reading descriptor" << hex << descriptorHandle;
+    qCDebug(QT_BT_BLUEZ) << "Targeted reading descriptor" << Qt::hex << descriptorHandle;
 
     Request request;
     request.payload = data;
@@ -2714,7 +2714,7 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForCentral(const QShar
         break;
     }
 
-    qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << hex << charHandle
+    qCDebug(QT_BT_BLUEZ) << "Writing characteristic" << Qt::hex << charHandle
                          << "(size:" << packet.count() << "with response:"
                          << (mode == QLowEnergyService::WriteWithResponse)
                          << "signed:" << (mode == QLowEnergyService::WriteSigned) << ")";
@@ -2774,7 +2774,7 @@ void QLowEnergyControllerPrivateBluez::writeDescriptorForCentral(
     memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
     memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
 
-    qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << hex << descriptorHandle
+    qCDebug(QT_BT_BLUEZ) << "Writing descriptor" << Qt::hex << descriptorHandle
                          << "(size:" << size << ")";
 
     Request request;

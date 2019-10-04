@@ -169,7 +169,7 @@ bool LeCmacCalculator::verify(const QByteArray &message, const quint128 &csrk,
 #ifdef CONFIG_LINUX_CRYPTO_API
     const quint64 actualMac = calculateMac(message, csrk);
     if (actualMac != expectedMac) {
-        qCWarning(QT_BT_BLUEZ) << hex << "signature verification failed: calculated mac:"
+        qCWarning(QT_BT_BLUEZ) << Qt::hex << "signature verification failed: calculated mac:"
                                << actualMac << "expected mac:" << expectedMac;
         return false;
     }

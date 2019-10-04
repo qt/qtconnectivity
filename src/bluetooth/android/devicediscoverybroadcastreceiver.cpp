@@ -72,7 +72,7 @@ static QBitArray initializeMinorCaches()
     case QBluetoothDeviceInfo::MiscellaneousDevice:
     case QBluetoothDeviceInfo::ComputerDevice:
     case QBluetoothDeviceInfo::PhoneDevice:
-    case QBluetoothDeviceInfo::LANAccessDevice:
+    case QBluetoothDeviceInfo::NetworkDevice:
     case QBluetoothDeviceInfo::AudioVideoDevice:
     case QBluetoothDeviceInfo::PeripheralDevice:
     case QBluetoothDeviceInfo::ImagingDevice:
@@ -114,7 +114,7 @@ static const MajorClassJavaToQtMapping majorMappings[] = {
     { "HEALTH", QBluetoothDeviceInfo::HealthDevice },
     { "IMAGING", QBluetoothDeviceInfo::ImagingDevice },
     { "MISC", QBluetoothDeviceInfo::MiscellaneousDevice },
-    { "NETWORKING", QBluetoothDeviceInfo::LANAccessDevice },
+    { "NETWORKING", QBluetoothDeviceInfo::NetworkDevice },
     { "PERIPHERAL", QBluetoothDeviceInfo::PeripheralDevice },
     { "PHONE", QBluetoothDeviceInfo::PhoneDevice },
     { "TOY", QBluetoothDeviceInfo::ToyDevice },
@@ -130,7 +130,7 @@ static const int minorIndexSizes[] = {
   61,  // QBluetoothDevice::MiscellaneousDevice
   18,  // QBluetoothDevice::ComputerDevice
   35,  // QBluetoothDevice::PhoneDevice
-  62,  // QBluetoothDevice::LANAccessDevice
+  62,  // QBluetoothDevice::NetworkDevice
   0,  // QBluetoothDevice::AudioVideoDevice
   56,  // QBluetoothDevice::PeripheralDevice
   63,  // QBluetoothDevice::ImagingDEvice
@@ -227,7 +227,7 @@ static const MinorClassJavaToQtMapping minorMappings[] = {
     // QBluetoothDevice::Miscellaneous
     { nullptr, 0 }, // index 61 & separator
 
-    // QBluetoothDevice::LANAccessDevice
+    // QBluetoothDevice::NetworkDevice
     { nullptr, 0 }, // index 62 & separator
 
     // QBluetoothDevice::ImagingDevice

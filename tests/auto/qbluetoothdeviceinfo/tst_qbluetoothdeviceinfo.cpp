@@ -154,21 +154,21 @@ void tst_QBluetoothDeviceInfo::tst_construction_data()
     QTest::newRow("0x000300 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000300)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
-        << QBluetoothDeviceInfo::LANAccessDevice
+        << QBluetoothDeviceInfo::NetworkDevice
         << quint8(QBluetoothDeviceInfo::NetworkFullService)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration
         << leDeviceUuid;
     QTest::newRow("0x000320 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x000320)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
-        << QBluetoothDeviceInfo::LANAccessDevice
+        << QBluetoothDeviceInfo::NetworkDevice
         << quint8(QBluetoothDeviceInfo::NetworkLoadFactorOne)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration
         << leDeviceUuid;
     QTest::newRow("0x0003E0 COD") << QBluetoothAddress("000000000000") << "My Bluetooth Device"
         << quint32(0x0003E0)
         << QBluetoothDeviceInfo::ServiceClasses(QBluetoothDeviceInfo::NoService)
-        << QBluetoothDeviceInfo::LANAccessDevice
+        << QBluetoothDeviceInfo::NetworkDevice
         << quint8(QBluetoothDeviceInfo::NetworkNoService)
         << QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration
         << leDeviceUuid;

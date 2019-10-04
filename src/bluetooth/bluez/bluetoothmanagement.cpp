@@ -254,7 +254,7 @@ void BluetoothManagement::_q_readNotifier()
         }
         default:
             qCDebug(QT_BT_BLUEZ) << "BluetoothManagement: Ignored event:"
-                                 << hex << qFromLittleEndian(hdr->cmdCode);
+                                 << Qt::hex << qFromLittleEndian(hdr->cmdCode);
             break;
         }
 
