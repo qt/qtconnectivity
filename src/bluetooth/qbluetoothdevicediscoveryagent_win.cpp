@@ -541,11 +541,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevice(
     } else {
         qCDebug(QT_BT_WINDOWS) << "Updating device:" << deviceIt->name() << deviceIt->address();
         // merge service uuids
-        QList<QBluetoothUuid> uuids = deviceIt->serviceUuids();
+        QVector<QBluetoothUuid> uuids = deviceIt->serviceUuids();
         uuids.append(foundDevice.serviceUuids());
-        const QSet<QBluetoothUuid> uuidSet = uuids.toSet();
+        const QSet<QBluetoothUuid> uuidSet(uuids.begin(), uuids.end());
         if (deviceIt->serviceUuids().count() != uuidSet.count())
-            deviceIt->setServiceUuids(uuidSet.toList().toVector());
+            deviceIt->setServiceUuids(uuidSet.values().toVector());
         if (deviceIt->coreConfigurations() != foundDevice.coreConfigurations())
             deviceIt->setCoreConfigurations(
                         QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);
