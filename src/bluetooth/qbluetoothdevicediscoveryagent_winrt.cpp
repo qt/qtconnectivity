@@ -440,8 +440,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
         hr = deviceFromIdOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothDevice *>>
                                                   ([thisPointer](IAsyncOperation<BluetoothDevice *> *op, AsyncStatus status)
         {
-            if (status == Completed && thisPointer)
-                thisPointer->onPairedClassicBluetoothDeviceFoundAsync(op, status);
+            if (thisPointer) {
+                if (status == Completed)
+                    thisPointer->onPairedClassicBluetoothDeviceFoundAsync(op, status);
+                --thisPointer->m_pendingPairedDevices;
+            }
             return S_OK;
         }).Get());
         if (FAILED(hr)) {
@@ -474,8 +477,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTR
         hr = deviceFromIdOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothLEDevice *>>
                                                   ([thisPointer] (IAsyncOperation<BluetoothLEDevice *> *op, AsyncStatus status)
         {
-            if (status == Completed && thisPointer)
-                thisPointer->onPairedBluetoothLEDeviceFoundAsync(op, status);
+            if (thisPointer) {
+                if (status == Completed)
+                    thisPointer->onPairedBluetoothLEDeviceFoundAsync(op, status);
+                --thisPointer->m_pendingPairedDevices;
+            }
             return S_OK;
         }).Get());
         if (FAILED(hr)) {
