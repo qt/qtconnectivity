@@ -4,7 +4,7 @@ SOURCES += darwin/uistrings.cpp \
            darwin/btledeviceinquiry.mm \
            darwin/btcentralmanager.mm
 
-PRIVATE_HEADERS += darwin/uistrings_p.h \
+HEADERS += darwin/uistrings_p.h \
                    darwin/btgcdtimer_p.h \
                    darwin/btraii_p.h \
                    darwin/btdelegates_p.h \
@@ -20,7 +20,7 @@ OBJECTIVE_SOURCES += darwin/btgcdtimer.mm \
 #QMAKE_CXXFLAGS_WARN_ON += -Wno-nullability-completeness
 
 macos {
-    PRIVATE_HEADERS += darwin/btdevicepair_p.h \
+    HEADERS += darwin/btdevicepair_p.h \
                        darwin/btdeviceinquiry_p.h \
                        darwin/btconnectionmonitor_p.h \
                        darwin/btsdpinquiry_p.h \
@@ -42,7 +42,7 @@ macos {
 }
 
 macos | ios {
-    PRIVATE_HEADERS += darwin/btperipheralmanager_p.h
+    HEADERS += darwin/btperipheralmanager_p.h
 
     OBJECTIVE_SOURCES += darwin/btperipheralmanager.mm
 }
