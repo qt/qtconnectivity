@@ -1,2 +1,2 @@
-PRIVATE_HEADERS += \
+HEADERS += \
     windows/qwinlowenergybluetooth_p.h

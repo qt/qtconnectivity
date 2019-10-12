@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontroller_p.h"
+#include "qlowenergycontroller_dummy_p.h"
 #include "dummy/dummy_helper_p.h"
 
 QT_BEGIN_NAMESPACE
