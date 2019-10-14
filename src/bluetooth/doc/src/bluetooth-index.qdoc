@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -42,7 +42,7 @@ Currently, the API is supported on the following platforms:
     \li \l {Qt for iOS}{iOS}
     \li \l {Qt for Linux/X11}{Linux (BlueZ 4.x/5.x)}
     \li \l \macos
-    \li \l {Qt for WinRT}{WinRT}
+    \li \l {Qt for UWP}{UWP (Universal Windows Platform)}
     \li \l {Qt for Windows}{Win32}
 \row
     \li Classic Bluetooth
@@ -80,8 +80,8 @@ Currently, the API is supported on the following platforms:
 
 Qt 5.14 adds a native Win32 port supporting Classic Bluetooth on Windows 7 or newer,
 and Bluetooth LE on Windows 8 or newer. It must be enabled at build time by configuration
-option -native-win32-bluetooth. The WinRT backend is used by default if this option is not
-set and the Win32 target platform supports the required WinRT APIs (minimal requirement is
+option -native-win32-bluetooth. The UWP backend is used by default if this option is not
+set and the Win32 target platform supports the required UWP APIs (minimal requirement is
 Windows 10 version 1507, with slightly improved service discovery since Windows 10 version
 1607).
 
@@ -168,7 +168,8 @@ The \l QtBluetooth module exports the following
      \li Enables logging of the QtBluetooth QML implementation
 \row
     \li qt.bluetooth.winrt
-    \li Enables logging of the \l {Qt for WinRT} {WinRT} implementation
+    \li Enables logging of the \l {Qt for UWP}{UWP (Universal Windows Platform)}
+        implementation
 \row
     \li qt.bluetooth.windows
     \li Enables logging of the \l {Qt for Windows} {Win32} implementation
