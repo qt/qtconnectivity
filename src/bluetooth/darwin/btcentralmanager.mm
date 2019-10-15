@@ -1229,13 +1229,7 @@ QT_USE_NAMESPACE
 #pragma clang diagnostic ignored "-Wunguarded-availability-new"
 
     const auto state = central.state;
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
-    if (state == CBManagerStateUnknown
-        || state == CBManagerStateResetting) {
-#else
-    if (state == CBCentralManagerStateUnknown
-        || state == CBCentralManagerStateResetting) {
-#endif
+    if (state == CBManagerStateUnknown || state == CBManagerStateResetting) {
         // We still have to wait, docs say:
         // "The current state of the central manager is unknown;
         // an update is imminent." or
@@ -1245,11 +1239,7 @@ QT_USE_NAMESPACE
     }
 
     // Let's check some states we do not like first:
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
-#else
-    if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
-#endif
         if (managerState == CentralManagerUpdating) {
             // We tried to connect just to realize, LE is not supported. Report this.
             managerState = CentralManagerIdle;
@@ -1266,12 +1256,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStatePoweredOff) {
-#else
-    if (state == CBCentralManagerStatePoweredOff) {
-#endif
-
         if (managerState == CentralManagerUpdating) {
             managerState = CentralManagerIdle;
             // I've seen this instead of Unsupported on OS X.
@@ -1288,11 +1273,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStatePoweredOn) {
-#else
-    if (state == CBCentralManagerStatePoweredOn) {
-#endif
         if (managerState == CentralManagerUpdating && !disconnectPending) {
             managerState = CentralManagerIdle;
             [self retrievePeripheralAndConnect];

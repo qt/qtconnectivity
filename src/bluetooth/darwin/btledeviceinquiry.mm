@@ -220,11 +220,7 @@ QT_USE_NAMESPACE
 
             [manager scanForPeripheralsWithServices:nil options:nil];
         } // Else we ignore.
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
-#else
-    } else if (state == CBCentralManagerStateUnsupported || state == CBCentralManagerStateUnauthorized) {
-#endif
         if (internalState == InquiryActive) {
             [self stopScanSafe];
             // Not sure how this is possible at all,
@@ -237,11 +233,7 @@ QT_USE_NAMESPACE
         }
 
         [manager setDelegate:nil];
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     } else if (state == CBManagerStatePoweredOff) {
-#else
-    } else if (state == CBCentralManagerStatePoweredOff) {
-#endif
 
 #ifndef Q_OS_MACOS
         if (internalState == InquiryStarting) {
