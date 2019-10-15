@@ -185,7 +185,8 @@ QT_USE_NAMESPACE
     dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT(leQueue);
     inquiryTimeoutMS = timeout;
-    manager.reset([[CBCentralManager alloc] initWithDelegate:self queue:leQueue]);
+    manager.reset([[CBCentralManager alloc] initWithDelegate:self queue:leQueue],
+                  DarwinBluetooth::RetainPolicy::noInitialRetain);
 }
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central
@@ -204,11 +205,7 @@ QT_USE_NAMESPACE
     using namespace DarwinBluetooth;
 
     const auto state = central.state;
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (state == CBManagerStatePoweredOn) {
-#else
-    if (state == CBCentralManagerStatePoweredOn) {
-#endif
         if (internalState == InquiryStarting) {
             internalState = InquiryActive;
 
@@ -285,12 +282,8 @@ QT_USE_NAMESPACE
 #pragma clang diagnostic ignored "-Wunguarded-availability-new"
 
     if (internalState == InquiryActive) {
-        const auto state = manager.data().state;
-    #if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
+        const auto state = manager.get().state;
         if (state == CBManagerStatePoweredOn)
-    #else
-        if (state == CBCentralManagerStatePoweredOn)
-    #endif
             [manager stopScan];
     }
 

@@ -51,8 +51,9 @@
 // We mean it.
 //
 
+#include "btraii_p.h"
+
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qscopedpointer.h>
 #include <QtCore/qglobal.h>
 
 #include <QtCore/private/qcore_mac_p.h>
@@ -73,36 +74,40 @@ class QBluetoothUuid;
 
 namespace DarwinBluetooth {
 
-struct NSObjectDeleter {
-    static void cleanup(NSObject *obj)
-    {
-        [obj release];
-    }
-};
-
 template<class T>
-class ObjCScopedPointer : public QScopedPointer<NSObject, NSObjectDeleter>
+class ObjCScopedPointer
 {
 public:
-    // TODO: remove default argument, add 'retain' parameter,
-    // add a default ctor??? This will make the semantics more
-    // transparent + will simplify the future transition to ARC
-    // (if it will ever happen).
-    explicit ObjCScopedPointer(T *ptr = nullptr) : QScopedPointer(ptr){}
+    ObjCScopedPointer() = default;
+    ObjCScopedPointer(T *ptr, RetainPolicy policy)
+        : m_ptr(ptr, policy)
+    {
+    }
+    void swap(ObjCScopedPointer &other)
+    {
+        m_ptr.swap(other.m_ptr);
+    }
+    void reset()
+    {
+        m_ptr.reset();
+    }
+    void reset(T *ptr, RetainPolicy policy)
+    {
+        m_ptr.reset(ptr, policy);
+    }
     operator T*() const
     {
-        return data();
+        return m_ptr.getAs<T>();
     }
-
-    T *data()const
+    T *get() const
     {
-        return static_cast<T *>(QScopedPointer::data());
+        // operator T * above does not work when accessing
+        // properties using '.' syntax.
+        return m_ptr.getAs<T>();
     }
-
-    T *take()
-    {
-        return static_cast<T *>(QScopedPointer::take());
-    }
+private:
+    // Copy and move disabled by m_ptr:
+    ScopedPointer m_ptr;
 };
 
 #define QT_BT_MAC_AUTORELEASEPOOL const QMacAutoReleasePool pool;

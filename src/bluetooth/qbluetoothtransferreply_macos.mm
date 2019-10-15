@@ -136,13 +136,13 @@ QBluetoothTransferReplyOSXPrivate::~QBluetoothTransferReplyOSXPrivate()
     // The OBEX session will be closed then. If
     // somehow IOBluetooth/OBEX still has a reference to our
     // session, it will not call any of delegate's callbacks.
-    if (session.data())
+    if (session)
         [session closeSession];
 }
 
 bool QBluetoothTransferReplyOSXPrivate::isActive() const
 {
-    return agent.data() || (session.data() && [session hasActiveRequest]);
+    return agent || (session && [session hasActiveRequest]);
 }
 
 bool QBluetoothTransferReplyOSXPrivate::startOPP(const QBluetoothAddress &device)
@@ -171,6 +171,8 @@ bool QBluetoothTransferReplyOSXPrivate::startOPP(const QBluetoothAddress &device
 
 void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &device, quint16 channelID)
 {
+    using namespace DarwinBluetooth;
+
     Q_ASSERT_X(!session, Q_FUNC_INFO, "session is already active");
 
     error = QBluetoothTransferReply::NoError;
@@ -184,7 +186,8 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
     }
 
     OBEXSession newSession([[ObjCOBEXSession alloc] initWithDelegate:this
-                            remoteDevice:device channelID:channelID]);
+                            remoteDevice:device channelID:channelID],
+                            RetainPolicy::noInitialRetain);
     if (!newSession) {
         qCWarning(QT_BT_DARWIN) << "failed to allocate DarwinBTOBEXSession object";
 
@@ -197,7 +200,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
 
     if ((status == kOBEXSuccess || status == kOBEXSessionAlreadyConnectedError)
         && error == QBluetoothTransferReply::NoError) {
-        session.reset(newSession.take());
+        session.swap(newSession);
         if ([session isConnected])
             sendPut();// Connected, send a PUT request.
     } else {
@@ -218,7 +221,7 @@ void QBluetoothTransferReplyOSXPrivate::sendConnect(const QBluetoothAddress &dev
 void QBluetoothTransferReplyOSXPrivate::sendPut()
 {
     Q_ASSERT_X(inputStream, Q_FUNC_INFO, "invalid input stream (null)");
-    Q_ASSERT_X(session.data(), Q_FUNC_INFO, "invalid OBEX session (nil)");
+    Q_ASSERT_X(session, Q_FUNC_INFO, "invalid OBEX session (nil)");
     Q_ASSERT_X([session isConnected], Q_FUNC_INFO, "not connected");
     Q_ASSERT_X(![session hasActiveRequest], Q_FUNC_INFO,
                "session already has an active request");
@@ -268,7 +271,7 @@ void QBluetoothTransferReplyOSXPrivate::OBEXConnectError(OBEXError errorCode, OB
     Q_UNUSED(errorCode)
     Q_UNUSED(response)
 
-    if (session.data()) {
+    if (session) {
         setReplyError(QBluetoothTransferReply::SessionError,
                       QCoreApplication::translate(TRANSFER_REPLY, TR_CONNECT_FAILED));
     } else {
@@ -283,7 +286,7 @@ void QBluetoothTransferReplyOSXPrivate::OBEXConnectError(OBEXError errorCode, OB
 void QBluetoothTransferReplyOSXPrivate::OBEXConnectSuccess()
 {
     // Now that OBEX connect succeeded, we can send an OBEX put request.
-    if (!session.data()) {
+    if (!session) {
         // We're still in OBEXConnect(), it'll take care of next steps.
         return;
     }
@@ -394,7 +397,7 @@ bool QBluetoothTransferReplyOSX::abort()
     // Reset a delegate.
     [osx_d_ptr->session closeSession];
     // Should never be called from an OBEX callback!
-    osx_d_ptr->session.reset(nullptr);
+    osx_d_ptr->session.reset();
 
     // Not setReplyError, we emit finished only!
     osx_d_ptr->requestComplete = true;

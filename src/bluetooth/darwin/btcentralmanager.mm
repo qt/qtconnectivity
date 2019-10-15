@@ -362,7 +362,7 @@ QT_USE_NAMESPACE
     using namespace DarwinBluetooth;
 
     // Retrieve a peripheral first ...
-    ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init]);
+    const ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init], RetainPolicy::noInitialRetain);
     if (!uuids) {
         qCWarning(QT_BT_DARWIN) << "failed to allocate identifiers";
         if (notifier)
@@ -374,7 +374,7 @@ QT_USE_NAMESPACE
     const quint128 qtUuidData(deviceUuid.toUInt128());
     uuid_t uuidData = {};
     std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
-    const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData]);
+    const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData], RetainPolicy::noInitialRetain);
     if (!nsUuid) {
         qCWarning(QT_BT_DARWIN) << "failed to allocate NSUUID identifier";
         if (notifier)

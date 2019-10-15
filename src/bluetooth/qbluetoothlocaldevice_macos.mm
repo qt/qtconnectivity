@@ -119,7 +119,10 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
-    HostController defaultController([[IOBluetoothHostController defaultController] retain]);
+    using namespace DarwinBluetooth;
+
+    ObjCScopedPointer<IOBluetoothHostController> defaultController([IOBluetoothHostController defaultController],
+                                                                   RetainPolicy::doInitialRetain);
     if (!defaultController) {
         qCCritical(QT_BT_DARWIN) << "failed to init a host controller object";
         return;
@@ -144,15 +147,15 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
         }
     }
 
-    hostController.reset(defaultController.take());
-
+    defaultController.swap(hostController);
     // This one is optional, if it fails to initialize, we do not care at all.
-    connectionMonitor.reset([[ObjCConnectionMonitor alloc] initWithMonitor:this]);
+    connectionMonitor.reset([[ObjCConnectionMonitor alloc] initWithMonitor:this],
+                            DarwinBluetooth::RetainPolicy::noInitialRetain);
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
 {
-    return hostController.data();
+    return hostController;
 }
 
 void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &address, Pairing pairing)

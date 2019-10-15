@@ -213,7 +213,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         notifier = aNotifier;
         state = PeripheralState::idle;
         nextServiceToAdd = {};
-        connectedCentrals.reset([[NSMutableSet alloc] init]);
+        connectedCentrals.reset([[NSMutableSet alloc] init],
+                                DarwinBluetooth::RetainPolicy::noInitialRetain);
         maxNotificationValueLength = std::numeric_limits<NSUInteger>::max();
     }
 
@@ -292,7 +293,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     QT_BT_MAC_AUTORELEASEPOOL
 
-    advertisementData.reset([[NSMutableDictionary alloc] init]);
+    advertisementData.reset([[NSMutableDictionary alloc] init],
+                            DarwinBluetooth::RetainPolicy::noInitialRetain);
     if (!advertisementData) {
         qCWarning(QT_BT_DARWIN) << "setParameters: failed to allocate "
                                    "NSMutableDictonary (advertisementData)";
@@ -311,7 +313,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     if (!data.services().count() && !scanResponse.services().count())
         return;
 
-    const ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init]);
+    const ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init],
+                                                  DarwinBluetooth::RetainPolicy::noInitialRetain);
     if (!uuids) {
         qCWarning(QT_BT_DARWIN) << "setParameters: failed to allocate "
                                    "NSMutableArray (services uuids)";
@@ -340,10 +343,11 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)startAdvertising
 {
     state = PeripheralState::waitingForPowerOn;
-    if (manager.data())
+    if (manager)
         [manager setDelegate:nil];
     manager.reset([[CBPeripheralManager alloc] initWithDelegate:self
-                   queue:DarwinBluetooth::qt_LE_queue()]);
+                   queue:DarwinBluetooth::qt_LE_queue()],
+                   DarwinBluetooth::RetainPolicy::noInitialRetain);
 }
 
 - (void)stopAdvertising
@@ -405,7 +409,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
 - (void) addServicesToPeripheral
 {
-    Q_ASSERT(manager.data());
+    Q_ASSERT(manager);
 
     if (nextServiceToAdd < services.size())
         [manager addService:services[nextServiceToAdd++]];
@@ -421,11 +425,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     if (peripheral != manager || !notifier)
         return;
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
     if (peripheral.state == CBManagerStatePoweredOn) {
-#else
-    if (peripheral.state == CBPeripheralManagerStatePoweredOn) {
-#endif
         // "Bluetooth is currently powered on and is available to use."
         if (state == PeripheralState::waitingForPowerOn) {
             [manager removeAllServices];
@@ -456,13 +456,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
      explicitly added again."
     */
 
-#if QT_IOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__IPHONE_10_0) || QT_OSX_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_13)
-    if (peripheral.state == CBManagerStateUnauthorized ||
-        peripheral.state == CBManagerStateUnsupported) {
-#else
-    if (peripheral.state == CBPeripheralManagerStateUnauthorized ||
-        peripheral.state == CBPeripheralManagerStateUnsupported) {
-#endif
+    if (peripheral.state == CBManagerStateUnauthorized || peripheral.state == CBManagerStateUnsupported) {
         emit notifier->LEnotSupported();
         state = PeripheralState::idle;
     }
@@ -507,7 +501,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     }
 
     if (nextServiceToAdd == services.size())
-        [manager startAdvertising:[advertisementData count] ? advertisementData.data() : nil];
+        [manager startAdvertising:[advertisementData count] ? advertisementData.get() : nil];
     else
         [self addServicesToPeripheral];
 }
@@ -753,7 +747,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     QT_BT_MAC_AUTORELEASEPOOL
 
-    ObjCScopedPointer<NSMutableArray> included([[NSMutableArray alloc] init]);
+    ObjCScopedPointer<NSMutableArray> included([[NSMutableArray alloc] init],
+                                               DarwinBluetooth::RetainPolicy::noInitialRetain);
     if (!included) {
         qCWarning(QT_BT_DARWIN) << "addIncludedSerivces: failed "
                                    "to allocate NSMutableArray";
@@ -784,7 +779,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     QT_BT_MAC_AUTORELEASEPOOL
 
-    ObjCScopedPointer<NSMutableArray> newCBChars([[NSMutableArray alloc] init]);
+    ObjCScopedPointer<NSMutableArray> newCBChars([[NSMutableArray alloc] init],
+                                                 DarwinBluetooth::RetainPolicy::noInitialRetain);
     if (!newCBChars) {
         qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
                                    "failed to allocate NSMutableArray "
@@ -838,7 +834,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         charData.properties = ch.properties();
         charData.value = ch.value();
 
-        const ObjCScopedPointer<NSMutableArray> newCBDescs([[NSMutableArray alloc] init]);
+        const ObjCScopedPointer<NSMutableArray> newCBDescs([[NSMutableArray alloc] init],
+                                                           DarwinBluetooth::RetainPolicy::noInitialRetain);
         if (!newCBDescs) {
             qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
                                        "failed to allocate NSMutableArray "
@@ -863,13 +860,13 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         }
 
         if ([newCBDescs count])
-            cbChar.data().descriptors = newCBDescs.data(); // retains
+            cbChar.data().descriptors = newCBDescs.get();
 
         qtService->characteristicList.insert(declHandle, charData);
     }
 
     if ([newCBChars count])
-        cbService.characteristics = newCBChars.data();
+        cbService.characteristics = newCBChars.get();
 }
 
 - (CBATTError)validateWriteRequest:(CBATTRequest *)request

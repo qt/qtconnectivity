@@ -211,7 +211,7 @@ using namespace DarwinBluetooth;
 @implementation QT_MANGLE_NAMESPACE(DarwinBTSDPInquiry)
 {
     QT_PREPEND_NAMESPACE(DarwinBluetooth::SDPInquiryDelegate) *delegate;
-    IOBluetoothDevice *device;
+    ObjCScopedPointer<IOBluetoothDevice> device;
     bool isActive;
 }
 
@@ -230,7 +230,6 @@ using namespace DarwinBluetooth;
 - (void)dealloc
 {
     //[device closeConnection]; //??? - synchronous, "In the future this API will be changed to allow asynchronous operation."
-    [device release];
     [super dealloc];
 }
 
@@ -253,7 +252,7 @@ using namespace DarwinBluetooth;
     // We first try to allocate "filters":
     ObjCScopedPointer<NSMutableArray> array;
     if (qtFilters.size()) {
-        array.reset([[NSMutableArray alloc] init]);
+        array.reset([[NSMutableArray alloc] init], RetainPolicy::noInitialRetain);
         if (!array) {
             qCCritical(QT_BT_DARWIN) << "failed to allocate an uuid filter";
             return kIOReturnError;
@@ -272,14 +271,11 @@ using namespace DarwinBluetooth;
     }
 
     const BluetoothDeviceAddress iobtAddress(iobluetooth_address(address));
-    ObjCScopedPointer<IOBluetoothDevice> newDevice([[IOBluetoothDevice deviceWithAddress:&iobtAddress] retain]);
-    if (!newDevice) {
+    device.reset([IOBluetoothDevice deviceWithAddress:&iobtAddress], RetainPolicy::doInitialRetain);
+    if (!device) {
         qCCritical(QT_BT_DARWIN) << "failed to create an IOBluetoothDevice object";
         return kIOReturnError;
     }
-
-    ObjCScopedPointer<IOBluetoothDevice> oldDevice(device);
-    device = newDevice.data();
 
     IOReturn result = kIOReturnSuccess;
     if (qtFilters.size())
@@ -289,10 +285,9 @@ using namespace DarwinBluetooth;
 
     if (result != kIOReturnSuccess) {
         qCCritical(QT_BT_DARWIN) << "failed to start an SDP query";
-        device = oldDevice.take();
+        device.reset();
     } else {
         isActive = true;
-        newDevice.take();
     }
 
     return result;
@@ -303,9 +298,7 @@ using namespace DarwinBluetooth;
     // There is no API to stop it,
     // but there is a 'stop' member-function in Qt and
     // after it's called sdpQueryComplete must be somehow ignored.
-
-    [device release];
-    device = nil;
+    device.reset();
 }
 
 - (void)sdpQueryComplete:(IOBluetoothDevice *)aDevice status:(IOReturn)status
