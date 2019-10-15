@@ -50,10 +50,10 @@ namespace DarwinBluetooth {
 ObjCStrongReference<IOBluetoothDevice> device_with_address(const QBluetoothAddress &address)
 {
     if (address.isNull())
-        return ObjCStrongReference<IOBluetoothDevice>(nil, false);
+        return {};
 
     const BluetoothDeviceAddress &iobtAddress = iobluetooth_address(address);
-    ObjCStrongReference<IOBluetoothDevice> res([[IOBluetoothDevice deviceWithAddress:&iobtAddress] retain], false);
+    ObjCStrongReference<IOBluetoothDevice> res([IOBluetoothDevice deviceWithAddress:&iobtAddress], RetainPolicy::doInitialRetain);
     return res;
 }
 

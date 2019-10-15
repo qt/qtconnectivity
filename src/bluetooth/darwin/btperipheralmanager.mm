@@ -91,7 +91,7 @@ ObjCStrongReference<CBMutableCharacteristic> create_characteristic(const QLowEne
                                                            properties:cb_properties(data)
                                                            value:nil
                                                            permissions:cb_permissions(data)],
-                                                           false /*do not retain*/);
+                                                           RetainPolicy::noInitialRetain);
     return ch;
 }
 
@@ -118,15 +118,15 @@ ObjCStrongReference<CBMutableDescriptor> create_descriptor(const QLowEnergyDescr
     ObjCStrongReference<NSObject> value;
     if (data.uuid() == QBluetoothUuid::CharacteristicUserDescription) {
         const QString asQString(QString::fromUtf8(data.value()));
-        value.reset(asQString.toNSString());
+        value.reset(asQString.toNSString(), RetainPolicy::doInitialRetain); // toNSString is auto-released, we have to retain.
     } else {
         const auto nsData = data_from_bytearray(data.value());
-        value.reset(nsData.data());
+        value.reset(nsData.data(), RetainPolicy::doInitialRetain);
     }
 
     const ObjCStrongReference<CBMutableDescriptor> d([[CBMutableDescriptor alloc]
                                                       initWithType:cb_uuid(data.uuid())
-                                                      value:value], false /*do not retain*/);
+                                                      value:value], RetainPolicy::noInitialRetain);
     return d;
 }
 
@@ -230,6 +230,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (QSharedPointer<QLowEnergyServicePrivate>)addService:(const QLowEnergyServiceData &)data
 {
     using QLES = QLowEnergyService;
+    using namespace DarwinBluetooth;
 
     const auto nEntries = qt_countGATTEntries(data);
     if (!nEntries || nEntries > std::numeric_limits<QLowEnergyHandle>::max() - lastHandle) {
@@ -244,7 +245,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     const ObjCStrongReference<CBMutableService>
         newCBService([[CBMutableService alloc] initWithType:cbUUID primary:primary],
-                     false /*do not retain*/);
+                     RetainPolicy::noInitialRetain);
 
     if (!newCBService) {
         qCCritical(QT_BT_DARWIN) << "addService: failed to create CBMutableService";
@@ -374,6 +375,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)write:(const QByteArray &)value
         charHandle:(QLowEnergyHandle)charHandle
 {
+    using namespace DarwinBluetooth;
+
     if (!notifier)
         return;
 
@@ -402,7 +405,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     // We copy data here: sending update requests is async (see sendUpdateRequests),
     // by the time we're allowed to actually send them, the data can change again
     // and we'll send an 'out of order' value.
-    const ObjCStrongReference<NSData> copy([NSData dataWithData:nsData], true);
+    const ObjCStrongReference<NSData> copy([NSData dataWithData:nsData], RetainPolicy::doInitialRetain);
     updateQueue.push_back(UpdateRequest{charHandle, copy});
     [self sendUpdateRequests];
 }
@@ -596,6 +599,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
         didReceiveWriteRequests:(NSArray *)requests
 {
+    using namespace DarwinBluetooth;
+
     QT_BT_MAC_AUTORELEASEPOOL
 
     if (peripheral != manager || !notifier) {
@@ -633,7 +638,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         value.length = pair.second;
         emit notifier->characteristicUpdated(handle, qt_bytearray(value));
         const ObjCStrongReference<NSData> copy([NSData dataWithData:value],
-                                               true);
+                                               RetainPolicy::doInitialRetain);
         updateQueue.push_back(UpdateRequest{handle, copy});
     }
 

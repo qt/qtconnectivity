@@ -165,6 +165,7 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
 
     using DarwinBluetooth::device_with_address;
     using DarwinBluetooth::ObjCStrongReference;
+    using DarwinBluetooth::RetainPolicy;
 
     // That's a really special case on OS X.
     if (pairing == QBluetoothLocalDevice::Unpaired)
@@ -194,7 +195,8 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
     // That's a totally new request ('Paired', since we are here).
     // Even if this device is paired (not by our local device), I still create a pairing request,
     // it'll just finish with success (skipping any intermediate steps).
-    PairingRequest newRequest([[ObjCPairingRequest alloc] initWithTarget:address delegate:this], false);
+    PairingRequest newRequest([[ObjCPairingRequest alloc] initWithTarget:address delegate:this],
+                              RetainPolicy::noInitialRetain);
     if (!newRequest) {
         qCCritical(QT_BT_DARWIN) << "failed to allocate a new pairing request";
         emitError(QBluetoothLocalDevice::PairingError, true);

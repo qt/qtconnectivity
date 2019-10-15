@@ -91,7 +91,7 @@ ObjCStrongReference<NSError> qt_timeoutNSError(OperationTimeout type)
     NSError *nsError = [[NSError alloc] initWithDomain:CBErrorDomain
                                         code:CBErrorOperationCancelled
                                         userInfo:nil];
-    return ObjCStrongReference<NSError>(nsError, false /*do not retain, done already*/);
+    return ObjCStrongReference<NSError>(nsError, RetainPolicy::noInitialRetain);
 }
 
 auto qt_find_watchdog(const std::vector<GCDTimer> &watchdogs, id object, OperationTimeout type)
@@ -215,9 +215,9 @@ QT_USE_NAMESPACE
     // Strangely enough, I can not reproduce this anymore, so this
     // part is simplified now. To be investigated though.
 
-    visitedServices.reset(nil);
-    servicesToVisit.reset(nil);
-    servicesToVisitNext.reset(nil);
+    visitedServices.reset();
+    servicesToVisit.reset();
+    servicesToVisitNext.reset();
 
     [manager setDelegate:nil];
     [manager release];
@@ -241,7 +241,7 @@ QT_USE_NAMESPACE
 {
     using namespace DarwinBluetooth;
 
-    GCDTimer newWatcher([[GCDTimerObjC alloc] initWithDelegate:self], false /*do not retain*/);
+    GCDTimer newWatcher([[GCDTimerObjC alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
     [newWatcher watchAfter:object withTimeoutType:type];
     timeoutWatchdogs.push_back(newWatcher);
     [newWatcher startWithTimeout:timeoutMS step:200];
@@ -492,10 +492,10 @@ QT_USE_NAMESPACE
             emit notifier->serviceDiscoveryFinished();
     } else {
         // 'reset' also calls retain on a parameter.
-        servicesToVisitNext.reset(nil);
-        servicesToVisit.reset([NSMutableArray arrayWithArray:services]);
+        servicesToVisitNext.reset();
+        servicesToVisit.reset([NSMutableArray arrayWithArray:services], RetainPolicy::doInitialRetain);
         currentService = 0;
-        visitedServices.reset([NSMutableSet setWithCapacity:peripheral.services.count]);
+        visitedServices.reset([NSMutableSet setWithCapacity:peripheral.services.count], RetainPolicy::doInitialRetain);
 
         CBService *const s = [services objectAtIndex:currentService];
         [visitedServices addObject:s];
@@ -1003,9 +1003,9 @@ QT_USE_NAMESPACE
     Q_ASSERT_X(!qtUuid.isNull(), Q_FUNC_INFO, "invalid uuid");
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
 
-    ObjCStrongReference<NSMutableArray> toVisit([NSMutableArray arrayWithArray:peripheral.services], true);
-    ObjCStrongReference<NSMutableArray> toVisitNext([[NSMutableArray alloc] init], false);
-    ObjCStrongReference<NSMutableSet> visitedNodes([[NSMutableSet alloc] init], false);
+    ObjCStrongReference<NSMutableArray> toVisit([NSMutableArray arrayWithArray:peripheral.services], RetainPolicy::doInitialRetain);
+    ObjCStrongReference<NSMutableArray> toVisitNext([[NSMutableArray alloc] init], RetainPolicy::noInitialRetain);
+    ObjCStrongReference<NSMutableSet> visitedNodes([[NSMutableSet alloc] init], RetainPolicy::noInitialRetain);
 
     while (true) {
         for (NSUInteger i = 0, e = [toVisit count]; i < e; ++i) {
@@ -1021,8 +1021,8 @@ QT_USE_NAMESPACE
         if (![toVisitNext count])
             return nil;
 
-        toVisit.resetWithoutRetain(toVisitNext.take());
-        toVisitNext.resetWithoutRetain([[NSMutableArray alloc] init]);
+        toVisit.swap(toVisitNext);
+        toVisitNext.reset([[NSMutableArray alloc] init], RetainPolicy::noInitialRetain);
     }
 
     return nil;
@@ -1425,7 +1425,7 @@ QT_USE_NAMESPACE
     } else if (service.includedServices && service.includedServices.count) {
         // Now we have even more services to do included services discovery ...
         if (!servicesToVisitNext)
-            servicesToVisitNext.reset([NSMutableArray arrayWithArray:service.includedServices]);
+            servicesToVisitNext.reset([NSMutableArray arrayWithArray:service.includedServices], RetainPolicy::doInitialRetain);
         else
             [servicesToVisitNext addObjectsFromArray:service.includedServices];
     }
@@ -1447,7 +1447,8 @@ QT_USE_NAMESPACE
     // No services to visit more on this 'level'.
 
     if (servicesToVisitNext && [servicesToVisitNext count]) {
-        servicesToVisit.resetWithoutRetain(servicesToVisitNext.take());
+        servicesToVisit.swap(servicesToVisitNext);
+        servicesToVisitNext.reset();
 
         currentService = 0;
         for (const NSUInteger e = [servicesToVisit count]; currentService < e; ++currentService) {
@@ -1464,9 +1465,9 @@ QT_USE_NAMESPACE
     // Finally, if we're here, the service discovery is done!
 
     // Release all these things now, no need to prolong their lifetime.
-    visitedServices.reset(nil);
-    servicesToVisit.reset(nil);
-    servicesToVisitNext.reset(nil);
+    visitedServices.reset();
+    servicesToVisit.reset();
+    servicesToVisitNext.reset();
 
     if (notifier)
         emit notifier->serviceDiscoveryFinished();

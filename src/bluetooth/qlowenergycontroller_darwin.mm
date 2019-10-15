@@ -413,9 +413,9 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
             discoveredCBServices.insert(newService->uuid, cbService);
         }
 
-        ObjCStrongReference<NSMutableArray> toVisit([[NSMutableArray alloc] initWithArray:services], false);
-        ObjCStrongReference<NSMutableArray> toVisitNext([[NSMutableArray alloc] init], false);
-        ObjCStrongReference<NSMutableSet> visited([[NSMutableSet alloc] init], false);
+        ObjCStrongReference<NSMutableArray> toVisit([[NSMutableArray alloc] initWithArray:services], RetainPolicy::noInitialRetain);
+        ObjCStrongReference<NSMutableArray> toVisitNext([[NSMutableArray alloc] init], RetainPolicy::noInitialRetain);
+        ObjCStrongReference<NSMutableSet> visited([[NSMutableSet alloc] init], RetainPolicy::noInitialRetain);
 
         while (true) {
             for (NSUInteger i = 0, e = [toVisit count]; i < e; ++i) {
@@ -453,8 +453,8 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
                 }
             }
 
-            toVisit.resetWithoutRetain(toVisitNext.take());
-            toVisitNext.resetWithoutRetain([[NSMutableArray alloc] init]);
+            toVisit.swap(toVisitNext);
+            toVisitNext.reset([[NSMutableArray alloc] init], RetainPolicy::noInitialRetain);
         }
     } else {
         qCDebug(QT_BT_DARWIN) << "no services found";

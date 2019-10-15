@@ -105,37 +105,37 @@ Number variant_to_nsnumber(const QVariant &);
 template<>
 Number variant_to_nsnumber<unsigned char>(const QVariant &var)
 {
-    return Number([NSNumber numberWithUnsignedChar:var.value<unsigned char>()], true);
+    return Number([NSNumber numberWithUnsignedChar:var.value<unsigned char>()], RetainPolicy::doInitialRetain);
 }
 
 template<>
 Number variant_to_nsnumber<unsigned short>(const QVariant &var)
 {
-    return Number([NSNumber numberWithUnsignedShort:var.value<unsigned short>()], true);
+    return Number([NSNumber numberWithUnsignedShort:var.value<unsigned short>()], RetainPolicy::doInitialRetain);
 }
 
 template<>
 Number variant_to_nsnumber<unsigned>(const QVariant &var)
 {
-    return Number([NSNumber numberWithUnsignedInt:var.value<unsigned>()], true);
+    return Number([NSNumber numberWithUnsignedInt:var.value<unsigned>()], RetainPolicy::doInitialRetain);
 }
 
 template<>
 Number variant_to_nsnumber<char>(const QVariant &var)
 {
-    return Number([NSNumber numberWithChar:var.value<char>()], true);
+    return Number([NSNumber numberWithChar:var.value<char>()], RetainPolicy::doInitialRetain);
 }
 
 template<>
 Number variant_to_nsnumber<short>(const QVariant &var)
 {
-    return Number([NSNumber numberWithShort:var.value<short>()], true);
+    return Number([NSNumber numberWithShort:var.value<short>()], RetainPolicy::doInitialRetain);
 }
 
 template<>
 Number variant_to_nsnumber<int>(const QVariant &var)
 {
-    return Number([NSNumber numberWithInt:var.value<int>()], true);
+    return Number([NSNumber numberWithInt:var.value<int>()], RetainPolicy::doInitialRetain);
 }
 
 template<class ValueType>
@@ -432,7 +432,7 @@ Dictionary iobluetooth_service_dictionary(const QBluetoothServiceInfo &serviceIn
     if (!attributeIds.size())
         return dict;
 
-    dict.reset([[NSMutableDictionary alloc] init]);
+    dict.reset([[NSMutableDictionary alloc] init], RetainPolicy::noInitialRetain);
 
     for (quint16 key : attributeIds) {
         if (key == QSInfo::ProtocolDescriptorList) // We handle it in a special way.

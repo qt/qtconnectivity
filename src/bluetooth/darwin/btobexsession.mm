@@ -61,6 +61,8 @@ OBEXSessionDelegate::~OBEXSessionDelegate()
 
 namespace {
 
+using NSDataPtr = NSMutableData *;
+
 struct OBEXHeader
 {
     OBEXHeader() : headerID(0)
@@ -326,7 +328,7 @@ ObjCStrongReference<NSMutableData> next_data_chunk(QIODevice &inputStream, IOBlu
     }
 
     ObjCStrongReference<NSMutableData> chunk([NSMutableData dataWithBytes:block.data()
-                                              length:realSize], true);
+                                              length:realSize], RetainPolicy::doInitialRetain);
     if (chunk && [chunk length]) {
         // If it actually was the last chunk
         // of a length == maxBodySize, we'll
@@ -653,7 +655,7 @@ QT_USE_NAMESPACE
         return kOBEXBadArgumentError;
     }
 
-    ObjCStrongReference<NSMutableData> headers([[NSMutableData alloc] init], false);
+    ObjCStrongReference<NSMutableData> headers([[NSMutableData alloc] init], RetainPolicy::noInitialRetain);
     if (!headers) {
         qCWarning(QT_BT_DARWIN) << "failed to allocate headers";
         return kOBEXNoResourcesError;
@@ -705,8 +707,8 @@ QT_USE_NAMESPACE
             delegate->OBEXPutDataSent([chunk length], fileSize);
 
         bytesSent = [chunk length];
-        headersData = headers.take();
-        bodyData = chunk.take();
+        headersData = NSDataPtr(headers.release());
+        bodyData = NSDataPtr(chunk.release());
         inputStream = input;
     } else {
         // PUT request failed and we now
@@ -779,7 +781,7 @@ QT_USE_NAMESPACE
         } else {
             [bodyData release];
             bytesSent += [chunk length];
-            bodyData = chunk.take();//retained already.
+            bodyData = NSDataPtr(chunk.release());
 
             if (delegate && !inputStream->isSequential())
                 delegate->OBEXPutDataSent(bytesSent, inputStream->size());

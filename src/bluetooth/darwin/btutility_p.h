@@ -113,88 +113,19 @@ private:
 #define QT_BT_MAC_AUTORELEASEPOOL const QMacAutoReleasePool pool;
 
 template<class T>
-class ObjCStrongReference {
+class ObjCStrongReference final : public StrongReference {
 public:
-    ObjCStrongReference()
-        : m_ptr(nil)
-    {
-    }
-    ObjCStrongReference(T *obj, bool retain)
-    {
-        if (retain)
-            m_ptr = [obj retain];
-        else
-            m_ptr = obj; // For example, created with initWithXXXX.
-    }
-    ObjCStrongReference(const ObjCStrongReference &rhs)
-    {
-        m_ptr = [rhs.m_ptr retain];
-    }
-    ObjCStrongReference &operator = (const ObjCStrongReference &rhs)
-    {
-        // "Old-style" implementation:
-        if (this != &rhs && m_ptr != rhs.m_ptr) {
-            [m_ptr release];
-            m_ptr = [rhs.m_ptr retain];
-        }
-
-        return *this;
-    }
-
-#ifdef Q_COMPILER_RVALUE_REFS
-    ObjCStrongReference(ObjCStrongReference &&xval)
-    {
-        m_ptr = xval.m_ptr;
-        xval.m_ptr = nil;
-    }
-
-    ObjCStrongReference &operator = (ObjCStrongReference &&xval)
-    {
-        m_ptr = xval.m_ptr;
-        xval.m_ptr = nil;
-        return *this;
-    }
-#endif
-
-    ~ObjCStrongReference()
-    {
-        [m_ptr release];
-    }
-
-    void reset(T *newVal)
-    {
-        if (m_ptr != newVal) {
-            [m_ptr release];
-            m_ptr = [newVal retain];
-        }
-    }
-
-    void resetWithoutRetain(T *newVal)
-    {
-        if (m_ptr != newVal) {
-            [m_ptr release];
-            m_ptr = newVal;
-        }
-    }
+    using StrongReference::StrongReference;
 
     operator T *() const
     {
-        return m_ptr;
+        return this->getAs<T>();
     }
 
     T *data() const
     {
-        return m_ptr;
+        return this->getAs<T>();
     }
-
-    T *take()
-    {
-        T * p = m_ptr;
-        m_ptr = nil;
-        return p;
-    }
-private:
-    T *m_ptr;
 };
 
 QString qt_address(NSString *address);

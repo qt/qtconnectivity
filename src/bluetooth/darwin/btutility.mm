@@ -117,7 +117,7 @@ ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &u
     const quint128 intVal(uuid.toUInt128());
 
     const ObjCStrongReference<IOBluetoothSDPUUID> iobtUUID([IOBluetoothSDPUUID uuidWithBytes:intVal.data
-                                                           length:nBytes], true);
+                                                           length:nBytes], RetainPolicy::doInitialRetain);
     return iobtUUID;
 }
 
@@ -223,7 +223,7 @@ ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
     if (!cfUuid)
         return ObjCStrongReference<CBUUID>();
 
-    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], true); //true == retain.
+    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], RetainPolicy::doInitialRetain);
     return cbUuid;
 }
 
@@ -312,9 +312,9 @@ QByteArray qt_bytearray(NSObject *obj)
 ObjCStrongReference<NSData> data_from_bytearray(const QByteArray & qtData)
 {
     if (!qtData.size())
-        return ObjCStrongReference<NSData>([[NSData alloc] init], false);
+        return ObjCStrongReference<NSData>([[NSData alloc] init], RetainPolicy::noInitialRetain);
 
-    ObjCStrongReference<NSData> result([NSData dataWithBytes:qtData.constData() length:qtData.size()], true);
+    ObjCStrongReference<NSData> result([NSData dataWithBytes:qtData.constData() length:qtData.size()], RetainPolicy::doInitialRetain);
     return result;
 }
 
@@ -323,9 +323,9 @@ ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray 
     using MutableData = ObjCStrongReference<NSMutableData>;
 
     if (!qtData.size())
-        return MutableData([[NSMutableData alloc] init], false);
+        return MutableData([[NSMutableData alloc] init], RetainPolicy::noInitialRetain);
 
-    MutableData result([[NSMutableData alloc] initWithLength:qtData.size()], false);
+    MutableData result([[NSMutableData alloc] initWithLength:qtData.size()], RetainPolicy::noInitialRetain);
     [result replaceBytesInRange:NSMakeRange(0, qtData.size())
                       withBytes:qtData.constData()];
     return result;
