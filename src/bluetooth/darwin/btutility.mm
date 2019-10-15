@@ -203,7 +203,7 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
     return QBluetoothUuid();
 }
 
-CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
+QCFType<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
 {
     const quint128 qtUuidData = qtUuid.toUInt128();
     const quint8 *const data = qtUuidData.data;
@@ -214,12 +214,12 @@ CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
                          data[12], data[13], data[14], data[15]};
 
     CFUUIDRef cfUuid = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, bytes);
-    return CFStrongReference<CFUUIDRef>(cfUuid, false);// false == already retained.
+    return cfUuid;
 }
 
 ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
 {
-    CFStrongReference<CFUUIDRef> cfUuid(cf_uuid(qtUuid));
+    QCFType<CFUUIDRef> cfUuid(cf_uuid(qtUuid));
     if (!cfUuid)
         return ObjCStrongReference<CBUUID>();
 
