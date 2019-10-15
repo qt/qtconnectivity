@@ -52,13 +52,14 @@ namespace DarwinBluetooth {
 StrongReference::StrongReference(void *object, RetainPolicy policy)
     : objCInstance(object)
 {
-    if (policy == RetainPolicy::doInitialRetain)
+    if (objCInstance && policy == RetainPolicy::doInitialRetain)
         objCInstance = [getAs<NSObject>() retain];
 }
 
 StrongReference::StrongReference(const StrongReference &other)
 {
-    objCInstance = [other.getAs<NSObject>() retain];
+    if ((objCInstance = other.getAs<NSObject>()))
+        objCInstance = [other.getAs<NSObject>() retain];
 }
 
 StrongReference::StrongReference(StrongReference &&other)
@@ -84,7 +85,16 @@ StrongReference &StrongReference::operator = (const StrongReference &other) noex
 StrongReference &StrongReference::operator = (StrongReference &&other) noexcept
 {
     swap(other);
+
     return *this;
+}
+
+void *StrongReference::release()
+{
+    void *released = objCInstance;
+    objCInstance = nullptr;
+
+    return released;
 }
 
 void StrongReference::reset()
@@ -98,11 +108,8 @@ void StrongReference::reset(void *obj, RetainPolicy policy)
     [getAs<NSObject>() release];
     objCInstance = obj;
 
-    if (policy == RetainPolicy::doInitialRetain) {
-        auto newInstance = static_cast<NSObject *>(obj);
-        Q_ASSERT(newInstance);
-        objCInstance = [newInstance retain];
-    }
+    if (objCInstance && policy == RetainPolicy::doInitialRetain)
+        objCInstance = [getAs<NSObject>() retain];
 }
 
 } // namespace DarwinBluetooth

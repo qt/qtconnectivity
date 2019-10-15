@@ -98,6 +98,8 @@ public:
         std::swap(objCInstance, other.objCInstance);
     }
 
+    void *release();
+
     void reset();
     void reset(void *newInstance, RetainPolicy policy);
 
