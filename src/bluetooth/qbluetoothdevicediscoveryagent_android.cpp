@@ -150,10 +150,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 
     // check Android v23+ permissions
-    // -> BTLE search requires android.permission.ACCESS_COARSE_LOCATION or android.permission.ACCESS_FINE_LOCATION
-    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod
-        && QtAndroid::androidSdkVersion() >= 23)
-    {
+    // -> any device search requires android.permission.ACCESS_COARSE_LOCATION or android.permission.ACCESS_FINE_LOCATION
+    if (QtAndroid::androidSdkVersion() >= 23) {
         const QString coarsePermission(QLatin1String("android.permission.ACCESS_COARSE_LOCATION"));
         const QString finePermission(QLatin1String("android.permission.ACCESS_FINE_LOCATION"));
 
