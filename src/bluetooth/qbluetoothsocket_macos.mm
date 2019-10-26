@@ -196,7 +196,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     // IOBluetoothL2CAPChannel is buffered (writeAsync).
 
     if (!txBuffer.size())
-        QMetaObject::invokeMethod(this, "_q_writeNotify", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, [this](){_q_writeNotify();}, Qt::QueuedConnection);
 
     char *dst = txBuffer.reserve(int(maxSize));
     std::copy(data, data + maxSize, dst);
