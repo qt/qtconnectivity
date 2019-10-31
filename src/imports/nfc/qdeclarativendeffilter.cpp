@@ -39,6 +39,8 @@
 
 #include "qdeclarativendeffilter_p.h"
 
+#include <limits.h>
+
 /*!
     \qmltype NdefFilter
     \instantiates QDeclarativeNdefFilter
