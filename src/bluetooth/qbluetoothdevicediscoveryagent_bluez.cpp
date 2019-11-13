@@ -292,6 +292,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
                      q, [this](const QString &path){
         this->_q_discoveryInterrupted(path);
     });
+    OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
+                QStringLiteral("org.bluez"), QStringLiteral(""), QDBusConnection::systemBus());
+    QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+                     q, [this](const QString &interface, const QVariantMap &changedProperties,
+                     const QStringList &invalidatedProperties,
+                     const QDBusMessage &signal) {
+        this->_q_PropertiesChanged(interface, signal.path(), changedProperties, invalidatedProperties);
+    });
+
+    // remember what we have to cleanup
+    propertyMonitors.append(prop);
 
     // collect initial set of information
     QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
@@ -476,17 +487,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString &dev
                          << "RSSI" << deviceInfo.rssi()
                          << "Num ManufacturerData" << deviceInfo.manufacturerData().size();
 
-    OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
-                QStringLiteral("org.bluez"), devicePath, QDBusConnection::systemBus(), q);
-    QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
-                     q, [this](const QString &interface, const QVariantMap &changedProperties,
-                            const QStringList &invalidatedProperties) {
-        this->_q_PropertiesChanged(interface, changedProperties, invalidatedProperties);
-    });
-
-    // remember what we have to cleanup
-    propertyMonitors.append(prop);
-
     // Cache the properties so we do not have to access dbus every time to get a value
     devicesProperties[devicePath] = properties;
 
@@ -641,6 +641,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &interface,
+                                                                 const QString &path,
                                                                  const QVariantMap &changed_properties,
                                                                  const QStringList &invalidated_properties)
 {
@@ -648,12 +649,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &
     if (interface != QStringLiteral("org.bluez.Device1"))
         return;
 
-    OrgFreedesktopDBusPropertiesInterface *props =
-            qobject_cast<OrgFreedesktopDBusPropertiesInterface *>(q->sender());
-    if (!props)
-        return;
-
-    const QString path = props->path();
     if (!devicesProperties.contains(path))
         return;
 
