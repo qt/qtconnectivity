@@ -7,12 +7,13 @@ set(java_sources
     src/org/qtproject/qt5/android/nfc/QtNfcBroadcastReceiver.java
 )
 
-add_jar(QtAndroidNfc # special case
+add_jar(QtNfc
     INCLUDE_JARS ${android_sdk}
     SOURCES ${java_sources}
 )
 
-install_jar(QtAndroidNfc # special case
+install_jar(QtNfc
     DESTINATION jar
     COMPONENT Devel
 )
+

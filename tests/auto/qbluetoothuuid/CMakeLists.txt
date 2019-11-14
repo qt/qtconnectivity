@@ -4,7 +4,7 @@
 ## tst_qbluetoothuuid Test:
 #####################################################################
 
-add_qt_test(tst_qbluetoothuuid
+qt_add_test(tst_qbluetoothuuid
     SOURCES
         tst_qbluetoothuuid.cpp
     PUBLIC_LIBRARIES

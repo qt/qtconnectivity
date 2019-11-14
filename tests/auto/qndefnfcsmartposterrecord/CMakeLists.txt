@@ -4,7 +4,7 @@
 ## tst_qndefnfcsmartposterrecord Test:
 #####################################################################
 
-add_qt_test(tst_qndefnfcsmartposterrecord
+qt_add_test(tst_qndefnfcsmartposterrecord
     SOURCES
         tst_qndefnfcsmartposterrecord.cpp
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## sdpscanner Tool:
 #####################################################################
 
-add_qt_tool(sdpscanner
+qt_add_tool(sdpscanner
     TOOLS_TARGET Bluetooth # special case
     SOURCES
         main.cpp
@@ -15,7 +15,6 @@ add_qt_tool(sdpscanner
 #### Keys ignored in scope 1:.:.:sdpscanner.pro:<TRUE>:
 # QT_FOR_CONFIG = "bluetooth-private"
 # TEMPLATE = "app"
-# _LOADED = "qt_tool"
 
 ## Scopes:
 #####################################################################

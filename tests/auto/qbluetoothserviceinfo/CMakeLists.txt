@@ -4,7 +4,7 @@
 ## tst_qbluetoothserviceinfo Test:
 #####################################################################
 
-add_qt_test(tst_qbluetoothserviceinfo
+qt_add_test(tst_qbluetoothserviceinfo
     SOURCES
         tst_qbluetoothserviceinfo.cpp
     PUBLIC_LIBRARIES
@@ -15,12 +15,12 @@ add_qt_test(tst_qbluetoothserviceinfo
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qbluetoothserviceinfo CONDITION APPLE_OSX
+qt_extend_target(tst_qbluetoothserviceinfo CONDITION APPLE_OSX
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-extend_target(tst_qbluetoothserviceinfo CONDITION ANDROID AND NOT ANDROID_EMBEDDED
+qt_extend_target(tst_qbluetoothserviceinfo CONDITION ANDROID AND NOT ANDROID_EMBEDDED
     DEFINES
         QT_ANDROID_BLUETOOTH
 )

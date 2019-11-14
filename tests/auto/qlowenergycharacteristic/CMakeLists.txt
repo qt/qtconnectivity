@@ -4,7 +4,7 @@
 ## tst_qlowenergycharacteristic Test:
 #####################################################################
 
-add_qt_test(tst_qlowenergycharacteristic
+qt_add_test(tst_qlowenergycharacteristic
     SOURCES
         tst_qlowenergycharacteristic.cpp
     PUBLIC_LIBRARIES

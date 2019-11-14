@@ -4,7 +4,7 @@
 ## tst_qbluetoothhostinfo Test:
 #####################################################################
 
-add_qt_test(tst_qbluetoothhostinfo
+qt_add_test(tst_qbluetoothhostinfo
     SOURCES
         tst_qbluetoothhostinfo.cpp
     PUBLIC_LIBRARIES

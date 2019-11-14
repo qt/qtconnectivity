@@ -4,7 +4,7 @@
 ## tst_qbluetoothserver Test:
 #####################################################################
 
-add_qt_test(tst_qbluetoothserver
+qt_add_test(tst_qbluetoothserver
     SOURCES
         tst_qbluetoothserver.cpp
     LIBRARIES
@@ -20,7 +20,7 @@ add_qt_test(tst_qbluetoothserver
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qbluetoothserver CONDITION APPLE_OSX
+qt_extend_target(tst_qbluetoothserver CONDITION APPLE_OSX
     PUBLIC_LIBRARIES
         Qt::Widgets
 )

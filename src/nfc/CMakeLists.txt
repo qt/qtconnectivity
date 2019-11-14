@@ -4,7 +4,7 @@
 ## Nfc Module:
 #####################################################################
 
-add_qt_module(Nfc
+qt_add_module(Nfc
     SOURCES
         qllcpserver.cpp qllcpserver_p.h
         qllcpsocket.cpp qllcpsocket_p.h
@@ -34,12 +34,11 @@ add_qt_module(Nfc
 
 #### Keys ignored in scope 1:.:.:nfc.pro:<TRUE>:
 # OTHER_FILES = "doc/src/*.qdoc"
-# _LOADED = "qt_module"
 
 ## Scopes:
 #####################################################################
 
-extend_target(Nfc CONDITION LINUX AND TARGET Qt::DBus
+qt_extend_target(Nfc CONDITION LINUX AND TARGET Qt::DBus
     SOURCES
         neard/adapter.cpp neard/adapter_p.h
         neard/agent.cpp neard/agent_p.h
@@ -81,7 +80,7 @@ if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     set(NFC_BACKEND_AVAILABLE ON) # special case
 endif()
 
-extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
+qt_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
     SOURCES
         android/androidjninfc.cpp android/androidjninfc_p.h
         android/androidmainnewintentlistener.cpp android/androidmainnewintentlistener_p.h
@@ -104,8 +103,8 @@ extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
 # NFC_BACKEND_AVAILABLE = "yes"
 
 # special case begin
-# extend_target(Nfc CONDITION NFC_BACKEND_AVAILABLE_ISEMPTY
-extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
+# qt_extend_target(Nfc CONDITION NFC_BACKEND_AVAILABLE_ISEMPTY
+qt_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
 # special case end
     SOURCES
         qllcpserver_p.cpp
@@ -117,7 +116,7 @@ extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
         qnearfieldsharetargetimpl_p.cpp qnearfieldsharetargetimpl_p.h
         qnearfieldtarget_p.cpp
 )
-add_qt_docs(Nfc
+qt_add_docs(Nfc
     doc/qtnfc.qdocconf
 )
 

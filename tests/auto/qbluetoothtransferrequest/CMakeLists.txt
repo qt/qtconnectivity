@@ -4,7 +4,7 @@
 ## tst_qbluetoothtransferrequest Test:
 #####################################################################
 
-add_qt_test(tst_qbluetoothtransferrequest
+qt_add_test(tst_qbluetoothtransferrequest
     SOURCES
         tst_qbluetoothtransferrequest.cpp
     PUBLIC_LIBRARIES

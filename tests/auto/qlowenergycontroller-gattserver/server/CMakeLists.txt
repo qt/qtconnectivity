@@ -4,7 +4,7 @@
 ## server Binary:
 #####################################################################
 
-add_qt_executable(server
+qt_add_executable(server
     GUI
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} # special case
     SOURCES

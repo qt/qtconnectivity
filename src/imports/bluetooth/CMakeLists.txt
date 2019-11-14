@@ -4,7 +4,7 @@
 ## bluetooth Plugin:
 #####################################################################
 
-add_qml_module(declarative_bluetooth # special case
+qt_add_qml_module(declarative_bluetooth # special case
     URI "QtBluetooth"
     CLASSNAME QBluetoothQmlPlugin
     SKIP_TYPE_REGISTRATION
@@ -23,4 +23,3 @@ add_qml_module(declarative_bluetooth # special case
 
 #### Keys ignored in scope 1:.:.:bluetooth.pro:<TRUE>:
 # TARGETPATH = "QtBluetooth"
-# _LOADED = "qml_plugin"

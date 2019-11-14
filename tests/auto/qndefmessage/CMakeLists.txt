@@ -4,7 +4,7 @@
 ## tst_qndefmessage Test:
 #####################################################################
 
-add_qt_test(tst_qndefmessage
+qt_add_test(tst_qndefmessage
     SOURCES
         tst_qndefmessage.cpp
     PUBLIC_LIBRARIES

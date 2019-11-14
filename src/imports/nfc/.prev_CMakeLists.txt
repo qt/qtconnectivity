@@ -4,7 +4,7 @@
 ## nfc Plugin:
 #####################################################################
 
-add_qml_module(nfc
+qt_add_qml_module(nfc
     URI "QtNfc"
     CLASSNAME QNfcQmlPlugin
     SKIP_TYPE_REGISTRATION
@@ -23,4 +23,3 @@ add_qml_module(nfc
 
 #### Keys ignored in scope 1:.:.:nfc.pro:<TRUE>:
 # TARGETPATH = "QtNfc"
-# _LOADED = "qml_plugin"

@@ -4,7 +4,7 @@
 ## tst_qbluetoothaddress Test:
 #####################################################################
 
-add_qt_test(tst_qbluetoothaddress
+qt_add_test(tst_qbluetoothaddress
     SOURCES
         tst_qbluetoothaddress.cpp
     PUBLIC_LIBRARIES
