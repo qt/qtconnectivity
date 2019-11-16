@@ -176,6 +176,13 @@ quint16 qNfcChecksum(const char *data, uint len)
 */
 
 /*!
+    \class QNearFieldTarget::RequestId
+    \inmodule QtHfc
+    \inheaderfile QNearFieldTarget
+    \brief A request id handle.
+*/
+
+/*!
     Constructs a new invalid request id handle.
 */
 QNearFieldTarget::RequestId::RequestId()
