@@ -611,7 +611,7 @@ QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids(DataCompleteness *compl
 
 #else
 
-/*!
+/*
     Returns the list of service UUIDS supported by the device. Most commonly this
     list of uuids represents custom uuids or a uuid value specified by
     \l QBluetoothUuid::ServiceClassUuid.
