@@ -63,7 +63,7 @@ private:
 };
 
 tst_QLowEnergyDescriptor::tst_QLowEnergyDescriptor() :
-    globalControl(0), globalService(0)
+    globalControl(nullptr), globalService(nullptr)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
 }
@@ -104,13 +104,13 @@ void tst_QLowEnergyDescriptor::initTestCase()
     QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 50000);
 
     // find first service with descriptor
-    QLowEnergyController *controller = 0;
+    QLowEnergyController *controller = nullptr;
     for (const QBluetoothDeviceInfo& remoteDeviceInfo : qAsConst(remoteLeDeviceInfos)) {
         controller = QLowEnergyController::createCentral(remoteDeviceInfo, this);
         qDebug() << "Connecting to" << remoteDeviceInfo.address();
         controller->connectToDevice();
         QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
-                  20000);
+                  20000)
         if (controller->state() != QLowEnergyController::ConnectedState) {
             // any error and we skip
             delete controller;
