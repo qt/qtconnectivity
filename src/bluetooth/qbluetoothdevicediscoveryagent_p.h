@@ -142,6 +142,7 @@ public:
     void _q_discoveryFinished();
     void _q_discoveryInterrupted(const QString &path);
     void _q_PropertiesChanged(const QString &interface,
+                              const QString &path,
                               const QVariantMap &changed_properties,
                               const QStringList &invalidated_properties);
     void _q_extendedDeviceDiscoveryTimeout();
