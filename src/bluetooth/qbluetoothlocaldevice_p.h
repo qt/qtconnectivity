@@ -201,7 +201,8 @@ public slots:
 private Q_SLOTS:
     void PropertiesChanged(const QString &interface,
                            const QVariantMap &changed_properties,
-                           const QStringList &invalidated_properties);
+                           const QStringList &invalidated_properties,
+                           const QDBusMessage &signal);
     void InterfacesAdded(const QDBusObjectPath &object_path,
                          InterfaceList interfaces_and_properties);
     void InterfacesRemoved(const QDBusObjectPath &object_path,
