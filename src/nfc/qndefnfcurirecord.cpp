@@ -135,9 +135,8 @@ void QNdefNfcUriRecord::setUri(const QUrl &uri)
 
     for (int i = 1; i < abbrevs; ++i) {
         if (uri.toString().startsWith(QLatin1String(abbreviations[i]))) {
-            QByteArray p;
+            QByteArray p(1, i);
 
-            p[0] = i;
             p += uri.toString().mid(qstrlen(abbreviations[i])).toUtf8();
 
             setPayload(p);
@@ -146,8 +145,7 @@ void QNdefNfcUriRecord::setUri(const QUrl &uri)
         }
     }
 
-    QByteArray p;
-    p[0] = 0;
+    QByteArray p(1, 0);
     p += uri.toString().toUtf8();
 
     setPayload(p);

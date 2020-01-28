@@ -705,8 +705,7 @@ void QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray &type)
 
 void QNdefNfcActRecord::setAction(QNdefNfcSmartPosterRecord::Action action)
 {
-    QByteArray data;
-    data[0] = action;
+    QByteArray data(1, action);
 
     setPayload(data);
 }
@@ -735,7 +734,7 @@ QByteArray QNdefNfcIconRecord::data() const
 
 void QNdefNfcSizeRecord::setSize(quint32 size)
 {
-    QByteArray data;
+    QByteArray data(4, 0);
 
     data[0] = (int) ((size & 0xFF000000) >> 24);
     data[1] = (int) ((size & 0x00FF0000) >> 16);
