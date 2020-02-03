@@ -843,7 +843,8 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
 // Bluez 5
 void QBluetoothLocalDevicePrivate::PropertiesChanged(const QString &interface,
                                                      const QVariantMap &changed_properties,
-                                                     const QStringList &/*invalidated_properties*/)
+                                                     const QStringList &/*invalidated_properties*/,
+                                                     const QDBusMessage &)
 {
     //qDebug() << "Change" << interface << changed_properties;
     if (interface == QStringLiteral("org.bluez.Adapter1")) {
