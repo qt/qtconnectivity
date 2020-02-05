@@ -43,6 +43,8 @@ qt_add_module(Bluetooth
         Qt::CorePrivate
     PUBLIC_LIBRARIES
         Qt::Core
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
 )
 
 #### Keys ignored in scope 1:.:.:bluetooth.pro:<TRUE>:
@@ -254,6 +256,8 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT APPLE_IOS AND N
         Qt::CorePrivate
     PUBLIC_LIBRARIES
         Qt::Core
+    PRIVATE_MODULE_INTERFACE
+        Qt::CorePrivate
 )
 
 qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT APPLE_IOS AND NOT APPLE_OSX AND NOT APPLE_TVOS AND NOT QT_FEATURE_bluez AND NOT WINRT AND (ANDROID_EMBEDDED OR NOT ANDROID)

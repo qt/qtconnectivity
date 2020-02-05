@@ -7,10 +7,9 @@
 qt_add_test(tst_qlowenergycontroller-gattserver
     SOURCES
         tst_qlowenergycontroller-gattserver.cpp
-    LIBRARIES
-        Qt::BluetoothPrivate
     PUBLIC_LIBRARIES
         Qt::Bluetooth
+        Qt::BluetoothPrivate
 )
 
 ## Scopes:

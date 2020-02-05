@@ -7,10 +7,8 @@
 qt_add_test(tst_qbluetoothdevicediscoveryagent
     SOURCES
         tst_qbluetoothdevicediscoveryagent.cpp
-    LIBRARIES
-        Qt::BluetoothPrivate
     PUBLIC_LIBRARIES
-        Qt::Bluetooth
+        Qt::BluetoothPrivate
         Qt::Concurrent
 )
 

@@ -7,10 +7,8 @@
 qt_add_test(tst_qbluetoothlocaldevice
     SOURCES
         tst_qbluetoothlocaldevice.cpp
-    LIBRARIES
-        Qt::BluetoothPrivate
     PUBLIC_LIBRARIES
-        Qt::Bluetooth
+        Qt::BluetoothPrivate
         Qt::Concurrent
 )
 
