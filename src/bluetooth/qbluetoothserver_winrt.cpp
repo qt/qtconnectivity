@@ -141,6 +141,7 @@ HRESULT QBluetoothServerPrivate::handleClientConnection(IStreamSocketListener *l
     if (pendingConnections.count() < maxPendingConnections) {
         qCDebug(QT_BT_WINRT) << "Accepting connection";
         pendingConnections.append(socket);
+        locker.unlock();
         q->newConnection();
     } else {
         qCDebug(QT_BT_WINRT) << "Refusing connection";
