@@ -239,17 +239,25 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (requestedMethods & QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
         const bool success = adapter.callMethod<jboolean>("startDiscovery");
         if (!success) {
-            lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-            errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
-            emit q->error(lastError);
+            qCDebug(QT_BT_ANDROID) << "Classic Discovery cannot be started";
+            if (requestedMethods == QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
+                //only classic discovery requested -> error out
+                lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+                errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
+
+                emit q->error(lastError);
+                return;
+            } // else fall through to LE discovery
+        } else {
+            m_active = SDPScanActive;
+            qCDebug(QT_BT_ANDROID)
+                << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Classic search successfully started.";
             return;
         }
+    }
 
-        m_active = SDPScanActive;
-        qCDebug(QT_BT_ANDROID)
-            << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Classic search successfully started.";
-    } else {
-        // LE search only requested
+    if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
+        // LE search only requested or classic discovery failed but lets try LE scan anyway
         Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 
         if (QtAndroidPrivate::androidSdkVersion() < 18) {
