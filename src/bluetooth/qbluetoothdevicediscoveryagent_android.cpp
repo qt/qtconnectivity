@@ -185,6 +185,44 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_ANDROID) << "ACCESS_COARSE|FINE_LOCATION permission available";
     }
 
+    // Double check Location service is turned on
+    bool locationTurnedOn = true; // backwards compatible behavior to previous Qt versions
+    const  QAndroidJniObject locString = QAndroidJniObject::getStaticObjectField(
+                "android/content/Context", "LOCATION_SERVICE", "Ljava/lang/String;");
+    const QAndroidJniObject locService = QtAndroid::androidContext().callObjectMethod(
+                "getSystemService",
+                "(Ljava/lang/String;)Ljava/lang/Object;",
+                locString.object<jstring>());
+
+    if (locService.isValid()) {
+        if (QtAndroid::androidSdkVersion() >= 28) {
+            locationTurnedOn = bool(locService.callMethod<jboolean>("isLocationEnabled"));
+        } else {
+            // try GPS and network provider
+            QAndroidJniObject provider = QAndroidJniObject::getStaticObjectField(
+                        "android/location/LocationManager", "GPS_PROVIDER", "Ljava/lang/String;");
+            bool gpsTurnedOn = bool(locService.callMethod<jboolean>("isProviderEnabled",
+                                      "(Ljava/lang/String;)Z", provider.object<jstring>()));
+
+            provider = QAndroidJniObject::getStaticObjectField(
+                       "android/location/LocationManager", "NETWORK_PROVIDER", "Ljava/lang/String;");
+            bool providerTurnedOn = bool(locService.callMethod<jboolean>("isProviderEnabled",
+                                          "(Ljava/lang/String;)Z", provider.object<jstring>()));
+
+            locationTurnedOn = gpsTurnedOn || providerTurnedOn;
+        }
+    }
+
+    if (!locationTurnedOn) {
+        qCWarning(QT_BT_ANDROID) << "Search not possible due to turned off Location service";
+        lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Location service turned off. Search is not possible.");
+        emit q->error(lastError);
+        return;
+    }
+
+    qCDebug(QT_BT_ANDROID) << "Location turned on";
+
     // install Java BroadcastReceiver
     if (!receiver) {
         // SDP based device discovery
