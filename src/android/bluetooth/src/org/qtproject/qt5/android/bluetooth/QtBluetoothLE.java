@@ -162,7 +162,13 @@ public class QtBluetoothLE {
             mBluetoothLeScanner.startScan(filterList, settings, leScanCallback21);
             mLeScanRunning = true;
         } else {
-            mBluetoothLeScanner.stopScan(leScanCallback21);
+            try {
+                mBluetoothLeScanner.stopScan(leScanCallback21);
+            } catch (IllegalStateException isex) {
+                // when trying to stop a scan while bluetooth is offline
+                // java.lang.IllegalStateException: BT Adapter is not turned ON
+                Log.d(TAG, "Stopping LE scan not possible: " + isex.getMessage());
+            }
             mLeScanRunning = false;
         }
 
