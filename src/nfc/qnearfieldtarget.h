@@ -169,10 +169,6 @@ private:
     QNearFieldTargetPrivate *d_ptr;
 };
 
-#if QT_DEPRECATED_SINCE(5, 9)
-Q_NFC_EXPORT quint16 qNfcChecksum(const char * data, uint len);
-#endif
-
 Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldTarget::AccessMethods)
 
 QT_END_NAMESPACE

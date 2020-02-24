@@ -126,18 +126,6 @@ QT_BEGIN_NAMESPACE
     \value CommandError             Failed to send a command to the target.
 */
 
-#if QT_DEPRECATED_SINCE(5, 9)
-/*!
-    \relates QNearFieldTarget
-
-    Returns the NFC checksum of the first \a len bytes of \a data.
-*/
-quint16 qNfcChecksum(const char *data, uint len)
-{
-    return qChecksum(data, len, Qt::ChecksumItuV41);
-}
-#endif
-
 /*!
     \fn void QNearFieldTarget::disconnected()
 
