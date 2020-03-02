@@ -851,7 +851,7 @@ void QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished(QDBusPendingCallW
             updateValueOfCharacteristic(nextJob.handle, nextJob.value, false);
 
         QLowEnergyCharacteristic ch(service, nextJob.handle);
-        // write without respone implies zero feedback
+        // write without response implies zero feedback
         if (nextJob.writeMode == QLowEnergyService::WriteWithResponse) {
             qCDebug(QT_BT_BLUEZ) << "Written Char:" << charData.uuid << nextJob.value.toHex();
             emit service->characteristicWritten(ch, nextJob.value);
@@ -971,7 +971,12 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
             if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
                 continue;
 
-            QDBusPendingReply<> reply = gattChar.characteristic->WriteValue(nextJob.value, QVariantMap());
+            QVariantMap options;
+            // The "type" option only works with BlueZ >= 5.50, older versions always write with response
+            options[QStringLiteral("type")] = nextJob.writeMode == QLowEnergyService::WriteWithoutResponse ?
+                QStringLiteral("command") : QStringLiteral("request");
+            QDBusPendingReply<> reply = gattChar.characteristic->WriteValue(nextJob.value, options);
+
             QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
             connect(watcher, &QDBusPendingCallWatcher::finished,
                     this, &QLowEnergyControllerPrivateBluezDBus::onCharWriteFinished);
