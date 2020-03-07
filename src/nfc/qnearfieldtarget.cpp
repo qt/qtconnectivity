@@ -544,6 +544,7 @@ bool QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
 void QNearFieldTarget::reportError(QNearFieldTarget::Error error,
                                    const QNearFieldTarget::RequestId &id)
 {
+    setResponseForRequest(id, QVariant(), false);
     QMetaObject::invokeMethod(this, [this, error, id]() {
         Q_EMIT this->error(error, id);
     }, Qt::QueuedConnection);

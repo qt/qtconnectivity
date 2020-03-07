@@ -55,11 +55,12 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -75,6 +76,9 @@ public class QtBluetoothLE {
     private boolean mLeScanRunning = false;
 
     private BluetoothGatt mBluetoothGatt = null;
+    private HandlerThread mHandlerThread = null;
+    private Handler mHandler = null;
+    private Constructor mCharacteristicConstructor = null;
     private String mRemoteGattAddress;
     private final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     private final int MAX_MTU = 512;
@@ -219,8 +223,13 @@ public class QtBluetoothLE {
                     resetData();
                     // reset mBluetoothGatt, reusing same object is not very reliable
                     // sometimes it reconnects and sometimes it does not.
-                    if (mBluetoothGatt != null)
+                    if (mBluetoothGatt != null) {
                         mBluetoothGatt.close();
+                        if (mHandler != null) {
+                            mHandler.getLooper().quitSafely();
+                            mHandler = null;
+                        }
+                    }
                     mBluetoothGatt = null;
                     break;
                 case BluetoothProfile.STATE_CONNECTED:
@@ -377,10 +386,11 @@ public class QtBluetoothLE {
                     errorCode = 2; break; // CharacteristicWriteError
             }
 
+            byte[] value = pendingJob.newValue;
             synchronized (readWriteQueue) {
                 ioJobPending = false;
             }
-            leCharacteristicWritten(qtObject, handle+1, characteristic.getValue(), errorCode);
+            leCharacteristicWritten(qtObject, handle+1, value, errorCode);
             performNextIO();
         }
 
@@ -572,29 +582,86 @@ public class QtBluetoothLE {
             return false;
         }
 
-        try {
-            // BluetoothDevice.connectGatt(Context, boolean, BluetoothGattCallback, int) was
-            // officially introduced by Android API v23. Earlier Android versions have a private
-            // implementation already though. Let's check at runtime and use it if possible.
-            //
-            // In general the new connectGatt() seems to be much more reliable than the function
-            // that doesn't specify the transport layer.
+        /* The required connectGatt function is already available in SDK v26, but Android 8.0
+         * contains a race condition in the Changed callback such that it can return the value that
+         * was written. This is fixed in Android 8.1, which matches SDK v27. */
+        if (Build.VERSION.SDK_INT >= 27) {
+            HandlerThread handlerThread = new HandlerThread("QtBluetoothLEHandlerThread");
+            handlerThread.start();
+            mHandler = new Handler(handlerThread.getLooper());
 
-            Class[] args = new Class[4];
+            Class[] args = new Class[6];
             args[0] = android.content.Context.class;
             args[1] = boolean.class;
             args[2] = android.bluetooth.BluetoothGattCallback.class;
             args[3] = int.class;
-            Method connectMethod = mRemoteGattDevice.getClass().getDeclaredMethod("connectGatt", args);
-            if (connectMethod != null) {
-                mBluetoothGatt = (BluetoothGatt) connectMethod.invoke(mRemoteGattDevice, qtContext,
-                                                                      false, gattCallback,
-                                                                      2 /*TRANSPORT_LE*/);
-                Log.w(TAG, "Using Android v23 BluetoothDevice.connectGatt()");
+            args[4] = int.class;
+            args[5] = android.os.Handler.class;
+
+            try {
+                Method connectMethod = mRemoteGattDevice.getClass().getDeclaredMethod("connectGatt", args);
+                if (connectMethod != null) {
+                    mBluetoothGatt = (BluetoothGatt) connectMethod.invoke(mRemoteGattDevice, qtContext, false,
+                            gattCallback, 2 /* TRANSPORT_LE */, 1 /*BluetoothDevice.PHY_LE_1M*/, mHandler);
+                    Log.w(TAG, "Using Android v26 BluetoothDevice.connectGatt()");
+                }
+            } catch (Exception ex) {
+                Log.w(TAG, "connectGatt() v26 not available");
+                ex.printStackTrace();
             }
-        } catch (Exception ex) {
-            // fallback to less reliable API 18 version
-            mBluetoothGatt = mRemoteGattDevice.connectGatt(qtContext, false, gattCallback);
+
+            if (mBluetoothGatt == null) {
+                mHandler.getLooper().quitSafely();
+                mHandler = null;
+            }
+        }
+
+        if (mBluetoothGatt == null) {
+            try {
+                //This API element is currently: greylist-max-o, reflection, allowed
+                //It may change in the future
+                Class[] constr_args = new Class[5];
+                constr_args[0] = android.bluetooth.BluetoothGattService.class;
+                constr_args[1] = java.util.UUID.class;
+                constr_args[2] = int.class;
+                constr_args[3] = int.class;
+                constr_args[4] = int.class;
+                mCharacteristicConstructor = BluetoothGattCharacteristic.class.getDeclaredConstructor(constr_args);
+                mCharacteristicConstructor.setAccessible(true);
+            } catch (NoSuchMethodException ex) {
+                Log.w(TAG, "Unable get characteristic constructor. Buffer race condition are possible");
+                /*  For some reason we don't get the private BluetoothGattCharacteristic ctor.
+                    This means that we cannot protect ourselves from issues where concurrent
+                    read and write operations on the same char can overwrite each others buffer.
+                    Nevertheless we continue with best effort.
+                */
+            }
+
+            try {
+                // BluetoothDevice.connectGatt(Context, boolean, BluetoothGattCallback, int) was
+                // officially introduced by Android API v23. Earlier Android versions have a
+                // private
+                // implementation already though. Let's check at runtime and use it if possible.
+                //
+                // In general the new connectGatt() seems to be much more reliable than the
+                // function
+                // that doesn't specify the transport layer.
+
+                Class[] args = new Class[4];
+                args[0] = android.content.Context.class;
+                args[1] = boolean.class;
+                args[2] = android.bluetooth.BluetoothGattCallback.class;
+                args[3] = int.class;
+                Method connectMethod = mRemoteGattDevice.getClass().getDeclaredMethod("connectGatt", args);
+                if (connectMethod != null) {
+                    mBluetoothGatt = (BluetoothGatt) connectMethod.invoke(mRemoteGattDevice, qtContext, false,
+                            gattCallback, 2 /* TRANSPORT_LE */);
+                    Log.w(TAG, "Using Android v23 BluetoothDevice.connectGatt()");
+                }
+            } catch (Exception ex) {
+                // fallback to less reliable API 18 version
+                mBluetoothGatt = mRemoteGattDevice.connectGatt(qtContext, false, gattCallback);
+            }
         }
 
         return mBluetoothGatt != null;
@@ -658,6 +725,7 @@ public class QtBluetoothLE {
 
     private final LinkedList<ReadWriteJob> readWriteQueue = new LinkedList<ReadWriteJob>();
     private boolean ioJobPending;
+    private ReadWriteJob pendingJob;
 
     /*
         Internal helper function
@@ -864,8 +932,7 @@ public class QtBluetoothLE {
 
             servicesToBeDiscovered.add(serviceHandle);
             scheduleServiceDetailDiscovery(serviceHandle);
-            performNextIO();
-
+            performNextIOThreaded();
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
@@ -949,8 +1016,11 @@ public class QtBluetoothLE {
         return true;
     }
 
-    private void scheduleMtuExchange()
-    {
+    /*
+     * Already executed in GattCallback so executed by the HandlerThread. No need to
+     * post it to the Hander.
+     */
+    private void scheduleMtuExchange() {
         ReadWriteJob newJob = new ReadWriteJob();
         newJob.jobType = IoJobType.Mtu;
         newJob.entry = null;
@@ -1063,7 +1133,7 @@ public class QtBluetoothLE {
             return false;
         }
 
-        performNextIO();
+        performNextIOThreaded();
         return true;
     }
 
@@ -1100,7 +1170,7 @@ public class QtBluetoothLE {
             return false;
         }
 
-        performNextIO();
+        performNextIOThreaded();
         return true;
     }
 
@@ -1135,7 +1205,7 @@ public class QtBluetoothLE {
             return false;
         }
 
-        performNextIO();
+        performNextIOThreaded();
         return true;
     }
 
@@ -1166,7 +1236,7 @@ public class QtBluetoothLE {
             return false;
         }
 
-        performNextIO();
+        performNextIOThreaded();
         return true;
     }
 
@@ -1180,7 +1250,7 @@ public class QtBluetoothLE {
             ioJobPending = false;
         }
 
-        performNextIO();
+        performNextIOThreaded();
 
         if (handle == HANDLE_FOR_MTU_EXCHANGE)
             return;
@@ -1202,6 +1272,24 @@ public class QtBluetoothLE {
         } catch (IndexOutOfBoundsException outOfBounds) {
             Log.w(TAG, "interruptCurrentIO(): Unknown gatt entry, index: "
                     + handle + " size: " + entries.size());
+        }
+    }
+
+    /*
+        Wrapper around performNextIO() ensuring that performNextIO() is executed inside
+        the mHandler/mHandlerThread if it exists.
+    */
+    private void performNextIOThreaded()
+    {
+        if (mHandler != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    performNextIO();
+                }
+            });
+        } else {
+            performNextIO();
         }
     }
 
@@ -1265,6 +1353,7 @@ public class QtBluetoothLE {
                 handleForTimeout.set(HANDLE_FOR_RESET); // not a pending call -> release atomic
             } else {
                 ioJobPending = true;
+                pendingJob = nextJob;
                 timeoutHandler.postDelayed(new TimeoutRunnable(
                         modifiedReadWriteHandle(handle, nextJob.jobType)), RUNNABLE_TIMEOUT);
             }
@@ -1353,6 +1442,16 @@ public class QtBluetoothLE {
         }
     }
 
+    private BluetoothGattCharacteristic cloneChararacteristic(BluetoothGattCharacteristic other) {
+        try {
+            return (BluetoothGattCharacteristic) mCharacteristicConstructor.newInstance(other.getService(),
+                    other.getUuid(), other.getInstanceId(), other.getProperties(), other.getPermissions());
+        } catch (Exception ex) {
+            Log.w(TAG, "Cloning characteristic failed!" + ex);
+            return null;
+        }
+    }
+
     // Runs inside the Mutex on readWriteQueue.
     // Returns true if nextJob should be skipped.
     private boolean executeWriteJob(ReadWriteJob nextJob)
@@ -1360,13 +1459,20 @@ public class QtBluetoothLE {
         boolean result;
         switch (nextJob.entry.type) {
             case Characteristic:
-                if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
-                    nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+                if (mHandler != null || mCharacteristicConstructor == null) {
+                    if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
+                        nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+                    }
+                    result = nextJob.entry.characteristic.setValue(nextJob.newValue);
+                    return !result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic);
+                } else {
+                    BluetoothGattCharacteristic orig = nextJob.entry.characteristic;
+                    BluetoothGattCharacteristic tmp = cloneChararacteristic(orig);
+                    if (tmp == null)
+                        return true;
+                    tmp.setWriteType(nextJob.requestedWriteType);
+                    return !tmp.setValue(nextJob.newValue) || !mBluetoothGatt.writeCharacteristic(tmp);
                 }
-                result = nextJob.entry.characteristic.setValue(nextJob.newValue);
-                if (!result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic))
-                    return true;
-                break;
             case Descriptor:
                 if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
                         /*

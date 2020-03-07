@@ -51,7 +51,7 @@
 
 #include <algorithm> // for std::max
 
-#include <SetupAPI.h>
+#include <setupapi.h>
 
 QT_BEGIN_NAMESPACE
 
