@@ -34,8 +34,7 @@
 
 The NFC API provides connectivity between NFC enabled devices.
 
-Currently the API is supported on \l{Qt for Android}{Android},
-and \l{Qt for Linux/X11}{Linux} using \l {https://01.org/linux-nfc}{Neard} v0.14 or later.
+Currently the API is supported on \l{Qt for Android}{Android}.
 
 \section1 Overview
 
@@ -81,20 +80,6 @@ See \l{Qt Licensing} for further details.
     \li \l {Qt NFC QML Types}{QML Types}
     \li \l {Qt NFC C++ Classes}{C++ Classes}
 \endlist
-
-\section2 Logging Categories
-
-The \l QtNfc module exports the following
-\l {Configuring Categories}{logging categories}:
-
-\table
-\header
-    \li Logging Category
-    \li Description
-\row
-    \li qt.nfc.neard
-    \li Enables logging of the Neard/Linux implementation
-\endtable
 
 \section2 Examples
 \list

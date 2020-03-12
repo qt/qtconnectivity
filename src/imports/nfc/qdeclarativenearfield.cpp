@@ -69,9 +69,6 @@
     and \l orderMatch properties to match the required NDEF messages.  Once an NDEF message is
     successfully read from a tag the \l messageRecords property is updated.
 
-    \note For platforms using neard, filtering is currently not implemented. For more information
-    on neard see \l QNearFieldManager.
-
     \snippet doc_src_qtnfc.qml QML register for messages
 */
 
@@ -88,8 +85,6 @@
     set to NDEF messages which match the filter. If no filter is set, a message handler for
     all NDEF messages will be registered.
 
-    \note Filtering is not supported when using neard.
-
     \l QNearFieldManager::registerNdefMessageHandler()
 */
 
@@ -97,7 +92,7 @@
     \qmlproperty bool NearField::orderMatch
 
     This property indicates whether the order of records should be taken into account when matching
-    messages. This is not supported when using neard.
+    messages.
 
     The default of orderMatch is false.
 */
@@ -108,9 +103,6 @@
 
     This property indicates if the underlying adapter is currently in polling state. If set to \c true
     the adapter will start polling and stop polling if set to \c false.
-
-    \note On platforms using neard, the adapter will stop polling as soon as a tag has been detected.
-    For more information see \l QNearFieldManager.
 */
 
 /*!

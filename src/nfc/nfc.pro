@@ -51,35 +51,9 @@ SOURCES += \
     qqmlndefrecord.cpp \
     qndefnfcsmartposterrecord.cpp \
     qnearfieldsharemanager.cpp \
-    qnearfieldsharetarget.cpp \
-    qnfc.cpp
+    qnearfieldsharetarget.cpp
 
-linux:!android:qtHaveModule(dbus) {
-    NFC_BACKEND_AVAILABLE = yes
-
-    QT_PRIVATE += dbus
-
-    DEFINES += NEARD_NFC
-
-    HEADERS += \
-        qllcpsocket_p_p.h \
-        qllcpserver_p_p.h \
-        qnearfieldmanager_neard_p.h \
-        qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h \
-        qnearfieldtarget_neard_p.h
-
-    SOURCES += \
-        qllcpsocket_p.cpp \
-        qllcpserver_p.cpp \
-        qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp \
-        qnearfieldmanager_neard.cpp \
-        qnearfieldtarget_neard_p.cpp
-
-    include(neard/neard.pri)
-
-} else:android:!android-embedded {
+android:!android-embedded {
     NFC_BACKEND_AVAILABLE = yes
     DEFINES += QT_ANDROID_NFC
     ANDROID_PERMISSIONS = \

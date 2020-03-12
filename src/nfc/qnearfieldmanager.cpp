@@ -42,8 +42,6 @@
 
 #if defined(QT_SIMULATOR)
 #include "qnearfieldmanager_simulator_p.h"
-#elif defined(NEARD_NFC)
-#include "qnearfieldmanager_neard_p.h"
 #elif defined(ANDROID_NFC)
 #include "qnearfieldmanager_android_p.h"
 #else
@@ -108,14 +106,6 @@ QT_BEGIN_NAMESPACE
 
     Automatically launching NDEF message handlers is supported on
     \l{nfc-android.html}{Android}.
-
-    \section3 NFC on Linux
-    The \l{https://01.org/linux-nfc}{Linux NFC project} provides software to support NFC on Linux platforms.
-    The neard daemon will allow access to the supported hardware via DBus interfaces. QtNfc requires neard
-    version 0.14 which can be built from source or installed via the appropriate Linux package manager. Not
-    all API features are currently supported.
-    To allow QtNfc to access the DBus interfaces the neard daemon has to be running. In case of problems
-    debug output can be enabled by enabling categorized logging for 'qt.nfc.neard'.
 */
 
 /*!
@@ -264,8 +254,6 @@ bool QNearFieldManager::isSupported() const
     successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
     when a target is within proximity.
     \sa stopTargetDetection()
-
-    \note For platforms using neard: target detection will stop as soon as a tag has been detected.
 */
 bool QNearFieldManager::startTargetDetection()
 {
@@ -329,8 +317,6 @@ static QMetaMethod methodForSignature(QObject *object, const char *method)
 
     \note The \e target parameter of \a method may not be available on all platforms, in which case
     \e target will be 0.
-
-    \note On platforms using neard registering message handlers is not supported.
 */
 
 int QNearFieldManager::registerNdefMessageHandler(QNdefRecord::TypeNameFormat typeNameFormat,
