@@ -386,8 +386,9 @@ public class QtBluetoothLE {
                     errorCode = 2; break; // CharacteristicWriteError
             }
 
-            byte[] value = pendingJob.newValue;
+            byte[] value;
             synchronized (readWriteQueue) {
+                value = pendingJob.newValue;
                 ioJobPending = false;
             }
             leCharacteristicWritten(qtObject, handle+1, value, errorCode);
