@@ -296,7 +296,7 @@ public class QtBluetoothLE {
 
                     //unlock the queue for next item
                     synchronized (readWriteQueue) {
-                        ioJobPending = false;
+                        pendingJob = null;
                     }
 
                     performNextIO();
@@ -309,7 +309,7 @@ public class QtBluetoothLE {
             if (requestTimedOut) {
                 Log.w(TAG, "Late char read reply after timeout was hit for handle " + foundHandle);
                 // Timeout has hit before this response -> ignore the response
-                // no need to unlock ioJobPending -> the timeout has done that already
+                // no need to unlock pendingJob -> the timeout has done that already
                 return;
             }
 
@@ -349,7 +349,7 @@ public class QtBluetoothLE {
 
             //unlock the queue for next item
             synchronized (readWriteQueue) {
-                ioJobPending = false;
+                pendingJob = null;
             }
 
             performNextIO();
@@ -373,7 +373,7 @@ public class QtBluetoothLE {
             if (requestTimedOut) {
                 Log.w(TAG, "Late char write reply after timeout was hit for handle " + handle);
                 // Timeout has hit before this response -> ignore the response
-                // no need to unlock ioJobPending -> the timeout has done that already
+                // no need to unlock pendingJob -> the timeout has done that already
                 return;
             }
 
@@ -389,7 +389,7 @@ public class QtBluetoothLE {
             byte[] value;
             synchronized (readWriteQueue) {
                 value = pendingJob.newValue;
-                ioJobPending = false;
+                pendingJob = null;
             }
             leCharacteristicWritten(qtObject, handle+1, value, errorCode);
             performNextIO();
@@ -420,7 +420,7 @@ public class QtBluetoothLE {
 
                     //unlock the queue for next item
                     synchronized (readWriteQueue) {
-                        ioJobPending = false;
+                        pendingJob = null;
                     }
                     performNextIO();
                     return;
@@ -433,7 +433,7 @@ public class QtBluetoothLE {
                 Log.w(TAG, "Late descriptor read reply after timeout was hit for handle " +
                            foundHandle);
                 // Timeout has hit before this response -> ignore the response
-                // no need to unlock ioJobPending -> the timeout has done that already
+                // no need to unlock pendingJob -> the timeout has done that already
                 return;
             }
 
@@ -492,7 +492,7 @@ public class QtBluetoothLE {
 
             //unlock the queue for next item
             synchronized (readWriteQueue) {
-                ioJobPending = false;
+                pendingJob = null;
             }
 
             performNextIO();
@@ -513,7 +513,7 @@ public class QtBluetoothLE {
                 Log.w(TAG, "Late descriptor write reply after timeout was hit for handle " +
                            handle);
                 // Timeout has hit before this response -> ignore the response
-                // no need to unlock ioJobPending -> the timeout has done that already
+                // no need to unlock pendingJob -> the timeout has done that already
                 return;
             }
 
@@ -527,7 +527,7 @@ public class QtBluetoothLE {
             }
 
             synchronized (readWriteQueue) {
-                ioJobPending = false;
+                pendingJob = null;
             }
 
             leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
@@ -560,12 +560,12 @@ public class QtBluetoothLE {
             if (requestTimedOut) {
                 Log.w(TAG, "Late mtu reply after timeout was hit");
                 // Timeout has hit before this response -> ignore the response
-                // no need to unlock ioJobPending -> the timeout has done that already
+                // no need to unlock pendingJob -> the timeout has done that already
                 return;
             }
 
             synchronized (readWriteQueue) {
-                ioJobPending = false;
+                pendingJob = null;
             }
 
             performNextIO();
@@ -725,7 +725,6 @@ public class QtBluetoothLE {
 
 
     private final LinkedList<ReadWriteJob> readWriteQueue = new LinkedList<ReadWriteJob>();
-    private boolean ioJobPending;
     private ReadWriteJob pendingJob;
 
     /*
@@ -1248,7 +1247,7 @@ public class QtBluetoothLE {
     {
         //unlock the queue for next item
         synchronized (readWriteQueue) {
-            ioJobPending = false;
+            pendingJob = null;
         }
 
         performNextIOThreaded();
@@ -1309,7 +1308,7 @@ public class QtBluetoothLE {
         int handle = HANDLE_FOR_RESET;
 
         synchronized (readWriteQueue) {
-            if (readWriteQueue.isEmpty() || ioJobPending)
+            if (readWriteQueue.isEmpty() || pendingJob != null)
                 return;
 
             nextJob = readWriteQueue.remove();
@@ -1353,7 +1352,6 @@ public class QtBluetoothLE {
             if (skip) {
                 handleForTimeout.set(HANDLE_FOR_RESET); // not a pending call -> release atomic
             } else {
-                ioJobPending = true;
                 pendingJob = nextJob;
                 timeoutHandler.postDelayed(new TimeoutRunnable(
                         modifiedReadWriteHandle(handle, nextJob.jobType)), RUNNABLE_TIMEOUT);
