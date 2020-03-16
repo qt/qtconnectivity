@@ -319,7 +319,7 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
 
     if (!m_keepConnection)
         disconnect();   // IOException at this point does not matter anymore.
-    QMetaObject::invokeMethod(this, "ndefMessagesWritten", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, &QNearFieldTarget::ndefMessagesWritten, Qt::QueuedConnection);
     return requestId;
 }
 

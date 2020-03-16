@@ -289,7 +289,9 @@ void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccess
 void QNearFieldManagerPrivateImpl::newIntent(QAndroidJniObject intent)
 {
     // This function is called from different thread and is used to move intent to main thread.
-    QMetaObject::invokeMethod(this, "onTargetDiscovered", Qt::QueuedConnection, Q_ARG(QAndroidJniObject, intent));
+    QMetaObject::invokeMethod(this, [this, intent] {
+        this->onTargetDiscovered(intent);
+    }, Qt::QueuedConnection);
 }
 
 QByteArray QNearFieldManagerPrivateImpl::getUid(const QAndroidJniObject &intent)

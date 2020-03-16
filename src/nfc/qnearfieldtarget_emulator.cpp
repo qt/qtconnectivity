@@ -104,8 +104,9 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
 
     response.chop(2);
 
-    QMetaObject::invokeMethod(this, "handleResponse", Qt::QueuedConnection,
-                              Q_ARG(QNearFieldTarget::RequestId, id), Q_ARG(QByteArray, response));
+    QMetaObject::invokeMethod(this, [this, id, response] {
+        this->handleResponse(id, response);
+    }, Qt::QueuedConnection);
 
     return id;
 }
@@ -168,8 +169,9 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
         response.chop(2);
     }
 
-    QMetaObject::invokeMethod(this, "handleResponse", Qt::QueuedConnection,
-                              Q_ARG(QNearFieldTarget::RequestId, id), Q_ARG(QByteArray, response));
+    QMetaObject::invokeMethod(this, [this, id, response] {
+        this->handleResponse(id, response);
+    }, Qt::QueuedConnection);
 
     return id;
 }

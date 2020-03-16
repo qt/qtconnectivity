@@ -181,7 +181,7 @@ void QNearFieldManagerPrivateImpl::targetActivated(QNearFieldTarget *target)
 void QNearFieldManagerPrivateImpl::targetDeactivated(QNearFieldTarget *target)
 {
     Q_EMIT targetLost(target);
-    QMetaObject::invokeMethod(target, "disconnected");
+    QMetaObject::invokeMethod(target, &QNearFieldTarget::disconnected);
 }
 
 struct VerifyRecord
