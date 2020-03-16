@@ -84,7 +84,7 @@ public:
     bool unregisterNdefMessageHandler(int handlerId) override;
     void requestAccess(QNearFieldManager::TargetAccessModes accessModes) override;
     void releaseAccess(QNearFieldManager::TargetAccessModes accessModes) override;
-    void newIntent(QAndroidJniObject intent);
+    void newIntent(QAndroidJniObject intent) override;
     QByteArray getUid(const QAndroidJniObject &intent);
 
 public slots:
