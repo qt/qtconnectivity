@@ -272,14 +272,6 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     return requestId;
 }
 
-QNearFieldTarget::RequestId NearFieldTarget::sendCommands(const QList<QByteArray> &commands)
-{
-    QNearFieldTarget::RequestId requestId;
-    for (int i=0; i < commands.size(); i++)
-        requestId = sendCommand(commands.at(i));
-    return requestId;
-}
-
 QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdefMessage> &messages)
 {
     if (messages.size() == 0)

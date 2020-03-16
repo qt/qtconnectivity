@@ -75,8 +75,7 @@ QT_BEGIN_NAMESPACE
     and set the NDEF message.
 
     If the target supports TagTypeSpecificAccess, sendCommand() can be used to send a single
-    proprietary command to the target and retrieve the response.  sendCommands() can be used to
-    send multiple proprietary commands to the target and retrieve all of the responses.
+    proprietary command to the target and retrieve the response.
 
     If the target supports LlcpAccess, the QLlcpSocket class can be used to connected to a
     service provided by the target.
@@ -104,7 +103,7 @@ QT_BEGIN_NAMESPACE
     \value NdefAccess               The target supports reading and writing NDEF messages using
                                     readNdefMessages() and writeNdefMessages().
     \value TagTypeSpecificAccess    The target supports sending tag type specific commands using
-                                    sendCommand() and sendCommands().
+                                    sendCommand().
     \value LlcpAccess               The target supports peer-to-peer LLCP communication.
 */
 
@@ -388,7 +387,7 @@ QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNde
     Returns the maximum number of bytes that can be sent with sendCommand. 0 will
     be returned if the target does not support sending tag type specific commands.
 
-    \sa sendCommand(), sendCommands()
+    \sa sendCommand()
 */
 int QNearFieldTarget::maxCommandLength() const
 {
@@ -411,29 +410,6 @@ int QNearFieldTarget::maxCommandLength() const
 QNearFieldTarget::RequestId QNearFieldTarget::sendCommand(const QByteArray &command)
 {
     Q_UNUSED(command);
-
-    emit error(UnsupportedError, RequestId());
-
-    return RequestId();
-}
-
-/*!
-    Sends multiple \a commands to the near field target. Returns a request id which can be used to
-    track the completion status of the request. An invalid request id will be returned if the
-    target does not support sending tag type specific commands.
-
-    If all commands complete successfully the requestCompleted() signal will be emitted; otherwise
-    the error() signal will be emitted. If a command fails succeeding commands from this call will
-    not be processed.
-
-    Once the request completes the response for successfully completed requests can be retrieved
-    from the requestResponse() function. The response of this request will be a QList<QByteArray>.
-
-    \sa requestCompleted(), waitForRequestCompleted()
-*/
-QNearFieldTarget::RequestId QNearFieldTarget::sendCommands(const QList<QByteArray> &commands)
-{
-    Q_UNUSED(commands);
 
     emit error(UnsupportedError, RequestId());
 

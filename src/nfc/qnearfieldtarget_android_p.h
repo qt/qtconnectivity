@@ -82,7 +82,6 @@ public:
     virtual RequestId readNdefMessages();
     int maxCommandLength() const;
     virtual RequestId sendCommand(const QByteArray &command);
-    virtual RequestId sendCommands(const QList<QByteArray> &commands);
     virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
     void setIntent(QAndroidJniObject intent);
 

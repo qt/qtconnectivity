@@ -140,7 +140,6 @@ public:
     // TagTypeSpecificAccess
     int maxCommandLength() const;
     virtual RequestId sendCommand(const QByteArray &command);
-    virtual RequestId sendCommands(const QList<QByteArray> &commands);
 
     virtual bool waitForRequestCompleted(const RequestId &id, int msecs = 5000);
 
