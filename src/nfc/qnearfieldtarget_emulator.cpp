@@ -271,7 +271,7 @@ void TagActivator::timerEvent(QTimerEvent *e)
         TagBase *tag = m_current.key();
 
         tagMutex.unlock();
-        emit tagDeactivated(tag);
+        Q_EMIT tagDeactivated(tag);
         tagMutex.lock();
     }
 
@@ -287,7 +287,7 @@ void TagActivator::timerEvent(QTimerEvent *e)
         TagBase *tag = m_current.key();
 
         tagMutex.unlock();
-        emit tagActivated(tag);
+        Q_EMIT tagActivated(tag);
         tagMutex.lock();
     }
 

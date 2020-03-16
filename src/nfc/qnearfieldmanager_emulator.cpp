@@ -159,7 +159,7 @@ int QNearFieldManagerPrivateImpl::getFreeId()
 void QNearFieldManagerPrivateImpl::targetActivated(QNearFieldTarget *target)
 {
     //if (matchesTarget(target->type(), m_detectTargetTypes))
-    emit targetDetected(target);
+    Q_EMIT targetDetected(target);
 
     if (target->hasNdefMessage()) {
         QTlvReader reader(target);
@@ -180,7 +180,7 @@ void QNearFieldManagerPrivateImpl::targetActivated(QNearFieldTarget *target)
 
 void QNearFieldManagerPrivateImpl::targetDeactivated(QNearFieldTarget *target)
 {
-    emit targetLost(target);
+    Q_EMIT targetLost(target);
     QMetaObject::invokeMethod(target, "disconnected");
 }
 

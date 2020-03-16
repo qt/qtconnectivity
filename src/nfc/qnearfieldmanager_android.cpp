@@ -320,7 +320,7 @@ void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
         connect(target, &NearFieldTarget::targetDestroyed, this, &QNearFieldManagerPrivateImpl::onTargetDestroyed);
         connect(target, &NearFieldTarget::targetLost, this, &QNearFieldManagerPrivateImpl::targetLost);
     }
-    emit targetDetected(target);
+    Q_EMIT targetDetected(target);
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)

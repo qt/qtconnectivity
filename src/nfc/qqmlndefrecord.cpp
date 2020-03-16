@@ -300,7 +300,7 @@ void QQmlNdefRecord::setType(const QString &newtype)
     Q_D(QQmlNdefRecord);
     d->record.setType(newtype.toUtf8());
 
-    emit typeChanged();
+    Q_EMIT typeChanged();
 }
 
 /*!
@@ -314,7 +314,7 @@ void QQmlNdefRecord::setTypeNameFormat(QQmlNdefRecord::TypeNameFormat newTypeNam
     Q_D(QQmlNdefRecord);
     d->record.setTypeNameFormat(static_cast<QNdefRecord::TypeNameFormat>(newTypeNameFormat));
 
-    emit typeNameFormatChanged();
+    Q_EMIT typeNameFormatChanged();
 }
 
 /*!
@@ -350,7 +350,7 @@ void QQmlNdefRecord::setRecord(const QNdefRecord &record)
         return;
 
     d->record = record;
-    emit recordChanged();
+    Q_EMIT recordChanged();
 }
 
 QT_END_NAMESPACE

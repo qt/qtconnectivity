@@ -71,7 +71,7 @@ NearFieldTarget::NearFieldTarget(QAndroidJniObject intent, const QByteArray uid,
 NearFieldTarget::~NearFieldTarget()
 {
     releaseIntent();
-    emit targetDestroyed(m_uid);
+    Q_EMIT targetDestroyed(m_uid);
 }
 
 QByteArray NearFieldTarget::uid() const
@@ -463,7 +463,7 @@ void NearFieldTarget::setupTargetCheckTimer()
 void NearFieldTarget::handleTargetLost()
 {
     releaseIntent();
-    emit targetLost(this);
+    Q_EMIT targetLost(this);
 }
 
 QAndroidJniObject NearFieldTarget::getTagTechnology(const QString &tech) const

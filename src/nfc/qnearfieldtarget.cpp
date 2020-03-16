@@ -411,7 +411,7 @@ QNearFieldTarget::RequestId QNearFieldTarget::sendCommand(const QByteArray &comm
 {
     Q_UNUSED(command);
 
-    emit error(UnsupportedError, RequestId());
+    Q_EMIT error(UnsupportedError, RequestId());
 
     return RequestId();
 }
@@ -471,7 +471,7 @@ void QNearFieldTarget::setResponseForRequest(const QNearFieldTarget::RequestId &
     d->m_decodedResponses.insert(id, response);
 
     if (emitRequestCompleted)
-        emit requestCompleted(id);
+        Q_EMIT requestCompleted(id);
 }
 
 /*!

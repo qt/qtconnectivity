@@ -120,5 +120,5 @@ void QQmlNdefFooRecord::setFoo(int value)
     QNdefRecord r = record();
     r.setPayload(payload);
     setRecord(r);
-    emit fooChanged();
+    Q_EMIT fooChanged();
 }

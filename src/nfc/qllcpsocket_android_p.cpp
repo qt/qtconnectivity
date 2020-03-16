@@ -259,7 +259,7 @@ bool QLlcpSocketPrivate::waitForDisconnected(int msecs)
     m_target = target;
 
     m_state = QLlcpSocket::ConnectedState;
-    emit q->connected();
+    Q_EMIT q->connected();
     qQNXNFCDebug() << "Socket connected";
 
     unsigned int targetId;
@@ -280,7 +280,7 @@ void QLlcpSocketPrivate::dataRead(QByteArray& data)
     /*Q_Q(QLlcpSocket);
     if (!data.isEmpty()) {
         m_receivedDatagrams.append(data);
-        emit q->readyRead();
+        Q_EMIT q->readyRead();
     }
     socketState = Idle;
     enteringIdle();*/
