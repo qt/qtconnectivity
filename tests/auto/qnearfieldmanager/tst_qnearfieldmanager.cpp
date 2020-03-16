@@ -79,7 +79,7 @@ void tst_QNearFieldManager::initTestCase()
     QNearFieldManagerPrivateImpl *emulatorBackend = new QNearFieldManagerPrivateImpl;
     QNearFieldManager manager(emulatorBackend, 0);
 
-    QVERIFY(manager.isAvailable());
+    QVERIFY(manager.isEnabled());
 }
 
 void tst_QNearFieldManager::targetDetected_data()

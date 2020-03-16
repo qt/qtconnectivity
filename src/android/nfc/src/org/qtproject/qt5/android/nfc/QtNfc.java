@@ -164,10 +164,10 @@ public class QtNfc
         return true;
     }
 
-    static public boolean isAvailable()
+    static public boolean isEnabled()
     {
         if (m_adapter == null) {
-            //Log.e(TAG, "No NFC available (Adapter is null)");
+            //Log.e(TAG, "No NFC supported (Adapter is null)");
             return false;
         }
 

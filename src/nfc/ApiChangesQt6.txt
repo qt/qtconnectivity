@@ -2,3 +2,4 @@ This document lists the API changed done to QtNFC between Qt 5.15 and Qt 6.
 
 - Removed function QNearFieldTarget::url(). No replacement available as the function was never implemented.
 - Removed function QNearFieldTarget::sendCommands(...). No replacement available as the function needs to be implemented by the API user.
+- Renamed function QNearFieldManager::isAvailable() to QNearFieldManager::isEnabled().

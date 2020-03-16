@@ -69,8 +69,8 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
 {
     //! [QNearFieldManager register handler]
     manager = new QNearFieldManager(this);
-    if (!manager->isAvailable()) {
-        qWarning() << "NFC not available";
+    if (!manager->isEnabled()) {
+        qWarning() << "NFC not enabled";
         return;
     }
 

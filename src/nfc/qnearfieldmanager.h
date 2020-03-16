@@ -76,7 +76,7 @@ public:
     explicit QNearFieldManager(QNearFieldManagerPrivate *backend, QObject *parent = nullptr);
     ~QNearFieldManager();
 
-    bool isAvailable() const;
+    bool isEnabled() const;
     bool isSupported() const;
 
     void setTargetAccessModes(TargetAccessModes accessModes);

@@ -75,7 +75,7 @@ public:
     QNearFieldManagerPrivateImpl();
     ~QNearFieldManagerPrivateImpl() override;
 
-    bool isAvailable() const override;
+    bool isEnabled() const override;
     bool isSupported() const override;
     bool startTargetDetection() override;
     void stopTargetDetection() override;

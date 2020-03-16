@@ -60,7 +60,7 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 {
 }
 
-bool QNearFieldManagerPrivateImpl::isAvailable() const
+bool QNearFieldManagerPrivateImpl::isEnabled() const
 {
     return true;
 }

@@ -70,7 +70,7 @@ public:
 bool startDiscovery();
 bool stopDiscovery();
 QAndroidJniObject getStartIntent();
-bool isAvailable();
+bool isEnabled();
 bool isSupported();
 bool registerListener(AndroidNfcListenerInterface *listener);
 bool unregisterListener(AndroidNfcListenerInterface *listener);

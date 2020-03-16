@@ -77,7 +77,7 @@ public:
     {
     }
 
-    virtual bool isAvailable() const
+    virtual bool isEnabled() const
     {
         return false;
     }

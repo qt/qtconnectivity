@@ -58,9 +58,9 @@ bool startDiscovery()
     return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"start");
 }
 
-bool isAvailable()
+bool isEnabled()
 {
-    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"isAvailable");
+    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"isEnabled");
 }
 
 bool isSupported()

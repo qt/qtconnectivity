@@ -69,7 +69,7 @@ public:
     QNearFieldManagerPrivateImpl();
     ~QNearFieldManagerPrivateImpl() override;
 
-    bool isAvailable() const override;
+    bool isEnabled() const override;
 
     void reset();
 

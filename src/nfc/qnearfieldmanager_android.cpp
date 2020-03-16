@@ -201,9 +201,9 @@ void QNearFieldManagerPrivateImpl::handlerError(QNearFieldTarget::Error error, c
     m_idToTarget.remove(id);
 }
 
-bool QNearFieldManagerPrivateImpl::isAvailable() const
+bool QNearFieldManagerPrivateImpl::isEnabled() const
 {
-    return AndroidNfc::isAvailable();
+    return AndroidNfc::isEnabled();
 }
 
 bool QNearFieldManagerPrivateImpl::isSupported() const
