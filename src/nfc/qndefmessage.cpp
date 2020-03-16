@@ -231,6 +231,28 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 }
 
 /*!
+    \fn QNdefMessage &QNdefMessage::operator=(const QNdefMessage &other)
+    \overload
+    \since 6.0
+
+    Copy assignment operator from QList<QNdefRecord>. Assigns the
+    \a other list of NDEF records to this NDEF record list.
+
+    After the operation, \a other and \c *this will be equal.
+*/
+
+/*!
+    \fn QNdefMessage &QNdefMessage::operator=(QNdefMessage &&other)
+    \overload
+    \since 6.0
+
+    Move assignment operator from QList<QNdefRecord>. Moves the
+    \a other list of NDEF records to this NDEF record list.
+
+    After the operation, \a other will be empty.
+*/
+
+/*!
     Returns true if this NDEF message is equivalent to \a other; otherwise returns false.
 
     An empty message (i.e. isEmpty() returns true) is equivalent to a NDEF message containing a
