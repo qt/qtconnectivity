@@ -312,7 +312,7 @@ void QLlcpSocketPrivate::enteringIdle()
     if (m_state == QLlcpSocket::ConnectedState) {
         if (m_writeQueue.isEmpty()) {
             qQNXNFCDebug() << "Write queue empty, reading in 50ms";
-            QTimer::singleShot(50, this, SLOT(read()));
+            QTimer::singleShot(50, this, &QLlcpSocketPrivate::read);
         } else {
             qQNXNFCDebug() << "Write first package in queue";
             writeDatagram(m_writeQueue.takeFirst());
