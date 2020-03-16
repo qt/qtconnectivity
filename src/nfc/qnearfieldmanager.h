@@ -85,19 +85,6 @@ public:
     bool startTargetDetection();
     void stopTargetDetection();
 
-    //TODO Qt 6 Consider removal of this registration mechanism
-    //None of the currently supported platforms supports the feature
-    //or in fact the implementation (on Android) is not what the
-    //function is supposed to do.
-    int registerNdefMessageHandler(QObject *object, const char *method);
-    int registerNdefMessageHandler(QNdefRecord::TypeNameFormat typeNameFormat,
-                                   const QByteArray &type,
-                                   QObject *object, const char *method);
-    int registerNdefMessageHandler(const QNdefFilter &filter,
-                                   QObject *object, const char *method);
-
-    bool unregisterNdefMessageHandler(int handlerId);
-
 Q_SIGNALS:
     void adapterStateChanged(QNearFieldManager::AdapterState state);
     void targetDetected(QNearFieldTarget *target);

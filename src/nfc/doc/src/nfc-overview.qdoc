@@ -107,35 +107,6 @@ As the above code demonstrates, writing of NDEF messages is triggered via
 is indicated by the emission of the \l QNearFieldTarget::ndefMessagesWritten() signal. Any
 type of error during read or write is indicated via \l QNearFieldTarget::error().
 
-\section2 Registering NDEF Message Handlers
-
-The above described method (of reading NDEF messages) directly connects to the platform's NFC infrastructure.
-However on some platforms (in particular mobile platforms) this may not actually trigger the target slot
-if the application is currently running in the background. This is not desirable in cases where an
-application wants to be activated if the platform detects a tag of particular type.
-For this purpose the Qt NFC API provides the possibility to register an NDEF message handler. The handler
-is called by the operating system, when the detected NDEF message matches the given filter criteria.
-Depending on the platform it may even be possible to start the application that registered the handler.
-
-\note This feature is not available on all platforms and, in addition to the code snippets below,
-may require further platform specific setup.
-
-\snippet annotatedurl/annotatedurl.cpp QNearFieldManager register handler
-
-For comparison an application that uses an empty NDEF filter (match all behavior) in combination with
-\l QNearFieldManager::registerNdefMessageHandler() would behave similarly to another application that uses
-\l QNearFieldTarget::readNdefMessages() while being in the forground. For more information about
-registration details of NDEF message handlers, see the
-\l {QNearFieldManager#automatically-launching-ndef-message-handlers}{QNearFieldManager} class description.
-
-The content of \c handleMessage() may look like the snippet below. Any incoming NDEF message of type
-\c text or \c uri will be processed:
-
-\snippet annotatedurl/annotatedurl.cpp handleMessage 1
-\snippet annotatedurl/annotatedurl.cpp handleMessage 2
-\snippet annotatedurl/annotatedurl.cpp handleMessage 3
-\snippet annotatedurl/annotatedurl.cpp handleMessage 4
-
 \section2 Sharing Files and Messages
 
 Since Qt 5.3, Qt NFC provides a generic NFC share feature. If both devices support the same protocol,

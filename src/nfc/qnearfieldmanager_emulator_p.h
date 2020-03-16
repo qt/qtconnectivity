@@ -74,12 +74,6 @@ public:
 
     bool startTargetDetection() override;
 
-    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method) override;
-    int registerNdefMessageHandler(const QNdefFilter &filter,
-                                   QObject *object, const QMetaMethod &method) override;
-
-    bool unregisterNdefMessageHandler(int id) override;
-
     void reset();
 
 private slots:
@@ -101,8 +95,6 @@ private:
         QMetaMethod method;
     };
 
-    QList<Callback> m_registeredHandlers;
-    QList<int> m_freeIds;
     QList<QNearFieldTarget::Type> m_detectTargetTypes;
     QMap<TagBase *, QPointer<QNearFieldTarget> > m_targets;
 

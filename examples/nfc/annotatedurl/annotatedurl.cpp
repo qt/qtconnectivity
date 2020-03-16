@@ -67,27 +67,6 @@
 AnnotatedUrl::AnnotatedUrl(QObject *parent)
 :   QObject(parent)
 {
-    //! [QNearFieldManager register handler]
-    manager = new QNearFieldManager(this);
-    if (!manager->isEnabled()) {
-        qWarning() << "NFC not enabled";
-        return;
-    }
-
-    QNdefFilter filter;
-    filter.setOrderMatch(false);
-    filter.appendRecord<QNdefNfcTextRecord>(1, UINT_MAX);
-    filter.appendRecord<QNdefNfcUriRecord>();
-    // type parameter cannot specify substring so filter for "image/" below
-    filter.appendRecord(QNdefRecord::Mime, QByteArray(), 0, 1);
-
-    int result = manager->registerNdefMessageHandler(filter, this,
-                                       SLOT(handleMessage(QNdefMessage,QNearFieldTarget*)));
-    //! [QNearFieldManager register handler]
-
-    if (result < 0)
-        qWarning() << "Platform does not support NDEF message handler registration";
-
     manager->startTargetDetection();
     connect(manager, &QNearFieldManager::targetDetected,
             this, &AnnotatedUrl::targetDetected);

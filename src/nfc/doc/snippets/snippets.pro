@@ -6,5 +6,4 @@ QT += nfc
 #! [project modification]
 
 SOURCES += main.cpp \
-           doc_src_qtnfc.cpp \
            nfc.cpp

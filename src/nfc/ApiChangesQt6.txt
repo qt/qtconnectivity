@@ -5,3 +5,4 @@ This document lists the API changed done to QtNFC between Qt 5.15 and Qt 6.
 - Renamed function QNearFieldManager::isAvailable() to QNearFieldManager::isEnabled().
 - Removed functions QNearFieldTarget::keepConnection() and QNearFieldTarget::setKeepConnection(...). Keeping the connection is the default behavior now.
 - Removed QML API. No replacement available because the support has been discontinued.
+- Removed functions QNearFieldTarget::(un)registerNdefMessageHandler(...). No replacement available.

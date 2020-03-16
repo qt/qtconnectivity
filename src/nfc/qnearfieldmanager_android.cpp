@@ -227,53 +227,6 @@ void QNearFieldManagerPrivateImpl::stopTargetDetection()
     updateReceiveState();
 }
 
-// FIXME This is supposed to be a platform registration. A message that
-// matches the given NDEF filter should restart the current application.
-// The implementation below only works as long as the current application
-// is running. It is not a platform wide registration on Android.
-int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(QObject *object, const QMetaMethod &method)
-{
-    ndefMessageHandlers.append(QPair<QPair<int, QObject *>, QMetaMethod>(QPair<int, QObject *>(m_handlerID, object), method));
-    updateReceiveState();
-    //Returns the handler ID and increments it afterwards
-    return m_handlerID++;
-}
-
-// FIXME see above
-int QNearFieldManagerPrivateImpl::registerNdefMessageHandler(const QNdefFilter &filter,
-                                                             QObject *object, const QMetaMethod &method)
-{
-    //If no record is set in the filter, we ignore the filter
-    if (filter.recordCount()==0)
-        return registerNdefMessageHandler(object, method);
-
-    ndefFilterHandlers.append(QPair<QPair<int, QObject*>, QPair<QNdefFilter, QMetaMethod> >
-                              (QPair<int, QObject*>(m_handlerID, object), QPair<QNdefFilter, QMetaMethod>(filter, method)));
-
-    updateReceiveState();
-
-    return m_handlerID++;
-}
-
-bool QNearFieldManagerPrivateImpl::unregisterNdefMessageHandler(int handlerId)
-{
-    for (int i=0; i<ndefMessageHandlers.count(); ++i) {
-        if (ndefMessageHandlers.at(i).first.first == handlerId) {
-            ndefMessageHandlers.removeAt(i);
-            updateReceiveState();
-            return true;
-        }
-    }
-    for (int i=0; i<ndefFilterHandlers.count(); ++i) {
-        if (ndefFilterHandlers.at(i).first.first == handlerId) {
-            ndefFilterHandlers.removeAt(i);
-            updateReceiveState();
-            return true;
-        }
-    }
-    return false;
-}
-
 void QNearFieldManagerPrivateImpl::requestAccess(QNearFieldManager::TargetAccessModes accessModes)
 {
     Q_UNUSED(accessModes);

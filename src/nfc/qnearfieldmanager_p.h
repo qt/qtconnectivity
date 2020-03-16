@@ -96,28 +96,6 @@ public:
     {
     }
 
-    virtual int registerNdefMessageHandler(QObject *object, const QMetaMethod &/*method*/)
-    {
-        Q_UNUSED(object);
-
-        return -1;
-    }
-
-    virtual int registerNdefMessageHandler(const QNdefFilter &/*filter*/,
-                                           QObject *object, const QMetaMethod &/*method*/)
-    {
-        Q_UNUSED(object);
-
-        return -1;
-    }
-
-    virtual bool unregisterNdefMessageHandler(int handlerId)
-    {
-        Q_UNUSED(handlerId);
-
-        return false;
-    }
-
     virtual void requestAccess(QNearFieldManager::TargetAccessModes accessModes)
     {
         m_requestedModes |= accessModes;

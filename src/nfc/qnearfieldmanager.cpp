@@ -72,11 +72,6 @@ QT_BEGIN_NAMESPACE
     are also capable of operating as the slave, so called Card Emulation mode. In this mode the
     local NFC device emulates a NFC Forum Tag or Contactless Card.
 
-    NFC Forum Tags can contain one or more messages in a standardized format. These messages are
-    encapsulated by the QNdefMessage class. Use the registerNdefMessageHandler() functions to
-    register message handlers with particular criteria. Handlers can be unregistered with the
-    unregisterNdefMessageHandler() function.
-
     Applications can connect to the targetDetected() and targetLost() signals to get notified when
     an NFC Forum Tag enters or leaves proximity. Before these signals are
     emitted target detection must be started with the startTargetDetection() function.
@@ -87,25 +82,6 @@ QT_BEGIN_NAMESPACE
     perform on the detected target. When access is no longer required the target access modes
     should be set to NoTargetAccess as other applications may be blocked from accessing targets.
     The current target access modes can be retried with the targetAccessModes() function.
-
-
-    \section2 Automatically launching NDEF message handlers
-
-    On some platforms it is possible to pre-register an application to receive NDEF messages
-    matching a given criteria. This is useful to get the system to automatically launch your
-    application when a matching NDEF message is received. This removes the need to have the user
-    manually launch NDEF handling applications, prior to touching a tag, or to have those
-    applications always running and using system resources.
-
-    The process of registering the handler is different for each platform. Please refer to the
-    platform documentation on how such a registration may be done.
-    If the application has been registered as an NDEF message handler, the application only needs
-    to call the registerNdefMessageHandler() function:
-
-    \snippet doc_src_qtnfc.cpp handleNdefMessage
-
-    Automatically launching NDEF message handlers is supported on
-    \l{nfc-android.html}{Android}.
 */
 
 /*!
@@ -272,133 +248,6 @@ void QNearFieldManager::stopTargetDetection()
     Q_D(QNearFieldManager);
 
     d->stopTargetDetection();
-}
-
-static QMetaMethod methodForSignature(QObject *object, const char *method)
-{
-    QByteArray normalizedMethod = QMetaObject::normalizedSignature(method);
-
-    if (!QMetaObject::checkConnectArgs(SIGNAL(targetDetected(QNdefMessage,QNearFieldTarget*)),
-                                       normalizedMethod)) {
-        qWarning("Signatures do not match: %s:%d\n", __FILE__, __LINE__);
-        return QMetaMethod();
-    }
-
-    quint8 memcode = (normalizedMethod.at(0) - '0') & 0x03;
-    normalizedMethod = normalizedMethod.mid(1);
-
-    int index;
-    switch (memcode) {
-    case QSLOT_CODE:
-        index = object->metaObject()->indexOfSlot(normalizedMethod.constData());
-        break;
-    case QSIGNAL_CODE:
-        index = object->metaObject()->indexOfSignal(normalizedMethod.constData());
-        break;
-    case QMETHOD_CODE:
-        index = object->metaObject()->indexOfMethod(normalizedMethod.constData());
-        break;
-    default:
-        index = -1;
-    }
-
-    if (index == -1)
-        return QMetaMethod();
-
-    return object->metaObject()->method(index);
-}
-
-/*!
-    Registers \a object to receive notifications on \a method when a tag has been detected and has
-    an NDEF record that matches \a typeNameFormat and \a type.  The \a method on \a object should
-    have the prototype
-    'void targetDetected(const QNdefMessage &message, QNearFieldTarget *target)'.
-
-    Returns an identifier, which can be used to unregister the handler, on success; otherwise
-    returns -1.
-
-    \note The \e target parameter of \a method may not be available on all platforms, in which case
-    \e target will be 0.
-*/
-
-int QNearFieldManager::registerNdefMessageHandler(QNdefRecord::TypeNameFormat typeNameFormat,
-                                                  const QByteArray &type,
-                                                  QObject *object, const char *method)
-{
-    QMetaMethod metaMethod = methodForSignature(object, method);
-    if (!metaMethod.enclosingMetaObject())
-        return -1;
-
-    QNdefFilter filter;
-    filter.appendRecord(typeNameFormat, type);
-
-    Q_D(QNearFieldManager);
-
-    return d->registerNdefMessageHandler(filter, object, metaMethod);
-}
-
-/*!
-    \fn int QNearFieldManager::registerNdefMessageHandler(QObject *object, const char *method)
-
-    Registers \a object to receive notifications on \a method when a tag has been detected and has
-    an NDEF message that matches a pre-registered message format. The \a method on \a object should
-    have the prototype
-    'void targetDetected(const QNdefMessage &message, QNearFieldTarget *target)'.
-
-    Returns an identifier, which can be used to unregister the handler, on success; otherwise
-    returns -1.
-
-    This function is used to register a QNearFieldManager instance to receive notifications when a
-    NDEF message matching a pre-registered message format is received. See the section on
-    \l {Automatically launching NDEF message handlers}.
-
-    \note The \e target parameter of \a method may not be available on all platforms, in which case
-    \e target will be 0.
-*/
-int QNearFieldManager::registerNdefMessageHandler(QObject *object, const char *method)
-{
-    QMetaMethod metaMethod = methodForSignature(object, method);
-    if (!metaMethod.enclosingMetaObject())
-        return -1;
-
-    Q_D(QNearFieldManager);
-
-    return d->registerNdefMessageHandler(object, metaMethod);
-}
-
-/*!
-    Registers \a object to receive notifications on \a method when a tag has been detected and has
-    an NDEF message that matches \a filter is detected. The \a method on \a object should have the
-    prototype 'void targetDetected(const QNdefMessage &message, QNearFieldTarget *target)'.
-
-    Returns an identifier, which can be used to unregister the handler, on success; otherwise
-    returns -1.
-
-    \note The \e target parameter of \a method may not be available on all platforms, in which case
-    \e target will be 0.
-*/
-int QNearFieldManager::registerNdefMessageHandler(const QNdefFilter &filter,
-                                                  QObject *object, const char *method)
-{
-    QMetaMethod metaMethod = methodForSignature(object, method);
-    if (!metaMethod.enclosingMetaObject())
-        return -1;
-
-    Q_D(QNearFieldManager);
-
-    return d->registerNdefMessageHandler(filter, object, metaMethod);
-}
-
-/*!
-    Unregisters the target detect handler identified by \a handlerId.
-
-    Returns true on success; otherwise returns false.
-*/
-bool QNearFieldManager::unregisterNdefMessageHandler(int handlerId)
-{
-    Q_D(QNearFieldManager);
-
-    return d->unregisterNdefMessageHandler(handlerId);
 }
 
 /*!

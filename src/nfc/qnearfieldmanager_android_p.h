@@ -79,9 +79,6 @@ public:
     bool isSupported() const override;
     bool startTargetDetection() override;
     void stopTargetDetection() override;
-    int registerNdefMessageHandler(QObject *object, const QMetaMethod &method) override;
-    int registerNdefMessageHandler(const QNdefFilter &filter, QObject *object, const QMetaMethod &method) override;
-    bool unregisterNdefMessageHandler(int handlerId) override;
     void requestAccess(QNearFieldManager::TargetAccessModes accessModes) override;
     void releaseAccess(QNearFieldManager::TargetAccessModes accessModes) override;
     void newIntent(QAndroidJniObject intent) override;
