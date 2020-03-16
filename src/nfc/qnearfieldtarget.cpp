@@ -278,14 +278,6 @@ QNearFieldTarget::~QNearFieldTarget()
 */
 
 /*!
-    Returns the URL of the near field target.
-*/
-QUrl QNearFieldTarget::url() const
-{
-    return QUrl();
-}
-
-/*!
     \fn QNearFieldTarget::Type QNearFieldTarget::type() const = 0
 
     Returns the type of tag type of this near field target.

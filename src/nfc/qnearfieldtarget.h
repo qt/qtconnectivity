@@ -122,7 +122,6 @@ public:
     virtual ~QNearFieldTarget();
 
     virtual QByteArray uid() const = 0;
-    virtual QUrl url() const;
 
     virtual Type type() const = 0;
     virtual AccessMethods accessMethods() const = 0;
