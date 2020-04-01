@@ -267,6 +267,7 @@ QNearFieldTarget::QNearFieldTarget(QObject *parent)
 */
 QNearFieldTarget::~QNearFieldTarget()
 {
+    d_ptr->disconnect();
     delete d_ptr;
 }
 
@@ -291,44 +292,12 @@ QNearFieldTarget::~QNearFieldTarget()
 /*!
     \since 5.9
 
-    Returns true if this feature is enabled.
-
-    \sa setKeepConnection(), disconnect()
-*/
-bool QNearFieldTarget::keepConnection() const
-{
-    return d_ptr->keepConnection();
-}
-
-/*!
-    \since 5.9
-
-    Preserves the connection to the target device after processing a command or
-    reading/writing NDEF messages if \a isPersistent is \c true.
-    By default, this behavior is not enabled.
-
-    Returns \c true if enabling this feature was successful. A possible
-    reason for a failure is the lack of support on the used platform.
-
-    Enabling this feature requires to use the disconnect() function too, to close the
-    connection manually and enable communication with the target from a different instance.
-    Disabling this feature will also close an open connection.
-
-    \sa keepConnection(), disconnect()
-*/
-bool QNearFieldTarget::setKeepConnection(bool isPersistent)
-{
-    return d_ptr->setKeepConnection(isPersistent);
-}
-
-/*!
-    \since 5.9
-
-    Closes the connection to the target.
+    Closes the connection to the target to enable communication with the target
+    from a different instance. The connection will also be closed, when the
+    QNearFieldTarget is destroyed. A connection to the target device is
+    (re)created to process a command or read/write a NDEF messages.
 
     Returns true only if an existing connection was successfully closed.
-
-    \sa keepConnection(), setKeepConnection()
 */
 bool QNearFieldTarget::disconnect()
 {

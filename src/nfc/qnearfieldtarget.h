@@ -126,8 +126,6 @@ public:
     virtual Type type() const = 0;
     virtual AccessMethods accessMethods() const = 0;
 
-    bool keepConnection() const;
-    bool setKeepConnection(bool isPersistent);
     bool disconnect();
 
     bool isProcessingCommand() const;

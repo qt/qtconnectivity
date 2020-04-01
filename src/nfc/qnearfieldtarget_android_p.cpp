@@ -44,18 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-bool QNearFieldTargetPrivate::keepConnection() const
-{
-    NEARFIELDTARGET_Q();
-    return q->keepConnection();
-}
-
-bool QNearFieldTargetPrivate::setKeepConnection(bool isPersistent)
-{
-    NEARFIELDTARGET_Q();
-    return q->setKeepConnection(isPersistent);
-}
-
 bool QNearFieldTargetPrivate::disconnect()
 {
     NEARFIELDTARGET_Q();

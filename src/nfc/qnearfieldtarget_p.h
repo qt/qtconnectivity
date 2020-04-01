@@ -77,8 +77,6 @@ public:
 
     QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
 
-    bool keepConnection() const;
-    bool setKeepConnection(bool isPersistent);
     bool disconnect();
     int maxCommandLength() const;
 };

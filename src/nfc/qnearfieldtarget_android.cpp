@@ -60,8 +60,7 @@
 NearFieldTarget::NearFieldTarget(QAndroidJniObject intent, const QByteArray uid, QObject *parent) :
     QNearFieldTarget(parent),
     m_intent(intent),
-    m_uid(uid),
-    m_keepConnection(false)
+    m_uid(uid)
 {
     updateTechList();
     updateType();
@@ -100,21 +99,6 @@ QNearFieldTarget::AccessMethods NearFieldTarget::accessMethods() const
         result |= TagTypeSpecificAccess;
 
     return result;
-}
-
-bool NearFieldTarget::keepConnection() const
-{
-    return m_keepConnection;
-}
-
-bool NearFieldTarget::setKeepConnection(bool isPersistent)
-{
-    m_keepConnection = isPersistent;
-
-    if (!m_keepConnection)
-        disconnect();
-
-    return true;
 }
 
 bool NearFieldTarget::disconnect()
@@ -175,11 +159,6 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     // Convert to byte array
     QAndroidJniObject ndefMessageBA = ndefMessage.callObjectMethod("toByteArray", "()[B");
     QByteArray ndefMessageQBA = jbyteArrayToQByteArray(ndefMessageBA.object<jbyteArray>());
-
-    if (!m_keepConnection) {
-        // Closing connection
-        disconnect();   // IOException at this point does not matter anymore.
-    }
 
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
@@ -261,10 +240,6 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
 
     handleResponse(requestId, result);
 
-    if (!m_keepConnection) {
-        // Closing connection
-        disconnect();   // IOException at this point does not matter anymore.
-    }
     QMetaObject::invokeMethod(this, [this, requestId]() {
         Q_EMIT this->requestCompleted(requestId);
     }, Qt::QueuedConnection);
@@ -317,8 +292,6 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
         return requestId;
     }
 
-    if (!m_keepConnection)
-        disconnect();   // IOException at this point does not matter anymore.
     QMetaObject::invokeMethod(this, &QNearFieldTarget::ndefMessagesWritten, Qt::QueuedConnection);
     return requestId;
 }

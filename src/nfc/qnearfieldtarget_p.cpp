@@ -44,17 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-bool QNearFieldTargetPrivate::keepConnection() const
-{
-    return false;
-}
-
-bool QNearFieldTargetPrivate::setKeepConnection(bool isPersistent)
-{
-    Q_UNUSED(isPersistent);
-    return false;
-}
-
 bool QNearFieldTargetPrivate::disconnect()
 {
     return false;

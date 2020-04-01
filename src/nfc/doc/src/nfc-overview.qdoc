@@ -78,6 +78,18 @@ to the \l QNearFieldManager::targetLost() signal:
 
 \note The target object should only be deleted via deleteLater() if it is deleted inside the slot.
 
+\section2 Connecting NFC Tags
+
+All functions of \l QNearFieldTarget that require a connection will create one by its own.
+An active connection will prevent other instances to create a connection because only one
+connection at the time is allowed.
+
+Qt 5 disconnected the tag at the end of the functions to allow other instances to connect.
+QNearFieldManager::setKeepConnection() allowed to change this behavior.
+
+Since Qt 6, \l QNearFieldTarget keeps the connection by default. The connection is only closed
+when the \l QNearFieldTarget is destroyed or \l QNearFieldManager::disconnect() is called.
+
 \section2 Reading and Writing NDEF Messages
 
 The \l QNearFieldTarget instance returned by \l QNearFieldManager::targetDetected() signal

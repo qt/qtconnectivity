@@ -75,8 +75,6 @@ public:
     virtual QByteArray uid() const;
     virtual Type type() const;
     virtual AccessMethods accessMethods() const;
-    bool keepConnection() const;
-    bool setKeepConnection(bool isPersistent);
     bool disconnect();
     virtual bool hasNdefMessage();
     virtual RequestId readNdefMessages();
@@ -114,7 +112,6 @@ protected:
     QTimer *m_targetCheckTimer;
     QString m_tech;
     QAndroidJniObject m_tagTech;
-    bool m_keepConnection;
 };
 
 QT_END_NAMESPACE
