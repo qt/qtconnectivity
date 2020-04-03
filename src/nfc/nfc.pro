@@ -1,5 +1,5 @@
 TARGET = QtNfc
-QT = core
+QT = core network
 DEFINES += QT_NO_FOREACH
 
 QMAKE_DOCS = $$PWD/doc/qtnfc.qdocconf

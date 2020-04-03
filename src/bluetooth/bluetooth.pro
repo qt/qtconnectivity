@@ -1,5 +1,5 @@
 TARGET = QtBluetooth
-QT = core core-private
+QT = core core-private network network-private
 DEFINES += QT_NO_FOREACH
 
 QMAKE_DOCS = $$PWD/doc/qtbluetooth.qdocconf
@@ -85,10 +85,7 @@ win32 {
 
 qtConfig(bluez) {
     QT_PRIVATE = concurrent
-    QT_FOR_PRIVATE += dbus network
-
-    # do not link against QtNetwork but use inline qt_safe_* functions
-    INCLUDEPATH += $$QT.network_private.includes
+    QT_FOR_PRIVATE += dbus
 
     include(bluez/bluez.pri)
 
