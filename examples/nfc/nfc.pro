@@ -4,9 +4,3 @@ qtHaveModule(widgets) {
         annotatedurl \
         ndefeditor
 }
-qtHaveModule(quick) {
-    SUBDIRS += \
-        poster
-}
-
-qtHaveModule(quick): SUBDIRS += corkboard

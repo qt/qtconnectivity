@@ -148,18 +148,4 @@ which usually require a much more complex setup.
 The bearer is chosen based on the device's capabilities and the properties of the to-be-shared data.
 
 \l QNearFieldShareManager and \l QNearFieldShareTarget are responsible for accessing the NFC share feature.
-
-\section1 QML Overview
-
-The QML API only supports a very small subset of the Qt NFC feature set. This section outlines the available QML features.
-
-\section2 Reading NDEF Messages
-
-The user can specify NDEF filters and use those filters to register for the automatic reception of NDEF
-messages which match those filters. The \l NearField::messageRecords property contains the list of NDEF records
-of the last NDEF message read matching the given filters.
-
-\snippet doc_src_qtnfc.qml QML register for messages
-
-If no filter is set, the message handler will match all incoming NDEF messages.
 */

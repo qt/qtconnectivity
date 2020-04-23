@@ -54,11 +54,6 @@ option to your \c .pro file:
 
 \snippet snippets.pro project modification
 
-To use the classes of the module in your application you need the following
-import statement in your \c .qml file:
-
-\snippet doc_src_qtnfc.qml import
-
 \section1 Licenses
 
 Qt NFC is available under commercial licenses from \l{The Qt Company}.
@@ -77,17 +72,11 @@ See \l{Qt Licensing} for further details.
 
 \section2 Reference
 \list
-    \li \l {Qt NFC QML Types}{QML Types}
     \li \l {Qt NFC C++ Classes}{C++ Classes}
 \endlist
 
 \section2 Examples
 \list
-    \li QML
-    \list
-        \li \l {corkboard}{CorkBoard}
-        \li \l {poster}{QML Poster}
-    \endlist
     \li C++
     \list
         \li \l {annotatedurl}{Annotated URL}

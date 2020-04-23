@@ -46,18 +46,5 @@ in their own documentation, but they are also accessible from here.
         \li \l{ndefeditor}{NDEF Editor}
         \li Create new or modify existing NDEF messages on NFC Forum Tags.
 \endtable
-
-\section2 QML Examples
-\table 80%
-    \header
-        \li Example
-        \li Description
-    \row
-        \li \l{corkboard} {CorkBoard}
-        \li Displays NDEF text tags on a corkboard.
-    \row
-        \li \l{poster}{QML Poster}
-        \li Displays URLs stored on NFC Forum Tags.
-\endtable
 */
 

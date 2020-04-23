@@ -7,7 +7,4 @@ QT += nfc
 
 SOURCES += main.cpp \
            doc_src_qtnfc.cpp \
-           nfc.cpp \
-           foorecord.cpp
-
-HEADERS += foorecord.h
+           nfc.cpp

@@ -14,7 +14,6 @@ HEADERS += \
     qndefmessage.h \
     qndeffilter.h \
     qndefnfcurirecord.h \
-    qqmlndefrecord.h \
     qndefnfcsmartposterrecord.h \
     qnearfieldsharemanager.h \
     qnearfieldsharetarget.h \
@@ -48,7 +47,6 @@ SOURCES += \
     qnearfieldtagtype4.cpp \
     qtlv.cpp \
     qllcpserver.cpp \
-    qqmlndefrecord.cpp \
     qndefnfcsmartposterrecord.cpp \
     qnearfieldsharemanager.cpp \
     qnearfieldsharetarget.cpp
