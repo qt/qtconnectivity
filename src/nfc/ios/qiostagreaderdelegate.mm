@@ -73,8 +73,7 @@ QT_USE_NAMESPACE
         return;
     }
 
-    self.session = [[NFCTagReaderSession alloc] autorelease];
-    self.session = [self.session initWithPollingOption:NFCPollingISO14443 delegate:self queue:nil];
+    self.session = [[[NFCTagReaderSession alloc] initWithPollingOption:NFCPollingISO14443 delegate:self queue:nil] autorelease];
     if (self.session) {
         if (self.message)
             self.session.alertMessage = self.message;

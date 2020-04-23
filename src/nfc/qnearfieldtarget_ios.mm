@@ -209,7 +209,7 @@ void QNearFieldTargetPrivateImpl::onExecuteRequest()
         requestInProgress = true;
         const auto request = queue.dequeue();
         const auto tag = static_cast<id<NFCISO7816Tag>>(nfcTag.get());
-        auto* apdu = [[NFCISO7816APDU alloc] initWithData: request.second.toNSData()];
+        auto *apdu = [[[NFCISO7816APDU alloc] initWithData: request.second.toNSData()] autorelease];
         [tag sendCommandAPDU: apdu completionHandler: ^(NSData* responseData, uint8_t sw1, uint8_t sw2, NSError* error){
             QByteArray recvBuffer = QByteArray::fromNSData(responseData);
             recvBuffer += static_cast<char>(sw1);
