@@ -106,17 +106,4 @@ As the above code demonstrates, writing of NDEF messages is triggered via
 \l QNearFieldTarget::writeNdefMessages(). The successful completion of the write operation
 is indicated by the emission of the \l QNearFieldTarget::ndefMessagesWritten() signal. Any
 type of error during read or write is indicated via \l QNearFieldTarget::error().
-
-\section2 Sharing Files and Messages
-
-Since Qt 5.3, Qt NFC provides a generic NFC share feature. If both devices support the same protocol,
-the feature can be used to share files or NDEF messages. The advantage is that the two involved partners
-can quickly establish a connection via NFC but transfer the data through, for example, Bluetooth or Wifi.
-Effectively, this combines the low configuration effort of NFC with high data rate communication bearers
-which usually require a much more complex setup.
-
-\note The API does not make any guarantees about the actual communication bearer used during the transfer.
-The bearer is chosen based on the device's capabilities and the properties of the to-be-shared data.
-
-\l QNearFieldShareManager and \l QNearFieldShareTarget are responsible for accessing the NFC share feature.
 */

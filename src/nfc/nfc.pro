@@ -15,8 +15,6 @@ HEADERS += \
     qndeffilter.h \
     qndefnfcurirecord.h \
     qndefnfcsmartposterrecord.h \
-    qnearfieldsharemanager.h \
-    qnearfieldsharetarget.h \
     qtnfcglobal_p.h \
     qllcpsocket_p.h \
     qllcpserver_p.h \
@@ -28,9 +26,7 @@ HEADERS += \
     qnearfieldtagtype3_p.h \
     qnearfieldtagtype4_p.h \
     qtlv_p.h \
-    qndefnfcsmartposterrecord_p.h \
-    qnearfieldsharemanager_p.h \
-    qnearfieldsharetarget_p.h
+    qndefnfcsmartposterrecord_p.h
 
 SOURCES += \
     qnearfieldmanager.cpp \
@@ -47,9 +43,7 @@ SOURCES += \
     qnearfieldtagtype4.cpp \
     qtlv.cpp \
     qllcpserver.cpp \
-    qndefnfcsmartposterrecord.cpp \
-    qnearfieldsharemanager.cpp \
-    qnearfieldsharetarget.cpp
+    qndefnfcsmartposterrecord.cpp
 
 android:!android-embedded {
     NFC_BACKEND_AVAILABLE = yes
@@ -67,8 +61,6 @@ android:!android-embedded {
         android/androidjninfc_p.h \
         qnearfieldmanager_android_p.h \
         qnearfieldtarget_android_p.h \
-        qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h \
         android/androidmainnewintentlistener_p.h
 
 
@@ -79,8 +71,6 @@ android:!android-embedded {
         qnearfieldmanager_android.cpp \
         qnearfieldtarget_android.cpp \
         qnearfieldtarget_android_p.cpp \
-        qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp \
         android/androidmainnewintentlistener.cpp
 }
 
@@ -90,16 +80,12 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     HEADERS += \
         qllcpsocket_p_p.h \
         qllcpserver_p_p.h \
-        qnearfieldmanagerimpl_p.h \
-        qnearfieldsharemanagerimpl_p.h \
-        qnearfieldsharetargetimpl_p.h
+        qnearfieldmanagerimpl_p.h
 
     SOURCES += \
         qllcpsocket_p.cpp \
         qllcpserver_p.cpp \
         qnearfieldmanagerimpl_p.cpp \
-        qnearfieldsharemanagerimpl_p.cpp \
-        qnearfieldsharetargetimpl_p.cpp \
         qnearfieldtarget_p.cpp
 }
 
