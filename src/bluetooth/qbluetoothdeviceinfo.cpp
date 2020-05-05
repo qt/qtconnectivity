@@ -717,7 +717,7 @@ bool QBluetoothDeviceInfo::setManufacturerData(quint16 manufacturerId, const QBy
     \sa setManufacturerData
     \since 5.12
 */
-QHash<quint16, QByteArray> QBluetoothDeviceInfo::manufacturerData() const
+QMultiHash<quint16, QByteArray> QBluetoothDeviceInfo::manufacturerData() const
 {
     Q_D(const QBluetoothDeviceInfo);
     return d->manufacturerData;

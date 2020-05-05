@@ -262,12 +262,10 @@ public:
 #endif
     void setServiceUuids(const QVector<QBluetoothUuid> &uuids);
 
-    // TODO Qt6 manufacturerData() need to be changed to return
-    // QMultiHash<quint16, QByteArray>
     QVector<quint16> manufacturerIds() const;
     QByteArray manufacturerData(quint16 manufacturerId) const;
     bool setManufacturerData(quint16 manufacturerId, const QByteArray &data);
-    QHash<quint16, QByteArray> manufacturerData() const;
+    QMultiHash<quint16, QByteArray> manufacturerData() const;
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);
     QBluetoothDeviceInfo::CoreConfigurations coreConfigurations() const;

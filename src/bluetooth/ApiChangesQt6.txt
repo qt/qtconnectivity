@@ -1,0 +1,9 @@
+This document lists the API changes done between Qt Bluetooth 5.15 and the first
+QtBluetooth release in the Qt 6 series. This file is temporary in nature to keep track of API
+changes for further documentation later on.
+
+QBluetoothDeviceInfo
+--------------------
+
+- QBluetoothDeviceInfo::manufacturerData() returns a QMultiHash rather than QHash. Since Qt 6
+QMultiHash no longer derives from QHash.
