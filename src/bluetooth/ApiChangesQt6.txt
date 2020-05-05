@@ -5,5 +5,15 @@ changes for further documentation later on.
 QBluetoothDeviceInfo
 --------------------
 
-- QBluetoothDeviceInfo::manufacturerData() returns a QMultiHash rather than QHash. Since Qt 6
-QMultiHash no longer derives from QHash.
+- manufacturerData() returns a QMultiHash rather than QHash. Since Qt 6
+  QMultiHash no longer derives from QHash.
+
+- DataCompleteness was removed without replacement.
+
+- setServiceUuids(const QList<QBluetoothUuid>, DataCompleteness) was replaced by
+  setServiceUuids(const QVector<QBluetoothUuid> &uuids)
+
+- DataCompleteness serviceUuidsCompleteness() const was removed without replacement.
+
+- QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const was replaced by
+  QVector<QBluetoothUuid> serviceUuids() const.

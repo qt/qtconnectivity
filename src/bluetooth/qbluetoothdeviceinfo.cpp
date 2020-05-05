@@ -282,9 +282,6 @@ QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     serviceClasses(QBluetoothDeviceInfo::NoService),
     majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
     minorDeviceClass(0),
-#if QT_DEPRECATED_SINCE(5, 13)
-    serviceUuidsCompleteness(QBluetoothDeviceInfo::DataUnavailable),
-#endif
     deviceCoreConfiguration(QBluetoothDeviceInfo::UnknownCoreConfiguration)
 {
 }
@@ -324,10 +321,6 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothAddress &address, con
     d->majorDeviceClass = static_cast<MajorDeviceClass>((classOfDevice >> 8) & 0x1f);
     d->serviceClasses = static_cast<ServiceClasses>((classOfDevice >> 13) & 0x7ff);
 
-#if QT_DEPRECATED_SINCE(5, 13)
-    d->serviceUuidsCompleteness = DataUnavailable;
-#endif
-
     d->valid = true;
     d->cached = false;
     d->rssi = 0;
@@ -356,10 +349,6 @@ QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothUuid &uuid, const QSt
     d->minorDeviceClass = static_cast<quint8>((classOfDevice >> 2) & 0x3f);
     d->majorDeviceClass = static_cast<MajorDeviceClass>((classOfDevice >> 8) & 0x1f);
     d->serviceClasses = static_cast<ServiceClasses>((classOfDevice >> 13) & 0x7ff);
-
-#if QT_DEPRECATED_SINCE(5, 13)
-    d->serviceUuidsCompleteness = DataUnavailable;
-#endif
 
     d->valid = true;
     d->cached = false;
@@ -426,9 +415,6 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
     d->serviceClasses = other.d_func()->serviceClasses;
     d->valid = other.d_func()->valid;
     d->cached = other.d_func()->cached;
-#if QT_DEPRECATED_SINCE(5, 13)
-    d->serviceUuidsCompleteness = other.d_func()->serviceUuidsCompleteness;
-#endif
     d->serviceUuids = other.d_func()->serviceUuids;
     d->manufacturerData = other.d_func()->manufacturerData;
     d->rssi = other.d_func()->rssi;
@@ -459,10 +445,6 @@ bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
         return false;
     if (d->address != other.d_func()->address)
         return false;
-#if QT_DEPRECATED_SINCE(5, 13)
-    if (d->serviceUuidsCompleteness != other.d_func()->serviceUuidsCompleteness)
-        return false;
-#endif
     if (d->serviceUuids.count() != other.d_func()->serviceUuids.count())
         return false;
     if (d->serviceUuids != other.d_func()->serviceUuids)
@@ -548,22 +530,6 @@ quint8 QBluetoothDeviceInfo::minorDeviceClass() const
     return d->minorDeviceClass;
 }
 
-#if QT_DEPRECATED_SINCE(5, 13)
-/*!
-    \deprecated
-
-    Sets the list of service UUIDs to \a uuids and the completeness of the data to \a completeness.
-*/
-void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids,
-                                           DataCompleteness completeness)
-{
-    Q_D(QBluetoothDeviceInfo);
-
-    d->serviceUuids = uuids.toVector();
-    d->serviceUuidsCompleteness = completeness;
-}
-#endif
-
 /*!
     Sets the list of service UUIDs to \a uuids.
     \since 5.13
@@ -574,7 +540,6 @@ void QBluetoothDeviceInfo::setServiceUuids(const QVector<QBluetoothUuid> &uuids)
     d->serviceUuids = uuids;
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 /*!
     Returns the list of service UUIDS supported by the device. Most commonly this
     list of uuids represents custom uuids or a uuid value specified by
@@ -588,57 +553,6 @@ QVector<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids() const
     Q_D(const QBluetoothDeviceInfo);
     return d->serviceUuids;
 }
-
-#elif QT_DEPRECATED_SINCE(5, 13)
-
-/*!
-    Returns the list of service UUIDS supported by the device. If \a completeness is not 0 it will
-    be set to DataComplete and the complete list of UUIDs supported by the device is returned.
-    DataIncomplete if additional service UUIDs are supported by the device and DataUnavailable if
-    no service UUID information is available.
-
-    This function requires both the Bluetooth devices to support the 2.1 specification.
-*/
-QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids(DataCompleteness *completeness) const
-{
-    Q_D(const QBluetoothDeviceInfo);
-
-    if (completeness)
-        *completeness = d->serviceUuidsCompleteness;
-
-    return d->serviceUuids.toList();
-}
-
-#else
-
-/*
-    Returns the list of service UUIDS supported by the device. Most commonly this
-    list of uuids represents custom uuids or a uuid value specified by
-    \l QBluetoothUuid::ServiceClassUuid.
-*/
-QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids() const
-{
-    Q_D(const QBluetoothDeviceInfo);
-    return d->serviceUuids.toList();
-}
-
-#endif //QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-
-#if QT_DEPRECATED_SINCE(5, 13)
-/*!
-    \deprecated
-
-    Returns the completeness of the service UUID list.  If DataComplete is returned,
-    serviceUuids() returns the complete list of service UUIDs supported by the device, otherwise
-    only the partial or empty list of service UUIDs. To get a list
-    of all services supported by the device, a full service discovery needs to be performed.
-*/
-QBluetoothDeviceInfo::DataCompleteness QBluetoothDeviceInfo::serviceUuidsCompleteness() const
-{
-    Q_D(const QBluetoothDeviceInfo);
-    return d->serviceUuidsCompleteness;
-}
-#endif
 
 /*!
     Returns all manufacturer ids attached to this device information.
