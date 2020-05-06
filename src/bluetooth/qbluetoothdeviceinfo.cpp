@@ -279,9 +279,9 @@ QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
     valid(false),
     cached(false),
     rssi(1),
-    serviceClasses(QBluetoothDeviceInfo::NoService),
-    majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
     minorDeviceClass(0),
+    majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
+    serviceClasses(QBluetoothDeviceInfo::NoService),
     deviceCoreConfiguration(QBluetoothDeviceInfo::UnknownCoreConfiguration)
 {
 }

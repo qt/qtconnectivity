@@ -67,15 +67,14 @@ public:
 
     bool valid;
     bool cached;
+    qint16 rssi;
+    quint8 minorDeviceClass;
 
     QBluetoothAddress address;
     QString name;
-
-    qint16 rssi;
+    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
 
     QBluetoothDeviceInfo::ServiceClasses serviceClasses;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
-    quint8 minorDeviceClass;
 
     QVector<QBluetoothUuid> serviceUuids;
     QMultiHash<quint16, QByteArray> manufacturerData;
