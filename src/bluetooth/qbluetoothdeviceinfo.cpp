@@ -275,14 +275,7 @@ QT_BEGIN_NAMESPACE
                                                 for standard and Low Energy device.
     \value LowEnergyCoreConfiguration           The device is a Bluetooth Low Energy device.
 */
-QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate() :
-    valid(false),
-    cached(false),
-    rssi(1),
-    minorDeviceClass(0),
-    majorDeviceClass(QBluetoothDeviceInfo::MiscellaneousDevice),
-    serviceClasses(QBluetoothDeviceInfo::NoService),
-    deviceCoreConfiguration(QBluetoothDeviceInfo::UnknownCoreConfiguration)
+QBluetoothDeviceInfoPrivate::QBluetoothDeviceInfoPrivate()
 {
 }
 

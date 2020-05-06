@@ -65,20 +65,20 @@ class QBluetoothDeviceInfoPrivate
 public:
     QBluetoothDeviceInfoPrivate();
 
-    bool valid;
-    bool cached;
-    qint16 rssi;
-    quint8 minorDeviceClass;
+    bool valid = false;
+    bool cached = false;
+    qint16 rssi = 1;
+    quint8 minorDeviceClass = 0;
 
     QBluetoothAddress address;
     QString name;
-    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass;
+    QBluetoothDeviceInfo::MajorDeviceClass majorDeviceClass = QBluetoothDeviceInfo::MiscellaneousDevice;
 
-    QBluetoothDeviceInfo::ServiceClasses serviceClasses;
+    QBluetoothDeviceInfo::ServiceClasses serviceClasses = QBluetoothDeviceInfo::NoService;
 
     QVector<QBluetoothUuid> serviceUuids;
     QMultiHash<quint16, QByteArray> manufacturerData;
-    QBluetoothDeviceInfo::CoreConfigurations deviceCoreConfiguration;
+    QBluetoothDeviceInfo::CoreConfigurations deviceCoreConfiguration = QBluetoothDeviceInfo::UnknownCoreConfiguration;
 
     QBluetoothUuid deviceUuid;
 };
