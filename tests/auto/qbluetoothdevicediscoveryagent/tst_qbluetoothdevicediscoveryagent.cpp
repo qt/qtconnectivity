@@ -120,7 +120,7 @@ static void myCustomMessageHandler(QtMsgType type,
                                    const QMessageLogContext &context,
                                    const QString &msg)
 {
-    logMessage = qMyMessageFormatString(type, context, msg);
+    logMessage = QString::fromUtf8(qMyMessageFormatString(type, context, msg));
 }
 #endif
 
@@ -171,7 +171,8 @@ void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_invalidBtAddress()
 {
-    QBluetoothDeviceDiscoveryAgent *discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress("11:11:11:11:11:11"));
+    QBluetoothDeviceDiscoveryAgent *discoveryAgent = new QBluetoothDeviceDiscoveryAgent(
+                QBluetoothAddress(QStringLiteral("11:11:11:11:11:11")));
 
     QCOMPARE(discoveryAgent->error(), QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
     discoveryAgent->start();
@@ -409,7 +410,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
         QVERIFY(discoveredSpy.count() == discoveryAgent.discoveredDevices().length());
         // verify that there really was some devices in the array
 
-        const QString remote = qgetenv("BT_TEST_DEVICE");
+        const QString remote = qEnvironmentVariable("BT_TEST_DEVICE");
         QBluetoothAddress remoteDevice;
         if (!remote.isEmpty()) {
             remoteDevice = QBluetoothAddress(remote);
