@@ -4,11 +4,6 @@
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
-%deprecatedheaders = (
-    "QtNfc" => {
-        "qnfcglobal.h" => "QtNfc/qtnfcglobal.h"
-    }
-);
 
 @ignore_for_include_check = (
 
