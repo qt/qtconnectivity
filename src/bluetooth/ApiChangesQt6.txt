@@ -2,6 +2,11 @@ This document lists the API changes done between Qt Bluetooth 5.15 and the first
 QtBluetooth release in the Qt 6 series. This file is temporary in nature to keep track of API
 changes for further documentation later on.
 
+General
+-------
+
+ - qbluetoothglobal.h was removed. qtbluetoothglobal. is the official header with the same purpose.
+
 QBluetoothDeviceInfo
 --------------------
 
