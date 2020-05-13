@@ -59,7 +59,6 @@ enum {
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
-    inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     receiver(0),
     m_adapterAddress(deviceAdapter),

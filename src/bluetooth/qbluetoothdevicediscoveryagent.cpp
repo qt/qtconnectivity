@@ -104,24 +104,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 */
 
 /*!
-    \enum QBluetoothDeviceDiscoveryAgent::InquiryType
-
-    This enum describes the inquiry type used while discovering Bluetooth devices.
-
-    \value GeneralUnlimitedInquiry  A general unlimited inquiry. Discovers all visible Bluetooth
-                                    devices in the local vicinity.
-    \value LimitedInquiry           A limited inquiry discovers devices that are in limited
-                                    inquiry mode.
-
-    LimitedInquiry is not supported on all platforms. If it is requested on a platform that does not
-    support it, GeneralUnlimitedInquiry will be used instead. Setting LimitedInquiry is useful
-    for multi-player Bluetooth-based games that needs faster communication between the devices.
-    The phone scans for devices in LimitedInquiry and Service Discovery is done on one or two devices
-    to speed up the service scan. After the game has connected to the device it intended to,
-    the device returns to GeneralUnlimitedInquiry.
-*/
-
-/*!
     \enum QBluetoothDeviceDiscoveryAgent::DiscoveryMethod
 
     This enum descibes the type of discovery method employed by the QBluetoothDeviceDiscoveryAgent.
@@ -249,30 +231,6 @@ QBluetoothDeviceDiscoveryAgent::QBluetoothDeviceDiscoveryAgent(
 QBluetoothDeviceDiscoveryAgent::~QBluetoothDeviceDiscoveryAgent()
 {
     delete d_ptr;
-}
-
-/*!
-    \property QBluetoothDeviceDiscoveryAgent::inquiryType
-    \brief type of inquiry scan to be used while discovering devices
-
-    This property affects the type of inquiry scan which is performed while discovering devices.
-
-    By default, this property is set to GeneralUnlimitedInquiry.
-
-    Not all platforms support LimitedInquiry.
-
-    \sa InquiryType
-*/
-QBluetoothDeviceDiscoveryAgent::InquiryType QBluetoothDeviceDiscoveryAgent::inquiryType() const
-{
-    Q_D(const QBluetoothDeviceDiscoveryAgent);
-    return d->inquiryType;
-}
-
-void QBluetoothDeviceDiscoveryAgent::setInquiryType(QBluetoothDeviceDiscoveryAgent::InquiryType type)
-{
-    Q_D(QBluetoothDeviceDiscoveryAgent);
-    d->inquiryType = type;
 }
 
 /*!

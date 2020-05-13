@@ -74,7 +74,6 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent)
 
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
-    connect(ui->inquiryType, SIGNAL(toggled(bool)), this, SLOT(setGeneralUnlimited(bool)));
     connect(ui->scan, SIGNAL(clicked()), this, SLOT(startScan()));
 
     connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
@@ -122,21 +121,11 @@ void DeviceDiscoveryDialog::startScan()
 {
     discoveryAgent->start();
     ui->scan->setEnabled(false);
-    ui->inquiryType->setEnabled(false);
 }
 
 void DeviceDiscoveryDialog::scanFinished()
 {
     ui->scan->setEnabled(true);
-    ui->inquiryType->setEnabled(true);
-}
-
-void DeviceDiscoveryDialog::setGeneralUnlimited(bool unlimited)
-{
-    if (unlimited)
-        discoveryAgent->setInquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
-    else
-        discoveryAgent->setInquiryType(QBluetoothDeviceDiscoveryAgent::LimitedInquiry);
 }
 
 void DeviceDiscoveryDialog::itemActivated(QListWidgetItem *item)

@@ -150,7 +150,6 @@ public:
 
 private:
     QList<QBluetoothDeviceInfo> discoveredDevices;
-    QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType;
 
     QBluetoothDeviceDiscoveryAgent::Error lastError;
     QString errorString;

@@ -92,7 +92,6 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         extendedDiscoveryTimer.setInterval(10000);
         extendedDiscoveryTimer.setSingleShot(true);
     }
-    inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()

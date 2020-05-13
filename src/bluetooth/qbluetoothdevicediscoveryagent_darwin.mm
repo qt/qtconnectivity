@@ -94,7 +94,6 @@ using LEInquiryObjC = QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry);
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(const QBluetoothAddress &adapter,
                                                                              QBluetoothDeviceDiscoveryAgent *q) :
-    inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
     lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     agentState(NonActive),
     adapterAddress(adapter),

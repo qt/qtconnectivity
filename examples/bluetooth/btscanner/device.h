@@ -79,7 +79,6 @@ public slots:
 private slots:
     void startScan();
     void scanFinished();
-    void setGeneralUnlimited(bool unlimited);
     void itemActivated(QListWidgetItem *item);
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode);
 

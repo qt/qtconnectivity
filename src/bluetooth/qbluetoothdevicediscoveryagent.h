@@ -54,8 +54,6 @@ class QBluetoothDeviceDiscoveryAgentPrivate;
 class Q_BLUETOOTH_EXPORT QBluetoothDeviceDiscoveryAgent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType
-               READ inquiryType WRITE setInquiryType)
 
 public:
     // FIXME: add more errors
@@ -71,12 +69,6 @@ public:
     };
     Q_ENUM(Error)
 
-    enum InquiryType {
-        GeneralUnlimitedInquiry,
-        LimitedInquiry
-    };
-    Q_ENUM(InquiryType)
-
     enum DiscoveryMethod
     {
         NoMethod = 0x0,
@@ -90,10 +82,6 @@ public:
     explicit QBluetoothDeviceDiscoveryAgent(const QBluetoothAddress &deviceAdapter,
                                             QObject *parent = nullptr);
     ~QBluetoothDeviceDiscoveryAgent();
-
-    // TODO Remove inquiry type in Qt 6 -> not really used anywhere
-    QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType() const;
-    void setInquiryType(QBluetoothDeviceDiscoveryAgent::InquiryType type);
 
     bool isActive() const;
 

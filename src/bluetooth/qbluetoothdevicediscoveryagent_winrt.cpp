@@ -814,8 +814,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 const QBluetoothAddress &deviceAdapter,
                 QBluetoothDeviceDiscoveryAgent *parent)
 
-    :   inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
-        lastError(QBluetoothDeviceDiscoveryAgent::NoError),
+    :   lastError(QBluetoothDeviceDiscoveryAgent::NoError),
         lowEnergySearchTimeout(25000),
         q_ptr(parent),
         leScanTimer(0)

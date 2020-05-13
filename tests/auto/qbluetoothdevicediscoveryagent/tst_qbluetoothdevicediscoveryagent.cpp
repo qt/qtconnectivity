@@ -70,13 +70,10 @@ public slots:
 private slots:
     void initTestCase();
 
-    void tst_properties();
-
     void tst_invalidBtAddress();
 
     void tst_startStopDeviceDiscoveries();
 
-    void tst_deviceDiscovery_data();
     void tst_deviceDiscovery();
 
     void tst_discoveryTimeout();
@@ -132,7 +129,6 @@ static void myCustomMessageHandler(QtMsgType type,
 void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 {
     qRegisterMetaType<QBluetoothDeviceInfo>();
-    qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::InquiryType>();
 
 #if QT_CONFIG(bluez)
     // To distinguish Bluez 4 and 5 we peek into the debug output
@@ -173,17 +169,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
     delete device;
 }
 
-void tst_QBluetoothDeviceDiscoveryAgent::tst_properties()
-{
-    QBluetoothDeviceDiscoveryAgent discoveryAgent;
-
-    QCOMPARE(discoveryAgent.inquiryType(), QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
-    discoveryAgent.setInquiryType(QBluetoothDeviceDiscoveryAgent::LimitedInquiry);
-    QCOMPARE(discoveryAgent.inquiryType(), QBluetoothDeviceDiscoveryAgent::LimitedInquiry);
-    discoveryAgent.setInquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
-    QCOMPARE(discoveryAgent.inquiryType(), QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
-}
-
 void tst_QBluetoothDeviceDiscoveryAgent::tst_invalidBtAddress()
 {
     QBluetoothDeviceDiscoveryAgent *discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress("11:11:11:11:11:11"));
@@ -209,7 +194,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::deviceDiscoveryDebug(const QBluetoothDe
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 {
-    QBluetoothDeviceDiscoveryAgent::InquiryType inquiryType = QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
     QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
     QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
@@ -222,7 +206,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
 
     // Starting case 1: start-stop, expecting cancel signal
-    discoveryAgent.setInquiryType(inquiryType);
     // we should have no errors at this point.
     QVERIFY(errorSpy.isEmpty());
 
@@ -372,32 +355,13 @@ void tst_QBluetoothDeviceDiscoveryAgent::finished()
     qDebug() << "Finished called";
 }
 
-void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery_data()
-{
-    QTest::addColumn<QBluetoothDeviceDiscoveryAgent::InquiryType>("inquiryType");
-
-    QTest::newRow("general unlimited inquiry") << QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry;
-    QTest::newRow("limited inquiry") << QBluetoothDeviceDiscoveryAgent::LimitedInquiry;
-}
-
 void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
 {
     {
-        QFETCH(QBluetoothDeviceDiscoveryAgent::InquiryType, inquiryType);
-
         //Run test in case of multiple Bluetooth adapters
         QBluetoothLocalDevice localDevice;
         //We will use default adapter if there is no other adapter
         QBluetoothAddress address = localDevice.address();
-        int numberOfAdapters = (localDevice.allDevices()).size();
-        QList<QBluetoothAddress> addresses;
-        if (numberOfAdapters > 1) {
-
-            for (int i=0; i < numberOfAdapters; i++) {
-                addresses.append(((QBluetoothHostInfo)localDevice.allDevices().at(i)).address());
-            }
-            address = (QBluetoothAddress)addresses.at(0);
-        }
 
         QBluetoothDeviceDiscoveryAgent discoveryAgent(address);
         QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
@@ -413,7 +377,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
 //        connect(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
 //                this, SLOT(deviceDiscoveryDebug(QBluetoothDeviceInfo)));
 
-        discoveryAgent.setInquiryType(inquiryType);
         discoveryAgent.start();
         if (!errorSpy.isEmpty()) {
             QCOMPARE(noOfLocalDevices, 0);
@@ -457,30 +420,12 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
 
         if (!remoteDevice.isNull())
             QVERIFY(discoveredSpy.count() > 0);
-        int counter = 0;
         // All returned QBluetoothDeviceInfo should be valid.
         while (!discoveredSpy.isEmpty()) {
             const QBluetoothDeviceInfo info =
                 qvariant_cast<QBluetoothDeviceInfo>(discoveredSpy.takeFirst().at(0));
             QVERIFY(info.isValid());
-            qDebug() << "Discovered device:" << info.address().toString() << info.name();
-
-            if (numberOfAdapters > 1) {
-                for (int i= 1; i < numberOfAdapters; i++) {
-                    if (info.address().toString() == addresses[i].toString())
-                        counter++;
-                }
-            }
         }
-#if defined(Q_OS_IOS) || defined(Q_OS_TVOS) || QT_CONFIG(winrt_bt)
-        //On iOS/WinRT, we do not have access to the local device/adapter, numberOfAdapters is 0,
-        //so we skip this test at all.
-        QSKIP("iOS/WinRT: no local Bluetooth device available. Skipping remaining part of test.");
-#endif
-
-        //For multiple Bluetooth adapter do the check only for GeneralUnlimitedInquiry.
-        if (!(inquiryType == QBluetoothDeviceDiscoveryAgent::LimitedInquiry))
-            QVERIFY((numberOfAdapters-1) == counter);
     }
 }
 

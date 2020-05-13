@@ -7,6 +7,12 @@ General
 
  - qbluetoothglobal.h was removed. qtbluetoothglobal. is the official header with the same purpose.
 
+QBluetoothDeviceDiscoveryAgent
+------------------------------
+
+ - QBluetoothDeviceDiscoveryAgent::inquiryType property and related setter/getter & enum were removed.
+   The API element was never implemented and/or supported.
+
 QBluetoothDeviceInfo
 --------------------
 
