@@ -72,8 +72,7 @@ public:
     enum ServiceState {
         InvalidService = 0,
         DiscoveryRequired,  // we know start/end handle but nothing more
-        //TODO Rename DiscoveringServices -> DiscoveringDetails or DiscoveringService
-        DiscoveringServices,// discoverDetails() called and running
+        DiscoveringService, // discoverDetails() called and running
         ServiceDiscovered,  // all details have been synchronized
         LocalService,
     };

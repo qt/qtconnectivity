@@ -22,3 +22,9 @@ QBluetoothDeviceInfo
 
 - QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const was replaced by
   QVector<QBluetoothUuid> serviceUuids() const.
+
+QLowEnergyService
+-----------------
+
+ - Renamed DiscoveringServices enum value to DiscoveringService. This properly relfects the fact that
+   only one service is being discovered at a given time.

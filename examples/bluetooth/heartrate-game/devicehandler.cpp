@@ -202,7 +202,7 @@ void DeviceHandler::serviceScanDone()
 void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
 {
     switch (s) {
-    case QLowEnergyService::DiscoveringServices:
+    case QLowEnergyService::DiscoveringService:
         setInfo(tr("Discovering services..."));
         break;
     case QLowEnergyService::ServiceDiscovered:

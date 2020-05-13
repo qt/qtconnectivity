@@ -216,7 +216,7 @@ void MyClass::btleSharedData()
 
     first->discoverDetails();
 
-    Q_ASSERT(first->state() == QLowEnergyService::DiscoveringServices);
+    Q_ASSERT(first->state() == QLowEnergyService::DiscoveringService);
     Q_ASSERT(first->state() == second->state());
 //! [data_share_qlowenergyservice]
 }

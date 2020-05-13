@@ -96,7 +96,7 @@ QT_BEGIN_NAMESPACE
 
     The discovery of its included services, characteristics and descriptors
     is triggered when calling \l discoverDetails(). During the discovery the
-    \l state() transitions from \l DiscoveryRequired via \l DiscoveringServices
+    \l state() transitions from \l DiscoveryRequired via \l DiscoveringService
     to its final \l ServiceDiscovered state. This transition is advertised via
     the \l stateChanged() signal. Once the details are known, all of the contained
     characteristics, descriptors and included services are known and can be read
@@ -228,7 +228,7 @@ QT_BEGIN_NAMESPACE
     \value DiscoveryRequired    The service details are yet to be discovered by calling \l discoverDetails().
                                 The only reliable pieces of information are its
                                 \l serviceUuid() and \l serviceName().
-    \value DiscoveringServices  The service details are being discovered.
+    \value DiscoveringService  The service details are being discovered.
     \value ServiceDiscovered    The service details have been discovered.
     \value LocalService         The service is associated with a controller object in the
                                 \l{QLowEnergyController::PeripheralRole}{peripheral role}. Such
@@ -573,7 +573,7 @@ void QLowEnergyService::discoverDetails()
     if (d->state != QLowEnergyService::DiscoveryRequired)
         return;
 
-    d->setState(QLowEnergyService::DiscoveringServices);
+    d->setState(QLowEnergyService::DiscoveringService);
 
     d->controller->discoverServiceDetails(d->uuid);
 }

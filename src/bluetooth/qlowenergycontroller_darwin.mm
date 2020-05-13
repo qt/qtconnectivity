@@ -302,7 +302,7 @@ void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(const QBluetoothU
     Q_ASSERT(leQueue);
 
     ServicePrivate qtService(serviceList.value(serviceUuid));
-    qtService->setState(QLowEnergyService::DiscoveringServices);
+    qtService->setState(QLowEnergyService::DiscoveringService);
     // Copy objects ...
     ObjCCentralManager *manager = centralManager.getAs<ObjCCentralManager>();
     const QBluetoothUuid serviceUuidCopy(serviceUuid);

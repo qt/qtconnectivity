@@ -320,7 +320,7 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
         // in case the service discovery failed
         // We have to queue the signal up to give UI time to even enter
         // the above mode
-        if (newState != QLowEnergyService::DiscoveringServices) {
+        if (newState != QLowEnergyService::DiscoveringService) {
             QMetaObject::invokeMethod(this, "characteristicsUpdated",
                                       Qt::QueuedConnection);
         }

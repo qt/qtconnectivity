@@ -844,7 +844,7 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
     QSharedPointer<QLowEnergyServicePrivate> pointer = serviceList.value(service);
     qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
-    pointer->setState(QLowEnergyService::DiscoveringServices);
+    pointer->setState(QLowEnergyService::DiscoveringService);
     ComPtr<IGattDeviceService3> deviceService3;
     HRESULT hr = deviceService.As(&deviceService3);
     if (FAILED(hr)) {
