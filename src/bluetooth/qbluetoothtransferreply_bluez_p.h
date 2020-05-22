@@ -75,11 +75,11 @@ public:
                                           QBluetoothTransferManager *parent = nullptr);
     ~QBluetoothTransferReplyBluez();
 
-    bool isFinished() const;
-    bool isRunning() const;
+    bool isFinished() const override;
+    bool isRunning() const override;
 
-    QBluetoothTransferReply::TransferError error() const;
-    QString errorString() const;
+    QBluetoothTransferReply::TransferError error() const override;
+    QString errorString() const override;
 
 private slots:
     bool start();

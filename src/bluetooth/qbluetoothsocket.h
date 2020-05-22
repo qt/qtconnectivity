@@ -103,14 +103,15 @@ public:
     virtual ~QBluetoothSocket();
 
     void abort();
-    virtual void close();
 
-    bool isSequential() const;
+    void close() override;
 
-    virtual qint64 bytesAvailable() const;
-    virtual qint64 bytesToWrite() const;
+    bool isSequential() const override;
 
-    virtual bool canReadLine() const;
+    qint64 bytesAvailable() const override;
+    qint64 bytesToWrite() const override;
+
+    bool canReadLine() const override;
 
     void connectToService(const QBluetoothServiceInfo &service, OpenMode openMode = ReadWrite);
     void connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid, OpenMode openMode = ReadWrite);
@@ -161,8 +162,8 @@ Q_SIGNALS:
     void stateChanged(QBluetoothSocket::SocketState state);
 
 protected:
-    virtual qint64 readData(char *data, qint64 maxSize);
-    virtual qint64 writeData(const char *data, qint64 maxSize);
+    qint64 readData(char *data, qint64 maxSize) override;
+    qint64 writeData(const char *data, qint64 maxSize) override;
 
     void setSocketState(SocketState state);
     void setSocketError(SocketError error);

@@ -102,8 +102,8 @@ public:
     Q_INVOKABLE void assignNextClient(QDeclarativeBluetoothSocket *dbs);
 
     // From QDeclarativeParserStatus
-    void classBegin() {}
-    void componentComplete();
+    void classBegin() override {}
+    void componentComplete() override;
 
     void setServiceName(const QString &name);
     void setDeviceAddress(const QString &address);

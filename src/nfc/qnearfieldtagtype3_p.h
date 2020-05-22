@@ -64,7 +64,7 @@ class Q_AUTOTEST_EXPORT QNearFieldTagType3 : public QNearFieldTarget
 public:
     explicit QNearFieldTagType3(QObject *parent = 0);
 
-    Type type() const { return NfcTagType3; }
+    Type type() const override { return NfcTagType3; }
 
     quint16 systemCode();
     QList<quint16> services();
@@ -78,7 +78,7 @@ public:
                              const QByteArray &data);
 
 protected:
-    bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response);
+    bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response) override;
 };
 
 QT_END_NAMESPACE

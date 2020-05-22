@@ -63,7 +63,7 @@ public:
     explicit QNearFieldTagType4(QObject *parent = 0);
     ~QNearFieldTagType4();
 
-    Type type() const { return NfcTagType4; }
+    Type type() const override { return NfcTagType4; }
 
     quint8 version();
 
@@ -74,7 +74,7 @@ public:
     virtual RequestId write(const QByteArray &data, quint16 startOffset = 0);
 
 protected:
-    bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response);
+    bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response) override;
 };
 
 QT_END_NAMESPACE

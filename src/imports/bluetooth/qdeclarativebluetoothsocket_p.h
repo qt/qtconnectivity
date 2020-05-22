@@ -113,8 +113,8 @@ public:
     QString stringData();
 
     // From QDeclarativeParserStatus
-    void classBegin() {}
-    void componentComplete();
+    void classBegin() override {}
+    void componentComplete() override;
 
     void newSocket(QBluetoothSocket *socket, QDeclarativeBluetoothService *service);
 

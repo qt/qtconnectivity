@@ -53,7 +53,7 @@ class QBluetoothQmlPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
     QBluetoothQmlPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         // @uri QtBluetooth
 

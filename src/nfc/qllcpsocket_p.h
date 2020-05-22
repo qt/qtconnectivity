@@ -93,7 +93,7 @@ public:
     void connectToService(QNearFieldTarget *target, const QString &serviceUri);
     void disconnectFromService();
 
-    void close();
+    void close() override;
 
     bool bind(quint8 port);
 
@@ -112,14 +112,14 @@ public:
     SocketError error() const;
     SocketState state() const;
 
-    qint64 bytesAvailable() const;
-    bool canReadLine() const;
+    qint64 bytesAvailable() const override;
+    bool canReadLine() const override;
 
-    bool waitForReadyRead(int msecs = 30000);
-    bool waitForBytesWritten(int msecs = 30000);
+    bool waitForReadyRead(int msecs = 30000) override;
+    bool waitForBytesWritten(int msecs = 30000) override;
     virtual bool waitForConnected(int msecs = 30000);
     virtual bool waitForDisconnected(int msecs = 30000);
-    bool isSequential() const;
+    bool isSequential() const override;
 
 signals:
     void connected();
@@ -128,8 +128,8 @@ signals:
     void stateChanged(QLlcpSocket::SocketState socketState);
 
 protected:
-    qint64 readData(char *data, qint64 maxlen);
-    qint64 writeData(const char *data, qint64 len);
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *data, qint64 len) override;
 
 private:
     QLlcpSocket(QLlcpSocketPrivate *d, QObject *parent);

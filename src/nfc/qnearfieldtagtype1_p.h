@@ -73,11 +73,11 @@ public:
     explicit QNearFieldTagType1(QObject *parent = 0);
     ~QNearFieldTagType1();
 
-    Type type() const { return NfcTagType1; }
+    Type type() const override { return NfcTagType1; }
 
-    bool hasNdefMessage();
-    RequestId readNdefMessages();
-    RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
+    bool hasNdefMessage() override;
+    RequestId readNdefMessages() override;
+    RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
 
     quint8 version();
     virtual int memorySize();
@@ -97,7 +97,7 @@ public:
                                  WriteMode mode = EraseAndWrite);
 
 protected:
-    bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response);
+    bool handleResponse(const QNearFieldTarget::RequestId &id, const QByteArray &response) override;
 
 private:
     QNearFieldTagType1Private *d_ptr;
