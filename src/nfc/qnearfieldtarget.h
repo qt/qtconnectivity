@@ -128,8 +128,6 @@ public:
 
     bool disconnect();
 
-    bool isProcessingCommand() const;
-
     // NdefAccess
     virtual bool hasNdefMessage();
     virtual RequestId readNdefMessages();

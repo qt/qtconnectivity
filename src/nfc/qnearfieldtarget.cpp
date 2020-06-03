@@ -305,14 +305,6 @@ bool QNearFieldTarget::disconnect()
 }
 
 /*!
-    Returns true if the target is processing commands; otherwise returns false.
-*/
-bool QNearFieldTarget::isProcessingCommand() const
-{
-    return false;
-}
-
-/*!
     Returns true if at least one NDEF message is stored on the near field target; otherwise returns
     false.
 */

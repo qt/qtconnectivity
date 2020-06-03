@@ -7,3 +7,4 @@ This document lists the API changed done to QtNFC between Qt 5.15 and Qt 6.
 - Removed QML API. No replacement available because the support has been discontinued.
 - Removed functions QNearFieldTarget::(un)registerNdefMessageHandler(...). No replacement available.
 - Removed QNearFieldShareManager/QNearFieldShareTarget. No replacement available.
+- Removed function QNearFieldTarget::isProcessingCommand(). No replacement available as the function is not implemented.
