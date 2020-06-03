@@ -249,9 +249,8 @@ enum ADType {
     // .. more will be added when required
 };
 
-// Endianness conversion for quint128 doesn't (yet) exist in qtendian.h
-template <>
-inline quint128 qbswap<quint128>(const quint128 src)
+// Endianness conversion for quint128 doesn't exist in qtendian.h
+inline quint128 qbswap(const quint128 src)
 {
     quint128 dst;
     for (int i = 0; i < 16; i++)

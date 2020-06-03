@@ -39,7 +39,7 @@
 
 #include <qndefnfctextrecord.h>
 
-#include <QtCore/QTextCodec>
+#include <QtCore/QStringConverter>
 #include <QtCore/QLocale>
 
 QT_BEGIN_NAMESPACE
@@ -122,19 +122,15 @@ QString QNdefNfcTextRecord::text() const
     if (p.isEmpty())
         return QString();
 
-#if QT_CONFIG(textcodec)
     quint8 status = p.at(0);
-
     bool utf16 = status & 0x80;
     quint8 codeLength = status & 0x3f;
 
-    QTextCodec *codec = QTextCodec::codecForName(utf16 ? "UTF-16BE" : "UTF-8");
+    auto toUnicode = QStringDecoder(
+        utf16 ? QStringDecoder::Encoding::Utf16BE : QStringDecoder::Encoding::Utf8,
+        QStringDecoder::Flag::Stateless);
 
-    return codec ? codec->toUnicode(p.constData() + 1 + codeLength, p.length() - 1 - codeLength) : QString();
-#else
-    qWarning("Cannot decode payload, Qt was built with -no-feature-textcodec!");
-    return QString();
-#endif
+    return toUnicode(p.constData() + 1 + codeLength, p.length() - 1 - codeLength);
 }
 
 /*!
@@ -142,7 +138,6 @@ QString QNdefNfcTextRecord::text() const
 */
 void QNdefNfcTextRecord::setText(const QString text)
 {
-#if QT_CONFIG(textcodec)
     if (payload().isEmpty())
         setLocale(QLocale().name());
 
@@ -155,15 +150,13 @@ void QNdefNfcTextRecord::setText(const QString text)
 
     p.truncate(1 + codeLength);
 
-    QTextCodec *codec = QTextCodec::codecForName(utf16 ? "UTF-16BE" : "UTF-8");
+    auto fromUnicode = QStringEncoder(
+        utf16? QStringEncoder::Encoding::Utf16BE : QStringEncoder::Encoding::Utf8,
+        QStringEncoder::Flag::Stateless|QStringEncoder::Flag::WriteBom);
 
-    p += codec->fromUnicode(text);
+    p += fromUnicode(text);
 
     setPayload(p);
-#else
-    qWarning("Cannot encode payload, Qt was built with -no-feature-textcodec!");
-    Q_UNUSED(text);
-#endif
 }
 
 /*!
