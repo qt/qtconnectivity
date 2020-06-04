@@ -45,12 +45,8 @@
 #include <QtCore/QMetaType>
 #include <QtCore/QObject>
 #include <QtCore/QSharedDataPointer>
+#include <QtCore/QVariant>
 #include <QtNfc/qtnfcglobal.h>
-
-QT_BEGIN_NAMESPACE
-class QString;
-class QUrl;
-QT_END_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 
@@ -119,35 +115,25 @@ public:
     };
 
     explicit QNearFieldTarget(QObject *parent = nullptr);
-    virtual ~QNearFieldTarget();
+    ~QNearFieldTarget();
 
-    virtual QByteArray uid() const = 0;
-
-    virtual Type type() const = 0;
-    virtual AccessMethods accessMethods() const = 0;
+    QByteArray uid() const;
+    Type type() const;
+    AccessMethods accessMethods() const;
 
     bool disconnect();
 
     // NdefAccess
-    virtual bool hasNdefMessage();
-    virtual RequestId readNdefMessages();
-    virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
+    bool hasNdefMessage();
+    RequestId readNdefMessages();
+    RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
 
     // TagTypeSpecificAccess
     int maxCommandLength() const;
-    virtual RequestId sendCommand(const QByteArray &command);
+    RequestId sendCommand(const QByteArray &command);
 
-    virtual bool waitForRequestCompleted(const RequestId &id, int msecs = 5000);
-
-    QVariant requestResponse(const RequestId &id);
-    void setResponseForRequest(const RequestId &id, const QVariant &response,
-                               bool emitRequestCompleted = true);
-
-protected:
-    virtual void handleResponse(const RequestId &id,
-                                const QVariant &response);
-
-    void reportError(Error error, const RequestId &id);
+    bool waitForRequestCompleted(const RequestId &id, int msecs = 5000) const;
+    QVariant requestResponse(const RequestId &id) const;
 
 Q_SIGNALS:
     void disconnected();
@@ -158,6 +144,9 @@ Q_SIGNALS:
     void requestCompleted(const QNearFieldTarget::RequestId &id);
 
     void error(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
+
+protected:
+    QNearFieldTarget(QNearFieldTargetPrivate *backend, QObject *parent = nullptr);
 
 private:
     QNearFieldTargetPrivate *d_ptr;

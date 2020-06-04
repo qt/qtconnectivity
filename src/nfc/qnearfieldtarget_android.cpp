@@ -57,8 +57,10 @@
 #define NFCTAGTYPE3 QStringLiteral("org.nfcforum.ndef.type3")
 #define NFCTAGTYPE4 QStringLiteral("org.nfcforum.ndef.type4")
 
-NearFieldTarget::NearFieldTarget(QAndroidJniObject intent, const QByteArray uid, QObject *parent) :
-    QNearFieldTarget(parent),
+QNearFieldTargetPrivateImpl::QNearFieldTargetPrivateImpl(QAndroidJniObject intent,
+                                                         const QByteArray uid,
+                                                         QObject *parent)
+:   QNearFieldTargetPrivate(parent),
     m_intent(intent),
     m_uid(uid)
 {
@@ -67,23 +69,23 @@ NearFieldTarget::NearFieldTarget(QAndroidJniObject intent, const QByteArray uid,
     setupTargetCheckTimer();
 }
 
-NearFieldTarget::~NearFieldTarget()
+QNearFieldTargetPrivateImpl::~QNearFieldTargetPrivateImpl()
 {
     releaseIntent();
     Q_EMIT targetDestroyed(m_uid);
 }
 
-QByteArray NearFieldTarget::uid() const
+QByteArray QNearFieldTargetPrivateImpl::uid() const
 {
     return m_uid;
 }
 
-QNearFieldTarget::Type NearFieldTarget::type() const
+QNearFieldTarget::Type QNearFieldTargetPrivateImpl::type() const
 {
     return m_type;
 }
 
-QNearFieldTarget::AccessMethods NearFieldTarget::accessMethods() const
+QNearFieldTarget::AccessMethods QNearFieldTargetPrivateImpl::accessMethods() const
 {
     QNearFieldTarget::AccessMethods result = QNearFieldTarget::UnknownAccess;
 
@@ -101,7 +103,7 @@ QNearFieldTarget::AccessMethods NearFieldTarget::accessMethods() const
     return result;
 }
 
-bool NearFieldTarget::disconnect()
+bool QNearFieldTargetPrivateImpl::disconnect()
 {
     if (!m_tagTech.isValid())
         return false;
@@ -117,12 +119,12 @@ bool NearFieldTarget::disconnect()
     return !catchJavaExceptions();
 }
 
-bool NearFieldTarget::hasNdefMessage()
+bool QNearFieldTargetPrivateImpl::hasNdefMessage()
 {
     return m_techList.contains(NDEFTECHNOLOGY);
 }
 
-QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
+QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::readNdefMessages()
 {
     // Making sure that target has NDEF messages
     if (!hasNdefMessage())
@@ -163,7 +165,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
     QMetaObject::invokeMethod(this, [this, qNdefMessage]() {
-        Q_EMIT this->QNearFieldTarget::ndefMessageRead(qNdefMessage);
+        Q_EMIT this->q_ptr->ndefMessageRead(qNdefMessage);
     }, Qt::QueuedConnection);
     QMetaObject::invokeMethod(this, [this, requestId]() {
         Q_EMIT this->requestCompleted(requestId);
@@ -176,7 +178,7 @@ QNearFieldTarget::RequestId NearFieldTarget::readNdefMessages()
     return requestId;
 }
 
-int NearFieldTarget::maxCommandLength() const
+int QNearFieldTargetPrivateImpl::maxCommandLength() const
 {
     QAndroidJniObject tagTech;
     if (m_techList.contains(ISODEPTECHNOLOGY))
@@ -199,10 +201,10 @@ int NearFieldTarget::maxCommandLength() const
     return returnVal;
 }
 
-QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &command)
+QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByteArray &command)
 {
     if (command.size() == 0 || command.size() > maxCommandLength()) {
-        Q_EMIT QNearFieldTarget::error(QNearFieldTarget::InvalidParametersError, QNearFieldTarget::RequestId());
+        Q_EMIT error(QNearFieldTarget::InvalidParametersError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     }
 
@@ -213,7 +215,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     QAndroidJniEnvironment env;
 
     if (!setTagTechnology({ISODEPTECHNOLOGY, NFCATECHNOLOGY, NFCBTECHNOLOGY, NFCFTECHNOLOGY, NFCVTECHNOLOGY})) {
-        Q_EMIT QNearFieldTarget::error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
+        Q_EMIT error(QNearFieldTarget::UnsupportedError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     }
 
@@ -247,7 +249,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     return requestId;
 }
 
-QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdefMessage> &messages)
+QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::writeNdefMessages(const QList<QNdefMessage> &messages)
 {
     if (messages.size() == 0)
         return QNearFieldTarget::RequestId();
@@ -292,11 +294,11 @@ QNearFieldTarget::RequestId NearFieldTarget::writeNdefMessages(const QList<QNdef
         return requestId;
     }
 
-    QMetaObject::invokeMethod(this, &QNearFieldTarget::ndefMessagesWritten, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, &QNearFieldTargetPrivate::ndefMessagesWritten, Qt::QueuedConnection);
     return requestId;
 }
 
-void NearFieldTarget::setIntent(QAndroidJniObject intent)
+void QNearFieldTargetPrivateImpl::setIntent(QAndroidJniObject intent)
 {
     if (m_intent == intent)
         return;
@@ -311,7 +313,7 @@ void NearFieldTarget::setIntent(QAndroidJniObject intent)
     }
 }
 
-void NearFieldTarget::checkIsTargetLost()
+void QNearFieldTargetPrivateImpl::checkIsTargetLost()
 {
     if (!m_intent.isValid() || !setTagTechnology(m_techList)) {
         handleTargetLost();
@@ -337,14 +339,14 @@ void NearFieldTarget::checkIsTargetLost()
         handleTargetLost();
 }
 
-void NearFieldTarget::releaseIntent()
+void QNearFieldTargetPrivateImpl::releaseIntent()
 {
     m_targetCheckTimer->stop();
 
     m_intent = QAndroidJniObject();
 }
 
-void NearFieldTarget::updateTechList()
+void QNearFieldTargetPrivateImpl::updateTechList()
 {
     if (!m_intent.isValid())
         return;
@@ -369,12 +371,12 @@ void NearFieldTarget::updateTechList()
     }
 }
 
-void NearFieldTarget::updateType()
+void QNearFieldTargetPrivateImpl::updateType()
 {
     m_type = getTagType();
 }
 
-QNearFieldTarget::Type NearFieldTarget::getTagType() const
+QNearFieldTarget::Type QNearFieldTargetPrivateImpl::getTagType() const
 {
     QAndroidJniEnvironment env;
 
@@ -425,21 +427,21 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
     return QNearFieldTarget::ProprietaryTag;
 }
 
-void NearFieldTarget::setupTargetCheckTimer()
+void QNearFieldTargetPrivateImpl::setupTargetCheckTimer()
 {
     m_targetCheckTimer = new QTimer(this);
     m_targetCheckTimer->setInterval(1000);
-    QObject::connect(m_targetCheckTimer, &QTimer::timeout, this, &NearFieldTarget::checkIsTargetLost);
+    QObject::connect(m_targetCheckTimer, &QTimer::timeout, this, &QNearFieldTargetPrivateImpl::checkIsTargetLost);
     m_targetCheckTimer->start();
 }
 
-void NearFieldTarget::handleTargetLost()
+void QNearFieldTargetPrivateImpl::handleTargetLost()
 {
     releaseIntent();
     Q_EMIT targetLost(this);
 }
 
-QAndroidJniObject NearFieldTarget::getTagTechnology(const QString &tech) const
+QAndroidJniObject QNearFieldTargetPrivateImpl::getTagTechnology(const QString &tech) const
 {
     QString techClass(tech);
     techClass.replace(QLatin1Char('.'), QLatin1Char('/'));
@@ -455,7 +457,7 @@ QAndroidJniObject NearFieldTarget::getTagTechnology(const QString &tech) const
     return tagTech;
 }
 
-bool NearFieldTarget::setTagTechnology(const QStringList &techList)
+bool QNearFieldTargetPrivateImpl::setTagTechnology(const QStringList &techList)
 {
     for (const QString &tech : techList) {
         if (m_techList.contains(tech)) {
@@ -471,7 +473,7 @@ bool NearFieldTarget::setTagTechnology(const QStringList &techList)
     return false;
 }
 
-bool NearFieldTarget::connect()
+bool QNearFieldTargetPrivateImpl::connect()
 {
     if (!m_tagTech.isValid())
         return false;
@@ -487,7 +489,7 @@ bool NearFieldTarget::connect()
     return !catchJavaExceptions();
 }
 
-QByteArray NearFieldTarget::jbyteArrayToQByteArray(const jbyteArray &byteArray) const
+QByteArray QNearFieldTargetPrivateImpl::jbyteArrayToQByteArray(const jbyteArray &byteArray) const
 {
     QAndroidJniEnvironment env;
     QByteArray resultArray;
@@ -497,7 +499,7 @@ QByteArray NearFieldTarget::jbyteArrayToQByteArray(const jbyteArray &byteArray) 
     return resultArray;
 }
 
-bool NearFieldTarget::catchJavaExceptions(bool verbose) const
+bool QNearFieldTargetPrivateImpl::catchJavaExceptions(bool verbose) const
 {
     QAndroidJniEnvironment env;
     if (env->ExceptionCheck()) {

@@ -54,6 +54,7 @@
 #include <QtCore/QtGlobal>
 #include <QtCore/QByteArray>
 #include <QtNfc/qtnfcglobal.h>
+#include <QMetaType>
 
 QT_FORWARD_DECLARE_CLASS(QSettings)
 
@@ -117,5 +118,7 @@ private:
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(TagBase *)
 
 #endif // TARGETEMULATOR_P_H

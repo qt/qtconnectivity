@@ -51,15 +51,13 @@
 // We mean it.
 //
 
-#include "qtnfcglobal.h"
-
 #include "qnearfieldtarget.h"
 
-#include <QtCore/QMap>
+#include <QtCore/QByteArray>
+#include <QtCore/QList>
+#include <QtCore/QObject>
 #include <QtCore/QSharedData>
 #include <QtCore/QVariant>
-
-#define NEARFIELDTARGET_Q() NearFieldTarget * const q = reinterpret_cast<NearFieldTarget *>(q_ptr)
 
 QT_BEGIN_NAMESPACE
 
@@ -67,18 +65,66 @@ class QNearFieldTarget::RequestIdPrivate : public QSharedData
 {
 };
 
-class QNearFieldTargetPrivate
+class Q_AUTOTEST_EXPORT QNearFieldTargetPrivate : public QObject
 {
-    QNearFieldTarget *q_ptr;
-    Q_DECLARE_PUBLIC(QNearFieldTarget)
+    Q_OBJECT
 
 public:
-    QNearFieldTargetPrivate(QNearFieldTarget *q) : q_ptr(q) {}
+    QNearFieldTarget *q_ptr;
 
+    explicit QNearFieldTargetPrivate(QObject *parent = nullptr);
+    virtual ~QNearFieldTargetPrivate() = default;
+
+    virtual QByteArray uid() const;
+    virtual QNearFieldTarget::Type type() const;
+    virtual QNearFieldTarget::AccessMethods accessMethods() const;
+
+    virtual bool disconnect();
+
+    // NdefAccess
+    virtual bool hasNdefMessage();
+    virtual QNearFieldTarget::RequestId readNdefMessages();
+    virtual QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
+
+    // TagTypeSpecificAccess
+    virtual int maxCommandLength() const;
+    virtual QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
+
+    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000) const;
+    QVariant requestResponse(const QNearFieldTarget::RequestId &id) const;
+
+Q_SIGNALS:
+    void disconnected();
+
+    void ndefMessageRead(const QNdefMessage &message);
+    void ndefMessagesWritten();
+
+    void requestCompleted(const QNearFieldTarget::RequestId &id);
+
+    void error(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
+
+protected:
     QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
 
-    bool disconnect();
-    int maxCommandLength() const;
+    void setResponseForRequest(const QNearFieldTarget::RequestId &id,
+                               const QVariant &response,
+                               bool emitRequestCompleted = true);
+
+    virtual void handleResponse(const QNearFieldTarget::RequestId &id,
+                                const QVariant &response);
+
+    void reportError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
+};
+
+class NearFieldTarget : public QNearFieldTarget
+{
+public:
+    NearFieldTarget(QNearFieldTargetPrivate *backend, QObject *parent = nullptr)
+    : QNearFieldTarget(backend, parent)
+    {
+        backend->q_ptr = this;
+        backend->setParent(this);
+    }
 };
 
 QT_END_NAMESPACE

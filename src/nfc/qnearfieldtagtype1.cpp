@@ -387,7 +387,7 @@ static QVariant decodeResponse(const QByteArray &command, const QByteArray &resp
     Constructs a new tag type 1 near field target with \a parent.
 */
 QNearFieldTagType1::QNearFieldTagType1(QObject *parent)
-:   QNearFieldTarget(parent), d_ptr(new QNearFieldTagType1Private(this))
+:   QNearFieldTargetPrivate(parent), d_ptr(new QNearFieldTagType1Private(this))
 {
 }
 
@@ -717,7 +717,7 @@ void QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
         QVariant decodedResponse = decodeResponse(command, response.toByteArray());
         setResponseForRequest(id, decodedResponse);
     } else {
-        QNearFieldTarget::handleResponse(id, response);
+        setResponseForRequest(id, response);
     }
 
     // continue reading / writing NDEF message

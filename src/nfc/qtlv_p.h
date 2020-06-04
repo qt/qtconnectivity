@@ -54,6 +54,7 @@
 #include "qtnfcglobal.h"
 
 #include "qnearfieldtarget.h"
+#include "qnearfieldtarget_p.h"
 
 #include <QtCore/QByteArray>
 #include <QtCore/QMap>
@@ -65,7 +66,7 @@ class QNearFieldTarget;
 class Q_AUTOTEST_EXPORT QTlvReader
 {
 public:
-    explicit QTlvReader(QNearFieldTarget *target);
+    explicit QTlvReader(QNearFieldTargetPrivate *target);
     explicit QTlvReader(const QByteArray &data);
 
     void addReservedMemory(int offset, int length);
@@ -86,7 +87,7 @@ private:
     int absoluteOffset(int sparseOffset) const;
     int dataLength(int startOffset) const;
 
-    QNearFieldTarget *m_target;
+    QNearFieldTargetPrivate *m_target;
     QByteArray m_rawData;
     QNearFieldTarget::RequestId m_requestId;
 
@@ -98,7 +99,7 @@ private:
 class QTlvWriter
 {
 public:
-    explicit QTlvWriter(QNearFieldTarget *target);
+    explicit QTlvWriter(QNearFieldTargetPrivate *target);
     explicit QTlvWriter(QByteArray *data);
     ~QTlvWriter();
 
@@ -113,7 +114,7 @@ public:
 private:
     int moveToNextAvailable();
 
-    QNearFieldTarget *m_target;
+    QNearFieldTargetPrivate *m_target;
     QByteArray *m_rawData;
 
     int m_index;

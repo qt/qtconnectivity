@@ -43,11 +43,9 @@
 
 #include <QtCore/QString>
 #include <QtCore/QUrl>
-#include <QtCore/QVariant>
 
 #include <QtCore/QDebug>
 
-#include <QElapsedTimer>
 #include <QCoreApplication>
 
 QT_BEGIN_NAMESPACE
@@ -255,11 +253,8 @@ QNearFieldTarget::RequestId &QNearFieldTarget::RequestId::operator=(const Reques
     Constructs a new near field target with \a parent.
 */
 QNearFieldTarget::QNearFieldTarget(QObject *parent)
-:   QObject(parent), d_ptr(new QNearFieldTargetPrivate(this))
+:   QNearFieldTarget(new QNearFieldTargetPrivate(this), parent)
 {
-    qRegisterMetaType<QNearFieldTarget::RequestId>();
-    qRegisterMetaType<QNearFieldTarget::Error>();
-    qRegisterMetaType<QNdefMessage>();
 }
 
 /*!
@@ -267,27 +262,40 @@ QNearFieldTarget::QNearFieldTarget(QObject *parent)
 */
 QNearFieldTarget::~QNearFieldTarget()
 {
-    d_ptr->disconnect();
-    delete d_ptr;
+    Q_D(QNearFieldTarget);
+
+    d->disconnect();
 }
 
 /*!
-    \fn QByteArray QNearFieldTarget::uid() const = 0
-
     Returns the UID of the near field target.
 */
+QByteArray QNearFieldTarget::uid() const
+{
+    Q_D(const QNearFieldTarget);
+
+    return d->uid();
+}
 
 /*!
-    \fn QNearFieldTarget::Type QNearFieldTarget::type() const = 0
-
     Returns the type of tag type of this near field target.
 */
+QNearFieldTarget::Type QNearFieldTarget::type() const
+{
+    Q_D(const QNearFieldTarget);
+
+    return d->type();
+}
 
 /*!
-    \fn QNearFieldTarget::AccessMethods QNearFieldTarget::accessMethods() const = 0
-
     Returns the access methods support by this near field target.
 */
+QNearFieldTarget::AccessMethods QNearFieldTarget::accessMethods() const
+{
+    Q_D(const QNearFieldTarget);
+
+    return d->accessMethods();
+}
 
 /*!
     \since 5.9
@@ -301,7 +309,9 @@ QNearFieldTarget::~QNearFieldTarget()
 */
 bool QNearFieldTarget::disconnect()
 {
-    return d_ptr->disconnect();
+    Q_D(QNearFieldTarget);
+
+    return d->disconnect();
 }
 
 /*!
@@ -310,7 +320,9 @@ bool QNearFieldTarget::disconnect()
 */
 bool QNearFieldTarget::hasNdefMessage()
 {
-    return false;
+    Q_D(QNearFieldTarget);
+
+    return d->hasNdefMessage();
 }
 
 /*!
@@ -324,7 +336,9 @@ bool QNearFieldTarget::hasNdefMessage()
 */
 QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
 {
-    return RequestId();
+    Q_D(QNearFieldTarget);
+
+    return d->readNdefMessages();
 }
 
 /*!
@@ -337,9 +351,9 @@ QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
 */
 QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNdefMessage> &messages)
 {
-    Q_UNUSED(messages);
+    Q_D(QNearFieldTarget);
 
-    return RequestId();
+    return d->writeNdefMessages(messages);
 }
 
 /*!
@@ -352,7 +366,9 @@ QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNde
 */
 int QNearFieldTarget::maxCommandLength() const
 {
-    return d_ptr->maxCommandLength();
+    Q_D(const QNearFieldTarget);
+
+    return d->maxCommandLength();
 }
 
 /*!
@@ -370,11 +386,9 @@ int QNearFieldTarget::maxCommandLength() const
 */
 QNearFieldTarget::RequestId QNearFieldTarget::sendCommand(const QByteArray &command)
 {
-    Q_UNUSED(command);
+    Q_D(QNearFieldTarget);
 
-    Q_EMIT error(UnsupportedError, RequestId());
-
-    return RequestId();
+    return d->sendCommand(command);
 }
 
 /*!
@@ -382,86 +396,46 @@ QNearFieldTarget::RequestId QNearFieldTarget::sendCommand(const QByteArray &comm
     request completes successfully and the requestCompeted() signal is emitted; otherwise returns
     false.
 */
-bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs)
+bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs) const
 {
-    Q_D(QNearFieldTarget);
+    Q_D(const QNearFieldTarget);
 
-    QElapsedTimer timer;
-    timer.start();
-
-    do {
-        if (d->m_decodedResponses.contains(id))
-            return true;
-        else
-            QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 1);
-    } while (timer.elapsed() <= msecs);
-
-    return false;
+    return d->waitForRequestCompleted(id, msecs);
 }
 
 /*!
     Returns the decoded response for request \a id. If the request is unknown or has not yet been
     completed an invalid QVariant is returned.
 */
-QVariant QNearFieldTarget::requestResponse(const RequestId &id)
+QVariant QNearFieldTarget::requestResponse(const RequestId &id) const
+{
+    Q_D(const QNearFieldTarget);
+
+    return d->requestResponse(id);
+}
+
+/*!
+    \internal
+*/
+QNearFieldTarget::QNearFieldTarget(QNearFieldTargetPrivate *backend, QObject *parent)
+:   QObject(parent), d_ptr(backend)
 {
     Q_D(QNearFieldTarget);
 
-    return d->m_decodedResponses.value(id);
-}
+    qRegisterMetaType<QNearFieldTarget::RequestId>();
+    qRegisterMetaType<QNearFieldTarget::Error>();
+    qRegisterMetaType<QNdefMessage>();
 
-/*!
-    Sets the decoded response for request \a id to \a response. If \a emitRequestCompleted is true
-    the requestCompleted() signal will be emitted for \a id; otherwise no signal will be emitted.
-
-    \sa requestResponse()
-*/
-void QNearFieldTarget::setResponseForRequest(const QNearFieldTarget::RequestId &id,
-                                             const QVariant &response, bool emitRequestCompleted)
-{
-    Q_D(QNearFieldTarget);
-
-    for (auto i = d->m_decodedResponses.begin(), end = d->m_decodedResponses.end(); i != end; /* erasing */) {
-        // no more external references
-        if (i.key().refCount() == 1)
-            i = d->m_decodedResponses.erase(i);
-        else
-            ++i;
-    }
-
-    d->m_decodedResponses.insert(id, response);
-
-    if (emitRequestCompleted)
-        Q_EMIT requestCompleted(id);
-}
-
-/*!
-    Handles the \a response received for the request \a id.
-
-    Classes reimplementing this virtual function should call the base class implementation to
-    ensure that requests initiated by those classes are handled correctly.
-
-    The default implementation stores the response such that it can be retrieved by
-    requestResponse().
-*/
-void QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
-                                      const QVariant &response)
-{
-    setResponseForRequest(id, response);
-}
-
-/*!
-    \since 5.12
-
-    Reports the \a error for the request \a id by appending the signal emission to the event queue.
-*/
-void QNearFieldTarget::reportError(QNearFieldTarget::Error error,
-                                   const QNearFieldTarget::RequestId &id)
-{
-    setResponseForRequest(id, QVariant(), false);
-    QMetaObject::invokeMethod(this, [this, error, id]() {
-        Q_EMIT this->error(error, id);
-    }, Qt::QueuedConnection);
+    connect(d, &QNearFieldTargetPrivate::disconnected,
+            this, &QNearFieldTarget::disconnected);
+    connect(d, &QNearFieldTargetPrivate::ndefMessageRead,
+            this, &QNearFieldTarget::ndefMessageRead);
+    connect(d, &QNearFieldTargetPrivate::ndefMessagesWritten,
+            this, &QNearFieldTarget::ndefMessagesWritten);
+    connect(d, &QNearFieldTargetPrivate::requestCompleted,
+            this, &QNearFieldTarget::requestCompleted);
+    connect(d, &QNearFieldTargetPrivate::error,
+            this, &QNearFieldTarget::error);
 }
 
 QT_END_NAMESPACE

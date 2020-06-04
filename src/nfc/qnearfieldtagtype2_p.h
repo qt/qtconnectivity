@@ -51,13 +51,13 @@
 // We mean it.
 //
 
-#include <QtNfc/QNearFieldTarget>
+#include "qnearfieldtarget_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QNearFieldTagType2Private;
 
-class Q_AUTOTEST_EXPORT QNearFieldTagType2 : public QNearFieldTarget
+class Q_AUTOTEST_EXPORT QNearFieldTagType2 : public QNearFieldTargetPrivate
 {
     Q_OBJECT
 

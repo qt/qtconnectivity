@@ -52,7 +52,7 @@
 //
 
 #include "qnearfieldmanager_p.h"
-#include "qnearfieldtarget.h"
+#include "qnearfieldtarget_p.h"
 #include "qndeffilter.h"
 
 #include <QtCore/QMetaMethod>
@@ -81,7 +81,7 @@ private slots:
     void tagDeactivated(TagBase *tag);
 
 private:
-    QMap<TagBase *, QPointer<QNearFieldTarget> > m_targets;
+    QMap<TagBase *, QPointer<QNearFieldTargetPrivate> > m_targets;
 
 };
 

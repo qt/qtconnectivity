@@ -88,7 +88,7 @@ QPair<int, int> qParseLockControlTlv(const QByteArray &tlvData)
     return qMakePair(byteAddress, size);
 }
 
-QTlvReader::QTlvReader(QNearFieldTarget *target)
+QTlvReader::QTlvReader(QNearFieldTargetPrivate *target)
 :   m_target(target), m_index(-1)
 {
     if (qobject_cast<QNearFieldTagType1 *>(m_target)) {
@@ -311,7 +311,7 @@ int QTlvReader::dataLength(int startOffset) const
 }
 
 
-QTlvWriter::QTlvWriter(QNearFieldTarget *target)
+QTlvWriter::QTlvWriter(QNearFieldTargetPrivate *target)
 :   m_target(target), m_rawData(0), m_index(0), m_tagMemorySize(-1)
 {
     if (qobject_cast<QNearFieldTagType1 *>(m_target)) {

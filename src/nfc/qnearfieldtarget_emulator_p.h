@@ -64,15 +64,15 @@ class TagType1 : public QNearFieldTagType1
     Q_OBJECT
 
 public:
-    TagType1(TagBase *tag, QObject *parent);
+    TagType1(TagBase *tag, QObject *parent = nullptr);
     ~TagType1();
 
-    QByteArray uid() const;
+    QByteArray uid() const override;
 
-    QNearFieldTarget::AccessMethods accessMethods() const;
+    QNearFieldTarget::AccessMethods accessMethods() const override;
 
-    QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
-    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000);
+    QNearFieldTarget::RequestId sendCommand(const QByteArray &command) override;
+    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs);
 
 private:
     TagBase *m_tag;
@@ -83,15 +83,15 @@ class TagType2 : public QNearFieldTagType2
     Q_OBJECT
 
 public:
-    TagType2(TagBase *tag, QObject *parent);
+    TagType2(TagBase *tag, QObject *parent = nullptr);
     ~TagType2();
 
-    QByteArray uid() const;
+    QByteArray uid() const override;
 
-    QNearFieldTarget::AccessMethods accessMethods() const;
+    QNearFieldTarget::AccessMethods accessMethods() const override;
 
-    QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
-    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000);
+    QNearFieldTarget::RequestId sendCommand(const QByteArray &command) override;
+    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs);
 
 private:
     TagBase *m_tag;

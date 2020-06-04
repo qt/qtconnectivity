@@ -52,7 +52,6 @@
 //
 
 #include "android/androidjninfc_p.h"
-#include "qnearfieldtarget.h"
 #include "qnearfieldtarget_p.h"
 #include "qndefmessage.h"
 #include "qlist.h"
@@ -64,28 +63,33 @@
 
 QT_BEGIN_NAMESPACE
 
-class NearFieldTarget : public QNearFieldTarget
+class QNearFieldTargetPrivateImpl : public QNearFieldTargetPrivate
 {
     Q_OBJECT
 public:
-    NearFieldTarget(QAndroidJniObject intent,
-                    const QByteArray uid,
-                    QObject *parent = nullptr);
-    virtual ~NearFieldTarget();
-    virtual QByteArray uid() const;
-    virtual QNearFieldTarget::Type type() const;
-    virtual QNearFieldTarget::AccessMethods accessMethods() const;
-    bool disconnect();
-    virtual bool hasNdefMessage();
-    virtual QNearFieldTarget::RequestId readNdefMessages();
-    int maxCommandLength() const;
-    virtual QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
-    virtual QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
+    QNearFieldTargetPrivateImpl(QAndroidJniObject intent,
+                                const QByteArray uid,
+                                QObject *parent = nullptr);
+    ~QNearFieldTargetPrivateImpl() override;
+
+    QByteArray uid() const override;
+    QNearFieldTarget::Type type() const override;
+    QNearFieldTarget::AccessMethods accessMethods() const override;
+
+    bool disconnect() override;
+
+    bool hasNdefMessage() override;
+    QNearFieldTarget::RequestId readNdefMessages() override;
+    QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
+
+    int maxCommandLength() const override;
+    QNearFieldTarget::RequestId sendCommand(const QByteArray &command) override;
+
     void setIntent(QAndroidJniObject intent);
 
 signals:
     void targetDestroyed(const QByteArray &tagId);
-    void targetLost(QNearFieldTarget *target);
+    void targetLost(QNearFieldTargetPrivateImpl *target);
     void ndefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id);
 
 protected slots:

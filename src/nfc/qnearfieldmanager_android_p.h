@@ -53,7 +53,7 @@
 
 #include "qnearfieldmanager_p.h"
 #include "qnearfieldmanager.h"
-#include "qnearfieldtarget.h"
+#include "qnearfieldtarget_android_p.h"
 #include "android/androidjninfc_p.h"
 
 #include <QHash>
@@ -90,13 +90,13 @@ protected:
 
 private:
     bool m_detecting;
-    QHash<QByteArray, NearFieldTarget*> m_detectedTargets;
+    QHash<QByteArray, QNearFieldTargetPrivateImpl*> m_detectedTargets;
 
 private slots:
     void onTargetDiscovered(QAndroidJniObject intent);
     void onTargetDestroyed(const QByteArray &uid);
-    void onTargetDetected(QNearFieldTarget *target);
-    void onTargetLost(QNearFieldTarget *target);
+    void onTargetDetected(QNearFieldTargetPrivateImpl *target);
+    void onTargetLost(QNearFieldTargetPrivateImpl *target);
 };
 
 QT_END_NAMESPACE

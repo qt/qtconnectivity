@@ -29,6 +29,7 @@ HEADERS += \
 SOURCES += \
     qnearfieldmanager.cpp \
     qnearfieldtarget.cpp \
+    qnearfieldtarget_p.cpp \
     qndefrecord.cpp \
     qndefnfctextrecord.cpp \
     qndefmessage.cpp \
@@ -66,7 +67,6 @@ android:!android-embedded {
         android/androidjninfc.cpp \
         qnearfieldmanager_android.cpp \
         qnearfieldtarget_android.cpp \
-        qnearfieldtarget_android_p.cpp \
         android/androidmainnewintentlistener.cpp
 }
 
@@ -81,8 +81,7 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     SOURCES += \
         qllcpsocket_p.cpp \
         qllcpserver_p.cpp \
-        qnearfieldmanagerimpl_p.cpp \
-        qnearfieldtarget_p.cpp
+        qnearfieldmanagerimpl_p.cpp
 }
 
 load(qt_module)

@@ -98,7 +98,7 @@ static QVariant decodeResponse(const QByteArray &command, const QByteArray &resp
     Constructs a new tag type 2 near field target with \a parent.
 */
 QNearFieldTagType2::QNearFieldTagType2(QObject *parent)
-:   QNearFieldTarget(parent), d_ptr(new QNearFieldTagType2Private)
+:   QNearFieldTargetPrivate(parent), d_ptr(new QNearFieldTagType2Private)
 {
 }
 
@@ -297,7 +297,7 @@ void QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
         }
     }
 
-    QNearFieldTarget::handleResponse(id, response);
+    setResponseForRequest(id, response);
 }
 
 /*!

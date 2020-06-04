@@ -74,7 +74,7 @@ void QNearFieldManagerPrivateImpl::reset()
 
 void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)
 {
-    QNearFieldTarget *target = m_targets.value(tag).data();
+    QNearFieldTargetPrivate *target = m_targets.value(tag).data();
     if (!target) {
         if (dynamic_cast<NfcTagType1 *>(tag))
             target = new TagType1(tag, this);
@@ -86,19 +86,19 @@ void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)
         m_targets.insert(tag, target);
     }
 
-    Q_EMIT targetDetected(target);
+    Q_EMIT targetDetected(new NearFieldTarget(target, this));
 }
 
 void QNearFieldManagerPrivateImpl::tagDeactivated(TagBase *tag)
 {
-    QNearFieldTarget *target = m_targets.value(tag).data();
+    QNearFieldTargetPrivate *target = m_targets.value(tag).data();
     if (!target) {
         m_targets.remove(tag);
         return;
     }
 
-    Q_EMIT targetLost(target);
-    QMetaObject::invokeMethod(target, &QNearFieldTarget::disconnected);
+    Q_EMIT targetLost(target->q_ptr);
+    QMetaObject::invokeMethod(target->q_ptr, &QNearFieldTarget::disconnected);
 }
 
 QT_END_NAMESPACE

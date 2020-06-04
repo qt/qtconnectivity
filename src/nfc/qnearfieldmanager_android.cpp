@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qnearfieldmanager_android_p.h"
-#include "qnearfieldtarget_android_p.h"
 
 #include "qndeffilter.h"
 #include "qndefmessage.h"
@@ -93,14 +92,19 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
     }
 }
 
-void QNearFieldManagerPrivateImpl::onTargetDetected(QNearFieldTarget *target)
+void QNearFieldManagerPrivateImpl::onTargetDetected(QNearFieldTargetPrivateImpl *target)
 {
-    Q_EMIT targetDetected(target);
+    if (target->q_ptr) {
+        Q_EMIT targetDetected(target->q_ptr);
+        return;
+    }
+
+    Q_EMIT targetDetected(new NearFieldTarget(target, this));
 }
 
-void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTarget *target)
+void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTargetPrivateImpl *target)
 {
-    Q_EMIT targetLost(target);
+    Q_EMIT targetLost(target->q_ptr);
 }
 
 bool QNearFieldManagerPrivateImpl::isEnabled() const
@@ -169,13 +173,13 @@ void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
     QByteArray uid = getUid(intent);
 
     // Accepting all targets but only sending signal of requested types.
-    NearFieldTarget *&target = m_detectedTargets[uid];
+    QNearFieldTargetPrivateImpl *&target = m_detectedTargets[uid];
     if (target) {
         target->setIntent(intent);  // Updating existing target
     } else {
-        target = new NearFieldTarget(intent, uid, this);
-        connect(target, &NearFieldTarget::targetDestroyed, this, &QNearFieldManagerPrivateImpl::onTargetDestroyed);
-        connect(target, &NearFieldTarget::targetLost, this, &QNearFieldManagerPrivateImpl::onTargetLost);
+        target = new QNearFieldTargetPrivateImpl(intent, uid);
+        connect(target, &QNearFieldTargetPrivateImpl::targetDestroyed, this, &QNearFieldManagerPrivateImpl::onTargetDestroyed);
+        connect(target, &QNearFieldTargetPrivateImpl::targetLost, this, &QNearFieldManagerPrivateImpl::onTargetLost);
     }
     onTargetDetected(target);
 }
