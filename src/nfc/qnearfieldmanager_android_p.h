@@ -84,15 +84,6 @@ public:
     void newIntent(QAndroidJniObject intent) override;
     QByteArray getUid(const QAndroidJniObject &intent);
 
-public slots:
-    void onTargetDiscovered(QAndroidJniObject intent);
-    void onTargetDestroyed(const QByteArray &uid);
-    void handlerTargetDetected(QNearFieldTarget *target);
-    void handlerTargetLost(QNearFieldTarget *target);
-    void handlerNdefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id);
-    void handlerRequestCompleted(const QNearFieldTarget::RequestId &id);
-    void handlerError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
-
 protected:
     static QByteArray getUidforTag(const QAndroidJniObject &tag);
     void updateReceiveState();
@@ -105,6 +96,15 @@ private:
     int m_handlerID;
     QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
     QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
+
+private slots:
+    void onTargetDiscovered(QAndroidJniObject intent);
+    void onTargetDestroyed(const QByteArray &uid);
+    void onTargetDetected(QNearFieldTarget *target);
+    void onTargetLost(QNearFieldTarget *target);
+    void onNdefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id);
+    void onRequestCompleted(const QNearFieldTarget::RequestId &id);
+    void onError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 };
 
 QT_END_NAMESPACE
