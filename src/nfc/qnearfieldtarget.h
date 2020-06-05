@@ -144,8 +144,8 @@ public:
                                bool emitRequestCompleted = true);
 
 protected:
-    Q_INVOKABLE virtual bool handleResponse(const QNearFieldTarget::RequestId &id,
-                                            const QByteArray &response);
+    virtual void handleResponse(const QNearFieldTarget::RequestId &id,
+                                const QVariant &response);
 
     void reportError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 

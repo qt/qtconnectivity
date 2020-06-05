@@ -436,8 +436,7 @@ void QNearFieldTarget::setResponseForRequest(const QNearFieldTarget::RequestId &
 }
 
 /*!
-    Handles the \a response received for the request \a id. Returns true if the response is
-    handled; otherwise returns false.
+    Handles the \a response received for the request \a id.
 
     Classes reimplementing this virtual function should call the base class implementation to
     ensure that requests initiated by those classes are handled correctly.
@@ -445,12 +444,10 @@ void QNearFieldTarget::setResponseForRequest(const QNearFieldTarget::RequestId &
     The default implementation stores the response such that it can be retrieved by
     requestResponse().
 */
-bool QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
-                                      const QByteArray &response)
+void QNearFieldTarget::handleResponse(const QNearFieldTarget::RequestId &id,
+                                      const QVariant &response)
 {
     setResponseForRequest(id, response);
-
-    return true;
 }
 
 /*!

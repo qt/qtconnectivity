@@ -706,22 +706,18 @@ QNearFieldTarget::RequestId QNearFieldTagType1::writeBlock(quint8 blockAddress,
 /*!
     \reimp
 */
-bool QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
-                                        const QByteArray &response)
+void QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
+                                        const QVariant &response)
 {
     Q_D(QNearFieldTagType1);
-
-    bool handled;
 
     if (d->m_pendingInternalCommands.contains(id)) {
         const QByteArray command = d->m_pendingInternalCommands.take(id);
 
-        QVariant decodedResponse = decodeResponse(command, response);
+        QVariant decodedResponse = decodeResponse(command, response.toByteArray());
         setResponseForRequest(id, decodedResponse);
-
-        handled = true;
     } else {
-        handled = QNearFieldTarget::handleResponse(id, response);
+        QNearFieldTarget::handleResponse(id, response);
     }
 
     // continue reading / writing NDEF message
@@ -731,8 +727,6 @@ bool QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
         else if (d->m_writeNdefMessageState != QNearFieldTagType1Private::NotWritingNdefMessage)
             d->progressToNextNdefWriteMessageState();
     }
-
-    return handled;
 }
 
 QT_END_NAMESPACE

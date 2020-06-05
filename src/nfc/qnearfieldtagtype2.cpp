@@ -261,15 +261,15 @@ QNearFieldTarget::RequestId QNearFieldTagType2::selectSector(quint8 sector)
 /*!
     \reimp
 */
-bool QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
-                                        const QByteArray &response)
+void QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
+                                        const QVariant &response)
 {
     Q_D(QNearFieldTagType2);
 
     if (d->m_pendingInternalCommands.contains(id)) {
         const QByteArray command = d->m_pendingInternalCommands.take(id);
 
-        QVariant decodedResponse = decodeResponse(command, response);
+        QVariant decodedResponse = decodeResponse(command, response.toByteArray());
         if (quint8(command.at(0)) == 0xc2 && decodedResponse.toBool()) {
             // SECTOR SELECT (Command Packet 2)
             SectorSelectState &state = d->m_pendingSectorSelectCommands[id];
@@ -285,17 +285,19 @@ bool QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
             setResponseForRequest(id, decodedResponse);
         }
 
-        return true;
-    } else if (d->m_pendingSectorSelectCommands.contains(id)) {
-        if (!response.isEmpty()) {
+        return;
+    }
+
+    if (d->m_pendingSectorSelectCommands.contains(id)) {
+        if (!response.toByteArray().isEmpty()) {
             d->m_pendingSectorSelectCommands.remove(id);
             setResponseForRequest(id, false);
 
-            return true;
+            return;
         }
     }
 
-    return QNearFieldTarget::handleResponse(id, response);
+    QNearFieldTarget::handleResponse(id, response);
 }
 
 /*!
