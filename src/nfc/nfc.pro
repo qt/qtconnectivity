@@ -23,8 +23,6 @@ HEADERS += \
     qnearfieldmanager_p.h \
     qnearfieldtagtype1_p.h \
     qnearfieldtagtype2_p.h \
-    qnearfieldtagtype3_p.h \
-    qnearfieldtagtype4_p.h \
     qtlv_p.h \
     qndefnfcsmartposterrecord_p.h
 
@@ -38,9 +36,7 @@ SOURCES += \
     qndefnfcurirecord.cpp \
     qnearfieldtagtype1.cpp \
     qnearfieldtagtype2.cpp \
-    qnearfieldtagtype3.cpp \
     qllcpsocket.cpp \
-    qnearfieldtagtype4.cpp \
     qtlv.cpp \
     qllcpserver.cpp \
     qndefnfcsmartposterrecord.cpp
