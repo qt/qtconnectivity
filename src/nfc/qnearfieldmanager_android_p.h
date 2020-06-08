@@ -91,20 +91,12 @@ protected:
 private:
     bool m_detecting;
     QHash<QByteArray, NearFieldTarget*> m_detectedTargets;
-    QMap<QNearFieldTarget::RequestId, QNearFieldTarget*> m_idToTarget;
-
-    int m_handlerID;
-    QList< QPair<QPair<int, QObject *>, QMetaMethod> > ndefMessageHandlers;
-    QList< QPair<QPair<int, QObject *>, QPair<QNdefFilter, QMetaMethod> > > ndefFilterHandlers;
 
 private slots:
     void onTargetDiscovered(QAndroidJniObject intent);
     void onTargetDestroyed(const QByteArray &uid);
     void onTargetDetected(QNearFieldTarget *target);
     void onTargetLost(QNearFieldTarget *target);
-    void onNdefMessageRead(const QNdefMessage &message, const QNearFieldTarget::RequestId &id);
-    void onRequestCompleted(const QNearFieldTarget::RequestId &id);
-    void onError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 };
 
 QT_END_NAMESPACE
