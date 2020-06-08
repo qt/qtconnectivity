@@ -238,7 +238,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     QByteArray result = jbyteArrayToQByteArray(myNewVal.object<jbyteArray>());
     env->DeleteLocalRef(jba);
 
-    handleResponse(requestId, result);
+    setResponseForRequest(requestId, result, false);
 
     QMetaObject::invokeMethod(this, [this, requestId]() {
         Q_EMIT this->requestCompleted(requestId);
