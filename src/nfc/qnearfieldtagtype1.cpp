@@ -706,8 +706,9 @@ QNearFieldTarget::RequestId QNearFieldTagType1::writeBlock(quint8 blockAddress,
 /*!
     \reimp
 */
-void QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
-                                        const QVariant &response)
+void QNearFieldTagType1::setResponseForRequest(const QNearFieldTarget::RequestId &id,
+                                               const QVariant &response,
+                                               bool emitRequestCompleted)
 {
     Q_D(QNearFieldTagType1);
 
@@ -715,9 +716,9 @@ void QNearFieldTagType1::handleResponse(const QNearFieldTarget::RequestId &id,
         const QByteArray command = d->m_pendingInternalCommands.take(id);
 
         QVariant decodedResponse = decodeResponse(command, response.toByteArray());
-        setResponseForRequest(id, decodedResponse);
+        QNearFieldTargetPrivate::setResponseForRequest(id, decodedResponse, emitRequestCompleted);
     } else {
-        setResponseForRequest(id, response);
+        QNearFieldTargetPrivate::setResponseForRequest(id, response, emitRequestCompleted);
     }
 
     // continue reading / writing NDEF message

@@ -261,8 +261,9 @@ QNearFieldTarget::RequestId QNearFieldTagType2::selectSector(quint8 sector)
 /*!
     \reimp
 */
-void QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
-                                        const QVariant &response)
+void QNearFieldTagType2::setResponseForRequest(const QNearFieldTarget::RequestId &id,
+                                               const QVariant &response,
+                                               bool emitRequestCompleted)
 {
     Q_D(QNearFieldTagType2);
 
@@ -282,7 +283,7 @@ void QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
 
             state.timerId = startTimer(1);
         } else {
-            setResponseForRequest(id, decodedResponse);
+            QNearFieldTargetPrivate::setResponseForRequest(id, decodedResponse, emitRequestCompleted);
         }
 
         return;
@@ -291,13 +292,13 @@ void QNearFieldTagType2::handleResponse(const QNearFieldTarget::RequestId &id,
     if (d->m_pendingSectorSelectCommands.contains(id)) {
         if (!response.toByteArray().isEmpty()) {
             d->m_pendingSectorSelectCommands.remove(id);
-            setResponseForRequest(id, false);
+            QNearFieldTargetPrivate::setResponseForRequest(id, false, emitRequestCompleted);
 
             return;
         }
     }
 
-    setResponseForRequest(id, response);
+    QNearFieldTargetPrivate::setResponseForRequest(id, response, emitRequestCompleted);
 }
 
 /*!
@@ -316,7 +317,7 @@ void QNearFieldTagType2::timerEvent(QTimerEvent *event)
         if (state.timerId == event->timerId()) {
             d->m_currentSector = state.sector;
 
-            setResponseForRequest(i.key(), true);
+            QNearFieldTargetPrivate::setResponseForRequest(i.key(), true);
 
             d->m_pendingSectorSelectCommands.erase(i);
             break;

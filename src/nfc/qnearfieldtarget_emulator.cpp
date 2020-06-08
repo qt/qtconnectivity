@@ -105,7 +105,7 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
     response.chop(2);
 
     QMetaObject::invokeMethod(this, [this, id, response] {
-        this->handleResponse(id, response);
+        this->setResponseForRequest(id, response);
     }, Qt::QueuedConnection);
 
     return id;
@@ -170,7 +170,7 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
     }
 
     QMetaObject::invokeMethod(this, [this, id, response] {
-        this->handleResponse(id, response);
+        this->setResponseForRequest(id, response);
     }, Qt::QueuedConnection);
 
     return id;

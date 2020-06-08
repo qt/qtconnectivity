@@ -146,11 +146,6 @@ void QNearFieldTargetPrivate::setResponseForRequest(const NearFieldTarget::Reque
         Q_EMIT requestCompleted(id);
 }
 
-void QNearFieldTargetPrivate::handleResponse(const NearFieldTarget::RequestId &id, const QVariant &response)
-{
-    setResponseForRequest(id, response);
-}
-
 void QNearFieldTargetPrivate::reportError(NearFieldTarget::Error error, const NearFieldTarget::RequestId &id)
 {
     setResponseForRequest(id, QVariant(), false);

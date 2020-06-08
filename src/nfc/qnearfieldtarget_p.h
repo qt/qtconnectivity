@@ -106,12 +106,9 @@ Q_SIGNALS:
 protected:
     QMap<QNearFieldTarget::RequestId, QVariant> m_decodedResponses;
 
-    void setResponseForRequest(const QNearFieldTarget::RequestId &id,
-                               const QVariant &response,
-                               bool emitRequestCompleted = true);
-
-    virtual void handleResponse(const QNearFieldTarget::RequestId &id,
-                                const QVariant &response);
+    virtual void setResponseForRequest(const QNearFieldTarget::RequestId &id,
+                                       const QVariant &response,
+                                       bool emitRequestCompleted = true);
 
     void reportError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 };

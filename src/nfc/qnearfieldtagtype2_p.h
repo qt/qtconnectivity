@@ -83,7 +83,7 @@ public:
     void timerEvent(QTimerEvent *event) override;
 
 protected:
-    void handleResponse(const QNearFieldTarget::RequestId &id, const QVariant &response) override;
+    void setResponseForRequest(const QNearFieldTarget::RequestId &id, const QVariant &response, bool emitRequestCompleted = true) override;
 
 private:
     QNearFieldTagType2Private *d_ptr;
