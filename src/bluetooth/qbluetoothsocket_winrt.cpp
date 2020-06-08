@@ -38,18 +38,13 @@
 ****************************************************************************/
 
 #include "qbluetoothsocket_winrt_p.h"
-
-#ifdef CLASSIC_APP_BUILD
-#define Q_OS_WINRT
-#endif
-#include <qfunctions_winrt.h>
-
-#include <private/qeventdispatcher_winrt_p.h>
+#include "qbluetoothutils_winrt_p.h"
 
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/qbluetoothdeviceinfo.h>
 #include <QtBluetooth/qbluetoothserviceinfo.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/private/qfunctions_winrt_p.h>
 
 #include <robuffer.h>
 #include <windows.devices.bluetooth.h>
@@ -186,21 +181,15 @@ public slots:
 public:
     void startReading()
     {
-        HRESULT hr;
-        hr = QEventDispatcherWinRT::runOnXamlThread([this]()
-        {
-            ComPtr<IBuffer> buffer;
-            HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
-            Q_ASSERT_SUCCEEDED(hr);
-            ComPtr<IInputStream> stream;
-            hr = m_socket->get_InputStream(&stream);
-            Q_ASSERT_SUCCEEDED(hr);
-            hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
-            Q_ASSERT_SUCCEEDED(hr);
-            hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
-            Q_ASSERT_SUCCEEDED(hr);
-            return S_OK;
-        });
+        ComPtr<IBuffer> buffer;
+        HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
+        Q_ASSERT_SUCCEEDED(hr);
+        ComPtr<IInputStream> stream;
+        hr = m_socket->get_InputStream(&stream);
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
+        hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
         Q_ASSERT_SUCCEEDED(hr);
     }
 
@@ -271,45 +260,41 @@ public:
         m_pendingData << newData;
         readLocker.unlock();
 
-        hr = QEventDispatcherWinRT::runOnXamlThread([buffer, this]() {
-            UINT32 readBufferLength;
-            ComPtr<IInputStream> stream;
-            HRESULT hr = m_socket->get_InputStream(&stream);
-            if (FAILED(hr)) {
-                qErrnoWarning(hr, "Failed to obtain input stream");
-                emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
-                return S_OK;
-            }
-
-            // Reuse the stream buffer
-            hr = buffer->get_Capacity(&readBufferLength);
-            if (FAILED(hr)) {
-                qErrnoWarning(hr, "Failed to get buffer capacity");
-                emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
-                return S_OK;
-            }
-            hr = buffer->put_Length(0);
-            if (FAILED(hr)) {
-                qErrnoWarning(hr, "Failed to set buffer length");
-                emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
-                return S_OK;
-            }
-
-            hr = stream->ReadAsync(buffer.Get(), readBufferLength, InputStreamOptions_Partial, &m_readOp);
-            if (FAILED(hr)) {
-                qErrnoWarning(hr, "onReadyRead(): Could not read into socket stream buffer.");
-                emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
-                return S_OK;
-            }
-            hr = m_readOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
-            if (FAILED(hr)) {
-                qErrnoWarning(hr, "onReadyRead(): Failed to set socket read callback.");
-                emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
-                return S_OK;
-            }
+        UINT32 readBufferLength;
+        ComPtr<IInputStream> stream;
+        hr = m_socket->get_InputStream(&stream);
+        if (FAILED(hr)) {
+            qErrnoWarning(hr, "Failed to obtain input stream");
+            emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
             return S_OK;
-        });
-        Q_ASSERT_SUCCEEDED(hr);
+        }
+
+        // Reuse the stream buffer
+        hr = buffer->get_Capacity(&readBufferLength);
+        if (FAILED(hr)) {
+            qErrnoWarning(hr, "Failed to get buffer capacity");
+            emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
+            return S_OK;
+        }
+        hr = buffer->put_Length(0);
+        if (FAILED(hr)) {
+            qErrnoWarning(hr, "Failed to set buffer length");
+            emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
+            return S_OK;
+        }
+
+        hr = stream->ReadAsync(buffer.Get(), readBufferLength, InputStreamOptions_Partial, &m_readOp);
+        if (FAILED(hr)) {
+            qErrnoWarning(hr, "onReadyRead(): Could not read into socket stream buffer.");
+            emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
+            return S_OK;
+        }
+        hr = m_readOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+        if (FAILED(hr)) {
+            qErrnoWarning(hr, "onReadyRead(): Failed to set socket read callback.");
+            emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
+            return S_OK;
+        }
         return S_OK;
     }
 
@@ -391,14 +376,10 @@ void QBluetoothSocketPrivateWinRT::connectToService(Microsoft::WRL::ComPtr<IHost
 
     q->setSocketState(QBluetoothSocket::ConnectingState);
     requestedOpenMode = openMode;
-    hr = QEventDispatcherWinRT::runOnXamlThread([this]() {
-        HRESULT hr;
-        hr = m_connectOp->put_Completed(Callback<IAsyncActionCompletedHandler>(
-                                         this, &QBluetoothSocketPrivateWinRT::handleConnectOpFinished).Get());
-        RETURN_HR_IF_FAILED("connectToHostByName: Could not register \"connectOp\" callback");
-        return S_OK;
-    });
-    Q_ASSERT_SUCCEEDED(hr);
+    hr = m_connectOp->put_Completed(Callback<IAsyncActionCompletedHandler>(
+                                     this, &QBluetoothSocketPrivateWinRT::handleConnectOpFinished).Get());
+    RETURN_VOID_IF_FAILED("connectToHostByName: Could not register \"connectOp\" callback");
+    return;
 }
 
 void QBluetoothSocketPrivateWinRT::connectToServiceHelper(const QBluetoothAddress &address, quint16 port, QIODevice::OpenMode openMode)

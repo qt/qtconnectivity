@@ -41,15 +41,13 @@
 #include "qbluetoothaddress.h"
 
 #include "qbluetoothlocaldevice_p.h"
-
-#ifdef CLASSIC_APP_BUILD
-#define Q_OS_WINRT
-#endif
-#include <QtCore/qfunctions_winrt.h>
+#include "qbluetoothutils_winrt_p.h"
 
 #include <robuffer.h>
 #include <windows.devices.bluetooth.h>
 #include <wrl.h>
+
+#include <QtCore/private/qfunctions_winrt_p.h>
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Devices::Bluetooth;

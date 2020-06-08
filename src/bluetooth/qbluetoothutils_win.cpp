@@ -37,11 +37,6 @@
 **
 ****************************************************************************/
 
-#include <QtCore/private/qeventdispatcher_winrt_p.h>
-
-#define Q_OS_WINRT
-#include <QtCore/qfunctions_winrt.h>
-
 #include <wrl.h>
 #include <windows.devices.bluetooth.h>
 
@@ -51,15 +46,6 @@ using namespace ABI::Windows::Devices::Bluetooth;
 using namespace ABI::Windows::Foundation;
 
 QT_BEGIN_NAMESPACE
-
-#pragma warning (push)
-#pragma warning (disable: 4273)
-HRESULT QEventDispatcherWinRT::runOnXamlThread(const std::function<HRESULT()> &delegate, bool waitForRun)
-{
-    Q_UNUSED(waitForRun);
-    return delegate();
-}
-#pragma warning (pop)
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
 {

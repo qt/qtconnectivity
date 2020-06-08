@@ -39,13 +39,10 @@
 
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
+#include "qbluetoothutils_winrt_p.h"
 
-#ifdef CLASSIC_APP_BUILD
-#define Q_OS_WINRT
-#endif
-#include <qfunctions_winrt.h>
 #include <QtCore/QLoggingCategory>
-#include <QtCore/private/qeventdispatcher_winrt_p.h>
+#include <QtCore/private/qfunctions_winrt_p.h>
 
 #include <functional>
 #include <robuffer.h>
@@ -121,19 +118,14 @@ QWinRTBluetoothServiceDiscoveryWorker::~QWinRTBluetoothServiceDiscoveryWorker()
 
 void QWinRTBluetoothServiceDiscoveryWorker::start()
 {
-    HRESULT hr;
-    hr = QEventDispatcherWinRT::runOnXamlThread([this]() {
-        ComPtr<IBluetoothDeviceStatics> deviceStatics;
-        HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &deviceStatics);
-        Q_ASSERT_SUCCEEDED(hr);
-        ComPtr<IAsyncOperation<BluetoothDevice *>> deviceFromAddressOperation;
-        hr = deviceStatics->FromBluetoothAddressAsync(m_targetAddress, &deviceFromAddressOperation);
-        Q_ASSERT_SUCCEEDED(hr);
-        hr = deviceFromAddressOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothDevice *>>
-                                                  (this, &QWinRTBluetoothServiceDiscoveryWorker::onBluetoothDeviceFoundAsync).Get());
-        Q_ASSERT_SUCCEEDED(hr);
-        return S_OK;
-    });
+    ComPtr<IBluetoothDeviceStatics> deviceStatics;
+    HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &deviceStatics);
+    Q_ASSERT_SUCCEEDED(hr);
+    ComPtr<IAsyncOperation<BluetoothDevice *>> deviceFromAddressOperation;
+    hr = deviceStatics->FromBluetoothAddressAsync(m_targetAddress, &deviceFromAddressOperation);
+    Q_ASSERT_SUCCEEDED(hr);
+    hr = deviceFromAddressOperation->put_Completed(Callback<IAsyncOperationCompletedHandler<BluetoothDevice *>>
+                                              (this, &QWinRTBluetoothServiceDiscoveryWorker::onBluetoothDeviceFoundAsync).Get());
     Q_ASSERT_SUCCEEDED(hr);
 }
 

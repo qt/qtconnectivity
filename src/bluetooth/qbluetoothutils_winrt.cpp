@@ -39,8 +39,7 @@
 
 #include "qbluetoothutils_winrt_p.h"
 #include <QtBluetooth/private/qtbluetoothglobal_p.h>
-
-#include <QtCore/qfunctions_winrt.h>
+#include <QtCore/private/qfunctions_winrt_p.h>
 
 #include <robuffer.h>
 #include <wrl.h>

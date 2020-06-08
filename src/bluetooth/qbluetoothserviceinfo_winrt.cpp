@@ -40,13 +40,10 @@
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothserviceinfo_p.h"
 #include "qbluetoothserver_p.h"
+#include "qbluetoothutils_winrt_p.h"
 
-#include <QtCore/private/qeventdispatcher_winrt_p.h>
 #include <QtCore/QLoggingCategory>
-#ifdef CLASSIC_APP_BUILD
-#define Q_OS_WINRT
-#endif
-#include <qfunctions_winrt.h>
+#include <QtCore/private/qfunctions_winrt_p.h>
 
 #include <wrl.h>
 #include <windows.devices.bluetooth.h>
@@ -465,12 +462,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
                                 IID_PPV_ARGS(&providerStatics));
     Q_ASSERT_SUCCEEDED(hr);
     ComPtr<IAsyncOperation<RfcommServiceProvider *>> op;
-    hr = QEventDispatcherWinRT::runOnXamlThread([providerStatics, serviceId, &op]
-    {
-        HRESULT hr;
-        hr = providerStatics->CreateAsync(serviceId.Get(), &op);
-        return hr;
-    });
+    hr = providerStatics->CreateAsync(serviceId.Get(), &op);
     Q_ASSERT_SUCCEEDED(hr);
     hr = QWinRTFunctions::await(op, serviceProvider.GetAddressOf());
     if (hr == HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE)) {
@@ -509,11 +501,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
     ComPtr<IRfcommServiceProvider2> serviceProvider2;
     hr = serviceProvider.As(&serviceProvider2);
     Q_ASSERT_SUCCEEDED(hr);
-    hr = QEventDispatcherWinRT::runOnXamlThread([listener, serviceProvider2] {
-        HRESULT hr;
-        hr = serviceProvider2->StartAdvertisingWithRadioDiscoverability(listener.Get(), true);
-        return hr;
-    });
+    hr = serviceProvider2->StartAdvertisingWithRadioDiscoverability(listener.Get(), true);
     if (FAILED(hr)) {
         qCWarning(QT_BT_WINRT) << Q_FUNC_INFO << "Could not start advertising. Check your SDP data.";
         return false;

@@ -190,11 +190,8 @@ qtConfig(bluez) {
         qbluetoothserver_p.cpp
 } else: qtConfig(winrt_bt) {
     DEFINES += QT_WINRT_BLUETOOTH
-    !winrt {
-        SOURCES += qbluetoothutils_win.cpp
-        DEFINES += CLASSIC_APP_BUILD
-        LIBS += runtimeobject.lib user32.lib
-    }
+    SOURCES += qbluetoothutils_win.cpp
+    LIBS += runtimeobject.lib user32.lib
 
     QT += core-private
 
@@ -254,12 +251,6 @@ qtConfig(bluez) {
 
     HEADERS += qlowenergycontroller_dummy_p.h \
                        qbluetoothsocket_dummy_p.h
-}
-
-winrt {
-    MODULE_WINRT_CAPABILITIES_DEVICE += \
-        bluetooth.genericAttributeProfile \
-        bluetooth.rfcomm
 }
 
 OTHER_FILES +=
