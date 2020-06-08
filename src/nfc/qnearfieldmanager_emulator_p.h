@@ -81,21 +81,6 @@ private slots:
     void tagDeactivated(TagBase *tag);
 
 private:
-    int getFreeId();
-
-    void targetActivated(QNearFieldTarget *target);
-    void targetDeactivated(QNearFieldTarget *target);
-
-    void ndefReceived(const QNdefMessage &message, QNearFieldTarget *target);
-
-    struct Callback {
-        QNdefFilter filter;
-
-        QObject *object;
-        QMetaMethod method;
-    };
-
-    QList<QNearFieldTarget::Type> m_detectTargetTypes;
     QMap<TagBase *, QPointer<QNearFieldTarget> > m_targets;
 
 };
