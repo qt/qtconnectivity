@@ -139,8 +139,8 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
     Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
     Q_ASSERT_X(length >= 2, Q_FUNC_INFO, "invalid data length");
 
-    Q_UNUSED(data)
-    Q_UNUSED(length)
+    Q_UNUSED(data);
+    Q_UNUSED(length);
 
     QList<OBEXHeader> empty;
     QList<OBEXHeader> qtHeaders;
@@ -810,7 +810,7 @@ QT_USE_NAMESPACE
 
 - (void)OBEXDisconnectHandler:(const OBEXSessionEvent*)event
 {
-    Q_UNUSED(event)
+    Q_UNUSED(event);
 
     Q_ASSERT_X(session, Q_FUNC_INFO, "invalid session (nil)");
 

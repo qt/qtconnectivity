@@ -239,10 +239,10 @@ qint64 QBluetoothSocketPrivate::bytesToWrite() const
 bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                                   QBluetoothSocket::SocketState socketState, QIODevice::OpenMode openMode)
 {
-    Q_UNUSED(socketDescriptor)
-    Q_UNUSED(socketType)
-    Q_UNUSED(socketState)
-    Q_UNUSED(openMode)
+    Q_UNUSED(socketDescriptor);
+    Q_UNUSED(socketType);
+    Q_UNUSED(socketState);
+    Q_UNUSED(openMode);
 
     qCWarning(QT_BT_DARWIN) << "setting a socket descriptor is not supported by IOBluetooth";
     // Noop on macOS.
@@ -252,9 +252,9 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
 void QBluetoothSocketPrivate::connectToServiceHelper(const QBluetoothAddress &address, quint16 port,
                                                      QIODevice::OpenMode openMode)
 {
-    Q_UNUSED(address)
-    Q_UNUSED(port)
-    Q_UNUSED(openMode)
+    Q_UNUSED(address);
+    Q_UNUSED(port);
+    Q_UNUSED(openMode);
 }
 
 void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
@@ -501,7 +501,7 @@ bool QBluetoothSocketPrivate::setL2CAPChannel(void *generic)
 
 void QBluetoothSocketPrivate::setChannelError(IOReturn errorCode)
 {
-    Q_UNUSED(errorCode)
+    Q_UNUSED(errorCode);
 
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 

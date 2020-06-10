@@ -268,8 +268,8 @@ void QBluetoothTransferReplyOSXPrivate::sendPut()
 
 void QBluetoothTransferReplyOSXPrivate::OBEXConnectError(OBEXError errorCode, OBEXOpCode response)
 {
-    Q_UNUSED(errorCode)
-    Q_UNUSED(response)
+    Q_UNUSED(errorCode);
+    Q_UNUSED(response);
 
     if (session) {
         setReplyError(QBluetoothTransferReply::SessionError,
@@ -316,7 +316,7 @@ void QBluetoothTransferReplyOSXPrivate::OBEXPutError(OBEXError errorCode, OBEXOp
     // (that's how errors are reported in OBEXSession events).
     // errorCode and responseCode are "mutually exclusive".
 
-    Q_UNUSED(responseCode)
+    Q_UNUSED(responseCode);
 
     if (errorCode != kOBEXSuccess) {
         // TODO: errorCode -> TransferError.
@@ -348,7 +348,7 @@ QBluetoothTransferReplyOSX::QBluetoothTransferReplyOSX(QIODevice *input,
                                 : QBluetoothTransferReply(manager)
 
 {
-    Q_UNUSED(input)
+    Q_UNUSED(input);
 
     setManager(manager);
     setRequest(request);

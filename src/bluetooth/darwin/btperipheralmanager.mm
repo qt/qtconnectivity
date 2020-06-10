@@ -274,7 +274,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
          data:(const QLowEnergyAdvertisingData &)data
          scanResponse:(const QLowEnergyAdvertisingData &)scanResponse
 {
-    Q_UNUSED(parameters)
+    Q_UNUSED(parameters);
 
     // This is the last method we call on the controller's thread
     // before starting advertising on the Qt's LE queue.
@@ -470,8 +470,8 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
         willRestoreState:(NSDictionary *)dict
 {
-    Q_UNUSED(peripheral)
-    Q_UNUSED(dict)
+    Q_UNUSED(peripheral);
+    Q_UNUSED(dict);
     // NOOP atm.
 }
 
@@ -491,7 +491,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
         didAddService:(CBService *)service error:(NSError *)error
 {
-    Q_UNUSED(service)
+    Q_UNUSED(service);
 
     if (peripheral != manager || !notifier)
         return;
@@ -512,7 +512,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central
         didSubscribeToCharacteristic:(CBCharacteristic *)characteristic
 {
-    Q_UNUSED(characteristic)
+    Q_UNUSED(characteristic);
 
     if (peripheral != manager || !notifier)
         return;
@@ -526,7 +526,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central
         didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic
 {
-    Q_UNUSED(characteristic)
+    Q_UNUSED(characteristic);
 
     if (peripheral != manager || !notifier)
         return;

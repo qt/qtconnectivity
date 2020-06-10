@@ -290,7 +290,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
     } else {
 #else
     {
-        Q_UNUSED(prevStart)
+        Q_UNUSED(prevStart);
 #endif // Q_OS_MACOS
         dispatch_queue_t leQueue(qt_LE_queue());
         Q_ASSERT(leQueue);

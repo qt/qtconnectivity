@@ -148,7 +148,7 @@ QT_USE_NAMESPACE
 - (void)l2capChannelData:(IOBluetoothL2CAPChannel*)l2capChannel
         data:(void *)dataPointer length:(size_t)dataLength
 {
-    Q_UNUSED(l2capChannel)
+    Q_UNUSED(l2capChannel);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -159,7 +159,7 @@ QT_USE_NAMESPACE
 - (void)l2capChannelOpenComplete:(IOBluetoothL2CAPChannel*)
         l2capChannel status:(IOReturn)error
 {
-    Q_UNUSED(l2capChannel)
+    Q_UNUSED(l2capChannel);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -173,7 +173,7 @@ QT_USE_NAMESPACE
 
 - (void)l2capChannelClosed:(IOBluetoothL2CAPChannel*)l2capChannel
 {
-    Q_UNUSED(l2capChannel)
+    Q_UNUSED(l2capChannel);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->channelClosed();
@@ -182,14 +182,14 @@ QT_USE_NAMESPACE
 
 - (void)l2capChannelReconfigured:(IOBluetoothL2CAPChannel*)l2capChannel
 {
-    Q_UNUSED(l2capChannel)
+    Q_UNUSED(l2capChannel);
 }
 
 - (void)l2capChannelWriteComplete:(IOBluetoothL2CAPChannel*)l2capChannel
         refcon:(void*)refcon status:(IOReturn)error
 {
-    Q_UNUSED(l2capChannel)
-    Q_UNUSED(refcon)
+    Q_UNUSED(l2capChannel);
+    Q_UNUSED(refcon);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -201,7 +201,7 @@ QT_USE_NAMESPACE
 
 - (void)l2capChannelQueueSpaceAvailable:(IOBluetoothL2CAPChannel*)l2capChannel
 {
-    Q_UNUSED(l2capChannel)
+    Q_UNUSED(l2capChannel);
 }
 
 // Aux. methods.

@@ -87,7 +87,7 @@ ObjCStrongReference<NSError> qt_timeoutNSError(OperationTimeout type)
     // after all (except callbacks checking if an operation was successful
     // or not).
     Q_ASSERT(type != OperationTimeout::none);
-    Q_UNUSED(type)
+    Q_UNUSED(type);
     NSError *nsError = [[NSError alloc] initWithDomain:CBErrorDomain
                                         code:CBErrorOperationCancelled
                                         userInfo:nil];
@@ -270,7 +270,7 @@ QT_USE_NAMESPACE
 
 - (void)timeout:(id)sender
 {
-    Q_UNUSED(sender)
+    Q_UNUSED(sender);
 
     using namespace DarwinBluetooth;
 
@@ -1288,8 +1288,8 @@ QT_USE_NAMESPACE
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)aPeripheral
 {
-    Q_UNUSED(central)
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(central);
+    Q_UNUSED(aPeripheral);
 
     if (managerState != DarwinBluetooth::CentralManagerConnecting) {
         // We called cancel but before disconnected, managed to connect?
@@ -1304,9 +1304,9 @@ QT_USE_NAMESPACE
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)aPeripheral
         error:(NSError *)error
 {
-    Q_UNUSED(central)
-    Q_UNUSED(aPeripheral)
-    Q_UNUSED(error)
+    Q_UNUSED(central);
+    Q_UNUSED(aPeripheral);
+    Q_UNUSED(error);
 
     if (managerState != DarwinBluetooth::CentralManagerConnecting) {
         // Canceled already.
@@ -1322,8 +1322,8 @@ QT_USE_NAMESPACE
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)aPeripheral
         error:(NSError *)error
 {
-    Q_UNUSED(central)
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(central);
+    Q_UNUSED(aPeripheral);
 
     // Clear internal caches/data.
     [self reset];
@@ -1344,7 +1344,7 @@ QT_USE_NAMESPACE
 
 - (void)peripheral:(CBPeripheral *)aPeripheral didDiscoverServices:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     using namespace DarwinBluetooth;
 
@@ -1375,8 +1375,8 @@ QT_USE_NAMESPACE
 - (void)peripheral:(CBPeripheral *)aPeripheral
         didModifyServices:(NSArray<CBService *> *)invalidatedServices
 {
-    Q_UNUSED(aPeripheral)
-    Q_UNUSED(invalidatedServices)
+    Q_UNUSED(aPeripheral);
+    Q_UNUSED(invalidatedServices);
 
     qCWarning(QT_BT_DARWIN) << "The peripheral has modified its services.";
     // "This method is invoked whenever one or more services of a peripheral have changed.
@@ -1400,7 +1400,7 @@ QT_USE_NAMESPACE
 - (void)peripheral:(CBPeripheral *)aPeripheral didDiscoverIncludedServicesForService:(CBService *)service
         error:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     using namespace DarwinBluetooth;
 
@@ -1478,7 +1478,7 @@ QT_USE_NAMESPACE
 {
     // This method does not change 'managerState', we can have several
     // discoveries active.
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     if (!notifier) {
         // Detached.
@@ -1510,7 +1510,7 @@ QT_USE_NAMESPACE
         didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic
         error:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     if (!notifier) // Detached.
         return;
@@ -1592,7 +1592,7 @@ QT_USE_NAMESPACE
 {
     // This method does not change 'managerState', we can
     // have several discoveries active at the same time.
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     if (!notifier) {
         // Detached, no need to continue ...
@@ -1628,7 +1628,7 @@ QT_USE_NAMESPACE
         didUpdateValueForDescriptor:(CBDescriptor *)descriptor
         error:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     Q_ASSERT_X(peripheral, Q_FUNC_INFO, "invalid peripheral (nil)");
 
@@ -1713,8 +1713,8 @@ QT_USE_NAMESPACE
         didWriteValueForCharacteristic:(CBCharacteristic *)characteristic
         error:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
-    Q_UNUSED(characteristic)
+    Q_UNUSED(aPeripheral);
+    Q_UNUSED(characteristic);
 
     if (!notifier) {
         // Detached.
@@ -1762,7 +1762,7 @@ QT_USE_NAMESPACE
         didWriteValueForDescriptor:(CBDescriptor *)descriptor
         error:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     if (!notifier) {
         // Detached already.
@@ -1798,7 +1798,7 @@ QT_USE_NAMESPACE
         didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic
         error:(NSError *)error
 {
-    Q_UNUSED(aPeripheral)
+    Q_UNUSED(aPeripheral);
 
     if (!notifier)
         return;

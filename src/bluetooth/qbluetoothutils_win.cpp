@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 #pragma warning (disable: 4273)
 HRESULT QEventDispatcherWinRT::runOnXamlThread(const std::function<HRESULT()> &delegate, bool waitForRun)
 {
-    Q_UNUSED(waitForRun)
+    Q_UNUSED(waitForRun);
     return delegate();
 }
 #pragma warning (pop)

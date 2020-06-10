@@ -241,33 +241,33 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevicePrivate::pairingStatus(const
 void QBluetoothLocalDevicePrivate::connecting(void *pair)
 {
     // TODO: why unused and if cannot be used - remove?
-    Q_UNUSED(pair)
+    Q_UNUSED(pair);
 }
 
 void QBluetoothLocalDevicePrivate::requestPIN(void *pair)
 {
     // TODO: why unused and if cannot be used - remove?
-    Q_UNUSED(pair)
+    Q_UNUSED(pair);
 }
 
 void QBluetoothLocalDevicePrivate::requestUserConfirmation(void *pair, BluetoothNumericValue intPin)
 {
     // TODO: why unused and if cannot be used - remove?
-    Q_UNUSED(pair)
-    Q_UNUSED(intPin)
+    Q_UNUSED(pair);
+    Q_UNUSED(intPin);
 }
 
 void QBluetoothLocalDevicePrivate::passkeyNotification(void *pair, BluetoothPasskey passkey)
 {
     // TODO: why unused and if cannot be used - remove?
-    Q_UNUSED(pair)
-    Q_UNUSED(passkey)
+    Q_UNUSED(pair);
+    Q_UNUSED(passkey);
 }
 
 void QBluetoothLocalDevicePrivate::error(void *pair, IOReturn errorCode)
 {
-    Q_UNUSED(pair)
-    Q_UNUSED(errorCode)
+    Q_UNUSED(pair);
+    Q_UNUSED(errorCode);
 
     emitError(QBluetoothLocalDevice::PairingError, false);
 }
@@ -399,7 +399,7 @@ void QBluetoothLocalDevice::powerOn()
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 {
-    Q_UNUSED(mode)
+    Q_UNUSED(mode);
 
     if (!isValid())
         qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "invalid local device";
@@ -462,7 +462,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 
 void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 {
-    Q_UNUSED(confirmation)
+    Q_UNUSED(confirmation);
 }
 
 

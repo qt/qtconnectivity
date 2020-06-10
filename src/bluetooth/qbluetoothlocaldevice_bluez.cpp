@@ -1159,7 +1159,7 @@ void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
 
 QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
 {
-    Q_UNUSED(in0)
+    Q_UNUSED(in0);
     Q_Q(QBluetoothLocalDevice);
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path();
     // seeded in constructor, 6 digit pin
@@ -1237,8 +1237,8 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
 
 void QBluetoothLocalDevicePrivate::Authorize(const QDBusObjectPath &in0, const QString &in1)
 {
-    Q_UNUSED(in0)
-    Q_UNUSED(in1)
+    Q_UNUSED(in0);
+    Q_UNUSED(in1);
     // TODO implement this
     qCDebug(QT_BT_BLUEZ) << "Got authorize for" << in0.path() << in1;
 }
@@ -1257,16 +1257,16 @@ void QBluetoothLocalDevicePrivate::Release()
 
 void QBluetoothLocalDevicePrivate::ConfirmModeChange(const QString &in0)
 {
-    Q_UNUSED(in0)
+    Q_UNUSED(in0);
     // TODO implement this
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0;
 }
 
 void QBluetoothLocalDevicePrivate::DisplayPasskey(const QDBusObjectPath &in0, uint in1, uchar in2)
 {
-    Q_UNUSED(in0)
-    Q_UNUSED(in1)
-    Q_UNUSED(in2)
+    Q_UNUSED(in0);
+    Q_UNUSED(in1);
+    Q_UNUSED(in2);
     // TODO implement this
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path() << in1 << in2;
 }

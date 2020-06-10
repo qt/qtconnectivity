@@ -447,7 +447,7 @@ void QtBluezDiscoveryManager::PropertiesChanged(const QString &interface,
                                                 const QStringList &invalidated_properties,
                                                 const QDBusMessage &)
 {
-    Q_UNUSED(invalidated_properties)
+    Q_UNUSED(invalidated_properties);
 
     OrgFreedesktopDBusPropertiesInterface *propIface =
             qobject_cast<OrgFreedesktopDBusPropertiesInterface *>(sender());

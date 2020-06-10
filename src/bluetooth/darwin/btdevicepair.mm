@@ -160,17 +160,17 @@ QT_USE_NAMESPACE
 
 - (void)devicePairingStarted:(id)sender
 {
-    Q_UNUSED(sender)
+    Q_UNUSED(sender);
 }
 
 - (void)devicePairingConnecting:(id)sender
 {
-    Q_UNUSED(sender)
+    Q_UNUSED(sender);
 }
 
 - (void)deviceParingPINCodeRequest:(id)sender
 {
-    Q_UNUSED(sender)
+    Q_UNUSED(sender);
 }
 
 - (void)devicePairingUserConfirmationRequest:(id)sender
@@ -187,8 +187,8 @@ QT_USE_NAMESPACE
 - (void)devicePairingUserPasskeyNotification:(id)sender
         passkey:(BluetoothPasskey)passkey
 {
-    Q_UNUSED(sender)
-    Q_UNUSED(passkey)
+    Q_UNUSED(sender);
+    Q_UNUSED(passkey);
 }
 
 - (void)devicePairingFinished:(id)sender error:(IOReturn)error
@@ -208,8 +208,8 @@ QT_USE_NAMESPACE
 - (void)deviceSimplePairingComplete:(id)sender
         status:(BluetoothHCIEventStatus)status
 {
-    Q_UNUSED(sender)
-    Q_UNUSED(status)
+    Q_UNUSED(sender);
+    Q_UNUSED(status);
 }
 
 @end

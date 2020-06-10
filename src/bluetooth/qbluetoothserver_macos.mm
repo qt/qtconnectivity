@@ -413,7 +413,7 @@ quint16 QBluetoothServer::serverPort() const
 
 void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
-    Q_UNUSED(security)
+    Q_UNUSED(security);
     Q_UNIMPLEMENTED();
 }
 

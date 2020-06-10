@@ -88,7 +88,7 @@ using namespace QT_NAMESPACE;
 - (void)connectionNotification:(IOBluetoothUserNotification *)aNotification
         withDevice:(IOBluetoothDevice *)device
 {
-    Q_UNUSED(aNotification)
+    Q_UNUSED(aNotification);
 
     typedef IOBluetoothUserNotification Notification;
 

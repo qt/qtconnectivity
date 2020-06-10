@@ -161,7 +161,7 @@ QT_USE_NAMESPACE
 
 - (void)timeout:(id)sender
 {
-    Q_UNUSED(sender)
+    Q_UNUSED(sender);
 
     if (internalState == InquiryActive) {
         [self stopScanSafe];
@@ -244,7 +244,7 @@ QT_USE_NAMESPACE
             return;
         }
 #else
-            Q_UNUSED(powerOffTimeoutMS)
+            Q_UNUSED(powerOffTimeoutMS);
 #endif // Q_OS_MACOS
         [elapsedTimer cancelTimer];
         [self stopScanSafe];

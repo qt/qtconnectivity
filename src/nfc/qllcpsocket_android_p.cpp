@@ -54,8 +54,8 @@ QLlcpSocketPrivate::~QLlcpSocketPrivate()
 
 void QLlcpSocketPrivate::connectToService(QNearFieldTarget *target, const QString &serviceUri)
 {
-    Q_UNUSED(target)
-    Q_UNUSED(serviceUri)
+    Q_UNUSED(target);
+    Q_UNUSED(serviceUri);
     /*if (m_state != QLlcpSocket::UnconnectedState) {
         qWarning() << Q_FUNC_INFO << "socket is already connected";
         return;

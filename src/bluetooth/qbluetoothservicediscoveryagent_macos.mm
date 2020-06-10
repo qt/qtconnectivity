@@ -174,7 +174,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(void *generic)
 
 void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(void *device, IOReturn errorCode)
 {
-    Q_UNUSED(device)
+    Q_UNUSED(device);
 
     qCWarning(QT_BT_DARWIN) << "inquiry failed with IOKit code:" << int(errorCode);
 

@@ -332,7 +332,7 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
     Q_UNUSED(role);
     return new QLowEnergyControllerPrivateWin32();
 #elif defined(Q_OS_DARWIN)
-    Q_UNUSED(role)
+    Q_UNUSED(role);
     return new QLowEnergyControllerPrivateDarwin();
 #else
     Q_UNUSED(role);

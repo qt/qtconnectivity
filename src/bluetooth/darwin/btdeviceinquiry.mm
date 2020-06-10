@@ -131,7 +131,7 @@ QT_USE_NAMESPACE
 - (void)deviceInquiryComplete:(IOBluetoothDeviceInquiry *)sender
         error:(IOReturn)error aborted:(BOOL)aborted
 {
-    Q_UNUSED(aborted)
+    Q_UNUSED(aborted);
 
     if (sender != m_inquiry) // Can never happen in the current version.
         return;
@@ -162,7 +162,7 @@ QT_USE_NAMESPACE
 
 - (void)deviceInquiryStarted:(IOBluetoothDeviceInquiry *)sender
 {
-    Q_UNUSED(sender)
+    Q_UNUSED(sender);
 }
 
 @end

@@ -185,9 +185,9 @@ void add_attribute<QUrl>(const QVariant &var, AttributeId key, Dictionary dict)
     if (!var.canConvert<QUrl>())
         return;
 
-    Q_UNUSED(var)
-    Q_UNUSED(key)
-    Q_UNUSED(dict)
+    Q_UNUSED(var);
+    Q_UNUSED(key);
+    Q_UNUSED(dict);
 
     // TODO: not clear how should I pass an url in a dictionary, NSURL does not work.
 }
@@ -242,8 +242,8 @@ void add_attribute<QUrl>(const QVariant &var, NSMutableArray *list)
     if (!var.canConvert<QUrl>())
         return;
 
-    Q_UNUSED(var)
-    Q_UNUSED(list)
+    Q_UNUSED(var);
+    Q_UNUSED(list);
     // TODO: not clear how should I pass an url in a dictionary, NSURL does not work.
 }
 

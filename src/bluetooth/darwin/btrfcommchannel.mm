@@ -140,7 +140,7 @@ QT_USE_NAMESPACE
 - (void)rfcommChannelData:(IOBluetoothRFCOMMChannel*)rfcommChannel
         data:(void *)dataPointer length:(size_t)dataLength
 {
-    Q_UNUSED(rfcommChannel)
+    Q_UNUSED(rfcommChannel);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -155,7 +155,7 @@ QT_USE_NAMESPACE
 - (void)rfcommChannelOpenComplete:(IOBluetoothRFCOMMChannel*)rfcommChannel
         status:(IOReturn)error
 {
-    Q_UNUSED(rfcommChannel)
+    Q_UNUSED(rfcommChannel);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -169,7 +169,7 @@ QT_USE_NAMESPACE
 
 - (void)rfcommChannelClosed:(IOBluetoothRFCOMMChannel*)rfcommChannel
 {
-    Q_UNUSED(rfcommChannel)
+    Q_UNUSED(rfcommChannel);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->channelClosed();
@@ -178,19 +178,19 @@ QT_USE_NAMESPACE
 
 - (void)rfcommChannelControlSignalsChanged:(IOBluetoothRFCOMMChannel*)rfcommChannel
 {
-    Q_UNUSED(rfcommChannel)
+    Q_UNUSED(rfcommChannel);
 }
 
 - (void)rfcommChannelFlowControlChanged:(IOBluetoothRFCOMMChannel*)rfcommChannel
 {
-    Q_UNUSED(rfcommChannel)
+    Q_UNUSED(rfcommChannel);
 }
 
 - (void)rfcommChannelWriteComplete:(IOBluetoothRFCOMMChannel*)rfcommChannel
         refcon:(void*)refcon status:(IOReturn)error
 {
-    Q_UNUSED(rfcommChannel)
-    Q_UNUSED(refcon)
+    Q_UNUSED(rfcommChannel);
+    Q_UNUSED(refcon);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
@@ -202,7 +202,7 @@ QT_USE_NAMESPACE
 
 - (void)rfcommChannelQueueSpaceAvailable:(IOBluetoothRFCOMMChannel*)rfcommChannel
 {
-    Q_UNUSED(rfcommChannel)
+    Q_UNUSED(rfcommChannel);
 }
 
 - (BluetoothRFCOMMChannelID)getChannelID

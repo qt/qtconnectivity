@@ -859,7 +859,7 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(int socketDescriptor, Q
                          QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_UNUSED(socketDescriptor);
-    Q_UNUSED(socketType)
+    Q_UNUSED(socketType);
     Q_UNUSED(socketState);
     Q_UNUSED(openMode);
     qCWarning(QT_BT_ANDROID) << "No socket descriptor support on Android.";

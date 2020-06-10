@@ -184,7 +184,7 @@ bool QBluetoothSocketPrivateDummy::setSocketDescriptor(int socketDescriptor, QBl
                                            QBluetoothSocket::SocketState socketState, QBluetoothSocket::OpenMode openMode)
 {
     Q_UNUSED(socketDescriptor);
-    Q_UNUSED(socketType)
+    Q_UNUSED(socketType);
     Q_UNUSED(socketState);
     Q_UNUSED(openMode);
     return false;

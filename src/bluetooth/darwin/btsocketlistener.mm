@@ -105,7 +105,7 @@ QT_USE_NAMESPACE
 - (void)rfcommOpenNotification:(IOBluetoothUserNotification *)notification
         channel:(IOBluetoothRFCOMMChannel *)newChannel
 {
-    Q_UNUSED(notification)
+    Q_UNUSED(notification);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->openNotifyRFCOMM(newChannel);
@@ -114,7 +114,7 @@ QT_USE_NAMESPACE
 - (void)l2capOpenNotification:(IOBluetoothUserNotification *)notification
         channel:(IOBluetoothL2CAPChannel *)newChannel
 {
-    Q_UNUSED(notification)
+    Q_UNUSED(notification);
 
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
     delegate->openNotifyL2CAP(newChannel);

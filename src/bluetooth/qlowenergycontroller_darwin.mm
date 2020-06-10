@@ -890,7 +890,7 @@ void QLowEnergyControllerPrivateDarwin::writeDescriptor(const QSharedPointer<QLo
                                                         const QLowEnergyHandle descriptorHandle,
                                                         const QByteArray &newValue)
 {
-    Q_UNUSED(charHandle)
+    Q_UNUSED(charHandle);
 
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
@@ -1029,9 +1029,9 @@ void QLowEnergyControllerPrivateDarwin::startAdvertising(const QLowEnergyAdverti
                                                          const QLowEnergyAdvertisingData &scanResponseData)
 {
 #ifdef Q_OS_TVOS
-    Q_UNUSED(params)
-    Q_UNUSED(advertisingData)
-    Q_UNUSED(scanResponseData)
+    Q_UNUSED(params);
+    Q_UNUSED(advertisingData);
+    Q_UNUSED(scanResponseData);
     qCWarning(QT_BT_DARWIN) << "advertising is not supported on your platform";
 #else
 
