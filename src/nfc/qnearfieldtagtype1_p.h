@@ -70,7 +70,7 @@ public:
     };
     Q_ENUM(WriteMode)
 
-    explicit QNearFieldTagType1(QObject *parent = 0);
+    explicit QNearFieldTagType1(QObject *parent = nullptr);
     ~QNearFieldTagType1();
 
     Type type() const override { return NfcTagType1; }

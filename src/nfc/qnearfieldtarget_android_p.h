@@ -70,7 +70,7 @@ class NearFieldTarget : public QNearFieldTarget
 public:
     NearFieldTarget(QAndroidJniObject intent,
                     const QByteArray uid,
-                    QObject *parent = 0);
+                    QObject *parent = nullptr);
     virtual ~NearFieldTarget();
     virtual QByteArray uid() const;
     virtual Type type() const;

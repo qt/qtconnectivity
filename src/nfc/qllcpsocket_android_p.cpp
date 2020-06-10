@@ -86,7 +86,7 @@ void QLlcpSocketPrivate::disconnectFromService()
     disconnect(QNXNFCManager::instance(), &QNXNFCManager::llcpDisconnected, this, &QLlcpSocketPrivate::disconnectFromService);
 
     q->disconnected();
-    m_conListener = 0;
+    m_conListener = nullptr;
     m_state = QLlcpSocket::UnconnectedState;*/
 }
 

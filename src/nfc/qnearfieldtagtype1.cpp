@@ -81,9 +81,9 @@ class QNearFieldTagType1Private
 public:
     QNearFieldTagType1Private(QNearFieldTagType1 *q)
     :   q_ptr(q), m_readNdefMessageState(NotReadingNdefMessage),
-        m_tlvReader(0),
+        m_tlvReader(nullptr),
         m_writeNdefMessageState(NotWritingNdefMessage),
-        m_tlvWriter(0)
+        m_tlvWriter(nullptr)
     { }
 
     QNearFieldTagType1 *q_ptr;
@@ -193,7 +193,7 @@ void QNearFieldTagType1Private::progressToNextNdefReadMessageState()
         m_nextExpectedRequestId = m_tlvReader->requestId();
         if (!m_nextExpectedRequestId.isValid()) {
             delete m_tlvReader;
-            m_tlvReader = 0;
+            m_tlvReader = nullptr;
             m_readNdefMessageState = NotReadingNdefMessage;
             Q_EMIT q->requestCompleted(m_readNdefRequestId);
             m_readNdefRequestId = QNearFieldTarget::RequestId();
@@ -270,7 +270,7 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
             break;
 
         delete m_tlvReader;
-        m_tlvReader = 0;
+        m_tlvReader = nullptr;
         m_writeNdefMessageState = NdefWriteWritingTlv;
 
         // fall through
@@ -299,7 +299,7 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
             m_nextExpectedRequestId = QNearFieldTarget::RequestId();
             m_writeNdefMessageState = NotWritingNdefMessage;
             delete m_tlvWriter;
-            m_tlvWriter = 0;
+            m_tlvWriter = nullptr;
             Q_EMIT q->ndefMessagesWritten();
             Q_EMIT q->requestCompleted(m_writeNdefRequestId);
             m_writeNdefRequestId = QNearFieldTarget::RequestId();
@@ -308,7 +308,7 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
             if (!m_nextExpectedRequestId.isValid()) {
                 m_writeNdefMessageState = NotWritingNdefMessage;
                 delete m_tlvWriter;
-                m_tlvWriter = 0;
+                m_tlvWriter = nullptr;
                 Q_EMIT q->error(QNearFieldTarget::NdefWriteError, m_writeNdefRequestId);
                 m_writeNdefRequestId = QNearFieldTarget::RequestId();
             }

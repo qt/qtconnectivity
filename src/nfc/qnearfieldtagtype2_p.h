@@ -64,7 +64,7 @@ class Q_AUTOTEST_EXPORT QNearFieldTagType2 : public QNearFieldTarget
     Q_DECLARE_PRIVATE(QNearFieldTagType2)
 
 public:
-    explicit QNearFieldTagType2(QObject *parent = 0);
+    explicit QNearFieldTagType2(QObject *parent = nullptr);
     ~QNearFieldTagType2();
 
     Type type() const override { return NfcTagType2; }

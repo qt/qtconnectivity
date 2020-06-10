@@ -68,7 +68,7 @@ class Q_AUTOTEST_EXPORT QNearFieldManagerPrivate : public QObject
     Q_OBJECT
 
 public:
-    explicit QNearFieldManagerPrivate(QObject *parent = 0)
+    explicit QNearFieldManagerPrivate(QObject *parent = nullptr)
     :   QObject(parent)
     {
     }

@@ -43,7 +43,7 @@
 QT_BEGIN_NAMESPACE
 
 QLlcpServerPrivate::QLlcpServerPrivate(QLlcpServer *q)
-    : q_ptr(q), m_llcpSocket(0), m_connected(false)
+    : q_ptr(q), m_llcpSocket(nullptr), m_connected(false)
 {
 }
 
@@ -99,13 +99,13 @@ quint8 QLlcpServerPrivate::serverPort() const
 
 bool QLlcpServerPrivate::hasPendingConnections() const
 {
-    return m_llcpSocket != 0;
+    return m_llcpSocket != nullptr;
 }
 
 QLlcpSocket *QLlcpServerPrivate::nextPendingConnection()
 {
     /*QLlcpSocket *socket = m_llcpSocket;
-    m_llcpSocket = 0;
+    m_llcpSocket = nullptr;
     return socket;*/
     return 0;
 }
@@ -118,7 +118,7 @@ QLlcpSocket::SocketError QLlcpServerPrivate::serverError() const
 /*void QLlcpServerPrivate::connected(nfc_target_t *target)
 {
     m_target = target;
-    if (m_llcpSocket != 0) {
+    if (m_llcpSocket != nullptr) {
         qWarning() << Q_FUNC_INFO << "LLCP socket not cloesed properly";
         return;
     }

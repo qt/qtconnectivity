@@ -66,7 +66,7 @@ class Q_NFC_EXPORT QLlcpServer : public QObject
     Q_DECLARE_PRIVATE(QLlcpServer)
 
 public:
-    explicit QLlcpServer(QObject *parent = 0);
+    explicit QLlcpServer(QObject *parent = nullptr);
     virtual ~QLlcpServer();
 
     bool listen(const QString &serviceUri);
