@@ -416,10 +416,10 @@ QNearFieldTarget::Type QNearFieldTargetPrivateImpl::getTagType() const
         if ((sakS & 0x0064) == 0x0000)
             return QNearFieldTarget::NfcTagType2;
         else if ((sakS & 0x0064) == 0x0020)
-            return QNearFieldTarget::NfcTagType4;
+            return QNearFieldTarget::NfcTagType4A;
         return QNearFieldTarget::ProprietaryTag;
     } else if (m_techList.contains(NFCBTECHNOLOGY)) {
-        return QNearFieldTarget::NfcTagType4;
+        return QNearFieldTarget::NfcTagType4B;
     } else if (m_techList.contains(NFCFTECHNOLOGY)) {
         return QNearFieldTarget::NfcTagType3;
     }

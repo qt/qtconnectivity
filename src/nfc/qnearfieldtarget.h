@@ -66,6 +66,8 @@ public:
         NfcTagType2,
         NfcTagType3,
         NfcTagType4,
+        NfcTagType4A,
+        NfcTagType4B,
         MifareTag
     };
     Q_ENUM(Type)

@@ -88,7 +88,10 @@ QT_BEGIN_NAMESPACE
     \value NfcTagType1      An NFC tag type 1 target.
     \value NfcTagType2      An NFC tag type 2 target.
     \value NfcTagType3      An NFC tag type 3 target.
-    \value NfcTagType4      An NFC tag type 4 target.
+    \value NfcTagType4      An NFC tag type 4 target. This value is used if the NfcTagType4
+                            cannot be further refined by NfcTagType4A or NfcTagType4B below.
+    \value NfcTagType4A     An NFC tag type 4 target based on ISO/IEC 14443-3A.
+    \value NfcTagType4B     An NFC tag type 4 target based on ISO/IEC 14443-3B.
     \value MifareTag        A Mifare target.
 */
 

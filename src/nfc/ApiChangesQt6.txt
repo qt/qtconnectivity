@@ -9,3 +9,4 @@ This document lists the API changed done to QtNFC between Qt 5.15 and Qt 6.
 - Removed QNearFieldShareManager/QNearFieldShareTarget. No replacement available.
 - Removed function QNearFieldTarget::isProcessingCommand(). No replacement available as the function is not implemented.
 - Removed functions setResponseForRequest, handleResponse and reportError from QNearFieldTarget. No replacement available as this is for internal use only.
+- Added NfcTagType4A and NfcTagType4B to QNearFieldTarget::Type.
