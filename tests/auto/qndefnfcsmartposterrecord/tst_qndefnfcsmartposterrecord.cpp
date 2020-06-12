@@ -187,7 +187,7 @@ void tst_QNdefNfcSmartPosterRecord::tst_emptyRecord()
 
     quint32 size = 0;
     QCOMPARE(record.size(), size);
-    QCOMPARE(record.typeInfo(), QByteArray());
+    QCOMPARE(record.typeInfo(), QString());
 
     QVERIFY(record.isRecordType<QNdefNfcSmartPosterRecord>());
     QVERIFY(!record.isRecordType<QNdefNfcTextRecord>());
@@ -427,7 +427,7 @@ void tst_QNdefNfcSmartPosterRecord::tst_typeInfo()
 {
     QNdefNfcSmartPosterRecord record;
 
-    QByteArray typeInfo("typeinfo");
+    QString typeInfo("typeinfo");
     record.setTypeInfo(typeInfo);
     QCOMPARE(record.typeInfo(), typeInfo);
     QVERIFY(record.hasTypeInfo());
@@ -484,7 +484,7 @@ void tst_QNdefNfcSmartPosterRecord::tst_construct()
     QCOMPARE(sprecord.size(), size);
 
     QVERIFY(sprecord.hasTypeInfo());
-    QCOMPARE(sprecord.typeInfo(), QByteArray("text/html"));
+    QCOMPARE(sprecord.typeInfo(), QString("text/html"));
 
     QVERIFY(record == sprecord);
     QVERIFY(!(record != sprecord));

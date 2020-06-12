@@ -41,6 +41,7 @@
 #define QNDEFNFCSMARTPOSTERRECORD_H
 
 #include <QtCore/QList>
+#include <QtCore/QString>
 #include <QtNfc/qtnfcglobal.h>
 #include <QtNfc/QNdefRecord>
 #include <QtNfc/qndefnfctextrecord.h>
@@ -131,9 +132,8 @@ public:
     quint32 size() const;
     void setSize(quint32 size);
 
-    //TODO Qt 6 the mimetype should be QString as it is UTF-8
-    QByteArray typeInfo() const;
-    void setTypeInfo(const QByteArray &type);
+    QString typeInfo() const;
+    void setTypeInfo(const QString &type);
 
 private:
     QSharedDataPointer<QNdefNfcSmartPosterRecordPrivate> d;

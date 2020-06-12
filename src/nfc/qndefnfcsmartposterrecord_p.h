@@ -76,8 +76,8 @@ class QNdefNfcTypeRecord : public QNdefRecord
 public:
     Q_DECLARE_NDEF_RECORD(QNdefNfcTypeRecord, QNdefRecord::NfcRtd, "t", QByteArray(0, char(0)))
 
-    void setTypeInfo(const QByteArray &type);
-    QByteArray typeInfo() const;
+    void setTypeInfo(const QString &type);
+    QString typeInfo() const;
 };
 
 class QNdefNfcSmartPosterRecordPrivate : public QSharedData

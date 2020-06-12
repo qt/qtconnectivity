@@ -670,28 +670,28 @@ void QNdefNfcSmartPosterRecord::setSize(quint32 size)
 }
 
 /*!
-    Returns the UTF-8 encoded MIME type that describes the type of the objects
-    that can be reached via uri().
+    Returns the MIME type that describes the type of the objects that can be
+    reached via uri().
 
-    If the type is not known the return QByteArray is empty.
+    If the type is not known, the returned QString is empty.
 
     \sa setTypeInfo(), hasTypeInfo()
  */
-QByteArray QNdefNfcSmartPosterRecord::typeInfo() const
+QString QNdefNfcSmartPosterRecord::typeInfo() const
 {
     if (d->m_type)
         return d->m_type->typeInfo();
 
-    return QByteArray();
+    return QString();
 }
 
 /*!
-    Sets the type record to \a type. \a type must be UTF-8 encoded
-    and describes the type of the object referenced by uri()
+    Sets the type record to \a type. \a type describes the type of the object
+    referenced by uri().
 
     \sa typeInfo()
  */
-void QNdefNfcSmartPosterRecord::setTypeInfo(const QByteArray &type)
+void QNdefNfcSmartPosterRecord::setTypeInfo(const QString &type)
 {
     if (d->m_type)
         delete d->m_type;
@@ -755,14 +755,14 @@ quint32 QNdefNfcSizeRecord::size() const
             + ((p[2] << 8) & 0x0000FF00) + (p[3] & 0x000000FF);
 }
 
-void QNdefNfcTypeRecord::setTypeInfo(const QByteArray &type)
+void QNdefNfcTypeRecord::setTypeInfo(const QString &type)
 {
-    setPayload(type);
+    setPayload(type.toUtf8());
 }
 
-QByteArray QNdefNfcTypeRecord::typeInfo() const
+QString QNdefNfcTypeRecord::typeInfo() const
 {
-    return payload();
+    return QString::fromUtf8(payload());
 }
 
 QT_END_NAMESPACE
