@@ -69,10 +69,10 @@ public:
 
     QByteArray uid() const;
 
-    AccessMethods accessMethods() const;
+    QNearFieldTarget::AccessMethods accessMethods() const;
 
-    RequestId sendCommand(const QByteArray &command);
-    bool waitForRequestCompleted(const RequestId &id, int msecs = 5000);
+    QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
+    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000);
 
 private:
     TagBase *m_tag;
@@ -88,10 +88,10 @@ public:
 
     QByteArray uid() const;
 
-    AccessMethods accessMethods() const;
+    QNearFieldTarget::AccessMethods accessMethods() const;
 
-    RequestId sendCommand(const QByteArray &command);
-    bool waitForRequestCompleted(const RequestId &id, int msecs = 5000);
+    QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
+    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000);
 
 private:
     TagBase *m_tag;

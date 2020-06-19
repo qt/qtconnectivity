@@ -67,18 +67,18 @@ public:
     explicit QNearFieldTagType2(QObject *parent = nullptr);
     ~QNearFieldTagType2();
 
-    Type type() const override { return NfcTagType2; }
+    QNearFieldTarget::Type type() const override { return QNearFieldTarget::NfcTagType2; }
 
     bool hasNdefMessage() override;
-    RequestId readNdefMessages() override;
-    RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
+    QNearFieldTarget::RequestId readNdefMessages() override;
+    QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
 
     quint8 version();
     int memorySize();
 
-    virtual RequestId readBlock(quint8 blockAddress);
-    virtual RequestId writeBlock(quint8 blockAddress, const QByteArray &data);
-    virtual RequestId selectSector(quint8 sector);
+    virtual QNearFieldTarget::RequestId readBlock(quint8 blockAddress);
+    virtual QNearFieldTarget::RequestId writeBlock(quint8 blockAddress, const QByteArray &data);
+    virtual QNearFieldTarget::RequestId selectSector(quint8 sector);
 
     void timerEvent(QTimerEvent *event) override;
 

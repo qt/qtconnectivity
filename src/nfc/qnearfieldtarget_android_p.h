@@ -73,14 +73,14 @@ public:
                     QObject *parent = nullptr);
     virtual ~NearFieldTarget();
     virtual QByteArray uid() const;
-    virtual Type type() const;
-    virtual AccessMethods accessMethods() const;
+    virtual QNearFieldTarget::Type type() const;
+    virtual QNearFieldTarget::AccessMethods accessMethods() const;
     bool disconnect();
     virtual bool hasNdefMessage();
-    virtual RequestId readNdefMessages();
+    virtual QNearFieldTarget::RequestId readNdefMessages();
     int maxCommandLength() const;
-    virtual RequestId sendCommand(const QByteArray &command);
-    virtual RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
+    virtual QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
+    virtual QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages);
     void setIntent(QAndroidJniObject intent);
 
 signals:
@@ -95,7 +95,7 @@ protected:
     void releaseIntent();
     void updateTechList();
     void updateType();
-    Type getTagType() const;
+    QNearFieldTarget::Type getTagType() const;
     void setupTargetCheckTimer();
     void handleTargetLost();
     QAndroidJniObject getTagTechnology(const QString &tech) const;
@@ -108,7 +108,7 @@ protected:
     QAndroidJniObject m_intent;
     QByteArray m_uid;
     QStringList m_techList;
-    Type m_type;
+    QNearFieldTarget::Type m_type;
     QTimer *m_targetCheckTimer;
     QString m_tech;
     QAndroidJniObject m_tagTech;

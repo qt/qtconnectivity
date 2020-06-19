@@ -73,28 +73,28 @@ public:
     explicit QNearFieldTagType1(QObject *parent = nullptr);
     ~QNearFieldTagType1();
 
-    Type type() const override { return NfcTagType1; }
+    QNearFieldTarget::Type type() const override { return QNearFieldTarget::NfcTagType1; }
 
     bool hasNdefMessage() override;
-    RequestId readNdefMessages() override;
-    RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
+    QNearFieldTarget::RequestId readNdefMessages() override;
+    QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
 
     quint8 version();
     virtual int memorySize();
 
     // DIGPROTO
-    virtual RequestId readIdentification();
+    virtual QNearFieldTarget::RequestId readIdentification();
 
     // static memory functions
-    virtual RequestId readAll();
-    virtual RequestId readByte(quint8 address);
-    virtual RequestId writeByte(quint8 address, quint8 data, WriteMode mode = EraseAndWrite);
+    virtual QNearFieldTarget::RequestId readAll();
+    virtual QNearFieldTarget::RequestId readByte(quint8 address);
+    virtual QNearFieldTarget::RequestId writeByte(quint8 address, quint8 data, WriteMode mode = EraseAndWrite);
 
     // dynamic memory functions
-    virtual RequestId readSegment(quint8 segmentAddress);
-    virtual RequestId readBlock(quint8 blockAddress);
-    virtual RequestId writeBlock(quint8 blockAddress, const QByteArray &data,
-                                 WriteMode mode = EraseAndWrite);
+    virtual QNearFieldTarget::RequestId readSegment(quint8 segmentAddress);
+    virtual QNearFieldTarget::RequestId readBlock(quint8 blockAddress);
+    virtual QNearFieldTarget::RequestId writeBlock(quint8 blockAddress, const QByteArray &data,
+                                                   WriteMode mode = EraseAndWrite);
 
 protected:
     void handleResponse(const QNearFieldTarget::RequestId &id, const QVariant &response) override;

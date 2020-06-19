@@ -140,14 +140,14 @@ public:
     virtual bool waitForRequestCompleted(const RequestId &id, int msecs = 5000);
 
     QVariant requestResponse(const RequestId &id);
-    void setResponseForRequest(const QNearFieldTarget::RequestId &id, const QVariant &response,
+    void setResponseForRequest(const RequestId &id, const QVariant &response,
                                bool emitRequestCompleted = true);
 
 protected:
-    virtual void handleResponse(const QNearFieldTarget::RequestId &id,
+    virtual void handleResponse(const RequestId &id,
                                 const QVariant &response);
 
-    void reportError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
+    void reportError(Error error, const RequestId &id);
 
 Q_SIGNALS:
     void disconnected();

@@ -72,14 +72,14 @@ QByteArray TagType1::uid() const
 
 QNearFieldTarget::AccessMethods TagType1::accessMethods() const
 {
-    return NdefAccess | TagTypeSpecificAccess;
+    return QNearFieldTarget::NdefAccess | QNearFieldTarget::TagTypeSpecificAccess;
 }
 
 QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
 {
     QMutexLocker locker(&tagMutex);
 
-    RequestId id(new RequestIdPrivate);
+    QNearFieldTarget::RequestId id(new QNearFieldTarget::RequestIdPrivate);
 
     // tag not in proximity
     if (!tagMap.value(m_tag)) {
@@ -111,7 +111,7 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
     return id;
 }
 
-bool TagType1::waitForRequestCompleted(const RequestId &id, int msecs)
+bool TagType1::waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs)
 {
     QCoreApplication::sendPostedEvents(this, QEvent::MetaCall);
 
@@ -137,14 +137,14 @@ QByteArray TagType2::uid() const
 
 QNearFieldTarget::AccessMethods TagType2::accessMethods() const
 {
-    return NdefAccess | TagTypeSpecificAccess;
+    return QNearFieldTarget::NdefAccess | QNearFieldTarget::TagTypeSpecificAccess;
 }
 
 QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
 {
     QMutexLocker locker(&tagMutex);
 
-    RequestId id(new RequestIdPrivate);
+    QNearFieldTarget::RequestId id(new QNearFieldTarget::RequestIdPrivate);
 
     // tag not in proximity
     if (!tagMap.value(m_tag)) {
@@ -176,7 +176,7 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
     return id;
 }
 
-bool TagType2::waitForRequestCompleted(const RequestId &id, int msecs)
+bool TagType2::waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs)
 {
     QCoreApplication::sendPostedEvents(this, QEvent::MetaCall);
 

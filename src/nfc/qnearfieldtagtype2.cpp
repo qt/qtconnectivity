@@ -124,7 +124,7 @@ bool QNearFieldTagType2::hasNdefMessage()
 */
 QNearFieldTarget::RequestId QNearFieldTagType2::readNdefMessages()
 {
-    return RequestId();
+    return QNearFieldTarget::RequestId();
 }
 
 /*!
@@ -134,7 +134,7 @@ QNearFieldTarget::RequestId QNearFieldTagType2::writeNdefMessages(const QList<QN
 {
     Q_UNUSED(messages);
 
-    return RequestId();
+    return QNearFieldTarget::RequestId();
 }
 
 /*!
@@ -144,12 +144,12 @@ quint8 QNearFieldTagType2::version()
 {
     Q_D(QNearFieldTagType2);
     if (d->m_currentSector != 0) {
-        RequestId id = selectSector(0);
+        QNearFieldTarget::RequestId id = selectSector(0);
         if (!waitForRequestCompleted(id))
             return 0;
     }
 
-    RequestId id = readBlock(0);
+    QNearFieldTarget::RequestId id = readBlock(0);
     if (!waitForRequestCompleted(id))
         return 0;
 
@@ -164,12 +164,12 @@ int QNearFieldTagType2::memorySize()
 {
     Q_D(QNearFieldTagType2);
     if (d->m_currentSector != 0) {
-        RequestId id = selectSector(0);
+        QNearFieldTarget::RequestId id = selectSector(0);
         if (!waitForRequestCompleted(id))
             return 0;
     }
 
-    RequestId id = readBlock(0);
+    QNearFieldTarget::RequestId id = readBlock(0);
     if (!waitForRequestCompleted(id))
         return 0;
 
@@ -208,14 +208,14 @@ QNearFieldTarget::RequestId QNearFieldTagType2::writeBlock(quint8 blockAddress,
                                                            const QByteArray &data)
 {
     if (data.length() != 4)
-        return RequestId();
+        return QNearFieldTarget::RequestId();
 
     QByteArray command;
     command.append(char(0xa2));         // WRITE
     command.append(char(blockAddress)); // Block address
     command.append(data);               // Data
 
-    RequestId id = sendCommand(command);
+    QNearFieldTarget::RequestId id = sendCommand(command);
 
     Q_D(QNearFieldTagType2);
 
@@ -243,7 +243,7 @@ QNearFieldTarget::RequestId QNearFieldTagType2::selectSector(quint8 sector)
     command.append(char(0xc2));     // SECTOR SELECT (Command Packet 1)
     command.append(char(0xff));
 
-    RequestId id = sendCommand(command);
+    QNearFieldTarget::RequestId id = sendCommand(command);
 
     Q_D(QNearFieldTagType2);
 

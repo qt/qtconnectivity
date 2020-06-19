@@ -85,18 +85,18 @@ QNearFieldTarget::Type NearFieldTarget::type() const
 
 QNearFieldTarget::AccessMethods NearFieldTarget::accessMethods() const
 {
-    AccessMethods result = UnknownAccess;
+    QNearFieldTarget::AccessMethods result = QNearFieldTarget::UnknownAccess;
 
     if (m_techList.contains(NDEFTECHNOLOGY)
             || m_techList.contains(NDEFFORMATABLETECHNOLOGY))
-        result |= NdefAccess;
+        result |= QNearFieldTarget::NdefAccess;
 
     if (m_techList.contains(ISODEPTECHNOLOGY)
             || m_techList.contains(NFCATECHNOLOGY)
             || m_techList.contains(NFCBTECHNOLOGY)
             || m_techList.contains(NFCFTECHNOLOGY)
             || m_techList.contains(NFCVTECHNOLOGY))
-        result |= TagTypeSpecificAccess;
+        result |= QNearFieldTarget::TagTypeSpecificAccess;
 
     return result;
 }
@@ -207,7 +207,7 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     }
 
     // Making sure that target has commands
-    if (!(accessMethods() & TagTypeSpecificAccess))
+    if (!(accessMethods() & QNearFieldTarget::TagTypeSpecificAccess))
         return QNearFieldTarget::RequestId();
 
     QAndroidJniEnvironment env;
@@ -383,19 +383,19 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
         QString qtype = ndef.callObjectMethod("getType", "()Ljava/lang/String;").toString();
 
         if (qtype.compare(MIFARETAG) == 0)
-            return MifareTag;
+            return QNearFieldTarget::MifareTag;
         if (qtype.compare(NFCTAGTYPE1) == 0)
-            return NfcTagType1;
+            return QNearFieldTarget::NfcTagType1;
         if (qtype.compare(NFCTAGTYPE2) == 0)
-            return NfcTagType2;
+            return QNearFieldTarget::NfcTagType2;
         if (qtype.compare(NFCTAGTYPE3) == 0)
-            return NfcTagType3;
+            return QNearFieldTarget::NfcTagType3;
         if (qtype.compare(NFCTAGTYPE4) == 0)
-            return NfcTagType4;
-        return ProprietaryTag;
+            return QNearFieldTarget::NfcTagType4;
+        return QNearFieldTarget::ProprietaryTag;
     } else if (m_techList.contains(NFCATECHNOLOGY)) {
         if (m_techList.contains(MIFARECLASSICTECHNOLOGY))
-            return MifareTag;
+            return QNearFieldTarget::MifareTag;
 
         // Checking ATQA/SENS_RES
         // xxx0 0000  xxxx xxxx: Identifies tag Type 1 platform
@@ -403,26 +403,26 @@ QNearFieldTarget::Type NearFieldTarget::getTagType() const
         QAndroidJniObject atqaBA = nfca.callObjectMethod("getAtqa", "()[B");
         QByteArray atqaQBA = jbyteArrayToQByteArray(atqaBA.object<jbyteArray>());
         if (atqaQBA.isEmpty())
-            return ProprietaryTag;
+            return QNearFieldTarget::ProprietaryTag;
         if ((atqaQBA[0] & 0x1F) == 0x00)
-            return NfcTagType1;
+            return QNearFieldTarget::NfcTagType1;
 
         // Checking SAK/SEL_RES
         // xxxx xxxx  x00x x0xx: Identifies tag Type 2 platform
         // xxxx xxxx  x01x x0xx: Identifies tag Type 4 platform
         jshort sakS = nfca.callMethod<jshort>("getSak");
         if ((sakS & 0x0064) == 0x0000)
-            return NfcTagType2;
+            return QNearFieldTarget::NfcTagType2;
         else if ((sakS & 0x0064) == 0x0020)
-            return NfcTagType4;
-        return ProprietaryTag;
+            return QNearFieldTarget::NfcTagType4;
+        return QNearFieldTarget::ProprietaryTag;
     } else if (m_techList.contains(NFCBTECHNOLOGY)) {
-        return NfcTagType4;
+        return QNearFieldTarget::NfcTagType4;
     } else if (m_techList.contains(NFCFTECHNOLOGY)) {
-        return NfcTagType3;
+        return QNearFieldTarget::NfcTagType3;
     }
 
-    return ProprietaryTag;
+    return QNearFieldTarget::ProprietaryTag;
 }
 
 void NearFieldTarget::setupTargetCheckTimer()
