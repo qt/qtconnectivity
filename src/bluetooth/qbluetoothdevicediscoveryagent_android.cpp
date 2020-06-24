@@ -372,7 +372,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
             }
             if (discoveredDevices[i].manufacturerData() != info.manufacturerData()) {
                 qCDebug(QT_BT_ANDROID) << "Updating manufacturer data for" << info.address();
-                const QVector<quint16> keys = info.manufacturerIds();
+                const QList<quint16> keys = info.manufacturerIds();
                 for (auto key: keys)
                     discoveredDevices[i].setManufacturerData(key, info.manufacturerData(key));
                 updatedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);

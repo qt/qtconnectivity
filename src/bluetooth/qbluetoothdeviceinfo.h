@@ -42,10 +42,10 @@
 
 #include <QtBluetooth/qtbluetoothglobal.h>
 
-#include <QtCore/qstring.h>
-#include <QtCore/qmetatype.h>
 #include <QtCore/qbytearray.h>
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qmetatype.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -237,10 +237,10 @@ public:
     qint16 rssi() const;
     void setRssi(qint16 signal);
 
-    QVector<QBluetoothUuid> serviceUuids() const;
-    void setServiceUuids(const QVector<QBluetoothUuid> &uuids);
+    QList<QBluetoothUuid> serviceUuids() const;
+    void setServiceUuids(const QList<QBluetoothUuid> &uuids);
 
-    QVector<quint16> manufacturerIds() const;
+    QList<quint16> manufacturerIds() const;
     QByteArray manufacturerData(quint16 manufacturerId) const;
     bool setManufacturerData(quint16 manufacturerId, const QByteArray &data);
     QMultiHash<quint16, QByteArray> manufacturerData() const;

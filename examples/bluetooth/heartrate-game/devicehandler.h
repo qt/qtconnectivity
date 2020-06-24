@@ -54,8 +54,8 @@
 #include "bluetoothbaseclass.h"
 
 #include <QDateTime>
+#include <QList>
 #include <QTimer>
-#include <QVector>
 
 #include <QLowEnergyController>
 #include <QLowEnergyService>
@@ -142,7 +142,7 @@ private:
     QDateTime m_start;
     QDateTime m_stop;
 
-    QVector<int> m_measurements;
+    QList<int> m_measurements;
     QLowEnergyController::RemoteAddressType m_addressType = QLowEnergyController::PublicAddress;
 
 #ifdef SIMULATOR

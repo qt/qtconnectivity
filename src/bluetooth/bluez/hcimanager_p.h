@@ -51,11 +51,11 @@
 // We mean it.
 //
 
-#include <QObject>
+#include <QtCore/QObject>
+#include <QtCore/QList>
 #include <QtCore/QSet>
 #include <QtCore/QSocketNotifier>
 #include <QtBluetooth/QBluetoothAddress>
-#include <QVector>
 #include "bluez/bluez_data_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -84,7 +84,7 @@ public:
     QBluetoothAddress addressForConnectionHandle(quint16 handle) const;
 
     // active connections
-    QVector<quint16> activeLowEnergyConnections() const;
+    QList<quint16> activeLowEnergyConnections() const;
 
     bool sendConnectionUpdateCommand(quint16 handle, const QLowEnergyConnectionParameters &params);
     bool sendConnectionParameterUpdateRequest(quint16 handle,

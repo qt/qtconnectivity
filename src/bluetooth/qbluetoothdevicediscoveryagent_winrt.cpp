@@ -167,7 +167,7 @@ private:
 #if QT_CONFIG(winrt_btle_no_pairing)
     QMutex m_foundDevicesMutex;
     struct LEAdvertisingInfo {
-        QVector<QBluetoothUuid> services;
+        QList<QBluetoothUuid> services;
         qint16 rssi = 0;
     };
 
@@ -342,7 +342,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
             quint32 size;
             hr = guids->get_Size(&size);
             Q_ASSERT_SUCCEEDED(hr);
-            QVector<QBluetoothUuid> serviceUuids;
+            QList<QBluetoothUuid> serviceUuids;
             for (quint32 i = 0; i < size; ++i) {
                 GUID guid;
                 hr = guids->GetAt(i, &guid);
@@ -356,7 +356,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
                 if (size == 0)
                     return S_OK;
                 const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
-                QVector<QBluetoothUuid> foundServices = adInfo.services;
+                QList<QBluetoothUuid> foundServices = adInfo.services;
                 if (adInfo.rssi != rssi) {
                     m_foundLEDevicesMap[address].rssi = rssi;
                     changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
@@ -561,7 +561,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
         uint serviceCount;
         hr = deviceServices->get_Size(&serviceCount);
         Q_ASSERT_SUCCEEDED(hr);
-        QVector<QBluetoothUuid> uuids;
+        QList<QBluetoothUuid> uuids;
         for (uint i = 0; i < serviceCount; ++i) {
             ComPtr<Rfcomm::IRfcommDeviceService> service;
             hr = deviceServices->GetAt(i, &service);
@@ -700,7 +700,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     uint serviceCount;
     hr = deviceServices->get_Size(&serviceCount);
     Q_ASSERT_SUCCEEDED(hr);
-    QVector<QBluetoothUuid> uuids;
+    QList<QBluetoothUuid> uuids;
     for (uint i = 0; i < serviceCount; ++i) {
         ComPtr<GenericAttributeProfile::IGattDeviceService> service;
         hr = deviceServices->GetAt(i, &service);
@@ -766,7 +766,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     boolean isPaired;
     hr = pairing->get_IsPaired(&isPaired);
     Q_ASSERT_SUCCEEDED(hr);
-    QVector<QBluetoothUuid> uuids;
+    QList<QBluetoothUuid> uuids;
 
     const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
     const qint16 rssi = adInfo.rssi;
@@ -886,7 +886,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDevic
             qCDebug(QT_BT_WINRT) << "Updating device" << iter->name() << iter->address();
             // merge service uuids
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            QVector<QBluetoothUuid> uuids = iter->serviceUuids();
+            QList<QBluetoothUuid> uuids = iter->serviceUuids();
 #else
             QList<QBluetoothUuid> uuids = iter->serviceUuids();
 #endif

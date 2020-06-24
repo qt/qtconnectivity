@@ -132,8 +132,8 @@ private:
     SOCKADDR_BTH sockaddr = {};
     CSADDR_INFO addrinfo = {};
     WSAQUERYSET regInfo = {};
-    QVector<WCHAR> serviceName;
-    QVector<WCHAR> serviceDescription;
+    QList<WCHAR> serviceName;
+    QList<WCHAR> serviceDescription;
 #endif
 
 #if QT_OSX_BLUETOOTH

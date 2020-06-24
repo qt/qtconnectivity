@@ -245,7 +245,8 @@ template<> quint8 servicesType<quint128>(bool dataComplete)
     return dataComplete ? 0x7 : 0x6;
 }
 
-template<typename T> static void addServicesData(AdvData &data, const QVector<T> &services)
+template<typename T>
+static void addServicesData(AdvData &data, const QList<T> &services)
 {
     if (services.isEmpty())
         return;
@@ -270,9 +271,9 @@ template<typename T> static void addServicesData(AdvData &data, const QVector<T>
 
 void QLeAdvertiserBluez::setServicesData(const QLowEnergyAdvertisingData &src, AdvData &dest)
 {
-    QVector<quint16> services16;
-    QVector<quint32> services32;
-    QVector<quint128> services128;
+    QList<quint16> services16;
+    QList<quint32> services32;
+    QList<quint128> services128;
     const QList<QBluetoothUuid> services = src.services();
     for (const QBluetoothUuid &service : services) {
         bool ok;

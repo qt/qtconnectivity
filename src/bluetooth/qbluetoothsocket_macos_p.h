@@ -66,12 +66,12 @@
 #include <QtCore/qbytearray.h>
 #include "qprivatelinearbuffer_p.h"
 
-#include <QtCore/qscopedpointer.h>
-#include <QtCore/qiodevice.h>
 #include <QtCore/qglobal.h>
-#include <QtCore/qobject.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qvector.h>
+#include <QtCore/QIODevice>
+#include <QtCore/QList>
+#include <QtCore/QObject>
+#include <QtCore/QScopedPointer>
+#include <QtCore/QString>
 
 QT_BEGIN_NAMESPACE
 
@@ -135,7 +135,7 @@ private:
     void readChannelData(void *data, std::size_t size) override;
     void writeComplete() override;
 
-    QVector<char> writeChunk;
+    QList<char> writeChunk;
 
     using L2CAPChannel = DarwinBluetooth::ScopedPointer;
     L2CAPChannel l2capChannel;

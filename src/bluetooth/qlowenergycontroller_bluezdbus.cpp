@@ -115,7 +115,7 @@ void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
 
         if (changedProperties.contains(QStringLiteral("UUIDs"))) {
             const QStringList newUuidStringList = changedProperties.value(QStringLiteral("UUIDs")).toStringList();
-            QVector<QBluetoothUuid> newUuidList;
+            QList<QBluetoothUuid> newUuidList;
             for (const QString &uuidString : newUuidStringList)
                 newUuidList.append(QBluetoothUuid(uuidString));
 

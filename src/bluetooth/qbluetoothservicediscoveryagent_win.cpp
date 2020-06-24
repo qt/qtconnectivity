@@ -294,7 +294,7 @@ static FindServiceResult findFirstService(const QBluetoothAddress &address)
     }
 
     const QString addressAsString = QStringLiteral("(%1)").arg(address.toString());
-    QVector<WCHAR> addressAsWChar(addressAsString.size() + 1);
+    QList<WCHAR> addressAsWChar(addressAsString.size() + 1);
     addressAsString.toWCharArray(addressAsWChar.data());
 
     GUID protocol = L2CAP_PROTOCOL_UUID; //Search for L2CAP and RFCOMM services

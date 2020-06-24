@@ -54,7 +54,6 @@
 
 #include <qglobal.h>
 #include <QtCore/QQueue>
-#include <QtCore/QVector>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"

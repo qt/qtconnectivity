@@ -355,7 +355,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
     //find SPP and custom uuid
     bool haveSppClass = false;
-    QVector<int> customUuids;
+    QList<int> customUuids;
 
     for (int i = 0; i < uuids.count(); i++) {
         const QBluetoothUuid uuid = uuids.at(i);

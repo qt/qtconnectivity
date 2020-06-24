@@ -36,9 +36,9 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qendian.h>
 #include <QtCore/qhash.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qsharedpointer.h>
-#include <QtCore/qvector.h>
 
 static QByteArray deviceName() { return "Qt GATT server"; }
 

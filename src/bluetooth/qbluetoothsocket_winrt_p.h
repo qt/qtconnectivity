@@ -129,12 +129,12 @@ public:
     QMutex m_readMutex;
 
     // Protected by m_readMutex. Written in addToPendingData (native callback)
-    QVector<QByteArray> m_pendingData;
+    QList<QByteArray> m_pendingData;
 
-    Q_INVOKABLE void addToPendingData(const QVector<QByteArray> &data);
+    Q_INVOKABLE void addToPendingData(const QList<QByteArray> &data);
 
 private slots:
-    void handleNewData(const QVector<QByteArray> &data);
+    void handleNewData(const QList<QByteArray> &data);
     void handleError(QBluetoothSocket::SocketError error);
 
 private:

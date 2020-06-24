@@ -376,7 +376,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_deviceFound(const QString &addres
     QBluetoothDeviceInfo device(btAddress, btName, btClass);
     if (dict.value(QStringLiteral("RSSI")).isValid())
         device.setRssi(dict.value(QStringLiteral("RSSI")).toInt());
-    QVector<QBluetoothUuid> uuids;
+    QList<QBluetoothUuid> uuids;
     const QStringList uuidStrings
             = dict.value(QLatin1String("UUIDs")).toStringList();
     for (const QString &u : uuidStrings)
@@ -427,7 +427,7 @@ static QBluetoothDeviceInfo createDeviceInfoFromBluez5Device(const QVariantMap& 
     QBluetoothDeviceInfo deviceInfo(btAddress, btName, btClass);
     deviceInfo.setRssi(qvariant_cast<short>(properties[QStringLiteral("RSSI")]));
 
-    QVector<QBluetoothUuid> uuids;
+    QList<QBluetoothUuid> uuids;
     bool foundLikelyLowEnergyUuid = false;
     const QStringList foundUuids = qvariant_cast<QStringList>(properties[QStringLiteral("UUIDs")]);
     for (const auto &u: foundUuids) {

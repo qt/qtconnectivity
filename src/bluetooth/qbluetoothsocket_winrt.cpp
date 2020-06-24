@@ -171,14 +171,14 @@ public:
     }
 
 signals:
-    void newDataReceived(const QVector<QByteArray> &data);
+    void newDataReceived(const QList<QByteArray> &data);
     void socketErrorOccured(QBluetoothSocket::SocketError error);
 
 public slots:
     Q_INVOKABLE void notifyAboutNewData()
     {
         QMutexLocker locker(&m_mutex);
-        const QVector<QByteArray> newData = std::move(m_pendingData);
+        const QList<QByteArray> newData = std::move(m_pendingData);
         m_pendingData.clear();
         emit newDataReceived(newData);
     }
@@ -317,7 +317,7 @@ public:
 
 private:
     ComPtr<IStreamSocket> m_socket;
-    QVector<QByteArray> m_pendingData;
+    QList<QByteArray> m_pendingData;
     bool m_shuttingDown = false;
 
     // Protects pendingData/pendingDatagrams which are accessed from native callbacks
@@ -765,12 +765,12 @@ bool QBluetoothSocketPrivateWinRT::canReadLine() const
     return buffer.canReadLine();
 }
 
-void QBluetoothSocketPrivateWinRT::handleNewData(const QVector<QByteArray> &data)
+void QBluetoothSocketPrivateWinRT::handleNewData(const QList<QByteArray> &data)
 {
     // Defer putting the data into the list until the next event loop iteration
     // (where the readyRead signal is emitted as well)
     QMetaObject::invokeMethod(this, "addToPendingData", Qt::QueuedConnection,
-                              Q_ARG(QVector<QByteArray>, data));
+                              Q_ARG(QList<QByteArray>, data));
 }
 
 void QBluetoothSocketPrivateWinRT::handleError(QBluetoothSocket::SocketError error)
@@ -796,7 +796,7 @@ void QBluetoothSocketPrivateWinRT::handleError(QBluetoothSocket::SocketError err
     }
 }
 
-void QBluetoothSocketPrivateWinRT::addToPendingData(const QVector<QByteArray> &data)
+void QBluetoothSocketPrivateWinRT::addToPendingData(const QList<QByteArray> &data)
 {
     Q_Q(QBluetoothSocket);
     QMutexLocker locker(&m_readMutex);

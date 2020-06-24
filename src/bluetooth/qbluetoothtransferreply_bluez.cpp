@@ -52,8 +52,8 @@
 #include "qbluetoothtransferreply.h"
 
 #include <QtCore/QAtomicInt>
+#include <QtCore/QList>
 #include <QtCore/QLoggingCategory>
-#include <QtCore/QVector>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrentRun>
@@ -174,7 +174,7 @@ bool QBluetoothTransferReplyBluez::start()
 
 bool QBluetoothTransferReplyBluez::copyToTempFile(QIODevice *to, QIODevice *from)
 {
-    QVector<char> block(4096);
+    QList<char> block(4096);
     int size;
 
     while ((size = from->read(block.data(), block.size())) > 0) {

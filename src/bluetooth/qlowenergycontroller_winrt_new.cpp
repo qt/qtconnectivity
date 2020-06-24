@@ -399,13 +399,13 @@ public:
     uint mCharacteristicsCountToBeDiscovered;
     quint16 mStartHandle = 0;
     quint16 mEndHandle = 0;
-    QVector<QBluetoothUuid> mIndicateChars;
+    QList<QBluetoothUuid> mIndicateChars;
 
 signals:
-    void charListObtained(const QBluetoothUuid &service, QHash<QLowEnergyHandle,
-                          QLowEnergyServicePrivate::CharData> charList,
-                          QVector<QBluetoothUuid> indicateChars,
-                          QLowEnergyHandle startHandle, QLowEnergyHandle endHandle);
+    void charListObtained(const QBluetoothUuid &service,
+                          QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList,
+                          QList<QBluetoothUuid> indicateChars, QLowEnergyHandle startHandle,
+                          QLowEnergyHandle endHandle);
     void errorOccured(const QString &error);
 };
 
@@ -917,7 +917,7 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
             this, &QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError);
     connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained,
             [this, reactOnDiscoveryError, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
-            QLowEnergyServicePrivate::CharData> charList, QVector<QBluetoothUuid> indicateChars,
+            QLowEnergyServicePrivate::CharData> charList, QList<QBluetoothUuid> indicateChars,
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
             qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"

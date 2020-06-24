@@ -40,7 +40,6 @@
 #ifndef QNDEFMESSAGE_H
 #define QNDEFMESSAGE_H
 
-#include <QtCore/QVector>
 #include <QtCore/QSet>
 #include <QtCore/QList>
 #include <QtCore/QMetaType>

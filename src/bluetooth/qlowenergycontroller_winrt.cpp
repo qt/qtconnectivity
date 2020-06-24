@@ -105,7 +105,7 @@ public:
 public slots:
     void obtainCharList()
     {
-        QVector<QBluetoothUuid> indicateChars;
+        QList<QBluetoothUuid> indicateChars;
         quint16 startHandle = 0;
         quint16 endHandle = 0;
         qCDebug(QT_BT_WINRT) << __FUNCTION__;
@@ -228,10 +228,10 @@ public:
     QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> mCharacteristicList;
 
 signals:
-    void charListObtained(const QBluetoothUuid &service, QHash<QLowEnergyHandle,
-                          QLowEnergyServicePrivate::CharData> charList,
-                          QVector<QBluetoothUuid> indicateChars,
-                          QLowEnergyHandle startHandle, QLowEnergyHandle endHandle);
+    void charListObtained(const QBluetoothUuid &service,
+                          QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList,
+                          QList<QBluetoothUuid> indicateChars, QLowEnergyHandle startHandle,
+                          QLowEnergyHandle endHandle);
 };
 
 QLowEnergyControllerPrivateWinRT::QLowEnergyControllerPrivateWinRT()
@@ -638,7 +638,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained,
             [this, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList
-            , QVector<QBluetoothUuid> indicateChars
+            , QList<QBluetoothUuid> indicateChars
             , QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
             qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"

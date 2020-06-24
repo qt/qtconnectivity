@@ -59,7 +59,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 
-Q_GLOBAL_STATIC(QVector<QLowEnergyControllerPrivateWin32 *>, qControllers)
+Q_GLOBAL_STATIC(QList<QLowEnergyControllerPrivateWin32 *>, qControllers)
 static QMutex controllersGuard(QMutex::NonRecursive);
 
 const QEvent::Type CharacteristicValueEventType = static_cast<QEvent::Type>(QEvent::User + 1);
@@ -244,15 +244,14 @@ static void closeSystemDevice(HANDLE hDevice)
         ::CloseHandle(hDevice);
 }
 
-static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
-        HANDLE hDevice, int *systemErrorCode)
+static QList<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(HANDLE hDevice, int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
-        return QVector<BTH_LE_GATT_SERVICE>();
+        return QList<BTH_LE_GATT_SERVICE>();
     }
 
-    QVector<BTH_LE_GATT_SERVICE> foundServices;
+    QList<BTH_LE_GATT_SERVICE> foundServices;
     USHORT servicesCount = 0;
     for (;;) {
         const HRESULT hr = ::BluetoothGATTGetServices(
@@ -271,21 +270,22 @@ static QVector<BTH_LE_GATT_SERVICE> enumeratePrimaryGattServices(
                 foundServices.resize(servicesCount);
             } else {
                 *systemErrorCode = error;
-                return QVector<BTH_LE_GATT_SERVICE>();
+                return QList<BTH_LE_GATT_SERVICE>();
             }
         }
     }
 }
 
-static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
-        HANDLE hService, PBTH_LE_GATT_SERVICE gattService, int *systemErrorCode)
+static QList<BTH_LE_GATT_CHARACTERISTIC>
+enumerateGattCharacteristics(HANDLE hService, PBTH_LE_GATT_SERVICE gattService,
+                             int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
-        return QVector<BTH_LE_GATT_CHARACTERISTIC>();
+        return QList<BTH_LE_GATT_CHARACTERISTIC>();
     }
 
-    QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics;
+    QList<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics;
     USHORT characteristicsCount = 0;
     for (;;) {
         const HRESULT hr = ::BluetoothGATTGetCharacteristics(
@@ -305,7 +305,7 @@ static QVector<BTH_LE_GATT_CHARACTERISTIC> enumerateGattCharacteristics(
                 foundCharacteristics.resize(characteristicsCount);
             } else {
                 *systemErrorCode = error;
-                return QVector<BTH_LE_GATT_CHARACTERISTIC>();
+                return QList<BTH_LE_GATT_CHARACTERISTIC>();
             }
         }
     }
@@ -381,15 +381,16 @@ static void setGattCharacteristicValue(
         *systemErrorCode = WIN32_FROM_HRESULT(hr);
 }
 
-static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
-        HANDLE hService, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic, int *systemErrorCode)
+static QList<BTH_LE_GATT_DESCRIPTOR>
+enumerateGattDescriptors(HANDLE hService, PBTH_LE_GATT_CHARACTERISTIC gattCharacteristic,
+                         int *systemErrorCode)
 {
     if (!gattFunctionsResolved) {
         *systemErrorCode = ERROR_NOT_SUPPORTED;
-        return QVector<BTH_LE_GATT_DESCRIPTOR>();
+        return QList<BTH_LE_GATT_DESCRIPTOR>();
     }
 
-    QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors;
+    QList<BTH_LE_GATT_DESCRIPTOR> foundDescriptors;
     USHORT descriptorsCount = 0;
     for (;;) {
         const HRESULT hr = ::BluetoothGATTGetDescriptors(
@@ -409,7 +410,7 @@ static QVector<BTH_LE_GATT_DESCRIPTOR> enumerateGattDescriptors(
                 foundDescriptors.resize(descriptorsCount);
             } else {
                 *systemErrorCode = error;
-                return QVector<BTH_LE_GATT_DESCRIPTOR>();
+                return QList<BTH_LE_GATT_DESCRIPTOR>();
             }
         }
     }
@@ -788,7 +789,7 @@ void QLowEnergyControllerPrivateWin32::discoverServices()
         return;
     }
 
-    const QVector<BTH_LE_GATT_SERVICE> foundServices =
+    const QList<BTH_LE_GATT_SERVICE> foundServices =
             enumeratePrimaryGattServices(hDevice, &systemErrorCode);
 
     closeSystemDevice(hDevice);
@@ -862,7 +863,7 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
     // We assume that the service does not have any characteristics with descriptors.
     servicePrivate->endHandle = servicePrivate->startHandle;
 
-    const QVector<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
+    const QList<BTH_LE_GATT_CHARACTERISTIC> foundCharacteristics =
             enumerateGattCharacteristics(servicePrivate->hService, nullptr, &systemErrorCode);
 
     if (systemErrorCode != NO_ERROR) {
@@ -922,9 +923,9 @@ void QLowEnergyControllerPrivateWin32::discoverServiceDetails(
                     servicePrivate->endHandle,
                     QLowEnergyHandle(gattCharacteristic.AttributeHandle + 1));
 
-        const QVector<BTH_LE_GATT_DESCRIPTOR> foundDescriptors = enumerateGattDescriptors(
-                    servicePrivate->hService, const_cast<PBTH_LE_GATT_CHARACTERISTIC>(
-                        &gattCharacteristic), &systemErrorCode);
+        const QList<BTH_LE_GATT_DESCRIPTOR> foundDescriptors = enumerateGattDescriptors(
+                servicePrivate->hService,
+                const_cast<PBTH_LE_GATT_CHARACTERISTIC>(&gattCharacteristic), &systemErrorCode);
 
         if (systemErrorCode != NO_ERROR) {
             if (systemErrorCode != ERROR_NOT_FOUND) {

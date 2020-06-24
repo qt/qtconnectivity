@@ -149,13 +149,13 @@ private:
     {
         QSharedPointer<OrgBluezGattCharacteristic1Interface> characteristic;
         QSharedPointer<OrgFreedesktopDBusPropertiesInterface> charMonitor;
-        QVector<QSharedPointer<OrgBluezGattDescriptor1Interface>> descriptors;
+        QList<QSharedPointer<OrgBluezGattDescriptor1Interface>> descriptors;
     };
 
     struct GattService
     {
         QString servicePath;
-        QVector<GattCharacteristic> characteristics;
+        QList<GattCharacteristic> characteristics;
 
         bool hasBatteryService = false;
         QSharedPointer<OrgBluezBattery1Interface> batteryInterface;
@@ -183,7 +183,7 @@ private:
         QSharedPointer<QLowEnergyServicePrivate> service;
     };
 
-    QVector<GattJob> jobs;
+    QList<GattJob> jobs;
     bool jobPending = false;
 
     void prepareNextJob();

@@ -551,7 +551,7 @@ void QLowEnergyControllerPrivateBluez::connectToDevice()
         return;
     }
 
-    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    QList<quint16> activeHandles = hciManager->activeLowEnergyConnections();
     if (!activeHandles.isEmpty()) {
         qCWarning(QT_BT_BLUEZ) << "Cannot connect due to pending active LE connections";
 
@@ -561,7 +561,7 @@ void QLowEnergyControllerPrivateBluez::connectToDevice()
                     this, &QLowEnergyControllerPrivateBluez::activeConnectionTerminationDone);
         }
 
-        QVector<QBluetoothAddress> connectedAddresses;
+        QList<QBluetoothAddress> connectedAddresses;
         for (const auto handle: activeHandles) {
             const QBluetoothAddress addr = hciManager->addressForConnectionHandle(handle);
             if (!addr.isNull())
@@ -584,7 +584,7 @@ void QLowEnergyControllerPrivateBluez::activeConnectionTerminationDone()
     qCDebug(QT_BT_BLUEZ) << "RemoteDeviceManager finished attempting"
                          << "to close external connections";
 
-    QVector<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    QList<quint16> activeHandles = hciManager->activeLowEnergyConnections();
     if (!activeHandles.isEmpty()) {
         qCWarning(QT_BT_BLUEZ) << "Cannot close pending external BTLE connections. Aborting connect attempt";
         setError(QLowEnergyController::ConnectionError);
@@ -2303,7 +2303,7 @@ void QLowEnergyControllerPrivateBluez::handleFindInformationRequest(const QByteA
     if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
         return;
 
-    QVector<Attribute> results = getAttributes(startingHandle, endingHandle);
+    QList<Attribute> results = getAttributes(startingHandle, endingHandle);
     if (results.isEmpty()) {
         sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
@@ -2343,7 +2343,7 @@ void QLowEnergyControllerPrivateBluez::handleFindByTypeValueRequest(const QByteA
         return attr.type == QBluetoothUuid(type) && attr.value == value
                 && checkReadPermissions(attr) == 0;
     };
-    const QVector<Attribute> results = getAttributes(startingHandle, endingHandle, predicate);
+    const QList<Attribute> results = getAttributes(startingHandle, endingHandle, predicate);
     if (results.isEmpty()) {
         sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
@@ -2385,8 +2385,9 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
         return;
 
     // Get all attributes with matching type.
-    QVector<Attribute> results = getAttributes(startingHandle, endingHandle,
-        [type](const Attribute &attr) { return attr.type == type; });
+    QList<Attribute> results =
+            getAttributes(startingHandle, endingHandle,
+                          [type](const Attribute &attr) { return attr.type == type; });
     ensureUniformValueSizes(results);
 
     if (results.isEmpty()) {
@@ -2483,7 +2484,7 @@ void QLowEnergyControllerPrivateBluez::handleReadMultipleRequest(const QByteArra
 
     if (!checkPacketSize(packet, 5, mtuSize))
         return;
-    QVector<QLowEnergyHandle> handles((packet.count() - 1) / sizeof(QLowEnergyHandle));
+    QList<QLowEnergyHandle> handles((packet.count() - 1) / sizeof(QLowEnergyHandle));
     auto *packetPtr = reinterpret_cast<const QLowEnergyHandle *>(packet.constData() + 1);
     for (int i = 0; i < handles.count(); ++i, ++packetPtr)
         handles[i] = bt_get_le16(packetPtr);
@@ -2495,7 +2496,7 @@ void QLowEnergyControllerPrivateBluez::handleReadMultipleRequest(const QByteArra
         sendErrorResponse(packet.at(0), *it, ATT_ERROR_INVALID_HANDLE);
         return;
     }
-    const QVector<Attribute> results = getAttributes(handles.first(), handles.last());
+    const QList<Attribute> results = getAttributes(handles.first(), handles.last());
     QByteArray response(1, ATT_OP_READ_MULTIPLE_RESPONSE);
     for (const Attribute &attr : results) {
         const int error = checkReadPermissions(attr);
@@ -2546,8 +2547,9 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
         return;
     }
 
-    QVector<Attribute> results = getAttributes(startingHandle, endingHandle,
-            [type](const Attribute &attr) { return attr.type == type; });
+    QList<Attribute> results =
+            getAttributes(startingHandle, endingHandle,
+                          [type](const Attribute &attr) { return attr.type == type; });
     if (results.isEmpty()) {
         sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
@@ -2648,7 +2650,7 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForPeripheral(
         for (auto it = clientConfigData.begin(); it != clientConfigData.end(); ++it) {
             if (isConnected && it.key() == remoteDevice.toUInt64())
                 continue;
-            QVector<ClientConfigurationData> &configDataList = it.value();
+            QList<ClientConfigurationData> &configDataList = it.value();
             for (ClientConfigurationData &configData : configDataList) {
                 if (configData.charValueHandle != valueHandle)
                     continue;
@@ -2922,10 +2924,10 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
     qCDebug(QT_BT_BLUEZ) << "client sends execute write request; flag is"
                          << (cancel ? "cancel" : "flush");
 
-    QVector<WriteRequest> requests = openPrepareWriteRequests;
+    QList<WriteRequest> requests = openPrepareWriteRequests;
     openPrepareWriteRequests.clear();
-    QVector<QLowEnergyCharacteristic> characteristics;
-    QVector<QLowEnergyDescriptor> descriptors;
+    QList<QLowEnergyCharacteristic> characteristics;
+    QList<QLowEnergyDescriptor> descriptors;
     if (!cancel) {
         for (const WriteRequest &request : qAsConst(requests)) {
             Attribute &attribute = localAttributes[request.handle];
@@ -2977,7 +2979,8 @@ void QLowEnergyControllerPrivateBluez::sendErrorResponse(quint8 request, quint16
 }
 
 void QLowEnergyControllerPrivateBluez::sendListResponse(const QByteArray &packetStart, int elemSize,
-        const QVector<Attribute> &attributes, const ElemWriter &elemWriter)
+                                                        const QList<Attribute> &attributes,
+                                                        const ElemWriter &elemWriter)
 {
     const int offset = packetStart.count();
     const int elemCount = qMin(attributes.count(), (mtuSize - offset) / elemSize);
@@ -3163,9 +3166,10 @@ bool QLowEnergyControllerPrivateBluez::isBonded() const
             != QBluetoothLocalDevice::Unpaired;
 }
 
-QVector<QLowEnergyControllerPrivateBluez::TempClientConfigurationData> QLowEnergyControllerPrivateBluez::gatherClientConfigData()
+QList<QLowEnergyControllerPrivateBluez::TempClientConfigurationData>
+QLowEnergyControllerPrivateBluez::gatherClientConfigData()
 {
-    QVector<TempClientConfigurationData> data;
+    QList<TempClientConfigurationData> data;
     for (const auto &service : qAsConst(localServices)) {
         for (auto charIt = service->characteristicList.begin();
              charIt != service->characteristicList.end(); ++charIt) {
@@ -3190,8 +3194,8 @@ void QLowEnergyControllerPrivateBluez::storeClientConfigurations()
         clientConfigData.remove(remoteDevice.toUInt64());
         return;
     }
-    QVector<ClientConfigurationData> clientConfigs;
-    const QVector<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
+    QList<ClientConfigurationData> clientConfigs;
+    const QList<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
     for (const auto &tempConfigData : tempConfigList) {
         Q_ASSERT(tempConfigData.descData->value.count() == 2);
         const quint16 value = bt_get_le16(tempConfigData.descData->value.constData());
@@ -3205,10 +3209,11 @@ void QLowEnergyControllerPrivateBluez::storeClientConfigurations()
 
 void QLowEnergyControllerPrivateBluez::restoreClientConfigurations()
 {
-    const QVector<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
-    const QVector<ClientConfigurationData> &restoredClientConfigs = isBonded()
-            ? clientConfigData.value(remoteDevice.toUInt64()) : QVector<ClientConfigurationData>();
-    QVector<QLowEnergyHandle> notifications;
+    const QList<TempClientConfigurationData> &tempConfigList = gatherClientConfigData();
+    const QList<ClientConfigurationData> &restoredClientConfigs = isBonded()
+            ? clientConfigData.value(remoteDevice.toUInt64())
+            : QList<ClientConfigurationData>();
+    QList<QLowEnergyHandle> notifications;
     for (const auto &tempConfigData : tempConfigList) {
         bool wasRestored = false;
         for (const auto &restoredData : restoredClientConfigs) {
@@ -3430,8 +3435,8 @@ void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnerg
     localAttributes[serviceAttribute.handle] = serviceAttribute;
 }
 
-void QLowEnergyControllerPrivateBluez::ensureUniformAttributes(QVector<Attribute> &attributes,
-        const std::function<int (const Attribute &)> &getSize)
+void QLowEnergyControllerPrivateBluez::ensureUniformAttributes(
+        QList<Attribute> &attributes, const std::function<int(const Attribute &)> &getSize)
 {
     if (attributes.isEmpty())
         return;
@@ -3443,22 +3448,24 @@ void QLowEnergyControllerPrivateBluez::ensureUniformAttributes(QVector<Attribute
 
 }
 
-void QLowEnergyControllerPrivateBluez::ensureUniformUuidSizes(QVector<Attribute> &attributes)
+void QLowEnergyControllerPrivateBluez::ensureUniformUuidSizes(QList<Attribute> &attributes)
 {
     ensureUniformAttributes(attributes,
                             [](const Attribute &attr) { return getUuidSize(attr.type); });
 }
 
-void QLowEnergyControllerPrivateBluez::ensureUniformValueSizes(QVector<Attribute> &attributes)
+void QLowEnergyControllerPrivateBluez::ensureUniformValueSizes(QList<Attribute> &attributes)
 {
     ensureUniformAttributes(attributes,
                             [](const Attribute &attr) { return attr.value.count(); });
 }
 
-QVector<QLowEnergyControllerPrivateBluez::Attribute> QLowEnergyControllerPrivateBluez::getAttributes(QLowEnergyHandle startHandle,
-        QLowEnergyHandle endHandle, const AttributePredicate &attributePredicate)
+QList<QLowEnergyControllerPrivateBluez::Attribute>
+QLowEnergyControllerPrivateBluez::getAttributes(QLowEnergyHandle startHandle,
+                                                QLowEnergyHandle endHandle,
+                                                const AttributePredicate &attributePredicate)
 {
-    QVector<Attribute> results;
+    QList<Attribute> results;
     if (startHandle > lastLocalHandle)
         return results;
     if (lastLocalHandle == 0) // We have no services at all.
@@ -3513,7 +3520,7 @@ int QLowEnergyControllerPrivateBluez::checkReadPermissions(const Attribute &attr
     return checkPermissions(attr, QLowEnergyCharacteristic::Read);
 }
 
-int QLowEnergyControllerPrivateBluez::checkReadPermissions(QVector<Attribute> &attributes)
+int QLowEnergyControllerPrivateBluez::checkReadPermissions(QList<Attribute> &attributes)
 {
     if (attributes.isEmpty())
         return 0;

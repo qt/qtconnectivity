@@ -284,10 +284,10 @@ QBluetoothAddress HciManager::addressForConnectionHandle(quint16 handle) const
     return QBluetoothAddress();
 }
 
-QVector<quint16> HciManager::activeLowEnergyConnections() const
+QList<quint16> HciManager::activeLowEnergyConnections() const
 {
     if (!isValid())
-        return QVector<quint16>();
+        return QList<quint16>();
 
     hci_conn_info *info;
     hci_conn_list_req *infoList;
@@ -297,7 +297,7 @@ QVector<quint16> HciManager::activeLowEnergyConnections() const
             malloc(sizeof(hci_conn_list_req) + maxNoOfConnections * sizeof(hci_conn_info));
 
     if (!infoList)
-        return QVector<quint16>();
+        return QList<quint16>();
 
     QScopedPointer<hci_conn_list_req, QScopedPointerPodDeleter> p(infoList);
     p->conn_num = maxNoOfConnections;
@@ -306,10 +306,10 @@ QVector<quint16> HciManager::activeLowEnergyConnections() const
 
     if (ioctl(hciSocket, HCIGETCONNLIST, (void *) infoList) < 0) {
         qCWarning(QT_BT_BLUEZ) << "Cannot retrieve connection list";
-        return QVector<quint16>();
+        return QList<quint16>();
     }
 
-    QVector<quint16> activeLowEnergyHandles;
+    QList<quint16> activeLowEnergyHandles;
     for (int i = 0; i < infoList->conn_num; i++) {
         switch (info[i].type) {
         case SCO_LINK:

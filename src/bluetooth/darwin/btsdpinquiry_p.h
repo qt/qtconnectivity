@@ -56,7 +56,6 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qlist.h>
-#include <QtCore/qvector.h>
 
 #include <Foundation/Foundation.h>
 
@@ -75,7 +74,7 @@ class SDPInquiryDelegate;
 
 void extract_service_record(IOBluetoothSDPServiceRecord *record, QBluetoothServiceInfo &serviceInfo);
 QVariant extract_attribute_value(IOBluetoothSDPDataElement *dataElement);
-QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device);
+QList<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device);
 
 } // namespace DarwinBluetooth
 

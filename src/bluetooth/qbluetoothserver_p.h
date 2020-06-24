@@ -82,7 +82,7 @@ class ServerAcceptanceThread;
 #include "darwin/btdelegates_p.h"
 #include "darwin/btraii_p.h"
 
-#include <QtCore/qvector.h>
+#include <QtCore/QList>
 
 #endif // QT_OSX_BLUETOOTH
 
@@ -140,7 +140,8 @@ public:
     EventRegistrationToken connectionToken {-1};
 
     mutable QMutex pendingConnectionsMutex;
-    QVector<Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket>> pendingConnections;
+    QList<Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket>>
+            pendingConnections;
 
     Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocketListener> socketListener;
     HRESULT handleClientConnection(ABI::Windows::Networking::Sockets::IStreamSocketListener *listener,
@@ -195,7 +196,7 @@ private:
     static void unregisterServer(QBluetoothServerPrivate *server);
 
     using PendingConnection = DarwinBluetooth::StrongReference;
-    QVector<PendingConnection> pendingConnections;
+    QList<PendingConnection> pendingConnections;
 
 #endif // QT_OSX_BLUETOOTH
 };

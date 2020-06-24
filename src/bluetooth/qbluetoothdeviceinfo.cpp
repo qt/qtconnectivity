@@ -527,7 +527,7 @@ quint8 QBluetoothDeviceInfo::minorDeviceClass() const
     Sets the list of service UUIDs to \a uuids.
     \since 5.13
  */
-void QBluetoothDeviceInfo::setServiceUuids(const QVector<QBluetoothUuid> &uuids)
+void QBluetoothDeviceInfo::setServiceUuids(const QList<QBluetoothUuid> &uuids)
 {
     Q_D(QBluetoothDeviceInfo);
     d->serviceUuids = uuids;
@@ -541,7 +541,7 @@ void QBluetoothDeviceInfo::setServiceUuids(const QVector<QBluetoothUuid> &uuids)
     \sa serviceUuids()
     \since 6.0
 */
-QVector<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids() const
+QList<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids() const
 {
     Q_D(const QBluetoothDeviceInfo);
     return d->serviceUuids;
@@ -554,7 +554,7 @@ QVector<QBluetoothUuid> QBluetoothDeviceInfo::serviceUuids() const
 
     \since 5.12
  */
-QVector<quint16> QBluetoothDeviceInfo::manufacturerIds() const
+QList<quint16> QBluetoothDeviceInfo::manufacturerIds() const
 {
     Q_D(const QBluetoothDeviceInfo);
     return d->manufacturerData.keys().toVector();

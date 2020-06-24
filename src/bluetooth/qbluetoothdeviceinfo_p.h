@@ -76,7 +76,7 @@ public:
 
     QBluetoothDeviceInfo::ServiceClasses serviceClasses = QBluetoothDeviceInfo::NoService;
 
-    QVector<QBluetoothUuid> serviceUuids;
+    QList<QBluetoothUuid> serviceUuids;
     QMultiHash<quint16, QByteArray> manufacturerData;
     QBluetoothDeviceInfo::CoreConfigurations deviceCoreConfiguration = QBluetoothDeviceInfo::UnknownCoreConfiguration;
 

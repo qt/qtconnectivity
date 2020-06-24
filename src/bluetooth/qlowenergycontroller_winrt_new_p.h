@@ -52,8 +52,8 @@
 //
 
 #include <qglobal.h>
+#include <QtCore/QList>
 #include <QtCore/QQueue>
-#include <QtCore/QVector>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include <QtBluetooth/qlowenergyservicedata.h>
@@ -156,7 +156,7 @@ private:
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> characteristic;
         EventRegistrationToken token;
     };
-    QVector<ValueChangedEntry> mValueChangedTokens;
+    QList<ValueChangedEntry> mValueChangedTokens;
 
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);

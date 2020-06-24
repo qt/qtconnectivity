@@ -58,8 +58,8 @@
 #include "bluez/bluez_data_p.h"
 #endif
 
+#include <QtCore/qlist.h>
 #include <QtCore/qobject.h>
-#include <QtCore/qvector.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -142,7 +142,7 @@ private:
         OpCodeCommandField ocf;
         QByteArray data;
     };
-    QVector<Command> m_pendingCommands;
+    QList<Command> m_pendingCommands;
 
     quint8 m_powerLevel;
     bool m_sendPowerLevel;

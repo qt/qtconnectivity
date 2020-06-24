@@ -53,9 +53,9 @@
 
 #include <deque>
 
+#include <QList>
 #include <QMutex>
 #include <QObject>
-#include <QVector>
 
 #include <QtBluetooth/qbluetoothaddress.h>
 
@@ -76,7 +76,7 @@ public:
     explicit RemoteDeviceManager(const QBluetoothAddress& localAddress, QObject *parent = nullptr);
 
     bool isJobInProgress() const { return jobInProgress; }
-    bool scheduleJob(JobType job, const QVector<QBluetoothAddress>& remoteDevices);
+    bool scheduleJob(JobType job, const QList<QBluetoothAddress> &remoteDevices);
 
 signals:
     void finished();

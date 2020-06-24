@@ -68,8 +68,7 @@ RemoteDeviceManager::RemoteDeviceManager(
     }
 }
 
-bool RemoteDeviceManager::scheduleJob(
-        JobType job, const QVector<QBluetoothAddress> &remoteDevices)
+bool RemoteDeviceManager::scheduleJob(JobType job, const QList<QBluetoothAddress> &remoteDevices)
 {
     if (adapterPath.isEmpty())
         return false;

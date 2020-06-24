@@ -62,7 +62,7 @@ struct LeDeviceEntry {
     QBluetoothAddress deviceAddress;
 };
 
-Q_GLOBAL_STATIC(QVector<LeDeviceEntry>, cachedLeDeviceEntries)
+Q_GLOBAL_STATIC(QList<LeDeviceEntry>, cachedLeDeviceEntries)
 Q_GLOBAL_STATIC(QMutex, cachedLeDeviceEntriesGuard)
 
 static QString devicePropertyString(
@@ -185,8 +185,7 @@ static void closeClassicSearch(HBLUETOOTH_DEVICE_FIND hSearch)
         ::BluetoothFindDeviceClose(hSearch);
 }
 
-static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
-        DWORD *systemErrorCode)
+static QList<QBluetoothDeviceInfo> enumerateLeDevices(DWORD *systemErrorCode)
 {
     // GUID_BLUETOOTHLE_DEVICE_INTERFACE
     const QUuid deviceInterfaceGuid("781aee18-7733-4ce4-add0-91f41c67b592");
@@ -198,13 +197,13 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
 
     if (hDeviceInfo == INVALID_HANDLE_VALUE) {
         *systemErrorCode = int(::GetLastError());
-        return QVector<QBluetoothDeviceInfo>();
+        return QList<QBluetoothDeviceInfo>();
     }
 
-    QVector<QBluetoothDeviceInfo> foundDevices;
+    QList<QBluetoothDeviceInfo> foundDevices;
     DWORD index = 0;
 
-    QVector<LeDeviceEntry> cachedEntries;
+    QList<LeDeviceEntry> cachedEntries;
 
     for (;;) {
         SP_DEVICE_INTERFACE_DATA deviceInterfaceData = {};
@@ -280,7 +279,7 @@ static QVector<QBluetoothDeviceInfo> enumerateLeDevices(
 }
 
 struct DiscoveryResult {
-    QVector<QBluetoothDeviceInfo> devices;
+    QList<QBluetoothDeviceInfo> devices;
     DWORD systemErrorCode;
     HBLUETOOTH_DEVICE_FIND hSearch; // Used only for classic devices
 };

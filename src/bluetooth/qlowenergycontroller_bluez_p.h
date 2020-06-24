@@ -52,8 +52,8 @@
 //
 
 #include <qglobal.h>
+#include <QtCore/QList>
 #include <QtCore/QQueue>
-#include <QtCore/QVector>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"
@@ -130,7 +130,7 @@ public:
         int minLength;
         int maxLength;
     };
-    QVector<Attribute> localAttributes;
+    QList<Attribute> localAttributes;
 
 private:
     quint16 connectionHandle = 0;
@@ -153,10 +153,10 @@ private:
         quint16 valueOffset;
         QByteArray value;
     };
-    QVector<WriteRequest> openPrepareWriteRequests;
+    QList<WriteRequest> openPrepareWriteRequests;
 
     // Invariant: !scheduledIndications.isEmpty => indicationInFlight == true
-    QVector<QLowEnergyHandle> scheduledIndications;
+    QList<QLowEnergyHandle> scheduledIndications;
     bool indicationInFlight = false;
 
     struct TempClientConfigurationData {
@@ -179,7 +179,7 @@ private:
         quint16 configValue;
         bool charValueWasUpdated = false;
     };
-    QHash<quint64, QVector<ClientConfigurationData>> clientConfigData;
+    QHash<quint64, QList<ClientConfigurationData>> clientConfigData;
 
     struct SigningData {
         SigningData() = default;
@@ -225,7 +225,7 @@ private:
     void closeServerSocket();
 
     bool isBonded() const;
-    QVector<TempClientConfigurationData> gatherClientConfigData();
+    QList<TempClientConfigurationData> gatherClientConfigData();
     void storeClientConfigurations();
     void restoreClientConfigurations();
 
@@ -289,24 +289,26 @@ private:
 
     using ElemWriter = std::function<void(const Attribute &, char *&)>;
     void sendListResponse(const QByteArray &packetStart, int elemSize,
-                          const QVector<Attribute> &attributes, const ElemWriter &elemWriter);
+                          const QList<Attribute> &attributes, const ElemWriter &elemWriter);
 
     void sendNotification(QLowEnergyHandle handle);
     void sendIndication(QLowEnergyHandle handle);
     void sendNotificationOrIndication(quint8 opCode, QLowEnergyHandle handle);
     void sendNextIndication();
 
-    void ensureUniformAttributes(QVector<Attribute> &attributes, const std::function<int(const Attribute &)> &getSize);
-    void ensureUniformUuidSizes(QVector<Attribute> &attributes);
-    void ensureUniformValueSizes(QVector<Attribute> &attributes);
+    void ensureUniformAttributes(QList<Attribute> &attributes,
+                                 const std::function<int(const Attribute &)> &getSize);
+    void ensureUniformUuidSizes(QList<Attribute> &attributes);
+    void ensureUniformValueSizes(QList<Attribute> &attributes);
 
     using AttributePredicate = std::function<bool(const Attribute &)>;
-    QVector<Attribute> getAttributes(QLowEnergyHandle startHandle, QLowEnergyHandle endHandle,
+    QList<Attribute> getAttributes(
+            QLowEnergyHandle startHandle, QLowEnergyHandle endHandle,
             const AttributePredicate &attributePredicate = [](const Attribute &) { return true; });
 
     int checkPermissions(const Attribute &attr, QLowEnergyCharacteristic::PropertyType type);
     int checkReadPermissions(const Attribute &attr);
-    int checkReadPermissions(QVector<Attribute> &attributes);
+    int checkReadPermissions(QList<Attribute> &attributes);
 
     bool verifyMac(const QByteArray &message, const quint128 &csrk, quint32 signCounter,
                    quint64 expectedMac);

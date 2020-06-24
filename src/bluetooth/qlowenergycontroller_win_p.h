@@ -52,8 +52,8 @@
 //
 
 #include <qglobal.h>
+#include <QtCore/QList>
 #include <QtCore/QQueue>
-#include <QtCore/QVector>
 #include <QtBluetooth/qbluetooth.h>
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"
@@ -117,7 +117,7 @@ public:
 signals:
     void jobFinished(const ThreadWorkerJob &job);
 private:
-    QVector<ThreadWorkerJob> m_jobs;
+    QList<ThreadWorkerJob> m_jobs;
 };
 
 class QLowEnergyServiceData;
