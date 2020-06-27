@@ -680,7 +680,7 @@ void QLowEnergyControllerPrivateDarwin::_q_CBManagerError(const QBluetoothUuid &
                                                           QLowEnergyController::Error errorCode)
 {
     // Errors reported while discovering service details etc.
-    Q_UNUSED(errorCode) // TODO: setError?
+    Q_UNUSED(errorCode); // TODO: setError?
 
     // We failed to discover any characteristics/descriptors.
     if (serviceList.contains(serviceUuid)) {
@@ -856,7 +856,7 @@ void QLowEnergyControllerPrivateDarwin::readDescriptor(const QSharedPointer<QLow
                                                        const QLowEnergyHandle charHandle,
                                                        const QLowEnergyHandle descriptorHandle)
 {
-    Q_UNUSED(charHandle) // Hehe, yes!
+    Q_UNUSED(charHandle); // Hehe, yes!
 
     Q_ASSERT_X(!service.isNull(), Q_FUNC_INFO, "invalid service (null)");
 
