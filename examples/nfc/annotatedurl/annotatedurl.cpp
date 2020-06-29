@@ -67,6 +67,12 @@
 AnnotatedUrl::AnnotatedUrl(QObject *parent)
 :   QObject(parent)
 {
+    manager = new QNearFieldManager(this);
+    if (!manager->isEnabled()) {
+        qWarning() << "NFC not enabled";
+        return;
+    }
+
     manager->startTargetDetection();
     connect(manager, &QNearFieldManager::targetDetected,
             this, &AnnotatedUrl::targetDetected);
