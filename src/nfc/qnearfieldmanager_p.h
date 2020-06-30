@@ -73,7 +73,7 @@ public:
     {
     }
 
-    ~QNearFieldManagerPrivate()
+    virtual ~QNearFieldManagerPrivate()
     {
     }
 

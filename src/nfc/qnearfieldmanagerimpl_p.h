@@ -59,7 +59,7 @@ class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
 {
 public:
   QNearFieldManagerPrivateImpl();
-  ~QNearFieldManagerPrivateImpl();
+  ~QNearFieldManagerPrivateImpl() override;
 };
 
 QT_END_NAMESPACE
