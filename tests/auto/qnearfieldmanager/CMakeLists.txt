@@ -17,7 +17,6 @@ list(APPEND test_data "../nfcdata/Qt Website Tag Type1.nfc") # special case
 qt_add_test(tst_qnearfieldmanager
     SOURCES
         ../../../src/nfc/qnearfieldmanager_emulator.cpp ../../../src/nfc/qnearfieldmanager_emulator_p.h
-        ../../../src/nfc/qnearfieldmanagervirtualbase.cpp ../../../src/nfc/qnearfieldmanagervirtualbase_p.h
         ../../../src/nfc/qnearfieldtarget_emulator.cpp ../../../src/nfc/qnearfieldtarget_emulator_p.h
         ../../../src/nfc/targetemulator.cpp ../../../src/nfc/targetemulator_p.h
         tst_qnearfieldmanager.cpp

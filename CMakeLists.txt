@@ -13,6 +13,9 @@ project(QtConnectivity # special case
 set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Network
                                                                Concurrent Widgets)
+if(ANDROID)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS AndroidExtras)
+endif()
 # special case end
 
 if(NOT TARGET Qt::Network)

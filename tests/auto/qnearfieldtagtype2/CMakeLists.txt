@@ -17,7 +17,6 @@ list(APPEND test_data "nfcdata/Empty Tag.nfc") # special case
 qt_add_test(tst_qnearfieldtagtype2
     SOURCES
         ../../../src/nfc/qnearfieldmanager_emulator.cpp ../../../src/nfc/qnearfieldmanager_emulator_p.h
-        ../../../src/nfc/qnearfieldmanagervirtualbase.cpp ../../../src/nfc/qnearfieldmanagervirtualbase_p.h
         ../../../src/nfc/qnearfieldtarget_emulator.cpp ../../../src/nfc/qnearfieldtarget_emulator_p.h
         ../../../src/nfc/targetemulator.cpp ../../../src/nfc/targetemulator_p.h
         tst_qnearfieldtagtype2.cpp

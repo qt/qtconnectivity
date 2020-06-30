@@ -41,10 +41,13 @@ qt_add_module(Bluetooth
         QT_NO_FOREACH
     LIBRARIES
         Qt::CorePrivate
+        Qt::NetworkPrivate
     PUBLIC_LIBRARIES
         Qt::Core
+        Qt::Network
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
+        Qt::NetworkPrivate
 )
 
 #### Keys ignored in scope 1:.:.:bluetooth.pro:<TRUE>:
@@ -59,16 +62,23 @@ qt_add_module(Bluetooth
 
 # special case begin
 if (WIN32)
-    string(REGEX MATCHALL "[0-9]+\\.|[0-9]+$" VERSIONLIST $ENV{WindowsSDKVersion})
-    list(GET VERSIONLIST 2 WINDOWS_SDK_VERSION_PATCH)
-endif()
+    if (DEFINED CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
+        set (WINDOWS_SDK_VERSION ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION})
+    elseif (DEFINED CMAKE_SYSTEM_VERSION)
+        set (WINDOWS_SDK_VERSION ${CMAKE_SYSTEM_VERSION})
+    endif ()
+    if (DEFINED WINDOWS_SDK_VERSION)
+        string(REGEX MATCHALL "[0-9]+\\.|[0-9]+$" VERSIONLIST ${WINDOWS_SDK_VERSION})
+        list(GET VERSIONLIST 2 WINDOWS_SDK_VERSION_PATCH)
+    endif ()
+endif ()
 
-extend_target(Bluetooth CONDITION WIN32
+extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION_PATCH
     DEFINES
         QT_UCRTVERSION="${WINDOWS_SDK_VERSION_PATCH}"
 )
 
-extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION LESS 14393
+extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION_PATCH LESS 14393
     DEFINES
         QT_WINRT_LIMITED_SERVICEDISCOVERY
 )
@@ -113,12 +123,11 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
         qbluetoothsocket_bluez.cpp qbluetoothsocket_bluez_p.h
         qbluetoothsocket_bluezdbus.cpp qbluetoothsocket_bluezdbus_p.h
         qbluetoothtransferreply_bluez.cpp qbluetoothtransferreply_bluez_p.h
-    INCLUDE_DIRECTORIES
-        core.network_private.includes
     LIBRARIES
         Qt::Concurrent
         Qt::DBus
-        Qt::Network
+    PRIVATE_MODULE_INTERFACE
+        Qt::DBus
 )
 
 qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le
@@ -147,7 +156,7 @@ if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
         jar/QtAndroidBluetooth.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
     )
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_PERMISSIONS
-        android.permission.ACCESS_COARSE_LOCATION android.permission.BLUETOOTH android.permission.BLUETOOTH_ADMIN
+        android.permission.ACCESS_COARSE_LOCATION android.permission.ACCESS_FINE_LOCATION android.permission.BLUETOOTH android.permission.BLUETOOTH_ADMIN
     )
 endif()
 
@@ -173,9 +182,12 @@ qt_extend_target(Bluetooth CONDITION ANDROID AND NOT ANDROID_EMBEDDED AND NOT QT
     LIBRARIES
         Qt::AndroidExtras
         Qt::CorePrivate
+    PRIVATE_MODULE_INTERFACE
+        Qt::AndroidExtras
+        Qt::CorePrivate
 )
 
-qt_extend_target(Bluetooth CONDITION APPLE_OSX AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_extend_target(Bluetooth CONDITION MACOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         darwin/btcentralmanager.mm darwin/btcentralmanager_p.h
         darwin/btconnectionmonitor.mm darwin/btconnectionmonitor_p.h
@@ -211,7 +223,7 @@ qt_extend_target(Bluetooth CONDITION APPLE_OSX AND NOT QT_FEATURE_bluez AND (AND
         Qt::Concurrent
 )
 
-qt_extend_target(Bluetooth CONDITION NOT APPLE_OSX AND NOT QT_FEATURE_bluez AND (APPLE_IOS OR APPLE_TVOS) AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_extend_target(Bluetooth CONDITION NOT MACOS AND NOT QT_FEATURE_bluez AND (IOS OR TVOS) AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         darwin/btcentralmanager.mm darwin/btcentralmanager_p.h
         darwin/btdelegates.cpp darwin/btdelegates_p.h
@@ -235,12 +247,12 @@ qt_extend_target(Bluetooth CONDITION NOT APPLE_OSX AND NOT QT_FEATURE_bluez AND 
         ${FWFoundation}
 )
 
-qt_extend_target(Bluetooth CONDITION APPLE_IOS AND NOT APPLE_OSX AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_extend_target(Bluetooth CONDITION IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         darwin/btperipheralmanager.mm darwin/btperipheralmanager_p.h
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT APPLE_IOS AND NOT APPLE_OSX AND NOT APPLE_TVOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         qbluetoothdevicediscoveryagent_winrt.cpp
         qbluetoothlocaldevice_winrt.cpp
@@ -256,31 +268,23 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT APPLE_IOS AND N
         Qt::CorePrivate
     PUBLIC_LIBRARIES
         Qt::Core
+        runtimeobject.lib
+        user32.lib
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT APPLE_IOS AND NOT APPLE_OSX AND NOT APPLE_TVOS AND NOT QT_FEATURE_bluez AND NOT WINRT AND (ANDROID_EMBEDDED OR NOT ANDROID)
-    SOURCES
-        qbluetoothutils_win.cpp
-    DEFINES
-        CLASSIC_APP_BUILD
-    PUBLIC_LIBRARIES
-        runtimeobject.lib
-        user32.lib
-)
-
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_FEATURE_winrt_btle_no_pairing AND NOT APPLE_IOS AND NOT APPLE_OSX AND NOT APPLE_TVOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_FEATURE_winrt_btle_no_pairing AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         qlowenergycontroller_winrt_new.cpp qlowenergycontroller_winrt_new_p.h
 )
 
 # special case begin
-#qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_WINDOWS_SDK_VERSION STRLESS 14393 AND NOT APPLE_IOS AND NOT APPLE_OSX AND NOT APPLE_TVOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
-#    DEFINES
-#        QT_UCRTVERSION=
-#        QT_WINRT_LIMITED_SERVICEDISCOVERY
-#)
+# qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_WINDOWS_SDK_VERSION STRLESS 14393 AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
+#     DEFINES
+#         QT_UCRTVERSION=
+#         QT_WINRT_LIMITED_SERVICEDISCOVERY
+# )
 # special case end
 
 qt_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND (ANDROID_EMBEDDED OR NOT ANDROID)
@@ -303,7 +307,7 @@ qt_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND NOT QT_F
         ws2_32
 )
 
-qt_extend_target(Bluetooth CONDITION UNIX AND NOT APPLE_IOS AND NOT APPLE_OSX AND NOT APPLE_TVOS AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_extend_target(Bluetooth CONDITION UNIX AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         dummy/dummy_helper.cpp dummy/dummy_helper_p.h
         qbluetoothdevicediscoveryagent_p.cpp
@@ -315,8 +319,6 @@ qt_extend_target(Bluetooth CONDITION UNIX AND NOT APPLE_IOS AND NOT APPLE_OSX AN
         qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
 )
 
-#### Keys ignored in scope 19:.:.:bluetooth.pro:WINRT:
-# MODULE_WINRT_CAPABILITIES_DEVICE = "bluetooth.genericAttributeProfile" "bluetooth.rfcomm"
 qt_add_docs(Bluetooth
     doc/qtbluetooth.qdocconf
 )
