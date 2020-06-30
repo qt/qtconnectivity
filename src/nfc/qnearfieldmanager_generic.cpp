@@ -39,7 +39,7 @@
 
 #include <QCoreApplication>
 
-#include "qnearfieldmanagerimpl_p.h"
+#include "qnearfieldmanager_generic_p.h"
 
 QT_BEGIN_NAMESPACE
 

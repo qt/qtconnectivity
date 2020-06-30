@@ -76,12 +76,12 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     HEADERS += \
         qllcpsocket_p_p.h \
         qllcpserver_p_p.h \
-        qnearfieldmanagerimpl_p.h
+        qnearfieldmanager_generic_p.h
 
     SOURCES += \
         qllcpsocket_p.cpp \
         qllcpserver_p.cpp \
-        qnearfieldmanagerimpl_p.cpp
+        qnearfieldmanager_generic.cpp
 }
 
 load(qt_module)

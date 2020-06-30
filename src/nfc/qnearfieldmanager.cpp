@@ -45,7 +45,7 @@
 #elif defined(ANDROID_NFC)
 #include "qnearfieldmanager_android_p.h"
 #else
-#include "qnearfieldmanagerimpl_p.h"
+#include "qnearfieldmanager_generic_p.h"
 #endif
 
 #include <QtCore/QMetaType>
