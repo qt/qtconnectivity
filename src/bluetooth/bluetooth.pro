@@ -190,7 +190,6 @@ qtConfig(bluez) {
         qbluetoothserver_p.cpp
 } else: qtConfig(winrt_bt) {
     DEFINES += QT_WINRT_BLUETOOTH
-    SOURCES += qbluetoothutils_win.cpp
     LIBS += runtimeobject.lib user32.lib
 
     QT += core-private
