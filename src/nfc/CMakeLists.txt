@@ -17,7 +17,7 @@ qt_add_module(Nfc
         qnearfieldmanager.cpp qnearfieldmanager.h qnearfieldmanager_p.h
         qnearfieldtagtype1.cpp qnearfieldtagtype1_p.h
         qnearfieldtagtype2.cpp qnearfieldtagtype2_p.h
-        qnearfieldtarget.cpp qnearfieldtarget.h qnearfieldtarget_p.h
+        qnearfieldtarget.cpp qnearfieldtarget.h qnearfieldtarget_p.cpp qnearfieldtarget_p.h
         qtlv.cpp qtlv_p.h
         qtnfcglobal.h qtnfcglobal_p.h
     DEFINES
@@ -50,7 +50,7 @@ qt_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
         qllcpserver_android_p.cpp qllcpserver_android_p.h
         qllcpsocket_android_p.cpp qllcpsocket_android_p.h
         qnearfieldmanager_android.cpp qnearfieldmanager_android_p.h
-        qnearfieldtarget_android.cpp qnearfieldtarget_android_p.cpp qnearfieldtarget_android_p.h
+        qnearfieldtarget_android.cpp qnearfieldtarget_android_p.h
     DEFINES
         ANDROID_NFC
         QT_ANDROID_NFC
@@ -72,8 +72,7 @@ qt_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
         qllcpserver_p_p.h
         qllcpsocket_p.cpp
         qllcpsocket_p_p.h
-        qnearfieldmanagerimpl_p.cpp qnearfieldmanagerimpl_p.h
-        qnearfieldtarget_p.cpp
+        qnearfieldmanager_generic.cpp qnearfieldmanager_generic_p.h
 )
 qt_add_docs(Nfc
     doc/qtnfc.qdocconf
