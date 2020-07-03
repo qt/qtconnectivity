@@ -20,7 +20,7 @@ qt_add_test(tst_qbluetoothsocket
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qbluetoothsocket CONDITION APPLE_OSX
+qt_extend_target(tst_qbluetoothsocket CONDITION MACOS
     DEFINES
         QT_OSX_BLUETOOTH
     PUBLIC_LIBRARIES
