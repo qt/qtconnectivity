@@ -1,0 +1,16 @@
+# Generated from bluetooth.pro.
+
+add_subdirectory(heartrate-server)
+if(TARGET Qt::Widgets)
+    add_subdirectory(btchat)
+    add_subdirectory(btscanner)
+    add_subdirectory(btfiletransfer)
+endif()
+if(TARGET Qt::Quick)
+    add_subdirectory(scanner)
+    add_subdirectory(picturetransfer)
+    add_subdirectory(pingpong)
+    add_subdirectory(lowenergyscanner)
+    add_subdirectory(heartrate-game)
+    add_subdirectory(chat)
+endif()

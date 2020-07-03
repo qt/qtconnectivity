@@ -1,0 +1,13 @@
+# Generated from server.pro.
+
+#####################################################################
+## server Binary:
+#####################################################################
+
+qt_add_executable(server
+    GUI
+    SOURCES
+        qlowenergycontroller-gattserver.cpp
+    PUBLIC_LIBRARIES
+        Qt::Bluetooth
+)

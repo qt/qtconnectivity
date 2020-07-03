@@ -1,0 +1,79 @@
+# Generated from heartrate-game.pro.
+
+cmake_minimum_required(VERSION 3.14)
+project(heartrate-game LANGUAGES CXX)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+set(INSTALL_EXAMPLEDIR "examples/bluetooth/heartrate-game")
+
+find_package(Qt6 COMPONENTS Core)
+find_package(Qt6 COMPONENTS Gui)
+find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS Quick)
+find_package(Qt6 COMPONENTS Bluetooth)
+
+add_qt_gui_executable(heartrate-game
+    bluetoothbaseclass.cpp bluetoothbaseclass.h
+    connectionhandler.cpp connectionhandler.h
+    devicefinder.cpp devicefinder.h
+    devicehandler.cpp devicehandler.h
+    deviceinfo.cpp deviceinfo.h
+    heartrate-global.h
+    main.cpp
+)
+target_link_libraries(heartrate-game PUBLIC
+    Qt::Bluetooth
+    Qt::Core
+    Qt::Gui
+    Qt::Qml
+    Qt::Quick
+)
+
+
+# Resources:
+set(qml_resource_files
+    "qml/App.qml"
+    "qml/BluetoothAlarmDialog.qml"
+    "qml/BottomLine.qml"
+    "qml/Connect.qml"
+    "qml/GameButton.qml"
+    "qml/GamePage.qml"
+    "qml/GameSettings.qml"
+    "qml/Measure.qml"
+    "qml/SplashScreen.qml"
+    "qml/Stats.qml"
+    "qml/StatsLabel.qml"
+    "qml/TitleBar.qml"
+    "qml/main.qml"
+    "qml/qmldir"
+)
+
+qt6_add_resources(heartrate-game "qml"
+    PREFIX
+        "/"
+    FILES
+        ${qml_resource_files}
+)
+set(images_resource_files
+    "qml/images/bt_off_to_on.png"
+    "qml/images/heart.png"
+    "qml/images/logo.png"
+)
+
+qt6_add_resources(heartrate-game "images"
+    PREFIX
+        "/"
+    FILES
+        ${images_resource_files}
+)
+
+install(TARGETS heartrate-game
+    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
+    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+)
