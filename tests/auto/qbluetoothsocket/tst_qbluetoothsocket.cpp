@@ -503,7 +503,7 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
     QBluetoothSocket socket;
 
     //test default values
-#if defined(QT_ANDROID_BLUETOOTH) | defined(QT_OSX_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_OSX_BLUETOOTH)
     QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Secure);
 #elif QT_CONFIG(bluez)
     QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Authorization);
