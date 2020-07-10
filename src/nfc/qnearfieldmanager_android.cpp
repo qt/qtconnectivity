@@ -165,10 +165,6 @@ QByteArray QNearFieldManagerPrivateImpl::getUid(const QAndroidJniObject &intent)
 
 void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
 {
-    // Only intents with a tag are relevant
-    if (!AndroidNfc::getTag(intent).isValid())
-        return;
-
     // Getting UID
     QByteArray uid = getUid(intent);
 
