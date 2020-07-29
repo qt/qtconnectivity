@@ -6,6 +6,7 @@
 
 qt_add_qml_module(declarative_bluetooth # special case
     URI "QtBluetooth"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QBluetoothQmlPlugin
     SKIP_TYPE_REGISTRATION
     SOURCES
@@ -22,4 +23,5 @@ qt_add_qml_module(declarative_bluetooth # special case
 )
 
 #### Keys ignored in scope 1:.:.:bluetooth.pro:<TRUE>:
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtBluetooth"

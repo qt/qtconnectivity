@@ -1,4 +1,5 @@
 TARGETPATH = QtBluetooth
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT = core quick bluetooth
 
