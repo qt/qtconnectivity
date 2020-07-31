@@ -11,3 +11,4 @@ This document lists the API changed done to QtNFC between Qt 5.15 and Qt 6.
 - Removed functions setResponseForRequest, handleResponse and reportError from QNearFieldTarget. No replacement available as this is for internal use only.
 - Added NfcTagType4A and NfcTagType4B to QNearFieldTarget::Type.
 - Changed the type of typeInfo in QNdefNfcSmartPosterRecord from QByteArray to QString.
+- Removed TargetAccessModes, setTargetAccessModes and targetAccessModes from QNearFieldManager. No replacement available.

@@ -96,23 +96,10 @@ public:
     {
     }
 
-    virtual void requestAccess(QNearFieldManager::TargetAccessModes accessModes)
-    {
-        m_requestedModes |= accessModes;
-    }
-
-    virtual void releaseAccess(QNearFieldManager::TargetAccessModes accessModes)
-    {
-        m_requestedModes &= ~accessModes;
-    }
-
 signals:
     void adapterStateChanged(QNearFieldManager::AdapterState state);
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
-
-public:
-    QNearFieldManager::TargetAccessModes m_requestedModes;
 };
 
 QT_END_NAMESPACE

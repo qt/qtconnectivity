@@ -63,14 +63,6 @@ public:
         TurningOff = 4
     };
     Q_ENUM(AdapterState)
-    enum TargetAccessMode {
-        NoTargetAccess = 0x00,
-        NdefReadTargetAccess = 0x01,
-        NdefWriteTargetAccess = 0x02,
-        TagTypeSpecificTargetAccess = 0x04
-    };
-    Q_ENUM(TargetAccessMode)
-    Q_DECLARE_FLAGS(TargetAccessModes, TargetAccessMode)
 
     explicit QNearFieldManager(QObject *parent = nullptr);
     explicit QNearFieldManager(QNearFieldManagerPrivate *backend, QObject *parent = nullptr);
@@ -78,9 +70,6 @@ public:
 
     bool isEnabled() const;
     bool isSupported() const;
-
-    void setTargetAccessModes(TargetAccessModes accessModes);
-    TargetAccessModes targetAccessModes() const;
 
     bool startTargetDetection();
     void stopTargetDetection();
@@ -93,8 +82,6 @@ Q_SIGNALS:
 private:
     QNearFieldManagerPrivate *d_ptr;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldManager::TargetAccessModes)
 
 QT_END_NAMESPACE
 

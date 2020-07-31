@@ -64,8 +64,8 @@ QT_BEGIN_NAMESPACE
     NFC Forum devices support two modes of communications.  The first mode, peer-to-peer
     communications, is used to communicate between two NFC Forum devices.  The second mode,
     master/slave communications, is used to communicate between an NFC Forum device and an NFC
-    Forum Tag or Contactless Card.  The targetDetected() signal is emitted when a target device
-    enters communications range.  Communications can be initiated from the slot connected to this
+    Forum Tag or Contactless Card. The targetDetected() signal is emitted when a target device
+    enters communications range. Communications can be initiated from the slot connected to this
     signal.
 
     NFC Forum devices generally operate as the master in master/slave communications. Some devices
@@ -73,15 +73,10 @@ QT_BEGIN_NAMESPACE
     local NFC device emulates a NFC Forum Tag or Contactless Card.
 
     Applications can connect to the targetDetected() and targetLost() signals to get notified when
-    an NFC Forum Tag enters or leaves proximity. Before these signals are
-    emitted target detection must be started with the startTargetDetection() function.
-    Target detection can be stopped with
-    the stopTargetDetection() function. Before a detected target can be accessed it is necessary to
-    request access rights. This must be done before the target device is touched. The
-    setTargetAccessModes() function is used to set the types of access the application wants to
-    perform on the detected target. When access is no longer required the target access modes
-    should be set to NoTargetAccess as other applications may be blocked from accessing targets.
-    The current target access modes can be retried with the targetAccessModes() function.
+    an NFC Forum Tag enters or leaves proximity. Before these signals are emitted target detection
+    must be started with the startTargetDetection() function. Target detection can be stopped with
+    the stopTargetDetection() function. When the target is no longer required the target should be
+    deleted as other applications may be blocked from accessing the target.
 */
 
 /*!
@@ -95,20 +90,6 @@ QT_BEGIN_NAMESPACE
     \value TurningOn    The nfc adapter is turning on.
     \value Online       The nfc adapter is online.
     \value TurningOff   The nfc adapter is turning off.
-*/
-
-/*!
-    \enum QNearFieldManager::TargetAccessMode
-
-    This enum describes the different access modes an application can have.
-
-    \value NoTargetAccess           The application cannot access NFC capabilities.
-    \value NdefReadTargetAccess     The application can read NDEF messages from targets by calling
-                                    QNearFieldTarget::readNdefMessages().
-    \value NdefWriteTargetAccess    The application can write NDEF messages to targets by calling
-                                    QNearFieldTarget::writeNdefMessages().
-    \value TagTypeSpecificTargetAccess  The application can access targets using raw commands by
-                                        calling QNearFieldTarget::sendCommand().
 */
 
 /*!
@@ -248,32 +229,6 @@ void QNearFieldManager::stopTargetDetection()
     Q_D(QNearFieldManager);
 
     d->stopTargetDetection();
-}
-
-/*!
-    Sets the requested target access modes to \a accessModes.
-*/
-void QNearFieldManager::setTargetAccessModes(TargetAccessModes accessModes)
-{
-    Q_D(QNearFieldManager);
-
-    TargetAccessModes removedModes = ~accessModes & d->m_requestedModes;
-    if (removedModes)
-        d->releaseAccess(removedModes);
-
-    TargetAccessModes newModes = accessModes & ~d->m_requestedModes;
-    if (newModes)
-        d->requestAccess(newModes);
-}
-
-/*!
-    Returns current requested target access modes.
-*/
-QNearFieldManager::TargetAccessModes QNearFieldManager::targetAccessModes() const
-{
-    Q_D(const QNearFieldManager);
-
-    return d->m_requestedModes;
 }
 
 QT_END_NAMESPACE

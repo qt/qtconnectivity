@@ -133,18 +133,6 @@ void QNearFieldManagerPrivateImpl::stopTargetDetection()
     updateReceiveState();
 }
 
-void QNearFieldManagerPrivateImpl::requestAccess(QNearFieldManager::TargetAccessModes accessModes)
-{
-    Q_UNUSED(accessModes);
-    //Do nothing, because we dont have access modes for the target
-}
-
-void QNearFieldManagerPrivateImpl::releaseAccess(QNearFieldManager::TargetAccessModes accessModes)
-{
-    Q_UNUSED(accessModes);
-    //Do nothing, because we dont have access modes for the target
-}
-
 void QNearFieldManagerPrivateImpl::newIntent(QAndroidJniObject intent)
 {
     // This function is called from different thread and is used to move intent to main thread.
