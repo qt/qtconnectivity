@@ -71,7 +71,7 @@ public:
     bool isEnabled() const;
     bool isSupported() const;
 
-    bool startTargetDetection();
+    bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod);
     void stopTargetDetection();
 
 Q_SIGNALS:

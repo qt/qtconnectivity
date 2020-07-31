@@ -214,7 +214,7 @@ void MainWindow::touchReceive()
     m_touchAction = ReadNdef;
 
     //! [QNearFieldManager start detection]
-    m_manager->startTargetDetection();
+    m_manager->startTargetDetection(QNearFieldTarget::NdefAccess);
     //! [QNearFieldManager start detection]
 }
 
@@ -224,7 +224,7 @@ void MainWindow::touchStore()
 
     m_touchAction = WriteNdef;
 
-    m_manager->startTargetDetection();
+    m_manager->startTargetDetection(QNearFieldTarget::NdefAccess);
 }
 
 //! [QNearFieldTarget detected]

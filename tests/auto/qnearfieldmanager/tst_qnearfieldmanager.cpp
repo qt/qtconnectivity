@@ -91,7 +91,7 @@ void tst_QNearFieldManager::targetDetected()
     QSignalSpy targetDetectedSpy(&manager, SIGNAL(targetDetected(QNearFieldTarget*)));
     QSignalSpy targetLostSpy(&manager, SIGNAL(targetLost(QNearFieldTarget*)));
 
-    manager.startTargetDetection();
+    manager.startTargetDetection(QNearFieldTarget::UnknownAccess);
 
     QTRY_VERIFY(!targetDetectedSpy.isEmpty());
 

@@ -77,7 +77,7 @@ public:
 
     bool isEnabled() const override;
     bool isSupported() const override;
-    bool startTargetDetection() override;
+    bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod) override;
     void stopTargetDetection() override;
     void newIntent(QAndroidJniObject intent) override;
     QByteArray getUid(const QAndroidJniObject &intent);
@@ -88,6 +88,7 @@ protected:
 
 private:
     bool m_detecting;
+    QNearFieldTarget::AccessMethod m_requestedMethod;
     QHash<QByteArray, QNearFieldTargetPrivateImpl*> m_detectedTargets;
 
 private slots:

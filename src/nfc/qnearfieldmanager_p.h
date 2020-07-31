@@ -87,7 +87,7 @@ public:
         return false;
     }
 
-    virtual bool startTargetDetection()
+    virtual bool startTargetDetection(QNearFieldTarget::AccessMethod)
     {
         return false;
     }

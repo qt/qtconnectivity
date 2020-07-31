@@ -62,7 +62,7 @@ bool QNearFieldManagerPrivateImpl::isEnabled() const
     return true;
 }
 
-bool QNearFieldManagerPrivateImpl::startTargetDetection()
+bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::AccessMethod)
 {
     return true;
 }

@@ -72,7 +72,7 @@ public:
 
     bool isEnabled() const override;
 
-    bool startTargetDetection() override;
+    bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod) override;
 
     void reset();
 

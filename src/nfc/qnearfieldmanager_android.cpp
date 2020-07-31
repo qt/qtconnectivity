@@ -117,12 +117,13 @@ bool QNearFieldManagerPrivateImpl::isSupported() const
     return AndroidNfc::isSupported();
 }
 
-bool QNearFieldManagerPrivateImpl::startTargetDetection()
+bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
 {
     if (m_detecting)
         return false;   // Already detecting targets
 
     m_detecting = true;
+    m_requestedMethod = accessMethod;
     updateReceiveState();
     return true;
 }
@@ -162,10 +163,16 @@ void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
         target->setIntent(intent);  // Updating existing target
     } else {
         target = new QNearFieldTargetPrivateImpl(intent, uid);
-        connect(target, &QNearFieldTargetPrivateImpl::targetDestroyed, this, &QNearFieldManagerPrivateImpl::onTargetDestroyed);
-        connect(target, &QNearFieldTargetPrivateImpl::targetLost, this, &QNearFieldManagerPrivateImpl::onTargetLost);
+
+        if (target->accessMethods() & m_requestedMethod) {
+            connect(target, &QNearFieldTargetPrivateImpl::targetDestroyed, this, &QNearFieldManagerPrivateImpl::onTargetDestroyed);
+            connect(target, &QNearFieldTargetPrivateImpl::targetLost, this, &QNearFieldManagerPrivateImpl::onTargetLost);
+            onTargetDetected(target);
+        } else {
+            delete target;
+            m_detectedTargets.remove(uid);
+        }
     }
-    onTargetDetected(target);
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)

@@ -209,20 +209,25 @@ bool QNearFieldManager::isSupported() const
 /*!
     \fn bool QNearFieldManager::startTargetDetection()
 
-    Starts detecting targets and returns true if target detection is
+    Starts detecting targets and returns \c true if target detection is
     successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
-    when a target is within proximity.
+    when a target is within proximity. Only tags with the given \a accessMethod will be delivered.
+    Active detection continues until \l stopTargetDetection() has been called.
+
+    To detect targets with a different \a accessMethod, stopTargetDetection() must be called first.
+
     \sa stopTargetDetection()
 */
-bool QNearFieldManager::startTargetDetection()
+bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
 {
     Q_D(QNearFieldManager);
-    return d->startTargetDetection();
+
+    return d->startTargetDetection(accessMethod);
 }
 
 /*!
-    Stops detecting targets.  The targetDetected() signal will no longer be emitted until another
-    call to startTargetDetection() is made.
+    Stops detecting targets. The targetDetected() signal will no longer be emitted until another
+    call to startTargetDetection() is made. Targets detected before are still valid.
 */
 void QNearFieldManager::stopTargetDetection()
 {

@@ -73,7 +73,7 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
         return;
     }
 
-    manager->startTargetDetection();
+    manager->startTargetDetection(QNearFieldTarget::NdefAccess);
     connect(manager, &QNearFieldManager::targetDetected,
             this, &AnnotatedUrl::targetDetected);
     connect(manager, &QNearFieldManager::targetLost,
