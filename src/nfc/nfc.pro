@@ -16,8 +16,6 @@ HEADERS += \
     qndefnfcurirecord.h \
     qndefnfcsmartposterrecord.h \
     qtnfcglobal_p.h \
-    qllcpsocket_p.h \
-    qllcpserver_p.h \
     qndefrecord_p.h \
     qnearfieldtarget_p.h \
     qnearfieldmanager_p.h \
@@ -37,9 +35,7 @@ SOURCES += \
     qndefnfcurirecord.cpp \
     qnearfieldtagtype1.cpp \
     qnearfieldtagtype2.cpp \
-    qllcpsocket.cpp \
     qtlv.cpp \
-    qllcpserver.cpp \
     qndefnfcsmartposterrecord.cpp
 
 android:!android-embedded {
@@ -53,8 +49,6 @@ android:!android-embedded {
     QT_PRIVATE += core-private gui androidextras
 
     HEADERS += \
-        qllcpserver_android_p.h \
-        qllcpsocket_android_p.h \
         android/androidjninfc_p.h \
         qnearfieldmanager_android_p.h \
         qnearfieldtarget_android_p.h \
@@ -62,8 +56,6 @@ android:!android-embedded {
 
 
     SOURCES += \
-        qllcpserver_android_p.cpp \
-        qllcpsocket_android_p.cpp \
         android/androidjninfc.cpp \
         qnearfieldmanager_android.cpp \
         qnearfieldtarget_android.cpp \
@@ -74,13 +66,9 @@ isEmpty(NFC_BACKEND_AVAILABLE) {
     message("Unsupported NFC platform, will not build a working QtNfc library.")
 
     HEADERS += \
-        qllcpsocket_p_p.h \
-        qllcpserver_p_p.h \
         qnearfieldmanager_generic_p.h
 
     SOURCES += \
-        qllcpsocket_p.cpp \
-        qllcpserver_p.cpp \
         qnearfieldmanager_generic.cpp
 }
 

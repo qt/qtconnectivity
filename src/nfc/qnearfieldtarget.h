@@ -75,8 +75,7 @@ public:
     enum AccessMethod {
         UnknownAccess = 0x00,
         NdefAccess = 0x01,
-        TagTypeSpecificAccess = 0x02,
-        LlcpAccess = 0x04
+        TagTypeSpecificAccess = 0x02
     };
     Q_ENUM(AccessMethod)
     Q_DECLARE_FLAGS(AccessMethods, AccessMethod)

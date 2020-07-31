@@ -74,9 +74,6 @@ QT_BEGIN_NAMESPACE
 
     If the target supports TagTypeSpecificAccess, sendCommand() can be used to send a single
     proprietary command to the target and retrieve the response.
-
-    If the target supports LlcpAccess, the QLlcpSocket class can be used to connected to a
-    service provided by the target.
 */
 
 /*!
@@ -105,7 +102,6 @@ QT_BEGIN_NAMESPACE
                                     readNdefMessages() and writeNdefMessages().
     \value TagTypeSpecificAccess    The target supports sending tag type specific commands using
                                     sendCommand().
-    \value LlcpAccess               The target supports peer-to-peer LLCP communication.
 */
 
 /*!
