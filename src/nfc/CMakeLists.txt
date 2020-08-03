@@ -54,6 +54,22 @@ qt_internal_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
         Qt::Gui
 )
 
+if(IOS)
+    # special case begin
+    set(NFC_BACKEND_AVAILABLE ON)
+    qt_disable_apple_app_extension_api_only(Nfc)
+    # special case end
+endif()
+
+qt_extend_target(Nfc CONDITION IOS
+    SOURCES
+        ios/qiostagreaderdelegate.mm ios/qiostagreaderdelegate_p.h
+        qnearfieldmanager_ios.mm qnearfieldmanager_ios_p.h
+        qnearfieldtarget_ios.mm qnearfieldtarget_ios_p.h
+    DEFINES
+        IOS_NFC
+)
+
 #### Keys ignored in scope 2:.:.:nfc.pro:ANDROID AND NOT ANDROID_EMBEDDED:
 # NFC_BACKEND_AVAILABLE = "yes"
 
