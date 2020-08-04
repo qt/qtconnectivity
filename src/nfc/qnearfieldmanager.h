@@ -72,10 +72,13 @@ public:
     bool isSupported() const;
 
     bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod);
-    void stopTargetDetection();
+    void stopTargetDetection(const QString &errorMessage = QString());
+
+    void setUserInformation(const QString &message);
 
 Q_SIGNALS:
     void adapterStateChanged(QNearFieldManager::AdapterState state);
+    void targetDetectionStopped();
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
 

@@ -103,6 +103,18 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \fn void QNearFieldManager::targetDetectionStopped()
+
+    \since 6.0
+
+    This signal is emitted whenever the target detection is stopped.
+
+    \note Mostly this signal is emitted when \l stopTargetDetection() has been called.
+    Additionally the user is able to stop the detection on iOS within a popup shown
+    by the system during the scan, which also leads to emitting this signal.
+*/
+
+/*!
     \fn void QNearFieldManager::targetDetected(QNearFieldTarget *target)
 
     This signal is emitted whenever a target is detected. The \a target parameter represents the
@@ -143,6 +155,8 @@ QNearFieldManager::QNearFieldManager(QObject *parent)
 
     connect(d_ptr, &QNearFieldManagerPrivate::adapterStateChanged,
             this, &QNearFieldManager::adapterStateChanged);
+    connect(d_ptr, &QNearFieldManagerPrivate::targetDetectionStopped,
+            this, &QNearFieldManager::targetDetectionStopped);
     connect(d_ptr, &QNearFieldManagerPrivate::targetDetected,
             this, &QNearFieldManager::targetDetected);
     connect(d_ptr, &QNearFieldManagerPrivate::targetLost,
@@ -164,6 +178,8 @@ QNearFieldManager::QNearFieldManager(QNearFieldManagerPrivate *backend, QObject 
 
     connect(d_ptr, &QNearFieldManagerPrivate::adapterStateChanged,
             this, &QNearFieldManager::adapterStateChanged);
+    connect(d_ptr, &QNearFieldManagerPrivate::targetDetectionStopped,
+            this, &QNearFieldManager::targetDetectionStopped);
     connect(d_ptr, &QNearFieldManagerPrivate::targetDetected,
             this, &QNearFieldManager::targetDetected);
     connect(d_ptr, &QNearFieldManagerPrivate::targetLost,
@@ -206,6 +222,7 @@ bool QNearFieldManager::isSupported() const
 
     return d->isSupported();
 }
+
 /*!
     \fn bool QNearFieldManager::startTargetDetection()
 
@@ -226,14 +243,47 @@ bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod acce
 }
 
 /*!
-    Stops detecting targets. The targetDetected() signal will no longer be emitted until another
-    call to startTargetDetection() is made. Targets detected before are still valid.
+    Stops detecting targets. The \l targetDetected() signal will no longer be emitted until another
+    call to \l startTargetDetection() is made. Targets detected before are still valid.
+
+    If an \a errorMessage is provided, this is a hint to the system that the goal, the application
+    had, was not reached. The \a errorMessage and a matching error icon are shown to the user.
+    Calling this function with an empty \a errorMessage, implies a successful operation end;
+    otherwise an \a errorMessage should be passed to this function.
+
+    \note Currently, \a errorMessage only has an effect on iOS because a popup is shown by the
+    system during the scan where the \a errorMessage is visible. Other platforms will ignore this
+    parameter.
+
+    \sa setUserInformation()
 */
-void QNearFieldManager::stopTargetDetection()
+void QNearFieldManager::stopTargetDetection(const QString &errorMessage)
 {
     Q_D(QNearFieldManager);
 
-    d->stopTargetDetection();
+    d->stopTargetDetection(errorMessage);
+}
+
+/*!
+    \since 6.0
+
+    Sets the message shown to the user by the system. If the target detection is running the
+    \a message will be updated immediately and can be used as a progress message. The last message
+    set before a call to \l startTargetDetection() without an error message is used as a success
+    message. If the target detection is not running the \a message will be used as the initial
+    message when the next detection is started. By default no message is shown to the user.
+
+    \note Currently, this function only has an effect on iOS because a popup is shown by the system
+    during the scan. On iOS, this \a message is mapped to the alert message which is shown upon
+    successful completion of the scan. Other platforms will ignore \a message.
+
+    \sa startTargetDetection(), stopTargetDetection()
+*/
+void QNearFieldManager::setUserInformation(const QString &message)
+{
+    Q_D(QNearFieldManager);
+
+    d->setUserInformation(message);
 }
 
 QT_END_NAMESPACE

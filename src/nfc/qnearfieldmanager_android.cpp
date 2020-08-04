@@ -128,10 +128,11 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
     return true;
 }
 
-void QNearFieldManagerPrivateImpl::stopTargetDetection()
+void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &)
 {
     m_detecting = false;
     updateReceiveState();
+    Q_EMIT targetDetectionStopped();
 }
 
 void QNearFieldManagerPrivateImpl::newIntent(QAndroidJniObject intent)

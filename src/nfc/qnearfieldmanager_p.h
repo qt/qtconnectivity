@@ -92,12 +92,17 @@ public:
         return false;
     }
 
-    virtual void stopTargetDetection()
+    virtual void stopTargetDetection(const QString &)
+    {
+    }
+
+    virtual void setUserInformation(const QString &)
     {
     }
 
 signals:
     void adapterStateChanged(QNearFieldManager::AdapterState state);
+    void targetDetectionStopped();
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
 };
