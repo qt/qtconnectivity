@@ -165,7 +165,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
                 const QString value(extract_qstring(data + i + 3, headerLength - 5));
                 if (!value.length()) // Some error?
                     return empty;
-                header.value.setValue<QString>(value);
+                header.value.setValue(value);
             } else // Still something weird.
                 return empty;
             break;
@@ -183,7 +183,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
                 value.resize(headerLength - 3);
                 std::copy(data, data + headerLength, value.begin());
             }
-            header.value.setValue<QVector<unsigned char> >(value);
+            header.value.setValue(value);
             break;
         }
         case OBEXHeaderFormat1Byte:
@@ -192,7 +192,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
             if (i + 2 > length)
                 return empty;
             headerLength = 2;
-            header.value.setValue<quint8>(data[i + 1]);
+            header.value.setValue(data[i + 1]);
             break;
         }
         case OBEXHeaderFormat4Byte:
@@ -201,7 +201,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
             if (i + 5 > length)
                 return empty;
             headerLength = 5;
-            header.value.setValue<quint32>(extract_uint32(data + i + 1));
+            header.value.setValue(extract_uint32(data + i + 1));
             break;
         }
         default:
