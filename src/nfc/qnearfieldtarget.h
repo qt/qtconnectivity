@@ -88,6 +88,7 @@ public:
         NoResponseError,
         ChecksumMismatchError,
         InvalidParametersError,
+        ConnectionError,
         NdefReadError,
         NdefWriteError,
         CommandError

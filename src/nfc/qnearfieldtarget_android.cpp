@@ -145,7 +145,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::readNdefMessages()
 
     // Connect
     if (!connect()) {
-        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
+        reportError(QNearFieldTarget::ConnectionError, requestId);
         return requestId;
     }
 
@@ -222,7 +222,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByte
     // Connecting
     QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
     if (!connect()) {
-        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
+        reportError(QNearFieldTarget::ConnectionError, requestId);
         return requestId;
     }
 
@@ -272,7 +272,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::writeNdefMessages(const
     // Connecting
     QNearFieldTarget::RequestId requestId = QNearFieldTarget::RequestId(new QNearFieldTarget::RequestIdPrivate());
     if (!connect()) {
-        reportError(QNearFieldTarget::TargetOutOfRangeError, requestId);
+        reportError(QNearFieldTarget::ConnectionError, requestId);
         return requestId;
     }
 

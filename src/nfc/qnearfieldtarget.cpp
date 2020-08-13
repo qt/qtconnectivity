@@ -117,6 +117,7 @@ QT_BEGIN_NAMESPACE
     \value NoResponseError          The target did not respond.
     \value ChecksumMismatchError    The checksum has detected a corrupted response.
     \value InvalidParametersError   Invalid parameters were passed to a tag type specific function.
+    \value ConnectionError          Failed to connect to the target.
     \value NdefReadError            Failed to read NDEF messages from the target.
     \value NdefWriteError           Failed to write NDEF messages to the target.
     \value CommandError             Failed to send a command to the target.
