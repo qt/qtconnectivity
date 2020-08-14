@@ -14,6 +14,7 @@ project(QtConnectivity # special case
 set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Network
                                                                Concurrent Widgets)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS DBus)
 if(ANDROID)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS AndroidExtras)
 endif()
