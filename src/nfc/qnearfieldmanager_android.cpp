@@ -112,8 +112,11 @@ bool QNearFieldManagerPrivateImpl::isEnabled() const
     return AndroidNfc::isEnabled();
 }
 
-bool QNearFieldManagerPrivateImpl::isSupported() const
+bool QNearFieldManagerPrivateImpl::isSupported(QNearFieldTarget::AccessMethod accessMethod) const
 {
+    if (accessMethod == QNearFieldTarget::UnknownAccess)
+        return false;
+
     return AndroidNfc::isSupported();
 }
 

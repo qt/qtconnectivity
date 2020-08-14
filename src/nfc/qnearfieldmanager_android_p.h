@@ -76,7 +76,7 @@ public:
     ~QNearFieldManagerPrivateImpl() override;
 
     bool isEnabled() const override;
-    bool isSupported() const override;
+    bool isSupported(QNearFieldTarget::AccessMethod accessMethod) const override;
     bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod) override;
     void stopTargetDetection(const QString &errorMessage) override;
     void newIntent(QAndroidJniObject intent) override;

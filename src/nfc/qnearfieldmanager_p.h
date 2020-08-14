@@ -82,7 +82,7 @@ public:
         return false;
     }
 
-    virtual bool isSupported() const
+    virtual bool isSupported(QNearFieldTarget::AccessMethod) const
     {
         return false;
     }

@@ -69,7 +69,8 @@ public:
     ~QNearFieldManager();
 
     bool isEnabled() const;
-    bool isSupported() const;
+    bool isSupported(QNearFieldTarget::AccessMethod accessMethod
+                     = QNearFieldTarget::AnyAccess) const;
 
     bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod);
     void stopTargetDetection(const QString &errorMessage = QString());

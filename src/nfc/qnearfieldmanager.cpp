@@ -213,14 +213,16 @@ bool QNearFieldManager::isEnabled() const
     \since 5.12
 
     Returns \c true if the underlying device has a NFC adapter; otherwise returns \c false.
+    If an \a accessMethod is given it returns only true if the NFC adapter supports the given
+    \a accessMethod.
 
     \sa isEnabled()
 */
-bool QNearFieldManager::isSupported() const
+bool QNearFieldManager::isSupported(QNearFieldTarget::AccessMethod accessMethod) const
 {
     Q_D(const QNearFieldManager);
 
-    return d->isSupported();
+    return d->isSupported(accessMethod);
 }
 
 /*!

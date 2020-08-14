@@ -102,6 +102,7 @@ QT_BEGIN_NAMESPACE
                                     readNdefMessages() and writeNdefMessages().
     \value TagTypeSpecificAccess    The target supports sending tag type specific commands using
                                     sendCommand().
+    \value AnyAccess                The target supports any of the known access types.
 */
 
 /*!
