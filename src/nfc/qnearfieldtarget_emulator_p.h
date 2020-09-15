@@ -75,7 +75,7 @@ public:
     bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs);
 
 private:
-    TagBase *m_tag;
+    TagBase *tag;
 };
 
 class TagType2 : public QNearFieldTagType2
@@ -94,7 +94,7 @@ public:
     bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs);
 
 private:
-    TagBase *m_tag;
+    TagBase *tag;
 };
 
 class TagActivator : public QObject
@@ -118,7 +118,7 @@ signals:
     void tagDeactivated(TagBase *tag);
 
 private:
-    QMap<TagBase *, bool>::Iterator m_current;
+    QMap<TagBase *, bool>::Iterator current;
     int timerId;
 };
 

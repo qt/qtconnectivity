@@ -109,13 +109,14 @@ protected:
     bool catchJavaExceptions(bool verbose = true) const;
 
 protected:
-    QAndroidJniObject m_intent;
-    QByteArray m_uid;
-    QStringList m_techList;
-    QNearFieldTarget::Type m_type;
-    QTimer *m_targetCheckTimer;
-    QString m_tech;
-    QAndroidJniObject m_tagTech;
+    QAndroidJniObject targetIntent;
+    QByteArray targetUid;
+    QTimer *targetCheckTimer;
+
+    QString selectedTech;
+    QStringList techList;
+    QNearFieldTarget::Type tagType;
+    QAndroidJniObject tagTech;
 };
 
 QT_END_NAMESPACE

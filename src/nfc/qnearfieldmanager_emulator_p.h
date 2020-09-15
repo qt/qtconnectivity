@@ -81,7 +81,7 @@ private slots:
     void tagDeactivated(TagBase *tag);
 
 private:
-    QMap<TagBase *, QPointer<QNearFieldTargetPrivate> > m_targets;
+    QMap<TagBase *, QPointer<QNearFieldTargetPrivate> > targets;
 
 };
 

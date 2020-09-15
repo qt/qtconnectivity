@@ -87,9 +87,9 @@ protected:
     void updateReceiveState();
 
 private:
-    bool m_detecting;
-    QNearFieldTarget::AccessMethod m_requestedMethod;
-    QHash<QByteArray, QNearFieldTargetPrivateImpl*> m_detectedTargets;
+    bool detecting;
+    QNearFieldTarget::AccessMethod requestedMethod;
+    QHash<QByteArray, QNearFieldTargetPrivateImpl*> detectedTargets;
 
 private slots:
     void onTargetDiscovered(QAndroidJniObject intent);

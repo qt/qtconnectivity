@@ -55,7 +55,7 @@ static QMap<TagBase *, bool> tagMap;
 Q_GLOBAL_STATIC(TagActivator, globalTagActivator);
 
 TagType1::TagType1(TagBase *tag, QObject *parent)
-:   QNearFieldTagType1(parent), m_tag(tag)
+:   QNearFieldTagType1(parent), tag(tag)
 {
 }
 
@@ -67,7 +67,7 @@ QByteArray TagType1::uid() const
 {
     QMutexLocker locker(&tagMutex);
 
-    return m_tag->uid();
+    return tag->uid();
 }
 
 QNearFieldTarget::AccessMethods TagType1::accessMethods() const
@@ -82,14 +82,14 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
     QNearFieldTarget::RequestId id(new QNearFieldTarget::RequestIdPrivate);
 
     // tag not in proximity
-    if (!tagMap.value(m_tag)) {
+    if (!tagMap.value(tag)) {
         reportError(QNearFieldTarget::TargetOutOfRangeError, id);
         return id;
     }
 
     quint16 crc = qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41);
 
-    QByteArray response = m_tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
+    QByteArray response = tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
 
     if (response.isEmpty()) {
         reportError(QNearFieldTarget::NoResponseError, id);
@@ -120,7 +120,7 @@ bool TagType1::waitForRequestCompleted(const QNearFieldTarget::RequestId &id, in
 
 
 TagType2::TagType2(TagBase *tag, QObject *parent)
-:   QNearFieldTagType2(parent), m_tag(tag)
+:   QNearFieldTagType2(parent), tag(tag)
 {
 }
 
@@ -132,7 +132,7 @@ QByteArray TagType2::uid() const
 {
     QMutexLocker locker(&tagMutex);
 
-    return m_tag->uid();
+    return tag->uid();
 }
 
 QNearFieldTarget::AccessMethods TagType2::accessMethods() const
@@ -147,14 +147,14 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
     QNearFieldTarget::RequestId id(new QNearFieldTarget::RequestIdPrivate);
 
     // tag not in proximity
-    if (!tagMap.value(m_tag)) {
+    if (!tagMap.value(tag)) {
         reportError(QNearFieldTarget::TargetOutOfRangeError, id);
         return id;
     }
 
     quint16 crc = qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41);
 
-    QByteArray response = m_tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
+    QByteArray response = tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
 
     if (response.isEmpty())
         return id;
@@ -235,7 +235,7 @@ void TagActivator::initialize()
         }
     }
 
-    m_current = tagMap.end();
+    current = tagMap.end();
 
     timerId = startTimer(1000);
 }
@@ -262,31 +262,31 @@ void TagActivator::timerEvent(QTimerEvent *e)
 
     tagMutex.lock();
 
-    if (m_current != tagMap.end()) {
-        if (m_current.key()->lastAccessTime() + 1500 > QDateTime::currentMSecsSinceEpoch()) {
+    if (current != tagMap.end()) {
+        if (current.key()->lastAccessTime() + 1500 > QDateTime::currentMSecsSinceEpoch()) {
             tagMutex.unlock();
             return;
         }
 
-        *m_current = false;
+        *current = false;
 
-        TagBase *tag = m_current.key();
+        TagBase *tag = current.key();
 
         tagMutex.unlock();
         Q_EMIT tagDeactivated(tag);
         tagMutex.lock();
     }
 
-    if (m_current != tagMap.end())
-        ++m_current;
+    if (current != tagMap.end())
+        ++current;
 
-    if (m_current == tagMap.end())
-        m_current = tagMap.begin();
+    if (current == tagMap.end())
+        current = tagMap.begin();
 
-    if (m_current != tagMap.end()) {
-        *m_current = true;
+    if (current != tagMap.end()) {
+        *current = true;
 
-        TagBase *tag = m_current.key();
+        TagBase *tag = current.key();
 
         tagMutex.unlock();
         Q_EMIT tagActivated(tag);

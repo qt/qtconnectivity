@@ -74,7 +74,7 @@ void QNearFieldManagerPrivateImpl::reset()
 
 void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)
 {
-    QNearFieldTargetPrivate *target = m_targets.value(tag).data();
+    QNearFieldTargetPrivate *target = targets.value(tag).data();
     if (!target) {
         if (dynamic_cast<NfcTagType1 *>(tag))
             target = new TagType1(tag, this);
@@ -83,7 +83,7 @@ void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)
         else
             qFatal("Unknown emulator tag type");
 
-        m_targets.insert(tag, target);
+        targets.insert(tag, target);
     }
 
     Q_EMIT targetDetected(new NearFieldTarget(target, this));
@@ -91,9 +91,9 @@ void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)
 
 void QNearFieldManagerPrivateImpl::tagDeactivated(TagBase *tag)
 {
-    QNearFieldTargetPrivate *target = m_targets.value(tag).data();
+    QNearFieldTargetPrivate *target = targets.value(tag).data();
     if (!target) {
-        m_targets.remove(tag);
+        targets.remove(tag);
         return;
     }
 

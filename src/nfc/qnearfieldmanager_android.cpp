@@ -71,7 +71,7 @@ extern "C"
 }
 
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
-    m_detecting(false)
+    detecting(false)
 {
     qRegisterMetaType<QAndroidJniObject>("QAndroidJniObject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
@@ -122,18 +122,18 @@ bool QNearFieldManagerPrivateImpl::isSupported(QNearFieldTarget::AccessMethod ac
 
 bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
 {
-    if (m_detecting)
+    if (detecting)
         return false;   // Already detecting targets
 
-    m_detecting = true;
-    m_requestedMethod = accessMethod;
+    detecting = true;
+    requestedMethod = accessMethod;
     updateReceiveState();
     return true;
 }
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &)
 {
-    m_detecting = false;
+    detecting = false;
     updateReceiveState();
     Q_EMIT targetDetectionStopped();
 }
@@ -162,26 +162,26 @@ void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
     QByteArray uid = getUid(intent);
 
     // Accepting all targets but only sending signal of requested types.
-    QNearFieldTargetPrivateImpl *&target = m_detectedTargets[uid];
+    QNearFieldTargetPrivateImpl *&target = detectedTargets[uid];
     if (target) {
         target->setIntent(intent);  // Updating existing target
     } else {
         target = new QNearFieldTargetPrivateImpl(intent, uid);
 
-        if (target->accessMethods() & m_requestedMethod) {
+        if (target->accessMethods() & requestedMethod) {
             connect(target, &QNearFieldTargetPrivateImpl::targetDestroyed, this, &QNearFieldManagerPrivateImpl::onTargetDestroyed);
             connect(target, &QNearFieldTargetPrivateImpl::targetLost, this, &QNearFieldManagerPrivateImpl::onTargetLost);
             onTargetDetected(target);
         } else {
             delete target;
-            m_detectedTargets.remove(uid);
+            detectedTargets.remove(uid);
         }
     }
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)
 {
-    m_detectedTargets.remove(uid);
+    detectedTargets.remove(uid);
 }
 
 QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QAndroidJniObject &tag)
@@ -200,7 +200,7 @@ QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QAndroidJniObject &t
 
 void QNearFieldManagerPrivateImpl::updateReceiveState()
 {
-    if (m_detecting) {
+    if (detecting) {
         AndroidNfc::registerListener(this);
     } else {
         AndroidNfc::unregisterListener(this);
