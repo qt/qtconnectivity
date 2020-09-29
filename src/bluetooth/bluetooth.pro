@@ -137,7 +137,7 @@ qtConfig(bluez) {
         android.permission.ACCESS_FINE_LOCATION \
         android.permission.ACCESS_COARSE_LOCATION # since Android 6.0 (API lvl 23)
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
-        jar/QtAndroidBluetooth.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
+        jar/Qt$${QT_MAJOR_VERSION}AndroidBluetooth.jar:org.qtproject.qt.android.bluetooth.QtBluetoothBroadcastReceiver
 
     SOURCES += \
         qbluetoothdevicediscoveryagent_android.cpp \

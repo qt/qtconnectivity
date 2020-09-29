@@ -108,7 +108,7 @@ void ServerAcceptanceThread::run()
         shutdownPendingConnections();
     }
 
-    javaThread = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothSocketServer");
+    javaThread = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer");
     if (!javaThread.isValid())
         return;
 

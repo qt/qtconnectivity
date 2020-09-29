@@ -276,13 +276,13 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
             d_ptr->pendingHostModeTransition = true;
         } else {
             QAndroidJniObject::callStaticMethod<void>(
-                "org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver",
+                "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
                 "setConnectable");
         }
     } else if (mode == QBluetoothLocalDevice::HostDiscoverable
                || mode == QBluetoothLocalDevice::HostDiscoverableLimitedInquiry) {
         QAndroidJniObject::callStaticMethod<void>(
-            "org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver", "setDiscoverable");
+            "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver", "setDiscoverable");
     }
 }
 
@@ -354,7 +354,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 
     QAndroidJniObject inputString = QAndroidJniObject::fromString(address.toString());
     jboolean success = QAndroidJniObject::callStaticMethod<jboolean>(
-        "org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver",
+        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
         "setPairingMode",
         "(Ljava/lang/String;Z)Z",
         inputString.object<jstring>(),
@@ -421,7 +421,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
      * but at least it can complement our already detected connections.
      */
     QAndroidJniObject connectedDevices = QAndroidJniObject::callStaticObjectMethod(
-        "org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver",
+        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
         "getConnectedDevices",
         "()[Ljava/lang/String;");
 

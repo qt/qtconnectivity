@@ -3,16 +3,17 @@
 qt_get_android_sdk_jar_for_api("android-18" android_sdk)
 
 set(java_sources
-    src/org/qtproject/qt5/android/nfc/QtNfc.java
-    src/org/qtproject/qt5/android/nfc/QtNfcBroadcastReceiver.java
+    src/org/qtproject/qt/android/nfc/QtNfc.java
+    src/org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver.java
 )
 
-add_jar(QtNfc
+qt_internal_add_jar(QtAndroidNfc
     INCLUDE_JARS ${android_sdk}
     SOURCES ${java_sources}
+    OUTPUT_DIR "${QT_BUILD_DIR}/jar"
 )
 
-install_jar(QtNfc
+install_jar(QtAndroidNfc
     DESTINATION jar
     COMPONENT Devel
 )

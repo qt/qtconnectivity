@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-package org.qtproject.qt5.android.nfc;
+package org.qtproject.qt.android.nfc;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

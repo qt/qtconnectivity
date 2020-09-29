@@ -37,7 +37,7 @@
  **
  ****************************************************************************/
 
-package org.qtproject.qt5.android.bluetooth;
+package org.qtproject.qt.android.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;

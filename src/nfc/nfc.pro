@@ -44,7 +44,7 @@ android:!android-embedded {
     ANDROID_PERMISSIONS = \
         android.permission.NFC
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
-        jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
+        jar/Qt$${QT_MAJOR_VERSION}AndroidNfc.jar:org.qtproject.qt.android.nfc.QtNfc
     DEFINES += ANDROID_NFC
     QT_PRIVATE += core-private gui androidextras
 

@@ -268,32 +268,32 @@ if (!clazz) { \
 static bool registerNatives(JNIEnv *env)
 {
     jclass clazz;
-    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver");
+    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
 
     if (env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for BroadcastReceiver failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothLE");
+    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothLE");
     if (env->RegisterNatives(clazz, methods_le, sizeof(methods_le) / sizeof(methods_le[0])) < 0) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for QBLuetoothLE failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothLEServer");
+    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothLEServer");
     if (env->RegisterNatives(clazz, methods_leServer, sizeof(methods_leServer) / sizeof(methods_leServer[0])) < 0) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for QBLuetoothLEServer failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothSocketServer");
+    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer");
     if (env->RegisterNatives(clazz, methods_server, sizeof(methods_server) / sizeof(methods_server[0])) < 0) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for SocketServer failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt5/android/bluetooth/QtBluetoothInputStreamThread");
+    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread");
     if (env->RegisterNatives(clazz, methods_inputStream,
                              sizeof(methods_inputStream) / sizeof(methods_inputStream[0])) < 0) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for InputStreamThread failed");

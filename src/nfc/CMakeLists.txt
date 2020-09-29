@@ -33,7 +33,7 @@ qt_add_module(Nfc
 
 if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     set_property(TARGET Nfc APPEND PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
-        jar/QtNfc.jar:org.qtproject.qt5.android.nfc.QtNfc
+        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc.jar:org.qtproject.qt.android.nfc.QtNfc # special case
     )
     set_property(TARGET Nfc APPEND PROPERTY QT_ANDROID_PERMISSIONS
         android.permission.NFC

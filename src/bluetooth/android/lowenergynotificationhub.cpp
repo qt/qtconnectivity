@@ -61,13 +61,13 @@ LowEnergyNotificationHub::LowEnergyNotificationHub(const QBluetoothAddress &remo
 
     if (isPeripheral) {
         qCDebug(QT_BT_ANDROID) << "Creating Android Peripheral/Server support for BTLE";
-        jBluetoothLe = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLEServer",
+        jBluetoothLe = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLEServer",
                                          "(Landroid/content/Context;)V", QtAndroidPrivate::context());
     } else {
         qCDebug(QT_BT_ANDROID) << "Creating Android Central/Client support for BTLE";
         const QAndroidJniObject address =
             QAndroidJniObject::fromString(remote.toString());
-        jBluetoothLe = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLE",
+        jBluetoothLe = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLE",
                                      "(Ljava/lang/String;Landroid/content/Context;)V",
                                      address.object<jstring>(),
                                      QtAndroidPrivate::context());

@@ -57,7 +57,7 @@ bool InputStreamThread::run()
 {
     QMutexLocker lock(&m_mutex);
 
-    javaInputStreamThread = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothInputStreamThread");
+    javaInputStreamThread = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread");
     if (!javaInputStreamThread.isValid() || !m_socket_p->inputStream.isValid())
         return false;
 

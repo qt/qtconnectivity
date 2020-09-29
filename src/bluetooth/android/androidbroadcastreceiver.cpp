@@ -56,7 +56,7 @@ AndroidBroadcastReceiver::AndroidBroadcastReceiver(QObject* parent)
     // get Qt Context
     contextObject = QAndroidJniObject(QtAndroidPrivate::context());
 
-    broadcastReceiverObject = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver");
+    broadcastReceiverObject = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
     if (!broadcastReceiverObject.isValid())
         return;
     broadcastReceiverObject.setField<jlong>("qtObject", reinterpret_cast<long>(this));

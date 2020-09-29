@@ -419,7 +419,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
 
     QAndroidJniEnvironment env;
     if (!leScanner.isValid()) {
-        leScanner = QAndroidJniObject("org/qtproject/qt5/android/bluetooth/QtBluetoothLE");
+        leScanner = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLE");
         if (env->ExceptionCheck() || !leScanner.isValid()) {
             qCWarning(QT_BT_ANDROID) << "Cannot load BTLE device scan class";
             env->ExceptionDescribe();

@@ -77,7 +77,7 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
 
     if (!broadcastReceiver->isValid()) {
-        *broadcastReceiver = QAndroidJniObject("org/qtproject/qt5/android/nfc/QtNfcBroadcastReceiver",
+        *broadcastReceiver = QAndroidJniObject("org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver",
                                                "(Landroid/content/Context;)V", QtAndroidPrivate::context());
     }
     broadcastListener->append(this);

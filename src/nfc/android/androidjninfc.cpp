@@ -47,7 +47,7 @@
 #include "qbytearray.h"
 #include "qdebug.h"
 
-static const char *nfcClassName = "org/qtproject/qt5/android/nfc/QtNfc";
+static const char *nfcClassName = "org/qtproject/qt/android/nfc/QtNfc";
 
 static AndroidNfc::MainNfcNewIntentListener mainListener;
 
