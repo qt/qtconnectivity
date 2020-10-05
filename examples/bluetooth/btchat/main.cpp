@@ -56,7 +56,6 @@
 int main(int argc, char *argv[])
 {
     //QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
 
     Chat d;

@@ -58,7 +58,6 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication application(argc, argv);
 //! [Transfer-2]
     QQuickView view;
