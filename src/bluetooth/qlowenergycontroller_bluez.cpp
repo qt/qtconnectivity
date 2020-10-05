@@ -333,7 +333,6 @@ void QLowEnergyControllerPrivateBluez::init()
             requestTimer->setInterval(gattRequestTimeout);
             connect(requestTimer, &QTimer::timeout,
                     this, &QLowEnergyControllerPrivateBluez::handleGattRequestTimeout);
-            qRegisterMetaTypeStreamOperators<QBluetoothUuid>();
         }
     }
 }

@@ -45,6 +45,7 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qiodevice.h>
 
 #include <algorithm>
 #include <cstddef>
