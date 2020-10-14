@@ -4,12 +4,20 @@
 ## sdpscanner Tool:
 #####################################################################
 
-qt_add_tool(sdpscanner
+# special case begin
+if(NOT TARGET PkgConfig::BLUEZ)
+     qt_find_package(BlueZ PROVIDED_TARGETS PkgConfig::BLUEZ)
+endif()
+# special case end
+
+
+qt_get_tool_target_name(target_name sdpscanner)
+qt_add_tool(${target_name}
     TOOLS_TARGET Bluetooth # special case
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
-        PkgConfig::BlueZ
+        PkgConfig::BLUEZ
 )
 
 #### Keys ignored in scope 1:.:.:sdpscanner.pro:<TRUE>:

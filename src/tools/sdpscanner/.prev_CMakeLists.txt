@@ -4,7 +4,8 @@
 ## sdpscanner Tool:
 #####################################################################
 
-qt_add_tool(sdpscanner
+qt_get_tool_target_name(target_name sdpscanner)
+qt_add_tool(${target_name}
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
