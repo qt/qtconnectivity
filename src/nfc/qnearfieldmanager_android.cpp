@@ -59,7 +59,7 @@ Q_GLOBAL_STATIC(QList<QNearFieldManagerPrivateImpl *>, broadcastListener)
 
 extern "C"
 {
-    JNIEXPORT void JNICALL Java_org_qtproject_qt5_android_nfc_QtNfcBroadcastReceiver_jniOnReceive(
+    JNIEXPORT void JNICALL Java_org_qtproject_qt_android_nfc_QtNfcBroadcastReceiver_jniOnReceive(
         JNIEnv */*env*/, jobject /*javaObject*/, jint state)
     {
         QNearFieldManager::AdapterState adapterState = static_cast<QNearFieldManager::AdapterState>((int) state);
