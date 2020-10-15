@@ -222,7 +222,7 @@ int QNearFieldTarget::RequestId::refCount() const
 */
 bool QNearFieldTarget::RequestId::operator<(const RequestId &other) const
 {
-    return d < other.d;
+    return std::less<const RequestIdPrivate*>()(d.constData(), other.d.constData());
 }
 
 /*!
