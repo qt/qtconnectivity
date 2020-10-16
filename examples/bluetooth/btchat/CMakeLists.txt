@@ -9,13 +9,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/bluetooth/btchat")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/btchat")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Bluetooth)
 find_package(Qt6 COMPONENTS Widgets)
 
-add_qt_gui_executable(btchat
+qt_add_executable(btchat
     chat.cpp chat.h chat.ui
     chatclient.cpp chatclient.h
     chatserver.cpp chatserver.h

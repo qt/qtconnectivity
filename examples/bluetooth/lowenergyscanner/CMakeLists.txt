@@ -9,14 +9,18 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/bluetooth/lowenergyscanner")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/lowenergyscanner")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Bluetooth)
 
-add_qt_gui_executable(lowenergyscanner
+qt_add_executable(lowenergyscanner
     characteristicinfo.cpp characteristicinfo.h
     device.cpp device.h
     deviceinfo.cpp deviceinfo.h

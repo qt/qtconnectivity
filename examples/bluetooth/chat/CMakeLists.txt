@@ -9,13 +9,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/bluetooth/chat")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/chat")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Bluetooth)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(qml_chat
+qt_add_executable(qml_chat
     qmlchat.cpp
 )
 target_link_libraries(qml_chat PUBLIC

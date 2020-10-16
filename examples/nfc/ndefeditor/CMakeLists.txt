@@ -9,14 +9,18 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/nfc/ndefeditor")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/nfc/ndefeditor")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Nfc)
 find_package(Qt6 COMPONENTS Widgets)
 
-add_qt_gui_executable(ndefeditor
+qt_add_executable(ndefeditor
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
     mimeimagerecordeditor.cpp mimeimagerecordeditor.h mimeimagerecordeditor.ui
