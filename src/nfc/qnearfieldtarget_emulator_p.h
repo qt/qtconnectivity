@@ -111,7 +111,7 @@ public:
     static TagActivator *instance();
 
 protected:
-    void timerEvent(QTimerEvent *e);
+    void timerEvent(QTimerEvent *e) override;
 
 signals:
     void tagActivated(TagBase *tag);

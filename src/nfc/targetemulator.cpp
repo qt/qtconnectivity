@@ -154,7 +154,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
         QByteArray uid = command.mid(3, 4);
 
         // check checksum
-        if (qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41) != 0)
+        if (qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41) != 0)
             return QByteArray();
 
         // check UID
@@ -223,7 +223,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
         QByteArray uid = command.mid(10, 4);
 
         // check checksum
-        if (qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41) != 0)
+        if (qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41) != 0)
             return QByteArray();
 
         // check UID
@@ -277,7 +277,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
     }
 
     if (!response.isEmpty()) {
-        quint16 crc = qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41);
+        quint16 crc = qChecksum(QByteArrayView(response.constData(), response.length()), Qt::ChecksumItuV41);
         response.append(quint8(crc & 0xff));
         response.append(quint8(crc >> 8));
     }
@@ -321,7 +321,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     QByteArray response;
 
     // check checksum
-    if (qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41) != 0)
+    if (qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41) != 0)
         return QByteArray();
 
     if (expectPacket2) {
@@ -378,7 +378,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     }
 
     if (!response.isEmpty()) {
-        quint16 crc = qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41);
+        quint16 crc = qChecksum(QByteArrayView(response.constData(), response.length()), Qt::ChecksumItuV41);
         response.append(quint8(crc & 0xff));
         response.append(quint8(crc >> 8));
     }

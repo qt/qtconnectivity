@@ -84,11 +84,11 @@ public:
     NfcTagType1();
     ~NfcTagType1();
 
-    void load(QSettings *settings);
+    void load(QSettings *settings) override;
 
-    QByteArray processCommand(const QByteArray &command);
+    QByteArray processCommand(const QByteArray &command) override;
 
-    QByteArray uid() const;
+    QByteArray uid() const override;
 
 private:
     quint8 readData(quint8 block, quint8 byte);
@@ -105,11 +105,11 @@ public:
     NfcTagType2();
     ~NfcTagType2();
 
-    void load(QSettings *settings);
+    void load(QSettings *settings) override;
 
-    QByteArray processCommand(const QByteArray &command);
+    QByteArray processCommand(const QByteArray &command) override;
 
-    QByteArray uid() const;
+    QByteArray uid() const override;
 
 private:
     QByteArray memory;

@@ -41,6 +41,7 @@
 #include "qnearfieldtarget_p.h"
 
 #include <QtCore/QByteArray>
+#include <QtCore/QByteArrayView>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDateTime>
 #include <QtCore/QDirIterator>
@@ -87,7 +88,7 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
         return id;
     }
 
-    quint16 crc = qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41);
+    quint16 crc = qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41);
 
     QByteArray response = tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
 
@@ -97,7 +98,7 @@ QNearFieldTarget::RequestId TagType1::sendCommand(const QByteArray &command)
     }
 
     // check crc
-    if (qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41) != 0) {
+    if (qChecksum(QByteArrayView(response.constData(), response.length()), Qt::ChecksumItuV41) != 0) {
         reportError(QNearFieldTarget::ChecksumMismatchError, id);
         return id;
     }
@@ -152,7 +153,7 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
         return id;
     }
 
-    quint16 crc = qChecksum(command.constData(), command.length(), Qt::ChecksumItuV41);
+    quint16 crc = qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41);
 
     QByteArray response = tag->processCommand(command + char(crc & 0xff) + char(crc >> 8));
 
@@ -161,7 +162,7 @@ QNearFieldTarget::RequestId TagType2::sendCommand(const QByteArray &command)
 
     if (response.length() > 1) {
         // check crc
-        if (qChecksum(response.constData(), response.length(), Qt::ChecksumItuV41) != 0) {
+        if (qChecksum(QByteArrayView(response.constData(), response.length()), Qt::ChecksumItuV41) != 0) {
             reportError(QNearFieldTarget::ChecksumMismatchError, id);
             return id;
         }
