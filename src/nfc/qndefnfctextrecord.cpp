@@ -130,7 +130,7 @@ QString QNdefNfcTextRecord::text() const
         utf16 ? QStringDecoder::Encoding::Utf16BE : QStringDecoder::Encoding::Utf8,
         QStringDecoder::Flag::Stateless);
 
-    return toUnicode(p.constData() + 1 + codeLength, p.length() - 1 - codeLength);
+    return toUnicode(QByteArrayView(p.constData() + 1 + codeLength, p.length() - 1 - codeLength));
 }
 
 /*!

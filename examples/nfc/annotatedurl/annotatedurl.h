@@ -54,8 +54,8 @@
 #include <QtNfc/QNdefMessage>
 
 #include <QtCore/QObject>
+#include <QtCore/QUrl>
 
-QT_FORWARD_DECLARE_CLASS(QUrl)
 QT_FORWARD_DECLARE_CLASS(QPixmap)
 QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
 QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)

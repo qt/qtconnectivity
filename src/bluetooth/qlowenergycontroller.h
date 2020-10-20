@@ -45,12 +45,12 @@
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QLowEnergyAdvertisingData>
+#include <QtBluetooth/QLowEnergyConnectionParameters>
 #include <QtBluetooth/QLowEnergyService>
 
 QT_BEGIN_NAMESPACE
 
 class QLowEnergyAdvertisingParameters;
-class QLowEnergyConnectionParameters;
 class QLowEnergyControllerPrivate;
 class QLowEnergyServiceData;
 
