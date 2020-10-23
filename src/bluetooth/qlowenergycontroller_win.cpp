@@ -60,7 +60,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 Q_GLOBAL_STATIC(QLibrary, bluetoothapis)
 
 Q_GLOBAL_STATIC(QList<QLowEnergyControllerPrivateWin32 *>, qControllers)
-static QMutex controllersGuard(QMutex::NonRecursive);
+static QMutex controllersGuard;
 
 const QEvent::Type CharacteristicValueEventType = static_cast<QEvent::Type>(QEvent::User + 1);
 
