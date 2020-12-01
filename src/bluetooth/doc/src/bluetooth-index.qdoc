@@ -118,6 +118,16 @@ Qt D-Bus support.
 
 The usage of the dummy backend is highlighted via an appropriate warning while building and running.
 
+\section3 \macos Specific
+The Bluetooth API on \macos requires a certain type of event dispatcher
+that in Qt causes a dependency to QGuiApplication. However, you can set the
+environment variable \c {QT_EVENT_DISPATCHER_CORE_FOUNDATION=1} to circumvent
+this issue.
+
+Applications that don't use Classic Bluetooth will find a subset of QtBluetooth
+is available, as CoreBluetooth (Bluetooth LE) do not require either of
+QApplication or QGuiApplication.
+
 \section2 Guides
 \list
     \li \l {Qt Bluetooth Overview}{Classic Bluetooth Overview}
