@@ -226,7 +226,7 @@ bool QNearFieldManager::isSupported(QNearFieldTarget::AccessMethod accessMethod)
 }
 
 /*!
-    \fn bool QNearFieldManager::startTargetDetection()
+    \fn bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
 
     Starts detecting targets and returns \c true if target detection is
     successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
