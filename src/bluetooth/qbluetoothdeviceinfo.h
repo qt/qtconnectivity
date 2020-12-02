@@ -60,9 +60,6 @@ public:
         MiscellaneousDevice = 0,
         ComputerDevice = 1,
         PhoneDevice = 2,
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        LANAccessDevice = 3,
-#endif
         NetworkDevice = 3,
         AudioVideoDevice = 4,
         PeripheralDevice = 5,

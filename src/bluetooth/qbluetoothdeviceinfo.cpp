@@ -61,9 +61,6 @@ QT_BEGIN_NAMESPACE
     \value MiscellaneousDevice  A miscellaneous device.
     \value ComputerDevice       A computer device or PDA.
     \value PhoneDevice          A telephone device.
-    \value LANAccessDevice      A device that provides access to a local area network
-                                (deprecated since Qt 5.13 and replaced by
-                                \l QBluetoothDeviceInfo::NetworkDevice).
     \value NetworkDevice        A device that provides access to a local area network (since Qt 5.13).
     \value AudioVideoDevice     A device capable of playback or capture of audio and/or video.
     \value PeripheralDevice     A peripheral device such as a keyboard, mouse, and so on.
