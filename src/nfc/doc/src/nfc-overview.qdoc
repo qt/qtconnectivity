@@ -57,7 +57,7 @@ it to Qt as shown in the following example.
         newIntent.putExtra(NfcAdapter.EXTRA_TAG, pTag);
         QtNative.onNewIntent(newIntent);
     }
-\ endcode
+\endcode
 
 \section1 C++ Overview
 
