@@ -42,8 +42,7 @@ Currently, the API is supported on the following platforms:
     \li \l {Qt for iOS}{iOS}
     \li \l {Qt for Linux/X11}{Linux (BlueZ 4.x/5.x)}
     \li \l \macos
-    \li \l {Qt for UWP}{UWP (Universal Windows Platform)}
-    \li \l {Qt for Windows}{Win32}
+    \li \l {Qt for Windows}
 \row
     \li Classic Bluetooth
     \li x
@@ -51,10 +50,8 @@ Currently, the API is supported on the following platforms:
     \li x
     \li x
     \li x
-    \li x
 \row
     \li Bluetooth LE Central
-    \li x
     \li x
     \li x
     \li x
@@ -67,10 +64,8 @@ Currently, the API is supported on the following platforms:
     \li x
     \li x
     \li
-    \li
 \row
     \li Bluetooth LE Advertisement & Scanning
-    \li
     \li
     \li
     \li
@@ -167,12 +162,8 @@ The \l QtBluetooth module exports the following
     \li qt.bluetooth.qml
      \li Enables logging of the QtBluetooth QML implementation
 \row
-    \li qt.bluetooth.winrt
-    \li Enables logging of the \l {Qt for UWP}{UWP (Universal Windows Platform)}
-        implementation
-\row
     \li qt.bluetooth.windows
-    \li Enables logging of the \l {Qt for Windows} {Win32} implementation
+    \li Enables logging of the \l {Qt for Windows} implementation
 \endtable
 
 Logging categories can be used to enable additional warning and debug output
