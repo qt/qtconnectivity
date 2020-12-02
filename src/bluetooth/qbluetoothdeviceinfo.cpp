@@ -250,17 +250,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \enum QBluetoothDeviceInfo::DataCompleteness
-
-    This enum describes the completeness of the received data.
-
-    \value DataComplete     The data is complete.
-    \value DataIncomplete   The data is incomplete. Addition datum is available via other
-                            interfaces.
-    \value DataUnavailable  No data is available.
-*/
-
-/*!
     \enum QBluetoothDeviceInfo::CoreConfiguration
     \since 5.4
 
