@@ -182,17 +182,17 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
         return;
     }
 
-    if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
+    if (var.typeId() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
         qDebug("%sSequence", indent.toLocal8Bit().constData());
         const QBluetoothServiceInfo::Sequence *sequence = static_cast<const QBluetoothServiceInfo::Sequence *>(var.data());
         for (const QVariant &v : *sequence)
             dumpAttributeVariant(v, indent + '\t');
-    } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
+    } else if (var.typeId() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
         qDebug("%sAlternative", indent.toLocal8Bit().constData());
         const QBluetoothServiceInfo::Alternative *alternative = static_cast<const QBluetoothServiceInfo::Alternative *>(var.data());
         for (const QVariant &v : *alternative)
             dumpAttributeVariant(v, indent + '\t');
-    } else if (var.userType() == qMetaTypeId<QBluetoothUuid>()) {
+    } else if (var.typeId() == qMetaTypeId<QBluetoothUuid>()) {
         QBluetoothUuid uuid = var.value<QBluetoothUuid>();
         switch (uuid.minimumSize()) {
         case 0:
@@ -212,20 +212,20 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
             qDebug("%suuid ???", indent.toLocal8Bit().constData());
         }
     } else {
-        switch (var.userType()) {
-        case QVariant::UInt:
+        switch (var.typeId()) {
+        case QMetaType::UInt:
             qDebug("%suint %u", indent.toLocal8Bit().constData(), var.toUInt());
             break;
-        case QVariant::Int:
+        case QMetaType::Int:
             qDebug("%sint %d", indent.toLocal8Bit().constData(), var.toInt());
             break;
-        case QVariant::String:
+        case QMetaType::QString:
             qDebug("%sstring %s", indent.toLocal8Bit().constData(), var.toString().toLocal8Bit().constData());
             break;
-        case QVariant::Bool:
+        case QMetaType::Bool:
             qDebug("%sbool %d", indent.toLocal8Bit().constData(), var.toBool());
             break;
-        case QVariant::Url:
+        case QMetaType::QUrl:
             qDebug("%surl %s", indent.toLocal8Bit().constData(), var.toUrl().toString().toLocal8Bit().constData());
             break;
         default:

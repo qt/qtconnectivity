@@ -463,7 +463,7 @@ bool QTlvWriter::process(bool all)
                 // sufficient data available
                 if (m_requestId.isValid()) {
                     const QVariant v = tag->requestResponse(m_requestId);
-                    if (v.type() == QVariant::ByteArray) {
+                    if (v.typeId() == QMetaType::QByteArray) {
                         // read in block
                         QByteArray block = v.toByteArray();
 
@@ -475,7 +475,7 @@ bool QTlvWriter::process(bool all)
                         // now write block
                         m_requestId = tag->writeBlock(currentBlock, block);
                         return false;
-                    } else if (v.type() == QVariant::Bool) {
+                    } else if (v.typeId() == QMetaType::Bool) {
                         m_requestId = QNearFieldTarget::RequestId();
                         int fill = qMin(fillLength, m_buffer.length() - bufferIndex);
                         bufferIndex = fill - (m_index - currentBlockStart);

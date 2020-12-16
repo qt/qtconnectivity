@@ -560,7 +560,7 @@ QBluetoothServiceInfo &QBluetoothServiceInfo::operator=(const QBluetoothServiceI
 
 static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString& indent)
 {
-    switch (int(var.type())) {
+    switch (var.typeId()) {
     case QMetaType::Void:
         dbg << QString::asprintf("%sEmpty\n", indent.toUtf8().constData());
         break;
@@ -597,8 +597,8 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
         dbg << QString::asprintf("%surl %s\n", indent.toUtf8().constData(),
                                  var.toUrl().toString().toUtf8().constData());
         break;
-    case QVariant::UserType:
-        if (var.userType() == qMetaTypeId<QBluetoothUuid>()) {
+    default:
+        if (var.typeId() == qMetaTypeId<QBluetoothUuid>()) {
             QBluetoothUuid uuid = var.value<QBluetoothUuid>();
             switch (uuid.minimumSize()) {
             case 0:
@@ -620,21 +620,19 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
             default:
                 dbg << QString::asprintf("%suuid ???\n", indent.toUtf8().constData());
             }
-        } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
+        } else if (var.typeId() == qMetaTypeId<QBluetoothServiceInfo::Sequence>()) {
             dbg << QString::asprintf("%sSequence\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Sequence *sequence = static_cast<const QBluetoothServiceInfo::Sequence *>(var.data());
             for (const QVariant &v : *sequence)
                 dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
-        } else if (var.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
+        } else if (var.typeId() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             dbg << QString::asprintf("%sAlternative\n", indent.toUtf8().constData());
             const QBluetoothServiceInfo::Alternative *alternative = static_cast<const QBluetoothServiceInfo::Alternative *>(var.data());
             for (const QVariant &v : *alternative)
                 dumpAttributeVariant(dbg, v, indent + QLatin1Char('\t'));
+        } else {
+            dbg << QString::asprintf("%sunknown variant type %d\n", indent.toUtf8().constData(), var.typeId());
         }
-        break;
-    default:
-        dbg << QString::asprintf("%sunknown variant type %d\n", indent.toUtf8().constData(),
-                                 var.userType());
     }
 }
 
