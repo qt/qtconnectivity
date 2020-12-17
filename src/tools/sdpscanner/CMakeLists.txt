@@ -12,7 +12,7 @@ endif()
 
 
 qt_get_tool_target_name(target_name sdpscanner)
-qt_add_tool(${target_name}
+qt_internal_add_tool(${target_name}
     TOOLS_TARGET Bluetooth # special case
     SOURCES
         main.cpp

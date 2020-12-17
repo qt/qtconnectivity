@@ -24,6 +24,10 @@ qt_add_executable(btscanner
     main.cpp
     service.cpp service.h service.ui
 )
+set_target_properties(btscanner PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(btscanner PUBLIC
     Qt::Bluetooth
     Qt::Core

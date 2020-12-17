@@ -21,6 +21,10 @@ find_package(Qt6 COMPONENTS Bluetooth)
 qt_add_executable(heartrate-server
     main.cpp
 )
+set_target_properties(heartrate-server PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(heartrate-server PUBLIC
     Qt::Bluetooth
     Qt::Core

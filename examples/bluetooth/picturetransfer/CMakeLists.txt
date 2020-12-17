@@ -24,6 +24,10 @@ qt_add_executable(qml_picturetransfer
     filetransfer.cpp filetransfer.h
     main.cpp
 )
+set_target_properties(qml_picturetransfer PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qml_picturetransfer PUBLIC
     Qt::Bluetooth
     Qt::Core

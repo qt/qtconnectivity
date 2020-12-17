@@ -27,6 +27,10 @@ qt_add_executable(ndefeditor
     textrecordeditor.cpp textrecordeditor.h textrecordeditor.ui
     urirecordeditor.cpp urirecordeditor.h urirecordeditor.ui
 )
+set_target_properties(ndefeditor PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(ndefeditor PUBLIC
     Qt::Core
     Qt::Gui

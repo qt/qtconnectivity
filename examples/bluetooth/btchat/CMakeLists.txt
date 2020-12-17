@@ -26,6 +26,10 @@ qt_add_executable(btchat
     main.cpp
     remoteselector.cpp remoteselector.h remoteselector.ui
 )
+set_target_properties(btchat PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(btchat PUBLIC
     Qt::Bluetooth
     Qt::Core

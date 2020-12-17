@@ -8,10 +8,3 @@ endif()
 if(TARGET Qt::Quick)
     add_subdirectory(imports)
 endif()
-
-# special case begin
-if(QT_FEATURE_bluez)
-    add_subdirectory(tools/sdpscanner)
-endif()
-# special case end
-

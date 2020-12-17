@@ -24,6 +24,10 @@ qt_add_executable(pingpong
     main.cpp
     pingpong.cpp pingpong.h
 )
+set_target_properties(pingpong PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(pingpong PUBLIC
     Qt::Bluetooth
     Qt::Core

@@ -4,7 +4,7 @@
 ## Bluetooth Module:
 #####################################################################
 
-qt_add_module(Bluetooth
+qt_internal_add_module(Bluetooth
     SOURCES
         lecmaccalculator_p.h
         qbluetooth.cpp qbluetooth.h
@@ -84,7 +84,7 @@ extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION_PATCH LESS 14393
 )
 # special case end
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
+qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
     SOURCES
         bluez/adapter.cpp bluez/adapter_p.h
         bluez/adapter1_bluez5.cpp bluez/adapter1_bluez5_p.h
@@ -125,12 +125,11 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
         qbluetoothtransferreply_bluez.cpp qbluetoothtransferreply_bluez_p.h
     LIBRARIES
         Qt::Concurrent
-        Qt::DBus
-    PRIVATE_MODULE_INTERFACE
-        Qt::DBus
+    PUBLIC_LIBRARIES # special case for Linux QEMU (gcc-armv7) on Linux Ubuntu_20_04 (gcc-x86_64)
+        Qt::DBus # special case
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le
+qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le
     SOURCES
         lecmaccalculator.cpp
         qleadvertiser_bluez.cpp
@@ -138,12 +137,12 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le
         qlowenergycontroller_bluezdbus.cpp qlowenergycontroller_bluezdbus_p.h
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le AND QT_FEATURE_linux_crypto_api
+qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le AND QT_FEATURE_linux_crypto_api
     DEFINES
         CONFIG_LINUX_CRYPTO_API
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND NOT QT_FEATURE_bluez_le
+qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND NOT QT_FEATURE_bluez_le
     SOURCES
         dummy/dummy_helper.cpp dummy/dummy_helper_p.h
         qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
@@ -160,7 +159,7 @@ if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     )
 endif()
 
-qt_extend_target(Bluetooth CONDITION ANDROID AND NOT ANDROID_EMBEDDED AND NOT QT_FEATURE_bluez
+qt_internal_extend_target(Bluetooth CONDITION ANDROID AND NOT ANDROID_EMBEDDED AND NOT QT_FEATURE_bluez
     SOURCES
         android/androidbroadcastreceiver.cpp android/androidbroadcastreceiver_p.h
         android/devicediscoverybroadcastreceiver.cpp android/devicediscoverybroadcastreceiver_p.h
@@ -187,7 +186,7 @@ qt_extend_target(Bluetooth CONDITION ANDROID AND NOT ANDROID_EMBEDDED AND NOT QT
         Qt::CorePrivate
 )
 
-qt_extend_target(Bluetooth CONDITION MACOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION MACOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         darwin/btcentralmanager.mm darwin/btcentralmanager_p.h
         darwin/btconnectionmonitor.mm darwin/btconnectionmonitor_p.h
@@ -223,7 +222,7 @@ qt_extend_target(Bluetooth CONDITION MACOS AND NOT QT_FEATURE_bluez AND (ANDROID
         Qt::Concurrent
 )
 
-qt_extend_target(Bluetooth CONDITION NOT MACOS AND NOT QT_FEATURE_bluez AND (IOS OR TVOS) AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION NOT MACOS AND NOT QT_FEATURE_bluez AND (IOS OR TVOS) AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         darwin/btcentralmanager.mm darwin/btcentralmanager_p.h
         darwin/btdelegates.cpp darwin/btdelegates_p.h
@@ -247,12 +246,12 @@ qt_extend_target(Bluetooth CONDITION NOT MACOS AND NOT QT_FEATURE_bluez AND (IOS
         ${FWFoundation}
 )
 
-qt_extend_target(Bluetooth CONDITION IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         darwin/btperipheralmanager.mm darwin/btperipheralmanager_p.h
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         qbluetoothdevicediscoveryagent_winrt.cpp
         qbluetoothlocaldevice_winrt.cpp
@@ -274,7 +273,7 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND NOT IOS AND NOT MAC
         Qt::CorePrivate
 )
 
-qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_FEATURE_winrt_btle_no_pairing AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_FEATURE_winrt_btle_no_pairing AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         qlowenergycontroller_winrt_new.cpp qlowenergycontroller_winrt_new_p.h
 )
@@ -287,7 +286,7 @@ qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_FEATURE_winrt_bt
 # )
 # special case end
 
-qt_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         qbluetoothdevicediscoveryagent_win.cpp
         qbluetoothlocaldevice_win.cpp
@@ -307,7 +306,7 @@ qt_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND NOT QT_F
         ws2_32
 )
 
-qt_extend_target(Bluetooth CONDITION UNIX AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
+qt_internal_extend_target(Bluetooth CONDITION UNIX AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES
         dummy/dummy_helper.cpp dummy/dummy_helper_p.h
         qbluetoothdevicediscoveryagent_p.cpp
@@ -319,7 +318,7 @@ qt_extend_target(Bluetooth CONDITION UNIX AND NOT IOS AND NOT MACOS AND NOT QT_F
         qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
 )
 
-qt_add_docs(Bluetooth
+qt_internal_add_docs(Bluetooth
     doc/qtbluetooth.qdocconf
 )
 

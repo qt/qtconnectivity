@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     *.txt)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qbluetoothtransfermanager
+qt_internal_add_test(tst_qbluetoothtransfermanager
     SOURCES
         tst_qbluetoothtransfermanager.cpp
     PUBLIC_LIBRARIES

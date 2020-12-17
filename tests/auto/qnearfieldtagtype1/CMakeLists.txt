@@ -14,7 +14,7 @@ endif()
 list(APPEND test_data "../nfcdata/Qt Labs Website Tag Type1.nfc") # special case
 list(APPEND test_data "../nfcdata/Qt Website Tag Type1.nfc") # special case
 
-qt_add_test(tst_qnearfieldtagtype1
+qt_internal_add_test(tst_qnearfieldtagtype1
     SOURCES
         ../../../src/nfc/qnearfieldmanager_emulator.cpp ../../../src/nfc/qnearfieldmanager_emulator_p.h
         ../../../src/nfc/qnearfieldtarget_emulator.cpp ../../../src/nfc/qnearfieldtarget_emulator_p.h
@@ -35,7 +35,7 @@ qt_add_test(tst_qnearfieldtagtype1
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qnearfieldtagtype1 CONDITION builtin_testdata
+qt_internal_extend_target(tst_qnearfieldtagtype1 CONDITION builtin_testdata
     DEFINES
         BUILTIN_TESTDATA
 )

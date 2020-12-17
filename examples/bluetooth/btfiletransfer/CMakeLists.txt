@@ -25,6 +25,10 @@ qt_add_executable(btfiletransfer
     progress.cpp progress.h progress.ui
     remoteselector.cpp remoteselector.h remoteselector.ui
 )
+set_target_properties(btfiletransfer PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(btfiletransfer PUBLIC
     Qt::Bluetooth
     Qt::Core

@@ -4,7 +4,7 @@
 ## tst_qbluetoothsocket Test:
 #####################################################################
 
-qt_add_test(tst_qbluetoothsocket
+qt_internal_add_test(tst_qbluetoothsocket
     SOURCES
         tst_qbluetoothsocket.cpp
     PUBLIC_LIBRARIES
@@ -20,14 +20,14 @@ qt_add_test(tst_qbluetoothsocket
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qbluetoothsocket CONDITION MACOS
+qt_internal_extend_target(tst_qbluetoothsocket CONDITION MACOS
     DEFINES
         QT_OSX_BLUETOOTH
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-qt_extend_target(tst_qbluetoothsocket CONDITION ANDROID AND NOT ANDROID_EMBEDDED
+qt_internal_extend_target(tst_qbluetoothsocket CONDITION ANDROID AND NOT ANDROID_EMBEDDED
     DEFINES
         QT_ANDROID_BLUETOOTH
 )

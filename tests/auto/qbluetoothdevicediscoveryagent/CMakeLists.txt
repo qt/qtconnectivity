@@ -4,7 +4,7 @@
 ## tst_qbluetoothdevicediscoveryagent Test:
 #####################################################################
 
-qt_add_test(tst_qbluetoothdevicediscoveryagent
+qt_internal_add_test(tst_qbluetoothdevicediscoveryagent
     SOURCES
         tst_qbluetoothdevicediscoveryagent.cpp
     PUBLIC_LIBRARIES
@@ -15,7 +15,7 @@ qt_add_test(tst_qbluetoothdevicediscoveryagent
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qbluetoothdevicediscoveryagent CONDITION APPLE_OSX
+qt_internal_extend_target(tst_qbluetoothdevicediscoveryagent CONDITION MACOS
     PUBLIC_LIBRARIES
         Qt::Widgets
 )

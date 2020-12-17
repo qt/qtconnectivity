@@ -4,7 +4,7 @@
 ## server Binary:
 #####################################################################
 
-qt_add_executable(server
+qt_internal_add_executable(server
     GUI
     SOURCES
         qlowenergycontroller-gattserver.cpp

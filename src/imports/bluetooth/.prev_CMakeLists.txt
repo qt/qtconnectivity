@@ -4,7 +4,7 @@
 ## bluetooth Plugin:
 #####################################################################
 
-qt_add_qml_module(bluetooth
+qt_internal_add_qml_module(bluetooth
     URI "QtBluetooth"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QBluetoothQmlPlugin

@@ -27,6 +27,10 @@ qt_add_executable(lowenergyscanner
     main.cpp
     serviceinfo.cpp serviceinfo.h
 )
+set_target_properties(lowenergyscanner PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_include_directories(lowenergyscanner PUBLIC
     .
 )

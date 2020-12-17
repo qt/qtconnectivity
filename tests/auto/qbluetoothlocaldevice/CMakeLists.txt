@@ -4,7 +4,7 @@
 ## tst_qbluetoothlocaldevice Test:
 #####################################################################
 
-qt_add_test(tst_qbluetoothlocaldevice
+qt_internal_add_test(tst_qbluetoothlocaldevice
     SOURCES
         tst_qbluetoothlocaldevice.cpp
     PUBLIC_LIBRARIES
@@ -15,7 +15,7 @@ qt_add_test(tst_qbluetoothlocaldevice
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qbluetoothlocaldevice CONDITION APPLE_OSX
+qt_internal_extend_target(tst_qbluetoothlocaldevice CONDITION MACOS
     PUBLIC_LIBRARIES
         Qt::Widgets
 )

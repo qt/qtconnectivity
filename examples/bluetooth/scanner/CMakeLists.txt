@@ -22,6 +22,10 @@ find_package(Qt6 COMPONENTS Quick)
 qt_add_executable(qml_scanner
     qmlscanner.cpp
 )
+set_target_properties(qml_scanner PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qml_scanner PUBLIC
     Qt::Bluetooth
     Qt::Core

@@ -4,7 +4,7 @@
 ## tst_qlowenergycontroller Test:
 #####################################################################
 
-qt_add_test(tst_qlowenergycontroller
+qt_internal_add_test(tst_qlowenergycontroller
     SOURCES
         tst_qlowenergycontroller.cpp
     PUBLIC_LIBRARIES
@@ -14,12 +14,12 @@ qt_add_test(tst_qlowenergycontroller
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qlowenergycontroller CONDITION ANDROID
+qt_internal_extend_target(tst_qlowenergycontroller CONDITION ANDROID
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-qt_extend_target(tst_qlowenergycontroller CONDITION APPLE_IOS OR APPLE_OSX
+qt_internal_extend_target(tst_qlowenergycontroller CONDITION IOS OR MACOS
     PUBLIC_LIBRARIES
         Qt::Widgets
 )

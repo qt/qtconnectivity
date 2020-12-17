@@ -30,6 +30,10 @@ qt_add_executable(heartrate-game
     heartrate-global.h
     main.cpp
 )
+set_target_properties(heartrate-game PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(heartrate-game PUBLIC
     Qt::Bluetooth
     Qt::Core

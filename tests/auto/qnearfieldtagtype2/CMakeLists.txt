@@ -14,7 +14,7 @@ endif()
 list(APPEND test_data "nfcdata/Dynamic Empty Tag.nfc") # special case
 list(APPEND test_data "nfcdata/Empty Tag.nfc") # special case
 
-qt_add_test(tst_qnearfieldtagtype2
+qt_internal_add_test(tst_qnearfieldtagtype2
     SOURCES
         ../../../src/nfc/qnearfieldmanager_emulator.cpp ../../../src/nfc/qnearfieldmanager_emulator_p.h
         ../../../src/nfc/qnearfieldtarget_emulator.cpp ../../../src/nfc/qnearfieldtarget_emulator_p.h
@@ -35,7 +35,7 @@ qt_add_test(tst_qnearfieldtagtype2
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qnearfieldtagtype2 CONDITION builtin_testdata
+qt_internal_extend_target(tst_qnearfieldtagtype2 CONDITION builtin_testdata
     DEFINES
         BUILTIN_TESTDATA
 )

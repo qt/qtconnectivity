@@ -4,7 +4,7 @@
 ## Nfc Module:
 #####################################################################
 
-qt_add_module(Nfc
+qt_internal_add_module(Nfc
     SOURCES
         qndeffilter.cpp qndeffilter.h
         qndefmessage.cpp qndefmessage.h
@@ -41,7 +41,7 @@ if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     set(NFC_BACKEND_AVAILABLE ON) # special case
 endif()
 
-qt_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
+qt_internal_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
     SOURCES
         android/androidjninfc.cpp android/androidjninfc_p.h
         android/androidmainnewintentlistener.cpp android/androidmainnewintentlistener_p.h
@@ -60,13 +60,13 @@ qt_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
 # NFC_BACKEND_AVAILABLE = "yes"
 
 # special case begin
-# qt_extend_target(Nfc CONDITION NFC_BACKEND_AVAILABLE_ISEMPTY
-qt_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
+# qt_internal_extend_target(Nfc CONDITION NFC_BACKEND_AVAILABLE_ISEMPTY
+qt_internal_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
 # special case end
     SOURCES
         qnearfieldmanager_generic.cpp qnearfieldmanager_generic_p.h
 )
-qt_add_docs(Nfc
+qt_internal_add_docs(Nfc
     doc/qtnfc.qdocconf
 )
 
