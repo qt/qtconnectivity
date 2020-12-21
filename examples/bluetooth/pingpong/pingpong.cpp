@@ -358,7 +358,7 @@ void PingPong::addService(const QBluetoothServiceInfo &service)
 
 void PingPong::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)
 {
-    setMessage(QStringLiteral("Scanning error") + error);
+    setMessage(QStringLiteral("Scanning error") + QVariant::fromValue(error).toString());
 }
 
 bool PingPong::showDialog() const
