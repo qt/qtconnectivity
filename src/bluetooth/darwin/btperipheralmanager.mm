@@ -204,6 +204,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     PeripheralState state;
     NSUInteger maxNotificationValueLength;
+    decltype(services.size()) nOfFailedAds;
 }
 
 - (id)initWith:(LECBManagerNotifier *)aNotifier
@@ -434,6 +435,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
             [manager removeAllServices];
             nextServiceToAdd = {};
             state = PeripheralState::advertising;
+            nOfFailedAds = 0;
             [self addServicesToPeripheral];
         }
         return;
@@ -498,15 +500,19 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     if (error) {
         NSLog(@"failed to add a service, error: %@", error);
-        emit notifier->CBManagerError(QLowEnergyController::AdvertisingError);
-        state = PeripheralState::idle;
-        return;
+        if (++nOfFailedAds == services.size()) {
+            emit notifier->CBManagerError(QLowEnergyController::AdvertisingError);
+            state = PeripheralState::idle;
+            return;
+        }
     }
 
-    if (nextServiceToAdd == services.size())
+    if (nextServiceToAdd == services.size()) {
+        nOfFailedAds = 0; // Discard any failed, some services made it into advertising.
         [manager startAdvertising:[advertisementData count] ? advertisementData.get() : nil];
-    else
+    } else {
         [self addServicesToPeripheral];
+    }
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central
@@ -632,7 +638,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         [self writeValueForCharacteristic:charHandle withWriteRequest:request];
     }
 
-    for (const auto pair : updated) {
+    for (const auto &pair : updated) {
         const auto handle = pair.first;
         NSMutableData *value = charValues[handle];
         value.length = pair.second;
