@@ -39,8 +39,8 @@
 
 #include "qlowenergycharacteristicdata.h"
 #include "qbluetoothaddress.h"
-#include "btutility_p.h"
 #include "qbluetoothuuid.h"
+#include "btutility_p.h"
 
 #include <QtCore/qendian.h>
 #include <QtCore/qstring.h>
@@ -203,27 +203,19 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
     return QBluetoothUuid();
 }
 
-QCFType<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
-{
-    const quint128 qtUuidData = qtUuid.toUInt128();
-    const quint8 *const data = qtUuidData.data;
-
-    CFUUIDBytes bytes = {data[0],  data[1],  data[2],  data[3],
-                         data[4],  data[5],  data[6],  data[7],
-                         data[8],  data[9],  data[10], data[11],
-                         data[12], data[13], data[14], data[15]};
-
-    CFUUIDRef cfUuid = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, bytes);
-    return cfUuid;
-}
-
 ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
 {
-    QCFType<CFUUIDRef> cfUuid(cf_uuid(qtUuid));
-    if (!cfUuid)
-        return ObjCStrongReference<CBUUID>();
+    bool ok = false;
+    const auto asUInt16 = qToBigEndian(qtUuid.toUInt16(&ok));
+    const auto asUInt128 = qtUuid.toUInt128();
 
-    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], RetainPolicy::doInitialRetain);
+    const NSUInteger length = ok ? sizeof asUInt16 : sizeof asUInt128;
+    const void *bytes = &asUInt128;
+    if (ok)
+        bytes = &asUInt16;
+
+    NSData *uuidData = [NSData dataWithBytes:bytes length:length];
+    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithData:uuidData], RetainPolicy::doInitialRetain);
     return cbUuid;
 }
 
