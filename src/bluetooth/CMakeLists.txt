@@ -1,5 +1,3 @@
-# Generated from bluetooth.pro.
-
 #####################################################################
 ## Bluetooth Module:
 #####################################################################
@@ -60,7 +58,6 @@ qt_internal_add_module(Bluetooth
 # WINDOWS_SDK_VERSION = "$$member($$list $$split WINDOWS_SDK_VERSION_STRING, . , 2)"
 # WINDOWS_SDK_VERSION_STRING = "$$(WindowsSDKVersion)"
 
-# special case begin
 if (WIN32)
     if (DEFINED CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
         set (WINDOWS_SDK_VERSION ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION})
@@ -82,7 +79,6 @@ extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION_PATCH LESS 14393
     DEFINES
         QT_WINRT_LIMITED_SERVICEDISCOVERY
 )
-# special case end
 
 qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
     SOURCES
@@ -125,8 +121,8 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
         qbluetoothtransferreply_bluez.cpp qbluetoothtransferreply_bluez_p.h
     LIBRARIES
         Qt::Concurrent
-    PUBLIC_LIBRARIES # special case for Linux QEMU (gcc-armv7) on Linux Ubuntu_20_04 (gcc-x86_64)
-        Qt::DBus # special case
+    PUBLIC_LIBRARIES # for Linux QEMU (gcc-armv7) on Linux Ubuntu_20_04 (gcc-x86_64)
+        Qt::DBus
 )
 
 qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND QT_FEATURE_bluez_le
@@ -152,7 +148,7 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez AND NOT QT_FEATUR
 
 if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
-        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar:org.qtproject.qt.android.bluetooth.QtBluetoothBroadcastReceiver # special case
+        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar:org.qtproject.qt.android.bluetooth.QtBluetoothBroadcastReceiver
     )
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_PERMISSIONS
         android.permission.ACCESS_COARSE_LOCATION android.permission.ACCESS_FINE_LOCATION android.permission.BLUETOOTH android.permission.BLUETOOTH_ADMIN
@@ -277,14 +273,6 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_FEATURE
     SOURCES
         qlowenergycontroller_winrt_new.cpp qlowenergycontroller_winrt_new_p.h
 )
-
-# special case begin
-# qt_extend_target(Bluetooth CONDITION QT_FEATURE_winrt_bt AND QT_WINDOWS_SDK_VERSION STRLESS 14393 AND NOT IOS AND NOT MACOS AND NOT QT_FEATURE_bluez AND NOT TVOS AND (ANDROID_EMBEDDED OR NOT ANDROID)
-#     DEFINES
-#         QT_UCRTVERSION=
-#         QT_WINRT_LIMITED_SERVICEDISCOVERY
-# )
-# special case end
 
 qt_internal_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND NOT QT_FEATURE_winrt_bt AND (ANDROID_EMBEDDED OR NOT ANDROID)
     SOURCES

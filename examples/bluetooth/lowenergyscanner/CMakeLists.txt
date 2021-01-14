@@ -1,5 +1,3 @@
-# Generated from lowenergyscanner.pro.
-
 cmake_minimum_required(VERSION 3.14)
 project(lowenergyscanner LANGUAGES CXX)
 

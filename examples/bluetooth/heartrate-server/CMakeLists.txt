@@ -1,5 +1,3 @@
-# Generated from heartrate-server.pro.
-
 cmake_minimum_required(VERSION 3.14)
 project(heartrate-server LANGUAGES CXX)
 

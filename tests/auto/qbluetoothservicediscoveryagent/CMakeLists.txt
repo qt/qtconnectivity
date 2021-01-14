@@ -1,5 +1,3 @@
-# Generated from qbluetoothservicediscoveryagent.pro.
-
 #####################################################################
 ## tst_qbluetoothservicediscoveryagent Test:
 #####################################################################

@@ -1,5 +1,3 @@
-# Generated from bluetooth.pro.
-
 add_subdirectory(heartrate-server)
 if(TARGET Qt::Widgets)
     add_subdirectory(btchat)

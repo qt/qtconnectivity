@@ -1,5 +1,3 @@
-# Generated from bluetooth.pro.
-
 qt_get_android_sdk_jar_for_api("android-21" android_sdk)
 
 set(java_sources
@@ -10,13 +8,13 @@ set(java_sources
     src/org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer.java
 )
 
-qt_internal_add_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth # special case
+qt_internal_add_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth
     INCLUDE_JARS ${android_sdk}
     SOURCES ${java_sources}
     OUTPUT_DIR "${QT_BUILD_DIR}/jar"
 )
 
-install_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth # special case
+install_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth
     DESTINATION jar
     COMPONENT Devel
 )

@@ -1,5 +1,3 @@
-# Generated from scanner.pro.
-
 cmake_minimum_required(VERSION 3.14)
 project(qml_scanner LANGUAGES CXX)
 

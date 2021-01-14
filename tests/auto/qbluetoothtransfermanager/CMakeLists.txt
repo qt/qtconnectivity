@@ -1,5 +1,3 @@
-# Generated from qbluetoothtransfermanager.pro.
-
 #####################################################################
 ## tst_qbluetoothtransfermanager Test:
 #####################################################################

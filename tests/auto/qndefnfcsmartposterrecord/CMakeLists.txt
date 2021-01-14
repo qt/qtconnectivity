@@ -1,5 +1,3 @@
-# Generated from qndefnfcsmartposterrecord.pro.
-
 #####################################################################
 ## tst_qndefnfcsmartposterrecord Test:
 #####################################################################

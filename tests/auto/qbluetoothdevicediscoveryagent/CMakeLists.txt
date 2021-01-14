@@ -1,5 +1,3 @@
-# Generated from qbluetoothdevicediscoveryagent.pro.
-
 #####################################################################
 ## tst_qbluetoothdevicediscoveryagent Test:
 #####################################################################

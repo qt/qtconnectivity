@@ -1,5 +1,3 @@
-# Generated from src.pro.
-
 add_subdirectory(bluetooth)
 add_subdirectory(nfc)
 if(ANDROID)
@@ -9,9 +7,6 @@ if(TARGET Qt::Quick)
     add_subdirectory(imports)
 endif()
 
-# special case begin
 if(QT_FEATURE_bluez)
     add_subdirectory(tools/sdpscanner)
 endif()
-# special case end
-

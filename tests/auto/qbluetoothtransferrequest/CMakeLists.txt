@@ -1,5 +1,3 @@
-# Generated from qbluetoothtransferrequest.pro.
-
 #####################################################################
 ## tst_qbluetoothtransferrequest Test:
 #####################################################################

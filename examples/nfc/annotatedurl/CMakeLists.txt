@@ -1,5 +1,3 @@
-# Generated from annotatedurl.pro.
-
 cmake_minimum_required(VERSION 3.14)
 project(annotatedurl LANGUAGES CXX)
 

@@ -1,5 +1,3 @@
-# Generated from qlowenergycharacteristic.pro.
-
 #####################################################################
 ## tst_qlowenergycharacteristic Test:
 #####################################################################

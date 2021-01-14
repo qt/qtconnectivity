@@ -1,5 +1,3 @@
-# Generated from nfc.pro.
-
 #####################################################################
 ## Nfc Module:
 #####################################################################
@@ -33,12 +31,12 @@ qt_internal_add_module(Nfc
 
 if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     set_property(TARGET Nfc APPEND PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
-        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc.jar:org.qtproject.qt.android.nfc.QtNfc # special case
+        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc.jar:org.qtproject.qt.android.nfc.QtNfc
     )
     set_property(TARGET Nfc APPEND PROPERTY QT_ANDROID_PERMISSIONS
         android.permission.NFC
     )
-    set(NFC_BACKEND_AVAILABLE ON) # special case
+    set(NFC_BACKEND_AVAILABLE ON)
 endif()
 
 qt_internal_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
@@ -59,10 +57,7 @@ qt_internal_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
 #### Keys ignored in scope 2:.:.:nfc.pro:ANDROID AND NOT ANDROID_EMBEDDED:
 # NFC_BACKEND_AVAILABLE = "yes"
 
-# special case begin
-# qt_internal_extend_target(Nfc CONDITION NFC_BACKEND_AVAILABLE_ISEMPTY
 qt_internal_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
-# special case end
     SOURCES
         qnearfieldmanager_generic.cpp qnearfieldmanager_generic_p.h
 )

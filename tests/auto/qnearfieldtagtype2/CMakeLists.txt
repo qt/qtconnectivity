@@ -1,18 +1,14 @@
-# Generated from qnearfieldtagtype2.pro.
-
-# special case begin
 if (NOT QT_FEATURE_private_tests)
     return()
 endif()
-# special case end
 
 #####################################################################
 ## tst_qnearfieldtagtype2 Test:
 #####################################################################
 
 # Collect test data
-list(APPEND test_data "nfcdata/Dynamic Empty Tag.nfc") # special case
-list(APPEND test_data "nfcdata/Empty Tag.nfc") # special case
+list(APPEND test_data "nfcdata/Dynamic Empty Tag.nfc")
+list(APPEND test_data "nfcdata/Empty Tag.nfc")
 
 qt_internal_add_test(tst_qnearfieldtagtype2
     SOURCES

@@ -1,6 +1,3 @@
-# Generated from auto.pro.
-
-# add_subdirectory(cmake) # special case
 if(TARGET Qt::Bluetooth)
     add_subdirectory(qbluetoothaddress)
     add_subdirectory(qbluetoothdevicediscoveryagent)
