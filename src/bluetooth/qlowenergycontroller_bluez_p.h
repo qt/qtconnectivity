@@ -352,7 +352,7 @@ private slots:
     void activeConnectionTerminationDone();
 };
 
-Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateBluez::Attribute, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QLowEnergyControllerPrivateBluez::Attribute, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 
