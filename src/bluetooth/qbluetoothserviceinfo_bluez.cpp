@@ -60,7 +60,7 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
 {
     const QString unsignedFormat(QStringLiteral("0x%1"));
 
-    switch (int(attribute.type())) {
+    switch (attribute.typeId()) {
     case QMetaType::Void:
         stream->writeEmptyElement(QStringLiteral("nil"));
         break;
