@@ -218,13 +218,12 @@ void tst_QLowEnergyController::cleanupTestCase()
 void tst_QLowEnergyController::tst_emptyCtor()
 {
     {
-        QBluetoothAddress remoteAddress;
-        QLowEnergyController control(remoteAddress);
-        QSignalSpy connectedSpy(&control, SIGNAL(connected()));
-        QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-        QSignalSpy errorSpy(&control, SIGNAL(error(QLowEnergyController::Error)));
-        QCOMPARE(control.error(), QLowEnergyController::NoError);
-        control.connectToDevice();
+        QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(QBluetoothDeviceInfo()));
+        QSignalSpy connectedSpy(control.data(), SIGNAL(connected()));
+        QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+        QSignalSpy errorSpy(control.data(), SIGNAL(error(QLowEnergyController::Error)));
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
+        control->connectToDevice();
 
         QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
 
@@ -237,13 +236,13 @@ void tst_QLowEnergyController::tst_emptyCtor()
     }
 
     {
-        QBluetoothDeviceInfo deviceInfo;
-        QLowEnergyController control(deviceInfo);
-        QSignalSpy connectedSpy(&control, SIGNAL(connected()));
-        QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-        QSignalSpy errorSpy(&control, SIGNAL(error(QLowEnergyController::Error)));
-        QCOMPARE(control.error(), QLowEnergyController::NoError);
-        control.connectToDevice();
+        QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(
+                                                         QBluetoothDeviceInfo(), QBluetoothAddress(), this));
+        QSignalSpy connectedSpy(control.data(), SIGNAL(connected()));
+        QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+        QSignalSpy errorSpy(control.data(), SIGNAL(error(QLowEnergyController::Error)));
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
+        control->connectToDevice();
 
         QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
 
@@ -268,66 +267,66 @@ void tst_QLowEnergyController::tst_connect()
 #endif
         QSKIP("No local Bluetooth or remote BTLE device found. Skipping test.");
 
-    QLowEnergyController control(remoteDeviceInfo);
-    QCOMPARE(remoteDeviceInfo.deviceUuid(), control.remoteDeviceUuid());
-    QCOMPARE(control.role(), QLowEnergyController::CentralRole);
-    QSignalSpy connectedSpy(&control, SIGNAL(connected()));
-    QSignalSpy disconnectedSpy(&control, SIGNAL(disconnected()));
+    QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(remoteDeviceInfo));
+    QCOMPARE(remoteDeviceInfo.deviceUuid(), control->remoteDeviceUuid());
+    QCOMPARE(control->role(), QLowEnergyController::CentralRole);
+    QSignalSpy connectedSpy(control.data(), SIGNAL(connected()));
+    QSignalSpy disconnectedSpy(control.data(), SIGNAL(disconnected()));
     if (remoteDeviceInfo.name().isEmpty())
-        QVERIFY(control.remoteName().isEmpty());
+        QVERIFY(control->remoteName().isEmpty());
     else
-        QCOMPARE(control.remoteName(), remoteDeviceInfo.name());
+        QCOMPARE(control->remoteName(), remoteDeviceInfo.name());
 
 #if !defined(Q_OS_IOS) && !defined(Q_OS_TVOS) && !QT_CONFIG(winrt_bt)
     const QBluetoothAddress localAdapter = localAdapters.at(0).address();
-    QCOMPARE(control.localAddress(), localAdapter);
-    QVERIFY(!control.localAddress().isNull());
+    QCOMPARE(control->localAddress(), localAdapter);
+    QVERIFY(!control->localAddress().isNull());
 #endif
 #ifndef Q_OS_MAC
-    QCOMPARE(control.remoteAddress(), remoteDevice);
+    QCOMPARE(control->remoteAddress(), remoteDevice);
 #endif
-    QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
-    QCOMPARE(control.error(), QLowEnergyController::NoError);
-    QVERIFY(control.errorString().isEmpty());
+    QCOMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
+    QVERIFY(control->errorString().isEmpty());
     QCOMPARE(disconnectedSpy.count(), 0);
     QCOMPARE(connectedSpy.count(), 0);
-    QVERIFY(control.services().isEmpty());
+    QVERIFY(control->services().isEmpty());
 
     bool wasError = false;
-    control.connectToDevice();
-    QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              10000);
+    control->connectToDevice();
+    QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              10000)
 
     QCOMPARE(disconnectedSpy.count(), 0);
-    if (control.error() != QLowEnergyController::NoError) {
+    if (control->error() != QLowEnergyController::NoError) {
         //error during connect
         QCOMPARE(connectedSpy.count(), 0);
-        QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
+        QCOMPARE(control->state(), QLowEnergyController::UnconnectedState);
         wasError = true;
-    } else if (control.state() == QLowEnergyController::ConnectingState) {
+    } else if (control->state() == QLowEnergyController::ConnectingState) {
         //timeout
         QCOMPARE(connectedSpy.count(), 0);
-        QVERIFY(control.errorString().isEmpty());
-        QCOMPARE(control.error(), QLowEnergyController::NoError);
-        QVERIFY(control.services().isEmpty());
+        QVERIFY(control->errorString().isEmpty());
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
+        QVERIFY(control->services().isEmpty());
         QSKIP("Connection to LE device cannot be established. Skipping test.");
         return;
     } else {
-        QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+        QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
         QCOMPARE(connectedSpy.count(), 1);
-        QCOMPARE(control.error(), QLowEnergyController::NoError);
-        QVERIFY(control.errorString().isEmpty());
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
+        QVERIFY(control->errorString().isEmpty());
     }
 
-    QVERIFY(control.services().isEmpty());
+    QVERIFY(control->services().isEmpty());
 
     QList<QLowEnergyService *> savedReferences;
 
     if (!wasError) {
-        QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-        QSignalSpy serviceFoundSpy(&control, SIGNAL(serviceDiscovered(QBluetoothUuid)));
-        QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-        control.discoverServices();
+        QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+        QSignalSpy serviceFoundSpy(control.data(), SIGNAL(serviceDiscovered(QBluetoothUuid)));
+        QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+        control->discoverServices();
         QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
         QCOMPARE(stateSpy.count(), 2);
         QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -348,7 +347,7 @@ void tst_QLowEnergyController::tst_connect()
             QVERIFY2(listing.contains(uuid),
                      uuid.toString().toLatin1());
 
-            QLowEnergyService *service = control.createServiceObject(uuid);
+            QLowEnergyService *service = control->createServiceObject(uuid);
             QVERIFY2(service, uuid.toString().toLatin1());
             savedReferences.append(service);
             QCOMPARE(service->type(), QLowEnergyService::PrimaryService);
@@ -357,9 +356,9 @@ void tst_QLowEnergyController::tst_connect()
 
         // unrelated uuids don't return valid service object
         // invalid service uuid
-        QVERIFY(!control.createServiceObject(QBluetoothUuid()));
+        QVERIFY(!control->createServiceObject(QBluetoothUuid()));
         // some random uuid
-        QVERIFY(!control.createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceName)));
+        QVERIFY(!control->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceName)));
 
         // initiate characteristic discovery
         for (QLowEnergyService *service : qAsConst(savedReferences)) {
@@ -380,7 +379,7 @@ void tst_QLowEnergyController::tst_connect()
 
         // ensure that related service objects share same state
         for (QLowEnergyService* originalService : qAsConst(savedReferences)) {
-            QLowEnergyService *newService = control.createServiceObject(
+            QLowEnergyService *newService = control->createServiceObject(
                         originalService->serviceUuid());
             QVERIFY(newService);
             QCOMPARE(newService->state(), QLowEnergyService::ServiceDiscovered);
@@ -389,9 +388,9 @@ void tst_QLowEnergyController::tst_connect()
     }
 
     // Finish off
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
     QTRY_VERIFY_WITH_TIMEOUT(
-                control.state() == QLowEnergyController::UnconnectedState,
+                control->state() == QLowEnergyController::UnconnectedState,
                 10000);
 
     if (wasError) {
@@ -429,78 +428,76 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 
     if (!remoteDeviceInfo.isValid())
         QSKIP("No remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(remoteDeviceInfo));
 
 
-    QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
-    QCOMPARE(control.error(), QLowEnergyController::NoError);
+    QCOMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              30000);
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              30000)
     }
 
-    if (control.state() == QLowEnergyController::ConnectingState
-            || control.error() != QLowEnergyController::NoError) {
+    if (control->state() == QLowEnergyController::ConnectingState
+            || control->error() != QLowEnergyController::NoError) {
         // default BTLE backend forever hangs in ConnectingState
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
 
     // 2. new controller to same device fails
     {
-#ifdef Q_OS_DARWIN
-        QLowEnergyController control2(remoteDeviceInfo);
-#else
-        QLowEnergyController control2(remoteDevice);
-#endif
-        control2.connectToDevice();
+
+        QScopedPointer<QLowEnergyController> control2(
+                    QLowEnergyController::createCentral(remoteDeviceInfo));
+        control2->connectToDevice();
         {
-            QTRY_IMPL(control2.state() != QLowEnergyController::ConnectingState,
-                      30000);
+            QTRY_IMPL(control2->state() != QLowEnergyController::ConnectingState,
+                      30000)
         }
 
 #if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN) || QT_CONFIG(winrt_bt)
-        QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-        QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
-        control2.disconnectFromDevice();
+        QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+        QCOMPARE(control2->state(), QLowEnergyController::ConnectedState);
+        control2->disconnectFromDevice();
         QTest::qWait(3000);
-        QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-        QCOMPARE(control2.state(), QLowEnergyController::UnconnectedState);
+        QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+        QCOMPARE(control2->state(), QLowEnergyController::UnconnectedState);
 #else
         if (!isBluezDbusLE) {
             // see QTBUG-42519
             // Linux non-DBus GATT cannot maintain two controller connections at the same time
-            QCOMPARE(control.state(), QLowEnergyController::UnconnectedState);
-            QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
-            control2.disconnectFromDevice();
-            QTRY_COMPARE(control2.state(), QLowEnergyController::UnconnectedState);
-            QTRY_COMPARE(control2.error(), QLowEnergyController::NoError);
+            QCOMPARE(control->state(), QLowEnergyController::UnconnectedState);
+            QCOMPARE(control2->state(), QLowEnergyController::ConnectedState);
+            control2->disconnectFromDevice();
+            QTRY_COMPARE(control2->state(), QLowEnergyController::UnconnectedState);
+            QTRY_COMPARE(control2->error(), QLowEnergyController::NoError);
 
             // reconnect control
-            control.connectToDevice();
+            control->connectToDevice();
             {
-                QTRY_VERIFY_WITH_TIMEOUT(control.state() != QLowEnergyController::ConnectingState,
+                QTRY_VERIFY_WITH_TIMEOUT(control->state() != QLowEnergyController::ConnectingState,
                                          30000);
             }
-            QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+            QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
         } else {
-            QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-            QCOMPARE(control2.state(), QLowEnergyController::ConnectedState);
-            control2.disconnectFromDevice();
-            QTRY_COMPARE(control2.state(), QLowEnergyController::UnconnectedState);
-            QTRY_COMPARE(control2.error(), QLowEnergyController::NoError);
-            QTRY_COMPARE(control.state(), QLowEnergyController::UnconnectedState);
+            QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+            QCOMPARE(control2->state(), QLowEnergyController::ConnectedState);
+            control2->disconnectFromDevice();
+            QTRY_COMPARE(control2->state(), QLowEnergyController::UnconnectedState);
+            QTRY_COMPARE(control2->error(), QLowEnergyController::NoError);
+            QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
 
             // reconnect control
-            control.connectToDevice();
+            control->connectToDevice();
             {
-                QTRY_VERIFY_WITH_TIMEOUT(control.state() != QLowEnergyController::ConnectingState,
+                QTRY_VERIFY_WITH_TIMEOUT(control->state() != QLowEnergyController::ConnectingState,
                                          30000);
             }
-            QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+            QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
         }
 #endif
     }
@@ -509,9 +506,9 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
      * for multiple services at the same time.
      * */
 
-    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-    control.discoverServices();
+    QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -524,13 +521,13 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 #define MAX_SERVICES_SAME_TIME_ACCESS 3
     QLowEnergyService *services[MAX_SERVICES_SAME_TIME_ACCESS];
 
-    QVERIFY(control.services().count() >= MAX_SERVICES_SAME_TIME_ACCESS);
+    QVERIFY(control->services().count() >= MAX_SERVICES_SAME_TIME_ACCESS);
 
-    QList<QBluetoothUuid> uuids = control.services();
+    QList<QBluetoothUuid> uuids = control->services();
 
     // initialize services
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
-        services[i] = control.createServiceObject(uuids.at(i), this);
+        services[i] = control->createServiceObject(uuids.at(i), this);
         QVERIFY(services[i]);
     }
 
@@ -554,22 +551,22 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
         QVERIFY(!services[i]->contains(QLowEnergyDescriptor()));
     }
 
-    control.disconnectFromDevice();
-    QTRY_VERIFY_WITH_TIMEOUT(control.state() == QLowEnergyController::UnconnectedState,
+    control->disconnectFromDevice();
+    QTRY_VERIFY_WITH_TIMEOUT(control->state() == QLowEnergyController::UnconnectedState,
                              30000);
     discoveryFinishedSpy.clear();
 
     // redo the discovery with same controller
     QLowEnergyService *services_second[MAX_SERVICES_SAME_TIME_ACCESS];
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
               30000);
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
     stateSpy.clear();
-    control.discoverServices();
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -579,7 +576,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
 
     // get all details
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
-        services_second[i] = control.createServiceObject(uuids.at(i), this);
+        services_second[i] = control->createServiceObject(uuids.at(i), this);
         QVERIFY(services_second[i]->parent() == this);
         QVERIFY(services[i]);
         QVERIFY(services_second[i]->state() == QLowEnergyService::DiscoveryRequired);
@@ -626,7 +623,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
         delete services_second[i];
     }
 
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
 }
 
 void tst_QLowEnergyController::verifyServiceProperties(
@@ -1671,43 +1668,49 @@ void tst_QLowEnergyController::tst_defaultBehavior()
     const QBluetoothAddress randomAddress("11:22:33:44:55:66");
 
     // Test automatic detection of local adapter
-    QLowEnergyController controlDefaultAdapter(randomAddress);
-    QCOMPARE(controlDefaultAdapter.remoteAddress(), randomAddress);
-    QCOMPARE(controlDefaultAdapter.state(), QLowEnergyController::UnconnectedState);
+    QScopedPointer<QLowEnergyController> controlDefaultAdapter(QLowEnergyController::createCentral(
+                                            QBluetoothDeviceInfo(randomAddress, QString("random"), 1)));
+
+    QCOMPARE(controlDefaultAdapter->remoteAddress(), randomAddress);
+    QCOMPARE(controlDefaultAdapter->state(), QLowEnergyController::UnconnectedState);
     if (foundAddresses.isEmpty()) {
-        QVERIFY(controlDefaultAdapter.localAddress().isNull());
+        QVERIFY(controlDefaultAdapter->localAddress().isNull());
     } else {
-        QCOMPARE(controlDefaultAdapter.error(), QLowEnergyController::NoError);
-        QVERIFY(controlDefaultAdapter.errorString().isEmpty());
-        QVERIFY(foundAddresses.contains(controlDefaultAdapter.localAddress()));
+        QCOMPARE(controlDefaultAdapter->error(), QLowEnergyController::NoError);
+        QVERIFY(controlDefaultAdapter->errorString().isEmpty());
+        QVERIFY(foundAddresses.contains(controlDefaultAdapter->localAddress()));
 
         // unrelated uuids don't return valid service object
         // invalid service uuid
-        QVERIFY(!controlDefaultAdapter.createServiceObject(
+        QVERIFY(!controlDefaultAdapter->createServiceObject(
                     QBluetoothUuid()));
         // some random uuid
-        QVERIFY(!controlDefaultAdapter.createServiceObject(
+        QVERIFY(!controlDefaultAdapter->createServiceObject(
                     QBluetoothUuid(QBluetoothUuid::DeviceName)));
     }
 
-    QCOMPARE(controlDefaultAdapter.services().count(), 0);
+    QCOMPARE(controlDefaultAdapter->services().count(), 0);
 
     // Test explicit local adapter
     if (!foundAddresses.isEmpty()) {
-        QLowEnergyController controlExplicitAdapter(randomAddress,
-                                                       foundAddresses[0]);
-        QCOMPARE(controlExplicitAdapter.remoteAddress(), randomAddress);
-        QCOMPARE(controlExplicitAdapter.localAddress(), foundAddresses[0]);
-        QCOMPARE(controlExplicitAdapter.state(),
+
+        QScopedPointer<QLowEnergyController> controlExplicitAdapter(
+                    QLowEnergyController::createCentral(
+                        QBluetoothDeviceInfo(randomAddress, QString("random"), 1),
+                        foundAddresses[0]));
+
+        QCOMPARE(controlExplicitAdapter->remoteAddress(), randomAddress);
+        QCOMPARE(controlExplicitAdapter->localAddress(), foundAddresses[0]);
+        QCOMPARE(controlExplicitAdapter->state(),
                  QLowEnergyController::UnconnectedState);
-        QCOMPARE(controlExplicitAdapter.services().count(), 0);
+        QCOMPARE(controlExplicitAdapter->services().count(), 0);
 
         // unrelated uuids don't return valid service object
         // invalid service uuid
-        QVERIFY(!controlExplicitAdapter.createServiceObject(
+        QVERIFY(!controlExplicitAdapter->createServiceObject(
                     QBluetoothUuid()));
         // some random uuid
-        QVERIFY(!controlExplicitAdapter.createServiceObject(
+        QVERIFY(!controlExplicitAdapter->createServiceObject(
                     QBluetoothUuid(QBluetoothUuid::DeviceName)));
     }
 }
@@ -1722,26 +1725,27 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
     if (!remoteDeviceInfo.isValid())
         QSKIP("No remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    QScopedPointer<QLowEnergyController> control(
+                QLowEnergyController::createCentral(remoteDeviceInfo));
 
-    QCOMPARE(control.error(), QLowEnergyController::NoError);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              30000);
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              30000)
     }
 
-    if (control.state() == QLowEnergyController::ConnectingState
-            || control.error() != QLowEnergyController::NoError) {
+    if (control->state() == QLowEnergyController::ConnectingState
+            || control->error() != QLowEnergyController::NoError) {
         // default BTLE backend forever hangs in ConnectingState
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-    control.discoverServices();
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -1750,10 +1754,10 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
              QLowEnergyController::DiscoveredState);
 
     const QBluetoothUuid testService(QString("f000aa60-0451-4000-b000-000000000000"));
-    QList<QBluetoothUuid> uuids = control.services();
+    QList<QBluetoothUuid> uuids = control->services();
     QVERIFY(uuids.contains(testService));
 
-    QLowEnergyService *service = control.createServiceObject(testService, this);
+    QLowEnergyService *service = control->createServiceObject(testService, this);
     QVERIFY(service);
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
@@ -1864,7 +1868,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QCOMPARE(dataChar.value(), QByteArray::fromHex("3f00"));
 
 
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
 
     // *******************************************
     // write value while disconnected -> error
@@ -1897,25 +1901,25 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
 
     if (!remoteDeviceInfo.isValid())
         QSKIP("No remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(remoteDeviceInfo));
 
     // quick setup - more elaborate test is done by connect()
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              30000);
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              30000)
     }
 
-    if (control.state() == QLowEnergyController::ConnectingState
-            || control.error() != QLowEnergyController::NoError) {
+    if (control->state() == QLowEnergyController::ConnectingState
+            || control->error() != QLowEnergyController::NoError) {
         // default BTLE backend forever hangs in ConnectingState
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-    control.discoverServices();
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -1924,10 +1928,10 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
              QLowEnergyController::DiscoveredState);
 
     const QBluetoothUuid testService(QString("f000aa00-0451-4000-b000-000000000000"));
-    QList<QBluetoothUuid> uuids = control.services();
+    QList<QBluetoothUuid> uuids = control->services();
     QVERIFY(uuids.contains(testService));
 
-    QLowEnergyService *service = control.createServiceObject(testService, this);
+    QLowEnergyService *service = control->createServiceObject(testService, this);
     QVERIFY(service);
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
@@ -1944,7 +1948,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
 
     if (!tempData.isValid()) {
         delete service;
-        control.disconnectFromDevice();
+        control->disconnectFromDevice();
         QSKIP("Cannot find temperature data characteristic of TI Sensor");
     }
 
@@ -1954,7 +1958,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
 
     if (!notification.isValid()) {
         delete service;
-        control.disconnectFromDevice();
+        control->disconnectFromDevice();
         QSKIP("Cannot find temperature data notification of TI Sensor");
     }
 
@@ -2130,7 +2134,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QCOMPARE(descWrittenSpy.count(), 0);
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
 
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
 
     // *******************************************
     // write value while disconnected -> error
@@ -2184,25 +2188,26 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     QBluetoothUuid serviceUuid(QBluetoothUuid::GenericAccess);
     QBluetoothUuid characterristicUuid(QBluetoothUuid::DeviceName);
 
-    QLowEnergyController control(encryptedDevice);
-    QCOMPARE(control.error(), QLowEnergyController::NoError);
+    QScopedPointer<QLowEnergyController> control(
+                QLowEnergyController::createCentral(QBluetoothDeviceInfo(encryptedDevice, QString("DeviceFoo"), 1)));
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              30000);
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              30000)
     }
 
-    if (control.state() == QLowEnergyController::ConnectingState
-            || control.error() != QLowEnergyController::NoError) {
+    if (control->state() == QLowEnergyController::ConnectingState
+            || control->error() != QLowEnergyController::NoError) {
         // default BTLE backend forever hangs in ConnectingState
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-    control.discoverServices();
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -2210,10 +2215,10 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveredState);
 
-    QList<QBluetoothUuid> uuids = control.services();
+    QList<QBluetoothUuid> uuids = control->services();
     QVERIFY(uuids.contains(serviceUuid));
 
-    QLowEnergyService *service = control.createServiceObject(serviceUuid, this);
+    QLowEnergyService *service = control->createServiceObject(serviceUuid, this);
     QVERIFY(service);
 
     // 1.) discovery triggers read of device name char which is encrypted
@@ -2263,7 +2268,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
 
     //change to Device Information service
     QVERIFY(uuids.contains(QBluetoothUuid::DeviceInformation));
-    service = control.createServiceObject(QBluetoothUuid::DeviceInformation);
+    service = control->createServiceObject(QBluetoothUuid::DeviceInformation);
     QVERIFY(service);
 
     service->discoverDetails();
@@ -2318,7 +2323,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     QCOMPARE(manufacturerChar.value(), expectedManufacturer);
 
     delete service;
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
 }
 
 
@@ -2338,25 +2343,25 @@ void tst_QLowEnergyController::tst_errorCases()
 
     if (!remoteDeviceInfo.isValid())
         QSKIP("No remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
-    QCOMPARE(control.error(), QLowEnergyController::NoError);
+    QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(remoteDeviceInfo));
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              30000);
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              30000)
     }
 
-    if (control.state() == QLowEnergyController::ConnectingState
-            || control.error() != QLowEnergyController::NoError) {
+    if (control->state() == QLowEnergyController::ConnectingState
+            || control->error() != QLowEnergyController::NoError) {
         // default BTLE backend forever hangs in ConnectingState
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-    control.discoverServices();
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -2371,15 +2376,15 @@ void tst_QLowEnergyController::tst_errorCases()
     const QBluetoothUuid oadServiceUuid(QStringLiteral("f000ffc0-0451-4000-b000-000000000000"));
     const QBluetoothUuid oadCharUuid(QString("f000ffc1-0451-4000-b000-000000000000"));
 
-    QVERIFY(control.services().contains(irTemperaturServiceUuid));
-    QVERIFY(control.services().contains(oadServiceUuid));
+    QVERIFY(control->services().contains(irTemperaturServiceUuid));
+    QVERIFY(control->services().contains(oadServiceUuid));
 
     // Create service objects and basic tests
-    QLowEnergyService *irService = control.createServiceObject(irTemperaturServiceUuid);
+    QLowEnergyService *irService = control->createServiceObject(irTemperaturServiceUuid);
     QVERIFY(irService);
     QCOMPARE(irService->state(), QLowEnergyService::DiscoveryRequired);
     QVERIFY(irService->characteristics().isEmpty());
-    QLowEnergyService *oadService = control.createServiceObject(oadServiceUuid);
+    QLowEnergyService *oadService = control->createServiceObject(oadServiceUuid);
     QVERIFY(oadService);
     QCOMPARE(oadService->state(), QLowEnergyService::DiscoveryRequired);
     QVERIFY(oadService->characteristics().isEmpty());
@@ -2543,7 +2548,7 @@ void tst_QLowEnergyController::tst_errorCases()
 
     delete irService;
     delete oadService;
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
 }
 
 /*
@@ -2560,26 +2565,26 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 
     if (!remoteDeviceInfo.isValid())
         QSKIP("No remote BTLE device found. Skipping test.");
-    QLowEnergyController control(remoteDeviceInfo);
+    QScopedPointer<QLowEnergyController> control(QLowEnergyController::createCentral(remoteDeviceInfo));
 
-    QCOMPARE(control.error(), QLowEnergyController::NoError);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 
-    control.connectToDevice();
+    control->connectToDevice();
     {
-        QTRY_IMPL(control.state() != QLowEnergyController::ConnectingState,
-              30000);
+        QTRY_IMPL(control->state() != QLowEnergyController::ConnectingState,
+              30000)
     }
 
-    if (control.state() == QLowEnergyController::ConnectingState
-            || control.error() != QLowEnergyController::NoError) {
+    if (control->state() == QLowEnergyController::ConnectingState
+            || control->error() != QLowEnergyController::NoError) {
         // default BTLE backend forever hangs in ConnectingState
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control.state(), QLowEnergyController::ConnectedState);
-    QSignalSpy discoveryFinishedSpy(&control, SIGNAL(discoveryFinished()));
-    QSignalSpy stateSpy(&control, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
-    control.discoverServices();
+    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
+    QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
+    control->discoverServices();
     QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 20000);
     QCOMPARE(stateSpy.count(), 2);
     QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
@@ -2589,10 +2594,10 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 
     // The Over-The-Air update service uuid
     const QBluetoothUuid testService(QString("f000ffc0-0451-4000-b000-000000000000"));
-    QList<QBluetoothUuid> uuids = control.services();
+    QList<QBluetoothUuid> uuids = control->services();
     QVERIFY(uuids.contains(testService));
 
-    QLowEnergyService *service = control.createServiceObject(testService, this);
+    QLowEnergyService *service = control->createServiceObject(testService, this);
     QVERIFY(service);
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
@@ -2619,7 +2624,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
             || !blockNotification.isValid()
             || !imageIdentityChar.isValid()) {
         delete service;
-        control.disconnectFromDevice();
+        control->disconnectFromDevice();
         QSKIP("Cannot find OAD char/notification");
     }
 
@@ -2828,7 +2833,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QVERIFY2(foundOneImage, "The SensorTag doesn't have a valid image? (2)");
 
     delete service;
-    control.disconnectFromDevice();
+    control->disconnectFromDevice();
 }
 
 QTEST_MAIN(tst_QLowEnergyController)

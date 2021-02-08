@@ -34,3 +34,13 @@ QLowEnergyService
 
  - Renamed DiscoveringServices enum value to DiscoveringService. This properly relfects the fact that
    only one service is being discovered at a given time.
+
+QLowEnergyController
+--------------------
+
+ - Existing ctors and create*() functions with remote QBluetoothAddress parameters have been removed. QBluetoothAddress
+   is not sufficient to indicate remote devices on Apple systems. It requires UUIDs to "name" devices. This can only
+   be satisfied by QBluetoothDeviceInfo.
+
+ - Remaining QLowEnergyController ctors have been made private. The createPeripheral() and createCentral() functions
+   should be used to obtain QLowEnergyController instances.

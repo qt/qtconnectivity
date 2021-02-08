@@ -91,17 +91,9 @@ public:
     enum Role { CentralRole, PeripheralRole };
     Q_ENUM(Role)
 
-    explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
-                                  QObject *parent = nullptr); // TODO Qt 6 remove ctor
-    explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
-                                  QObject *parent = nullptr); // TODO Qt 6 make private
-    explicit QLowEnergyController(const QBluetoothAddress &remoteDevice,
-                                  const QBluetoothAddress &localDevice,
-                                  QObject *parent = nullptr); // TODO Qt 6 remove ctor
-
     static QLowEnergyController *createCentral(const QBluetoothDeviceInfo &remoteDevice,
                                                QObject *parent = nullptr);
-    static QLowEnergyController *createCentral(const QBluetoothAddress &remoteDevice,
+    static QLowEnergyController *createCentral(const QBluetoothDeviceInfo &remoteDevice,
                                                const QBluetoothAddress &localDevice,
                                                QObject *parent = nullptr);
     static QLowEnergyController *createPeripheral(QObject *parent = nullptr);
@@ -154,7 +146,14 @@ Q_SIGNALS:
     void connectionUpdated(const QLowEnergyConnectionParameters &parameters);
 
 private:
-    explicit QLowEnergyController(QObject *parent = nullptr); // For the peripheral role.
+    // peripheral role ctor
+    explicit QLowEnergyController(QObject *parent = nullptr);
+
+    // central role ctors
+    explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,
+                                  const QBluetoothAddress &localDevice,
+                                  QObject *parent = nullptr);
+
 
     Q_DECLARE_PRIVATE(QLowEnergyController)
     QLowEnergyControllerPrivate *d_ptr;

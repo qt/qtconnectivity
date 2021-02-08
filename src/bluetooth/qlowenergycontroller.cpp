@@ -347,91 +347,35 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
     remote Bluetooth Low Energy device to which this object
     should attempt to connect later on.
 
-    The controller uses the local default Bluetooth adapter for
-    the connection management.
-
-    \obsolete
- */
-QLowEnergyController::QLowEnergyController(
-                            const QBluetoothAddress &remoteDevice,
-                            QObject *parent)
-    : QObject(parent)
-{
-    // Note: a central created using this ctor is useless
-    // on Darwin - no way to use addresses when connecting.
-
-    d_ptr = privateController(CentralRole);
-
-    Q_D(QLowEnergyController);
-    d->q_ptr = this;
-    d->role = CentralRole;
-    d->remoteDevice = remoteDevice;
-    d->localAdapter = QBluetoothLocalDevice().address();
-    d->addressType = QLowEnergyController::PublicAddress;
-    d->init();
-}
-
-/*!
-    Constructs a new instance of this class with \a parent.
-
-    The \a remoteDeviceInfo must contain the details of the
-    remote Bluetooth Low Energy device to which this object
-    should attempt to connect later on.
-
-    The controller uses the local default Bluetooth adapter for
-    the connection management.
-
-    \since 5.5
-    \obsolete
-*/
-QLowEnergyController::QLowEnergyController(
-                            const QBluetoothDeviceInfo &remoteDeviceInfo,
-                            QObject *parent)
-    : QObject(parent)
-{
-    d_ptr = privateController(CentralRole);
-
-    Q_D(QLowEnergyController);
-    d->q_ptr = this;
-    d->role = CentralRole;
-    d->deviceUuid = remoteDeviceInfo.deviceUuid();
-    d->remoteDevice = remoteDeviceInfo.address();
-    d->localAdapter = QBluetoothLocalDevice().address();
-    d->addressType = QLowEnergyController::PublicAddress;
-    d->remoteName = remoteDeviceInfo.name();
-    d->init();
-}
-
-/*!
-    Constructs a new instance of this class with \a parent.
-
-    The \a remoteDevice must contain the address of the
-    remote Bluetooth Low Energy device to which this object
-    should attempt to connect later on.
-
     The connection is established via \a localDevice. If \a localDevice
     is invalid, the local default device is automatically selected. If
     \a localDevice specifies a local device that is not a local Bluetooth
     adapter, \l error() is set to \l InvalidBluetoothAdapterError once
     \l connectToDevice() is called.
 
-    \obsolete
+    \note This is only supported on BlueZ
  */
 QLowEnergyController::QLowEnergyController(
-                            const QBluetoothAddress &remoteDevice,
+                            const QBluetoothDeviceInfo &remoteDevice,
                             const QBluetoothAddress &localDevice,
                             QObject *parent)
     : QObject(parent)
 {
-    // Note: a central create using this ctor is useless on
-    // Darwin (CoreBluetooth does not work with addresses).
     d_ptr = privateController(CentralRole);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->role = CentralRole;
-    d->remoteDevice = remoteDevice;
-    d->localAdapter = localDevice;
+    d->deviceUuid = remoteDevice.deviceUuid();
+    d->remoteDevice = remoteDevice.address();
+
+    if (localDevice.isNull())
+        d->localAdapter = QBluetoothLocalDevice().address();
+    else
+        d->localAdapter = localDevice;
+
+    d->addressType = QLowEnergyController::PublicAddress;
+    d->remoteName = remoteDevice.name();
     d->init();
 }
 
@@ -448,7 +392,7 @@ QLowEnergyController::QLowEnergyController(
 QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDeviceInfo &remoteDevice,
                                                           QObject *parent)
 {
-    return new QLowEnergyController(remoteDevice, parent);
+    return new QLowEnergyController(remoteDevice, QBluetoothAddress(), parent);
 }
 
 /*!
@@ -467,7 +411,7 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
 
     \since 5.14
  */
-QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothAddress &remoteDevice,
+QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDeviceInfo &remoteDevice,
                                                           const QBluetoothAddress &localDevice,
                                                           QObject *parent)
 {
