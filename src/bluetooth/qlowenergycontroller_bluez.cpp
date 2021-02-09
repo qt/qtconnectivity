@@ -1417,7 +1417,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
         const quint16 numElements = (response.size() - 2) / elementLength;
 
         quint16 offset = 2;
-        QLowEnergyHandle descriptorHandle;
+        QLowEnergyHandle descriptorHandle {};
         QBluetoothUuid uuid;
         const char *data = response.constData();
         for (int i = 0; i < numElements; i++) {
