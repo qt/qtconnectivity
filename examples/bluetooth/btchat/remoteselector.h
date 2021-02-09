@@ -91,7 +91,9 @@ private slots:
     void serviceDiscovered(const QBluetoothServiceInfo &serviceInfo);
     void discoveryFinished();
     void on_remoteDevices_itemActivated(QListWidgetItem *item);
+    void on_remoteDevices_itemClicked(QListWidgetItem *item);
     void on_cancelButton_clicked();
+    void on_connectButton_clicked();
 };
 
 #endif // REMOTESELECTOR_H

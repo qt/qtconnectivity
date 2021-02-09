@@ -141,12 +141,29 @@ void RemoteSelector::discoveryFinished()
 
 void RemoteSelector::on_remoteDevices_itemActivated(QListWidgetItem *item)
 {
-    qDebug() << "got click" << item->text();
     m_service = m_discoveredServices.value(item);
     if (m_discoveryAgent->isActive())
         m_discoveryAgent->stop();
 
     accept();
+}
+
+void RemoteSelector::on_remoteDevices_itemClicked(QListWidgetItem *)
+{
+    ui->connectButton->setEnabled(true);
+}
+
+void RemoteSelector::on_connectButton_clicked()
+{
+    auto items = ui->remoteDevices->selectedItems();
+    if (items.size()) {
+        QListWidgetItem *item = items[0];
+        m_service = m_discoveredServices.value(item);
+        if (m_discoveryAgent->isActive())
+            m_discoveryAgent->stop();
+
+        accept();
+    }
 }
 
 void RemoteSelector::on_cancelButton_clicked()
