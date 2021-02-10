@@ -57,10 +57,6 @@ QT_BEGIN_NAMESPACE
 
 // Packet data structures for Mgmt API bluez.git/doc/mgmt-api.txt
 
-enum class EventCode {
-    DeviceFound =       0x0012,
-};
-
 struct MgmtHdr {
     quint16 cmdCode;
     quint16 controllerIndex;
@@ -235,7 +231,7 @@ void BluetoothManagement::_q_readNotifier()
             break; // not a complete event header -> wait for next notifier
 
         switch (static_cast<EventCode>(qFromLittleEndian(hdr->cmdCode))) {
-        case EventCode::DeviceFound:
+        case EventCode::DeviceFoundEvent:
         {
             const MgmtEventDeviceFound *event = reinterpret_cast<const MgmtEventDeviceFound*>
                                                    (data.constData() + sizeof(MgmtHdr));
@@ -255,7 +251,7 @@ void BluetoothManagement::_q_readNotifier()
         }
         default:
             qCDebug(QT_BT_BLUEZ) << "BluetoothManagement: Ignored event:"
-                                 << Qt::hex << qFromLittleEndian(hdr->cmdCode);
+                                 << Qt::hex << (EventCode)qFromLittleEndian(hdr->cmdCode);
             break;
         }
 
