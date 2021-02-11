@@ -56,6 +56,7 @@
 #include <QtDBus/qdbusunixfiledescriptor.h>
 
 #include <QtNetwork/qlocalsocket.h>
+#include <QDBusPendingCallWatcher>
 
 class OrgBluezProfileManager1Interface;
 
@@ -109,6 +110,9 @@ public:
     qint64 bytesAvailable() const override;
     bool canReadLine() const override;
     qint64 bytesToWrite() const override;
+
+public slots:
+    void connectToServiceReplyHandler(QDBusPendingCallWatcher *);
 
 private:
     void remoteConnected(const QDBusUnixFileDescriptor &fd);
