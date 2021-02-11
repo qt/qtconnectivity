@@ -238,18 +238,29 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(
     OrgBluezDevice1Interface device(QStringLiteral("org.bluez"), remoteDevicePath,
                                     QDBusConnection::systemBus());
     reply = device.ConnectProfile(profileUuid);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished,
+            this, &QBluetoothSocketPrivateBluezDBus::connectToServiceReplyHandler);
+
+    q->setOpenMode(openMode);
+    q->setSocketState(QBluetoothSocket::ConnectingState);
+}
+
+void QBluetoothSocketPrivateBluezDBus::connectToServiceReplyHandler(
+        QDBusPendingCallWatcher *watcher)
+{
+    Q_Q(QBluetoothSocket);
+
+    QDBusPendingReply<> reply = *watcher;
     if (reply.isError()) {
-        qCWarning(QT_BT_BLUEZ) << "Cannot connect to profile/service:" << uuid;
+        qCWarning(QT_BT_BLUEZ) << "Cannot connect to profile/service.";
 
         clearSocket();
 
         errorString = QBluetoothSocket::tr("Cannot connect to remote profile");
         q->setSocketError(QBluetoothSocket::HostNotFoundError);
-        return;
     }
-
-    q->setOpenMode(openMode);
-    q->setSocketState(QBluetoothSocket::ConnectingState);
+    watcher->deleteLater();
 }
 
 void QBluetoothSocketPrivateBluezDBus::connectToService(
