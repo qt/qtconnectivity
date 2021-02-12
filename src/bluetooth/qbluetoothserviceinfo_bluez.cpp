@@ -119,7 +119,7 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
         stream->writeEmptyElement(QStringLiteral("url"));
         stream->writeAttribute(QStringLiteral("value"), attribute.value<QUrl>().toString());
         break;
-    case QVariant::UserType:
+    default:
         if (attribute.userType() == qMetaTypeId<QBluetoothUuid>()) {
             stream->writeEmptyElement(QStringLiteral("uuid"));
 
@@ -158,10 +158,9 @@ static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
             for (const QVariant &v : *alternative)
                 writeAttribute(stream, v);
             stream->writeEndElement();
+        } else {
+            qCWarning(QT_BT_BLUEZ) << "Unknown variant type" << attribute.userType();
         }
-        break;
-            default:
-        qCWarning(QT_BT_BLUEZ) << "Unknown variant type", attribute.userType();
     }
 }
 
