@@ -296,6 +296,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
 
         QVariantMap mapping;
         mapping.insert(QStringLiteral("ServiceRecord"), xmlServiceRecord);
+        mapping.insert(QStringLiteral("Role"), QStringLiteral("server"));
 
         // Strategy to pick service uuid
         // 1.) use serviceUuid()
