@@ -143,6 +143,7 @@ void ChatServer::stopServer()
 
     // Close sockets
     qDeleteAll(clientSockets);
+    clientNames.clear();
 
     // Close server
     delete rfcommServer;
@@ -170,6 +171,7 @@ void ChatServer::clientConnected()
     connect(socket, &QBluetoothSocket::readyRead, this, &ChatServer::readSocket);
     connect(socket, &QBluetoothSocket::disconnected, this, QOverload<>::of(&ChatServer::clientDisconnected));
     clientSockets.append(socket);
+    clientNames[socket] = socket->peerName();
     emit clientConnected(socket->peerName());
 }
 //! [clientConnected]
@@ -181,9 +183,10 @@ void ChatServer::clientDisconnected()
     if (!socket)
         return;
 
-    emit clientDisconnected(socket->peerName());
+    emit clientDisconnected(clientNames[socket]);
 
     clientSockets.removeOne(socket);
+    clientNames.remove(socket);
 
     socket->deleteLater();
 }
@@ -198,7 +201,7 @@ void ChatServer::readSocket()
 
     while (socket->canReadLine()) {
         QByteArray line = socket->readLine().trimmed();
-        emit messageReceived(socket->peerName(),
+        emit messageReceived(clientNames[socket],
                              QString::fromUtf8(line.constData(), line.length()));
     }
 }

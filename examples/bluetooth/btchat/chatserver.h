@@ -90,6 +90,7 @@ private:
     QBluetoothServer *rfcommServer = nullptr;
     QBluetoothServiceInfo serviceInfo;
     QList<QBluetoothSocket *> clientSockets;
+    QMap<QBluetoothSocket *, QString> clientNames;
 };
 //! [declaration]
 
