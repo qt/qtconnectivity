@@ -165,7 +165,7 @@ int Chat::adapterFromUserSelection() const
 
 void Chat::reactOnSocketError(const QString &error)
 {
-    ui->chat->insertPlainText(error);
+    ui->chat->insertPlainText(QString::fromLatin1("%1\n").arg(error));
 }
 
 //! [clientDisconnected]
