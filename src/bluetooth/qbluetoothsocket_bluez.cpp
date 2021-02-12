@@ -416,7 +416,6 @@ void QBluetoothSocketPrivateBluez::abort()
     q->setOpenMode(QIODevice::NotOpen);
     q->setSocketState(QBluetoothSocket::UnconnectedState);
     emit q->readChannelFinished();
-    emit q->disconnected();
 }
 
 QString QBluetoothSocketPrivateBluez::localName() const

@@ -166,7 +166,6 @@ void QBluetoothSocketPrivate::abort()
 
     q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
     emit q_ptr->readChannelFinished();
-    emit q_ptr->disconnected();
 
 }
 
