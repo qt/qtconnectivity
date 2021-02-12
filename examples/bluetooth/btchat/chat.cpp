@@ -241,6 +241,7 @@ void Chat::sendClicked()
 
     ui->sendText->setEnabled(true);
     ui->sendButton->setEnabled(true);
+    ui->sendText->setFocus();
 }
 //! [sendClicked]
 
