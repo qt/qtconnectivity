@@ -50,6 +50,7 @@ qt6_add_resources(qml_chat "chat"
 )
 
 if(ANDROID)
+    find_package(Qt6 COMPONENTS AndroidExtras)
     target_link_libraries(qml_chat PUBLIC
         Qt::AndroidExtras
     )

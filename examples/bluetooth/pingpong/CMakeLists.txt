@@ -50,6 +50,7 @@ qt6_add_resources(pingpong "resource"
 )
 
 if(ANDROID)
+    find_package(Qt6 COMPONENTS AndroidExtras)
     target_link_libraries(pingpong PUBLIC
         Qt::AndroidExtras
     )
