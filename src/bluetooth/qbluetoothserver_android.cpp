@@ -55,8 +55,7 @@ QHash<QBluetoothServerPrivate*, int> __fakeServerPorts;
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType,
                                                  QBluetoothServer *parent)
-    : socket(0),maxPendingConnections(1), securityFlags(QBluetooth::NoSecurity), serverType(sType),
-      m_lastError(QBluetoothServer::NoError), q_ptr(parent)
+    : serverType(sType), q_ptr(parent)
 {
     thread = new ServerAcceptanceThread();
     thread->setMaxPendingConnections(maxPendingConnections);

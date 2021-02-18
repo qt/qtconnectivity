@@ -115,17 +115,17 @@ public:
 #endif
 
 public:
-    QBluetoothSocket *socket;
+    QBluetoothSocket *socket = nullptr;
 
-    int maxPendingConnections;
-    QBluetooth::SecurityFlags securityFlags;
+    int maxPendingConnections = 1;
+    QBluetooth::SecurityFlags securityFlags = QBluetooth::NoSecurity;
     QBluetoothServiceInfo::Protocol serverType;
 
 protected:
     QBluetoothServer *q_ptr;
 
 private:
-    QBluetoothServer::Error m_lastError;
+    QBluetoothServer::Error m_lastError = QBluetoothServer::NoError;
 #if QT_CONFIG(bluez) || defined(QT_WIN_BLUETOOTH)
     QSocketNotifier *socketNotifier = nullptr;
 #elif defined(QT_ANDROID_BLUETOOTH)
