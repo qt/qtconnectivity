@@ -241,6 +241,10 @@ void PingPong::updateDirection()
 void PingPong::startServer()
 {
     setMessage(QStringLiteral("Starting the server"));
+
+    // make discoverable
+    QBluetoothLocalDevice().setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+
     //! [Starting the server]
     m_serverInfo = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
     connect(m_serverInfo, &QBluetoothServer::newConnection,

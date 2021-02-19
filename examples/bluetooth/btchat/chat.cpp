@@ -91,9 +91,11 @@ Chat::Chat(QWidget *parent)
         ui->firstAdapter->setChecked(true);
         connect(ui->firstAdapter, &QRadioButton::clicked, this, &Chat::newAdapterSelected);
         connect(ui->secondAdapter, &QRadioButton::clicked, this, &Chat::newAdapterSelected);
-        QBluetoothLocalDevice adapter(localAdapters.at(0).address());
-        adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
     }
+
+    // make discoverable
+    QBluetoothLocalDevice adapter(localAdapters.at(0).address());
+    adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
 
     //! [Create Chat Server]
     server = new ChatServer(this);
