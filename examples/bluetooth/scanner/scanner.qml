@@ -119,7 +119,7 @@ Item {
         model: btModel
         delegate: Rectangle {
             id: btDelegate
-            width: parent.width
+            width: mainList.width
             height: column.height + 10
 
             property bool expended: false;
