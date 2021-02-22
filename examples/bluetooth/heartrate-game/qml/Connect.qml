@@ -100,7 +100,7 @@ GamePage {
             delegate: Rectangle {
                 id: box
                 height:GameSettings.fieldHeight * 1.2
-                width: parent.width
+                width: devices.width
                 color: index % 2 === 0 ? GameSettings.delegate1Color : GameSettings.delegate2Color
 
                 MouseArea {
