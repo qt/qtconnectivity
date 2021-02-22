@@ -15,6 +15,9 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/heartrate-server")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Bluetooth)
+if(ANDROID)
+    find_package(Qt6 COMPONENTS Gui)
+endif()
 
 qt_add_executable(heartrate-server
     main.cpp
