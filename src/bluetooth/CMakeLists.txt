@@ -16,9 +16,6 @@ qt_internal_add_module(Bluetooth
         qbluetoothserviceinfo.cpp qbluetoothserviceinfo.h qbluetoothserviceinfo_p.h
         qbluetoothsocket.cpp qbluetoothsocket.h
         qbluetoothsocketbase.cpp qbluetoothsocketbase_p.h
-        qbluetoothtransfermanager.cpp qbluetoothtransfermanager.h
-        qbluetoothtransferreply.cpp qbluetoothtransferreply.h qbluetoothtransferreply_p.h
-        qbluetoothtransferrequest.cpp qbluetoothtransferrequest.h qbluetoothtransferrequest_p.h
         qbluetoothuuid.cpp qbluetoothuuid.h
         qleadvertiser_p.h
         qlowenergyadvertisingdata.cpp qlowenergyadvertisingdata.h
@@ -96,13 +93,6 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
         bluez/gattservice1.cpp bluez/gattservice1_p.h
         bluez/hcimanager.cpp bluez/hcimanager_p.h
         bluez/manager.cpp bluez/manager_p.h
-        bluez/obex_agent.cpp bluez/obex_agent_p.h
-        bluez/obex_client.cpp bluez/obex_client_p.h
-        bluez/obex_client1_bluez5.cpp bluez/obex_client1_bluez5_p.h
-        bluez/obex_manager.cpp bluez/obex_manager_p.h
-        bluez/obex_objectpush1_bluez5.cpp bluez/obex_objectpush1_bluez5_p.h
-        bluez/obex_transfer.cpp bluez/obex_transfer_p.h
-        bluez/obex_transfer1_bluez5.cpp bluez/obex_transfer1_bluez5_p.h
         bluez/objectmanager.cpp bluez/objectmanager_p.h
         bluez/profile1.cpp bluez/profile1_p.h
         bluez/profile1context.cpp bluez/profile1context_p.h
@@ -118,7 +108,6 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
         qbluetoothserviceinfo_bluez.cpp
         qbluetoothsocket_bluez.cpp qbluetoothsocket_bluez_p.h
         qbluetoothsocket_bluezdbus.cpp qbluetoothsocket_bluezdbus_p.h
-        qbluetoothtransferreply_bluez.cpp qbluetoothtransferreply_bluez_p.h
     LIBRARIES
         Qt::Concurrent
     PUBLIC_LIBRARIES # for Linux QEMU (gcc-armv7) on Linux Ubuntu_20_04 (gcc-x86_64)
@@ -208,7 +197,6 @@ qt_internal_extend_target(Bluetooth CONDITION MACOS AND NOT QT_FEATURE_bluez AND
         qbluetoothservicediscoveryagent_macos.mm
         qbluetoothserviceinfo_macos.mm
         qbluetoothsocket_macos.mm qbluetoothsocket_macos_p.h
-        qbluetoothtransferreply_macos.mm qbluetoothtransferreply_macos_p.h
         qlowenergycontroller_darwin.mm qlowenergycontroller_darwin_p.h
     DEFINES
         QT_OSX_BLUETOOTH

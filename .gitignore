@@ -36,14 +36,12 @@ include
 config.tests/bluez/bluez
 config.tests/bluez_le/bluez_le
 examples/bluetooth/btchat/btchat
-examples/bluetooth/btfiletransfer/btfiletransfer
 examples/bluetooth/btscanner/btscanner
 examples/bluetooth/chat/qml_chat
 examples/bluetooth/heartrate-game/heartrate-game
 examples/bluetooth/heartrate-server/heartrate-server
 examples/bluetooth/lowenergyscanner/lowenergyscanner
 examples/bluetooth/pingpong/pingpong
-examples/bluetooth/picturetransfer/qml_picturetransfer
 examples/bluetooth/scanner/qml_scanner
 examples/nfc/annotatedurl/annotatedurl
 examples/nfc/ndefeditor/ndefeditor
@@ -68,8 +66,6 @@ tests/auto/qbluetoothserver/tst_qbluetoothserver
 tests/auto/qbluetoothservicediscoveryagent/tst_qbluetoothservicediscoveryagent
 tests/auto/qbluetoothserviceinfo/tst_qbluetoothserviceinfo
 tests/auto/qbluetoothsocket/tst_qbluetoothsocket
-tests/auto/qbluetoothtransfermanager/tst_qbluetoothtransfermanager
-tests/auto/qbluetoothtransferrequest/tst_qbluetoothtransferrequest
 tests/auto/qbluetoothuuid/tst_qbluetoothuuid
 tests/auto/qlowenergycharacteristic/tst_qlowenergycharacteristic
 tests/auto/qlowenergycontroller/tst_qlowenergycontroller

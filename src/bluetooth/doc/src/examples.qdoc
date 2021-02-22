@@ -48,9 +48,6 @@
             \li \l{btchat}{Bluetooth Chat}
             \li Simple chat server and client via Bluetooth.
         \row
-            \li \l{btfiletransfer}{Bluetooth File Transfer}
-            \li Transfer files between Bluetooth devices.
-        \row
             \li \l{btscanner}{Bluetooth Scanner}
             \li Scan for Bluetooth devices.
     \endtable
@@ -63,9 +60,6 @@
         \row
             \li \l{chat}{QML Bluetooth Chat Example}
             \li Simple chat client via Bluetooth.
-        \row
-            \li \l{picturetransfer}{QML Bluetooth Picture Push Example}
-            \li Transfer pictures between Bluetooth devices.
         \row
             \li \l{pingpong}{QML Bluetooth PingPong}
             \li Ping pong game demonstrating Bluetooth socket communication between two devices.

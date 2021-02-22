@@ -44,3 +44,10 @@ QLowEnergyController
 
  - Remaining QLowEnergyController ctors have been made private. The createPeripheral() and createCentral() functions
    should be used to obtain QLowEnergyController instances.
+
+QBluetoothTransferManager
+-------------------------
+
+ - QBluetoothTransferManager, QBluetoothTransferRequest, and QBluetoothTransferReply have been removed
+   without replacement.
+

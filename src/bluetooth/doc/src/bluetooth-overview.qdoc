@@ -82,18 +82,6 @@
 
     \snippet doc_src_qtbluetooth.cpp device_discovery
 
-    \section1 Pushing Files to Remote Devices
-
-    Once the desired device was found, there are two main use cases provided by Qt Bluetooth. The
-    simpler one is to send files via the Obex Object Push Profile (OPP). As the name describes, this
-    profile can push files from one device to another. Currently it is not possible to pull files
-    or browse the remote file system. The profile does not require the two devices to be
-    paired before exchanging data. To push files to remote devices, create a
-    QBluetoothTransferRequest and ask the QBluetoothTransferManager to push the file contained in
-    the request by calling its \l {QBluetoothTransferManager::put()}{put()} function.
-
-    \snippet doc_src_qtbluetooth.cpp sendfile
-
     \section1 Exchanging Data Between Devices
 
     The more flexible approach for communication between two Bluetooth enabled devices, is to
