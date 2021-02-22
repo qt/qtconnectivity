@@ -422,6 +422,10 @@ QDeclarativeBluetoothDiscoveryModel::DiscoveryMode QDeclarativeBluetoothDiscover
 
 void QDeclarativeBluetoothDiscoveryModel::setDiscoveryMode(DiscoveryMode discovery)
 {
+    if (d->m_discoveryMode == discovery)
+        return;
+
+    clearModel();
     d->m_discoveryMode = discovery;
     emit discoveryModeChanged();
 }
