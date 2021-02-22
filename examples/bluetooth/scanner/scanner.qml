@@ -62,8 +62,8 @@ Item {
         running: true
         discoveryMode: BluetoothDiscoveryModel.DeviceDiscovery
         onDiscoveryModeChanged: console.log("Discovery mode: " + discoveryMode)
-        onServiceDiscovered: console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
-        onDeviceDiscovered: console.log("New device: " + device)
+        onServiceDiscovered: service => console.log("Found new service " + service.deviceAddress + " " + service.deviceName + " " + service.serviceName);
+        onDeviceDiscovered: device => console.log("New device: " + device)
         onErrorChanged: {
                 switch (btModel.error) {
                 case BluetoothDiscoveryModel.PoweredOffError:
