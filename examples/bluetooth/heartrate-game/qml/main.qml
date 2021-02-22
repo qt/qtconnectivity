@@ -81,7 +81,7 @@ Window {
 
     Connections {
         target: splashLoader.item
-        onReadyToGo: {
+        function onReadyToGo() {
             appLoader.visible = true
             appLoader.item.init()
             splashLoader.visible = false
