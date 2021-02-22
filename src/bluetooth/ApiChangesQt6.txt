@@ -53,3 +53,11 @@ QBluetoothTransferManager
  - QBluetoothTransferManager, QBluetoothTransferRequest, and QBluetoothTransferReply have been removed
    without replacement.
 
+QML Interface
+-------------
+
+ - The QML interface has been removed because socket programming via QML is not advisable.
+   QDeclarativeBluetoothService, QDeclarativeBluetoothSocket, and QDeclarativeBluetoothDiscoveryModel
+   (in QML: BluetoothService, BluetoothSocket, and BluetoothDiscoveryModel)
+   have been removed without replacement.
+

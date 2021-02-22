@@ -187,9 +187,7 @@ A quick way to enable all QtBluetooth logging is to add the following line to th
 \list
     \li QML
     \list
-        \li \l {scanner}{QML Bluetooth Scanner}
         \li \l {pingpong}{QML Bluetooth PingPong}
-        \li \l {chat}{QML Bluetooth Chat}
         \li \l {heartrate-game}{Bluetooth Low Energy Heart Rate Game}
         \li \l {heartrate-server}{Bluetooth Low Energy Heart Rate Server}
         \li \l {lowenergyscanner}{Bluetooth Low Energy Scanner}

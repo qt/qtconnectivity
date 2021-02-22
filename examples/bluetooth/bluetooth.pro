@@ -7,8 +7,6 @@ qtHaveModule(widgets) {
                btscanner
 }
 
-qtHaveModule(quick): SUBDIRS += scanner \
-                                pingpong \
+qtHaveModule(quick): SUBDIRS += pingpong \
                                 lowenergyscanner \
-                                heartrate-game \
-                                chat
+                                heartrate-game

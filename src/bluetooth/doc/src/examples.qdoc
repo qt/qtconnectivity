@@ -58,14 +58,8 @@
             \li Example
             \li Description
         \row
-            \li \l{chat}{QML Bluetooth Chat Example}
-            \li Simple chat client via Bluetooth.
-        \row
             \li \l{pingpong}{QML Bluetooth PingPong}
             \li Ping pong game demonstrating Bluetooth socket communication between two devices.
-        \row
-            \li \l{scanner}{QML Bluetooth Scanner}
-            \li Scan for Bluetooth devices and services.
         \row
             \li \l{heartrate-game}{QML Bluetooth Low Energy Heart Rate Game}
             \li Connect to Bluetooth Low Energy heart rate belts and receive
