@@ -78,7 +78,7 @@ public:
     bool isValid() const;
     bool monitorEvent(HciManager::HciEvent event);
     bool monitorAclPackets();
-    bool sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters);
+    bool sendCommand(QBluezConst::OpCodeGroupField ogf, QBluezConst::OpCodeCommandField ocf, const QByteArray &parameters);
 
     void stopEvents();
     QBluetoothAddress addressForConnectionHandle(quint16 handle) const;

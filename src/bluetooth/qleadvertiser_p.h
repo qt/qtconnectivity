@@ -119,7 +119,7 @@ private:
     void setManufacturerData(const QLowEnergyAdvertisingData &src, AdvData &dest);
     void setLocalNameData(const QLowEnergyAdvertisingData &src, AdvData &dest);
 
-    void queueCommand(OpCodeCommandField ocf, const QByteArray &advertisingData);
+    void queueCommand(QBluezConst::OpCodeCommandField ocf, const QByteArray &advertisingData);
     void sendNextCommand();
     void queueAdvertisingCommands();
     void queueReadTxPowerLevelCommand();
@@ -138,8 +138,8 @@ private:
 
     struct Command {
         Command() {}
-        Command(OpCodeCommandField ocf, const QByteArray &data) : ocf(ocf), data(data) { }
-        OpCodeCommandField ocf;
+        Command(QBluezConst::OpCodeCommandField ocf, const QByteArray &data) : ocf(ocf), data(data) { }
+        QBluezConst::OpCodeCommandField ocf;
         QByteArray data;
     };
     QList<Command> m_pendingCommands;

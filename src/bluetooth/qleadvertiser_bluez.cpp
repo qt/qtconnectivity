@@ -117,7 +117,7 @@ void QLeAdvertiserBluez::doStopAdvertising()
     sendNextCommand();
 }
 
-void QLeAdvertiserBluez::queueCommand(OpCodeCommandField ocf, const QByteArray &data)
+void QLeAdvertiserBluez::queueCommand(QBluezConst::OpCodeCommandField ocf, const QByteArray &data)
 {
     m_pendingCommands << Command(ocf, data);
 }
@@ -129,7 +129,7 @@ void QLeAdvertiserBluez::sendNextCommand()
         return;
     }
     const Command &c = m_pendingCommands.first();
-    if (!m_hciManager.sendCommand(OgfLinkControl, c.ocf, c.data)) {
+    if (!m_hciManager.sendCommand(QBluezConst::OgfLinkControl, c.ocf, c.data)) {
         handleError();
         return;
     }
@@ -148,13 +148,13 @@ void QLeAdvertiserBluez::queueAdvertisingCommands()
 void QLeAdvertiserBluez::queueReadTxPowerLevelCommand()
 {
     // Spec v4.2, Vol 2, Part E, 7.8.6
-    queueCommand(OcfLeReadTxPowerLevel, QByteArray());
+    queueCommand(QBluezConst::OcfLeReadTxPowerLevel, QByteArray());
 }
 
 void QLeAdvertiserBluez::toggleAdvertising(bool enable)
 {
     // Spec v4.2, Vol 2, Part E, 7.8.9
-    queueCommand(OcfLeSetAdvEnable, QByteArray(1, enable));
+    queueCommand(QBluezConst::OcfLeSetAdvEnable, QByteArray(1, enable));
 }
 
 void QLeAdvertiserBluez::setAdvertisingParams()
@@ -183,7 +183,7 @@ void QLeAdvertiserBluez::setAdvertisingParams()
 
     const QByteArray paramsData = byteArrayFromStruct(params);
     qCDebug(QT_BT_BLUEZ) << "advertising parameters:" << paramsData.toHex();
-    queueCommand(OcfLeSetAdvParams, paramsData);
+    queueCommand(QBluezConst::OcfLeSetAdvParams, paramsData);
 }
 
 static quint16 forceIntoRange(quint16 val, quint16 min, quint16 max)
@@ -368,12 +368,12 @@ void QLeAdvertiserBluez::setData(bool isScanResponseData)
 
     if (!isScanResponseData) {
         qCDebug(QT_BT_BLUEZ) << "advertising data:" << dataToSend.toHex();
-        queueCommand(OcfLeSetAdvData, dataToSend);
+        queueCommand(QBluezConst::OcfLeSetAdvData, dataToSend);
     } else if ((parameters().mode() == QLowEnergyAdvertisingParameters::AdvScanInd
                || parameters().mode() == QLowEnergyAdvertisingParameters::AdvInd)
                && theData.length > 0) {
         qCDebug(QT_BT_BLUEZ) << "scan response data:" << dataToSend.toHex();
-        queueCommand(OcfLeSetScanResponseData, dataToSend);
+        queueCommand(QBluezConst::OcfLeSetScanResponseData, dataToSend);
     }
 }
 
@@ -394,7 +394,7 @@ void QLeAdvertiserBluez::setWhiteList()
     // Spec v4.2, Vol 2, Part E, 7.8.15-16
     if (parameters().filterPolicy() == QLowEnergyAdvertisingParameters::IgnoreWhiteList)
         return;
-    queueCommand(OcfLeClearWhiteList, QByteArray());
+    queueCommand(QBluezConst::OcfLeClearWhiteList, QByteArray());
     const QList<QLowEnergyAdvertisingParameters::AddressInfo> whiteListInfos
             = parameters().whiteList();
     for (const auto &addressInfo : whiteListInfos) {
@@ -402,7 +402,7 @@ void QLeAdvertiserBluez::setWhiteList()
         static_assert(sizeof commandParam == 7, "unexpected struct size");
         commandParam.addrType = addressInfo.type;
         convertAddress(addressInfo.address.toUInt64(), commandParam.addr.b);
-        queueCommand(OcfLeAddToWhiteList, byteArrayFromStruct(commandParam));
+        queueCommand(QBluezConst::OcfLeAddToWhiteList, byteArrayFromStruct(commandParam));
     }
 }
 
@@ -411,14 +411,14 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
 {
     if (m_pendingCommands.isEmpty())
         return;
-    const quint16 ocf = ocfFromOpCode(opCode);
+    const QBluezConst::OpCodeCommandField ocf = QBluezConst::OpCodeCommandField(ocfFromOpCode(opCode));
     const Command currentCmd = m_pendingCommands.first();
     if (currentCmd.ocf != ocf)
         return; // Not one of our commands.
     m_pendingCommands.takeFirst();
     if (status != 0) {
         qCDebug(QT_BT_BLUEZ) << "command" << ocf << "failed with status" << status;
-        if (ocf == OcfLeSetAdvEnable && status == 0xc && currentCmd.data == QByteArray(1, '\0')) {
+        if (ocf == QBluezConst::OcfLeSetAdvEnable && status == 0xc && currentCmd.data == QByteArray(1, '\0')) {
             // we ignore OcfLeSetAdvEnable if it tries to disable an active advertisement
             // it seems the platform often automatically turns off advertisements
             // subsequently the explicit stopAdvertisement call fails when re-issued
@@ -426,7 +426,7 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
             sendNextCommand();
             return;
         }
-        if (ocf == OcfLeReadTxPowerLevel) {
+        if (ocf == QBluezConst::OcfLeReadTxPowerLevel) {
             qCDebug(QT_BT_BLUEZ) << "reading power level failed, leaving it out of the "
                                     "advertising data";
             m_sendPowerLevel = false;
@@ -439,7 +439,7 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
     }
 
     switch (ocf) {
-    case OcfLeReadTxPowerLevel:
+    case QBluezConst::OcfLeReadTxPowerLevel:
         if (m_sendPowerLevel) {
             m_powerLevel = data.at(0);
             qCDebug(QT_BT_BLUEZ) << "TX power level is" << m_powerLevel;

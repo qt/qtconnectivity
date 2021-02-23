@@ -202,7 +202,7 @@ bool HciManager::monitorAclPackets()
     return true;
 }
 
-bool HciManager::sendCommand(OpCodeGroupField ogf, OpCodeCommandField ocf, const QByteArray &parameters)
+bool HciManager::sendCommand(QBluezConst::OpCodeGroupField ogf, QBluezConst::OpCodeCommandField ocf, const QByteArray &parameters)
 {
     qCDebug(QT_BT_BLUEZ) << "sending command; ogf:" << ogf << "ocf:" << ocf;
     quint8 packetType = HCI_COMMAND_PKT;
@@ -369,7 +369,7 @@ bool HciManager::sendConnectionUpdateCommand(quint16 handle,
     commandParams.maxCeLength = qToLittleEndian(quint16(0xffff));
     const QByteArray data = QByteArray::fromRawData(reinterpret_cast<char *>(&commandParams),
                                                     sizeof commandParams);
-    return sendCommand(OgfLinkControl, OcfLeConnectionUpdate, data);
+    return sendCommand(QBluezConst::OgfLinkControl, QBluezConst::OcfLeConnectionUpdate, data);
 }
 
 bool HciManager::sendConnectionParameterUpdateRequest(quint16 handle,

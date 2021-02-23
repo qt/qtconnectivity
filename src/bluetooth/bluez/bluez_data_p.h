@@ -55,6 +55,7 @@
 #include <QtCore/qendian.h>
 #include <sys/socket.h>
 #include <QtBluetooth/QBluetoothUuid>
+#include <QtCore/qtmetamacros.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -375,21 +376,25 @@ struct hci_command_hdr {
     quint8 plen;
 } __attribute__ ((packed));
 
-enum OpCodeGroupField {
-    OgfLinkControl = 0x8,
-};
+namespace QBluezConst {
+    Q_NAMESPACE
+    enum OpCodeGroupField {
+        OgfLinkControl = 0x8,
+    };
+    Q_ENUM_NS(OpCodeGroupField);
 
-enum OpCodeCommandField {
-    OcfLeSetAdvParams = 0x6,
-    OcfLeReadTxPowerLevel = 0x7,
-    OcfLeSetAdvData = 0x8,
-    OcfLeSetScanResponseData = 0x9,
-    OcfLeSetAdvEnable = 0xa,
-    OcfLeClearWhiteList = 0x10,
-    OcfLeAddToWhiteList = 0x11,
-    OcfLeConnectionUpdate = 0x13,
-};
-
+    enum OpCodeCommandField {
+        OcfLeSetAdvParams = 0x6,
+        OcfLeReadTxPowerLevel = 0x7,
+        OcfLeSetAdvData = 0x8,
+        OcfLeSetScanResponseData = 0x9,
+        OcfLeSetAdvEnable = 0xa,
+        OcfLeClearWhiteList = 0x10,
+        OcfLeAddToWhiteList = 0x11,
+        OcfLeConnectionUpdate = 0x13,
+    };
+    Q_ENUM_NS(OpCodeCommandField);
+}
 /* Command opcode pack/unpack */
 #define opCodePack(ogf, ocf) (quint16(((ocf) & 0x03ff)|((ogf) << 10)))
 #define ogfFromOpCode(op) ((op) >> 10)
