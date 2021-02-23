@@ -47,7 +47,7 @@
 
     \snippet btchat/chatserver.h declaration
 
-    The first thing the chat server needs to do is create an instance of QRfcommServer to listen
+    The first thing the chat server needs to do is create an instance of QBluetoothServer to listen
     for incoming Bluetooth connections. Our clientConnected() slot will be called whenever a new
     connection is created.
 
