@@ -148,6 +148,8 @@ void tst_QLowEnergyController::initTestCase()
     }
 #endif
 
+    // QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+
     devAgent = new QBluetoothDeviceDiscoveryAgent(this);
     devAgent->setLowEnergyDiscoveryTimeout(5000);
 
@@ -486,8 +488,10 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
         } else {
             QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
             QCOMPARE(control2->state(), QLowEnergyController::ConnectedState);
+            QTRY_COMPARE(control2->error(), QLowEnergyController::NoError);
             control2->disconnectFromDevice();
             QTRY_COMPARE(control2->state(), QLowEnergyController::UnconnectedState);
+            QTRY_COMPARE(control->error(), QLowEnergyController::NoError);
             QTRY_COMPARE(control2->error(), QLowEnergyController::NoError);
             QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
 
@@ -624,6 +628,8 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
     }
 
     control->disconnectFromDevice();
+    QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 }
 
 void tst_QLowEnergyController::verifyServiceProperties(
@@ -1742,7 +1748,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QTRY_VERIFY_WITH_TIMEOUT(control->state() == QLowEnergyController::ConnectedState, 20000);
     QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control->discoverServices();
@@ -1869,7 +1875,8 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
 
     control->disconnectFromDevice();
-
+    QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
     // *******************************************
     // write value while disconnected -> error
     errorSpy.clear();
@@ -1949,6 +1956,8 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     if (!tempData.isValid()) {
         delete service;
         control->disconnectFromDevice();
+        QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
         QSKIP("Cannot find temperature data characteristic of TI Sensor");
     }
 
@@ -1959,6 +1968,8 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     if (!notification.isValid()) {
         delete service;
         control->disconnectFromDevice();
+        QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
         QSKIP("Cannot find temperature data notification of TI Sensor");
     }
 
@@ -2135,6 +2146,8 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
 
     control->disconnectFromDevice();
+    QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 
     // *******************************************
     // write value while disconnected -> error
@@ -2324,6 +2337,8 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
 
     delete service;
     control->disconnectFromDevice();
+    QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 }
 
 
@@ -2549,6 +2564,8 @@ void tst_QLowEnergyController::tst_errorCases()
     delete irService;
     delete oadService;
     control->disconnectFromDevice();
+    QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 }
 
 /*
@@ -2581,7 +2598,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
         QSKIP("Cannot connect to remote device");
     }
 
-    QCOMPARE(control->state(), QLowEnergyController::ConnectedState);
+    QTRY_VERIFY_WITH_TIMEOUT(control->state() == QLowEnergyController::ConnectedState, 20000);
     QSignalSpy discoveryFinishedSpy(control.data(), SIGNAL(discoveryFinished()));
     QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
     control->discoverServices();
@@ -2625,6 +2642,8 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
             || !imageIdentityChar.isValid()) {
         delete service;
         control->disconnectFromDevice();
+        QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+        QCOMPARE(control->error(), QLowEnergyController::NoError);
         QSKIP("Cannot find OAD char/notification");
     }
 
@@ -2834,6 +2853,8 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 
     delete service;
     control->disconnectFromDevice();
+    QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
+    QCOMPARE(control->error(), QLowEnergyController::NoError);
 }
 
 QTEST_MAIN(tst_QLowEnergyController)
