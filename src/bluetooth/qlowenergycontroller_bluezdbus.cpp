@@ -60,6 +60,9 @@ QLowEnergyControllerPrivateBluezDBus::QLowEnergyControllerPrivateBluezDBus()
 
 QLowEnergyControllerPrivateBluezDBus::~QLowEnergyControllerPrivateBluezDBus()
 {
+    if (state != QLowEnergyController::UnconnectedState) {
+        qCWarning(QT_BT_BLUEZ) << "Low Energy Controller deleted while connected.";
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::init()
@@ -390,6 +393,8 @@ void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
             qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::disconnect() failed"
                                  << reply.reply().errorName()
                                  << reply.reply().errorMessage();
+            executeClose(QLowEnergyController::UnknownError);
+        } else {
             executeClose(QLowEnergyController::NoError);
         }
         call->deleteLater();

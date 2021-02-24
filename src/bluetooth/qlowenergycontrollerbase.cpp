@@ -123,6 +123,7 @@ void QLowEnergyControllerPrivate::setError(
 void QLowEnergyControllerPrivate::setState(
         QLowEnergyController::ControllerState newState)
 {
+    qCDebug(QT_BT) << "QLowEnergyControllerPrivate setting state to" << newState;
     Q_Q(QLowEnergyController);
     if (state == newState)
         return;
