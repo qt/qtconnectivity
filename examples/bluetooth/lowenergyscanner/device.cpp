@@ -116,7 +116,7 @@ void Device::addDevice(const QBluetoothDeviceInfo &info)
 void Device::deviceScanFinished()
 {
     const QList<QBluetoothDeviceInfo> foundDevices = discoveryAgent->discoveredDevices();
-    for (auto nextDevice : foundDevices)
+    for (auto &nextDevice : foundDevices)
         if (nextDevice.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
             devices.append(new DeviceInfo(nextDevice));
 
