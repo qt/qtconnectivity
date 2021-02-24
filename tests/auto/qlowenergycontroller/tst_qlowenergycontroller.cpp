@@ -1934,7 +1934,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
              QLowEnergyController::DiscoveredState);
 
-    const QBluetoothUuid testService(QString("f000aa00-0451-4000-b000-000000000000"));
+    const QBluetoothUuid testService(QString("f000aa20-0451-4000-b000-000000000000"));
     QList<QBluetoothUuid> uuids = control->services();
     QVERIFY(uuids.contains(testService));
 
@@ -1944,41 +1944,41 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QTRY_VERIFY_WITH_TIMEOUT(
         service->state() == QLowEnergyService::ServiceDiscovered, 30000);
 
-    // Temperature service described by
+    // Humidity service described by
     // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
 
-    // 1. Find temperature data characteristic
-    const QLowEnergyCharacteristic tempData = service->characteristic(
-                QBluetoothUuid(QStringLiteral("f000aa01-0451-4000-b000-000000000000")));
-    const QLowEnergyCharacteristic tempConfig = service->characteristic(
-                QBluetoothUuid(QStringLiteral("f000aa02-0451-4000-b000-000000000000")));
+    // 1. Find humidity data characteristic
+    const QLowEnergyCharacteristic humidData = service->characteristic(
+            QBluetoothUuid(QStringLiteral("f000aa21-0451-4000-b000-000000000000")));
+    const QLowEnergyCharacteristic humidConfig = service->characteristic(
+            QBluetoothUuid(QStringLiteral("f000aa22-0451-4000-b000-000000000000")));
 
-    if (!tempData.isValid()) {
+    if (!humidData.isValid()) {
         delete service;
         control->disconnectFromDevice();
         QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
         QCOMPARE(control->error(), QLowEnergyController::NoError);
-        QSKIP("Cannot find temperature data characteristic of TI Sensor");
+        QSKIP("Cannot find humidity data characteristic of TI Sensor");
     }
 
-    // 2. Find temperature data notification descriptor
-    const QLowEnergyDescriptor notification = tempData.descriptor(
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+    // 2. Find humidity data notification descriptor
+    const QLowEnergyDescriptor notification =
+            humidData.descriptor(QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
 
     if (!notification.isValid()) {
         delete service;
         control->disconnectFromDevice();
         QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
         QCOMPARE(control->error(), QLowEnergyController::NoError);
-        QSKIP("Cannot find temperature data notification of TI Sensor");
+        QSKIP("Cannot find humidity data notification of TI Sensor");
     }
 
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
     QVERIFY(service->contains(notification));
-    QVERIFY(service->contains(tempData));
-    if (tempConfig.isValid()) {
-        QVERIFY(service->contains(tempConfig));
-        QCOMPARE(tempConfig.value(), QByteArray::fromHex("00"));
+    QVERIFY(service->contains(humidData));
+    if (humidConfig.isValid()) {
+        QVERIFY(service->contains(humidConfig));
+        QCOMPARE(humidConfig.value(), QByteArray::fromHex("00"));
     }
 
     // 3. Test reading and writing to descriptor -> activate notifications
@@ -2009,11 +2009,11 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     }
 
     // 4. Test reception of notifications
-    // activate the temperature sensor if available
-    if (tempConfig.isValid()) {
-        service->writeCharacteristic(tempConfig, QByteArray::fromHex("01"));
+    // activate the humidity sensor if available
+    if (humidConfig.isValid()) {
+        service->writeCharacteristic(humidConfig, QByteArray::fromHex("01"));
 
-        // first signal is confirmation of tempConfig write
+        // first signal is confirmation of humidConfig write
         // subsequent signals are temp data updates
         QTRY_VERIFY_WITH_TIMEOUT(charWrittenSpy.count() == 1, 10000);
         QTRY_VERIFY_WITH_TIMEOUT(charChangedSpy.count() >= 4, 10000);
@@ -2021,8 +2021,8 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
         QCOMPARE(charWrittenSpy.count(), 1);
         QLowEnergyCharacteristic writtenChar = charWrittenSpy[0].at(0).value<QLowEnergyCharacteristic>();
         QByteArray writtenValue = charWrittenSpy[0].at(1).toByteArray();
-        QCOMPARE(tempConfig, writtenChar);
-        QCOMPARE(tempConfig.value(), writtenValue);
+        QCOMPARE(humidConfig, writtenChar);
+        QCOMPARE(humidConfig.value(), writtenValue);
         QCOMPARE(writtenChar.value(), writtenValue);
         QCOMPARE(writtenValue, QByteArray::fromHex("01"));
 
@@ -2031,17 +2031,17 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
             entry = charChangedSpy[i];
             const QLowEnergyCharacteristic ch = entry[0].value<QLowEnergyCharacteristic>();
 
-            QCOMPARE(tempData, ch);
+            QCOMPARE(humidData, ch);
 
             //check last characteristic changed value matches the characteristics current value
             if (i == (charChangedSpy.count() - 1)) {
                 writtenValue = entry[1].toByteArray();
                 QCOMPARE(ch.value(), writtenValue);
-                QCOMPARE(tempData.value(), writtenValue);
+                QCOMPARE(humidData.value(), writtenValue);
             }
         }
 
-        service->writeCharacteristic(tempConfig, QByteArray::fromHex("00"));
+        service->writeCharacteristic(humidConfig, QByteArray::fromHex("00"));
     }
 
     // 5. Test reading and writing of/to descriptor -> deactivate notifications
