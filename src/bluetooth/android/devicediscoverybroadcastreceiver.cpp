@@ -237,7 +237,10 @@ static const MinorClassJavaToQtMapping minorMappings[] = {
     { nullptr, 0 }, // index 64 & separator
 };
 
-/* Advertising Data Type (AD type) for LE scan records, as defined in Bluetooth CSS v6. */
+/*
+    Advertising Data Type (AD type) for LE scan records, as defined in
+    https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
+*/
 enum ADType {
     ADType16BitUuidIncomplete = 0x02,
     ADType16BitUuidComplete = 0x03,
@@ -245,6 +248,8 @@ enum ADType {
     ADType32BitUuidComplete = 0x05,
     ADType128BitUuidIncomplete = 0x06,
     ADType128BitUuidComplete = 0x07,
+    ADTypeShortenedLocalName = 0x08,
+    ADTypeCompleteLocalName = 0x09,
     ADTypeManufacturerSpecificData = 0xff,
     // .. more will be added when required
 };
@@ -407,8 +412,8 @@ DeviceDiscoveryBroadcastReceiver::DeviceDiscoveryBroadcastReceiver(QObject* pare
 // Runs in Java thread
 void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobject intent)
 {
-    Q_UNUSED(context);
-    Q_UNUSED(env);
+    Q_UNUSED(context)
+    Q_UNUSED(env)
 
     QAndroidJniObject intentObject(intent);
     const QString action = intentObject.callObjectMethod("getAction", "()Ljava/lang/String;").toString();
@@ -519,6 +524,7 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
         int i = 0;
 
         // Spec 4.2, Vol 3, Part C, Chapter 11
+        QString localName;
         while (i < scanRecordLength) {
             // sizeof(EIR Data) = sizeof(Length) + sizeof(EIR data Type) + sizeof(EIR Data)
             // Length = sizeof(EIR data Type) + sizeof(EIR Data)
@@ -554,9 +560,19 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
                                               QByteArray(dataPtr + 2, nBytes - 3));
                 }
                 break;
+            // According to Spec 5.0, Vol 3, Part C, Chapter 12.1
+            // the device's local  name is utf8 encoded
+            case ADTypeShortenedLocalName:
+                if (localName.isEmpty())
+                    localName = QString::fromUtf8(dataPtr, nBytes - 1);
+                break;
+            case ADTypeCompleteLocalName:
+                localName = QString::fromUtf8(dataPtr, nBytes - 1);
+                break;
             default:
+                // qWarning() << "Unhandled AD Type" << Qt::hex << adType;
                 // no other types supported yet and therefore skipped
-                // https://www.bluetooth.org/en-us/specification/assigned-numbers/generic-access-profile
+                // https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
                 break;
             }
 
@@ -565,6 +581,9 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(JNIEnv
             if (!foundService.isNull() && !serviceUuids.contains(foundService))
                 serviceUuids.append(foundService);
         }
+
+        if (info.name().isEmpty())
+            info.setName(localName);
 
         info.setServiceUuids(serviceUuids);
 

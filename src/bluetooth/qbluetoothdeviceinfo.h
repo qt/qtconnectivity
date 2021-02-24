@@ -226,6 +226,7 @@ public:
 
     QBluetoothAddress address() const;
     QString name() const;
+    void setName(const QString &name);
 
     ServiceClasses serviceClasses() const;
     MajorDeviceClass majorDeviceClass() const;

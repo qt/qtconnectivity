@@ -475,6 +475,18 @@ QString QBluetoothDeviceInfo::name() const
 }
 
 /*!
+  Sets the \a name of the device.
+
+  \since 6.2
+ */
+void QBluetoothDeviceInfo::setName(const QString &name)
+{
+    Q_D(QBluetoothDeviceInfo);
+
+    d->name = name;
+}
+
+/*!
     Returns the service class of the device.
 */
 QBluetoothDeviceInfo::ServiceClasses QBluetoothDeviceInfo::serviceClasses() const
