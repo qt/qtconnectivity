@@ -70,11 +70,12 @@ private slots:
 
 private:
     QBluetoothAddress remoteDevice;
+    int numDevices = 0;
     bool expectRemoteDevice;
 };
 
 tst_QBluetoothLocalDevice::tst_QBluetoothLocalDevice()
-    : expectRemoteDevice(false)
+    : numDevices(QBluetoothLocalDevice::allDevices().count()), expectRemoteDevice(false)
 {
     const QString remote = qgetenv("BT_TEST_DEVICE");
     if (!remote.isEmpty()) {
@@ -84,6 +85,9 @@ tst_QBluetoothLocalDevice::tst_QBluetoothLocalDevice()
     } else {
         qWarning() << "Not using any remote device for testing. Set BT_TEST_DEVICE env to run manual tests involving a remote device";
     }
+
+    if (numDevices == 0)
+        return;
 
     // start with host powered off
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
@@ -121,7 +125,7 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
     QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
 
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     localDevice.powerOn();
@@ -142,7 +146,7 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
     QSKIP("Not possible on Windows");
 #endif
 
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     {
@@ -196,7 +200,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
     QFETCH(QBluetoothLocalDevice::HostMode, hostModeExpected);
     QFETCH(bool, expectSignal);
 
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
@@ -229,7 +233,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
 
 void tst_QBluetoothLocalDevice::tst_address()
 {
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
@@ -238,7 +242,7 @@ void tst_QBluetoothLocalDevice::tst_address()
 }
 void tst_QBluetoothLocalDevice::tst_name()
 {
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
@@ -250,7 +254,7 @@ void tst_QBluetoothLocalDevice::tst_isValid()
     // On OS X we can have a valid device (device.isValid() == true),
     // that has neither a name nor a valid address - this happens
     // if a Bluetooth adapter is OFF.
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 #endif
 
@@ -296,7 +300,7 @@ void tst_QBluetoothLocalDevice::tst_allDevices()
 }
 void tst_QBluetoothLocalDevice::tst_construction()
 {
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
@@ -358,7 +362,7 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
     QFETCH(int, pairingWaitTime);
     QFETCH(bool, expectErrorSignal);
 
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
@@ -425,7 +429,7 @@ void tst_QBluetoothLocalDevice::tst_pairingStatus()
     QFETCH(QBluetoothAddress, deviceAddress);
     QFETCH(QBluetoothLocalDevice::Pairing, pairingExpected);
 
-    if (!QBluetoothLocalDevice::allDevices().count())
+    if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
