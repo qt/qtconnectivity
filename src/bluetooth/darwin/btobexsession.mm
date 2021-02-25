@@ -179,7 +179,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
             // Something is wrong:
             if (headerLength < 3 || i + headerLength > length)
                 return empty;
-            QVector<unsigned char> value;
+            QList<unsigned char> value;
             if (headerLength > 3) {
                 value.resize(headerLength - 3);
                 std::copy(data, data + headerLength, value.begin());
@@ -320,7 +320,7 @@ ObjCStrongReference<NSMutableData> next_data_chunk(QIODevice &inputStream, IOBlu
 
     const OBEXMaxPacketLength maxBodySize = packetSize - headersLength;
 
-    QVector<char> block(maxBodySize);
+    QList<char> block(maxBodySize);
     const int realSize = inputStream.read(block.data(), block.size());
     if (realSize <= 0) {
         // Well, either the last or an error.

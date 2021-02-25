@@ -7,6 +7,8 @@ General
 
  - qbluetoothglobal.h was removed. qtbluetoothglobal. is the official header with the same purpose.
 
+ - Every usage of QVector has been replaced by QList.
+
 QBluetoothDeviceDiscoveryAgent
 ------------------------------
 
@@ -22,12 +24,12 @@ QBluetoothDeviceInfo
 - DataCompleteness was removed without replacement.
 
 - setServiceUuids(const QList<QBluetoothUuid>, DataCompleteness) was replaced by
-  setServiceUuids(const QVector<QBluetoothUuid> &uuids)
+  setServiceUuids(const QList<QBluetoothUuid> &uuids)
 
 - DataCompleteness serviceUuidsCompleteness() const was removed without replacement.
 
 - QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const was replaced by
-  QVector<QBluetoothUuid> serviceUuids() const.
+  QList<QBluetoothUuid> serviceUuids() const.
 
 QLowEnergyService
 -----------------

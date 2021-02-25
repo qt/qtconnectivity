@@ -370,7 +370,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceFound(void *obj)
     deviceInfo.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
     deviceInfo.setRssi(device.RSSI);
 
-    const QVector<QBluetoothUuid> uuids(DarwinBluetooth::extract_services_uuids(device));
+    const QList<QBluetoothUuid> uuids(DarwinBluetooth::extract_services_uuids(device));
     deviceInfo.setServiceUuids(uuids);
 
     deviceFound(deviceInfo);
@@ -498,7 +498,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QBluetoothDeviceIn
 
                 if (discoveredDevices[i].manufacturerData() != newDeviceInfo.manufacturerData()) {
                     qCDebug(QT_BT_DARWIN) << "Updating manufacturer data for" << newDeviceInfo.address();
-                    const QVector<quint16> keys = newDeviceInfo.manufacturerIds();
+                    const QList<quint16> keys = newDeviceInfo.manufacturerIds();
                     for (auto key: keys)
                         discoveredDevices[i].setManufacturerData(key, newDeviceInfo.manufacturerData(key));
                     updatedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);

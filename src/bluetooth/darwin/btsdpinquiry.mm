@@ -71,7 +71,7 @@ QBluetoothUuid extract_service_ID(IOBluetoothSDPServiceRecord *record)
     return sdp_element_to_uuid([record getAttributeDataElement:kBluetoothSDPAttributeIdentifierServiceID]);
 }
 
-QVector<QBluetoothUuid> extract_service_class_ID_list(IOBluetoothSDPServiceRecord *record)
+QList<QBluetoothUuid> extract_service_class_ID_list(IOBluetoothSDPServiceRecord *record)
 {
     Q_ASSERT(record);
 
@@ -81,7 +81,7 @@ QVector<QBluetoothUuid> extract_service_class_ID_list(IOBluetoothSDPServiceRecor
     if (!idList || [idList getTypeDescriptor] != kBluetoothSDPDataElementTypeDataElementSequence)
         return {};
 
-    QVector<QBluetoothUuid> uuids;
+    QList<QBluetoothUuid> uuids;
     NSArray *const arr = [idList getArrayValue];
     for (IOBluetoothSDPDataElement *dataElement in arr) {
         const auto qtUuid = sdp_element_to_uuid(dataElement);
@@ -92,7 +92,7 @@ QVector<QBluetoothUuid> extract_service_class_ID_list(IOBluetoothSDPServiceRecor
     return uuids;
 }
 
-QBluetoothServiceInfo::Sequence service_class_ID_list_to_sequence(const QVector<QBluetoothUuid> &uuids)
+QBluetoothServiceInfo::Sequence service_class_ID_list_to_sequence(const QList<QBluetoothUuid> &uuids)
 {
     if (uuids.isEmpty())
         return {};
@@ -170,15 +170,15 @@ void extract_service_record(IOBluetoothSDPServiceRecord *record, QBluetoothServi
     if (!serviceUuid.isNull())
         serviceInfo.setServiceUuid(serviceUuid);
 
-    const QVector<QBluetoothUuid> uuids(extract_service_class_ID_list(record));
+    const QList<QBluetoothUuid> uuids(extract_service_class_ID_list(record));
     const auto sequence = service_class_ID_list_to_sequence(uuids);
     if (!sequence.isEmpty())
         serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, sequence);
 }
 
-QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
+QList<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
 {
-    QVector<QBluetoothUuid> uuids;
+    QList<QBluetoothUuid> uuids;
 
     // All "temporary" obj-c objects are autoreleased.
     QT_BT_MAC_AUTORELEASEPOOL;
@@ -192,7 +192,7 @@ QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
         if (!serviceID.isNull())
             uuids.push_back(serviceID);
 
-        const QVector<QBluetoothUuid> idList(extract_service_class_ID_list(record));
+        const QList<QBluetoothUuid> idList(extract_service_class_ID_list(record));
         if (idList.size())
             uuids.append(idList);
     }

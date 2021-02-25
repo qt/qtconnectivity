@@ -81,7 +81,7 @@ struct AdvertisementData {
 
     // For now, we "parse":
     QString localName;
-    QVector<QBluetoothUuid> serviceUuids;
+    QList<QBluetoothUuid> serviceUuids;
     QHash<quint16, QByteArray> manufacturerData;
     // TODO: other keys probably?
     AdvertisementData(NSDictionary *AdvertisementData);
