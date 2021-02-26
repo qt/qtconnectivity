@@ -365,8 +365,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
         //check for SPP protocol
         bool ok = false;
-        auto uuid16 = uuid.toUInt16(&ok);
-        haveSppClass |= ok && uuid16 == QBluetoothUuid::SerialPort;
+        haveSppClass |= ok && uuid == QBluetoothUuid::ServiceClassUuid::SerialPort;
 
         //check for custom uuid
         if (uuid.minimumSize() == 16)
@@ -375,7 +374,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
     auto rfcommProtocolDescriptorList = []() -> QBluetoothServiceInfo::Sequence {
             QBluetoothServiceInfo::Sequence protocol;
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm))
                      << QVariant::fromValue(0);
             return protocol;
     };
@@ -383,7 +382,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
     auto sppProfileDescriptorList = []() -> QBluetoothServiceInfo::Sequence {
         QBluetoothServiceInfo::Sequence profileSequence;
         QBluetoothServiceInfo::Sequence classId;
-        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
         classId << QVariant::fromValue(quint16(0x100));
         profileSequence.append(QVariant::fromValue(classId));
         return profileSequence;
@@ -400,7 +399,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         {
             QBluetoothServiceInfo::Sequence protocol;
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::L2cap));
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }
 
@@ -417,12 +416,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             QBluetoothServiceInfo::Sequence classId;
             //set SPP service class uuid
             classId << QVariant::fromValue(uuid);
-            classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+            classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
             serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
             serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Serial Port Profile"));
             serviceInfo.setServiceUuid(uuid);
-        } else if (uuid == QBluetoothUuid{QBluetoothUuid::SerialPort}) {
+        } else if (uuid == QBluetoothUuid{QBluetoothUuid::ServiceClassUuid::SerialPort}) {
             //set rfcomm protocol
             protocolDescriptorList.append(QVariant::fromValue(rfcommProtocolDescriptorList()));
 
@@ -440,7 +439,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
         QBluetoothServiceInfo::Sequence publicBrowse;
-        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
 
         if (!customUuids.contains(i)) {

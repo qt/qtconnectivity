@@ -132,7 +132,7 @@
     Although the example application does not display descriptors it uses descriptors to
     get the name of an individual characteristic if its name cannot be discerned based on its
     UUID. The second way to obtain the name is the existence of a descriptor of the type
-    \l {QBluetoothUuid::CharacteristicUserDescription}. The code below demonstrates how this
+    \l {QBluetoothUuid::DescriptorType::CharacteristicUserDescription}. The code below demonstrates how this
     may be achieved:
 
     \snippet lowenergyscanner/characteristicinfo.cpp les-get-descriptors

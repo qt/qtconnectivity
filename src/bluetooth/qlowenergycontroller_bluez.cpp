@@ -662,7 +662,7 @@ void QLowEnergyControllerPrivateBluez::createServicesForCentralIfRequired()
         return; //nothing to do
 
     //do not add the services each time we start a connection
-    if (localServices.contains(QBluetoothUuid(QBluetoothUuid::GenericAccess)))
+    if (localServices.contains(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::GenericAccess)))
         return;
 
     qCDebug(QT_BT_BLUEZ) << "Creating default GAP/GATT services";
@@ -671,22 +671,22 @@ void QLowEnergyControllerPrivateBluez::createServicesForCentralIfRequired()
     //for now the values are static
     QLowEnergyServiceData gapServiceData;
     gapServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
-    gapServiceData.setUuid(QBluetoothUuid::GenericAccess);
+    gapServiceData.setUuid(QBluetoothUuid::ServiceClassUuid::GenericAccess);
 
     QLowEnergyCharacteristicData gapDeviceName;
-    gapDeviceName.setUuid(QBluetoothUuid::DeviceName);
+    gapDeviceName.setUuid(QBluetoothUuid::CharacteristicType::DeviceName);
     gapDeviceName.setProperties(QLowEnergyCharacteristic::Read);
 
     QBluetoothLocalDevice mainAdapter;
     gapDeviceName.setValue(mainAdapter.name().toLatin1()); //static name
 
     QLowEnergyCharacteristicData gapAppearance;
-    gapAppearance.setUuid(QBluetoothUuid::Appearance);
+    gapAppearance.setUuid(QBluetoothUuid::CharacteristicType::Appearance);
     gapAppearance.setProperties(QLowEnergyCharacteristic::Read);
     gapAppearance.setValue(QByteArray::fromHex("80")); // Generic Computer (0x80)
 
     QLowEnergyCharacteristicData gapPrivacyFlag;
-    gapPrivacyFlag.setUuid(QBluetoothUuid::PeripheralPrivacyFlag);
+    gapPrivacyFlag.setUuid(QBluetoothUuid::CharacteristicType::PeripheralPrivacyFlag);
     gapPrivacyFlag.setProperties(QLowEnergyCharacteristic::Read);
     gapPrivacyFlag.setValue(QByteArray::fromHex("00")); // disable privacy
 
@@ -701,16 +701,16 @@ void QLowEnergyControllerPrivateBluez::createServicesForCentralIfRequired()
 
     QLowEnergyServiceData gattServiceData;
     gattServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
-    gattServiceData.setUuid(QBluetoothUuid::GenericAttribute);
+    gattServiceData.setUuid(QBluetoothUuid::ServiceClassUuid::GenericAttribute);
 
     QLowEnergyCharacteristicData serviceChangedChar;
-    serviceChangedChar.setUuid(QBluetoothUuid::ServiceChanged);
+    serviceChangedChar.setUuid(QBluetoothUuid::CharacteristicType::ServiceChanged);
     serviceChangedChar.setProperties(QLowEnergyCharacteristic::Indicate);
     //arbitrary range of 2 bit handle range (1-4
     serviceChangedChar.setValue(QByteArray::fromHex("0104"));
 
     const QLowEnergyDescriptorData clientConfig(
-                        QBluetoothUuid::ClientCharacteristicConfiguration,
+                        QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration,
                         QByteArray(2, 0));
     serviceChangedChar.addDescriptor(clientConfig);
     gattServiceData.addCharacteristic(serviceChangedChar);
@@ -2627,7 +2627,7 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForPeripheral(
     if (!hasNotifyProperty && !hasIndicateProperty)
         return;
     for (const QLowEnergyServicePrivate::DescData &desc : qAsConst(charData.descriptorList)) {
-        if (desc.uuid != QBluetoothUuid::ClientCharacteristicConfiguration)
+        if (desc.uuid != QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)
             continue;
 
         // Notify/indicate currently connected client.
@@ -3176,7 +3176,7 @@ QLowEnergyControllerPrivateBluez::gatherClientConfigData()
             for (auto descIt = charData.descriptorList.begin();
                  descIt != charData.descriptorList.end(); ++descIt) {
                 QLowEnergyServicePrivate::DescData &descData = descIt.value();
-                if (descData.uuid == QBluetoothUuid::ClientCharacteristicConfiguration) {
+                if (descData.uuid == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
                     data << TempClientConfigurationData(&descData, charData.valueHandle,
                                                         descIt.key());
                     break;
@@ -3390,17 +3390,17 @@ void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnerg
             attribute.maxLength = INT_MAX;
 
             // Spec v4.2, Vol. 3, Part G, 3.3.3.x
-            if (attribute.type == QBluetoothUuid::CharacteristicExtendedProperties) {
+            if (attribute.type == QBluetoothUuid::DescriptorType::CharacteristicExtendedProperties) {
                 attribute.properties = QLowEnergyCharacteristic::Read;
                 attribute.minLength = attribute.maxLength = 2;
-            } else if (attribute.type == QBluetoothUuid::CharacteristicPresentationFormat) {
+            } else if (attribute.type == QBluetoothUuid::DescriptorType::CharacteristicPresentationFormat) {
                 attribute.properties = QLowEnergyCharacteristic::Read;
                 attribute.minLength = attribute.maxLength = 7;
-            } else if (attribute.type == QBluetoothUuid::CharacteristicAggregateFormat) {
+            } else if (attribute.type == QBluetoothUuid::DescriptorType::CharacteristicAggregateFormat) {
                 attribute.properties = QLowEnergyCharacteristic::Read;
                 attribute.minLength = 4;
-            } else if (attribute.type == QBluetoothUuid::ClientCharacteristicConfiguration
-                       || attribute.type == QBluetoothUuid::ServerCharacteristicConfiguration) {
+            } else if (attribute.type == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration
+                       || attribute.type == QBluetoothUuid::DescriptorType::ServerCharacteristicConfiguration) {
                 attribute.properties = QLowEnergyCharacteristic::Read
                         | QLowEnergyCharacteristic::Write
                         | QLowEnergyCharacteristic::WriteNoResponse

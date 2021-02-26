@@ -636,7 +636,7 @@ void QLowEnergyControllerPrivateDarwin::_q_notificationEnabled(QLowEnergyHandle 
     }
 
     const QLowEnergyDescriptor qtDescriptor =
-        qtChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+        qtChar.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
     if (!qtDescriptor.isValid()) {
         qCWarning(QT_BT_DARWIN) << "characteristic" << charHandle
                                 << "does not have a client characteristic "

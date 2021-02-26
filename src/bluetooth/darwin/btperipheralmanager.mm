@@ -105,8 +105,8 @@ ObjCStrongReference<CBMutableDescriptor> create_descriptor(const QLowEnergyDescr
     CBUUIDCharacteristicUserDescriptionString and CBUUIDCharacteristicFormatString"
     */
 
-    if (data.uuid() != QBluetoothUuid::CharacteristicUserDescription &&
-        data.uuid() != QBluetoothUuid::CharacteristicPresentationFormat) {
+    if (data.uuid() != QBluetoothUuid::DescriptorType::CharacteristicUserDescription &&
+        data.uuid() != QBluetoothUuid::DescriptorType::CharacteristicPresentationFormat) {
         qCWarning(QT_BT_DARWIN) << "unsupported descriptor" << data.uuid();
         return {};
     }
@@ -116,7 +116,7 @@ ObjCStrongReference<CBMutableDescriptor> create_descriptor(const QLowEnergyDescr
     // Descriptors are immutable with CoreBluetooth, that's why we
     // have to provide a value here and not able to change it later.
     ObjCStrongReference<NSObject> value;
-    if (data.uuid() == QBluetoothUuid::CharacteristicUserDescription) {
+    if (data.uuid() == QBluetoothUuid::DescriptorType::CharacteristicUserDescription) {
         const QString asQString(QString::fromUtf8(data.value()));
         value.reset(asQString.toNSString(), RetainPolicy::doInitialRetain); // toNSString is auto-released, we have to retain.
     } else {

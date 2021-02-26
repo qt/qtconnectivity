@@ -112,7 +112,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& loca
     if (registered)
         return false;
 
-    if (protocolDescriptor(QBluetoothUuid::Rfcomm).isEmpty()) {
+    if (protocolDescriptor(QBluetoothUuid::ProtocolUuid::Rfcomm).isEmpty()) {
         qCWarning(QT_BT_ANDROID) << Q_FUNC_INFO << "Only RFCOMM services can be registered on Android";
         return false;
     }

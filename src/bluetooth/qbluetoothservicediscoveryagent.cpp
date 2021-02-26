@@ -231,7 +231,7 @@ QList<QBluetoothServiceInfo> QBluetoothServiceDiscoveryAgent::discoveredServices
     \l {QBluetoothServiceInfo::ServiceId}{ServiceId} and \l {QBluetoothServiceInfo::ServiceClassIds} {ServiceClassIds}
     attributes.
 
-    An empty UUID list is equivalent to a list containing only QBluetoothUuid::PublicBrowseGroup.
+    An empty UUID list is equivalent to a list containing only QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup.
 
     \sa uuidFilter()
 */

@@ -281,27 +281,27 @@ QBluetoothUuid::DescriptorType QLowEnergyDescriptor::type() const
 {
     const QBluetoothUuid u = uuid();
     bool ok = false;
-    quint16 shortUuid = u.toUInt16(&ok);
+    QBluetoothUuid::DescriptorType shortUuid = static_cast<QBluetoothUuid::DescriptorType>(u.toUInt16(&ok));
 
     if (!ok)
-        return QBluetoothUuid::UnknownDescriptorType;
+        return QBluetoothUuid::DescriptorType::UnknownDescriptorType;
 
     switch (shortUuid) {
-    case QBluetoothUuid::CharacteristicExtendedProperties:
-    case QBluetoothUuid::CharacteristicUserDescription:
-    case QBluetoothUuid::ClientCharacteristicConfiguration:
-    case QBluetoothUuid::ServerCharacteristicConfiguration:
-    case QBluetoothUuid::CharacteristicPresentationFormat:
-    case QBluetoothUuid::CharacteristicAggregateFormat:
-    case QBluetoothUuid::ValidRange:
-    case QBluetoothUuid::ExternalReportReference:
-    case QBluetoothUuid::ReportReference:
+        case QBluetoothUuid::DescriptorType::CharacteristicExtendedProperties:
+    case QBluetoothUuid::DescriptorType::CharacteristicUserDescription:
+    case QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration:
+    case QBluetoothUuid::DescriptorType::ServerCharacteristicConfiguration:
+    case QBluetoothUuid::DescriptorType::CharacteristicPresentationFormat:
+    case QBluetoothUuid::DescriptorType::CharacteristicAggregateFormat:
+    case QBluetoothUuid::DescriptorType::ValidRange:
+    case QBluetoothUuid::DescriptorType::ExternalReportReference:
+    case QBluetoothUuid::DescriptorType::ReportReference:
         return (QBluetoothUuid::DescriptorType) shortUuid;
     default:
         break;
     }
 
-    return QBluetoothUuid::UnknownDescriptorType;
+    return QBluetoothUuid::DescriptorType::UnknownDescriptorType;
 }
 
 /*!

@@ -581,7 +581,7 @@ void BtLocalDevice::serverListenPort()
 
         QBluetoothServiceInfo::Sequence profileSequence;
         QBluetoothServiceInfo::Sequence classId;
-        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
         classId << QVariant::fromValue(quint16(0x100));
         profileSequence.append(QVariant::fromValue(classId));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
@@ -589,7 +589,7 @@ void BtLocalDevice::serverListenPort()
 
         classId.clear();
         classId << QVariant::fromValue(QBluetoothUuid(QString(TEST_SERVICE_UUID)));
-        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
         serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
         // Service name, description and provider
@@ -604,20 +604,20 @@ void BtLocalDevice::serverListenPort()
 
         // Service Discoverability
         QBluetoothServiceInfo::Sequence browseSequence;
-        browseSequence << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        browseSequence << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, browseSequence);
 
         // Protocol descriptor list
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         QBluetoothServiceInfo::Sequence protocol;
-        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::L2cap));
         if (server->serverType() == QBluetoothServiceInfo::L2capProtocol)
             protocol << QVariant::fromValue(server->serverPort());
         protocolDescriptorList.append(QVariant::fromValue(protocol));
 
         if (server->serverType() == QBluetoothServiceInfo::RfcommProtocol) {
             protocol.clear();
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm))
                      << QVariant::fromValue(quint8(server->serverPort()));
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }

@@ -439,7 +439,8 @@ static QBluetoothDeviceInfo createDeviceInfoFromBluez5Device(const QVariantMap& 
             //once we found one BTLE service we are done
             bool ok = false;
             quint16 shortId = id.toUInt16(&ok);
-            if (ok && ((shortId & QBluetoothUuid::GenericAccess) == QBluetoothUuid::GenericAccess))
+            quint16 genericAccessInt = static_cast<quint16>(QBluetoothUuid::ServiceClassUuid::GenericAccess);
+            if (ok && ((shortId & genericAccessInt) == genericAccessInt))
                 foundLikelyLowEnergyUuid = true;
         }
         uuids.append(id);

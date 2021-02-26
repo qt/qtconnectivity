@@ -164,7 +164,7 @@ void DeviceHandler::stopMeasurement()
 //! [Filter HeartRate service 1]
 void DeviceHandler::serviceDiscovered(const QBluetoothUuid &gatt)
 {
-    if (gatt == QBluetoothUuid(QBluetoothUuid::HeartRate)) {
+    if (gatt == QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::HeartRate)) {
         setInfo("Heart Rate service discovered. Waiting for service scan to be done...");
         m_foundHeartRateService = true;
     }
@@ -184,7 +184,7 @@ void DeviceHandler::serviceScanDone()
 //! [Filter HeartRate service 2]
     // If heartRateService found, create new service
     if (m_foundHeartRateService)
-        m_service = m_control->createServiceObject(QBluetoothUuid(QBluetoothUuid::HeartRate), this);
+        m_service = m_control->createServiceObject(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::HeartRate), this);
 
     if (m_service) {
         connect(m_service, &QLowEnergyService::stateChanged, this, &DeviceHandler::serviceStateChanged);
@@ -209,13 +209,13 @@ void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
     {
         setInfo(tr("Service discovered."));
 
-        const QLowEnergyCharacteristic hrChar = m_service->characteristic(QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement));
+        const QLowEnergyCharacteristic hrChar = m_service->characteristic(QBluetoothUuid(QBluetoothUuid::CharacteristicType::HeartRateMeasurement));
         if (!hrChar.isValid()) {
             setError("HR Data not found.");
             break;
         }
 
-        m_notificationDesc = hrChar.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+        m_notificationDesc = hrChar.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         if (m_notificationDesc.isValid())
             m_service->writeDescriptor(m_notificationDesc, QByteArray::fromHex("0100"));
 
@@ -234,7 +234,7 @@ void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
 void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, const QByteArray &value)
 {
     // ignore any other characteristic change -> shouldn't really happen though
-    if (c.uuid() != QBluetoothUuid(QBluetoothUuid::HeartRateMeasurement))
+    if (c.uuid() != QBluetoothUuid(QBluetoothUuid::CharacteristicType::HeartRateMeasurement))
         return;
 
     auto data = reinterpret_cast<const quint8 *>(value.constData());

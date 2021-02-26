@@ -683,7 +683,7 @@ QT_USE_NAMESPACE
                     newDesc.value = qt_bytearray(static_cast<NSObject *>(d.value));
                     descList[lastValidHandle] = newDesc;
                     // Check, if it's client characteristic configuration descriptor:
-                    if (newDesc.uuid == QBluetoothUuid::ClientCharacteristicConfiguration) {
+                    if (newDesc.uuid == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
                         if (newDesc.value.size() && (newDesc.value[0] & 3))
                             [peripheral setNotifyValue:YES forCharacteristic:c];
                     }
@@ -807,7 +807,7 @@ QT_USE_NAMESPACE
         CBCharacteristic *const characteristic = charMap[request.handle];
 
         if (request.type == LERequest::ClientConfiguration) {
-            const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+            const QBluetoothUuid qtUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
             CBDescriptor *const descriptor = [self descriptor:qtUuid forCharacteristic:characteristic];
             Q_ASSERT_X(descriptor, Q_FUNC_INFO, "no client characteristic "
                        "configuration descriptor found");
@@ -868,7 +868,7 @@ QT_USE_NAMESPACE
     // At the moment we call setNotifyValue _only_ from 'writeDescriptor';
     // from Qt's API POV it's a descriptor write operation and we must report
     // it back, so check _now_ that we really have this descriptor.
-    const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+    const QBluetoothUuid qtUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
     if (![self descriptor:qtUuid forCharacteristic:charMap[charHandle]]) {
         qCWarning(QT_BT_DARWIN) << "no client characteristic configuration found";
         if (notifier) {
@@ -1809,7 +1809,7 @@ QT_USE_NAMESPACE
 
     requestPending = false;
 
-    const QBluetoothUuid qtUuid(QBluetoothUuid::ClientCharacteristicConfiguration);
+    const QBluetoothUuid qtUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
     CBDescriptor *const descriptor = [self descriptor:qtUuid forCharacteristic:characteristic];
     const QByteArray valueToReport(valuesToWrite.value(descriptor, QByteArray()));
     const int nRemoved = valuesToWrite.remove(descriptor);

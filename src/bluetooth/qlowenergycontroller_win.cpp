@@ -629,18 +629,18 @@ static BTH_LE_GATT_CHARACTERISTIC recoverNativeLeGattCharacteristic(
 static BTH_LE_GATT_DESCRIPTOR_TYPE nativeLeGattDescriptorTypeFromUuid(
         const QBluetoothUuid &uuid)
 {
-    switch (uuid.toUInt16()) {
-    case QBluetoothUuid::CharacteristicExtendedProperties:
+    switch (static_cast<QBluetoothUuid::DescriptorType>(uuid.toUInt16())) {
+    case QBluetoothUuid::DescriptorType::CharacteristicExtendedProperties:
         return CharacteristicExtendedProperties;
-    case QBluetoothUuid::CharacteristicUserDescription:
+    case QBluetoothUuid::DescriptorType::CharacteristicUserDescription:
         return CharacteristicUserDescription;
-    case QBluetoothUuid::ClientCharacteristicConfiguration:
+    case QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration:
         return ClientCharacteristicConfiguration;
-    case QBluetoothUuid::ServerCharacteristicConfiguration:
+    case QBluetoothUuid::DescriptorType::ServerCharacteristicConfiguration:
         return ServerCharacteristicConfiguration;
-    case QBluetoothUuid::CharacteristicPresentationFormat:
+    case QBluetoothUuid::DescriptorType::CharacteristicPresentationFormat:
         return CharacteristicFormat;
-    case QBluetoothUuid::CharacteristicAggregateFormat:
+    case QBluetoothUuid::DescriptorType::CharacteristicAggregateFormat:
         return CharacteristicAggregateFormat;
     default:
         return CustomDescriptor;

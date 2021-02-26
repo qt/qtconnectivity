@@ -37,6 +37,12 @@ QLowEnergyService
  - Renamed DiscoveringServices enum value to DiscoveringService. This properly relfects the fact that
    only one service is being discovered at a given time.
 
+QBluetoothUuid
+--------------
+
+ - enums ProtocolUuid, ServiceClassUuid, CharacteristicType, and DescriptorType are now scoped enums.
+   Usage of enum items has to be adapted in user code.
+
 QLowEnergyController
 --------------------
 

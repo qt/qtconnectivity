@@ -203,7 +203,7 @@ Low Energy devices.
     The \c serviceDiscovered() slot below is triggered as a result of the
     \l {QLowEnergyController::serviceDiscovered()} signal and provides an intermittent progress report.
     Since we are talking about the heart listener app which monitors HeartRate devices in the vicinity
-    we ignore any service that is not of type \l QBluetoothUuid::HeartRate.
+    we ignore any service that is not of type \l QBluetoothUuid::ServiceClassUuid::HeartRate.
 
     \snippet heartrate-game/devicehandler.cpp Filter HeartRate service 1
 
@@ -225,12 +225,12 @@ Low Energy devices.
     \section2 Interaction with the Peripheral Device
 
     In the code example above, the desired characteristic is of type
-    \l {QBluetoothUuid::HeartRateMeasurement}{HeartRateMeasurement}. Since the application measures
+    \l {QBluetoothUuid::CharacteristicType::HeartRateMeasurement}{HeartRateMeasurement}. Since the application measures
     the heart rate changes, it must enable change notifications for the characteristic.
     Note that not all characteristics provide change notifications. Since the HeartRate characteristic
     has been standardized it is possible to assume that notifications can be received. Ultimately
     \l QLowEnergyCharacteristic::properties() must have the \l {QLowEnergyCharacteristic::Notify} flag
-    set and a descriptor of type \l {QBluetoothUuid::ClientCharacteristicConfiguration} must exist to confirm
+    set and a descriptor of type \l {QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration} must exist to confirm
     the availability of an appropriate notification.
 
     Finally, we process the value of the HeartRate characteristic, as per Bluetooth Low Energy standard:

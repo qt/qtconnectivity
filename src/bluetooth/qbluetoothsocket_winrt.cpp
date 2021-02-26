@@ -466,7 +466,7 @@ void QBluetoothSocketPrivateWinRT::connectToService(
     } else {
        // try doing service discovery to see if we can find the socket
        if (service.serviceUuid().isNull()
-               && !service.serviceClassUuids().contains(QBluetoothUuid::SerialPort)) {
+               && !service.serviceClassUuids().contains(QBluetoothUuid::ServiceClassUuid::SerialPort)) {
            qCWarning(QT_BT_WINRT) << "No port, no PSM, and no UUID provided. Unable to connect";
            return;
        }

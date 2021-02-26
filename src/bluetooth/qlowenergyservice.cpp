@@ -144,7 +144,7 @@ QT_BEGIN_NAMESPACE
     the central is interested in receiving. In order for a characteristic to support
     such notifications it must have the \l QLowEnergyCharacteristic::Notify or
     \l QLowEnergyCharacteristic::Indicate property and a descriptor of type
-    \l QBluetoothUuid::ClientCharacteristicConfiguration. Provided those conditions
+    \l QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration. Provided those conditions
     are fulfilled notifications can be enabled as shown in the following code segment:
 
     \snippet doc_src_qtbluetooth.cpp enable_btle_notifications
@@ -330,7 +330,7 @@ QT_BEGIN_NAMESPACE
     role, this signal is emitted when the value of \a characteristic is changed by an event on the
     peripheral/device side. In that case, the signal emission implies that change notifications must
     have been activated via the characteristic's
-    \l {QBluetoothUuid::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
+    \l {QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
     descriptor prior to the change event on the peripheral. More details on how this might be
     done can be found further \l{notifications}{above}.
 
@@ -814,7 +814,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
         return;
     }
 #ifdef Q_OS_DARWIN
-    if (descriptor.uuid() == QBluetoothUuid::ClientCharacteristicConfiguration) {
+    if (descriptor.uuid() == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
         // We have to identify a special case - ClientCharacteristicConfiguration
         // since with CoreBluetooth:
         //

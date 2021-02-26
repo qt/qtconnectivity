@@ -66,11 +66,11 @@ using ServiceInfo = QBluetoothServiceInfo;
 // I need these getters duplicated here:
 ServiceInfo::Protocol socket_protocol(const QBluetoothServiceInfoPrivate &privateInfo)
 {
-    ServiceInfo::Sequence parameters = privateInfo.protocolDescriptor(QBluetoothUuid::Rfcomm);
+    ServiceInfo::Sequence parameters = privateInfo.protocolDescriptor(QBluetoothUuid::ProtocolUuid::Rfcomm);
     if (!parameters.isEmpty())
         return ServiceInfo::RfcommProtocol;
 
-    parameters = privateInfo.protocolDescriptor(QBluetoothUuid::L2cap);
+    parameters = privateInfo.protocolDescriptor(QBluetoothUuid::ProtocolUuid::L2cap);
     if (!parameters.isEmpty())
         return ServiceInfo::L2capProtocol;
 
@@ -196,9 +196,9 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 
     const QMutexLocker lock(&QBluetoothServerPrivate::channelMapMutex());
     if (type == ServiceInfo::RfcommProtocol)
-        server = QBluetoothServerPrivate::registeredServer(channel_or_psm(*this, QBluetoothUuid::Rfcomm), type);
+        server = QBluetoothServerPrivate::registeredServer(channel_or_psm(*this, QBluetoothUuid::ProtocolUuid::Rfcomm), type);
     else if (type == ServiceInfo::L2capProtocol)
-        server = QBluetoothServerPrivate::registeredServer(channel_or_psm(*this, QBluetoothUuid::L2cap), type);
+        server = QBluetoothServerPrivate::registeredServer(channel_or_psm(*this, QBluetoothUuid::ProtocolUuid::L2cap), type);
 
     if (server)
         server->stopListener();

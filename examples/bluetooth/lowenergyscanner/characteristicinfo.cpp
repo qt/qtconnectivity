@@ -74,7 +74,7 @@ QString CharacteristicInfo::getName() const
     // find descriptor with CharacteristicUserDescription
     const QList<QLowEnergyDescriptor> descriptors = m_characteristic.descriptors();
     for (const QLowEnergyDescriptor &descriptor : descriptors) {
-        if (descriptor.type() == QBluetoothUuid::CharacteristicUserDescription) {
+        if (descriptor.type() == QBluetoothUuid::DescriptorType::CharacteristicUserDescription) {
             name = descriptor.value();
             break;
         }

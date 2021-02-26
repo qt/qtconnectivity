@@ -469,11 +469,11 @@ void QBluetoothServiceInfo::removeAttribute(quint16 attributeId)
 */
 QBluetoothServiceInfo::Protocol QBluetoothServiceInfo::socketProtocol() const
 {
-    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::Rfcomm);
+    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::ProtocolUuid::Rfcomm);
     if (!parameters.isEmpty())
         return RfcommProtocol;
 
-    parameters = protocolDescriptor(QBluetoothUuid::L2cap);
+    parameters = protocolDescriptor(QBluetoothUuid::ProtocolUuid::L2cap);
     if (!parameters.isEmpty())
         return L2capProtocol;
 
@@ -490,7 +490,7 @@ QBluetoothServiceInfo::Protocol QBluetoothServiceInfo::socketProtocol() const
 */
 int QBluetoothServiceInfo::protocolServiceMultiplexer() const
 {
-    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::L2cap);
+    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::ProtocolUuid::L2cap);
 
     if (parameters.isEmpty())
         return -1;
@@ -670,7 +670,7 @@ QBluetoothServiceInfo::Sequence QBluetoothServiceInfoPrivate::protocolDescriptor
 
 int QBluetoothServiceInfoPrivate::serverChannel() const
 {
-    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::Rfcomm);
+    QBluetoothServiceInfo::Sequence parameters = protocolDescriptor(QBluetoothUuid::ProtocolUuid::Rfcomm);
 
     if (parameters.isEmpty())
         return -1;

@@ -84,7 +84,7 @@ void tst_QBluetoothUuid::tst_construction()
     }
 
     {
-        QBluetoothUuid uuid(QBluetoothUuid::PublicBrowseGroup);
+        QBluetoothUuid uuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup);
 
         QVERIFY(!uuid.isNull());
 
@@ -94,11 +94,11 @@ void tst_QBluetoothUuid::tst_construction()
         uuid16 = uuid.toUInt16(&ok);
 
         QVERIFY(ok);
-        QCOMPARE(uuid16, static_cast<quint16>(QBluetoothUuid::PublicBrowseGroup));
+        QCOMPARE(uuid16, static_cast<quint16>(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup));
     }
 
     {
-        QBluetoothUuid uuid(QBluetoothUuid::PublicBrowseGroup);
+        QBluetoothUuid uuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup);
 
         QBluetoothUuid copy(uuid);
 
@@ -106,7 +106,7 @@ void tst_QBluetoothUuid::tst_construction()
     }
 
     {
-        QBluetoothUuid uuid(QBluetoothUuid::L2cap);
+        QBluetoothUuid uuid(QBluetoothUuid::ProtocolUuid::L2cap);
 
         QVERIFY(!uuid.isNull());
 
@@ -116,7 +116,7 @@ void tst_QBluetoothUuid::tst_construction()
         uuid16 = uuid.toUInt16(&ok);
 
         QVERIFY(ok);
-        QCOMPARE(uuid16, static_cast<quint16>(QBluetoothUuid::L2cap));
+        QCOMPARE(uuid16, static_cast<quint16>(QBluetoothUuid::ProtocolUuid::L2cap));
     }
 
     {
@@ -146,7 +146,7 @@ void tst_QBluetoothUuid::tst_construction()
 
 void tst_QBluetoothUuid::tst_assignment()
 {
-    QBluetoothUuid uuid(QBluetoothUuid::PublicBrowseGroup);
+    QBluetoothUuid uuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup);
 
     {
         QBluetoothUuid copy = uuid;

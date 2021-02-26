@@ -272,8 +272,8 @@ void QBluetoothSocketPrivateBluezDBus::connectToService(
     targetService = service.serviceUuid();
     if (targetService.isNull()) {
         // Do we have serialport service class?
-        if (service.serviceClassUuids().contains(QBluetoothUuid::SerialPort))
-            targetService = QBluetoothUuid::SerialPort;
+        if (service.serviceClassUuids().contains(QBluetoothUuid::ServiceClassUuid::SerialPort))
+            targetService = QBluetoothUuid::ServiceClassUuid::SerialPort;
     }
 
     if (targetService.isNull()) {

@@ -261,8 +261,8 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
             << QBluetoothServiceDiscoveryAgent::NoError;
         if (!--max)
             break;
-        //QTest::newRow("public browse group") << info << (QList<QBluetoothUuid>() << QBluetoothUuid::PublicBrowseGroup);
-        //QTest::newRow("l2cap") << info << (QList<QBluetoothUuid>() << QBluetoothUuid::L2cap);
+        //QTest::newRow("public browse group") << info << (QList<QBluetoothUuid>() << QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup);
+        //QTest::newRow("l2cap") << info << (QList<QBluetoothUuid>() << QBluetoothUuid::ProtocolUuid::L2cap);
     }
     QTest::newRow("all devices") << QBluetoothDeviceInfo() << QList<QBluetoothUuid>()
         << QBluetoothServiceDiscoveryAgent::NoError;
@@ -282,17 +282,17 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
             addresses.append(((QBluetoothHostInfo)localDevice.allDevices().at(i)).address());
         }
         QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
-        QBluetoothUuid uuid(QBluetoothUuid::Ftp);
+        QBluetoothUuid uuid(QBluetoothUuid::ProtocolUuid::Ftp);
         server.listen(addresses[0]);
         QBluetoothServiceInfo serviceInfo;
         serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, "serviceName");
         QBluetoothServiceInfo::Sequence publicBrowse;
-        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::PublicBrowseGroup));
+        publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
 
         QBluetoothServiceInfo::Sequence profileSequence;
         QBluetoothServiceInfo::Sequence classId;
-        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
+        classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
         classId << QVariant::fromValue(quint16(0x100));
         profileSequence.append(QVariant::fromValue(classId));
         serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
@@ -302,11 +302,11 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
 
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         QBluetoothServiceInfo::Sequence protocol;
-        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::L2cap));
         protocolDescriptorList.append(QVariant::fromValue(protocol));
         protocol.clear();
 
-        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+        protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm))
                  << QVariant::fromValue(quint8(server.serverPort()));
 
         protocolDescriptorList.append(QVariant::fromValue(protocol));

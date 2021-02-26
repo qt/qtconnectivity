@@ -81,21 +81,21 @@ int main(int argc, char *argv[])
     advertisingData.setDiscoverability(QLowEnergyAdvertisingData::DiscoverabilityGeneral);
     advertisingData.setIncludePowerLevel(true);
     advertisingData.setLocalName("HeartRateServer");
-    advertisingData.setServices(QList<QBluetoothUuid>() << QBluetoothUuid::HeartRate);
+    advertisingData.setServices(QList<QBluetoothUuid>() << QBluetoothUuid::ServiceClassUuid::HeartRate);
     //! [Advertising Data]
 
     //! [Service Data]
     QLowEnergyCharacteristicData charData;
-    charData.setUuid(QBluetoothUuid::HeartRateMeasurement);
+    charData.setUuid(QBluetoothUuid::CharacteristicType::HeartRateMeasurement);
     charData.setValue(QByteArray(2, 0));
     charData.setProperties(QLowEnergyCharacteristic::Notify);
-    const QLowEnergyDescriptorData clientConfig(QBluetoothUuid::ClientCharacteristicConfiguration,
+    const QLowEnergyDescriptorData clientConfig(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration,
                                                 QByteArray(2, 0));
     charData.addDescriptor(clientConfig);
 
     QLowEnergyServiceData serviceData;
     serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
-    serviceData.setUuid(QBluetoothUuid::HeartRate);
+    serviceData.setUuid(QBluetoothUuid::ServiceClassUuid::HeartRate);
     serviceData.addCharacteristic(charData);
     //! [Service Data]
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         value.append(char(0)); // Flags that specify the format of the value.
         value.append(char(currentHeartRate)); // Actual value.
         QLowEnergyCharacteristic characteristic
-                = service->characteristic(QBluetoothUuid::HeartRateMeasurement);
+                = service->characteristic(QBluetoothUuid::CharacteristicType::HeartRateMeasurement);
         Q_ASSERT(characteristic.isValid());
         service->writeCharacteristic(characteristic, value); // Potentially causes notification.
         if (currentHeartRate == 60)

@@ -170,8 +170,8 @@ void MyClass::btleSharedData()
 
     // waiting for connection
 
-    first = control.createServiceObject(QBluetoothUuid::BatteryService);
-    second = control.createServiceObject(QBluetoothUuid::BatteryService);
+    first = control.createServiceObject(QBluetoothUuid::ServiceClassUuid::BatteryService);
+    second = control.createServiceObject(QBluetoothUuid::ServiceClassUuid::BatteryService);
     Q_ASSERT(first->state() == QLowEnergyService::DiscoveryRequired);
     Q_ASSERT(first->state() == second->state());
 
@@ -190,7 +190,7 @@ void MyClass::enableCharNotifications()
     control->connectToDevice();
 
 
-    service = control->createServiceObject(QBluetoothUuid::BatteryService, this);
+    service = control->createServiceObject(QBluetoothUuid::ServiceClassUuid::BatteryService, this);
     if (!service)
         return;
 
@@ -201,12 +201,12 @@ void MyClass::enableCharNotifications()
 //! [enable_btle_notifications]
     //PreCondition: service details already discovered
     QLowEnergyCharacteristic batteryLevel = service->characteristic(
-                QBluetoothUuid::BatteryLevel);
+                QBluetoothUuid::CharacteristicType::BatteryLevel);
     if (!batteryLevel.isValid())
         return;
 
     QLowEnergyDescriptor notification = batteryLevel.descriptor(
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
     if (!notification.isValid())
         return;
 

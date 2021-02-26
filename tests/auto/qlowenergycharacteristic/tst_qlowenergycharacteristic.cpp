@@ -200,9 +200,9 @@ void tst_QLowEnergyCharacteristic::tst_constructionDefault()
     QCOMPARE(characteristic.descriptors().count(), 0);
     QCOMPARE(characteristic.descriptor(QBluetoothUuid()),
              QLowEnergyDescriptor());
-    QCOMPARE(characteristic.descriptor(QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration)),
+    QCOMPARE(characteristic.descriptor(QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)),
              QLowEnergyDescriptor());
-    QCOMPARE(characteristic.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration),
+    QCOMPARE(characteristic.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration),
              QLowEnergyDescriptor());
     QCOMPARE(characteristic.properties(), QLowEnergyCharacteristic::Unknown);
 

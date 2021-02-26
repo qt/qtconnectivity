@@ -58,8 +58,7 @@ struct quint128
 class Q_BLUETOOTH_EXPORT QBluetoothUuid : public QUuid
 {
 public:
-    //TODO Qt 6: Convert enums to scoped enums (see QTBUG-65831)
-    enum ProtocolUuid {
+    enum class ProtocolUuid {
         Sdp = 0x0001,
         Udp = 0x0002,
         Rfcomm = 0x0003,
@@ -87,7 +86,7 @@ public:
         L2cap = 0x0100
     };
 
-    enum ServiceClassUuid {
+    enum class ServiceClassUuid {
         ServiceDiscoveryServer = 0x1000,
         BrowseGroupDescriptor = 0x1001,
         PublicBrowseGroup = 0x1002,
@@ -181,7 +180,7 @@ public:
         ContinuousGlucoseMonitoring = 0x181f
     };
 
-    enum CharacteristicType {
+    enum class CharacteristicType {
         DeviceName = 0x2a00,
         Appearance = 0x2a01,
         PeripheralPrivacyFlag = 0x2a02,
@@ -348,7 +347,7 @@ public:
         BarometricPressureTrend = 0x2aa3
     };
 
-    enum DescriptorType {
+    enum class DescriptorType {
         UnknownDescriptorType = 0x0,
         CharacteristicExtendedProperties = 0x2900,
         CharacteristicUserDescription = 0x2901,
@@ -370,13 +369,13 @@ public:
 
     // values below are based on Bluetooth BASE_UUID
     constexpr QBluetoothUuid(ProtocolUuid uuid) noexcept
-        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     constexpr QBluetoothUuid(ServiceClassUuid uuid) noexcept
-        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     constexpr QBluetoothUuid(CharacteristicType uuid) noexcept
-        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     constexpr QBluetoothUuid(DescriptorType uuid) noexcept
-        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     explicit constexpr QBluetoothUuid(quint16 uuid) noexcept
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     explicit constexpr QBluetoothUuid(quint32 uuid) noexcept

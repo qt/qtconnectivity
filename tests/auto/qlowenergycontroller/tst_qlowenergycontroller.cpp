@@ -360,7 +360,8 @@ void tst_QLowEnergyController::tst_connect()
         // invalid service uuid
         QVERIFY(!control->createServiceObject(QBluetoothUuid()));
         // some random uuid
-        QVERIFY(!control->createServiceObject(QBluetoothUuid(QBluetoothUuid::DeviceName)));
+        QVERIFY(!control->createServiceObject(
+                QBluetoothUuid(QBluetoothUuid::CharacteristicType::DeviceName)));
 
         // initiate characteristic discovery
         for (QLowEnergyService *service : qAsConst(savedReferences)) {
@@ -714,9 +715,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0xf));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
     } else if (info->serviceUuid() ==
@@ -847,18 +848,18 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x26));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
         QCOMPARE(chars[0].descriptors().at(1).isValid(), true);
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x27));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("54656d702e2044617461"));
@@ -879,9 +880,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x2a));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray::fromHex("54656d702e20436f6e662e"));
@@ -904,9 +905,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
             QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
             HANDLE_COMPARE(chars[2].descriptors().at(0).handle(), QLowEnergyHandle(0x2d));
             QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                     QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
             QCOMPARE(chars[2].descriptors().at(0).type(),
-                    QBluetoothUuid::CharacteristicUserDescription);
+                     QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
             QCOMPARE(chars[2].descriptors().at(0).value(),
                     QByteArray::fromHex("54656d702e20506572696f64"));
             QVERIFY(info->contains(chars[2].descriptors().at(0)));
@@ -934,9 +935,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x6c));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -944,9 +945,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x6d));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("4b6579205072657373205374617465"));
         QVERIFY(info->contains(chars[0].descriptors().at(1)));
@@ -974,9 +975,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x31));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                 QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -984,9 +985,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x32));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                 QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
                  QByteArray::fromHex("416363656c2e2044617461"));
         QVERIFY(info->contains(chars[0].descriptors().at(1)));
@@ -1007,9 +1008,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x35));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                 QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                  QByteArray::fromHex("416363656c2e20436f6e662e"));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
@@ -1031,9 +1032,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[2].descriptors().at(0).handle(), QLowEnergyHandle(0x38));
         QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[2].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[2].descriptors().at(0).value(),
                 QByteArray::fromHex("416363656c2e20506572696f64"));
@@ -1061,9 +1062,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x3c));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -1071,9 +1072,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x3d));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("48756d69642e2044617461"));
         QVERIFY(info->contains(chars[0].descriptors().at(1)));
@@ -1095,9 +1096,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x40));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray::fromHex("48756d69642e20436f6e662e"));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
@@ -1119,9 +1120,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
             QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
             HANDLE_COMPARE(chars[2].descriptors().at(0).handle(), QLowEnergyHandle(0x43));
             QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                     QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
             QCOMPARE(chars[2].descriptors().at(0).type(),
-                    QBluetoothUuid::CharacteristicUserDescription);
+                     QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
             QCOMPARE(chars[2].descriptors().at(0).value(),
                     QByteArray::fromHex("48756d69642e20506572696f64"));
             QVERIFY(info->contains(chars[2].descriptors().at(0)));
@@ -1149,9 +1150,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x47));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                 QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -1159,9 +1160,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x48));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                 QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
                  QByteArray::fromHex("4d61676e2e2044617461"));
         QVERIFY(info->contains(chars[0].descriptors().at(1)));
@@ -1182,9 +1183,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x4b));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                 QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[1].descriptors().at(0).value(),
                  QByteArray::fromHex("4d61676e2e20436f6e662e"));
@@ -1206,9 +1207,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[2].descriptors().at(0).handle(), QLowEnergyHandle(0x4e));
         QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                 QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[2].descriptors().at(0).type(),
-                 QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[2].descriptors().at(0).value(),
                  QByteArray::fromHex("4d61676e2e20506572696f64"));
@@ -1236,9 +1237,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x52));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -1246,9 +1247,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x53));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("4261726f6d2e2044617461"));
@@ -1270,9 +1271,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x56));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray::fromHex("4261726f6d2e20436f6e662e"));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
@@ -1305,9 +1306,10 @@ void tst_QLowEnergyController::verifyServiceProperties(
             // value different in other revisions and test may fail
             HANDLE_COMPARE(calibration.descriptors().at(0).handle(), QLowEnergyHandle(0x5c));
             QCOMPARE(calibration.descriptors().at(0).uuid(),
-                    QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                     QBluetoothUuid(
+                             QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
             QCOMPARE(calibration.descriptors().at(0).type(),
-                    QBluetoothUuid::ClientCharacteristicConfiguration);
+                     QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
             QVERIFY(verifyClientCharacteristicValue(calibration.descriptors().at(0).value()));
             QVERIFY(info->contains(calibration.descriptors().at(0)));
 
@@ -1315,9 +1317,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
             // value different in other revisions and test may fail
             HANDLE_COMPARE(calibration.descriptors().at(1).handle(), QLowEnergyHandle(0x5d));
             QCOMPARE(calibration.descriptors().at(1).uuid(),
-                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                     QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
             QCOMPARE(calibration.descriptors().at(1).type(),
-                    QBluetoothUuid::CharacteristicUserDescription);
+                     QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
             QCOMPARE(calibration.descriptors().at(1).value(),
                      QByteArray::fromHex("4261726f6d2e2043616c6962722e"));
             QVERIFY(info->contains(calibration.descriptors().at(1)));
@@ -1341,9 +1343,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
             // value different in other revisions and test may fail
             HANDLE_COMPARE(period.descriptors().at(0).handle(), QLowEnergyHandle(0x59));
             QCOMPARE(period.descriptors().at(0).uuid(),
-                    QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                     QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
             QCOMPARE(period.descriptors().at(0).type(),
-                    QBluetoothUuid::CharacteristicUserDescription);
+                     QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
             QCOMPARE(period.descriptors().at(0).value(),
                      QByteArray::fromHex("4261726f6d2e20506572696f64"));
             QVERIFY(info->contains(period.descriptors().at(0)));
@@ -1371,9 +1373,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x61));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -1381,9 +1383,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x62));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         // value different in other revisions and test may fail
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("4779726f2044617461"));
@@ -1406,9 +1408,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x65));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray::fromHex("4779726f20436f6e662e"));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
@@ -1429,9 +1431,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[2].descriptors().at(0).handle(), QLowEnergyHandle(0x68));
         QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[2].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[2].descriptors().at(0).value(),
                 QByteArray::fromHex("4779726f20506572696f64"));
         QVERIFY(info->contains(chars[2].descriptors().at(0)));
@@ -1457,9 +1459,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x71));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(0).value(),
                 QByteArray::fromHex("546573742044617461"));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
@@ -1480,9 +1482,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x74));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray::fromHex("5465737420436f6e666967"));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
@@ -1509,9 +1511,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x78));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -1519,9 +1521,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x79));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("436f6e6e2e20506172616d73"));
         QVERIFY(info->contains(chars[0].descriptors().at(1)));
@@ -1539,9 +1541,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[1].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x7c));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(0).value(),
                 QByteArray::fromHex("436f6e6e2e20506172616d7320526571"));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
@@ -1559,9 +1561,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[2].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[2].descriptors().at(0).handle(), QLowEnergyHandle(0x7f));
         QCOMPARE(chars[2].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[2].descriptors().at(0).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[2].descriptors().at(0).value(),
                 QByteArray::fromHex("446973636f6e6e65637420526571"));
         QVERIFY(info->contains(chars[2].descriptors().at(0)));
@@ -1587,9 +1589,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         QCOMPARE(chars[0].descriptors().at(0).isValid(), true);
         HANDLE_COMPARE(chars[0].descriptors().at(0).handle(), QLowEnergyHandle(0x83));
         QCOMPARE(chars[0].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[0].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[0].descriptors().at(0)));
 
@@ -1597,9 +1599,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[0].descriptors().at(1).handle(), QLowEnergyHandle(0x84));
         QCOMPARE(chars[0].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[0].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[0].descriptors().at(1).value(),
                 QByteArray::fromHex("496d67204964656e74696679"));
         QVERIFY(info->contains(chars[0].descriptors().at(1)));
@@ -1621,9 +1623,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(0).handle(), QLowEnergyHandle(0x87));
         QCOMPARE(chars[1].descriptors().at(0).uuid(),
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
         QCOMPARE(chars[1].descriptors().at(0).type(),
-                QBluetoothUuid::ClientCharacteristicConfiguration);
+                 QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
         QVERIFY(verifyClientCharacteristicValue(chars[0].descriptors().at(0).value()));
         QVERIFY(info->contains(chars[1].descriptors().at(0)));
 
@@ -1631,9 +1633,9 @@ void tst_QLowEnergyController::verifyServiceProperties(
         // value different in other revisions and test may fail
         HANDLE_COMPARE(chars[1].descriptors().at(1).handle(), QLowEnergyHandle(0x88));
         QCOMPARE(chars[1].descriptors().at(1).uuid(),
-                QBluetoothUuid(QBluetoothUuid::CharacteristicUserDescription));
+                 QBluetoothUuid(QBluetoothUuid::DescriptorType::CharacteristicUserDescription));
         QCOMPARE(chars[1].descriptors().at(1).type(),
-                QBluetoothUuid::CharacteristicUserDescription);
+                 QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
         QCOMPARE(chars[1].descriptors().at(1).value(),
                 QByteArray::fromHex("496d6720426c6f636b"));
         QVERIFY(info->contains(chars[1].descriptors().at(1)));
@@ -1692,7 +1694,7 @@ void tst_QLowEnergyController::tst_defaultBehavior()
                     QBluetoothUuid()));
         // some random uuid
         QVERIFY(!controlDefaultAdapter->createServiceObject(
-                    QBluetoothUuid(QBluetoothUuid::DeviceName)));
+                QBluetoothUuid(QBluetoothUuid::CharacteristicType::DeviceName)));
     }
 
     QCOMPARE(controlDefaultAdapter->services().count(), 0);
@@ -1717,7 +1719,7 @@ void tst_QLowEnergyController::tst_defaultBehavior()
                     QBluetoothUuid()));
         // some random uuid
         QVERIFY(!controlExplicitAdapter->createServiceObject(
-                    QBluetoothUuid(QBluetoothUuid::DeviceName)));
+                QBluetoothUuid(QBluetoothUuid::CharacteristicType::DeviceName)));
     }
 }
 
@@ -1962,8 +1964,8 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     }
 
     // 2. Find humidity data notification descriptor
-    const QLowEnergyDescriptor notification =
-            humidData.descriptor(QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+    const QLowEnergyDescriptor notification = humidData.descriptor(
+            QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
 
     if (!notification.isValid()) {
         delete service;
@@ -2198,8 +2200,8 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     //The target characteristic must be readble and writable
     //under encryption to test dynamic switching of security level
     QBluetoothAddress encryptedDevice(QString("00:02:5B:00:15:10"));
-    QBluetoothUuid serviceUuid(QBluetoothUuid::GenericAccess);
-    QBluetoothUuid characterristicUuid(QBluetoothUuid::DeviceName);
+    QBluetoothUuid serviceUuid(QBluetoothUuid::ServiceClassUuid::GenericAccess);
+    QBluetoothUuid characterristicUuid(QBluetoothUuid::CharacteristicType::DeviceName);
 
     QScopedPointer<QLowEnergyController> control(
                 QLowEnergyController::createCentral(QBluetoothDeviceInfo(encryptedDevice, QString("DeviceFoo"), 1)));
@@ -2280,8 +2282,8 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     delete service;
 
     //change to Device Information service
-    QVERIFY(uuids.contains(QBluetoothUuid::DeviceInformation));
-    service = control->createServiceObject(QBluetoothUuid::DeviceInformation);
+    QVERIFY(uuids.contains(QBluetoothUuid::ServiceClassUuid::DeviceInformation));
+    service = control->createServiceObject(QBluetoothUuid::ServiceClassUuid::DeviceInformation);
     QVERIFY(service);
 
     service->discoverDetails();
@@ -2296,8 +2298,8 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
                        SIGNAL(error(QLowEnergyService::ServiceError)));
 
     const QByteArray expectedSoftRev("Application version 2.3.0.0");
-    QLowEnergyCharacteristic softwareRevChar
-            = service->characteristic(QBluetoothUuid::SoftwareRevisionString);
+    QLowEnergyCharacteristic softwareRevChar =
+            service->characteristic(QBluetoothUuid::CharacteristicType::SoftwareRevisionString);
     QVERIFY(softwareRevChar.isValid());
     QCOMPARE(softwareRevChar.value(), expectedSoftRev);
 
@@ -2321,8 +2323,8 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     // This assumes the manufacturer string was mondified via CSR SDK
     // see function description above
     const QByteArray expectedManufacturer("Cambridge Silicon Radi");
-    QLowEnergyCharacteristic manufacturerChar = service->characteristic(
-                QBluetoothUuid::ManufacturerNameString);
+    QLowEnergyCharacteristic manufacturerChar =
+            service->characteristic(QBluetoothUuid::CharacteristicType::ManufacturerNameString);
     QVERIFY(manufacturerChar.isValid());
     QCOMPARE(manufacturerChar.value(), expectedManufacturer);
 
@@ -2530,7 +2532,7 @@ void tst_QLowEnergyController::tst_errorCases()
     // CharacteristicUserDescription is not writable
 
     QLowEnergyDescriptor nonWritableDesc = nonWritableChar.descriptor(
-                QBluetoothUuid::CharacteristicUserDescription);
+            QBluetoothUuid::DescriptorType::CharacteristicUserDescription);
     QVERIFY(nonWritableDesc.isValid());
     irService->writeDescriptor(nonWritableDesc, QByteArray("ABCD"));
     QTRY_VERIFY_WITH_TIMEOUT(!irErrorSpy.isEmpty(), 5000);
@@ -2633,9 +2635,9 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
 
     // 2. Get "Image Identity" notification descriptor
     const QLowEnergyDescriptor identityNotification = imageIdentityChar.descriptor(
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+            QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
     const QLowEnergyDescriptor blockNotification = imageBlockChar.descriptor(
-                QBluetoothUuid(QBluetoothUuid::ClientCharacteristicConfiguration));
+            QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration));
 
     if (!identityNotification.isValid()
             || !blockNotification.isValid()

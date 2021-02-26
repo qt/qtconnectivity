@@ -515,12 +515,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
             QBluetoothServiceInfo::Sequence protocolDescriptorList;
             {
                 QBluetoothServiceInfo::Sequence protocol;
-                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::L2cap));
                 protocolDescriptorList.append(QVariant::fromValue(protocol));
             }
             {
                 QBluetoothServiceInfo::Sequence protocol;
-                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+                protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Att));
                 protocolDescriptorList.append(QVariant::fromValue(protocol));
             }
             service.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
@@ -743,12 +743,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         QBluetoothServiceInfo::Sequence protocolDescriptorList;
         {
             QBluetoothServiceInfo::Sequence protocol;
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::L2cap));
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::L2cap));
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }
         {
             QBluetoothServiceInfo::Sequence protocol;
-            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Att));
+            protocol << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Att));
             protocolDescriptorList.append(QVariant::fromValue(protocol));
         }
         serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList, protocolDescriptorList);
