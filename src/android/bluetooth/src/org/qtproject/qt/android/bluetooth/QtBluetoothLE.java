@@ -218,7 +218,7 @@ public class QtBluetoothLE {
             settingsBuilder = settingsBuilder.setScanMode(ScanSettings.SCAN_MODE_BALANCED);
             ScanSettings settings = settingsBuilder.build();
 
-            List<ScanFilter> filterList = new ArrayList<ScanFilter>(2);
+            List<ScanFilter> filterList = new ArrayList<ScanFilter>();
 
             mBluetoothLeScanner.startScan(filterList, settings, leScanCallback21);
             mLeScanRunning = true;
