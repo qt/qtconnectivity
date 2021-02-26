@@ -366,13 +366,22 @@ public:
         EnvironmentalSensingTriggerSetting = 0x290d
     };
 
-    QBluetoothUuid();
-    QBluetoothUuid(ProtocolUuid uuid);
-    QBluetoothUuid(ServiceClassUuid uuid);
-    QBluetoothUuid(CharacteristicType uuid);
-    QBluetoothUuid(DescriptorType uuid);
-    explicit QBluetoothUuid(quint16 uuid);
-    explicit QBluetoothUuid(quint32 uuid);
+    constexpr QBluetoothUuid() noexcept {};
+
+    // values below are based on Bluetooth BASE_UUID
+    constexpr QBluetoothUuid(ProtocolUuid uuid) noexcept
+        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+    constexpr QBluetoothUuid(ServiceClassUuid uuid) noexcept
+        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+    constexpr QBluetoothUuid(CharacteristicType uuid) noexcept
+        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+    constexpr QBluetoothUuid(DescriptorType uuid) noexcept
+        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+    explicit constexpr QBluetoothUuid(quint16 uuid) noexcept
+        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+    explicit constexpr QBluetoothUuid(quint32 uuid) noexcept
+        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+
     explicit QBluetoothUuid(quint128 uuid);
     explicit QBluetoothUuid(const QString &uuid);
     QBluetoothUuid(const QBluetoothUuid &uuid);

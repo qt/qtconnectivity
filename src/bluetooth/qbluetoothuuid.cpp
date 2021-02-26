@@ -48,7 +48,18 @@
 QT_BEGIN_NAMESPACE
 
 // Bluetooth base UUID 00000000-0000-1000-8000-00805F9B34FB
-Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34FB}"))
+// these defines represent the above UUID
+// static inline constexpr const uint data1Reference   = 0x00000000;
+static inline constexpr const ushort data2Reference = 0x0000;
+static inline constexpr const ushort data3Reference = 0x1000;
+static inline constexpr const unsigned char data4Reference[] { 0x80, 0x00, 0x00, 0x80,
+                                                               0x5f, 0x9b, 0x34, 0xfb };
+
+void registerQBluetoothUuid()
+{
+    qRegisterMetaType<QBluetoothUuid>();
+}
+Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 
 /*!
     \class QBluetoothUuid
@@ -503,91 +514,49 @@ Q_GLOBAL_STATIC_WITH_ARGS(QUuid, baseUuid, ("{00000000-0000-1000-8000-00805F9B34
     \value UnknownDescriptorType             The descriptor type is unknown.
 */
 
-static void registerQBluetoothUuidMetaType()
-{
-    static bool initDone = false;
-    if (!initDone) {
-        qRegisterMetaType<QBluetoothUuid>();
-        initDone = true;
-    }
-}
-
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid()
+
     Constructs a new null Bluetooth UUID.
 */
-QBluetoothUuid::QBluetoothUuid()
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(ProtocolUuid uuid)
+
     Constructs a new Bluetooth UUID from the protocol \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(ProtocolUuid uuid)
-:   QUuid(uuid, baseUuid()->data2,
-          baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
-          baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
-          baseUuid()->data4[6], baseUuid()->data4[7])
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
+
     Constructs a new Bluetooth UUID from the service class \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(ServiceClassUuid uuid)
-:   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
-          baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
-          baseUuid()->data4[6], baseUuid()->data4[7])
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
+
     Constructs a new Bluetooth UUID from the characteristic type \a uuid.
     \since 5.4
 */
-QBluetoothUuid::QBluetoothUuid(CharacteristicType uuid)
-:   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
-          baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
-          baseUuid()->data4[6], baseUuid()->data4[7])
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(DescriptorType uuid)
+
     Constructs a new Bluetooth UUID from the descriptor type \a uuid.
     \since 5.4
 */
-QBluetoothUuid::QBluetoothUuid(DescriptorType uuid)
-    :   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
-              baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
-              baseUuid()->data4[6], baseUuid()->data4[7])
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(quint16 uuid)
+
     Constructs a new Bluetooth UUID from the 16 bit \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(quint16 uuid)
-:   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
-          baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
-          baseUuid()->data4[6], baseUuid()->data4[7])
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(quint32 uuid)
+
     Constructs a new Bluetooth UUID from the 32 bit \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(quint32 uuid)
-:   QUuid(uuid, baseUuid()->data2, baseUuid()->data3, baseUuid()->data4[0], baseUuid()->data4[1],
-          baseUuid()->data4[2], baseUuid()->data4[3], baseUuid()->data4[4], baseUuid()->data4[5],
-          baseUuid()->data4[6], baseUuid()->data4[7])
-{
-    registerQBluetoothUuidMetaType();
-}
 
 /*!
     Constructs a new Bluetooth UUID from the 128 bit \a uuid.
@@ -596,7 +565,6 @@ QBluetoothUuid::QBluetoothUuid(quint32 uuid)
 */
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
 {
-    registerQBluetoothUuidMetaType();
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
     data1 = qFromBigEndian<quint32>(*reinterpret_cast<quint32 *>(&uuid.data[0]));
@@ -618,7 +586,6 @@ QT_WARNING_POP
 QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 :   QUuid(uuid)
 {
-    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -627,7 +594,6 @@ QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 QBluetoothUuid::QBluetoothUuid(const QBluetoothUuid &uuid)
 :   QUuid(uuid)
 {
-    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -636,7 +602,6 @@ QBluetoothUuid::QBluetoothUuid(const QBluetoothUuid &uuid)
 QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
 :   QUuid(uuid)
 {
-    registerQBluetoothUuidMetaType();
 }
 
 /*!
@@ -654,8 +619,8 @@ QBluetoothUuid::~QBluetoothUuid()
 */
 int QBluetoothUuid::minimumSize() const
 {
-    if (data2 == baseUuid()->data2 && data3 == baseUuid()->data3 &&
-        memcmp(data4, baseUuid()->data4, 8) == 0) {
+    if (data2 == data2Reference && data3 == data3Reference
+        && memcmp(data4, data4Reference, 8) == 0) {
         // 16 or 32 bit Bluetooth UUID
         if (data1 & 0xFFFF0000)
             return 4;
@@ -676,8 +641,8 @@ int QBluetoothUuid::minimumSize() const
 */
 quint16 QBluetoothUuid::toUInt16(bool *ok) const
 {
-    if (data1 & 0xFFFF0000 || data2 != baseUuid()->data2 || data3 != baseUuid()->data3 ||
-        memcmp(data4, baseUuid()->data4, 8) != 0) {
+    if (data1 & 0xFFFF0000 || data2 != data2Reference || data3 != data3Reference
+        || memcmp(data4, data4Reference, 8) != 0) {
         // not convertable to 16 bit Bluetooth UUID.
         if (ok)
             *ok = false;
@@ -697,8 +662,8 @@ quint16 QBluetoothUuid::toUInt16(bool *ok) const
 */
 quint32 QBluetoothUuid::toUInt32(bool *ok) const
 {
-    if (data2 != baseUuid()->data2 || data3 != baseUuid()->data3 ||
-        memcmp(data4, baseUuid()->data4, 8) != 0) {
+    if (data2 != data2Reference || data3 != data3Reference
+        || memcmp(data4, data4Reference, 8) != 0) {
         // not convertable to 32 bit Bluetooth UUID.
         if (ok)
             *ok = false;
