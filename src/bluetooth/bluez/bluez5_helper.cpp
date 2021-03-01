@@ -64,16 +64,29 @@ typedef enum Bluez5TestResultType
 Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown));
 Q_GLOBAL_STATIC_WITH_ARGS(QVersionNumber, bluezDaemonVersion, (QVersionNumber()));
 
+/*!
+    Ensures that the DBus types are registered
+ */
+void initializeBluez5()
+{
+    static bool initRequired = true;
+    if (!initRequired)
+        return;
+
+    // do not run this twice
+    initRequired = false;
+    qDBusRegisterMetaType<InterfaceList>();
+    qDBusRegisterMetaType<ManagedObjectList>();
+    qDBusRegisterMetaType<ManufacturerDataList>();
+}
+
 bool isBluez5()
 {
     if (*bluezVersion() == BluezVersionUnknown) {
         OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
                                                          QStringLiteral("/"),
                                                          QDBusConnection::systemBus());
-
-        qDBusRegisterMetaType<InterfaceList>();
-        qDBusRegisterMetaType<ManagedObjectList>();
-        qDBusRegisterMetaType<ManufacturerDataList>();
+        initializeBluez5();
 
         QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
         reply.waitForFinished();

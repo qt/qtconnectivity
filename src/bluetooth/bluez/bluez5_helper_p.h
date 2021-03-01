@@ -66,6 +66,7 @@ Q_DECLARE_METATYPE(ManagedObjectList)
 
 QT_BEGIN_NAMESPACE
 
+void initializeBluez5();
 bool isBluez5();
 
 // exported for unit test purposes

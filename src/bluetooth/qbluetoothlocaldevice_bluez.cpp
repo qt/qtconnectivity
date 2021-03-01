@@ -150,7 +150,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
     QList<QBluetoothHostInfo> localDevices;
 
-    isBluez5(); // temporary fix for dbus registration
+    initializeBluez5();
     OrgFreedesktopDBusObjectManagerInterface manager(
             QStringLiteral("org.bluez"), QStringLiteral("/"), QDBusConnection::systemBus());
     QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
@@ -424,10 +424,8 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
         q_ptr(q)
 {
     registerQBluetoothLocalDeviceMetaType();
-
-    if (isBluez5()) // TODO registers DBUS meta types -> make registration independent of this fct
-                    // call
-        initializeAdapterBluez5();
+    initializeBluez5();
+    initializeAdapterBluez5();
 
     connectDeviceChanges();
 }
