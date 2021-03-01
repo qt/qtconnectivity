@@ -265,9 +265,14 @@ void QBluetoothDeviceDiscoveryAgent::setLowEnergyDiscoveryTimeout(int timeout)
     Q_D(QBluetoothDeviceDiscoveryAgent);
 
     // cannot deliberately turn it off
-    if (d->lowEnergySearchTimeout < 0 || timeout < 0) {
-        qCDebug(QT_BT) << "The Bluetooth Low Energy device discovery timeout cannot be negative "
-                          "or set on a backend which does not support this feature.";
+    if (timeout < 0) {
+        qCDebug(QT_BT) << "The Bluetooth Low Energy device discovery timeout cannot be negative.";
+        return;
+    }
+
+    if (d->lowEnergySearchTimeout < 0) {
+        qCDebug(QT_BT) << "The Bluetooth Low Energy device discovery timeout cannot be  "
+                          "set on a backend which does not support this feature.";
         return;
     }
 
