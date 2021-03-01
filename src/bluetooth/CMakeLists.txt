@@ -81,7 +81,6 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
     SOURCES
         bluez/adapter.cpp bluez/adapter_p.h
         bluez/adapter1_bluez5.cpp bluez/adapter1_bluez5_p.h
-        bluez/agent.cpp bluez/agent_p.h
         bluez/battery1.cpp bluez/battery1_p.h
         bluez/bluetoothmanagement.cpp bluez/bluetoothmanagement_p.h
         bluez/bluez5_helper.cpp bluez/bluez5_helper_p.h

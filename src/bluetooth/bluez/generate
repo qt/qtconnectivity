@@ -5,7 +5,6 @@ qdbusxml2cpp -p manager_p.h:manager.cpp org.bluez.Manager.xml org.bluez.Manager
 qdbusxml2cpp -p adapter_p.h:adapter.cpp org.bluez.all.xml org.bluez.Adapter
 qdbusxml2cpp -i servicemap_p.h -p device_p.h:device.cpp org.bluez.Device.xml org.bluez.Device
 qdbusxml2cpp -p service_p.h:service.cpp org.bluez.all.xml org.bluez.Service
-qdbusxml2cpp -c OrgBluezAgentAdaptor -a agent_p.h:agent.cpp org.bluez.Agent.xml org.bluez.Agent
 
 #Bluez 5
 qdbusxml2cpp -p adapter1_bluez5_p.h:adapter1_bluez5.cpp org.bluez.Adapter1.xml
