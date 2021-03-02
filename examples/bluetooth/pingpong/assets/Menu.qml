@@ -51,8 +51,7 @@
 import QtQuick 2.0
 
 Rectangle {
-    width: 600
-    height: 300
+    anchors.fill: parent
 
 
     Rectangle {

@@ -48,13 +48,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.1
 import QtQuick.Window 2.1
 
 Window {
     id: menulist
     width: 600
-    height: 300
+    height: 600
+    visibility: (Qt.platform.os === "android" || Qt.platform.os === "ios") ? Window.FullScreen : Window.Windowed
     visible: true
 
     Dialog {
