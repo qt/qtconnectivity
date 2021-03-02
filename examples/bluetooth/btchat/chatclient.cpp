@@ -115,12 +115,12 @@ void ChatClient::sendMessage(const QString &message)
 
 void ChatClient::onSocketErrorOccurred(QBluetoothSocket::SocketError error)
 {
-    if (error == QBluetoothSocket::NoSocketError)
+    if (error == QBluetoothSocket::SocketError::NoSocketError)
         return;
 
     QMetaEnum metaEnum = QMetaEnum::fromType<QBluetoothSocket::SocketError>();
     QString errorString = socket->peerName() + QLatin1Char(' ')
-            + metaEnum.valueToKey(error) + QLatin1String(" occurred");
+            + metaEnum.valueToKey(static_cast<int>(error)) + QLatin1String(" occurred");
 
     emit socketErrorOccurred(errorString);
 }

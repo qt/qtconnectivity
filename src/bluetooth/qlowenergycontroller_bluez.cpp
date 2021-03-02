@@ -764,22 +764,22 @@ void QLowEnergyControllerPrivateBluez::l2cpDisconnected()
 void QLowEnergyControllerPrivateBluez::l2cpErrorChanged(QBluetoothSocket::SocketError e)
 {
     switch (e) {
-    case QBluetoothSocket::HostNotFoundError:
+    case QBluetoothSocket::SocketError::HostNotFoundError:
         setError(QLowEnergyController::UnknownRemoteDeviceError);
         qCDebug(QT_BT_BLUEZ) << "The passed remote device address cannot be found";
         break;
-    case QBluetoothSocket::NetworkError:
+    case QBluetoothSocket::SocketError::NetworkError:
         setError(QLowEnergyController::NetworkError);
         qCDebug(QT_BT_BLUEZ) << "Network IO error while talking to LE device";
         break;
-    case QBluetoothSocket::RemoteHostClosedError:
+    case QBluetoothSocket::SocketError::RemoteHostClosedError:
         setError(QLowEnergyController::RemoteHostClosedError);
         qCDebug(QT_BT_BLUEZ) << "Remote host closed the connection";
         break;
-    case QBluetoothSocket::UnknownSocketError:
-    case QBluetoothSocket::UnsupportedProtocolError:
-    case QBluetoothSocket::OperationError:
-    case QBluetoothSocket::ServiceNotFoundError:
+    case QBluetoothSocket::SocketError::UnknownSocketError:
+    case QBluetoothSocket::SocketError::UnsupportedProtocolError:
+    case QBluetoothSocket::SocketError::OperationError:
+    case QBluetoothSocket::SocketError::ServiceNotFoundError:
     default:
         // these errors shouldn't happen -> as it means
         // the code in this file has bugs
@@ -3138,7 +3138,7 @@ void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
     l2cpSocket->d_ptr->lowEnergySocketType = addressType == QLowEnergyController::PublicAddress
             ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;
     l2cpSocket->setSocketDescriptor(clientSocket, QBluetoothServiceInfo::L2capProtocol,
-            QBluetoothSocket::ConnectedState, QIODevice::ReadWrite | QIODevice::Unbuffered);
+            QBluetoothSocket::SocketState::ConnectedState, QIODevice::ReadWrite | QIODevice::Unbuffered);
     restoreClientConfigurations();
     loadSigningDataIfNecessary(RemoteSigningKey);
 

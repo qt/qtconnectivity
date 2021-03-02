@@ -94,7 +94,7 @@ public:
     qint64 readData(char *data, qint64 maxSize) override;
 
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
-                             QBluetoothSocket::SocketState socketState = QBluetoothSocket::ConnectedState,
+                             QBluetoothSocket::SocketState socketState = QBluetoothSocket::SocketState::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
 
     qint64 bytesAvailable() const override;

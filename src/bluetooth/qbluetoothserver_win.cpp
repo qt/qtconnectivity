@@ -97,7 +97,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
     }
 
-    if (d->socket->state() == QBluetoothSocket::ListeningState) {
+    if (d->socket->state() == QBluetoothSocket::SocketState::ListeningState) {
         qCWarning(QT_BT_WINDOWS) << "Socket already in listen mode, close server first";
         return false;
     }
@@ -158,7 +158,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
     }
 
-    d->socket->setSocketState(QBluetoothSocket::ListeningState);
+    d->socket->setSocketState(QBluetoothSocket::SocketState::ListeningState);
 
     if (!d->socketNotifier) {
         d->socketNotifier = new QSocketNotifier(d->socket->socketDescriptor(),

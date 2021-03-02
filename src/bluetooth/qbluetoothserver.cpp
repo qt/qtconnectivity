@@ -269,7 +269,7 @@ bool QBluetoothServer::isListening() const
     return d->isListening();
 #endif
 
-    return d->socket->state() == QBluetoothSocket::ListeningState;
+    return d->socket->state() == QBluetoothSocket::SocketState::ListeningState;
 }
 
 /*!

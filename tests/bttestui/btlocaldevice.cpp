@@ -514,13 +514,13 @@ void BtLocalDevice::dumpSocketInformation()
         qDebug() << "socket bytesAvailable()" << socket->bytesAvailable();
         QString tmp;
         switch (socket->error()) {
-            case QBluetoothSocket::NoSocketError: tmp += "NoSocketError"; break;
-            case QBluetoothSocket::UnknownSocketError: tmp += "UnknownSocketError"; break;
-            case QBluetoothSocket::HostNotFoundError: tmp += "HostNotFoundError"; break;
-            case QBluetoothSocket::ServiceNotFoundError: tmp += "ServiceNotFound"; break;
-            case QBluetoothSocket::NetworkError: tmp += "NetworkError"; break;
-            //case QBluetoothSocket::OperationError: tmp+= "OperationError"; break;
-            case QBluetoothSocket::UnsupportedProtocolError: tmp += "UnsupportedProtocolError"; break;
+            case QBluetoothSocket::SocketError::NoSocketError: tmp += "NoSocketError"; break;
+            case QBluetoothSocket::SocketError::UnknownSocketError: tmp += "UnknownSocketError"; break;
+            case QBluetoothSocket::SocketError::HostNotFoundError: tmp += "HostNotFoundError"; break;
+            case QBluetoothSocket::SocketError::ServiceNotFoundError: tmp += "ServiceNotFound"; break;
+            case QBluetoothSocket::SocketError::NetworkError: tmp += "NetworkError"; break;
+            //case QBluetoothSocket::SocketError::OperationError: tmp+= "OperationError"; break;
+            case QBluetoothSocket::SocketError::UnsupportedProtocolError: tmp += "UnsupportedProtocolError"; break;
             default: tmp+= "Undefined"; break;
         }
 
@@ -533,7 +533,7 @@ void BtLocalDevice::dumpSocketInformation()
 void BtLocalDevice::writeData()
 {
     const char * testData = "ABCABC\n";
-    if (socket && socket->state() == QBluetoothSocket::ConnectedState) {
+    if (socket && socket->state() == QBluetoothSocket::SocketState::ConnectedState) {
         socket->write(testData);
     }
     for (QBluetoothSocket* client : serverSockets) {
@@ -756,13 +756,13 @@ void BtLocalDevice::dumpServerInformation()
             qDebug() << "Pending bytes: " << client->bytesAvailable();
             QString tmp;
             switch (client->error()) {
-            case QBluetoothSocket::NoSocketError: tmp += "NoSocketError"; break;
-            case QBluetoothSocket::UnknownSocketError: tmp += "UnknownSocketError"; break;
-            case QBluetoothSocket::HostNotFoundError: tmp += "HostNotFoundError"; break;
-            case QBluetoothSocket::ServiceNotFoundError: tmp += "ServiceNotFound"; break;
-            case QBluetoothSocket::NetworkError: tmp += "NetworkError"; break;
-            case QBluetoothSocket::UnsupportedProtocolError: tmp += "UnsupportedProtocolError"; break;
-            //case QBluetoothSocket::OperationError: tmp+= "OperationError"; break;
+            case QBluetoothSocket::SocketError::NoSocketError: tmp += "NoSocketError"; break;
+            case QBluetoothSocket::SocketError::UnknownSocketError: tmp += "UnknownSocketError"; break;
+            case QBluetoothSocket::SocketError::HostNotFoundError: tmp += "HostNotFoundError"; break;
+            case QBluetoothSocket::SocketError::ServiceNotFoundError: tmp += "ServiceNotFound"; break;
+            case QBluetoothSocket::SocketError::NetworkError: tmp += "NetworkError"; break;
+            case QBluetoothSocket::SocketError::UnsupportedProtocolError: tmp += "UnsupportedProtocolError"; break;
+            //case QBluetoothSocket::SocketError::OperationError: tmp+= "OperationError"; break;
             default: tmp += QString::number(static_cast<int>(client->error())); break;
             }
 

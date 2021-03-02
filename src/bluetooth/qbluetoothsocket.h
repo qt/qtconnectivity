@@ -48,7 +48,6 @@
 #include <QtBluetooth/qbluetoothserviceinfo.h>
 
 #include <QtCore/qiodevice.h>
-#include <QtNetwork/qabstractsocket.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -73,28 +72,26 @@ class Q_BLUETOOTH_EXPORT QBluetoothSocket : public QIODevice
 
 public:
 
-    // TODO Decouple SocketState and SocketError enum values from QAbstractSocket in Qt 6
-    enum SocketState {
-        UnconnectedState = QAbstractSocket::UnconnectedState,
-        ServiceLookupState = QAbstractSocket::HostLookupState,
-        ConnectingState = QAbstractSocket::ConnectingState,
-        ConnectedState = QAbstractSocket::ConnectedState,
-        BoundState = QAbstractSocket::BoundState,
-        ClosingState = QAbstractSocket::ClosingState,
-        ListeningState = QAbstractSocket::ListeningState
+    enum class SocketState {
+        UnconnectedState,
+        ServiceLookupState,
+        ConnectingState,
+        ConnectedState,
+        BoundState,
+        ClosingState,
+        ListeningState
     };
     Q_ENUM(SocketState)
 
-    enum SocketError {
-        NoSocketError = -2,
-        UnknownSocketError = QAbstractSocket::UnknownSocketError, //-1
-        RemoteHostClosedError = QAbstractSocket::RemoteHostClosedError, //1
-        HostNotFoundError = QAbstractSocket::HostNotFoundError, //2
-        ServiceNotFoundError = QAbstractSocket::SocketAddressNotAvailableError, //9
-        NetworkError = QAbstractSocket::NetworkError, //7
-        UnsupportedProtocolError = 8,
-        OperationError = QAbstractSocket::OperationError //19
-        //New enums (independent of QAbstractSocket) should be added from 100 onwards
+    enum class SocketError {
+        NoSocketError,
+        UnknownSocketError,
+        RemoteHostClosedError,
+        HostNotFoundError,
+        ServiceNotFoundError,
+        NetworkError,
+        UnsupportedProtocolError,
+        OperationError
     };
     Q_ENUM(SocketError)
 
@@ -139,7 +136,7 @@ public:
     //void setReadBufferSize(qint64 size);
 
     bool setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
-                             SocketState socketState = ConnectedState,
+                             SocketState socketState = SocketState::ConnectedState,
                              OpenMode openMode = ReadWrite);
     int socketDescriptor() const;
 

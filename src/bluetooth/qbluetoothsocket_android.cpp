@@ -196,7 +196,7 @@ QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
 
 QBluetoothSocketPrivateAndroid::~QBluetoothSocketPrivateAndroid()
 {
-    if (state != QBluetoothSocket::UnconnectedState)
+    if (state != QBluetoothSocket::SocketState::UnconnectedState)
         emit closeJavaSocket();
 }
 
@@ -367,8 +367,8 @@ bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUui
         socketObject = remoteDevice = QAndroidJniObject();
         errorString = QBluetoothSocket::tr("Cannot connect to %1",
                                            "%1 = uuid").arg(reverse.toString());
-        q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::ServiceNotFoundError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return false;
     }
 
@@ -407,13 +407,13 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
 
     qCDebug(QT_BT_ANDROID) << "connectToServiceHelper()" << address.toString() << uuid.toString();
 
-    q->setSocketState(QBluetoothSocket::ConnectingState);
+    q->setSocketState(QBluetoothSocket::SocketState::ConnectingState);
 
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         errorString = QBluetoothSocket::tr("Device does not support Bluetooth");
-        q->setSocketError(QBluetoothSocket::NetworkError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }
 
@@ -421,8 +421,8 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
     if (state != 12 ) { //BluetoothAdapter.STATE_ON
         qCWarning(QT_BT_ANDROID) << "Bt device offline";
         errorString = QBluetoothSocket::tr("Device is powered off");
-        q->setSocketError(QBluetoothSocket::NetworkError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }
 
@@ -436,8 +436,8 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
         env->ExceptionClear();
 
         errorString = QBluetoothSocket::tr("Cannot access address %1", "%1 = Bt address e.g. 11:22:33:44:55:66").arg(address.toString());
-        q->setSocketError(QBluetoothSocket::HostNotFoundError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::HostNotFoundError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }
 
@@ -470,8 +470,8 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
         socketObject = remoteDevice = QAndroidJniObject();
         errorString = QBluetoothSocket::tr("Cannot connect to %1 on %2",
                                            "%1 = uuid, %2 = Bt address").arg(uuid.toString()).arg(address.toString());
-        q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::ServiceNotFoundError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }
 
@@ -486,11 +486,11 @@ void QBluetoothSocketPrivateAndroid::connectToService(
 {
     Q_Q(QBluetoothSocket);
 
-    if (q->state() != QBluetoothSocket::UnconnectedState
-            && q->state() != QBluetoothSocket::ServiceLookupState) {
+    if (q->state() != QBluetoothSocket::SocketState::UnconnectedState
+            && q->state() != QBluetoothSocket::SocketState::ServiceLookupState) {
         qCWarning(QT_BT_ANDROID) << "QBluetoothSocketPrivateAndroid::connectToService called on busy socket";
         errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
-        q->setSocketError(QBluetoothSocket::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return;
     }
 
@@ -522,7 +522,7 @@ void QBluetoothSocketPrivateAndroid::connectToService(
 
     if (!ensureNativeSocket(protocol)) {
         errorString = QBluetoothSocket::tr("Socket type not supported");
-        q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
         return;
     }
     connectToServiceHelper(service.device().address(), service.serviceUuid(), openMode);
@@ -534,10 +534,10 @@ void QBluetoothSocketPrivateAndroid::connectToService(
 {
     Q_Q(QBluetoothSocket);
 
-    if (q->state() != QBluetoothSocket::UnconnectedState) {
+    if (q->state() != QBluetoothSocket::SocketState::UnconnectedState) {
         qCWarning(QT_BT_ANDROID) << "QBluetoothSocketPrivateAndroid::connectToService called on busy socket";
         errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
-        q->setSocketError(QBluetoothSocket::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return;
     }
 
@@ -545,13 +545,13 @@ void QBluetoothSocketPrivateAndroid::connectToService(
         qCWarning(QT_BT_ANDROID) << "QBluetoothSocketPrivateAndroid::connectToService cannot "
                                   "connect with 'UnknownProtocol' (type provided by given service)";
         errorString = QBluetoothSocket::tr("Socket type not supported");
-        q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
         return;
     }
 
     if (!ensureNativeSocket(q->socketType())) {
         errorString = QBluetoothSocket::tr("Socket type not supported");
-        q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+        q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
         return;
     }
     connectToServiceHelper(address, uuid, openMode);
@@ -567,7 +567,7 @@ void QBluetoothSocketPrivateAndroid::connectToService(
     Q_Q(QBluetoothSocket);
 
     errorString = tr("Connecting to port is not supported");
-    q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
+    q->setSocketError(QBluetoothSocket::SocketError::ServiceNotFoundError);
     qCWarning(QT_BT_ANDROID) << "Connecting to port is not supported";
 }
 
@@ -598,8 +598,8 @@ void QBluetoothSocketPrivateAndroid::socketConnectSuccess(const QAndroidJniObjec
 
 
         errorString = QBluetoothSocket::tr("Obtaining streams for service failed");
-        q->setSocketError(QBluetoothSocket::NetworkError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }
 
@@ -619,15 +619,15 @@ void QBluetoothSocketPrivateAndroid::socketConnectSuccess(const QAndroidJniObjec
         inputThread = 0;
 
         errorString = QBluetoothSocket::tr("Input stream thread cannot be started");
-        q->setSocketError(QBluetoothSocket::NetworkError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }
 
     // only unbuffered behavior supported at this stage
     q->setOpenMode(QIODevice::ReadWrite|QIODevice::Unbuffered);
 
-    q->setSocketState(QBluetoothSocket::ConnectedState);
+    q->setSocketState(QBluetoothSocket::SocketState::ConnectedState);
 }
 
 void QBluetoothSocketPrivateAndroid::defaultSocketConnectFailed(
@@ -650,8 +650,8 @@ void QBluetoothSocketPrivateAndroid::defaultSocketConnectFailed(
     if (!success) {
         errorString = QBluetoothSocket::tr("Connection to service failed");
         socketObject = remoteDevice = QAndroidJniObject();
-        q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::ServiceNotFoundError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
 
         QAndroidJniEnvironment env;
         env->ExceptionClear(); // just in case
@@ -674,13 +674,13 @@ void QBluetoothSocketPrivateAndroid::fallbackSocketConnectFailed(
     errorString = QBluetoothSocket::tr("Connection to service failed");
     socketObject = remoteDevice = QAndroidJniObject();
 
-    q->setSocketError(QBluetoothSocket::ServiceNotFoundError);
-    q->setSocketState(QBluetoothSocket::UnconnectedState);
+    q->setSocketError(QBluetoothSocket::SocketError::ServiceNotFoundError);
+    q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
 }
 
 void QBluetoothSocketPrivateAndroid::abort()
 {
-    if (state == QBluetoothSocket::UnconnectedState)
+    if (state == QBluetoothSocket::SocketState::UnconnectedState)
         return;
 
     if (socketObject.isValid()) {
@@ -716,7 +716,7 @@ void QBluetoothSocketPrivateAndroid::abort()
             // Unconnected (now) in advance
             Q_Q(QBluetoothSocket);
             q->setOpenMode(QIODevice::NotOpen);
-            q->setSocketState(QBluetoothSocket::UnconnectedState);
+            q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
             emit q->readChannelFinished();
         }
     }
@@ -774,10 +774,10 @@ qint64 QBluetoothSocketPrivateAndroid::writeData(const char *data, qint64 maxSiz
 {
     //TODO implement buffered behavior (so far only unbuffered)
     Q_Q(QBluetoothSocket);
-    if (state != QBluetoothSocket::ConnectedState || !outputStream.isValid()) {
+    if (state != QBluetoothSocket::SocketState::ConnectedState || !outputStream.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Socket::writeData: " << state << outputStream.isValid();
         errorString = QBluetoothSocket::tr("Cannot write while not connected");
-        q->setSocketError(QBluetoothSocket::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return -1;
     }
 
@@ -792,7 +792,7 @@ qint64 QBluetoothSocketPrivateAndroid::writeData(const char *data, qint64 maxSiz
         env->ExceptionDescribe();
         env->ExceptionClear();
         errorString = QBluetoothSocket::tr("Error during write on socket.");
-        q->setSocketError(QBluetoothSocket::NetworkError);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
         return -1;
     }
 
@@ -803,10 +803,10 @@ qint64 QBluetoothSocketPrivateAndroid::writeData(const char *data, qint64 maxSiz
 qint64 QBluetoothSocketPrivateAndroid::readData(char *data, qint64 maxSize)
 {
     Q_Q(QBluetoothSocket);
-    if (state != QBluetoothSocket::ConnectedState || !inputThread) {
+    if (state != QBluetoothSocket::SocketState::ConnectedState || !inputThread) {
         qCWarning(QT_BT_ANDROID) << "Socket::readData: " << state << inputThread ;
         errorString = QBluetoothSocket::tr("Cannot read while not connected");
-        q->setSocketError(QBluetoothSocket::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return -1;
     }
 
@@ -819,7 +819,7 @@ void QBluetoothSocketPrivateAndroid::inputThreadError(int errorCode)
 
     if (errorCode != -1) { //magic error which is expected and can be ignored
         errorString = QBluetoothSocket::tr("Network error during read");
-        q->setSocketError(QBluetoothSocket::NetworkError);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
     }
 
     //finally we can delete the InputStreamThread
@@ -842,7 +842,7 @@ void QBluetoothSocketPrivateAndroid::inputThreadError(int errorCode)
     }
 
     q->setOpenMode(QIODevice::NotOpen);
-    q->setSocketState(QBluetoothSocket::UnconnectedState);
+    q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
     emit q->readChannelFinished();
 }
 
@@ -871,7 +871,7 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject
 {
     Q_Q(QBluetoothSocket);
 
-    if (q->state() != QBluetoothSocket::UnconnectedState || !socket.isValid())
+    if (q->state() != QBluetoothSocket::SocketState::UnconnectedState || !socket.isValid())
         return false;
 
     if (!ensureNativeSocket(socketType_))
@@ -898,8 +898,8 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject
 
 
         errorString = QBluetoothSocket::tr("Obtaining streams for service failed");
-        q->setSocketError(QBluetoothSocket::NetworkError);
-        q->setSocketState(QBluetoothSocket::UnconnectedState);
+        q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return false;
     }
 

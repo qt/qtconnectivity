@@ -80,7 +80,7 @@ void QBluetoothSocketPrivateDummy::connectToService(
 
     qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
     errorString = QBluetoothSocket::tr("Socket type not supported");
-    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+    q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
 }
 
 void QBluetoothSocketPrivateDummy::connectToService(
@@ -94,7 +94,7 @@ void QBluetoothSocketPrivateDummy::connectToService(
 
     qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
     errorString = QBluetoothSocket::tr("Socket type not supported");
-    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+    q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
 }
 
 void QBluetoothSocketPrivateDummy::connectToService(
@@ -108,7 +108,7 @@ void QBluetoothSocketPrivateDummy::connectToService(
 
     qWarning() << "Using non-functional QBluetoothSocketPrivateDummy";
     errorString = QBluetoothSocket::tr("Socket type not supported");
-    q->setSocketError(QBluetoothSocket::UnsupportedProtocolError);
+    q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
 }
 
 void QBluetoothSocketPrivateDummy::abort()
@@ -152,9 +152,9 @@ qint64 QBluetoothSocketPrivateDummy::writeData(const char *data, qint64 maxSize)
 
     Q_Q(QBluetoothSocket);
 
-    if (state != QBluetoothSocket::ConnectedState) {
+    if (state != QBluetoothSocket::SocketState::ConnectedState) {
         errorString = QBluetoothSocket::tr("Cannot write while not connected");
-        q->setSocketError(QBluetoothSocket::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return -1;
     }
     return -1;
@@ -167,9 +167,9 @@ qint64 QBluetoothSocketPrivateDummy::readData(char *data, qint64 maxSize)
 
     Q_Q(QBluetoothSocket);
 
-    if (state != QBluetoothSocket::ConnectedState) {
+    if (state != QBluetoothSocket::SocketState::ConnectedState) {
         errorString = QBluetoothSocket::tr("Cannot read while not connected");
-        q->setSocketError(QBluetoothSocket::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return -1;
     }
 

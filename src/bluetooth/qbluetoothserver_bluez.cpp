@@ -157,7 +157,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 {
     Q_D(QBluetoothServer);
 
-    if (d->socket->state() == QBluetoothSocket::ListeningState) {
+    if (d->socket->state() == QBluetoothSocket::SocketState::ListeningState) {
         qCWarning(QT_BT_BLUEZ) << "Socket already in listen mode, close server first";
         return false; //already listening, nothing to do
     }
@@ -248,7 +248,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         return false;
     }
 
-    d->socket->setSocketState(QBluetoothSocket::ListeningState);
+    d->socket->setSocketState(QBluetoothSocket::SocketState::ListeningState);
 
     if (!d->socketNotifier) {
         d->socketNotifier = new QSocketNotifier(d->socket->socketDescriptor(),
@@ -266,7 +266,7 @@ void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
 
-    if (d->socket->state() == QBluetoothSocket::UnconnectedState)
+    if (d->socket->state() == QBluetoothSocket::SocketState::UnconnectedState)
         d->maxPendingConnections = numConnections;
 }
 
@@ -336,7 +336,7 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 {
     Q_D(QBluetoothServer);
 
-    if (d->socket->state() == QBluetoothSocket::UnconnectedState) {
+    if (d->socket->state() == QBluetoothSocket::SocketState::UnconnectedState) {
         // nothing to set beyond the fact to remember the sec level for the next listen()
         d->securityFlags = security;
         return;
@@ -357,7 +357,7 @@ QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
 {
     Q_D(const QBluetoothServer);
 
-    if (d->socket->state() == QBluetoothSocket::UnconnectedState)
+    if (d->socket->state() == QBluetoothSocket::SocketState::UnconnectedState)
         return d->securityFlags;
 
     return d->socketSecurityLevel();

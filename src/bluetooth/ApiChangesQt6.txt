@@ -59,6 +59,12 @@ QBluetoothTransferManager
  - QBluetoothTransferManager, QBluetoothTransferRequest, and QBluetoothTransferReply have been removed
    without replacement.
 
+QBluetoothSocket
+-------------------------
+
+ - QBluetoothSocket::SocketState and QBluetoothSocket::SocketError are now scoped enums. Usage of enum
+   items has to be adapted in user code.
+
 QML Interface
 -------------
 
