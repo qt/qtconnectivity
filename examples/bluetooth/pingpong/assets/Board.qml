@@ -89,7 +89,7 @@ Rectangle {
         height: (parent.height/5)
         anchors.left: parent.left
         color: "#363636"
-        radius: 10
+        radius: width/2
 
         MouseArea {
             id: leftMouse
@@ -110,7 +110,7 @@ Rectangle {
         height: (parent.height/5)
         anchors.right: parent.right
         color: "#363636"
-        radius: 10
+        radius: width/2
 
         MouseArea {
             id: rightMouse
