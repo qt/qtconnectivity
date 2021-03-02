@@ -76,7 +76,9 @@ Rectangle {
 
             MouseArea {
                 id: leftMouse
-                anchors.fill: parent
+                width: (board.width/2)
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
                 acceptedButtons: Qt.LeftButton
                 drag.target: leftblock
                 drag.axis: Drag.YAxis
@@ -97,7 +99,9 @@ Rectangle {
 
             MouseArea {
                 id: rightMouse
-                anchors.fill: parent
+                width: (board.width/2)
+                height: parent.height
+                anchors.horizontalCenter: parent.horizontalCenter
                 acceptedButtons: Qt.LeftButton
                 drag.target: rightblock
                 drag.axis: Drag.YAxis
