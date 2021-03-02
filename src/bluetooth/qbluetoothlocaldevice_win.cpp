@@ -176,12 +176,6 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     return Unpaired;
 }
 
-void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-{
-    Q_UNUSED(confirmation);
-    Q_UNIMPLEMENTED();
-}
-
 QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(
         QBluetoothLocalDevice *q, const QBluetoothAddress &address)
     : deviceValid(false)

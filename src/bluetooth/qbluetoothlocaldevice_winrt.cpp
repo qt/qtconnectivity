@@ -159,11 +159,6 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     return QBluetoothLocalDevice::Paired;
 }
 
-void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-{
-    Q_UNUSED(confirmation);
-}
-
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 {
     Q_UNUSED(mode);

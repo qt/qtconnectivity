@@ -65,14 +65,12 @@ public:
     virtual ~LocalDeviceBroadcastReceiver() {}
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
     virtual void onReceiveLeScan(JNIEnv *, jobject, jint, jbyteArray) {}
-    bool pairingConfirmation(bool accept);
 
 signals:
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
     void pairingStateChanged(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
     void connectDeviceChanges(const QBluetoothAddress &address, bool isConnectEvent);
-    void pairingDisplayConfirmation(const QBluetoothAddress &address, const QString& pin);
-    void pairingDisplayPinCode(const QBluetoothAddress &address, const QString& pin);
+
 private:
     int previousScanMode;
     QAndroidJniObject pairingDevice;

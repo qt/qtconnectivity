@@ -460,12 +460,6 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     return localDevices;
 }
 
-void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-{
-    Q_UNUSED(confirmation);
-}
-
-
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
     if (!isValid())

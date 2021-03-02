@@ -64,7 +64,6 @@ static const char * const javaActionBondStateChanged = "ACTION_BOND_STATE_CHANGE
 static const char * const javaActionDiscoveryStarted = "ACTION_DISCOVERY_STARTED";
 static const char * const javaActionDiscoveryFinished = "ACTION_DISCOVERY_FINISHED";
 static const char * const javaActionFound = "ACTION_FOUND";
-static const char * const javaActionPairingRequest = "ACTION_PAIRING_REQUEST";
 static const char * const javaActionScanModeChanged = "ACTION_SCAN_MODE_CHANGED";
 static const char * const javaActionUuid = "ACTION_UUID";
 static const char * const javaExtraBondState = "EXTRA_BOND_STATE";
@@ -110,8 +109,6 @@ QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldNam
         fieldName = javaActionDiscoveryFinished; break;
     case JavaNames::ActionFound:
         fieldName = javaActionFound; break;
-    case JavaNames::ActionPairingRequest:
-        fieldName = javaActionPairingRequest; break;
     case JavaNames::ActionScanModeChanged:
         fieldName = javaActionScanModeChanged; break;
     case JavaNames::ActionUuid:

@@ -261,43 +261,6 @@ bool QBluetoothLocalDevice::isValid() const
 */
 
 /*!
-  \fn QBluetoothLocalDevice::pairingDisplayConfirmation(const QBluetoothAddress &address, QString pin)
-
-  Signal by some platforms to display a pairing confirmation dialog for \a address.  The user
-  is asked to confirm the \a pin is the same on both devices.  The \l pairingConfirmation() function
-  must be called to indicate if the user accepts or rejects the displayed pin.
-
-  This signal is only emitted for pairing requests issued by calling \l requestPairing().
-  On \macos, this method never gets called - there is a callback with a PIN (IOBluetooth),
-  but it expects immediate reply yes/no - and there is no time to show any dialog or compare PINs.
-
-  \sa pairingConfirmation()
-*/
-
-/*!
-  \fn QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-
-  To be called after getting a pairingDisplayConfirmation(). The \a confirmation parameter either
-  accepts the pairing or rejects it.
-
-  Accepting a pairing always refers to the last pairing request issued via \l requestPairing().
-
-  \note This function requires BLUETOOTH_PRIVILEGED permission on Android which is generally not
-  obtainable for 3rdparty. Android's default handler for pairing requests will do this on behalf
-  of the user and the application can ignore this call. Nevertheless the proper Android calls are made
-  in case the application does have the required permissions.
-*/
-
-/*!
-  \fn QBluetoothLocalDevice::pairingDisplayPinCode(const QBluetoothAddress &address, QString pin)
-
-  Signal by some platforms to display the \a pin to the user for \a address.  The pin is automatically
-  generated, and does not need to be confirmed.
-
-  This signal is only emitted for pairing requests issued by calling \l requestPairing().
-*/
-
-/*!
   \fn QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 
   Set the \a pairing status with \a address.  The results are returned by the signal, pairingFinished().

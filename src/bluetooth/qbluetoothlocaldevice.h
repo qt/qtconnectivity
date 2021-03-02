@@ -99,17 +99,12 @@ public:
 
     static QList<QBluetoothHostInfo> allDevices();
 
-public Q_SLOTS:
-    void pairingConfirmation(bool confirmation);
-
 Q_SIGNALS:
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
     void deviceConnected(const QBluetoothAddress &address);
     void deviceDisconnected(const QBluetoothAddress &address);
     void pairingFinished(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 
-    void pairingDisplayPinCode(const QBluetoothAddress &address, QString pin);
-    void pairingDisplayConfirmation(const QBluetoothAddress &address, QString pin);
     void error(QBluetoothLocalDevice::Error error);
 
 private:

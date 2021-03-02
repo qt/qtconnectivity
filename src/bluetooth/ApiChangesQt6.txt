@@ -31,6 +31,14 @@ QBluetoothDeviceInfo
 - QList<QBluetoothUuid> serviceUuids(DataCompleteness *completeness = nullptr) const was replaced by
   QList<QBluetoothUuid> serviceUuids() const.
 
+QBluetoothLocalDevice
+---------------------
+
+- Pairing agent related API was removed without replacement. This includes pairingConfirmation(bool),
+  pairingDisplayPinCode(..) & pairingDisplayConfirmation(..). Except for Android and BlueZ 4 there was
+  never an implementation for it. Bluez 4 support was removed in Qt 6 and Android's implementation
+  required unobtainable BLUETOOTH_PRIVILEGED for at least parts of the code.
+
 QLowEnergyService
 -----------------
 

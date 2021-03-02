@@ -67,8 +67,6 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(
             this, &QBluetoothLocalDevicePrivate::processPairingStateChanged);
     connect(receiver, &LocalDeviceBroadcastReceiver::connectDeviceChanges,
             this, &QBluetoothLocalDevicePrivate::processConnectDeviceChanges);
-    connect(receiver, &LocalDeviceBroadcastReceiver::pairingDisplayConfirmation,
-            this, &QBluetoothLocalDevicePrivate::processDisplayConfirmation);
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
@@ -193,18 +191,6 @@ void QBluetoothLocalDevicePrivate::processConnectDeviceChanges(const QBluetoothA
         connectedDevices.removeAll(address);
         emit q_ptr->deviceDisconnected(address);
     }
-}
-
-void QBluetoothLocalDevicePrivate::processDisplayConfirmation(const QBluetoothAddress &address,
-                                                              const QString &pin)
-{
-    // only send pairing notification for pairing requests issued by
-    // this QBluetoothLocalDevice instance
-    if (pendingPairing(address) == -1)
-        return;
-
-    emit q_ptr->pairingDisplayConfirmation(address, pin);
-    emit q_ptr->pairingDisplayPinCode(address, pin);
 }
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
@@ -395,16 +381,6 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     }
 
     return Unpaired;
-}
-
-void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-{
-    if (!d_ptr->adapter())
-        return;
-
-    bool success = d_ptr->receiver->pairingConfirmation(confirmation);
-    if (!success)
-        emit error(PairingError);
 }
 
 QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const

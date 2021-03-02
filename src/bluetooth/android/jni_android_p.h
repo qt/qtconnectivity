@@ -65,7 +65,6 @@ enum JavaNames {
     ActionDiscoveryStarted,
     ActionDiscoveryFinished,
     ActionFound,
-    ActionPairingRequest,
     ActionScanModeChanged,
     ActionUuid,
     ExtraBondState,

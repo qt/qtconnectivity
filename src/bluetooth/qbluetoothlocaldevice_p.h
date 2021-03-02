@@ -58,7 +58,6 @@
 
 #if QT_CONFIG(bluez)
 #include <QObject>
-#include <QDBusContext>
 #include <QDBusObjectPath>
 #include <QDBusMessage>
 #include <QSet>
@@ -124,7 +123,6 @@ private slots:
     void processPairingStateChanged(const QBluetoothAddress &address,
                                     QBluetoothLocalDevice::Pairing pairing);
     void processConnectDeviceChanges(const QBluetoothAddress &address, bool isConnectEvent);
-    void processDisplayConfirmation(const QBluetoothAddress &address, const QString &pin);
 
 private:
     QBluetoothLocalDevice *q_ptr;
@@ -141,7 +139,7 @@ public:
 };
 
 #elif QT_CONFIG(bluez)
-class QBluetoothLocalDevicePrivate : public QObject, protected QDBusContext
+class QBluetoothLocalDevicePrivate : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
@@ -167,16 +165,6 @@ public:
     int pendingHostModeChange;
 
 public slots:
-    void Authorize(const QDBusObjectPath &in0, const QString &in1);
-    void Cancel();
-    void ConfirmModeChange(const QString &in0);
-    void DisplayPasskey(const QDBusObjectPath &in0, uint in1, uchar in2);
-    void Release();
-    uint RequestPasskey(const QDBusObjectPath &in0);
-
-    void RequestConfirmation(const QDBusObjectPath &in0, uint in1);
-    QString RequestPinCode(const QDBusObjectPath &in0);
-
     void pairingCompleted(QDBusPendingCallWatcher *);
 
     bool isValid() const;
@@ -200,8 +188,6 @@ private Q_SLOTS:
 private:
     void connectDeviceChanges();
 
-    QDBusMessage msgConfirmation;
-    QDBusConnection *msgConnection = nullptr;
     QString deviceAdapterPath;
 
     QBluetoothLocalDevice *q_ptr;

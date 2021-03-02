@@ -486,7 +486,6 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
-    delete msgConnection;
     delete adapterBluez5;
     delete adapterProperties;
     delete managerBluez5;
@@ -677,53 +676,9 @@ bool QBluetoothLocalDevicePrivate::isValid() const
     return adapterBluez5 && managerBluez5;
 }
 
-void QBluetoothLocalDevicePrivate::RequestConfirmation(const QDBusObjectPath &in0, uint in1)
-{
-    Q_UNUSED(in0);
-    Q_Q(QBluetoothLocalDevice);
-    setDelayedReply(true);
-    msgConfirmation = message();
-    msgConnection = new QDBusConnection(connection());
-    emit q->pairingDisplayConfirmation(address, QString::fromLatin1("%1").arg(in1));
-}
-
-
 QList<QBluetoothAddress> QBluetoothLocalDevicePrivate::connectedDevices() const
 {
     return connectedDevicesSet.values();
-}
-
-void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-{
-    if (!d_ptr
-        || !d_ptr->msgConfirmation.isReplyRequired()
-        || !d_ptr->msgConnection)
-        return;
-
-    if (confirmation) {
-        QDBusMessage msg = d_ptr->msgConfirmation.createReply(QVariant(true));
-        d_ptr->msgConnection->send(msg);
-    } else {
-        QDBusMessage error
-            = d_ptr->msgConfirmation.createErrorReply(QDBusError::AccessDenied,
-                                                      QStringLiteral("Pairing rejected"));
-        d_ptr->msgConnection->send(error);
-    }
-    delete d_ptr->msgConnection;
-    d_ptr->msgConnection = nullptr;
-}
-
-QString QBluetoothLocalDevicePrivate::RequestPinCode(const QDBusObjectPath &in0)
-{
-    Q_UNUSED(in0);
-    Q_Q(QBluetoothLocalDevice);
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path();
-    // seeded in constructor, 6 digit pin
-    QString pin = QString::fromLatin1("%1").arg(QRandomGenerator::global()->bounded(1000000));
-    pin = QString::fromLatin1("%1").arg(pin, 6, QLatin1Char('0'));
-
-    emit q->pairingDisplayPinCode(address, pin);
-    return pin;
 }
 
 void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *watcher)
@@ -768,49 +723,6 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
     }
 
     watcher->deleteLater();
-}
-
-void QBluetoothLocalDevicePrivate::Authorize(const QDBusObjectPath &in0, const QString &in1)
-{
-    Q_UNUSED(in0);
-    Q_UNUSED(in1);
-    // TODO implement this
-    qCDebug(QT_BT_BLUEZ) << "Got authorize for" << in0.path() << in1;
-}
-
-void QBluetoothLocalDevicePrivate::Cancel()
-{
-    // TODO implement this
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
-}
-
-void QBluetoothLocalDevicePrivate::Release()
-{
-    // TODO implement this
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
-}
-
-void QBluetoothLocalDevicePrivate::ConfirmModeChange(const QString &in0)
-{
-    Q_UNUSED(in0);
-    // TODO implement this
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0;
-}
-
-void QBluetoothLocalDevicePrivate::DisplayPasskey(const QDBusObjectPath &in0, uint in1, uchar in2)
-{
-    Q_UNUSED(in0);
-    Q_UNUSED(in1);
-    Q_UNUSED(in2);
-    // TODO implement this
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << in0.path() << in1 << in2;
-}
-
-uint QBluetoothLocalDevicePrivate::RequestPasskey(const QDBusObjectPath &in0)
-{
-    Q_UNUSED(in0);
-    qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
-    return (QRandomGenerator::global()->bounded(1000000));
 }
 
 #include "moc_qbluetoothlocaldevice_p.cpp"

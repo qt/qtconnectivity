@@ -115,9 +115,4 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     return Unpaired;
 }
 
-void QBluetoothLocalDevice::pairingConfirmation(bool confirmation)
-{
-    Q_UNUSED(confirmation);
-}
-
 QT_END_NAMESPACE

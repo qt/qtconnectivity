@@ -59,10 +59,6 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
             this, &BtLocalDevice::connected);
     connect(localDevice, &QBluetoothLocalDevice::deviceDisconnected,
             this, &BtLocalDevice::disconnected);
-    connect(localDevice, &QBluetoothLocalDevice::pairingDisplayConfirmation,
-            this, &BtLocalDevice::pairingDisplayConfirmation);
-    connect(localDevice, &QBluetoothLocalDevice::pairingDisplayPinCode,
-            this, &BtLocalDevice::pairingDisplayPinCode);
 
     if (localDevice->isValid()) {
         deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
@@ -200,25 +196,6 @@ void BtLocalDevice::connected(const QBluetoothAddress &addr)
 void BtLocalDevice::disconnected(const QBluetoothAddress &addr)
 {
     qDebug() << "Newly disconnected device" << addr.toString();
-}
-
-void BtLocalDevice::pairingDisplayConfirmation(const QBluetoothAddress &address, const QString &pin)
-{
-    qDebug() << "PairingDisplayConfirmation" << address << pin;
-    QTimer::singleShot(3000, this, SLOT(confirmPairing()));
-}
-
-void BtLocalDevice::pairingDisplayPinCode(const QBluetoothAddress &address, const QString &pin)
-{
-    qDebug() << "PairingDisplayPinCode" << address << pin;
-}
-
-void BtLocalDevice::confirmPairing()
-{
-    static bool confirm = false;
-    confirm = !confirm; //toggle
-    qDebug() << "######" << "Sending pairing confirmation: " << confirm;
-    localDevice->pairingConfirmation(confirm);
 }
 
 void BtLocalDevice::cycleSecurityFlags()
