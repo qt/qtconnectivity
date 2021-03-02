@@ -70,6 +70,8 @@ PingPong::~PingPong()
 
 void PingPong::startGame()
 {
+    m_resultLeft = m_resultRight = 0;
+    emit resultChanged();
     m_showDialog = false;
     emit showDialogChanged();
     //! [Start the game]
@@ -189,22 +191,23 @@ void PingPong::checkBoundaries()
 
 void PingPong::checkResult()
 {
+    if (m_resultRight < 10 && m_resultLeft < 10)
+        return;
+
     if (m_resultRight == 10 && m_role == 2) {
-        setMessage("Game over. You win!");
-        m_timer->stop();
+        setMessage("Game over. You win! Next game starts in 10s");
     }
     else if (m_resultRight == 10 && m_role == 1) {
-        setMessage("Game over. You lose!");
-        m_timer->stop();
+        setMessage("Game over. You lose! Next game starts in 10s");
     }
     else if (m_resultLeft == 10 && m_role == 1) {
-        setMessage("Game over. You win!");
-        m_timer->stop();
+        setMessage("Game over. You win! Next game starts in 10s");
     }
     else if (m_resultLeft == 10 && m_role == 2) {
-        setMessage("Game over. You lose!");
-        m_timer->stop();
+        setMessage("Game over. You lose! Next game starts in 10s");
     }
+    m_timer->stop();
+    QTimer::singleShot(10000, this, SLOT(startGame()));
 }
 
 void PingPong::startServer()
