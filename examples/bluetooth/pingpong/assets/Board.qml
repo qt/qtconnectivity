@@ -56,31 +56,6 @@ Rectangle {
     width: 600
     height: 300
 
-    // 1 - server role; left pedal
-    // 2 - client role; right pedal
-    property int roleSide: pingPong.role
-    onRoleSideChanged: {
-        if (pingPong.role == 1) {
-            rightMouse.opacity = 0.7
-            rightMouse.enabled = false
-        }
-        else if (pingPong.role == 2) {
-            leftMouse.opacity = 0.7
-            leftMouse.enabled = false
-        }
-    }
-
-    property bool deviceMessage: pingPong.showDialog
-    onDeviceMessageChanged: {
-        if (pingPong.showDialog) {
-            info.visible = true;
-            board.opacity = 0.5;
-        } else {
-            info.visible = false;
-            board.opacity = 1;
-        }
-    }
-
     // Left pedal - server role
     Rectangle {
         id: leftblock
@@ -122,18 +97,6 @@ Rectangle {
             drag.maximumY: (board.height - rightblock.height)
         }
     }
-
-    property double leftBlockY: leftblock.y
-    onLeftBlockYChanged: pingPong.updateLeftBlock(leftblock.y)
-
-    property double leftBlockUpdate: pingPong.leftBlockY
-    onLeftBlockUpdateChanged: leftblock.y = pingPong.leftBlockY
-
-    property double rightBlockY: rightblock.y
-    onRightBlockYChanged: pingPong.updateRightBlock(rightblock.y)
-
-    property double rightBlockUpdate: pingPong.rightBlockY
-    onRightBlockUpdateChanged: rightblock.y = pingPong.rightBlockY
 
     Rectangle {
         id: splitter
@@ -178,6 +141,43 @@ Rectangle {
             NumberAnimation { target: ball; property: "y"; duration: 50 }
         }
     }
+
+    // 1 - server role; left pedal
+    // 2 - client role; right pedal
+    property int roleSide: pingPong.role
+    onRoleSideChanged: {
+        if (pingPong.role == 1) {
+            rightMouse.opacity = 0.7
+            rightMouse.enabled = false
+        }
+        else if (pingPong.role == 2) {
+            leftMouse.opacity = 0.7
+            leftMouse.enabled = false
+        }
+    }
+
+    property bool deviceMessage: pingPong.showDialog
+    onDeviceMessageChanged: {
+        if (pingPong.showDialog) {
+            info.visible = true;
+            board.opacity = 0.5;
+        } else {
+            info.visible = false;
+            board.opacity = 1;
+        }
+    }
+
+    property double leftBlockY: leftblock.y
+    onLeftBlockYChanged: pingPong.updateLeftBlock(leftblock.y)
+
+    property double leftBlockUpdate: pingPong.leftBlockY
+    onLeftBlockUpdateChanged: leftblock.y = pingPong.leftBlockY
+
+    property double rightBlockY: rightblock.y
+    onRightBlockYChanged: pingPong.updateRightBlock(rightblock.y)
+
+    property double rightBlockUpdate: pingPong.rightBlockY
+    onRightBlockUpdateChanged: rightblock.y = pingPong.rightBlockY
 
     Component.onCompleted: {
         if (menulist.height == Screen.height && menulist.width == Screen.width)
