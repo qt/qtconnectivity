@@ -108,8 +108,6 @@ qt_internal_extend_target(Bluetooth CONDITION QT_FEATURE_bluez
         qbluetoothserviceinfo_bluez.cpp
         qbluetoothsocket_bluez.cpp qbluetoothsocket_bluez_p.h
         qbluetoothsocket_bluezdbus.cpp qbluetoothsocket_bluezdbus_p.h
-    LIBRARIES
-        Qt::Concurrent
     PUBLIC_LIBRARIES # for Linux QEMU (gcc-armv7) on Linux Ubuntu_20_04 (gcc-x86_64)
         Qt::DBus
 )
@@ -203,7 +201,6 @@ qt_internal_extend_target(Bluetooth CONDITION MACOS AND NOT QT_FEATURE_bluez AND
     LIBRARIES
         ${FWFoundation}
         ${FWIOBluetooth}
-        Qt::Concurrent
 )
 
 qt_internal_extend_target(Bluetooth CONDITION NOT MACOS AND NOT QT_FEATURE_bluez AND (IOS OR TVOS) AND (ANDROID_EMBEDDED OR NOT ANDROID)
@@ -274,8 +271,6 @@ qt_internal_extend_target(Bluetooth CONDITION WIN32 AND NOT QT_FEATURE_bluez AND
         windows/qwinlowenergybluetooth_p.h
     DEFINES
         QT_WIN_BLUETOOTH
-    LIBRARIES
-        Qt::Concurrent
     PUBLIC_LIBRARIES
         bthprops
         setupapi

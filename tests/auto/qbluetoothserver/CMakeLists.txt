@@ -7,7 +7,6 @@ qt_internal_add_test(tst_qbluetoothserver
         tst_qbluetoothserver.cpp
     PUBLIC_LIBRARIES
         Qt::BluetoothPrivate
-        Qt::Concurrent
 )
 
 #### Keys ignored in scope 1:.:.:qbluetoothserver.pro:<TRUE>:

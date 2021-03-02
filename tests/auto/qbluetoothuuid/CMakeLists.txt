@@ -7,5 +7,4 @@ qt_internal_add_test(tst_qbluetoothuuid
         tst_qbluetoothuuid.cpp
     PUBLIC_LIBRARIES
         Qt::Bluetooth
-        Qt::Concurrent
 )

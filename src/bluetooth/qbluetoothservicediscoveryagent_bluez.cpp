@@ -52,7 +52,6 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QProcess>
 #include <QtDBus/QDBusPendingCallWatcher>
-#include <QtConcurrent/QtConcurrentRun>
 
 QT_BEGIN_NAMESPACE
 

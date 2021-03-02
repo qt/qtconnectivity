@@ -7,7 +7,6 @@ qt_internal_add_test(tst_qbluetoothsocket
         tst_qbluetoothsocket.cpp
     PUBLIC_LIBRARIES
         Qt::BluetoothPrivate
-        Qt::Concurrent
         Qt::Network
 )
 

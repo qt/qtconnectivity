@@ -41,7 +41,7 @@ endif()
 
 qt_feature("bluez" PUBLIC
     LABEL "BlueZ"
-    CONDITION BLUEZ_FOUND AND QT_FEATURE_concurrent AND QT_FEATURE_dbus # special case
+    CONDITION BLUEZ_FOUND AND QT_FEATURE_dbus # special case
 )
 qt_feature("bluez_le" PRIVATE
     LABEL "BlueZ Low Energy"

@@ -7,7 +7,6 @@ qt_internal_add_test(tst_qbluetoothdevicediscoveryagent
         tst_qbluetoothdevicediscoveryagent.cpp
     PUBLIC_LIBRARIES
         Qt::BluetoothPrivate
-        Qt::Concurrent
 )
 
 ## Scopes:

@@ -45,7 +45,7 @@
     "features": {
         "bluez": {
             "label": "BlueZ",
-            "condition": "libs.bluez && features.concurrent && features.dbus",
+            "condition": "libs.bluez && features.dbus",
             "output": [ "publicFeature" ]
         },
         "bluez_le": {
