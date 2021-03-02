@@ -52,88 +52,97 @@ import QtQuick 2.0
 import QtQuick.Window 2.1
 
 Rectangle {
-    id: board
-    width: 600
-    height: 300
+    id: fullWindow
+    anchors.fill: parent
+    color: "black"
 
-    // Left pedal - server role
+    property double scaleFactor: Math.min(width, height)
+
     Rectangle {
-        id: leftblock
-        y: (parent.height/2)
-        width: (parent.width/27)
-        height: (parent.height/5)
-        anchors.left: parent.left
-        color: "#363636"
-        radius: width/2
+        id: board
+        width: scaleFactor
+        height: scaleFactor
+        anchors.centerIn: parent
 
-        MouseArea {
-            id: leftMouse
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            drag.target: leftblock
-            drag.axis: Drag.YAxis
-            drag.minimumY: 0
-            drag.maximumY: (board.height - leftblock.height)
+        // Left pedal - server role
+        Rectangle {
+            id: leftblock
+            y: (parent.height/2)
+            width: (parent.width/27)
+            height: (parent.height/5)
+            anchors.left: parent.left
+            color: "#363636"
+            radius: width/2
+
+            MouseArea {
+                id: leftMouse
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                drag.target: leftblock
+                drag.axis: Drag.YAxis
+                drag.minimumY: 0
+                drag.maximumY: (board.height - leftblock.height)
+            }
         }
-    }
 
-    // Right pedal - client role
-    Rectangle {
-        id: rightblock
-        y: (parent.height/2)
-        width: (parent.width/27)
-        height: (parent.height/5)
-        anchors.right: parent.right
-        color: "#363636"
-        radius: width/2
+        // Right pedal - client role
+        Rectangle {
+            id: rightblock
+            y: (parent.height/2)
+            width: (parent.width/27)
+            height: (parent.height/5)
+            anchors.right: parent.right
+            color: "#363636"
+            radius: width/2
 
-        MouseArea {
-            id: rightMouse
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            drag.target: rightblock
-            drag.axis: Drag.YAxis
-            drag.minimumY: 0
-            drag.maximumY: (board.height - rightblock.height)
+            MouseArea {
+                id: rightMouse
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                drag.target: rightblock
+                drag.axis: Drag.YAxis
+                drag.minimumY: 0
+                drag.maximumY: (board.height - rightblock.height)
+            }
         }
-    }
 
-    Rectangle {
-        id: splitter
-        color: "#363636"
-        anchors.horizontalCenter: parent.horizontalCenter
-        height: parent.height
-        width: parent.width/100
-    }
+        Rectangle {
+            id: splitter
+            color: "#363636"
+            anchors.horizontalCenter: parent.horizontalCenter
+            height: parent.height
+            width: parent.width/100
+        }
 
-    Text {
-        id: leftResult
-        text: pingPong.leftResult
-        font.bold: true
-        font.pixelSize: 30
-        anchors.right: splitter.left
-        anchors.top: parent.top
-        anchors.margins: 15
-    }
+        Text {
+            id: leftResult
+            text: pingPong.leftResult
+            font.bold: true
+            font.pixelSize: 30
+            anchors.right: splitter.left
+            anchors.top: parent.top
+            anchors.margins: 15
+        }
 
-    Text {
-        id: rightResult
-        text: pingPong.rightResult
-        font.bold: true
-        font.pixelSize: 30
-        anchors.left: splitter.right
-        anchors.top: parent.top
-        anchors.margins: 15
-    }
+        Text {
+            id: rightResult
+            text: pingPong.rightResult
+            font.bold: true
+            font.pixelSize: 30
+            anchors.left: splitter.right
+            anchors.top: parent.top
+            anchors.margins: 15
+        }
 
-    Rectangle {
-        id: ball
-        width: leftblock.width
-        height: leftblock.width
-        radius: width/2
-        color: "#363636"
-        x: pingPong.ballX
-        y: pingPong.ballY
+        Rectangle {
+            id: ball
+            width: leftblock.width
+            height: leftblock.width
+            radius: width/2
+            color: "#363636"
+            x: pingPong.ballX
+            y: pingPong.ballY
+        }
     }
 
     // 1 - server role; left pedal
