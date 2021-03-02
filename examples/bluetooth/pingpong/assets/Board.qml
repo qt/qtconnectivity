@@ -128,18 +128,12 @@ Rectangle {
 
     Rectangle {
         id: ball
-        width: leftblock.width/2
-        height: leftblock.width/2
-        radius: width
+        width: leftblock.width
+        height: leftblock.width
+        radius: width/2
         color: "#363636"
         x: pingPong.ballX
         y: pingPong.ballY
-
-        SequentialAnimation {
-            running: true
-            NumberAnimation { target: ball; property: "x"; duration: 50 }
-            NumberAnimation { target: ball; property: "y"; duration: 50 }
-        }
     }
 
     // 1 - server role; left pedal
