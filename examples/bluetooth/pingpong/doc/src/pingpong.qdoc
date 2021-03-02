@@ -39,9 +39,7 @@
     \include examples-run.qdocinc
 
     At the beginning, the user selects the role. One device acts as a server and the second
-    one as a client. After selecting the role, adjustments to the screen size are done
-    (two devices might have different screen sizes). The server side starts a service named
-    "PingPong server".
+    one as a client. The server side starts a service named "PingPong server".
 
     \snippet pingpong/pingpong.cpp Starting the server
 
@@ -63,7 +61,7 @@
     \snippet pingpong/pingpong.cpp Start the game
 
     The server updates the ball direction and coordinates. The coordinates of pedals are sent
-    to each other every 50ms.
+    to each other every 10ms.
 
     \snippet pingpong/pingpong.cpp Updating coordinates
 
@@ -74,7 +72,9 @@
     \snippet pingpong/pingpong.cpp Checking the boundaries
 
     In the code above, it was shown how the server checks whether the ball has reached
-    the boundaries of the board. In the case of the goal, the server updates
+    the boundaries of the board. In case of a collision with a pedal, a convex surface
+    is simulated. The part of the velocity normal to the simulated surface is inverted
+    and increased by 10% to speed up the game. In the case of the goal, the server updates
     the results via its socket.
 
     \image intro1.png
