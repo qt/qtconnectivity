@@ -144,8 +144,8 @@ Rectangle {
             height: leftblock.width
             radius: width/2
             color: "#363636"
-            x: pingPong.ballX
-            y: pingPong.ballY
+            x: pingPong.ballX * scaleFactor
+            y: pingPong.ballY * scaleFactor
         }
     }
 
@@ -175,23 +175,20 @@ Rectangle {
     }
 
     property double leftBlockY: leftblock.y
-    onLeftBlockYChanged: pingPong.updateLeftBlock(leftblock.y)
+    onLeftBlockYChanged: pingPong.updateLeftBlock(leftblock.y / scaleFactor)
 
     property double leftBlockUpdate: pingPong.leftBlockY
-    onLeftBlockUpdateChanged: leftblock.y = pingPong.leftBlockY
+    onLeftBlockUpdateChanged: leftblock.y = pingPong.leftBlockY * scaleFactor
 
     property double rightBlockY: rightblock.y
-    onRightBlockYChanged: pingPong.updateRightBlock(rightblock.y)
+    onRightBlockYChanged: pingPong.updateRightBlock(rightblock.y / scaleFactor)
 
     property double rightBlockUpdate: pingPong.rightBlockY
-    onRightBlockUpdateChanged: rightblock.y = pingPong.rightBlockY
+    onRightBlockUpdateChanged: rightblock.y = pingPong.rightBlockY * scaleFactor
+
 
     Component.onCompleted: {
-        if (menulist.height == Screen.height && menulist.width == Screen.width)
-            pingPong.setSize(Screen.width, Screen.height)
-        else
-            pingPong.setSize(board.width, board.height)
-        pingPong.updateLeftBlock(leftblock.y)
-        pingPong.updateRightBlock(rightblock.y)
+        pingPong.updateLeftBlock(leftblock.y / scaleFactor)
+        pingPong.updateRightBlock(rightblock.y / scaleFactor)
     }
 }

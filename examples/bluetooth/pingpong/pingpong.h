@@ -81,7 +81,6 @@ public:
     float leftBlockY() const;
     float rightBlockY() const;
     void checkBoundaries();
-    void updateDirection();
     bool showDialog() const;
     QString message() const;
     void setMessage(const QString &message);
@@ -93,7 +92,6 @@ public:
 public slots:
     void startGame();
     void update();
-    void setSize(const float &x, const float &y);
     void updateBall(const float &bX, const float &bY);
     void updateLeftBlock(const float &lY);
     void updateRightBlock(const float &rY);
@@ -119,32 +117,24 @@ Q_SIGNALS:
     void resultChanged();
 
 private:
-    QBluetoothServer *m_serverInfo;
+    QBluetoothServer *m_serverInfo = nullptr;
     QBluetoothServiceInfo m_serviceInfo;
-    QBluetoothSocket *socket;
-    QBluetoothServiceDiscoveryAgent *discoveryAgent;
+    QBluetoothSocket *socket = nullptr;
+    QBluetoothServiceDiscoveryAgent *discoveryAgent = nullptr;
 
-    float m_ballX;
-    float m_ballY;
-    float m_ballPreviousX;
-    float m_ballPreviousY;
-    float m_leftBlockY;
-    float m_rightBlockY;
-    QTimer *m_timer;
-    float m_boardWidth;
-    float m_boardHeight;
-    float m_direction;
-    float m_targetX;
-    float m_targetY;
-    int interval;
-    int m_resultLeft;
-    int m_resultRight;
-    bool m_showDialog;
+    float m_ballX = 0.5f;
+    float m_ballY = 0.9f;
+    float m_leftBlockY = 0.4f;
+    float m_rightBlockY = 0.4f;
+    QTimer *m_timer = nullptr;
+    float m_speedy = 0.002f;
+    float m_speedx = 0.002f;
+    int m_resultLeft = 0;
+    int m_resultRight = 0;
+    bool m_showDialog = false;
     QString m_message;
-    int m_role;
-    float m_proportionX;
-    float m_proportionY;
-    bool m_serviceFound;
+    int m_role = 0;
+    bool m_serviceFound = false;
 };
 
 #endif // PINGPONG_H
