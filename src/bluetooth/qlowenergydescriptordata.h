@@ -51,8 +51,6 @@ struct QLowEnergyDescriptorDataPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyDescriptorData
 {
-    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyDescriptorData &d1,
-                                              const QLowEnergyDescriptorData &d12);
 public:
     QLowEnergyDescriptorData();
     QLowEnergyDescriptorData(const QBluetoothUuid &uuid,
@@ -61,6 +59,15 @@ public:
     ~QLowEnergyDescriptorData();
 
     QLowEnergyDescriptorData &operator=(const QLowEnergyDescriptorData &other);
+    friend bool operator==(const QLowEnergyDescriptorData &a, const QLowEnergyDescriptorData &b)
+    {
+        return equals(a, b);
+    }
+
+    friend bool operator!=(const QLowEnergyDescriptorData &a, const QLowEnergyDescriptorData &b)
+    {
+        return !equals(a, b);
+    }
 
     QByteArray value() const;
     void setValue(const QByteArray &value);
@@ -83,16 +90,9 @@ public:
     void swap(QLowEnergyDescriptorData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
 
 private:
+    static bool equals(const QLowEnergyDescriptorData &a, const QLowEnergyDescriptorData &b);
     QSharedDataPointer<QLowEnergyDescriptorDataPrivate> d;
 };
-
-Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyDescriptorData &d1,
-                                   const QLowEnergyDescriptorData &d2);
-
-inline bool operator!=(const QLowEnergyDescriptorData &d1, const QLowEnergyDescriptorData &d2)
-{
-    return !(d1 == d2);
-}
 
 Q_DECLARE_SHARED(QLowEnergyDescriptorData)
 

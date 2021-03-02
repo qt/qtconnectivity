@@ -202,24 +202,36 @@ QBluetooth::AttAccessConstraints QLowEnergyDescriptorData::writeConstraints() co
  */
 
 /*!
-   Returns \c true if \a d1 and \a d2 are equal with respect to their public state,
+   \fn bool QLowEnergyDescriptorData::operator==(const QLowEnergyDescriptorData &a,
+                                                 const QLowEnergyDescriptorData &b)
+
+   \brief Returns \c true if \a a and \a b are equal with respect to their public state,
    otherwise returns \c false.
  */
-bool operator==(const QLowEnergyDescriptorData &d1, const QLowEnergyDescriptorData &d2)
-{
-    return d1.d == d2.d || (
-                d1.uuid() == d2.uuid()
-                && d1.value() == d2.value()
-                && d1.isReadable() == d2.isReadable()
-                && d1.isWritable() == d2.isWritable()
-                && d1.readConstraints() == d2.readConstraints()
-                && d1.writeConstraints() == d2.writeConstraints());
-}
 
 /*!
-   \fn bool operator!=(const QLowEnergyDescriptorData &d1, const QLowEnergyDescriptorData &d2)
-   Returns \c true if \a d1 and \a d2 are not equal with respect to their public state,
-   otherwise returns \c false.
+    \fn bool QLowEnergyDescriptorData::operator!=(const QLowEnergyDescriptorData &a,
+                                                  const QLowEnergyDescriptorData &b)
+
+    \brief Returns \c true if \a a and \a b are unequal with respect to their public state,
+    otherwise returns \c false.
  */
+
+/*!
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+    \internal
+ */
+bool QLowEnergyDescriptorData::equals(const QLowEnergyDescriptorData &a,
+                                      const QLowEnergyDescriptorData &b)
+{
+    return a.d == b.d || (
+                a.uuid() == b.uuid()
+                && a.value() == b.value()
+                && a.isReadable() == b.isReadable()
+                && a.isWritable() == b.isWritable()
+                && a.readConstraints() == b.readConstraints()
+                && a.writeConstraints() == b.writeConstraints());
+}
 
 QT_END_NAMESPACE

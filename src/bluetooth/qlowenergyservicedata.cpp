@@ -198,21 +198,33 @@ bool QLowEnergyServiceData::isValid() const
  */
 
 /*!
-   Returns \c true if \a sd1 and \a sd2 are equal with respect to their public state,
+   \fn bool QLowEnergyServiceData::operator==(const QLowEnergyServiceData &a,
+                                              const QLowEnergyServiceData &b)
+
+   \brief Returns \c true if \a a and \a b are equal with respect to their public state,
    otherwise returns \c false.
  */
-bool operator==(const QLowEnergyServiceData &sd1, const QLowEnergyServiceData &sd2)
-{
-    return sd1.d == sd2.d || (sd1.type() == sd2.type() && sd1.uuid() == sd2.uuid()
-                              && sd1.includedServices() == sd2.includedServices()
-                              && sd1.characteristics() == sd2.characteristics());
-}
 
 /*!
-   \fn bool operator!=(const QLowEnergyServiceData &sd1,
-                       const QLowEnergyServiceData &sd2)
-   Returns \c true if \a sd1 and \a sd2 are not equal with respect to their public state,
-   otherwise returns \c false.
+    \fn bool QLowEnergyServiceData::operator!=(const QLowEnergyServiceData &a,
+                                               const QLowEnergyServiceData &b)
+
+    \brief Returns \c true if \a a and \a b are unequal with respect to their public state,
+    otherwise returns \c false.
  */
+
+/*!
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+    \internal
+ */
+bool QLowEnergyServiceData::equals(const QLowEnergyServiceData &a, const QLowEnergyServiceData &b)
+{
+    return a.d == b.d || (
+                a.type() == b.type()
+                && a.uuid() == b.uuid()
+                && a.includedServices() == b.includedServices()
+                && a.characteristics() == b.characteristics());
+}
 
 QT_END_NAMESPACE

@@ -95,26 +95,27 @@ QBluetoothHostInfo &QBluetoothHostInfo::operator=(const QBluetoothHostInfo &othe
 }
 
 /*!
-    \since 5.5
-
-    Returns true if \a other is equal to this QBluetoothHostInfo, otherwise false.
+    \fn bool QBluetoothHostInfo::operator==(const QBluetoothHostInfo &a,
+                                            const QBluetoothHostInfo &b)
+    \brief Returns \c true if \a a and \a b are equal, otherwise \c false.
 */
-bool QBluetoothHostInfo::operator==(const QBluetoothHostInfo &other) const
-{
-    if (d_ptr == other.d_ptr)
-        return true;
-
-    return d_ptr->m_address == other.d_ptr->m_address && d_ptr->m_name == other.d_ptr->m_name;
-}
 
 /*!
-    \since 5.5
-
-    Returns true if \a other is not equal to this QBluetoothHostInfo, otherwise false.
+    \fn bool QBluetoothHostInfo::operator!=(const QBluetoothHostInfo &a,
+                                            const QBluetoothHostInfo &b)
+    \brief Returns \c true if \a a and \a b are not equal, otherwise \c false.
 */
-bool QBluetoothHostInfo::operator!=(const QBluetoothHostInfo &other) const
+
+/*!
+    \brief Returns \c true if \a a and \a b are equal, otherwise \c false.
+    \internal
+*/
+bool QBluetoothHostInfo::equals(const QBluetoothHostInfo &a, const QBluetoothHostInfo &b)
 {
-    return !operator==(other);
+    if (a.d_ptr == b.d_ptr)
+        return true;
+
+    return a.d_ptr->m_address == b.d_ptr->m_address && a.d_ptr->m_name == b.d_ptr->m_name;
 }
 
 /*!

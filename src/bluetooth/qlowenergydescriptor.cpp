@@ -145,41 +145,50 @@ QLowEnergyDescriptor &QLowEnergyDescriptor::operator=(const QLowEnergyDescriptor
 }
 
 /*!
-    Returns \c true if \a other is equal to this QLowEnergyCharacteristic; otherwise \c false.
-
-    Two QLowEnergyDescriptor instances are considered to be equal if they refer to
-    the same descriptor on the same remote Bluetooth Low Energy device or both
-    instances have been default-constructed.
- */
-bool QLowEnergyDescriptor::operator==(const QLowEnergyDescriptor &other) const
-{
-    if (d_ptr != other.d_ptr)
-        return false;
-
-    if ((data && !other.data) || (!data && other.data))
-        return false;
-
-    if (!data)
-        return true;
-
-    if (data->charHandle != other.data->charHandle
-        || data->descHandle != other.data->descHandle) {
-        return false;
-    }
-
-    return true;
-}
-
-/*!
-    Returns \c true if \a other is not equal to this QLowEnergyCharacteristic; otherwise \c false.
+    \fn bool QLowEnergyDescriptor::operator==(const QLowEnergyDescriptor &a,
+                                              const QLowEnergyDescriptor &b)
+    \brief Returns \c true if \a a is equal to \a b; otherwise \c false.
 
     Two QLowEnergyDescriptor instances are considered to be equal if they refer to
     the same descriptor on the same remote Bluetooth Low Energy device  or both
     instances have been default-constructed.
  */
-bool QLowEnergyDescriptor::operator!=(const QLowEnergyDescriptor &other) const
+
+/*!
+    \fn bool QLowEnergyDescriptor::operator!=(const QLowEnergyDescriptor &a,
+                                              const QLowEnergyDescriptor &b)
+   \brief Returns \c true if \a a is not equal to \a b; otherwise \c false.
+
+    Two QLowEnergyDescriptor instances are considered to be equal if they refer to
+    the same descriptor on the same remote Bluetooth Low Energy device  or both
+    instances have been default-constructed.
+ */
+
+/*!
+    \brief Returns \c true if \a other is equal to this QLowEnergyCharacteristic,
+    otherwise \c false.
+    \internal
+
+    Two QLowEnergyDescriptor instances are considered to be equal if they refer to
+    the same descriptor on the same remote Bluetooth Low Energy device or both
+    instances have been default-constructed.
+ */
+bool QLowEnergyDescriptor::equals(const QLowEnergyDescriptor &a, const QLowEnergyDescriptor &b)
 {
-    return !(*this == other);
+    if (a.d_ptr != b.d_ptr)
+        return false;
+
+    if ((a.data && !b.data) || (!a.data && b.data))
+        return false;
+
+    if (!a.data)
+        return true;
+
+    if (a.data->charHandle != b.data->charHandle || a.data->descHandle != b.data->descHandle) {
+        return false;
+    }
+
+    return true;
 }
 
 /*!

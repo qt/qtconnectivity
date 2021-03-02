@@ -50,14 +50,20 @@ class QLowEnergyAdvertisingDataPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyAdvertisingData
 {
-    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyAdvertisingData &data1,
-                                              const QLowEnergyAdvertisingData &data2);
 public:
     QLowEnergyAdvertisingData();
     QLowEnergyAdvertisingData(const QLowEnergyAdvertisingData &other);
     ~QLowEnergyAdvertisingData();
 
     QLowEnergyAdvertisingData &operator=(const QLowEnergyAdvertisingData &other);
+    friend bool operator==(const QLowEnergyAdvertisingData &a, const QLowEnergyAdvertisingData &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QLowEnergyAdvertisingData &a, const QLowEnergyAdvertisingData &b)
+    {
+        return !equals(a, b);
+    }
 
     void setLocalName(const QString &name);
     QString localName() const;
@@ -87,16 +93,9 @@ public:
     void swap(QLowEnergyAdvertisingData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
 
 private:
+    static bool equals(const QLowEnergyAdvertisingData &a, const QLowEnergyAdvertisingData &b);
     QSharedDataPointer<QLowEnergyAdvertisingDataPrivate> d;
 };
-
-Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyAdvertisingData &data1,
-                                   const QLowEnergyAdvertisingData &data2);
-inline bool operator!=(const QLowEnergyAdvertisingData &data1,
-                       const QLowEnergyAdvertisingData &data2)
-{
-    return !(data1 == data2);
-}
 
 Q_DECLARE_SHARED(QLowEnergyAdvertisingData)
 

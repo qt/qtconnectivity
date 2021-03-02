@@ -52,27 +52,44 @@ class QLowEnergyAdvertisingParametersPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyAdvertisingParameters
 {
-    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyAdvertisingParameters &p1,
-                                              const QLowEnergyAdvertisingParameters &p2);
 public:
     QLowEnergyAdvertisingParameters();
     QLowEnergyAdvertisingParameters(const QLowEnergyAdvertisingParameters &other);
     ~QLowEnergyAdvertisingParameters();
 
     QLowEnergyAdvertisingParameters &operator=(const QLowEnergyAdvertisingParameters &other);
+    friend bool operator==(const QLowEnergyAdvertisingParameters &a,
+                           const QLowEnergyAdvertisingParameters &b)
+    {
+        return equals(a, b);
+    }
+
+    friend bool operator!=(const QLowEnergyAdvertisingParameters &a,
+                           const QLowEnergyAdvertisingParameters &b)
+    {
+        return !equals(a, b);
+    }
 
     enum Mode { AdvInd = 0x0, AdvScanInd = 0x2, AdvNonConnInd = 0x3 };
     void setMode(Mode mode);
     Mode mode() const;
 
-    struct AddressInfo {
+    class Q_BLUETOOTH_EXPORT AddressInfo
+    {
+    public:
         AddressInfo(const QBluetoothAddress &addr, QLowEnergyController::RemoteAddressType t)
             : address(addr), type(t) {}
         AddressInfo() : type(QLowEnergyController::PublicAddress) {}
 
         QBluetoothAddress address;
         QLowEnergyController::RemoteAddressType type;
+        friend bool operator==(const AddressInfo &a, const AddressInfo &b) { return equals(a, b); }
+        friend bool operator!=(const AddressInfo &a, const AddressInfo &b) { return !equals(a, b); }
+
+    private:
+        static bool equals(const AddressInfo &a, const AddressInfo &b);
     };
+
     enum FilterPolicy {
         IgnoreWhiteList = 0x00,
         UseWhiteListForScanning = 0x01,
@@ -93,22 +110,10 @@ public:
     void swap(QLowEnergyAdvertisingParameters &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
 
 private:
+    static bool equals(const QLowEnergyAdvertisingParameters &a,
+                       const QLowEnergyAdvertisingParameters &b);
     QSharedDataPointer<QLowEnergyAdvertisingParametersPrivate> d;
 };
-
-inline bool operator==(const QLowEnergyAdvertisingParameters::AddressInfo &ai1,
-                       const QLowEnergyAdvertisingParameters::AddressInfo &ai2)
-{
-    return ai1.address == ai2.address && ai1.type == ai2.type;
-}
-
-Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyAdvertisingParameters &p1,
-                                   const QLowEnergyAdvertisingParameters &p2);
-inline bool operator!=(const QLowEnergyAdvertisingParameters &p1,
-                       const QLowEnergyAdvertisingParameters &p2)
-{
-    return !(p1 == p2);
-}
 
 Q_DECLARE_SHARED(QLowEnergyAdvertisingParameters)
 

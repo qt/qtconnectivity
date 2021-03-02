@@ -50,14 +50,22 @@ class QLowEnergyConnectionParametersPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyConnectionParameters
 {
-    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyConnectionParameters &p1,
-                                              const QLowEnergyConnectionParameters &p2);
 public:
     QLowEnergyConnectionParameters();
     QLowEnergyConnectionParameters(const QLowEnergyConnectionParameters &other);
     ~QLowEnergyConnectionParameters();
 
     QLowEnergyConnectionParameters &operator=(const QLowEnergyConnectionParameters &other);
+    friend bool operator==(const QLowEnergyConnectionParameters &a,
+                           const QLowEnergyConnectionParameters &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QLowEnergyConnectionParameters &a,
+                           const QLowEnergyConnectionParameters &b)
+    {
+        return !equals(a, b);
+    }
 
     void setIntervalRange(double minimum, double maximum);
     double minimumInterval() const;
@@ -72,16 +80,10 @@ public:
     void swap(QLowEnergyConnectionParameters &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
 
 private:
+    static bool equals(const QLowEnergyConnectionParameters &a,
+                       const QLowEnergyConnectionParameters &b);
     QSharedDataPointer<QLowEnergyConnectionParametersPrivate> d;
 };
-
-Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyConnectionParameters &p1,
-                                   const QLowEnergyConnectionParameters &p2);
-inline bool operator!=(const QLowEnergyConnectionParameters &p1,
-                       const QLowEnergyConnectionParameters &p2)
-{
-    return !(p1 == p2);
-}
 
 Q_DECLARE_SHARED(QLowEnergyConnectionParameters)
 

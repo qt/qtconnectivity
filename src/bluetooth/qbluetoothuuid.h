@@ -387,10 +387,12 @@ public:
     QBluetoothUuid(const QUuid &uuid);
     ~QBluetoothUuid() = default;
 
-    bool operator==(const QBluetoothUuid &other) const;
-    bool operator!=(const QBluetoothUuid &other) const { return !operator==(other); }
-
     QBluetoothUuid &operator=(const QBluetoothUuid &other) = default;
+    friend bool operator==(const QBluetoothUuid &a, const QBluetoothUuid &b)
+    {
+        return static_cast<QUuid>(a) == static_cast<QUuid>(b);
+    }
+    friend bool operator!=(const QBluetoothUuid &a, const QBluetoothUuid &b) { return !(a == b); }
 
     int minimumSize() const;
 
@@ -402,6 +404,9 @@ public:
     static QString protocolToString(ProtocolUuid uuid);
     static QString characteristicToString(CharacteristicType uuid);
     static QString descriptorToString(DescriptorType uuid);
+
+private:
+    static bool equals(const QBluetoothUuid &a, const QBluetoothUuid &b);
 };
 
 #ifndef QT_NO_DATASTREAM

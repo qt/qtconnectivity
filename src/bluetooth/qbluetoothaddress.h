@@ -63,11 +63,17 @@ public:
 
     void clear();
 
-    bool operator<(const QBluetoothAddress &other) const;
-    bool operator==(const QBluetoothAddress &other) const;
-    inline bool operator!=(const QBluetoothAddress &other) const
+    friend bool operator<(const QBluetoothAddress &a, const QBluetoothAddress &b)
     {
-        return !operator==(other);
+        return a.m_address < b.m_address;
+    }
+    friend bool operator==(const QBluetoothAddress &a, const QBluetoothAddress &b)
+    {
+        return a.m_address == b.m_address;
+    }
+    inline friend bool operator!=(const QBluetoothAddress &a, const QBluetoothAddress &b)
+    {
+        return a.m_address != b.m_address;
     }
 
     quint64 toUInt64() const;

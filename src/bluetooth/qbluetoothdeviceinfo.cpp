@@ -404,48 +404,49 @@ QBluetoothDeviceInfo &QBluetoothDeviceInfo::operator=(const QBluetoothDeviceInfo
 }
 
 /*!
-  Returns true if the \a other QBluetoothDeviceInfo object and this are identical.
-  */
-bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &other) const
-{
-    Q_D(const QBluetoothDeviceInfo);
+    \fn bool QBluetoothDeviceInfo::operator==(const QBluetoothDeviceInfo &a, const QBluetoothDeviceInfo &b)
+    \brief Returns \c true if the two QBluetoothDeviceInfo objects \a a and \a b are equal.
+*/
 
-    if (d->cached != other.d_func()->cached)
+/*!
+    \fn bool QBluetoothDeviceInfo::operator!=(const QBluetoothDeviceInfo &a,
+                                              const QBluetoothDeviceInfo &b)
+    \brief Returns \c true if the two QBluetoothDeviceInfo objects \a a and \a b are not equal.
+*/
+
+/*!
+    \brief Returns true if the \a other QBluetoothDeviceInfo object and this are identical.
+    \internal
+*/
+
+bool QBluetoothDeviceInfo::equals(const QBluetoothDeviceInfo &a, const QBluetoothDeviceInfo &b)
+{
+    if (a.d_func()->cached != b.d_func()->cached)
         return false;
-    if (d->valid != other.d_func()->valid)
+    if (a.d_func()->valid != b.d_func()->valid)
         return false;
-    if (d->majorDeviceClass != other.d_func()->majorDeviceClass)
+    if (a.d_func()->majorDeviceClass != b.d_func()->majorDeviceClass)
         return false;
-    if (d->minorDeviceClass != other.d_func()->minorDeviceClass)
+    if (a.d_func()->minorDeviceClass != b.d_func()->minorDeviceClass)
         return false;
-    if (d->serviceClasses != other.d_func()->serviceClasses)
+    if (a.d_func()->serviceClasses != b.d_func()->serviceClasses)
         return false;
-    if (d->name != other.d_func()->name)
+    if (a.d_func()->name != b.d_func()->name)
         return false;
-    if (d->address != other.d_func()->address)
+    if (a.d_func()->address != b.d_func()->address)
         return false;
-    if (d->serviceUuids.count() != other.d_func()->serviceUuids.count())
+    if (a.d_func()->serviceUuids.count() != b.d_func()->serviceUuids.count())
         return false;
-    if (d->serviceUuids != other.d_func()->serviceUuids)
+    if (a.d_func()->serviceUuids != b.d_func()->serviceUuids)
         return false;
-    if (d->manufacturerData != other.d_func()->manufacturerData)
+    if (a.d_func()->manufacturerData != b.d_func()->manufacturerData)
         return false;
-    if (d->deviceCoreConfiguration != other.d_func()->deviceCoreConfiguration)
+    if (a.d_func()->deviceCoreConfiguration != b.d_func()->deviceCoreConfiguration)
         return false;
-    if (d->deviceUuid != other.d_func()->deviceUuid)
+    if (a.d_func()->deviceUuid != b.d_func()->deviceUuid)
         return false;
 
     return true;
-}
-
-/*!
-    Returns true if this object is different from \a other, or false otherwise.
-
-    \sa operator==()
-*/
-bool QBluetoothDeviceInfo::operator!=(const QBluetoothDeviceInfo &other) const
-{
-    return !(*this == other);
 }
 
 /*!

@@ -59,8 +59,14 @@ public:
     ~QLowEnergyDescriptor();
 
     QLowEnergyDescriptor &operator=(const QLowEnergyDescriptor &other);
-    bool operator==(const QLowEnergyDescriptor &other) const;
-    bool operator!=(const QLowEnergyDescriptor &other) const;
+    friend bool operator==(const QLowEnergyDescriptor &a, const QLowEnergyDescriptor &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QLowEnergyDescriptor &a, const QLowEnergyDescriptor &b)
+    {
+        return !equals(a, b);
+    }
 
     bool isValid() const;
 
@@ -92,6 +98,9 @@ protected:
     QLowEnergyDescriptor(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle charHandle,
                              QLowEnergyHandle descHandle);
+
+private:
+    static bool equals(const QLowEnergyDescriptor &a, const QLowEnergyDescriptor &b);
 };
 
 QT_END_NAMESPACE

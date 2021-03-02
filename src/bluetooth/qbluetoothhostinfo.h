@@ -54,9 +54,14 @@ public:
     ~QBluetoothHostInfo();
 
     QBluetoothHostInfo &operator=(const QBluetoothHostInfo &other);
-
-    bool operator==(const QBluetoothHostInfo &other) const;
-    bool operator!=(const QBluetoothHostInfo &other) const;
+    friend bool operator==(const QBluetoothHostInfo &a, const QBluetoothHostInfo &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QBluetoothHostInfo &a, const QBluetoothHostInfo &b)
+    {
+        return !equals(a, b);
+    }
 
     QBluetoothAddress address() const;
     void setAddress(const QBluetoothAddress &address);
@@ -65,6 +70,7 @@ public:
     void setName(const QString &name);
 
 private:
+    static bool equals(const QBluetoothHostInfo &a, const QBluetoothHostInfo &b);
     Q_DECLARE_PRIVATE(QBluetoothHostInfo)
     QBluetoothHostInfoPrivate *d_ptr;
 };

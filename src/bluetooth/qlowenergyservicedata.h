@@ -52,14 +52,20 @@ struct QLowEnergyServiceDataPrivate;
 
 class Q_BLUETOOTH_EXPORT QLowEnergyServiceData
 {
-    friend Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData &sd1,
-                                              const QLowEnergyServiceData &sd2);
 public:
     QLowEnergyServiceData();
     QLowEnergyServiceData(const QLowEnergyServiceData &other);
     ~QLowEnergyServiceData();
 
     QLowEnergyServiceData &operator=(const QLowEnergyServiceData &other);
+    friend bool operator==(const QLowEnergyServiceData &a, const QLowEnergyServiceData &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QLowEnergyServiceData &a, const QLowEnergyServiceData &b)
+    {
+        return !equals(a, b);
+    }
 
     enum ServiceType { ServiceTypePrimary = 0x2800, ServiceTypeSecondary = 0x2801 };
     ServiceType type() const;
@@ -81,15 +87,9 @@ public:
     void swap(QLowEnergyServiceData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
 
 private:
+    static bool equals(const QLowEnergyServiceData &a, const QLowEnergyServiceData &b);
     QSharedDataPointer<QLowEnergyServiceDataPrivate> d;
 };
-
-Q_BLUETOOTH_EXPORT bool operator==(const QLowEnergyServiceData &sd1,
-                                   const QLowEnergyServiceData &sd2);
-inline bool operator!=(const QLowEnergyServiceData &sd1, const QLowEnergyServiceData &sd2)
-{
-    return !(sd1 == sd2);
-}
 
 Q_DECLARE_SHARED(QLowEnergyServiceData)
 

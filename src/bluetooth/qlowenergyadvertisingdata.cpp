@@ -263,27 +263,34 @@ QByteArray QLowEnergyAdvertisingData::rawData() const
  */
 
 /*!
-   Returns \c true if \a data1 and \a data2 are equal with respect to their public state,
-   otherwise returns \c false.
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+    \internal
  */
-bool operator==(const QLowEnergyAdvertisingData &data1, const QLowEnergyAdvertisingData &data2)
+bool QLowEnergyAdvertisingData::equals(const QLowEnergyAdvertisingData &a,
+                                       const QLowEnergyAdvertisingData &b)
 {
-    if (data1.d == data2.d)
+    if (a.d == b.d)
         return true;
-    return data1.discoverability() == data2.discoverability()
-            && data1.includePowerLevel() == data2.includePowerLevel()
-            && data1.localName() == data2.localName()
-            && data1.manufacturerData() == data2.manufacturerData()
-            && data1.manufacturerId() == data2.manufacturerId()
-            && data1.services() == data2.services()
-            && data1.rawData() == data2.rawData();
+    return a.discoverability() == b.discoverability()
+            && a.includePowerLevel() == b.includePowerLevel() && a.localName() == b.localName()
+            && a.manufacturerData() == b.manufacturerData()
+            && a.manufacturerId() == b.manufacturerId() && a.services() == b.services()
+            && a.rawData() == b.rawData();
 }
 
 /*!
-   \fn bool operator!=(const QLowEnergyAdvertisingData &data1,
-                       const QLowEnergyAdvertisingData &data2)
-   Returns \c true if \a data1 and \a data2 are not equal with respect to their public state,
-   otherwise returns \c false.
+    \fn bool QLowEnergyAdvertisingData::operator!=(const QLowEnergyAdvertisingData &data1,
+                                                   const QLowEnergyAdvertisingData &data2)
+    \brief Returns \c true if \a data1 and \a data2 are not equal with respect to their
+    public state, otherwise returns \c false.
+ */
+
+/*!
+    \fn bool QLowEnergyAdvertisingData::operator==(const QLowEnergyAdvertisingData &data1,
+                                                   const QLowEnergyAdvertisingData &data2)
+    \brief Returns \c true if \a data1 and \a data2 are equal with respect to their public
+    state, otherwise returns \c false.
  */
 
 /*!

@@ -214,24 +214,33 @@ int QLowEnergyConnectionParameters::supervisionTimeout() const
  */
 
 /*!
-   Returns \a true if \a p1 and \a p2 are equal with respect to their public state,
-   otherwise returns false.
+    \brief Returns \a true if \a a and \a b are equal with respect to their public state,
+    otherwise returns false.
+    \internal
  */
-bool operator==(const QLowEnergyConnectionParameters &p1, const QLowEnergyConnectionParameters &p2)
+bool QLowEnergyConnectionParameters::equals(const QLowEnergyConnectionParameters &a,
+                                            const QLowEnergyConnectionParameters &b)
 {
-    if (p1.d == p2.d)
+    if (a.d == b.d)
         return true;
-    return p1.minimumInterval() == p2.minimumInterval()
-            && p1.maximumInterval() == p2.maximumInterval()
-            && p1.latency() == p2.latency()
-            && p1.supervisionTimeout() == p2.supervisionTimeout();
+    return a.minimumInterval() == b.minimumInterval() && a.maximumInterval() == b.maximumInterval()
+            && a.latency() == b.latency() && a.supervisionTimeout() == b.supervisionTimeout();
 }
 
 /*!
-   \fn bool operator!=(const QLowEnergyConnectionParameters &p1,
-                       const QLowEnergyConnectionParameters &p2)
-   Returns \a true if \a p1 and \a p2 are not equal with respect to their public state,
-   otherwise returns false.
+   \fn bool QLowEnergyConnectionParameters::operator!=(
+                                    const QLowEnergyConnectionParameters &p1,
+                                    const QLowEnergyConnectionParameters &p2)
+   \brief Returns \c true if \a p1 and \a p2 are not equal with respect to their public state,
+   otherwise returns \c false.
+ */
+
+/*!
+    \fn bool QLowEnergyConnectionParameters::operator==(
+                                    const QLowEnergyConnectionParameters &p1,
+                                    const QLowEnergyConnectionParameters &p2)
+    \brief Returns \c true if \a p1 and \a p2 are equal with respect to their public state,
+    otherwise returns \c false.
  */
 
 QT_END_NAMESPACE

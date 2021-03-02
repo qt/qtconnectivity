@@ -254,27 +254,34 @@ bool QLowEnergyCharacteristicData::isValid() const
  */
 
 /*!
-   Returns \c true if \a cd1 and \a cd2 are equal with respect to their public state,
-   otherwise returns \c false.
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+    \internal
  */
-bool operator==(const QLowEnergyCharacteristicData &cd1, const QLowEnergyCharacteristicData &cd2)
+bool QLowEnergyCharacteristicData::equals(const QLowEnergyCharacteristicData &a,
+                                          const QLowEnergyCharacteristicData &b)
 {
-    return cd1.d == cd2.d || (
-                cd1.uuid() == cd2.uuid()
-                && cd1.properties() == cd2.properties()
-                && cd1.descriptors() == cd2.descriptors()
-                && cd1.value() == cd2.value()
-                && cd1.readConstraints() == cd2.readConstraints()
-                && cd1.writeConstraints() == cd2.writeConstraints()
-                && cd1.minimumValueLength() == cd2.maximumValueLength()
-                && cd1.maximumValueLength() == cd2.maximumValueLength());
+    return a.d == b.d
+            || (a.uuid() == b.uuid() && a.properties() == b.properties()
+                && a.descriptors() == b.descriptors() && a.value() == b.value()
+                && a.readConstraints() == b.readConstraints()
+                && a.writeConstraints() == b.writeConstraints()
+                && a.minimumValueLength() == b.maximumValueLength()
+                && a.maximumValueLength() == b.maximumValueLength());
 }
 
 /*!
-   \fn bool operator!=(const QLowEnergyCharacteristicData &cd1,
-                       const QLowEnergyCharacteristicData &cd2)
-   Returns \c true if \a cd1 and \a cd2 are not equal with respect to their public state,
-   otherwise returns \c false.
+    \fn bool QLowEnergyCharacteristicData::operator==(const QLowEnergyCharacteristicData &a,
+                                                      const QLowEnergyCharacteristicData &b)
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+ */
+
+/*!
+    \fn bool QLowEnergyCharacteristicData::operator!=(const QLowEnergyCharacteristicData &a,
+                                                      const QLowEnergyCharacteristicData &b)
+    \brief Returns \c true if \a a and \a b are not equal with respect to their public state,
+    otherwise returns \c false.
  */
 
 QT_END_NAMESPACE

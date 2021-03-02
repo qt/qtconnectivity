@@ -55,15 +55,6 @@ QT_BEGIN_NAMESPACE
     This class holds a Bluetooth address in a platform- and protocol-independent manner.
 */
 
-/*!
-    \fn inline bool QBluetoothAddress::operator!=(const QBluetoothAddress &other) const
-
-
-    Compares this Bluetooth address with \a other.
-
-    Returns true if the Bluetooth addresses are not equal, otherwise returns false.
-*/
-
 void registerQBluetoothAddress()
 {
     qRegisterMetaType<QBluetoothAddress>();
@@ -147,25 +138,6 @@ bool QBluetoothAddress::isNull() const
 }
 
 /*!
-    Returns true if the Bluetooth address is less than \a other, otherwise
-    returns false.
-*/
-bool QBluetoothAddress::operator<(const QBluetoothAddress &other) const
-{
-    return m_address < other.m_address;
-}
-
-/*!
-    Compares this Bluetooth address to \a other.
-
-    Returns true if the two Bluetooth addresses are equal, otherwise returns false.
-*/
-bool QBluetoothAddress::operator==(const QBluetoothAddress &other) const
-{
-    return m_address == other.m_address;
-}
-
-/*!
     Returns this Bluetooth address as a quint64.
 */
 quint64 QBluetoothAddress::toUInt64() const
@@ -187,6 +159,27 @@ QString QBluetoothAddress::toString() const
 
     return s.toUpper();
 }
+
+/*!
+    \fn bool QBluetoothAddress::operator<(const QBluetoothAddress &a,
+                                          const QBluetoothAddress &b)
+    \brief Returns true if the Bluetooth address \a a is less than \a b, otherwise
+    returns false.
+*/
+
+/*!
+    \fn bool QBluetoothAddress::operator==(const QBluetoothAddress &a,
+                                           const QBluetoothAddress &b)
+    \brief Returns \c true if the two Bluetooth addresses \a a and \a b are equal,
+    otherwise returns \c false.
+*/
+
+/*!
+    \fn bool QBluetoothAddress::operator!=(const QBluetoothAddress &a,
+                                           const QBluetoothAddress &b)
+    \brief Returns \c true if the two Bluetooth addresses \a a and \a b are not equal,
+    otherwise returns \c false.
+*/
 
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug debug, const QBluetoothAddress &address)

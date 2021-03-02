@@ -221,8 +221,14 @@ public:
     void setCached(bool cached);
 
     QBluetoothDeviceInfo &operator=(const QBluetoothDeviceInfo &other);
-    bool operator==(const QBluetoothDeviceInfo &other) const;
-    bool operator!=(const QBluetoothDeviceInfo &other) const;
+    friend bool operator==(const QBluetoothDeviceInfo &a, const QBluetoothDeviceInfo &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QBluetoothDeviceInfo &a, const QBluetoothDeviceInfo &b)
+    {
+        return !equals(a, b);
+    }
 
     QBluetoothAddress address() const;
     QString name() const;
@@ -253,6 +259,7 @@ protected:
     QBluetoothDeviceInfoPrivate *d_ptr;
 
 private:
+    static bool equals(const QBluetoothDeviceInfo &a, const QBluetoothDeviceInfo &b);
     Q_DECLARE_PRIVATE(QBluetoothDeviceInfo)
 };
 

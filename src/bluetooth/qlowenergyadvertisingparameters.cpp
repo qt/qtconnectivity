@@ -269,26 +269,58 @@ int QLowEnergyAdvertisingParameters::maximumInterval() const
  */
 
 /*!
-   Returns \a true if \a p1 and \a p2 are equal with respect to their public state,
-   otherwise returns false.
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+    \internal
  */
-bool operator==(const QLowEnergyAdvertisingParameters &p1,
-                const QLowEnergyAdvertisingParameters &p2)
+bool QLowEnergyAdvertisingParameters::equals(const QLowEnergyAdvertisingParameters &a,
+                                             const QLowEnergyAdvertisingParameters &b)
 {
-    if (p1.d == p2.d)
+    if (a.d == b.d)
         return true;
-    return p1.filterPolicy() == p2.filterPolicy()
-            && p1.minimumInterval() == p2.minimumInterval()
-            && p1.maximumInterval() == p2.maximumInterval()
-            && p1.mode() == p2.mode()
-            && p1.whiteList() == p2.whiteList();
+    return a.filterPolicy() == b.filterPolicy() && a.minimumInterval() == b.minimumInterval()
+            && a.maximumInterval() == b.maximumInterval() && a.mode() == b.mode()
+            && a.whiteList() == b.whiteList();
+}
+
+bool QLowEnergyAdvertisingParameters::AddressInfo::equals(
+        const QLowEnergyAdvertisingParameters::AddressInfo &ai1,
+        const QLowEnergyAdvertisingParameters::AddressInfo &ai2)
+{
+    return ai1.address == ai2.address && ai1.type == ai2.type;
 }
 
 /*!
-   \fn bool operator!=(const QLowEnergyAdvertisingParameters &p1,
-                       const QLowEnergyAdvertisingParameters &p2)
-   Returns \a true if \a p1 and \a p2 are not equal with respect to their public state,
-   otherwise returns false.
+    \fn bool QLowEnergyAdvertisingParameters::operator!=(
+                                        const QLowEnergyAdvertisingParameters &a,
+                                        const QLowEnergyAdvertisingParameters &b)
+    \brief Returns \c true if \a a and \a b are not equal with respect to their public state,
+    otherwise returns \c false.
+ */
+
+/*!
+    \fn bool QLowEnergyAdvertisingParameters::operator==(
+                                        const QLowEnergyAdvertisingParameters &a,
+                                        const QLowEnergyAdvertisingParameters &b)
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
+ */
+
+/*!
+    \fn bool QLowEnergyAdvertisingParameters::AddressInfo::operator!=(const
+    QLowEnergyAdvertisingParameters::AddressInfo &a, const
+    QLowEnergyAdvertisingParameters::AddressInfo &b)
+
+    \brief Returns \c true if \a a and \a b are not equal with respect to their public state,
+    otherwise returns \c false.
+ */
+
+/*!
+    \fn bool QLowEnergyAdvertisingParameters::AddressInfo::operator==(
+                            const QLowEnergyAdvertisingParameters::AddressInfo &a,
+                            const QLowEnergyAdvertisingParameters::AddressInfo &b)
+    \brief Returns \c true if \a a and \a b are equal with respect to their public state,
+    otherwise returns \c false.
  */
 
 QT_END_NAMESPACE

@@ -253,40 +253,50 @@ QLowEnergyCharacteristic &QLowEnergyCharacteristic::operator=(const QLowEnergyCh
 }
 
 /*!
-    Returns \c true if \a other is equal to this QLowEnergyCharacteristic; otherwise \c false.
+    \fn bool QLowEnergyCharacteristic::operator==(const QLowEnergyCharacteristic &a,
+                                                  const QLowEnergyCharacteristic &b)
+    \brief Returns \c true if \a a is equal to \a b, otherwise \c false.
 
     Two \l QLowEnergyCharacteristic instances are considered to be equal if they refer to
     the same characteristic on the same remote Bluetooth Low Energy device or both instances
     have been default-constructed.
  */
-bool QLowEnergyCharacteristic::operator==(const QLowEnergyCharacteristic &other) const
-{
-    if (d_ptr != other.d_ptr)
-        return false;
-
-    if ((data && !other.data) || (!data && other.data))
-        return false;
-
-    if (!data)
-        return true;
-
-    if (data->handle != other.data->handle)
-        return false;
-
-    return true;
-}
 
 /*!
-    Returns \c true if \a other is not equal to this QLowEnergyCharacteristic; otherwise \c false.
+    \fn bool QLowEnergyCharacteristic::operator!=(const QLowEnergyCharacteristic &a,
+                                                  const QLowEnergyCharacteristic &b)
+    \brief Returns \c true if \a a and \a b are not equal; otherwise \c
+    false.
 
     Two QLowEnergyCharcteristic instances are considered to be equal if they refer to
     the same characteristic on the same remote Bluetooth Low Energy device or both instances
     have been default-constructed.
  */
 
-bool QLowEnergyCharacteristic::operator!=(const QLowEnergyCharacteristic &other) const
+/*!
+    \brief Returns \c true if \a a is equal to \a b; otherwise \c false.
+    \internal
+
+    Two \l QLowEnergyCharacteristic instances are considered to be equal if they refer to
+    the same characteristic on the same remote Bluetooth Low Energy device or both instances
+    have been default-constructed.
+ */
+bool QLowEnergyCharacteristic::equals(const QLowEnergyCharacteristic &a,
+                                      const QLowEnergyCharacteristic &b)
 {
-    return !(*this == other);
+    if (a.d_ptr != b.d_ptr)
+        return false;
+
+    if ((a.data && !b.data) || (!a.data && b.data))
+        return false;
+
+    if (!a.data)
+        return true;
+
+    if (a.data->handle != b.data->handle)
+        return false;
+
+    return true;
 }
 
 /*!

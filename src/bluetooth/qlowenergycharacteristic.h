@@ -73,8 +73,14 @@ public:
     ~QLowEnergyCharacteristic();
 
     QLowEnergyCharacteristic &operator=(const QLowEnergyCharacteristic &other);
-    bool operator==(const QLowEnergyCharacteristic &other) const;
-    bool operator!=(const QLowEnergyCharacteristic &other) const;
+    friend bool operator==(const QLowEnergyCharacteristic &a, const QLowEnergyCharacteristic &b)
+    {
+        return equals(a, b);
+    }
+    friend bool operator!=(const QLowEnergyCharacteristic &a, const QLowEnergyCharacteristic &b)
+    {
+        return !equals(a, b);
+    }
 
     QString name() const;
 
@@ -108,6 +114,9 @@ protected:
     QLowEnergyCharacteristicPrivate *data = nullptr;
     QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle handle);
+
+private:
+    static bool equals(const QLowEnergyCharacteristic &a, const QLowEnergyCharacteristic &b);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyCharacteristic::PropertyTypes)
