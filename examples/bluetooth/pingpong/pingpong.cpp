@@ -136,11 +136,59 @@ void PingPong::checkBoundaries()
     if (((m_ballX + ballWidth) > (1. - blockSize)) && (ballCenterY < (m_rightBlockY + blockHeight))
         && (ballCenterY > m_rightBlockY)) {
         // right paddle collision
-        m_speedx = -std::abs(m_speedx);
+        // simulating paddle surface to be a quarter of a circle
+        float paddlecenter = m_rightBlockY + blockHeight / 2.;
+        float relpos = (ballCenterY - paddlecenter) / (blockHeight / 2.); // [-1 : 1]
+        float surfaceangle = M_PI_4 * relpos;
+
+        // calculation of surface normal
+        float normalx = -cos(surfaceangle);
+        float normaly = sin(surfaceangle);
+
+        // calculation of surface tangent
+        float tangentx = sin(surfaceangle);
+        float tangenty = cos(surfaceangle);
+
+        // calculation of tangentialspeed
+        float tangentialspeed = tangentx * m_speedx + tangenty * m_speedy;
+        // calculation of normal speed
+        float normalspeed = normalx * m_speedx + normaly * m_speedy;
+
+        // speed increase of 10%
+        normalspeed *= 1.1f;
+
+        if (normalspeed < 0) { // if we are coming from the left. To avoid double reflections
+            m_speedx = tangentialspeed * tangentx - normalspeed * normalx;
+            m_speedy = tangentialspeed * tangenty - normalspeed * normaly;
+        }
     } else if ((m_ballX < blockSize) && (ballCenterY < (m_leftBlockY + blockHeight))
                && (ballCenterY > m_leftBlockY)) {
         // left paddle collision
-        m_speedx = std::abs(m_speedx);
+        // simulating paddle surface to be a quarter of a circle
+        float paddlecenter = m_leftBlockY + blockHeight / 2.;
+        float relpos = (ballCenterY - paddlecenter) / (blockHeight / 2.); // [-1 : 1]
+        float surfaceangle = M_PI_4 * relpos;
+
+        // calculation of surface normal
+        float normalx = cos(surfaceangle);
+        float normaly = sin(surfaceangle);
+
+        // calculation of surface tangent
+        float tangentx = -sin(surfaceangle);
+        float tangenty = cos(surfaceangle);
+
+        // calculation of tangentialspeed
+        float tangentialspeed = tangentx * m_speedx + tangenty * m_speedy;
+        // calculation of normal speed
+        float normalspeed = normalx * m_speedx + normaly * m_speedy;
+
+        // speed increase of 10%
+        normalspeed *= 1.1f;
+
+        if (normalspeed < 0) { // if we are coming from the left. To avoid double reflections
+            m_speedx = tangentialspeed * tangentx - normalspeed * normalx;
+            m_speedy = tangentialspeed * tangenty - normalspeed * normaly;
+        }
     } else if (m_ballY < 0) {
         m_speedy = std::abs(m_speedy);
     } else if (m_ballY + ballWidth > 1.f) {
