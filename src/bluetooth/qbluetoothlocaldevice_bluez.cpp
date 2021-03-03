@@ -64,12 +64,14 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this))
 {
+    d_ptr->currentMode = hostMode();
 }
 
 QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this, address))
 {
+    d_ptr->currentMode = hostMode();
 }
 
 QString QBluetoothLocalDevice::name() const
@@ -100,6 +102,11 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
         return;
 
     Q_D(QBluetoothLocalDevice);
+
+    if (d->pendingHostModeChange != -1) {
+        qCWarning(QT_BT_BLUEZ) << "setHostMode() ignored due to already pending mode change";
+        return;
+    }
 
     switch (mode) {
     case HostDiscoverableLimitedInquiry:
@@ -523,8 +530,6 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
         connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                 this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
     }
-
-    currentMode = static_cast<QBluetoothLocalDevice::HostMode>(-1);
 }
 
 void QBluetoothLocalDevicePrivate::PropertiesChanged(const QString &interface,
