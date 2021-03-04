@@ -135,8 +135,6 @@ public:
     bool isActive() const;
 
 #if QT_CONFIG(bluez)
-    void _q_deviceFound(const QString &address, const QVariantMap &dict);
-    void _q_propertyChanged(const QString &name, const QDBusVariant &value);
     void _q_InterfacesAdded(const QDBusObjectPath &object_path,
                             InterfaceList interfaces_and_properties);
     void _q_discoveryFinished();
@@ -145,7 +143,6 @@ public:
                               const QString &path,
                               const QVariantMap &changed_properties,
                               const QStringList &invalidated_properties);
-    void _q_extendedDeviceDiscoveryTimeout();
 #endif
 
 private:
@@ -176,18 +173,13 @@ private:
     QBluetoothAddress m_adapterAddress;
     bool pendingCancel;
     bool pendingStart;
-    OrgBluezManagerInterface *manager = nullptr;
-    OrgBluezAdapterInterface *adapter = nullptr;
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5 = nullptr;
     OrgBluezAdapter1Interface *adapterBluez5 = nullptr;
     QTimer *discoveryTimer = nullptr;
     QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
 
     void deviceFoundBluez5(const QString &devicePath, const QVariantMap &properties);
-    void startBluez5(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods);
 
-    bool useExtendedDiscovery;
-    QTimer extendedDiscoveryTimer;
     QMap<QString, QVariantMap> devicesProperties;
 #endif
 
