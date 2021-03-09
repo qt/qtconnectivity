@@ -352,9 +352,6 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
 
 void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 {
-    // Not all devices respond to SDP, so allow for a failure
-    static int expected_failures = 0;
-
     if (devices.isEmpty())
         QSKIP("This test requires an in-range bluetooth device");
 
@@ -402,7 +399,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
         scanTime -= 1000;
     }
 
-    if (discoveryAgent.error() && expected_failures++ < 2){
+    if (discoveryAgent.error()) {
         qDebug() << "Device failed to respond to SDP, skipping device" << discoveryAgent.error() << discoveryAgent.errorString();
         return;
     }
@@ -415,7 +412,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     QVERIFY(errorSpy.isEmpty());
 
     //if (discoveryAgent.discoveredServices().count() && expected_failures++ <2){
-    if (discoveredSpy.isEmpty() && expected_failures++ < 2){
+    if (discoveredSpy.isEmpty()) {
         qDebug() << "Device failed to return any results, skipping device" << discoveryAgent.discoveredServices().count();
         return;
     }
