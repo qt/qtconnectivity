@@ -407,7 +407,10 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
         QVERIFY(discoveryAgent.errorString().isEmpty());
 
         // verify that the list is as big as the signals received.
-        QVERIFY(discoveredSpy.count() == discoveryAgent.discoveredDevices().length());
+        // discoveredSpy might have more events as some devices are found multiple times,
+        // leading to messages like
+        // "Almost Duplicate  "88:C6:26:F5:3E:E2" "88-C6-26-F5-3E-E2" - replacing in place"
+        QVERIFY(discoveredSpy.count() >= discoveryAgent.discoveredDevices().length());
         // verify that there really was some devices in the array
 
         const QString remote = qEnvironmentVariable("BT_TEST_DEVICE");
