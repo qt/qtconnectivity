@@ -591,23 +591,8 @@ QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 /*!
     Constructs a new Bluetooth UUID that is a copy of \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(const QBluetoothUuid &uuid)
-:   QUuid(uuid)
-{
-}
-
-/*!
-    Constructs a new Bluetooth UUID that is a copy of \a uuid.
-*/
 QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
 :   QUuid(uuid)
-{
-}
-
-/*!
-    Destroys the Bluetooth UUID.
-*/
-QBluetoothUuid::~QBluetoothUuid()
 {
 }
 

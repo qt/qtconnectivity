@@ -383,9 +383,9 @@ public:
 
     explicit QBluetoothUuid(quint128 uuid);
     explicit QBluetoothUuid(const QString &uuid);
-    QBluetoothUuid(const QBluetoothUuid &uuid);
+    QBluetoothUuid(const QBluetoothUuid &uuid) = default;
     QBluetoothUuid(const QUuid &uuid);
-    ~QBluetoothUuid();
+    ~QBluetoothUuid() = default;
 
     bool operator==(const QBluetoothUuid &other) const;
     bool operator!=(const QBluetoothUuid &other) const { return !operator==(other); }
