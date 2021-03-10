@@ -6,7 +6,7 @@ qt_internal_add_module(Bluetooth
     SOURCES
         lecmaccalculator_p.h
         qbluetooth.cpp qbluetooth.h
-        qbluetoothaddress.cpp qbluetoothaddress.h qbluetoothaddress_p.h
+        qbluetoothaddress.cpp qbluetoothaddress.h
         qbluetoothdevicediscoveryagent.cpp qbluetoothdevicediscoveryagent.h qbluetoothdevicediscoveryagent_p.h
         qbluetoothdeviceinfo.cpp qbluetoothdeviceinfo.h qbluetoothdeviceinfo_p.h
         qbluetoothhostinfo.cpp qbluetoothhostinfo.h qbluetoothhostinfo_p.h

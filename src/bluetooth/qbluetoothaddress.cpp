@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qbluetoothaddress.h"
-#include "qbluetoothaddress_p.h"
 
 #ifndef QT_NO_DEBUG_STREAM
 #include <QDebug>
@@ -74,19 +73,16 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothAddress)
 /*!
     Constructs an null Bluetooth address.
 */
-QBluetoothAddress::QBluetoothAddress() :
-    d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress()
 {
 }
 
 /*!
     Constructs a new Bluetooth address and assigns \a address to it.
 */
-QBluetoothAddress::QBluetoothAddress(quint64 address) :
-    d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress(quint64 address)
 {
-    Q_D(QBluetoothAddress);
-    d->m_address = address;
+    m_address = address;
 }
 
 /*!
@@ -95,11 +91,8 @@ QBluetoothAddress::QBluetoothAddress(quint64 address) :
     The format of \a address can be either XX:XX:XX:XX:XX:XX or XXXXXXXXXXXX,
     where X is a hexadecimal digit.  Case is not important.
 */
-QBluetoothAddress::QBluetoothAddress(const QString &address) :
-    d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress(const QString &address)
 {
-    Q_D(QBluetoothAddress);
-
     QString a = address;
 
     if (a.length() == 17)
@@ -107,19 +100,18 @@ QBluetoothAddress::QBluetoothAddress(const QString &address) :
 
     if (a.length() == 12) {
         bool ok;
-        d->m_address = a.toULongLong(&ok, 16);
+        m_address = a.toULongLong(&ok, 16);
         if (!ok)
             clear();
     } else {
-        d->m_address = 0;
+        m_address = 0;
     }
 }
 
 /*!
     Constructs a new Bluetooth address which is a copy of \a other.
 */
-QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &other) :
-    d_ptr(new QBluetoothAddressPrivate)
+QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &other)
 {
     *this = other;
 }
@@ -129,7 +121,6 @@ QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &other) :
 */
 QBluetoothAddress::~QBluetoothAddress()
 {
-    delete d_ptr;
 }
 
 /*!
@@ -137,9 +128,7 @@ QBluetoothAddress::~QBluetoothAddress()
 */
 QBluetoothAddress &QBluetoothAddress::operator=(const QBluetoothAddress &other)
 {
-    Q_D(QBluetoothAddress);
-
-    d->m_address = other.d_func()->m_address;
+    m_address = other.m_address;
 
     return *this;
 }
@@ -149,8 +138,7 @@ QBluetoothAddress &QBluetoothAddress::operator=(const QBluetoothAddress &other)
 */
 void QBluetoothAddress::clear()
 {
-    Q_D(QBluetoothAddress);
-    d->m_address = 0;
+    m_address = 0;
 }
 
 /*!
@@ -158,8 +146,7 @@ void QBluetoothAddress::clear()
 */
 bool QBluetoothAddress::isNull() const
 {
-    Q_D(const QBluetoothAddress);
-    return d->m_address == 0;
+    return m_address == 0;
 }
 
 /*!
@@ -168,8 +155,7 @@ bool QBluetoothAddress::isNull() const
 */
 bool QBluetoothAddress::operator<(const QBluetoothAddress &other) const
 {
-    Q_D(const QBluetoothAddress);
-    return d->m_address < other.d_func()->m_address;
+    return m_address < other.m_address;
 }
 
 /*!
@@ -179,8 +165,7 @@ bool QBluetoothAddress::operator<(const QBluetoothAddress &other) const
 */
 bool QBluetoothAddress::operator==(const QBluetoothAddress &other) const
 {
-    Q_D(const QBluetoothAddress);
-    return d->m_address == other.d_func()->m_address;
+    return m_address == other.m_address;
 }
 
 /*!
@@ -188,8 +173,7 @@ bool QBluetoothAddress::operator==(const QBluetoothAddress &other) const
 */
 quint64 QBluetoothAddress::toUInt64() const
 {
-    Q_D(const QBluetoothAddress);
-    return d->m_address;
+    return m_address;
 }
 
 /*!
@@ -198,19 +182,13 @@ quint64 QBluetoothAddress::toUInt64() const
 QString QBluetoothAddress::toString() const
 {
     QString s(QStringLiteral("%1:%2:%3:%4:%5:%6"));
-    Q_D(const QBluetoothAddress);
 
     for (int i = 5; i >= 0; --i) {
-        const quint8 a = (d->m_address >> (i*8)) & 0xff;
+        const quint8 a = (m_address >> (i*8)) & 0xff;
         s = s.arg(a, 2, 16, QLatin1Char('0'));
     }
 
     return s.toUpper();
-}
-
-QBluetoothAddressPrivate::QBluetoothAddressPrivate()
-{
-    m_address = 0;
 }
 
 #ifndef QT_NO_DEBUG_STREAM
