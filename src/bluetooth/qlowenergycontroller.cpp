@@ -423,7 +423,8 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
 /*!
    Returns a new object of this class that is in the \l PeripheralRole and has the
    parent object \a parent.
-   Typically, the next step is to call \l startAdvertising() on the returned object.
+   Typically, the next steps are to add some services and finally
+   call \l startAdvertising() on the returned object.
 
    The controller uses the local default Bluetooth adapter for the connection management.
 
@@ -432,10 +433,33 @@ QLowEnergyController *QLowEnergyController::createCentral(const QBluetoothDevice
  */
 QLowEnergyController *QLowEnergyController::createPeripheral(QObject *parent)
 {
-    return new QLowEnergyController(parent);
+    return new QLowEnergyController(QBluetoothAddress(), parent);
 }
 
-QLowEnergyController::QLowEnergyController(QObject *parent)
+/*!
+    Returns a new object of this class that is in the \l PeripheralRole and has the
+    parent object \a parent and is using \a localDevice.
+    Typically, the next steps are to add some services and finally
+    call \l startAdvertising() on the returned object.
+
+    The peripheral is created on \a localDevice. If \a localDevice is invalid,
+    the local default device is automatically selected. If \a localDevice specifies
+    a local device that is not a local Bluetooth adapter, \l error() is set to
+    \l InvalidBluetoothAdapterError.
+
+    Selecting \a localDevice is only supported on Linux. On other platform,
+    the parameter is ignored.
+
+    \sa QLowEnergyController::PeripheralRole
+    \since 6.2
+ */
+QLowEnergyController *QLowEnergyController::createPeripheral(const QBluetoothAddress &localDevice,
+                                                             QObject *parent)
+{
+    return new QLowEnergyController(localDevice, parent);
+}
+
+QLowEnergyController::QLowEnergyController(const QBluetoothAddress &localDevice, QObject *parent)
     : QObject(parent)
 {
     d_ptr = privateController(PeripheralRole);
@@ -443,7 +467,12 @@ QLowEnergyController::QLowEnergyController(QObject *parent)
     Q_D(QLowEnergyController);
     d->q_ptr = this;
     d->role = PeripheralRole;
-    d->localAdapter = QBluetoothLocalDevice().address();
+
+    if (localDevice.isNull())
+        d->localAdapter = QBluetoothLocalDevice().address();
+    else
+        d->localAdapter = localDevice;
+
     d->init();
 }
 

@@ -96,6 +96,8 @@ public:
     static QLowEnergyController *createCentral(const QBluetoothDeviceInfo &remoteDevice,
                                                const QBluetoothAddress &localDevice,
                                                QObject *parent = nullptr);
+    static QLowEnergyController *createPeripheral(const QBluetoothAddress &localDevice,
+                                                  QObject *parent = nullptr);
     static QLowEnergyController *createPeripheral(QObject *parent = nullptr);
 
     // TODO: Allow to set connection timeout (disconnect when no data has been exchanged for n seconds).
@@ -147,7 +149,7 @@ Q_SIGNALS:
 
 private:
     // peripheral role ctor
-    explicit QLowEnergyController(QObject *parent = nullptr);
+    explicit QLowEnergyController(const QBluetoothAddress &localDevice, QObject *parent = nullptr);
 
     // central role ctors
     explicit QLowEnergyController(const QBluetoothDeviceInfo &remoteDevice,

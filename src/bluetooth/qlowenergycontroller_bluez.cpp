@@ -284,7 +284,10 @@ QLowEnergyControllerPrivateBluez::QLowEnergyControllerPrivateBluez()
 void QLowEnergyControllerPrivateBluez::init()
 {
     hciManager = new HciManager(localAdapter, this);
-    if (!hciManager->isValid())
+    if (!hciManager->isValid()){
+        setError(QLowEnergyController::InvalidBluetoothAdapterError);
+        return;
+    }
         return;
 
     hciManager->monitorEvent(HciManager::HciEvent::EVT_ENCRYPT_CHANGE);
