@@ -329,25 +329,29 @@ void tst_QBluetoothLocalDevice::tst_pairDevice_data()
             << QBluetoothLocalDevice::Unpaired << 1000 << true;
 
     if (!remoteDevice.isNull()) {
+        // Unpairing is quick but pairing level upgrade requires manual interaction
+        // on both devices. Therefore the timeouts are higher for the changes
+        // which require manual interaction.
         QTest::newRow("UnParing Test device 1") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Unpaired << 1000 << false;
+                << QBluetoothLocalDevice::Unpaired << 5000 << false;
         //Bluez5 may have to do a device search which can take up to 20s
         QTest::newRow("Pairing Test Device") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Paired << 21000 << false;
+                << QBluetoothLocalDevice::Paired << 30000 << false;
         QTest::newRow("Pairing upgrade for Authorization") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::AuthorizedPaired << 1000 << false;
+                << QBluetoothLocalDevice::AuthorizedPaired << 5000 << false;
         QTest::newRow("Unpairing Test device 2") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Unpaired << 1000 << false;
+                << QBluetoothLocalDevice::Unpaired << 5000 << false;
         QTest::newRow("Authorized Pairing") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::AuthorizedPaired << 10000 << false;
+                << QBluetoothLocalDevice::AuthorizedPaired << 30000 << false;
         QTest::newRow("Pairing Test Device after Authorization Pairing") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Paired << 1000 << false;
+                << QBluetoothLocalDevice::Paired << 5000 << false;
+
         QTest::newRow("Pairing Test Device after Authorization2") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Paired << 1000 << false; //same again
+                << QBluetoothLocalDevice::Paired << 5000 << false; //same again
         QTest::newRow("Unpairing Test device 3") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Unpaired << 1000 << false;
+                << QBluetoothLocalDevice::Unpaired << 5000 << false;
         QTest::newRow("UnParing Test device 4") << QBluetoothAddress(remoteDevice)
-                << QBluetoothLocalDevice::Unpaired << 1000 << false;
+                << QBluetoothLocalDevice::Unpaired << 5000 << false;
     }
 }
 
@@ -381,17 +385,18 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
     QVERIFY(localDevice.isValid());
 
     localDevice.requestPairing(deviceAddress, pairingExpected);
-    // async, wait for it
-    QTest::qWait(pairingWaitTime);
 
+    // The above function triggers async interaction with the user on two machines.
+    // Responding takes time. Let's adjust the subsequent timeout dyncamically based on
+    // the need of the operation
     if (expectErrorSignal) {
-        QTRY_VERIFY(!errorSpy.isEmpty());
+        QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), pairingWaitTime);
         QVERIFY(pairingSpy.isEmpty());
         QList<QVariant> arguments = errorSpy.first();
         QBluetoothLocalDevice::Error e = qvariant_cast<QBluetoothLocalDevice::Error>(arguments.at(0));
         QCOMPARE(e, QBluetoothLocalDevice::PairingError);
     } else {
-        QTRY_VERIFY(!pairingSpy.isEmpty());
+        QTRY_VERIFY_WITH_TIMEOUT(!pairingSpy.isEmpty(), pairingWaitTime);
         QVERIFY(errorSpy.isEmpty());
 
         // test the actual signal values.
