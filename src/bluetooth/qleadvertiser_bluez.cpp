@@ -97,7 +97,7 @@ QLeAdvertiserBluez::~QLeAdvertiserBluez()
 
 void QLeAdvertiserBluez::doStartAdvertising()
 {
-    if (!m_hciManager.monitorEvent(HciManager::CommandCompleteEvent)) {
+    if (!m_hciManager.monitorEvent(HciManager::HciEvent::EVT_CMD_COMPLETE)) {
         handleError();
         return;
     }
@@ -417,7 +417,9 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
         return; // Not one of our commands.
     m_pendingCommands.takeFirst();
     if (status != 0) {
-        qCDebug(QT_BT_BLUEZ) << "command" << ocf << "failed with status" << status;
+        qCDebug(QT_BT_BLUEZ) << "command" << ocf
+                             << "failed with status" << (HciManager::HciError)status
+                             << "status code" << status;
         if (ocf == QBluezConst::OcfLeSetAdvEnable && status == 0xc && currentCmd.data == QByteArray(1, '\0')) {
             // we ignore OcfLeSetAdvEnable if it tries to disable an active advertisement
             // it seems the platform often automatically turns off advertisements

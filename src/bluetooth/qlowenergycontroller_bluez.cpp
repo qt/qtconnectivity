@@ -287,10 +287,10 @@ void QLowEnergyControllerPrivateBluez::init()
     if (!hciManager->isValid())
         return;
 
-    hciManager->monitorEvent(HciManager::EncryptChangeEvent);
+    hciManager->monitorEvent(HciManager::HciEvent::EVT_ENCRYPT_CHANGE);
     connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
             this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
-    hciManager->monitorEvent(HciManager::LeMetaEvent);
+    hciManager->monitorEvent(HciManager::HciEvent::EVT_LE_META_EVENT);
     hciManager->monitorAclPackets();
     connect(hciManager, &HciManager::connectionComplete, [this](quint16 handle) {
         connectionHandle = handle;
@@ -2206,7 +2206,7 @@ bool QLowEnergyControllerPrivateBluez::increaseEncryptLevelfRequired(quint8 erro
     case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
         if (!hciManager->isValid())
             return false;
-        if (!hciManager->monitorEvent(HciManager::EncryptChangeEvent))
+        if (!hciManager->monitorEvent(HciManager::HciEvent::EVT_ENCRYPT_CHANGE))
             return false;
         if (securityLevelValue != BT_SECURITY_HIGH) {
             qCDebug(QT_BT_BLUEZ) << "Requesting encrypted link";

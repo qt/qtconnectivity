@@ -345,7 +345,6 @@ typedef struct {
 } __attribute__ ((packed)) hci_event_hdr;
 #define HCI_EVENT_HDR_SIZE 2
 
-#define EVT_ENCRYPT_CHANGE 0x08
 typedef struct {
     quint8  status;
     quint16 handle;
@@ -353,7 +352,6 @@ typedef struct {
 } __attribute__ ((packed)) evt_encrypt_change;
 #define EVT_ENCRYPT_CHANGE_SIZE 4
 
-#define EVT_CMD_COMPLETE                0x0E
 struct evt_cmd_complete {
     quint8 ncmd;
     quint16 opcode;

@@ -168,7 +168,7 @@ bool HciManager::monitorEvent(HciManager::HciEvent event)
     }
 
     hci_filter_set_ptype(HCI_EVENT_PKT, &filter);
-    hci_filter_set_event(event, &filter);
+    hci_filter_set_event(static_cast<int>(event), &filter);
     //hci_filter_all_events(&filter);
 
     if (setsockopt(hciSocket, SOL_HCI, HCI_FILTER, &filter, sizeof(hci_filter)) < 0) {
@@ -467,11 +467,11 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         return;
     }
 
-    qCDebug(QT_BT_BLUEZ) << "HCI event triggered, type:" << Qt::hex << header->evt;
+    qCDebug(QT_BT_BLUEZ) << "HCI event triggered, type:" << (HciManager::HciEvent)header->evt
+                         << "type code:" << Qt::hex << header->evt;
 
-    switch (header->evt) {
-    case EVT_ENCRYPT_CHANGE:
-    {
+    switch ((HciManager::HciEvent)header->evt) {
+    case HciEvent::EVT_ENCRYPT_CHANGE: {
         const evt_encrypt_change *event = (evt_encrypt_change *) data;
         qCDebug(QT_BT_BLUEZ) << "HCI Encrypt change, status:"
                              << (event->status == 0 ? "Success" : "Failed")
@@ -481,9 +481,8 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         QBluetoothAddress remoteDevice = addressForConnectionHandle(event->handle);
         if (!remoteDevice.isNull())
             emit encryptionChangedEvent(remoteDevice, event->status == 0);
-    }
-        break;
-    case EVT_CMD_COMPLETE: {
+    } break;
+    case HciEvent::EVT_CMD_COMPLETE: {
         auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
         static_assert(sizeof *event == 3, "unexpected struct size");
 
@@ -493,9 +492,8 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         const auto additionalData = QByteArray(reinterpret_cast<const char *>(data)
                                                + sizeof *event + 1, size - sizeof *event - 1);
         emit commandCompleted(event->opcode, status, additionalData);
-    }
-        break;
-    case LeMetaEvent:
+    } break;
+    case HciEvent::EVT_LE_META_EVENT:
         handleLeMetaEvent(data);
         break;
     default:
