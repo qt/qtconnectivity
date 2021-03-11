@@ -183,13 +183,21 @@ protected:
     QBluetoothSocketBasePrivate *d_ptr;
 
 private:
+#ifndef QT_NO_DEBUG_STREAM
+    friend QDebug operator<<(QDebug d, QBluetoothSocket::SocketError e)
+    {
+        return streamingoperator(d, e);
+    }
+    friend QDebug operator<<(QDebug d, QBluetoothSocket::SocketState e)
+    {
+        return streamingoperator(d, e);
+    }
+    static QDebug streamingoperator(QDebug, QBluetoothSocket::SocketError);
+    static QDebug streamingoperator(QDebug, QBluetoothSocket::SocketState);
+#endif
     friend class QLowEnergyControllerPrivateBluez;
 };
 
-#ifndef QT_NO_DEBUG_STREAM
-Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketError);
-Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, QBluetoothSocket::SocketState);
-#endif
 
 QT_END_NAMESPACE
 

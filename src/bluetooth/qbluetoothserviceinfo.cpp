@@ -636,8 +636,8 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
     }
 }
 
-
-QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
+#ifndef QT_NO_DEBUG_STREAM
+QDebug QBluetoothServiceInfo::streamingoperator(QDebug dbg, const QBluetoothServiceInfo &info)
 {
     QDebugStateSaver saver(dbg);
     dbg.noquote() << "\n";
@@ -647,6 +647,7 @@ QDebug operator<<(QDebug dbg, const QBluetoothServiceInfo &info)
     }
     return dbg;
 }
+#endif
 
 QBluetoothServiceInfo::Sequence QBluetoothServiceInfoPrivate::protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const
 {

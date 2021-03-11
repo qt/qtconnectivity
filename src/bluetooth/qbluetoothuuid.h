@@ -393,6 +393,13 @@ public:
         return static_cast<QUuid>(a) == static_cast<QUuid>(b);
     }
     friend bool operator!=(const QBluetoothUuid &a, const QBluetoothUuid &b) { return !(a == b); }
+#ifndef QT_NO_DEBUG_STREAM
+    friend QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
+    {
+        return streamingoperator(debug, uuid);
+    }
+    static QDebug streamingoperator(QDebug debug, const QBluetoothUuid &uuid);
+#endif
 
     int minimumSize() const;
 
@@ -418,15 +425,6 @@ inline QDataStream &operator<<(QDataStream &s, const QBluetoothUuid &uuid)
 inline QDataStream &operator>>(QDataStream &s, QBluetoothUuid &uuid)
 {
     return s >> static_cast<QUuid &>(uuid);
-}
-#endif
-
-#ifndef QT_NO_DEBUG_STREAM
-/// TODO: Move implementation to .cpp, uninline and add Q_BLUETOOTH_EXPORT for Qt 6
-inline QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
-{
-    debug << uuid.toString();
-    return debug;
 }
 #endif
 

@@ -1095,4 +1095,11 @@ QString QBluetoothUuid::descriptorToString(QBluetoothUuid::DescriptorType uuid)
     \brief Returns \c true if \a a is not equal to \a b, otherwise \c false.
 */
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug QBluetoothUuid::streamingoperator(QDebug debug, const QBluetoothUuid &uuid)
+{
+    debug << uuid.toString();
+    return debug;
+}
+#endif
 QT_END_NAMESPACE

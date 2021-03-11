@@ -811,7 +811,7 @@ int QBluetoothSocket::socketDescriptor() const
 
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug debug, QBluetoothSocket::SocketError error)
+QDebug QBluetoothSocket::streamingoperator(QDebug debug, QBluetoothSocket::SocketError error)
 {
     switch (error) {
     case QBluetoothSocket::SocketError::UnknownSocketError:
@@ -838,7 +838,7 @@ QDebug operator<<(QDebug debug, QBluetoothSocket::SocketError error)
     return debug;
 }
 
-QDebug operator<<(QDebug debug, QBluetoothSocket::SocketState state)
+QDebug QBluetoothSocket::streamingoperator(QDebug debug, QBluetoothSocket::SocketState state)
 {
     switch (state) {
     case QBluetoothSocket::SocketState::UnconnectedState:

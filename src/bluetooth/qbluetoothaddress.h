@@ -45,6 +45,7 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
 #include <QtCore/QMetaType>
+#include <QtCore/QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,11 +82,14 @@ public:
 
 private:
     quint64 m_address = { 0 };
-};
-
 #ifndef QT_NO_DEBUG_STREAM
-Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, const QBluetoothAddress &address);
+    friend QDebug operator<<(QDebug d, const QBluetoothAddress &a)
+    {
+        return streamingoperator(d, a);
+    }
+    static QDebug streamingoperator(QDebug, const QBluetoothAddress &address);
 #endif
+};
 
 QT_END_NAMESPACE
 

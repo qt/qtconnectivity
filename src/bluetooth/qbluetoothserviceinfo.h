@@ -147,9 +147,14 @@ public:
     bool registerService(const QBluetoothAddress &localAdapter = QBluetoothAddress());
     bool unregisterService();
 
-protected:
-    friend Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug, const QBluetoothServiceInfo &);
-
+private:
+#ifndef QT_NO_DEBUG_STREAM
+    friend QDebug operator<<(QDebug d, const QBluetoothServiceInfo &i)
+    {
+        return streamingoperator(d, i);
+    }
+    static QDebug streamingoperator(QDebug, const QBluetoothServiceInfo &);
+#endif
 protected:
     QSharedPointer<QBluetoothServiceInfoPrivate> d_ptr;
 };
