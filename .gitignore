@@ -31,7 +31,6 @@ qmlplugindump_wrapper.sh
 qdbusxml2cpp_wrapper.sh
 config.log
 tmp
-imports/*
 include
 config.tests/bluez/bluez
 config.tests/bluez_le/bluez_le
