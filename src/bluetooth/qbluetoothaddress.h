@@ -51,8 +51,8 @@ QT_BEGIN_NAMESPACE
 class Q_BLUETOOTH_EXPORT QBluetoothAddress
 {
 public:
-    QBluetoothAddress();
-    explicit QBluetoothAddress(quint64 address);
+    constexpr QBluetoothAddress() noexcept {};
+    constexpr explicit QBluetoothAddress(quint64 address) noexcept : m_address(address) {};
     explicit QBluetoothAddress(const QString &address);
     QBluetoothAddress(const QBluetoothAddress &other);
     ~QBluetoothAddress();

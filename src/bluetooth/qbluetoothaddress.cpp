@@ -71,19 +71,16 @@ void registerQBluetoothAddress()
 Q_CONSTRUCTOR_FUNCTION(registerQBluetoothAddress)
 
 /*!
-    Constructs an null Bluetooth address.
+    \fn QBluetoothAddress::QBluetoothAddress()
+
+    Constructs an null Bluetooth Address.
 */
-QBluetoothAddress::QBluetoothAddress()
-{
-}
 
 /*!
+    \fn QBluetoothAddress::QBluetoothAddress(quint64 address)
+
     Constructs a new Bluetooth address and assigns \a address to it.
 */
-QBluetoothAddress::QBluetoothAddress(quint64 address)
-{
-    m_address = address;
-}
 
 /*!
     Constructs a new Bluetooth address and assigns \a address to it.
