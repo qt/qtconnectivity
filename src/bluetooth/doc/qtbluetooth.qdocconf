@@ -38,11 +38,9 @@ tagfile                 = ../../../doc/qtbluetooth/qtbluetooth.tags
 
 depends += qtcore qtdoc qtquick
 
-headerdirs  += .. \
-                ../../imports/bluetooth
+headerdirs  += ..
 
-sourcedirs  += .. \
-                ../../imports/bluetooth \
+sourcedirs  += ..
 
 exampledirs += ../../../examples/bluetooth \
                snippets/ \
