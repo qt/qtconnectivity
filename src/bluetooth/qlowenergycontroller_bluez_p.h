@@ -58,6 +58,7 @@
 #include <QtBluetooth/qlowenergycharacteristic.h>
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
+#include "bluez/bluez_data_p.h"
 
 #include <QtBluetooth/QBluetoothSocket>
 #include <functional>
@@ -136,7 +137,7 @@ private:
     quint16 connectionHandle = 0;
     QBluetoothSocket *l2cpSocket = nullptr;
     struct Request {
-        quint8 command;
+        QBluezConst::AttCommand command;
         QByteArray payload;
         // TODO reference below is ugly but until we know all commands and their
         // requirements this is WIP
@@ -262,7 +263,7 @@ private:
                                  bool isCancelation);
     void sendNextPrepareWriteRequest(const QLowEnergyHandle handle,
                                      const QByteArray &newValue, quint16 offset);
-    bool increaseEncryptLevelfRequired(quint8 errorCode);
+    bool increaseEncryptLevelfRequired(QBluezConst::AttError errorCode);
 
     void resetController();
 
@@ -270,7 +271,7 @@ private:
 
     bool checkPacketSize(const QByteArray &packet, int minSize, int maxSize = -1);
     bool checkHandle(const QByteArray &packet, QLowEnergyHandle handle);
-    bool checkHandlePair(quint8 request, QLowEnergyHandle startingHandle,
+    bool checkHandlePair(QBluezConst::AttCommand request, QLowEnergyHandle startingHandle,
                          QLowEnergyHandle endingHandle);
 
     void handleExchangeMtuRequest(const QByteArray &packet);
@@ -285,7 +286,8 @@ private:
     void handlePrepareWriteRequest(const QByteArray &packet);
     void handleExecuteWriteRequest(const QByteArray &packet);
 
-    void sendErrorResponse(quint8 request, quint16 handle, quint8 code);
+    void sendErrorResponse(QBluezConst::AttCommand request, quint16 handle,
+                           QBluezConst::AttError code);
 
     using ElemWriter = std::function<void(const Attribute &, char *&)>;
     void sendListResponse(const QByteArray &packetStart, int elemSize,
@@ -293,7 +295,7 @@ private:
 
     void sendNotification(QLowEnergyHandle handle);
     void sendIndication(QLowEnergyHandle handle);
-    void sendNotificationOrIndication(quint8 opCode, QLowEnergyHandle handle);
+    void sendNotificationOrIndication(QBluezConst::AttCommand opCode, QLowEnergyHandle handle);
     void sendNextIndication();
 
     void ensureUniformAttributes(QList<Attribute> &attributes,
@@ -306,9 +308,10 @@ private:
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle,
             const AttributePredicate &attributePredicate = [](const Attribute &) { return true; });
 
-    int checkPermissions(const Attribute &attr, QLowEnergyCharacteristic::PropertyType type);
-    int checkReadPermissions(const Attribute &attr);
-    int checkReadPermissions(QList<Attribute> &attributes);
+    QBluezConst::AttError checkPermissions(const Attribute &attr,
+                                           QLowEnergyCharacteristic::PropertyType type);
+    QBluezConst::AttError checkReadPermissions(const Attribute &attr);
+    QBluezConst::AttError checkReadPermissions(QList<Attribute> &attributes);
 
     bool verifyMac(const QByteArray &message, const quint128 &csrk, quint32 signCounter,
                    quint64 expectedMac);

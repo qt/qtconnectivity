@@ -82,36 +82,6 @@
 #define GATT_INCLUDED_SERVICE   quint16(0x2802)
 #define GATT_CHARACTERISTIC     quint16(0x2803)
 
-// GATT commands
-#define ATT_OP_ERROR_RESPONSE           0x1
-#define ATT_OP_EXCHANGE_MTU_REQUEST     0x2 //send own mtu
-#define ATT_OP_EXCHANGE_MTU_RESPONSE    0x3 //receive server MTU
-#define ATT_OP_FIND_INFORMATION_REQUEST 0x4 //discover individual attribute info
-#define ATT_OP_FIND_INFORMATION_RESPONSE 0x5
-#define ATT_OP_FIND_BY_TYPE_VALUE_REQUEST 0x6
-#define ATT_OP_FIND_BY_TYPE_VALUE_RESPONSE 0x7
-#define ATT_OP_READ_BY_TYPE_REQUEST     0x8 //discover characteristics
-#define ATT_OP_READ_BY_TYPE_RESPONSE    0x9
-#define ATT_OP_READ_REQUEST             0xA //read characteristic & descriptor values
-#define ATT_OP_READ_RESPONSE            0xB
-#define ATT_OP_READ_BLOB_REQUEST        0xC //read values longer than MTU-1
-#define ATT_OP_READ_BLOB_RESPONSE       0xD
-#define ATT_OP_READ_MULTIPLE_REQUEST    0xE
-#define ATT_OP_READ_MULTIPLE_RESPONSE   0xF
-#define ATT_OP_READ_BY_GROUP_REQUEST    0x10 //discover services
-#define ATT_OP_READ_BY_GROUP_RESPONSE   0x11
-#define ATT_OP_WRITE_REQUEST            0x12 //write characteristic with response
-#define ATT_OP_WRITE_RESPONSE           0x13
-#define ATT_OP_PREPARE_WRITE_REQUEST    0x16 //write values longer than MTU-3 -> queueing
-#define ATT_OP_PREPARE_WRITE_RESPONSE   0x17
-#define ATT_OP_EXECUTE_WRITE_REQUEST    0x18 //write values longer than MTU-3 -> execute queue
-#define ATT_OP_EXECUTE_WRITE_RESPONSE   0x19
-#define ATT_OP_HANDLE_VAL_NOTIFICATION  0x1b //informs about value change
-#define ATT_OP_HANDLE_VAL_INDICATION    0x1d //informs about value change -> requires reply
-#define ATT_OP_HANDLE_VAL_CONFIRMATION  0x1e //answer for ATT_OP_HANDLE_VAL_INDICATION
-#define ATT_OP_WRITE_COMMAND            0x52 //write characteristic without response
-#define ATT_OP_SIGNED_WRITE_COMMAND     0xD2
-
 //GATT command sizes in bytes
 #define ERROR_RESPONSE_HEADER_SIZE 5
 #define FIND_INFO_REQUEST_HEADER_SIZE 5
@@ -123,34 +93,6 @@
 #define PREPARE_WRITE_HEADER_SIZE 5
 #define EXECUTE_WRITE_HEADER_SIZE 2
 #define MTU_EXCHANGE_HEADER_SIZE 3
-
-// GATT error codes
-#define ATT_ERROR_INVALID_HANDLE        0x01
-#define ATT_ERROR_READ_NOT_PERM         0x02
-#define ATT_ERROR_WRITE_NOT_PERM        0x03
-#define ATT_ERROR_INVALID_PDU           0x04
-#define ATT_ERROR_INSUF_AUTHENTICATION  0x05
-#define ATT_ERROR_REQUEST_NOT_SUPPORTED 0x06
-#define ATT_ERROR_INVALID_OFFSET        0x07
-#define ATT_ERROR_INSUF_AUTHORIZATION   0x08
-#define ATT_ERROR_PREPARE_QUEUE_FULL    0x09
-#define ATT_ERROR_ATTRIBUTE_NOT_FOUND   0x0A
-#define ATT_ERROR_ATTRIBUTE_NOT_LONG    0x0B
-#define ATT_ERROR_INSUF_ENCR_KEY_SIZE   0x0C
-#define ATT_ERROR_INVAL_ATTR_VALUE_LEN  0x0D
-#define ATT_ERROR_UNLIKELY              0x0E
-#define ATT_ERROR_INSUF_ENCRYPTION      0x0F
-#define ATT_ERROR_UNSUPPRTED_GROUP_TYPE 0x10
-#define ATT_ERROR_INSUF_RESOURCES       0x11
-#define ATT_ERROR_APPLICATION_START     0x80
-//------------------------------------------
-// The error codes in this block are
-// implementation specific errors
-
-#define ATT_ERROR_REQUEST_STALLED       0x81
-
-//------------------------------------------
-#define ATT_ERROR_APPLICATION_END       0x9f
 
 #define APPEND_VALUE true
 #define NEW_VALUE false
@@ -182,62 +124,65 @@ static inline QBluetoothUuid convert_uuid128(const quint128 *p)
 static void dumpErrorInformation(const QByteArray &response)
 {
     const char *data = response.constData();
-    if (response.size() != 5 || data[0] != ATT_OP_ERROR_RESPONSE) {
+    if (response.size() != 5
+        || (static_cast<QBluezConst::AttCommand>(data[0])
+            != QBluezConst::AttCommand::ATT_OP_ERROR_RESPONSE)) {
         qCWarning(QT_BT_BLUEZ) << QLatin1String("Not a valid error response");
         return;
     }
 
-    quint8 lastCommand = data[1];
+    QBluezConst::AttCommand lastCommand = static_cast<QBluezConst::AttCommand>(data[1]);
     quint16 handle = bt_get_le16(&data[2]);
-    quint8 errorCode = data[4];
+    QBluezConst::AttError errorCode = static_cast<QBluezConst::AttError>(data[4]);
 
     QString errorString;
     switch (errorCode) {
-    case ATT_ERROR_INVALID_HANDLE:
+    case QBluezConst::AttError::ATT_ERROR_INVALID_HANDLE:
         errorString = QStringLiteral("invalid handle"); break;
-    case ATT_ERROR_READ_NOT_PERM:
+    case QBluezConst::AttError::ATT_ERROR_READ_NOT_PERM:
         errorString = QStringLiteral("not readable attribute - permissions"); break;
-    case ATT_ERROR_WRITE_NOT_PERM:
+    case QBluezConst::AttError::ATT_ERROR_WRITE_NOT_PERM:
         errorString = QStringLiteral("not writable attribute - permissions"); break;
-    case ATT_ERROR_INVALID_PDU:
+    case QBluezConst::AttError::ATT_ERROR_INVALID_PDU:
         errorString = QStringLiteral("PDU invalid"); break;
-    case ATT_ERROR_INSUF_AUTHENTICATION:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_AUTHENTICATION:
         errorString = QStringLiteral("needs authentication - permissions"); break;
-    case ATT_ERROR_REQUEST_NOT_SUPPORTED:
+    case QBluezConst::AttError::ATT_ERROR_REQUEST_NOT_SUPPORTED:
         errorString = QStringLiteral("server does not support request"); break;
-    case ATT_ERROR_INVALID_OFFSET:
+    case QBluezConst::AttError::ATT_ERROR_INVALID_OFFSET:
         errorString = QStringLiteral("offset past end of attribute"); break;
-    case ATT_ERROR_INSUF_AUTHORIZATION:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_AUTHORIZATION:
         errorString = QStringLiteral("need authorization - permissions"); break;
-    case ATT_ERROR_PREPARE_QUEUE_FULL:
+    case QBluezConst::AttError::ATT_ERROR_PREPARE_QUEUE_FULL:
         errorString = QStringLiteral("run out of prepare queue space"); break;
-    case ATT_ERROR_ATTRIBUTE_NOT_FOUND:
+    case QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_FOUND:
         errorString = QStringLiteral("no attribute in given range found"); break;
-    case ATT_ERROR_ATTRIBUTE_NOT_LONG:
+    case QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_LONG:
         errorString = QStringLiteral("attribute not read/written using read blob"); break;
-    case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_ENCR_KEY_SIZE:
         errorString = QStringLiteral("need encryption key size - permissions"); break;
-    case ATT_ERROR_INVAL_ATTR_VALUE_LEN:
+    case QBluezConst::AttError::ATT_ERROR_INVAL_ATTR_VALUE_LEN:
         errorString = QStringLiteral("written value is invalid size"); break;
-    case ATT_ERROR_UNLIKELY:
+    case QBluezConst::AttError::ATT_ERROR_UNLIKELY:
         errorString = QStringLiteral("unlikely error"); break;
-    case ATT_ERROR_INSUF_ENCRYPTION:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_ENCRYPTION:
         errorString = QStringLiteral("needs encryption - permissions"); break;
-    case ATT_ERROR_UNSUPPRTED_GROUP_TYPE:
+    case QBluezConst::AttError::ATT_ERROR_UNSUPPRTED_GROUP_TYPE:
         errorString = QStringLiteral("unsupported group type"); break;
-    case ATT_ERROR_INSUF_RESOURCES:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_RESOURCES:
         errorString = QStringLiteral("insufficient resources to complete request"); break;
     default:
-        if (errorCode >= ATT_ERROR_APPLICATION_START && errorCode <= ATT_ERROR_APPLICATION_END)
-            errorString = QStringLiteral("application error: %1").arg(errorCode);
+        if (errorCode >= QBluezConst::AttError::ATT_ERROR_APPLICATION_START
+            && errorCode <= QBluezConst::AttError::ATT_ERROR_APPLICATION_END)
+            errorString =
+                    QStringLiteral("application error: %1").arg(static_cast<quint8>(errorCode));
         else
             errorString = QStringLiteral("unknown error code");
         break;
     }
 
-    qCDebug(QT_BT_BLUEZ) << "Error1:" << errorString
-             << "last command:" << Qt::hex << lastCommand
-             << "handle:" << handle;
+    qCDebug(QT_BT_BLUEZ) << "Error:" << errorCode << "Error description:" << errorString
+                         << "last command:" << lastCommand << "handle:" << handle;
 }
 
 static int getUuidSize(const QBluetoothUuid &uuid)
@@ -353,60 +298,65 @@ void QLowEnergyControllerPrivateBluez::handleGattRequestTimeout()
         const Request currentRequest = openRequests.dequeue();
         requestPending = false; // reset pending flag
 
-        qCWarning(QT_BT_BLUEZ).nospace() << "****** Request type 0x" << Qt::hex << currentRequest.command
-                           << " to server/peripheral timed out";
+        qCWarning(QT_BT_BLUEZ).nospace() << "****** Request type 0x" << currentRequest.command
+                                         << " to server/peripheral timed out";
         qCWarning(QT_BT_BLUEZ) << "****** Looks like the characteristic or descriptor does NOT act in"
                                <<  "accordance to Bluetooth 4.x spec.";
         qCWarning(QT_BT_BLUEZ) << "****** Please check server implementation."
                                << "Continuing under reservation.";
 
-        quint8 command = currentRequest.command;
-        const auto createRequestErrorMessage = [](quint8 opcodeWithError,
-                                           QLowEnergyHandle handle) {
+        QBluezConst::AttCommand command = currentRequest.command;
+        const auto createRequestErrorMessage = [](QBluezConst::AttCommand opcodeWithError,
+                                                  QLowEnergyHandle handle) {
             QByteArray errorPackage(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
-            errorPackage[0] = ATT_OP_ERROR_RESPONSE;
-            errorPackage[1] = opcodeWithError; // e.g. ATT_OP_READ_REQUEST
+            errorPackage[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_ERROR_RESPONSE);
+            errorPackage[1] = static_cast<quint8>(
+                    opcodeWithError); // e.g. QBluezConst::AttCommand::ATT_OP_READ_REQUEST
             putBtData(handle, errorPackage.data() + 2); //
-            errorPackage[4] = ATT_ERROR_REQUEST_STALLED;
+            errorPackage[4] = static_cast<quint8>(QBluezConst::AttError::ATT_ERROR_REQUEST_STALLED);
 
             return errorPackage;
         };
 
         switch (command) {
-        case ATT_OP_EXCHANGE_MTU_REQUEST:  // MTU change request
+        case QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST: // MTU change request
             // never received reply to MTU request
             // it is safe to skip and go to next request
             break;
-        case ATT_OP_READ_BY_GROUP_REQUEST: // primary or secondary service discovery
-        case ATT_OP_READ_BY_TYPE_REQUEST:  // characteristic or included service discovery
+        case QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST: // primary or secondary service
+                                                                    // discovery
+        case QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_REQUEST: // characteristic or included
+                                                                   // service discovery
             // jump back into usual response handling with custom error code
             // 2nd param "0" as required by spec
             processReply(currentRequest, createRequestErrorMessage(command, 0));
             break;
-        case ATT_OP_READ_REQUEST:          // read descriptor or characteristic value
-        case ATT_OP_READ_BLOB_REQUEST:     // read long descriptor or characteristic
-        case ATT_OP_WRITE_REQUEST:         // write descriptor or characteristic
+        case QBluezConst::AttCommand::ATT_OP_READ_REQUEST: // read descriptor or characteristic
+                                                           // value
+        case QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST: // read long descriptor or
+                                                                // characteristic
+        case QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST: // write descriptor or characteristic
         {
             uint handleData = currentRequest.reference.toUInt();
             const QLowEnergyHandle charHandle = (handleData & 0xffff);
             const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
             processReply(currentRequest, createRequestErrorMessage(command,
                                 descriptorHandle ? descriptorHandle : charHandle));
-        }
-            break;
-        case ATT_OP_FIND_INFORMATION_REQUEST: // get descriptor information
+        } break;
+        case QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_REQUEST: // get descriptor information
             processReply(currentRequest, createRequestErrorMessage(
                                             command, currentRequest.reference2.toUInt()));
             break;
-        case ATT_OP_PREPARE_WRITE_REQUEST: // prepare to write long desc or char
-        case ATT_OP_EXECUTE_WRITE_REQUEST: // execute long write of desc or char
+        case QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST: // prepare to write long desc or
+                                                                    // char
+        case QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_REQUEST: // execute long write of desc or
+                                                                    // char
         {
             uint handleData = currentRequest.reference.toUInt();
             const QLowEnergyHandle attrHandle = (handleData & 0xffff);
             processReply(currentRequest,
                          createRequestErrorMessage(command, attrHandle));
-        }
-            break;
+        } break;
         default:
             // not a command used by central role implementation
             qCWarning(QT_BT_BLUEZ) << "Missing response for ATT peripheral command: "
@@ -838,18 +788,17 @@ void QLowEnergyControllerPrivateBluez::l2cpReadyRead()
     if (incomingPacket.isEmpty())
         return;
 
-    const quint8 command = incomingPacket.constData()[0];
+    const QBluezConst::AttCommand command =
+            static_cast<QBluezConst::AttCommand>(incomingPacket.constData()[0]);
     switch (command) {
-    case ATT_OP_HANDLE_VAL_NOTIFICATION:
-    {
+    case QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_NOTIFICATION: {
         processUnsolicitedReply(incomingPacket);
         return;
     }
-    case ATT_OP_HANDLE_VAL_INDICATION:
-    {
+    case QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_INDICATION: {
         //send confirmation
         QByteArray packet;
-        packet.append(static_cast<char>(ATT_OP_HANDLE_VAL_CONFIRMATION));
+        packet.append(static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_CONFIRMATION));
         sendPacket(packet);
 
         processUnsolicitedReply(incomingPacket);
@@ -857,42 +806,42 @@ void QLowEnergyControllerPrivateBluez::l2cpReadyRead()
     }
     //--------------------------------------------------
     // Peripheral side packet handling
-    case ATT_OP_EXCHANGE_MTU_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST:
         handleExchangeMtuRequest(incomingPacket);
         return;
-    case ATT_OP_FIND_INFORMATION_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_REQUEST:
         handleFindInformationRequest(incomingPacket);
         return;
-    case ATT_OP_FIND_BY_TYPE_VALUE_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_FIND_BY_TYPE_VALUE_REQUEST:
         handleFindByTypeValueRequest(incomingPacket);
         return;
-    case ATT_OP_READ_BY_TYPE_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_REQUEST:
         handleReadByTypeRequest(incomingPacket);
         return;
-    case ATT_OP_READ_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_READ_REQUEST:
         handleReadRequest(incomingPacket);
         return;
-    case ATT_OP_READ_BLOB_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST:
         handleReadBlobRequest(incomingPacket);
         return;
-    case ATT_OP_READ_MULTIPLE_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_READ_MULTIPLE_REQUEST:
         handleReadMultipleRequest(incomingPacket);
         return;
-    case ATT_OP_READ_BY_GROUP_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST:
         handleReadByGroupTypeRequest(incomingPacket);
         return;
-    case ATT_OP_WRITE_REQUEST:
-    case ATT_OP_WRITE_COMMAND:
-    case ATT_OP_SIGNED_WRITE_COMMAND:
+    case QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_WRITE_COMMAND:
+    case QBluezConst::AttCommand::ATT_OP_SIGNED_WRITE_COMMAND:
         handleWriteRequestOrCommand(incomingPacket);
         return;
-    case ATT_OP_PREPARE_WRITE_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST:
         handlePrepareWriteRequest(incomingPacket);
         return;
-    case ATT_OP_EXECUTE_WRITE_REQUEST:
+    case QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_REQUEST:
         handleExecuteWriteRequest(incomingPacket);
         return;
-    case ATT_OP_HANDLE_VAL_CONFIRMATION:
+    case QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_CONFIRMATION:
         if (indicationInFlight) {
             indicationInFlight = false;
             sendNextIndication();
@@ -947,8 +896,8 @@ void QLowEnergyControllerPrivateBluez::encryptionChangedEvent(
         Q_ASSERT(!openRequests.isEmpty());
         Request failedRequest = openRequests.takeFirst();
 
-        if (failedRequest.command == ATT_OP_WRITE_REQUEST) {
-             // Failing write requests trigger some sort of response
+        if (failedRequest.command == QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST) {
+            // Failing write requests trigger some sort of response
             uint ref = failedRequest.reference.toUInt();
             const QLowEnergyHandle charHandle = (ref & 0xffff);
             const QLowEnergyHandle descriptorHandle = ((ref >> 16) & 0xffff);
@@ -961,7 +910,7 @@ void QLowEnergyControllerPrivateBluez::encryptionChangedEvent(
                 else
                     service->setError(QLowEnergyService::DescriptorWriteError);
             }
-        } else if (failedRequest.command == ATT_OP_PREPARE_WRITE_REQUEST) {
+        } else if (failedRequest.command == QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST) {
             uint handleData = failedRequest.reference.toUInt();
             const QLowEnergyHandle attrHandle = (handleData & 0xffff);
             const QByteArray newValue = failedRequest.reference2.toByteArray();
@@ -1066,21 +1015,20 @@ void QLowEnergyControllerPrivateBluez::processReply(
 {
     Q_Q(QLowEnergyController);
 
-    quint8 command = response.constData()[0];
+    QBluezConst::AttCommand command = static_cast<QBluezConst::AttCommand>(response.constData()[0]);
 
     bool isErrorResponse = false;
     // if error occurred 2. byte is previous request type
-    if (command == ATT_OP_ERROR_RESPONSE) {
+    if (command == QBluezConst::AttCommand::ATT_OP_ERROR_RESPONSE) {
         dumpErrorInformation(response);
-        command = response.constData()[1];
+        command = static_cast<QBluezConst::AttCommand>(response.constData()[1]);
         isErrorResponse = true;
     }
 
     switch (command) {
-    case ATT_OP_EXCHANGE_MTU_REQUEST: // in case of error
-    case ATT_OP_EXCHANGE_MTU_RESPONSE:
-    {
-        Q_ASSERT(request.command == ATT_OP_EXCHANGE_MTU_REQUEST);
+    case QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST: // in case of error
+    case QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_RESPONSE: {
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST);
         if (isErrorResponse) {
             mtuSize = ATT_DEFAULT_LE_MTU;
             break;
@@ -1093,13 +1041,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
             mtuSize = ATT_DEFAULT_LE_MTU;
 
         qCDebug(QT_BT_BLUEZ) << "Server MTU:" << mtu << "resulting mtu:" << mtuSize;
-    }
-        break;
-    case ATT_OP_READ_BY_GROUP_REQUEST: // in case of error
-    case ATT_OP_READ_BY_GROUP_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST: // in case of error
+    case QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_RESPONSE: {
         // Discovering services
-        Q_ASSERT(request.command == ATT_OP_READ_BY_GROUP_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST);
 
         const quint16 type = request.reference.toUInt();
 
@@ -1159,13 +1105,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 sendReadByGroupRequest(0x0001, 0xFFFF, GATT_SECONDARY_SERVICE);
             }
         }
-    }
-        break;
-    case ATT_OP_READ_BY_TYPE_REQUEST: //in case of error
-    case ATT_OP_READ_BY_TYPE_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_REQUEST: // in case of error
+    case QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_RESPONSE: {
         // Discovering characteristics
-        Q_ASSERT(request.command == ATT_OP_READ_BY_TYPE_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_REQUEST);
 
         QSharedPointer<QLowEnergyServicePrivate> p =
                 request.reference.value<QSharedPointer<QLowEnergyServicePrivate> >();
@@ -1234,13 +1178,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
             else
                 readServiceValues(p->uuid, true);
         }
-    }
-        break;
-    case ATT_OP_READ_REQUEST: //error case
-    case ATT_OP_READ_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_READ_REQUEST: // error case
+    case QBluezConst::AttCommand::ATT_OP_READ_RESPONSE: {
         //Reading characteristics and descriptors
-        Q_ASSERT(request.command == ATT_OP_READ_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_READ_REQUEST);
 
         uint handleData = request.reference.toUInt();
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
@@ -1253,7 +1195,8 @@ void QLowEnergyControllerPrivateBluez::processReply(
 
         if (isErrorResponse) {
             Q_ASSERT(!encryptionChangePending);
-            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            QBluezConst::AttError err = static_cast<QBluezConst::AttError>(response.constData()[4]);
+            encryptionChangePending = increaseEncryptLevelfRequired(err);
             if (encryptionChangePending) {
                 // Just requested a security level change.
                 // Retry the same command again once the change has happened
@@ -1305,13 +1248,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
             else
                 service->setState(QLowEnergyService::ServiceDiscovered);
         }
-    }
-        break;
-    case ATT_OP_READ_BLOB_REQUEST: //error case
-    case ATT_OP_READ_BLOB_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST: // error case
+    case QBluezConst::AttCommand::ATT_OP_READ_BLOB_RESPONSE: {
         //Reading characteristic or descriptor with value longer value than MTU
-        Q_ASSERT(request.command == ATT_OP_READ_BLOB_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST);
 
         uint handleData = request.reference.toUInt();
         const QLowEnergyHandle charHandle = (handleData & 0xffff);
@@ -1366,13 +1307,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 service->setState(QLowEnergyService::ServiceDiscovered);
         }
 
-    }
-        break;
-    case ATT_OP_FIND_INFORMATION_REQUEST: //error case
-    case ATT_OP_FIND_INFORMATION_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_REQUEST: // error case
+    case QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_RESPONSE: {
         //Discovering descriptors
-        Q_ASSERT(request.command == ATT_OP_FIND_INFORMATION_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_REQUEST);
 
         /* packet format:
          *  <opcode><format>[<handle><descriptor_uuid>]+
@@ -1483,13 +1422,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 keys.removeFirst();
             discoverNextDescriptor(p, keys, nextPotentialHandle);
         }
-    }
-        break;
-    case ATT_OP_WRITE_REQUEST: //error case
-    case ATT_OP_WRITE_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST: // error case
+    case QBluezConst::AttCommand::ATT_OP_WRITE_RESPONSE: {
         //Write command response
-        Q_ASSERT(request.command == ATT_OP_WRITE_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST);
 
         uint ref = request.reference.toUInt();
         const QLowEnergyHandle charHandle = (ref & 0xffff);
@@ -1501,7 +1438,8 @@ void QLowEnergyControllerPrivateBluez::processReply(
 
         if (isErrorResponse) {
             Q_ASSERT(!encryptionChangePending);
-            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            QBluezConst::AttError err = static_cast<QBluezConst::AttError>(response.constData()[4]);
+            encryptionChangePending = increaseEncryptLevelfRequired(err);
             if (encryptionChangePending) {
                 openRequests.prepend(request);
                 break;
@@ -1525,13 +1463,11 @@ void QLowEnergyControllerPrivateBluez::processReply(
             QLowEnergyDescriptor descriptor(service, charHandle, descriptorHandle);
             emit service->descriptorWritten(descriptor, newValue);
         }
-    }
-        break;
-    case ATT_OP_PREPARE_WRITE_REQUEST: //error case
-    case ATT_OP_PREPARE_WRITE_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST: // error case
+    case QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_RESPONSE: {
         //Prepare write command response
-        Q_ASSERT(request.command == ATT_OP_PREPARE_WRITE_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST);
 
         uint handleData = request.reference.toUInt();
         const QLowEnergyHandle attrHandle = (handleData & 0xffff);
@@ -1540,7 +1476,8 @@ void QLowEnergyControllerPrivateBluez::processReply(
 
         if (isErrorResponse) {
             Q_ASSERT(!encryptionChangePending);
-            encryptionChangePending = increaseEncryptLevelfRequired(response.constData()[4]);
+            QBluezConst::AttError err = static_cast<QBluezConst::AttError>(response.constData()[4]);
+            encryptionChangePending = increaseEncryptLevelfRequired(err);
             if (encryptionChangePending) {
                 openRequests.prepend(request);
                 break;
@@ -1554,14 +1491,12 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 sendExecuteWriteRequest(attrHandle, newValue, false);
             }
         }
-    }
-        break;
-    case ATT_OP_EXECUTE_WRITE_REQUEST: //error case
-    case ATT_OP_EXECUTE_WRITE_RESPONSE:
-    {
+    } break;
+    case QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_REQUEST: // error case
+    case QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_RESPONSE: {
         // right now used in connection with long characteristic/descriptor value writes
         // not catering for reliable writes
-        Q_ASSERT(request.command == ATT_OP_EXECUTE_WRITE_REQUEST);
+        Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_REQUEST);
 
         uint handleData = request.reference.toUInt();
         const QLowEnergyHandle attrHandle = handleData & 0xffff;
@@ -1591,8 +1526,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 emit service->characteristicWritten(ch, newValue);
             }
         }
-    }
-        break;
+    } break;
     default:
         qCDebug(QT_BT_BLUEZ) << "Unknown packet: " << response.toHex();
         break;
@@ -1610,7 +1544,7 @@ void QLowEnergyControllerPrivateBluez::sendReadByGroupRequest(
     //call for primary and secondary services
     quint8 packet[GRP_TYPE_REQ_HEADER_SIZE];
 
-    packet[0] = ATT_OP_READ_BY_GROUP_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST);
     putBtData(start, &packet[1]);
     putBtData(end, &packet[3]);
     putBtData(type, &packet[5]);
@@ -1622,7 +1556,7 @@ void QLowEnergyControllerPrivateBluez::sendReadByGroupRequest(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_READ_BY_GROUP_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST;
     request.reference = type;
     openRequests.enqueue(request);
 
@@ -1648,7 +1582,7 @@ void QLowEnergyControllerPrivateBluez::sendReadByTypeRequest(
 {
     quint8 packet[READ_BY_TYPE_REQ_HEADER_SIZE];
 
-    packet[0] = ATT_OP_READ_BY_TYPE_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_REQUEST);
     putBtData(nextHandle, &packet[1]);
     putBtData(serviceData->endHandle, &packet[3]);
     putBtData(attributeType, &packet[5]);
@@ -1661,7 +1595,7 @@ void QLowEnergyControllerPrivateBluez::sendReadByTypeRequest(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_READ_BY_TYPE_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_REQUEST;
     request.reference = QVariant::fromValue(serviceData);
     request.reference2 = attributeType;
     openRequests.enqueue(request);
@@ -1744,7 +1678,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValues(
 
     for (int i = 0; i < targetHandles.count(); i++) {
         pair = targetHandles.at(i);
-        packet[0] = ATT_OP_READ_REQUEST;
+        packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_REQUEST);
         putBtData(pair.first, &packet[1]);
 
         QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
@@ -1752,7 +1686,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValues(
 
         Request request;
         request.payload = data;
-        request.command = ATT_OP_READ_REQUEST;
+        request.command = QBluezConst::AttCommand::ATT_OP_READ_REQUEST;
         request.reference = pair.second;
         // last entry?
         request.reference2 = QVariant((bool)(i + 1 == targetHandles.count()));
@@ -1779,7 +1713,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValuesByOffset(
     const QLowEnergyHandle descriptorHandle = ((handleData >> 16) & 0xffff);
 
     QByteArray data(READ_BLOB_REQUEST_HEADER_SIZE, Qt::Uninitialized);
-    data[0] = ATT_OP_READ_BLOB_REQUEST;
+    data[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST);
 
     QLowEnergyHandle handleToRead = charHandle;
     if (descriptorHandle) {
@@ -1805,7 +1739,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValuesByOffset(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_READ_BLOB_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST;
     request.reference = handleData;
     request.reference2 = isLastValue;
     openRequests.prepend(request);
@@ -1834,7 +1768,8 @@ void QLowEnergyControllerPrivateBluez::discoverServiceDescriptors(
 void QLowEnergyControllerPrivateBluez::processUnsolicitedReply(const QByteArray &payload)
 {
     const char *data = payload.constData();
-    bool isNotification = (data[0] == ATT_OP_HANDLE_VAL_NOTIFICATION);
+    bool isNotification = (static_cast<QBluezConst::AttCommand>(data[0])
+                           == QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_NOTIFICATION);
     const QLowEnergyHandle changedHandle = bt_get_le16(&data[1]);
 
     if (QT_BT_BLUEZ().isDebugEnabled()) {
@@ -1860,7 +1795,7 @@ void QLowEnergyControllerPrivateBluez::exchangeMTU()
     qCDebug(QT_BT_BLUEZ) << "Exchanging MTU";
 
     quint8 packet[MTU_EXCHANGE_HEADER_SIZE];
-    packet[0] = ATT_OP_EXCHANGE_MTU_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST);
     putBtData(quint16(ATT_MAX_LE_MTU), &packet[1]);
 
     QByteArray data(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
@@ -1868,7 +1803,7 @@ void QLowEnergyControllerPrivateBluez::exchangeMTU()
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_EXCHANGE_MTU_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST;
     openRequests.enqueue(request);
 
     sendNextPendingRequest();
@@ -1972,7 +1907,7 @@ void QLowEnergyControllerPrivateBluez::discoverNextDescriptor(
                          << pendingCharHandles << startingHandle;
 
     quint8 packet[FIND_INFO_REQUEST_HEADER_SIZE];
-    packet[0] = ATT_OP_FIND_INFORMATION_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_REQUEST);
 
     const QLowEnergyHandle charStartHandle = startingHandle;
     QLowEnergyHandle charEndHandle = 0;
@@ -1989,7 +1924,7 @@ void QLowEnergyControllerPrivateBluez::discoverNextDescriptor(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_FIND_INFORMATION_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_REQUEST;
     request.reference = QVariant::fromValue<QList<QLowEnergyHandle> >(pendingCharHandles);
     request.reference2 = startingHandle;
     openRequests.enqueue(request);
@@ -2016,7 +1951,7 @@ void QLowEnergyControllerPrivateBluez::sendNextPrepareWriteRequest(
     }
 
     quint8 packet[PREPARE_WRITE_HEADER_SIZE];
-    packet[0] = ATT_OP_PREPARE_WRITE_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST);
     putBtData(targetHandle, &packet[1]); // attribute handle
     putBtData(offset, &packet[3]); // offset into newValue
 
@@ -2038,7 +1973,7 @@ void QLowEnergyControllerPrivateBluez::sendNextPrepareWriteRequest(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_PREPARE_WRITE_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_REQUEST;
     request.reference = (handle | ((offset + requiredPayload) << 16));
     request.reference2 = newValue;
     openRequests.enqueue(request);
@@ -2057,7 +1992,7 @@ void QLowEnergyControllerPrivateBluez::sendExecuteWriteRequest(
         bool isCancelation)
 {
     quint8 packet[EXECUTE_WRITE_HEADER_SIZE];
-    packet[0] = ATT_OP_EXECUTE_WRITE_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_REQUEST);
     if (isCancelation)
         packet[1] = 0x00; // cancel pending write prepare requests
     else
@@ -2071,7 +2006,7 @@ void QLowEnergyControllerPrivateBluez::sendExecuteWriteRequest(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_EXECUTE_WRITE_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_REQUEST;
     request.reference  = (attrHandle | ((isCancelation ? 0x00 : 0x01) << 16));
     request.reference2 = newValue;
     openRequests.prepend(request);
@@ -2139,7 +2074,7 @@ void QLowEnergyControllerPrivateBluez::readCharacteristic(
     }
 
     quint8 packet[READ_REQUEST_HEADER_SIZE];
-    packet[0] = ATT_OP_READ_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_REQUEST);
     putBtData(charDetails.valueHandle, &packet[1]);
 
     QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
@@ -2149,10 +2084,10 @@ void QLowEnergyControllerPrivateBluez::readCharacteristic(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_READ_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_READ_REQUEST;
     request.reference = charHandle;
     // reference2 not really required but false prevents service discovery
-    // code from running in ATT_OP_READ_RESPONSE handler
+    // code from running in QBluezConst::AttCommand::ATT_OP_READ_RESPONSE handler
     request.reference2 = false;
     openRequests.enqueue(request);
 
@@ -2174,7 +2109,7 @@ void QLowEnergyControllerPrivateBluez::readDescriptor(
         return;
 
     quint8 packet[READ_REQUEST_HEADER_SIZE];
-    packet[0] = ATT_OP_READ_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_REQUEST);
     putBtData(descriptorHandle, &packet[1]);
 
     QByteArray data(READ_REQUEST_HEADER_SIZE, Qt::Uninitialized);
@@ -2184,10 +2119,10 @@ void QLowEnergyControllerPrivateBluez::readDescriptor(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_READ_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_READ_REQUEST;
     request.reference = (charHandle | (descriptorHandle << 16));
     // reference2 not really required but false prevents service discovery
-    // code from running in ATT_OP_READ_RESPONSE handler
+    // code from running in QBluezConst::AttCommand::ATT_OP_READ_RESPONSE handler
     request.reference2 = false;
     openRequests.enqueue(request);
 
@@ -2198,15 +2133,16 @@ void QLowEnergyControllerPrivateBluez::readDescriptor(
  * Returns true if the encryption change was successfully requested.
  * The request is triggered if we got a related ATT error.
  */
-bool QLowEnergyControllerPrivateBluez::increaseEncryptLevelfRequired(quint8 errorCode)
+bool QLowEnergyControllerPrivateBluez::increaseEncryptLevelfRequired(
+        QBluezConst::AttError errorCode)
 {
     if (securityLevelValue == BT_SECURITY_HIGH)
         return false;
 
     switch (errorCode) {
-    case ATT_ERROR_INSUF_ENCRYPTION:
-    case ATT_ERROR_INSUF_AUTHENTICATION:
-    case ATT_ERROR_INSUF_ENCR_KEY_SIZE:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_ENCRYPTION:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_AUTHENTICATION:
+    case QBluezConst::AttError::ATT_ERROR_INSUF_ENCR_KEY_SIZE:
         if (!hciManager->isValid())
             return false;
         if (!hciManager->monitorEvent(HciManager::HciEvent::EVT_ENCRYPT_CHANGE))
@@ -2242,7 +2178,8 @@ bool QLowEnergyControllerPrivateBluez::checkPacketSize(const QByteArray &packet,
         return true;
     qCWarning(QT_BT_BLUEZ) << "client request of type" << packet.at(0)
                            << "has unexpected packet size" << packet.count();
-    sendErrorResponse(packet.at(0), 0, ATT_ERROR_INVALID_PDU);
+    sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), 0,
+                      QBluezConst::AttError::ATT_ERROR_INVALID_PDU);
     return false;
 }
 
@@ -2250,16 +2187,18 @@ bool QLowEnergyControllerPrivateBluez::checkHandle(const QByteArray &packet, QLo
 {
     if (handle != 0 && handle <= lastLocalHandle)
         return true;
-    sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVALID_HANDLE);
+    sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                      QBluezConst::AttError::ATT_ERROR_INVALID_HANDLE);
     return false;
 }
 
-bool QLowEnergyControllerPrivateBluez::checkHandlePair(quint8 request, QLowEnergyHandle startingHandle,
-                                                  QLowEnergyHandle endingHandle)
+bool QLowEnergyControllerPrivateBluez::checkHandlePair(QBluezConst::AttCommand request,
+                                                       QLowEnergyHandle startingHandle,
+                                                       QLowEnergyHandle endingHandle)
 {
     if (startingHandle == 0 || startingHandle > endingHandle) {
         qCDebug(QT_BT_BLUEZ) << "handle range invalid";
-        sendErrorResponse(request, startingHandle, ATT_ERROR_INVALID_HANDLE);
+        sendErrorResponse(request, startingHandle, QBluezConst::AttError::ATT_ERROR_INVALID_HANDLE);
         return false;
     }
     return true;
@@ -2273,14 +2212,15 @@ void QLowEnergyControllerPrivateBluez::handleExchangeMtuRequest(const QByteArray
         return;
     if (receivedMtuExchangeRequest) { // Client must only send this once per connection.
         qCDebug(QT_BT_BLUEZ) << "Client sent extraneous MTU exchange packet";
-        sendErrorResponse(packet.at(0), 0, ATT_ERROR_REQUEST_NOT_SUPPORTED);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), 0,
+                          QBluezConst::AttError::ATT_ERROR_REQUEST_NOT_SUPPORTED);
         return;
     }
     receivedMtuExchangeRequest = true;
 
     // Send reply.
     QByteArray reply(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
-    reply[0] = ATT_OP_EXCHANGE_MTU_RESPONSE;
+    reply[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_RESPONSE);
     putBtData(static_cast<quint16>(ATT_MAX_LE_MTU), reply.data() + 1);
     sendPacket(reply);
 
@@ -2302,19 +2242,22 @@ void QLowEnergyControllerPrivateBluez::handleFindInformationRequest(const QByteA
     const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
     qCDebug(QT_BT_BLUEZ) << "client sends find information request; start:" << startingHandle
                          << "end:" << endingHandle;
-    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+    if (!checkHandlePair(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                         endingHandle))
         return;
 
     QList<Attribute> results = getAttributes(startingHandle, endingHandle);
     if (results.isEmpty()) {
-        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                          QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
     }
     ensureUniformUuidSizes(results);
 
     QByteArray responsePrefix(2, Qt::Uninitialized);
     const int uuidSize = getUuidSize(results.first().type);
-    responsePrefix[0] = ATT_OP_FIND_INFORMATION_RESPONSE;
+    responsePrefix[0] =
+            static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_FIND_INFORMATION_RESPONSE);
     responsePrefix[1] = uuidSize == 2 ? 0x1 : 0x2;
     const int elementSize = sizeof(QLowEnergyHandle) + uuidSize;
     const auto elemWriter = [](const Attribute &attr, char *&data) {
@@ -2338,20 +2281,23 @@ void QLowEnergyControllerPrivateBluez::handleFindByTypeValueRequest(const QByteA
     qCDebug(QT_BT_BLUEZ) << "client sends find by type value request; start:" << startingHandle
                          << "end:" << endingHandle << "type:" << type
                          << "value:" << value.toHex();
-    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+    if (!checkHandlePair(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                         endingHandle))
         return;
 
     const auto predicate = [value, this, type](const Attribute &attr) {
         return attr.type == QBluetoothUuid(type) && attr.value == value
-                && checkReadPermissions(attr) == 0;
+                && checkReadPermissions(attr) == QBluezConst::AttError::ATT_ERROR_NO_ERROR;
     };
     const QList<Attribute> results = getAttributes(startingHandle, endingHandle, predicate);
     if (results.isEmpty()) {
-        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                          QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
     }
 
-    QByteArray responsePrefix(1, ATT_OP_FIND_BY_TYPE_VALUE_RESPONSE);
+    QByteArray responsePrefix(
+            1, static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_FIND_BY_TYPE_VALUE_RESPONSE));
     const int elemSize = 2 * sizeof(QLowEnergyHandle);
     const auto elemWriter = [](const Attribute &attr, char *&data) {
         putDataAndIncrement(attr.handle, data);
@@ -2378,12 +2324,14 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
         type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const quint128 *>(typeStart)));
     } else {
         qCWarning(QT_BT_BLUEZ) << "read by type request has invalid packet size" << packet.count();
-        sendErrorResponse(packet.at(0), 0, ATT_ERROR_INVALID_PDU);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), 0,
+                          QBluezConst::AttError::ATT_ERROR_INVALID_PDU);
         return;
     }
     qCDebug(QT_BT_BLUEZ) << "client sends read by type request, start:" << startingHandle
                          << "end:" << endingHandle << "type:" << type;
-    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+    if (!checkHandlePair(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                         endingHandle))
         return;
 
     // Get all attributes with matching type.
@@ -2393,19 +2341,21 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
     ensureUniformValueSizes(results);
 
     if (results.isEmpty()) {
-        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                          QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
     }
 
-    const int error = checkReadPermissions(results);
-    if (error) {
-        sendErrorResponse(packet.at(0), results.first().handle, error);
+    const QBluezConst::AttError error = checkReadPermissions(results);
+    if (error != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)),
+                          results.first().handle, error);
         return;
     }
 
     const int elementSize = sizeof(QLowEnergyHandle) + results.first().value.count();
     QByteArray responsePrefix(2, Qt::Uninitialized);
-    responsePrefix[0] = ATT_OP_READ_BY_TYPE_RESPONSE;
+    responsePrefix[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_RESPONSE);
     responsePrefix[1] = elementSize;
     const auto elemWriter = [](const Attribute &attr, char *&data) {
         putDataAndIncrement(attr.handle, data);
@@ -2426,15 +2376,16 @@ void QLowEnergyControllerPrivateBluez::handleReadRequest(const QByteArray &packe
     if (!checkHandle(packet, handle))
         return;
     const Attribute &attribute = localAttributes.at(handle);
-    const int permissionsError = checkReadPermissions(attribute);
-    if (permissionsError) {
-        sendErrorResponse(packet.at(0), handle, permissionsError);
+    const QBluezConst::AttError permissionsError = checkReadPermissions(attribute);
+    if (permissionsError != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          permissionsError);
         return;
     }
 
     const int sentValueLength = qMin(attribute.value.count(), mtuSize - 1);
     QByteArray response(1 + sentValueLength, Qt::Uninitialized);
-    response[0] = ATT_OP_READ_RESPONSE;
+    response[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_RESPONSE);
     using namespace std;
     memcpy(response.data() + 1, attribute.value.constData(), sentValueLength);
     qCDebug(QT_BT_BLUEZ) << "sending response:" << response.toHex();
@@ -2455,17 +2406,20 @@ void QLowEnergyControllerPrivateBluez::handleReadBlobRequest(const QByteArray &p
     if (!checkHandle(packet, handle))
         return;
     const Attribute &attribute = localAttributes.at(handle);
-    const int permissionsError = checkReadPermissions(attribute);
-    if (permissionsError) {
-        sendErrorResponse(packet.at(0), handle, permissionsError);
+    const QBluezConst::AttError permissionsError = checkReadPermissions(attribute);
+    if (permissionsError != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          permissionsError);
         return;
     }
     if (valueOffset > attribute.value.count()) {
-        sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVALID_OFFSET);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          QBluezConst::AttError::ATT_ERROR_INVALID_OFFSET);
         return;
     }
     if (attribute.value.count() <= mtuSize - 3) {
-        sendErrorResponse(packet.at(0), handle, ATT_ERROR_ATTRIBUTE_NOT_LONG);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_LONG);
         return;
     }
 
@@ -2473,7 +2427,7 @@ void QLowEnergyControllerPrivateBluez::handleReadBlobRequest(const QByteArray &p
     const int sentValueLength = qMin(attribute.value.count() - valueOffset, mtuSize - 1);
 
     QByteArray response(1 + sentValueLength, Qt::Uninitialized);
-    response[0] = ATT_OP_READ_BLOB_RESPONSE;
+    response[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BLOB_RESPONSE);
     using namespace std;
     memcpy(response.data() + 1, attribute.value.constData() + valueOffset, sentValueLength);
     qCDebug(QT_BT_BLUEZ) << "sending response:" << response.toHex();
@@ -2495,15 +2449,18 @@ void QLowEnergyControllerPrivateBluez::handleReadMultipleRequest(const QByteArra
     const auto it = std::find_if(handles.constBegin(), handles.constEnd(),
             [this](QLowEnergyHandle handle) { return handle >= lastLocalHandle; });
     if (it != handles.constEnd()) {
-        sendErrorResponse(packet.at(0), *it, ATT_ERROR_INVALID_HANDLE);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), *it,
+                          QBluezConst::AttError::ATT_ERROR_INVALID_HANDLE);
         return;
     }
     const QList<Attribute> results = getAttributes(handles.first(), handles.last());
-    QByteArray response(1, ATT_OP_READ_MULTIPLE_RESPONSE);
+    QByteArray response(
+            1, static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_MULTIPLE_RESPONSE));
     for (const Attribute &attr : results) {
-        const int error = checkReadPermissions(attr);
-        if (error) {
-            sendErrorResponse(packet.at(0), attr.handle, error);
+        const QBluezConst::AttError error = checkReadPermissions(attr);
+        if (error != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+            sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), attr.handle,
+                              error);
             return;
         }
 
@@ -2535,17 +2492,20 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
     } else {
         qCWarning(QT_BT_BLUEZ) << "read by group type request has invalid packet size"
                                << packet.count();
-        sendErrorResponse(packet.at(0), 0, ATT_ERROR_INVALID_PDU);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), 0,
+                          QBluezConst::AttError::ATT_ERROR_INVALID_PDU);
         return;
     }
     qCDebug(QT_BT_BLUEZ) << "client sends read by group type request, start:" << startingHandle
                          << "end:" << endingHandle << "type:" << type;
 
-    if (!checkHandlePair(packet.at(0), startingHandle, endingHandle))
+    if (!checkHandlePair(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                         endingHandle))
         return;
     if (type != QBluetoothUuid(static_cast<quint16>(GATT_PRIMARY_SERVICE))
             && type != QBluetoothUuid(static_cast<quint16>(GATT_SECONDARY_SERVICE))) {
-        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_UNSUPPRTED_GROUP_TYPE);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                          QBluezConst::AttError::ATT_ERROR_UNSUPPRTED_GROUP_TYPE);
         return;
     }
 
@@ -2553,12 +2513,14 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
             getAttributes(startingHandle, endingHandle,
                           [type](const Attribute &attr) { return attr.type == type; });
     if (results.isEmpty()) {
-        sendErrorResponse(packet.at(0), startingHandle, ATT_ERROR_ATTRIBUTE_NOT_FOUND);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
+                          QBluezConst::AttError::ATT_ERROR_ATTRIBUTE_NOT_FOUND);
         return;
     }
-    const int error = checkReadPermissions(results);
-    if (error) {
-        sendErrorResponse(packet.at(0), results.first().handle, error);
+    const QBluezConst::AttError error = checkReadPermissions(results);
+    if (error != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)),
+                          results.first().handle, error);
         return;
     }
 
@@ -2566,7 +2528,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
 
     const int elementSize = 2 * sizeof(QLowEnergyHandle) + results.first().value.count();
     QByteArray responsePrefix(2, Qt::Uninitialized);
-    responsePrefix[0] = ATT_OP_READ_BY_GROUP_RESPONSE;
+    responsePrefix[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_RESPONSE);
     responsePrefix[1] = elementSize;
     const auto elemWriter = [](const Attribute &attr, char *&data) {
         putDataAndIncrement(attr.handle, data);
@@ -2685,14 +2647,14 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForCentral(const QShar
             return;
         }
         // write value fits into single package
-        packet[0] = ATT_OP_WRITE_REQUEST;
+        packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST);
         writeWithResponse = true;
         break;
     case QLowEnergyService::WriteWithoutResponse:
-        packet[0] = ATT_OP_WRITE_COMMAND;
+        packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_WRITE_COMMAND);
         break;
     case QLowEnergyService::WriteSigned:
-        packet[0] = ATT_OP_SIGNED_WRITE_COMMAND;
+        packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_SIGNED_WRITE_COMMAND);
         if (!isBonded()) {
             qCWarning(QT_BT_BLUEZ) << "signed write not possible: requires bond between devices";
             service->setError(QLowEnergyService::CharacteristicWriteError);
@@ -2733,7 +2695,7 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForCentral(const QShar
 
     Request request;
     request.payload = packet;
-    request.command = ATT_OP_WRITE_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST;
     request.reference = charHandle;
     request.reference2 = newValue;
     openRequests.enqueue(request);
@@ -2770,7 +2732,7 @@ void QLowEnergyControllerPrivateBluez::writeDescriptorForCentral(
     }
 
     quint8 packet[WRITE_REQUEST_HEADER_SIZE];
-    packet[0] = ATT_OP_WRITE_REQUEST;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST);
     putBtData(descriptorHandle, &packet[1]);
 
     const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
@@ -2783,7 +2745,7 @@ void QLowEnergyControllerPrivateBluez::writeDescriptorForCentral(
 
     Request request;
     request.payload = data;
-    request.command = ATT_OP_WRITE_REQUEST;
+    request.command = QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST;
     request.reference = (charHandle | (descriptorHandle << 16));
     request.reference2 = newValue;
     openRequests.enqueue(request);
@@ -2795,8 +2757,10 @@ void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteAr
 {
     // Spec v4.2, Vol 3, Part F, 3.4.5.1-3
 
-    const bool isRequest = packet.at(0) == ATT_OP_WRITE_REQUEST;
-    const bool isSigned = quint8(packet.at(0)) == quint8(ATT_OP_SIGNED_WRITE_COMMAND);
+    const bool isRequest = static_cast<QBluezConst::AttCommand>(packet.at(0))
+            == QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST;
+    const bool isSigned = static_cast<QBluezConst::AttCommand>(packet.at(0))
+            == QBluezConst::AttCommand::ATT_OP_SIGNED_WRITE_COMMAND;
     if (!checkPacketSize(packet, isSigned ? 15 : 3, mtuSize))
         return;
     const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
@@ -2810,9 +2774,10 @@ void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteAr
     const QLowEnergyCharacteristic::PropertyType type = isRequest
             ? QLowEnergyCharacteristic::Write : isSigned
               ? QLowEnergyCharacteristic::WriteSigned : QLowEnergyCharacteristic::WriteNoResponse;
-    const int permissionsError = checkPermissions(attribute, type);
-    if (permissionsError) {
-        sendErrorResponse(packet.at(0), handle, permissionsError);
+    const QBluezConst::AttError permissionsError = checkPermissions(attribute, type);
+    if (permissionsError != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          permissionsError);
         return;
     }
 
@@ -2858,7 +2823,8 @@ void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteAr
     }
 
     if (valueLength > attribute.maxLength) {
-        sendErrorResponse(packet.at(0), handle, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          QBluezConst::AttError::ATT_ERROR_INVAL_ATTR_VALUE_LEN);
         return;
     }
 
@@ -2873,7 +2839,8 @@ void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteAr
     updateLocalAttributeValue(handle, value, characteristic, descriptor);
 
     if (isRequest) {
-        const QByteArray response = QByteArray(1, ATT_OP_WRITE_RESPONSE);
+        const QByteArray response =
+                QByteArray(1, static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_WRITE_RESPONSE));
         sendPacket(response);
     }
 
@@ -2897,13 +2864,16 @@ void QLowEnergyControllerPrivateBluez::handlePrepareWriteRequest(const QByteArra
     if (!checkHandle(packet, handle))
         return;
     const Attribute &attribute = localAttributes.at(handle);
-    const int permissionsError = checkPermissions(attribute, QLowEnergyCharacteristic::Write);
-    if (permissionsError) {
-        sendErrorResponse(packet.at(0), handle, permissionsError);
+    const QBluezConst::AttError permissionsError =
+            checkPermissions(attribute, QLowEnergyCharacteristic::Write);
+    if (permissionsError != QBluezConst::AttError::ATT_ERROR_NO_ERROR) {
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          permissionsError);
         return;
     }
     if (openPrepareWriteRequests.count() >= maxPrepareQueueSize) {
-        sendErrorResponse(packet.at(0), handle, ATT_ERROR_PREPARE_QUEUE_FULL);
+        sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), handle,
+                          QBluezConst::AttError::ATT_ERROR_PREPARE_QUEUE_FULL);
         return;
     }
 
@@ -2912,7 +2882,7 @@ void QLowEnergyControllerPrivateBluez::handlePrepareWriteRequest(const QByteArra
                                                     packet.mid(5));
 
     QByteArray response = packet;
-    response[0] = ATT_OP_PREPARE_WRITE_RESPONSE;
+    response[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_PREPARE_WRITE_RESPONSE);
     sendPacket(response);
 }
 
@@ -2934,12 +2904,15 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
         for (const WriteRequest &request : qAsConst(requests)) {
             Attribute &attribute = localAttributes[request.handle];
             if (request.valueOffset > attribute.value.count()) {
-                sendErrorResponse(packet.at(0), request.handle, ATT_ERROR_INVALID_OFFSET);
+                sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)),
+                                  request.handle, QBluezConst::AttError::ATT_ERROR_INVALID_OFFSET);
                 return;
             }
             const QByteArray newValue = attribute.value.left(request.valueOffset) + request.value;
             if (newValue.count() > attribute.maxLength) {
-                sendErrorResponse(packet.at(0), request.handle, ATT_ERROR_INVAL_ATTR_VALUE_LEN);
+                sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)),
+                                  request.handle,
+                                  QBluezConst::AttError::ATT_ERROR_INVAL_ATTR_VALUE_LEN);
                 return;
             }
             QLowEnergyCharacteristic characteristic;
@@ -2956,7 +2929,8 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
         }
     }
 
-    sendPacket(QByteArray(1, ATT_OP_EXECUTE_WRITE_RESPONSE));
+    sendPacket(QByteArray(
+            1, static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_RESPONSE)));
 
     for (const QLowEnergyCharacteristic &characteristic : qAsConst(characteristics))
         emit characteristic.d_ptr->characteristicChanged(characteristic, characteristic.value());
@@ -2964,19 +2938,22 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
         emit descriptor.d_ptr->descriptorWritten(descriptor, descriptor.value());
 }
 
-void QLowEnergyControllerPrivateBluez::sendErrorResponse(quint8 request, quint16 handle, quint8 code)
+void QLowEnergyControllerPrivateBluez::sendErrorResponse(QBluezConst::AttCommand request,
+                                                         quint16 handle, QBluezConst::AttError code)
 {
     // An ATT command never receives an error response.
-    if (request == ATT_OP_WRITE_COMMAND || request == ATT_OP_SIGNED_WRITE_COMMAND)
+    if (request == QBluezConst::AttCommand::ATT_OP_WRITE_COMMAND
+        || request == QBluezConst::AttCommand::ATT_OP_SIGNED_WRITE_COMMAND)
         return;
 
     QByteArray packet(ERROR_RESPONSE_HEADER_SIZE, Qt::Uninitialized);
-    packet[0] = ATT_OP_ERROR_RESPONSE;
-    packet[1] = request;
+    packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_ERROR_RESPONSE);
+    packet[1] = static_cast<quint8>(request);
     putBtData(handle, packet.data() + 2);
-    packet[4] = code;
-    qCWarning(QT_BT_BLUEZ) << "sending error response; request:" << request << "handle:" << handle
-                << "code:" << code;
+    packet[4] = static_cast<quint8>(code);
+    qCWarning(QT_BT_BLUEZ) << "sending error response; request:"
+                           << request << "handle:" << handle
+                           << "code:" << code;
     sendPacket(packet);
 }
 
@@ -2999,25 +2976,24 @@ void QLowEnergyControllerPrivateBluez::sendListResponse(const QByteArray &packet
 
 void QLowEnergyControllerPrivateBluez::sendNotification(QLowEnergyHandle handle)
 {
-    sendNotificationOrIndication(ATT_OP_HANDLE_VAL_NOTIFICATION, handle);
+    sendNotificationOrIndication(QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_NOTIFICATION, handle);
 }
 
 void QLowEnergyControllerPrivateBluez::sendIndication(QLowEnergyHandle handle)
 {
     Q_ASSERT(!indicationInFlight);
     indicationInFlight = true;
-    sendNotificationOrIndication(ATT_OP_HANDLE_VAL_INDICATION, handle);
+    sendNotificationOrIndication(QBluezConst::AttCommand::ATT_OP_HANDLE_VAL_INDICATION, handle);
 }
 
-void QLowEnergyControllerPrivateBluez::sendNotificationOrIndication(
-        quint8 opCode,
-        QLowEnergyHandle handle)
+void QLowEnergyControllerPrivateBluez::sendNotificationOrIndication(QBluezConst::AttCommand opCode,
+                                                                    QLowEnergyHandle handle)
 {
     Q_ASSERT(handle <= lastLocalHandle);
     const Attribute &attribute = localAttributes.at(handle);
     const int maxValueLength = qMin(attribute.value.count(), mtuSize - 3);
     QByteArray packet(3 + maxValueLength, Qt::Uninitialized);
-    packet[0] = opCode;
+    packet[0] = static_cast<quint8>(opCode);
     putBtData(handle, packet.data() + 1);
     using namespace std;
     memcpy(packet.data() + 3, attribute.value.constData(), maxValueLength);
@@ -3483,8 +3459,9 @@ QLowEnergyControllerPrivateBluez::getAttributes(QLowEnergyHandle startHandle,
     return results;
 }
 
-int QLowEnergyControllerPrivateBluez::checkPermissions(const Attribute &attr,
-                                                  QLowEnergyCharacteristic::PropertyType type)
+QBluezConst::AttError
+QLowEnergyControllerPrivateBluez::checkPermissions(const Attribute &attr,
+                                                   QLowEnergyCharacteristic::PropertyType type)
 {
     const bool isReadAccess = type == QLowEnergyCharacteristic::Read;
     const bool isWriteCommand = type == QLowEnergyCharacteristic::WriteNoResponse;
@@ -3494,7 +3471,7 @@ int QLowEnergyControllerPrivateBluez::checkPermissions(const Attribute &attr,
     Q_ASSERT(isReadAccess || isWriteAccess);
     if (!(attr.properties & type)) {
         if (isReadAccess)
-            return ATT_ERROR_READ_NOT_PERM;
+            return QBluezConst::AttError::ATT_ERROR_READ_NOT_PERM;
 
         // The spec says: If an attribute requires a signed write, then a non-signed write command
         // can also be used if the link is encrypted.
@@ -3502,44 +3479,50 @@ int QLowEnergyControllerPrivateBluez::checkPermissions(const Attribute &attr,
                 && (attr.properties & QLowEnergyCharacteristic::WriteSigned)
                 && securityLevel() >= BT_SECURITY_MEDIUM;
         if (!unsignedWriteOk)
-            return ATT_ERROR_WRITE_NOT_PERM;
+            return QBluezConst::AttError::ATT_ERROR_WRITE_NOT_PERM;
     }
     const AttAccessConstraints constraints = isReadAccess
             ? attr.readConstraints : attr.writeConstraints;
-    if (constraints.testFlag(AttAuthorizationRequired))
-        return ATT_ERROR_INSUF_AUTHORIZATION; // TODO: emit signal (and offer authorization function)?
-    if (constraints.testFlag(AttEncryptionRequired) && securityLevel() < BT_SECURITY_MEDIUM)
-        return ATT_ERROR_INSUF_ENCRYPTION;
-    if (constraints.testFlag(AttAuthenticationRequired) && securityLevel() < BT_SECURITY_HIGH)
-        return ATT_ERROR_INSUF_AUTHENTICATION;
+    if (constraints.testFlag(AttAccessConstraint::AttAuthorizationRequired))
+        return QBluezConst::AttError::ATT_ERROR_INSUF_AUTHORIZATION; // TODO: emit signal (and offer
+                                                                     // authorization function)?
+    if (constraints.testFlag(AttAccessConstraint::AttEncryptionRequired)
+        && securityLevel() < BT_SECURITY_MEDIUM)
+        return QBluezConst::AttError::ATT_ERROR_INSUF_ENCRYPTION;
+    if (constraints.testFlag(AttAccessConstraint::AttAuthenticationRequired)
+        && securityLevel() < BT_SECURITY_HIGH)
+        return QBluezConst::AttError::ATT_ERROR_INSUF_AUTHENTICATION;
     if (false)
-        return ATT_ERROR_INSUF_ENCR_KEY_SIZE;
-    return 0;
+        return QBluezConst::AttError::ATT_ERROR_INSUF_ENCR_KEY_SIZE;
+    return QBluezConst::AttError::ATT_ERROR_NO_ERROR;
 }
 
-int QLowEnergyControllerPrivateBluez::checkReadPermissions(const Attribute &attr)
+QBluezConst::AttError QLowEnergyControllerPrivateBluez::checkReadPermissions(const Attribute &attr)
 {
     return checkPermissions(attr, QLowEnergyCharacteristic::Read);
 }
 
-int QLowEnergyControllerPrivateBluez::checkReadPermissions(QList<Attribute> &attributes)
+QBluezConst::AttError
+QLowEnergyControllerPrivateBluez::checkReadPermissions(QList<Attribute> &attributes)
 {
     if (attributes.isEmpty())
-        return 0;
+        return QBluezConst::AttError::ATT_ERROR_NO_ERROR;
 
     // The logic prescribed in the spec is as follows:
     //    1) If the first in a list of matching attributes has a permissions error,
     //       then that error is returned via an error response.
     //    2) If any other element of that list would cause a permissions error, then all
     //       attributes from this one on are not part of the result set, but no error is returned.
-    const int error = checkReadPermissions(attributes.first());
-    if (error)
+    const QBluezConst::AttError error = checkReadPermissions(attributes.first());
+    if (error != QBluezConst::AttError::ATT_ERROR_NO_ERROR)
         return error;
-    const auto it = std::find_if(attributes.begin() + 1, attributes.end(),
-            [this](const Attribute &attr) { return checkReadPermissions(attr) != 0; });
+    const auto it =
+            std::find_if(attributes.begin() + 1, attributes.end(), [this](const Attribute &attr) {
+                return checkReadPermissions(attr) != QBluezConst::AttError::ATT_ERROR_NO_ERROR;
+            });
     if (it != attributes.end())
         attributes.erase(it, attributes.end());
-    return 0;
+    return QBluezConst::AttError::ATT_ERROR_NO_ERROR;
 }
 
 bool QLowEnergyControllerPrivateBluez::verifyMac(const QByteArray &message, const quint128 &csrk,
