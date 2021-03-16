@@ -540,7 +540,6 @@ void QBluetoothSocketPrivate::channelClosed()
         q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
         q_ptr->setOpenMode(QIODevice::NotOpen);
         emit q_ptr->readChannelFinished();
-        emit q_ptr->disconnected();
     } else {
         state = QBluetoothSocket::UnconnectedState;
         // We are still in connectToService and do not want
