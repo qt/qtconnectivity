@@ -139,7 +139,7 @@ Q_SIGNALS:
     void connected();
     void disconnected();
     void stateChanged(QLowEnergyController::ControllerState state);
-    void error(QLowEnergyController::Error newError);
+    void errorOccurred(QLowEnergyController::Error newError);
 
     void serviceDiscovered(const QBluetoothUuid &newService);
     void discoveryFinished();

@@ -605,8 +605,8 @@ void QLowEnergyControllerPrivateBluez::establishL2cpClientSocket()
     l2cpSocket = new QBluetoothSocket(QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, SIGNAL(connected()), this, SLOT(l2cpConnected()));
     connect(l2cpSocket, SIGNAL(disconnected()), this, SLOT(l2cpDisconnected()));
-    connect(l2cpSocket, SIGNAL(error(QBluetoothSocket::SocketError)),
-            this, SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
+    connect(l2cpSocket, SIGNAL(errorOccurred(QBluetoothSocket::SocketError)), this,
+            SLOT(l2cpErrorChanged(QBluetoothSocket::SocketError)));
     connect(l2cpSocket, SIGNAL(readyRead()), this, SLOT(l2cpReadyRead()));
 
     quint32 addressTypeToUse = (addressType == QLowEnergyController::PublicAddress)
@@ -3132,8 +3132,8 @@ void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
                 rawSocketPrivate, QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, &QBluetoothSocket::disconnected,
             this, &QLowEnergyControllerPrivateBluez::l2cpDisconnected);
-    connect(l2cpSocket, static_cast<void (QBluetoothSocket::*)(QBluetoothSocket::SocketError)>
-            (&QBluetoothSocket::error), this, &QLowEnergyControllerPrivateBluez::l2cpErrorChanged);
+    connect(l2cpSocket, &QBluetoothSocket::errorOccurred, this,
+            &QLowEnergyControllerPrivateBluez::l2cpErrorChanged);
     connect(l2cpSocket, &QIODevice::readyRead, this, &QLowEnergyControllerPrivateBluez::l2cpReadyRead);
     l2cpSocket->d_ptr->lowEnergySocketType = addressType == QLowEnergyController::PublicAddress
             ? BDADDR_LE_PUBLIC : BDADDR_LE_RANDOM;

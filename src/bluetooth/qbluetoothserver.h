@@ -97,7 +97,7 @@ public:
 
 Q_SIGNALS:
     void newConnection();
-    void error(QBluetoothServer::Error error);
+    void errorOccurred(QBluetoothServer::Error error);
 
 protected:
     QBluetoothServerPrivate *d_ptr;

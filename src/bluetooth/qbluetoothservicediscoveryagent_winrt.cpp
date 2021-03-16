@@ -599,7 +599,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::onError()
     discoveredDevices.clear();
     error = QBluetoothServiceDiscoveryAgent::InputOutputError;
     errorString = "errorDescription";
-    emit q->error(error);
+    emit q->errorOccurred(error);
 }
 
 QT_END_NAMESPACE

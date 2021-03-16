@@ -81,7 +81,7 @@ public:
 
 signals:
     void newConnection();
-    void error(QBluetoothServer::Error);
+    void errorOccurred(QBluetoothServer::Error);
 
 private:
     bool validSetup() const;

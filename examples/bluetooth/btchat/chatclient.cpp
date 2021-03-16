@@ -77,9 +77,7 @@ void ChatClient::startClient(const QBluetoothServiceInfo &remoteService)
     connect(socket, &QBluetoothSocket::readyRead, this, &ChatClient::readSocket);
     connect(socket, &QBluetoothSocket::connected, this, QOverload<>::of(&ChatClient::connected));
     connect(socket, &QBluetoothSocket::disconnected, this, &ChatClient::disconnected);
-    connect(socket, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
-            this, &ChatClient::onSocketErrorOccurred);
-
+    connect(socket, &QBluetoothSocket::errorOccurred, this, &ChatClient::onSocketErrorOccurred);
 }
 //! [startClient]
 

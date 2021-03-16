@@ -881,7 +881,7 @@ void QLowEnergyControllerPrivateAndroid::advertisementError(int errorCode)
     }
 
     error = QLowEnergyController::AdvertisingError;
-    emit q->error(error);
+    emit q->errorOccurred(error);
 
     // not relevant states in peripheral mode
     Q_ASSERT(state != QLowEnergyController::DiscoveredState);

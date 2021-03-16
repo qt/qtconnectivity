@@ -284,10 +284,12 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QLowEnergyService::error(QLowEnergyService::ServiceError newError)
+    \fn void QLowEnergyService::errorOccurred(QLowEnergyService::ServiceError newError)
 
     This signal is emitted when an error occurrs. The \a newError parameter
     describes the error that occurred.
+
+    \since 6.2
  */
 
 /*!
@@ -385,8 +387,8 @@ QLowEnergyService::QLowEnergyService(QSharedPointer<QLowEnergyServicePrivate> p,
     qRegisterMetaType<QLowEnergyService::ServiceType>();
     qRegisterMetaType<QLowEnergyService::WriteMode>();
 
-    connect(p.data(), &QLowEnergyServicePrivate::error,
-            this, QOverload<QLowEnergyService::ServiceError>::of(&QLowEnergyService::error));
+    connect(p.data(), &QLowEnergyServicePrivate::errorOccurred, this,
+            &QLowEnergyService::errorOccurred);
     connect(p.data(), &QLowEnergyServicePrivate::stateChanged,
             this, &QLowEnergyService::stateChanged);
     connect(p.data(), &QLowEnergyServicePrivate::characteristicChanged,

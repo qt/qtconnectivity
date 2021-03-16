@@ -136,7 +136,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
         //abort any outstanding discoveries
         discoveredDevices.clear();
-        emit q->error(error);
+        emit q->errorOccurred(error);
         _q_serviceDiscoveryFinished();
 
         return;
@@ -159,7 +159,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         //abort any outstanding discoveries
         sdpCache.clear();
         discoveredDevices.clear();
-        emit q->error(error);
+        emit q->errorOccurred(error);
         _q_serviceDiscoveryFinished();
 
         return;
@@ -182,7 +182,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
             qCWarning(QT_BT_ANDROID) << "Cannot start SDP for" << discoveredDevices.at(0).name()
                                      << "(" << address.toString() << ")";
-            emit q->error(error);
+            emit q->errorOccurred(error);
         }
         _q_serviceDiscoveryFinished();
         return;
@@ -201,7 +201,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
             if (singleDevice) {
                 error = QBluetoothServiceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothServiceDiscoveryAgent::tr("Cannot obtain service uuids");
-                emit q->error(error);
+                emit q->errorOccurred(error);
             }
             qCWarning(QT_BT_ANDROID) << "Cannot retrieve SDP UUIDs for" << discoveredDevices.at(0).name()
                                      << "(" << address.toString() << ")";
@@ -510,7 +510,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_hostModeStateChanged(QBluetoothL
         receiver = nullptr;
 
         Q_Q(QBluetoothServiceDiscoveryAgent);
-        emit q->error(error);
+        emit q->errorOccurred(error);
         _q_serviceDiscoveryFinished();
     }
 }

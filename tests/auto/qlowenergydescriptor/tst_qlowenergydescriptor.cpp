@@ -91,7 +91,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
     connect(devAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
             this, SLOT(deviceDiscovered(QBluetoothDeviceInfo)));
 
-    QSignalSpy errorSpy(devAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QSignalSpy errorSpy(devAgent, SIGNAL(errorOccurred(QBluetoothDeviceDiscoveryAgent::Error)));
     QVERIFY(errorSpy.isValid());
     QVERIFY(errorSpy.isEmpty());
 

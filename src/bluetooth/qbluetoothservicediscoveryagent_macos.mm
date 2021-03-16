@@ -103,7 +103,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &devi
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::PoweredOffError;
             errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_LOCAL_DEV_OFF);
-            emit q_ptr->error(error);
+            emit q_ptr->errorOccurred(error);
         }
 
         return _q_serviceDiscoveryFinished();
@@ -183,7 +183,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryError(void *device, IORet
     if (singleDevice) {
         error = QBluetoothServiceDiscoveryAgent::UnknownError;
         errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
-        emit q_ptr->error(error);
+        emit q_ptr->errorOccurred(error);
     }
 
     _q_serviceDiscoveryFinished();
@@ -201,7 +201,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::UnknownError;
             errorString = QCoreApplication::translate(SERVICE_DISCOVERY, SD_MINIMAL_FAILED);
-            emit q_ptr->error(error);
+            emit q_ptr->errorOccurred(error);
         }
     } else {
 

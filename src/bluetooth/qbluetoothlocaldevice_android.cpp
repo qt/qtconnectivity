@@ -136,7 +136,7 @@ void QBluetoothLocalDevicePrivate::processHostModeChange(QBluetoothLocalDevice::
     if (isValid() && newMode == QBluetoothLocalDevice::HostPoweredOff) {
         bool success = (bool)obj->callMethod<jboolean>("enable", "()Z");
         if (!success)
-            emit q_ptr->error(QBluetoothLocalDevice::UnknownError);
+            emit q_ptr->errorOccurred(QBluetoothLocalDevice::UnknownError);
     }
 
     pendingHostModeTransition = false;
@@ -167,7 +167,7 @@ void QBluetoothLocalDevicePrivate::processPairingStateChanged(
         || (!entry.second && pairing == QBluetoothLocalDevice::Unpaired)) {
         emit q_ptr->pairingFinished(address, pairing);
     } else {
-        emit q_ptr->error(QBluetoothLocalDevice::PairingError);
+        emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);
     }
 }
 
@@ -233,7 +233,7 @@ void QBluetoothLocalDevice::powerOn()
     if (d_ptr->adapter()) {
         bool ret = (bool)d_ptr->adapter()->callMethod<jboolean>("enable", "()Z");
         if (!ret)
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
     }
 }
 
@@ -252,7 +252,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
             success = (bool)d_ptr->adapter()->callMethod<jboolean>("disable", "()Z");
 
         if (!success)
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
     } else if (mode == QBluetoothLocalDevice::HostConnectable) {
         if (hostMode() == QBluetoothLocalDevice::HostDiscoverable) {
             // cannot directly go from Discoverable to Connectable

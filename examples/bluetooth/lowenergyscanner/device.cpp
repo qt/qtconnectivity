@@ -68,8 +68,8 @@ Device::Device()
     discoveryAgent->setLowEnergyDiscoveryTimeout(5000);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &Device::addDevice);
-    connect(discoveryAgent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-            this, &Device::deviceScanError);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this,
+            &Device::deviceScanError);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &Device::deviceScanFinished);
     //! [les-devicediscovery-1]
 
@@ -188,8 +188,7 @@ void Device::scanServices(const QString &address)
         controller = QLowEnergyController::createCentral(currentDevice.getDevice());
         connect(controller, &QLowEnergyController::connected,
                 this, &Device::deviceConnected);
-        connect(controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error),
-                this, &Device::errorReceived);
+        connect(controller, &QLowEnergyController::errorOccurred, this, &Device::errorReceived);
         connect(controller, &QLowEnergyController::disconnected,
                 this, &Device::deviceDisconnected);
         connect(controller, &QLowEnergyController::serviceDiscovered,

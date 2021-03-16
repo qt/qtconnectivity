@@ -84,11 +84,12 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QBluetoothServer::error(QBluetoothServer::Error error)
+    \fn void QBluetoothServer::errorOccurred(QBluetoothServer::Error error)
 
     This signal is emitted when an \a error occurs.
 
     \sa error(), QBluetoothServer::Error
+    \since 6.2
 */
 
 /*!

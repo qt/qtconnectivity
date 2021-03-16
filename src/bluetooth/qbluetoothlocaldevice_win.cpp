@@ -103,20 +103,20 @@ void QBluetoothLocalDevice::setHostMode(
         if (::BluetoothIsDiscoverable(nullptr)
                 && !::BluetoothEnableDiscovery(nullptr, FALSE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to disable the discoverable mode";
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
             return;
         }
         if (::BluetoothIsConnectable(nullptr)
                 && !::BluetoothEnableIncomingConnections(nullptr, FALSE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to disable the connectable mode";
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
             return;
         }
     } else if (requestedMode == QBluetoothLocalDevice::HostConnectable) {
         if (!::BluetoothIsConnectable(nullptr)
                 && !::BluetoothEnableIncomingConnections(nullptr, TRUE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to enable the connectable mode";
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
             return;
         }
     } else if (requestedMode == QBluetoothLocalDevice::HostDiscoverable
@@ -124,12 +124,12 @@ void QBluetoothLocalDevice::setHostMode(
         if (!::BluetoothIsConnectable(nullptr)
                 && !::BluetoothEnableIncomingConnections(nullptr, TRUE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to enable the connectable mode";
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
             return;
         }
         if (!::BluetoothEnableDiscovery(nullptr, TRUE)) {
             qCWarning(QT_BT_WINDOWS) << "Unable to enable the discoverable mode";
-            emit error(QBluetoothLocalDevice::UnknownError);
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
             return;
         }
     }

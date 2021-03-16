@@ -126,7 +126,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device does not support Bluetooth");
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -136,7 +136,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_ANDROID) << "Incorrect local adapter passed.";
         lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Passed address is not a local device.");
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -144,7 +144,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (state != 12) {  // BluetoothAdapter.STATE_ON
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -176,7 +176,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                 qCWarning(QT_BT_ANDROID) << "Search not possible due to missing permission (ACCESS_COARSE|FINE_LOCATION)";
                 lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
                 errorString = QBluetoothDeviceDiscoveryAgent::tr("Missing Location permission. Search is not possible.");
-                emit q->error(lastError);
+                emit q->errorOccurred(lastError);
                 return;
             }
         }
@@ -216,7 +216,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_ANDROID) << "Search not possible due to turned off Location service";
         lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Location service turned off. Search is not possible.");
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -244,7 +244,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                 lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
 
-                emit q->error(lastError);
+                emit q->errorOccurred(lastError);
                 return;
             } // else fall through to LE discovery
         } else {
@@ -265,7 +265,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
             m_active = NoScanActive;
             lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Low Energy Discovery not supported");
-            emit q->error(lastError);
+            emit q->errorOccurred(lastError);
             return;
         }
 
@@ -290,7 +290,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
         if (!success) {
             lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Discovery cannot be stopped");
-            emit q->error(lastError);
+            emit q->errorOccurred(lastError);
             return;
         }
     } else if (m_active == BtleScanActive) {
@@ -322,7 +322,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
             m_active = NoScanActive;
             lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
-            emit q->error(lastError);
+            emit q->errorOccurred(lastError);
             return;
         }
 

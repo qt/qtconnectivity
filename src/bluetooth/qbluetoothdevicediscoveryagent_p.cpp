@@ -79,7 +79,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError;
     errorString = QBluetoothDeviceDiscoveryAgent::tr("Device discovery not supported on this platform");
 
-    emit q->error(lastError);
+    emit q->errorOccurred(lastError);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()

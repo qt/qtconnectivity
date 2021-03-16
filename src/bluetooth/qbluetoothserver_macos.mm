@@ -302,7 +302,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
                                 << address.toString()
                                 << "is not a valid local adapter";
         d_ptr->m_lastError = UnknownError;
-        emit error(UnknownError);
+        emit errorOccurred(UnknownError);
         return false;
     }
 
@@ -310,7 +310,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
         qCWarning(QT_BT_DARWIN) << "Bluetooth device is powered off";
         d_ptr->m_lastError = PoweredOffError;
-        emit error(PoweredOffError);
+        emit errorOccurred(PoweredOffError);
         return false;
     }
 
@@ -319,7 +319,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (type == ServiceInfo::UnknownProtocol) {
         qCWarning(QT_BT_DARWIN) << "invalid protocol";
         d_ptr->m_lastError = UnsupportedProtocolError;
-        emit error(d_ptr->m_lastError);
+        emit errorOccurred(d_ptr->m_lastError);
         return false;
     }
 
@@ -348,14 +348,14 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     }
 
     if (d_ptr->m_lastError != QBluetoothServer::NoError) {
-        emit error(d_ptr->m_lastError);
+        emit errorOccurred(d_ptr->m_lastError);
         return false;
     }
 
     if (!port) {
         qCWarning(QT_BT_DARWIN) << "all ports are busy";
         d_ptr->m_lastError = ServiceAlreadyRegisteredError;
-        emit error(d_ptr->m_lastError);
+        emit errorOccurred(d_ptr->m_lastError);
         return false;
     }
 

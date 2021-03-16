@@ -154,7 +154,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "ERROR: " << errorString;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -182,7 +182,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         Q_Q(QBluetoothDeviceDiscoveryAgent);
         delete adapter;
         adapter = nullptr;
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -192,7 +192,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         delete adapter;
         adapter = nullptr;
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -225,7 +225,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         Q_Q(QBluetoothDeviceDiscoveryAgent);
         qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO << "ERROR: " << errorString;
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 }
@@ -240,7 +240,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
         qCWarning(QT_BT_BLUEZ) << "Cannot find Bluez 5 adapter for device search" << ok;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Cannot find valid Bluetooth adapter.");
-        q->error(lastError);
+        q->errorOccurred(lastError);
         return;
     }
 
@@ -254,7 +254,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
         delete adapterBluez5;
         adapterBluez5 = nullptr;
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -279,7 +279,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startBluez5(QBluetoothDeviceDiscover
                                                              "are not supported on this platform");
             delete adapterBluez5;
             adapterBluez5 = nullptr;
-            emit q->error(lastError);
+            emit q->errorOccurred(lastError);
             return;
         } else if (filterReply.error().type() != QDBusError::UnknownMethod) {
             qCDebug(QT_BT_BLUEZ) << "SetDiscoveryFilter failed:" << filterReply.error();
@@ -636,7 +636,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
 
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
     }
 }
 

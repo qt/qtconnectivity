@@ -70,7 +70,7 @@ void QLowEnergyServicePrivate::setController(QLowEnergyControllerPrivate *contro
 void QLowEnergyServicePrivate::setError(QLowEnergyService::ServiceError newError)
 {
     lastError = newError;
-    emit error(newError);
+    emit errorOccurred(newError);
 }
 
 void QLowEnergyServicePrivate::setState(QLowEnergyService::ServiceState newState)

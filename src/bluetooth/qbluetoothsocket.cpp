@@ -147,11 +147,12 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 */
 
 /*!
-    \fn void QBluetoothSocket::error(QBluetoothSocket::SocketError error)
+    \fn void QBluetoothSocket::errorOccurred(QBluetoothSocket::SocketError error)
 
     This signal is emitted when an \a error occurs.
 
     \sa error()
+    \since 6.2
 */
 
 /*!
@@ -603,7 +604,7 @@ void QBluetoothSocket::setSocketError(QBluetoothSocket::SocketError error_)
 {
     Q_D(QBluetoothSocketBase);
     d->socketError = error_;
-    emit error(error_);
+    emit errorOccurred(error_);
 }
 
 /*!

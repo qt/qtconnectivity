@@ -247,12 +247,13 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 */
 
 /*!
-    \fn void QLowEnergyController::error(QLowEnergyController::Error newError)
+    \fn void QLowEnergyController::errorOccurred(QLowEnergyController::Error newError)
 
     This signal is emitted when an error occurs.
     The \a newError parameter describes the error that occurred.
 
     \sa error(), errorString()
+    \since 6.2
 */
 
 /*!

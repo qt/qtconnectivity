@@ -79,7 +79,7 @@ public:
 
 signals:
     void dataAvailable();
-    void error(int errorCode);
+    void errorOccurred(int errorCode);
 
 private:
     QBluetoothSocketPrivateAndroid *m_socket_p;

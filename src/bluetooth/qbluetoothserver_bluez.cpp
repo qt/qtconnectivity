@@ -167,14 +167,14 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         qCWarning(QT_BT_BLUEZ) << "Device does not support Bluetooth or"
                                  << address.toString() << "is not a valid local adapter";
         d->m_lastError = QBluetoothServer::UnknownError;
-        emit error(d->m_lastError);
+        emit errorOccurred(d->m_lastError);
         return false;
     }
 
     QBluetoothLocalDevice::HostMode hostMode = device.hostMode();
     if (hostMode == QBluetoothLocalDevice::HostPoweredOff) {
         d->m_lastError = QBluetoothServer::PoweredOffError;
-        emit error(d->m_lastError);
+        emit errorOccurred(d->m_lastError);
         qCWarning(QT_BT_BLUEZ) << "Bluetooth device is powered off";
         return false;
     }
@@ -197,7 +197,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         sock = d->socket->socketDescriptor();
         if (sock < 0) {
             d->m_lastError = InputOutputError;
-            emit error(d->m_lastError);
+            emit errorOccurred(d->m_lastError);
             return false;
         }
     }
@@ -218,7 +218,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
                 d->m_lastError = ServiceAlreadyRegisteredError;
             else
                 d->m_lastError = InputOutputError;
-            emit error(d->m_lastError);
+            emit errorOccurred(d->m_lastError);
             return false;
         }
     } else {
@@ -235,7 +235,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
         if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(sockaddr_l2)) < 0) {
             d->m_lastError = InputOutputError;
-            emit error(d->m_lastError);
+            emit errorOccurred(d->m_lastError);
             return false;
         }
     }
@@ -244,7 +244,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
 
     if (::listen(sock, d->maxPendingConnections) < 0) {
         d->m_lastError = InputOutputError;
-        emit error(d->m_lastError);
+        emit errorOccurred(d->m_lastError);
         return false;
     }
 
@@ -348,7 +348,7 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
         qCWarning(QT_BT_BLUEZ) << "Failed to set socket option, closing socket for safety" << errorCode;
         qCWarning(QT_BT_BLUEZ) << "Error: " << qt_error_string(errorCode);
         d->m_lastError = InputOutputError;
-        emit error(d->m_lastError);
+        emit errorOccurred(d->m_lastError);
         d->socket->close();
     }
 }

@@ -405,7 +405,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_nextSdpScan(const QVariant &inpu
                       : QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = qt_error_string(result.systemError);
             qCWarning(QT_BT_WINDOWS) << errorString;
-            emit q->error(this->error);
+            emit q->errorOccurred(this->error);
         } else {
 
             if (serviceMatches(result.info)) {

@@ -136,7 +136,8 @@ void tst_QBluetoothSocket::initTestCase()
     // Go find the server
     QBluetoothServiceDiscoveryAgent *sda = new QBluetoothServiceDiscoveryAgent(this);
     connect(sda, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)), this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-    connect(sda, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)), this, SLOT(error(QBluetoothServiceDiscoveryAgent::Error)));
+    connect(sda, SIGNAL(errorOccurred(QBluetoothServiceDiscoveryAgent::Error)), this,
+            SLOT(error(QBluetoothServiceDiscoveryAgent::Error)));
     connect(sda, SIGNAL(finished()), this, SLOT(finished()));
 
     qDebug() << "Starting discovery";
@@ -244,7 +245,7 @@ void tst_QBluetoothSocket::tst_serviceConnection()
 
     /* Connection */
     QSignalSpy connectedSpy(&socket, SIGNAL(connected()));
-    QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
+    QSignalSpy errorSpy(&socket, SIGNAL(errorOccurred(QBluetoothSocket::SocketError)));
 
     QCOMPARE(socket.openMode(), QIODevice::NotOpen);
     QCOMPARE(socket.isWritable(), false);
@@ -489,7 +490,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
 void tst_QBluetoothSocket::tst_error()
 {
     QBluetoothSocket socket;
-    QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
+    QSignalSpy errorSpy(&socket, SIGNAL(errorOccurred(QBluetoothSocket::SocketError)));
     QCOMPARE(errorSpy.count(), 0);
     const QBluetoothSocket::SocketError e = socket.error();
 
@@ -534,7 +535,7 @@ void tst_QBluetoothSocket::tst_unsupportedProtocolError()
     QVERIFY(socket.error() == QBluetoothSocket::SocketError::NoSocketError);
     QVERIFY(socket.errorString() == QString());
 
-    QSignalSpy errorSpy(&socket, SIGNAL(error(QBluetoothSocket::SocketError)));
+    QSignalSpy errorSpy(&socket, SIGNAL(errorOccurred(QBluetoothSocket::SocketError)));
 
     // 1. Stop early with 'UnsupportedProtocolError'.
     QBluetoothServiceInfo dummyServiceInfo;

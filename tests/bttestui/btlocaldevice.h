@@ -51,7 +51,7 @@ public:
     QString hostMode() const;
 
 signals:
-    void error(QBluetoothLocalDevice::Error error);
+    void errorOccurred(QBluetoothLocalDevice::Error error);
     void hostModeStateChanged();
     void socketStateUpdate(int foobar);
     void secFlagsChanged();

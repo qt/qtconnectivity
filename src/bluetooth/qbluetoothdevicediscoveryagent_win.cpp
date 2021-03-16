@@ -369,7 +369,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_WINDOWS) << "Device does not support Bluetooth";
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device does not support Bluetooth");
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -384,7 +384,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_WINDOWS) << "Incorrect local adapter passed.";
         lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Passed address is not a local device.");
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
         return;
     }
 
@@ -434,7 +434,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::finishDiscovery(QBluetoothDeviceDisc
     if (errorCode == QBluetoothDeviceDiscoveryAgent::NoError)
         emit q->finished();
     else
-        emit q->error(lastError);
+        emit q->errorOccurred(lastError);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::startLeDevicesDiscovery()

@@ -197,7 +197,7 @@ void tst_QBluetoothServer::tst_receive()
         }
     }
     QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
-    QSignalSpy errorSpy(&server, SIGNAL(error(QBluetoothServer::Error)));
+    QSignalSpy errorSpy(&server, SIGNAL(errorOccurred(QBluetoothServer::Error)));
 
     bool result = server.listen(address, 20);  // port == 20
     QTest::qWait(1000);

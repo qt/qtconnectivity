@@ -118,7 +118,8 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
         QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
         QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
-        QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+        QSignalSpy errorSpy(&discoveryAgent,
+                            SIGNAL(errorOccurred(QBluetoothDeviceDiscoveryAgent::Error)));
         QSignalSpy discoveredSpy(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)));
     //    connect(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
     //            this, SLOT(deviceDiscoveryDebug(QBluetoothDeviceInfo)));
@@ -377,12 +378,13 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     QVERIFY(discoveryAgent.uuidFilter() == uuidFilter);
 
     QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
-    QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)));
+    QSignalSpy errorSpy(&discoveryAgent,
+                        SIGNAL(errorOccurred(QBluetoothServiceDiscoveryAgent::Error)));
     QSignalSpy discoveredSpy(&discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)));
 //    connect(&discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
 //            this, SLOT(serviceDiscoveryDebug(QBluetoothServiceInfo)));
-    connect(&discoveryAgent, SIGNAL(error(QBluetoothServiceDiscoveryAgent::Error)),
-            this, SLOT(serviceError(QBluetoothServiceDiscoveryAgent::Error)));
+    connect(&discoveryAgent, SIGNAL(errorOccurred(QBluetoothServiceDiscoveryAgent::Error)), this,
+            SLOT(serviceError(QBluetoothServiceDiscoveryAgent::Error)));
 
     discoveryAgent.start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 

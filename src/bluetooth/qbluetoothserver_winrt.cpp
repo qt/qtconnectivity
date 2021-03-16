@@ -157,7 +157,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     Q_D(QBluetoothServer);
     if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
         d->m_lastError = UnsupportedProtocolError;
-        emit error(d->m_lastError);
+        emit errorOccurred(d->m_lastError);
         return false;
     }
 
@@ -189,7 +189,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     } else {
         qCWarning(QT_BT_WINRT) << "server with port" << port << "already registered or port invalid";
         d->m_lastError = ServiceAlreadyRegisteredError;
-        emit error(d->m_lastError);
+        emit errorOccurred(d->m_lastError);
         return false;
     }
 

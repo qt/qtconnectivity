@@ -105,7 +105,7 @@ Q_SIGNALS:
     void deviceDisconnected(const QBluetoothAddress &address);
     void pairingFinished(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 
-    void error(QBluetoothLocalDevice::Error error);
+    void errorOccurred(QBluetoothLocalDevice::Error error);
 
 private:
     Q_DECLARE_PRIVATE(QBluetoothLocalDevice)

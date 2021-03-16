@@ -121,11 +121,11 @@ void DeviceHandler::setDevice(DeviceInfo *device)
         connect(m_control, &QLowEnergyController::discoveryFinished,
                 this, &DeviceHandler::serviceScanDone);
 
-        connect(m_control, static_cast<void (QLowEnergyController::*)(QLowEnergyController::Error)>(&QLowEnergyController::error),
-                this, [this](QLowEnergyController::Error error) {
-            Q_UNUSED(error);
-            setError("Cannot connect to remote device.");
-        });
+        connect(m_control, &QLowEnergyController::errorOccurred, this,
+                [this](QLowEnergyController::Error error) {
+                    Q_UNUSED(error);
+                    setError("Cannot connect to remote device.");
+                });
         connect(m_control, &QLowEnergyController::connected, this, [this]() {
             setInfo("Controller connected. Search services...");
             m_control->discoverServices();

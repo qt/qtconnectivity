@@ -107,7 +107,7 @@ Q_SIGNALS:
     void serviceDiscovered(const QBluetoothServiceInfo &info);
     void finished();
     void canceled();
-    void error(QBluetoothServiceDiscoveryAgent::Error error);
+    void errorOccurred(QBluetoothServiceDiscoveryAgent::Error error);
 
 private:
     QBluetoothServiceDiscoveryAgentPrivate *d_ptr;

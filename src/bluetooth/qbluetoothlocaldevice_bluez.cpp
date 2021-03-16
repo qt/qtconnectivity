@@ -250,7 +250,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
     QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
     reply.waitForFinished();
     if (reply.isError()) {
-        emit q_ptr->error(QBluetoothLocalDevice::PairingError);
+        emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);
         return;
     }
 
@@ -332,7 +332,7 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
                 this, [q, targetAddress](QDBusPendingCallWatcher* watcher){
             QDBusPendingReply<> reply = *watcher;
             if (reply.isError())
-                emit q->error(QBluetoothLocalDevice::PairingError);
+                emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
             else
                 emit q->pairingFinished(targetAddress, QBluetoothLocalDevice::Unpaired);
 
@@ -378,7 +378,7 @@ void QBluetoothLocalDevicePrivate::pairingDiscoveryTimedOut()
     QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
                 adapterBluez5->path());
 
-    emit q_ptr->error(QBluetoothLocalDevice::PairingError);
+    emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);
 }
 
 QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
@@ -689,7 +689,7 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
     if (reply.isError()) {
         qCWarning(QT_BT_BLUEZ) << "Failed to create pairing" << reply.error().name();
         if (reply.error().name() != QStringLiteral("org.bluez.Error.AuthenticationCanceled"))
-            emit q->error(QBluetoothLocalDevice::PairingError);
+            emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
         watcher->deleteLater();
         return;
     }
@@ -697,14 +697,14 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
     if (adapterBluez5) {
         if (!pairingTarget) {
             qCWarning(QT_BT_BLUEZ) << "Pairing target expected but found null pointer.";
-            emit q->error(QBluetoothLocalDevice::PairingError);
+            emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
             watcher->deleteLater();
             return;
         }
 
         if (!pairingTarget->paired()) {
             qCWarning(QT_BT_BLUEZ) << "Device was not paired as requested";
-            emit q->error(QBluetoothLocalDevice::PairingError);
+            emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
             watcher->deleteLater();
             return;
         }

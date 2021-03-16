@@ -440,13 +440,11 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     QCOMPARE(customChar5.value(), QByteArray("initial"));
 
     customService->writeCharacteristic(customChar, "whatever");
-    spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
-                             (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
+    spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::errorOccurred));
     QVERIFY(spy->wait(3000));
     QCOMPARE(customService->error(), QLowEnergyService::CharacteristicWriteError);
 
-    spy.reset(new QSignalSpy(customService.data(), static_cast<void (QLowEnergyService::*)
-                             (QLowEnergyService::ServiceError)>(&QLowEnergyService::error)));
+    spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::errorOccurred));
     customService->writeCharacteristic(customChar5, "1", QLowEnergyService::WriteSigned);
 
     // error might happen immediately or once event loop comes back

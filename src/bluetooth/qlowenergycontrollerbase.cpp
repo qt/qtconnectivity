@@ -117,7 +117,7 @@ void QLowEnergyControllerPrivate::setError(
         break;
     }
 
-    emit q->error(newError);
+    emit q->errorOccurred(newError);
 }
 
 void QLowEnergyControllerPrivate::setState(

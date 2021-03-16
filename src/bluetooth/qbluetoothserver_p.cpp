@@ -75,7 +75,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     Q_UNUSED(port);
     Q_D(QBluetoothServer);
     d->m_lastError = UnsupportedProtocolError;
-    emit error(d->m_lastError);
+    emit errorOccurred(d->m_lastError);
     return false;
 }
 

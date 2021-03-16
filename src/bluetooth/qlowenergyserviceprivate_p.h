@@ -104,7 +104,7 @@ public:
 
 signals:
     void stateChanged(QLowEnergyService::ServiceState newState);
-    void error(QLowEnergyService::ServiceError error);
+    void errorOccurred(QLowEnergyService::ServiceError error);
     void characteristicChanged(const QLowEnergyCharacteristic &characteristic,
                                const QByteArray &newValue);
     void characteristicRead(const QLowEnergyCharacteristic &info,

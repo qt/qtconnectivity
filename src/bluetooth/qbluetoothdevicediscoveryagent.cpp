@@ -168,12 +168,14 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 */
 
 /*!
-    \fn void QBluetoothDeviceDiscoveryAgent::error(QBluetoothDeviceDiscoveryAgent::Error error)
+    \fn void QBluetoothDeviceDiscoveryAgent::errorOccurred(QBluetoothDeviceDiscoveryAgent::Error
+   error)
 
     This signal is emitted when an \a error occurs during Bluetooth device discovery.
     The \a error parameter describes the error that occurred.
 
     \sa error(), errorString()
+    \since 6.2
 */
 
 /*!
@@ -348,7 +350,7 @@ void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
         d->lastError = UnsupportedDiscoveryMethod;
         d->errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
                                                             "are not supported on this platform");
-        emit error(d->lastError);
+        emit errorOccurred(d->lastError);
         return;
     }
 

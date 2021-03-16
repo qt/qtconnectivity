@@ -155,7 +155,7 @@ public:
 Q_SIGNALS:
     void connected();
     void disconnected();
-    void error(QBluetoothSocket::SocketError error);
+    void errorOccurred(QBluetoothSocket::SocketError error);
     void stateChanged(QBluetoothSocket::SocketState state);
 
 protected:

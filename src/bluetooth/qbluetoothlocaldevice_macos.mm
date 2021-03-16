@@ -312,7 +312,7 @@ void QBluetoothLocalDevicePrivate::emitError(QBluetoothLocalDevice::Error error,
         QMetaObject::invokeMethod(q_ptr, "error", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error, error));
     } else {
-        emit q_ptr->error(QBluetoothLocalDevice::PairingError);
+        emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);
     }
 }
 

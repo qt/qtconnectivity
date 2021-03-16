@@ -156,7 +156,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 #ifdef Q_OS_MACOS
     if (!controller) {
         setError(QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
-        emit q_ptr->error(lastError);
+        emit q_ptr->errorOccurred(lastError);
         return;
     }
 #endif // Q_OS_MACOS
@@ -202,7 +202,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startClassic()
             qCCritical(QT_BT_DARWIN) << "failed to initialize an Classic device inquiry";
             setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
                      QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED));
-            emit q_ptr->error(lastError);
+            emit q_ptr->errorOccurred(lastError);
             return;
         }
     }
@@ -213,7 +213,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startClassic()
     if (res != kIOReturnSuccess) {
         setError(res, QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED));
         agentState = NonActive;
-        emit q_ptr->error(lastError);
+        emit q_ptr->errorOccurred(lastError);
     }
 }
 
@@ -250,7 +250,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
         setError(QBluetoothDeviceDiscoveryAgent::UnknownError,
                  QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STARTED_LE));
         agentState = NonActive;
-        emit q_ptr->error(lastError);
+        emit q_ptr->errorOccurred(lastError);
         return;
     }
 
@@ -285,7 +285,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
             startPending = prevStart;
             stopPending = false;
             setError(res, QCoreApplication::translate(DEV_DISCOVERY, DD_NOT_STOPPED));
-            emit q_ptr->error(lastError);
+            emit q_ptr->errorOccurred(lastError);
         }
     } else {
 #else
@@ -340,7 +340,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::error(IOReturn error)
 
     setError(error);
 
-    emit q_ptr->error(lastError);
+    emit q_ptr->errorOccurred(lastError);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::classicDeviceFound(void *obj)
@@ -429,7 +429,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDisco
     stopPending = false;
     agentState = NonActive;
     setError(error);
-    emit q_ptr->error(lastError);
+    emit q_ptr->errorOccurred(lastError);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported()
@@ -452,7 +452,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported()
     startPending = false;
     stopPending = false;
     setError(QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError);
-    emit q_ptr->error(lastError);
+    emit q_ptr->errorOccurred(lastError);
 #endif
 }
 

@@ -269,8 +269,7 @@ void PingPong::startServer()
     m_serverInfo = new QBluetoothServer(QBluetoothServiceInfo::RfcommProtocol, this);
     connect(m_serverInfo, &QBluetoothServer::newConnection,
             this, &PingPong::clientConnected);
-    connect(m_serverInfo, QOverload<QBluetoothServer::Error>::of(&QBluetoothServer::error),
-            this, &PingPong::serverError);
+    connect(m_serverInfo, &QBluetoothServer::errorOccurred, this, &PingPong::serverError);
     const QBluetoothUuid uuid(serviceUuid);
 
     m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
@@ -290,8 +289,8 @@ void PingPong::startClient()
             this, &PingPong::addService);
     connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
             this, &PingPong::done);
-    connect(discoveryAgent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
-            this, &PingPong::serviceScanError);
+    connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::errorOccurred, this,
+            &PingPong::serviceScanError);
 #ifdef Q_OS_ANDROID //see QTBUG-61392
     if (QtAndroid::androidSdkVersion() >= 23)
         discoveryAgent->setUuidFilter(QBluetoothUuid(androidUuid));
@@ -324,8 +323,7 @@ void PingPong::clientConnected()
             this, &PingPong::readSocket);
     connect(socket, &QBluetoothSocket::disconnected,
             this, &PingPong::clientDisconnected);
-    connect(socket, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
-            this, &PingPong::socketError);
+    connect(socket, &QBluetoothSocket::errorOccurred, this, &PingPong::socketError);
 
     //! [Initiating server socket]
     setMessage(QStringLiteral("Client connected. Get ready!"));

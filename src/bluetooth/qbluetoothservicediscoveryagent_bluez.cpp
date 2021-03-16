@@ -106,7 +106,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
     if (reply.isError()) {
         error = QBluetoothServiceDiscoveryAgent::InputOutputError;
         errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to find appointed local adapter");
-        emit q->error(error);
+        emit q->errorOccurred(error);
         _q_serviceDiscoveryFinished();
         return;
     }
@@ -147,7 +147,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
             discoveredDevices.clear();
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("Cannot access adapter during service discovery");
-            emit q->error(error);
+            emit q->errorOccurred(error);
             _q_serviceDiscoveryFinished();
             return;
         }
@@ -159,7 +159,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
 
             error = QBluetoothServiceDiscoveryAgent::InvalidBluetoothAdapterError;
             errorString = QBluetoothServiceDiscoveryAgent::tr("Cannot find local Bluetooth adapter");
-            emit q->error(error);
+            emit q->errorOccurred(error);
             _q_serviceDiscoveryFinished();
 
             return;
@@ -174,7 +174,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::startBluez5(const QBluetoothAddress
 
         error = QBluetoothServiceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothServiceDiscoveryAgent::tr("Local device is powered off");
-        emit q->error(error);
+        emit q->errorOccurred(error);
 
         _q_serviceDiscoveryFinished();
         return;
@@ -287,7 +287,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
         discoveredDevices.clear();
         error = errorCode;
         errorString = errorDescription;
-        emit q->error(error);
+        emit q->errorOccurred(error);
     } else if (!xmlRecords.isEmpty() && discoveryState() != Inactive) {
         for (const QString &record : xmlRecords) {
             QBluetoothServiceInfo serviceInfo = parseServiceXml(record);
@@ -401,7 +401,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_foundDevice(QDBusPendingCallWatc
             if (singleDevice) {
                 error = QBluetoothServiceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
-                emit q->error(error);
+                emit q->errorOccurred(error);
             }
             _q_serviceDiscoveryFinished();
             return;
@@ -445,7 +445,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_createdDevice(QDBusPendingCallWa
             if (singleDevice) {
                 error = QBluetoothServiceDiscoveryAgent::InputOutputError;
                 errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
-                emit q->error(error);
+                emit q->errorOccurred(error);
             }
             _q_serviceDiscoveryFinished();
             return;
@@ -538,7 +538,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::discoverServices(const QString &dev
         if (singleDevice && deviceReply.isError()) {
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to access device");
-            emit q->error(error);
+            emit q->errorOccurred(error);
         }
         _q_serviceDiscoveryFinished();
     } else {
@@ -576,7 +576,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_discoveredServices(QDBusPendingC
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::UnknownError;
             errorString = reply.error().message();
-            emit q->error(error);
+            emit q->errorOccurred(error);
         }
         delete device;
         device = nullptr;
@@ -677,8 +677,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
         if (singleDevice) {
             error = QBluetoothServiceDiscoveryAgent::InputOutputError;
             errorString = reply.error().message();
-            emit q->error(error);
-
+            emit q->errorOccurred(error);
         }
         _q_serviceDiscoveryFinished();
         return;

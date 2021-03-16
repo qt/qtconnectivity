@@ -274,17 +274,21 @@ bool QBluetoothLocalDevice::isValid() const
 */
 
 /*!
-  \fn QBluetoothLocalDevice::pairingFinished(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing)
+  \fn QBluetoothLocalDevice::pairingFinished(const QBluetoothAddress &address,
+  QBluetoothLocalDevice::Pairing pairing)
 
   Pairing or unpairing has completed with \a address. Current pairing status is in \a pairing.
-  If the pairing request was not successful, this signal will not be emitted. The error() signal
-  is emitted if the pairing request failed. The signal is only ever emitted for pairing requests
-  which have previously requested by calling \l requestPairing() of the current object instance.
+  If the pairing request was not successful, this signal will not be emitted. The errorOccurred()
+  signal is emitted if the pairing request failed. The signal is only ever emitted for pairing
+  requests which have previously requested by calling \l requestPairing() of the current object
+  instance.
 */
 
 /*!
-  \fn QBluetoothLocalDevice::error(QBluetoothLocalDevice::Error error)
+  \fn QBluetoothLocalDevice::errorOccurred(QBluetoothLocalDevice::Error error)
   Signal emitted if there's an exceptional \a error while pairing.
+
+  \since 6.2
 */
 
 /*!

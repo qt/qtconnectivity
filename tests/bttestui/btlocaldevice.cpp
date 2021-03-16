@@ -49,8 +49,8 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
     QObject(parent), securityFlags(QBluetooth::NoSecurity)
 {
     localDevice = new QBluetoothLocalDevice(this);
-    connect(localDevice, &QBluetoothLocalDevice::error,
-            this, &BtLocalDevice::error);
+    connect(localDevice, &QBluetoothLocalDevice::errorOccurred, this,
+            &BtLocalDevice::errorOccurred);
     connect(localDevice, &QBluetoothLocalDevice::hostModeStateChanged,
             this, &BtLocalDevice::hostModeStateChanged);
     connect(localDevice, &QBluetoothLocalDevice::pairingFinished,
@@ -66,8 +66,8 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
                 this, &BtLocalDevice::deviceDiscovered);
         connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::finished,
                 this, &BtLocalDevice::discoveryFinished);
-        connect(deviceAgent, QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-                this, &BtLocalDevice::discoveryError);
+        connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this,
+                &BtLocalDevice::discoveryError);
         connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::canceled,
                 this, &BtLocalDevice::discoveryCanceled);
 
@@ -78,14 +78,13 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
                 this, &BtLocalDevice::serviceDiscoveryFinished);
         connect(serviceAgent, &QBluetoothServiceDiscoveryAgent::canceled,
                 this, &BtLocalDevice::serviceDiscoveryCanceled);
-        connect(serviceAgent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
-                this, &BtLocalDevice::serviceDiscoveryError);
+        connect(serviceAgent, &QBluetoothServiceDiscoveryAgent::errorOccurred, this,
+                &BtLocalDevice::serviceDiscoveryError);
 
         socket = new QBluetoothSocket(SOCKET_PROTOCOL, this);
         connect(socket, &QBluetoothSocket::stateChanged,
                 this, &BtLocalDevice::socketStateChanged);
-        connect(socket, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
-                this, &BtLocalDevice::socketError);
+        connect(socket, &QBluetoothSocket::errorOccurred, this, &BtLocalDevice::socketError);
         connect(socket, &QBluetoothSocket::connected, this, &BtLocalDevice::socketConnected);
         connect(socket, &QBluetoothSocket::disconnected, this, &BtLocalDevice::socketDisconnected);
         connect(socket, &QIODevice::readyRead, this, &BtLocalDevice::readData);
@@ -96,8 +95,7 @@ BtLocalDevice::BtLocalDevice(QObject *parent) :
 
         server = new QBluetoothServer(SOCKET_PROTOCOL, this);
         connect(server, &QBluetoothServer::newConnection, this, &BtLocalDevice::serverNewConnection);
-        connect(server, QOverload<QBluetoothServer::Error>::of(&QBluetoothServer::error),
-                this, &BtLocalDevice::serverError);
+        connect(server, &QBluetoothServer::errorOccurred, this, &BtLocalDevice::serverError);
     } else {
         deviceAgent = nullptr;
         serviceAgent = nullptr;
@@ -659,8 +657,7 @@ void BtLocalDevice::serverNewConnection()
     connect(client, &QIODevice::readyRead, this, &BtLocalDevice::clientSocketReadyRead);
     connect(client, &QBluetoothSocket::stateChanged,
             this, &BtLocalDevice::socketStateChanged);
-    connect(client, QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
-            this, &BtLocalDevice::socketError);
+    connect(client, &QBluetoothSocket::errorOccurred, this, &BtLocalDevice::socketError);
     connect(client, &QBluetoothSocket::connected, this, &BtLocalDevice::socketConnected);
     connect(client, &QBluetoothSocket::bytesWritten, this, [](qint64 bytesWritten){
         qDebug() << "Bytes Written to Server socket:" << bytesWritten;
@@ -813,7 +810,7 @@ void BtLocalDevice::powerOn()
 
 void BtLocalDevice::reset()
 {
-    emit error(static_cast<QBluetoothLocalDevice::Error>(1000));
+    emit errorOccurred(static_cast<QBluetoothLocalDevice::Error>(1000));
     if (serviceAgent) {
         serviceAgent->clear();
     }

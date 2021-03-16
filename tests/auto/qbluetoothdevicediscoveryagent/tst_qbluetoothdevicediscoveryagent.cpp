@@ -204,7 +204,8 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 
     QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
     QSignalSpy cancelSpy(&discoveryAgent, SIGNAL(canceled()));
-    QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QSignalSpy errorSpy(&discoveryAgent,
+                        SIGNAL(errorOccurred(QBluetoothDeviceDiscoveryAgent::Error)));
 
     // Starting case 1: start-stop, expecting cancel signal
     // we should have no errors at this point.
@@ -372,7 +373,8 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
         QVERIFY(discoveryAgent.discoveredDevices().isEmpty());
 
         QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
-        QSignalSpy errorSpy(&discoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+        QSignalSpy errorSpy(&discoveryAgent,
+                            SIGNAL(errorOccurred(QBluetoothDeviceDiscoveryAgent::Error)));
         QSignalSpy discoveredSpy(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)));
 //        connect(&discoveryAgent, SIGNAL(finished()), this, SLOT(finished()));
 //        connect(&discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
@@ -494,7 +496,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
 
     QBluetoothDeviceDiscoveryAgent agent;
     QSignalSpy finishedSpy(&agent, SIGNAL(finished()));
-    QSignalSpy errorSpy(&agent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)));
+    QSignalSpy errorSpy(&agent, SIGNAL(errorOccurred(QBluetoothDeviceDiscoveryAgent::Error)));
     QSignalSpy discoveredSpy(&agent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)));
 
     // NoMethod - should just immediately return:

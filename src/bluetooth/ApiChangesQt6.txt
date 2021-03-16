@@ -81,3 +81,10 @@ QML Interface
    (in QML: BluetoothService, BluetoothSocket, and BluetoothDiscoveryModel)
    have been removed without replacement.
 
+"error" signals
+---------------
+
+ - The "error" signals in QBluetoothDeviceDiscoveryAgent, QBluetoothLocalDevice, QBluetoothServer,
+   QBluetoothServiceDiscoveryAgent, QBluetoothSocket, QLowEnergyController, and QLowEnergyService
+   have been renamed to "errorOccurred" to remove ambiguities between the "error" signal and the
+   "error" getter.

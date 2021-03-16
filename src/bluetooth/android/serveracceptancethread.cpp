@@ -149,7 +149,7 @@ bool ServerAcceptanceThread::isRunning() const
 void ServerAcceptanceThread::javaThreadErrorOccurred(int errorCode)
 {
     qCDebug(QT_BT_ANDROID) << "JavaThread error:" << errorCode;
-    emit error(QBluetoothServer::InputOutputError);
+    emit errorOccurred(QBluetoothServer::InputOutputError);
 }
 
 //Runs inside the Java thread

@@ -606,8 +606,8 @@ void QBluetoothSocketPrivateAndroid::socketConnectSuccess(const QAndroidJniObjec
     inputThread = new InputStreamThread(this);
     QObject::connect(inputThread, SIGNAL(dataAvailable()),
                      q, SIGNAL(readyRead()), Qt::QueuedConnection);
-    QObject::connect(inputThread, SIGNAL(error(int)),
-                     this, SLOT(inputThreadError(int)), Qt::QueuedConnection);
+    QObject::connect(inputThread, SIGNAL(errorOccurred(int)), this, SLOT(inputThreadError(int)),
+                     Qt::QueuedConnection);
 
     if (!inputThread->run()) {
         //close socket again
@@ -912,8 +912,8 @@ bool QBluetoothSocketPrivateAndroid::setSocketDescriptor(const QAndroidJniObject
     inputThread = new InputStreamThread(this);
     QObject::connect(inputThread, SIGNAL(dataAvailable()),
                      q, SIGNAL(readyRead()), Qt::QueuedConnection);
-    QObject::connect(inputThread, SIGNAL(error(int)),
-                     this, SLOT(inputThreadError(int)), Qt::QueuedConnection);
+    QObject::connect(inputThread, SIGNAL(errorOccurred(int)), this, SLOT(inputThreadError(int)),
+                     Qt::QueuedConnection);
     inputThread->run();
 
     // WorkerThread manages all sockets for us

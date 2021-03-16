@@ -99,9 +99,9 @@ void InputStreamThread::javaThreadErrorOccurred(int errorCode)
     QMutexLocker lock(&m_mutex);
 
     if (!expectClosure)
-        emit error(errorCode);
+        emit errorOccurred(errorCode);
     else
-        emit error(-1); //magic error, -1 means error was expected due to expected close()
+        emit errorOccurred(-1); // magic error, -1 means error was expected due to expected close()
 }
 
 //inside the java thread

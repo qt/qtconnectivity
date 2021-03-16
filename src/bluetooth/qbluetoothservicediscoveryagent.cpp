@@ -141,10 +141,13 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QBluetoothServiceDiscoveryAgent::error(QBluetoothServiceDiscoveryAgent::Error error)
+    \fn void QBluetoothServiceDiscoveryAgent::errorOccurred(QBluetoothServiceDiscoveryAgent::Error
+   error)
 
     This signal is emitted when an \a error occurs. The \a error parameter describes the error that
     occurred.
+
+    \since 6.2
 */
 
 /*!
@@ -458,11 +461,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::startDeviceDiscovery()
                          q, [this](const QBluetoothDeviceInfo &info){
             this->_q_deviceDiscovered(info);
         });
-        QObject::connect(deviceDiscoveryAgent,
-                         QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-                         q, [this](QBluetoothDeviceDiscoveryAgent::Error newError){
-            this->_q_deviceDiscoveryError(newError);
-        });
+        QObject::connect(deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, q,
+                         [this](QBluetoothDeviceDiscoveryAgent::Error newError) {
+                             this->_q_deviceDiscoveryError(newError);
+                         });
     }
 
     setDiscoveryState(DeviceDiscovery);
@@ -500,7 +502,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
         errorString = deviceDiscoveryAgent->errorString();
         setDiscoveryState(Inactive);
         Q_Q(QBluetoothServiceDiscoveryAgent);
-        emit q->error(error);
+        emit q->errorOccurred(error);
         emit q->finished();
         return;
     }
@@ -536,7 +538,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryError(QBluetoothD
 
     setDiscoveryState(Inactive);
     Q_Q(QBluetoothServiceDiscoveryAgent);
-    emit q->error(error);
+    emit q->errorOccurred(error);
     emit q->finished();
 }
 

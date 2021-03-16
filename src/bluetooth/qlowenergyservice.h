@@ -124,7 +124,7 @@ Q_SIGNALS:
                         const QByteArray &value);
     void descriptorWritten(const QLowEnergyDescriptor &info,
                            const QByteArray &value);
-    void error(QLowEnergyService::ServiceError error);
+    void errorOccurred(QLowEnergyService::ServiceError error);
 
 private:
     Q_DECLARE_PRIVATE(QLowEnergyService)
