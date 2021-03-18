@@ -144,7 +144,7 @@ void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
                 return;
 
             QSharedPointer<QLowEnergyServicePrivate> serviceData = serviceList.value(uuid);
-            if (serviceData->state != QLowEnergyService::ServiceDiscovered)
+            if (serviceData->state != QLowEnergyService::RemoteServiceDiscovered)
                 return;
 
             QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData>::iterator iter;
@@ -528,7 +528,7 @@ void QLowEnergyControllerPrivateBluezDBus::discoverBatteryServiceDetails(
     serviceData->characteristicList[indexHandle] = charData;
     serviceData->endHandle = runningHandle++;
 
-    serviceData->setState(QLowEnergyService::ServiceDiscovered);
+    serviceData->setState(QLowEnergyService::RemoteServiceDiscovered);
 }
 
 void QLowEnergyControllerPrivateBluezDBus::executeClose(QLowEnergyController::Error newError)
@@ -701,7 +701,7 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
         GattJob &lastJob = jobs.last();
         lastJob.flags.setFlag(GattJob::LastServiceDiscovery, true);
     } else {
-        serviceData->setState(QLowEnergyService::ServiceDiscovered);
+        serviceData->setState(QLowEnergyService::RemoteServiceDiscovered);
     }
 
     scheduleNextJob();
@@ -752,7 +752,7 @@ void QLowEnergyControllerPrivateBluezDBus::onCharReadFinished(QDBusPendingCallWa
 
         if (isServiceDiscovery) {
             if (nextJob.flags.testFlag(GattJob::LastServiceDiscovery))
-                service->setState(QLowEnergyService::ServiceDiscovered);
+                service->setState(QLowEnergyService::RemoteServiceDiscovered);
         } else {
             QLowEnergyCharacteristic ch(service, nextJob.handle);
             emit service->characteristicRead(ch, reply.value());
@@ -818,7 +818,7 @@ void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWa
 
         if (isServiceDiscovery) {
             if (nextJob.flags.testFlag(GattJob::LastServiceDiscovery))
-                service->setState(QLowEnergyService::ServiceDiscovered);
+                service->setState(QLowEnergyService::RemoteServiceDiscovered);
         } else {
             QLowEnergyDescriptor desc(service, ch.attributeHandle(), nextJob.handle);
             emit service->descriptorRead(desc, reply.value());

@@ -146,7 +146,7 @@ void tst_QLowEnergyCharacteristic::initTestCase()
 
             leService->discoverDetails();
             QTRY_VERIFY_WITH_TIMEOUT(
-                        leService->state() == QLowEnergyService::ServiceDiscovered, 10000);
+                        leService->state() == QLowEnergyService::RemoteServiceDiscovered, 10000);
 
             const QList<QLowEnergyCharacteristic> chars = leService->characteristics();
             for (const QLowEnergyCharacteristic &ch : chars) {

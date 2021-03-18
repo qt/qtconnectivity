@@ -216,9 +216,9 @@ Low Energy devices.
     \snippet heartrate-game/devicehandler.cpp Filter HeartRate service 2
 
     During the detail search the service's \l {QLowEnergyService::state()}{state()} transitions
-    from \l {QLowEnergyService::DiscoveryRequired}{DiscoveryRequired} to
-    \l {QLowEnergyService::DiscoveringService}{DiscoveringService} and eventually ends with
-    \l {QLowEnergyService::ServiceDiscovered}{ServiceDiscovered}:
+    from \l {QLowEnergyService::RemoteService}{RemoteService} to
+    \l {QLowEnergyService::RemoteServiceDiscovering}{RemoteServiceDiscovering} and eventually ends with
+    \l {QLowEnergyService::RemoteServiceDiscovered}{RemoteServiceDiscovered}:
 
     \snippet heartrate-game/devicehandler.cpp Find HRM characteristic
 

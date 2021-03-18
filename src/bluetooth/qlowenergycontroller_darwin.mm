@@ -304,7 +304,7 @@ void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(
     Q_ASSERT(leQueue);
 
     ServicePrivate qtService(serviceList.value(serviceUuid));
-    qtService->setState(QLowEnergyService::DiscoveringService);
+    qtService->setState(QLowEnergyService::RemoteServiceDiscovering);
     // Copy objects ...
     ObjCCentralManager *manager = centralManager.getAs<ObjCCentralManager>();
     const QBluetoothUuid serviceUuidCopy(serviceUuid);
@@ -492,7 +492,7 @@ void QLowEnergyControllerPrivateDarwin::_q_serviceDetailsDiscoveryFinished(QShar
     qtService->endHandle = service->endHandle;
     qtService->characteristicList = service->characteristicList;
 
-    qtService->setState(QLowEnergyService::ServiceDiscovered);
+    qtService->setState(QLowEnergyService::RemoteServiceDiscovered);
 }
 
 void QLowEnergyControllerPrivateDarwin::_q_servicesWereModified()

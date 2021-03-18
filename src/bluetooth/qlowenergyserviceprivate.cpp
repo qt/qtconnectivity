@@ -62,7 +62,7 @@ void QLowEnergyServicePrivate::setController(QLowEnergyControllerPrivate *contro
     controller = control;
 
     if (control)
-        setState(QLowEnergyService::DiscoveryRequired);
+        setState(QLowEnergyService::RemoteService);
     else
         setState(QLowEnergyService::InvalidService);
 }

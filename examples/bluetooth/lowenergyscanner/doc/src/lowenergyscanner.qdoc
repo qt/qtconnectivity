@@ -110,9 +110,9 @@
     Change notifications can be triggered as a result of writing a value or due to an on-device
     update potentially triggered by the internal logic.
     During the initial detail search the service's \l {QLowEnergyService::state()}{state()} transitions
-    from \l {QLowEnergyService::DiscoveryRequired}{DiscoveryRequired} to
-    \l {QLowEnergyService::DiscoveringService}{DiscoveringService} and eventually ends with
-    \l {QLowEnergyService::ServiceDiscovered}{ServiceDiscovered}:
+    from \l {QLowEnergyService::RemoteService}{RemoteService} to
+    \l {QLowEnergyService::RemoteServiceDiscovering}{RemoteServiceDiscovering} and eventually ends with
+    \l {QLowEnergyService::RemoteServiceDiscovered}{RemoteServiceDiscovered}:
 
     \snippet lowenergyscanner/device.cpp les-service-3
 

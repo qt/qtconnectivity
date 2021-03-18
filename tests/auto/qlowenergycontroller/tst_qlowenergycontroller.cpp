@@ -353,7 +353,7 @@ void tst_QLowEnergyController::tst_connect()
             QVERIFY2(service, uuid.toString().toLatin1());
             savedReferences.append(service);
             QCOMPARE(service->type(), QLowEnergyService::PrimaryService);
-            QCOMPARE(service->state(), QLowEnergyService::DiscoveryRequired);
+            QCOMPARE(service->state(), QLowEnergyService::RemoteService);
         }
 
         // unrelated uuids don't return valid service object
@@ -372,7 +372,7 @@ void tst_QLowEnergyController::tst_connect()
             service->discoverDetails();
 
             QTRY_VERIFY_WITH_TIMEOUT(
-                        service->state() == QLowEnergyService::ServiceDiscovered, 10000);
+                        service->state() == QLowEnergyService::RemoteServiceDiscovered, 10000);
 
             QCOMPARE(errorSpy.count(), 0); //no error
             QCOMPARE(stateSpy.count(), 2); //
@@ -385,7 +385,7 @@ void tst_QLowEnergyController::tst_connect()
             QLowEnergyService *newService = control->createServiceObject(
                         originalService->serviceUuid());
             QVERIFY(newService);
-            QCOMPARE(newService->state(), QLowEnergyService::ServiceDiscovered);
+            QCOMPARE(newService->state(), QLowEnergyService::RemoteServiceDiscovered);
             delete newService;
         }
     }
@@ -544,7 +544,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
         qWarning() << "Waiting for" << i << services[i]->serviceUuid();
         QTRY_VERIFY_WITH_TIMEOUT(
-            services[i]->state() == QLowEnergyService::ServiceDiscovered,
+            services[i]->state() == QLowEnergyService::RemoteServiceDiscovered,
             30000);
     }
 
@@ -584,7 +584,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
         services_second[i] = control->createServiceObject(uuids.at(i), this);
         QVERIFY(services_second[i]->parent() == this);
         QVERIFY(services[i]);
-        QVERIFY(services_second[i]->state() == QLowEnergyService::DiscoveryRequired);
+        QVERIFY(services_second[i]->state() == QLowEnergyService::RemoteService);
         services_second[i]->discoverDetails();
     }
 
@@ -592,7 +592,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
     for (int i = 0; i<MAX_SERVICES_SAME_TIME_ACCESS; i++) {
         qWarning() << "Waiting for" << i << services_second[i]->serviceUuid();
         QTRY_VERIFY_WITH_TIMEOUT(
-            services_second[i]->state() == QLowEnergyService::ServiceDiscovered,
+            services_second[i]->state() == QLowEnergyService::RemoteServiceDiscovered,
             30000);
         QCOMPARE(services_second[i]->serviceName(), services[i]->serviceName());
         QCOMPARE(services_second[i]->serviceUuid(), services[i]->serviceUuid());
@@ -619,7 +619,7 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
         QCOMPARE(services[i]->serviceName(), services_second[i]->serviceName());
         QCOMPARE(services[i]->type(), services_second[i]->type());
         QVERIFY(services[i]->state() == QLowEnergyService::InvalidService);
-        QVERIFY(services_second[i]->state() == QLowEnergyService::ServiceDiscovered);
+        QVERIFY(services_second[i]->state() == QLowEnergyService::RemoteServiceDiscovered);
     }
 
     // cleanup
@@ -1769,7 +1769,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
     QVERIFY(service);
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        service->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
 
     // test service described by
     // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
@@ -1944,7 +1944,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QVERIFY(service);
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        service->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
 
     // Humidity service described by
     // http://processors.wiki.ti.com/index.php/CC2650_SensorTag_User%27s_Guide
@@ -2239,7 +2239,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
     // 1.) discovery triggers read of device name char which is encrypted
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        service->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
 
     QLowEnergyCharacteristic encryptedChar = service->characteristic(
                                                     characterristicUuid);
@@ -2287,7 +2287,7 @@ void tst_QLowEnergyController::tst_customProgrammableDevice()
 
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        service->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
 
     // 4.) read of software revision string which is longer than mtu
     //     tests readCharacteristic() including blob reads
@@ -2397,11 +2397,11 @@ void tst_QLowEnergyController::tst_errorCases()
     // Create service objects and basic tests
     QLowEnergyService *irService = control->createServiceObject(irTemperaturServiceUuid);
     QVERIFY(irService);
-    QCOMPARE(irService->state(), QLowEnergyService::DiscoveryRequired);
+    QCOMPARE(irService->state(), QLowEnergyService::RemoteService);
     QVERIFY(irService->characteristics().isEmpty());
     QLowEnergyService *oadService = control->createServiceObject(oadServiceUuid);
     QVERIFY(oadService);
-    QCOMPARE(oadService->state(), QLowEnergyService::DiscoveryRequired);
+    QCOMPARE(oadService->state(), QLowEnergyService::RemoteService);
     QVERIFY(oadService->characteristics().isEmpty());
 
     QLowEnergyCharacteristic invalidChar;
@@ -2427,7 +2427,7 @@ void tst_QLowEnergyController::tst_errorCases()
     // discover IR Service
     irService->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        irService->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        irService->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
     QVERIFY(!irService->contains(invalidChar));
     QVERIFY(!irService->contains(invalidDesc));
     irErrorSpy.clear();
@@ -2547,7 +2547,7 @@ void tst_QLowEnergyController::tst_errorCases()
     // discover OAD Service
     oadService->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        oadService->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        oadService->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
     oadErrorSpy.clear();
 
     // Test reading
@@ -2618,7 +2618,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     QVERIFY(service);
     service->discoverDetails();
     QTRY_VERIFY_WITH_TIMEOUT(
-        service->state() == QLowEnergyService::ServiceDiscovered, 30000);
+        service->state() == QLowEnergyService::RemoteServiceDiscovered, 30000);
 
     // 1. Get "Image Identity" and "Image Block" characteristic
     const QLowEnergyCharacteristic imageIdentityChar = service->characteristic(

@@ -1125,7 +1125,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 } else {
                     // discovery finished since the service doesn't have any
                     // characteristics
-                    p->setState(QLowEnergyService::ServiceDiscovered);
+                    p->setState(QLowEnergyService::RemoteServiceDiscovered);
                 }
             } else if (attributeType == GATT_INCLUDED_SERVICE) {
                 // finished up include discovery
@@ -1191,7 +1191,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
         QSharedPointer<QLowEnergyServicePrivate> service = serviceForHandle(charHandle);
         Q_ASSERT(!service.isNull());
         bool isServiceDiscoveryRun
-                = !(service->state == QLowEnergyService::ServiceDiscovered);
+                = !(service->state == QLowEnergyService::RemoteServiceDiscovered);
 
         if (isErrorResponse) {
             Q_ASSERT(!encryptionChangePending);
@@ -1246,7 +1246,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             if (!descriptorHandle)
                 discoverServiceDescriptors(service->uuid);
             else
-                service->setState(QLowEnergyService::ServiceDiscovered);
+                service->setState(QLowEnergyService::RemoteServiceDiscovered);
         }
     } break;
     case QBluezConst::AttCommand::ATT_OP_READ_BLOB_REQUEST: // error case
@@ -1279,7 +1279,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 readServiceValuesByOffset(handleData, length,
                                           request.reference2.toBool());
                 break;
-            } else if (service->state == QLowEnergyService::ServiceDiscovered) {
+            } else if (service->state == QLowEnergyService::RemoteServiceDiscovered) {
                 // readCharacteristic() or readDescriptor() ongoing
                 if (!descriptorHandle) {
                     QLowEnergyCharacteristic ch(service, charHandle);
@@ -1294,7 +1294,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             qWarning() << "READ BLOB for char:" << charHandle
                        << "descriptor:" << descriptorHandle << "on service"
                        << service->uuid.toString() << "failed (service discovery run:"
-                       << (service->state == QLowEnergyService::ServiceDiscovered) << ")";
+                       << (service->state == QLowEnergyService::RemoteServiceDiscovered) << ")";
         }
 
         if (request.reference2.toBool()) {
@@ -1304,7 +1304,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             if (!descriptorHandle)
                 discoverServiceDescriptors(service->uuid);
             else
-                service->setState(QLowEnergyService::ServiceDiscovered);
+                service->setState(QLowEnergyService::RemoteServiceDiscovered);
         }
 
     } break;
@@ -1673,7 +1673,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValues(
             discoverServiceDescriptors(service->uuid);
         } else {
             // characteristic w/o descriptors
-            service->setState(QLowEnergyService::ServiceDiscovered);
+            service->setState(QLowEnergyService::RemoteServiceDiscovered);
         }
         return;
     }
@@ -1756,7 +1756,7 @@ void QLowEnergyControllerPrivateBluez::discoverServiceDescriptors(
 
     if (service->characteristicList.isEmpty()) { // service has no characteristics
         // implies that characteristic & descriptor discovery can be skipped
-        service->setState(QLowEnergyService::ServiceDiscovered);
+        service->setState(QLowEnergyService::RemoteServiceDiscovered);
         return;
     }
 

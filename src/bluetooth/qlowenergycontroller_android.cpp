@@ -229,7 +229,7 @@ void QLowEnergyControllerPrivateAndroid::discoverServiceDetails(
                 serviceList.value(service);
         if (!servicePrivate.isNull()) {
             servicePrivate->setError(QLowEnergyService::UnknownError);
-            servicePrivate->setState(QLowEnergyService::DiscoveryRequired);
+            servicePrivate->setState(QLowEnergyService::RemoteService);
         }
         qCWarning(QT_BT_ANDROID) << "Cannot discover details for" << service.toString();
         return;
@@ -570,7 +570,7 @@ void QLowEnergyControllerPrivateAndroid::serviceDetailsDiscoveryFinished(
     qCDebug(QT_BT_ANDROID) << "Service" << serviceUuid << "discovered (start:"
               << startHandle << "end:" << endHandle << ")" << pointer.data();
 
-    pointer->setState(QLowEnergyService::ServiceDiscovered);
+    pointer->setState(QLowEnergyService::RemoteServiceDiscovered);
 }
 
 void QLowEnergyControllerPrivateAndroid::characteristicRead(
@@ -594,7 +594,7 @@ void QLowEnergyControllerPrivateAndroid::characteristicRead(
     //value handle always one larger than characteristics value handle
     charDetails.valueHandle = charHandle + 1;
 
-    if (service->state == QLowEnergyService::ServiceDiscovered) {
+    if (service->state == QLowEnergyService::RemoteServiceDiscovered) {
         QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
         if (!characteristic.isValid()) {
             qCWarning(QT_BT_ANDROID) << "characteristicRead: Cannot find characteristic";
@@ -635,7 +635,7 @@ void QLowEnergyControllerPrivateAndroid::descriptorRead(
     if (!entryUpdated) {
         qCWarning(QT_BT_ANDROID) << "Cannot find/update descriptor"
                                  << descUuid << charUuid << serviceUuid;
-    } else if (service->state == QLowEnergyService::ServiceDiscovered){
+    } else if (service->state == QLowEnergyService::RemoteServiceDiscovered){
         QLowEnergyDescriptor descriptor = descriptorForHandle(descHandle);
         if (!descriptor.isValid()) {
             qCWarning(QT_BT_ANDROID) << "descriptorRead: Cannot find descriptor";

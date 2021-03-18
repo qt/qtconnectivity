@@ -826,13 +826,13 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(
     {
         qCDebug(QT_BT_WINRT) << msg;
         service->setError(QLowEnergyService::UnknownError);
-        service->setState(QLowEnergyService::DiscoveryRequired);
+        service->setState(QLowEnergyService::RemoteService);
     };
     //update service data
     QSharedPointer<QLowEnergyServicePrivate> pointer = serviceList.value(service);
     qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
-    pointer->setState(QLowEnergyService::DiscoveringService);
+    pointer->setState(QLowEnergyService::RemoteServiceDiscovering);
     ComPtr<IGattDeviceService3> deviceService3;
     HRESULT hr = deviceService.As(&deviceService3);
     if (FAILED(hr)) {
@@ -921,7 +921,7 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(
         for (const QBluetoothUuid &indicateChar : qAsConst(indicateChars))
             registerForValueChanges(service, indicateChar);
 
-        pointer->setState(QLowEnergyService::ServiceDiscovered);
+        pointer->setState(QLowEnergyService::RemoteServiceDiscovered);
         thread->exit(0);
     });
     thread->start();

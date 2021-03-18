@@ -50,8 +50,12 @@ QBluetoothLocalDevice
 QLowEnergyService
 -----------------
 
- - Renamed DiscoveringServices enum value to DiscoveringService. This properly relfects the fact that
-   only one service is being discovered at a given time.
+ - Renamed ServiceState enum values:
+   - "DiscoveryRequired" becomes "RemoteService"
+   - "DiscoveringServices" becomes "RemoteServiceDiscovering"
+   - "ServiceDiscovered" becomes "RemoteServiceDiscovered"
+   This change happens in anticipation that service discovery might become an optional
+   step in the future.
 
 QBluetoothUuid
 --------------

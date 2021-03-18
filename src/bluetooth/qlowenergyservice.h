@@ -71,11 +71,27 @@ public:
 
     enum ServiceState {
         InvalidService = 0,
-        DiscoveryRequired,  // we know start/end handle but nothing more
-        DiscoveringService, // discoverDetails() called and running
-        ServiceDiscovered,  // all details have been synchronized
+        RemoteService,
+        RemoteServiceDiscovering, // discoverDetails() called and running
+        RemoteServiceDiscovered,  // all details have been synchronized
         LocalService,
+
+#if QT_DEPRECATED_SINCE(6, 2)
+// for source compatibility:
+        DiscoveryRequired
+            Q_DECL_ENUMERATOR_DEPRECATED_X(
+                "DiscoveryRequired was renamed to RemoteService.")
+                = RemoteService,
+        DiscoveringService
+            Q_DECL_ENUMERATOR_DEPRECATED_X(
+                "DiscoveringService was renamed to RemoteServiceDiscovering.")
+                = RemoteServiceDiscovering,
+        ServiceDiscovered
+            Q_DECL_ENUMERATOR_DEPRECATED_X(
+                "ServiceDiscovered was renamed to RemoteServiceDiscovered.")
+                = RemoteServiceDiscovered,
     };
+#endif
     Q_ENUM(ServiceState)
 
     enum DiscoveryMode {

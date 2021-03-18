@@ -202,10 +202,10 @@ void DeviceHandler::serviceScanDone()
 void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
 {
     switch (s) {
-    case QLowEnergyService::DiscoveringService:
+    case QLowEnergyService::RemoteServiceDiscovering:
         setInfo(tr("Discovering services..."));
         break;
-    case QLowEnergyService::ServiceDiscovered:
+    case QLowEnergyService::RemoteServiceDiscovered:
     {
         setInfo(tr("Service discovered."));
 
@@ -306,7 +306,7 @@ bool DeviceHandler::alive() const
 #endif
 
     if (m_service)
-        return m_service->state() == QLowEnergyService::ServiceDiscovered;
+        return m_service->state() == QLowEnergyService::RemoteServiceDiscovered;
 
     return false;
 }

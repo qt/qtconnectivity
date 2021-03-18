@@ -316,7 +316,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
                 m_leController->createServiceObject(QBluetoothUuid::ServiceClassUuid::GenericAccess));
     QVERIFY(!genericAccessService.isNull());
     genericAccessService->discoverDetails();
-    while (genericAccessService->state() != QLowEnergyService::ServiceDiscovered) {
+    while (genericAccessService->state() != QLowEnergyService::RemoteServiceDiscovered) {
         spy.reset(new QSignalSpy(genericAccessService.data(), &QLowEnergyService::stateChanged));
         QVERIFY(spy->wait(3000));
     }
@@ -344,7 +344,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
                 m_leController->createServiceObject(QBluetoothUuid::ServiceClassUuid::RunningSpeedAndCadence));
     QVERIFY(!runningSpeedService.isNull());
     runningSpeedService->discoverDetails();
-    while (runningSpeedService->state() != QLowEnergyService::ServiceDiscovered) {
+    while (runningSpeedService->state() != QLowEnergyService::RemoteServiceDiscovered) {
         spy.reset(new QSignalSpy(runningSpeedService.data(), &QLowEnergyService::stateChanged));
         QVERIFY(spy->wait(3000));
     }
@@ -376,7 +376,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
                 m_leController->createServiceObject(serviceUuid128));
     QVERIFY(!customService128.isNull());
     customService128->discoverDetails();
-    while (customService128->state() != QLowEnergyService::ServiceDiscovered) {
+    while (customService128->state() != QLowEnergyService::RemoteServiceDiscovered) {
         spy.reset(new QSignalSpy(customService128.data(), &QLowEnergyService::stateChanged));
         QVERIFY(spy->wait(5000));
     }
@@ -393,7 +393,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
                 m_leController->createServiceObject(QBluetoothUuid(quint16(0x2000))));
     QVERIFY(!customService.isNull());
     customService->discoverDetails();
-    while (customService->state() != QLowEnergyService::ServiceDiscovered) {
+    while (customService->state() != QLowEnergyService::RemoteServiceDiscovered) {
         spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::stateChanged));
         QVERIFY(spy->wait(5000));
     }
@@ -514,7 +514,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     customService.reset(m_leController->createServiceObject(QBluetoothUuid(quint16(0x2000))));
     QVERIFY(!customService.isNull());
     customService->discoverDetails();
-    while (customService->state() != QLowEnergyService::ServiceDiscovered) {
+    while (customService->state() != QLowEnergyService::RemoteServiceDiscovered) {
         spy.reset(new QSignalSpy(customService.data(), &QLowEnergyService::stateChanged));
         QVERIFY(spy->wait(5000));
     }

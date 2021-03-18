@@ -586,7 +586,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
     qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
 
-    pointer->setState(QLowEnergyService::DiscoveringService);
+    pointer->setState(QLowEnergyService::RemoteServiceDiscovering);
     ComPtr<IGattDeviceService2> deviceService2;
     HRESULT hr = deviceService.As(&deviceService2);
     Q_ASSERT_SUCCEEDED(hr);
@@ -647,7 +647,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
         for (const QBluetoothUuid &indicateChar : qAsConst(indicateChars))
             registerForValueChanges(service, indicateChar);
 
-        pointer->setState(QLowEnergyService::ServiceDiscovered);
+        pointer->setState(QLowEnergyService::RemoteServiceDiscovered);
         thread->exit(0);
     });
     thread->start();

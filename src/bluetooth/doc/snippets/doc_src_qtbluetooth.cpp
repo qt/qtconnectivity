@@ -172,12 +172,12 @@ void MyClass::btleSharedData()
 
     first = control.createServiceObject(QBluetoothUuid::ServiceClassUuid::BatteryService);
     second = control.createServiceObject(QBluetoothUuid::ServiceClassUuid::BatteryService);
-    Q_ASSERT(first->state() == QLowEnergyService::DiscoveryRequired);
+    Q_ASSERT(first->state() == QLowEnergyService::RemoteService);
     Q_ASSERT(first->state() == second->state());
 
     first->discoverDetails();
 
-    Q_ASSERT(first->state() == QLowEnergyService::DiscoveringService);
+    Q_ASSERT(first->state() == QLowEnergyService::RemoteServiceDiscovering);
     Q_ASSERT(first->state() == second->state());
 //! [data_share_qlowenergyservice]
 }

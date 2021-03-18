@@ -252,7 +252,7 @@ void Device::connectToService(const QString &uuid)
     m_characteristics.clear();
     emit characteristicsUpdated();
 
-    if (service->state() == QLowEnergyService::DiscoveryRequired) {
+    if (service->state() == QLowEnergyService::RemoteService) {
         //! [les-service-3]
         connect(service, &QLowEnergyService::stateChanged,
                 this, &Device::serviceDetailsDiscovered);
@@ -314,12 +314,12 @@ void Device::deviceDisconnected()
 
 void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
 {
-    if (newState != QLowEnergyService::ServiceDiscovered) {
+    if (newState != QLowEnergyService::RemoteServiceDiscovered) {
         // do not hang in "Scanning for characteristics" mode forever
         // in case the service discovery failed
         // We have to queue the signal up to give UI time to even enter
         // the above mode
-        if (newState != QLowEnergyService::DiscoveringService) {
+        if (newState != QLowEnergyService::RemoteServiceDiscovering) {
             QMetaObject::invokeMethod(this, "characteristicsUpdated",
                                       Qt::QueuedConnection);
         }

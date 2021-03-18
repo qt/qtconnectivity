@@ -220,20 +220,24 @@ QT_BEGIN_NAMESPACE
 
     This enum describes the \l state() of the service object.
 
-    \value InvalidService       A service can become invalid when it looses
-                                the connection to the underlying device. Even though
-                                the connection may be lost it retains its last information.
-                                An invalid service cannot become valid anymore even if
-                                the connection to the device is re-established.
-    \value DiscoveryRequired    The service details are yet to be discovered by calling \l discoverDetails().
-                                The only reliable pieces of information are its
-                                \l serviceUuid() and \l serviceName().
-    \value DiscoveringService  The service details are being discovered.
-    \value ServiceDiscovered    The service details have been discovered.
-    \value LocalService         The service is associated with a controller object in the
-                                \l{QLowEnergyController::PeripheralRole}{peripheral role}. Such
-                                service objects do not change their state.
-                                This value was introduced by Qt 5.7.
+    \value InvalidService             A service can become invalid when it looses
+                                      the connection to the underlying device. Even though
+                                      the connection may be lost it retains its last information.
+                                      An invalid service cannot become valid anymore even if
+                                      the connection to the device is re-established.
+    \value RemoteService              The service details are yet to be discovered
+                                      by calling \l discoverDetails().
+                                      The only reliable pieces of information are its
+                                      \l serviceUuid() and \l serviceName().
+    \value RemoteServiceDiscovering   The service details are being discovered.
+    \value RemoteServiceDiscovered    The service details have been discovered.
+    \value LocalService               The service is associated with a controller object in the
+                                      \l{QLowEnergyController::PeripheralRole}{peripheral role}.
+                                      Such service objects do not change their state.
+                                      This value was introduced by Qt 5.7.
+    \value DiscoveryRequired          Deprecated. Was renamed to RemoteService.
+    \value DiscoveringService         Deprecated. Was renamed to RemoteServiceDiscovering.
+    \value ServiceDiscovered          Deprecated. Was renamed to RemoteServiceDiscovered.
  */
 
 /*!
@@ -612,10 +616,10 @@ void QLowEnergyService::discoverDetails(DiscoveryMode mode)
         return;
     }
 
-    if (d->state != QLowEnergyService::DiscoveryRequired)
+    if (d->state != QLowEnergyService::RemoteService)
         return;
 
-    d->setState(QLowEnergyService::DiscoveringService);
+    d->setState(QLowEnergyService::RemoteServiceDiscovering);
 
     d->controller->discoverServiceDetails(d->uuid, mode);
 }
@@ -676,7 +680,7 @@ void QLowEnergyService::readCharacteristic(
 {
     Q_D(QLowEnergyService);
 
-    if (d->controller == nullptr || state() != ServiceDiscovered || !contains(characteristic)) {
+    if (d->controller == nullptr || state() != RemoteServiceDiscovered || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -749,7 +753,7 @@ void QLowEnergyService::writeCharacteristic(
 
     if (d->controller == nullptr
             || (d->controller->role == QLowEnergyController::CentralRole
-                && state() != ServiceDiscovered)
+                && state() != RemoteServiceDiscovered)
             || !contains(characteristic)) {
         d->setError(QLowEnergyService::OperationError);
         return;
@@ -806,7 +810,7 @@ void QLowEnergyService::readDescriptor(
 {
     Q_D(QLowEnergyService);
 
-    if (d->controller == nullptr || state() != ServiceDiscovered || !contains(descriptor)) {
+    if (d->controller == nullptr || state() != RemoteServiceDiscovered || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
     }
@@ -850,7 +854,7 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 
     if (d->controller == nullptr
             || (d->controller->role == QLowEnergyController::CentralRole
-            && state() != ServiceDiscovered)
+            && state() != RemoteServiceDiscovered)
         || !contains(descriptor)) {
         d->setError(QLowEnergyService::OperationError);
         return;
