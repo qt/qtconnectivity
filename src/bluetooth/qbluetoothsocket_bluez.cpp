@@ -689,8 +689,8 @@ bool QBluetoothSocketPrivateBluez::setSocketDescriptor(int socketDescriptor, QBl
     connectWriteNotifier = new QSocketNotifier(socket, QSocketNotifier::Write, q);
     QObject::connect(connectWriteNotifier, SIGNAL(activated(QSocketDescriptor)), this, SLOT(_q_writeNotify()));
 
-    q->setSocketState(socketState);
     q->setOpenMode(openMode);
+    q->setSocketState(socketState);
 
     return true;
 }
