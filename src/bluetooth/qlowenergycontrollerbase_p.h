@@ -80,7 +80,8 @@ public:
     virtual void disconnectFromDevice() = 0;
 
     virtual void discoverServices() = 0;
-    virtual void discoverServiceDetails(const QBluetoothUuid &service) = 0;
+    virtual void discoverServiceDetails(const QBluetoothUuid &service,
+                                        QLowEnergyService::DiscoveryMode mode) = 0;
 
     virtual void readCharacteristic(
                         const QSharedPointer<QLowEnergyServicePrivate> service,

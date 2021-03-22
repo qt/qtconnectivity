@@ -88,7 +88,8 @@ public:
     void disconnectFromDevice() override;
 
     void discoverServices() override;
-    void discoverServiceDetails(const QBluetoothUuid &service) override;
+    void discoverServiceDetails(const QBluetoothUuid &service,
+                                QLowEnergyService::DiscoveryMode mode) override;
 
     void startAdvertising(const QLowEnergyAdvertisingParameters &params,
                           const QLowEnergyAdvertisingData &advertisingData,

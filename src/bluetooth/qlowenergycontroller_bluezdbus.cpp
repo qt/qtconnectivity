@@ -546,8 +546,10 @@ void QLowEnergyControllerPrivateBluezDBus::executeClose(QLowEnergyController::Er
     }
 }
 
-void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(const QBluetoothUuid &service)
+void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
+        const QBluetoothUuid &service, QLowEnergyService::DiscoveryMode mode)
 {
+    Q_UNUSED(mode);
     if (!serviceList.contains(service) || !dbusServices.contains(service)) {
         qCWarning(QT_BT_BLUEZ) << "Discovery of unknown service" << service.toString()
                                << "not possible";

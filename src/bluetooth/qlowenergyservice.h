@@ -78,6 +78,12 @@ public:
     };
     Q_ENUM(ServiceState)
 
+    enum DiscoveryMode {
+        FullDiscovery,      // standard, reads all attributes
+        SkipValueDiscovery  // does not read characteristic values and descriptors
+    };
+    Q_ENUM(DiscoveryMode)
+
     enum WriteMode {
         WriteWithResponse = 0,
         WriteWithoutResponse,
@@ -97,7 +103,7 @@ public:
     QBluetoothUuid serviceUuid() const;
     QString serviceName() const;
 
-    void discoverDetails();
+    void discoverDetails(DiscoveryMode mode = FullDiscovery);
 
     ServiceError error() const;
 

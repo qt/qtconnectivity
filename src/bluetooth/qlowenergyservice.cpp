@@ -237,6 +237,25 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+    \enum QLowEnergyService::DiscoveryMode
+
+    This enum lists service discovery modes.
+    All modes discover the characteristics of the service and the descriptors
+    of the characteristics. The modes differ in whether characteristic values
+    and descriptors are read.
+
+    \value FullDiscovery        During a full discovery, all characteristics
+                                are discovered. All characteristic values and
+                                descriptors are read.
+    \value SkipValueDiscovery   During a minimal discovery, all characteristics
+                                are discovered. Characteristic values and
+                                descriptors are not read.
+
+    \sa discoverDetails()
+    \since 6.2
+*/
+
+/*!
   \enum QLowEnergyService::WriteMode
 
   This enum describes the mode to be used when writing a characteristic value.
@@ -555,15 +574,35 @@ QString QLowEnergyService::serviceName() const
            QStringLiteral("Unknown Service");
 }
 
-
 /*!
-    Initiates the discovery of the services, characteristics
-    and descriptors contained by the service. The discovery process is indicated
-    via the \l stateChanged() signal.
+    Initiates discovery of the service's included services, characteristics,
+    and their associated descriptors.
+
+    The discovery process is indicated via the \l stateChanged() signal.
+    After creation, the service is in \l DiscoveryRequired state.
+    When calling discoverDetails() it transitions to \l DiscoveringService.
+    After completion of detail discovery, it transitions to
+    \l ServiceDiscovered state. On each transition, the \l stateChanged()
+    signal is emitted.
+    Depending on the argument \a mode, a \l FullDiscovery or a
+    \l SkipValueDiscovery is performed. In
+    any case, all services and characteristics are discovered. A
+    \l FullDiscovery proceeds and reads all characteristic values and
+    descriptors. A \l SkipValueDiscovery does not read characteristic values
+    and descriptors. A \l SkipValueDiscovery has two advantages. First, it is
+    faster. Second, it circumvents bugs in some devices which wrongly advertise
+    characteristics or descriptors as readable but nevertheless do not permit
+    reads on them. This can trigger unpredictable behavior.
+    After a \l SkipValueDiscovery, it is necessary to call
+    \l readCharacteristic() / \l readDescriptor() and wait for them to
+    finish successfully before accessing the value of a characteristic or
+    descriptor.
+
+    The argument \a mode was introduced in Qt 6.2.
 
     \sa state()
  */
-void QLowEnergyService::discoverDetails()
+void QLowEnergyService::discoverDetails(DiscoveryMode mode)
 {
     Q_D(QLowEnergyService);
 
@@ -577,7 +616,7 @@ void QLowEnergyService::discoverDetails()
 
     d->setState(QLowEnergyService::DiscoveringService);
 
-    d->controller->discoverServiceDetails(d->uuid);
+    d->controller->discoverServiceDetails(d->uuid, mode);
 }
 
 /*!

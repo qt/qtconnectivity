@@ -80,7 +80,8 @@ void QLowEnergyControllerPrivateCommon::discoverServices()
 
 }
 
-void QLowEnergyControllerPrivateCommon::discoverServiceDetails(const QBluetoothUuid &/*service*/)
+void QLowEnergyControllerPrivateCommon::discoverServiceDetails(
+        const QBluetoothUuid & /*service*/, QLowEnergyService::DiscoveryMode /*mode*/)
 {
 
 }

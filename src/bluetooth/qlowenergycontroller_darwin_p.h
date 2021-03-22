@@ -82,7 +82,8 @@ public:
     void connectToDevice() override;
     void disconnectFromDevice() override;
     void discoverServices() override;
-    void discoverServiceDetails(const QBluetoothUuid &serviceUuid) override;
+    void discoverServiceDetails(const QBluetoothUuid &serviceUuid,
+                                QLowEnergyService::DiscoveryMode mode) override;
 
     void readCharacteristic(const QSharedPointer<QLowEnergyServicePrivate> service,
                             const QLowEnergyHandle charHandle) override;

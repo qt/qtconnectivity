@@ -564,8 +564,10 @@ void QLowEnergyControllerPrivateWinRT::discoverServices()
     emit q->discoveryFinished();
 }
 
-void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUuid &service)
+void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUuid &service,
+                                                              QLowEnergyService::DiscoveryMode mode)
 {
+    Q_UNUSED(mode);
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service;
     if (!serviceList.contains(service)) {
         qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"

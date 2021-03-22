@@ -285,8 +285,10 @@ void QLowEnergyControllerPrivateDarwin::discoverServices()
     });
 }
 
-void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(const QBluetoothUuid &serviceUuid)
+void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(
+        const QBluetoothUuid &serviceUuid, QLowEnergyService::DiscoveryMode mode)
 {
+    Q_UNUSED(mode);
     if (state != QLowEnergyController::DiscoveredState) {
         qCWarning(QT_BT_DARWIN) << "can not discover service details in the current state, "
                                    "QLowEnergyController::DiscoveredState is expected";
