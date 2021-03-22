@@ -133,8 +133,8 @@ void QBluetoothSocketPrivateWin::connectToServiceHelper(const QBluetoothAddress 
 
     const int error = ::WSAGetLastError();
     if (result != SOCKET_ERROR || error == WSAEWOULDBLOCK) {
-        q->setSocketState(QBluetoothSocket::SocketState::ConnectingState);
         q->setOpenMode(openMode);
+        q->setSocketState(QBluetoothSocket::SocketState::ConnectingState);
     } else {
         errorString = qt_error_string(error);
         q->setSocketError(QBluetoothSocket::SocketError::UnknownSocketError);
@@ -341,10 +341,12 @@ void QBluetoothSocketPrivateWin::abort()
     Q_Q(QBluetoothSocket);
 
     const bool wasConnected = q->state() == QBluetoothSocket::SocketState::ConnectedState;
-    q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
     if (wasConnected) {
         q->setOpenMode(QIODevice::NotOpen);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         emit q->readChannelFinished();
+    } else {
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
     }
 }
 
@@ -509,8 +511,8 @@ bool QBluetoothSocketPrivateWin::setSocketDescriptor(int socketDescriptor,
 
     if (!createNotifiers())
         return false;
-    q->setSocketState(socketState);
     q->setOpenMode(openMode);
+    q->setSocketState(socketState);
     if (socketState == QBluetoothSocket::SocketState::ConnectedState) {
         connectWriteNotifier->setEnabled(true);
         readNotifier->setEnabled(true);
