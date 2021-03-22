@@ -47,8 +47,6 @@
 #include "qbluetoothsocket_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
 #include "qbluetoothsocket_winrt_p.h"
-#elif defined(QT_WIN_BLUETOOTH)
-#include "qbluetoothsocket_win_p.h"
 #elif defined(QT_OSX_BLUETOOTH)
 #include "qbluetoothsocket_macos_p.h"
 #else
@@ -272,8 +270,6 @@ static QBluetoothSocketBasePrivate *createSocketPrivate()
     return new QBluetoothSocketPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
     return new QBluetoothSocketPrivateWinRT();
-#elif defined(QT_WIN_BLUETOOTH)
-    return new QBluetoothSocketPrivateWin();
 #elif defined(QT_OSX_BLUETOOTH)
     return new QBluetoothSocketPrivate();
 #else

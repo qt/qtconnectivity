@@ -265,24 +265,6 @@ elseif(QT_FEATURE_winrt_bt)
                 qlowenergycontroller_winrt_new.cpp qlowenergycontroller_winrt_new_p.h
         )
     endif()
-elseif(WIN32)
-    qt_internal_extend_target(Bluetooth
-        SOURCES
-            qbluetoothdevicediscoveryagent_win.cpp
-            qbluetoothlocaldevice_win.cpp
-            qbluetoothserver_win.cpp
-            qbluetoothservicediscoveryagent_win.cpp
-            qbluetoothserviceinfo_win.cpp
-            qbluetoothsocket_win.cpp qbluetoothsocket_win_p.h
-            qlowenergycontroller_win.cpp qlowenergycontroller_win_p.h
-            windows/qwinlowenergybluetooth_p.h
-        DEFINES
-            QT_WIN_BLUETOOTH
-        PUBLIC_LIBRARIES
-            bthprops
-            setupapi
-            ws2_32
-    )
 else()
     qt_internal_extend_target(Bluetooth
         SOURCES

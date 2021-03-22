@@ -195,28 +195,6 @@ private:
     void initializeAdapterBluez5();
 };
 
-#elif defined(QT_WIN_BLUETOOTH)
-
-class QBluetoothLocalDevicePrivate : public QObject
-{
-    Q_OBJECT
-    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
-public:
-    QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
-                                 const QBluetoothAddress &address = QBluetoothAddress());
-
-    ~QBluetoothLocalDevicePrivate();
-    bool isValid() const;
-    void initialize(const QBluetoothAddress &address);
-
-    static QList<QBluetoothHostInfo> localAdapters();
-
-    QBluetoothAddress deviceAddress;
-    QString deviceName;
-    bool deviceValid;
-private:
-    QBluetoothLocalDevice *q_ptr;
-};
 #elif defined(QT_WINRT_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject
 {

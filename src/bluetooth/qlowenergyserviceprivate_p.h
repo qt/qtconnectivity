@@ -60,9 +60,6 @@
 #if defined(QT_ANDROID_BLUETOOTH)
 #include <QtAndroidExtras/QAndroidJniObject>
 #endif
-#if defined(QT_WIN_BLUETOOTH)
-#include <qt_windows.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -86,9 +83,6 @@ public:
         QLowEnergyCharacteristic::PropertyTypes properties;
         QByteArray value;
         QHash<QLowEnergyHandle, DescData> descriptorList;
-#ifdef QT_WIN_BLUETOOTH
-        Qt::HANDLE hValueChangeEvent;
-#endif
     };
 
     enum GattAttributeTypes {
@@ -133,9 +127,6 @@ public:
 #if defined(QT_ANDROID_BLUETOOTH)
     // reference to the BluetoothGattService object
     QAndroidJniObject androidService;
-#endif
-#if defined(QT_WIN_BLUETOOTH)
-    Qt::HANDLE hService = nullptr;
 #endif
 
 };

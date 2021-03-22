@@ -72,21 +72,7 @@ class QXmlStreamReader;
 QT_END_NAMESPACE
 #endif
 
-#ifdef QT_WIN_BLUETOOTH
-#include <QtCore/QVariant>
-
-QT_BEGIN_NAMESPACE
-class QThread;
-
-class ThreadWorkerFind : public QObject
-{
-    Q_OBJECT
-signals:
-    void findFinished(QVariant result);
-};
-QT_END_NAMESPACE
-
-#elif defined(QT_WINRT_BLUETOOTH)
+#ifdef QT_WINRT_BLUETOOTH
 #include <QtCore/QPointer>
 #endif
 
@@ -110,7 +96,7 @@ class QWinRTBluetoothServiceDiscoveryWorker;
 #endif
 
 class QBluetoothServiceDiscoveryAgentPrivate
-#if defined QT_WINRT_BLUETOOTH || defined QT_WIN_BLUETOOTH
+#if defined(QT_WINRT_BLUETOOTH)
         : public QObject
 {
     Q_OBJECT
@@ -171,10 +157,6 @@ public:
     void _q_fetchUuidsTimeout();
     void _q_hostModeStateChanged(QBluetoothLocalDevice::HostMode state);
 #endif
-#ifdef QT_WIN_BLUETOOTH
-    void _q_nextSdpScan(const QVariant &input);
-    bool serviceMatches(const QBluetoothServiceInfo &info);
-#endif
 
 private:
     void start(const QBluetoothAddress &address);
@@ -224,15 +206,6 @@ private:
 
     QAndroidJniObject btAdapter;
     QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
-#endif
-
-#ifdef QT_WIN_BLUETOOTH
-private:
-    bool pendingStop;
-    bool pendingFinish;
-
-    QThread *threadFind = nullptr;
-    ThreadWorkerFind *threadWorkerFind = nullptr;
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH
