@@ -80,38 +80,38 @@ public:
     virtual void disconnectFromDevice() = 0;
 
     virtual void discoverServices() = 0;
-    virtual void discoverServiceDetails(const QBluetoothUuid &/*service*/) = 0;
+    virtual void discoverServiceDetails(const QBluetoothUuid &service) = 0;
 
     virtual void readCharacteristic(
-                        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                        const QLowEnergyHandle /*charHandle*/) = 0;
+                        const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle) = 0;
     virtual void readDescriptor(
-                        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                        const QLowEnergyHandle /*charHandle*/,
-                        const QLowEnergyHandle /*descriptorHandle*/) = 0;
+                        const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QLowEnergyHandle descriptorHandle) = 0;
 
     virtual void writeCharacteristic(
-                        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                        const QLowEnergyHandle /*charHandle*/,
-                        const QByteArray &/*newValue*/,
-                        QLowEnergyService::WriteMode /*writeMode*/) = 0;
+                        const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QByteArray &newValue,
+                        QLowEnergyService::WriteMode writeMode) = 0;
     virtual void writeDescriptor(
-                        const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                        const QLowEnergyHandle /*charHandle*/,
-                        const QLowEnergyHandle /*descriptorHandle*/,
-                        const QByteArray &/*newValue*/) = 0;
+                        const QSharedPointer<QLowEnergyServicePrivate> service,
+                        const QLowEnergyHandle charHandle,
+                        const QLowEnergyHandle descriptorHandle,
+                        const QByteArray &newValue) = 0;
 
     virtual void startAdvertising(
-                        const QLowEnergyAdvertisingParameters &/* params */,
-                        const QLowEnergyAdvertisingData &/* advertisingData */,
-                        const QLowEnergyAdvertisingData &/* scanResponseData */) = 0;
+                        const QLowEnergyAdvertisingParameters &params,
+                        const QLowEnergyAdvertisingData &advertisingData,
+                        const QLowEnergyAdvertisingData &scanResponseData) = 0;
     virtual void stopAdvertising() = 0;
 
     virtual void requestConnectionUpdate(
-                        const QLowEnergyConnectionParameters & /* params */) = 0;
+                        const QLowEnergyConnectionParameters & params) = 0;
     virtual void addToGenericAttributeList(
-                        const QLowEnergyServiceData &/* service */,
-                        QLowEnergyHandle /* startHandle */) = 0;
+                        const QLowEnergyServiceData &service,
+                        QLowEnergyHandle startHandle) = 0;
 
 
     virtual QLowEnergyService *addServiceHelper(

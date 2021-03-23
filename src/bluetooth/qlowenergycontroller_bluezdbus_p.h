@@ -82,38 +82,38 @@ public:
     void disconnectFromDevice() override;
 
     void discoverServices() override;
-    void discoverServiceDetails(const QBluetoothUuid &/*service*/) override;
+    void discoverServiceDetails(const QBluetoothUuid &service) override;
 
     void readCharacteristic(
-                const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                const QLowEnergyHandle /*charHandle*/) override;
+                const QSharedPointer<QLowEnergyServicePrivate> service,
+                const QLowEnergyHandle charHandle) override;
     void readDescriptor(
-                const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                const QLowEnergyHandle /*charHandle*/,
-                const QLowEnergyHandle /*descriptorHandle*/) override;
+                const QSharedPointer<QLowEnergyServicePrivate> service,
+                const QLowEnergyHandle charHandle,
+                const QLowEnergyHandle descriptorHandle) override;
 
     void writeCharacteristic(
-                const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                const QLowEnergyHandle /*charHandle*/,
-                const QByteArray &/*newValue*/,
-                QLowEnergyService::WriteMode /*writeMode*/) override;
+                const QSharedPointer<QLowEnergyServicePrivate> service,
+                const QLowEnergyHandle charHandle,
+                const QByteArray &newValue,
+                QLowEnergyService::WriteMode writeMode) override;
     void writeDescriptor(
-                const QSharedPointer<QLowEnergyServicePrivate> /*service*/,
-                const QLowEnergyHandle /*charHandle*/,
-                const QLowEnergyHandle /*descriptorHandle*/,
-                const QByteArray &/*newValue*/) override;
+                const QSharedPointer<QLowEnergyServicePrivate> service,
+                const QLowEnergyHandle charHandle,
+                const QLowEnergyHandle descriptorHandle,
+                const QByteArray &newValue) override;
 
     void startAdvertising(
-                const QLowEnergyAdvertisingParameters &/* params */,
-                const QLowEnergyAdvertisingData &/* advertisingData */,
-                const QLowEnergyAdvertisingData &/* scanResponseData */) override;
+                const QLowEnergyAdvertisingParameters &params,
+                const QLowEnergyAdvertisingData &advertisingData,
+                const QLowEnergyAdvertisingData &scanResponseData) override;
     void stopAdvertising() override;
 
     void requestConnectionUpdate(
-                const QLowEnergyConnectionParameters & /* params */) override;
+                const QLowEnergyConnectionParameters & params) override;
     void addToGenericAttributeList(
-                        const QLowEnergyServiceData &/* service */,
-                        QLowEnergyHandle /* startHandle */) override;
+                        const QLowEnergyServiceData &service,
+                        QLowEnergyHandle startHandle) override;
 
     QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
 
@@ -126,7 +126,7 @@ private:
 
 private slots:
     void devicePropertiesChanged(const QString &interface, const QVariantMap &changedProperties,
-                           const QStringList &/*invalidatedProperties*/);
+                                 const QStringList &invalidatedProperties);
     void characteristicPropertiesChanged(QLowEnergyHandle charHandle, const QString &interface,
                                     const QVariantMap &changedProperties,
                                     const QStringList &invalidatedProperties);
