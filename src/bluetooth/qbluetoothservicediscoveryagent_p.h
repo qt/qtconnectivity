@@ -135,15 +135,6 @@ public:
     void _q_serviceDiscoveryFinished();
     void _q_deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error);
 #if QT_CONFIG(bluez)
-    void _q_discoveredServices(QDBusPendingCallWatcher *watcher);
-    void _q_createdDevice(QDBusPendingCallWatcher *watcher);
-    void _q_foundDevice(QDBusPendingCallWatcher *watcher);
-    //Slots below are used for discovering Bluetooth Low Energy devices. It will be used with Bluez 5.x version.
-    /*
-    void _g_discoveredGattService();
-    void _q_discoverGattCharacteristics(QDBusPendingCallWatcher *watcher);
-    void _q_discoveredGattCharacteristic(QDBusPendingCallWatcher *watcher);
-    */
     void _q_sdpScannerDone(int exitCode, QProcess::ExitStatus status);
     void _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::Error errorCode,
                           const QString &errorDescription,
@@ -171,7 +162,6 @@ private:
     QVariant readAttributeValue(QXmlStreamReader &xml);
     QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
-    void discoverServices(const QString &deviceObjectPath);
 #endif
 
 public:
@@ -193,10 +183,7 @@ private:
     bool singleDevice;
 #if QT_CONFIG(bluez)
     QString foundHostAdapterPath;
-    OrgBluezManagerInterface *manager = nullptr;
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5 = nullptr;
-    OrgBluezAdapterInterface *adapter = nullptr;
-    OrgBluezDeviceInterface *device = nullptr;
     QProcess *sdpScannerProcess = nullptr;
 #endif
 
