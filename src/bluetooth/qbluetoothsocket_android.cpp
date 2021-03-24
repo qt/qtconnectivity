@@ -337,10 +337,7 @@ bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUui
     if (reverse.isNull())
         return false;
 
-    //cut leading { and trailing } {xxx-xxx}
-    QString tempUuid = reverse.toString();
-    tempUuid.chop(1); //remove trailing '}'
-    tempUuid.remove(0, 1); //remove first '{'
+    QString tempUuid = reverse.toString(QUuid::WithoutBraces);
 
     QAndroidJniEnvironment env;
     const QAndroidJniObject inputString = QAndroidJniObject::fromString(tempUuid);

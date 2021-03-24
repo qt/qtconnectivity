@@ -215,10 +215,7 @@ void QLowEnergyControllerPrivateAndroid::discoverServiceDetails(const QBluetooth
     if (!hub)
         return;
 
-    //cut leading { and trailing } {xxx-xxx}
-    QString tempUuid = service.toString();
-    tempUuid.chop(1); //remove trailing '}'
-    tempUuid.remove(0, 1); //remove first '{'
+    QString tempUuid = service.toString(QUuid::WithoutBraces);
 
     QAndroidJniEnvironment env;
     QAndroidJniObject uuid = QAndroidJniObject::fromString(tempUuid);

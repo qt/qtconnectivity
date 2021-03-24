@@ -115,9 +115,7 @@ void ServerAcceptanceThread::run()
     javaThread.setField<jlong>("qtObject", reinterpret_cast<long>(this));
     javaThread.setField<jboolean>("logEnabled", QT_BT_ANDROID().isDebugEnabled());
 
-    QString tempUuid = m_uuid.toString();
-    tempUuid.chop(1); //remove trailing '}'
-    tempUuid.remove(0,1); //remove first '{'
+    QString tempUuid = m_uuid.toString(QUuid::WithoutBraces);
 
     QAndroidJniObject uuidString = QAndroidJniObject::fromString(tempUuid);
     QAndroidJniObject serviceNameString = QAndroidJniObject::fromString(m_serviceName);

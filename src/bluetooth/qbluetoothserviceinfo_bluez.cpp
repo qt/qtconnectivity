@@ -331,9 +331,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress &loca
         if (!firstCustomUuid.isNull())
             profileUuid = firstCustomUuid;
 
-        QString uuidString = profileUuid.toString();
-        uuidString.chop(1); // remove trailing '}'
-        uuidString.remove(0, 1); // remove beginning '{'
+        QString uuidString = profileUuid.toString(QUuid::WithoutBraces);
 
         qCDebug(QT_BT_BLUEZ) << "Registering profile under" << profilePath
                              << uuidString;
