@@ -1126,21 +1126,12 @@ public class QtBluetoothLE {
             for (int i = serviceHandle + 1; i <= endHandle; i++) {
                 GattEntry entry = entries.get(i);
 
-                switch (entry.type) {
-                    case Characteristic:
-                    case Descriptor:
-                    // we schedule CharacteristicValue for initial discovery to simplify
-                    // detection of the end of service discovery process
-                    // performNextIO() ignores CharacteristicValue GATT entries
-                    case CharacteristicValue:
-                        break;
-                    case Service:
-                        // should not really happen unless endHandle is wrong
-                        Log.w(TAG, "scheduleServiceDetailDiscovery: wrong endHandle");
-                        return;
+                if (entry.type == GattEntryType.Service) {
+                    // should not really happen unless endHandle is wrong
+                    Log.w(TAG, "scheduleServiceDetailDiscovery: wrong endHandle");
+                    return;
                 }
 
-                // only descriptor and characteristic fall through to this point
                 ReadWriteJob newJob = new ReadWriteJob();
                 newJob.entry = entry;
                 newJob.jobType = IoJobType.Read;
