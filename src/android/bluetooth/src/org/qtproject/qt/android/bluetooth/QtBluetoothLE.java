@@ -770,7 +770,10 @@ public class QtBluetoothLE {
 
     private enum IoJobType
     {
-        Read, Write, Mtu
+        Read, Write, Mtu,
+        SkippedRead
+        // a skipped read is a read which is not executed
+        // introduced in Qt 6.2 to skip reads without changing service discovery logic
     }
 
     private class ReadWriteJob
@@ -953,7 +956,7 @@ public class QtBluetoothLE {
         }
     }
 
-    public synchronized boolean discoverServiceDetails(String serviceUuid)
+    public synchronized boolean discoverServiceDetails(String serviceUuid, boolean fullDiscovery)
     {
         try {
             if (mBluetoothGatt == null)
@@ -997,7 +1000,7 @@ public class QtBluetoothLE {
             }
 
             servicesToBeDiscovered.add(serviceHandle);
-            scheduleServiceDetailDiscovery(serviceHandle);
+            scheduleServiceDetailDiscovery(serviceHandle, fullDiscovery);
             performNextIOThreaded();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -1106,7 +1109,7 @@ public class QtBluetoothLE {
 
         //TODO function not yet used
      */
-    private void scheduleServiceDetailDiscovery(int serviceHandle)
+    private void scheduleServiceDetailDiscovery(int serviceHandle, boolean fullDiscovery)
     {
         GattEntry serviceEntry = entries.get(serviceHandle);
         final int endHandle = serviceEntry.endHandle;
@@ -1134,7 +1137,11 @@ public class QtBluetoothLE {
 
                 ReadWriteJob newJob = new ReadWriteJob();
                 newJob.entry = entry;
-                newJob.jobType = IoJobType.Read;
+                if (fullDiscovery) {
+                    newJob.jobType = IoJobType.Read;
+                } else {
+                    newJob.jobType = IoJobType.SkippedRead;
+                }
 
                 final boolean result = readWriteQueue.add(newJob);
                 if (!result)
@@ -1398,6 +1405,9 @@ public class QtBluetoothLE {
                 case Read:
                     skip = executeReadJob(nextJob);
                     break;
+                case SkippedRead:
+                    skip = true;
+                    break;
                 case Write:
                     skip = executeWriteJob(nextJob);
                     break;
@@ -1442,17 +1452,20 @@ public class QtBluetoothLE {
                     entry.valueKnown = true;
                     switch (entry.type) {
                         case Characteristic:
-                            Log.d(TAG, "Non-readable characteristic " + entry.characteristic.getUuid() +
-                                    " for service " + entry.characteristic.getService().getUuid());
+                            Log.d(TAG,
+                                nextJob.jobType == IoJobType.Read ? "Non-readable" : "Skipped reading of"
+                                + " characteristic " + entry.characteristic.getUuid()
+                                + " for service " + entry.characteristic.getService().getUuid());
                             leCharacteristicRead(qtObject, entry.characteristic.getService().getUuid().toString(),
                                     handle + 1, entry.characteristic.getUuid().toString(),
                                     entry.characteristic.getProperties(), entry.characteristic.getValue());
                             break;
                         case Descriptor:
-                            // atm all descriptor types are readable
-                            Log.d(TAG, "Non-readable descriptor " + entry.descriptor.getUuid() +
-                                    " for service/char" + entry.descriptor.getCharacteristic().getService().getUuid() +
-                                    "/" + entry.descriptor.getCharacteristic().getUuid());
+                            Log.d(TAG,
+                                nextJob.jobType == IoJobType.Read ? "Non-readable" : "Skipped reading of"
+                                + " descriptor " + entry.descriptor.getUuid()
+                                + " for service/char " + entry.descriptor.getCharacteristic().getService().getUuid()
+                                + "/" + entry.descriptor.getCharacteristic().getUuid());
                             leDescriptorRead(qtObject,
                                     entry.descriptor.getCharacteristic().getService().getUuid().toString(),
                                     entry.descriptor.getCharacteristic().getUuid().toString(),
@@ -1460,7 +1473,7 @@ public class QtBluetoothLE {
                                     entry.descriptor.getValue());
                             break;
                         case CharacteristicValue:
-                            // for more details see scheduleServiceDetailDiscovery(int)
+                            // for more details see scheduleServiceDetailDiscovery(int, boolean)
                             break;
                         case Service:
                             Log.w(TAG, "Scheduling of Service Gatt entry for service discovery should never happen.");

@@ -221,9 +221,11 @@ void QLowEnergyControllerPrivateAndroid::discoverServiceDetails(
 
     QAndroidJniEnvironment env;
     QAndroidJniObject uuid = QAndroidJniObject::fromString(tempUuid);
+    bool readAllValues = mode == QLowEnergyService::FullDiscovery;
     bool result = hub->javaObject().callMethod<jboolean>("discoverServiceDetails",
-                                                         "(Ljava/lang/String;)Z",
-                                                         uuid.object<jstring>());
+                                                         "(Ljava/lang/String;Z)Z",
+                                                         uuid.object<jstring>(),
+                                                         readAllValues);
     if (!result) {
         QSharedPointer<QLowEnergyServicePrivate> servicePrivate =
                 serviceList.value(service);
