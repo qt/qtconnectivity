@@ -505,20 +505,21 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
 
     //test default values
 #if defined(QT_ANDROID_BLUETOOTH) || defined(QT_OSX_BLUETOOTH)
-    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Secure);
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Secure);
 #elif QT_CONFIG(bluez)
-    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Authorization);
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Authorization);
 #else
-    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::NoSecurity);
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::NoSecurity);
 #endif
 
-    socket.setPreferredSecurityFlags(QBluetooth::Authentication|QBluetooth::Encryption);
+    socket.setPreferredSecurityFlags(QBluetooth::Security::Authentication
+                                     | QBluetooth::Security::Encryption);
 
 #if defined(QT_OSX_BLUETOOTH)
-    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Secure);
+    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Secure);
 #else
     QCOMPARE(socket.preferredSecurityFlags(),
-            QBluetooth::Encryption|QBluetooth::Authentication);
+             QBluetooth::Security::Encryption | QBluetooth::Security::Authentication);
 #endif
 }
 

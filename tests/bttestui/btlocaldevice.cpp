@@ -45,8 +45,8 @@
 #define SOCKET_PROTOCOL QBluetoothServiceInfo::RfcommProtocol
 //#define SOCKET_PROTOCOL QBluetoothServiceInfo::L2capProtocol
 
-BtLocalDevice::BtLocalDevice(QObject *parent) :
-    QObject(parent), securityFlags(QBluetooth::NoSecurity)
+BtLocalDevice::BtLocalDevice(QObject *parent)
+    : QObject(parent), securityFlags(QBluetooth::Security::NoSecurity)
 {
     localDevice = new QBluetoothLocalDevice(this);
     connect(localDevice, &QBluetoothLocalDevice::errorOccurred, this,
@@ -114,9 +114,9 @@ BtLocalDevice::~BtLocalDevice()
     }
 }
 
-int BtLocalDevice::secFlags() const
+QBluetooth::SecurityFlags BtLocalDevice::secFlags() const
 {
-    return static_cast<int>(securityFlags);
+    return securityFlags;
 }
 
 void BtLocalDevice::setSecFlags(int newFlags)
@@ -198,16 +198,16 @@ void BtLocalDevice::disconnected(const QBluetoothAddress &addr)
 
 void BtLocalDevice::cycleSecurityFlags()
 {
-    if (securityFlags.testFlag(QBluetooth::Secure))
-        setSecFlags(QBluetooth::NoSecurity);
-    else if (securityFlags.testFlag(QBluetooth::Encryption))
-        setSecFlags(secFlags() | QBluetooth::Secure);
-    else if (securityFlags.testFlag(QBluetooth::Authentication))
-        setSecFlags(secFlags() | QBluetooth::Encryption);
-    else if (securityFlags.testFlag(QBluetooth::Authorization))
-        setSecFlags(secFlags() | QBluetooth::Authentication);
+    if (securityFlags.testFlag(QBluetooth::Security::Secure))
+        setSecFlags(QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity));
+    else if (securityFlags.testFlag(QBluetooth::Security::Encryption))
+        setSecFlags(secFlags() | QBluetooth::Security::Secure);
+    else if (securityFlags.testFlag(QBluetooth::Security::Authentication))
+        setSecFlags(secFlags() | QBluetooth::Security::Encryption);
+    else if (securityFlags.testFlag(QBluetooth::Security::Authorization))
+        setSecFlags(secFlags() | QBluetooth::Security::Authentication);
     else
-        setSecFlags(secFlags() | QBluetooth::Authorization);
+        setSecFlags(secFlags() | QBluetooth::Security::Authorization);
 }
 
 void BtLocalDevice::deviceDiscovered(const QBluetoothDeviceInfo &info)
@@ -703,7 +703,7 @@ void BtLocalDevice::clientSocketReadyRead()
 
 void BtLocalDevice::dumpServerInformation()
 {
-    static QBluetooth::SecurityFlags secFlag = QBluetooth::Authentication;
+    static QBluetooth::SecurityFlags secFlag = QBluetooth::Security::Authentication;
     if (server) {
         qDebug() << "*******************************";
         qDebug() << "server port:" <<server->serverPort()
@@ -714,10 +714,10 @@ void BtLocalDevice::dumpServerInformation()
                  << "hasPending:" << server->hasPendingConnections()
                  << "maxPending:" << server->maxPendingConnections();
         qDebug() << "security:" << server->securityFlags() << "Togling security flag";
-        if (secFlag == QBluetooth::Authentication)
-            secFlag = QBluetooth::Encryption;
+        if (secFlag == QBluetooth::SecurityFlags(QBluetooth::Security::Authentication))
+            secFlag = QBluetooth::Security::Encryption;
         else
-            secFlag = QBluetooth::Authentication;
+            secFlag = QBluetooth::Security::Authentication;
 
         //server->setSecurityFlags(secFlag);
 

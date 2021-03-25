@@ -253,7 +253,7 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 
 QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
 {
-    return QBluetooth::NoSecurity;
+    return QBluetooth::Security::NoSecurity;
 }
 
 QT_END_NAMESPACE

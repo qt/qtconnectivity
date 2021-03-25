@@ -287,13 +287,14 @@ int QBluetoothServer::maxPendingConnections() const
 
 /*!
     \fn QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
-    Sets the Bluetooth security flags to \a security. This function must be called before calling listen().
-    The Bluetooth link will always be encrypted when using Bluetooth 2.1 devices as encryption is
-    mandatory.
+    Sets the Bluetooth security flags to \a security. This function must be called
+    before calling listen(). The Bluetooth link will always be encrypted when using
+    Bluetooth 2.1 devices as encryption is mandatory.
 
-    Android only supports two levels of security (secure and non-secure). If this flag is set to
-    \l QBluetooth::NoSecurity the server object will not employ any authentication or encryption.
-    Any other security flag combination will trigger a secure Bluetooth connection.
+    Android only supports two levels of security (secure and non-secure). If this flag
+    is set to \l QBluetooth::Security::NoSecurity the server object will not employ
+    any authentication or encryption. Any other security flag combination will
+    trigger a secure Bluetooth connection.
 
     On \macos, security flags are not supported and will be ignored.
 */

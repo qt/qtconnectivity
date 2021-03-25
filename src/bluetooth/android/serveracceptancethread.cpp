@@ -119,7 +119,7 @@ void ServerAcceptanceThread::run()
 
     QAndroidJniObject uuidString = QAndroidJniObject::fromString(tempUuid);
     QAndroidJniObject serviceNameString = QAndroidJniObject::fromString(m_serviceName);
-    bool isSecure = !(secFlags == QBluetooth::NoSecurity);
+    bool isSecure = !(secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity));
     javaThread.callMethod<void>("setServiceDetails", "(Ljava/lang/String;Ljava/lang/String;Z)V",
                                 uuidString.object<jstring>(),
                                 serviceNameString.object<jstring>(),

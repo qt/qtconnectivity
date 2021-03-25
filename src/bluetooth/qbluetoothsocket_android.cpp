@@ -186,7 +186,7 @@ QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
   :
     inputThread(0)
 {
-    secFlags = QBluetooth::Secure;
+    secFlags = QBluetooth::Security::Secure;
     adapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                         "getDefaultAdapter",
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
@@ -270,7 +270,7 @@ bool QBluetoothSocketPrivateAndroid::fallBackConnect(QAndroidJniObject uuid, int
     }
 
     QAndroidJniObject method;
-    if (secFlags == QBluetooth::NoSecurity) {
+    if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {
         qCDebug(QT_BT_ANDROID) << "Connnecting via insecure rfcomm";
         method = remoteDeviceClass.callObjectMethod(
                 "getMethod",
@@ -345,7 +345,7 @@ bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUui
                                                                        "(Ljava/lang/String;)Ljava/util/UUID;",
                                                                        inputString.object<jstring>());
 
-    if (secFlags == QBluetooth::NoSecurity) {
+    if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {
         qCDebug(QT_BT_ANDROID) << "Connnecting via insecure rfcomm";
         socketObject = remoteDevice.callObjectMethod("createInsecureRfcommSocketToServiceRecord",
                                                  "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",
@@ -448,7 +448,7 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
                                                                        "(Ljava/lang/String;)Ljava/util/UUID;",
                                                                        inputString.object<jstring>());
 
-    if (secFlags == QBluetooth::NoSecurity) {
+    if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {
         qCDebug(QT_BT_ANDROID) << "Connnecting via insecure rfcomm";
         socketObject = remoteDevice.callObjectMethod("createInsecureRfcommSocketToServiceRecord",
                                                  "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",

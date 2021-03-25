@@ -315,7 +315,7 @@ private:
 QBluetoothSocketPrivateWinRT::QBluetoothSocketPrivateWinRT()
     : m_worker(new SocketWorker())
 {
-    secFlags = QBluetooth::NoSecurity;
+    secFlags = QBluetooth::Security::NoSecurity;
     connect(m_worker, &SocketWorker::newDataReceived,
             this, &QBluetoothSocketPrivateWinRT::handleNewData, Qt::QueuedConnection);
     connect(m_worker, &SocketWorker::socketErrorOccured,

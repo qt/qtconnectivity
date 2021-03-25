@@ -1071,19 +1071,21 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
     int permission = 0;
     if (charData.properties() & QLowEnergyCharacteristic::Read) {
         if (int(charData.readConstraints()) == 0 // nothing is equivalent to simple read
-            || (charData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            || (charData.readConstraints()
+                & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_READ");
         }
 
-        if (charData.readConstraints() & QBluetooth::AttAuthenticationRequired) {
+        if (charData.readConstraints()
+            & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_READ_ENCRYPTED");
         }
 
-        if (charData.readConstraints() & QBluetooth::AttEncryptionRequired) {
+        if (charData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_READ_ENCRYPTED_MITM");
@@ -1093,19 +1095,21 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
     if (charData.properties() &
                 (QLowEnergyCharacteristic::Write|QLowEnergyCharacteristic::WriteNoResponse) ) {
         if (int(charData.writeConstraints()) == 0 // no flag is equivalent ti simple write
-             || (charData.writeConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            || (charData.writeConstraints()
+                & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE");
         }
 
-        if (charData.writeConstraints() & QBluetooth::AttAuthenticationRequired) {
+        if (charData.writeConstraints()
+            & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_ENCRYPTED");
         }
 
-        if (charData.writeConstraints() & QBluetooth::AttEncryptionRequired) {
+        if (charData.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_ENCRYPTED_MITM");
@@ -1113,7 +1117,7 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
     }
 
     if (charData.properties() & QLowEnergyCharacteristic::WriteSigned) {
-        if (charData.writeConstraints() & QBluetooth::AttEncryptionRequired) {
+        if (charData.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permission |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_SIGNED_MITM");
@@ -1136,19 +1140,21 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
 
     if (descData.isReadable()) {
         if (int(descData.readConstraints()) == 0 // empty is equivalent to simple read
-            || (descData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            || (descData.readConstraints()
+                & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_READ");
         }
 
-        if (descData.readConstraints() & QBluetooth::AttAuthenticationRequired) {
+        if (descData.readConstraints()
+            & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_READ_ENCRYPTED");
         }
 
-        if (descData.readConstraints() & QBluetooth::AttEncryptionRequired) {
+        if (descData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattDescriptor",
                                                 "PERMISSION_READ_ENCRYPTED_MITM");
@@ -1157,19 +1163,21 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
 
     if (descData.isWritable()) {
         if (int(descData.readConstraints()) == 0 // empty is equivalent to simple read
-            || (descData.readConstraints() & QBluetooth::AttAuthorizationRequired)) {
+            || (descData.readConstraints()
+                & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_WRITE");
         }
 
-        if (descData.readConstraints() & QBluetooth::AttAuthenticationRequired) {
+        if (descData.readConstraints()
+            & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_WRITE_ENCRYPTED");
         }
 
-        if (descData.readConstraints() & QBluetooth::AttEncryptionRequired) {
+        if (descData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permissions |= QAndroidJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattDescriptor",
                                                 "PERMISSION_WRITE_ENCRYPTED_MITM");

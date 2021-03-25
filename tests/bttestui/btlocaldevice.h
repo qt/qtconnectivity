@@ -46,7 +46,7 @@ public:
     Q_PROPERTY(int secFlags READ secFlags WRITE setSecFlags
                NOTIFY secFlagsChanged)
 
-    int secFlags() const;
+    QBluetooth::SecurityFlags secFlags() const;
     void setSecFlags(int);
     QString hostMode() const;
 

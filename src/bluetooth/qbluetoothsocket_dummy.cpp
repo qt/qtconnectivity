@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 
 QBluetoothSocketPrivateDummy::QBluetoothSocketPrivateDummy()
 {
-    secFlags = QBluetooth::NoSecurity;
+    secFlags = QBluetooth::Security::NoSecurity;
 #ifndef QT_IOS_BLUETOOTH
     printDummyWarning();
 #endif

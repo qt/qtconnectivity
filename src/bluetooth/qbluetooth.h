@@ -52,7 +52,7 @@ Q_NAMESPACE_EXPORT(Q_BLUETOOTH_EXPORT)
 // TODO Qt 6: Merge these two enums? But note that ATT Authorization has no equivalent
 //            on the socket security level.
 
-enum Security {
+enum class Security {
     NoSecurity = 0x00,
     Authorization = 0x01,
     Authentication = 0x02,
@@ -63,7 +63,7 @@ Q_ENUM_NS(Security)
 Q_DECLARE_FLAGS(SecurityFlags, Security)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SecurityFlags)
 
-enum AttAccessConstraint {
+enum class AttAccessConstraint {
     AttAuthorizationRequired = 0x1,
     AttAuthenticationRequired = 0x2,
     AttEncryptionRequired = 0x4,

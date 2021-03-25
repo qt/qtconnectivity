@@ -571,9 +571,9 @@ void TestQLowEnergyControllerGattServer::serviceData()
     descData.setValue("xyz");
     QCOMPARE(descData.value().constData(), "xyz");
 
-    descData.setReadPermissions(true, AttAuthenticationRequired);
+    descData.setReadPermissions(true, AttAccessConstraint::AttAuthenticationRequired);
     QCOMPARE(descData.isReadable(), true);
-    QCOMPARE(descData.readConstraints(), AttAuthenticationRequired);
+    QCOMPARE(descData.readConstraints(), AttAccessConstraint::AttAuthenticationRequired);
 
     descData.setWritePermissions(false);
     QCOMPARE(descData.isWritable(), false);
@@ -607,10 +607,13 @@ void TestQLowEnergyControllerGattServer::serviceData()
     charData.setProperties(props);
     QCOMPARE(charData.properties(),  props);
 
-    charData.setReadConstraints(AttEncryptionRequired);
-    QCOMPARE(charData.readConstraints(), AttEncryptionRequired);
-    charData.setWriteConstraints(AttAuthenticationRequired | AttAuthorizationRequired);
-    QCOMPARE(charData.writeConstraints(), AttAuthenticationRequired | AttAuthorizationRequired);
+    charData.setReadConstraints(AttAccessConstraint::AttEncryptionRequired);
+    QCOMPARE(charData.readConstraints(), AttAccessConstraint::AttEncryptionRequired);
+    charData.setWriteConstraints(AttAccessConstraint::AttAuthenticationRequired
+                                 | AttAccessConstraint::AttAuthorizationRequired);
+    QCOMPARE(charData.writeConstraints(),
+             AttAccessConstraint::AttAuthenticationRequired
+                     | AttAccessConstraint::AttAuthorizationRequired);
 
     charData.addDescriptor(descData);
     QCOMPARE(charData.descriptors().count(), 1);

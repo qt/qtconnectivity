@@ -495,17 +495,18 @@ QString QBluetoothSocket::errorString() const
     Therefore it is required to reconnect to change this parameter for an
     existing connection.
 
-    On Bluez this property is set to QBluetooth::Authorization by default.
+    On Bluez this property is set to QBluetooth::Security::Authorization by default.
 
     On \macos, this value is ignored as the platform does not permit access
     to the security parameter of the socket. By default the platform prefers
     secure/encrypted connections though and therefore this function always
-    returns \l QBluetooth::Secure.
+    returns \l QBluetooth::Security::Secure.
 
-    Android only supports two levels of security (secure and non-secure). If this flag is set to
-    \l QBluetooth::NoSecurity the socket object will not employ any authentication or encryption.
-    Any other security flag combination will trigger a secure Bluetooth connection.
-    This flag is set to \l QBluetooth::Secure by default.
+    Android only supports two levels of security (secure and non-secure).
+    If this flag is set to \l QBluetooth::Security::NoSecurity the socket
+    object will not employ any authentication or encryption. Any other
+    security flag combination will trigger a secure Bluetooth connection.
+    This flag is set to \l QBluetooth::Security::Secure by default.
 
     \note A secure connection requires a pairing between the two devices. On
     some platforms, the pairing is automatically initiated during the establishment
@@ -534,7 +535,7 @@ void QBluetoothSocket::setPreferredSecurityFlags(QBluetooth::SecurityFlags flags
     during or after the connection has been established. If such a change happens
     it is not reflected in the value of this flag.
 
-    On \macos, this flag is always set to \l QBluetooth::Secure.
+    On \macos, this flag is always set to \l QBluetooth::Security::Secure.
 
     \sa setPreferredSecurityFlags()
 
@@ -544,7 +545,7 @@ QBluetooth::SecurityFlags QBluetoothSocket::preferredSecurityFlags() const
 {
 #if QT_OSX_BLUETOOTH
     // not supported on macOS - platform always uses encryption
-    return QBluetooth::Secure;
+    return QBluetooth::Security::Secure;
 #else
     Q_D(const QBluetoothSocketBase);
     return d->secFlags;

@@ -66,7 +66,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 QBluetoothSocketPrivateBluez::QBluetoothSocketPrivateBluez()
     : QBluetoothSocketBasePrivate()
 {
-    secFlags = QBluetooth::Authorization;
+    secFlags = QBluetooth::Security::Authorization;
 }
 
 QBluetoothSocketPrivateBluez::~QBluetoothSocketPrivateBluez()
@@ -134,15 +134,15 @@ void QBluetoothSocketPrivateBluez::connectToServiceHelper(const QBluetoothAddres
     }
 
     // apply preferred security level
-    // ignore QBluetooth::Authentication -> not used anymore by kernel
+    // ignore QBluetooth::Security::Authentication -> not used anymore by kernel
     struct bt_security security;
     memset(&security, 0, sizeof(security));
 
-    if (secFlags & QBluetooth::Authorization)
+    if (secFlags & QBluetooth::Security::Authorization)
         security.level = BT_SECURITY_LOW;
-    if (secFlags & QBluetooth::Encryption)
+    if (secFlags & QBluetooth::Security::Encryption)
         security.level = BT_SECURITY_MEDIUM;
-    if (secFlags & QBluetooth::Secure)
+    if (secFlags & QBluetooth::Security::Secure)
         security.level = BT_SECURITY_HIGH;
 
     if (setsockopt(socket, SOL_BLUETOOTH, BT_SECURITY,

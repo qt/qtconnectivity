@@ -11,6 +11,12 @@ General
 
  - Win32 backend has been removed. There will not be a working Bluetooth backend when Qt is built with mingw.
 
+QBluetooth namespace
+--------------------
+
+ - The enums QBluetooth::Security and QBluetooth::AttAccessConstraint have been changed
+   to a scoped enums for improved type safety.
+
 QBluetoothDeviceDiscoveryAgent
 ------------------------------
 

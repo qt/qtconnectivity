@@ -67,7 +67,7 @@ static const QLatin1String profilePathTemplate("/qt/btsocket/%1%2/%3");
 
 QBluetoothSocketPrivateBluezDBus::QBluetoothSocketPrivateBluezDBus()
 {
-    secFlags = QBluetooth::NoSecurity;
+    secFlags = QBluetooth::Security::NoSecurity;
 
     profileManager = new OrgBluezProfileManager1Interface(
                             QStringLiteral("org.bluez"),

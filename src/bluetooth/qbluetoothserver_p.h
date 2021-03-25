@@ -115,7 +115,7 @@ public:
     QBluetoothSocket *socket = nullptr;
 
     int maxPendingConnections = 1;
-    QBluetooth::SecurityFlags securityFlags = QBluetooth::NoSecurity;
+    QBluetooth::SecurityFlags securityFlags = QBluetooth::Security::NoSecurity;
     QBluetoothServiceInfo::Protocol serverType;
 
 protected:

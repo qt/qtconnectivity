@@ -76,10 +76,10 @@ CBAttributePermissions cb_permissions(const QLowEnergyCharacteristicData &data)
     if (props & QLEC::Read)
         cbFlags = CBAttributePermissions(cbFlags | CBAttributePermissionsReadable);
 
-    if (data.writeConstraints() & QBluetooth::AttEncryptionRequired)
+    if (data.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired)
         cbFlags = CBAttributePermissions(cbFlags | CBAttributePermissionsWriteEncryptionRequired);
 
-    if (data.readConstraints() & QBluetooth::AttEncryptionRequired)
+    if (data.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired)
         cbFlags = CBAttributePermissions(cbFlags | CBAttributePermissionsReadEncryptionRequired);
 
     return cbFlags;

@@ -87,16 +87,15 @@ typedef QMap<quint16, QBluetoothServerPrivate *>::iterator ServerMapIterator;
 
 } // unnamed namespace
 
-
 QBluetoothServerPrivate::QBluetoothServerPrivate(ServiceInfo::Protocol type,
                                                  QBluetoothServer *parent)
-                            : socket(nullptr),
-                              maxPendingConnections(1),
-                              securityFlags(QBluetooth::NoSecurity),
-                              serverType(type),
-                              q_ptr(parent),
-                              m_lastError(QBluetoothServer::NoError),
-                              port(0)
+    : socket(nullptr),
+      maxPendingConnections(1),
+      securityFlags(QBluetooth::Security::NoSecurity),
+      serverType(type),
+      q_ptr(parent),
+      m_lastError(QBluetoothServer::NoError),
+      port(0)
 {
     if (serverType == ServiceInfo::UnknownProtocol)
         qCWarning(QT_BT_DARWIN) << "unknown protocol";
@@ -420,7 +419,7 @@ void QBluetoothServer::setSecurityFlags(QBluetooth::SecurityFlags security)
 QBluetooth::SecurityFlags QBluetoothServer::securityFlags() const
 {
     Q_UNIMPLEMENTED();
-    return QBluetooth::NoSecurity;
+    return QBluetooth::Security::NoSecurity;
 }
 
 QT_END_NAMESPACE
