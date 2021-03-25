@@ -51,8 +51,7 @@ QT_BEGIN_NAMESPACE
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 const QBluetoothAddress &deviceAdapter,
                 QBluetoothDeviceDiscoveryAgent *parent)
-    :   lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-        lowEnergySearchTimeout(-1),
+    :   lowEnergySearchTimeout(-1),
         q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);

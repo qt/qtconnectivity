@@ -59,14 +59,8 @@ enum {
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
-    lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-    receiver(0),
     m_adapterAddress(deviceAdapter),
     m_active(NoScanActive),
-    leScanTimeout(0),
-    pendingCancel(false),
-    pendingStart(false),
-    lowEnergySearchTimeout(25000),
     q_ptr(parent)
 {
     QAndroidJniEnvironment env;

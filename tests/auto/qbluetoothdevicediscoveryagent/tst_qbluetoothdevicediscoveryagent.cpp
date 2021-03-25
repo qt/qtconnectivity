@@ -394,18 +394,13 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
     QBluetoothDeviceDiscoveryAgent agent;
 
     // check default values
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || QT_CONFIG(winrt_bt)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || QT_CONFIG(winrt_bt) \
+    || QT_CONFIG(bluez)
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
     agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
     agent.setLowEnergyDiscoveryTimeout(20000);
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
-#elif QT_CONFIG(bluez)
-    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
-    agent.setLowEnergyDiscoveryTimeout(-1); // negative ignored
-    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 20000);
-    agent.setLowEnergyDiscoveryTimeout(25000);
-    QCOMPARE(agent.lowEnergyDiscoveryTimeout(), 25000);
 #else
     QCOMPARE(agent.lowEnergyDiscoveryTimeout(), -1);
     agent.setLowEnergyDiscoveryTimeout(20000); // feature not supported -> ignored

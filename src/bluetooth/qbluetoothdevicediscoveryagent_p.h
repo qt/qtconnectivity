@@ -135,7 +135,7 @@ public:
 private:
     QList<QBluetoothDeviceInfo> discoveredDevices;
 
-    QBluetoothDeviceDiscoveryAgent::Error lastError;
+    QBluetoothDeviceDiscoveryAgent::Error lastError = QBluetoothDeviceDiscoveryAgent::NoError;
     QString errorString;
 
 #ifdef QT_ANDROID_BLUETOOTH
@@ -148,18 +148,19 @@ private slots:
 private:
     void startLowEnergyScan();
 
-    DeviceDiscoveryBroadcastReceiver *receiver;
+    DeviceDiscoveryBroadcastReceiver *receiver = nullptr;
     QBluetoothAddress m_adapterAddress;
     short m_active;
     QAndroidJniObject adapter;
     QAndroidJniObject leScanner;
-    QTimer *leScanTimeout;
+    QTimer *leScanTimeout = nullptr;
 
-    bool pendingCancel, pendingStart;
+    bool pendingCancel = false;
+    bool pendingStart = false;
 #elif QT_CONFIG(bluez)
     QBluetoothAddress m_adapterAddress;
-    bool pendingCancel;
-    bool pendingStart;
+    bool pendingCancel = false;
+    bool pendingStart = false;
     OrgFreedesktopDBusObjectManagerInterface *managerBluez5 = nullptr;
     OrgBluezAdapter1Interface *adapterBluez5 = nullptr;
     QTimer *discoveryTimer = nullptr;
@@ -180,7 +181,7 @@ private slots:
 private:
     void disconnectAndClearWorker();
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
-    QTimer *leScanTimer;
+    QTimer *leScanTimer = nullptr;
 #endif
 
 #ifdef Q_OS_DARWIN
@@ -220,8 +221,8 @@ private:
 
     QBluetoothAddress adapterAddress;
 
-    bool startPending;
-    bool stopPending;
+    bool startPending = false;
+    bool stopPending = false;
 
 #ifdef Q_OS_MACOS
 
@@ -234,7 +235,7 @@ private:
 
 #endif // Q_OS_DARWIN
 
-    int lowEnergySearchTimeout;
+    int lowEnergySearchTimeout = 25000;
     QBluetoothDeviceDiscoveryAgent::DiscoveryMethods requestedMethods;
     QBluetoothDeviceDiscoveryAgent *q_ptr;
 };

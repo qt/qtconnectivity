@@ -785,11 +785,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
                 const QBluetoothAddress &deviceAdapter,
                 QBluetoothDeviceDiscoveryAgent *parent)
-
-    :   lastError(QBluetoothDeviceDiscoveryAgent::NoError),
-        lowEnergySearchTimeout(25000),
-        leScanTimer(0),
-        q_ptr(parent)
+    :   q_ptr(parent)
 {
     Q_UNUSED(deviceAdapter);
 }

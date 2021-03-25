@@ -59,11 +59,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
-    lastError(QBluetoothDeviceDiscoveryAgent::NoError),
     m_adapterAddress(deviceAdapter),
-    pendingCancel(false),
-    pendingStart(false),
-    lowEnergySearchTimeout(20000),
     q_ptr(parent)
 {
     initializeBluez5();
