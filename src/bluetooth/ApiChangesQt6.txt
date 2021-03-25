@@ -9,6 +9,8 @@ General
 
  - Every usage of QVector has been replaced by QList.
 
+ - Win32 backend has been removed. There will not be a working Bluetooth backend when Qt is built with mingw.
+
 QBluetoothDeviceDiscoveryAgent
 ------------------------------
 
