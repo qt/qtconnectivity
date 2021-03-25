@@ -491,7 +491,18 @@ bool QNearFieldTargetPrivateImpl::connect()
     if (connected)
         return true;
 
+    setCommandTimeout(2000);
     tagTech.callMethod<void>("connect");
+    return !catchJavaExceptions();
+}
+
+bool QNearFieldTargetPrivateImpl::setCommandTimeout(int timeout)
+{
+    if (!tagTech.isValid())
+        return false;
+
+    tagTech.callMethod<void>("setTimeout", "(I)V", timeout);
+
     return !catchJavaExceptions();
 }
 
