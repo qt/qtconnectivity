@@ -61,8 +61,8 @@ typedef enum Bluez5TestResultType
     BluezNotAvailable
 } Bluez5TestResult;
 
-Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown));
-Q_GLOBAL_STATIC_WITH_ARGS(QVersionNumber, bluezDaemonVersion, (QVersionNumber()));
+Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown))
+Q_GLOBAL_STATIC_WITH_ARGS(QVersionNumber, bluezDaemonVersion, (QVersionNumber()))
 
 /*!
     Ensures that the DBus types are registered

@@ -379,7 +379,7 @@ namespace QBluezConst {
     enum OpCodeGroupField {
         OgfLinkControl = 0x8,
     };
-    Q_ENUM_NS(OpCodeGroupField);
+    Q_ENUM_NS(OpCodeGroupField)
 
     enum OpCodeCommandField {
         OcfLeSetAdvParams = 0x6,
@@ -391,7 +391,7 @@ namespace QBluezConst {
         OcfLeAddToWhiteList = 0x11,
         OcfLeConnectionUpdate = 0x13,
     };
-    Q_ENUM_NS(OpCodeCommandField);
+    Q_ENUM_NS(OpCodeCommandField)
 
     enum class AttCommand : quint8 {
         ATT_OP_ERROR_RESPONSE              = 0x01,
@@ -423,7 +423,7 @@ namespace QBluezConst {
         ATT_OP_WRITE_COMMAND               = 0x52, //write characteristic without response
         ATT_OP_SIGNED_WRITE_COMMAND        = 0xD2
     };
-    Q_ENUM_NS(AttCommand);
+    Q_ENUM_NS(AttCommand)
 
     enum class AttError : quint8 {
         ATT_ERROR_NO_ERROR              = 0x00,
@@ -454,7 +454,7 @@ namespace QBluezConst {
         //------------------------------------------
         ATT_ERROR_APPLICATION_END       = 0x9f
     };
-    Q_ENUM_NS(AttError);
+    Q_ENUM_NS(AttError)
 }
 /* Command opcode pack/unpack */
 #define opCodePack(ogf, ocf) (quint16(((ocf) & 0x03ff)|((ogf) << 10)))

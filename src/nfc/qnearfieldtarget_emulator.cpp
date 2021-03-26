@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 static QMutex tagMutex;
 static QMap<TagBase *, bool> tagMap;
 
-Q_GLOBAL_STATIC(TagActivator, globalTagActivator);
+Q_GLOBAL_STATIC(TagActivator, globalTagActivator)
 
 TagType1::TagType1(TagBase *tag, QObject *parent)
 :   QNearFieldTagType1(parent), tag(tag)
