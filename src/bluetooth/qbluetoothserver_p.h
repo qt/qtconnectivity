@@ -82,7 +82,7 @@ class ServerAcceptanceThread;
 #include "darwin/btdelegates_p.h"
 #include "darwin/btraii_p.h"
 
-#include <QtCore/QList>
+#include <QtCore/QMutex>
 
 #endif // QT_OSX_BLUETOOTH
 
