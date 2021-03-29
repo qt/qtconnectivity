@@ -122,6 +122,8 @@ QT_BEGIN_NAMESPACE
     \value NdefReadError            Failed to read NDEF messages from the target.
     \value NdefWriteError           Failed to write NDEF messages to the target.
     \value CommandError             Failed to send a command to the target.
+    \value TimeoutError             The request could not be completed within the time
+                                    specified in waitForRequestCompleted().
 */
 
 /*!
@@ -393,9 +395,9 @@ QNearFieldTarget::RequestId QNearFieldTarget::sendCommand(const QByteArray &comm
     request completes successfully and the requestCompeted() signal is emitted; otherwise returns
     false.
 */
-bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs) const
+bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs)
 {
-    Q_D(const QNearFieldTarget);
+    Q_D(QNearFieldTarget);
 
     return d->waitForRequestCompleted(id, msecs);
 }

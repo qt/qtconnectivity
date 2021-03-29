@@ -59,6 +59,17 @@
 
 QT_BEGIN_NAMESPACE
 
+class ResponseProvider : public QObject
+{
+    Q_OBJECT
+
+    public:
+        void provideResponse(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer);
+
+    Q_SIGNALS:
+        void responseReceived(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer);
+};
+
 struct NfcTagDeleter
 {
     void operator()(void *tag);
@@ -89,14 +100,16 @@ private:
     std::unique_ptr<void, NfcTagDeleter> nfcTag;
     bool connected = false;
     QTimer targetCheckTimer;
-    bool requestInProgress = false;
+    QNearFieldTarget::RequestId requestInProgress;
     QQueue<std::pair<QNearFieldTarget::RequestId, QByteArray>> queue;
 
     bool connect();
 
 private Q_SLOTS:
     void onTargetCheck();
+    void onTargetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
     void onExecuteRequest();
+    void onResponseReceived(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer);
 };
 
 QT_END_NAMESPACE

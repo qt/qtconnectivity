@@ -41,6 +41,7 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,17 +109,24 @@ NearFieldTarget::RequestId QNearFieldTargetPrivate::sendCommand(const QByteArray
     return id;
 }
 
-bool QNearFieldTargetPrivate::waitForRequestCompleted(const NearFieldTarget::RequestId &id, int msecs) const
+bool QNearFieldTargetPrivate::waitForRequestCompleted(const NearFieldTarget::RequestId &id, int msecs)
 {
     QElapsedTimer timer;
     timer.start();
 
+    const QPointer<QNearFieldTargetPrivate> weakThis = this;
+
     do {
+        if (!weakThis)
+            return false;
+
         if (m_decodedResponses.contains(id))
             return true;
         else
             QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 1);
     } while (timer.elapsed() <= msecs);
+
+    reportError(QNearFieldTarget::TimeoutError, id);
 
     return false;
 }

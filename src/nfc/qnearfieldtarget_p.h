@@ -90,7 +90,7 @@ public:
     virtual int maxCommandLength() const;
     virtual QNearFieldTarget::RequestId sendCommand(const QByteArray &command);
 
-    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000) const;
+    bool waitForRequestCompleted(const QNearFieldTarget::RequestId &id, int msecs = 5000);
     QVariant requestResponse(const QNearFieldTarget::RequestId &id) const;
 
 Q_SIGNALS:

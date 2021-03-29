@@ -46,6 +46,12 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_GLOBAL_STATIC(ResponseProvider, responseProvider)
+
+void ResponseProvider::provideResponse(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer) {
+    Q_EMIT responseReceived(requestId, success, recvBuffer);
+}
+
 void NfcTagDeleter::operator()(void *tag)
 {
     [static_cast<id<NFCTag>>(tag) release];
@@ -57,6 +63,8 @@ QNearFieldTargetPrivateImpl:: QNearFieldTargetPrivateImpl(void *tag, QObject *pa
 {
     Q_ASSERT(nfcTag);
 
+    QObject::connect(this, &QNearFieldTargetPrivate::error, this, &QNearFieldTargetPrivateImpl::onTargetError);
+    QObject::connect(responseProvider, &ResponseProvider::responseReceived, this, &QNearFieldTargetPrivateImpl::onResponseReceived);
     QObject::connect(&targetCheckTimer, &QTimer::timeout, this, &QNearFieldTargetPrivateImpl::onTargetCheck);
     targetCheckTimer.start(500);
 }
@@ -152,6 +160,9 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByte
 
 bool QNearFieldTargetPrivateImpl::isAvailable() const
 {
+    if (requestInProgress.isValid())
+        return true;
+
     if (@available(iOS 13, *)) {
         id<NFCTag> tag = static_cast<id<NFCTag>>(nfcTag.get());
         return tag && (!connected || tag.available);
@@ -162,27 +173,28 @@ bool QNearFieldTargetPrivateImpl::isAvailable() const
 
 bool QNearFieldTargetPrivateImpl::connect()
 {
-    if (connected || requestInProgress)
+    if (connected || requestInProgress.isValid())
         return true;
 
-    if (!isAvailable())
+    if (!isAvailable() || queue.isEmpty())
         return false;
 
     if (@available(iOS 13, *)) {
-        requestInProgress = true;
+        requestInProgress = queue.head().first;
         id<NFCTag> tag = static_cast<id<NFCTag>>(nfcTag.get());
         NFCTagReaderSession* session = tag.session;
         [session connectToTag: tag completionHandler: ^(NSError* error){
             const bool success = error == nil;
             QMetaObject::invokeMethod(this, [this, success] {
-                requestInProgress = false;
+                requestInProgress = QNearFieldTarget::RequestId();
                 if (success) {
                     connected = true;
                     onExecuteRequest();
                 } else {
+                    const auto requestId = queue.dequeue().first;
                     invalidate();
                     Q_EMIT targetLost(this);
-                    reportError(QNearFieldTarget::ConnectionError, queue.head().first);
+                    reportError(QNearFieldTarget::ConnectionError, requestId);
                 }
             });
         }];
@@ -200,14 +212,22 @@ void QNearFieldTargetPrivateImpl::onTargetCheck()
     }
 }
 
+void QNearFieldTargetPrivateImpl::onTargetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id) {
+    Q_UNUSED(id)
+    if (error == QNearFieldTarget::TimeoutError) {
+        invalidate();
+        Q_EMIT targetLost(this);
+    }
+}
+
 void QNearFieldTargetPrivateImpl::onExecuteRequest()
 {
-    if (!nfcTag || requestInProgress || queue.isEmpty())
+    if (!nfcTag || requestInProgress.isValid() || queue.isEmpty())
         return;
 
     if (@available(iOS 13, *)) {
-        requestInProgress = true;
         const auto request = queue.dequeue();
+        requestInProgress = request.first;
         const auto tag = static_cast<id<NFCISO7816Tag>>(nfcTag.get());
         auto *apdu = [[[NFCISO7816APDU alloc] initWithData: request.second.toNSData()] autorelease];
         [tag sendCommandAPDU: apdu completionHandler: ^(NSData* responseData, uint8_t sw1, uint8_t sw2, NSError* error){
@@ -215,19 +235,24 @@ void QNearFieldTargetPrivateImpl::onExecuteRequest()
             recvBuffer += static_cast<char>(sw1);
             recvBuffer += static_cast<char>(sw2);
             const bool success = error == nil;
-            const auto requestId = request.first;
-            QMetaObject::invokeMethod(this, [this, success, requestId, recvBuffer] {
-                requestInProgress = false;
-                if (success) {
-                    setResponseForRequest(requestId, recvBuffer, true);
-                    onExecuteRequest();
-                } else {
-                    invalidate();
-                    Q_EMIT targetLost(this);
-                    reportError(QNearFieldTarget::CommandError, requestId);
-                }
-            });
+            responseProvider->provideResponse(request.first, success, recvBuffer);
         }];
+    }
+}
+
+void  QNearFieldTargetPrivateImpl::onResponseReceived(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer)
+{
+    if (requestInProgress != requestId)
+        return;
+
+    requestInProgress = QNearFieldTarget::RequestId();
+    if (success) {
+        setResponseForRequest(requestId, recvBuffer, true);
+        onExecuteRequest();
+    } else {
+        invalidate();
+        Q_EMIT targetLost(this);
+        reportError(QNearFieldTarget::CommandError, requestId);
     }
 }
 

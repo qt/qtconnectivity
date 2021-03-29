@@ -92,7 +92,8 @@ public:
         ConnectionError,
         NdefReadError,
         NdefWriteError,
-        CommandError
+        CommandError,
+        TimeoutError
     };
     Q_ENUM(Error)
 
@@ -135,7 +136,7 @@ public:
     int maxCommandLength() const;
     RequestId sendCommand(const QByteArray &command);
 
-    bool waitForRequestCompleted(const RequestId &id, int msecs = 5000) const;
+    bool waitForRequestCompleted(const RequestId &id, int msecs = 5000);
     QVariant requestResponse(const RequestId &id) const;
 
 Q_SIGNALS:
