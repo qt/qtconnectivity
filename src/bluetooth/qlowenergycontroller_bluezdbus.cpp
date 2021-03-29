@@ -549,7 +549,6 @@ void QLowEnergyControllerPrivateBluezDBus::executeClose(QLowEnergyController::Er
 void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
         const QBluetoothUuid &service, QLowEnergyService::DiscoveryMode mode)
 {
-    Q_UNUSED(mode);
     if (!serviceList.contains(service) || !dbusServices.contains(service)) {
         qCWarning(QT_BT_BLUEZ) << "Discovery of unknown service" << service.toString()
                                << "not possible";
@@ -651,7 +650,8 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
         charData.uuid = QBluetoothUuid(dbusChar.characteristic->uUID());
 
         // schedule read for initial char value
-        if (charData.properties.testFlag(QLowEnergyCharacteristic::Read)) {
+        if (mode == QLowEnergyService::FullDiscovery
+            && charData.properties.testFlag(QLowEnergyCharacteristic::Read)) {
             GattJob job;
             job.flags = GattJob::JobFlags({GattJob::CharRead, GattJob::ServiceDiscovery});
             job.service = serviceData;
@@ -683,12 +683,14 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
                 });
             }
 
-            // schedule read for initial descriptor value
-            GattJob job;
-            job.flags = GattJob::JobFlags({GattJob::DescRead, GattJob::ServiceDiscovery});
-            job.service = serviceData;
-            job.handle = descriptorHandle;
-            jobs.append(job);
+            if (mode == QLowEnergyService::FullDiscovery) {
+                // schedule read for initial descriptor value
+                GattJob job;
+                job.flags = GattJob::JobFlags({ GattJob::DescRead, GattJob::ServiceDiscovery });
+                job.service = serviceData;
+                job.handle = descriptorHandle;
+                jobs.append(job);
+            }
         }
 
         serviceData->characteristicList[indexHandle] = charData;
