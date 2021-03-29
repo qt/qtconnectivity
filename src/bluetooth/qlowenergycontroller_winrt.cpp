@@ -44,6 +44,7 @@
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
 #include <QtBluetooth/private/qbluetoothutils_winrt_p.h>
+#include <QtBluetooth/QLowEnergyService>
 
 #include <QtCore/QtEndian>
 #include <QtCore/QLoggingCategory>
@@ -128,9 +129,9 @@ class QWinRTLowEnergyServiceHandlerNew : public QObject
     Q_OBJECT
 public:
     QWinRTLowEnergyServiceHandlerNew(const QBluetoothUuid &service,
-                                     const ComPtr<IGattDeviceService3> &deviceService)
-        : mService(service)
-        , mDeviceService(deviceService)
+                                     const ComPtr<IGattDeviceService3> &deviceService,
+                                     QLowEnergyService::DiscoveryMode mode)
+        : mService(service), mMode(mode), mDeviceService(deviceService)
     {
         qCDebug(QT_BT_WINRT) << __FUNCTION__;
     }
@@ -239,7 +240,8 @@ public slots:
                     return S_OK;
                 }
                 charData.properties = QLowEnergyCharacteristic::PropertyTypes(properties & 0xff);
-                if (charData.properties & QLowEnergyCharacteristic::Read) {
+                if (charData.properties & QLowEnergyCharacteristic::Read
+                    && mMode == QLowEnergyService::FullDiscovery) {
                     ComPtr<IAsyncOperation<GattReadResult *>> readOp;
                     hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached,
                                                                      &readOp);
@@ -313,46 +315,61 @@ public slots:
                     descData.uuid = QBluetoothUuid(descriptorUuid);
                     charData.descriptorList.insert(descHandle, descData);
                     if (descData.uuid == QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)) {
-                        ComPtr<IAsyncOperation<ClientCharConfigDescriptorResult *>> readOp;
-                        hr = characteristic->ReadClientCharacteristicConfigurationDescriptorAsync(&readOp);
-                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not read descriptor value")
-                        ComPtr<IClientCharConfigDescriptorResult> readResult;
-                        hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
-                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not await descriptor read result")
-                        GattClientCharacteristicConfigurationDescriptorValue value;
-                        hr = readResult->get_ClientCharacteristicConfigurationDescriptor(&value);
-                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not get descriptor value from result")
-                        quint16 result = 0;
-                        bool correct = false;
-                        if (value & GattClientCharacteristicConfigurationDescriptorValue_Indicate) {
-                            result |= GattClientCharacteristicConfigurationDescriptorValue_Indicate;
-                            correct = true;
-                        }
-                        if (value & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
-                            result |= GattClientCharacteristicConfigurationDescriptorValue_Notify;
-                            correct = true;
-                        }
-                        if (value == GattClientCharacteristicConfigurationDescriptorValue_None) {
-                            correct = true;
-                        }
-                        if (!correct)
-                            continue;
+                        if (mMode == QLowEnergyService::FullDiscovery) {
+                            ComPtr<IAsyncOperation<ClientCharConfigDescriptorResult *>> readOp;
+                            hr = characteristic
+                                         ->ReadClientCharacteristicConfigurationDescriptorAsync(
+                                                 &readOp);
+                            WARN_AND_CONTINUE_IF_FAILED(hr, "Could not read descriptor value")
+                            ComPtr<IClientCharConfigDescriptorResult> readResult;
+                            hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
+                            WARN_AND_CONTINUE_IF_FAILED(hr,
+                                                        "Could not await descriptor read result")
+                            GattClientCharacteristicConfigurationDescriptorValue value;
+                            hr = readResult->get_ClientCharacteristicConfigurationDescriptor(
+                                    &value);
+                            WARN_AND_CONTINUE_IF_FAILED(
+                                    hr, "Could not get descriptor value from result")
+                            quint16 result = 0;
+                            bool correct = false;
+                            if (value
+                                & GattClientCharacteristicConfigurationDescriptorValue_Indicate) {
+                                result |=
+                                        GattClientCharacteristicConfigurationDescriptorValue_Indicate;
+                                correct = true;
+                            }
+                            if (value
+                                & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
+                                result |=
+                                        GattClientCharacteristicConfigurationDescriptorValue_Notify;
+                                correct = true;
+                            }
+                            if (value
+                                == GattClientCharacteristicConfigurationDescriptorValue_None) {
+                                correct = true;
+                            }
+                            if (!correct)
+                                continue;
 
-                        descData.value = QByteArray(2, Qt::Uninitialized);
-                        qToLittleEndian(result, descData.value.data());
+                            descData.value = QByteArray(2, Qt::Uninitialized);
+                            qToLittleEndian(result, descData.value.data());
+                        }
                         mIndicateChars << charData.uuid;
                     } else {
-                        ComPtr<IAsyncOperation<GattReadResult *>> readOp;
-                        hr = descriptor->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached,
-                                                                     &readOp);
-                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not read descriptor value")
-                        ComPtr<IGattReadResult> readResult;
-                        hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
-                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could await descriptor read result")
-                        if (descData.uuid == QBluetoothUuid::DescriptorType::CharacteristicUserDescription)
-                            descData.value = byteArrayFromGattResult(readResult, true);
-                        else
-                            descData.value = byteArrayFromGattResult(readResult);
+                        if (mMode == QLowEnergyService::FullDiscovery) {
+                            ComPtr<IAsyncOperation<GattReadResult *>> readOp;
+                            hr = descriptor->ReadValueWithCacheModeAsync(
+                                    BluetoothCacheMode_Uncached, &readOp);
+                            WARN_AND_CONTINUE_IF_FAILED(hr, "Could not read descriptor value")
+                            ComPtr<IGattReadResult> readResult;
+                            hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
+                            WARN_AND_CONTINUE_IF_FAILED(hr, "Could await descriptor read result")
+                            if (descData.uuid
+                                == QBluetoothUuid::DescriptorType::CharacteristicUserDescription)
+                                descData.value = byteArrayFromGattResult(readResult, true);
+                            else
+                                descData.value = byteArrayFromGattResult(readResult);
+                        }
                     }
                     charData.descriptorList.insert(descHandle, descData);
                 }
@@ -378,6 +395,7 @@ private:
 
 public:
     QBluetoothUuid mService;
+    QLowEnergyService::DiscoveryMode mMode;
     ComPtr<IGattDeviceService3> mDeviceService;
     QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> mCharacteristicList;
     uint mCharacteristicsCountToBeDiscovered;
@@ -795,7 +813,6 @@ void QLowEnergyControllerPrivateWinRT::discoverServices()
 void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
         const QBluetoothUuid &service, QLowEnergyService::DiscoveryMode mode)
 {
-    Q_UNUSED(mode);
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << service;
     if (!serviceList.contains(service)) {
         qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"
@@ -882,8 +899,8 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
             otherService->type |= QLowEnergyService::IncludedService;
     }
 
-    QWinRTLowEnergyServiceHandlerNew *worker
-            = new QWinRTLowEnergyServiceHandlerNew(service, deviceService3);
+    QWinRTLowEnergyServiceHandlerNew *worker =
+            new QWinRTLowEnergyServiceHandlerNew(service, deviceService3, mode);
     QThread *thread = new QThread;
     worker->moveToThread(thread);
     connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandlerNew::obtainCharList);
