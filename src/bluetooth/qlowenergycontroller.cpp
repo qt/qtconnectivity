@@ -56,7 +56,6 @@
 #include "qlowenergycontroller_android_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
 #include "qtbluetoothglobal_p.h"
-#include "qlowenergycontroller_winrt_p.h"
 #include "qlowenergycontroller_winrt_new_p.h"
 #elif defined(Q_OS_DARWIN)
 #include "qlowenergycontroller_darwin_p.h"
@@ -319,7 +318,7 @@ static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role
     return new QLowEnergyControllerPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
     Q_UNUSED(role);
-    return createWinRTLowEnergyController();
+    return new QLowEnergyControllerPrivateWinRTNew();
 #elif defined(Q_OS_DARWIN)
     Q_UNUSED(role);
     return new QLowEnergyControllerPrivateDarwin();

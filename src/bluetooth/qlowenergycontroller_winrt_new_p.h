@@ -87,8 +87,6 @@ class QWinRTLowEnergyServiceHandler;
 
 extern void registerQLowEnergyControllerMetaType();
 
-QLowEnergyControllerPrivate *createWinRTLowEnergyController();
-
 class QLowEnergyControllerPrivateWinRTNew final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT

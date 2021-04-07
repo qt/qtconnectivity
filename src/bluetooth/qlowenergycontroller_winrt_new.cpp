@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qlowenergycontroller_winrt_new_p.h"
-#include "qlowenergycontroller_winrt_p.h"
 #include "qbluetoothutils_winrt_p.h"
 
 #include <QtBluetooth/qbluetoothlocaldevice.h>
@@ -110,17 +109,6 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT_SERVICE_THREAD)
-
-QLowEnergyControllerPrivate *createWinRTLowEnergyController()
-{
-    if (supportsNewLEApi()) {
-        qCDebug(QT_BT_WINRT) << "Using new low energy controller";
-        return new QLowEnergyControllerPrivateWinRTNew();
-    }
-
-    qCDebug(QT_BT_WINRT) << "Using pre 15063 low energy controller";
-    return new QLowEnergyControllerPrivateWinRT();
-}
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult,
                                           bool isWCharString = false)
