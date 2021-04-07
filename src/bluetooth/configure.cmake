@@ -30,12 +30,6 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../config.tests/winrt_bt/CMakeLists.tx
                            PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../config.tests/winrt_bt")
 endif()
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../config.tests/winrt_btle_no_pairing/CMakeLists.txt")
-    qt_config_compile_test("winrt_btle_no_pairing"
-                           LABEL "WinRT extended bluetooth low energy API"
-                           PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../config.tests/winrt_btle_no_pairing")
-endif()
-
 
 #### Features
 
@@ -54,8 +48,4 @@ qt_feature("linux_crypto_api" PRIVATE
 qt_feature("winrt_bt" PRIVATE
     LABEL "WinRT Bluetooth API (desktop & UWP)"
     CONDITION WIN32 AND TEST_winrt_bt
-)
-qt_feature("winrt_btle_no_pairing" PRIVATE
-    LABEL "WinRT advanced bluetooth low energy API (desktop & UWP)"
-    CONDITION WIN32 AND QT_FEATURE_winrt_bt AND TEST_winrt_btle_no_pairing
 )

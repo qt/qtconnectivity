@@ -247,6 +247,7 @@ elseif(QT_FEATURE_winrt_bt)
             qbluetoothsocket_winrt.cpp qbluetoothsocket_winrt_p.h
             qbluetoothutils_winrt.cpp qbluetoothutils_winrt_p.h
             qlowenergycontroller_winrt.cpp qlowenergycontroller_winrt_p.h
+            qlowenergycontroller_winrt_new.cpp qlowenergycontroller_winrt_new_p.h
         DEFINES
             QT_WINRT_BLUETOOTH
         LIBRARIES
@@ -258,13 +259,6 @@ elseif(QT_FEATURE_winrt_bt)
         PRIVATE_MODULE_INTERFACE
             Qt::CorePrivate
     )
-
-    if(QT_FEATURE_winrt_btle_no_pairing)
-        qt_internal_extend_target(Bluetooth
-            SOURCES
-                qlowenergycontroller_winrt_new.cpp qlowenergycontroller_winrt_new_p.h
-        )
-    endif()
 else()
     qt_internal_extend_target(Bluetooth
         SOURCES

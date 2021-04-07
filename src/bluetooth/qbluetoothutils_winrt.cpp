@@ -61,9 +61,6 @@ bool supportsNewLEApi()
         return apiPresent;
 
     initialized = true;
-#if !QT_CONFIG(winrt_btle_no_pairing)
-    return apiPresent;
-#endif
 
     ComPtr<IApiInformationStatics> apiInformationStatics;
     HRESULT hr = RoGetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Foundation_Metadata_ApiInformation).Get(),

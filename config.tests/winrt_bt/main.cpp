@@ -40,6 +40,7 @@ int main()
     ABI::Windows::Foundation::GetActivationFactory(Microsoft::WRL::Wrappers::HString::MakeReference
         (RuntimeClass_Windows_Devices_Enumeration_DeviceInformation).Get(), &deviceInformationStatics);
 
+    (void)Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService3>().Get();
     (void)Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothDevice>().Get();
     (void)Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice>().Get();
     return 0;
