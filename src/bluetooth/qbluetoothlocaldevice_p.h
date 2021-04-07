@@ -80,21 +80,6 @@ QT_END_NAMESPACE
 #include <QtCore/QPair>
 #endif
 
-#ifdef QT_WINRT_BLUETOOTH
-#include <wrl.h>
-
-namespace ABI {
-    namespace Windows {
-        namespace Devices {
-            namespace Bluetooth {
-                struct IBluetoothDeviceStatics;
-                struct IBluetoothLEDeviceStatics;
-            }
-        }
-    }
-}
-#endif
-
 QT_BEGIN_NAMESPACE
 
 extern void registerQBluetoothLocalDeviceMetaType();
@@ -207,8 +192,6 @@ public:
 
 private:
     QBluetoothLocalDevice *q_ptr;
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothDeviceStatics> mStatics;
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDeviceStatics> mLEStatics;
 };
 #elif !defined(QT_OSX_BLUETOOTH) // dummy backend
 class QBluetoothLocalDevicePrivate : public QObject
