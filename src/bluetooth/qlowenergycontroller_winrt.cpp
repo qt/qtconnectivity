@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qlowenergycontroller_winrt_new_p.h"
+#include "qlowenergycontroller_winrt_p.h"
 #include "qbluetoothutils_winrt_p.h"
 
 #include <QtBluetooth/qbluetoothlocaldevice.h>
@@ -416,27 +416,27 @@ void QWinRTLowEnergyServiceHandlerNew::emitErrorAndQuitThread(const QString &err
     QThread::currentThread()->quit();
 }
 
-QLowEnergyControllerPrivateWinRTNew::QLowEnergyControllerPrivateWinRTNew()
+QLowEnergyControllerPrivateWinRT::QLowEnergyControllerPrivateWinRT()
     : QLowEnergyControllerPrivate()
 {
     registerQLowEnergyControllerMetaType();
-    connect(this, &QLowEnergyControllerPrivateWinRTNew::characteristicChanged,
-            this, &QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged,
+    connect(this, &QLowEnergyControllerPrivateWinRT::characteristicChanged,
+            this, &QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged,
             Qt::QueuedConnection);
 }
 
-QLowEnergyControllerPrivateWinRTNew::~QLowEnergyControllerPrivateWinRTNew()
+QLowEnergyControllerPrivateWinRT::~QLowEnergyControllerPrivateWinRT()
 {
     unregisterFromStatusChanges();
     unregisterFromValueChanges();
     mAbortPending = true;
 }
 
-void QLowEnergyControllerPrivateWinRTNew::init()
+void QLowEnergyControllerPrivateWinRT::init()
 {
 }
 
-void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
+void QLowEnergyControllerPrivateWinRT::connectToDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     mAbortPending = false;
@@ -482,7 +482,7 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
         connectToPairedDevice();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
+void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     Q_Q(QLowEnergyController);
@@ -495,7 +495,7 @@ void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
     emit q->disconnected();
 }
 
-ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRTNew::getNativeService(
+ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRT::getNativeService(
         const QBluetoothUuid &serviceUuid)
 {
     ComPtr<IGattDeviceService> deviceService;
@@ -506,7 +506,7 @@ ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRTNew::getNativeService
     return deviceService;
 }
 
-ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRTNew::getNativeCharacteristic(
+ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRT::getNativeCharacteristic(
         const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid)
 {
     ComPtr<IGattDeviceService> service = getNativeService(serviceUuid);
@@ -543,7 +543,7 @@ ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRTNew::getNativeCharac
     return characteristic;
 }
 
-void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoothUuid &serviceUuid,
+void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothUuid &serviceUuid,
                                                                   const QBluetoothUuid &charUuid)
 {
     qCDebug(QT_BT_WINRT) << "Registering characteristic" << charUuid << "in service"
@@ -567,7 +567,7 @@ void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoo
     EventRegistrationToken token;
     HRESULT hr;
     hr = characteristic->add_ValueChanged(
-                Callback<ValueChangedHandler>(this, &QLowEnergyControllerPrivateWinRTNew::onValueChange).Get(),
+                Callback<ValueChangedHandler>(this, &QLowEnergyControllerPrivateWinRT::onValueChange).Get(),
                 &token);
     RETURN_IF_FAILED("Could not register characteristic for value changes", return)
     mValueChangedTokens.append(ValueChangedEntry(characteristic, token));
@@ -575,7 +575,7 @@ void QLowEnergyControllerPrivateWinRTNew::registerForValueChanges(const QBluetoo
         << serviceUuid << "registered for value changes";
 }
 
-void QLowEnergyControllerPrivateWinRTNew::unregisterFromValueChanges()
+void QLowEnergyControllerPrivateWinRT::unregisterFromValueChanges()
 {
     qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
     HRESULT hr;
@@ -592,7 +592,7 @@ void QLowEnergyControllerPrivateWinRTNew::unregisterFromValueChanges()
     mValueChangedTokens.clear();
 }
 
-HRESULT QLowEnergyControllerPrivateWinRTNew::onValueChange(IGattCharacteristic *characteristic, IGattValueChangedEventArgs *args)
+HRESULT QLowEnergyControllerPrivateWinRT::onValueChange(IGattCharacteristic *characteristic, IGattValueChangedEventArgs *args)
 {
     HRESULT hr;
     quint16 handle;
@@ -605,7 +605,7 @@ HRESULT QLowEnergyControllerPrivateWinRTNew::onValueChange(IGattCharacteristic *
     return S_OK;
 }
 
-bool QLowEnergyControllerPrivateWinRTNew::registerForStatusChanges()
+bool QLowEnergyControllerPrivateWinRT::registerForStatusChanges()
 {
     if (!mDevice)
         return false;
@@ -614,13 +614,13 @@ bool QLowEnergyControllerPrivateWinRTNew::registerForStatusChanges()
 
     HRESULT hr;
     hr = mDevice->add_ConnectionStatusChanged(
-        Callback<StatusHandler>(this, &QLowEnergyControllerPrivateWinRTNew::onStatusChange).Get(),
+        Callback<StatusHandler>(this, &QLowEnergyControllerPrivateWinRT::onStatusChange).Get(),
                                 &mStatusChangedToken);
     RETURN_IF_FAILED("Could not add status callback on Xaml thread", return false)
     return true;
 }
 
-void QLowEnergyControllerPrivateWinRTNew::unregisterFromStatusChanges()
+void QLowEnergyControllerPrivateWinRT::unregisterFromStatusChanges()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     if (mDevice && mStatusChangedToken.value) {
@@ -629,7 +629,7 @@ void QLowEnergyControllerPrivateWinRTNew::unregisterFromStatusChanges()
     }
 }
 
-HRESULT QLowEnergyControllerPrivateWinRTNew::onStatusChange(IBluetoothLEDevice *dev, IInspectable *)
+HRESULT QLowEnergyControllerPrivateWinRT::onStatusChange(IBluetoothLEDevice *dev, IInspectable *)
 {
     Q_Q(QLowEnergyController);
     BluetoothConnectionStatus status;
@@ -653,7 +653,7 @@ HRESULT QLowEnergyControllerPrivateWinRTNew::onStatusChange(IBluetoothLEDevice *
     return S_OK;
 }
 
-void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
+void QLowEnergyControllerPrivateWinRT::obtainIncludedServices(
         QSharedPointer<QLowEnergyServicePrivate> servicePointer,
         ComPtr<IGattDeviceService> service)
 {
@@ -712,7 +712,7 @@ void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
     }
 }
 
-HRESULT QLowEnergyControllerPrivateWinRTNew::onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<GattDeviceServicesResult *> *op, AsyncStatus status)
+HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<GattDeviceServicesResult *> *op, AsyncStatus status)
 {
     Q_Q(QLowEnergyController);
     if (status != AsyncStatus::Completed) {
@@ -775,7 +775,7 @@ HRESULT QLowEnergyControllerPrivateWinRTNew::onServiceDiscoveryFinished(ABI::Win
     return S_OK;
 }
 
-void QLowEnergyControllerPrivateWinRTNew::discoverServices()
+void QLowEnergyControllerPrivateWinRT::discoverServices()
 {
     qCDebug(QT_BT_WINRT) << "Service discovery initiated";
 
@@ -787,12 +787,12 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServices()
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain services", return);
     hr = asyncResult->put_Completed(
         Callback<IAsyncOperationCompletedHandler<GenericAttributeProfile::GattDeviceServicesResult *>>(
-                this, &QLowEnergyControllerPrivateWinRTNew::onServiceDiscoveryFinished).Get());
+                this, &QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished).Get());
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not run registration in Xaml thread",
                                       return)
 }
 
-void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(
+void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
         const QBluetoothUuid &service, QLowEnergyService::DiscoveryMode mode)
 {
     Q_UNUSED(mode);
@@ -890,7 +890,7 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandlerNew::errorOccured,
-            this, &QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError);
+            this, &QLowEnergyControllerPrivateWinRT::handleServiceHandlerError);
     connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained,
             [this, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
             QLowEnergyServicePrivate::CharData> charList, QList<QBluetoothUuid> indicateChars,
@@ -915,7 +915,7 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(
     thread->start();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::startAdvertising(
+void QLowEnergyControllerPrivateWinRT::startAdvertising(
         const QLowEnergyAdvertisingParameters &,
         const QLowEnergyAdvertisingData &,
         const QLowEnergyAdvertisingData &)
@@ -924,17 +924,17 @@ void QLowEnergyControllerPrivateWinRTNew::startAdvertising(
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::stopAdvertising()
+void QLowEnergyControllerPrivateWinRT::stopAdvertising()
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
+void QLowEnergyControllerPrivateWinRT::requestConnectionUpdate(const QLowEnergyConnectionParameters &)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::readCharacteristic(
+void QLowEnergyControllerPrivateWinRT::readCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle)
 {
@@ -996,7 +996,7 @@ void QLowEnergyControllerPrivateWinRTNew::readCharacteristic(
                                    service, QLowEnergyService::CharacteristicReadError, return)
 }
 
-void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
+void QLowEnergyControllerPrivateWinRT::readDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descHandle)
@@ -1167,7 +1167,7 @@ void QLowEnergyControllerPrivateWinRTNew::readDescriptor(
                                    service, QLowEnergyService::DescriptorReadError, return)
 }
 
-void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
+void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QByteArray &newValue,
@@ -1232,7 +1232,7 @@ void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
     hr = characteristic->WriteValueWithOptionAsync(buffer.Get(), option, &writeOp);
     CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could write characteristic",
                                    service, QLowEnergyService::CharacteristicWriteError, return)
-    QPointer<QLowEnergyControllerPrivateWinRTNew> thisPtr(this);
+    QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
     auto writeCompletedLambda = [charData, charHandle, newValue, service, writeWithResponse, thisPtr]
             (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
     {
@@ -1273,7 +1273,7 @@ void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
                                    service, QLowEnergyService::CharacteristicWriteError, return)
 }
 
-void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
+void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descHandle,
@@ -1336,7 +1336,7 @@ void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
         HRESULT hr = characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(value, &writeOp);
         CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not write client characteristic configuration",
                                        service, QLowEnergyService::DescriptorWriteError, return)
-        QPointer<QLowEnergyControllerPrivateWinRTNew> thisPtr(this);
+        QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
         auto writeCompletedLambda = [charHandle, descHandle, newValue, service, thisPtr]
                 (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
         {
@@ -1432,7 +1432,7 @@ void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
     hr = descriptor->WriteValueAsync(buffer.Get(), &writeOp);
     CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not write descriptor value",
                                    service, QLowEnergyService::DescriptorWriteError, return)
-    QPointer<QLowEnergyControllerPrivateWinRTNew> thisPtr(this);
+    QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
     auto writeCompletedLambda = [charHandle, descHandle, newValue, service, thisPtr]
             (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
     {
@@ -1464,13 +1464,13 @@ void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
 }
 
 
-void QLowEnergyControllerPrivateWinRTNew::addToGenericAttributeList(const QLowEnergyServiceData &,
+void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnergyServiceData &,
                                                                     QLowEnergyHandle)
 {
     Q_UNIMPLEMENTED();
 }
 
-void QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged(
+void QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged(
         quint16 charHandle, const QByteArray &data)
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__ << charHandle << data;
@@ -1498,7 +1498,7 @@ void QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged(
     emit service->characteristicChanged(characteristic, data);
 }
 
-void QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError(const QString &error)
+void QLowEnergyControllerPrivateWinRT::handleServiceHandlerError(const QString &error)
 {
     if (state != QLowEnergyController::DiscoveringState)
         return;
@@ -1508,7 +1508,7 @@ void QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError(const QStrin
     setError(QLowEnergyController::ConnectionError);
 }
 
-void QLowEnergyControllerPrivateWinRTNew::connectToPairedDevice()
+void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
 {
     Q_Q(QLowEnergyController);
     ComPtr<IBluetoothLEDevice3> device3;
@@ -1626,7 +1626,7 @@ void QLowEnergyControllerPrivateWinRTNew::connectToPairedDevice()
     }
 }
 
-void QLowEnergyControllerPrivateWinRTNew::connectToUnpairedDevice()
+void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
 {
     if (!registerForStatusChanges()) {
         setError(QLowEnergyController::ConnectionError);
@@ -1664,4 +1664,4 @@ void QLowEnergyControllerPrivateWinRTNew::connectToUnpairedDevice()
 
 QT_END_NAMESPACE
 
-#include "qlowenergycontroller_winrt_new.moc"
+#include "qlowenergycontroller_winrt.moc"

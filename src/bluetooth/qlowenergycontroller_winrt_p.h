@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLOWENERGYCONTROLLERPRIVATEWINRT_NEW_P_H
-#define QLOWENERGYCONTROLLERPRIVATEWINRT_NEW_P_H
+#ifndef QLOWENERGYCONTROLLERPRIVATEWINRT_P_H
+#define QLOWENERGYCONTROLLERPRIVATEWINRT_P_H
 
 //
 //  W A R N I N G
@@ -87,12 +87,12 @@ class QWinRTLowEnergyServiceHandler;
 
 extern void registerQLowEnergyControllerMetaType();
 
-class QLowEnergyControllerPrivateWinRTNew final : public QLowEnergyControllerPrivate
+class QLowEnergyControllerPrivateWinRT final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivateWinRTNew();
-    ~QLowEnergyControllerPrivateWinRTNew() override;
+    QLowEnergyControllerPrivateWinRT();
+    ~QLowEnergyControllerPrivateWinRT() override;
 
     void init() override;
 
@@ -177,4 +177,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QLOWENERGYCONTROLLERPRIVATEWINRT_NEW_P_H
+#endif // QLOWENERGYCONTROLLERPRIVATEWINRT_P_H
