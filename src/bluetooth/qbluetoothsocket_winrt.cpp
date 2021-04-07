@@ -67,7 +67,7 @@ typedef IAsyncOperationWithProgress<IBuffer *, UINT32> IAsyncBufferOperation;
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 struct SocketGlobal
 {
@@ -98,7 +98,7 @@ static qint64 writeIOStream(ComPtr<IOutputStream> stream, const char *data, qint
 {
     ComPtr<IBuffer> buffer;
     if (len > UINT32_MAX) {
-        qCWarning(QT_BT_WINRT) << "writeIOStream can only write up to" << UINT32_MAX << "bytes.";
+        qCWarning(QT_BT_WINDOWS) << "writeIOStream can only write up to" << UINT32_MAX << "bytes.";
         len = UINT32_MAX;
     }
     quint32 ulen = static_cast<quint32>(len);
@@ -412,7 +412,7 @@ void QBluetoothSocketPrivateWinRT::connectToService(
 
     if (q->state() != QBluetoothSocket::SocketState::UnconnectedState
             && q->state() != QBluetoothSocket::SocketState::ServiceLookupState) {
-        qCWarning(QT_BT_WINRT) << "QBluetoothSocket::connectToService called on busy socket";
+        qCWarning(QT_BT_WINDOWS) << "QBluetoothSocket::connectToService called on busy socket";
         errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
         q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return;
@@ -467,10 +467,10 @@ void QBluetoothSocketPrivateWinRT::connectToService(
        // try doing service discovery to see if we can find the socket
        if (service.serviceUuid().isNull()
                && !service.serviceClassUuids().contains(QBluetoothUuid::ServiceClassUuid::SerialPort)) {
-           qCWarning(QT_BT_WINRT) << "No port, no PSM, and no UUID provided. Unable to connect";
+           qCWarning(QT_BT_WINDOWS) << "No port, no PSM, and no UUID provided. Unable to connect";
            return;
        }
-       qCDebug(QT_BT_WINRT) << "Need a port/psm, doing discovery";
+       qCDebug(QT_BT_WINDOWS) << "Need a port/psm, doing discovery";
        q->doDeviceDiscovery(service, openMode);
    }
 }
@@ -481,7 +481,7 @@ void QBluetoothSocketPrivateWinRT::connectToService(
     Q_Q(QBluetoothSocket);
 
     if (q->state() != QBluetoothSocket::SocketState::UnconnectedState) {
-        qCWarning(QT_BT_WINRT) << "QBluetoothSocketPrivateWinRT::connectToService called on busy socket";
+        qCWarning(QT_BT_WINDOWS) << "QBluetoothSocketPrivateWinRT::connectToService called on busy socket";
         errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
         q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return;
@@ -506,7 +506,7 @@ void QBluetoothSocketPrivateWinRT::connectToService(
     Q_Q(QBluetoothSocket);
 
     if (q->state() != QBluetoothSocket::SocketState::UnconnectedState) {
-        qCWarning(QT_BT_WINRT) << "QBluetoothSocketPrivateWinRT::connectToService called on busy socket";
+        qCWarning(QT_BT_WINDOWS) << "QBluetoothSocketPrivateWinRT::connectToService called on busy socket";
         errorString = QBluetoothSocket::tr("Trying to connect while connection is in progress");
         q->setSocketError(QBluetoothSocket::SocketError::OperationError);
         return;
@@ -590,7 +590,7 @@ quint16 QBluetoothSocketPrivateWinRT::localPort() const
     bool ok = true;
     const uint port = qt_QStringFromHString(localPortString).toUInt(&ok);
     if (!ok || port > UINT16_MAX) {
-        qCWarning(QT_BT_WINRT) << "Unexpected local port";
+        qCWarning(QT_BT_WINDOWS) << "Unexpected local port";
         return 0;
     }
     return quint16(port);
@@ -647,7 +647,7 @@ quint16 QBluetoothSocketPrivateWinRT::peerPort() const
     bool ok = true;
     const uint port = qt_QStringFromHString(remotePortString).toUInt(&ok);
     if (!ok || port > UINT16_MAX) {
-        qCWarning(QT_BT_WINRT) << "Unexpected remote port";
+        qCWarning(QT_BT_WINDOWS) << "Unexpected remote port";
         return 0;
     }
     return quint16(port);
@@ -670,7 +670,7 @@ qint64 QBluetoothSocketPrivateWinRT::writeData(const char *data, qint64 maxSize)
 
     qint64 bytesWritten = writeIOStream(stream, data, maxSize);
     if (bytesWritten < 0) {
-        qCWarning(QT_BT_WINRT) << "Socket::writeData: " << state;
+        qCWarning(QT_BT_WINDOWS) << "Socket::writeData: " << state;
         errorString = QBluetoothSocket::tr("Cannot read while not connected");
         q->setSocketError(QBluetoothSocket::SocketError::OperationError);
     }
@@ -710,7 +710,7 @@ bool QBluetoothSocketPrivateWinRT::setSocketDescriptor(int socketDescriptor, QBl
     Q_UNUSED(socketType);
     Q_UNUSED(socketState);
     Q_UNUSED(openMode);
-    qCWarning(QT_BT_WINRT) << "No socket descriptor support on WinRT.";
+    qCWarning(QT_BT_WINDOWS) << "No socket descriptor support on WinRT.";
     return false;
 }
 

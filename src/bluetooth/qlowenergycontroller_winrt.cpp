@@ -85,13 +85,13 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 
 #define WARN_AND_CONTINUE_IF_FAILED(hr, msg) \
     if (FAILED(hr)) { \
-        qCWarning(QT_BT_WINRT) << msg; \
+        qCWarning(QT_BT_WINDOWS) << msg; \
         continue; \
     }
 
 #define CHECK_FOR_DEVICE_CONNECTION_ERROR_IMPL(this, hr, msg, ret) \
     if (FAILED(hr)) { \
-        qCWarning(QT_BT_WINRT) << msg; \
+        qCWarning(QT_BT_WINDOWS) << msg; \
         this->unregisterFromStatusChanges(); \
         this->setError(QLowEnergyController::ConnectionError); \
         this->setState(QLowEnergyController::UnconnectedState); \
@@ -103,13 +103,13 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 
 #define CHECK_HR_AND_SET_SERVICE_ERROR(hr, msg, service, error, ret) \
     if (FAILED(hr)) { \
-        qCDebug(QT_BT_WINRT) << msg; \
+        qCDebug(QT_BT_WINDOWS) << msg; \
         service->setError(error); \
         ret; \
     }
 
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT_SERVICE_THREAD)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS_SERVICE_THREAD)
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult,
                                           bool isWCharString = false)
@@ -118,7 +118,7 @@ static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattRes
     HRESULT hr;
     hr = gattResult->get_Value(&buffer);
     if (FAILED(hr) || !buffer) {
-        qCWarning(QT_BT_WINRT) << "Could not obtain buffer from GattReadResult";
+        qCWarning(QT_BT_WINDOWS) << "Could not obtain buffer from GattReadResult";
         return QByteArray();
     }
     return byteArrayFromBuffer(buffer, isWCharString);
@@ -133,7 +133,7 @@ public:
                                      QLowEnergyService::DiscoveryMode mode)
         : mService(service), mMode(mode), mDeviceService(deviceService)
     {
-        qCDebug(QT_BT_WINRT) << __FUNCTION__;
+        qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     }
 
     ~QWinRTLowEnergyServiceHandlerNew()
@@ -144,7 +144,7 @@ public slots:
     void obtainCharList()
     {
         mIndicateChars.clear();
-        qCDebug(QT_BT_WINRT) << __FUNCTION__;
+        qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
         ComPtr<IAsyncOperation<GattCharacteristicsResult *>> characteristicsOp;
         ComPtr<IGattCharacteristicsResult> characteristicsResult;
         HRESULT hr = mDeviceService->GetCharacteristicsAsync(&characteristicsOp);
@@ -172,7 +172,7 @@ public slots:
             ComPtr<IGattCharacteristic> characteristic;
             hr = characteristics->GetAt(i, &characteristic);
             if (FAILED(hr)) {
-                qCWarning(QT_BT_WINRT) << "Could not obtain characteristic at" << i;
+                qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic at" << i;
                 --mCharacteristicsCountToBeDiscovered;
                 continue;
             }
@@ -180,7 +180,7 @@ public slots:
             ComPtr<IGattCharacteristic3> characteristic3;
             hr = characteristic.As(&characteristic3);
             if (FAILED(hr)) {
-                qCWarning(QT_BT_WINRT) << "Could not cast characteristic";
+                qCWarning(QT_BT_WINDOWS) << "Could not cast characteristic";
                 --mCharacteristicsCountToBeDiscovered;
                 continue;
             }
@@ -192,7 +192,7 @@ public slots:
             ComPtr<IAsyncOperation<GattDescriptorsResult*>> descAsyncResult;
             hr = characteristic3->GetDescriptorsAsync(&descAsyncResult);
             if (FAILED(hr)) {
-                qCWarning(QT_BT_WINRT) << "Could not obtain list of descriptors";
+                qCWarning(QT_BT_WINDOWS) << "Could not obtain list of descriptors";
                 --mCharacteristicsCountToBeDiscovered;
                 continue;
             }
@@ -202,7 +202,7 @@ public slots:
                             (IAsyncOperation<GattDescriptorsResult *> *op,
                             AsyncStatus status) {
                 if (status != AsyncStatus::Completed) {
-                    qCWarning(QT_BT_WINRT) << "Descriptor operation unsuccessful";
+                    qCWarning(QT_BT_WINDOWS) << "Descriptor operation unsuccessful";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -211,7 +211,7 @@ public slots:
 
                 HRESULT hr = characteristic->get_AttributeHandle(&handle);
                 if (FAILED(hr)) {
-                    qCWarning(QT_BT_WINRT) << "Could not obtain characteristic's attribute handle";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic's attribute handle";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -225,7 +225,7 @@ public slots:
                 GUID guuid;
                 hr = characteristic->get_Uuid(&guuid);
                 if (FAILED(hr)) {
-                    qCWarning(QT_BT_WINRT) << "Could not obtain characteristic's Uuid";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic's Uuid";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -234,7 +234,7 @@ public slots:
                 GattCharacteristicProperties properties;
                 hr = characteristic->get_CharacteristicProperties(&properties);
                 if (FAILED(hr)) {
-                    qCWarning(QT_BT_WINRT) << "Could not obtain characteristic's properties";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic's properties";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -246,7 +246,7 @@ public slots:
                     hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode_Uncached,
                                                                      &readOp);
                     if (FAILED(hr)) {
-                        qCWarning(QT_BT_WINRT) << "Could not read characteristic";
+                        qCWarning(QT_BT_WINDOWS) << "Could not read characteristic";
                         --mCharacteristicsCountToBeDiscovered;
                         checkAllCharacteristicsDiscovered();
                         return S_OK;
@@ -254,13 +254,13 @@ public slots:
                     ComPtr<IGattReadResult> readResult;
                     hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
                     if (FAILED(hr)) {
-                        qCWarning(QT_BT_WINRT) << "Could not obtain characteristic read result";
+                        qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic read result";
                         --mCharacteristicsCountToBeDiscovered;
                         checkAllCharacteristicsDiscovered();
                         return S_OK;
                     }
                     if (!readResult)
-                        qCWarning(QT_BT_WINRT) << "Characteristic read result is null";
+                        qCWarning(QT_BT_WINDOWS) << "Characteristic read result is null";
                     else
                         charData.value = byteArrayFromGattResult(readResult);
                 }
@@ -271,7 +271,7 @@ public slots:
                 ComPtr<IGattDescriptorsResult> result;
                 hr = op->GetResults(&result);
                 if (FAILED(hr)) {
-                    qCWarning(QT_BT_WINRT) << "Could not obtain descriptor read result";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain descriptor read result";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -279,7 +279,7 @@ public slots:
                 GattCommunicationStatus commStatus;
                 hr = result->get_Status(&commStatus);
                 if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-                    qCWarning(QT_BT_WINRT) << "Descriptor operation failed";
+                    qCWarning(QT_BT_WINDOWS) << "Descriptor operation failed";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -287,7 +287,7 @@ public slots:
 
                 hr = result->get_Descriptors(&descriptors);
                 if (FAILED(hr)) {
-                    qCWarning(QT_BT_WINRT) << "Could not obtain list of descriptors";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain list of descriptors";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -296,7 +296,7 @@ public slots:
                 uint descriptorCount;
                 hr = descriptors->get_Size(&descriptorCount);
                 if (FAILED(hr)) {
-                    qCWarning(QT_BT_WINRT) << "Could not obtain list of descriptors' size";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain list of descriptors' size";
                     --mCharacteristicsCountToBeDiscovered;
                     checkAllCharacteristicsDiscovered();
                     return S_OK;
@@ -380,7 +380,7 @@ public slots:
                 return S_OK;
             }).Get());
             if (FAILED(hr)) {
-                qCWarning(QT_BT_WINRT) << "Could not register descriptor callback";
+                qCWarning(QT_BT_WINDOWS) << "Could not register descriptor callback";
                 --mCharacteristicsCountToBeDiscovered;
                 continue;
             }
@@ -456,7 +456,7 @@ void QLowEnergyControllerPrivateWinRT::init()
 
 void QLowEnergyControllerPrivateWinRT::connectToDevice()
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     mAbortPending = false;
     Q_Q(QLowEnergyController);
     if (remoteDevice.isNull()) {
@@ -478,7 +478,7 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
     hr = QWinRTFunctions::await(deviceFromIdOperation, mDevice.GetAddressOf(),
                                 QWinRTFunctions::ProcessMainThreadEvents, 5000);
     if (FAILED(hr) || !mDevice) {
-        qCWarning(QT_BT_WINRT) << "Could not find LE device";
+        qCWarning(QT_BT_WINDOWS) << "Could not find LE device";
         setError(QLowEnergyController::InvalidBluetoothAdapterError);
         setState(QLowEnergyController::UnconnectedState);
         return;
@@ -502,7 +502,7 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
 
 void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::ClosingState);
     unregisterFromValueChanges();
@@ -520,7 +520,7 @@ ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRT::getNativeService(
     HRESULT hr;
     hr = mDevice->GetGattService(serviceUuid, &deviceService);
     if (FAILED(hr))
-        qCDebug(QT_BT_WINRT) << "Could not obtain native service for Uuid" << serviceUuid;
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for Uuid" << serviceUuid;
     return deviceService;
 }
 
@@ -564,7 +564,7 @@ ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRT::getNativeCharacter
 void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothUuid &serviceUuid,
                                                                   const QBluetoothUuid &charUuid)
 {
-    qCDebug(QT_BT_WINRT) << "Registering characteristic" << charUuid << "in service"
+    qCDebug(QT_BT_WINDOWS) << "Registering characteristic" << charUuid << "in service"
                          << serviceUuid << "for value changes";
     for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
         GUID guuid;
@@ -576,7 +576,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
     }
     ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(serviceUuid, charUuid);
     if (!characteristic) {
-        qCDebug(QT_BT_WINRT).nospace() << "Could not obtain native characteristic " << charUuid
+        qCDebug(QT_BT_WINDOWS).nospace() << "Could not obtain native characteristic " << charUuid
                              << " from service " << serviceUuid << ". Qt will not be able to signal"
                              << " changes for this characteristic.";
         return;
@@ -589,23 +589,23 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
                 &token);
     RETURN_IF_FAILED("Could not register characteristic for value changes", return)
     mValueChangedTokens.append(ValueChangedEntry(characteristic, token));
-    qCDebug(QT_BT_WINRT) << "Characteristic" << charUuid << "in service"
+    qCDebug(QT_BT_WINDOWS) << "Characteristic" << charUuid << "in service"
         << serviceUuid << "registered for value changes";
 }
 
 void QLowEnergyControllerPrivateWinRT::unregisterFromValueChanges()
 {
-    qCDebug(QT_BT_WINRT) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
+    qCDebug(QT_BT_WINDOWS) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
     HRESULT hr;
     for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
         if (!entry.characteristic) {
-            qCWarning(QT_BT_WINRT) << "Unregistering from value changes for characteristic failed."
+            qCWarning(QT_BT_WINDOWS) << "Unregistering from value changes for characteristic failed."
                                    << "Characteristic has been deleted";
             continue;
         }
         hr = entry.characteristic->remove_ValueChanged(entry.token);
         if (FAILED(hr))
-            qCWarning(QT_BT_WINRT) << "Unregistering from value changes for characteristic failed.";
+            qCWarning(QT_BT_WINDOWS) << "Unregistering from value changes for characteristic failed.";
     }
     mValueChangedTokens.clear();
 }
@@ -628,7 +628,7 @@ bool QLowEnergyControllerPrivateWinRT::registerForStatusChanges()
     if (!mDevice)
         return false;
 
-    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
 
     HRESULT hr;
     hr = mDevice->add_ConnectionStatusChanged(
@@ -640,7 +640,7 @@ bool QLowEnergyControllerPrivateWinRT::registerForStatusChanges()
 
 void QLowEnergyControllerPrivateWinRT::unregisterFromStatusChanges()
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     if (mDevice && mStatusChangedToken.value) {
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
         mStatusChangedToken.value = 0;
@@ -708,7 +708,7 @@ void QLowEnergyControllerPrivateWinRT::obtainIncludedServices(
         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain included service's Uuid");
         const QBluetoothUuid includedUuid(guuid);
         QSharedPointer<QLowEnergyServicePrivate> includedPointer;
-        qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__
+        qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__
                                             << "Changing service pointer from thread"
                                             << QThread::currentThread();
         if (serviceList.contains(includedUuid)) {
@@ -734,7 +734,7 @@ HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Window
 {
     Q_Q(QLowEnergyController);
     if (status != AsyncStatus::Completed) {
-        qCDebug(QT_BT_WINRT) << "Could not obtain services";
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain services";
         return S_OK;
     }
     ComPtr<IGattDeviceServicesResult> result;
@@ -766,7 +766,7 @@ HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Window
         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service's Uuid");
         const QBluetoothUuid service(guuid);
 
-        qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__
+        qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__
                                             << "Changing service pointer from thread"
                                             << QThread::currentThread();
         QSharedPointer<QLowEnergyServicePrivate> pointer;
@@ -795,7 +795,7 @@ HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Window
 
 void QLowEnergyControllerPrivateWinRT::discoverServices()
 {
-    qCDebug(QT_BT_WINRT) << "Service discovery initiated";
+    qCDebug(QT_BT_WINDOWS) << "Service discovery initiated";
 
     ComPtr<IBluetoothLEDevice3> device3;
     HRESULT hr = mDevice.As(&device3);
@@ -813,29 +813,29 @@ void QLowEnergyControllerPrivateWinRT::discoverServices()
 void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
         const QBluetoothUuid &service, QLowEnergyService::DiscoveryMode mode)
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service;
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__ << service;
     if (!serviceList.contains(service)) {
-        qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"
+        qCWarning(QT_BT_WINDOWS) << "Discovery done of unknown service:"
             << service.toString();
         return;
     }
 
     ComPtr<IGattDeviceService> deviceService = getNativeService(service);
     if (!deviceService) {
-        qCDebug(QT_BT_WINRT) << "Could not obtain native service for uuid " << service;
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for uuid " << service;
         return;
     }
 
     auto reactOnDiscoveryError = [](QSharedPointer<QLowEnergyServicePrivate> service,
             const QString &msg)
     {
-        qCDebug(QT_BT_WINRT) << msg;
+        qCDebug(QT_BT_WINDOWS) << msg;
         service->setError(QLowEnergyService::UnknownError);
         service->setState(QLowEnergyService::RemoteService);
     };
     //update service data
     QSharedPointer<QLowEnergyServicePrivate> pointer = serviceList.value(service);
-    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+    qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
     pointer->setState(QLowEnergyService::RemoteServiceDiscovering);
     ComPtr<IGattDeviceService3> deviceService3;
@@ -887,7 +887,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
 
         const QBluetoothUuid service(guuid);
         if (service.isNull()) {
-            qCDebug(QT_BT_WINRT) << "Could not find service";
+            qCDebug(QT_BT_WINDOWS) << "Could not find service";
             continue;
         }
 
@@ -913,7 +913,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
             QLowEnergyServicePrivate::CharData> charList, QList<QBluetoothUuid> indicateChars,
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
-            qCWarning(QT_BT_WINRT) << "Discovery done of unknown service:"
+            qCWarning(QT_BT_WINDOWS) << "Discovery done of unknown service:"
                                    << service.toString();
             return;
         }
@@ -955,8 +955,8 @@ void QLowEnergyControllerPrivateWinRT::readCharacteristic(
         const QSharedPointer<QLowEnergyServicePrivate> service,
         const QLowEnergyHandle charHandle)
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle;
-    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__ << service << charHandle;
+    qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
@@ -966,18 +966,18 @@ void QLowEnergyControllerPrivateWinRT::readCharacteristic(
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_WINRT) << charHandle << "could not be found in service" << service->uuid;
+        qCDebug(QT_BT_WINDOWS) << charHandle << "could not be found in service" << service->uuid;
         service->setError(QLowEnergyService::CharacteristicReadError);
         return;
     }
 
     const QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
     if (!(charData.properties & QLowEnergyCharacteristic::Read))
-        qCDebug(QT_BT_WINRT) << "Read flag is not set for characteristic" << charData.uuid;
+        qCDebug(QT_BT_WINDOWS) << "Read flag is not set for characteristic" << charData.uuid;
 
     ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(service->uuid, charData.uuid);
     if (!characteristic) {
-        qCDebug(QT_BT_WINRT) << "Could not obtain native characteristic" << charData.uuid
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain native characteristic" << charData.uuid
                              << "from service" << service->uuid;
         service->setError(QLowEnergyService::CharacteristicReadError);
         return;
@@ -990,7 +990,7 @@ void QLowEnergyControllerPrivateWinRT::readCharacteristic(
             (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
     {
         if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-            qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "read operation failed.";
+            qCDebug(QT_BT_WINDOWS) << "Characteristic" << charHandle << "read operation failed.";
             service->setError(QLowEnergyService::CharacteristicReadError);
             return S_OK;
         }
@@ -1018,8 +1018,8 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
         const QLowEnergyHandle charHandle,
         const QLowEnergyHandle descHandle)
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << descHandle;
-    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__ << service << charHandle << descHandle;
+    qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
@@ -1029,7 +1029,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "in characteristic" << charHandle
+        qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "in characteristic" << charHandle
                              << "cannot be found in service" << service->uuid;
         service->setError(QLowEnergyService::DescriptorReadError);
         return;
@@ -1038,7 +1038,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
     const QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
     ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(service->uuid, charData.uuid);
     if (!characteristic) {
-        qCDebug(QT_BT_WINRT) << "Could not obtain native characteristic" << charData.uuid
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain native characteristic" << charData.uuid
                              << "from service" << service->uuid;
         service->setError(QLowEnergyService::DescriptorReadError);
         return;
@@ -1046,7 +1046,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
 
     // Get native descriptor
     if (!charData.descriptorList.contains(descHandle))
-        qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "cannot be found in characteristic" << charHandle;
+        qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "cannot be found in characteristic" << charHandle;
     const QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
     const QBluetoothUuid descUuid = descData.uuid;
     if (descUuid == QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)) {
@@ -1058,7 +1058,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
                 (IAsyncOperation<ClientCharConfigDescriptorResult *> *op, AsyncStatus status)
         {
             if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "read operation failed";
+                qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "read operation failed";
                 service->setError(QLowEnergyService::DescriptorReadError);
                 return S_OK;
             }
@@ -1084,7 +1084,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
             if (value == GattClientCharacteristicConfigurationDescriptorValue_None)
                 correct = true;
             if (!correct) {
-                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle
+                qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle
                                      << "read operation failed. Obtained unexpected value.";
                 service->setError(QLowEnergyService::DescriptorReadError);
                 return S_OK;
@@ -1136,11 +1136,11 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
     CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not await descritpor list's size",
                                    service, QLowEnergyService::DescriptorReadError, return)
     if (size == 0) {
-        qCWarning(QT_BT_WINRT) << "No descriptor with uuid" << descData.uuid << "was found.";
+        qCWarning(QT_BT_WINDOWS) << "No descriptor with uuid" << descData.uuid << "was found.";
         service->setError(QLowEnergyService::DescriptorReadError);
         return;
     } else if (size > 1) {
-        qCWarning(QT_BT_WINRT) << "There is more than 1 descriptor with uuid" << descData.uuid;
+        qCWarning(QT_BT_WINDOWS) << "There is more than 1 descriptor with uuid" << descData.uuid;
     }
 
     ComPtr<IGattDescriptor> descriptor;
@@ -1155,7 +1155,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
             (IAsyncOperation<GattReadResult*> *op, AsyncStatus status)
     {
         if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-            qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "read operation failed";
+            qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "read operation failed";
             service->setError(QLowEnergyService::DescriptorReadError);
             return S_OK;
         }
@@ -1163,7 +1163,7 @@ void QLowEnergyControllerPrivateWinRT::readDescriptor(
         HRESULT hr;
         hr = op->GetResults(&descriptorValue);
         if (FAILED(hr)) {
-            qCDebug(QT_BT_WINRT) << "Could not obtain result for descriptor" << descHandle;
+            qCDebug(QT_BT_WINDOWS) << "Could not obtain result for descriptor" << descHandle;
             service->setError(QLowEnergyService::DescriptorReadError);
             return S_OK;
         }
@@ -1190,8 +1190,8 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
         const QByteArray &newValue,
         QLowEnergyService::WriteMode mode)
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << newValue << mode;
-    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__ << service << charHandle << newValue << mode;
+    qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
@@ -1200,7 +1200,7 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
         return;
     }
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "cannot be found in service"
+        qCDebug(QT_BT_WINDOWS) << "Characteristic" << charHandle << "cannot be found in service"
                              << service->uuid;
         service->setError(QLowEnergyService::CharacteristicWriteError);
         return;
@@ -1210,12 +1210,12 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
     const bool writeWithResponse = mode == QLowEnergyService::WriteWithResponse;
     if (!(charData.properties & (writeWithResponse ? QLowEnergyCharacteristic::Write
              : QLowEnergyCharacteristic::WriteNoResponse)))
-        qCDebug(QT_BT_WINRT) << "Write flag is not set for characteristic" << charHandle;
+        qCDebug(QT_BT_WINDOWS) << "Write flag is not set for characteristic" << charHandle;
 
     ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(service->uuid,
                                                                          charData.uuid);
     if (!characteristic) {
-        qCDebug(QT_BT_WINRT) << "Could not obtain native characteristic" << charData.uuid
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain native characteristic" << charData.uuid
                              << "from service" << service->uuid;
         service->setError(QLowEnergyService::CharacteristicWriteError);
         return;
@@ -1254,7 +1254,7 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
             (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
     {
         if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-            qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "write operation failed";
+            qCDebug(QT_BT_WINDOWS) << "Characteristic" << charHandle << "write operation failed";
             service->setError(QLowEnergyService::CharacteristicWriteError);
             return S_OK;
         }
@@ -1262,7 +1262,7 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
         HRESULT hr;
         hr = op->GetResults(&result);
         if (hr == E_BLUETOOTH_ATT_INVALID_ATTRIBUTE_VALUE_LENGTH) {
-            qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle
+            qCDebug(QT_BT_WINDOWS) << "Characteristic" << charHandle
                                  << "write operation was tried with invalid value length";
             service->setError(QLowEnergyService::CharacteristicWriteError);
             return S_OK;
@@ -1270,7 +1270,7 @@ void QLowEnergyControllerPrivateWinRT::writeCharacteristic(
         CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain characteristic write result",
                                        service, QLowEnergyService::CharacteristicWriteError, return S_OK)
         if (result != GattCommunicationStatus_Success) {
-            qCDebug(QT_BT_WINRT) << "Characteristic" << charHandle << "write operation failed";
+            qCDebug(QT_BT_WINDOWS) << "Characteristic" << charHandle << "write operation failed";
             service->setError(QLowEnergyService::CharacteristicWriteError);
             return S_OK;
         }
@@ -1296,8 +1296,8 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         const QLowEnergyHandle descHandle,
         const QByteArray &newValue)
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__ << service << charHandle << descHandle << newValue;
-    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__ << service << charHandle << descHandle << newValue;
+    qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
     Q_ASSERT(!service.isNull());
     if (role == QLowEnergyController::PeripheralRole) {
@@ -1307,7 +1307,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
     }
 
     if (!service->characteristicList.contains(charHandle)) {
-        qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "in characteristic" << charHandle
+        qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "in characteristic" << charHandle
                              << "could not be found in service" << service->uuid;
         service->setError(QLowEnergyService::DescriptorWriteError);
         return;
@@ -1316,7 +1316,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
     const QLowEnergyServicePrivate::CharData charData = service->characteristicList.value(charHandle);
     ComPtr<IGattCharacteristic> characteristic = getNativeCharacteristic(service->uuid, charData.uuid);
     if (!characteristic) {
-        qCDebug(QT_BT_WINRT) << "Could not obtain native characteristic" << charData.uuid
+        qCDebug(QT_BT_WINDOWS) << "Could not obtain native characteristic" << charData.uuid
                              << "from service" << service->uuid;
         service->setError(QLowEnergyService::DescriptorWriteError);
         return;
@@ -1324,7 +1324,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
 
     // Get native descriptor
     if (!charData.descriptorList.contains(descHandle))
-        qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "could not be found in Characteristic"
+        qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "could not be found in Characteristic"
                              << charHandle;
 
     QLowEnergyServicePrivate::DescData descData = charData.descriptorList.value(descHandle);
@@ -1333,7 +1333,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         quint16 intValue = qFromLittleEndian<quint16>(newValue);
         if (intValue & GattClientCharacteristicConfigurationDescriptorValue_Indicate
                 && intValue & GattClientCharacteristicConfigurationDescriptorValue_Notify) {
-            qCWarning(QT_BT_WINRT) << "Setting both Indicate and Notify is not supported on WinRT";
+            qCWarning(QT_BT_WINDOWS) << "Setting both Indicate and Notify is not supported on WinRT";
             value = GattClientCharacteristicConfigurationDescriptorValue(
                     (GattClientCharacteristicConfigurationDescriptorValue_Indicate
                      | GattClientCharacteristicConfigurationDescriptorValue_Notify));
@@ -1344,7 +1344,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         } else if (intValue == 0) {
             value = GattClientCharacteristicConfigurationDescriptorValue_None;
         } else {
-            qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle
+            qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle
                                  << "write operation failed: Invalid value";
             service->setError(QLowEnergyService::DescriptorWriteError);
             return;
@@ -1358,7 +1358,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
                 (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
         {
             if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-                qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "write operation failed";
                 service->setError(QLowEnergyService::DescriptorWriteError);
                 return S_OK;
             }
@@ -1368,7 +1368,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
             CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain result for descriptor",
                                            service, QLowEnergyService::DescriptorWriteError, return S_OK)
             if (result != GattCommunicationStatus_Success) {
-                qCWarning(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+                qCWarning(QT_BT_WINDOWS) << "Descriptor" << descHandle << "write operation failed";
                 service->setError(QLowEnergyService::DescriptorWriteError);
                 return S_OK;
             }
@@ -1400,7 +1400,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
     GattCommunicationStatus commStatus;
     hr = result->get_Status(&commStatus);
     if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-        qCWarning(QT_BT_WINRT) << "Descriptor operation failed";
+        qCWarning(QT_BT_WINDOWS) << "Descriptor operation failed";
         service->setError(QLowEnergyService::DescriptorWriteError);
         return;
     }
@@ -1413,10 +1413,10 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
     CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain list of descriptors' size",
                                    service, QLowEnergyService::DescriptorWriteError, return)
     if (size == 0) {
-        qCWarning(QT_BT_WINRT) << "No descriptor with uuid" << descData.uuid << "was found.";
+        qCWarning(QT_BT_WINDOWS) << "No descriptor with uuid" << descData.uuid << "was found.";
         return;
     } else if (size > 1) {
-        qCWarning(QT_BT_WINRT) << "There is more than 1 descriptor with uuid" << descData.uuid;
+        qCWarning(QT_BT_WINDOWS) << "There is more than 1 descriptor with uuid" << descData.uuid;
     }
     ComPtr<IGattDescriptor> descriptor;
     hr = descriptors->GetAt(0, &descriptor);
@@ -1454,7 +1454,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
             (IAsyncOperation<GattCommunicationStatus> *op, AsyncStatus status)
     {
         if (status == AsyncStatus::Canceled || status == AsyncStatus::Error) {
-            qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+            qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "write operation failed";
             service->setError(QLowEnergyService::DescriptorWriteError);
             return S_OK;
         }
@@ -1464,7 +1464,7 @@ void QLowEnergyControllerPrivateWinRT::writeDescriptor(
         CHECK_HR_AND_SET_SERVICE_ERROR(hr, "Could not obtain result for descriptor",
                                        service, QLowEnergyService::DescriptorWriteError, return S_OK)
         if (result != GattCommunicationStatus_Success) {
-            qCDebug(QT_BT_WINRT) << "Descriptor" << descHandle << "write operation failed";
+            qCDebug(QT_BT_WINDOWS) << "Descriptor" << descHandle << "write operation failed";
             service->setError(QLowEnergyService::DescriptorWriteError);
             return S_OK;
         }
@@ -1490,20 +1490,20 @@ void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnerg
 void QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged(
         quint16 charHandle, const QByteArray &data)
 {
-    qCDebug(QT_BT_WINRT) << __FUNCTION__ << charHandle << data;
-    qCDebug(QT_BT_WINRT_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__ << charHandle << data;
+    qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                         << QThread::currentThread();
     QSharedPointer<QLowEnergyServicePrivate> service =
             serviceForHandle(charHandle);
     if (service.isNull())
         return;
 
-    qCDebug(QT_BT_WINRT) << "Characteristic change notification" << service->uuid
+    qCDebug(QT_BT_WINDOWS) << "Characteristic change notification" << service->uuid
                            << charHandle << data.toHex();
 
     QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
     if (!characteristic.isValid()) {
-        qCWarning(QT_BT_WINRT) << "characteristicChanged: Cannot find characteristic";
+        qCWarning(QT_BT_WINDOWS) << "characteristicChanged: Cannot find characteristic";
         return;
     }
 
@@ -1520,7 +1520,7 @@ void QLowEnergyControllerPrivateWinRT::handleServiceHandlerError(const QString &
     if (state != QLowEnergyController::DiscoveringState)
         return;
 
-    qCWarning(QT_BT_WINRT) << "Error while discovering services:" << error;
+    qCWarning(QT_BT_WINDOWS) << "Error while discovering services:" << error;
     setState(QLowEnergyController::UnconnectedState);
     setError(QLowEnergyController::ConnectionError);
 }
@@ -1543,7 +1543,7 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
         GattCommunicationStatus commStatus;
         hr = deviceServicesResult->get_Status(&commStatus);
         if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-            qCWarning(QT_BT_WINRT()) << "Service operation failed";
+            qCWarning(QT_BT_WINDOWS()) << "Service operation failed";
             setError(QLowEnergyController::ConnectionError);
             setState(QLowEnergyController::UnconnectedState);
             unregisterFromStatusChanges();
@@ -1558,7 +1558,7 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
         CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service count", return)
 
         if (serviceCount == 0) {
-            qCWarning(QT_BT_WINRT()) << "Found devices without services";
+            qCWarning(QT_BT_WINDOWS()) << "Found devices without services";
             setError(QLowEnergyController::ConnectionError);
             setState(QLowEnergyController::UnconnectedState);
             unregisterFromStatusChanges();
@@ -1584,7 +1584,7 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
             GattCommunicationStatus commStatus;
             hr = characteristicsResult->get_Status(&commStatus);
             if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-                qCWarning(QT_BT_WINRT) << "Characteristic operation failed";
+                qCWarning(QT_BT_WINDOWS) << "Characteristic operation failed";
                 break;
             }
             ComPtr<IVectorView<GattCharacteristic *>> characteristics;
@@ -1592,7 +1592,7 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
             if (hr == E_ACCESSDENIED) {
                 // Everything will work as expected up until this point if the manifest capabilties
                 // for bluetooth LE are not set.
-                qCWarning(QT_BT_WINRT) << "Could not obtain characteristic list. Please check your "
+                qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic list. Please check your "
                     "manifest capabilities";
                 setState(QLowEnergyController::UnconnectedState);
                 setError(QLowEnergyController::ConnectionError);
@@ -1626,7 +1626,7 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
                 hr = result->get_Value(&buffer);
                 CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic value", return);
                 if (!buffer) {
-                    qCDebug(QT_BT_WINRT) << "Problem reading value";
+                    qCDebug(QT_BT_WINDOWS) << "Problem reading value";
                     break;
                 }
 
@@ -1668,7 +1668,7 @@ void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
             continue;
 
         if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-            qCWarning(QT_BT_WINRT()) << "Service operation failed";
+            qCWarning(QT_BT_WINDOWS()) << "Service operation failed";
             setError(QLowEnergyController::ConnectionError);
             setState(QLowEnergyController::UnconnectedState);
             unregisterFromStatusChanges();

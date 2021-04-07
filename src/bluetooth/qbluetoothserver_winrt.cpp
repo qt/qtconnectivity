@@ -63,7 +63,7 @@ typedef ITypedEventHandler<StreamSocketListener *, StreamSocketListenerConnectio
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 QHash<QBluetoothServerPrivate *, int> __fakeServerPorts;
 
@@ -121,7 +121,7 @@ HRESULT QBluetoothServerPrivate::handleClientConnection(IStreamSocketListener *l
 {
     Q_Q(QBluetoothServer);
     if (!socketListener || socketListener.Get() != listener) {
-        qCDebug(QT_BT_WINRT) << "Accepting connection from wrong listener. We should not be here.";
+        qCDebug(QT_BT_WINDOWS) << "Accepting connection from wrong listener. We should not be here.";
         Q_UNREACHABLE();
         return S_OK;
     }
@@ -132,12 +132,12 @@ HRESULT QBluetoothServerPrivate::handleClientConnection(IStreamSocketListener *l
     Q_ASSERT_SUCCEEDED(hr);
     QMutexLocker locker(&pendingConnectionsMutex);
     if (pendingConnections.count() < maxPendingConnections) {
-        qCDebug(QT_BT_WINRT) << "Accepting connection";
+        qCDebug(QT_BT_WINDOWS) << "Accepting connection";
         pendingConnections.append(socket);
         locker.unlock();
         q->newConnection();
     } else {
-        qCDebug(QT_BT_WINRT) << "Refusing connection";
+        qCDebug(QT_BT_WINDOWS) << "Refusing connection";
     }
 
     return S_OK;
@@ -185,9 +185,9 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     if (__fakeServerPorts.key(port) == 0) {
         __fakeServerPorts[d] = port;
 
-        qCDebug(QT_BT_WINRT) << "Port" << port << "registered";
+        qCDebug(QT_BT_WINDOWS) << "Port" << port << "registered";
     } else {
-        qCWarning(QT_BT_WINRT) << "server with port" << port << "already registered or port invalid";
+        qCWarning(QT_BT_WINDOWS) << "server with port" << port << "already registered or port invalid";
         d->m_lastError = ServiceAlreadyRegisteredError;
         emit errorOccurred(d->m_lastError);
         return false;
@@ -201,7 +201,7 @@ void QBluetoothServer::setMaxPendingConnections(int numConnections)
     Q_D(QBluetoothServer);
     QMutexLocker locker(&d->pendingConnectionsMutex);
     if (d->pendingConnections.count() > numConnections) {
-        qCWarning(QT_BT_WINRT) << "There are currently more than" << numConnections << "connections"
+        qCWarning(QT_BT_WINDOWS) << "There are currently more than" << numConnections << "connections"
                                << "pending. Number of maximum pending connections was not changed.";
         return;
     }

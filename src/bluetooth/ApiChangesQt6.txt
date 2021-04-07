@@ -11,6 +11,9 @@ General
 
  - Win32 backend has been removed. There will not be a working Bluetooth backend when Qt is built with mingw.
 
+ - Since there is now only one Windows backend, the logging category qt.bluetooth.winrt was removed.
+   The corresponding log messages are now in qt.bluetooth.windows.
+
 QBluetooth namespace
 --------------------
 

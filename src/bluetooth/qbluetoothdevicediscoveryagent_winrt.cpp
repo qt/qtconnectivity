@@ -69,24 +69,24 @@ using namespace ABI::Windows::Storage::Streams;
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 #define EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED(msg, error, ret) \
     if (FAILED(hr)) { \
         emit errorOccured(error); \
-        qCWarning(QT_BT_WINRT) << msg; \
+        qCWarning(QT_BT_WINDOWS) << msg; \
         ret; \
     }
 
 #define WARN_AND_RETURN_IF_FAILED(msg, ret) \
     if (FAILED(hr)) { \
-        qCWarning(QT_BT_WINRT) << msg; \
+        qCWarning(QT_BT_WINDOWS) << msg; \
         ret; \
     }
 
 #define WARN_AND_CONTINUE_IF_FAILED(msg) \
     if (FAILED(hr)) { \
-        qCWarning(QT_BT_WINRT) << msg; \
+        qCWarning(QT_BT_WINDOWS) << msg; \
         continue; \
     }
 
@@ -111,7 +111,7 @@ static ManufacturerData extractManufacturerData(ComPtr<IBluetoothLEAdvertisement
         WARN_AND_CONTINUE_IF_FAILED("Could not obtain manufacturer data set.");
         const QByteArray bufferData = byteArrayFromBuffer(buffer);
         if (ret.contains(id))
-            qCWarning(QT_BT_WINRT) << "Company ID already present in manufacturer data.";
+            qCWarning(QT_BT_WINDOWS) << "Company ID already present in manufacturer data.";
         ret.insert(id, bufferData);
     }
     return ret;
@@ -214,7 +214,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::start()
         setupLEDeviceWatcher();
     }
 
-    qCDebug(QT_BT_WINRT) << "Worker started";
+    qCDebug(QT_BT_WINDOWS) << "Worker started";
 }
 
 void QWinRTBluetoothDeviceDiscoveryWorker::stopLEWatcher()
@@ -264,7 +264,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::startDeviceDiscovery(QBluetoothDevice
 
 void QWinRTBluetoothDeviceDiscoveryWorker::onDeviceDiscoveryFinished(IAsyncOperation<DeviceInformationCollection *> *op, QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
 {
-    qCDebug(QT_BT_WINRT) << (mode == QBluetoothDeviceDiscoveryAgent::ClassicMethod ? "BT" : "BTLE")
+    qCDebug(QT_BT_WINDOWS) << (mode == QBluetoothDeviceDiscoveryAgent::ClassicMethod ? "BT" : "BTLE")
         << " scan completed";
     ComPtr<IVectorView<DeviceInformation *>> devices;
     HRESULT hr;
@@ -461,7 +461,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
         if (!m_pendingPairedDevices
                 && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
             finishDiscovery();
-        qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from id";
+        qCWarning(QT_BT_WINDOWS) << "Could not obtain bluetooth device from id";
         return;
     }
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
@@ -481,7 +481,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
         if (!m_pendingPairedDevices
                 && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
             finishDiscovery();
-        qCWarning(QT_BT_WINRT) << "Could not register device found callback";
+        qCWarning(QT_BT_WINDOWS) << "Could not register device found callback";
         return;
     }
 }
@@ -495,7 +495,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTR
     if (FAILED(hr)) {
         emit errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
         --m_pendingPairedDevices;
-        qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from id";
+        qCWarning(QT_BT_WINDOWS) << "Could not obtain bluetooth device from id";
         return;
     }
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
@@ -512,7 +512,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTR
     if (FAILED(hr)) {
         emit errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
         --m_pendingPairedDevices;
-        qCWarning(QT_BT_WINRT) << "Could not register device found callback";
+        qCWarning(QT_BT_WINDOWS) << "Could not register device found callback";
         return;
     }
 }
@@ -526,7 +526,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromAddressAsync(quint
     HRESULT hr = m_leDeviceStatics->FromBluetoothAddressAsync(address, &deviceFromAddressOperation);
     if (FAILED(hr)) {
         emit errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
-        qCWarning(QT_BT_WINRT) << "Could not obtain bluetooth device from address";
+        qCWarning(QT_BT_WINDOWS) << "Could not obtain bluetooth device from address";
         return;
     }
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
@@ -539,7 +539,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromAddressAsync(quint
     }).Get());
     if (FAILED(hr)) {
         emit errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
-        qCWarning(QT_BT_WINRT) << "Could not register device found callback";
+        qCWarning(QT_BT_WINDOWS) << "Could not register device found callback";
         return;
     }
 }
@@ -583,7 +583,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
     IVectorView <Rfcomm::RfcommDeviceService *> *deviceServices;
     hr = device->get_RfcommServices(&deviceServices);
     if (hr == E_ACCESSDENIED) {
-        qCWarning(QT_BT_WINRT) << "Could not obtain device services. Please check you have "
+        qCWarning(QT_BT_WINDOWS) << "Could not obtain device services. Please check you have "
                                   "permission to access the device.";
     } else {
         EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain device services",
@@ -614,7 +614,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
             uuids.append(QBluetoothUuid(uuid));
         }
 
-        qCDebug(QT_BT_WINRT) << "Discovered BT device: " << QString::number(address) << btName
+        qCDebug(QT_BT_WINDOWS) << "Discovered BT device: " << QString::number(address) << btName
             << "Num UUIDs" << uuids.count();
 
         QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, classOfDeviceInt);
@@ -668,7 +668,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFoundAsync(IAsy
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device, PairingCheck pairingCheck)
 {
     if (!device) {
-        qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: No device given";
+        qCDebug(QT_BT_WINDOWS) << "onBluetoothLEDeviceFound: No device given";
         return S_OK;
     }
 
@@ -684,7 +684,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                                        QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                        return S_OK);
         if (!deviceInfo) {
-            qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: Could not obtain device information";
+            qCDebug(QT_BT_WINDOWS) << "onBluetoothLEDeviceFound: Could not obtain device information";
             return S_OK;
         }
         ComPtr<IDeviceInformation2> deviceInfo2;
@@ -718,7 +718,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                     return S_OK;
 
                 if (status != AsyncStatus::Completed) {
-                    qCDebug(QT_BT_WINRT) << "Could not pair device";
+                    qCDebug(QT_BT_WINDOWS) << "Could not pair device";
                     return S_OK;
                 }
 
@@ -727,7 +727,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                 hr = op->GetResults(&result);
                 if (FAILED(hr)) {
                     emit tPointer->errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
-                    qCWarning(QT_BT_WINRT) << "Could not obtain pairing result";
+                    qCWarning(QT_BT_WINDOWS) << "Could not obtain pairing result";
                     return S_OK;
                 }
 
@@ -735,7 +735,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                 hr = result.Get()->get_Status(&pairingStatus);
                 if (FAILED(hr) || pairingStatus != DevicePairingResultStatus_Paired) {
                     emit tPointer->errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
-                    qCWarning(QT_BT_WINRT) << "Device pairing failed";
+                    qCWarning(QT_BT_WINDOWS) << "Device pairing failed";
                     return S_OK;
                 }
 
@@ -788,7 +788,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     const qint16 rssi = m_foundLEDevices.value(address);
     const ManufacturerData manufacturerData = m_foundLEManufacturerData.value(address);
 
-    qCDebug(QT_BT_WINRT) << "Discovered BTLE device: " << QString::number(address) << btName
+    qCDebug(QT_BT_WINDOWS) << "Discovered BTLE device: " << QString::number(address) << btName
         << "Num UUIDs" << uuids.count() << "RSSI:" << rssi
         << "Num manufacturer data" << manufacturerData.count();
 
@@ -808,7 +808,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device)
 {
     if (!device) {
-        qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: No device given";
+        qCDebug(QT_BT_WINDOWS) << "onBluetoothLEDeviceFound: No device given";
         return S_OK;
     }
 
@@ -834,7 +834,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                                            QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                            return S_OK);
     if (!deviceInfo) {
-        qCDebug(QT_BT_WINRT) << "onBluetoothLEDeviceFound: Could not obtain device information";
+        qCDebug(QT_BT_WINDOWS) << "onBluetoothLEDeviceFound: Could not obtain device information";
         return S_OK;
     }
     ComPtr<IDeviceInformation2> deviceInfo2;
@@ -886,7 +886,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     }
     const ManufacturerData manufacturerData = m_foundLEManufacturerData.value(address);
 
-    qCDebug(QT_BT_WINRT) << "Discovered BTLE device: " << QString::number(address) << btName
+    qCDebug(QT_BT_WINDOWS) << "Discovered BTLE device: " << QString::number(address) << btName
         << "Num UUIDs" << uuids.count() << "RSSI:" << rssi
         << "Num manufacturer data" << manufacturerData.count();
 
@@ -974,7 +974,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDevic
     for (QList<QBluetoothDeviceInfo>::iterator iter = discoveredDevices.begin();
         iter != discoveredDevices.end(); ++iter) {
         if (iter->address() == info.address()) {
-            qCDebug(QT_BT_WINRT) << "Updating device" << iter->name() << iter->address();
+            qCDebug(QT_BT_WINDOWS) << "Updating device" << iter->name() << iter->address();
             // merge service uuids
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             QList<QBluetoothUuid> uuids = iter->serviceUuids();
@@ -1007,7 +1007,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::updateDeviceData(const QBluetoothAdd
     for (QList<QBluetoothDeviceInfo>::iterator iter = discoveredDevices.begin();
         iter != discoveredDevices.end(); ++iter) {
         if (iter->address() == address) {
-            qCDebug(QT_BT_WINRT) << "Updating data for device" << iter->name() << iter->address();
+            qCDebug(QT_BT_WINDOWS) << "Updating data for device" << iter->name() << iter->address();
             if (fields.testFlag(QBluetoothDeviceInfo::Field::RSSI))
                 iter->setRssi(rssi);
             if (fields.testFlag(QBluetoothDeviceInfo::Field::ManufacturerData))
