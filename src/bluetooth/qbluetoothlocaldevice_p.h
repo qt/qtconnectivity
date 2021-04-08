@@ -73,6 +73,11 @@ class QDBusPendingCallWatcher;
 QT_END_NAMESPACE
 #endif
 
+#ifdef QT_WINRT_BLUETOOTH
+#include <winrt/base.h>
+struct PairingWorker;
+#endif
+
 #ifdef QT_ANDROID_BLUETOOTH
 #include <jni.h>
 #include <QtCore/QJniEnvironment>
@@ -192,6 +197,8 @@ public:
 
 private:
     QBluetoothLocalDevice *q_ptr;
+
+    winrt::com_ptr<PairingWorker> mPairingWorker;
 };
 #elif !defined(QT_OSX_BLUETOOTH) // dummy backend
 class QBluetoothLocalDevicePrivate : public QObject
