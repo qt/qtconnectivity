@@ -309,7 +309,7 @@ void QLowEnergyControllerPrivateDarwin::discoverServiceDetails(
     ObjCCentralManager *manager = centralManager.getAs<ObjCCentralManager>();
     const QBluetoothUuid serviceUuidCopy(serviceUuid);
     dispatch_async(leQueue, ^{
-        [manager discoverServiceDetails:serviceUuidCopy];
+        [manager discoverServiceDetails:serviceUuidCopy readValues:mode == QLowEnergyService::FullDiscovery];
     });
 }
 

@@ -45,6 +45,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qmap.h>
 
 #include <algorithm>
 #include <vector>
@@ -138,6 +139,8 @@ QT_USE_NAMESPACE
 
 @end
 
+using DiscoveryMode = QLowEnergyService::DiscoveryMode;
+
 @implementation QT_MANGLE_NAMESPACE(DarwinBTCentralManager)
 {
 @private
@@ -159,7 +162,7 @@ QT_USE_NAMESPACE
     // We'd like to avoid loops in a services' topology:
     DarwinBluetooth::ObjCStrongReference<NSMutableSet> visitedServices;
 
-    QList<QBluetoothUuid> servicesToDiscoverDetails;
+    QMap<QBluetoothUuid, DiscoveryMode> servicesToDiscoverDetails;
 
     DarwinBluetooth::ServiceHash serviceMap;
     DarwinBluetooth::CharHash charMap;
@@ -506,6 +509,7 @@ QT_USE_NAMESPACE
 }
 
 - (void)discoverServiceDetails:(const QBluetoothUuid &)serviceUuid
+        readValues:(bool) read
 {
     // This function does not change 'managerState', since it
     // can be called concurrently (not waiting for the previous
@@ -526,7 +530,8 @@ QT_USE_NAMESPACE
     QT_BT_MAC_AUTORELEASEPOOL;
 
     if (CBService *const service = [self serviceForUUID:serviceUuid]) {
-        servicesToDiscoverDetails.append(serviceUuid);
+        const auto mode = read ? DiscoveryMode::FullDiscovery : DiscoveryMode::SkipValueDiscovery;
+        servicesToDiscoverDetails[serviceUuid] = mode;
         [self watchAfter:service timeout:OperationTimeout::characteristicsDiscovery];
         [peripheral discoverCharacteristics:nil forService:service];
         return;
@@ -627,7 +632,8 @@ QT_USE_NAMESPACE
     QT_BT_MAC_AUTORELEASEPOOL;
 
     const QBluetoothUuid serviceUuid(qt_uuid(service.UUID));
-    servicesToDiscoverDetails.removeAll(serviceUuid);
+    const bool skipValues = servicesToDiscoverDetails[serviceUuid] == DiscoveryMode::SkipValueDiscovery;
+    servicesToDiscoverDetails.remove(serviceUuid);
 
     const NSUInteger nHandles = qt_countGATTEntries(service);
     Q_ASSERT_X(nHandles, Q_FUNC_INFO, "unexpected number of GATT entires");
@@ -667,7 +673,8 @@ QT_USE_NAMESPACE
             newChar.uuid = qt_uuid(c.UUID);
             const int cbProps = c.properties & 0xff;
             newChar.properties = static_cast<QLowEnergyCharacteristic::PropertyTypes>(cbProps);
-            newChar.value = qt_bytearray(c.value);
+            if (!skipValues)
+                newChar.value = qt_bytearray(c.value);
             newChar.valueHandle = lastValidHandle;
 
             NSArray *const ds = c.descriptors;
@@ -1494,15 +1501,22 @@ QT_USE_NAMESPACE
 
     [self stopWatchingAfter:service operation:OperationTimeout::characteristicsDiscovery];
 
+    const auto qtUuid = qt_uuid(service.UUID);
+    const bool skipRead = servicesToDiscoverDetails[qtUuid] == DiscoveryMode::SkipValueDiscovery;
+
     Q_ASSERT_X(managerState != CentralManagerUpdating, Q_FUNC_INFO, "invalid state");
 
     if (error) {
         NSLog(@"%s failed with error: %@", Q_FUNC_INFO, error);
         // We did not discover any characteristics and can not discover descriptors,
         // inform our delegate (it will set a service state also).
-        emit notifier->CBManagerError(qt_uuid(service.UUID), QLowEnergyController::UnknownError);
+        emit notifier->CBManagerError(qtUuid, QLowEnergyController::UnknownError);
     }
 
+    if (skipRead) {
+        [self serviceDetailsDiscoveryFinished:service];
+        return;
+    }
     [self readCharacteristics:service];
 }
 

@@ -147,7 +147,8 @@ QT_END_NAMESPACE
 - (void)disconnectFromDevice;
 
 - (void)discoverServices;
-- (void)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;
+- (void)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
+        readValues:(bool)read;
 
 - (void)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
