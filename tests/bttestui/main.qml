@@ -59,7 +59,7 @@ Rectangle {
         }
 
 
-        onError: errorText.text = evaluateError(error)
+        onErrorOccurred: errorText.text = evaluateError(error)
         onHostModeStateChanged: hostModeText.text = device.hostMode;
         onSocketStateUpdate : socketStateText.text = evaluateSocketState(foobar);
     }
