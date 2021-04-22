@@ -42,9 +42,6 @@ QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetooth::SecurityFlags)
 
-// Max time to wait for connection
-static const int MaxConnectTime = 60 * 1000;   // 1 minute in ms
-
 class tst_QBluetoothServer : public QObject
 {
     Q_OBJECT
