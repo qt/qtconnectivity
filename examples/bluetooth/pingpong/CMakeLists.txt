@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(pingpong LANGUAGES CXX)
+project(btpingpong LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -18,15 +18,16 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Bluetooth)
 
-qt_add_executable(pingpong
+qt_add_executable(btpingpong
     main.cpp
     pingpong.cpp pingpong.h
 )
-set_target_properties(pingpong PROPERTIES
+set_target_properties(btpingpong PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+    OUTPUT_NAME "pingpong"
 )
-target_link_libraries(pingpong PUBLIC
+target_link_libraries(btpingpong PUBLIC
     Qt::Bluetooth
     Qt::Core
     Qt::Gui
@@ -42,7 +43,7 @@ set(resource_resource_files
     "assets/main.qml"
 )
 
-qt6_add_resources(pingpong "resource"
+qt6_add_resources(btpingpong "resource"
     PREFIX
         "/"
     FILES
@@ -51,12 +52,12 @@ qt6_add_resources(pingpong "resource"
 
 if(ANDROID)
     find_package(Qt6 COMPONENTS AndroidExtras)
-    target_link_libraries(pingpong PUBLIC
+    target_link_libraries(btpingpong PUBLIC
         Qt::AndroidExtras
     )
 endif()
 
-install(TARGETS pingpong
+install(TARGETS btpingpong
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
