@@ -1566,7 +1566,6 @@ void QLowEnergyControllerPrivateBluez::sendReadByGroupRequest(
 void QLowEnergyControllerPrivateBluez::discoverServiceDetails(const QBluetoothUuid &service,
                                                               QLowEnergyService::DiscoveryMode mode)
 {
-    Q_UNUSED(mode);
     if (!serviceList.contains(service)) {
         qCWarning(QT_BT_BLUEZ) << "Discovery of unknown service" << service.toString()
                                << "not possible";
@@ -1574,6 +1573,7 @@ void QLowEnergyControllerPrivateBluez::discoverServiceDetails(const QBluetoothUu
     }
 
     QSharedPointer<QLowEnergyServicePrivate> serviceData = serviceList.value(service);
+    serviceData->mode = mode;
     serviceData->characteristicList.clear();
     sendReadByTypeRequest(serviceData, serviceData->startHandle, GATT_INCLUDED_SERVICE);
 }
@@ -1628,6 +1628,16 @@ void QLowEnergyControllerPrivateBluez::readServiceValues(
     }
 
     QSharedPointer<QLowEnergyServicePrivate> service = serviceList.value(serviceUuid);
+
+    if (service->mode == QLowEnergyService::SkipValueDiscovery) {
+        if (readCharacteristics) {
+            // -> continue with descriptor discovery
+            discoverServiceDescriptors(service->uuid);
+        } else {
+            service->setState(QLowEnergyService::RemoteServiceDiscovered);
+        }
+        return;
+    }
 
     // pair.first -> target attribute
     // pair.second -> context information for read request
