@@ -51,9 +51,8 @@ QT_BEGIN_NAMESPACE
     \inmodule QtNfc
     \since 5.2
 
-    The QNdefFilter encapsulates the structure of an NDEF message and is used by
-    QNearFieldManager::registerNdefMessageHandler() to match NDEF message that have a particular
-    structure.
+    The QNdefFilter encapsulates the structure of an NDEF message and is used for
+    matching messages that have a particular structure.
 
     The following filter matches NDEF messages that contain a single smart poster record:
 

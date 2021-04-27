@@ -58,8 +58,7 @@ the contents of the NDEF message.
 \section1 AnnotatedUrl Handler Implementation
 
 NFC messages read by the \c QNearFieldManager are forwarded to
-AnnotatedUrl::handleMessage. The callback signature details can be
-read in \l{QNearFieldManager::registerNdefMessageHandler}.
+AnnotatedUrl::handleMessage.
 
 \snippet annotatedurl/annotatedurl.cpp handleMessage 1
 
