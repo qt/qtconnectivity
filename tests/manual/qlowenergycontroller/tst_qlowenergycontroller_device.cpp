@@ -1,0 +1,604 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the QtBluetooth module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include <QObject>
+#include <QtGlobal>
+#include <QTest>
+#include <QBluetoothAddress>
+#include <QBluetoothDeviceDiscoveryAgent>
+#include <QSignalSpy>
+#include <QLowEnergyController>
+#include <QLoggingCategory>
+#include <QScopeGuard>
+#include <QBluetoothLocalDevice>
+
+static const QLatin1String largeCharacteristicServiceUuid("1f85e37c-ac16-11eb-ae5c-93d3a763feed");
+static const QLatin1String largeCharacteristicCharUuid("40e4f68e-ac16-11eb-9956-cfe55a8c370c");
+
+static const QLatin1String
+        notificationIndicationTestServiceUuid("bb137ac5-5716-4b80-873b-e2d11d29efe2");
+static const QLatin1String
+        notificationIndicationTestChar1Uuid("6da4d652-0248-478a-a5a8-1e2f076158cc");
+static const QLatin1String
+        notificationIndicationTestChar2Uuid("990930f0-b9cc-4c27-8c1b-ebc2bcae5c95");
+static const QLatin1String
+        notificationIndicationTestChar3Uuid("9a60486b-de5b-4e03-b914-4e158c0bd388");
+static const QLatin1String
+        notificationIndicationTestChar4Uuid("d92435d4-6c2e-43f8-a6be-bbb66b5a3e28");
+
+static const QLatin1String connectionCountServiceUuid("78c61a07-a0f9-4b92-be2d-2570d8dbf010");
+static const QLatin1String connectionCountCharUuid("9414ec2d-792f-46a2-a19e-186d0fb38a08");
+
+
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH) || defined(Q_OS_DARWIN)
+#define QT_BLUETOOTH_MTU_SUPPORTED
+#endif
+
+#if defined(QT_BLUETOOTH_MTU_SUPPORTED)
+static const QLatin1String mtuServiceUuid("9a9483eb-cf4f-4c32-9a6b-794238d5b483");
+static const QLatin1String mtuCharUuid("960d7e2a-a850-4a70-8064-cd74e9ccb6ff");
+#endif
+
+/*
+ * This class contains all unit tests for QLowEnergyController
+ * which require a remote device and can thus not run completely automated
+ */
+class tst_qlowenergycontroller_device : public QObject
+{
+    Q_OBJECT
+
+public:
+    tst_qlowenergycontroller_device();
+    ~tst_qlowenergycontroller_device();
+private slots:
+    void initTestCase();
+    void init();
+    void cleanup();
+    void cleanupTestCase();
+
+#if defined(QT_BLUETOOTH_MTU_SUPPORTED)
+    void checkMtuNegotiation();
+#endif
+    void readWriteLargeCharacteristic();
+    void readDuringServiceDiscovery();
+    void readNotificationAndIndicationProperty();
+    void testNotificationAndIndication();
+
+public:
+    void checkconnectionCounter(std::unique_ptr<QLowEnergyController> &control);
+    static int connectionCounter;
+
+private:
+    void discoverTestServer();
+
+    std::unique_ptr<QBluetoothDeviceDiscoveryAgent> mDevAgent;
+    std::unique_ptr<QLowEnergyController> mController;
+    QBluetoothDeviceInfo mRemoteDeviceInfo;
+    QString mServerDeviceName;
+};
+
+// connectionCounter is used to check that the server-side connect events
+// occur as expected. On the first time when the value is the initial "-1"
+// we read the current connection count from a service/characteristic providing it.
+// This way we don't need to always restart the server-side for testing
+int tst_qlowenergycontroller_device::connectionCounter = -1;
+
+tst_qlowenergycontroller_device::tst_qlowenergycontroller_device()
+{
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+}
+
+tst_qlowenergycontroller_device::~tst_qlowenergycontroller_device() { }
+
+void tst_qlowenergycontroller_device::initTestCase()
+{
+    qDebug() << "Testcase build time: " << __TIME__;
+    mDevAgent.reset(new QBluetoothDeviceDiscoveryAgent(this));
+    mDevAgent->setLowEnergyDiscoveryTimeout(75000);
+    mServerDeviceName = qEnvironmentVariable("BTLE_SERVER_DEVICE_NAME");
+    if (mServerDeviceName.isEmpty())
+        mServerDeviceName = QStringLiteral("Pixel 4a");
+    qDebug() << "Using server device name for testing: " << mServerDeviceName;
+    qDebug() << "To change this set BTLE_SERVER_DEVICE_NAME environment variable";
+}
+
+void tst_qlowenergycontroller_device::discoverTestServer()
+{
+    mRemoteDeviceInfo = QBluetoothDeviceInfo(); // Invalidate whatever we had before
+    QSignalSpy finishedSpy(mDevAgent.get(), SIGNAL(finished()));
+    QSignalSpy canceledSpy(mDevAgent.get(), SIGNAL(canceled()));
+    // there should be no changes yet
+    QVERIFY(finishedSpy.isValid() && finishedSpy.isEmpty());
+    QVERIFY(canceledSpy.isValid() && canceledSpy.isEmpty());
+
+    QObject forLifeTime;
+    QObject::connect(mDevAgent.get(), &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+                     &forLifeTime, [&](const QBluetoothDeviceInfo& info) {
+        if (info.name() == mServerDeviceName) {
+            qDebug() << "Matching server device discovered, stopping device discovery agent";
+            mDevAgent->stop();
+        }
+    });
+
+    // Start device discovery
+    mDevAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+    QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0 || canceledSpy.count() > 0, 80000);
+
+    // Verify that we have found a matching server device
+    bool deviceFound = false;
+    const QList<QBluetoothDeviceInfo> infos = mDevAgent->discoveredDevices();
+    for (const QBluetoothDeviceInfo &info : infos) {
+        if (info.name() == mServerDeviceName) {
+            mRemoteDeviceInfo = info;
+            deviceFound = true;
+            qDebug() << "Found a matching server device" << info.name() << info.address();
+            break;
+        }
+        qDebug() << "Ignoring a non-matching device:" << info.name() << info.address();
+    }
+    QVERIFY2(deviceFound, "Cannot find remote device.");
+}
+
+
+void tst_qlowenergycontroller_device::init()
+{
+    // Connect to the test server. If unsuccessful, rediscover and retry.
+    // Rediscovery may be needed as the address of the remote can change and
+    // also at least Bluez backend recovers from its own internal errors
+    // more likely making the test less flaky
+    while (!mController || mController->state() != QLowEnergyController::ConnectedState) {
+        discoverTestServer();
+        QVERIFY(mRemoteDeviceInfo.isValid());
+        mController.reset(QLowEnergyController::createCentral(mRemoteDeviceInfo));
+        mController->connectToDevice();
+        QTRY_VERIFY_WITH_TIMEOUT(mController->state() != QLowEnergyController::ConnectingState, 30000);
+        if (mController->state() != QLowEnergyController::ConnectedState) {
+            mController.reset();
+            qDebug() << "Retrying connecting to the server in 5 seconds";
+            QTest::qWait(5000);
+        }
+    }
+    QCOMPARE(mController->state(), QLowEnergyController::ConnectedState);
+    QCOMPARE(mController->error(), QLowEnergyController::NoError);
+}
+
+void tst_qlowenergycontroller_device::cleanup()
+{
+    mController->disconnectFromDevice();
+    QTRY_VERIFY_WITH_TIMEOUT(mController->state() == QLowEnergyController::UnconnectedState, 30000);
+    QCOMPARE(mController->state(), QLowEnergyController::UnconnectedState);
+    qDebug() << "Disconnected from remote device, waiting 5s before deleting controller.";
+    QTest::qWait(5000);
+    mController.reset();
+}
+
+void tst_qlowenergycontroller_device::cleanupTestCase() { }
+
+#if defined(QT_BLUETOOTH_MTU_SUPPORTED)
+// Don't use QSKIP here as that
+// would still cause lengthy init() and clean() executions.
+void tst_qlowenergycontroller_device::checkMtuNegotiation()
+{
+    // service discovery, including MTU negotiation
+    qDebug() << "MTU after connect" << mController->mtu();
+    QCOMPARE(mController->mtu(), 23);
+
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+    QCOMPARE(mController->error(), QLowEnergyController::NoError);
+
+    checkconnectionCounter(mController);
+
+    // now a larger MTU should have been negotiated
+    qDebug() << "MTU after service discovery" << mController->mtu();
+    QVERIFY(mController->mtu() > 23);
+
+    // check that central and peripheral agree on negotiated mtu
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(mtuServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    auto characteristic = service->characteristic(QBluetoothUuid(mtuCharUuid));
+    int mtu;
+    memcpy(&mtu, characteristic.value().constData(), sizeof(int));
+    QCOMPARE(mtu, mController->mtu());
+}
+#endif
+
+#undef QT_BLUETOOTH_MTU_SUPPORTED
+
+void tst_qlowenergycontroller_device::checkconnectionCounter(
+        std::unique_ptr<QLowEnergyController> &mController)
+{
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(connectionCountServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    auto counterCharacteristic = service->characteristic(QBluetoothUuid(connectionCountCharUuid));
+    // If we have just started the test, read the current connection counter from the server.
+    // The connection counter is essentially the number of "connected" events the server
+    // has had.
+    if (connectionCounter == -1) {
+        memcpy(&connectionCounter, counterCharacteristic.value().constData(), sizeof(int));
+        qDebug() << "Connection counter initialized from the server to:" << connectionCounter;
+    } else {
+        connectionCounter++;
+        QByteArray value((const char *)&connectionCounter, sizeof(int));
+        QCOMPARE(counterCharacteristic.value(), value);
+    }
+}
+
+void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
+{
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+
+    checkconnectionCounter(mController);
+
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(largeCharacteristicServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::SkipValueDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    QSignalSpy readSpy(service, &QLowEnergyService::characteristicRead);
+    QSignalSpy writtenSpy(service, &QLowEnergyService::characteristicWritten);
+    QCOMPARE(readSpy.count(), 0);
+    QCOMPARE(writtenSpy.count(), 0);
+
+    auto characteristic = service->characteristic(QBluetoothUuid(largeCharacteristicCharUuid));
+    QByteArray testArray(0);
+    qDebug() << "Initial large characteristic value:" << characteristic.value();
+    QCOMPARE(characteristic.value(), testArray);
+
+    service->readCharacteristic(characteristic);
+    QTRY_COMPARE(readSpy.count(), 1);
+    qDebug() << "Large characteristic value after read:" << characteristic.value();
+    testArray = QByteArray(512, 0);
+    testArray[0] = 0x0b;
+    QCOMPARE(characteristic.value(), testArray);
+
+    for (int i = 0; i < 512; ++i) {
+        testArray[i] = i % 5;
+    }
+
+    service->writeCharacteristic(characteristic, testArray);
+    QCOMPARE(service->error(), QLowEnergyService::ServiceError::NoError);
+    QTRY_COMPARE(writtenSpy.count(), 1);
+
+    service->readCharacteristic(characteristic);
+    QTRY_COMPARE(readSpy.count(), 2);
+    qDebug() << "Large characteristic value after write/read:" << characteristic.value();
+    QCOMPARE(characteristic.value(), testArray);
+}
+
+void tst_qlowenergycontroller_device::readDuringServiceDiscovery()
+{
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+
+    checkconnectionCounter(mController);
+
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(largeCharacteristicServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    QSignalSpy readSpy(service, &QLowEnergyService::characteristicRead);
+    QSignalSpy writtenSpy(service, &QLowEnergyService::characteristicWritten);
+    QCOMPARE(readSpy.count(), 0);
+    QCOMPARE(writtenSpy.count(), 0);
+
+    auto characteristic = service->characteristic(QBluetoothUuid(largeCharacteristicCharUuid));
+    QByteArray testArray(512, 0);
+    testArray[0] = 0x0b;
+    qDebug() << "Initial large characteristic value:" << characteristic.value();
+    QCOMPARE(characteristic.value(), testArray);
+
+    service->readCharacteristic(characteristic);
+    QTRY_COMPARE(readSpy.count(), 1);
+    qDebug() << "Large characteristic value after read:" << characteristic.value();
+    testArray = QByteArray(512, 0);
+    testArray[0] = 0x0b;
+    QCOMPARE(characteristic.value(), testArray);
+
+    for (int i = 0; i < 512; ++i) {
+        testArray[i] = i % 5;
+    }
+
+    service->writeCharacteristic(characteristic, testArray);
+    QCOMPARE(service->error(), QLowEnergyService::ServiceError::NoError);
+    QTRY_COMPARE(writtenSpy.count(), 1);
+
+    service->readCharacteristic(characteristic);
+    QTRY_COMPARE(readSpy.count(), 2);
+    qDebug() << "Large characteristic value after write/read:" << characteristic.value();
+    QCOMPARE(characteristic.value(), testArray);
+}
+
+void tst_qlowenergycontroller_device::readNotificationAndIndicationProperty()
+{
+    // discover services
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+
+    checkconnectionCounter(mController);
+
+    // check test service is available
+    QVERIFY(mController->services().contains(QBluetoothUuid(notificationIndicationTestServiceUuid)));
+
+    // get service object
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(notificationIndicationTestServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    // check that all four characteristics are found
+    QCOMPARE(service->characteristics().size(), 4);
+
+    // check that properties are correctly set
+    auto notifyOrIndicate = QLowEnergyCharacteristic::PropertyType::Notify
+            | QLowEnergyCharacteristic::PropertyType::Indicate;
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar1Uuid));
+        QCOMPARE(characteristic.properties() & notifyOrIndicate, 0);
+    }
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar2Uuid));
+        QCOMPARE(characteristic.properties() & notifyOrIndicate,
+                 QLowEnergyCharacteristic::PropertyType::Notify);
+    }
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar3Uuid));
+        QCOMPARE(characteristic.properties() & notifyOrIndicate,
+                 QLowEnergyCharacteristic::PropertyType::Indicate);
+    }
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar4Uuid));
+        QCOMPARE(characteristic.properties() & notifyOrIndicate, notifyOrIndicate);
+    }
+}
+
+void tst_qlowenergycontroller_device::testNotificationAndIndication()
+{
+    // discover services
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+
+    checkconnectionCounter(mController);
+
+    // get service object
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(notificationIndicationTestServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    // Verify that notification works
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar2Uuid));
+        auto notifyOrIndicate = QLowEnergyCharacteristic::PropertyType::Notify
+                | QLowEnergyCharacteristic::PropertyType::Indicate;
+        QCOMPARE(characteristic.properties() & notifyOrIndicate,
+                 QLowEnergyCharacteristic::PropertyType::Notify);
+
+        // getting cccd
+        QLowEnergyDescriptor cccd = characteristic.clientCharacteristicConfiguration();
+        QVERIFY(cccd.isValid());
+
+        // write to cccd
+        bool cccdWritten = false;
+        QObject dummy; // for lifetime management
+        QObject::connect(
+                service, &QLowEnergyService::descriptorWritten, &dummy,
+                [&cccdWritten](const QLowEnergyDescriptor &info, const QByteArray &) {
+                    if (info.uuid()
+                        == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
+                        cccdWritten = true;
+                    }
+                });
+        service->writeDescriptor(cccd, QLowEnergyCharacteristic::CCCDEnableNotification);
+        QTRY_VERIFY(cccdWritten);
+
+        // notification should be enabled
+        auto oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+        // wait again
+        oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+
+        // disable notification
+        cccdWritten = false;
+        service->writeDescriptor(cccd, QLowEnergyCharacteristic::CCCDDisable);
+        QTRY_VERIFY(cccdWritten);
+
+        // check that there are no notifications:
+        oldvalue = characteristic.value();
+        for (int i = 0; i < 3; ++i) {
+            QTest::qWait(100);
+            QCOMPARE(characteristic.value(), oldvalue);
+        }
+    }
+
+    // Verify that indication works
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar3Uuid));
+        auto notifyOrIndicate = QLowEnergyCharacteristic::PropertyType::Notify
+                | QLowEnergyCharacteristic::PropertyType::Indicate;
+        QCOMPARE(characteristic.properties() & notifyOrIndicate,
+                 QLowEnergyCharacteristic::PropertyType::Indicate);
+
+        // getting cccd
+        QLowEnergyDescriptor cccd = characteristic.clientCharacteristicConfiguration();
+        QVERIFY(cccd.isValid());
+
+        // write to cccd
+        bool cccdWritten = false;
+        QObject dummy; // for lifetime management
+        QObject::connect(
+                service, &QLowEnergyService::descriptorWritten, &dummy,
+                [&cccdWritten](const QLowEnergyDescriptor &info, const QByteArray &) {
+                    if (info.uuid()
+                        == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
+                        cccdWritten = true;
+                    }
+                });
+        QByteArray newValue = QByteArray::fromHex("0200");
+        service->writeDescriptor(cccd, newValue);
+        QTRY_VERIFY(cccdWritten);
+
+        // indication should be enabled
+        auto oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+        // wait again
+        oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+
+        // disable indication
+        cccdWritten = false;
+        newValue = QByteArray::fromHex("0000");
+        service->writeDescriptor(cccd, newValue);
+        QTRY_VERIFY(cccdWritten);
+
+        // check that there are no notifications:
+        oldvalue = characteristic.value();
+        for (int i = 0; i < 3; ++i) {
+            QTest::qWait(100);
+            QCOMPARE(characteristic.value(), oldvalue);
+        }
+    }
+
+    // indication and notification works
+    {
+        QLowEnergyCharacteristic characteristic =
+                service->characteristic(QBluetoothUuid(notificationIndicationTestChar4Uuid));
+        auto notifyOrIndicate = QLowEnergyCharacteristic::PropertyType::Notify
+                | QLowEnergyCharacteristic::PropertyType::Indicate;
+        QCOMPARE(characteristic.properties() & notifyOrIndicate, notifyOrIndicate);
+
+        // getting cccd
+        QLowEnergyDescriptor cccd = characteristic.clientCharacteristicConfiguration();
+        QVERIFY(cccd.isValid());
+
+        // write to cccd
+        bool cccdWritten = false;
+        QObject dummy; // for lifetime management
+        QObject::connect(
+                service, &QLowEnergyService::descriptorWritten, &dummy,
+                [&cccdWritten](const QLowEnergyDescriptor &info, const QByteArray &) {
+                    if (info.uuid()
+                        == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
+                        cccdWritten = true;
+                    }
+                });
+        QByteArray newValue = QByteArray::fromHex("0100");
+        service->writeDescriptor(cccd, newValue);
+        QTRY_VERIFY(cccdWritten);
+
+        // notification should be enabled
+        auto oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+        // wait again
+        oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+
+        // disable notification
+        cccdWritten = false;
+        newValue = QByteArray::fromHex("0000");
+        service->writeDescriptor(cccd, newValue);
+        QTRY_VERIFY(cccdWritten);
+
+        // check that there are no updates:
+        oldvalue = characteristic.value();
+        for (int i = 0; i < 3; ++i) {
+            QTest::qWait(100);
+            QCOMPARE(characteristic.value(), oldvalue);
+        }
+
+        newValue = QByteArray::fromHex("0200");
+        service->writeDescriptor(cccd, newValue);
+        QTRY_VERIFY(cccdWritten);
+
+        // indication should be enabled
+        oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+        // wait again
+        oldvalue = characteristic.value();
+        QCOMPARE(characteristic.value(), oldvalue);
+        // wait for change
+        QTRY_VERIFY(characteristic.value() != oldvalue);
+
+        // disable indication
+        cccdWritten = false;
+        newValue = QByteArray::fromHex("0000");
+        service->writeDescriptor(cccd, newValue);
+        QTRY_VERIFY(cccdWritten);
+
+        // check that there are no indications:
+        oldvalue = characteristic.value();
+        for (int i = 0; i < 3; ++i) {
+            QTest::qWait(100);
+            QCOMPARE(characteristic.value(), oldvalue);
+        }
+    }
+}
+
+QTEST_MAIN(tst_qlowenergycontroller_device)
+
+#include "tst_qlowenergycontroller_device.moc"
