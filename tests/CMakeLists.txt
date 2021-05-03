@@ -7,6 +7,8 @@ if(TARGET Qt::Bluetooth)
     if(TARGET Qt::Quick)
         add_subdirectory(bttestui)
     endif()
+
+    add_subdirectory(bluetoothtestdevice)
 endif()
 
 qt_build_tests()
