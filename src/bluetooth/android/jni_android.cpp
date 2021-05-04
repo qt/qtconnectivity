@@ -209,6 +209,8 @@ static JNINativeMethod methods_le[] = {
                 (void *) QtBluetoothLE_leScanResult},
     {"leConnectionStateChange", "(JII)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
+    {"leMtuChanged", "(JI)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_mtuChanged},
     {"leServicesDiscovered", "(JILjava/lang/String;)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_servicesDiscovered},
     {"leServiceDetailDiscoveryFinished", "(JLjava/lang/String;II)V",

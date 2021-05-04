@@ -129,6 +129,8 @@ public:
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
 
+    int mtu() const override;
+
 signals:
     void characteristicChanged(quint16 charHandle, const QByteArray &data);
 

@@ -105,6 +105,8 @@ public:
 
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
+
+    int mtu() const override;
 };
 
 QT_END_NAMESPACE

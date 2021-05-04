@@ -106,6 +106,8 @@ void QLowEnergyControllerPrivateAndroid::init()
         // TODO add connections as they get added later on
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
                 this, &QLowEnergyControllerPrivateAndroid::connectionUpdated);
+        connect(hub, &LowEnergyNotificationHub::mtuChanged,
+                this, &QLowEnergyControllerPrivateAndroid::mtuChanged);
         connect(hub, &LowEnergyNotificationHub::advertisementError,
                 this, &QLowEnergyControllerPrivateAndroid::advertisementError);
         connect(hub, &LowEnergyNotificationHub::serverCharacteristicChanged,
@@ -123,6 +125,8 @@ void QLowEnergyControllerPrivateAndroid::init()
         // we only connect to the central role specific signals
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
                 this, &QLowEnergyControllerPrivateAndroid::connectionUpdated);
+        connect(hub, &LowEnergyNotificationHub::mtuChanged,
+                this, &QLowEnergyControllerPrivateAndroid::mtuChanged);
         connect(hub, &LowEnergyNotificationHub::servicesDiscovered,
                 this, &QLowEnergyControllerPrivateAndroid::servicesDiscovered);
         connect(hub, &LowEnergyNotificationHub::serviceDetailsDiscoveryFinished,
@@ -413,6 +417,15 @@ void QLowEnergyControllerPrivateAndroid::connectionUpdated(
     else
         centralConnectionUpdated(newState, errorCode);
 }
+
+void QLowEnergyControllerPrivateAndroid::mtuChanged(int mtu)
+{
+    Q_Q(QLowEnergyController);
+    qCDebug(QT_BT_ANDROID) << "MTU updated:"
+                           << "mtu:" << mtu;
+    emit q->mtuChanged(mtu);
+}
+
 
 // called if server/peripheral
 void QLowEnergyControllerPrivateAndroid::peripheralConnectionUpdated(
@@ -1277,6 +1290,18 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
     hub->javaObject().callMethod<void>("addService",
                                        "(Landroid/bluetooth/BluetoothGattService;)V",
                                        service->androidService.object());
+}
+
+int QLowEnergyControllerPrivateAndroid::mtu() const
+{
+    if (!hub) {
+        qCWarning(QT_BT_ANDROID) << "could not determine MTU, hub is does not exist";
+        return -1;
+    } else {
+        int result = hub->javaObject().callMethod<int>("mtu");
+        qCDebug(QT_BT_ANDROID) << "MTU found to be" << result;
+        return result;
+    }
 }
 
 QT_END_NAMESPACE

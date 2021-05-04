@@ -74,6 +74,8 @@ public:
 
     static void lowEnergy_connectionChange(JNIEnv*, jobject, jlong qtObject,
                                            jint errorCode, jint newState);
+    static void lowEnergy_mtuChanged(JNIEnv*, jobject, jlong qtObject,
+                                           jint mtu);
     static void lowEnergy_servicesDiscovered(JNIEnv*, jobject, jlong qtObject,
                                              jint errorCode, jobject uuidList);
     static void lowEnergy_serviceDetailsDiscovered(JNIEnv *, jobject,
@@ -111,6 +113,7 @@ public:
 signals:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
             QLowEnergyController::Error errorCode);
+    void mtuChanged(int mtu);
     void servicesDiscovered(QLowEnergyController::Error errorCode, const QString &uuids);
     void serviceDetailsDiscoveryFinished(const QString& serviceUuid,
             int startHandle, int endHandle);

@@ -117,6 +117,8 @@ public:
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
 
+    int mtu() const override;
+
 private:
 
     LowEnergyNotificationHub *hub;
@@ -124,6 +126,7 @@ private:
 private slots:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
                            QLowEnergyController::Error errorCode);
+    void mtuChanged(int mtu);
     void servicesDiscovered(QLowEnergyController::Error errorCode,
                             const QString &foundServices);
     void serviceDetailsDiscoveryFinished(const QString& serviceUuid,

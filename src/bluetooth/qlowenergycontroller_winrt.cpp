@@ -1487,6 +1487,12 @@ void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnerg
     Q_UNIMPLEMENTED();
 }
 
+int QLowEnergyControllerPrivateWinRT::mtu() const
+{
+    // not supported yet
+    return -1;
+}
+
 void QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged(
         quint16 charHandle, const QByteArray &data)
 {

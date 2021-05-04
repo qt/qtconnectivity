@@ -1302,6 +1302,12 @@ void QLowEnergyControllerPrivateBluezDBus::addToGenericAttributeList(
 {
 }
 
+int QLowEnergyControllerPrivateBluezDBus::mtu() const
+{
+    // currently not supported
+    return -1;
+}
+
 QLowEnergyService *QLowEnergyControllerPrivateBluezDBus::addServiceHelper(
                     const QLowEnergyServiceData &/*service*/)
 {

@@ -876,4 +876,27 @@ QLowEnergyController::Role QLowEnergyController::role() const
     return d_ptr->role;
 }
 
+/*!
+   Returns the MTU size.
+
+   During connection setup, the ATT MTU size is negotiated.
+   This method provides the result of this negotiation.
+   It can be used to optimize packet sizes in some situations.
+   The maximum amount of data which can be transferred in a single
+   packet is \b {mtu-3} bytes. 3 bytes are required for the ATT
+   protocol header.
+
+   Before the connection setup and MTU negotiation, the
+   default value of \c 23 will be returned.
+
+   Not every platform exposes the MTU value. On those platforms (e.g. Linux)
+   this function always returns \c -1.
+
+   \since 6.2
+ */
+int QLowEnergyController::mtu() const
+{
+    return d_ptr->mtu();
+}
+
 QT_END_NAMESPACE

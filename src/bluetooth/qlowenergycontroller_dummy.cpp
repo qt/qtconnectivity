@@ -135,4 +135,10 @@ void QLowEnergyControllerPrivateCommon::addToGenericAttributeList(const QLowEner
 {
 }
 
+int QLowEnergyControllerPrivateCommon::mtu() const
+{
+    // not supported
+    return -1;
+}
+
 QT_END_NAMESPACE

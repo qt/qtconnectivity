@@ -1029,18 +1029,20 @@ void QLowEnergyControllerPrivateBluez::processReply(
     case QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST: // in case of error
     case QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_RESPONSE: {
         Q_ASSERT(request.command == QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST);
+        quint16 oldMtuSize = mtuSize;
         if (isErrorResponse) {
             mtuSize = ATT_DEFAULT_LE_MTU;
-            break;
+        } else {
+            const char *data = response.constData();
+            quint16 mtu = bt_get_le16(&data[1]);
+            mtuSize = mtu;
+            if (mtuSize < ATT_DEFAULT_LE_MTU)
+                mtuSize = ATT_DEFAULT_LE_MTU;
+
+            qCDebug(QT_BT_BLUEZ) << "Server MTU:" << mtu << "resulting mtu:" << mtuSize;
         }
-
-        const char *data = response.constData();
-        quint16 mtu = bt_get_le16(&data[1]);
-        mtuSize = mtu;
-        if (mtuSize < ATT_DEFAULT_LE_MTU)
-            mtuSize = ATT_DEFAULT_LE_MTU;
-
-        qCDebug(QT_BT_BLUEZ) << "Server MTU:" << mtu << "resulting mtu:" << mtuSize;
+        if (oldMtuSize != mtuSize)
+            emit q->mtuChanged(mtuSize);
     } break;
     case QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_REQUEST: // in case of error
     case QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_RESPONSE: {
@@ -3423,6 +3425,11 @@ void QLowEnergyControllerPrivateBluez::addToGenericAttributeList(const QLowEnerg
     }
     serviceAttribute.groupEndHandle = currentHandle;
     localAttributes[serviceAttribute.handle] = serviceAttribute;
+}
+
+int QLowEnergyControllerPrivateBluez::mtu() const
+{
+    return mtuSize;
 }
 
 void QLowEnergyControllerPrivateBluez::ensureUniformAttributes(

@@ -137,11 +137,14 @@ public:
 
     Role role() const;
 
+    int mtu() const;
+
 Q_SIGNALS:
     void connected();
     void disconnected();
     void stateChanged(QLowEnergyController::ControllerState state);
     void errorOccurred(QLowEnergyController::Error newError);
+    void mtuChanged(int mtu);
 
     void serviceDiscovered(const QBluetoothUuid &newService);
     void discoveryFinished();

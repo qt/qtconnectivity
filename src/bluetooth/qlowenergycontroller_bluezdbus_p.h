@@ -116,6 +116,8 @@ public:
                         const QLowEnergyServiceData &service,
                         QLowEnergyHandle startHandle) override;
 
+    int mtu() const override;
+
     QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
 
 

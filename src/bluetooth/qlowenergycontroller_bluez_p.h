@@ -119,6 +119,8 @@ public:
     void addToGenericAttributeList(const QLowEnergyServiceData &service,
                                    QLowEnergyHandle startHandle) override;
 
+    int mtu() const override;
+
     struct Attribute {
         Attribute() : handle(0) {}
 

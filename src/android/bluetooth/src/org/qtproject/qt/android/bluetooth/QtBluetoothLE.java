@@ -613,6 +613,7 @@ public class QtBluetoothLE {
         // requires Android API v21
         public void onMtuChanged(android.bluetooth.BluetoothGatt gatt, int mtu, int status)
         {
+            int previousMtu = mSupportedMtu;
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.w(TAG, "MTU changed to " + mtu);
                 mSupportedMtu = mtu;
@@ -620,6 +621,8 @@ public class QtBluetoothLE {
                 Log.w(TAG, "MTU change error " + status + ". New MTU " + mtu);
                 mSupportedMtu = DEFAULT_MTU;
             }
+            if (previousMtu != mSupportedMtu)
+                leMtuChanged(qtObject, mSupportedMtu);
 
             boolean requestTimedOut = !handleForTimeout.compareAndSet(
                     modifiedReadWriteHandle(HANDLE_FOR_MTU_EXCHANGE, IoJobType.Mtu), HANDLE_FOR_RESET);
@@ -638,6 +641,13 @@ public class QtBluetoothLE {
         }
     };
 
+    public int mtu() {
+        if (mSupportedMtu == -1) {
+            return DEFAULT_MTU;
+        } else {
+            return mSupportedMtu;
+        }
+    }
 
     public boolean connect() {
         BluetoothDevice mRemoteGattDevice;
@@ -1695,6 +1705,7 @@ public class QtBluetoothLE {
     }
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
+    public native void leMtuChanged(long qtObject, int mtu);
     public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
     public native void leServiceDetailDiscoveryFinished(long qtObject, final String serviceUuid,
                                                         int startHandle, int endHandle);

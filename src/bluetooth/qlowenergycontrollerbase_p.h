@@ -114,6 +114,7 @@ public:
                         const QLowEnergyServiceData &service,
                         QLowEnergyHandle startHandle) = 0;
 
+    virtual int mtu() const = 0;
 
     virtual QLowEnergyService *addServiceHelper(
                         const QLowEnergyServiceData &service);

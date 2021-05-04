@@ -329,6 +329,12 @@ void QLowEnergyControllerPrivateDarwin::addToGenericAttributeList(const QLowEner
     // of the base class).
 }
 
+int QLowEnergyControllerPrivateDarwin::mtu() const
+{
+    // not supported yet
+    return -1;
+}
+
 QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QLowEnergyServiceData &service)
 {
     // Three checks below should be removed, they are done in the q_ptr's class.

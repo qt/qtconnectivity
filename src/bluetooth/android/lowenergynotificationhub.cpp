@@ -118,6 +118,18 @@ void LowEnergyNotificationHub::lowEnergy_connectionChange(JNIEnv *, jobject, jlo
                                     (QLowEnergyController::Error)errorCode));
 }
 
+void LowEnergyNotificationHub::lowEnergy_mtuChanged(
+        JNIEnv *, jobject, jlong qtObject, jint mtu)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QMetaObject::invokeMethod(hub, "mtuChanged", Qt::QueuedConnection, Q_ARG(int, mtu));
+}
+
 void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
         JNIEnv *, jobject, jlong qtObject, jint errorCode, jobject uuidList)
 {
