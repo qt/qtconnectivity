@@ -215,7 +215,15 @@ QT_USE_NAMESPACE
                 [elapsedTimer startWithTimeout:inquiryTimeoutMS step:timeStepMS];
             }
 
-            [manager scanForPeripheralsWithServices:nil options:nil];
+            // ### Qt 6.x: remove the use of env. variable, as soon as a proper public API is in place.
+            bool envOk = false;
+            const int env = qEnvironmentVariableIntValue("QT_BLUETOOTH_SCAN_ENABLE_DUPLICATES", &envOk);
+            if (envOk && env) {
+                [manager scanForPeripheralsWithServices:nil
+                 options:@{CBCentralManagerScanOptionAllowDuplicatesKey : @YES}];
+            } else {
+                [manager scanForPeripheralsWithServices:nil options:nil];
+            }
         } // Else we ignore.
     } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
         if (internalState == InquiryActive) {
