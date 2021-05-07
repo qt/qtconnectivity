@@ -1,4 +1,4 @@
-include(FindPkgConfig)
+find_package(PkgConfig QUIET)
 
 pkg_check_modules(BLUEZ bluez IMPORTED_TARGET)
 
