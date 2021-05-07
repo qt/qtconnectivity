@@ -40,7 +40,7 @@ Currently, the API is supported on the following platforms:
     \li API Feature
     \li \l {Qt for Android}{Android}
     \li \l {Qt for iOS}{iOS}
-    \li \l {Qt for Linux/X11}{Linux (BlueZ 4.x/5.x)}
+    \li \l {Qt for Linux/X11}{Linux (BlueZ 5.x)}
     \li \l \macos
     \li \l {Qt for Windows}
 \row
