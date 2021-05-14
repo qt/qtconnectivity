@@ -929,8 +929,8 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
                                        !data.localName().isEmpty());
     builder = builder.callObjectMethod("setIncludeTxPowerLevel", "(Z)Landroid/bluetooth/le/AdvertiseData$Builder;",
                                        data.includePowerLevel());
-    for (const auto service: data.services())
-    {
+    const auto services = data.services();
+    for (const auto &service : services) {
         builder = builder.callObjectMethod("addServiceUuid",
                                        "(Landroid/os/ParcelUuid;)Landroid/bluetooth/le/AdvertiseData$Builder;",
                                        javaParcelUuidfromQtUuid(service).object());
