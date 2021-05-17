@@ -3,7 +3,6 @@ TARGET = btchat
 
 QT = core bluetooth widgets
 requires(qtConfig(listwidget))
-android: QT += androidextras
 
 SOURCES = \
     main.cpp \

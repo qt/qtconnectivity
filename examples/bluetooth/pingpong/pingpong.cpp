@@ -50,9 +50,7 @@
 
 #include "pingpong.h"
 #include <QDebug>
-#ifdef Q_OS_ANDROID
-#include <QtAndroid>
-#endif
+#include <QCoreApplication>
 
 PingPong::PingPong()
 {
@@ -292,7 +290,7 @@ void PingPong::startClient()
     connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::errorOccurred, this,
             &PingPong::serviceScanError);
 #ifdef Q_OS_ANDROID //see QTBUG-61392
-    if (QtAndroid::androidSdkVersion() >= 23)
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 23)
         discoveryAgent->setUuidFilter(QBluetoothUuid(androidUuid));
     else
         discoveryAgent->setUuidFilter(QBluetoothUuid(serviceUuid));

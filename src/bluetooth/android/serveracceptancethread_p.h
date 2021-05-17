@@ -52,7 +52,7 @@
 //
 
 #include <QtCore/QMutex>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include <QtBluetooth/QBluetoothServer>
 #include <QtBluetooth/QBluetoothUuid>
 #include "qbluetooth.h"
@@ -69,7 +69,7 @@ public:
 
 
     bool hasPendingConnections() const;
-    QAndroidJniObject nextPendingConnection();
+    QJniObject nextPendingConnection();
     void setMaxPendingConnections(int maximumCount);
 
     void javaThreadErrorOccurred(int errorCode);
@@ -87,14 +87,14 @@ private:
     bool validSetup() const;
     void shutdownPendingConnections();
 
-    QList<QAndroidJniObject> pendingSockets;
+    QList<QJniObject> pendingSockets;
     mutable QMutex m_mutex;
     QString m_serviceName;
     QBluetoothUuid m_uuid;
     int maxPendingConnections;
     QBluetooth::SecurityFlags secFlags;
 
-    QAndroidJniObject javaThread;
+    QJniObject javaThread;
 
 };
 

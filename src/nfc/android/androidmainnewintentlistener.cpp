@@ -42,7 +42,7 @@
 #include "android/androidjninfc_p.h"
 #include "qdebug.h"
 #include <QtGui/QGuiApplication>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
@@ -67,7 +67,7 @@ bool MainNfcNewIntentListener::handleNewIntent(JNIEnv */*env*/, jobject intent)
 
     listenersLock.lockForRead();
     for (AndroidNfc::AndroidNfcListenerInterface *listener : qAsConst(listeners)) {
-        listener->newIntent(QAndroidJniObject(intent));
+        listener->newIntent(QJniObject(intent));
     }
     listenersLock.unlock();
     return true;
@@ -77,7 +77,7 @@ bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *lis
 {
     static bool firstListener = true;
     if (firstListener) {
-        QAndroidJniObject intent = AndroidNfc::getStartIntent();
+        QJniObject intent = AndroidNfc::getStartIntent();
         if (intent.isValid()) {
             listener->newIntent(intent);
         }

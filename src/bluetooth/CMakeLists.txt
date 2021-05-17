@@ -139,10 +139,8 @@ elseif(ANDROID AND NOT ANDROID_EMBEDDED)
         DEFINES
             QT_ANDROID_BLUETOOTH
         LIBRARIES
-            Qt::AndroidExtras
             Qt::CorePrivate
         PRIVATE_MODULE_INTERFACE
-            Qt::AndroidExtras
             Qt::CorePrivate
     )
 elseif(MACOS)

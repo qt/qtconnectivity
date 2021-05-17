@@ -41,9 +41,8 @@
 #include <android/log.h>
 #include "android/androidbroadcastreceiver_p.h"
 #include <QtCore/QLoggingCategory>
-#include <QtCore/private/qjnihelpers_p.h>
+#include <QtCore/qnativeinterface.h>
 #include <QtGui/QGuiApplication>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,14 +53,14 @@ AndroidBroadcastReceiver::AndroidBroadcastReceiver(QObject* parent)
     : QObject(parent), valid(false)
 {
     // get Qt Context
-    contextObject = QAndroidJniObject(QtAndroidPrivate::context());
+    contextObject = QJniObject(QNativeInterface::QAndroidApplication::context());
 
-    broadcastReceiverObject = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
+    broadcastReceiverObject = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
     if (!broadcastReceiverObject.isValid())
         return;
     broadcastReceiverObject.setField<jlong>("qtObject", reinterpret_cast<long>(this));
 
-    intentFilterObject = QAndroidJniObject("android/content/IntentFilter");
+    intentFilterObject = QJniObject("android/content/IntentFilter");
     if (!intentFilterObject.isValid())
         return;
 
@@ -85,7 +84,7 @@ void AndroidBroadcastReceiver::unregisterReceiver()
     broadcastReceiverObject.callMethod<void>("unregisterReceiver");
 }
 
-void AndroidBroadcastReceiver::addAction(const QAndroidJniObject &action)
+void AndroidBroadcastReceiver::addAction(const QJniObject &action)
 {
     if (!valid || !action.isValid())
         return;

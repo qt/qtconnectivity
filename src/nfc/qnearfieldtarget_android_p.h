@@ -58,8 +58,8 @@
 #include "qstringlist.h"
 #include <QTimer>
 
-#include <QtAndroidExtras/QAndroidJniObject>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtCore/QJniObject>
+#include <QtCore/QJniEnvironment>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,7 +67,7 @@ class QNearFieldTargetPrivateImpl : public QNearFieldTargetPrivate
 {
     Q_OBJECT
 public:
-    QNearFieldTargetPrivateImpl(QAndroidJniObject intent,
+    QNearFieldTargetPrivateImpl(QJniObject intent,
                                 const QByteArray uid,
                                 QObject *parent = nullptr);
     ~QNearFieldTargetPrivateImpl() override;
@@ -85,7 +85,7 @@ public:
     int maxCommandLength() const override;
     QNearFieldTarget::RequestId sendCommand(const QByteArray &command) override;
 
-    void setIntent(QAndroidJniObject intent);
+    void setIntent(QJniObject intent);
 
 signals:
     void targetDestroyed(const QByteArray &tagId);
@@ -102,22 +102,21 @@ protected:
     QNearFieldTarget::Type getTagType() const;
     void setupTargetCheckTimer();
     void handleTargetLost();
-    QAndroidJniObject getTagTechnology(const QString &tech) const;
+    QJniObject getTagTechnology(const QString &tech) const;
     bool setTagTechnology(const QStringList &technologies);
     bool connect();
     bool setCommandTimeout(int timeout);
     QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray) const;
-    bool catchJavaExceptions(bool verbose = true) const;
 
 protected:
-    QAndroidJniObject targetIntent;
+    QJniObject targetIntent;
     QByteArray targetUid;
     QTimer *targetCheckTimer;
 
     QString selectedTech;
     QStringList techList;
     QNearFieldTarget::Type tagType;
-    QAndroidJniObject tagTech;
+    QJniObject tagTech;
 };
 
 QT_END_NAMESPACE

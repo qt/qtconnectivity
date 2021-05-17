@@ -159,7 +159,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
         return false;
 
     //check Bluetooth is available and online
-    QAndroidJniObject btAdapter = QAndroidJniObject::callStaticObjectMethod(
+    QJniObject btAdapter = QJniObject::callStaticObjectMethod(
                                         "android/bluetooth/BluetoothAdapter",
                                         "getDefaultAdapter",
                                         "()Landroid/bluetooth/BluetoothAdapter;");
@@ -245,7 +245,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 {
     Q_D(const QBluetoothServer);
 
-    QAndroidJniObject socket = d->thread->nextPendingConnection();
+    QJniObject socket = d->thread->nextPendingConnection();
     if (!socket.isValid())
         return 0;
 

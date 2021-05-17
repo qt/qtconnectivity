@@ -54,7 +54,7 @@
 
 #include "qbluetoothdevicediscoveryagent.h"
 #ifdef QT_ANDROID_BLUETOOTH
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include "android/devicediscoverybroadcastreceiver_p.h"
 #include <QtCore/QTimer>
 #endif
@@ -151,8 +151,8 @@ private:
     DeviceDiscoveryBroadcastReceiver *receiver = nullptr;
     QBluetoothAddress m_adapterAddress;
     short m_active;
-    QAndroidJniObject adapter;
-    QAndroidJniObject leScanner;
+    QJniObject adapter;
+    QJniObject leScanner;
     QTimer *leScanTimeout = nullptr;
 
     bool pendingCancel = false;

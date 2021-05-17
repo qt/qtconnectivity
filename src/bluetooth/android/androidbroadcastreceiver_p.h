@@ -55,7 +55,7 @@
 #include <jni.h>
 #include <QtCore/QObject>
 #include <android/log.h>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,7 +68,7 @@ public:
     AndroidBroadcastReceiver(QObject* parent = nullptr);
     virtual ~AndroidBroadcastReceiver();
 
-    void addAction(const QAndroidJniObject &filter);
+    void addAction(const QJniObject &filter);
     bool isValid() const;
     void unregisterReceiver();
 
@@ -79,9 +79,9 @@ protected:
     virtual void onReceiveLeScan(JNIEnv *env, jobject jBluetoothDevice, jint rssi, jbyteArray scanRecord) = 0;
 
 
-    QAndroidJniObject contextObject;
-    QAndroidJniObject intentFilterObject;
-    QAndroidJniObject broadcastReceiverObject;
+    QJniObject contextObject;
+    QJniObject intentFilterObject;
+    QJniObject broadcastReceiverObject;
     bool valid;
 };
 

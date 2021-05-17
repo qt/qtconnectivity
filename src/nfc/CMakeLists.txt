@@ -46,7 +46,6 @@ qt_internal_extend_target(Nfc CONDITION ANDROID AND NOT ANDROID_EMBEDDED
         ANDROID_NFC
         QT_ANDROID_NFC
     LIBRARIES
-        Qt::AndroidExtras
         Qt::CorePrivate
         Qt::Gui
 )

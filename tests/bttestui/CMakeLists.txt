@@ -34,7 +34,3 @@ qt_internal_add_resource(bttestui "bttest"
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(bttestui CONDITION ANDROID
-    PUBLIC_LIBRARIES
-        Qt::AndroidExtras
-)

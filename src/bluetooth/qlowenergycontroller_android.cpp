@@ -38,9 +38,10 @@
 ****************************************************************************/
 
 #include "qlowenergycontroller_android_p.h"
+#include <QCoreApplication>
 #include <QtCore/QLoggingCategory>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniEnvironment>
+#include <QtCore/QJniObject>
 #include <QtBluetooth/QLowEnergyServiceData>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -53,17 +54,17 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-Q_DECLARE_METATYPE(QAndroidJniObject)
+Q_DECLARE_METATYPE(QJniObject)
 
 // Conversion: QBluetoothUuid -> java.util.UUID
-static QAndroidJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
+static QJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
 {
     QString output = uuid.toString();
     // cut off leading and trailing brackets
     output = output.mid(1, output.size()-2);
 
-    QAndroidJniObject javaString = QAndroidJniObject::fromString(output);
-    QAndroidJniObject javaUuid = QAndroidJniObject::callStaticObjectMethod(
+    QJniObject javaString = QJniObject::fromString(output);
+    QJniObject javaUuid = QJniObject::callStaticObjectMethod(
                 "java/util/UUID", "fromString", "(Ljava/lang/String;)Ljava/util/UUID;",
                 javaString.object());
 
@@ -90,7 +91,7 @@ void QLowEnergyControllerPrivateAndroid::init()
     // Android Central/Client support starts with v18
     // Peripheral/Server support requires Android API v21
     const bool isPeripheral = (role == QLowEnergyController::PeripheralRole);
-    const jint version = QtAndroidPrivate::androidSdkVersion();
+    const jint version = QNativeInterface::QAndroidApplication::sdkVersion();
 
     if (isPeripheral) {
         if (version < 21) {
@@ -99,7 +100,7 @@ void QLowEnergyControllerPrivateAndroid::init()
             return;
         }
 
-        qRegisterMetaType<QAndroidJniObject>();
+        qRegisterMetaType<QJniObject>();
 
         hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
         // we only connect to the peripheral role specific signals
@@ -223,8 +224,8 @@ void QLowEnergyControllerPrivateAndroid::discoverServiceDetails(
 
     QString tempUuid = service.toString(QUuid::WithoutBraces);
 
-    QAndroidJniEnvironment env;
-    QAndroidJniObject uuid = QAndroidJniObject::fromString(tempUuid);
+    QJniEnvironment env;
+    QJniObject uuid = QJniObject::fromString(tempUuid);
     bool readAllValues = mode == QLowEnergyService::FullDiscovery;
     bool result = hub->javaObject().callMethod<jboolean>("discoverServiceDetails",
                                                          "(Ljava/lang/String;Z)Z",
@@ -256,7 +257,7 @@ void QLowEnergyControllerPrivateAndroid::writeCharacteristic(
     if (!service->characteristicList.contains(charHandle))
         return;
 
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
     jbyteArray payload;
     payload = env->NewByteArray(newValue.size());
     env->SetByteArrayRegion(payload, 0, newValue.size(),
@@ -277,19 +278,13 @@ void QLowEnergyControllerPrivateAndroid::writeCharacteristic(
 
             const auto &characteristic = characteristicForHandle(charHandle);
             if (characteristic.isValid()) {
-                const QAndroidJniObject charUuid = javaUuidfromQtUuid(characteristic.uuid());
+                const QJniObject charUuid = javaUuidfromQtUuid(characteristic.uuid());
                 result = hub->javaObject().callMethod<jboolean>(
                             "writeCharacteristic",
                             "(Landroid/bluetooth/BluetoothGattService;Ljava/util/UUID;[B)Z",
                             service->androidService.object(), charUuid.object(), payload);
             }
         }
-    }
-
-    if (env->ExceptionOccurred()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        result = false;
     }
 
     env->DeleteLocalRef(payload);
@@ -306,7 +301,7 @@ void QLowEnergyControllerPrivateAndroid::writeDescriptor(
 {
     Q_ASSERT(!service.isNull());
 
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
     jbyteArray payload;
     payload = env->NewByteArray(newValue.size());
     env->SetByteArrayRegion(payload, 0, newValue.size(),
@@ -326,8 +321,8 @@ void QLowEnergyControllerPrivateAndroid::writeDescriptor(
                 qCDebug(QT_BT_ANDROID) << "Write descriptor" << descriptor.uuid()
                                    << "(service:" << service->uuid
                                    << "char: " << characteristic.uuid() << ")";
-                const QAndroidJniObject charUuid = javaUuidfromQtUuid(characteristic.uuid());
-                const QAndroidJniObject descUuid = javaUuidfromQtUuid(descriptor.uuid());
+                const QJniObject charUuid = javaUuidfromQtUuid(characteristic.uuid());
+                const QJniObject descUuid = javaUuidfromQtUuid(descriptor.uuid());
                 result = hub->javaObject().callMethod<jboolean>(
                             "writeDescriptor",
                             "(Landroid/bluetooth/BluetoothGattService;Ljava/util/UUID;Ljava/util/UUID;[B)Z",
@@ -335,12 +330,6 @@ void QLowEnergyControllerPrivateAndroid::writeDescriptor(
                             descUuid.object(), payload);
             }
         }
-    }
-
-    if (env->ExceptionOccurred()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        result = false;
     }
 
     env->DeleteLocalRef(payload);
@@ -358,19 +347,13 @@ void QLowEnergyControllerPrivateAndroid::readCharacteristic(
     if (!service->characteristicList.contains(charHandle))
         return;
 
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
     bool result = false;
     if (hub) {
         qCDebug(QT_BT_ANDROID) << "Read characteristic with handle"
                                <<  charHandle << service->uuid;
         result = hub->javaObject().callMethod<jboolean>("readCharacteristic",
                       "(I)Z", charHandle);
-    }
-
-    if (env->ExceptionOccurred()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        result = false;
     }
 
     if (!result)
@@ -384,19 +367,13 @@ void QLowEnergyControllerPrivateAndroid::readDescriptor(
 {
     Q_ASSERT(!service.isNull());
 
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
     bool result = false;
     if (hub) {
         qCDebug(QT_BT_ANDROID) << "Read descriptor with handle"
                                <<  descriptorHandle << service->uuid;
         result = hub->javaObject().callMethod<jboolean>("readDescriptor",
                       "(I)Z", descriptorHandle);
-    }
-
-    if (env->ExceptionOccurred()) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        result = false;
     }
 
     if (!result)
@@ -557,8 +534,8 @@ void QLowEnergyControllerPrivateAndroid::serviceDetailsDiscoveryFinished(
     pointer->endHandle = endHandle;
 
     if (hub && hub->javaObject().isValid()) {
-        QAndroidJniObject uuid = QAndroidJniObject::fromString(serviceUuid);
-        QAndroidJniObject javaIncludes = hub->javaObject().callObjectMethod(
+        QJniObject uuid = QJniObject::fromString(serviceUuid);
+        QJniObject javaIncludes = hub->javaObject().callObjectMethod(
                                         "includedServices",
                                         "(Ljava/lang/String;)Ljava/lang/String;",
                                         uuid.object<jstring>());
@@ -716,22 +693,22 @@ void QLowEnergyControllerPrivateAndroid::descriptorWritten(
 }
 
 void QLowEnergyControllerPrivateAndroid::serverDescriptorWritten(
-        const QAndroidJniObject &jniDesc, const QByteArray &newValue)
+        const QJniObject &jniDesc, const QByteArray &newValue)
 {
     qCDebug(QT_BT_ANDROID) << "Server descriptor change notification" << newValue.toHex();
 
     // retrieve service, char and desc uuids
-    QAndroidJniObject jniChar = jniDesc.callObjectMethod(
+    QJniObject jniChar = jniDesc.callObjectMethod(
                                     "getCharacteristic", "()Landroid/bluetooth/BluetoothGattCharacteristic;");
     if (!jniChar.isValid())
         return;
 
-    QAndroidJniObject jniService = jniChar.callObjectMethod(
+    QJniObject jniService = jniChar.callObjectMethod(
                                     "getService", "()Landroid/bluetooth/BluetoothGattService;");
     if (!jniService.isValid())
         return;
 
-    QAndroidJniObject jniUuid = jniService.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    QJniObject jniUuid = jniService.callObjectMethod("getUuid", "()Ljava/util/UUID;");
     const QBluetoothUuid serviceUuid(jniUuid.toString());
     if (serviceUuid.isNull())
         return;
@@ -806,17 +783,17 @@ void QLowEnergyControllerPrivateAndroid::characteristicChanged(
 }
 
 void QLowEnergyControllerPrivateAndroid::serverCharacteristicChanged(
-        const QAndroidJniObject &characteristic, const QByteArray &newValue)
+        const QJniObject &characteristic, const QByteArray &newValue)
 {
     qCDebug(QT_BT_ANDROID) << "Server characteristic change notification" << newValue.toHex();
 
     // match characteristic to servicePrivate
-    QAndroidJniObject service = characteristic.callObjectMethod(
+    QJniObject service = characteristic.callObjectMethod(
                                     "getService", "()Landroid/bluetooth/BluetoothGattService;");
     if (!service.isValid())
         return;
 
-    QAndroidJniObject jniUuid = service.callObjectMethod("getUuid", "()Ljava/util/UUID;");
+    QJniObject jniUuid = service.callObjectMethod("getUuid", "()Ljava/util/UUID;");
     QBluetoothUuid serviceUuid(jniUuid.toString());
     if (serviceUuid.isNull())
         return;
@@ -918,23 +895,23 @@ void QLowEnergyControllerPrivateAndroid::advertisementError(int errorCode)
     }
 }
 
-static QAndroidJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid &uuid)
+static QJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid &uuid)
 {
     QString output = uuid.toString();
     // cut off leading and trailing brackets
     output = output.mid(1, output.size()-2);
 
-    QAndroidJniObject javaString = QAndroidJniObject::fromString(output);
-    QAndroidJniObject parcelUuid = QAndroidJniObject::callStaticObjectMethod(
+    QJniObject javaString = QJniObject::fromString(output);
+    QJniObject parcelUuid = QJniObject::callStaticObjectMethod(
                 "android/os/ParcelUuid", "fromString",
                 "(Ljava/lang/String;)Landroid/os/ParcelUuid;", javaString.object());
 
     return parcelUuid;
 }
 
-static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
+static QJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
 {
-    QAndroidJniObject builder = QAndroidJniObject("android/bluetooth/le/AdvertiseData$Builder");
+    QJniObject builder = QJniObject("android/bluetooth/le/AdvertiseData$Builder");
 
     // device name cannot be set but there is choice to show it or not
     builder = builder.callObjectMethod("setIncludeDeviceName", "(Z)Landroid/bluetooth/le/AdvertiseData$Builder;",
@@ -949,7 +926,7 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
     }
 
     if (!data.manufacturerData().isEmpty()) {
-        QAndroidJniEnvironment env;
+        QJniEnvironment env;
         const qint32 nativeSize = data.manufacturerData().size();
         jbyteArray nativeData = env->NewByteArray(nativeSize);
         env->SetByteArrayRegion(nativeData, 0, nativeSize,
@@ -959,10 +936,8 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
                                        data.manufacturerId(), nativeData);
         env->DeleteLocalRef(nativeData);
 
-        if (env->ExceptionCheck()) {
+        if (!builder.isValid()) {
             qCWarning(QT_BT_ANDROID) << "Cannot set manufacturer id/data";
-            env->ExceptionDescribe();
-            env->ExceptionClear();
         }
     }
 
@@ -970,7 +945,7 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
           -> Qt assumes rawData() is a global field
           -> Android pairs rawData() per service uuid
     if (!data.rawData().isEmpty()) {
-        QAndroidJniEnvironment env;
+        QJniEnvironment env;
         qint32 nativeSize = data.rawData().size();
         jbyteArray nativeData = env->NewByteArray(nativeSize);
         env->SetByteArrayRegion(nativeData, 0, nativeSize,
@@ -980,21 +955,19 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
                                        data.rawData().object(), nativeData);
         env->DeleteLocalRef(nativeData);
 
-        if (env->ExceptionCheck()) {
+        if (env.checkAndClearExceptions()) {
             qCWarning(QT_BT_ANDROID) << "Cannot set advertisement raw data";
-            env->ExceptionDescribe();
-            env->ExceptionClear();
         }
     }*/
 
-    QAndroidJniObject javaAdvertiseData = builder.callObjectMethod("build",
+    QJniObject javaAdvertiseData = builder.callObjectMethod("build",
                                        "()Landroid/bluetooth/le/AdvertiseData;");
     return javaAdvertiseData;
 }
 
-static QAndroidJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertisingParameters &params)
+static QJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertisingParameters &params)
 {
-    QAndroidJniObject builder = QAndroidJniObject("android/bluetooth/le/AdvertiseSettings$Builder");
+    QJniObject builder = QJniObject("android/bluetooth/le/AdvertiseSettings$Builder");
 
     bool connectable = false;
     switch (params.mode())
@@ -1015,7 +988,7 @@ static QAndroidJniObject createJavaAdvertiseSettings(const QLowEnergyAdvertising
      *      Android TxPowerLevel, AdvertiseMode and Timeout not mappable to Qt
      */
 
-    QAndroidJniObject javaAdvertiseSettings = builder.callObjectMethod("build",
+    QJniObject javaAdvertiseSettings = builder.callObjectMethod("build",
                                             "()Landroid/bluetooth/le/AdvertiseSettings;");
     return javaAdvertiseSettings;
 }
@@ -1035,9 +1008,9 @@ void QLowEnergyControllerPrivateAndroid::startAdvertising(const QLowEnergyAdvert
     }
 
     // Pass on advertisingData, scanResponse & AdvertiseSettings
-    QAndroidJniObject jAdvertiseData = createJavaAdvertiseData(advertisingData);
-    QAndroidJniObject jScanResponse = createJavaAdvertiseData(scanResponseData);
-    QAndroidJniObject jAdvertiseSettings = createJavaAdvertiseSettings(params);
+    QJniObject jAdvertiseData = createJavaAdvertiseData(advertisingData);
+    QJniObject jScanResponse = createJavaAdvertiseData(scanResponseData);
+    QJniObject jAdvertiseSettings = createJavaAdvertiseSettings(params);
 
     const bool result = hub->javaObject().callMethod<jboolean>("startAdvertising",
             "(Landroid/bluetooth/le/AdvertiseData;Landroid/bluetooth/le/AdvertiseData;Landroid/bluetooth/le/AdvertiseSettings;)Z",
@@ -1087,20 +1060,20 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
         if (int(charData.readConstraints()) == 0 // nothing is equivalent to simple read
             || (charData.readConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_READ");
         }
 
         if (charData.readConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_READ_ENCRYPTED");
         }
 
         if (charData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_READ_ENCRYPTED_MITM");
         }
@@ -1111,20 +1084,20 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
         if (int(charData.writeConstraints()) == 0 // no flag is equivalent ti simple write
             || (charData.writeConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE");
         }
 
         if (charData.writeConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_ENCRYPTED");
         }
 
         if (charData.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_ENCRYPTED_MITM");
         }
@@ -1132,11 +1105,11 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
 
     if (charData.properties() & QLowEnergyCharacteristic::WriteSigned) {
         if (charData.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_SIGNED_MITM");
         } else {
-            permission |= QAndroidJniObject::getStaticField<jint>(
+            permission |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattCharacteristic",
                                                 "PERMISSION_WRITE_SIGNED");
         }
@@ -1156,20 +1129,20 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
         if (int(descData.readConstraints()) == 0 // empty is equivalent to simple read
             || (descData.readConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
-            permissions |= QAndroidJniObject::getStaticField<jint>(
+            permissions |= QJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_READ");
         }
 
         if (descData.readConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
-            permissions |= QAndroidJniObject::getStaticField<jint>(
+            permissions |= QJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_READ_ENCRYPTED");
         }
 
         if (descData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
-            permissions |= QAndroidJniObject::getStaticField<jint>(
+            permissions |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattDescriptor",
                                                 "PERMISSION_READ_ENCRYPTED_MITM");
         }
@@ -1179,20 +1152,20 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
         if (int(descData.readConstraints()) == 0 // empty is equivalent to simple read
             || (descData.readConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
-            permissions |= QAndroidJniObject::getStaticField<jint>(
+            permissions |= QJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_WRITE");
         }
 
         if (descData.readConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
-            permissions |= QAndroidJniObject::getStaticField<jint>(
+            permissions |= QJniObject::getStaticField<jint>(
                                 "android/bluetooth/BluetoothGattDescriptor",
                                 "PERMISSION_WRITE_ENCRYPTED");
         }
 
         if (descData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
-            permissions |= QAndroidJniObject::getStaticField<jint>(
+            permissions |= QJniObject::getStaticField<jint>(
                                                 "android/bluetooth/BluetoothGattDescriptor",
                                                 "PERMISSION_WRITE_ENCRYPTED_MITM");
         }
@@ -1209,13 +1182,13 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
         return;
 
     // create BluetoothGattService object
-    jint sType = QAndroidJniObject::getStaticField<jint>(
+    jint sType = QJniObject::getStaticField<jint>(
                             "android/bluetooth/BluetoothGattService", "SERVICE_TYPE_PRIMARY");
     if (serviceData.type() == QLowEnergyServiceData::ServiceTypeSecondary)
-        sType = QAndroidJniObject::getStaticField<jint>(
+        sType = QJniObject::getStaticField<jint>(
                                     "android/bluetooth/BluetoothGattService", "SERVICE_TYPE_SECONDARY");
 
-    service->androidService = QAndroidJniObject("android/bluetooth/BluetoothGattService",
+    service->androidService = QJniObject("android/bluetooth/BluetoothGattService",
                                                 "(Ljava/util/UUID;I)V",
                                                 javaUuidfromQtUuid(service->uuid).object(), sType);
 
@@ -1234,13 +1207,13 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
     // add characteristics
     const QList<QLowEnergyCharacteristicData> serviceCharsData = serviceData.characteristics();
     for (const auto &charData: serviceCharsData) {
-        QAndroidJniObject javaChar = QAndroidJniObject("android/bluetooth/BluetoothGattCharacteristic",
+        QJniObject javaChar = QJniObject("android/bluetooth/BluetoothGattCharacteristic",
                                                        "(Ljava/util/UUID;II)V",
                                                        javaUuidfromQtUuid(charData.uuid()).object(),
                                                        int(charData.properties()),
                                                        setupCharPermissions(charData));
 
-        QAndroidJniEnvironment env;
+        QJniEnvironment env;
         jbyteArray jb = env->NewByteArray(charData.value().size());
         env->SetByteArrayRegion(jb, 0, charData.value().size(), (jbyte*)charData.value().data());
         jboolean success = javaChar.callMethod<jboolean>("setValue", "([B)Z", jb);
@@ -1251,7 +1224,7 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
 
         const QList<QLowEnergyDescriptorData> descriptorList = charData.descriptors();
         for (const auto &descData: descriptorList) {
-            QAndroidJniObject javaDesc = QAndroidJniObject("android/bluetooth/BluetoothGattDescriptor",
+            QJniObject javaDesc = QJniObject("android/bluetooth/BluetoothGattDescriptor",
                                                            "(Ljava/util/UUID;I)V",
                                                            javaUuidfromQtUuid(descData.uuid()).object(),
                                                            setupDescPermissions(descData));

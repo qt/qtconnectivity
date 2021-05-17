@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 #include <QtCore/QLoggingCategory>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtCore/QJniEnvironment>
 
 #include "android/inputstreamthread_p.h"
 #include "qbluetoothsocket_android_p.h"
@@ -57,7 +57,7 @@ bool InputStreamThread::run()
 {
     QMutexLocker lock(&m_mutex);
 
-    javaInputStreamThread = QAndroidJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread");
+    javaInputStreamThread = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread");
     if (!javaInputStreamThread.isValid() || !m_socket_p->inputStream.isValid())
         return false;
 
@@ -107,7 +107,7 @@ void InputStreamThread::javaThreadErrorOccurred(int errorCode)
 //inside the java thread
 void InputStreamThread::javaReadyRead(jbyteArray buffer, int bufferLength)
 {
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
 
     QMutexLocker lock(&m_mutex);
     char *writePtr = m_socket_p->buffer.reserve(bufferLength);

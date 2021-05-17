@@ -58,7 +58,7 @@
 #include <QtBluetooth/QLowEnergyCharacteristic>
 
 #if defined(QT_ANDROID_BLUETOOTH)
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -127,7 +127,7 @@ public:
 
 #if defined(QT_ANDROID_BLUETOOTH)
     // reference to the BluetoothGattService object
-    QAndroidJniObject androidService;
+    QJniObject androidService;
 #endif
 
 };

@@ -62,8 +62,8 @@ QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
 
 #ifdef QT_ANDROID_BLUETOOTH
-#include <QtAndroidExtras/QAndroidJniEnvironment>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniEnvironment>
+#include <QtCore/QJniObject>
 #include <QtBluetooth/QBluetoothUuid>
 
 class ServerAcceptanceThread;

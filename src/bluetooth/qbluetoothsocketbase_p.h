@@ -56,7 +56,7 @@
 #include <QtBluetooth/qbluetoothsocket.h>
 
 #if defined(QT_ANDROID_BLUETOOTH)
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #endif
 
 #if defined(QT_WINRT_BLUETOOTH)
@@ -137,7 +137,7 @@ public:
                                   QIODevice::OpenMode openMode) = 0;
 
 #ifdef QT_ANDROID_BLUETOOTH
-    virtual bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
+    virtual bool setSocketDescriptor(const QJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::SocketState::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) = 0;
 #elif defined(QT_WINRT_BLUETOOTH)

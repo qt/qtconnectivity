@@ -54,7 +54,7 @@
 
 #include "qbluetoothsocketbase_p.h"
 
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include <QtCore/QPointer>
 #include "android/inputstreamthread_p.h"
 #include <jni.h>
@@ -81,7 +81,7 @@ public:
     void connectToService(const QBluetoothAddress &address, quint16 port,
                           QIODevice::OpenMode openMode) override;
 
-    bool fallBackConnect(QAndroidJniObject uuid, int channel);
+    bool fallBackConnect(QJniObject uuid, int channel);
     bool fallBackReversedConnect(const QBluetoothUuid &uuid);
 
     bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;
@@ -100,7 +100,7 @@ public:
     qint64 writeData(const char *data, qint64 maxSize) override;
     qint64 readData(char *data, qint64 maxSize) override;
 
-    bool setSocketDescriptor(const QAndroidJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
+    bool setSocketDescriptor(const QJniObject &socket, QBluetoothServiceInfo::Protocol socketType,
                              QBluetoothSocket::SocketState socketState = QBluetoothSocket::SocketState::ConnectedState,
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) override;
 
@@ -114,20 +114,20 @@ public:
 
     static QBluetoothUuid reverseUuid(const QBluetoothUuid &serviceUuid);
 
-    QAndroidJniObject adapter;
-    QAndroidJniObject socketObject;
-    QAndroidJniObject remoteDevice;
-    QAndroidJniObject inputStream;
-    QAndroidJniObject outputStream;
+    QJniObject adapter;
+    QJniObject socketObject;
+    QJniObject remoteDevice;
+    QJniObject inputStream;
+    QJniObject outputStream;
     InputStreamThread *inputThread;
 
 public slots:
-    void socketConnectSuccess(const QAndroidJniObject &socket);
-    void defaultSocketConnectFailed(const QAndroidJniObject & socket,
-                                    const QAndroidJniObject &targetUuid,
+    void socketConnectSuccess(const QJniObject &socket);
+    void defaultSocketConnectFailed(const QJniObject & socket,
+                                    const QJniObject &targetUuid,
                                     const QBluetoothUuid &qtTargetUuid);
-    void fallbackSocketConnectFailed(const QAndroidJniObject &socket,
-                                     const QAndroidJniObject &targetUuid);
+    void fallbackSocketConnectFailed(const QJniObject &socket,
+                                     const QJniObject &targetUuid);
     void inputThreadError(int errorCode);
 
 signals:

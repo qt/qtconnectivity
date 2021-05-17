@@ -58,8 +58,8 @@
 
 #include <QHash>
 #include <QMap>
-#include <QtAndroidExtras/QAndroidJniObject>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtCore/QJniObject>
+#include <QtCore/QJniEnvironment>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,11 +79,11 @@ public:
     bool isSupported(QNearFieldTarget::AccessMethod accessMethod) const override;
     bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod) override;
     void stopTargetDetection(const QString &errorMessage) override;
-    void newIntent(QAndroidJniObject intent) override;
-    QByteArray getUid(const QAndroidJniObject &intent);
+    void newIntent(QJniObject intent) override;
+    QByteArray getUid(const QJniObject &intent);
 
 protected:
-    static QByteArray getUidforTag(const QAndroidJniObject &tag);
+    static QByteArray getUidforTag(const QJniObject &tag);
     void updateReceiveState();
 
 private:
@@ -92,7 +92,7 @@ private:
     QHash<QByteArray, QNearFieldTargetPrivateImpl*> detectedTargets;
 
 private slots:
-    void onTargetDiscovered(QAndroidJniObject intent);
+    void onTargetDiscovered(QJniObject intent);
     void onTargetDestroyed(const QByteArray &uid);
     void onTargetDetected(QNearFieldTargetPrivateImpl *target);
     void onTargetLost(QNearFieldTargetPrivateImpl *target);

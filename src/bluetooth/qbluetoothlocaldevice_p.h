@@ -75,8 +75,8 @@ QT_END_NAMESPACE
 
 #ifdef QT_ANDROID_BLUETOOTH
 #include <jni.h>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniEnvironment>
+#include <QtCore/QJniObject>
 #include <QtCore/QPair>
 #endif
 
@@ -111,7 +111,7 @@ public:
         QBluetoothLocalDevice *q, const QBluetoothAddress &address = QBluetoothAddress());
     ~QBluetoothLocalDevicePrivate();
 
-    QAndroidJniObject *adapter();
+    QJniObject *adapter();
     void initialize(const QBluetoothAddress &address);
     static bool startDiscovery();
     static bool cancelDiscovery();
@@ -126,7 +126,7 @@ private slots:
 
 private:
     QBluetoothLocalDevice *q_ptr;
-    QAndroidJniObject *obj = nullptr;
+    QJniObject *obj = nullptr;
 
     int pendingPairing(const QBluetoothAddress &address);
 

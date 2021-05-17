@@ -37,11 +37,12 @@
 **
 ****************************************************************************/
 
+#include <QCoreApplication>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QTimer>
 #include <QtCore/private/qjnihelpers_p.h>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtCore/QJniEnvironment>
 #include <QtBluetooth/QBluetoothHostInfo>
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothServiceDiscoveryAgent>
@@ -85,10 +86,10 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
         }
     }
 
-    if (QtAndroidPrivate::androidSdkVersion() < 15)
+    if (QNativeInterface::QAndroidApplication::sdkVersion() < 15)
         qCWarning(QT_BT_ANDROID)
             << "SDP not supported by Android API below version 15. Detected version: "
-            << QtAndroidPrivate::androidSdkVersion()
+            << QNativeInterface::QAndroidApplication::sdkVersion()
             << "Service discovery will return empty list.";
 
 
@@ -98,7 +99,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     */
 
     if (createAdapter)
-        btAdapter = QAndroidJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
+        btAdapter = QJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
                                                            "getDefaultAdapter",
                                                            "()Landroid/bluetooth/BluetoothAdapter;");
     if (!btAdapter.isValid())
@@ -150,7 +151,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
      *
      * TODO: Use reflection to support getUuuids() where possible.
      * */
-    if (QtAndroidPrivate::androidSdkVersion() < 15) {
+    if (QNativeInterface::QAndroidApplication::sdkVersion() < 15) {
         qCWarning(QT_BT_ANDROID) << "Aborting SDP enquiry due to too low Android API version (requires v15+)";
 
         error = QBluetoothServiceDiscoveryAgent::UnknownError;
@@ -165,15 +166,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         return;
     }
 
-    QAndroidJniObject inputString = QAndroidJniObject::fromString(address.toString());
-    QAndroidJniObject remoteDevice =
+    QJniObject inputString = QJniObject::fromString(address.toString());
+    QJniObject remoteDevice =
             btAdapter.callObjectMethod("getRemoteDevice",
                                                "(Ljava/lang/String;)Landroid/bluetooth/BluetoothDevice;",
                                                inputString.object<jstring>());
-    QAndroidJniEnvironment env;
-    if (env->ExceptionCheck()) {
-        env->ExceptionClear();
-        env->ExceptionDescribe();
+    if (!remoteDevice.isValid()) {
 
         //if it was only device then its error -> otherwise go to next device
         if (singleDevice) {
@@ -194,7 +192,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
                                << ")" << address.toString() ;
 
         //Minimal discovery uses BluetoothDevice.getUuids()
-        QAndroidJniObject parcelUuidArray = remoteDevice.callObjectMethod(
+        QJniObject parcelUuidArray = remoteDevice.callObjectMethod(
                     "getUuids", "()[Landroid/os/ParcelUuid;");
 
         if (!parcelUuidArray.isValid()) {

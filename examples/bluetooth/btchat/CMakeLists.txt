@@ -34,13 +34,6 @@ target_link_libraries(btchat PUBLIC
     Qt::Widgets
 )
 
-if(ANDROID)
-    find_package(Qt6 COMPONENTS AndroidExtras)
-    target_link_libraries(btchat PUBLIC
-        Qt::AndroidExtras
-    )
-endif()
-
 install(TARGETS btchat
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -55,27 +55,27 @@ QT_BEGIN_ANDROIDNFC_NAMESPACE
 
 bool startDiscovery()
 {
-    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"start");
+    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"start");
 }
 
 bool isEnabled()
 {
-    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"isEnabled");
+    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"isEnabled");
 }
 
 bool isSupported()
 {
-    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"isSupported");
+    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"isSupported");
 }
 
 bool stopDiscovery()
 {
-    return QAndroidJniObject::callStaticMethod<jboolean>(nfcClassName,"stop");
+    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"stop");
 }
 
-QAndroidJniObject getStartIntent()
+QJniObject getStartIntent()
 {
-    QAndroidJniObject ret = QAndroidJniObject::callStaticObjectMethod(nfcClassName, "getStartIntent", "()Landroid/content/Intent;");
+    QJniObject ret = QJniObject::callStaticObjectMethod(nfcClassName, "getStartIntent", "()Landroid/content/Intent;");
     return ret;
 }
 
@@ -89,10 +89,10 @@ bool unregisterListener(AndroidNfcListenerInterface *listener)
     return mainListener.unregisterListener(listener);
 }
 
-QAndroidJniObject getTag(const QAndroidJniObject &intent)
+QJniObject getTag(const QJniObject &intent)
 {
-    QAndroidJniObject extraTag = QAndroidJniObject::getStaticObjectField("android/nfc/NfcAdapter", "EXTRA_TAG", "Ljava/lang/String;");
-    QAndroidJniObject tag = intent.callObjectMethod("getParcelableExtra", "(Ljava/lang/String;)Landroid/os/Parcelable;", extraTag.object<jstring>());
+    QJniObject extraTag = QJniObject::getStaticObjectField("android/nfc/NfcAdapter", "EXTRA_TAG", "Ljava/lang/String;");
+    QJniObject tag = intent.callObjectMethod("getParcelableExtra", "(Ljava/lang/String;)Landroid/os/Parcelable;", extraTag.object<jstring>());
     return tag;
 }
 

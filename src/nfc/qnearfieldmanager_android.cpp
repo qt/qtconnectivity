@@ -47,6 +47,7 @@
 #include "qdebug.h"
 #include "qlist.h"
 
+#include <QCoreApplication>
 #include <QScopedPointer>
 #include <QtCore/QMetaType>
 #include <QtCore/QMetaMethod>
@@ -54,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(QAndroidJniObject, broadcastReceiver)
+Q_GLOBAL_STATIC(QJniObject, broadcastReceiver)
 Q_GLOBAL_STATIC(QList<QNearFieldManagerPrivateImpl *>, broadcastListener)
 
 extern "C"
@@ -73,12 +74,12 @@ extern "C"
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     detecting(false)
 {
-    qRegisterMetaType<QAndroidJniObject>("QAndroidJniObject");
+    qRegisterMetaType<QJniObject>("QJniObject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
 
     if (!broadcastReceiver->isValid()) {
-        *broadcastReceiver = QAndroidJniObject("org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver",
-                                               "(Landroid/content/Context;)V", QtAndroidPrivate::context());
+        *broadcastReceiver = QJniObject("org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver",
+                                        "(Landroid/content/Context;)V", QNativeInterface::QAndroidApplication::context());
     }
     broadcastListener->append(this);
 }
@@ -88,7 +89,7 @@ QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
     broadcastListener->removeOne(this);
     if (broadcastListener->isEmpty()) {
         broadcastReceiver->callMethod<void>("unregisterReceiver");
-        *broadcastReceiver = QAndroidJniObject();
+        *broadcastReceiver = QJniObject();
     }
 }
 
@@ -138,7 +139,7 @@ void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &)
     Q_EMIT targetDetectionStopped();
 }
 
-void QNearFieldManagerPrivateImpl::newIntent(QAndroidJniObject intent)
+void QNearFieldManagerPrivateImpl::newIntent(QJniObject intent)
 {
     // This function is called from different thread and is used to move intent to main thread.
     QMetaObject::invokeMethod(this, [this, intent] {
@@ -146,17 +147,16 @@ void QNearFieldManagerPrivateImpl::newIntent(QAndroidJniObject intent)
     }, Qt::QueuedConnection);
 }
 
-QByteArray QNearFieldManagerPrivateImpl::getUid(const QAndroidJniObject &intent)
+QByteArray QNearFieldManagerPrivateImpl::getUid(const QJniObject &intent)
 {
     if (!intent.isValid())
         return QByteArray();
 
-    QAndroidJniEnvironment env;
-    QAndroidJniObject tag = AndroidNfc::getTag(intent);
+    QJniObject tag = AndroidNfc::getTag(intent);
     return getUidforTag(tag);
 }
 
-void QNearFieldManagerPrivateImpl::onTargetDiscovered(QAndroidJniObject intent)
+void QNearFieldManagerPrivateImpl::onTargetDiscovered(QJniObject intent)
 {
     // Getting UID
     QByteArray uid = getUid(intent);
@@ -184,13 +184,13 @@ void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)
     detectedTargets.remove(uid);
 }
 
-QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QAndroidJniObject &tag)
+QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QJniObject &tag)
 {
     if (!tag.isValid())
         return QByteArray();
 
-    QAndroidJniEnvironment env;
-    QAndroidJniObject tagId = tag.callObjectMethod("getId", "()[B");
+    QJniEnvironment env;
+    QJniObject tagId = tag.callObjectMethod("getId", "()[B");
     QByteArray uid;
     jsize len = env->GetArrayLength(tagId.object<jbyteArray>());
     uid.resize(len);

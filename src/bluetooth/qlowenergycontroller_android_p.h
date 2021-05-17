@@ -59,7 +59,7 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include "android/lowenergynotificationhub_p.h"
 
 #include <functional>
@@ -140,9 +140,9 @@ private slots:
                                QLowEnergyService::ServiceError errorCode);
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
-    void serverDescriptorWritten(const QAndroidJniObject &jniDesc, const QByteArray &newValue);
+    void serverDescriptorWritten(const QJniObject &jniDesc, const QByteArray &newValue);
     void characteristicChanged(int charHandle, const QByteArray &data);
-    void serverCharacteristicChanged(const QAndroidJniObject &jniChar, const QByteArray &newValue);
+    void serverCharacteristicChanged(const QJniObject &jniChar, const QByteArray &newValue);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
     void advertisementError(int errorCode);
 

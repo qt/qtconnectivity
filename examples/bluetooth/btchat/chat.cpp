@@ -53,15 +53,12 @@
 #include "chatserver.h"
 #include "chatclient.h"
 
+#include <QCoreApplication>
 #include <QtCore/qdebug.h>
 
 #include <QtBluetooth/qbluetoothdeviceinfo.h>
 #include <QtBluetooth/qbluetoothlocaldevice.h>
 #include <QtBluetooth/qbluetoothuuid.h>
-
-#ifdef Q_OS_ANDROID
-#include <QtAndroidExtras/QtAndroid>
-#endif
 
 static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
 #ifdef Q_OS_ANDROID
@@ -193,7 +190,7 @@ void Chat::connectClicked()
 
     RemoteSelector remoteSelector(adapter);
 #ifdef Q_OS_ANDROID
-    if (QtAndroid::androidSdkVersion() >= 23)
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 23)
         remoteSelector.startDiscovery(QBluetoothUuid(reverseUuid));
     else
         remoteSelector.startDiscovery(QBluetoothUuid(serviceUuid));

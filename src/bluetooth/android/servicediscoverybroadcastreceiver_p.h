@@ -68,7 +68,7 @@ public:
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent);
     virtual void onReceiveLeScan(JNIEnv *, jobject, jint, jbyteArray) {}
 
-    static QList<QBluetoothUuid> convertParcelableArray(const QAndroidJniObject &obj);
+    static QList<QBluetoothUuid> convertParcelableArray(const QJniObject &obj);
 
 signals:
     void uuidFetchFinished(const QBluetoothAddress &addr, const QList<QBluetoothUuid> &serviceUuid);

@@ -87,7 +87,7 @@ class QBluetoothDeviceDiscoveryAgent;
 #ifdef QT_ANDROID_BLUETOOTH
 class ServiceDiscoveryBroadcastReceiver;
 class LocalDeviceBroadcastReceiver;
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include <QtBluetooth/QBluetoothLocalDevice>
 #endif
 
@@ -191,7 +191,7 @@ private:
     ServiceDiscoveryBroadcastReceiver *receiver = nullptr;
     LocalDeviceBroadcastReceiver *localDeviceReceiver = nullptr;
 
-    QAndroidJniObject btAdapter;
+    QJniObject btAdapter;
     QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
 #endif
 

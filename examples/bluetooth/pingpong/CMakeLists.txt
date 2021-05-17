@@ -50,13 +50,6 @@ qt6_add_resources(btpingpong "resource"
         ${resource_resource_files}
 )
 
-if(ANDROID)
-    find_package(Qt6 COMPONENTS AndroidExtras)
-    target_link_libraries(btpingpong PUBLIC
-        Qt::AndroidExtras
-    )
-endif()
-
 install(TARGETS btpingpong
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"

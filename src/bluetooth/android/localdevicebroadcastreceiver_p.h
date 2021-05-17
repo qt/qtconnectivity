@@ -73,7 +73,7 @@ signals:
 
 private:
     int previousScanMode;
-    QAndroidJniObject pairingDevice;
+    QJniObject pairingDevice;
 
     int bondingModePreset[3];
     int hostModePreset[3];

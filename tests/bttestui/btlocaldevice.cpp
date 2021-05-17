@@ -27,11 +27,9 @@
 ****************************************************************************/
 
 #include "btlocaldevice.h"
+#include <QCoreApplication>
 #include <QDebug>
 #include <QTimer>
-#ifdef Q_OS_ANDROID
-#include <QtAndroidExtras/QtAndroid>
-#endif
 #include <QtBluetooth/QBluetoothServiceInfo>
 
 #define BTCHAT_DEVICE_ADDR "00:15:83:38:17:C3"
@@ -322,7 +320,7 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
     bool matchingService =
             (info.serviceUuid() == QBluetoothUuid(QString(TEST_SERVICE_UUID)));
 #ifdef Q_OS_ANDROID
-    if (QtAndroid::androidSdkVersion() >= 23) //bug introduced by Android 6.0.1
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 23) //bug introduced by Android 6.0.1
         matchingService = matchingService
             || (info.serviceUuid() == QBluetoothUuid(QString(TEST_REVERSE_SERVICE_UUID)));
 #endif

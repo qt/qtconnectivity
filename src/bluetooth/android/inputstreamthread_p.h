@@ -54,7 +54,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QMutex>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include <jni.h>
 
 QT_BEGIN_NAMESPACE
@@ -83,7 +83,7 @@ signals:
 
 private:
     QBluetoothSocketPrivateAndroid *m_socket_p;
-    QAndroidJniObject javaInputStreamThread;
+    QJniObject javaInputStreamThread;
     mutable QMutex m_mutex;
     bool expectClosure;
 };

@@ -73,7 +73,7 @@ signals:
     void finished();
 
 private:
-    QBluetoothDeviceInfo retrieveDeviceInfo(JNIEnv *env, const QAndroidJniObject& bluetoothDevice,
+    QBluetoothDeviceInfo retrieveDeviceInfo(const QJniObject& bluetoothDevice,
                                             int rssi, jbyteArray scanRecord = nullptr);
 };
 

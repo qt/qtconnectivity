@@ -54,7 +54,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QReadWriteLock>
 #include <QtCore/private/qjnihelpers_p.h>
-#include <QtAndroidExtras/QAndroidJniObject>
+#include <QtCore/QJniObject>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QLowEnergyController>
 #include <QtBluetooth/QLowEnergyService>
@@ -105,7 +105,7 @@ public:
     static void lowEnergy_advertisementError(JNIEnv *, jobject, jlong qtObject,
                                                jint status);
 
-    QAndroidJniObject javaObject()
+    QJniObject javaObject()
     {
         return jBluetoothLe;
     }
@@ -126,9 +126,9 @@ signals:
                                QLowEnergyService::ServiceError errorCode);
     void descriptorWritten(int descHandle, const QByteArray &data,
                            QLowEnergyService::ServiceError errorCode);
-    void serverDescriptorWritten(const QAndroidJniObject &descriptor, const QByteArray &newValue);
+    void serverDescriptorWritten(const QJniObject &descriptor, const QByteArray &newValue);
     void characteristicChanged(int charHandle, const QByteArray &data);
-    void serverCharacteristicChanged(const QAndroidJniObject &characteristic, const QByteArray &newValue);
+    void serverCharacteristicChanged(const QJniObject &characteristic, const QByteArray &newValue);
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
     void advertisementError(int status);
 
@@ -136,7 +136,7 @@ public slots:
 private:
     static QReadWriteLock lock;
 
-    QAndroidJniObject jBluetoothLe;
+    QJniObject jBluetoothLe;
     long javaToCtoken;
 
 };

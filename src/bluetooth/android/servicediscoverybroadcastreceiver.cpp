@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "android/servicediscoverybroadcastreceiver_p.h"
+#include <QCoreApplication>
 #include <QtCore/QLoggingCategory>
-#include <QtCore/private/qjnihelpers_p.h>
-#include <QtAndroidExtras/QAndroidJniEnvironment>
+#include <QtCore/QJniEnvironment>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include "android/jni_android_p.h"
@@ -51,7 +51,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 ServiceDiscoveryBroadcastReceiver::ServiceDiscoveryBroadcastReceiver(QObject* parent): AndroidBroadcastReceiver(parent)
 {
-    if (QtAndroidPrivate::androidSdkVersion() >= 15)
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 15)
         addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionUuid)); //API 15+
 }
 
@@ -60,7 +60,7 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
     Q_UNUSED(context);
     Q_UNUSED(env);
 
-    QAndroidJniObject intentObject(intent);
+    QJniObject intentObject(intent);
     const QString action = intentObject.callObjectMethod("getAction", "()Ljava/lang/String;").toString();
 
     qCDebug(QT_BT_ANDROID) << "ServiceDiscoveryBroadcastReceiver::onReceive() - event:" << action;
@@ -68,9 +68,9 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
     if (action == valueForStaticField(JavaNames::BluetoothDevice,
                                       JavaNames::ActionUuid).toString()) {
 
-        QAndroidJniObject keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
+        QJniObject keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                                          JavaNames::ExtraUuid);
-        QAndroidJniObject parcelableUuids = intentObject.callObjectMethod(
+        QJniObject parcelableUuids = intentObject.callObjectMethod(
                                                 "getParcelableArrayExtra",
                                                 "(Ljava/lang/String;)[Landroid/os/Parcelable;",
                                                 keyExtra.object<jstring>());
@@ -81,7 +81,7 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
         const QList<QBluetoothUuid> result = ServiceDiscoveryBroadcastReceiver::convertParcelableArray(parcelableUuids);
 
         keyExtra = valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ExtraDevice);
-        QAndroidJniObject bluetoothDevice =
+        QJniObject bluetoothDevice =
         intentObject.callObjectMethod("getParcelableExtra",
                                   "(Ljava/lang/String;)Landroid/os/Parcelable;",
                                   keyExtra.object<jstring>());
@@ -95,10 +95,10 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
     }
 }
 
-QList<QBluetoothUuid> ServiceDiscoveryBroadcastReceiver::convertParcelableArray(const QAndroidJniObject &parcelUuidArray)
+QList<QBluetoothUuid> ServiceDiscoveryBroadcastReceiver::convertParcelableArray(const QJniObject &parcelUuidArray)
 {
     QList<QBluetoothUuid> result;
-    QAndroidJniEnvironment env;
+    QJniEnvironment env;
 
     jobjectArray parcels = parcelUuidArray.object<jobjectArray>();
     if (!parcels)
@@ -106,7 +106,7 @@ QList<QBluetoothUuid> ServiceDiscoveryBroadcastReceiver::convertParcelableArray(
 
     jint size = env->GetArrayLength(parcels);
     for (int i = 0; i < size; i++) {
-        auto p = QAndroidJniObject::fromLocalRef(env->GetObjectArrayElement(parcels, i));
+        auto p = QJniObject::fromLocalRef(env->GetObjectArrayElement(parcels, i));
 
         QBluetoothUuid uuid(p.callObjectMethod<jstring>("toString").toString());
         //qCDebug(QT_BT_ANDROID) << uuid.toString();

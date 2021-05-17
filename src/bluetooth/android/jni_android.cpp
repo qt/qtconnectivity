@@ -50,7 +50,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-typedef QHash<QByteArray, QAndroidJniObject> JCachedStringFields;
+typedef QHash<QByteArray, QJniObject> JCachedStringFields;
 Q_GLOBAL_STATIC(JCachedStringFields, cachedStringFields)
 
 //Java class names
@@ -78,7 +78,7 @@ static const char * const javaExtraUuid = "EXTRA_UUID";
  * This function operates on the assumption that each
  * field is of type java/lang/String.
  */
-QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
+QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
 {
     //construct key
     //the switch statements are used to reduce the number of duplicated strings
@@ -92,7 +92,7 @@ QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldNam
         className = javaBluetoothDeviceClassName; break;
     default:
         qCWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
-        return QAndroidJniObject();
+        return QJniObject();
     }
 
     const char *fieldName;
@@ -129,7 +129,7 @@ QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldNam
         fieldName = javaExtraUuid; break;
     default:
         qCWarning(QT_BT_ANDROID) << "Unknown java field name passed to valueForStaticField():" << javaFieldName;
-        return QAndroidJniObject();
+        return QJniObject();
     }
 
     int offset_class = qstrlen(className);
@@ -140,14 +140,12 @@ QAndroidJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldNam
 
     JCachedStringFields::iterator it = cachedStringFields()->find(key);
     if (it == cachedStringFields()->end()) {
-        QAndroidJniEnvironment env;
-        QAndroidJniObject fieldValue = QAndroidJniObject::getStaticObjectField(
+        QJniEnvironment env;
+        QJniObject fieldValue = QJniObject::getStaticObjectField(
                                             className, fieldName, "Ljava/lang/String;");
-        if (env->ExceptionCheck()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-            cachedStringFields()->insert(key, QAndroidJniObject());
-            return QAndroidJniObject();
+        if (!fieldValue.isValid()) {
+            cachedStringFields()->insert(key, QJniObject());
+            return QJniObject();
         }
 
         cachedStringFields()->insert(key, fieldValue);
