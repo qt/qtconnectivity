@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -124,11 +124,11 @@ static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattRes
     return byteArrayFromBuffer(buffer, isWCharString);
 }
 
-class QWinRTLowEnergyServiceHandlerNew : public QObject
+class QWinRTLowEnergyServiceHandler : public QObject
 {
     Q_OBJECT
 public:
-    QWinRTLowEnergyServiceHandlerNew(const QBluetoothUuid &service,
+    QWinRTLowEnergyServiceHandler(const QBluetoothUuid &service,
                                      const ComPtr<IGattDeviceService3> &deviceService,
                                      QLowEnergyService::DiscoveryMode mode)
         : mService(service), mMode(mode), mDeviceService(deviceService)
@@ -136,7 +136,7 @@ public:
         qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     }
 
-    ~QWinRTLowEnergyServiceHandlerNew()
+    ~QWinRTLowEnergyServiceHandler()
     {
     }
 
@@ -411,7 +411,7 @@ signals:
     void errorOccured(const QString &error);
 };
 
-bool QWinRTLowEnergyServiceHandlerNew::checkAllCharacteristicsDiscovered()
+bool QWinRTLowEnergyServiceHandler::checkAllCharacteristicsDiscovered()
 {
     if (mCharacteristicsCountToBeDiscovered == 0) {
         emit charListObtained(mService, mCharacteristicList, mIndicateChars,
@@ -423,12 +423,12 @@ bool QWinRTLowEnergyServiceHandlerNew::checkAllCharacteristicsDiscovered()
     return false;
 }
 
-void QWinRTLowEnergyServiceHandlerNew::emitErrorAndQuitThread(HRESULT hr)
+void QWinRTLowEnergyServiceHandler::emitErrorAndQuitThread(HRESULT hr)
 {
     emitErrorAndQuitThread(qt_error_string(hr));
 }
 
-void QWinRTLowEnergyServiceHandlerNew::emitErrorAndQuitThread(const QString &error)
+void QWinRTLowEnergyServiceHandler::emitErrorAndQuitThread(const QString &error)
 {
     emit errorOccured(error);
     QThread::currentThread()->quit();
@@ -899,16 +899,16 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
             otherService->type |= QLowEnergyService::IncludedService;
     }
 
-    QWinRTLowEnergyServiceHandlerNew *worker =
-            new QWinRTLowEnergyServiceHandlerNew(service, deviceService3, mode);
+    QWinRTLowEnergyServiceHandler *worker =
+            new QWinRTLowEnergyServiceHandler(service, deviceService3, mode);
     QThread *thread = new QThread;
     worker->moveToThread(thread);
-    connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandlerNew::obtainCharList);
+    connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandler::obtainCharList);
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
-    connect(worker, &QWinRTLowEnergyServiceHandlerNew::errorOccured,
+    connect(worker, &QWinRTLowEnergyServiceHandler::errorOccured,
             this, &QLowEnergyControllerPrivateWinRT::handleServiceHandlerError);
-    connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained,
+    connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained,
             [this, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
             QLowEnergyServicePrivate::CharData> charList, QList<QBluetoothUuid> indicateChars,
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {

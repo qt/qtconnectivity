@@ -83,7 +83,6 @@ QT_BEGIN_NAMESPACE
 
 class QLowEnergyServiceData;
 class QTimer;
-class QWinRTLowEnergyServiceHandler;
 
 extern void registerQLowEnergyControllerMetaType();
 
