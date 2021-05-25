@@ -365,4 +365,20 @@ bool QNdefRecord::operator==(const QNdefRecord &other) const
     return true;
 }
 
+/*!
+    Clear the NDEF record.
+
+    An \l isEmpty() call returns \c true for a cleared record. The record
+    \l type() is set to \l {QNdefRecord::}{Empty}.
+*/
+void QNdefRecord::clear()
+{
+    if (d) {
+        d->typeNameFormat = 0;
+        d->type.clear();
+        d->id.clear();
+        d->payload.clear();
+    }
+}
+
 QT_END_NAMESPACE

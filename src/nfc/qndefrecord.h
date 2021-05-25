@@ -90,6 +90,8 @@ public:
     bool operator==(const QNdefRecord &other) const;
     inline bool operator!=(const QNdefRecord &other) const { return !operator==(other); }
 
+    void clear();
+
 protected:
     QNdefRecord(const QNdefRecord &other, TypeNameFormat typeNameFormat, const QByteArray &type);
     QNdefRecord(const QNdefRecord &other, TypeNameFormat typeNameFormat);

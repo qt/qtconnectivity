@@ -187,6 +187,22 @@ void tst_QNdefRecord::tst_record()
 
         QVERIFY(record != other);
     }
+
+    // test clear
+    {
+        QNdefRecord record;
+        record.setTypeNameFormat(QNdefRecord::NfcRtd);
+        record.setId("id");
+        record.setType("type");
+        record.setPayload("Some random data");
+
+        record.clear();
+        QCOMPARE(record.typeNameFormat(), QNdefRecord::Empty);
+        QVERIFY(record.id().isEmpty());
+        QVERIFY(record.type().isEmpty());
+        QVERIFY(record.payload().isEmpty());
+        QVERIFY(record.isEmpty());
+    }
 }
 
 void tst_QNdefRecord::tst_textRecord_data()

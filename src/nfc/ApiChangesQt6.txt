@@ -13,3 +13,4 @@ This document lists the API changed done to QtNFC between Qt 5.15 and Qt 6.
 - Changed the type of typeInfo in QNdefNfcSmartPosterRecord from QByteArray to QString.
 - Removed TargetAccessModes, setTargetAccessModes and targetAccessModes from QNearFieldManager. No replacement available.
 - Removed ndefMessagesWritten signal. A requestCompleted signal is used instead.
+- Added QNdefRecord::clear() method.
