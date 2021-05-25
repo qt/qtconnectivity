@@ -300,7 +300,6 @@ void QNearFieldTagType1Private::progressToNextNdefWriteMessageState()
             m_writeNdefMessageState = NotWritingNdefMessage;
             delete m_tlvWriter;
             m_tlvWriter = nullptr;
-            Q_EMIT q->ndefMessagesWritten();
             Q_EMIT q->requestCompleted(m_writeNdefRequestId);
             m_writeNdefRequestId = QNearFieldTarget::RequestId();
         } else {

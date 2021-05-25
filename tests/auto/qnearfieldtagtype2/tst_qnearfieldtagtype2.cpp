@@ -311,10 +311,13 @@ void tst_QNearFieldTagType2::ndefMessages()
 
         messages.append(message);
 
-        QSignalSpy ndefMessageWriteSpy(target, SIGNAL(ndefMessagesWritten()));
-        target->writeNdefMessages(messages);
+        QSignalSpy requestCompleteSpy(target, &QNearFieldTagType2::requestCompleted);
+        id = target->writeNdefMessages(messages);
 
-        QTRY_VERIFY(!ndefMessageWriteSpy.isEmpty());
+        QTRY_VERIFY(!requestCompleteSpy.isEmpty());
+        const auto completedId =
+                requestCompleteSpy.takeFirst().first().value<QNearFieldTarget::RequestId>();
+        QCOMPARE(completedId, id);
 
         QVERIFY(target->hasNdefMessage());
 

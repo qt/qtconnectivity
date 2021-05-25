@@ -422,7 +422,6 @@ void tst_QNearFieldTagType1::ndefMessages()
         requestCompletedSpy.clear();
         errorSpy.clear();
 
-        QSignalSpy ndefMessageWriteSpy(target, SIGNAL(ndefMessagesWritten()));
         QNearFieldTarget::RequestId writeId = target->writeNdefMessages(messages);
 
         QVERIFY(writeId.isValid());
@@ -435,8 +434,6 @@ void tst_QNearFieldTagType1::ndefMessages()
             completedId =
                 requestCompletedSpy.takeFirst().first().value<QNearFieldTarget::RequestId>();
         }
-
-        QVERIFY(!ndefMessageWriteSpy.isEmpty());
 
         QVERIFY(target->hasNdefMessage());
 

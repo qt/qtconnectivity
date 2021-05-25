@@ -300,7 +300,9 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::writeNdefMessages(const
         return requestId;
     }
 
-    QMetaObject::invokeMethod(this, &QNearFieldTargetPrivate::ndefMessagesWritten, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [this, requestId]() {
+        Q_EMIT this->requestCompleted(requestId);
+    }, Qt::QueuedConnection);
     return requestId;
 }
 

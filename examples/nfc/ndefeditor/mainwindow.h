@@ -91,7 +91,7 @@ private slots:
     void targetLost(QNearFieldTarget *target);
 
     void ndefMessageRead(const QNdefMessage &message);
-    void ndefMessageWritten();
+    void ndefMessageWritten(const QNearFieldTarget::RequestId &id);
     void targetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 
 private:

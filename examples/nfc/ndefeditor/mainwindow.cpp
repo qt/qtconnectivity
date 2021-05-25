@@ -242,7 +242,7 @@ void MainWindow::targetDetected(QNearFieldTarget *target)
             targetError(QNearFieldTarget::NdefReadError, m_request);
         break;
     case WriteNdef:
-        connect(target, &QNearFieldTarget::ndefMessagesWritten, this, &MainWindow::ndefMessageWritten);
+        connect(target, &QNearFieldTarget::requestCompleted, this, &MainWindow::ndefMessageWritten);
         connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
 
         m_request = target->writeNdefMessages(QList<QNdefMessage>() << ndefMessage());
@@ -287,12 +287,14 @@ void MainWindow::ndefMessageRead(const QNdefMessage &message)
     ui->statusBar->clearMessage();
 }
 
-void MainWindow::ndefMessageWritten()
+void MainWindow::ndefMessageWritten(const QNearFieldTarget::RequestId &id)
 {
-    ui->status->setStyleSheet(QString());
-    m_manager->stopTargetDetection();
-    m_request = QNearFieldTarget::RequestId();
-    ui->statusBar->clearMessage();
+    if (id == m_request) {
+        ui->status->setStyleSheet(QString());
+        m_manager->stopTargetDetection();
+        m_request = QNearFieldTarget::RequestId();
+        ui->statusBar->clearMessage();
+    }
 }
 
 void MainWindow::targetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id)

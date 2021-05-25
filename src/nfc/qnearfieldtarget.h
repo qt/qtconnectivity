@@ -142,7 +142,6 @@ Q_SIGNALS:
     void disconnected();
 
     void ndefMessageRead(const QNdefMessage &message);
-    void ndefMessagesWritten();
 
     void requestCompleted(const QNearFieldTarget::RequestId &id);
 

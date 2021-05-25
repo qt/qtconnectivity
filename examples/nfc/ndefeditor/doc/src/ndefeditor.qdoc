@@ -56,7 +56,7 @@ Tag by calling the method QNearFieldManager::startTargetDetection.
 Once the target is detected the MainWindow connects the following
 signals to its internal private slots:
 QNearFieldTarget::ndefMessageRead, QNearFieldTarget::NdefReadError,
-QNearFieldTarget::ndefMessagesWritten,
+QNearFieldTarget::requestCompleted,
 QNearFieldTarget::NdefWriteError and QNearFieldTarget::error
 
 \snippet ndefeditor/mainwindow.cpp QNearFieldTarget detected

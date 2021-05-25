@@ -139,14 +139,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QNearFieldTarget::ndefMessagesWritten()
-
-    This signal is emitted when NDEF messages have been successfully written to the target.
-
-    \sa writeNdefMessages()
-*/
-
-/*!
     \fn void QNearFieldTarget::requestCompleted(const QNearFieldTarget::RequestId &id)
 
     This signal is emitted when a request \a id completes.
@@ -347,7 +339,7 @@ QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
     to track the completion status of the request. An invalid request id will be returned if the
     target does not support reading NDEF messages.
 
-    The ndefMessagesWritten() signal will be emitted when the write operation completes
+    The requestCompleted() signal will be emitted when the write operation completes
     successfully; otherwise the error() signal is emitted.
 */
 QNearFieldTarget::RequestId QNearFieldTarget::writeNdefMessages(const QList<QNdefMessage> &messages)
@@ -431,8 +423,6 @@ QNearFieldTarget::QNearFieldTarget(QNearFieldTargetPrivate *backend, QObject *pa
             this, &QNearFieldTarget::disconnected);
     connect(d, &QNearFieldTargetPrivate::ndefMessageRead,
             this, &QNearFieldTarget::ndefMessageRead);
-    connect(d, &QNearFieldTargetPrivate::ndefMessagesWritten,
-            this, &QNearFieldTarget::ndefMessagesWritten);
     connect(d, &QNearFieldTargetPrivate::requestCompleted,
             this, &QNearFieldTarget::requestCompleted);
     connect(d, &QNearFieldTargetPrivate::error,
