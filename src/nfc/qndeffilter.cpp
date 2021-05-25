@@ -74,7 +74,26 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
+    \class QNdefFilter::Record
+    \brief The QNdefFilter::Record struct contains the information about a
+    filter record.
+
+    \ingroup connectivity-nfc
+    \inmodule QtNfc
+    \since 5.2
+
+    The QNdefFilter::Record struct is used to populate the QNdefFilter object.
+    Each record contains the following information:
+    \list
+    \li \l {QNdefRecord::TypeNameFormat} of the corresponding \l QNdefRecord.
+    \li Type of the \l QNdefRecord.
+    \li Minimum and maximum amount of the records with such parameters in the
+        filter.
+    \endlist
+*/
+
+/*!
+    \fn template<typename T> void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
 
     Appends a record matching the template parameter to the NDEF filter.  The record must occur
     between \a min and \a max times in the NDEF message.
@@ -103,7 +122,7 @@ QNdefFilter::QNdefFilter()
 }
 
 /*!
-    constructs a new NDEF filter that is a copy of \a other.
+    Constructs a new NDEF filter that is a copy of \a other.
 */
 QNdefFilter::QNdefFilter(const QNdefFilter &other)
 :   d(other.d)
@@ -185,6 +204,10 @@ void QNdefFilter::appendRecord(const Record &record)
 
 /*!
     Returns the NDEF record at index \a i.
+
+    \a i must be a valid index (i.e. 0 <= i < \l recordCount()).
+
+    \sa recordCount()
 */
 QNdefFilter::Record QNdefFilter::recordAt(int i) const
 {
