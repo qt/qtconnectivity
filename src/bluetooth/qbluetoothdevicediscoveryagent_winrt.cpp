@@ -265,7 +265,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::startDeviceDiscovery(QBluetoothDevice
 void QWinRTBluetoothDeviceDiscoveryWorker::onDeviceDiscoveryFinished(IAsyncOperation<DeviceInformationCollection *> *op, QBluetoothDeviceDiscoveryAgent::DiscoveryMethod mode)
 {
     qCDebug(QT_BT_WINDOWS) << (mode == QBluetoothDeviceDiscoveryAgent::ClassicMethod ? "BT" : "BTLE")
-        << " scan completed";
+        << "scan completed";
     ComPtr<IVectorView<DeviceInformation *>> devices;
     HRESULT hr;
     hr = op->GetResults(&devices);
