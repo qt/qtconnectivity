@@ -155,7 +155,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \class QNearFieldTarget::RequestId
-    \inmodule QtHfc
+    \inmodule QtNfc
     \inheaderfile QNearFieldTarget
     \brief A request id handle.
 */
