@@ -143,7 +143,10 @@ private:
 
     bool mAbortPending = false;
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
+    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattSession>
+            mGattSession;
     EventRegistrationToken mStatusChangedToken;
+    EventRegistrationToken mMtuChangedToken;
     struct ValueChangedEntry {
         ValueChangedEntry() {}
         ValueChangedEntry(Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> c,
@@ -165,6 +168,10 @@ private:
     void unregisterFromValueChanges();
     HRESULT onValueChange(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic *characteristic,
                           ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs *args);
+    HRESULT onMtuChange(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattSession *session,
+                        IInspectable *args);
+    bool registerForMtuChanges();
+    void unregisterFromMtuChanges();
 
     bool registerForStatusChanges();
     void unregisterFromStatusChanges();

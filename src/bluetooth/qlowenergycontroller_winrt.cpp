@@ -73,6 +73,7 @@ using namespace ABI::Windows::Storage::Streams;
 QT_BEGIN_NAMESPACE
 
 typedef ITypedEventHandler<BluetoothLEDevice *, IInspectable *> StatusHandler;
+typedef ITypedEventHandler<GattSession *, IInspectable *> MtuHandler;
 typedef ITypedEventHandler<GattCharacteristic *, GattValueChangedEventArgs *> ValueChangedHandler;
 typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConfigDescriptorResult;
 typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharConfigDescriptorResult;
@@ -483,6 +484,36 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
         setState(QLowEnergyController::UnconnectedState);
         return;
     }
+
+    // get GattSession: 1. get device id
+    ComPtr<IBluetoothLEDevice4> device4;
+    hr = mDevice.As(&device4);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return );
+
+    ComPtr<IBluetoothDeviceId> deviceId;
+    hr = device4->get_BluetoothDeviceId(&deviceId);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not get bluetooth device id", return )
+
+    // get GattSession: 2. get session statics
+    ComPtr<IGattSessionStatics> sessionStatics;
+    hr = GetActivationFactory(
+            HString::MakeReference(
+                    RuntimeClass_Windows_Devices_Bluetooth_GenericAttributeProfile_GattSession)
+                    .Get(),
+            &sessionStatics);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain GattSession statics", return )
+
+    // get GattSession: 3. get session
+    ComPtr<IAsyncOperation<GattSession *>> gattSessionFromIdOperation;
+    hr = sessionStatics->FromDeviceIdAsync(deviceId.Get(), &gattSessionFromIdOperation);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not get GattSession from id", return )
+    hr = QWinRTFunctions::await(gattSessionFromIdOperation, mGattSession.GetAddressOf(),
+                                QWinRTFunctions::ProcessMainThreadEvents, 5000);
+    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not complete Gatt session acquire", return )
+
+    // subscribe to changed event
+    registerForMtuChanges();
+
     BluetoothConnectionStatus status;
     hr = mDevice->get_ConnectionStatus(&status);
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain device's connection status", return)
@@ -507,7 +538,9 @@ void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
     setState(QLowEnergyController::ClosingState);
     unregisterFromValueChanges();
     unregisterFromStatusChanges();
+    unregisterFromMtuChanges();
     mAbortPending = true;
+    mGattSession = nullptr;
     mDevice = nullptr;
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
@@ -622,6 +655,18 @@ HRESULT QLowEnergyControllerPrivateWinRT::onValueChange(IGattCharacteristic *cha
     emit characteristicChanged(handle, byteArrayFromBuffer(buffer));
     return S_OK;
 }
+HRESULT QLowEnergyControllerPrivateWinRT::onMtuChange(IGattSession *session, IInspectable *args)
+{
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
+    if (session != mGattSession.Get()) {
+        qCWarning(QT_BT_WINDOWS) << "Got MTU changed event for wrong GattSession.";
+        return S_OK;
+    }
+
+    Q_Q(QLowEnergyController);
+    emit q->mtuChanged(mtu());
+    return S_OK;
+}
 
 bool QLowEnergyControllerPrivateWinRT::registerForStatusChanges()
 {
@@ -634,7 +679,7 @@ bool QLowEnergyControllerPrivateWinRT::registerForStatusChanges()
     hr = mDevice->add_ConnectionStatusChanged(
         Callback<StatusHandler>(this, &QLowEnergyControllerPrivateWinRT::onStatusChange).Get(),
                                 &mStatusChangedToken);
-    RETURN_IF_FAILED("Could not add status callback on Xaml thread", return false)
+    RETURN_IF_FAILED("Could not add status callback", return false)
     return true;
 }
 
@@ -644,6 +689,30 @@ void QLowEnergyControllerPrivateWinRT::unregisterFromStatusChanges()
     if (mDevice && mStatusChangedToken.value) {
         mDevice->remove_ConnectionStatusChanged(mStatusChangedToken);
         mStatusChangedToken.value = 0;
+    }
+}
+
+bool QLowEnergyControllerPrivateWinRT::registerForMtuChanges()
+{
+    if (!mDevice || !mGattSession)
+        return false;
+
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
+
+    HRESULT hr;
+    hr = mGattSession->add_MaxPduSizeChanged(
+            Callback<MtuHandler>(this, &QLowEnergyControllerPrivateWinRT::onMtuChange).Get(),
+            &mMtuChangedToken);
+    RETURN_IF_FAILED("Could not add MTU callback", return false)
+    return true;
+}
+
+void QLowEnergyControllerPrivateWinRT::unregisterFromMtuChanges()
+{
+    qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
+    if (mDevice && mGattSession && mMtuChangedToken.value) {
+        mGattSession->remove_MaxPduSizeChanged(mMtuChangedToken);
+        mMtuChangedToken.value = 0;
     }
 }
 
@@ -663,6 +732,8 @@ HRESULT QLowEnergyControllerPrivateWinRT::onStatusChange(IBluetoothLEDevice *dev
         invalidateServices();
         unregisterFromValueChanges();
         unregisterFromStatusChanges();
+        unregisterFromMtuChanges();
+        mGattSession = nullptr;
         mDevice = nullptr;
         setError(QLowEnergyController::RemoteHostClosedError);
         setState(QLowEnergyController::UnconnectedState);
@@ -1489,8 +1560,16 @@ void QLowEnergyControllerPrivateWinRT::addToGenericAttributeList(const QLowEnerg
 
 int QLowEnergyControllerPrivateWinRT::mtu() const
 {
-    // not supported yet
-    return -1;
+    uint16_t mtu = 23;
+    if (!mGattSession) {
+        qCDebug(QT_BT_WINDOWS) << "mtu queried before GattSession available. Using default mtu.";
+        return mtu;
+    }
+
+    HRESULT hr = mGattSession->get_MaxPduSize(&mtu);
+    RETURN_IF_FAILED("could not obtain MTU size", return mtu);
+    qCDebug(QT_BT_WINDOWS) << "mtu determined to be" << mtu;
+    return mtu;
 }
 
 void QLowEnergyControllerPrivateWinRT::handleCharacteristicChanged(
