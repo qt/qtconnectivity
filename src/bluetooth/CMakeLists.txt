@@ -51,32 +51,6 @@ qt_internal_add_module(Bluetooth
 ## Scopes:
 #####################################################################
 
-#### Keys ignored in scope 2:.:.:bluetooth.pro:WIN32:
-# WINDOWS_SDK_VERSION = "$$member($$list $$split WINDOWS_SDK_VERSION_STRING, . , 2)"
-# WINDOWS_SDK_VERSION_STRING = "$$(WindowsSDKVersion)"
-
-if (WIN32)
-    if (DEFINED CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION)
-        set (WINDOWS_SDK_VERSION ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION})
-    elseif (DEFINED CMAKE_SYSTEM_VERSION)
-        set (WINDOWS_SDK_VERSION ${CMAKE_SYSTEM_VERSION})
-    endif ()
-    if (DEFINED WINDOWS_SDK_VERSION)
-        string(REGEX MATCHALL "[0-9]+\\.|[0-9]+$" VERSIONLIST ${WINDOWS_SDK_VERSION})
-        list(GET VERSIONLIST 2 WINDOWS_SDK_VERSION_PATCH)
-    endif ()
-endif ()
-
-qt_internal_extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION_PATCH
-    DEFINES
-        QT_UCRTVERSION="${WINDOWS_SDK_VERSION_PATCH}"
-)
-
-qt_internal_extend_target(Bluetooth CONDITION WIN32 AND WINDOWS_SDK_VERSION_PATCH LESS 14393
-    DEFINES
-        QT_WINRT_LIMITED_SERVICEDISCOVERY
-)
-
 if(QT_FEATURE_bluez)
     qt_internal_extend_target(Bluetooth
         SOURCES

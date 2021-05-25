@@ -144,17 +144,6 @@ HRESULT QWinRTBluetoothServiceDiscoveryWorker::onBluetoothDeviceFoundAsync(IAsyn
     quint64 address;
     device->get_BluetoothAddress(&address);
 
-#ifdef QT_WINRT_LIMITED_SERVICEDISCOVERY
-    if (m_mode != QBluetoothServiceDiscoveryAgent::MinimalDiscovery) {
-        qWarning() << "Used Windows SDK version (" << QString::number(QT_UCRTVERSION) << ") does not "
-                      "support full service discovery. Consider updating to a more recent Windows 10 "
-                      "SDK (14393 or above).";
-    }
-    ComPtr<IVectorView<RfcommDeviceService*>> commServices;
-    hr = device->get_RfcommServices(&commServices);
-    Q_ASSERT_SUCCEEDED(hr);
-    processServiceSearchResult(address, commServices);
-#else // !QT_WINRT_LIMITED_SERVICEDISOVERY
     ComPtr<IBluetoothDevice3> device3;
     hr = device.As(&device3);
     Q_ASSERT_SUCCEEDED(hr);
@@ -182,7 +171,6 @@ HRESULT QWinRTBluetoothServiceDiscoveryWorker::onBluetoothDeviceFoundAsync(IAsyn
         return S_OK;
     }).Get());
     Q_ASSERT_SUCCEEDED(hr);
-#endif // !QT_WINRT_LIMITED_SERVICEDISOVERY
 
     return S_OK;
 }
