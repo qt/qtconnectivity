@@ -38,9 +38,10 @@
 ****************************************************************************/
 
 #include "qnearfieldtagtype1_p.h"
-#include "qnearfieldtarget_p.h"
-#include "qndefmessage.h"
 #include "qtlv_p.h"
+
+#include <QtNfc/private/qnearfieldtarget_p.h>
+#include <QtNfc/qndefmessage.h>
 
 #include <QtCore/QByteArray>
 #include <QtCore/QVariant>

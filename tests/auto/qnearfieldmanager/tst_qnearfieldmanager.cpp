@@ -28,12 +28,12 @@
 
 #include <QtTest/QtTest>
 
-#include <private/qnearfieldmanager_emulator_p.h>
-#include <qnearfieldmanager.h>
-#include <qndefnfctextrecord.h>
-#include <qndefnfcurirecord.h>
-#include <qndefmessage.h>
-#include <qndefrecord.h>
+#include <qnearfieldmanager_emulator_p.h>
+#include <QtNfc/qnearfieldmanager.h>
+#include <QtNfc/qndefnfctextrecord.h>
+#include <QtNfc/qndefnfcurirecord.h>
+#include <QtNfc/qndefmessage.h>
+#include <QtNfc/qndefrecord.h>
 
 QT_USE_NAMESPACE
 

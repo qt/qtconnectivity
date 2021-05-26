@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qnearfieldtagtype2_p.h"
-#include "qnearfieldtarget_p.h"
+#include <QtNfc/private/qnearfieldtarget_p.h>
 
 #include <QtCore/QVariant>
 #include <QtCore/QCoreApplication>

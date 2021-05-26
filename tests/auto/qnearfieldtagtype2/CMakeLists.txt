@@ -12,14 +12,16 @@ list(APPEND test_data "nfcdata/Empty Tag.nfc")
 
 qt_internal_add_test(tst_qnearfieldtagtype2
     SOURCES
-        ../../../src/nfc/qnearfieldmanager_emulator.cpp ../../../src/nfc/qnearfieldmanager_emulator_p.h
-        ../../../src/nfc/qnearfieldtarget_emulator.cpp ../../../src/nfc/qnearfieldtarget_emulator_p.h
-        ../../../src/nfc/targetemulator.cpp ../../../src/nfc/targetemulator_p.h
+        ../nfccommons/qnearfieldtarget_emulator.cpp ../nfccommons/qnearfieldtarget_emulator_p.h
+        ../nfccommons/targetemulator.cpp ../nfccommons/targetemulator_p.h
+        ../nfccommons/qnearfieldtagtype1.cpp ../nfccommons/qnearfieldtagtype1_p.h
+        ../nfccommons/qnearfieldtagtype2.cpp ../nfccommons/qnearfieldtagtype2_p.h
+        ../nfccommons/qtlv.cpp ../nfccommons/qtlv_p.h
         tst_qnearfieldtagtype2.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/nfcdata\\\"
     INCLUDE_DIRECTORIES
-        ../../../src/nfc
+        ../nfccommons
     PUBLIC_LIBRARIES
         Qt::NfcPrivate
     TESTDATA ${test_data}

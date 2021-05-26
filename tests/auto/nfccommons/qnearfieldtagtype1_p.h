@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTLV_P_H
-#define QTLV_P_H
+#ifndef QNEARFIELDTAGTYPE1_H
+#define QNEARFIELDTAGTYPE1_H
 
 //
 //  W A R N I N G
@@ -51,84 +51,58 @@
 // We mean it.
 //
 
-#include "qtnfcglobal.h"
-
-#include "qnearfieldtarget.h"
-#include "qnearfieldtarget_p.h"
-
-#include <QtCore/QByteArray>
-#include <QtCore/QMap>
-#include <QtCore/QPair>
+#include <QtNfc/private/qnearfieldtarget_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QNearFieldTarget;
-class Q_AUTOTEST_EXPORT QTlvReader
+class QNearFieldTagType1Private;
+
+class QNearFieldTagType1 : public QNearFieldTargetPrivate
 {
+    Q_OBJECT
+
+    Q_DECLARE_PRIVATE(QNearFieldTagType1)
+
 public:
-    explicit QTlvReader(QNearFieldTargetPrivate *target);
-    explicit QTlvReader(const QByteArray &data);
+    enum WriteMode {
+        EraseAndWrite,
+        WriteOnly
+    };
+    Q_ENUM(WriteMode)
 
-    void addReservedMemory(int offset, int length);
-    int reservedMemorySize() const;
+    explicit QNearFieldTagType1(QObject *parent = nullptr);
+    ~QNearFieldTagType1();
 
-    QNearFieldTarget::RequestId requestId() const;
+    QNearFieldTarget::Type type() const override { return QNearFieldTarget::NfcTagType1; }
 
-    bool atEnd() const;
+    bool hasNdefMessage() override;
+    QNearFieldTarget::RequestId readNdefMessages() override;
+    QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
 
-    bool readNext();
+    quint8 version();
+    virtual int memorySize();
 
-    quint8 tag() const;
-    int length();
-    QByteArray data();
+    // DIGPROTO
+    virtual QNearFieldTarget::RequestId readIdentification();
+
+    // static memory functions
+    virtual QNearFieldTarget::RequestId readAll();
+    virtual QNearFieldTarget::RequestId readByte(quint8 address);
+    virtual QNearFieldTarget::RequestId writeByte(quint8 address, quint8 data, WriteMode mode = EraseAndWrite);
+
+    // dynamic memory functions
+    virtual QNearFieldTarget::RequestId readSegment(quint8 segmentAddress);
+    virtual QNearFieldTarget::RequestId readBlock(quint8 blockAddress);
+    virtual QNearFieldTarget::RequestId writeBlock(quint8 blockAddress, const QByteArray &data,
+                                                   WriteMode mode = EraseAndWrite);
+
+protected:
+    void setResponseForRequest(const QNearFieldTarget::RequestId &id, const QVariant &response, bool emitRequestCompleted = true) override;
 
 private:
-    bool readMoreData(int sparseOffset);
-    int absoluteOffset(int sparseOffset) const;
-    int dataLength(int startOffset) const;
-
-    QNearFieldTargetPrivate *m_target;
-    QByteArray m_rawData;
-    QNearFieldTarget::RequestId m_requestId;
-
-    QByteArray m_tlvData;
-    int m_index;
-    QMap<int, int> m_reservedMemory;
+    QNearFieldTagType1Private *d_ptr;
 };
-
-class QTlvWriter
-{
-public:
-    explicit QTlvWriter(QNearFieldTargetPrivate *target);
-    explicit QTlvWriter(QByteArray *data);
-    ~QTlvWriter();
-
-    void addReservedMemory(int offset, int length);
-
-    void writeTlv(quint8 tag, const QByteArray &data = QByteArray());
-
-    bool process(bool all = false);
-
-    QNearFieldTarget::RequestId requestId() const;
-
-private:
-    int moveToNextAvailable();
-
-    QNearFieldTargetPrivate *m_target;
-    QByteArray *m_rawData;
-
-    int m_index;
-    int m_tagMemorySize;
-    QMap<int, int> m_reservedMemory;
-
-    QByteArray m_buffer;
-
-    QNearFieldTarget::RequestId m_requestId;
-};
-
-QPair<int, int> qParseReservedMemoryControlTlv(const QByteArray &tlvData);
-QPair<int, int> qParseLockControlTlv(const QByteArray &tlvData);
 
 QT_END_NAMESPACE
 
-#endif // QTLV_P_H
+#endif // QNEARFIELDTAGTYPE1_H

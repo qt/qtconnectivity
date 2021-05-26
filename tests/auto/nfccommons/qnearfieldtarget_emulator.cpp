@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qnearfieldtarget_emulator_p.h"
-#include "qnearfieldtarget_p.h"
+#include <QtNfc/private/qnearfieldtarget_p.h>
 
 #include <QtCore/QByteArray>
 #include <QtCore/QByteArrayView>

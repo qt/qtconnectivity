@@ -28,10 +28,10 @@
 
 #include <QtTest/QtTest>
 
-#include <private/qnearfieldtarget_emulator_p.h>
-#include <qndefmessage.h>
-#include <private/qnearfieldtagtype2_p.h>
-#include <qndefnfctextrecord.h>
+#include <qnearfieldtarget_emulator_p.h>
+#include <qnearfieldtagtype2_p.h>
+#include <QtNfc/qndefmessage.h>
+#include <QtNfc/qndefnfctextrecord.h>
 
 QT_USE_NAMESPACE
 

@@ -11,10 +11,7 @@ qt_internal_add_module(Nfc
         qndefnfcurirecord.cpp qndefnfcurirecord.h
         qndefrecord.cpp qndefrecord.h qndefrecord_p.h
         qnearfieldmanager.cpp qnearfieldmanager.h qnearfieldmanager_p.h
-        qnearfieldtagtype1.cpp qnearfieldtagtype1_p.h
-        qnearfieldtagtype2.cpp qnearfieldtagtype2_p.h
         qnearfieldtarget.cpp qnearfieldtarget.h qnearfieldtarget_p.cpp qnearfieldtarget_p.h
-        qtlv.cpp qtlv_p.h
         qtnfcglobal.h qtnfcglobal_p.h
     DEFINES
         QT_NO_FOREACH

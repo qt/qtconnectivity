@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QNEARFIELDTAGTYPE2_H
-#define QNEARFIELDTAGTYPE2_H
+#ifndef QNEARFIELDMANAGER_EMULATOR_H
+#define QNEARFIELDMANAGER_EMULATOR_H
 
 //
 //  W A R N I N G
@@ -51,44 +51,40 @@
 // We mean it.
 //
 
-#include "qnearfieldtarget_p.h"
+#include <QtNfc/private/qnearfieldmanager_p.h>
+#include <QtNfc/private/qnearfieldtarget_p.h>
+#include <QtNfc/qndeffilter.h>
+
+#include <QtCore/QMetaMethod>
+#include <QtCore/QObject>
+#include <QtCore/QPointer>
 
 QT_BEGIN_NAMESPACE
 
-class QNearFieldTagType2Private;
-
-class Q_AUTOTEST_EXPORT QNearFieldTagType2 : public QNearFieldTargetPrivate
+class TagBase;
+class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate
 {
     Q_OBJECT
 
-    Q_DECLARE_PRIVATE(QNearFieldTagType2)
-
 public:
-    explicit QNearFieldTagType2(QObject *parent = nullptr);
-    ~QNearFieldTagType2();
+    QNearFieldManagerPrivateImpl();
+    ~QNearFieldManagerPrivateImpl() override;
 
-    QNearFieldTarget::Type type() const override { return QNearFieldTarget::NfcTagType2; }
+    bool isEnabled() const override;
 
-    bool hasNdefMessage() override;
-    QNearFieldTarget::RequestId readNdefMessages() override;
-    QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
+    bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod) override;
 
-    quint8 version();
-    int memorySize();
+    void reset();
 
-    virtual QNearFieldTarget::RequestId readBlock(quint8 blockAddress);
-    virtual QNearFieldTarget::RequestId writeBlock(quint8 blockAddress, const QByteArray &data);
-    virtual QNearFieldTarget::RequestId selectSector(quint8 sector);
-
-    void timerEvent(QTimerEvent *event) override;
-
-protected:
-    void setResponseForRequest(const QNearFieldTarget::RequestId &id, const QVariant &response, bool emitRequestCompleted = true) override;
+private slots:
+    void tagActivated(TagBase *tag);
+    void tagDeactivated(TagBase *tag);
 
 private:
-    QNearFieldTagType2Private *d_ptr;
+    QMap<TagBase *, QPointer<QNearFieldTargetPrivate> > targets;
+
 };
 
 QT_END_NAMESPACE
 
-#endif // QNEARFIELDTAGTYPE2_H
+#endif // QNEARFIELDMANAGER_EMULATOR_H
