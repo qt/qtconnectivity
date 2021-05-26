@@ -825,6 +825,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     const QString btName = QString::fromWCharArray(WindowsGetStringRawBuffer(name.Get(), nullptr));
 
     ComPtr<IBluetoothLEDevice2> device2;
+    hr = device.As(&device2);
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not cast device",
                                            QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                            return S_OK);
