@@ -90,8 +90,8 @@ public:
             Q_DECL_ENUMERATOR_DEPRECATED_X(
                 "ServiceDiscovered was renamed to RemoteServiceDiscovered.")
                 = RemoteServiceDiscovered,
-    };
 #endif
+    };
     Q_ENUM(ServiceState)
 
     enum DiscoveryMode {
