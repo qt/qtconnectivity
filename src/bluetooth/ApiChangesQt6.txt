@@ -76,6 +76,14 @@ QLowEnergyController
  - Remaining QLowEnergyController ctors have been made private. The createPeripheral() and createCentral() functions
    should be used to obtain QLowEnergyController instances.
 
+QLowEnergyCharacteristic
+------------------------
+
+ - New method clientCharacteristicConfiguration() have been introduced to conveniently obtain the
+   Client Characteristic Configuration Descriptor.
+ - Constants CCCDDisable, CCCDEnableNotification, and CCCDEnableIndication have been introduced
+   which hold the possible values for the Client Characteristic Configuration Descriptor.
+
 QBluetoothTransferManager
 -------------------------
 

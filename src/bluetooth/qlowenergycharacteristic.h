@@ -94,7 +94,13 @@ public:
     QLowEnergyDescriptor descriptor(const QBluetoothUuid &uuid) const;
     QList<QLowEnergyDescriptor> descriptors() const;
 
+    QLowEnergyDescriptor clientCharacteristicConfiguration() const;
+
     bool isValid() const;
+
+    static const QByteArray CCCDDisable;
+    static const QByteArray CCCDEnableNotification;
+    static const QByteArray CCCDEnableIndication;
 
 private:
     QLowEnergyHandle attributeHandle() const;

@@ -343,9 +343,8 @@ QLowEnergyHandle QLowEnergyCharacteristic::attributeHandle() const
     return data->handle;
 }
 
-
 /*!
-    Returns the descriptor for \a uuid or an invalid \c QLowEnergyDescriptor instance.
+    Returns the descriptor for \a uuid or an invalid \l QLowEnergyDescriptor instance.
 
     \sa descriptors()
 */
@@ -369,6 +368,51 @@ QLowEnergyDescriptor QLowEnergyCharacteristic::descriptor(const QBluetoothUuid &
     }
 
     return QLowEnergyDescriptor();
+}
+
+/*!
+    Returns the Client Characteristic Configuration Descriptor or an
+    invalid \l QLowEnergyDescriptor instance if no
+    Client Characteristic Configuration Descriptor exists.
+
+    BTLE characteristics can support notifications and/or indications.
+    In both cases, the peripheral will inform the central on
+    each change of the characteristic's value. In the BTLE
+    attribute protocol, notification messages are not confirmed
+    by the central, while indications are confirmed.
+    Notifications are considered faster, but unreliable, while
+    indications are slower and more reliable.
+
+    If a characteristic supports notification or indication,
+    these can be enabled by writing special bit patterns to the
+    Client Characteristic Configuration Descriptor.
+    For convenience, these bit patterns are provided as
+    \l QLowEnergyCharacteristic::CCCDDisable,
+    \l QLowEnergyCharacteristic::CCCDEnableNotification, and
+    \l QLowEnergyCharacteristic::CCCDEnableIndication.
+
+    Enabling e.g. notification for a characteristic named
+    \c mycharacteristic in a service called \c myservice
+    could be done using the following code.
+    \code
+    auto cccd = mycharacteristic.clientCharacteristicConfiguration();
+    if (!cccd.isValid()) {
+        // your error handling
+        return error;
+    }
+    myservice->writeDescriptor(cccd, QLowEnergyCharacteristic::CCCDEnableNotification);
+    \endcode
+
+    \note
+    Calling \c characteristic.clientCharacteristicConfiguration() is equivalent to calling
+    \c characteristic.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration).
+
+    \since 6.2
+    \sa descriptor()
+*/
+QLowEnergyDescriptor QLowEnergyCharacteristic::clientCharacteristicConfiguration() const
+{
+    return descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
 }
 
 /*!
@@ -397,5 +441,36 @@ QList<QLowEnergyDescriptor> QLowEnergyCharacteristic::descriptors() const
 
     return result;
 }
+
+/*!
+    \variable QLowEnergyCharacteristic::CCCDDisable
+    \since 6.2
+
+    Bit pattern to write into Client Characteristic Configuration Descriptor
+    to disable both notification and indication.
+
+    \sa QLowEnergyCharacteristic::clientCharacteristicConfiguration
+*/
+/*!
+    \variable QLowEnergyCharacteristic::CCCDEnableNotification
+    \since 6.2
+
+    Bit pattern to write into Client Characteristic Configuration Descriptor
+    to enable notification.
+
+    \sa QLowEnergyCharacteristic::clientCharacteristicConfiguration
+*/
+/*!
+    \variable QLowEnergyCharacteristic::CCCDEnableIndication
+    \since 6.2
+
+    Bit pattern to write into Client Characteristic Configuration Descriptor
+    to enable indication.
+
+    \sa QLowEnergyCharacteristic::clientCharacteristicConfiguration
+*/
+const QByteArray QLowEnergyCharacteristic::CCCDDisable = QByteArray::fromHex("0000");
+const QByteArray QLowEnergyCharacteristic::CCCDEnableNotification = QByteArray::fromHex("0100");
+const QByteArray QLowEnergyCharacteristic::CCCDEnableIndication = QByteArray::fromHex("0200");
 
 QT_END_NAMESPACE

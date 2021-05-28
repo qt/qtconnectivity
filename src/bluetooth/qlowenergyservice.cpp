@@ -356,7 +356,7 @@ QT_BEGIN_NAMESPACE
     role, this signal is emitted when the value of \a characteristic is changed by an event on the
     peripheral/device side. In that case, the signal emission implies that change notifications must
     have been activated via the characteristic's
-    \l {DescriptorType::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
+    \l {QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration}{ClientCharacteristicConfiguration}
     descriptor prior to the change event on the peripheral. More details on how this might be
     done can be found further \l{notifications}{above}.
 
