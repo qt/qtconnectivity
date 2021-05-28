@@ -65,15 +65,9 @@
 #include <QtCore/QUrl>
 
 AnnotatedUrl::AnnotatedUrl(QObject *parent)
-:   QObject(parent)
+    : QObject(parent),
+      manager(new QNearFieldManager(this))
 {
-    manager = new QNearFieldManager(this);
-    if (!manager->isEnabled()) {
-        qWarning() << "NFC not enabled";
-        return;
-    }
-
-    manager->startTargetDetection(QNearFieldTarget::NdefAccess);
     connect(manager, &QNearFieldManager::targetDetected,
             this, &AnnotatedUrl::targetDetected);
     connect(manager, &QNearFieldManager::targetLost,
@@ -83,6 +77,16 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
 AnnotatedUrl::~AnnotatedUrl()
 {
 
+}
+
+void AnnotatedUrl::startDetection()
+{
+    if (!manager->isEnabled()) {
+        qWarning() << "NFC not enabled";
+        return;
+    }
+
+    manager->startTargetDetection(QNearFieldTarget::NdefAccess);
 }
 
 void AnnotatedUrl::targetDetected(QNearFieldTarget *target)

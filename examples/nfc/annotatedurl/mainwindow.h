@@ -77,7 +77,7 @@ public slots:
     void displayAnnotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
 
 protected:
-    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
     Ui::MainWindow *ui;

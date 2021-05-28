@@ -38,34 +38,41 @@ image/* MIME record, and one or more localized Text records.
 This is the initial state of the example:
 \image annotatedurl.png
 
-In this example the NFC Tag used contains a text record. The UI
-gets updated accordingly to:
+In this example the NFC Tag used contains a text record and an URI record.
+The UI gets updated accordingly to:
 
 \image annotatedurl2.png
 
+When the screen is tapped, the URL will be opened in the browser.
+
 \section1 AnnotatedUrl Class Definition
 
-The \c AnnotatedUrl class wraps the \c QNearFieldManager, the class
-providing the NFC Tag detection functionality. NDEF messages are read
-by the QNearFieldManager and forwarded to a handler contained in the
+The \c AnnotatedUrl class wraps \l QNearFieldManager, the class providing
+the NFC Tag detection functionality. NDEF messages are read by
+\l QNearFieldManager and forwarded to a handler contained in the
 \c AnnotatedUrl class. After parsing the NDEF message the class emits
-the signal AnnotatedUrl::annotatedUrl(const QUrl &url, const QString
-&title, const QPixmap &pixmap). The UI reacts to the signal displaying
+the \c annotatedUrl() signal. The UI reacts to the signal displaying
 the contents of the NDEF message.
 
 \snippet annotatedurl/annotatedurl.h 0
 
+\note The \c startDetection() method is used to defer the actual tag detection
+until all the connections between the UI and NFC-related logic are established.
+This is important when the application is automatically started once an NFC tag
+is touched. Such usecase is currently supported on Android.
+
+\snippet annotatedurl/main.cpp 0
+
 \section1 AnnotatedUrl Handler Implementation
 
-NFC messages read by the \c QNearFieldManager are forwarded to
-AnnotatedUrl::handleMessage.
+NFC messages read by the \l QNearFieldManager are forwarded to
+\c {AnnotatedUrl::handleMessage}.
 
 \snippet annotatedurl/annotatedurl.cpp handleMessage 1
 
 Because NFC messages are composed of several NDEF records, looping
 through all of the records allows the extraction of the 3 parameters
 to be displayed in the UI: the Uri, the Title and the Pixmap:
-
 
 \snippet annotatedurl/annotatedurl.cpp handleMessage 2
 \snippet annotatedurl/annotatedurl.cpp handleMessage 3
@@ -75,6 +82,30 @@ corresponding signal is emitted so that the UI can handle it.
 
 \snippet annotatedurl/annotatedurl.cpp handleMessage 4
 
+\section1 Automatic Application Startup
+
+Android supports automatic application startup when the NDEF tag is touched.
+See \l {Qt NFC on Android} for the required changes to the Android manifest
+file.
+
+Introduction of a custom AndroidManifest.xml requires special steps on the
+build system side.
+
+\section2 Building with qmake
+
+When using qmake, the following needs to be added to the \c {.pro} file:
+
+\quotefromfile annotatedurl/annotatedurl.pro
+\skipto android {
+\printuntil }
+
+\section2 Building with CMake
+
+When using CMake, the following needs to be added to the \c CMakeLists.txt:
+
+\quotefromfile annotatedurl/CMakeLists.txt
+\skipto if(ANDROID)
+\printuntil endif()
 
 \include examples-run.qdocinc
 

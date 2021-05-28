@@ -69,6 +69,8 @@ public:
     explicit AnnotatedUrl(QObject *parent = 0);
     ~AnnotatedUrl();
 
+    void startDetection();
+
 signals:
     void annotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
 

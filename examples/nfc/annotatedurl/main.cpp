@@ -57,17 +57,19 @@
 
 #include <QtWidgets/QApplication>
 
+//! [0]
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow mainWindow;
-
     AnnotatedUrl annotatedUrl;
 
     QObject::connect(&annotatedUrl, &AnnotatedUrl::annotatedUrl,
                      &mainWindow, &MainWindow::displayAnnotatedUrl);
 
+    annotatedUrl.startDetection();
     mainWindow.show();
 
     return a.exec();
 }
+//! [0]

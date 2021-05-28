@@ -13,5 +13,12 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
+android {
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
+
+    DISTFILES += \
+        android/AndroidManifest.xml
+}
+
 target.path = $$[QT_INSTALL_EXAMPLES]/nfc/annotatedurl
 INSTALLS += target

@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS Nfc)
 find_package(Qt6 COMPONENTS Widgets)
 
 qt_add_executable(annotatedurl
+    MANUAL_FINALIZATION
     annotatedurl.cpp annotatedurl.h
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
@@ -33,6 +34,15 @@ target_link_libraries(annotatedurl PUBLIC
     Qt::Nfc
     Qt::Widgets
 )
+
+if(ANDROID)
+    set_property(TARGET annotatedurl
+        APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/android
+    )
+endif()
+
+qt_finalize_target(annotatedurl)
 
 install(TARGETS annotatedurl
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
