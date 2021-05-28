@@ -326,6 +326,10 @@ bool QNearFieldTarget::hasNdefMessage()
     An ndefMessageRead() signal will be emitted for each NDEF message. The requestCompleted()
     signal will be emitted was all NDEF messages have been read. The error() signal is emitted if
     an error occurs.
+
+    \note An attempt to read an NDEF message from a tag, that is in INITIALIZED
+    state as defined by NFC Forum, will fail with the \l NdefReadError, as the
+    tag is formatted to support NDEF but does not contain a message yet.
 */
 QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
 {
