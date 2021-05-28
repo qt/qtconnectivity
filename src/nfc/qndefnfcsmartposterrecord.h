@@ -98,8 +98,8 @@ public:
     bool hasSize() const;
     bool hasTypeInfo() const;
 
-    int titleCount() const;
-    QNdefNfcTextRecord titleRecord(const int index) const;
+    qsizetype titleCount() const;
+    QNdefNfcTextRecord titleRecord(qsizetype index) const;
     QString title(const QString &locale = QString()) const;
     QList<QNdefNfcTextRecord> titleRecords() const;
 
@@ -117,8 +117,8 @@ public:
     Action action() const;
     void setAction(Action act);
 
-    int iconCount() const;
-    QNdefNfcIconRecord iconRecord(const int index) const;
+    qsizetype iconCount() const;
+    QNdefNfcIconRecord iconRecord(qsizetype index) const;
     QByteArray icon(const QByteArray& mimetype = QByteArray()) const;
 
     QList<QNdefNfcIconRecord> iconRecords() const;

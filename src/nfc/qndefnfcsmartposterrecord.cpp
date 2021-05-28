@@ -270,15 +270,17 @@ bool QNdefNfcSmartPosterRecord::hasTypeInfo() const
 /*!
     Returns the number of title records contained inside the smart poster.
  */
-int QNdefNfcSmartPosterRecord::titleCount() const
+qsizetype QNdefNfcSmartPosterRecord::titleCount() const
 {
     return d->m_titleList.length();
 }
 
 /*!
-    Returns the title record corresponding to the index \a index inside the smart poster, where \a index is a value between 0 and titleCount() - 1. Values outside of this range return an empty record.
+    Returns the title record corresponding to the index \a index inside the
+    smart poster, where \a index is a value between 0 and titleCount() - 1.
+    Values outside of this range return an empty record.
  */
-QNdefNfcTextRecord QNdefNfcSmartPosterRecord::titleRecord(const int index) const
+QNdefNfcTextRecord QNdefNfcSmartPosterRecord::titleRecord(qsizetype index) const
 {
     if (index >= 0 && index < d->m_titleList.length())
         return d->m_titleList[index];
@@ -492,15 +494,17 @@ void QNdefNfcSmartPosterRecord::setAction(Action act)
 /*!
     Returns the number of icon records contained inside the smart poster.
  */
-int QNdefNfcSmartPosterRecord::iconCount() const
+qsizetype QNdefNfcSmartPosterRecord::iconCount() const
 {
     return d->m_iconList.length();
 }
 
 /*!
-    Returns the icon record corresponding to the index \a index inside the smart poster, where \a index is a value between 0 and \l iconCount() - 1. Values outside of this range return an empty record.
+    Returns the icon record corresponding to the index \a index inside the smart
+    poster, where \a index is a value between 0 and \l iconCount() - 1.
+    Values outside of this range return an empty record.
  */
-QNdefNfcIconRecord QNdefNfcSmartPosterRecord::iconRecord(const int index) const
+QNdefNfcIconRecord QNdefNfcSmartPosterRecord::iconRecord(qsizetype index) const
 {
     if (index >= 0 && index < d->m_iconList.length())
         return d->m_iconList[index];

@@ -72,8 +72,8 @@ public:
                       unsigned int min = 1, unsigned int max = 1);
     void appendRecord(const Record &record);
 
-    int recordCount() const;
-    Record recordAt(int i) const;
+    qsizetype recordCount() const;
+    Record recordAt(qsizetype i) const;
 
     QNdefFilter &operator=(const QNdefFilter &other);
 

@@ -209,7 +209,7 @@ void QNdefFilter::appendRecord(const Record &record)
 
     \sa recordCount()
 */
-QNdefFilter::Record QNdefFilter::recordAt(int i) const
+QNdefFilter::Record QNdefFilter::recordAt(qsizetype i) const
 {
     return d->filterRecords.at(i);
 }
@@ -217,7 +217,7 @@ QNdefFilter::Record QNdefFilter::recordAt(int i) const
 /*!
     Returns the number of NDEF records in the filter.
 */
-int QNdefFilter::recordCount() const
+qsizetype QNdefFilter::recordCount() const
 {
     return d->filterRecords.count();
 }
