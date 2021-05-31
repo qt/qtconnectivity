@@ -67,10 +67,10 @@ public:
     };
 
     template<typename T>
-    void appendRecord(unsigned int min = 1, unsigned int max = 1);
-    void appendRecord(QNdefRecord::TypeNameFormat typeNameFormat, const QByteArray &type,
+    bool appendRecord(unsigned int min = 1, unsigned int max = 1);
+    bool appendRecord(QNdefRecord::TypeNameFormat typeNameFormat, const QByteArray &type,
                       unsigned int min = 1, unsigned int max = 1);
-    void appendRecord(const Record &record);
+    bool appendRecord(const Record &record);
 
     qsizetype recordCount() const;
     Record recordAt(qsizetype i) const;
@@ -82,11 +82,11 @@ private:
 };
 
 template <typename T>
-void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
+bool QNdefFilter::appendRecord(unsigned int min, unsigned int max)
 {
     T record;
 
-    appendRecord(record.typeNameFormat(), record.type(), min, max);
+    return appendRecord(record.typeNameFormat(), record.type(), min, max);
 }
 
 QT_END_NAMESPACE

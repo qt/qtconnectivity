@@ -93,10 +93,13 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn template<typename T> void QNdefFilter::appendRecord(unsigned int min, unsigned int max)
+    \fn template<typename T> bool QNdefFilter::appendRecord(unsigned int min, unsigned int max)
 
-    Appends a record matching the template parameter to the NDEF filter.  The record must occur
-    between \a min and \a max times in the NDEF message.
+    Appends a record matching the template parameter to the NDEF filter.
+    The record must occur between \a min and \a max times in the NDEF message.
+
+    Returns \c true if the record was appended successfully. Otherwise returns
+    \c false.
 */
 
 class QNdefFilterPrivate : public QSharedData
@@ -169,8 +172,8 @@ void QNdefFilter::setOrderMatch(bool on)
 }
 
 /*!
-    Returns true if the filter takes NDEF record order into account when matching; otherwise
-    returns false.
+    Returns \c true if the filter takes NDEF record order into account when
+    matching. Otherwise returns \c false.
 */
 bool QNdefFilter::orderMatch() const
 {
@@ -178,10 +181,14 @@ bool QNdefFilter::orderMatch() const
 }
 
 /*!
-    Appends a record with type name format \a typeNameFormat and type \a type to the NDEF filter.
-    The record must occur between \a min and \a max times in the NDEF message.
+    Appends a record with type name format \a typeNameFormat and type \a type
+    to the NDEF filter. The record must occur between \a min and \a max times
+    in the NDEF message.
+
+    Returns \c true if the record was appended successfully. Otherwise returns
+    \c false.
 */
-void QNdefFilter::appendRecord(QNdefRecord::TypeNameFormat typeNameFormat, const QByteArray &type,
+bool QNdefFilter::appendRecord(QNdefRecord::TypeNameFormat typeNameFormat, const QByteArray &type,
                                unsigned int min, unsigned int max)
 {
     QNdefFilter::Record record;
@@ -191,15 +198,27 @@ void QNdefFilter::appendRecord(QNdefRecord::TypeNameFormat typeNameFormat, const
     record.minimum = min;
     record.maximum = max;
 
-    d->filterRecords.append(record);
+    return appendRecord(record);
+}
+
+static bool verifyRecord(const QNdefFilter::Record &record)
+{
+    return record.minimum <= record.maximum;
 }
 
 /*!
-    Appends \a record to the NDEF filter.
+    Verifies the \a record and appends it to the NDEF filter.
+
+    Returns \c true if the record was appended successfully. Otherwise returns
+    \c false.
 */
-void QNdefFilter::appendRecord(const Record &record)
+bool QNdefFilter::appendRecord(const Record &record)
 {
-    d->filterRecords.append(record);
+    if (verifyRecord(record)) {
+        d->filterRecords.append(record);
+        return true;
+    }
+    return false;
 }
 
 /*!
