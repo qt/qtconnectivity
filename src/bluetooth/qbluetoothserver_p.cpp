@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType,
                                                  QBluetoothServer *parent)
-    : maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError),
+    : serverType(sType),
       q_ptr(parent)
 {
 #ifndef QT_IOS_BLUETOOTH
