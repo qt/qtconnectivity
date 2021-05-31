@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QNdefMessage;
+
 class QNdefFilterPrivate;
 class Q_NFC_EXPORT QNdefFilter
 {
@@ -76,6 +78,8 @@ public:
     Record recordAt(qsizetype i) const;
 
     QNdefFilter &operator=(const QNdefFilter &other);
+
+    bool match(const QNdefMessage &message) const;
 
 private:
     QSharedDataPointer<QNdefFilterPrivate> d;
