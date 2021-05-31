@@ -48,6 +48,32 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \class QNdefNfcIconRecord
+    \brief The QNdefNfcIconRecord class provides an NFC MIME record to hold an
+    icon.
+
+    \ingroup connectivity-nfc
+    \inmodule QtNfc
+    \since Qt 5.2
+
+    This class wraps the image data into an NDEF message.
+    It provides an NDEF record of type \l QNdefRecord::Mime.
+    The \l {QNdefRecord::}{payload}() contains the raw image data.
+*/
+
+/*!
+    \fn QNdefNfcIconRecord::QNdefNfcIconRecord()
+
+    Constructs an empty NDEF record of type \l QNdefRecord::Mime.
+*/
+
+/*!
+    \fn QNdefNfcIconRecord::QNdefNfcIconRecord(const QNdefRecord &other)
+
+    Constructs an NDEF icon record that is a copy of \a other.
+*/
+
+/*!
     \class QNdefNfcSmartPosterRecord
     \brief The QNdefNfcSmartPosterRecord class provides an NFC RTD-SmartPoster.
 
@@ -726,11 +752,17 @@ QNdefNfcSmartPosterRecord::Action QNdefNfcActRecord::action() const
     return value;
 }
 
+/*!
+    Sets the contents of the icon record to \a data.
+*/
 void QNdefNfcIconRecord::setData(const QByteArray &data)
 {
     setPayload(data);
 }
 
+/*!
+    Returns the icon data as \l QByteArray.
+*/
 QByteArray QNdefNfcIconRecord::data() const
 {
     return payload();
