@@ -41,6 +41,12 @@ class tst_QNdefFilter : public QObject
     Q_OBJECT
 private slots:
     void construct();
+    void copyConstruct();
+    void assingmentOperator();
+
+    void clearFilter();
+
+    void orderMatch();
 
     void appendRecord();
     void appendRecord_data();
@@ -59,6 +65,67 @@ void tst_QNdefFilter::construct()
 {
     QNdefFilter filter;
     QCOMPARE(filter.recordCount(), 0);
+    QCOMPARE(filter.orderMatch(), false);
+}
+
+void tst_QNdefFilter::copyConstruct()
+{
+    QNdefFilter filter;
+    filter.setOrderMatch(true);
+    filter.appendRecord<QNdefNfcTextRecord>(1, 2);
+    filter.appendRecord(QNdefRecord::Empty, "", 0, 1);
+
+    QNdefFilter filterCopy(filter);
+    QCOMPARE(filterCopy.orderMatch(), true);
+    QCOMPARE(filterCopy.recordCount(), 2);
+    QNdefFilter::Record rec = filterCopy.recordAt(1);
+    QCOMPARE(rec.typeNameFormat, QNdefRecord::Empty);
+    QCOMPARE(rec.type, QByteArray());
+    QCOMPARE(rec.minimum, 0);
+    QCOMPARE(rec.maximum, 1);
+}
+
+void tst_QNdefFilter::assingmentOperator()
+{
+    QNdefFilter filter;
+    filter.setOrderMatch(true);
+    filter.appendRecord<QNdefNfcTextRecord>(1, 2);
+    filter.appendRecord(QNdefRecord::Empty, "", 0, 1);
+
+    QNdefFilter filterCopy;
+    filterCopy = filter;
+
+    QCOMPARE(filterCopy.orderMatch(), true);
+    QCOMPARE(filterCopy.recordCount(), 2);
+    QNdefFilter::Record rec = filterCopy.recordAt(1);
+    QCOMPARE(rec.typeNameFormat, QNdefRecord::Empty);
+    QCOMPARE(rec.type, QByteArray());
+    QCOMPARE(rec.minimum, 0);
+    QCOMPARE(rec.maximum, 1);
+}
+
+void tst_QNdefFilter::clearFilter()
+{
+    QNdefFilter filter;
+    filter.setOrderMatch(true);
+    filter.appendRecord<QNdefNfcTextRecord>(1, 2);
+    filter.appendRecord(QNdefRecord::Empty, "", 0, 1);
+
+    filter.clear();
+
+    QCOMPARE(filter.orderMatch(), false);
+    QCOMPARE(filter.recordCount(), 0);
+}
+
+void tst_QNdefFilter::orderMatch()
+{
+    QNdefFilter filter;
+    QCOMPARE(filter.orderMatch(), false);
+
+    filter.setOrderMatch(true);
+    QCOMPARE(filter.orderMatch(), true);
+
+    filter.setOrderMatch(false);
     QCOMPARE(filter.orderMatch(), false);
 }
 
