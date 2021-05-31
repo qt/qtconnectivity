@@ -61,6 +61,11 @@ See also the \l {Build with CMake} overview.
 QT += nfc
 \endcode
 
+\section1 Module Evolution
+
+\l {Changes to Qt NFC} lists important changes in the module API and
+functionality that were done for the Qt 6 series of Qt.
+
 \section1 Licenses
 
 Qt NFC is available under commercial licenses from \l{The Qt Company}.
