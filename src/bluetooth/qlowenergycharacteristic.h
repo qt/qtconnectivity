@@ -89,7 +89,6 @@ public:
     QByteArray value() const;
 
     QLowEnergyCharacteristic::PropertyTypes properties() const;
-    QLowEnergyHandle handle() const;
 
     QLowEnergyDescriptor descriptor(const QBluetoothUuid &uuid) const;
     QList<QLowEnergyDescriptor> descriptors() const;
@@ -103,6 +102,7 @@ public:
     static const QByteArray CCCDEnableIndication;
 
 private:
+    QLowEnergyHandle handle() const;
     QLowEnergyHandle attributeHandle() const;
 
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;

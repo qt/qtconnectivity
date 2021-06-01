@@ -83,6 +83,12 @@ QLowEnergyCharacteristic
    Client Characteristic Configuration Descriptor.
  - Constants CCCDDisable, CCCDEnableNotification, and CCCDEnableIndication have been introduced
    which hold the possible values for the Client Characteristic Configuration Descriptor.
+ - The handle() method is no longer part of the public interface.
+
+QLowEnergyDescriptor
+--------------------
+
+ - The handle() method is no longer part of the public interface.
 
 QBluetoothTransferManager
 -------------------------

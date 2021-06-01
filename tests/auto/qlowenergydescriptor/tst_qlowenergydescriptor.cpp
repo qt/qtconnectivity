@@ -190,7 +190,6 @@ void tst_QLowEnergyDescriptor::tst_constructionDefault()
     QVERIFY(!descriptor.isValid());
     QCOMPARE(descriptor.value(), QByteArray());
     QVERIFY(descriptor.uuid().isNull());
-    QVERIFY(descriptor.handle() == 0);
     QCOMPARE(descriptor.name(), QString());
     QCOMPARE(descriptor.type(), QBluetoothUuid::DescriptorType::UnknownDescriptorType);
 
@@ -198,7 +197,6 @@ void tst_QLowEnergyDescriptor::tst_constructionDefault()
     QVERIFY(!copyConstructed.isValid());
     QCOMPARE(copyConstructed.value(), QByteArray());
     QVERIFY(copyConstructed.uuid().isNull());
-    QVERIFY(copyConstructed.handle() == 0);
     QCOMPARE(copyConstructed.name(), QString());
     QCOMPARE(copyConstructed.type(), QBluetoothUuid::DescriptorType::UnknownDescriptorType);
 
@@ -218,7 +216,6 @@ void tst_QLowEnergyDescriptor::tst_constructionDefault()
     QVERIFY(!assigned.isValid());
     QCOMPARE(assigned.value(), QByteArray());
     QVERIFY(assigned.uuid().isNull());
-    QVERIFY(assigned.handle() == 0);
     QCOMPARE(assigned.name(), QString());
     QCOMPARE(assigned.type(), QBluetoothUuid::DescriptorType::UnknownDescriptorType);
 
@@ -239,7 +236,6 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QVERIFY(!target.isValid());
     QCOMPARE(target.type(), QBluetoothUuid::DescriptorType::UnknownDescriptorType);
     QCOMPARE(target.name(), QString());
-    QCOMPARE(target.handle(), QLowEnergyHandle(0));
     QCOMPARE(target.uuid(), QBluetoothUuid());
     QCOMPARE(target.value(), QByteArray());
 
@@ -270,7 +266,6 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QVERIFY(target.isValid());
     QVERIFY(target.type() != QBluetoothUuid::DescriptorType::UnknownDescriptorType);
     QVERIFY(!target.name().isEmpty());
-    QVERIFY(target.handle() > 0);
     QVERIFY(!target.uuid().isNull());
     QVERIFY(!valueFound || !target.value().isEmpty());
 
@@ -282,7 +277,6 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QCOMPARE(target.isValid(), targets[index].isValid());
     QCOMPARE(target.type(), targets[index].type());
     QCOMPARE(target.name(), targets[index].name());
-    QCOMPARE(target.handle(), targets[index].handle());
     QCOMPARE(target.uuid(), targets[index].uuid());
     QCOMPARE(target.value(), targets[index].value());
 
@@ -291,7 +285,6 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QCOMPARE(copyConstructed.isValid(), targets[index].isValid());
     QCOMPARE(copyConstructed.type(), targets[index].type());
     QCOMPARE(copyConstructed.name(), targets[index].name());
-    QCOMPARE(copyConstructed.handle(), targets[index].handle());
     QCOMPARE(copyConstructed.uuid(), targets[index].uuid());
     QCOMPARE(copyConstructed.value(), targets[index].value());
 
@@ -306,7 +299,6 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QVERIFY(!target.isValid());
     QCOMPARE(target.value(), QByteArray());
     QVERIFY(target.uuid().isNull());
-    QVERIFY(target.handle() == 0);
     QCOMPARE(target.name(), QString());
     QCOMPARE(target.type(), QBluetoothUuid::DescriptorType::UnknownDescriptorType);
 

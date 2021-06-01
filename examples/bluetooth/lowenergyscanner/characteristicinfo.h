@@ -61,7 +61,6 @@ class CharacteristicInfo: public QObject
     Q_PROPERTY(QString characteristicName READ getName NOTIFY characteristicChanged)
     Q_PROPERTY(QString characteristicUuid READ getUuid NOTIFY characteristicChanged)
     Q_PROPERTY(QString characteristicValue READ getValue NOTIFY characteristicChanged)
-    Q_PROPERTY(QString characteristicHandle READ getHandle NOTIFY characteristicChanged)
     Q_PROPERTY(QString characteristicPermission READ getPermission NOTIFY characteristicChanged)
 
 public:
@@ -71,7 +70,6 @@ public:
     QString getName() const;
     QString getUuid() const;
     QString getValue() const;
-    QString getHandle() const;
     QString getPermission() const;
     QLowEnergyCharacteristic getCharacteristic() const;
 

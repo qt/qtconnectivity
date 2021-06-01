@@ -214,6 +214,8 @@ QByteArray QLowEnergyCharacteristic::value() const
 }
 
 /*!
+    \internal
+
     Returns the handle of the characteristic's value attribute;
     or \c 0 if the handle cannot be accessed on the platform or
     if the characteristic is invalid.

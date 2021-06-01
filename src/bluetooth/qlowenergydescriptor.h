@@ -73,12 +73,12 @@ public:
     QByteArray value() const;
 
     QBluetoothUuid uuid() const;
-    QLowEnergyHandle handle() const;
     QString name() const;
 
     QBluetoothUuid::DescriptorType type() const;
 
 private:
+    QLowEnergyHandle handle() const;
     QLowEnergyHandle characteristicHandle() const;
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
 
