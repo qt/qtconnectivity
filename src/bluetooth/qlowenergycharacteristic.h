@@ -96,7 +96,7 @@ public:
 
     bool isValid() const;
 
-protected:
+private:
     QLowEnergyHandle attributeHandle() const;
 
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
@@ -113,7 +113,6 @@ protected:
     QLowEnergyCharacteristic(QSharedPointer<QLowEnergyServicePrivate> p,
                              QLowEnergyHandle handle);
 
-private:
     static bool equals(const QLowEnergyCharacteristic &a, const QLowEnergyCharacteristic &b);
 };
 

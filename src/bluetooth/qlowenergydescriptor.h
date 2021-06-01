@@ -78,7 +78,7 @@ public:
 
     QBluetoothUuid::DescriptorType type() const;
 
-protected:
+private:
     QLowEnergyHandle characteristicHandle() const;
     QSharedPointer<QLowEnergyServicePrivate> d_ptr;
 
@@ -97,7 +97,6 @@ protected:
                              QLowEnergyHandle charHandle,
                              QLowEnergyHandle descHandle);
 
-private:
     static bool equals(const QLowEnergyDescriptor &a, const QLowEnergyDescriptor &b);
 };
 
