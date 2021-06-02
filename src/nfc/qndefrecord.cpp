@@ -366,6 +366,8 @@ bool QNdefRecord::operator==(const QNdefRecord &other) const
 }
 
 /*!
+    \since 6.2
+
     Clear the NDEF record.
 
     An \l isEmpty() call returns \c true for a cleared record. The record
