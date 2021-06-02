@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -46,13 +46,20 @@ The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devi
 target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
 on NFC Forum Tags and sending tag specific commands.
 
+\include module-use.qdocinc using qt module
 
-\section1 Getting Started
+\badcode
+find_package(Qt6 COMPONENTS Nfc REQUIRED)
+target_link_libraries(mytarget PRIVATE Qt::Nfc)
+\endcode
 
-To use the C++ library in your application, add the following configuration
-option to your \c .pro file:
+See also the \l {Build with CMake} overview.
 
-\snippet snippets.pro project modification
+\include module-use.qdocinc building with qmake
+
+\badcode
+QT += nfc
+\endcode
 
 \section1 Licenses
 

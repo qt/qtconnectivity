@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Aaron McCarthy <mccarthy.aaron@gmail.com>
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -35,9 +36,18 @@
 
 The \l{Qt NFC} C++ API enables an application to access NFC Forum Tags.
 
-To use the C++ library in your application, add the following configuration
-option to your \c .pro file:
+\include module-use.qdocinc using qt module
 
-\snippet snippets.pro project modification
+\badcode
+find_package(Qt6 COMPONENTS Nfc REQUIRED)
+target_link_libraries(mytarget PRIVATE Qt::Nfc)
+\endcode
+
+\include module-use.qdocinc building with qmake
+
+\badcode
+QT += nfc
+\endcode
+
 */
 
