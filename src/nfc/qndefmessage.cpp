@@ -233,7 +233,7 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 /*!
     \fn QNdefMessage &QNdefMessage::operator=(const QNdefMessage &other)
     \overload
-    \since 6.0
+    \since 6.2
 
     Copy assignment operator from QList<QNdefRecord>. Assigns the
     \a other list of NDEF records to this NDEF record list.
@@ -244,7 +244,7 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 /*!
     \fn QNdefMessage &QNdefMessage::operator=(QNdefMessage &&other)
     \overload
-    \since 6.0
+    \since 6.2
 
     Move assignment operator from QList<QNdefRecord>. Moves the
     \a other list of NDEF records to this NDEF record list.

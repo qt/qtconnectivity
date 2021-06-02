@@ -303,6 +303,8 @@ QNdefFilter &QNdefFilter::operator=(const QNdefFilter &other)
 }
 
 /*!
+    \since 6.2
+
     Returns \c true if the \a message matches the given filter.
     Otherwise returns \c false.
 

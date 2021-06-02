@@ -107,7 +107,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn void QNearFieldManager::targetDetectionStopped()
 
-    \since 6.0
+    \since 6.2
 
     This signal is emitted whenever the target detection is stopped.
 
@@ -197,7 +197,7 @@ QNearFieldManager::~QNearFieldManager()
 }
 
 /*!
-    \since 6.0
+    \since 6.2
 
     Returns \c true if the device has a NFC adapter and
     it is turned on; otherwise returns \c false.
@@ -269,7 +269,7 @@ void QNearFieldManager::stopTargetDetection(const QString &errorMessage)
 }
 
 /*!
-    \since 6.0
+    \since 6.2
 
     Sets the message shown to the user by the system. If the target detection is running the
     \a message will be updated immediately and can be used as a progress message. The last message
