@@ -148,7 +148,7 @@ QT_BEGIN_NAMESPACE
     \sa Q_DECLARE_NDEF_RECORD()
 */
 
-uint qHash(const QNdefRecord &key)
+size_t qHash(const QNdefRecord &key)
 {
     return qHash(key.type() + key.id() + key.payload());
 }
