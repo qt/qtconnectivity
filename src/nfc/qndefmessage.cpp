@@ -101,17 +101,17 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
     QByteArray partialChunk;
     QNdefRecord record;
 
-    QByteArray::const_iterator i = message.begin();
-    while (i < message.constEnd()) {
-        quint8 flags = *i;
+    qsizetype idx = 0;
+    while (idx < message.size()) {
+        quint8 flags = message.at(idx);
 
-        bool messageBegin = flags & 0x80;
-        bool messageEnd = flags & 0x40;
+        const bool messageBegin = flags & 0x80;
+        const bool messageEnd = flags & 0x40;
 
-        bool cf = flags & 0x20;
-        bool sr = flags & 0x10;
-        bool il = flags & 0x08;
-        quint8 typeNameFormat = flags & 0x07;
+        const bool cf = flags & 0x20;
+        const bool sr = flags & 0x10;
+        const bool il = flags & 0x08;
+        const quint8 typeNameFormat = flags & 0x07;
 
         if (messageBegin && seenMessageBegin) {
             qWarning("Got message begin but already parsed some records");
@@ -128,8 +128,9 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
         } else if (messageEnd && !seenMessageEnd) {
             seenMessageEnd = true;
         }
-        if (cf && (typeNameFormat != 0x06) && !partialChunk.isEmpty()) {
-            qWarning("partial chunk not empty or typeNameFormat not 0x06 as expected");
+        // TNF must be 0x06 even for the last chunk, when cf == 0.
+        if ((typeNameFormat != 0x06) && !partialChunk.isEmpty()) {
+            qWarning("Partial chunk not empty, but TNF not 0x06 as expected");
             return QNdefMessage();
         }
 
@@ -137,12 +138,12 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
         headerLength += (sr) ? 1 : 4;
         headerLength += (il) ? 1 : 0;
 
-        if (i + headerLength >= message.constEnd()) {
+        if (idx + headerLength >= message.size()) {
             qWarning("Unexpected end of message");
             return QNdefMessage();
         }
 
-        quint8 typeLength = *(++i);
+        const quint8 typeLength = message.at(++idx);
 
         if ((typeNameFormat == 0x06) && (typeLength != 0)) {
             qWarning("Invalid chunked data, TYPE_LENGTH != 0");
@@ -151,27 +152,40 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 
         quint32 payloadLength;
         if (sr)
-            payloadLength = quint8(*(++i));
+            payloadLength = quint8(message.at(++idx));
         else {
-            payloadLength = quint8(*(++i)) << 24;
-            payloadLength |= quint8(*(++i)) << 16;
-            payloadLength |= quint8(*(++i)) << 8;
-            payloadLength |= quint8(*(++i)) << 0;
+            payloadLength = quint8(message.at(++idx)) << 24;
+            payloadLength |= quint8(message.at(++idx)) << 16;
+            payloadLength |= quint8(message.at(++idx)) << 8;
+            payloadLength |= quint8(message.at(++idx)) << 0;
         }
 
         quint8 idLength;
         if (il)
-            idLength = *(++i);
+            idLength = message.at(++idx);
         else
             idLength = 0;
 
-        int contentLength = typeLength + payloadLength + idLength;
-        if (i + contentLength >= message.constEnd()) {
+        // On 32-bit systems this can overflow
+        const qsizetype convertedPayloadLength = static_cast<qsizetype>(payloadLength);
+        const qsizetype contentLength = convertedPayloadLength + typeLength + idLength;
+
+        // On a 32 bit platform the payload can theoretically exceed the max.
+        // size of a QByteArray. This will never happen in practice with correct
+        // data because there are no NFC tags that can store such data sizes,
+        // but still can be possible if the data is corrupted.
+        if ((contentLength < 0) || (convertedPayloadLength < 0)
+            || ((std::numeric_limits<qsizetype>::max() - idx) < contentLength)) {
+            qWarning("Payload can't fit into QByteArray");
+            return QNdefMessage();
+        }
+
+        if (idx + contentLength >= message.size()) {
             qWarning("Unexpected end of message");
             return QNdefMessage();
         }
 
-        if ((typeNameFormat == 0x06) && (idLength != 0)) {
+        if ((typeNameFormat == 0x06) && il) {
             qWarning("Invalid chunked data, IL != 0");
             return QNdefMessage();
         }
@@ -180,20 +194,19 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
             record.setTypeNameFormat(QNdefRecord::TypeNameFormat(typeNameFormat));
 
         if (typeLength > 0) {
-            QByteArray type(++i, typeLength);
+            QByteArray type(&message.constData()[++idx], typeLength);
             record.setType(type);
-            i += typeLength - 1;
+            idx += typeLength - 1;
         }
 
         if (idLength > 0) {
-            QByteArray id(++i, idLength);
+            QByteArray id(&message.constData()[++idx], idLength);
             record.setId(id);
-            i += idLength - 1;
+            idx += idLength - 1;
         }
 
         if (payloadLength > 0) {
-            QByteArray payload(++i, payloadLength);
-
+            QByteArray payload(&message.constData()[++idx], payloadLength);
 
             if (cf) {
                 // chunked payload, except last
@@ -207,7 +220,7 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
                 record.setPayload(payload);
             }
 
-            i += payloadLength - 1;
+            idx += payloadLength - 1;
         }
 
         if (!cf) {
@@ -219,11 +232,11 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
             break;
 
         // move to start of next record
-        ++i;
+        ++idx;
     }
 
-    if (!seenMessageBegin && !seenMessageEnd) {
-        qWarning("Malformed NDEF Message, missing begin or end.");
+    if (!seenMessageBegin || !seenMessageEnd) {
+        qWarning("Malformed NDEF Message, missing begin or end");
         return QNdefMessage();
     }
 

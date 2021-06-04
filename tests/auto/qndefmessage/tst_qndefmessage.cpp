@@ -46,9 +46,13 @@ public:
     ~tst_QNdefMessage();
 
 private slots:
-    void tst_parse_data();
-    void tst_parse();
-    void messageParsingFromByteArray();
+    void equality();
+    void equality_data();
+    void parseSingleRecordMessage_data();
+    void parseSingleRecordMessage();
+    void parseCorruptedMessage();
+    void parseCorruptedMessage_data();
+    void parseComplexMessage();
 };
 
 tst_QNdefMessage::tst_QNdefMessage()
@@ -59,7 +63,82 @@ tst_QNdefMessage::~tst_QNdefMessage()
 {
 }
 
-void tst_QNdefMessage::tst_parse_data()
+void tst_QNdefMessage::equality()
+{
+    QFETCH(QNdefMessage, lhs);
+    QFETCH(QNdefMessage, rhs);
+    QFETCH(bool, result);
+
+    QCOMPARE(lhs == rhs, result);
+    QCOMPARE(rhs == lhs, result);
+}
+
+void tst_QNdefMessage::equality_data()
+{
+    QTest::addColumn<QNdefMessage>("lhs");
+    QTest::addColumn<QNdefMessage>("rhs");
+    QTest::addColumn<bool>("result");
+
+    QTest::newRow("empty vs empty") << QNdefMessage() << QNdefMessage() << true;
+    {
+        QNdefRecord rec;
+        rec.setTypeNameFormat(QNdefRecord::Empty);
+
+        QNdefMessage message;
+        message.push_back(rec);
+
+        QTest::newRow("empty vs empty record") << QNdefMessage() << message << true;
+    }
+    {
+        QNdefMessage message;
+        message.push_back(QNdefNfcTextRecord());
+
+        QTest::newRow("empty vs non-empty record") << QNdefMessage() << message << false;
+    }
+    {
+        QNdefMessage lhs;
+        lhs.push_back(QNdefNfcTextRecord());
+
+        QNdefMessage rhs;
+        rhs.push_back(QNdefNfcUriRecord());
+
+        QTest::newRow("different records") << lhs << rhs << false;
+    }
+    {
+        QNdefMessage lhs;
+        lhs.push_back(QNdefNfcTextRecord());
+        lhs.push_back(QNdefNfcUriRecord());
+
+        QNdefMessage rhs;
+        rhs.push_back(QNdefNfcUriRecord());
+
+        QTest::newRow("different amount of records") << lhs << rhs << false;
+    }
+    {
+        QNdefMessage lhs;
+        lhs.push_back(QNdefNfcTextRecord());
+        lhs.push_back(QNdefNfcUriRecord());
+
+        QNdefMessage rhs;
+        rhs.push_back(QNdefNfcUriRecord());
+        rhs.push_back(QNdefNfcTextRecord());
+
+        QTest::newRow("same records, different order") << lhs << rhs << false;
+    }
+    {
+        QNdefMessage lhs;
+        lhs.push_back(QNdefNfcTextRecord());
+        lhs.push_back(QNdefNfcUriRecord());
+
+        QNdefMessage rhs;
+        rhs.push_back(QNdefNfcTextRecord());
+        rhs.push_back(QNdefNfcUriRecord());
+
+        QTest::newRow("same records, same order") << lhs << rhs << true;
+    }
+}
+
+void tst_QNdefMessage::parseSingleRecordMessage_data()
 {
     QTest::addColumn<QByteArray>("data");
     QTest::addColumn<QNdefMessage>("message");
@@ -336,6 +415,46 @@ void tst_QNdefMessage::tst_parse_data()
                  QByteArray::fromHex(QByteArray("55052b31323334353637383930")));
     }
 
+    // Chunk payload - the NFC-RTD URI split into 3 chunks
+    {
+        const QByteArray type("U");
+        const QByteArray id("test");
+        QByteArray payload1;
+        payload1.append(char(0x05));
+        payload1.append("+123");
+
+        const QByteArray payload2("456");
+        const QByteArray payload3("7890");
+
+        QByteArray data;
+        data.append(char(0xB9)); // MB=1, ME=0, CF=1, SR=1, IL=1, TNF=1 (NFC-RTD)
+        data.append(type.length());
+        data.append(payload1.length() & 0xff); // length fits into 1 byte
+        data.append(id.length());
+        data.append(type);
+        data.append(id);
+        data.append(payload1);
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(payload2.length());
+        data.append(payload2);
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(payload3.length());
+        data.append(payload3);
+
+        QNdefRecord record;
+        record.setTypeNameFormat(QNdefRecord::NfcRtd);
+        record.setType(type);
+        record.setId(id);
+        record.setPayload(QByteArray("\005+1234567890", 12));
+        QList<QNdefRecord> recordList;
+        recordList.append(record);
+        QTest::newRow("chunk payloads nfc-rtd uri tel:+1234567890")
+                << data << QNdefMessage(recordList)
+                << (QVariantList() << QUrl(QStringLiteral("tel:+1234567890")));
+    }
+
     // Truncated message
     {
         QByteArray type("U");
@@ -378,7 +497,7 @@ void tst_QNdefMessage::tst_parse_data()
     }
 }
 
-void tst_QNdefMessage::tst_parse()
+void tst_QNdefMessage::parseSingleRecordMessage()
 {
     QFETCH(QByteArray, data);
     QFETCH(QNdefMessage, message);
@@ -432,7 +551,175 @@ void tst_QNdefMessage::tst_parse()
     }
 }
 
-void tst_QNdefMessage::messageParsingFromByteArray()
+void tst_QNdefMessage::parseCorruptedMessage()
+{
+    // This test is needed to check that all the potential errors in the
+    // input data are handled correctly.
+
+    QFETCH(QByteArray, data);
+    QFETCH(QByteArray, warningMessage);
+
+    if (!warningMessage.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, warningMessage.constData());
+
+    QNdefMessage parsedMessage = QNdefMessage::fromByteArray(data);
+    // corrupted data always results in an empty message
+    QVERIFY(parsedMessage.isEmpty());
+}
+
+void tst_QNdefMessage::parseCorruptedMessage_data()
+{
+    QTest::addColumn<QByteArray>("data");
+    QTest::addColumn<QByteArray>("warningMessage");
+
+    {
+        QByteArray data;
+        data.append(char(0x50)); // MB=0, ME=1, SR=1
+        data.append(char(0)); // TYPE LENGTH
+        data.append(char(0)); // PAYLOAD LENGTH
+
+        const QByteArray warningMsg = "Haven't got message begin yet";
+
+        QTest::newRow("No message begin") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0x90)); // MB=1, ME=0, SR=1
+        data.append(char(0)); // TYPE LENGTH
+        data.append(char(0)); // PAYLOAD LENGTH
+
+        const QByteArray warningMsg = "Malformed NDEF Message, missing begin or end";
+
+        QTest::newRow("No message end") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0x90)); // MB=1, ME=0, SR=1
+        data.append(char(0)); // TYPE LENGTH
+        data.append(char(0)); // PAYLOAD LENGTH
+        data.append(char(0xd0)); // MB=1, ME=1, SR=1
+        data.append(char(0)); // TYPE LENGTH
+        data.append(char(0)); // PAYLOAD LENGTH
+
+        const QByteArray warningMsg = "Got message begin but already parsed some records";
+
+        QTest::newRow("Multiple message begin") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0xB1)); // MB=1, ME=0, CF=1, SR=1, IL=0, TNF=1 (NFC-RTD)
+        data.append(char(0x01)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('U'); // type
+        data.append('a'); // payload
+        data.append(char(0x76)); // MB=0, ME=1 (incorrect), CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('b'); // payload
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('c'); // payload
+
+        const QByteArray warningMsg = "Got message end but already parsed final record";
+
+        QTest::newRow("Multiple message end") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0xB1)); // MB=1, ME=0, CF=1, SR=1, IL=0, TNF=1 (NFC-RTD)
+        data.append(char(0x01)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('U'); // type
+        data.append('a'); // payload
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('b'); // payload
+        data.append(char(0x51)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=1 (NFC-RTD - incorrect)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('c'); // payload
+
+        const QByteArray warningMsg = "Partial chunk not empty, but TNF not 0x06 as expected";
+
+        QTest::newRow("Incorrect TNF in chunk") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0xB1)); // MB=1, ME=0, CF=1, SR=1, IL=0, TNF=1 (NFC-RTD)
+        data.append(char(0x01)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('U'); // type
+        data.append('a'); // payload
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x01)); // type length (incorrect)
+        data.append(char(0x01)); // payload length
+        data.append('U'); // type (incorrect)
+        data.append('b'); // payload
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('c'); // payload
+
+        const QByteArray warningMsg = "Invalid chunked data, TYPE_LENGTH != 0";
+
+        QTest::newRow("Incorrect TYPE_LENGTH in chunk") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0xB1)); // MB=1, ME=0, CF=1, SR=1, IL=0, TNF=1 (NFC-RTD)
+        data.append(char(0x01)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('U'); // type
+        data.append('a'); // payload
+        data.append(char(0x3E)); // MB=0, ME=0, CF=1, SR=1, IL=1 (incorrect), TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append(char(0x01)); // id length (incorrect)
+        data.append('i'); // id (incorrect)
+        data.append('b'); // payload
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('c'); // payload
+
+        const QByteArray warningMsg = "Invalid chunked data, IL != 0";
+
+        QTest::newRow("Incorrect IL in chunk") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0xC8)); // MB=1, ME=1, CF=0, SR=0, IL=1, TNF=0
+        data.append(char(0)); // type legnth
+        data.append(char(0)); // payload length (incorrect, 4 bytes expected)
+
+        const QByteArray warningMsg = "Unexpected end of message";
+
+        QTest::newRow("Invalid header length") << data << warningMsg;
+    }
+    {
+        QByteArray data;
+        data.append(char(0xC1)); // MB=1, ME=1, CF=0, SR=0, IL=0, TNF=1
+        data.append(char(0x01)); // type legnth
+        data.append(char(0xFF)); // payload length 3
+        data.append(char(0xFF)); // payload length 2
+        data.append(char(0xFF)); // payload length 1
+        data.append(char(0xFF)); // payload length 0
+        data.append('U'); // type
+        data.append('a'); // payload
+
+        // In case of 32 bit the code path will be different from 64 bit, so
+        // the warning message is also different.
+        const QByteArray warningMsg = (sizeof(qsizetype) <= sizeof(quint32))
+                ? "Payload can't fit into QByteArray"
+                : "Unexpected end of message";
+
+        QTest::newRow("Max payload length") << data << warningMsg;
+    }
+}
+
+void tst_QNdefMessage::parseComplexMessage()
 {
     const QByteArray reference("1234567890");
     QNdefMessage message;
