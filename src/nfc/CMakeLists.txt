@@ -57,7 +57,7 @@ if(IOS)
     # special case end
 endif()
 
-qt_extend_target(Nfc CONDITION IOS
+qt_internal_extend_target(Nfc CONDITION IOS
     SOURCES
         ios/qiostagreaderdelegate.mm ios/qiostagreaderdelegate_p.h
         qnearfieldmanager_ios.mm qnearfieldmanager_ios_p.h
