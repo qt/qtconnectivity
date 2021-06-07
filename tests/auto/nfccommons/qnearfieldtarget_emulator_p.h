@@ -108,6 +108,9 @@ public:
     void initialize();
     void reset();
 
+    void start();
+    void stop();
+
     static TagActivator *instance();
 
 protected:
@@ -118,8 +121,10 @@ signals:
     void tagDeactivated(TagBase *tag);
 
 private:
+    void stopInternal();
+
     QMap<TagBase *, bool>::Iterator current;
-    int timerId;
+    int timerId = -1;
 };
 
 QT_END_NAMESPACE

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -72,9 +72,16 @@ public:
 
     bool isEnabled() const override;
 
+    bool isSupported(QNearFieldTarget::AccessMethod accessMethod) const override;
+
     bool startTargetDetection(QNearFieldTarget::AccessMethod accessMethod) override;
+    void stopTargetDetection(const QString &message) override;
+    void setUserInformation(const QString &message) override;
 
     void reset();
+
+signals:
+    void userInformationChanged(const QString &message);
 
 private slots:
     void tagActivated(TagBase *tag);

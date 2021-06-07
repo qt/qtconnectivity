@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -52,6 +52,11 @@ public:
 private slots:
     void initTestCase();
 
+    void isSupported();
+    void isSupported_data();
+
+    void userInformation();
+
     void targetDetected_data();
     void targetDetected();
 };
@@ -72,56 +77,105 @@ void tst_QNearFieldManager::initTestCase()
     QVERIFY(manager.isEnabled());
 }
 
+void tst_QNearFieldManager::isSupported()
+{
+    QFETCH(QNearFieldTarget::AccessMethod, accessMethod);
+    QFETCH(bool, supported);
+
+    QNearFieldManagerPrivateImpl *emulatorBackend = new QNearFieldManagerPrivateImpl;
+    QNearFieldManager manager(emulatorBackend, nullptr);
+
+    QCOMPARE(manager.isSupported(accessMethod), supported);
+}
+
+void tst_QNearFieldManager::isSupported_data()
+{
+    QTest::addColumn<QNearFieldTarget::AccessMethod>("accessMethod");
+    QTest::addColumn<bool>("supported");
+
+    QTest::newRow("UnknownAccess") << QNearFieldTarget::UnknownAccess << false;
+    QTest::newRow("NdefAccess") << QNearFieldTarget::NdefAccess << true;
+    QTest::newRow("TagTypeSpecificAccess") << QNearFieldTarget::TagTypeSpecificAccess << false;
+    QTest::newRow("AnyAccess") << QNearFieldTarget::AnyAccess << true;
+}
+
+void tst_QNearFieldManager::userInformation()
+{
+    QNearFieldManagerPrivateImpl *emulatorBackend = new QNearFieldManagerPrivateImpl;
+    QNearFieldManager manager(emulatorBackend, nullptr);
+
+    QSignalSpy spy(emulatorBackend, &QNearFieldManagerPrivateImpl::userInformationChanged);
+
+    manager.startTargetDetection(QNearFieldTarget::AnyAccess);
+
+    const QString progressString("NFC target detection in progress");
+    manager.setUserInformation(progressString);
+
+    const QString errorString("Failed to detect NFC targets");
+    manager.stopTargetDetection(errorString);
+
+    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.at(0).at(0).toString(), progressString);
+    QCOMPARE(spy.at(1).at(0).toString(), errorString);
+}
+
 void tst_QNearFieldManager::targetDetected_data()
 {
+    QTest::addColumn<QNearFieldTarget::AccessMethod>("accessMethod");
     QTest::addColumn<bool>("deleteTarget");
 
-    QTest::newRow("AnyTarget") << false;
-    QTest::newRow("NfcTagType1") << false;
-    QTest::newRow("Delete Target") << true;
+    QTest::newRow("UnknownAccess") << QNearFieldTarget::UnknownAccess << false;
+    QTest::newRow("NdefAccess, no delete") << QNearFieldTarget::NdefAccess << false;
+    QTest::newRow("AnyAccess, delete") << QNearFieldTarget::AnyAccess << true;
 }
 
 void tst_QNearFieldManager::targetDetected()
 {
+    QFETCH(QNearFieldTarget::AccessMethod, accessMethod);
     QFETCH(bool, deleteTarget);
 
     QNearFieldManagerPrivateImpl *emulatorBackend = new QNearFieldManagerPrivateImpl;
-    QNearFieldManager manager(emulatorBackend, 0);
+    QNearFieldManager manager(emulatorBackend, nullptr);
 
-    QSignalSpy targetDetectedSpy(&manager, SIGNAL(targetDetected(QNearFieldTarget*)));
-    QSignalSpy targetLostSpy(&manager, SIGNAL(targetLost(QNearFieldTarget*)));
+    QSignalSpy targetDetectedSpy(&manager, &QNearFieldManager::targetDetected);
+    QSignalSpy targetLostSpy(&manager, &QNearFieldManager::targetLost);
+    QSignalSpy detectionStoppedSpy(&manager, &QNearFieldManager::targetDetectionStopped);
 
-    manager.startTargetDetection(QNearFieldTarget::UnknownAccess);
+    const bool started = manager.startTargetDetection(accessMethod);
 
-    QTRY_VERIFY(!targetDetectedSpy.isEmpty());
+    if (started) {
+        QTRY_VERIFY(!targetDetectedSpy.isEmpty());
 
-    QNearFieldTarget *target = targetDetectedSpy.first().at(0).value<QNearFieldTarget *>();
+        QNearFieldTarget *target = targetDetectedSpy.first().at(0).value<QNearFieldTarget *>();
 
-    QSignalSpy disconnectedSpy(target, SIGNAL(disconnected()));
+        QSignalSpy disconnectedSpy(target, SIGNAL(disconnected()));
 
-    QVERIFY(target);
+        QVERIFY(target);
 
-    QVERIFY(!target->uid().isEmpty());
+        QVERIFY(!target->uid().isEmpty());
 
-    if (!deleteTarget) {
-        QTRY_VERIFY(!targetLostSpy.isEmpty());
+        if (!deleteTarget) {
+            QTRY_VERIFY(!targetLostSpy.isEmpty());
 
-        QNearFieldTarget *lostTarget = targetLostSpy.first().at(0).value<QNearFieldTarget *>();
+            QNearFieldTarget *lostTarget = targetLostSpy.first().at(0).value<QNearFieldTarget *>();
 
-        QCOMPARE(target, lostTarget);
+            QCOMPARE(target, lostTarget);
 
-        QVERIFY(!disconnectedSpy.isEmpty());
-    } else {
-        delete target;
+            QVERIFY(!disconnectedSpy.isEmpty());
+        } else {
+            delete target;
 
-        // wait for another targetDetected() without a targetLost() signal in between.
-        targetDetectedSpy.clear();
-        targetLostSpy.clear();
+            // wait for another targetDetected() without a targetLost() signal in between.
+            targetDetectedSpy.clear();
+            targetLostSpy.clear();
 
-        QTRY_VERIFY(targetLostSpy.isEmpty() && !targetDetectedSpy.isEmpty());
+            QTRY_VERIFY(targetLostSpy.isEmpty() && !targetDetectedSpy.isEmpty());
+        }
     }
 
     manager.stopTargetDetection();
+
+    QCOMPARE(detectionStoppedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_QNearFieldManager)
