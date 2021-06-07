@@ -83,15 +83,15 @@ public:
 class QNdefNfcSmartPosterRecordPrivate : public QSharedData
 {
 public:
-    QNdefNfcSmartPosterRecordPrivate() : m_uri(0), m_action(0), m_size(0), m_type(0) {}
+    QNdefNfcSmartPosterRecordPrivate() {}
 
 public:
     QList<QNdefNfcTextRecord> m_titleList;
-    QNdefNfcUriRecord *m_uri;
-    QNdefNfcActRecord *m_action;
+    QNdefNfcUriRecord *m_uri = nullptr;
+    QNdefNfcActRecord *m_action = nullptr;
     QList<QNdefNfcIconRecord> m_iconList;
-    QNdefNfcSizeRecord *m_size;
-    QNdefNfcTypeRecord *m_type;
+    QNdefNfcSizeRecord *m_size = nullptr;
+    QNdefNfcTypeRecord *m_type = nullptr;
 };
 
 QT_END_NAMESPACE
