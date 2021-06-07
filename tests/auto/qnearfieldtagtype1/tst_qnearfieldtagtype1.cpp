@@ -76,6 +76,7 @@ void tst_QNearFieldTagType1::init()
     targetParent = new QObject();
 
     TagActivator::instance()->initialize();
+    TagActivator::instance()->start();
 }
 
 void tst_QNearFieldTagType1::cleanup()
@@ -104,6 +105,8 @@ void tst_QNearFieldTagType1::waitForMatchingTarget()
 void tst_QNearFieldTagType1::staticMemoryModel()
 {
     waitForMatchingTarget();
+    if (QTest::currentTestFailed())
+        return;
 
     QVERIFY(target->accessMethods() & QNearFieldTarget::TagTypeSpecificAccess);
 
@@ -239,6 +242,8 @@ void tst_QNearFieldTagType1::dynamicMemoryModel()
     QList<QByteArray> seenIds;
     forever {
         waitForMatchingTarget();
+        if (QTest::currentTestFailed())
+            return;
 
         QNearFieldTarget::RequestId id = target->readIdentification();
         QVERIFY(target->waitForRequestCompleted(id));
@@ -368,6 +373,8 @@ void tst_QNearFieldTagType1::ndefMessages()
     QByteArray firstId;
     forever {
         waitForMatchingTarget();
+        if (QTest::currentTestFailed())
+            return;
 
         QNearFieldTarget::RequestId id = target->readIdentification();
         QVERIFY(target->waitForRequestCompleted(id));

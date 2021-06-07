@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -62,9 +62,31 @@ bool QNearFieldManagerPrivateImpl::isEnabled() const
     return true;
 }
 
-bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::AccessMethod)
+bool QNearFieldManagerPrivateImpl::isSupported(QNearFieldTarget::AccessMethod accessMethod) const
 {
-    return true;
+    return accessMethod == QNearFieldTarget::NdefAccess
+            || accessMethod == QNearFieldTarget::AnyAccess;
+}
+
+bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
+{
+    const bool supported = isSupported(accessMethod);
+    if (supported)
+        TagActivator::instance()->start();
+
+    return supported;
+}
+
+void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &message)
+{
+    setUserInformation(message);
+    TagActivator::instance()->stop();
+    emit targetDetectionStopped();
+}
+
+void QNearFieldManagerPrivateImpl::setUserInformation(const QString &message)
+{
+    emit userInformationChanged(message);
 }
 
 void QNearFieldManagerPrivateImpl::reset()

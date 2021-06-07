@@ -184,9 +184,7 @@ bool TagType2::waitForRequestCompleted(const QNearFieldTarget::RequestId &id, in
     return QNearFieldTagType2::waitForRequestCompleted(id, msecs);
 }
 
-
-TagActivator::TagActivator()
-:   timerId(-1)
+TagActivator::TagActivator() : QObject()
 {
     qRegisterMetaType<QNearFieldTarget::Error>();
 }
@@ -237,19 +235,36 @@ void TagActivator::initialize()
     }
 
     current = tagMap.end();
-
-    timerId = startTimer(1000);
 }
 
 void TagActivator::reset()
 {
     QMutexLocker locker(&tagMutex);
 
-    killTimer(timerId);
-    timerId = -1;
+    stopInternal();
 
     qDeleteAll(tagMap.keys());
     tagMap.clear();
+}
+
+void TagActivator::start()
+{
+    QMutexLocker locker(&tagMutex);
+    timerId = startTimer(1000);
+}
+
+void TagActivator::stop()
+{
+    QMutexLocker locker(&tagMutex);
+    stopInternal();
+}
+
+void TagActivator::stopInternal()
+{
+    if (timerId != -1) {
+        killTimer(timerId);
+        timerId = -1;
+    }
 }
 
 TagActivator *TagActivator::instance()
