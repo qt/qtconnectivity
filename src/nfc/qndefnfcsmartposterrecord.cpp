@@ -209,7 +209,7 @@ void QNdefNfcSmartPosterRecord::convertToPayload()
     QNdefMessage message;
 
     // Title
-    for (int t=0; t<titleCount(); t++)
+    for (qsizetype t = 0; t < titleCount(); t++)
         message.append(titleRecord(t));
 
     // URI
@@ -221,7 +221,7 @@ void QNdefNfcSmartPosterRecord::convertToPayload()
         message.append(*(d->m_action));
 
     // Icon
-    for (int i=0; i<iconCount(); i++)
+    for (qsizetype i = 0; i < iconCount(); i++)
         message.append(iconRecord(i));
 
     // Size
@@ -242,7 +242,7 @@ void QNdefNfcSmartPosterRecord::convertToPayload()
  */
 bool QNdefNfcSmartPosterRecord::hasTitle(const QString &locale) const
 {
-    for (int i = 0; i < d->m_titleList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_titleList.length(); ++i) {
         const QNdefNfcTextRecord &text = d->m_titleList[i];
 
         if (locale.isEmpty() || text.locale() == locale)
@@ -257,7 +257,7 @@ bool QNdefNfcSmartPosterRecord::hasTitle(const QString &locale) const
  */
 bool QNdefNfcSmartPosterRecord::hasAction() const
 {
-    return d->m_action != 0;
+    return d->m_action != nullptr;
 }
 
 /*!
@@ -267,7 +267,7 @@ bool QNdefNfcSmartPosterRecord::hasAction() const
  */
 bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray &mimetype) const
 {
-    for (int i = 0; i < d->m_iconList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_iconList.length(); ++i) {
         const QNdefNfcIconRecord &icon = d->m_iconList[i];
 
         if (mimetype.isEmpty() || icon.type() == mimetype)
@@ -282,7 +282,7 @@ bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray &mimetype) const
  */
 bool QNdefNfcSmartPosterRecord::hasSize() const
 {
-    return d->m_size != 0;
+    return d->m_size != nullptr;
 }
 
 /*!
@@ -290,7 +290,7 @@ bool QNdefNfcSmartPosterRecord::hasSize() const
  */
 bool QNdefNfcSmartPosterRecord::hasTypeInfo() const
 {
-    return d->m_type != 0;
+    return d->m_type != nullptr;
 }
 
 /*!
@@ -321,7 +321,7 @@ QNdefNfcTextRecord QNdefNfcSmartPosterRecord::titleRecord(qsizetype index) const
  */
 QString QNdefNfcSmartPosterRecord::title(const QString &locale) const
 {
-    for (int i = 0; i < d->m_titleList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_titleList.length(); ++i) {
         const QNdefNfcTextRecord &text = d->m_titleList[i];
 
         if (locale.isEmpty() || text.locale() == locale)
@@ -346,17 +346,18 @@ QList<QNdefNfcTextRecord> QNdefNfcSmartPosterRecord::titleRecords() const
  */
 bool QNdefNfcSmartPosterRecord::addTitle(const QNdefNfcTextRecord &text)
 {
-    bool status = addTitleInternal(text);
+    const bool status = addTitleInternal(text);
 
-    // Convert to payload
-    convertToPayload();
+    // Convert to payload if the title is added
+    if (status)
+        convertToPayload();
 
     return status;
 }
 
 bool QNdefNfcSmartPosterRecord::addTitleInternal(const QNdefNfcTextRecord &text)
 {
-    for (int i = 0; i < d->m_titleList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_titleList.length(); ++i) {
         const QNdefNfcTextRecord &rec = d->m_titleList[i];
 
         if (rec.locale() == text.locale())
@@ -390,7 +391,7 @@ bool QNdefNfcSmartPosterRecord::removeTitle(const QNdefNfcTextRecord &text)
 {
     bool status = false;
 
-    for (int i = 0; i < d->m_titleList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_titleList.length(); ++i) {
         const QNdefNfcTextRecord &rec = d->m_titleList[i];
 
         if (rec.text() == text.text() && rec.locale() == text.locale() && rec.encoding() == text.encoding()) {
@@ -400,8 +401,9 @@ bool QNdefNfcSmartPosterRecord::removeTitle(const QNdefNfcTextRecord &text)
         }
     }
 
-    // Convert to payload
-    convertToPayload();
+    // Convert to payload if the title list has changed
+    if (status)
+        convertToPayload();
 
     return status;
 }
@@ -414,7 +416,7 @@ bool QNdefNfcSmartPosterRecord::removeTitle(const QString &locale)
 {
     bool status = false;
 
-    for (int i = 0; i < d->m_titleList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_titleList.length(); ++i) {
         const QNdefNfcTextRecord &rec = d->m_titleList[i];
 
         if (rec.locale() == locale) {
@@ -424,8 +426,9 @@ bool QNdefNfcSmartPosterRecord::removeTitle(const QString &locale)
         }
     }
 
-    // Convert to payload
-    convertToPayload();
+    // Convert to payload if the title list has changed
+    if (status)
+        convertToPayload();
 
     return status;
 }
@@ -437,7 +440,7 @@ void QNdefNfcSmartPosterRecord::setTitles(const QList<QNdefNfcTextRecord> &title
 {
     d->m_titleList.clear();
 
-    for (int i = 0; i < titles.length(); ++i) {
+    for (qsizetype i = 0; i < titles.length(); ++i) {
         d->m_titleList.append(titles[i]);
     }
 
@@ -544,7 +547,7 @@ QNdefNfcIconRecord QNdefNfcSmartPosterRecord::iconRecord(qsizetype index) const
  */
 QByteArray QNdefNfcSmartPosterRecord::icon(const QByteArray& mimetype) const
 {
-    for (int i = 0; i < d->m_iconList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_iconList.length(); ++i) {
         const QNdefNfcIconRecord &icon = d->m_iconList[i];
 
         if (mimetype.isEmpty() || icon.type() == mimetype)
@@ -576,7 +579,7 @@ void QNdefNfcSmartPosterRecord::addIcon(const QNdefNfcIconRecord &icon)
 
 void QNdefNfcSmartPosterRecord::addIconInternal(const QNdefNfcIconRecord &icon)
 {
-    for (int i = 0; i < d->m_iconList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_iconList.length(); ++i) {
         const QNdefNfcIconRecord &rec = d->m_iconList[i];
 
         if (rec.type() == icon.type())
@@ -607,7 +610,7 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QNdefNfcIconRecord &icon)
 {
     bool status = false;
 
-    for (int i = 0; i < d->m_iconList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_iconList.length(); ++i) {
         const QNdefNfcIconRecord &rec = d->m_iconList[i];
 
         if (rec.type() == icon.type() && rec.data() == icon.data()) {
@@ -617,8 +620,9 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QNdefNfcIconRecord &icon)
         }
     }
 
-    // Convert to payload
-    convertToPayload();
+    // Convert to payload if the icon list has changed
+    if (status)
+        convertToPayload();
 
     return status;
 }
@@ -631,7 +635,7 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
 {
     bool status = false;
 
-    for (int i = 0; i < d->m_iconList.length(); ++i) {
+    for (qsizetype i = 0; i < d->m_iconList.length(); ++i) {
         const QNdefNfcIconRecord &rec = d->m_iconList[i];
 
         if (rec.type() == type) {
@@ -641,8 +645,9 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
         }
     }
 
-    // Convert to payload
-    convertToPayload();
+    // Convert to payload if the icon list has changed
+    if (status)
+        convertToPayload();
 
     return status;
 }
@@ -657,7 +662,7 @@ void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
 {
     d->m_iconList.clear();
 
-    for (int i = 0; i < icons.length(); ++i) {
+    for (qsizetype i = 0; i < icons.length(); ++i) {
         d->m_iconList.append(icons[i]);
     }
 
