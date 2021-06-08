@@ -77,6 +77,7 @@ public:
     \note The actual data packets sent over the advertising channel cannot contain more than 31
           bytes. If the variable-length data set via this class exceeds that limit, it will
           be left out of the packet or truncated, depending on the type.
+          On Android, advertising will fail if advertising data is larger than 31 bytes.
 
     \sa QLowEnergyAdvertisingParameters
     \sa QLowEnergyController::startAdvertising()

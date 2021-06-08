@@ -583,6 +583,7 @@ public class QtBluetoothLEServer {
                 case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
                     return; // ignore -> noop
                 case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
+                    Log.e(TAG, "Please reduce size of advertising data.");
                     qtErrorCode = 1;
                     break;
                 case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
