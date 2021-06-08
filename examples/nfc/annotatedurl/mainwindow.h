@@ -75,6 +75,7 @@ public:
 
 public slots:
     void displayAnnotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
+    void nfcStateChanged(bool enabled);
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;

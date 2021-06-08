@@ -75,6 +75,12 @@ void MainWindow::displayAnnotatedUrl(const QUrl &url, const QString &title, cons
     ui->m_image->setPixmap(pixmap);
 }
 
+void MainWindow::nfcStateChanged(bool enabled)
+{
+    const QString text = enabled ? "Touch a tag" : "Enable NFC";
+    ui->m_help->setText(text);
+}
+
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     if (ui->centralWidget->rect().contains(event->pos()))

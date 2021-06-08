@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
@@ -52,12 +52,12 @@
 #define ANNOTATEDURL_H
 
 #include <QtNfc/QNdefMessage>
+#include <QtNfc/QNearFieldManager>
 
 #include <QtCore/QObject>
 #include <QtCore/QUrl>
 
 QT_FORWARD_DECLARE_CLASS(QPixmap)
-QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
 QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)
 
 //! [0]
@@ -73,12 +73,15 @@ public:
 
 signals:
     void annotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
+    void nfcStateChanged(bool enabled);
 
 public slots:
     void targetDetected(QNearFieldTarget *target);
     void targetLost(QNearFieldTarget *target);
     void handleMessage(const QNdefMessage &message, QNearFieldTarget *target);
     void handlePolledNdefMessage(QNdefMessage message);
+    void handleAdapterStateChange(QNearFieldManager::AdapterState state);
+
 private:
     QNearFieldManager *manager;
 };

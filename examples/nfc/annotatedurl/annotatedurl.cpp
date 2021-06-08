@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
@@ -72,6 +72,8 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
             this, &AnnotatedUrl::targetDetected);
     connect(manager, &QNearFieldManager::targetLost,
             this, &AnnotatedUrl::targetLost);
+    connect(manager, &QNearFieldManager::adapterStateChanged,
+            this, &AnnotatedUrl::handleAdapterStateChange);
 }
 
 AnnotatedUrl::~AnnotatedUrl()
@@ -83,10 +85,12 @@ void AnnotatedUrl::startDetection()
 {
     if (!manager->isEnabled()) {
         qWarning() << "NFC not enabled";
+        emit nfcStateChanged(false);
         return;
     }
 
-    manager->startTargetDetection(QNearFieldTarget::NdefAccess);
+    if (manager->startTargetDetection(QNearFieldTarget::NdefAccess))
+        emit nfcStateChanged(true);
 }
 
 void AnnotatedUrl::targetDetected(QNearFieldTarget *target)
@@ -110,6 +114,18 @@ void AnnotatedUrl::handlePolledNdefMessage(QNdefMessage message)
     QNearFieldTarget *target = qobject_cast<QNearFieldTarget *>(sender());
     handleMessage(message, target);
 }
+
+//! [handleAdapterState]
+void AnnotatedUrl::handleAdapterStateChange(QNearFieldManager::AdapterState state)
+{
+    if (state == QNearFieldManager::AdapterState::Online) {
+        startDetection();
+    } else if (state == QNearFieldManager::AdapterState::Offline) {
+        manager->stopTargetDetection();
+        emit nfcStateChanged(false);
+    }
+}
+//! [handleAdapterState]
 
 //! [handleMessage 1]
 void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *target)
