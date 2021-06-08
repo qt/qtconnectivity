@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module.
@@ -51,21 +51,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtWidgets/QMainWindow>
+#include <QWidget>
+#include <QPixmap>
 
 QT_FORWARD_DECLARE_CLASS(QMouseEvent)
 QT_FORWARD_DECLARE_CLASS(QUrl)
-QT_FORWARD_DECLARE_CLASS(QPixmap)
 QT_FORWARD_DECLARE_CLASS(QString)
-QT_FORWARD_DECLARE_CLASS(QWidget)
+QT_FORWARD_DECLARE_CLASS(QLabel)
+QT_FORWARD_DECLARE_CLASS(QScreen)
 
-QT_BEGIN_NAMESPACE
-namespace Ui {
-    class MainWindow;
-}
-QT_END_NAMESPACE
-
-class MainWindow : public QMainWindow
+class MainWindow : public QWidget
 {
     Q_OBJECT
 
@@ -79,9 +74,21 @@ public slots:
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void moveEvent(QMoveEvent *event) override;
+
+private slots:
+    void updateWidgetLayout(Qt::ScreenOrientation orientation);
 
 private:
-    Ui::MainWindow *ui;
+    void handleScreenChange();
+
+    QLabel *m_titleLabel;
+    QLabel *m_infoLabel;
+    QLabel *m_uriLabel;
+    QLabel *m_landscapeIconLabel;
+    QLabel *m_portraitIconLabel;
+    QScreen *m_screen = nullptr;
+    QPixmap m_pixmap;
 };
 
 #endif // MAINWINDOW_H

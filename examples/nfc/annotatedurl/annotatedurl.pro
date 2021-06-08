@@ -11,8 +11,6 @@ SOURCES += main.cpp \
 HEADERS  += mainwindow.h \
     annotatedurl.h
 
-FORMS    += mainwindow.ui
-
 android {
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 
