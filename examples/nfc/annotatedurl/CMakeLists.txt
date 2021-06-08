@@ -22,7 +22,7 @@ qt_add_executable(annotatedurl
     MANUAL_FINALIZATION
     annotatedurl.cpp annotatedurl.h
     main.cpp
-    mainwindow.cpp mainwindow.h mainwindow.ui
+    mainwindow.cpp mainwindow.h
 )
 set_target_properties(annotatedurl PROPERTIES
     WIN32_EXECUTABLE TRUE
