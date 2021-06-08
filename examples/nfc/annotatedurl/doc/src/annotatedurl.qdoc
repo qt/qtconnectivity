@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt local connectivty modules.
@@ -81,6 +81,16 @@ Finally after having extracted the parameters of the NFC message the
 corresponding signal is emitted so that the UI can handle it.
 
 \snippet annotatedurl/annotatedurl.cpp handleMessage 4
+
+\section1 Adapter State Handling
+
+On Android the adapter state changes can be detected by connecting to the
+\l QNearFieldManager::adapterStateChanged() signal. This allows stopping the
+detection when the NFC adapter is disabled, and restarting it when the adapter
+is enabled again. This approach is implemented in the
+\c {AnnotatedUrl::handleAdapterStateChange} slot.
+
+\snippet annotatedurl/annotatedurl.cpp handleAdapterState
 
 \section1 Automatic Application Startup
 

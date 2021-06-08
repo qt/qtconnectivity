@@ -66,6 +66,8 @@ int main(int argc, char *argv[])
 
     QObject::connect(&annotatedUrl, &AnnotatedUrl::annotatedUrl,
                      &mainWindow, &MainWindow::displayAnnotatedUrl);
+    QObject::connect(&annotatedUrl, &AnnotatedUrl::nfcStateChanged,
+                     &mainWindow, &MainWindow::nfcStateChanged);
 
     annotatedUrl.startDetection();
     mainWindow.show();
