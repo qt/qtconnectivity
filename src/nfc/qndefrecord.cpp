@@ -104,13 +104,15 @@ QT_BEGIN_NAMESPACE
 /*!
     \fn bool QNdefRecord::isRecordType() const
 
-    Returns true if the NDEF record is of the specified record type; otherwise returns false.
+    Returns \c true if the NDEF record is of the specified record type;
+    otherwise returns \c false.
 */
 
 /*!
     \fn bool QNdefRecord::operator!=(const QNdefRecord &other) const
 
-    Returns true if this NDEF record does not equal \a other; otherwise return false.
+    Returns \c true if this NDEF record does not equal \a other;
+    otherwise return \c false.
 */
 
 /*!
@@ -327,7 +329,8 @@ QByteArray QNdefRecord::payload() const
 }
 
 /*!
-    Returns true if the NDEF record contains an empty payload; otherwise return false.
+    Returns \c true if the NDEF record contains an empty payload;
+    otherwise returns \c false.
 
     This is equivalent to calling \c {payload().isEmpty()}.
 */
@@ -340,7 +343,8 @@ bool QNdefRecord::isEmpty() const
 }
 
 /*!
-    Returns true if \a other and this NDEF record are the same.
+    Returns \c true if \a other and this NDEF record are the same.
+    Otherwise returns \c false.
 */
 bool QNdefRecord::operator==(const QNdefRecord &other) const
 {

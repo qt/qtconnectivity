@@ -438,9 +438,10 @@ void QNdefFilter::clear()
 }
 
 /*!
-    Sets the ording requirements of the filter. If \a on is true the filter will only match if the
-    order of records in the filter matches the order of the records in the NDEF message. If \a on
-    is false the order of the records is not taken into account when matching.
+    Sets the ordering requirements of the filter. If \a on is \c {true}, the
+    filter will only match if the order of records in the filter matches the
+    order of the records in the NDEF message. If \a on is \c {false}, the order
+    of the records is not taken into account when matching.
 
     By default record order is not taken into account.
 */

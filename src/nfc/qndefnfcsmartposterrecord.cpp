@@ -236,9 +236,10 @@ void QNdefNfcSmartPosterRecord::convertToPayload()
 }
 
 /*!
-    Returns true if the smart poster contains a title record using locale \a locale. If \a locale
-    is empty then true is returned if the smart poster contains at least one title record. In all
-    cases false is returned.
+    Returns \c true if the smart poster contains a title record using the locale
+    \a locale. If \a locale is empty, then \c true is returned if the smart
+    poster contains at least one title record. In all other cases, \c false is
+    returned.
  */
 bool QNdefNfcSmartPosterRecord::hasTitle(const QString &locale) const
 {
@@ -253,7 +254,8 @@ bool QNdefNfcSmartPosterRecord::hasTitle(const QString &locale) const
 }
 
 /*!
-    Returns true if the smart poster contains an action record, otherwise false.
+    Returns \c true if the smart poster contains an action record, otherwise
+    returns \c false.
  */
 bool QNdefNfcSmartPosterRecord::hasAction() const
 {
@@ -261,9 +263,10 @@ bool QNdefNfcSmartPosterRecord::hasAction() const
 }
 
 /*!
-    Returns true if the smart poster contains an icon record using type \a mimetype.
-    If \a mimetype is empty then true is returned if the smart poster contains at least one icon record.
-    In all other cases false is returned.
+    Returns \c true if the smart poster contains an icon record using the type
+    \a mimetype. If \a mimetype is empty, then \c true is returned if the smart
+    poster contains at least one icon record.
+    In all other cases, \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray &mimetype) const
 {
@@ -278,7 +281,8 @@ bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray &mimetype) const
 }
 
 /*!
-    Returns true if the smart poster contains a size record, otherwise false.
+    Returns \c true if the smart poster contains a size record, otherwise
+    returns \c false.
  */
 bool QNdefNfcSmartPosterRecord::hasSize() const
 {
@@ -286,7 +290,8 @@ bool QNdefNfcSmartPosterRecord::hasSize() const
 }
 
 /*!
-    Returns true if the smart poster contains a type record, otherwise false.
+    Returns \c true if the smart poster contains a type record, otherwise
+    returns \c false.
  */
 bool QNdefNfcSmartPosterRecord::hasTypeInfo() const
 {
@@ -342,7 +347,7 @@ QList<QNdefNfcTextRecord> QNdefNfcSmartPosterRecord::titleRecords() const
 /*!
     Attempts to add a title record \a text to the smart poster. If the smart poster does not already
     contain a title record with the same locale as title record \a text, then the title record is added
-    and the function returns true. Otherwise false is returned.
+    and the function returns \c true. Otherwise \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::addTitle(const QNdefNfcTextRecord &text)
 {
@@ -371,7 +376,7 @@ bool QNdefNfcSmartPosterRecord::addTitleInternal(const QNdefNfcTextRecord &text)
 /*!
     Attempts to add a new title record with title \a text, locale \a locale and encoding \a encoding.
     If the smart poster does not already contain a title record with locale \a locale, then the title record
-    is added and the function returns true. Otherwise false is returned.
+    is added and the function returns \c true. Otherwise \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::addTitle(const QString &text, const QString &locale, QNdefNfcTextRecord::Encoding encoding)
 {
@@ -384,8 +389,9 @@ bool QNdefNfcSmartPosterRecord::addTitle(const QString &text, const QString &loc
 }
 
 /*!
-    Attempts to remove the title record \a text from the smart poster. Removes the record and returns true
-    if the smart poster contains a matching record, otherwise false.
+    Attempts to remove the title record \a text from the smart poster. Removes
+    the record and returns \c true if the smart poster contains a matching
+    record, otherwise \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::removeTitle(const QNdefNfcTextRecord &text)
 {
@@ -409,8 +415,9 @@ bool QNdefNfcSmartPosterRecord::removeTitle(const QNdefNfcTextRecord &text)
 }
 
 /*!
-    Attempts to remove a title record with locale \a locale from the smart poster. Removes the record and returns true
-    if the smart poster contains a matching record, otherwise false.
+    Attempts to remove a title record with the locale \a locale from the smart
+    poster. Removes the record and returns \c true if the smart poster contains
+    a matching record, otherwise \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::removeTitle(const QString &locale)
 {
@@ -603,8 +610,9 @@ void QNdefNfcSmartPosterRecord::addIcon(const QByteArray &type, const QByteArray
 }
 
 /*!
-    Attempts to remove the icon record \a icon from the smart poster. Removes the record and returns true
-    if the smart poster contains a matching record, otherwise false.
+    Attempts to remove the icon record \a icon from the smart poster.
+    Removes the record and returns \c true if the smart poster contains
+    a matching record, otherwise \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::removeIcon(const QNdefNfcIconRecord &icon)
 {
@@ -628,8 +636,9 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QNdefNfcIconRecord &icon)
 }
 
 /*!
-    Attempts to remove the icon record with type \a type from the smart poster. Removes the record
-    and returns true if the smart poster contains a matching record, otherwise false.
+    Attempts to remove the icon record with the type \a type from the smart
+    poster. Removes the record and returns \c true if the smart poster contains
+    a matching record, otherwise \c false is returned.
  */
 bool QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
 {
