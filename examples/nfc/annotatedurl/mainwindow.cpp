@@ -111,6 +111,18 @@ void MainWindow::nfcStateChanged(bool enabled)
     m_infoLabel->setText(text);
 }
 
+void MainWindow::showTagError(const QString &message)
+{
+    m_uriLabel->clear();
+    m_titleLabel->clear();
+    m_pixmap = QPixmap();
+    m_landscapeIconLabel->setVisible(false);
+    m_portraitIconLabel->setVisible(false);
+
+    m_infoLabel->setHidden(false);
+    m_infoLabel->setText(message);
+}
+
 void MainWindow::mouseReleaseEvent(QMouseEvent * /*event*/)
 {
     QDesktopServices::openUrl(QUrl(m_uriLabel->text()));

@@ -53,6 +53,7 @@
 
 #include <QtNfc/QNdefMessage>
 #include <QtNfc/QNearFieldManager>
+#include <QtNfc/QNdefFilter>
 
 #include <QtCore/QObject>
 #include <QtCore/QUrl>
@@ -74,6 +75,7 @@ public:
 signals:
     void annotatedUrl(const QUrl &url, const QString &title, const QPixmap &pixmap);
     void nfcStateChanged(bool enabled);
+    void tagError(const QString &error);
 
 public slots:
     void targetDetected(QNearFieldTarget *target);
@@ -84,6 +86,7 @@ public slots:
 
 private:
     QNearFieldManager *manager;
+    QNdefFilter messageFilter;
 };
 //! [0]
 
