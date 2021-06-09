@@ -74,6 +74,13 @@ AnnotatedUrl::AnnotatedUrl(QObject *parent)
             this, &AnnotatedUrl::targetLost);
     connect(manager, &QNearFieldManager::adapterStateChanged,
             this, &AnnotatedUrl::handleAdapterStateChange);
+
+//! [populateFilter]
+    messageFilter.setOrderMatch(false);
+    messageFilter.appendRecord<QNdefNfcTextRecord>(1, 100);
+    messageFilter.appendRecord<QNdefNfcUriRecord>(1, 1);
+    messageFilter.appendRecord(QNdefRecord::Mime, "", 0, 1);
+//! [populateFilter]
 }
 
 AnnotatedUrl::~AnnotatedUrl()
@@ -100,6 +107,8 @@ void AnnotatedUrl::targetDetected(QNearFieldTarget *target)
 
     connect(target, &QNearFieldTarget::ndefMessageRead,
             this, &AnnotatedUrl::handlePolledNdefMessage);
+    connect(target, &QNearFieldTarget::error, this,
+            [this]() { emit tagError("Tag read error"); });
     target->readNdefMessages();
 }
 
@@ -133,6 +142,13 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
 //! [handleMessage 1]
     Q_UNUSED(target);
 
+//! [handleMessage 2]
+    if (!messageFilter.match(message)) {
+        emit tagError("Invalid message format");
+        return;
+    }
+//! [handleMessage 2]
+
     enum {
         MatchedNone,
         MatchedFirst,
@@ -147,14 +163,14 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
     QUrl url;
     QPixmap pixmap;
 
-//! [handleMessage 2]
+//! [handleMessage 3]
     for (const QNdefRecord &record : message) {
         if (record.isRecordType<QNdefNfcTextRecord>()) {
             QNdefNfcTextRecord textRecord(record);
 
             title = textRecord.text();
             QLocale locale(textRecord.locale());
-//! [handleMessage 2]
+//! [handleMessage 3]
             // already found best match
             if (bestMatch == MatchedLanguageAndCountry) {
                 // do nothing
@@ -168,7 +184,7 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
             } else if (bestMatch == MatchedNone) {
                 bestMatch = MatchedFirst;
             }
-//! [handleMessage 3]
+//! [handleMessage 4]
         } else if (record.isRecordType<QNdefNfcUriRecord>()) {
             QNdefNfcUriRecord uriRecord(record);
 
@@ -177,10 +193,10 @@ void AnnotatedUrl::handleMessage(const QNdefMessage &message, QNearFieldTarget *
                    record.type().startsWith("image/")) {
             pixmap = QPixmap::fromImage(QImage::fromData(record.payload()));
         }
-//! [handleMessage 3]
 //! [handleMessage 4]
+//! [handleMessage 5]
     }
 
     emit annotatedUrl(url, title, pixmap);
 }
-//! [handleMessage 4]
+//! [handleMessage 5]
