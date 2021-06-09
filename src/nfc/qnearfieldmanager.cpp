@@ -214,9 +214,9 @@ bool QNearFieldManager::isEnabled() const
 /*!
     \since 5.12
 
-    Returns \c true if the underlying device has a NFC adapter; otherwise returns \c false.
-    If an \a accessMethod is given it returns only true if the NFC adapter supports the given
-    \a accessMethod.
+    Returns \c true if the underlying device has a NFC adapter; otherwise
+    returns \c false. If an \a accessMethod is given, the function returns
+    \c true only if the NFC adapter supports the given \a accessMethod.
 
     \sa isEnabled()
 */
@@ -231,7 +231,7 @@ bool QNearFieldManager::isSupported(QNearFieldTarget::AccessMethod accessMethod)
     \fn bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
 
     Starts detecting targets and returns \c true if target detection is
-    successfully started; otherwise returns false. Causes the targetDetected() signal to be emitted
+    successfully started; otherwise returns \c false. Causes the targetDetected() signal to be emitted
     when a target is within proximity. Only tags with the given \a accessMethod will be delivered.
     Active detection continues until \l stopTargetDetection() has been called.
 

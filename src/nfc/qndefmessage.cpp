@@ -253,10 +253,11 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 */
 
 /*!
-    Returns true if this NDEF message is equivalent to \a other; otherwise returns false.
+    Returns \c true if this NDEF message is equivalent to \a other; otherwise
+    returns \c false.
 
-    An empty message (i.e. isEmpty() returns true) is equivalent to a NDEF message containing a
-    single record of type QNdefRecord::Empty.
+    An empty message (i.e. isEmpty() returns \c true) is equivalent to a NDEF
+    message containing a single record of type \l QNdefRecord::Empty.
 */
 bool QNdefMessage::operator==(const QNdefMessage &other) const
 {

@@ -193,7 +193,7 @@ QNearFieldTarget::RequestId::~RequestId()
 }
 
 /*!
-    Returns true if this is a valid request id; otherwise returns false.
+    Returns \c true if this is a valid request id; otherwise returns \c false.
 */
 bool QNearFieldTarget::RequestId::isValid() const
 {
@@ -300,7 +300,8 @@ QNearFieldTarget::AccessMethods QNearFieldTarget::accessMethods() const
     QNearFieldTarget is destroyed. A connection to the target device is
     (re)created to process a command or read/write a NDEF messages.
 
-    Returns true only if an existing connection was successfully closed.
+    Returns \c true only if an existing connection was successfully closed;
+    otherwise returns \c false.
 */
 bool QNearFieldTarget::disconnect()
 {
@@ -310,8 +311,8 @@ bool QNearFieldTarget::disconnect()
 }
 
 /*!
-    Returns true if at least one NDEF message is stored on the near field target; otherwise returns
-    false.
+    Returns \c true if at least one NDEF message is stored on the near field
+    target; otherwise returns \c false.
 */
 bool QNearFieldTarget::hasNdefMessage()
 {
@@ -391,9 +392,9 @@ QNearFieldTarget::RequestId QNearFieldTarget::sendCommand(const QByteArray &comm
 }
 
 /*!
-    Waits up to \a msecs milliseconds for the request \a id to complete. Returns true if the
-    request completes successfully and the requestCompeted() signal is emitted; otherwise returns
-    false.
+    Waits up to \a msecs milliseconds for the request \a id to complete.
+    Returns \c true if the request completes successfully and the
+    requestCompeted() signal is emitted; otherwise returns \c false.
 */
 bool QNearFieldTarget::waitForRequestCompleted(const RequestId &id, int msecs)
 {
