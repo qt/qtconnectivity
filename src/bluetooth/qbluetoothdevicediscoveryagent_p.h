@@ -236,7 +236,7 @@ private:
 
 #endif // Q_OS_DARWIN
 
-    int lowEnergySearchTimeout = 25000;
+    int lowEnergySearchTimeout = 40000;
     QBluetoothDeviceDiscoveryAgent::DiscoveryMethods requestedMethods;
     QBluetoothDeviceDiscoveryAgent *q_ptr;
 };

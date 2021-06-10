@@ -259,6 +259,8 @@ QList<QBluetoothDeviceInfo> QBluetoothDeviceDiscoveryAgent::discoveredDevices() 
     the platform the classic search may add more time to the total discovery process
     beyond \a timeout.
 
+    For a reliable Bluetooth Low Energy discovery, use at least 40000 milliseconds.
+
     \sa lowEnergyDiscoveryTimeout()
     \since 5.8
  */

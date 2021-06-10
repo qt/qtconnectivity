@@ -62,7 +62,7 @@ Q_LOGGING_CATEGORY(QT_BT_DARWIN, "qt.bluetooth.darwin")
 
 namespace DarwinBluetooth {
 
-const int defaultLEScanTimeoutMS = 25000;
+const int defaultLEScanTimeoutMS = 40000;
 // We use it only on iOS for now:
 const int maxValueLength = 512;
 
