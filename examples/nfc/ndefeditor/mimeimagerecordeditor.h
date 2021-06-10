@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -48,7 +48,6 @@
 **
 ****************************************************************************/
 
-
 #ifndef MIMEIMAGERECORDEDITOR_H
 #define MIMEIMAGERECORDEDITOR_H
 
@@ -76,9 +75,20 @@ public:
     void setRecord(const QNdefRecord &record);
     QNdefRecord record() const;
 
+public slots:
+    void handleScreenOrientationChange(Qt::ScreenOrientation orientation);
+
+protected:
+    void resizeEvent(QResizeEvent *) override;
+
 private:
+    void updatePixmap();
+
     Ui::MimeImageRecordEditor *ui;
     QNdefRecord m_record;
+    QPixmap m_pixmap;
+    bool m_imageSelected = false;
+    bool m_screenRotated = false;
 
 private slots:
     void on_mimeImageOpen_clicked();

@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS Nfc)
 find_package(Qt6 COMPONENTS Widgets)
 
 qt_add_executable(ndefeditor
+    MANUAL_FINALIZATION
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
     mimeimagerecordeditor.cpp mimeimagerecordeditor.h mimeimagerecordeditor.ui
@@ -35,6 +36,15 @@ target_link_libraries(ndefeditor PUBLIC
     Qt::Nfc
     Qt::Widgets
 )
+
+if(ANDROID)
+    set_property(TARGET ndefeditor
+        APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+        ${CMAKE_CURRENT_SOURCE_DIR}/android
+    )
+endif()
+
+qt_finalize_target(ndefeditor)
 
 install(TARGETS ndefeditor
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
