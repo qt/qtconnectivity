@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include <QtCore/QLoggingCategory>
-#include <QtCore/private/qjnihelpers_p.h>
 #include <QtCore/qrandom.h>
 #include "localdevicebroadcastreceiver_p.h"
 #include "android/jni_android_p.h"

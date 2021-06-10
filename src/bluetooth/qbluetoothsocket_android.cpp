@@ -47,9 +47,7 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QThread>
 #include <QtCore/QTime>
-#include <QtCore/private/qjni_p.h>
 #include <QtCore/QJniEnvironment>
-#include <QtCore/private/qjnihelpers_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -220,7 +218,7 @@ bool QBluetoothSocketPrivateAndroid::fallBackConnect(QJniObject uuid, int channe
         return false;
     }
 
-    jclass classClass = QJNIEnvironmentPrivate::findClass("java/lang/Class");
+    jclass classClass = env.findClass("java/lang/Class");
     jobjectArray rawArray = env->NewObjectArray(1, classClass,
                                                 integerObject.object<jobject>());
     QJniObject paramTypes(rawArray);
@@ -271,7 +269,7 @@ bool QBluetoothSocketPrivateAndroid::fallBackConnect(QJniObject uuid, int channe
         return false;
     }
 
-    jclass objectClass = QJNIEnvironmentPrivate::findClass("java/lang/Object");
+    jclass objectClass = env.findClass("java/lang/Object");
     QJniObject channelObject = QJniObject::callStaticObjectMethod(
                                         "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", channel);
     rawArray = env->NewObjectArray(1, objectClass, channelObject.object<jobject>());

@@ -116,7 +116,7 @@ elseif(ANDROID AND NOT ANDROID_EMBEDDED)
         jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar:org.qtproject.qt.android.bluetooth.QtBluetoothBroadcastReceiver
     )
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_PERMISSIONS
-        android.permission.ACCESS_COARSE_LOCATION android.permission.ACCESS_FINE_LOCATION android.permission.BLUETOOTH android.permission.BLUETOOTH_ADMIN
+        android.permission.ACCESS_FINE_LOCATION android.permission.BLUETOOTH android.permission.BLUETOOTH_ADMIN
     )
 
     qt_internal_extend_target(Bluetooth

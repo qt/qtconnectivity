@@ -53,7 +53,6 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QReadWriteLock>
-#include <QtCore/private/qjnihelpers_p.h>
 #include <QtCore/QJniObject>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QLowEnergyController>
