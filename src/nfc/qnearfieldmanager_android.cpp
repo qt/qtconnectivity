@@ -51,7 +51,6 @@
 #include <QScopedPointer>
 #include <QtCore/QMetaType>
 #include <QtCore/QMetaMethod>
-#include <QtCore/private/qjnihelpers_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -41,7 +41,6 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QTimer>
-#include <QtCore/private/qjnihelpers_p.h>
 #include <QtCore/QJniEnvironment>
 #include <QtBluetooth/QBluetoothHostInfo>
 #include <QtBluetooth/QBluetoothLocalDevice>
