@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -67,6 +67,9 @@
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QScroller>
+#include <QtWidgets/QApplication>
+#include <QtGui/QScreen>
 
 class EmptyRecordLabel : public QLabel
 {
@@ -102,7 +105,7 @@ private:
     QNdefRecord m_record;
 };
 
-template <typename T>
+template<typename T>
 void addRecord(Ui::MainWindow *ui, const QNdefRecord &record = QNdefRecord())
 {
     QVBoxLayout *vbox = qobject_cast<QVBoxLayout *>(ui->scrollAreaWidgetContents->layout());
@@ -120,10 +123,10 @@ void addRecord(Ui::MainWindow *ui, const QNdefRecord &record = QNdefRecord())
     T *recordEditor = new T;
     recordEditor->setObjectName(QStringLiteral("record-editor"));
 
+    vbox->addWidget(recordEditor);
+
     if (!record.isEmpty())
         recordEditor->setRecord(record);
-
-    vbox->addWidget(recordEditor);
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -140,6 +143,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     QVBoxLayout *vbox = new QVBoxLayout;
     ui->scrollAreaWidgetContents->setLayout(vbox);
+#if (defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)) || defined(Q_OS_IOS)
+    QScroller::grabGesture(ui->scrollArea, QScroller::TouchGesture);
+    ui->scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+#endif
+
+    // Detect keyboard show/hide. We can't directly update the UI to ensure
+    // that the focused widget is active. Instead we wait for a resizeEvent
+    // that happens shortly after the keyboard is shown, and do all the
+    // processing there.
+    QInputMethod *inputMethod = qApp->inputMethod();
+    connect(inputMethod, &QInputMethod::visibleChanged,
+            [this, inputMethod]() { m_keyboardVisible = inputMethod->isVisible(); });
 
     //! [QNearFieldManager init]
     m_manager = new QNearFieldManager(this);
@@ -153,6 +169,20 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::resizeEvent(QResizeEvent *e)
+{
+    QMainWindow::resizeEvent(e);
+    if (m_keyboardVisible) {
+        QWidget *areaWidget = ui->scrollAreaWidgetContents;
+        QList<QWidget *> childWidgets = areaWidget->findChildren<QWidget *>();
+        for (const auto widget : childWidgets) {
+            if (widget->hasFocus()) {
+                ui->scrollArea->ensureWidgetVisible(widget);
+            }
+        }
+    }
 }
 
 void MainWindow::addNfcTextRecord()

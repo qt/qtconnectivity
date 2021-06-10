@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtNfc module of the Qt Toolkit.
@@ -54,6 +54,12 @@
 #include <QtGui/QImageReader>
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QBuffer>
+#include <QScreen>
+#include <QLayout>
+
+#if (defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)) || defined(Q_OS_IOS)
+#    define MOBILE_PLATFORM
+#endif
 
 static QString imageFormatToMimeType(const QByteArray &format)
 {
@@ -90,6 +96,10 @@ MimeImageRecordEditor::MimeImageRecordEditor(QWidget *parent) :
     ui(new Ui::MimeImageRecordEditor)
 {
     ui->setupUi(this);
+#ifdef MOBILE_PLATFORM
+    connect(screen(), &QScreen::orientationChanged, this,
+            &MimeImageRecordEditor::handleScreenOrientationChange);
+#endif
 }
 
 MimeImageRecordEditor::~MimeImageRecordEditor()
@@ -108,14 +118,70 @@ void MimeImageRecordEditor::setRecord(const QNdefRecord &record)
     QImageReader reader(&buffer);
 
     ui->mimeImageType->setText(imageFormatToMimeType(reader.format()));
-
-    ui->mimeImageImage->setPixmap(QPixmap::fromImage(reader.read()));
     ui->mimeImageFile->clear();
+
+    m_pixmap = QPixmap::fromImage(reader.read());
+    updatePixmap();
 }
 
 QNdefRecord MimeImageRecordEditor::record() const
 {
     return m_record;
+}
+
+void MimeImageRecordEditor::handleScreenOrientationChange(Qt::ScreenOrientation orientation)
+{
+    Q_UNUSED(orientation);
+#ifdef MOBILE_PLATFORM
+    if (m_imageSelected) {
+        ui->mimeImageImage->clear();
+        adjustSize();
+        m_screenRotated = true;
+    }
+#endif
+}
+
+void MimeImageRecordEditor::resizeEvent(QResizeEvent *)
+{
+    if (m_imageSelected) {
+#ifdef MOBILE_PLATFORM
+        if (m_screenRotated) {
+            updatePixmap();
+            m_screenRotated = false;
+        }
+#else
+        updatePixmap();
+#endif
+    }
+}
+
+void MimeImageRecordEditor::updatePixmap()
+{
+    // Calculate the desired width of the image. It's calculated based on the
+    // screen size minus the content margins.
+    const auto parentContentMargins = parentWidget()->layout()->contentsMargins();
+    const auto thisContentMargins = layout()->contentsMargins();
+#ifdef MOBILE_PLATFORM
+    // Because of QTBUG-94459 the screen size might be incorrect, so we check
+    // the orientation to find the actual width
+    const auto w = screen()->availableSize().width();
+    const auto h = screen()->availableSize().height();
+    const auto screenWidth =
+            (screen()->orientation() == Qt::PortraitOrientation) ? qMin(w, h) : qMax(w, h);
+#else
+    const auto screenWidth = width();
+#endif
+    const auto imageWidth = screenWidth - parentContentMargins.right() - parentContentMargins.left()
+            - thisContentMargins.right() - thisContentMargins.left();
+
+    if (!m_pixmap.isNull()) {
+        if (m_pixmap.width() > imageWidth)
+            ui->mimeImageImage->setPixmap(m_pixmap.scaledToWidth(imageWidth));
+        else
+            ui->mimeImageImage->setPixmap(m_pixmap);
+    } else {
+        ui->mimeImageImage->setText("Can't show the image");
+    }
 }
 
 void MimeImageRecordEditor::on_mimeImageOpen_clicked()
@@ -139,10 +205,11 @@ void MimeImageRecordEditor::on_mimeImageOpen_clicked()
     QString mimeType = imageFormatToMimeType(reader.format());
     ui->mimeImageType->setText(mimeType);
 
-    QImage image = reader.read();
-
     ui->mimeImageFile->setText(mimeDataFile);
-    ui->mimeImageImage->setPixmap(QPixmap::fromImage(image));
+    const QImage image = reader.read();
+    m_pixmap = QPixmap::fromImage(image);
+    m_imageSelected = true;
+    updatePixmap();
 
     m_record.setTypeNameFormat(QNdefRecord::Mime);
     m_record.setType(mimeType.toLatin1());
