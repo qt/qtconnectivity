@@ -15,3 +15,5 @@ install_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc
     DESTINATION jar
     COMPONENT Devel
 )
+
+add_dependencies(Nfc Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc)

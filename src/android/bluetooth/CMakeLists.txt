@@ -18,3 +18,5 @@ install_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth
     DESTINATION jar
     COMPONENT Devel
 )
+
+add_dependencies(Bluetooth Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth)
