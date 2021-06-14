@@ -156,6 +156,7 @@ dispatch_queue_t qt_LE_queue();
 
 extern const int defaultLEScanTimeoutMS;
 extern const int maxValueLength;
+extern const int defaultMtu;
 
 } // namespace DarwinBluetooth
 

@@ -180,6 +180,7 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     std::vector<DarwinBluetooth::GCDTimer> timeoutWatchdogs;
 
     CBPeripheral *peripheral;
+    int lastKnownMtu;
 }
 
 - (id)initWith:(DarwinBluetooth::LECBManagerNotifier *)aNotifier
@@ -206,6 +207,8 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
 
         if (!timeoutMS)
             timeoutMS = 20000;
+
+        lastKnownMtu = defaultMtu;
     }
 
     return self;
@@ -414,6 +417,7 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
         if (notifier)
             emit notifier->connected();
     } else {
+        [self setMtu:defaultMtu];
         qCDebug(QT_BT_DARWIN) << "trying to connect";
         managerState = CentralManagerConnecting;
         [manager connectPeripheral:peripheral options:nil];
@@ -852,6 +856,35 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
             }
         }
     }
+}
+
+- (void)setMtu:(int)newMtu
+{
+    if (lastKnownMtu == newMtu)
+        return;
+    lastKnownMtu = newMtu;
+    if (notifier)
+        emit notifier->mtuChanged(newMtu);
+}
+
+- (int)mtu
+{
+    using namespace DarwinBluetooth;
+
+    if (![self isConnected]) {
+        [self setMtu:defaultMtu];
+        return defaultMtu;
+    }
+
+    Q_ASSERT(peripheral);
+    const NSUInteger maxLen = [peripheral maximumWriteValueLengthForType:
+                                          CBCharacteristicWriteWithoutResponse];
+    if (maxLen > std::numeric_limits<int>::max() - 3)
+        [self setMtu:defaultMtu];
+    else
+        [self setMtu:int(maxLen) + 3];
+
+    return lastKnownMtu;
 }
 
 - (void)setNotifyValue:(const QByteArray &)value
@@ -1303,6 +1336,8 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
         return;
     }
 
+    void([self mtu]);
+
     managerState = DarwinBluetooth::CentralManagerIdle;
     if (notifier)
         emit notifier->connected();
@@ -1332,6 +1367,7 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     Q_UNUSED(central);
     Q_UNUSED(aPeripheral);
 
+    [self setMtu:DarwinBluetooth::defaultMtu];
     // Clear internal caches/data.
     [self reset];
 
