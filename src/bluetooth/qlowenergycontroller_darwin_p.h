@@ -117,6 +117,7 @@ private Q_SLOTS:
     void _q_connected();
     void _q_disconnected();
 
+    void _q_mtuChanged(int newValue);
     void _q_serviceDiscoveryFinished();
     void _q_serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
     void _q_servicesWereModified();

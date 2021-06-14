@@ -150,6 +150,8 @@ QT_END_NAMESPACE
 - (void)discoverServiceDetails:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid
         readValues:(bool)read;
 
+- (int)mtu;
+
 - (void)setNotifyValue:(const QT_PREPEND_NAMESPACE(QByteArray) &)value
         forCharacteristic:(QT_PREPEND_NAMESPACE(QLowEnergyHandle))charHandle
         onService:(const QT_PREPEND_NAMESPACE(QBluetoothUuid) &)serviceUuid;

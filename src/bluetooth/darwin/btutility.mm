@@ -66,6 +66,8 @@ const int defaultLEScanTimeoutMS = 40000;
 // We use it only on iOS for now:
 const int maxValueLength = 512;
 
+const int defaultMtu = 23;
+
 QString qt_address(NSString *address)
 {
     if (address && address.length) {

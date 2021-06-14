@@ -81,6 +81,8 @@ Q_SIGNALS:
     void connected();
     void disconnected();
 
+    void mtuChanged(int newValue);
+
     void serviceDiscoveryFinished();
     void serviceDetailsDiscoveryFinished(QSharedPointer<QLowEnergyServicePrivate> service);
     void characteristicRead(QLowEnergyHandle charHandle, const QByteArray &value);

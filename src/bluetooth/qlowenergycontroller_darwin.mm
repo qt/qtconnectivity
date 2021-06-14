@@ -331,8 +331,15 @@ void QLowEnergyControllerPrivateDarwin::addToGenericAttributeList(const QLowEner
 
 int QLowEnergyControllerPrivateDarwin::mtu() const
 {
-    // not supported yet
-    return -1;
+    __block int mtu = DarwinBluetooth::defaultMtu;
+    if (const auto leQueue = DarwinBluetooth::qt_LE_queue()) {
+        const auto *manager = centralManager.getAs<ObjCCentralManager>();
+        dispatch_sync(leQueue, ^{
+            mtu = [manager mtu];
+        });
+    }
+
+    return mtu;
 }
 
 QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QLowEnergyServiceData &service)
@@ -385,6 +392,11 @@ void QLowEnergyControllerPrivateDarwin::_q_disconnected()
 
     setState(QLowEnergyController::UnconnectedState);
     emit q_ptr->disconnected();
+}
+
+void QLowEnergyControllerPrivateDarwin::_q_mtuChanged(int newValue)
+{
+    emit q_ptr->mtuChanged(newValue);
 }
 
 void QLowEnergyControllerPrivateDarwin::_q_serviceDiscoveryFinished()
@@ -1030,6 +1042,8 @@ bool QLowEnergyControllerPrivateDarwin::connectSlots(DarwinBluetooth::LECBManage
                        this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyController::Error)));
     ok = ok && connect(notifier, SIGNAL(CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)),
                        this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)));
+    ok = ok && connect(notifier, &LECBManagerNotifier::mtuChanged, this,
+                       &QLowEnergyControllerPrivateDarwin::_q_mtuChanged);
 
     if (!ok)
         notifier->disconnect();
