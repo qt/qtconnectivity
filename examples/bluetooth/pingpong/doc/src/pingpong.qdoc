@@ -34,7 +34,7 @@
     Bluetooth devices. The basic concept is the ping pong game where two players
     communicate via sockets.
 
-    \image intro.png
+    \image qmlpingpong_intro.png
 
     \include examples-run.qdocinc
 
