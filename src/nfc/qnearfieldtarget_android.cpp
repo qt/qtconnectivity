@@ -318,7 +318,7 @@ void QNearFieldTargetPrivateImpl::setIntent(QJniObject intent)
 
 void QNearFieldTargetPrivateImpl::checkIsTargetLost()
 {
-    if (!targetIntent.isValid() || !setTagTechnology(techList)) {
+    if (!targetIntent.isValid() || !setTagTechnology({selectedTech})) {
         handleTargetLost();
         return;
     }
@@ -327,7 +327,7 @@ void QNearFieldTargetPrivateImpl::checkIsTargetLost()
     bool connected = false;
     auto methodId = env.findMethod(tagTech.objectClass(), "isConnected", "()Z");
     if (methodId)
-        env->CallBooleanMethod(tagTech.object(), methodId);
+        connected = env->CallBooleanMethod(tagTech.object(), methodId);
     if (!methodId || env.checkAndClearExceptions()) {
         handleTargetLost();
         return;
