@@ -806,67 +806,6 @@ int QBluetoothSocket::socketDescriptor() const
     return d->socket;
 }
 
-
-
-#ifndef QT_NO_DEBUG_STREAM
-QDebug QBluetoothSocket::streamingoperator(QDebug debug, QBluetoothSocket::SocketError error)
-{
-    switch (error) {
-    case QBluetoothSocket::SocketError::UnknownSocketError:
-        debug << "QBluetoothSocket::SocketError::UnknownSocketError";
-        break;
-    case QBluetoothSocket::SocketError::HostNotFoundError:
-        debug << "QBluetoothSocket::SocketError::HostNotFoundError";
-        break;
-    case QBluetoothSocket::SocketError::RemoteHostClosedError:
-        debug << "QBluetoothSocket::SocketError::RemoteHostClosedError";
-        break;
-    case QBluetoothSocket::SocketError::ServiceNotFoundError:
-        debug << "QBluetoothSocket::SocketError::ServiceNotFoundError";
-        break;
-    case QBluetoothSocket::SocketError::NetworkError:
-        debug << "QBluetoothSocket::SocketError::NetworkError";
-        break;
-    case QBluetoothSocket::SocketError::UnsupportedProtocolError:
-        debug << "QBluetoothSocket::SocketError::UnsupportedProtocolError";
-        break;
-    default:
-        debug << "QBluetoothSocket::SocketError(" << (int)error << ")";
-    }
-    return debug;
-}
-
-QDebug QBluetoothSocket::streamingoperator(QDebug debug, QBluetoothSocket::SocketState state)
-{
-    switch (state) {
-    case QBluetoothSocket::SocketState::UnconnectedState:
-        debug << "QBluetoothSocket::SocketState::UnconnectedState";
-        break;
-    case QBluetoothSocket::SocketState::ConnectingState:
-        debug << "QBluetoothSocket::SocketState::ConnectingState";
-        break;
-    case QBluetoothSocket::SocketState::ConnectedState:
-        debug << "QBluetoothSocket::SocketState::ConnectedState";
-        break;
-    case QBluetoothSocket::SocketState::BoundState:
-        debug << "QBluetoothSocket::SocketState::BoundState";
-        break;
-    case QBluetoothSocket::SocketState::ClosingState:
-        debug << "QBluetoothSocket::SocketState::ClosingState";
-        break;
-    case QBluetoothSocket::SocketState::ListeningState:
-        debug << "QBluetoothSocket::SocketState::ListeningState";
-        break;
-    case QBluetoothSocket::SocketState::ServiceLookupState:
-        debug << "QBluetoothSocket::SocketState::ServiceLookupState";
-        break;
-    default:
-        debug << "QBluetoothSocket::SocketState(" << (int)state << ")";
-    }
-    return debug;
-}
-#endif
-
 QT_END_NAMESPACE
 
 #include "moc_qbluetoothsocket.cpp"
