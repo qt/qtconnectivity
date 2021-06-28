@@ -41,19 +41,6 @@
 #define QTNFC_H
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#    if defined(QT_BUILD_NFC_LIB)
-#      define Q_NFC_EXPORT Q_DECL_EXPORT
-#    else
-#      define Q_NFC_EXPORT Q_DECL_IMPORT
-#    endif
-#else
-#    define Q_NFC_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtNfc/qtnfcexports.h>
 
 #endif // QTNFC_H

@@ -18,6 +18,7 @@ qt_internal_add_module(Nfc
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Network
+    GENERATE_CPP_EXPORTS
 )
 
 #### Keys ignored in scope 1:.:.:nfc.pro:<TRUE>:

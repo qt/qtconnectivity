@@ -41,19 +41,6 @@
 
 #include <QtCore/qglobal.h>
 #include <QtBluetooth/qtbluetooth-config.h> // for feature detection
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#    if defined(QT_BUILD_BLUETOOTH_LIB)
-#      define Q_BLUETOOTH_EXPORT Q_DECL_EXPORT
-#    else
-#      define Q_BLUETOOTH_EXPORT Q_DECL_IMPORT
-#    endif
-#else
-#    define Q_BLUETOOTH_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtBluetooth/qtbluetoothexports.h>
 
 #endif // QTBLUETOOTH_H
