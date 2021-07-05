@@ -1367,7 +1367,6 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     Q_UNUSED(central);
     Q_UNUSED(aPeripheral);
 
-    [self setMtu:DarwinBluetooth::defaultMtu];
     // Clear internal caches/data.
     [self reset];
 
