@@ -62,12 +62,15 @@ endif()
 qt_internal_extend_target(Nfc CONDITION IOS
     SOURCES
         ios/qiostagreaderdelegate.mm ios/qiostagreaderdelegate_p.h
+        ios/qiosnfcndefsessiondelegate.mm ios/qiosnfcndefsessiondelegate_p.h
+        ios/qiosndefnotifier.cpp ios/qiosndefnotifier_p.h
         qnearfieldmanager_ios.mm qnearfieldmanager_ios_p.h
         qnearfieldtarget_ios.mm qnearfieldtarget_ios_p.h
     DEFINES
         IOS_NFC
     LIBRARIES
         ${FWCoreNFC}
+        Qt::CorePrivate
 )
 
 if(QT_FEATURE_pcsclite)

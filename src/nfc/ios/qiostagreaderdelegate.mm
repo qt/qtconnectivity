@@ -81,7 +81,7 @@ QT_USE_NAMESPACE
     if (self.sessionStoppedByApplication) {
         self.sessionStoppedByApplication = false;
         return;
-   }
+    }
 
     const bool doRestart =
         !(error.code == NFCReaderError::NFCReaderSessionInvalidationErrorUserCanceled
@@ -103,9 +103,8 @@ QT_USE_NAMESPACE
         }
     }
 
-    if (!foundTag) {
+    if (!foundTag)
         [session restartPolling];
-    }
 }
 
 @end

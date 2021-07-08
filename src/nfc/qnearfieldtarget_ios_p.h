@@ -16,10 +16,15 @@
 //
 
 #include "qnearfieldtarget_p.h"
+#include "qnearfieldtarget.h"
+
+#include "qndefmessage.h"
 
 #include <QQueue>
 #include <QTimer>
+
 #include <memory>
+#include <deque>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,10 +39,23 @@ class ResponseProvider : public QObject
         void responseReceived(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer);
 };
 
-struct NfcTagDeleter
+struct NfcDeleter
 {
     void operator()(void *tag);
 };
+
+struct NdefOperation
+{
+    enum Type {
+        Read,
+        Write
+    } type = Read;
+
+    QNearFieldTarget::RequestId requestId;
+    QNdefMessage message;
+};
+
+class QNfcNdefNotifier;
 
 class QNearFieldTargetPrivateImpl : public QNearFieldTargetPrivate
 {
@@ -45,6 +63,7 @@ class QNearFieldTargetPrivateImpl : public QNearFieldTargetPrivate
 
 public:
     QNearFieldTargetPrivateImpl(void *tag, QObject *parent = nullptr);
+    QNearFieldTargetPrivateImpl(void *sessionDelegate, void *tag, QObject *parent = nullptr);
     ~QNearFieldTargetPrivateImpl() override;
     void invalidate();
 
@@ -55,25 +74,44 @@ public:
     int maxCommandLength() const override;
     QNearFieldTarget::RequestId sendCommand(const QByteArray &command) override;
 
+    // NdefAccess
+    bool hasNdefMessage() override;
+    QNearFieldTarget::RequestId readNdefMessages() override;
+    QNearFieldTarget::RequestId writeNdefMessages(const QList<QNdefMessage> &messages) override;
+
+
     bool isAvailable() const;
 
 Q_SIGNALS:
     void targetLost(QNearFieldTargetPrivateImpl *target);
 
 private:
-    std::unique_ptr<void, NfcTagDeleter> nfcTag;
+    std::unique_ptr<void, NfcDeleter> nfcTag;
+
+    // Owned by the near field manager.
+    void *sessionDelegate = nil;
+    // Owned by the session delegate.
+    QNfcNdefNotifier *notifier = nullptr;
+    bool hasNDEFMessage = false;
+
     bool connected = false;
     QTimer targetCheckTimer;
     QNearFieldTarget::RequestId requestInProgress;
     QQueue<std::pair<QNearFieldTarget::RequestId, QByteArray>> queue;
+    std::deque<NdefOperation> ndefOperations;
 
     bool connect();
+
+    bool isNdefTag() const;
 
 private Q_SLOTS:
     void onTargetCheck();
     void onTargetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
     void onExecuteRequest();
     void onResponseReceived(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer);
+    // NDEF:
+    void messageRead(const QNdefMessage &ndefMessage, QNearFieldTarget::RequestId request);
+    void messageWritten(QNearFieldTarget::RequestId request);
 };
 
 QT_END_NAMESPACE

@@ -203,6 +203,9 @@ bool QNearFieldManager::isSupported(QNearFieldTarget::AccessMethod accessMethod)
 
     To detect targets with a different \a accessMethod, stopTargetDetection() must be called first.
 
+    \note On iOS it is impossible to start target detection for both NdefAccess and TagTypeSpecificAccess
+    at the same time. So if AnyAccess is selected, NdefAccess will be used instead.
+
     \sa stopTargetDetection()
 */
 bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
@@ -215,6 +218,9 @@ bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod acce
 /*!
     Stops detecting targets. The \l targetDetected() signal will no longer be emitted until another
     call to \l startTargetDetection() is made. Targets detected before are still valid.
+
+    \note On iOS, detected targets become invalid after this call (e.g. an attempt to write or
+    read NDEF messages will result in an error).
 
     If an \a errorMessage is provided, this is a hint to the system that the goal, the application
     had, was not reached. The \a errorMessage and a matching error icon are shown to the user.

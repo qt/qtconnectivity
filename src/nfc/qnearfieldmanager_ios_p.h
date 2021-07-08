@@ -14,6 +14,7 @@
 //
 // We mean it.
 //
+#include <QtCore/private/qcore_mac_p.h>
 
 #include "qnearfieldmanager_p.h"
 
@@ -22,6 +23,9 @@
 #import <os/availability.h>
 
 Q_FORWARD_DECLARE_OBJC_CLASS(QT_MANGLE_NAMESPACE(QIosTagReaderDelegate));
+
+Q_FORWARD_DECLARE_OBJC_CLASS(QT_MANGLE_NAMESPACE(QIosNfcNdefSessionDelegate));
+QT_NAMESPACE_ALIAS_OBJC_CLASS(QIosNfcNdefSessionDelegate);
 
 QT_BEGIN_NAMESPACE
 
@@ -53,12 +57,16 @@ Q_SIGNALS:
 
 private:
     QT_MANGLE_NAMESPACE(QIosTagReaderDelegate) *delegate API_AVAILABLE(ios(13.0)) = nullptr;
+    QIosNfcNdefSessionDelegate *ndefDelegate = nullptr;
     bool detectionRunning = false;
     bool isRestarting = false;
     QList<QNearFieldTargetPrivateImpl *> detectedTargets;
+    QNearFieldTarget::AccessMethod activeAccessMethod = QNearFieldTarget::UnknownAccess;
 
     void startSession();
+    bool startNdefSession();
     void stopSession(const QString &error);
+    void stopNdefSession(const QString &error);
     void clearTargets();
 
 private Q_SLOTS:

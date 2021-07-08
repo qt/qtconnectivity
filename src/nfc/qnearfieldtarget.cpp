@@ -230,6 +230,11 @@ QNearFieldTarget::~QNearFieldTarget()
 
 /*!
     Returns the UID of the near field target.
+
+    \note On iOS, this function returns an empty QByteArray for
+    a near field target discovered using NdefAccess method.
+
+    \sa QNearFieldTarget::AccessMethod
 */
 QByteArray QNearFieldTarget::uid() const
 {
@@ -249,7 +254,7 @@ QNearFieldTarget::Type QNearFieldTarget::type() const
 }
 
 /*!
-    Returns the access methods support by this near field target.
+    Returns the access methods supported by this near field target.
 */
 QNearFieldTarget::AccessMethods QNearFieldTarget::accessMethods() const
 {
