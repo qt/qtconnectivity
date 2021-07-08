@@ -142,8 +142,6 @@ using ValueRange = QPair<NSUInteger, NSUInteger>;
 
 // CBPeripheralManagerDelegate's callbacks (BTLE queue).
 - (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral;
-- (void)peripheralManager:(CBPeripheralManager *)peripheral
-        willRestoreState:(NSDictionary *)dict;
 - (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral
         error:(NSError *)error;
 - (void)peripheralManager:(CBPeripheralManager *)peripheral

@@ -469,14 +469,6 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 #pragma clang diagnostic pop
 }
 
-- (void)peripheralManager:(CBPeripheralManager *)peripheral
-        willRestoreState:(NSDictionary *)dict
-{
-    Q_UNUSED(peripheral);
-    Q_UNUSED(dict);
-    // NOOP atm.
-}
-
 - (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral
         error:(NSError *)error
 {
