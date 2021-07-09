@@ -198,18 +198,15 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         if (QtAndroid::androidSdkVersion() >= 28) {
             locationTurnedOn = bool(locService.callMethod<jboolean>("isLocationEnabled"));
         } else {
-            // try GPS and network provider
-            QAndroidJniObject provider = QAndroidJniObject::getStaticObjectField(
-                        "android/location/LocationManager", "GPS_PROVIDER", "Ljava/lang/String;");
-            bool gpsTurnedOn = bool(locService.callMethod<jboolean>("isProviderEnabled",
-                                      "(Ljava/lang/String;)Z", provider.object<jstring>()));
+            // check whether there is any enabled provider
+            QAndroidJniObject listOfEnabledProviders =
+                    locService.callObjectMethod("getProviders", "(Z)Ljava/util/List;", true);
 
-            provider = QAndroidJniObject::getStaticObjectField(
-                       "android/location/LocationManager", "NETWORK_PROVIDER", "Ljava/lang/String;");
-            bool providerTurnedOn = bool(locService.callMethod<jboolean>("isProviderEnabled",
-                                          "(Ljava/lang/String;)Z", provider.object<jstring>()));
-
-            locationTurnedOn = gpsTurnedOn || providerTurnedOn;
+            if (listOfEnabledProviders.isValid()) {
+                int size = listOfEnabledProviders.callMethod<jint>("size", "()I");
+                locationTurnedOn = size > 0;
+                qCDebug(QT_BT_ANDROID) << size << "enabled location providers detected.";
+            }
         }
     }
 
