@@ -10,6 +10,7 @@ endif()
 qt_get_tool_target_name(target_name sdpscanner)
 qt_internal_add_tool(${target_name}
     TOOLS_TARGET Bluetooth
+    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
