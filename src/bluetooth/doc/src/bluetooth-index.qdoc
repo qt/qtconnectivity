@@ -190,6 +190,11 @@ A quick way to enable all QtBluetooth logging is to add the following line to th
     \endlist
 \endlist
 
+\section1 Module Evolution
+
+\l{Changes to Qt Bluetooth} lists important changes in the module
+API and functionality that were done for the Qt 6 series of Qt.
+
 \section1 Licenses and Attributions
 
 Qt Bluetooth is available under commercial licenses from \l{The Qt Company}.
