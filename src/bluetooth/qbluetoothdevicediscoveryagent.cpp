@@ -100,6 +100,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                     Bluetooth device search at all. This value was introduced by Qt 5.5.
     \value UnsupportedDiscoveryMethod   One of the requested discovery methods is not supported by
                                         the current platform. This value was introduced by Qt 5.8.
+    \value LocationServiceTurnedOffError    The location service is turned off. Usage of
+                                            Bluetooth APIs is not possible when location service
+                                            is turned off. This value was introduced by Qt 6.2.
     \value UnknownError     An unknown error has occurred.
 */
 
