@@ -180,7 +180,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     if (!locationTurnedOn) {
         qCWarning(QT_BT_ANDROID) << "Search not possible due to turned off Location service";
-        lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+        lastError = QBluetoothDeviceDiscoveryAgent::LocationServiceTurnedOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Location service turned off. Search is not possible.");
         emit q->errorOccurred(lastError);
         return;
