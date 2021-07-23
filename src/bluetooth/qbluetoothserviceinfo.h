@@ -151,9 +151,9 @@ private:
 #ifndef QT_NO_DEBUG_STREAM
     friend QDebug operator<<(QDebug d, const QBluetoothServiceInfo &i)
     {
-        return streamingoperator(d, i);
+        return streamingOperator(d, i);
     }
-    static QDebug streamingoperator(QDebug, const QBluetoothServiceInfo &);
+    static QDebug streamingOperator(QDebug, const QBluetoothServiceInfo &);
 #endif
 protected:
     QSharedPointer<QBluetoothServiceInfoPrivate> d_ptr;

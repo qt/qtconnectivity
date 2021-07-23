@@ -396,9 +396,9 @@ public:
 #ifndef QT_NO_DEBUG_STREAM
     friend QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
     {
-        return streamingoperator(debug, uuid);
+        return streamingOperator(debug, uuid);
     }
-    static QDebug streamingoperator(QDebug debug, const QBluetoothUuid &uuid);
+    static QDebug streamingOperator(QDebug debug, const QBluetoothUuid &uuid);
 #endif
 
     int minimumSize() const;

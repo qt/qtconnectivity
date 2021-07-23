@@ -637,7 +637,7 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
 }
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug QBluetoothServiceInfo::streamingoperator(QDebug dbg, const QBluetoothServiceInfo &info)
+QDebug QBluetoothServiceInfo::streamingOperator(QDebug dbg, const QBluetoothServiceInfo &info)
 {
     QDebugStateSaver saver(dbg);
     dbg.noquote() << "\n";

@@ -182,7 +182,7 @@ QString QBluetoothAddress::toString() const
 */
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug QBluetoothAddress::streamingoperator(QDebug debug, const QBluetoothAddress &address)
+QDebug QBluetoothAddress::streamingOperator(QDebug debug, const QBluetoothAddress &address)
 {
     debug << address.toString();
     return debug;

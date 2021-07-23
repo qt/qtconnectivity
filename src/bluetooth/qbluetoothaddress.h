@@ -85,9 +85,9 @@ private:
 #ifndef QT_NO_DEBUG_STREAM
     friend QDebug operator<<(QDebug d, const QBluetoothAddress &a)
     {
-        return streamingoperator(d, a);
+        return streamingOperator(d, a);
     }
-    static QDebug streamingoperator(QDebug, const QBluetoothAddress &address);
+    static QDebug streamingOperator(QDebug, const QBluetoothAddress &address);
 #endif
 };
 
