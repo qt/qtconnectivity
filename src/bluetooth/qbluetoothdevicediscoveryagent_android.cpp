@@ -45,6 +45,7 @@
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include "android/devicediscoverybroadcastreceiver_p.h"
 #include <QtCore/QJniEnvironment>
+#include <QtCore/private/qandroidextras_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -137,11 +138,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
-    auto precisePermission = QPermission::PreciseLocation;
-    auto preciseCheckRes = QCoreApplication::checkPermission(precisePermission).result();
-    if (preciseCheckRes != QPermission::Authorized) {
-        auto preciseRequestRes = QCoreApplication::requestPermission(precisePermission).result();
-        if (preciseRequestRes != QPermission::Authorized) {
+    auto precisePermission = QtAndroidPrivate::PreciseLocation;
+    auto preciseCheckRes = QtAndroidPrivate::checkPermission(precisePermission).result();
+    if (preciseCheckRes != QtAndroidPrivate::Authorized) {
+        auto preciseRequestRes = QtAndroidPrivate::requestPermission(precisePermission).result();
+        if (preciseRequestRes != QtAndroidPrivate::Authorized) {
             qCWarning(QT_BT_ANDROID) <<
                 "Search not possible due to missing permission (ACCESS_FINE_LOCATION)";
             errorString = QBluetoothDeviceDiscoveryAgent::tr(
