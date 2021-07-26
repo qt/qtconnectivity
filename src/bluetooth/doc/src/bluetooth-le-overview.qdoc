@@ -120,7 +120,7 @@ Low Energy devices.
     \row
         \li 0x0004
         \li 0x2803
-        \li UUID 0x2A08, Value handle: 0x0006
+        \li UUID 0x2A08, Value handle: 0x0005
         \li Characteristic of type Date Time
     \row
         \li 0x0005
