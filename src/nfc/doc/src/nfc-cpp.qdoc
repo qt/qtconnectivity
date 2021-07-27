@@ -29,6 +29,7 @@
 
 \module QtNfc
 \ingroup modules
+\qtcmakepackage Nfc
 \qtvariable nfc
 
 \title Qt NFC C++ Classes
