@@ -212,14 +212,14 @@ bool TestQLowEnergyControllerGattServer::checkCmacSupport(const quint128& csrk)
             if (setsockopt(testSocket, 279 /* SOL_ALG */, ALG_SET_KEY, csrkMsb.data, sizeof csrkMsb) != -1) {
                  retval = true;
             } else {
-                 QWARN("Needed socket options (SOL_ALG) not available");
+                 qWarning("Needed socket options (SOL_ALG) not available");
             }
         } else {
-            QWARN("bind() failed for crypto socket:");
+            qWarning("bind() failed for crypto socket:");
         }
         close(testSocket);
     } else {
-         QWARN("Unable to create test socket");
+         qWarning("Unable to create test socket");
     }
 #endif
     return retval;
