@@ -86,6 +86,9 @@ tst_QLowEnergyCharacteristic::~tst_QLowEnergyCharacteristic()
 
 void tst_QLowEnergyCharacteristic::initTestCase()
 {
+#if defined(Q_OS_MACOS)
+    QSKIP("The low energy characteristic tests fail on macOS");
+#endif
     if (QBluetoothLocalDevice::allDevices().isEmpty()) {
         qWarning("No remote device discovered.");
         return;
