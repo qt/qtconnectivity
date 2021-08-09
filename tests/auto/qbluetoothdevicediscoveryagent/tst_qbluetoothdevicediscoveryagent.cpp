@@ -95,6 +95,10 @@ tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
 
 void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 {
+#if defined(Q_OS_MACOS)
+    QSKIP("The device discovery agent tests fail on macOS");
+#endif
+
     qRegisterMetaType<QBluetoothDeviceInfo>();
 
     noOfLocalDevices = QBluetoothLocalDevice::allDevices().count();

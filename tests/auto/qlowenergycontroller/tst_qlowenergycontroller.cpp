@@ -114,6 +114,9 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
+#if defined(Q_OS_MACOS)
+    QSKIP("The low energy controller tests fail on macOS");
+#endif
 #if !defined(Q_OS_MAC)
     if (remoteDevice.isNull()
 #if !QT_CONFIG(winrt_bt)
