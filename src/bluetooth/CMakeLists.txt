@@ -54,26 +54,22 @@ qt_internal_add_module(Bluetooth
 if(QT_FEATURE_bluez)
     qt_internal_extend_target(Bluetooth
         SOURCES
-            bluez/adapter.cpp bluez/adapter_p.h
             bluez/adapter1_bluez5.cpp bluez/adapter1_bluez5_p.h
             bluez/battery1.cpp bluez/battery1_p.h
             bluez/bluetoothmanagement.cpp bluez/bluetoothmanagement_p.h
             bluez/bluez5_helper.cpp bluez/bluez5_helper_p.h
             bluez/bluez_data_p.h
-            bluez/device.cpp bluez/device_p.h
             bluez/device1_bluez5.cpp bluez/device1_bluez5_p.h
             bluez/gattchar1.cpp bluez/gattchar1_p.h
             bluez/gattdesc1.cpp bluez/gattdesc1_p.h
             bluez/gattservice1.cpp bluez/gattservice1_p.h
             bluez/hcimanager.cpp bluez/hcimanager_p.h
-            bluez/manager.cpp bluez/manager_p.h
             bluez/objectmanager.cpp bluez/objectmanager_p.h
             bluez/profile1.cpp bluez/profile1_p.h
             bluez/profile1context.cpp bluez/profile1context_p.h
             bluez/profilemanager1.cpp bluez/profilemanager1_p.h
             bluez/properties.cpp bluez/properties_p.h
             bluez/remotedevicemanager.cpp bluez/remotedevicemanager_p.h
-            bluez/service.cpp bluez/service_p.h
             bluez/servicemap.cpp bluez/servicemap_p.h
             qbluetoothdevicediscoveryagent_bluez.cpp
             qbluetoothlocaldevice_bluez.cpp

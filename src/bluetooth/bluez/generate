@@ -1,11 +1,5 @@
 #!/bin/sh
 
-#Bluez 4
-qdbusxml2cpp -p manager_p.h:manager.cpp org.bluez.Manager.xml org.bluez.Manager
-qdbusxml2cpp -p adapter_p.h:adapter.cpp org.bluez.all.xml org.bluez.Adapter
-qdbusxml2cpp -i servicemap_p.h -p device_p.h:device.cpp org.bluez.Device.xml org.bluez.Device
-qdbusxml2cpp -p service_p.h:service.cpp org.bluez.all.xml org.bluez.Service
-
 #Bluez 5
 qdbusxml2cpp -p adapter1_bluez5_p.h:adapter1_bluez5.cpp org.bluez.Adapter1.xml
 qdbusxml2cpp -i bluez5_helper_p.h -p device1_bluez5_p.h:device1_bluez5.cpp org.bluez.Device1.xml

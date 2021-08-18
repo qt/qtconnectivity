@@ -50,11 +50,6 @@
 #include "bluez/bluez5_helper_p.h"
 #include "bluez/bluetoothmanagement_p.h"
 
-// Bluez 4
-#include "bluez/adapter_p.h"
-#include "bluez/device_p.h"
-#include "bluez/manager_p.h"
-
 #include <QtCore/QFileInfo>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QSettings>

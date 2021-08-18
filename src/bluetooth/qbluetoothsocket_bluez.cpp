@@ -41,9 +41,6 @@
 #include "qbluetoothsocket_bluez_p.h"
 #include "qbluetoothdeviceinfo.h"
 
-#include "bluez/manager_p.h"
-#include "bluez/adapter_p.h"
-#include "bluez/device_p.h"
 #include "bluez/objectmanager_p.h"
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include "bluez/bluez_data_p.h"

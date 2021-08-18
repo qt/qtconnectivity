@@ -40,9 +40,6 @@
 #include "qbluetoothservicediscoveryagent.h"
 #include "qbluetoothservicediscoveryagent_p.h"
 
-#include "bluez/manager_p.h"
-#include "bluez/adapter_p.h"
-#include "bluez/device_p.h"
 #include "bluez/bluez5_helper_p.h"
 #include "bluez/objectmanager_p.h"
 #include "bluez/adapter1_bluez5_p.h"
