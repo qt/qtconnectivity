@@ -56,7 +56,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 typedef enum Bluez5TestResultType
 {
     BluezVersionUnknown,
-    BluezVersion4,
     BluezVersion5,
     BluezNotAvailable
 } Bluez5TestResult;
@@ -91,20 +90,10 @@ bool isBluez5()
         QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
         reply.waitForFinished();
         if (reply.isError()) {
-            // not Bluez 5.x
-            OrgBluezManagerInterface manager_bluez4(QStringLiteral("org.bluez"),
-                                             QStringLiteral("/"),
-                                             QDBusConnection::systemBus());
-            QDBusPendingReply<QList<QDBusObjectPath> > reply
-                    = manager_bluez4.ListAdapters();
-            reply.waitForFinished();
-            if (reply.isError()) {
-                *bluezVersion() = BluezNotAvailable;
-                qWarning() << "Cannot find a running Bluez. Please check the Bluez installation.";
-            } else {
-                *bluezVersion() = BluezVersion4;
-                qCDebug(QT_BT_BLUEZ) << "Bluez 4 detected.";
-            }
+            *bluezVersion() = BluezNotAvailable;
+            qWarning() << "Cannot find a compatible running Bluez. "
+                          "Please check the Bluez installation. "
+                          "QtBluetooth requires at least BlueZ version 5.";
         } else {
             *bluezVersion() = BluezVersion5;
             qCDebug(QT_BT_BLUEZ) << "Bluez 5 detected.";
