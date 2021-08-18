@@ -102,11 +102,6 @@ option to your \c .pro file:
 
 \snippet snippets.pro contacts project modification
 
-To use the classes of the module in your application you need the following
-import statement in your \c .qml file:
-
-\snippet doc_src_qtbluetooth.qml import
-
 \section1 Related Information
 
 \section2 Building Qt Bluetooth
@@ -130,7 +125,6 @@ The usage of the dummy backend is highlighted via an appropriate warning while b
 
 \section2 Reference
 \list
-    \li \l {Qt Bluetooth QML Types}{QML Types}
     \li \l {Qt Bluetooth C++ Classes}{C++ Classes}
 \endlist
 
@@ -158,9 +152,6 @@ The \l QtBluetooth module exports the following
 \row
     \li qt.bluetooth.osx
     \li Enables logging of the \l {Qt for macOS} {macOS} implementation
-\row
-    \li qt.bluetooth.qml
-     \li Enables logging of the QtBluetooth QML implementation
 \row
     \li qt.bluetooth.windows
     \li Enables logging of the \l {Qt for Windows} implementation
