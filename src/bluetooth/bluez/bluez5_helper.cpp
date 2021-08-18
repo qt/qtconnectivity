@@ -47,7 +47,6 @@
 #include "objectmanager_p.h"
 #include "properties_p.h"
 #include "adapter1_bluez5_p.h"
-#include "manager_p.h"
 
 QT_BEGIN_NAMESPACE
 
