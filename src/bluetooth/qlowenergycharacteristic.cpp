@@ -52,16 +52,16 @@ QT_BEGIN_NAMESPACE
     \since 5.4
 
     QLowEnergyCharacteristic provides information about a Bluetooth Low Energy
-    service characteristic's \l name(), \l uuid(), \l value(), \l properties(),
-    \l handle() and \l descriptors(). To obtain the characteristic's specification
+    service characteristic's name(), uuid(), value(), properties(), and
+    descriptors(). To obtain the characteristic's specification
     and information, it is necessary to connect to the device using the
-    \l QLowEnergyService and \l QLowEnergyController classes.
+    QLowEnergyService and QLowEnergyController classes.
 
     The characteristic value may be written via the \l QLowEnergyService instance
     that manages the service to which this characteristic belongs. The
     \l {QLowEnergyService::writeCharacteristic()} function writes the new value.
     The \l {QLowEnergyService::characteristicWritten()} signal is emitted upon success.
-    The \l value() of this object is automatically updated accordingly.
+    The value() of this object is automatically updated accordingly.
 
     Characteristics may contain none, one or more descriptors. They can be individually
     retrieved using the \l descriptor() function. The \l descriptors() function returns

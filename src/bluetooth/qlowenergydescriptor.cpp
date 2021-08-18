@@ -52,16 +52,16 @@ QT_BEGIN_NAMESPACE
     \since 5.4
 
     QLowEnergyDescriptor provides information about a Bluetooth Low Energy
-    descriptor's \l name(), \l uuid(), \l value() and \l handle(). Descriptors are
+    descriptor's name(), uuid(), and value(). Descriptors are
     encapsulated by Bluetooth Low Energy characteristics and provide additional
     contextual information about the characteristic (data format, notification activation
     and so on).
 
-    The descriptor value may be written via the \l QLowEnergyService instance
+    The descriptor value may be written via the QLowEnergyService instance
     that manages the service to which this descriptor belongs. The
     \l {QLowEnergyService::writeDescriptor()} function writes the new value.
     The \l {QLowEnergyService::descriptorWritten()} signal
-    is emitted upon success. The cached \l value() of this object is updated accordingly.
+    is emitted upon success. The cached value() of this object is updated accordingly.
 
     \sa QLowEnergyService, QLowEnergyCharacteristic
 */
