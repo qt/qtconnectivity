@@ -108,7 +108,7 @@ public:
     int serverChannel() const;
 private:
 #if QT_CONFIG(bluez)
-    OrgBluezProfileManager1Interface *serviceBluez5 = nullptr;
+    OrgBluezProfileManager1Interface *service = nullptr;
     quint32 serviceRecord;
     QBluetoothAddress currentLocalAdapter;
     QString profilePath;
