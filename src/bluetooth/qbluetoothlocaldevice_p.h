@@ -149,9 +149,9 @@ public:
     ~QBluetoothLocalDevicePrivate();
 
     QSet<QBluetoothAddress> connectedDevicesSet;
-    OrgBluezAdapter1Interface *adapterBluez5 = nullptr;
+    OrgBluezAdapter1Interface *adapter = nullptr;
     OrgFreedesktopDBusPropertiesInterface *adapterProperties = nullptr;
-    OrgFreedesktopDBusObjectManagerInterface *managerBluez5 = nullptr;
+    OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
     QMap<QString, OrgFreedesktopDBusPropertiesInterface *> deviceChangeMonitors;
 
     QList<QBluetoothAddress> connectedDevices() const;
@@ -169,8 +169,8 @@ public slots:
 
     bool isValid() const;
 
-    void requestPairingBluez5(const QBluetoothAddress &address,
-                              QBluetoothLocalDevice::Pairing targetPairing);
+    void requestPairing(const QBluetoothAddress &address,
+                        QBluetoothLocalDevice::Pairing targetPairing);
 
 private Q_SLOTS:
     void PropertiesChanged(const QString &interface,
@@ -181,8 +181,7 @@ private Q_SLOTS:
                          InterfaceList interfaces_and_properties);
     void InterfacesRemoved(const QDBusObjectPath &object_path,
                            const QStringList &interfaces);
-    void processPairingBluez5(const QString &objectPath,
-                              QBluetoothLocalDevice::Pairing target);
+    void processPairing(const QString &objectPath, QBluetoothLocalDevice::Pairing target);
     void pairingDiscoveryTimedOut();
 
 private:
@@ -192,7 +191,7 @@ private:
 
     QBluetoothLocalDevice *q_ptr;
 
-    void initializeAdapterBluez5();
+    void initializeAdapter();
 };
 
 #elif defined(QT_WINRT_BLUETOOTH)

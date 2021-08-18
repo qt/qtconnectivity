@@ -166,9 +166,9 @@ QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
 :   serviceRecord(0), registered(false)
 {
     initializeBluez5();
-    serviceBluez5 = new OrgBluezProfileManager1Interface(QStringLiteral("org.bluez"),
-                                                         QStringLiteral("/org/bluez"),
-                                                         QDBusConnection::systemBus(), this);
+    service = new OrgBluezProfileManager1Interface(QStringLiteral("org.bluez"),
+                                                   QStringLiteral("/org/bluez"),
+                                                   QDBusConnection::systemBus(), this);
 }
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
@@ -188,7 +188,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
     if (profilePath.isEmpty())
         return false;
 
-    QDBusPendingReply<> reply = serviceBluez5->UnregisterProfile(QDBusObjectPath(profilePath));
+    QDBusPendingReply<> reply = service->UnregisterProfile(QDBusObjectPath(profilePath));
     reply.waitForFinished();
     if (reply.isError()) {
         qCWarning(QT_BT_BLUEZ) << "Cannot unregister profile:" << profilePath
@@ -281,7 +281,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress & /*l
     qCDebug(QT_BT_BLUEZ) << "Registering profile under" << profilePath << uuidString;
 
     QDBusPendingReply<> reply =
-            serviceBluez5->RegisterProfile(QDBusObjectPath(profilePath), uuidString, mapping);
+            service->RegisterProfile(QDBusObjectPath(profilePath), uuidString, mapping);
     reply.waitForFinished();
     if (reply.isError()) {
         qCWarning(QT_BT_BLUEZ) << "Cannot register profile" << reply.error().message();

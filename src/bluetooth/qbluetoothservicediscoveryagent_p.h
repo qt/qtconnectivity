@@ -183,7 +183,7 @@ private:
     bool singleDevice;
 #if QT_CONFIG(bluez)
     QString foundHostAdapterPath;
-    OrgFreedesktopDBusObjectManagerInterface *managerBluez5 = nullptr;
+    OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
     QProcess *sdpScannerProcess = nullptr;
 #endif
 

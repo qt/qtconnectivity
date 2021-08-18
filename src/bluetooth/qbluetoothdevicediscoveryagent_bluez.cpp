@@ -60,11 +60,11 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     q_ptr(parent)
 {
     initializeBluez5();
-    managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
+    manager = new OrgFreedesktopDBusObjectManagerInterface(
                                        QStringLiteral("org.bluez"),
                                        QStringLiteral("/"),
                                        QDBusConnection::systemBus(), parent);
-    QObject::connect(managerBluez5,
+    QObject::connect(manager,
                      &OrgFreedesktopDBusObjectManagerInterface::InterfacesAdded,
                      q_ptr,
                      [this](const QDBusObjectPath &objectPath, InterfaceList interfacesAndProperties) {
@@ -77,7 +77,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
-    delete adapterBluez5;
+    delete adapter;
 }
 
 //TODO: Qt6 remove the pendingCancel/pendingStart logic as it is cumbersome.
@@ -94,7 +94,7 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
     if (pendingCancel)
         return false; //TODO Qt6: remove pending[Cancel|Start] logic (see comment above)
 
-    return adapterBluez5;
+    return adapter;
 }
 
 QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods()
@@ -124,16 +124,15 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
-    adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
-                                                  adapterPath,
-                                                  QDBusConnection::systemBus());
+    adapter = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"), adapterPath,
+                                            QDBusConnection::systemBus());
 
-    if (!adapterBluez5->powered()) {
+    if (!adapter->powered()) {
         qCDebug(QT_BT_BLUEZ) << "Aborting device discovery due to offline Bluetooth Adapter";
         lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
-        delete adapterBluez5;
-        adapterBluez5 = nullptr;
+        delete adapter;
+        adapter = nullptr;
         emit q->errorOccurred(lastError);
         return;
     }
@@ -148,7 +147,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     // older BlueZ 5.x versions don't have this function
     // filterReply returns UnknownMethod which we ignore
-    QDBusPendingReply<> filterReply = adapterBluez5->SetDiscoveryFilter(map);
+    QDBusPendingReply<> filterReply = adapter->SetDiscoveryFilter(map);
     filterReply.waitForFinished();
     if (filterReply.isError()) {
         if (filterReply.error().type() == QDBusError::Other
@@ -157,8 +156,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
             lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod;
             errorString = QBluetoothDeviceDiscoveryAgent::tr("One or more device discovery methods "
                                                              "are not supported on this platform");
-            delete adapterBluez5;
-            adapterBluez5 = nullptr;
+            delete adapter;
+            adapter = nullptr;
             emit q->errorOccurred(lastError);
             return;
         } else if (filterReply.error().type() != QDBusError::UnknownMethod) {
@@ -166,7 +165,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         }
     }
 
-    QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapterBluez5->path());
+    QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapter->path());
     QObject::connect(QtBluezDiscoveryManager::instance(), &QtBluezDiscoveryManager::discoveryInterrupted,
                      q, [this](const QString &path){
         this->_q_discoveryInterrupted(path);
@@ -184,7 +183,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     propertyMonitors.append(prop);
 
     // collect initial set of information
-    QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
+    QDBusPendingReply<ManagedObjectList> reply = manager->GetManagedObjects();
     reply.waitForFinished();
     if (!reply.isError()) {
         ManagedObjectList managedObjectList = reply.value();
@@ -197,10 +196,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
                 if (iface == QStringLiteral("org.bluez.Device1")) {
 
-                    if (path.path().indexOf(adapterBluez5->path()) != 0)
+                    if (path.path().indexOf(adapter->path()) != 0)
                         continue; //devices whose path doesn't start with same path we skip
 
-                    deviceFoundBluez5(path.path(), jt.value());
+                    deviceFound(path.path(), jt.value());
                     if (!isActive()) // Can happen if stop() was called from a slot in user code.
                       return;
                 }
@@ -226,7 +225,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
-    if (!adapterBluez5)
+    if (!adapter)
         return;
 
     qCDebug(QT_BT_BLUEZ) << Q_FUNC_INFO;
@@ -285,8 +284,8 @@ static QBluetoothDeviceInfo createDeviceInfoFromBluez5Device(const QVariantMap& 
     return deviceInfo;
 }
 
-void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString &devicePath,
-                                                              const QVariantMap &properties)
+void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QString &devicePath,
+                                                        const QVariantMap &properties)
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
@@ -294,8 +293,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFoundBluez5(const QString &dev
         return;
 
     auto deviceAdapter = qvariant_cast<QDBusObjectPath>(properties[QStringLiteral("Adapter")]);
-     if (deviceAdapter.path() != adapterBluez5->path())
-         return;
+    if (deviceAdapter.path() != adapter->path())
+        return;
 
     // read information
     QBluetoothDeviceInfo deviceInfo = createDeviceInfoFromBluez5Device(properties);
@@ -338,8 +337,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_InterfacesAdded(const QDBusObject
 
     if (interfaces_and_properties.contains(QStringLiteral("org.bluez.Device1"))) {
         // device interfaces belonging to different adapter
-        // will be filtered out by deviceFoundBluez5();
-        deviceFoundBluez5(object_path.path(), interfaces_and_properties[QStringLiteral("org.bluez.Device1")]);
+        // will be filtered out by deviceFound();
+        deviceFound(object_path.path(),
+                    interfaces_and_properties[QStringLiteral("org.bluez.Device1")]);
     }
 }
 
@@ -351,13 +351,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryFinished()
         discoveryTimer->stop();
 
     QtBluezDiscoveryManager::instance()->disconnect(q);
-    QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(adapterBluez5->path());
+    QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(adapter->path());
 
     qDeleteAll(propertyMonitors);
     propertyMonitors.clear();
 
-    delete adapterBluez5;
-    adapterBluez5 = nullptr;
+    delete adapter;
+    adapter = nullptr;
 
     if (pendingCancel && !pendingStart) {
         pendingCancel = false;
@@ -379,7 +379,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
     if (!q->isActive())
         return;
 
-    if (path == adapterBluez5->path()) {
+    if (path == adapter->path()) {
         qCWarning(QT_BT_BLUEZ) << "Device discovery aborted due to unexpected adapter changes from another process.";
 
         if (discoveryTimer)
@@ -389,8 +389,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_discoveryInterrupted(const QStrin
         // no need to call unregisterDiscoveryInterest since QtBluezDiscoveryManager
         // does this automatically when emitting discoveryInterrupted(QString) signal
 
-        delete adapterBluez5;
-        adapterBluez5 = nullptr;
+        delete adapter;
+        adapter = nullptr;
 
         errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;

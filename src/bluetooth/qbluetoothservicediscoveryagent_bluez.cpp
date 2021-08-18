@@ -61,15 +61,14 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     q_ptr(qp)
 {
     initializeBluez5();
-    managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
-                                    QStringLiteral("org.bluez"), QStringLiteral("/"),
-                                    QDBusConnection::systemBus());
+    manager = new OrgFreedesktopDBusObjectManagerInterface(
+            QStringLiteral("org.bluez"), QStringLiteral("/"), QDBusConnection::systemBus());
     qRegisterMetaType<QBluetoothServiceDiscoveryAgent::Error>();
 }
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
 {
-    delete managerBluez5;
+    delete manager;
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
@@ -336,7 +335,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
 
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
-    QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
+    QDBusPendingReply<ManagedObjectList> reply = manager->GetManagedObjects();
     reply.waitForFinished();
     if (reply.isError()) {
         if (singleDevice) {

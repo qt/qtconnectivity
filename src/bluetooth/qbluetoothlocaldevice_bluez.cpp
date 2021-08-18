@@ -76,24 +76,24 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
 
 QString QBluetoothLocalDevice::name() const
 {
-    if (d_ptr->adapterBluez5)
-        return d_ptr->adapterBluez5->alias();
+    if (d_ptr->adapter)
+        return d_ptr->adapter->alias();
 
     return QString();
 }
 
 QBluetoothAddress QBluetoothLocalDevice::address() const
 {
-    if (d_ptr->adapterBluez5)
-        return QBluetoothAddress(d_ptr->adapterBluez5->address());
+    if (d_ptr->adapter)
+        return QBluetoothAddress(d_ptr->adapter->address());
 
     return QBluetoothAddress();
 }
 
 void QBluetoothLocalDevice::powerOn()
 {
-    if (d_ptr->adapterBluez5)
-        d_ptr->adapterBluez5->setPowered(true);
+    if (d_ptr->adapter)
+        d_ptr->adapter->setPowered(true);
 }
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
@@ -115,33 +115,33 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
             // We first have to wait for BT to be powered on,
             // then we can set the host mode correctly
             d->pendingHostModeChange = static_cast<int>(HostDiscoverable);
-            d->adapterBluez5->setPowered(true);
+            d->adapter->setPowered(true);
         } else {
-            d->adapterBluez5->setDiscoverable(true);
+            d->adapter->setDiscoverable(true);
         }
         break;
     case HostConnectable:
         if (hostMode() == HostPoweredOff) {
             d->pendingHostModeChange = static_cast<int>(HostConnectable);
-            d->adapterBluez5->setPowered(true);
+            d->adapter->setPowered(true);
         } else {
-            d->adapterBluez5->setDiscoverable(false);
+            d->adapter->setDiscoverable(false);
         }
         break;
     case HostPoweredOff:
-        d->adapterBluez5->setPowered(false);
+        d->adapter->setPowered(false);
         break;
     }
 }
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 {
-    if (d_ptr->adapterBluez5) {
-        if (!d_ptr->adapterBluez5->powered())
+    if (d_ptr->adapter) {
+        if (!d_ptr->adapter->powered())
             return HostPoweredOff;
-        else if (d_ptr->adapterBluez5->discoverable())
+        else if (d_ptr->adapter->discoverable())
             return HostDiscoverable;
-        else if (d_ptr->adapterBluez5->powered())
+        else if (d_ptr->adapter->powered())
             return HostConnectable;
     }
 
@@ -201,7 +201,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 
     const Pairing current_pairing = pairingStatus(address);
     if (current_pairing == pairing) {
-        if (d_ptr->adapterBluez5) {
+        if (d_ptr->adapter) {
             // A possibly running discovery or pending pairing request should be canceled
             if (d_ptr->pairingDiscoveryTimer && d_ptr->pairingDiscoveryTimer->isActive()) {
                 d_ptr->pairingDiscoveryTimer->stop();
@@ -214,7 +214,6 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
                 delete d_ptr->pairingTarget;
                 d_ptr->pairingTarget = nullptr;
             }
-
         }
         QMetaObject::invokeMethod(this, "pairingFinished", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothAddress, address),
@@ -222,11 +221,11 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         return;
     }
 
-    d_ptr->requestPairingBluez5(address, pairing);
+    d_ptr->requestPairing(address, pairing);
 }
 
-void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress &targetAddress,
-                                                        QBluetoothLocalDevice::Pairing targetPairing)
+void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &targetAddress,
+                                                  QBluetoothLocalDevice::Pairing targetPairing)
 {
     if (!isValid())
         return;
@@ -234,8 +233,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
     //are we already discovering something? -> abort those attempts
     if (pairingDiscoveryTimer && pairingDiscoveryTimer->isActive()) {
         pairingDiscoveryTimer->stop();
-        QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
-                    adapterBluez5->path());
+        QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(adapter->path());
     }
 
     if (pairingTarget) {
@@ -247,7 +245,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
     // if we cannot find it we may have to turn on Discovery mode for a limited amount of time
 
     // check device doesn't already exist
-    QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
+    QDBusPendingReply<ManagedObjectList> reply = manager->GetManagedObjects();
     reply.waitForFinished();
     if (reply.isError()) {
         emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);
@@ -270,7 +268,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
                 if (targetAddress == QBluetoothAddress(device.address())) {
                     qCDebug(QT_BT_BLUEZ) << "Initiating direct pair to" << targetAddress.toString();
                     //device exist -> directly work with it
-                    processPairingBluez5(path.path(), targetPairing);
+                    processPairing(path.path(), targetPairing);
                     return;
                 }
             }
@@ -278,7 +276,7 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
     }
 
     //no device matching -> turn on discovery
-    QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapterBluez5->path());
+    QtBluezDiscoveryManager::instance()->registerDiscoveryInterest(adapter->path());
 
     address = targetAddress;
     pairing = targetPairing;
@@ -301,8 +299,8 @@ void QBluetoothLocalDevicePrivate::requestPairingBluez5(const QBluetoothAddress 
  * If it has to be paired then we need another roundtrip through the event loop
  * while we wait for the user to accept the pairing dialogs.
  */
-void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPath,
-                                                        QBluetoothLocalDevice::Pairing target)
+void QBluetoothLocalDevicePrivate::processPairing(const QString &objectPath,
+                                                  QBluetoothLocalDevice::Pairing target)
 {
     if (pairingTarget)
         delete pairingTarget;
@@ -311,8 +309,7 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
     if (pairingDiscoveryTimer && pairingDiscoveryTimer->isActive()) {
         pairingDiscoveryTimer->stop();
 
-        QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
-                    adapterBluez5->path());
+        QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(adapter->path());
     }
 
     pairingTarget = new OrgBluezDevice1Interface(QStringLiteral("org.bluez"), objectPath,
@@ -326,7 +323,7 @@ void QBluetoothLocalDevicePrivate::processPairingBluez5(const QString &objectPat
         delete pairingTarget;
         pairingTarget = nullptr;
 
-        QDBusPendingReply<> removeReply = adapterBluez5->RemoveDevice(QDBusObjectPath(objectPath));
+        QDBusPendingReply<> removeReply = adapter->RemoveDevice(QDBusObjectPath(objectPath));
         auto watcher = new QDBusPendingCallWatcher(removeReply, this);
         connect(watcher, &QDBusPendingCallWatcher::finished,
                 this, [q, targetAddress](QDBusPendingCallWatcher* watcher){
@@ -375,8 +372,7 @@ void QBluetoothLocalDevicePrivate::pairingDiscoveryTimedOut()
 {
     qCWarning(QT_BT_BLUEZ) << "Discovery for pairing purposes failed. Cannot find parable device.";
 
-    QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(
-                adapterBluez5->path());
+    QtBluezDiscoveryManager::instance()->unregisterDiscoveryInterest(adapter->path());
 
     emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);
 }
@@ -389,7 +385,7 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
 
     if (isValid())
     {
-        QDBusPendingReply<ManagedObjectList> reply = d_ptr->managerBluez5->GetManagedObjects();
+        QDBusPendingReply<ManagedObjectList> reply = d_ptr->manager->GetManagedObjects();
         reply.waitForFinished();
         if (reply.isError())
             return Unpaired;
@@ -432,7 +428,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
 {
     registerQBluetoothLocalDeviceMetaType();
     initializeBluez5();
-    initializeAdapterBluez5();
+    initializeAdapter();
 
     connectDeviceChanges();
 }
@@ -446,7 +442,7 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
 {
     if (isValid()) {
         //setup property change notifications for all existing devices
-        QDBusPendingReply<ManagedObjectList> reply = managerBluez5->GetManagedObjects();
+        QDBusPendingReply<ManagedObjectList> reply = manager->GetManagedObjects();
         reply.waitForFinished();
         if (reply.isError())
             return;
@@ -486,29 +482,29 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
-    delete adapterBluez5;
+    delete adapter;
     delete adapterProperties;
-    delete managerBluez5;
+    delete manager;
     delete pairingTarget;
 
     qDeleteAll(deviceChangeMonitors);
 }
 
-void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
+void QBluetoothLocalDevicePrivate::initializeAdapter()
 {
-    if (adapterBluez5)
+    if (adapter)
         return;
 
     //get all local adapters
-    if (!managerBluez5)
-        managerBluez5 = new OrgFreedesktopDBusObjectManagerInterface(
+    if (!manager)
+        manager = new OrgFreedesktopDBusObjectManagerInterface(
                                                      QStringLiteral("org.bluez"),
                                                      QStringLiteral("/"),
                                                      QDBusConnection::systemBus(), this);
 
-    connect(managerBluez5, &OrgFreedesktopDBusObjectManagerInterface::InterfacesAdded,
+    connect(manager, &OrgFreedesktopDBusObjectManagerInterface::InterfacesAdded,
             this, &QBluetoothLocalDevicePrivate::InterfacesAdded);
-    connect(managerBluez5, &OrgFreedesktopDBusObjectManagerInterface::InterfacesRemoved,
+    connect(manager, &OrgFreedesktopDBusObjectManagerInterface::InterfacesRemoved,
             this, &QBluetoothLocalDevicePrivate::InterfacesRemoved);
 
     bool ok = true;
@@ -517,15 +513,14 @@ void QBluetoothLocalDevicePrivate::initializeAdapterBluez5()
         return;
 
     deviceAdapterPath = adapterPath;
-    adapterBluez5 = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"),
-                                                   adapterPath,
-                                                   QDBusConnection::systemBus(), this);
+    adapter = new OrgBluezAdapter1Interface(QStringLiteral("org.bluez"), adapterPath,
+                                            QDBusConnection::systemBus(), this);
 
-    if (adapterBluez5) {
+    if (adapter) {
         //hook up propertiesChanged for current adapter
         adapterProperties = new OrgFreedesktopDBusPropertiesInterface(
-                    QStringLiteral("org.bluez"), adapterBluez5->path(),
-                    QDBusConnection::systemBus(), this);
+                QStringLiteral("org.bluez"), adapter->path(),
+                QDBusConnection::systemBus(), this);
         connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                 this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
     }
@@ -544,10 +539,10 @@ void QBluetoothLocalDevicePrivate::PropertiesChanged(const QString &interface,
 
             QBluetoothLocalDevice::HostMode mode;
 
-            if (!adapterBluez5->powered()) {
+            if (!adapter->powered()) {
                 mode = QBluetoothLocalDevice::HostPoweredOff;
             } else {
-                if (adapterBluez5->discoverable())
+                if (adapter->discoverable())
                     mode = QBluetoothLocalDevice::HostDiscoverable;
                 else
                     mode = QBluetoothLocalDevice::HostConnectable;
@@ -555,9 +550,9 @@ void QBluetoothLocalDevicePrivate::PropertiesChanged(const QString &interface,
                 if (pendingHostModeChange != -1) {
 
                     if (static_cast<int>(mode) != pendingHostModeChange) {
-                        adapterBluez5->setDiscoverable(
-                            pendingHostModeChange
-                            == static_cast<int>(QBluetoothLocalDevice::HostDiscoverable));
+                        adapter->setDiscoverable(
+                                pendingHostModeChange
+                                == static_cast<int>(QBluetoothLocalDevice::HostDiscoverable));
                         pendingHostModeChange = -1;
                         return;
                     }
@@ -624,7 +619,7 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
         OrgBluezDevice1Interface device(QStringLiteral("org.bluez"),
                                         object_path.path(), QDBusConnection::systemBus());
         if (!address.isNull() && address == QBluetoothAddress(device.address()))
-            processPairingBluez5(object_path.path(), pairing);
+            processPairing(object_path.path(), pairing);
     }
 }
 
@@ -649,15 +644,14 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
         }
     }
 
-    if (adapterBluez5
-            && object_path.path() == adapterBluez5->path()
-            && interfaces.contains(QLatin1String("org.bluez.Adapter1"))) {
-        qCDebug(QT_BT_BLUEZ) << "Adapter" << adapterBluez5->path() << "was removed";
+    if (adapter && object_path.path() == adapter->path()
+        && interfaces.contains(QLatin1String("org.bluez.Adapter1"))) {
+        qCDebug(QT_BT_BLUEZ) << "Adapter" << adapter->path() << "was removed";
         // current adapter was removed -> invalidate the instance
-        delete adapterBluez5;
-        adapterBluez5 = nullptr;
-        managerBluez5->deleteLater();
-        managerBluez5 = nullptr;
+        delete adapter;
+        adapter = nullptr;
+        manager->deleteLater();
+        manager = nullptr;
         delete adapterProperties;
         adapterProperties = nullptr;
 
@@ -673,7 +667,7 @@ void QBluetoothLocalDevicePrivate::InterfacesRemoved(const QDBusObjectPath &obje
 
 bool QBluetoothLocalDevicePrivate::isValid() const
 {
-    return adapterBluez5 && managerBluez5;
+    return adapter && manager;
 }
 
 QList<QBluetoothAddress> QBluetoothLocalDevicePrivate::connectedDevices() const
@@ -694,7 +688,7 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
         return;
     }
 
-    if (adapterBluez5) {
+    if (adapter) {
         if (!pairingTarget) {
             qCWarning(QT_BT_BLUEZ) << "Pairing target expected but found null pointer.";
             emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
