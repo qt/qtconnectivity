@@ -92,9 +92,6 @@ Qt Bluetooth supports Bluetooth Low Energy development for client/central role u
 Further details can be found in the
 \l {Bluetooth Low Energy Overview}{Bluetooth Low Energy Overview} section.
 
-A new addition since the Qt Bluetooth 5.7 release covers support for Bluetooth Low Energy
-applications performing the peripheral/server role. This new API remains in Technology Preview.
-
 \section1 Getting Started
 
 To use the C++ library in your application, add the following configuration
