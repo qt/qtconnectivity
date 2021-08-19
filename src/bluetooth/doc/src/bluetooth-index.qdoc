@@ -92,10 +92,14 @@ Qt Bluetooth supports Bluetooth Low Energy development for client/central role u
 Further details can be found in the
 \l {Bluetooth Low Energy Overview}{Bluetooth Low Energy Overview} section.
 
-\section1 Getting Started
+\include module-use.qdocinc using qt module
+\snippet doc/snippets/CMakeLists.txt 0
 
-To use the C++ library in your application, add the following configuration
-option to your \c .pro file:
+See also the \l {Build with CMake} overview.
+
+\section2 Building with qmake
+
+Add \c bluetooth to the \c QT variable:
 
 \snippet snippets.pro contacts project modification
 
