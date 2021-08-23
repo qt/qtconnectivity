@@ -148,7 +148,7 @@ public:
 #endif
 
 public:
-    QPrivateLinearBuffer buffer;
+    QPrivateLinearBuffer rxBuffer;
     QPrivateLinearBuffer txBuffer;
     int socket = -1;
     QBluetoothServiceInfo::Protocol socketType = QBluetoothServiceInfo::UnknownProtocol;

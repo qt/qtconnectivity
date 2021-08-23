@@ -96,25 +96,25 @@ static inline QString qt_QStringFromHString(const HString &string)
 
 static qint64 writeIOStream(ComPtr<IOutputStream> stream, const char *data, qint64 len)
 {
-    ComPtr<IBuffer> buffer;
+    ComPtr<IBuffer> tempBuffer;
     if (len > UINT32_MAX) {
         qCWarning(QT_BT_WINDOWS) << "writeIOStream can only write up to" << UINT32_MAX << "bytes.";
         len = UINT32_MAX;
     }
     quint32 ulen = static_cast<quint32>(len);
-    HRESULT hr = g->bufferFactory->Create(ulen, &buffer);
+    HRESULT hr = g->bufferFactory->Create(ulen, &tempBuffer);
     Q_ASSERT_SUCCEEDED(hr);
-    hr = buffer->put_Length(ulen);
+    hr = tempBuffer->put_Length(ulen);
     Q_ASSERT_SUCCEEDED(hr);
     ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteArrayAccess;
-    hr = buffer.As(&byteArrayAccess);
+    hr = tempBuffer.As(&byteArrayAccess);
     Q_ASSERT_SUCCEEDED(hr);
     byte *bytes;
     hr = byteArrayAccess->Buffer(&bytes);
     Q_ASSERT_SUCCEEDED(hr);
     memcpy(bytes, data, ulen);
     ComPtr<IAsyncOperationWithProgress<UINT32, UINT32>> op;
-    hr = stream->WriteAsync(buffer.Get(), &op);
+    hr = stream->WriteAsync(tempBuffer.Get(), &op);
     RETURN_IF_FAILED("Failed to write to stream", return -1);
     UINT32 bytesWritten;
     hr = QWinRTFunctions::await(op, &bytesWritten);
@@ -181,13 +181,13 @@ public slots:
 public:
     void startReading()
     {
-        ComPtr<IBuffer> buffer;
-        HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &buffer);
+        ComPtr<IBuffer> tempBuffer;
+        HRESULT hr = g->bufferFactory->Create(READ_BUFFER_SIZE, &tempBuffer);
         Q_ASSERT_SUCCEEDED(hr);
         ComPtr<IInputStream> stream;
         hr = m_socket->get_InputStream(&stream);
         Q_ASSERT_SUCCEEDED(hr);
-        hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
+        hr = stream->ReadAsync(tempBuffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
         Q_ASSERT_SUCCEEDED(hr);
         hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
         Q_ASSERT_SUCCEEDED(hr);
@@ -214,8 +214,8 @@ public:
             return S_OK;
         }
 
-        ComPtr<IBuffer> buffer;
-        HRESULT hr = asyncInfo->GetResults(&buffer);
+        ComPtr<IBuffer> tempBuffer;
+        HRESULT hr = asyncInfo->GetResults(&tempBuffer);
         if (FAILED(hr)) {
             qErrnoWarning(hr, "Failed to get read results buffer");
             emit socketErrorOccured(QBluetoothSocket::SocketError::UnknownSocketError);
@@ -223,7 +223,7 @@ public:
         }
 
         UINT32 bufferLength;
-        hr = buffer->get_Length(&bufferLength);
+        hr = tempBuffer->get_Length(&bufferLength);
         if (FAILED(hr)) {
             qErrnoWarning(hr, "Failed to get buffer length");
             emit socketErrorOccured(QBluetoothSocket::SocketError::UnknownSocketError);
@@ -239,7 +239,7 @@ public:
         }
 
         ComPtr<Windows::Storage::Streams::IBufferByteAccess> byteArrayAccess;
-        hr = buffer.As(&byteArrayAccess);
+        hr = tempBuffer.As(&byteArrayAccess);
         if (FAILED(hr)) {
             qErrnoWarning(hr, "Failed to get cast buffer");
             emit socketErrorOccured(QBluetoothSocket::SocketError::UnknownSocketError);
@@ -270,20 +270,20 @@ public:
         }
 
         // Reuse the stream buffer
-        hr = buffer->get_Capacity(&readBufferLength);
+        hr = tempBuffer->get_Capacity(&readBufferLength);
         if (FAILED(hr)) {
             qErrnoWarning(hr, "Failed to get buffer capacity");
             emit socketErrorOccured(QBluetoothSocket::SocketError::UnknownSocketError);
             return S_OK;
         }
-        hr = buffer->put_Length(0);
+        hr = tempBuffer->put_Length(0);
         if (FAILED(hr)) {
             qErrnoWarning(hr, "Failed to set buffer length");
             emit socketErrorOccured(QBluetoothSocket::SocketError::UnknownSocketError);
             return S_OK;
         }
 
-        hr = stream->ReadAsync(buffer.Get(), readBufferLength, InputStreamOptions_Partial, &m_readOp);
+        hr = stream->ReadAsync(tempBuffer.Get(), readBufferLength, InputStreamOptions_Partial, &m_readOp);
         if (FAILED(hr)) {
             qErrnoWarning(hr, "onReadyRead(): Could not read into socket stream buffer.");
             emit socketErrorOccured(QBluetoothSocket::SocketError::UnknownSocketError);
@@ -689,10 +689,10 @@ qint64 QBluetoothSocketPrivateWinRT::readData(char *data, qint64 maxSize)
         return -1;
     }
 
-    if (!buffer.isEmpty()) {
+    if (!rxBuffer.isEmpty()) {
         if (maxSize > INT_MAX)
             maxSize = INT_MAX;
-        return buffer.read(data, int(maxSize));
+        return rxBuffer.read(data, int(maxSize));
     }
 
     return 0;
@@ -733,7 +733,7 @@ bool QBluetoothSocketPrivateWinRT::setSocketDescriptor(ComPtr<IStreamSocket> soc
 
 qint64 QBluetoothSocketPrivateWinRT::bytesAvailable() const
 {
-    return buffer.size();
+    return rxBuffer.size();
 }
 
 qint64 QBluetoothSocketPrivateWinRT::bytesToWrite() const
@@ -743,7 +743,7 @@ qint64 QBluetoothSocketPrivateWinRT::bytesToWrite() const
 
 bool QBluetoothSocketPrivateWinRT::canReadLine() const
 {
-    return buffer.canReadLine();
+    return rxBuffer.canReadLine();
 }
 
 void QBluetoothSocketPrivateWinRT::handleNewData(const QList<QByteArray> &data)
@@ -783,7 +783,7 @@ void QBluetoothSocketPrivateWinRT::addToPendingData(const QList<QByteArray> &dat
     QMutexLocker locker(&m_readMutex);
     m_pendingData.append(data);
     for (const QByteArray &newData : data) {
-        char *writePointer = buffer.reserve(newData.length());
+        char *writePointer = rxBuffer.reserve(newData.length());
         memcpy(writePointer, newData.data(), size_t(newData.length()));
     }
     locker.unlock();
